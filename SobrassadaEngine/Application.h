@@ -8,6 +8,7 @@
 class WindowModule;
 class OpenGLModule;
 class InputModule;
+class ShaderModule;
 
 class Application
 {
@@ -17,11 +18,12 @@ public:
 
 	bool Init();
 	update_status Update(float deltaTime);
-	bool CleanUp();
+	bool ShutDown();
 
 	WindowModule* GetWindowModule() { return windowModule; }
 	OpenGLModule* GetOpenGLModule() { return openGLModule; }
 	InputModule* GetInputModule() { return inputModule; }
+	ShaderModule* GetShaderModule() { return shaderModule; }
 
 private:
 	std::list<Module*> modules;
@@ -29,6 +31,7 @@ private:
 	WindowModule* windowModule = nullptr;
 	OpenGLModule* openGLModule = nullptr;
 	InputModule* inputModule = nullptr;
+	ShaderModule* shaderModule = nullptr;
 
 	uint32_t previousElapsedTime = 0;
 };

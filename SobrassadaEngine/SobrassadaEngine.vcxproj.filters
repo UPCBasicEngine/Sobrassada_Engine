@@ -18,6 +18,9 @@
     <ClCompile Include="InputModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -45,6 +48,9 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="InputModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>

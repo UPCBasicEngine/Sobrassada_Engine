@@ -24,7 +24,7 @@ std::vector<char*>* Logs = NULL;
 
 int main(int argc, char** argv)
 {
-	std::unique_ptr<UPCTimer> timer = std::make_unique<UPCTimer>();
+	UPCTimer* timer = new UPCTimer();
 
 	int mainReturn = EXIT_SUCCESS;
 	MainState mainState = MAIN_CREATION;
@@ -76,10 +76,10 @@ int main(int argc, char** argv)
 
 		case MAIN_FINISH:
 
-			GLOG("----- Application CleanUp -----");
-			if (App->CleanUp() == false)
+			GLOG("----- Application ShutDown -----");
+			if (App->ShutDown() == false)
 			{
-				GLOG("----- Application CleanUp exits with error -----");
+				GLOG("----- Application ShutDown exits with error -----");
 			}
 			else
 				mainReturn = EXIT_SUCCESS;
@@ -92,6 +92,7 @@ int main(int argc, char** argv)
 	}
 
 	delete App;
+	delete timer;
 
 	// Free memory from log*
 	for (auto log : *Logs)
@@ -101,7 +102,7 @@ int main(int argc, char** argv)
 	Logs->clear();
 	delete Logs;
 
-	std::cout << "Hello world \n";
+	std::cout << "Hello world \n"; 
 
-	return mainReturn;
+d	return mainReturn;
 }

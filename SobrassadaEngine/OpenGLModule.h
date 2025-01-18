@@ -13,7 +13,7 @@ public:
 	update_status PreUpdate(float deltaTime) override;
 	update_status Update(float deltaTime) override;
 	update_status PostUpdate(float deltaTime) override;
-	bool CleanUp() override;
+	bool ShutDown() override;
 
 	void WindowResized(unsigned width, unsigned height);
 

@@ -113,7 +113,7 @@ update_status InputModule::PreUpdate(float deltaTime)
 	return UPDATE_CONTINUE;
 }
 
-bool InputModule::CleanUp()
+bool InputModule::ShutDown()
 {
 	GLOG("Quitting SDL input event subsystem");
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);

@@ -12,7 +12,7 @@ public:
 	~WindowModule();
 
 	bool Init() override;
-	bool CleanUp() override;
+	bool ShutDown() override;
 
 	SDL_Window* window = NULL;
 	SDL_Surface* screen_surface = NULL;

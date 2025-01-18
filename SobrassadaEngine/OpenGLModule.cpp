@@ -73,7 +73,7 @@ update_status OpenGLModule::PostUpdate(float deltaTime)
 	return UPDATE_CONTINUE;
 }
 
-bool OpenGLModule::CleanUp()
+bool OpenGLModule::ShutDown()
 {
 	GLOG("Destroying renderer");
 

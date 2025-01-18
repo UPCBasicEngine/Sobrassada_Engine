@@ -25,7 +25,7 @@ public:
 
 	bool Init() override;
 	update_status PreUpdate(float deltaTime) override;
-	bool CleanUp();
+	bool ShutDown();
 
 	KeyState GetKey(int id) const
 	{

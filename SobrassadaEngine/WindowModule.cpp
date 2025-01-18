@@ -46,7 +46,7 @@ bool WindowModule::Init()
 	return returnStatus;
 }
 
-bool WindowModule::CleanUp()
+bool WindowModule::ShutDown()
 {
 	GLOG("Destroying SDL window and quitting all SDL systems");
 

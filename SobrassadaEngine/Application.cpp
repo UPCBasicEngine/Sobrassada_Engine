@@ -3,12 +3,14 @@
 #include "WindowModule.h"
 #include "OpenGLModule.h"
 #include "InputModule.h"
+#include "ShaderModule.h"
 
 Application::Application()
 {
 	modules.push_back(windowModule = new WindowModule());
 	modules.push_back(openGLModule = new OpenGLModule());
 	modules.push_back(inputModule = new InputModule());
+	modules.push_back(shaderModule = new ShaderModule());
 }
 
 Application::~Application()
@@ -48,12 +50,12 @@ update_status Application::Update(float deltaTime)
 	return returnStatus;
 }
 
-bool Application::CleanUp()
+bool Application::ShutDown()
 {
 	bool returnStatus = true;
 
 	for (std::list<Module*>::reverse_iterator it = modules.rbegin(); it != modules.rend() && returnStatus; ++it)
-		returnStatus = (*it)->CleanUp();
+		returnStatus = (*it)->ShutDown();
 
 	return returnStatus;
 }

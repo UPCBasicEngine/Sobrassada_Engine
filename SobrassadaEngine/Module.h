@@ -41,7 +41,7 @@ public:
 		return UPDATE_CONTINUE;
 	}
 
-	virtual bool CleanUp()
+	virtual bool ShutDown()
 	{
 		return true;
 	}
