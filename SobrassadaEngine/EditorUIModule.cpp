@@ -161,6 +161,25 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
 	FramePlots();
 	ImGui::Spacing();
 
+	ImGui::SeparatorText("Modules Configuration");
+	if (ImGui::CollapsingHeader("Window"))
+	{
+		WindowConfig();
+	}
+
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("Editor camera"))
+	{
+		// TODO: ADD CAMERA MODULE AS TEMPORAL MEANWHILO THERE ARE NO GAMEOBJECTS
+		//CameraConfig();
+	}
+
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("OpenGL"))
+	{
+		OpenGLConfig();
+	}
+
 	ImGui::End();
 }
 
@@ -169,9 +188,56 @@ void EditorUIModule::FramePlots()
 	char title[25];
 	std::vector<float> frametimeVector(frametime.begin(), frametime.end());
 	sprintf_s(title, 25, "Milliseconds %0.1f", frametime.back());
-	ImGui::PlotHistogram("##milliseconds", &frametimeVector[0], frametimeVector.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100));
+	ImGui::PlotHistogram("##milliseconds", &frametimeVector[0], (int)frametimeVector.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100));
 
 	std::vector<float> framerateVector(framerate.begin(), framerate.end());
 	sprintf_s(title, 25, "Framerate %.1f", framerate.back());
-	ImGui::PlotHistogram("##framerate", &framerateVector.front(), framerateVector.size(), 0, title, 0.0f, 200.0f, ImVec2(310, 100));
+	ImGui::PlotHistogram("##framerate", &framerateVector.front(), (int)framerateVector.size(), 0, title, 0.0f, 200.0f, ImVec2(310, 100));
+}
+
+void EditorUIModule::WindowConfig()
+{
+	static bool borderless = false;
+	static bool full_desktop = false;
+	static bool resizable = true;
+	static bool fullscreen = false;
+
+	// Brightness Slider
+	float brightness = App->GetWindowModule()->GetBrightness();
+	if (ImGui::SliderFloat("Brightness", &brightness, 0, 1)) App->GetWindowModule()->SetBrightness(brightness);
+
+	SDL_DisplayMode& displayMode = App->GetWindowModule()->GetDesktopDisplayMode();
+	int maxWidth = displayMode.w;
+	int maxHeight= displayMode.h;
+
+	// Width Slider
+	int width = App->GetWindowModule()->GetWidth();
+	if (ImGui::SliderInt("Width", &width, 0, maxWidth)) App->GetWindowModule()->SetWidth(width);
+
+	// Height Slider
+	int height = App->GetWindowModule()->GetHeight();
+	if (ImGui::SliderInt("Height", &height, 0, maxHeight)) App->GetWindowModule()->SetHeight(height);
+
+	// Set Fullscreen
+	if (ImGui::Checkbox("Fullscreen", &fullscreen)) App->GetWindowModule()->SetFullscreen(fullscreen);
+	ImGui::SameLine();
+
+	// Set Resizable
+	if (ImGui::Checkbox("Resizable", &resizable)) App->GetWindowModule()->SetResizable(resizable);
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Restart to apply");
+
+	// Set Borderless
+	if (ImGui::Checkbox("Borderless", &borderless)) App->GetWindowModule()->SetBorderless(borderless);
+	ImGui::SameLine();
+
+	// Set Full Desktop
+	if (ImGui::Checkbox("Full Desktop", &full_desktop)) App->GetWindowModule()->SetFullDesktop(full_desktop);
+}
+
+void EditorUIModule::CameraConfig()
+{
+}
+
+void EditorUIModule::OpenGLConfig()
+{
 }

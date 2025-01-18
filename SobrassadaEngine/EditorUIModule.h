@@ -19,10 +19,16 @@ private:
 
 	void AddFramePlotData(float deltaTime);
 	void Draw();
+
 	void MainMenu();
-	void Console(bool& consoleMenu);
 	void EditorSettings(bool& editorSettingsMenu);
+	
 	void FramePlots();
+	void WindowConfig();
+	void CameraConfig();
+	void OpenGLConfig();
+
+	void Console(bool& consoleMenu);
 
 	bool consoleMenu = false;
 	bool editorSettingsMenu = false;

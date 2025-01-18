@@ -13,8 +13,27 @@ public:
 
 	bool Init() override;
 	bool ShutDown() override;
+	
+	void WindowResized(const unsigned int width, const unsigned int height);
 
-	SDL_Window* window = NULL;
-	SDL_Surface* screen_surface = NULL;
+	int GetWidth() const { return windowWidth; }
+	int GetHeight() const { return windowHeight; }
+	SDL_DisplayMode& GetDesktopDisplayMode() const;
+	float GetBrightness() const;
+
+	void SetBrightness(const float brightness) const;
+	void SetWidth(const unsigned int width);
+	void SetHeight(const unsigned int height);
+	bool SetFullscreen(bool fullscreen) const;
+	void SetResizable(bool resizable) const;
+	void SetBorderless(bool borderless) const;
+	bool SetFullDesktop(bool full_desktop) const;
+
+	SDL_Window* window = nullptr;
+	SDL_Surface* screen_surface = nullptr;
+
+private:
+	int windowWidth = SCREEN_WIDTH;
+	int windowHeight = SCREEN_HEIGHT;
 };
 
