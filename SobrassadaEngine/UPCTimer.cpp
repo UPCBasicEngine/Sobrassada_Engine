@@ -16,5 +16,7 @@ float UPCTimer::Tick()
 	uint32_t deltaTicks = currentTicks - previousTicks;
 	float deltaTime = deltaTicks / 1000.f;
 
+	previousTicks = currentTicks;
+
 	return deltaTime;
 }

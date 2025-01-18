@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 	Logs->clear();
 	delete Logs;
 
-	std::cout << "Hello world \n"; 
+	std::cout << "Hello world \n";
 
-d	return mainReturn;
+	return mainReturn;
 }

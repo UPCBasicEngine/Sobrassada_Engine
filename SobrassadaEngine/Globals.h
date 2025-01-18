@@ -33,7 +33,7 @@ enum update_status
 #define SCREEN_HEIGHT 720
 #define FULLSCREEN false
 #define VSYNC true
-#define TITLE "Super Awesome Engine"
+#define TITLE "Sobrassada Engine"
 #define HFOV 90
 
 #define DEFAULT_GL_CLEAR_COLOR_RED 0.5f

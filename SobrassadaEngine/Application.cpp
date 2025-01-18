@@ -4,6 +4,7 @@
 #include "OpenGLModule.h"
 #include "InputModule.h"
 #include "ShaderModule.h"
+#include "EditorUIModule.h"
 
 Application::Application()
 {
@@ -11,6 +12,7 @@ Application::Application()
 	modules.push_back(openGLModule = new OpenGLModule());
 	modules.push_back(inputModule = new InputModule());
 	modules.push_back(shaderModule = new ShaderModule());
+	modules.push_back(editorUIModule = new EditorUIModule());
 }
 
 Application::~Application()

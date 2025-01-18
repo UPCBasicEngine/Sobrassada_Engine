@@ -5,9 +5,6 @@
     <ClCompile Include="WindowModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="OpenGLModule.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="log.cpp">
       <Filter>Utils</Filter>
@@ -21,6 +18,33 @@
     <ClCompile Include="ShaderModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="EditorUIModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_demo.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_draw.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_impl_opengl3.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_impl_sdl2.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_tables.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_widgets.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -29,15 +53,15 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{2cd12f8e-4d83-4137-a3bb-33b6ec3804a8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ImGui">
+      <UniqueIdentifier>{add34c0e-22b7-4156-b4ab-74923f0775f1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Module.h">
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="WindowModule.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="OpenGLModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Application.h" />
@@ -52,6 +76,39 @@
     </ClInclude>
     <ClInclude Include="ShaderModule.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorUIModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imconfig.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_impl_opengl3.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_impl_opengl3_loader.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_impl_sdl2.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_internal.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imstb_rectpack.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imstb_textedit.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imstb_truetype.h">
+      <Filter>ImGui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
