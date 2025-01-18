@@ -7,7 +7,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
-
+#include "glew.h"
 
 EditorUIModule::EditorUIModule()
 {
@@ -240,4 +240,52 @@ void EditorUIModule::CameraConfig()
 
 void EditorUIModule::OpenGLConfig()
 {
+	OpenGLModule* openGLModule = App->GetOpenGLModule();
+
+	float clearRed = openGLModule->GetClearRed();
+	float clearGreen = openGLModule->GetClearGreen();
+	float clearBlue = openGLModule->GetClearBlue();
+
+	if (ImGui::SliderFloat("Red Clear Color", &clearRed, 0.f, 1.f)) openGLModule->SetClearRed(clearRed);
+	if (ImGui::SliderFloat("Green Clear Color", &clearGreen, 0.f, 1.f)) openGLModule->SetClearGreen(clearGreen);
+	if (ImGui::SliderFloat("Blue Clear Color", &clearBlue, 0.f, 1.f)) openGLModule->SetClearBlue(clearBlue);
+
+	if (ImGui::Button("Reset Colors"))
+	{
+		clearRed = DEFAULT_GL_CLEAR_COLOR_RED;
+		clearGreen = DEFAULT_GL_CLEAR_COLOR_GREEN;
+		clearBlue = DEFAULT_GL_CLEAR_COLOR_BLUE;
+
+		openGLModule->SetClearRed(clearRed);
+		openGLModule->SetClearGreen(clearGreen);
+		openGLModule->SetClearBlue(clearBlue);
+	}
+
+	ImGui::Separator();
+
+	static bool depthTest = true;
+	
+	if (ImGui::Checkbox("Depth test", &depthTest))
+	{
+		openGLModule->SetDepthTest(depthTest);
+	}
+
+	static bool faceCulling = true;
+	if (ImGui::Checkbox("Face cull", &faceCulling))
+	{
+		openGLModule->SetFaceCull(faceCulling);
+	}
+
+	static int frontFaceMode = GL_CCW;
+	bool changed = false;
+	ImGui::Text("Front face mode");
+	if (ImGui::RadioButton("Counter clock-wise", &frontFaceMode, GL_CCW))
+	{
+		openGLModule->SetFrontFaceMode(frontFaceMode);
+	}
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Clock-wise", &frontFaceMode, GL_CW))
+	{
+		openGLModule->SetFrontFaceMode(frontFaceMode);
+	}
 }

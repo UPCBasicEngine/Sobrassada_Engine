@@ -18,6 +18,16 @@ public:
 	void WindowResized(unsigned width, unsigned height);
 
 	void* GetContext() const { return context; }
+	float GetClearRed() const { return clearColorRed; }
+	float GetClearGreen() const { return clearColorGreen; }
+	float GetClearBlue() const { return clearColorBlue; }
+
+	void SetDepthTest(bool enable);
+	void SetFaceCull(bool enable);
+	void SetFrontFaceMode(int mode);
+	void SetClearRed(float newValue);
+	void SetClearGreen(float newValue);
+	void SetClearBlue(float newValue);
 
 private:
 	void* context;

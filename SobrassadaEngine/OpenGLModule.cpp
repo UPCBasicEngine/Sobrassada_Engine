@@ -85,3 +85,35 @@ bool OpenGLModule::ShutDown()
 void OpenGLModule::WindowResized(unsigned width, unsigned height)
 {
 }
+
+void OpenGLModule::SetDepthTest(bool enable)
+{
+	if (enable) glEnable(GL_DEPTH_TEST);
+	else glDisable(GL_DEPTH_TEST);
+}
+
+void OpenGLModule::SetFaceCull(bool enable)
+{
+	if (enable) glEnable(GL_CULL_FACE);
+	else glDisable(GL_CULL_FACE);
+}
+
+void OpenGLModule::SetFrontFaceMode(int mode)
+{
+	glFrontFace(mode);
+}
+
+void OpenGLModule::SetClearRed(float newValue)
+{
+	clearColorRed = newValue;
+}
+
+void OpenGLModule::SetClearGreen(float newValue)
+{
+	clearColorGreen = newValue;
+}
+
+void OpenGLModule::SetClearBlue(float newValue)
+{
+	clearColorBlue = newValue;
+}
