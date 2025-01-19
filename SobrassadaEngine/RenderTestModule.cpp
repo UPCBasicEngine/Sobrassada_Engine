@@ -3,9 +3,11 @@
 #include "Application.h"
 #include "CameraModule.h"
 #include "ShaderModule.h"
+#include "TextureModuleTest.h"
 
 #include "MathGeoLib.h"
 #include "glew.h"
+#include "DirectXTex/DirectXTex.h"
 
 RenderTestModule::RenderTestModule()
 {
@@ -17,12 +19,38 @@ RenderTestModule::~RenderTestModule()
 
 bool RenderTestModule::Init()
 {
-	program = App->GetShaderModule()->GetProgram("./basicVertexShader.vs", "./basicFragmentShader.fs");
+	//program = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
+	program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");
 
-	float vtx_data[] = { 
+	// Triangle without UV's
+	/*float vtx_data[] = { 
 		-1.0f, -1.0f, 0.0f, 
 		1.0f, -1.0f, 0.0f, 
 		0.0f, 1.0f, 0.0f,
+	};*/
+
+	// Texture loading
+	DirectX::TexMetadata textureMetadata;
+	auto baboonPath = L"./Test/baboon.ppm";
+	baboonTexture = App->GetTextureModuleTest()->LoadTexture(baboonPath, textureMetadata);
+	
+	// Quad with UV's
+	float vtx_data[] = {
+		-1.0f, 1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+
+		1.0f, -1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+
+		0.0f, 0.0f,
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f
 	};
 
 	glGenBuffers(1, &vbo);
@@ -55,7 +83,15 @@ update_status RenderTestModule::Render(float deltaTime)
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	// Sending texture coordiantes
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, baboonTexture);
+
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	return UPDATE_CONTINUE;
 }

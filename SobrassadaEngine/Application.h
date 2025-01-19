@@ -15,6 +15,7 @@ class EditorUIModule;
 class CameraModule;
 class DebugDrawModule;
 class RenderTestModule;
+class TextureModuleTest;
 
 class Application
 {
@@ -36,6 +37,7 @@ public:
 	CameraModule* GetCameraModule() { return cameraModule;}
 	DebugDrawModule* GetDebugDreawModule() { return debugDraw; }
 	RenderTestModule* GetRenderTestModule() { return renderTest;}
+	TextureModuleTest* GetTextureModuleTest() { return textureModuleTest;}
 
 private:
 	std::list<Module*> modules;
@@ -50,6 +52,7 @@ private:
 	CameraModule* cameraModule = nullptr;
 	DebugDrawModule* debugDraw = nullptr;
 	RenderTestModule* renderTest = nullptr;
+	TextureModuleTest* textureModuleTest = nullptr;
 
 	uint32_t previousElapsedTime = 0;
 };

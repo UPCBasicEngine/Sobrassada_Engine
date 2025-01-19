@@ -16,5 +16,6 @@ private:
 	
 	int program = -1;
 	unsigned vbo = -1;
+	unsigned int baboonTexture = -1;
 };
 

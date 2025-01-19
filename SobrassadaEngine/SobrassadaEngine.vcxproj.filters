@@ -150,6 +150,9 @@
     <ClCompile Include="RenderTestModule.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
+    <ClCompile Include="TextureModuleTest.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -234,6 +237,9 @@
       <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="RenderTestModule.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureModuleTest.h">
       <Filter>Debug</Filter>
     </ClInclude>
   </ItemGroup>

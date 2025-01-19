@@ -10,6 +10,7 @@
 #include "CameraModule.h"
 #include "DebugDrawModule.h"
 #include "RenderTestModule.h"
+#include "TextureModuleTest.h"
 
 Application::Application()
 {
@@ -19,6 +20,7 @@ Application::Application()
 	modules.push_back(shaderModule = new ShaderModule());
 
 	//TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+	modules.push_back(textureModuleTest = new TextureModuleTest());
 	modules.push_back(cameraModule = new CameraModule());
 	modules.push_back(renderTest = new RenderTestModule());
 	modules.push_back(debugDraw = new DebugDrawModule());
