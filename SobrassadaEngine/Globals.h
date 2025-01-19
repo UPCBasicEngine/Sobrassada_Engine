@@ -44,3 +44,5 @@ enum update_status
 #define DEFAULT_CAMERA_MOVMENT_SPEED 7.5f;
 #define DEFAULT_CAMERA_MOUSE_SENSITIVITY 0.5f;
 #define DEFAUL_CAMERA_ZOOM_SENSITIVITY 5.f;
+
+constexpr float PI = 3.14159265359f;

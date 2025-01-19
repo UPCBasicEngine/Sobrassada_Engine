@@ -133,6 +133,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="CameraModule.cpp" />
+    <ClCompile Include="DebugDrawModule.cpp" />
     <ClCompile Include="EditorUIModule.cpp" />
     <ClCompile Include="InputModule.cpp" />
     <ClCompile Include="Libs\ImGui\imgui.cpp" />
@@ -142,15 +144,52 @@
     <ClCompile Include="Libs\ImGui\imgui_impl_sdl2.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_tables.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Algorithm\Random\LCG.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\AABB.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Capsule.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Circle.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Cone.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Cylinder.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Frustum.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Line.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\LineSegment.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\OBB.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Plane.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Polygon.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Polyhedron.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Ray.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Sphere.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\Triangle.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Geometry\TriangleMesh.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\BitOps.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\float2.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\float3.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\float3x3.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\float3x4.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\float4.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\float4x4.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\MathFunc.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\MathLog.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\MathOps.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\Polynomial.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\Quat.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\SSEMath.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Math\TransformOps.cpp" />
+    <ClCompile Include="Libs\MathGeoLib\include\Time\Clock.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="OpenGLModule.cpp" />
+    <ClCompile Include="RenderTestModule.cpp" />
     <ClCompile Include="ShaderModule.cpp" />
     <ClCompile Include="UPCTimer.cpp" />
     <ClCompile Include="WindowModule.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="CameraModule.h" />
+    <ClInclude Include="debugdraw.h" />
+    <ClInclude Include="DebugDrawModule.h" />
+    <ClInclude Include="debug_draw.hpp" />
     <ClInclude Include="EditorUIModule.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="InputModule.h" />
@@ -165,9 +204,13 @@
     <ClInclude Include="Libs\ImGui\imstb_truetype.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="OpenGLModule.h" />
+    <ClInclude Include="RenderTestModule.h" />
     <ClInclude Include="ShaderModule.h" />
     <ClInclude Include="UPCTimer.h" />
     <ClInclude Include="WindowModule.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

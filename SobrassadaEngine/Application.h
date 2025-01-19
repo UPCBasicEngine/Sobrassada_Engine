@@ -11,6 +11,11 @@ class InputModule;
 class ShaderModule;
 class EditorUIModule;
 
+// TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+class CameraModule;
+class DebugDrawModule;
+class RenderTestModule;
+
 class Application
 {
 public:
@@ -27,6 +32,11 @@ public:
 	ShaderModule* GetShaderModule() { return shaderModule; }
 	EditorUIModule* GetEditorUIModule() { return editorUIModule; };
 
+	// TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+	CameraModule* GetCameraModule() { return cameraModule;}
+	DebugDrawModule* GetDebugDreawModule() { return debugDraw; }
+	RenderTestModule* GetRenderTestModule() { return renderTest;}
+
 private:
 	std::list<Module*> modules;
 	
@@ -35,6 +45,11 @@ private:
 	InputModule* inputModule = nullptr;
 	ShaderModule* shaderModule = nullptr;
 	EditorUIModule* editorUIModule = nullptr;
+
+	// TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+	CameraModule* cameraModule = nullptr;
+	DebugDrawModule* debugDraw = nullptr;
+	RenderTestModule* renderTest = nullptr;
 
 	uint32_t previousElapsedTime = 0;
 };

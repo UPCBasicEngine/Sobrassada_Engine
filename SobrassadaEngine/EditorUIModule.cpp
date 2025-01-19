@@ -44,7 +44,11 @@ update_status EditorUIModule::PreUpdate(float deltaTime)
 update_status EditorUIModule::Update(float deltaTime)
 {
 	AddFramePlotData(deltaTime);
+	return UPDATE_CONTINUE;
+}
 
+update_status EditorUIModule::Render(float deltaTime)
+{
 	Draw();
 
 	ImGui::Render();
@@ -60,6 +64,11 @@ update_status EditorUIModule::Update(float deltaTime)
 		SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
 	}
 
+	return UPDATE_CONTINUE;
+}
+
+update_status EditorUIModule::PostUpdate(float deltaTime)
+{
 	if (closeApplication) return UPDATE_STOP;
 
 	return UPDATE_CONTINUE;

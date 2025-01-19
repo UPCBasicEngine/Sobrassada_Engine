@@ -13,6 +13,8 @@ public:
 	bool Init() override;
 	update_status PreUpdate(float deltaTime) override;
 	update_status Update(float deltaTime) override;
+	update_status Render(float deltaTime) override;
+	update_status PostUpdate(float deltaTime) override;
 	bool ShutDown() override;
 
 private:
