@@ -1,25 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="WindowModule.cpp">
+    <ClCompile Include="Modules\WindowModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="log.cpp">
+    <ClCompile Include="Utils\log.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="UPCTimer.cpp">
+    <ClCompile Include="Utils\UPCTimer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="InputModule.cpp">
+    <ClCompile Include="Modules\InputModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderModule.cpp">
+    <ClCompile Include="Modules\ShaderModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="EditorUIModule.cpp">
+    <ClCompile Include="UI\EditorUIModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="OpenGLModule.cpp">
+    <ClCompile Include="Modules\OpenGLModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui.cpp">
@@ -141,22 +141,22 @@
     </ClCompile>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="DebugDrawModule.cpp">
+    <ClCompile Include="Modules\DebugDrawModule.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="RenderTestModule.cpp">
+    <ClCompile Include="Tests\RenderTestModule.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="TextureModuleTest.cpp">
+    <ClCompile Include="Tests\TextureModuleTest.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="CameraModule.cpp">
+    <ClCompile Include="Tests\CameraModule.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="EngineMesh.cpp">
+    <ClCompile Include="Tests\EngineMesh.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="EngineModel.cpp">
+    <ClCompile Include="Tests\EngineModel.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
   </ItemGroup>
@@ -181,28 +181,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Module.h">
+    <ClInclude Include="Modules\Module.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="WindowModule.h">
+    <ClInclude Include="Modules\WindowModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="Globals.h">
+    <ClInclude Include="Utils\Globals.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="UPCTimer.h">
+    <ClInclude Include="Utils\UPCTimer.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="InputModule.h">
+    <ClInclude Include="Modules\InputModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderModule.h">
+    <ClInclude Include="Modules\ShaderModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="EditorUIModule.h">
+    <ClInclude Include="UI\EditorUIModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="OpenGLModule.h">
+    <ClInclude Include="Modules\OpenGLModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imconfig.h">
@@ -233,28 +233,28 @@
       <Filter>ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="debugdraw.h">
+    <ClInclude Include="DebugDraw\debugdraw.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="debug_draw.hpp">
+    <ClInclude Include="DebugDraw\debug_draw.hpp">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="DebugDrawModule.h">
+    <ClInclude Include="Modules\DebugDrawModule.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="RenderTestModule.h">
+    <ClInclude Include="Tests\RenderTestModule.h">
       <Filter>Tests</Filter>
     </ClInclude>
-    <ClInclude Include="TextureModuleTest.h">
+    <ClInclude Include="Tests\TextureModuleTest.h">
       <Filter>Tests</Filter>
     </ClInclude>
-    <ClInclude Include="CameraModule.h">
+    <ClInclude Include="Tests\CameraModule.h">
       <Filter>Tests</Filter>
     </ClInclude>
-    <ClInclude Include="EngineMesh.h">
+    <ClInclude Include="Tests\EngineMesh.h">
       <Filter>Tests</Filter>
     </ClInclude>
-    <ClInclude Include="EngineModel.h">
+    <ClInclude Include="Tests\EngineModel.h">
       <Filter>Tests</Filter>
     </ClInclude>
   </ItemGroup>
