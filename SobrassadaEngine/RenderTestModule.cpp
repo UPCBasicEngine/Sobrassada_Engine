@@ -8,9 +8,11 @@
 #include "MathGeoLib.h"
 #include "glew.h"
 #include "DirectXTex/DirectXTex.h"
+#include "EngineModel.h"
 
 RenderTestModule::RenderTestModule()
 {
+	currentLoadedModel = new EngineModel();
 }
 
 RenderTestModule::~RenderTestModule()
@@ -19,6 +21,8 @@ RenderTestModule::~RenderTestModule()
 
 bool RenderTestModule::Init()
 {
+	currentLoadedModel->Load("./Test/BakerHouse.gltf");
+
 	//program = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
 	program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");
 
@@ -93,6 +97,8 @@ update_status RenderTestModule::Render(float deltaTime)
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
+	currentLoadedModel->Render(program, proj, view);
+
 	return UPDATE_CONTINUE;
 }
 
@@ -100,5 +106,8 @@ bool RenderTestModule::ShutDown()
 {
 	App->GetShaderModule()->DeleteProgram(program);
 	glDeleteBuffers(1, &vbo);
+	glDeleteTextures(1, &baboonTexture);
+	delete currentLoadedModel;
+
 	return true;
 }

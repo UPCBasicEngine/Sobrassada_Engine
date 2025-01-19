@@ -139,19 +139,25 @@
     <ClCompile Include="Libs\MathGeoLib\include\Geometry\TriangleMesh.cpp">
       <Filter>MathGeoLib</Filter>
     </ClCompile>
-    <ClCompile Include="CameraModule.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="DebugDrawModule.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
     <ClCompile Include="RenderTestModule.cpp">
-      <Filter>Debug</Filter>
+      <Filter>Tests</Filter>
     </ClCompile>
     <ClCompile Include="TextureModuleTest.cpp">
-      <Filter>Debug</Filter>
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraModule.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineMesh.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineModel.cpp">
+      <Filter>Tests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +175,9 @@
     </Filter>
     <Filter Include="Debug">
       <UniqueIdentifier>{b890b5cb-22e9-4094-8b54-814ae6ff1684}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tests">
+      <UniqueIdentifier>{27fbe6cb-da01-4a99-989c-de397f7946c3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -223,9 +232,6 @@
     <ClInclude Include="Libs\ImGui\imstb_truetype.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="CameraModule.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
     <ClInclude Include="Application.h" />
     <ClInclude Include="debugdraw.h">
       <Filter>Debug</Filter>
@@ -237,10 +243,19 @@
       <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="RenderTestModule.h">
-      <Filter>Debug</Filter>
+      <Filter>Tests</Filter>
     </ClInclude>
     <ClInclude Include="TextureModuleTest.h">
-      <Filter>Debug</Filter>
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraModule.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineMesh.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineModel.h">
+      <Filter>Tests</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

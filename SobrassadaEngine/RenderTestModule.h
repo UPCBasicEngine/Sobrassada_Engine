@@ -2,6 +2,8 @@
 
 #include "Module.h"
 
+class EngineModel;
+
 class RenderTestModule : public Module
 {
 public:
@@ -17,5 +19,6 @@ private:
 	int program = -1;
 	unsigned vbo = -1;
 	unsigned int baboonTexture = -1;
+	EngineModel* currentLoadedModel;
 };
 
