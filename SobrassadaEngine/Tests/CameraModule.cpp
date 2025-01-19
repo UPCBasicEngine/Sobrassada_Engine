@@ -2,6 +2,10 @@
 
 #include "Application.h"
 #include "WindowModule.h"
+#include "InputModule.h"
+
+#include "SDL_scancode.h"
+#include <functional>
 
 CameraModule::CameraModule()
 {
@@ -32,6 +36,10 @@ bool CameraModule::Init()
 	viewMatrix = camera.ViewMatrix();
 	projectionMatrix = camera.ProjectionMatrix();
 
+	std::function<void(void)> fPressed = std::bind(&CameraModule::EventTriggered, this);
+
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_F, fPressed);
+
 	return true;
 }
 
@@ -43,4 +51,9 @@ update_status CameraModule::Update(float deltaTime)
 bool CameraModule::ShutDown()
 {
 	return true;
+}
+
+void CameraModule::EventTriggered()
+{
+	GLOG("Event Trigered!!!!")
 }

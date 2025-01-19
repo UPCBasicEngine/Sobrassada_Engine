@@ -4,6 +4,9 @@
  
 #include "SDL_scancode.h"
 #include "Math/float2.h"
+#include <list>
+#include <unordered_map>
+#include <functional>
 
 typedef unsigned __int8 Uint8;
 #define NUM_MOUSE_BUTTONS 5
@@ -27,6 +30,8 @@ public:
 	update_status PreUpdate(float deltaTime) override;
 	bool ShutDown();
 
+	void SubscribeToEvent(int keyEvent, std::function<void(void)>& functionCallback);
+
 	KeyState GetKey(int id) const
 	{
 		return keyboard[id];
@@ -47,5 +52,7 @@ private:
 	float2 mouseMotion;
 	float2 mouse;
 	int mouseWheel = 0;
+
+	std::unordered_map<int, std::list<std::function<void(void)>>> subscribedCallbacks;
 };
 

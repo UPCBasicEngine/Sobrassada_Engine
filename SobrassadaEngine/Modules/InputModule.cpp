@@ -101,13 +101,22 @@ update_status InputModule::PreUpdate(float deltaTime)
 		case SDL_MOUSEWHEEL:
 			mouseWheel = sdlEvent.wheel.y;
 			break;
-		//case SDL_DROPFILE:
-		//	std::string filePath = std::string(sdlEvent.drop.file);
-		//	int fileExtensionPosition = (int)filePath.find_last_of('.');
+			//case SDL_DROPFILE:
+			//	std::string filePath = std::string(sdlEvent.drop.file);
+			//	int fileExtensionPosition = (int)filePath.find_last_of('.');
 
-		//	std::string fileExtension = filePath.substr(fileExtensionPosition, filePath.length());
-		//	if (fileExtension == ".ppm" || fileExtension == ".png" || fileExtension == ".jpg") App->GetModelViewerModule()->LoadTexture(filePath.c_str());
-		//	else if (fileExtension == ".gltf") App->GetModelViewerModule()->LoadModel(filePath.c_str());
+			//	std::string fileExtension = filePath.substr(fileExtensionPosition, filePath.length());
+			//	if (fileExtension == ".ppm" || fileExtension == ".png" || fileExtension == ".jpg") App->GetModelViewerModule()->LoadTexture(filePath.c_str());
+			//	else if (fileExtension == ".gltf") App->GetModelViewerModule()->LoadModel(filePath.c_str());
+		}
+	}
+
+	// TESTING EVENT DISPATCHER
+	if (keyboard[SDL_SCANCODE_F] == KEY_DOWN)
+	{
+		for (const auto it : subscribedCallbacks[SDL_SCANCODE_F])
+		{
+			it();
 		}
 	}
 
@@ -119,4 +128,19 @@ bool InputModule::ShutDown()
 	GLOG("Quitting SDL input event subsystem");
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);
 	return true;
+}
+
+void InputModule::SubscribeToEvent(int keyEvent, std::function<void(void)>& functionCallback)
+{
+	auto eventIterator = subscribedCallbacks.find(keyEvent);
+	if (eventIterator != subscribedCallbacks.end())
+	{
+		eventIterator->second.push_back(functionCallback);
+	}
+	else
+	{
+		auto newList = std::list<std::function<void(void)>>();
+		newList.push_back(functionCallback);
+		subscribedCallbacks.insert({ keyEvent, newList });
+	}
 }
