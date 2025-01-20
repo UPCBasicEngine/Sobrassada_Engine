@@ -23,6 +23,8 @@ public:
 	const float4x4& GetProjectionMatrix() { return projectionMatrix; }
 	const float4x4& GetViewMatrix() { return viewMatrix; }
 
+	void SetAspectRatio(float newAspectRatio);
+
 	void EventTriggered();
 
 private:

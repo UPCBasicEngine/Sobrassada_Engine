@@ -53,6 +53,13 @@ bool CameraModule::ShutDown()
 	return true;
 }
 
+void CameraModule::SetAspectRatio(float newAspectRatio)
+{
+	camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);
+	viewMatrix = camera.ViewMatrix();
+	projectionMatrix = camera.ProjectionMatrix();
+}
+
 void CameraModule::EventTriggered()
 {
 	GLOG("Event Trigered!!!!")

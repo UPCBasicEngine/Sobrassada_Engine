@@ -6,7 +6,6 @@
 #pragma comment( lib, "Libs/SDL/lib/SDL2.lib" )
 #pragma comment( lib, "Libs/SDL/lib/SDL2main.lib" )
 
-#include <iostream>
 #include <memory>
 
 

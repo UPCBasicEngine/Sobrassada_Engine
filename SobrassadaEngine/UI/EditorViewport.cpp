@@ -6,6 +6,9 @@
 
 #include "imgui.h"
 
+// TODO: THIS MODULE WILL BE REMOVED
+#include "CameraModule.h"
+
 EditorViewport::EditorViewport()
 {
 }
@@ -20,7 +23,7 @@ void EditorViewport::Render()
 
 	if (ImGui::Begin("Sence"), &openWindow)
 	{
-		if (ImGui::BeginChild("##SceneChild", ImVec2(0.f, 0.f), ImGuiWindowFlags_NoScrollWithMouse))
+		if (ImGui::BeginChild("##SceneChild", ImVec2(0.f, 0.f), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar))
 		{
 			const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
 
@@ -36,7 +39,12 @@ void EditorViewport::Render()
 			ImGui::EndChild();
 
 			ImVec2 windowSize = ImGui::GetWindowSize();
-			if (framebuffer->GetTextureWidth() != windowSize.x || framebuffer->GetTextureHeight() != windowSize.y) framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
+			if (framebuffer->GetTextureWidth() != windowSize.x || framebuffer->GetTextureHeight() != windowSize.y)
+			{
+				float aspectRatio = windowSize.y / windowSize.x;
+				App->GetCameraModule()->SetAspectRatio(aspectRatio);
+				framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
+			}
 		}
 	}
 	ImGui::End();
