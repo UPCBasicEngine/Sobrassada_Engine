@@ -17,8 +17,6 @@ public:
 	update_status PostUpdate(float deltaTime) override;
 	bool ShutDown() override;
 
-	void WindowResized(unsigned width, unsigned height);
-
 	void* GetContext() const { return context; }
 	float GetClearRed() const { return clearColorRed; }
 	float GetClearGreen() const { return clearColorGreen; }

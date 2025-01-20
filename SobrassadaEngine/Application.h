@@ -11,7 +11,7 @@ class InputModule;
 class ShaderModule;
 class EditorUIModule;
 
-// TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+// TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 class CameraModule;
 class DebugDrawModule;
 class RenderTestModule;
@@ -33,7 +33,7 @@ public:
 	ShaderModule* GetShaderModule() { return shaderModule; }
 	EditorUIModule* GetEditorUIModule() { return editorUIModule; };
 
-	// TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+	// TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 	CameraModule* GetCameraModule() { return cameraModule;}
 	DebugDrawModule* GetDebugDreawModule() { return debugDraw; }
 	RenderTestModule* GetRenderTestModule() { return renderTest;}
@@ -48,7 +48,7 @@ private:
 	ShaderModule* shaderModule = nullptr;
 	EditorUIModule* editorUIModule = nullptr;
 
-	// TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+	// TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 	CameraModule* cameraModule = nullptr;
 	DebugDrawModule* debugDraw = nullptr;
 	RenderTestModule* renderTest = nullptr;

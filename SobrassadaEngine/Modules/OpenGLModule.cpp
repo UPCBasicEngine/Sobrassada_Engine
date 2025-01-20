@@ -89,10 +89,6 @@ bool OpenGLModule::ShutDown()
 	return true;
 }
 
-void OpenGLModule::WindowResized(unsigned width, unsigned height)
-{
-}
-
 void OpenGLModule::SetDepthTest(bool enable)
 {
 	if (enable) glEnable(GL_DEPTH_TEST);

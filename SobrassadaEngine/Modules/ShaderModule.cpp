@@ -110,7 +110,7 @@ unsigned int ShaderModule::CreateProgram(unsigned int vertexShader, unsigned fra
 	return programId;
 }
 
-void ShaderModule::DeleteProgram(unsigned int programId)
+void ShaderModule::DeleteProgram(unsigned int programID)
 {
-	glDeleteProgram(programId);
+	glDeleteProgram(programID);
 }

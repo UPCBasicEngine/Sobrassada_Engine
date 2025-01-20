@@ -47,6 +47,7 @@ public:
 	int GetMouseWheel() const { return mouseWheel; }
 
 private:
+
 	KeyState* keyboard = NULL;
 	KeyState mouseButtons[NUM_MOUSE_BUTTONS];
 	float2 mouseMotion;

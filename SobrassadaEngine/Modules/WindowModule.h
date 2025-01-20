@@ -27,12 +27,15 @@ public:
 	bool SetFullscreen(bool fullscreen) const;
 	void SetResizable(bool resizable) const;
 	void SetBorderless(bool borderless) const;
-	bool SetFullDesktop(bool full_desktop) const;
+	bool SetFullDesktop(bool fullDesktop) const;
+
+public:
 
 	SDL_Window* window = nullptr;
-	SDL_Surface* screen_surface = nullptr;
+	SDL_Surface* screenSurface = nullptr;
 
 private:
+
 	int windowWidth = SCREEN_WIDTH;
 	int windowHeight = SCREEN_HEIGHT;
 };

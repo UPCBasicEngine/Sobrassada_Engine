@@ -3,6 +3,7 @@
 class EditorViewport
 {
 public:
+
 	EditorViewport();
 	~EditorViewport();
 

@@ -19,9 +19,7 @@ EditorViewport::~EditorViewport()
 
 void EditorViewport::Render()
 {
-	static bool openWindow = true;
-
-	if (ImGui::Begin("Sence"), &openWindow)
+	if (ImGui::Begin("Sence"))
 	{
 		if (ImGui::BeginChild("##SceneChild", ImVec2(0.f, 0.f), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar))
 		{

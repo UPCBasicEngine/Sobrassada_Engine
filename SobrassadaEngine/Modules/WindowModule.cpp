@@ -40,7 +40,7 @@ bool WindowModule::Init()
 		else
 		{
 			//Get window surface
-			screen_surface = SDL_GetWindowSurface(window);
+			screenSurface = SDL_GetWindowSurface(window);
 		}
 	}
 
@@ -64,8 +64,6 @@ void WindowModule::WindowResized(const unsigned int width, const unsigned int he
 {
 	windowWidth = width;
 	windowHeight = height;
-
-	// TODO: SEND TO CAMERA TO RECALCULATE ASPECT RATIO FOR FRUSTRUM
 }
 
 SDL_DisplayMode& WindowModule::GetDesktopDisplayMode() const
@@ -113,7 +111,7 @@ void WindowModule::SetBorderless(bool borderless) const
 	SDL_SetWindowBordered(window, borderless ? SDL_FALSE : SDL_TRUE);
 }
 
-bool WindowModule::SetFullDesktop(bool full_desktop) const
+bool WindowModule::SetFullDesktop(bool fullDesktop) const
 {
-	return SDL_SetWindowFullscreen(window, full_desktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+	return SDL_SetWindowFullscreen(window, fullDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 }

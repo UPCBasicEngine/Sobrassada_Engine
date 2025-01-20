@@ -10,7 +10,7 @@ public:
 	~ShaderModule();
 
 	unsigned int GetProgram(const char* vertexPath, const char* fragmentPath);
-	void DeleteProgram(unsigned int programId);
+	void DeleteProgram(unsigned int programID);
 
 private:
 

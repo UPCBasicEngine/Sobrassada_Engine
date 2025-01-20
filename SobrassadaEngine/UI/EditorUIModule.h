@@ -9,6 +9,7 @@ class EditorViewport;
 class EditorUIModule : public Module
 {
 public:
+
 	EditorUIModule();
 	~EditorUIModule();
 
@@ -34,6 +35,8 @@ private:
 
 	void Console(bool& consoleMenu);
 
+private:
+	
 	bool consoleMenu = false;
 	bool editorSettingsMenu = false;
 	bool closeApplication = false;

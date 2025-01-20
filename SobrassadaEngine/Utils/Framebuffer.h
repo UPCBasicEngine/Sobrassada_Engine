@@ -5,6 +5,7 @@
 class Framebuffer
 {
 public:
+
 	Framebuffer(int witdh, int height, bool useRbo);
 	~Framebuffer();
 
@@ -19,8 +20,11 @@ public:
 	const unsigned int GetTextureHeight() { return textureHeight; }
 
 private:
+
 	bool Initialize();
 	void CleanUp();
+
+private:
 
 	unsigned int fbo, rbo;
 	unsigned int framebufferTexture;
