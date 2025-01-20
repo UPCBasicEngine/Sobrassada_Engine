@@ -2,6 +2,8 @@
 
 #include "Module.h"
 
+class Framebuffer;
+
 class OpenGLModule : public Module
 {
 public:
@@ -21,6 +23,7 @@ public:
 	float GetClearRed() const { return clearColorRed; }
 	float GetClearGreen() const { return clearColorGreen; }
 	float GetClearBlue() const { return clearColorBlue; }
+	Framebuffer* GetFramebuffer() const { return framebuffer; }
 
 	void SetDepthTest(bool enable);
 	void SetFaceCull(bool enable);
@@ -31,6 +34,8 @@ public:
 
 private:
 	void* context;
+
+	Framebuffer* framebuffer = nullptr;
 
 	float clearColorRed = DEFAULT_GL_CLEAR_COLOR_RED;
 	float clearColorGreen = DEFAULT_GL_CLEAR_COLOR_GREEN;

@@ -159,6 +159,12 @@
     <ClCompile Include="Tests\EngineModel.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Framebuffer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\EditorViewport.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -178,6 +184,9 @@
     </Filter>
     <Filter Include="Tests">
       <UniqueIdentifier>{27fbe6cb-da01-4a99-989c-de397f7946c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{b3f5d97a-4296-47c2-80a3-75724af69446}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -256,6 +265,12 @@
     </ClInclude>
     <ClInclude Include="Tests\EngineModel.h">
       <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Framebuffer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\EditorViewport.h">
+      <Filter>UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

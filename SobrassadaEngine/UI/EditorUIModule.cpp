@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "WindowModule.h"
 #include "OpenGLModule.h"
+#include "EditorViewport.h"
 
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -24,10 +25,11 @@ bool EditorUIModule::Init()
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 	ImGui_ImplSDL2_InitForOpenGL(App->GetWindowModule()->window, App->GetOpenGLModule()->GetContext());
 	ImGui_ImplOpenGL3_Init("#version 460");
+
+	editorViewport = new EditorViewport();
 
 	return true;
 }
@@ -51,18 +53,10 @@ update_status EditorUIModule::Render(float deltaTime)
 {
 	Draw();
 
+	editorViewport->Render();
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	// Needed for the viewports flag to work
-	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-	{
-		SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
-		SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
-		ImGui::UpdatePlatformWindows();
-		ImGui::RenderPlatformWindowsDefault();
-		SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
-	}
 
 	return UPDATE_CONTINUE;
 }
@@ -110,7 +104,7 @@ void EditorUIModule::AddFramePlotData(float deltaTime)
 
 void EditorUIModule::Draw()
 {
-	
+	ImGui::DockSpaceOverViewport();
 	MainMenu();
 
 	if (consoleMenu) Console(consoleMenu);

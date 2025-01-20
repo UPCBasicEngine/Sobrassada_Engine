@@ -62,6 +62,20 @@ void TextureModuleTest::ConvertMetadata(const DirectX::TexMetadata& metadata, Op
 	}
 }
 
+unsigned int TextureModuleTest::CreateFramebufferTexture(int width, int height)
+{
+	unsigned int textureId = 0;
+
+	glGenTextures(1, &textureId);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	return textureId;
+}
+
 bool TextureModuleTest::LoadTextureFile(const wchar_t* texturePath, DirectX::TexMetadata& outMetadata, DirectX::ScratchImage& outImage)
 {
 	HRESULT hr = LoadFromDDSFile(texturePath, DirectX::DDS_FLAGS_NONE, &outMetadata, outImage);

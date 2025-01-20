@@ -15,15 +15,18 @@
 Application::Application()
 {
 	modules.push_back(windowModule = new WindowModule());
+	
+	//TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+	modules.push_back(textureModuleTest = new TextureModuleTest());
+
 	modules.push_back(openGLModule = new OpenGLModule());
 	modules.push_back(inputModule = new InputModule());
 	modules.push_back(shaderModule = new ShaderModule());
 
 	//TODO: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
-	modules.push_back(textureModuleTest = new TextureModuleTest());
 	modules.push_back(cameraModule = new CameraModule());
-	modules.push_back(renderTest = new RenderTestModule());
 	modules.push_back(debugDraw = new DebugDrawModule());
+	modules.push_back(renderTest = new RenderTestModule());
 
 	modules.push_back(editorUIModule = new EditorUIModule());
 }

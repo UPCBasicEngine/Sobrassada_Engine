@@ -4,11 +4,17 @@
 #include "CameraModule.h"
 #include "ShaderModule.h"
 #include "TextureModuleTest.h"
+#include "WindowModule.h"
+#include "Framebuffer.h"
+#include "OpenGLModule.h"
 
 #include "MathGeoLib.h"
 #include "glew.h"
 #include "DirectXTex/DirectXTex.h"
 #include "EngineModel.h"
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
 
 RenderTestModule::RenderTestModule()
 {
@@ -64,9 +70,13 @@ bool RenderTestModule::Init()
 	return true;
 }
 
+update_status RenderTestModule::PreUpdate(float deltaTime)
+{
+	return UPDATE_CONTINUE;
+}
+
 update_status RenderTestModule::Render(float deltaTime)
 {
-
 	float4x4 model, view, proj;
 
 	proj = App->GetCameraModule()->GetProjectionMatrix();
@@ -99,6 +109,9 @@ update_status RenderTestModule::Render(float deltaTime)
 
 	currentLoadedModel->Render(program, proj, view);
 
+	// Unbinding frame buffer so ui gets rendered
+	App->GetOpenGLModule()->GetFramebuffer()->Unbind();
+
 	return UPDATE_CONTINUE;
 }
 
@@ -110,4 +123,26 @@ bool RenderTestModule::ShutDown()
 	delete currentLoadedModel;
 
 	return true;
+}
+
+void RenderTestModule::RenderEditorViewport()
+{
+	ImGui::SetNextWindowSize(ImVec2(500, 500));
+	ImGui::SetNextWindowPos(ImVec2(0,50));
+	ImGui::Begin("Scene");
+	{
+		ImGui::BeginChild("GameRender");
+
+		float width = ImGui::GetContentRegionAvail().x;
+		float height = ImGui::GetContentRegionAvail().y;
+
+		ImGui::Image(
+			(ImTextureID)0,
+			ImGui::GetContentRegionAvail(),
+			ImVec2(0, 1),
+			ImVec2(1, 0)
+		);
+	}
+	ImGui::EndChild();
+	ImGui::End();
 }

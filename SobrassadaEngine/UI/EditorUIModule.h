@@ -4,6 +4,8 @@
 
 #include<deque>
 
+class EditorViewport;
+
 class EditorUIModule : public Module
 {
 public:
@@ -39,5 +41,7 @@ private:
 	int maximumPlotData = 50;
 	std::deque<float> framerate;
 	std::deque<float> frametime;
+
+	EditorViewport* editorViewport = nullptr;
 };
 

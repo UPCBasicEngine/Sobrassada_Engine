@@ -2,8 +2,9 @@
 
 #include "Application.h"
 #include "WindowModule.h"
-#include "glew.h"
+#include "Framebuffer.h"
 
+#include "glew.h"
 #include "Windows.h"
 
 OpenGLModule::OpenGLModule()
@@ -41,6 +42,8 @@ bool OpenGLModule::Init()
 	glEnable(GL_CULL_FACE); // Enable cull backward faces
 	glFrontFace(GL_CCW);	// Enable conter clock wise backward faces
 
+	framebuffer = new Framebuffer(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight(), true);
+
 	return true;
 }
 
@@ -49,9 +52,11 @@ update_status OpenGLModule::PreUpdate(float deltaTime)
 	int CurrentWidth = 0;
 	int CurrentHeight = 0;
 	SDL_GetWindowSize(App->GetWindowModule()->window, &CurrentWidth, &CurrentHeight);
-
+	
+	framebuffer->Bind();
+	
 	if (CurrentWidth && CurrentHeight) {
-		glViewport(0, 0, CurrentWidth, CurrentHeight);
+		glViewport(0, 0, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight());
 
 		glClearColor(clearColorRed, clearColorGreen, clearColorBlue, 1.0f);
 
@@ -68,6 +73,8 @@ update_status OpenGLModule::Update(float deltaTime)
 
 update_status OpenGLModule::PostUpdate(float deltaTime)
 {
+	framebuffer->CheckResize();
+
 	SDL_GL_SwapWindow(App->GetWindowModule()->window);
 
 	return UPDATE_CONTINUE;
@@ -78,7 +85,7 @@ bool OpenGLModule::ShutDown()
 	GLOG("Destroying renderer");
 
 	SDL_GL_DeleteContext(App->GetWindowModule()->window);
-
+	delete framebuffer;
 	return true;
 }
 
