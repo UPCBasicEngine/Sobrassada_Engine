@@ -6,43 +6,20 @@ class Application;
 
 class Module
 {
-public:
+  public:
+    Module() {}
 
-	Module()
-	{
-	}
+    virtual ~Module() {}
 
-	virtual ~Module()
-	{
-	}
+    virtual bool Init() { return true; }
 
-	virtual bool Init()
-	{
-		return true;
-	}
+    virtual update_status PreUpdate(float deltaTime) { return UPDATE_CONTINUE; }
 
-	virtual update_status PreUpdate(float deltaTime)
-	{
-		return UPDATE_CONTINUE;
-	}
+    virtual update_status Update(float deltaTime) { return UPDATE_CONTINUE; }
 
-	virtual update_status Update(float deltaTime)
-	{
-		return UPDATE_CONTINUE;
-	}
+    virtual update_status Render(float deltaTime) { return UPDATE_CONTINUE; }
 
-	virtual update_status Render(float deltaTime)
-	{
-		return UPDATE_CONTINUE;
-	}
+    virtual update_status PostUpdate(float deltaTime) { return UPDATE_CONTINUE; }
 
-	virtual update_status PostUpdate(float deltaTime)
-	{
-		return UPDATE_CONTINUE;
-	}
-
-	virtual bool ShutDown()
-	{
-		return true;
-	}
-}; 
+    virtual bool ShutDown() { return true; }
+};

@@ -1,26 +1,24 @@
 #include "DebugDrawModule.h"
-#include "Globals.h"
-#include "MathGeoLib.h"
 #include "Application.h"
 #include "CameraModule.h"
-#include "WindowModule.h"
+#include "Globals.h"
+#include "MathGeoLib.h"
 #include "SDL_video.h"
+#include "WindowModule.h"
 
 #define DEBUG_DRAW_IMPLEMENTATION
-#include "DebugDraw.h"     // Debug Draw API. Notice that we need the DEBUG_DRAW_IMPLEMENTATION macro here!
+#include "DebugDraw.h" // Debug Draw API. Notice that we need the DEBUG_DRAW_IMPLEMENTATION macro here!
 
 #include "glew.h"
 
-class DDRenderInterfaceCoreGL final
-    : public dd::RenderInterface
+class DDRenderInterfaceCoreGL final : public dd::RenderInterface
 {
-public:
-
+  public:
     //
     // dd::RenderInterface overrides:
     //
 
-    void drawPointList(const dd::DrawVertex* points, int count, bool depthEnabled) override
+    void drawPointList(const dd::DrawVertex *points, int count, bool depthEnabled) override
     {
         assert(points != nullptr);
         assert(count > 0 && count <= DEBUG_DRAW_VERTEX_BUFFER_SIZE);
@@ -28,8 +26,7 @@ public:
         glBindVertexArray(linePointVAO);
         glUseProgram(linePointProgram);
 
-        glUniformMatrix4fv(linePointProgram_MvpMatrixLocation,
-            1, GL_TRUE, reinterpret_cast<float*>(&mvpMatrix));
+        glUniformMatrix4fv(linePointProgram_MvpMatrixLocation, 1, GL_TRUE, reinterpret_cast<float *>(&mvpMatrix));
 
         bool already = glIsEnabled(GL_DEPTH_TEST);
 
@@ -62,10 +59,9 @@ public:
         {
             glDisable(GL_DEPTH_TEST);
         }
-
     }
 
-    void drawLineList(const dd::DrawVertex* lines, int count, bool depthEnabled) override
+    void drawLineList(const dd::DrawVertex *lines, int count, bool depthEnabled) override
     {
         assert(lines != nullptr);
         assert(count > 0 && count <= DEBUG_DRAW_VERTEX_BUFFER_SIZE);
@@ -73,8 +69,7 @@ public:
         glBindVertexArray(linePointVAO);
         glUseProgram(linePointProgram);
 
-        glUniformMatrix4fv(linePointProgram_MvpMatrixLocation,
-            1, GL_TRUE, reinterpret_cast<const float*>(&mvpMatrix));
+        glUniformMatrix4fv(linePointProgram_MvpMatrixLocation, 1, GL_TRUE, reinterpret_cast<const float *>(&mvpMatrix));
 
         bool already = glIsEnabled(GL_DEPTH_TEST);
 
@@ -107,10 +102,9 @@ public:
         {
             glDisable(GL_DEPTH_TEST);
         }
-
     }
 
-    void drawGlyphList(const dd::DrawVertex* glyphs, int count, dd::GlyphTextureHandle glyphTex) override
+    void drawGlyphList(const dd::DrawVertex *glyphs, int count, dd::GlyphTextureHandle glyphTex) override
     {
         assert(glyphs != nullptr);
         assert(count > 0 && count <= DEBUG_DRAW_VERTEX_BUFFER_SIZE);
@@ -120,9 +114,7 @@ public:
 
         // These doesn't have to be reset every draw call, I'm just being lazy ;)
         glUniform1i(textProgram_GlyphTextureLocation, 0);
-        glUniform2f(textProgram_ScreenDimensions,
-            static_cast<GLfloat>(width),
-            static_cast<GLfloat>(height));
+        glUniform2f(textProgram_ScreenDimensions, static_cast<GLfloat>(width), static_cast<GLfloat>(height));
 
         if (glyphTex != nullptr)
         {
@@ -163,7 +155,7 @@ public:
         }
     }
 
-    dd::GlyphTextureHandle createGlyphTexture(int width, int height, const void* pixels) override
+    dd::GlyphTextureHandle createGlyphTexture(int width, int height, const void *pixels) override
     {
         assert(width > 0 && height > 0);
         assert(pixels != nullptr);
@@ -202,33 +194,24 @@ public:
 
     // These two can also be implemented to perform GL render
     // state setup/cleanup, but we don't use them in this sample.
-    //void beginDraw() override { }
-    //void endDraw()   override { }
+    // void beginDraw() override { }
+    // void endDraw()   override { }
 
     //
     // Local methods:
     //
 
     DDRenderInterfaceCoreGL()
-        : mvpMatrix()
-        , width(0)
-        , height(0)
-        , linePointProgram(0)
-        , linePointProgram_MvpMatrixLocation(-1)
-        , textProgram(0)
-        , textProgram_GlyphTextureLocation(-1)
-        , textProgram_ScreenDimensions(-1)
-        , linePointVAO(0)
-        , linePointVBO(0)
-        , textVAO(0)
-        , textVBO(0)
+        : mvpMatrix(), width(0), height(0), linePointProgram(0), linePointProgram_MvpMatrixLocation(-1), textProgram(0),
+          textProgram_GlyphTextureLocation(-1), textProgram_ScreenDimensions(-1), linePointVAO(0), linePointVBO(0),
+          textVAO(0), textVBO(0)
     {
-        //std::printf("\n");
-        //std::printf("GL_VENDOR    : %s\n",   glGetString(GL_VENDOR));
-        //std::printf("GL_RENDERER  : %s\n",   glGetString(GL_RENDERER));
-        //std::printf("GL_VERSION   : %s\n",   glGetString(GL_VERSION));
-        //std::printf("GLSL_VERSION : %s\n\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-        //std::printf("DDRenderInterfaceCoreGL initializing ...\n");
+        // std::printf("\n");
+        // std::printf("GL_VENDOR    : %s\n",   glGetString(GL_VENDOR));
+        // std::printf("GL_RENDERER  : %s\n",   glGetString(GL_RENDERER));
+        // std::printf("GL_VERSION   : %s\n",   glGetString(GL_VERSION));
+        // std::printf("GLSL_VERSION : %s\n\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+        // std::printf("DDRenderInterfaceCoreGL initializing ...\n");
 
         // Default OpenGL states:
         glEnable(GL_CULL_FACE);
@@ -241,7 +224,7 @@ public:
         setupShaderPrograms();
         setupVertexBuffers();
 
-        //std::printf("DDRenderInterfaceCoreGL ready!\n\n");
+        // std::printf("DDRenderInterfaceCoreGL ready!\n\n");
     }
 
     ~DDRenderInterfaceCoreGL()
@@ -258,7 +241,7 @@ public:
 
     void setupShaderPrograms()
     {
-        //std::printf("> DDRenderInterfaceCoreGL::setupShaderPrograms()\n");
+        // std::printf("> DDRenderInterfaceCoreGL::setupShaderPrograms()\n");
 
         //
         // Line/point drawing shader:
@@ -283,7 +266,7 @@ public:
             linePointProgram_MvpMatrixLocation = glGetUniformLocation(linePointProgram, "u_MvpMatrix");
             if (linePointProgram_MvpMatrixLocation < 0)
             {
-                //errorF("Unable to get u_MvpMatrix uniform location!");
+                // errorF("Unable to get u_MvpMatrix uniform location!");
             }
             checkGLError(__FILE__, __LINE__);
         }
@@ -312,13 +295,13 @@ public:
             textProgram_GlyphTextureLocation = glGetUniformLocation(textProgram, "u_glyphTexture");
             if (textProgram_GlyphTextureLocation < 0)
             {
-                //errorF("Unable to get u_glyphTexture uniform location!");
+                // errorF("Unable to get u_glyphTexture uniform location!");
             }
 
             textProgram_ScreenDimensions = glGetUniformLocation(textProgram, "u_screenDimensions");
             if (textProgram_ScreenDimensions < 0)
             {
-                //errorF("Unable to get u_screenDimensions uniform location!");
+                // errorF("Unable to get u_screenDimensions uniform location!");
             }
 
             checkGLError(__FILE__, __LINE__);
@@ -327,7 +310,7 @@ public:
 
     void setupVertexBuffers()
     {
-        //std::printf("> DDRenderInterfaceCoreGL::setupVertexBuffers()\n");
+        // std::printf("> DDRenderInterfaceCoreGL::setupVertexBuffers()\n");
 
         //
         // Lines/points vertex buffer:
@@ -342,7 +325,9 @@ public:
 
             // RenderInterface will never be called with a batch larger than
             // DEBUG_DRAW_VERTEX_BUFFER_SIZE vertexes, so we can allocate the same amount here.
-            glBufferData(GL_ARRAY_BUFFER, DEBUG_DRAW_VERTEX_BUFFER_SIZE * sizeof(dd::DrawVertex), nullptr, GL_STREAM_DRAW);
+            glBufferData(
+                GL_ARRAY_BUFFER, DEBUG_DRAW_VERTEX_BUFFER_SIZE * sizeof(dd::DrawVertex), nullptr, GL_STREAM_DRAW
+            );
             checkGLError(__FILE__, __LINE__);
 
             // Set the vertex format expected by 3D points and lines:
@@ -355,7 +340,8 @@ public:
                 /* type      = */ GL_FLOAT,
                 /* normalize = */ GL_FALSE,
                 /* stride    = */ sizeof(dd::DrawVertex),
-                /* offset    = */ reinterpret_cast<void*>(offset));
+                /* offset    = */ reinterpret_cast<void *>(offset)
+            );
             offset += sizeof(float) * 3;
 
             glEnableVertexAttribArray(1); // in_ColorPointSize (vec4)
@@ -365,7 +351,8 @@ public:
                 /* type      = */ GL_FLOAT,
                 /* normalize = */ GL_FALSE,
                 /* stride    = */ sizeof(dd::DrawVertex),
-                /* offset    = */ reinterpret_cast<void*>(offset));
+                /* offset    = */ reinterpret_cast<void *>(offset)
+            );
 
             checkGLError(__FILE__, __LINE__);
 
@@ -387,7 +374,9 @@ public:
 
             // NOTE: A more optimized implementation might consider combining
             // both the lines/points and text buffers to save some memory!
-            glBufferData(GL_ARRAY_BUFFER, DEBUG_DRAW_VERTEX_BUFFER_SIZE * sizeof(dd::DrawVertex), nullptr, GL_STREAM_DRAW);
+            glBufferData(
+                GL_ARRAY_BUFFER, DEBUG_DRAW_VERTEX_BUFFER_SIZE * sizeof(dd::DrawVertex), nullptr, GL_STREAM_DRAW
+            );
             checkGLError(__FILE__, __LINE__);
 
             // Set the vertex format expected by the 2D text:
@@ -400,7 +389,8 @@ public:
                 /* type      = */ GL_FLOAT,
                 /* normalize = */ GL_FALSE,
                 /* stride    = */ sizeof(dd::DrawVertex),
-                /* offset    = */ reinterpret_cast<void*>(offset));
+                /* offset    = */ reinterpret_cast<void *>(offset)
+            );
             offset += sizeof(float) * 2;
 
             glEnableVertexAttribArray(1); // in_TexCoords (vec2)
@@ -410,7 +400,8 @@ public:
                 /* type      = */ GL_FLOAT,
                 /* normalize = */ GL_FALSE,
                 /* stride    = */ sizeof(dd::DrawVertex),
-                /* offset    = */ reinterpret_cast<void*>(offset));
+                /* offset    = */ reinterpret_cast<void *>(offset)
+            );
             offset += sizeof(float) * 2;
 
             glEnableVertexAttribArray(2); // in_Color (vec4)
@@ -420,7 +411,8 @@ public:
                 /* type      = */ GL_FLOAT,
                 /* normalize = */ GL_FALSE,
                 /* stride    = */ sizeof(dd::DrawVertex),
-                /* offset    = */ reinterpret_cast<void*>(offset));
+                /* offset    = */ reinterpret_cast<void *>(offset)
+            );
 
             checkGLError(__FILE__, __LINE__);
 
@@ -442,12 +434,12 @@ public:
         return reinterpret_cast<dd::GlyphTextureHandle>(temp);
     }
 
-    static void checkGLError(const char* file, const int line)
+    static void checkGLError(const char *file, const int line)
     {
         GLenum err;
         while ((err = glGetError()) != GL_NO_ERROR)
         {
-            //errorF("%s(%d) : GL_CORE_ERROR=0x%X - %s", file, line, err, errorToString(err));
+            // errorF("%s(%d) : GL_CORE_ERROR=0x%X - %s", file, line, err, errorToString(err));
         }
     }
 
@@ -462,9 +454,9 @@ public:
 
         if (status == GL_FALSE)
         {
-            GLchar strInfoLog[1024] = { 0 };
+            GLchar strInfoLog[1024] = {0};
             glGetShaderInfoLog(shader, sizeof(strInfoLog) - 1, nullptr, strInfoLog);
-            //errorF("\n>>> Shader compiler errors:\n%s", strInfoLog);
+            // errorF("\n>>> Shader compiler errors:\n%s", strInfoLog);
         }
     }
 
@@ -479,9 +471,9 @@ public:
 
         if (status == GL_FALSE)
         {
-            GLchar strInfoLog[1024] = { 0 };
+            GLchar strInfoLog[1024] = {0};
             glGetProgramInfoLog(program, sizeof(strInfoLog) - 1, nullptr, strInfoLog);
-            //errorF("\n>>> Program linker errors:\n%s", strInfoLog);
+            // errorF("\n>>> Program linker errors:\n%s", strInfoLog);
         }
     }
 
@@ -490,14 +482,13 @@ public:
     math::float4x4 mvpMatrix;
     unsigned width, height;
 
-private:
-
+  private:
     GLuint linePointProgram;
-    GLint  linePointProgram_MvpMatrixLocation;
+    GLint linePointProgram_MvpMatrixLocation;
 
     GLuint textProgram;
-    GLint  textProgram_GlyphTextureLocation;
-    GLint  textProgram_ScreenDimensions;
+    GLint textProgram_GlyphTextureLocation;
+    GLint textProgram_ScreenDimensions;
 
     GLuint linePointVAO;
     GLuint linePointVBO;
@@ -505,12 +496,11 @@ private:
     GLuint textVAO;
     GLuint textVBO;
 
-    static const char* linePointVertShaderSrc;
-    static const char* linePointFragShaderSrc;
+    static const char *linePointVertShaderSrc;
+    static const char *linePointFragShaderSrc;
 
-    static const char* textVertShaderSrc;
-    static const char* textFragShaderSrc;
-
+    static const char *textVertShaderSrc;
+    static const char *textFragShaderSrc;
 
 }; // class DDRenderInterfaceCoreGL
 
@@ -518,80 +508,79 @@ private:
 // Minimal shaders we need for the debug primitives:
 // ========================================================
 
-const char* DDRenderInterfaceCoreGL::linePointVertShaderSrc = "\n"
-"#version 150\n"
-"\n"
-"in vec3 in_Position;\n"
-"in vec4 in_ColorPointSize;\n"
-"\n"
-"out vec4 v_Color;\n"
-"uniform mat4 u_MvpMatrix;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    gl_Position  = u_MvpMatrix * vec4(in_Position, 1.0);\n"
-"    gl_PointSize = in_ColorPointSize.w;\n"
-"    v_Color      = vec4(in_ColorPointSize.xyz, 1.0);\n"
-"}\n";
+const char *DDRenderInterfaceCoreGL::linePointVertShaderSrc =
+    "\n"
+    "#version 150\n"
+    "\n"
+    "in vec3 in_Position;\n"
+    "in vec4 in_ColorPointSize;\n"
+    "\n"
+    "out vec4 v_Color;\n"
+    "uniform mat4 u_MvpMatrix;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    gl_Position  = u_MvpMatrix * vec4(in_Position, 1.0);\n"
+    "    gl_PointSize = in_ColorPointSize.w;\n"
+    "    v_Color      = vec4(in_ColorPointSize.xyz, 1.0);\n"
+    "}\n";
 
-const char* DDRenderInterfaceCoreGL::linePointFragShaderSrc = "\n"
-"#version 150\n"
-"\n"
-"in  vec4 v_Color;\n"
-"out vec4 out_FragColor;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    out_FragColor = v_Color;\n"
-"}\n";
+const char *DDRenderInterfaceCoreGL::linePointFragShaderSrc = "\n"
+                                                              "#version 150\n"
+                                                              "\n"
+                                                              "in  vec4 v_Color;\n"
+                                                              "out vec4 out_FragColor;\n"
+                                                              "\n"
+                                                              "void main()\n"
+                                                              "{\n"
+                                                              "    out_FragColor = v_Color;\n"
+                                                              "}\n";
 
-const char* DDRenderInterfaceCoreGL::textVertShaderSrc = "\n"
-"#version 150\n"
-"\n"
-"in vec2 in_Position;\n"
-"in vec2 in_TexCoords;\n"
-"in vec3 in_Color;\n"
-"\n"
-"uniform vec2 u_screenDimensions;\n"
-"\n"
-"out vec2 v_TexCoords;\n"
-"out vec4 v_Color;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    // Map to normalized clip coordinates:\n"
-"    float x = ((2.0 * (in_Position.x - 0.5)) / u_screenDimensions.x) - 1.0;\n"
-"    float y = 1.0 - ((2.0 * (in_Position.y - 0.5)) / u_screenDimensions.y);\n"
-"\n"
-"    gl_Position = vec4(x, y, 0.0, 1.0);\n"
-"    v_TexCoords = in_TexCoords;\n"
-"    v_Color     = vec4(in_Color, 1.0);\n"
-"}\n";
+const char *DDRenderInterfaceCoreGL::textVertShaderSrc =
+    "\n"
+    "#version 150\n"
+    "\n"
+    "in vec2 in_Position;\n"
+    "in vec2 in_TexCoords;\n"
+    "in vec3 in_Color;\n"
+    "\n"
+    "uniform vec2 u_screenDimensions;\n"
+    "\n"
+    "out vec2 v_TexCoords;\n"
+    "out vec4 v_Color;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    // Map to normalized clip coordinates:\n"
+    "    float x = ((2.0 * (in_Position.x - 0.5)) / u_screenDimensions.x) - 1.0;\n"
+    "    float y = 1.0 - ((2.0 * (in_Position.y - 0.5)) / u_screenDimensions.y);\n"
+    "\n"
+    "    gl_Position = vec4(x, y, 0.0, 1.0);\n"
+    "    v_TexCoords = in_TexCoords;\n"
+    "    v_Color     = vec4(in_Color, 1.0);\n"
+    "}\n";
 
-const char* DDRenderInterfaceCoreGL::textFragShaderSrc = "\n"
-"#version 150\n"
-"\n"
-"in vec2 v_TexCoords;\n"
-"in vec4 v_Color;\n"
-"\n"
-"uniform sampler2D u_glyphTexture;\n"
-"out vec4 out_FragColor;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    out_FragColor = v_Color;\n"
-"    out_FragColor.a = texture(u_glyphTexture, v_TexCoords).r;\n"
-"}\n";
+const char *DDRenderInterfaceCoreGL::textFragShaderSrc =
+    "\n"
+    "#version 150\n"
+    "\n"
+    "in vec2 v_TexCoords;\n"
+    "in vec4 v_Color;\n"
+    "\n"
+    "uniform sampler2D u_glyphTexture;\n"
+    "out vec4 out_FragColor;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    out_FragColor = v_Color;\n"
+    "    out_FragColor.a = texture(u_glyphTexture, v_TexCoords).r;\n"
+    "}\n";
 
-DDRenderInterfaceCoreGL* DebugDrawModule::implementation = 0;
+DDRenderInterfaceCoreGL *DebugDrawModule::implementation = 0;
 
-DebugDrawModule::DebugDrawModule()
-{
-}
+DebugDrawModule::DebugDrawModule() {}
 
-DebugDrawModule::~DebugDrawModule()
-{
-}
+DebugDrawModule::~DebugDrawModule() {}
 
 bool DebugDrawModule::Init()
 {
@@ -599,7 +588,6 @@ bool DebugDrawModule::Init()
     dd::initialize(implementation);
     return true;
 }
-
 
 bool DebugDrawModule::ShutDown()
 {
@@ -619,7 +607,7 @@ update_status DebugDrawModule::Render(float deltaTime)
     dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
     dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
 
-    int width = 0;
+    int width  = 0;
     int height = 0;
 
     SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
@@ -629,13 +617,11 @@ update_status DebugDrawModule::Render(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
-void DebugDrawModule::Draw(const float4x4& view, const float4x4& proj, unsigned width, unsigned height)
+void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height)
 {
-    implementation->width = width;
-    implementation->height = height;
+    implementation->width     = width;
+    implementation->height    = height;
     implementation->mvpMatrix = proj * view;
 
     dd::flush();
 }
-
-

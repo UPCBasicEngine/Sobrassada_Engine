@@ -9,17 +9,16 @@ class Camera;
 
 class DebugDrawModule : public Module
 {
-public:
-	DebugDrawModule();
-	~DebugDrawModule();
+  public:
+    DebugDrawModule();
+    ~DebugDrawModule();
 
-	bool			Init() override;
-	update_status	Render(float deltaTime) override;
-	bool            ShutDown() override;
+    bool Init() override;
+    update_status Render(float deltaTime) override;
+    bool ShutDown() override;
 
-	void            Draw(const float4x4& view, const float4x4& proj, unsigned width, unsigned height);
-private:
+    void Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height);
 
-	static DDRenderInterfaceCoreGL* implementation;
+  private:
+    static DDRenderInterfaceCoreGL *implementation;
 };
-

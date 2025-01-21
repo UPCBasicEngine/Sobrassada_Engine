@@ -1,0 +1,30 @@
+---
+AlignAfterOpenBracket: BlockIndent
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCompound: true
+  PadOperators: true
+AlignConsecutiveDeclarations:
+  Enabled: false
+  AcrossEmptyLines: false
+AlignConsecutiveMacros:
+  Enabled: true
+AlignOperands: AlignAfterOperator
+AllowAllArgumentsOnNextLine: true
+SpaceAfterCStyleCast: false
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: false
+ColumnLimit: 120
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeInheritanceColon: true
+AllowShortEnumsOnASingleLine: false
+SortIncludes: CaseSensitive
+CompactNamespaces: false
+NamespaceIndentation: Inner
+IndentWidth: 4
+Language: Cpp
+BreakBeforeBraces: Allman
+SpaceBeforeCtorInitializerColon: true

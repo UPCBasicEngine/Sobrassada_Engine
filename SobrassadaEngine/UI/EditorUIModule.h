@@ -2,49 +2,45 @@
 
 #include "Module.h"
 
-#include<deque>
+#include <deque>
 
 class EditorViewport;
 
 class EditorUIModule : public Module
 {
-public:
+  public:
+    EditorUIModule();
+    ~EditorUIModule();
 
-	EditorUIModule();
-	~EditorUIModule();
+    bool Init() override;
+    update_status PreUpdate(float deltaTime) override;
+    update_status Update(float deltaTime) override;
+    update_status Render(float deltaTime) override;
+    update_status PostUpdate(float deltaTime) override;
+    bool ShutDown() override;
 
-	bool Init() override;
-	update_status PreUpdate(float deltaTime) override;
-	update_status Update(float deltaTime) override;
-	update_status Render(float deltaTime) override;
-	update_status PostUpdate(float deltaTime) override;
-	bool ShutDown() override;
+  private:
+    void AddFramePlotData(float deltaTime);
+    void Draw();
 
-private:
+    void MainMenu();
+    void EditorSettings(bool &editorSettingsMenu);
 
-	void AddFramePlotData(float deltaTime);
-	void Draw();
+    void FramePlots();
+    void WindowConfig();
+    void CameraConfig();
+    void OpenGLConfig();
 
-	void MainMenu();
-	void EditorSettings(bool& editorSettingsMenu);
-	
-	void FramePlots();
-	void WindowConfig();
-	void CameraConfig();
-	void OpenGLConfig();
+    void Console(bool &consoleMenu);
 
-	void Console(bool& consoleMenu);
+  private:
+    bool consoleMenu        = false;
+    bool editorSettingsMenu = false;
+    bool closeApplication   = false;
 
-private:
-	
-	bool consoleMenu = false;
-	bool editorSettingsMenu = false;
-	bool closeApplication = false;
+    int maximumPlotData     = 50;
+    std::deque<float> framerate;
+    std::deque<float> frametime;
 
-	int maximumPlotData = 50;
-	std::deque<float> framerate;
-	std::deque<float> frametime;
-
-	EditorViewport* editorViewport = nullptr;
+    EditorViewport *editorViewport = nullptr;
 };
-

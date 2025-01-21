@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Module.h"
 #include "Globals.h"
+#include "Module.h"
 
-#include<list>
+#include <list>
 
 class WindowModule;
 class OpenGLModule;
@@ -19,42 +19,42 @@ class TextureModuleTest;
 
 class Application
 {
-public:
-	Application();
-	~Application();
+  public:
+    Application();
+    ~Application();
 
-	bool Init();
-	update_status Update(float deltaTime);
-	bool ShutDown();
+    bool Init();
+    update_status Update(float deltaTime);
+    bool ShutDown();
 
-	WindowModule* GetWindowModule() { return windowModule; }
-	OpenGLModule* GetOpenGLModule() { return openGLModule; }
-	InputModule* GetInputModule() { return inputModule; }
-	ShaderModule* GetShaderModule() { return shaderModule; }
-	EditorUIModule* GetEditorUIModule() { return editorUIModule; };
+    WindowModule *GetWindowModule() { return windowModule; }
+    OpenGLModule *GetOpenGLModule() { return openGLModule; }
+    InputModule *GetInputModule() { return inputModule; }
+    ShaderModule *GetShaderModule() { return shaderModule; }
+    EditorUIModule *GetEditorUIModule() { return editorUIModule; };
 
-	// TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
-	CameraModule* GetCameraModule() { return cameraModule;}
-	DebugDrawModule* GetDebugDreawModule() { return debugDraw; }
-	RenderTestModule* GetRenderTestModule() { return renderTest;}
-	TextureModuleTest* GetTextureModuleTest() { return textureModuleTest;}
+    // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+    CameraModule *GetCameraModule() { return cameraModule; }
+    DebugDrawModule *GetDebugDreawModule() { return debugDraw; }
+    RenderTestModule *GetRenderTestModule() { return renderTest; }
+    TextureModuleTest *GetTextureModuleTest() { return textureModuleTest; }
 
-private:
-	std::list<Module*> modules;
-	
-	WindowModule* windowModule = nullptr;
-	OpenGLModule* openGLModule = nullptr;
-	InputModule* inputModule = nullptr;
-	ShaderModule* shaderModule = nullptr;
-	EditorUIModule* editorUIModule = nullptr;
+  private:
+    std::list<Module *> modules;
 
-	// TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
-	CameraModule* cameraModule = nullptr;
-	DebugDrawModule* debugDraw = nullptr;
-	RenderTestModule* renderTest = nullptr;
-	TextureModuleTest* textureModuleTest = nullptr;
+    WindowModule *windowModule           = nullptr;
+    OpenGLModule *openGLModule           = nullptr;
+    InputModule *inputModule             = nullptr;
+    ShaderModule *shaderModule           = nullptr;
+    EditorUIModule *editorUIModule       = nullptr;
 
-	uint32_t previousElapsedTime = 0;
+    // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
+    CameraModule *cameraModule           = nullptr;
+    DebugDrawModule *debugDraw           = nullptr;
+    RenderTestModule *renderTest         = nullptr;
+    TextureModuleTest *textureModuleTest = nullptr;
+
+    uint32_t previousElapsedTime         = 0;
 };
 
-extern Application* App;
+extern Application *App;
