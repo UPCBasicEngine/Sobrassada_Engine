@@ -15,7 +15,7 @@ class EditorUIModule : public Module
     bool Init() override;
     update_status PreUpdate(float deltaTime) override;
     update_status Update(float deltaTime) override;
-    update_status Render(float deltaTime) override;
+    update_status RenderEditor(float deltaTime) override;
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
@@ -32,8 +32,8 @@ class EditorUIModule : public Module
     void OpenGLConfig();
 
     void Console(bool &consoleMenu);
-
-  private:
+    
+private:
     bool consoleMenu        = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
@@ -43,4 +43,9 @@ class EditorUIModule : public Module
     std::deque<float> frametime;
 
     EditorViewport *editorViewport = nullptr;
+
 };
+
+
+
+
