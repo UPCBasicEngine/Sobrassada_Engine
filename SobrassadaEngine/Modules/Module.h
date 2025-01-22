@@ -18,6 +18,8 @@ class Module
     virtual update_status Update(float deltaTime) { return UPDATE_CONTINUE; }
 
     virtual update_status Render(float deltaTime) { return UPDATE_CONTINUE; }
+    
+    virtual update_status RenderEditor(float deltaTime) { return UPDATE_CONTINUE; }
 
     virtual update_status PostUpdate(float deltaTime) { return UPDATE_CONTINUE; }
 

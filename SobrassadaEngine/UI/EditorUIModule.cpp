@@ -45,7 +45,7 @@ update_status EditorUIModule::Update(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
-update_status EditorUIModule::Render(float deltaTime)
+update_status EditorUIModule::RenderEditor(float deltaTime)
 {
     Draw();
 
@@ -72,6 +72,8 @@ bool EditorUIModule::ShutDown()
 
     framerate.clear();
     frametime.clear();
+
+    delete editorViewport;
 
     return true;
 }
