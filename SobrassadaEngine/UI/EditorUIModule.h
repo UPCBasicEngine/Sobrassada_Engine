@@ -32,8 +32,8 @@ class EditorUIModule : public Module
     void OpenGLConfig();
 
     void Console(bool &consoleMenu);
-    
-private:
+
+  private:
     bool consoleMenu        = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
@@ -43,9 +43,4 @@ private:
     std::deque<float> frametime;
 
     EditorViewport *editorViewport = nullptr;
-
 };
-
-
-
-
