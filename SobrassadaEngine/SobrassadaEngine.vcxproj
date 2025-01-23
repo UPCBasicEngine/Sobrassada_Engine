@@ -218,6 +218,7 @@
     <ClInclude Include="Tests\RenderTestModule.h" />
     <ClInclude Include="Modules\ShaderModule.h" />
     <ClInclude Include="Tests\TextureModuleTest.h" />
+    <ClInclude Include="Utils\Transform.h" />
     <ClInclude Include="Utils\UPCTimer.h" />
     <ClInclude Include="Modules\WindowModule.h" />
   </ItemGroup>
