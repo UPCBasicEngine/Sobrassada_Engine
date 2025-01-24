@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
+    <ClCompile Include="Scene\GameObjects\GameObject.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
     <ClCompile Include="UI\EditorViewport.cpp" />
     <ClCompile Include="Tests\CameraModule.cpp" />
@@ -193,6 +194,8 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Scene\Components\Component.h" />
+    <ClInclude Include="Scene\GameObjects\GameObject.h" />
+    <ClInclude Include="Utils\BoundingBox.h" />
     <ClInclude Include="Utils\Framebuffer.h" />
     <ClInclude Include="UI\EditorViewport.h" />
     <ClInclude Include="Tests\CameraModule.h" />
