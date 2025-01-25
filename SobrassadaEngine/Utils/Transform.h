@@ -3,7 +3,7 @@
 
 struct Transform
 {
-    Transform(): position(0, 0, 0), rotation(0, 0, 0), scale(1, 1, 1)
+    Transform(): position(0, 0, 0), rotation(0, 0, 0), scale(1, 1, 1) {}
     
     float3 position;
     float3 rotation;

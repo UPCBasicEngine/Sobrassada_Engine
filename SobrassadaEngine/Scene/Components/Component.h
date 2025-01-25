@@ -1,5 +1,7 @@
 ﻿#pragma once
+
 #include "Transform.h"
+#include "ComponentUtils.h"
 
 #include <vector>
 
@@ -7,25 +9,30 @@ class Component
 {
 public:
 
-    Component(char* ownerUUID, char* name);
+    Component(const uint32_t uuid, const uint32_t ownerUUID, const char* name);
 
     virtual ~Component() = default;
     
     virtual void Enable();
-    virtual void Update();
+    virtual void Update() = 0;
     virtual void Disable();
 
-    bool AddComponent(const char* componentUUID);
-    bool RemoveComponent(const char* componentUUID);
+    virtual bool CreateComponent(const ComponentType componentType);
+    virtual bool AddComponent(const uint32_t componentUUID);
+    virtual bool RemoveComponent(const uint32_t componentUUID);
+    
+    virtual void RenderEditorInspector();
+    virtual void RenderEditorComponentTree();
 
-    virtual void RenderEditor();
+    uint32_t GetUUID() const;
     
 private:
 
-    char* ownerUUID;
-    std::vector<const char*> children;
+    const uint32_t uuid;
+    const uint32_t ownerUUID;
+    std::vector<uint32_t> children;
 
-    char* name;
+    const char* name;
     bool enabled;
     
     Transform localTransform;

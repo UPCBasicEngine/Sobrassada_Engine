@@ -1,0 +1,18 @@
+﻿#include "MeshComponent.h"
+
+MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t ownerUUID, const char* name)
+        : Component(uuid, ownerUUID, name)
+{
+}
+
+void MeshComponent::RenderEditorInspector()
+{
+}
+
+void MeshComponent::RenderEditorComponentTree()
+{
+}
+
+void MeshComponent::Update()
+{
+}
