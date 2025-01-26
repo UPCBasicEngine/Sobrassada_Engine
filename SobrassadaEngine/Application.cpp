@@ -12,6 +12,8 @@
 #include "RenderTestModule.h"
 #include "TextureModuleTest.h"
 
+#include <Algorithm/Random/LCG.h>
+
 Application::Application()
 {
     modules.push_back(windowModule = new WindowModule());
@@ -29,6 +31,8 @@ Application::Application()
     modules.push_back(renderTest = new RenderTestModule());
 
     modules.push_back(editorUIModule = new EditorUIModule());
+
+    testComponent = ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), 0);
 }
 
 Application::~Application()
@@ -68,10 +72,13 @@ update_status Application::Update(float deltaTime)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->RenderEditor(deltaTime);
+    
+    testComponent->RenderEditorInspector();
 
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->PostUpdate(deltaTime);
+
 
     return returnStatus;
 }

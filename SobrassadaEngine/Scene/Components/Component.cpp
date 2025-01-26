@@ -48,7 +48,7 @@ void Component::RenderEditorInspector()
 {
 }
 
-void Component::RenderEditorComponentTree()
+void Component::RenderEditorComponentTree(const uint8_t layer)
 {
 }
 

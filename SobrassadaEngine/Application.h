@@ -2,6 +2,7 @@
 
 #include "Globals.h"
 #include "Module.h"
+#include "Scene/Components/Component.h"
 
 #include <list>
 
@@ -55,6 +56,8 @@ class Application
     TextureModuleTest *textureModuleTest = nullptr;
 
     uint32_t previousElapsedTime         = 0;
+
+    Component* testComponent = nullptr;
 };
 
 extern Application *App;

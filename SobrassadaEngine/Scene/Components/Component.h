@@ -22,12 +22,12 @@ public:
     virtual bool RemoveComponent(const uint32_t componentUUID);
     
     virtual void RenderEditorInspector();
-    virtual void RenderEditorComponentTree();
+    virtual void RenderEditorComponentTree(uint8_t layer);
 
     uint32_t GetUUID() const;
-    
-private:
 
+protected:
+    
     const uint32_t uuid;
     const uint32_t ownerUUID;
     std::vector<uint32_t> children;
