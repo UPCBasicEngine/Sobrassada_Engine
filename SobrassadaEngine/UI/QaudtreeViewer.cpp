@@ -21,7 +21,7 @@ QaudtreeViewer::QaudtreeViewer()
     };*/
 
     // Lines
-    float vtx_data[] = {-1.0f, -1.0f, 1.0f, -1.0f};
+    float vtx_data[] = {-1.0f, -1.0f, 0.f, 1.0f, -1.0f, 0.f};
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -69,12 +69,7 @@ void QaudtreeViewer::Render(bool &renderBoolean)
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glEnableVertexAttribArray(0);
-
-    // Triangle
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    // Lines
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
     // Triangle
     // glDrawArrays(GL_TRIANGLES, 0, 3);
