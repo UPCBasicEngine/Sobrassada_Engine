@@ -193,4 +193,6 @@ void EngineMesh::Render(int program, int texturePosition, float4x4& projectionMa
 
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
+
+	glBindVertexArray(0);
 }

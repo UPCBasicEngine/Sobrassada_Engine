@@ -4,6 +4,7 @@
 #include "EditorViewport.h"
 #include "OpenGLModule.h"
 #include "WindowModule.h"
+#include "QaudtreeViewer.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -26,6 +27,7 @@ bool EditorUIModule::Init()
     ImGui_ImplOpenGL3_Init("#version 460");
 
     editorViewport = new EditorViewport();
+    quadtreeViewer = new QaudtreeViewer();
 
     return true;
 }
@@ -51,6 +53,8 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 
     editorViewport->Render();
 
+    if (quadtreeViewerViewport) quadtreeViewer->Render(quadtreeViewerViewport);
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -74,6 +78,7 @@ bool EditorUIModule::ShutDown()
     frametime.clear();
 
     delete editorViewport;
+    delete quadtreeViewer;
 
     return true;
 }
@@ -118,6 +123,8 @@ void EditorUIModule::MainMenu()
     if (ImGui::BeginMenu("General"))
     {
         if (ImGui::MenuItem("Console")) consoleMenu = !consoleMenu;
+        
+        if (ImGui::MenuItem("Quadtree")) quadtreeViewerViewport = !quadtreeViewerViewport;
 
         if (ImGui::MenuItem("Quit")) closeApplication = true;
 

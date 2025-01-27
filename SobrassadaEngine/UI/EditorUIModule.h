@@ -5,6 +5,7 @@
 #include <deque>
 
 class EditorViewport;
+class QaudtreeViewer;
 
 class EditorUIModule : public Module
 {
@@ -34,13 +35,15 @@ class EditorUIModule : public Module
     void Console(bool &consoleMenu);
 
   private:
-    bool consoleMenu        = false;
-    bool editorSettingsMenu = false;
-    bool closeApplication   = false;
+    bool consoleMenu            = false;
+    bool editorSettingsMenu     = false;
+    bool quadtreeViewerViewport = false;
+    bool closeApplication       = false;
 
-    int maximumPlotData     = 50;
+    int maximumPlotData         = 50;
     std::deque<float> framerate;
     std::deque<float> frametime;
 
     EditorViewport *editorViewport = nullptr;
+    QaudtreeViewer *quadtreeViewer = nullptr;
 };
