@@ -18,8 +18,6 @@ class QaudtreeViewer
 
   private:
     Framebuffer *framebuffer;
-    unsigned int vbo            = 0;
-    unsigned int program        = 0;
     float cameraSizeScaleFactor = 10.f;
 
     Frustum camera;

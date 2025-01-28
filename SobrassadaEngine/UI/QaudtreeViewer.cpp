@@ -1,11 +1,8 @@
 #include "QaudtreeViewer.h"
 
 #include "Application.h"
-#include "CameraModule.h"
 #include "Framebuffer.h"
 #include "Globals.h"
-#include "ShaderModule.h"
-#include "WindowModule.h"
 #include "DebugDrawModule.h"
 
 #include "SDL.h"
@@ -14,20 +11,7 @@
 
 QaudtreeViewer::QaudtreeViewer()
 {
-    program     = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
     framebuffer = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
-    // Triangle
-    /*float vtx_data[] = {
-        -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    };*/
-
-    // Lines
-    float vtx_data[] = {-1.0f, -1.0f, 0.f, 1.0f, -1.0f, 0.f};
-
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_data), vtx_data, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
     camera.type               = FrustumType::OrthographicFrustum;
@@ -47,7 +31,6 @@ QaudtreeViewer::QaudtreeViewer()
 QaudtreeViewer::~QaudtreeViewer()
 {
     delete framebuffer;
-    glDeleteBuffers(1, &vbo);
 }
 
 void QaudtreeViewer::Render(bool &renderBoolean)
@@ -59,27 +42,6 @@ void QaudtreeViewer::Render(bool &renderBoolean)
     glViewport(0, 0, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //float4x4 model;
-    //model = float4x4::identity;
-
-    //glUseProgram(program);
-    //glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
-    //glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
-    //glUniformMatrix4fv(2, 1, GL_TRUE, &model[0][0]);
-
-    //glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    //// Triangle
-    //// glDrawArrays(GL_TRIANGLES, 0, 3);
-    //glDrawArrays(GL_LINES, 0, 2);
-
-    //// Unbind everything to not mess with other renders
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //glBindTexture(GL_TEXTURE_2D, 0);
-    //glActiveTexture(0);
 
     App->GetDebugDreawModule()->RenderLines(viewMatrix, projectionMatrix, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight());
 
