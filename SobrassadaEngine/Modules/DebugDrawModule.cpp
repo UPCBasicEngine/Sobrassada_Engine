@@ -5,6 +5,7 @@
 #include "MathGeoLib.h"
 #include "SDL_video.h"
 #include "WindowModule.h"
+#include "QaudtreeViewer.h"
 
 #define DEBUG_DRAW_IMPLEMENTATION
 #include "DebugDraw.h" // Debug Draw API. Notice that we need the DEBUG_DRAW_IMPLEMENTATION macro here!
@@ -624,4 +625,14 @@ void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned 
     implementation->mvpMatrix = proj * view;
 
     dd::flush();
+}
+
+void DebugDrawModule::RenderLines(float4x4& viewMatrix, float4x4& projectionMatrix, int width, int height)
+{
+    for (int i = 0; i < 10; ++i)
+    {
+        dd::line(ddVec3(0.f, 0.f, 0.f), ddVec3(10, 10 - i, 0.f), ddVec3(1.f, 0.f, 0.f));
+    }
+
+    Draw(viewMatrix, projectionMatrix, width, height);
 }

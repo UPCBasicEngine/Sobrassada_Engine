@@ -6,6 +6,7 @@
 #include "Globals.h"
 #include "ShaderModule.h"
 #include "WindowModule.h"
+#include "DebugDrawModule.h"
 
 #include "SDL.h"
 #include "glew.h"
@@ -59,26 +60,28 @@ void QaudtreeViewer::Render(bool &renderBoolean)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    float4x4 model;
-    model = float4x4::identity;
+    //float4x4 model;
+    //model = float4x4::identity;
 
-    glUseProgram(program);
-    glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
-    glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
-    glUniformMatrix4fv(2, 1, GL_TRUE, &model[0][0]);
+    //glUseProgram(program);
+    //glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
+    //glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
+    //glUniformMatrix4fv(2, 1, GL_TRUE, &model[0][0]);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    //glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
-    // Triangle
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawArrays(GL_LINES, 0, 2);
+    //// Triangle
+    //// glDrawArrays(GL_TRIANGLES, 0, 3);
+    //glDrawArrays(GL_LINES, 0, 2);
 
-    // Unbind everything to not mess with other renders
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(0);
+    //// Unbind everything to not mess with other renders
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    //glActiveTexture(0);
+
+    App->GetDebugDreawModule()->RenderLines(viewMatrix, projectionMatrix, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight());
 
     framebuffer->Unbind();
 
