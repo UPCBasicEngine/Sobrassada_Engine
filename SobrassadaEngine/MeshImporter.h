@@ -19,6 +19,7 @@ namespace MeshImporter {
     // Function to import a mesh from a GLTF model
     bool ImportMesh(const tinygltf::Model& model,
         const tinygltf::Mesh& mesh,
-        const tinygltf::Primitive& primitive);
+        const tinygltf::Primitive& primitive,
+        const std::string& filePath);
 
 }

@@ -6,11 +6,12 @@
 
 namespace MeshImporter {
 
-    bool ImportMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh, const tinygltf::Primitive& primitive) {
+    bool ImportMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh, const tinygltf::Primitive& primitive, const std::string& filepath) {
 
         std::vector<Vertex> vertexBuffer;
         std::vector<unsigned int> indexBuffer;
 
+        //assumes there's always position,normal and texcoord0 !
         const auto& itPos = primitive.attributes.find("POSITION"); //holds iterator position pointing for the POSITION key
         if (itPos != primitive.attributes.end())
         {
@@ -95,15 +96,20 @@ namespace MeshImporter {
         }
 
         // Extract material
-        int materialIndex = primitive.material;
-
         // Extract mode (0:points  1:lines  2:line loop  3:line strip  4:triangles)
-        int mode = primitive.mode;
-
+        //check for no mateiral and default to triangle mode
+        int materialIndex = (primitive.material != -1) ? primitive.material : 0;
+        int mode = (primitive.mode != -1) ? primitive.mode : 4; 
 
         // save to binary file.
         // 1 - NUMBER OF INDICES,  2 - NUMBER OF VERTICES  3 - MATERIAL  4 - DRAWING MODE
-        unsigned int header[4] = { indexBuffer.size(), vertexBuffer.size(), materialIndex, mode };
+        unsigned int header[4] = {
+          static_cast<unsigned int>(indexBuffer.size()),
+          static_cast<unsigned int>(vertexBuffer.size()),
+          static_cast<unsigned int>(materialIndex),
+          static_cast<unsigned int>(mode)
+        };
+
         unsigned int size = sizeof(header) + sizeof(Vertex) * vertexBuffer.size() + sizeof(unsigned int) * indexBuffer.size();
 
         char* fileBuffer = new char[size];
@@ -122,7 +128,9 @@ namespace MeshImporter {
         cursor += sizeof(unsigned int) * indexBuffer.size();
 
         //false = append
-        FileSystem::Save("output_mesh.sobrassada", fileBuffer, size, false);
+        std::string fullPath = filepath + ".sobrassada";
+        const char* cFullPath = fullPath.c_str();
+        FileSystem::Save(cFullPath, fileBuffer, size, false);
 
         delete[] fileBuffer;
 

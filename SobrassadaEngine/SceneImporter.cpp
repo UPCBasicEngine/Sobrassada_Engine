@@ -12,7 +12,8 @@ namespace SceneImporter {
 
 		tinygltf::TinyGLTF gltfContext;
 		tinygltf::Model model;
-		std::string err, warn;
+		std::string err, warn, name;
+		int n = 0;
 
 		bool ret = gltfContext.LoadASCIIFromFile(&model, &err, &warn, filepath);
 		if (!ret)
@@ -37,9 +38,13 @@ namespace SceneImporter {
 		*/
 		for (const auto& srcMesh : model.meshes)
 		{
+			name = srcMesh.name;
+			n = 0;
 			for (const auto& primitive : srcMesh.primitives)
 			{
-				MeshImporter::ImportMesh(model, srcMesh, primitive);
+				name += std::to_string(n);
+				MeshImporter::ImportMesh(model, srcMesh, primitive, name);
+				n++;
 			}
 		}
 
