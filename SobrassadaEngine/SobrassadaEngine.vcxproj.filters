@@ -165,6 +165,14 @@
     <ClCompile Include="UI\EditorViewport.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Component.cpp" />
+    <ClCompile Include="SceneImporter.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshImporter.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -271,6 +279,14 @@
     </ClInclude>
     <ClInclude Include="UI\EditorViewport.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h" />
+    <ClInclude Include="MeshImporter.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="SceneImporter.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
