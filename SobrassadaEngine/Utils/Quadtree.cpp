@@ -37,39 +37,51 @@ bool Quadtree::InsertElement(float4 &newElement)
     bool inserted = false;
 
     if (topLeft->InsertElement(newElement)) inserted = true;
-    else if (topRight->InsertElement(newElement)) inserted = true;
-    else if (bottomLeft->InsertElement(newElement)) inserted = true;
-    else if (bottomRight->InsertElement(newElement)) inserted = true;
+    if (topRight->InsertElement(newElement)) inserted = true;
+    if (bottomLeft->InsertElement(newElement)) inserted = true;
+    if (bottomRight->InsertElement(newElement)) inserted = true;
 
     return inserted = true;
 }
 
-void Quadtree::QueryElements(float4 &area, std::unordered_set<float4> &foundElements)
+void Quadtree::QueryElements(float4 &area, std::unordered_set<float4> &foundElements) const
 {
 }
 
-void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &elementLines)
+void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &elementLines) const
 {
     if (elements.size() > 0)
     {
         for (auto &element : elements)
         {
-            float sizeX = element.z;
-            float sizeY = element.w;
+            float halfSizeX    = element.z / 2.f;
+            float halfSizeY    = element.w / 2.f;
 
-            elementLines.push_back(float4(element.x, element.y, element.x + sizeX, element.y));
-            elementLines.push_back(float4(element.x + sizeX, element.y, element.x + sizeX, element.y - sizeY));
-            elementLines.push_back(float4(element.x, element.y - sizeY, element.x + sizeX, element.y - sizeY));
-            elementLines.push_back(float4(element.x, element.y, element.x, element.y - sizeY));
+            float2 topLeft     = float2(element.x - halfSizeX, element.y + halfSizeY);
+            float2 topRight    = float2(element.x + halfSizeX, element.y + halfSizeY);
+            float2 bottomLeft  = float2(element.x - halfSizeX, element.y - halfSizeY);
+            float2 bottomRight = float2(element.x + halfSizeX, element.y - halfSizeY);
+
+            elementLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
+            elementLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
+            elementLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
+            elementLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
         }
     }
 
     if (IsLeaf())
     {
-        drawLines.push_back(float4(position.x, position.y, position.x + size, position.y));
-        drawLines.push_back(float4(position.x + size, position.y, position.x + size, position.y - size));
-        drawLines.push_back(float4(position.x, position.y - size, position.x + size, position.y - size));
-        drawLines.push_back(float4(position.x, position.y, position.x, position.y - size));
+        float halfSize     = size / 2.f;
+
+        float2 topLeft     = float2(position.x - halfSize, position.y + halfSize);
+        float2 topRight    = float2(position.x + halfSize, position.y + halfSize);
+        float2 bottomLeft  = float2(position.x - halfSize, position.y - halfSize);
+        float2 bottomRight = float2(position.x + halfSize, position.y - halfSize);
+
+        drawLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
+        drawLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
+        drawLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
+        drawLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
     }
     else
     {
@@ -82,12 +94,16 @@ void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &ele
 
 void Quadtree::Subdivide()
 {
-    float childSize = size / 2.f;
+    float childSize     = size / 2.f;
+    float halfChildSize = size / 4.f;
 
-    topLeft         = new Quadtree(float2(position.x, position.y), childSize, elementsCapacity);
-    topRight        = new Quadtree(float2(position.x + childSize, position.y), childSize, elementsCapacity);
-    bottomLeft      = new Quadtree(float2(position.x, position.y - childSize), childSize, elementsCapacity);
-    bottomRight     = new Quadtree(float2(position.x + childSize, position.y - childSize), childSize, elementsCapacity);
+    topLeft = new Quadtree(float2(position.x - halfChildSize, position.y + halfChildSize), childSize, elementsCapacity);
+    topRight =
+        new Quadtree(float2(position.x + halfChildSize, position.y + halfChildSize), childSize, elementsCapacity);
+    bottomLeft =
+        new Quadtree(float2(position.x - halfChildSize, position.y - halfChildSize), childSize, elementsCapacity);
+    bottomRight =
+        new Quadtree(float2(position.x + halfChildSize, position.y - halfChildSize), childSize, elementsCapacity);
 
     for (auto &element : elements)
     {
@@ -100,17 +116,23 @@ void Quadtree::Subdivide()
     elements.clear();
 }
 
-bool Quadtree::Intersects(float4 &element)
+bool Quadtree::Intersects(float4 &element) const
 {
-    float2 l1 = position;
-    float2 r1 = float2(position.x + size, position.y - size);
+    float halftSizeX          = size / 2.f;
+    float halftSizeY          = size / 2.f;
 
-    float2 l2 = float2(element.x, element.y);
-    float2 r2 = float2(element.x + element.z, element.y - element.w);
+    float2 selfTopLeft        = float2(position.x - halftSizeX, position.y + halftSizeY);
+    float2 selfBottomRight    = float2(position.x + halftSizeX, position.y - halftSizeY);
 
-    if (l1.x > r2.x || l2.x > r1.x) return false;
+    halftSizeX                = element.z / 2.f;
+    halftSizeY                = element.w / 2.f;
 
-    if (r1.y > l2.y || r2.y > l1.y) return false;
+    float2 elementTopLeft     = float2(element.x - halftSizeX, element.y + halftSizeY);
+    float2 elementBottomRight = float2(element.x + halftSizeX, element.y - halftSizeY);
+
+    if (selfTopLeft.x > elementBottomRight.x || elementTopLeft.x > selfBottomRight.x) return false;
+
+    if (selfBottomRight.y > elementTopLeft.y || elementBottomRight.y > selfTopLeft.y) return false;
 
     return true;
 }

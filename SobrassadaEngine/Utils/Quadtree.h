@@ -19,13 +19,13 @@ class Quadtree
     ~Quadtree();
 
     bool InsertElement(float4 &newElement);
-    void QueryElements(float4 &area, std::unordered_set<float4> &foundElements);
-    void GetDrawLines(std::list<float4> &drawLines, std::list<float4> &elementLines);
+    void QueryElements(float4 &area, std::unordered_set<float4> &foundElements) const;
+    void GetDrawLines(std::list<float4> &drawLines, std::list<float4> &elementLines) const;
 
   private:
     void Subdivide();
-    bool Intersects(float4 &element);
-    bool IsLeaf() { return topLeft == nullptr; };
+    bool Intersects(float4 &element) const;
+    bool IsLeaf() const { return topLeft == nullptr; };
 
   private:
     float2 position;

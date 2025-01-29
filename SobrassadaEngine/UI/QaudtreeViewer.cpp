@@ -14,7 +14,7 @@
 QaudtreeViewer::QaudtreeViewer()
 {
     framebuffer               = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
-    quadtree                  = new Quadtree(float2(-10, 10), 20, 2);
+    quadtree                  = new Quadtree(float2(0, 0), 20, 2);
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
     camera.type               = FrustumType::OrthographicFrustum;
@@ -32,13 +32,13 @@ QaudtreeViewer::QaudtreeViewer()
 
     // TODO: REMOVE, JUST FOR TESTING QUADTREE GENERATION
     math::LCG randomGenerator;
-    int samplePoints = 10;
+    int samplePoints = 3;
 
     for (int i = 0; i < samplePoints; ++i)
     {
-        int xCoord      = randomGenerator.Int(-10, 10);
-        int yCoord      = randomGenerator.Int(-10, 10);
-        float4 newPoint = float4((float)xCoord, (float)yCoord, 2.f, 2.f);
+        float xCoord    = randomGenerator.Float(-10, 10);
+        float yCoord    = randomGenerator.Float(-10, 10);
+        float4 newPoint = float4(xCoord, yCoord, 1.f, 1.f);
 
         quadtree->InsertElement(newPoint);
     }
