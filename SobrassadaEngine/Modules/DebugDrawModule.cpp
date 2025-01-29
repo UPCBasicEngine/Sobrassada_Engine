@@ -631,9 +631,9 @@ void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned 
     dd::flush();
 }
 
-void DebugDrawModule::RenderLines(
-    float4x4 &viewMatrix, float4x4 &projectionMatrix, int width, int height, std::list<float4> &lines,
-    std::list<float4> &elementLines
+void DebugDrawModule::RenderQuadtreeViewportLines(
+    const float4x4 &viewMatrix, const float4x4 &projectionMatrix, int width, int height, const std::list<float4> &lines,
+    const std::list<float4> &elementLines, const std::list<float4> &queryArea
 )
 {
 
@@ -645,6 +645,11 @@ void DebugDrawModule::RenderLines(
     for (auto &line : elementLines)
     {
         dd::line(ddVec3(line.x, line.y, 1.f), ddVec3(line.z, line.w, 1.f), ddVec3(0.f, 0.f, 1.f));
+    }
+
+    for (auto &line : queryArea)
+    {
+        dd::line(ddVec3(line.x, line.y, 1.f), ddVec3(line.z, line.w, 1.f), ddVec3(0.f, 1.f, 0.f));
     }
 
     Draw(viewMatrix, projectionMatrix, width, height);

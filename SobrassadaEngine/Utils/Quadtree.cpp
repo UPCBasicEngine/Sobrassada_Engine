@@ -13,7 +13,7 @@ Quadtree::~Quadtree()
     delete bottomRight;
 }
 
-bool Quadtree::InsertElement(float4 &newElement)
+bool Quadtree::InsertElement(const Box &newElement)
 {
     if (!Intersects(newElement)) return false;
 
@@ -44,8 +44,21 @@ bool Quadtree::InsertElement(float4 &newElement)
     return inserted = true;
 }
 
-void Quadtree::QueryElements(float4 &area, std::unordered_set<float4> &foundElements) const
+void Quadtree::QueryElements(const Box &area, std::unordered_set<Box, BoxHash> &foundElements) const
 {
+    if (!Intersects(area)) return;
+
+    for (auto &element : elements)
+    {
+        foundElements.insert(element);
+    }
+
+    if (IsLeaf()) return;
+
+    topLeft->QueryElements(area, foundElements);
+    topRight->QueryElements(area, foundElements);
+    bottomLeft->QueryElements(area, foundElements);
+    bottomRight->QueryElements(area, foundElements);
 }
 
 void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &elementLines) const
@@ -54,8 +67,8 @@ void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &ele
     {
         for (auto &element : elements)
         {
-            float halfSizeX    = element.z / 2.f;
-            float halfSizeY    = element.w / 2.f;
+            float halfSizeX    = element.sizeX / 2.f;
+            float halfSizeY    = element.sizeY / 2.f;
 
             float2 topLeft     = float2(element.x - halfSizeX, element.y + halfSizeY);
             float2 topRight    = float2(element.x + halfSizeX, element.y + halfSizeY);
@@ -116,7 +129,7 @@ void Quadtree::Subdivide()
     elements.clear();
 }
 
-bool Quadtree::Intersects(float4 &element) const
+bool Quadtree::Intersects(const Box &element) const
 {
     float halftSizeX          = size / 2.f;
     float halftSizeY          = size / 2.f;
@@ -124,8 +137,8 @@ bool Quadtree::Intersects(float4 &element) const
     float2 selfTopLeft        = float2(position.x - halftSizeX, position.y + halftSizeY);
     float2 selfBottomRight    = float2(position.x + halftSizeX, position.y - halftSizeY);
 
-    halftSizeX                = element.z / 2.f;
-    halftSizeY                = element.w / 2.f;
+    halftSizeX                = element.sizeX / 2.f;
+    halftSizeY                = element.sizeY / 2.f;
 
     float2 elementTopLeft     = float2(element.x - halftSizeX, element.y + halftSizeY);
     float2 elementBottomRight = float2(element.x + halftSizeX, element.y - halftSizeY);

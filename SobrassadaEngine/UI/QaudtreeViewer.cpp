@@ -32,13 +32,13 @@ QaudtreeViewer::QaudtreeViewer()
 
     // TODO: REMOVE, JUST FOR TESTING QUADTREE GENERATION
     math::LCG randomGenerator;
-    int samplePoints = 3;
+    int samplePoints = 10;
 
     for (int i = 0; i < samplePoints; ++i)
     {
         float xCoord    = randomGenerator.Float(-10, 10);
         float yCoord    = randomGenerator.Float(-10, 10);
-        float4 newPoint = float4(xCoord, yCoord, 1.f, 1.f);
+        Box newPoint    = Box(xCoord, yCoord, 1.f, 1.f);
 
         quadtree->InsertElement(newPoint);
     }
@@ -61,11 +61,18 @@ void QaudtreeViewer::Render(bool &renderBoolean)
 
     std::list<float4> drawLines;
     std::list<float4> elementLines;
+    std::list<float4> queryAreaLines;
     quadtree->GetDrawLines(drawLines, elementLines);
 
-    App->GetDebugDreawModule()->RenderLines(
+    Box queryArea = Box(5, 5, 5, 5);
+    std::unordered_set<Box, BoxHash> rettrievedElements;
+    quadtree->QueryElements(queryArea, rettrievedElements);
+
+    CreateQueryAreaLines(queryArea, queryAreaLines);
+
+    App->GetDebugDreawModule()->RenderQuadtreeViewportLines(
         viewMatrix, projectionMatrix, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight(), drawLines,
-        elementLines
+        elementLines, queryAreaLines
     );
 
     framebuffer->Unbind();
@@ -105,4 +112,20 @@ void QaudtreeViewer::ChangeCameraSize(float width, float height)
 
     viewMatrix                = camera.ViewMatrix();
     projectionMatrix          = camera.ProjectionMatrix();
+}
+
+void QaudtreeViewer::CreateQueryAreaLines(const Box &queryArea, std::list<float4> &queryAreaLines) const
+{
+    float halfSizeX    = queryArea.sizeX / 2.f;
+    float halfSizeY    = queryArea.sizeY / 2.f;
+
+    float2 topLeft     = float2(queryArea.x - halfSizeX, queryArea.y + halfSizeY);
+    float2 topRight    = float2(queryArea.x + halfSizeX, queryArea.y + halfSizeY);
+    float2 bottomLeft  = float2(queryArea.x - halfSizeX, queryArea.y - halfSizeY);
+    float2 bottomRight = float2(queryArea.x + halfSizeX, queryArea.y - halfSizeY);
+
+    queryAreaLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
+    queryAreaLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
+    queryAreaLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
+    queryAreaLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
 }
