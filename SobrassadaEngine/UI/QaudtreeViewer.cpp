@@ -1,17 +1,20 @@
 #include "QaudtreeViewer.h"
 
 #include "Application.h"
+#include "DebugDrawModule.h"
 #include "Framebuffer.h"
 #include "Globals.h"
-#include "DebugDrawModule.h"
+#include "Quadtree.h"
 
+#include "Algorithm/Random/LCG.h"
 #include "SDL.h"
 #include "glew.h"
 #include "imgui.h"
 
 QaudtreeViewer::QaudtreeViewer()
 {
-    framebuffer = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
+    framebuffer               = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
+    quadtree                  = new Quadtree(float2(-10, 10), 20, 2);
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
     camera.type               = FrustumType::OrthographicFrustum;
@@ -26,6 +29,19 @@ QaudtreeViewer::QaudtreeViewer()
 
     viewMatrix                = camera.ViewMatrix();
     projectionMatrix          = camera.ProjectionMatrix();
+
+    // TODO: REMOVE, JUST FOR TESTING QUADTREE GENERATION
+    math::LCG randomGenerator;
+    int samplePoints = 10;
+
+    for (int i = 0; i < samplePoints; ++i)
+    {
+        int xCoord      = randomGenerator.Int(-10, 10);
+        int yCoord      = randomGenerator.Int(-10, 10);
+        float4 newPoint = float4((float)xCoord, (float)yCoord, 2.f, 2.f);
+
+        quadtree->InsertElement(newPoint);
+    }
 }
 
 QaudtreeViewer::~QaudtreeViewer()
@@ -43,7 +59,14 @@ void QaudtreeViewer::Render(bool &renderBoolean)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    App->GetDebugDreawModule()->RenderLines(viewMatrix, projectionMatrix, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight());
+    std::list<float4> drawLines;
+    std::list<float4> elementLines;
+    quadtree->GetDrawLines(drawLines, elementLines);
+
+    App->GetDebugDreawModule()->RenderLines(
+        viewMatrix, projectionMatrix, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight(), drawLines,
+        elementLines
+    );
 
     framebuffer->Unbind();
 
@@ -75,7 +98,7 @@ void QaudtreeViewer::Render(bool &renderBoolean)
     ImGui::End();
 }
 
-void QaudtreeViewer::ChangeCameraSize(float width, float height) 
+void QaudtreeViewer::ChangeCameraSize(float width, float height)
 {
     camera.orthographicHeight = width / cameraSizeScaleFactor;
     camera.orthographicWidth  = height / cameraSizeScaleFactor;

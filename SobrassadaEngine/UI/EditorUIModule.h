@@ -37,7 +37,7 @@ class EditorUIModule : public Module
   private:
     bool consoleMenu            = false;
     bool editorSettingsMenu     = false;
-    bool quadtreeViewerViewport = false;
+    bool quadtreeViewerViewport = true;
     bool closeApplication       = false;
 
     int maximumPlotData         = 50;

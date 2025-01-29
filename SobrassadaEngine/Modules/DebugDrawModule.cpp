@@ -3,9 +3,9 @@
 #include "CameraModule.h"
 #include "Globals.h"
 #include "MathGeoLib.h"
+#include "QaudtreeViewer.h"
 #include "SDL_video.h"
 #include "WindowModule.h"
-#include "QaudtreeViewer.h"
 
 #define DEBUG_DRAW_IMPLEMENTATION
 #include "DebugDraw.h" // Debug Draw API. Notice that we need the DEBUG_DRAW_IMPLEMENTATION macro here!
@@ -579,9 +579,13 @@ const char *DDRenderInterfaceCoreGL::textFragShaderSrc =
 
 DDRenderInterfaceCoreGL *DebugDrawModule::implementation = 0;
 
-DebugDrawModule::DebugDrawModule() {}
+DebugDrawModule::DebugDrawModule()
+{
+}
 
-DebugDrawModule::~DebugDrawModule() {}
+DebugDrawModule::~DebugDrawModule()
+{
+}
 
 bool DebugDrawModule::Init()
 {
@@ -627,11 +631,20 @@ void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned 
     dd::flush();
 }
 
-void DebugDrawModule::RenderLines(float4x4& viewMatrix, float4x4& projectionMatrix, int width, int height)
+void DebugDrawModule::RenderLines(
+    float4x4 &viewMatrix, float4x4 &projectionMatrix, int width, int height, std::list<float4> &lines,
+    std::list<float4> &elementLines
+)
 {
-    for (int i = 0; i < 10; ++i)
+
+    for (auto &line : lines)
     {
-        dd::line(ddVec3(0.f, 0.f, 0.f), ddVec3(10, 10 - i, 0.f), ddVec3(1.f, 0.f, 0.f));
+        dd::line(ddVec3(line.x, line.y, 0.f), ddVec3(line.z, line.w, 0.f), ddVec3(1.f, 0.f, 0.f));
+    }
+
+    for (auto &line : elementLines)
+    {
+        dd::line(ddVec3(line.x, line.y, 1.f), ddVec3(line.z, line.w, 1.f), ddVec3(0.f, 0.f, 1.f));
     }
 
     Draw(viewMatrix, projectionMatrix, width, height);

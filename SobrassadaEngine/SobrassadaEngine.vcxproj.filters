@@ -169,6 +169,9 @@
     <ClCompile Include="UI\QaudtreeViewer.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Quadtree.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -279,6 +282,9 @@
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="UI\QaudtreeViewer.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Quadtree.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

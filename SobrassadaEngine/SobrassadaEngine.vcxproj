@@ -133,6 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Utils\Quadtree.cpp" />
     <ClCompile Include="UI\QaudtreeViewer.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
@@ -193,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Utils\Quadtree.h" />
     <ClInclude Include="UI\QaudtreeViewer.h" />
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="Utils\Framebuffer.h" />

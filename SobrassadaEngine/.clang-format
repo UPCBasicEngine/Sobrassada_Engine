@@ -28,3 +28,4 @@ IndentWidth: 4
 Language: Cpp
 BreakBeforeBraces: Allman
 SpaceBeforeCtorInitializerColon: true
+AllowShortFunctionsOnASingleLine: InlineOnly

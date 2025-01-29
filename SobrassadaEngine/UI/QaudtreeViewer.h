@@ -4,6 +4,7 @@
 #include "Math/float4x4.h"
 
 class Framebuffer;
+class Quadtree;
 
 class QaudtreeViewer
 {
@@ -18,6 +19,7 @@ class QaudtreeViewer
 
   private:
     Framebuffer *framebuffer;
+    Quadtree *quadtree;
     float cameraSizeScaleFactor = 10.f;
 
     Frustum camera;
