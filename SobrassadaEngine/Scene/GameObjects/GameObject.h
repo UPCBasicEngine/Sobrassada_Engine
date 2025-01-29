@@ -2,15 +2,17 @@
 #include "BoundingBox.h"
 
 #include <vector>
+#include <string>
 
 class GameObject
 {
 public:
 
-	GameObject(char* parentUUID, char* name);
+	GameObject(std::string name);
+	GameObject(uint32_t parentUUID, std::string name);
 
-	bool AddGameObject(const char* gameObjectUUID);
-	bool RemoveGameObject(const char *gameObjectUUID);
+	bool AddGameObject(uint32_t gameObjectUUID);
+    bool RemoveGameObject(uint32_t gameObjectUUID);
 
 	void OnEditor();
 
@@ -18,12 +20,12 @@ public:
 
 private:
 
-	char* parentUUID;
-	std::vector<const char *> children;
+	uint32_t parentUUID;
+	std::vector<uint32_t> children;
 
-	char* name;
+	std::string name;
 
-	char* rootComponentUUID;
+	uint32_t rootComponentUUID;
 
 	BoundingBox boundingBox;
 };

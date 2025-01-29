@@ -37,6 +37,7 @@ class EditorUIModule : public Module
     bool consoleMenu        = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
+    bool hierarchyMenu      = false;
 
     int maximumPlotData     = 50;
     std::deque<float> framerate;

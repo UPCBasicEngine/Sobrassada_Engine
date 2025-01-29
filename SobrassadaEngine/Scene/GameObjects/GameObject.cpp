@@ -1,14 +1,16 @@
 #include "GameObject.h"
 
-GameObject::GameObject(char *parentUUID, char *name) : parentUUID(parentUUID), name(name) {}
+GameObject::GameObject(std::string name) : name(name) {}
 
-bool GameObject::AddGameObject(const char* gameObjectUUID)
+GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(parentUUID), name(name) {}
+
+bool GameObject::AddGameObject(uint32_t gameObjectUUID)
 {
     children.push_back(gameObjectUUID);
 	return true; 
 }
 
-bool GameObject::RemoveGameObject(const char* gameObjectUUID)
+bool GameObject::RemoveGameObject(uint32_t gameObjectUUID)
 {
     if (const auto it = std::find(children.begin(), children.end(), gameObjectUUID); it != children.end())
     {

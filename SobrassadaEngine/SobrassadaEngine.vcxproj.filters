@@ -171,6 +171,9 @@
     <ClCompile Include="Scene\GameObjects\GameObject.cpp">
       <Filter>Scene\GameObjects</Filter>
     </ClCompile>
+    <ClCompile Include="Modules\SceneModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -298,6 +301,9 @@
     </ClInclude>
     <ClInclude Include="Utils\BoundingBox.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\SceneModule.h">
+      <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
