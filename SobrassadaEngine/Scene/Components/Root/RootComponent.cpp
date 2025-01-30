@@ -1,5 +1,7 @@
 ﻿#include "RootComponent.h"
 
+#include "Application.h"
+#include "EditorUIModule.h"
 #include "imgui.h"
 #include "Scene/Components/Standalone/ModelComponent.h"
 
@@ -38,15 +40,16 @@ void RootComponent::RenderEditorInspector()
     
     ImGui::SeparatorText("Component hierarchy");
 
-    ImGui::Text(name);
-    
-    for (uint32_t child : children)
+    const bool isExpanded = ImGui::TreeNodeExV((void*) nullptr, ImGuiTreeNodeFlags_Framed, name, nullptr);
+    ImGui::SameLine();
+    ImGui::Selectable(": Root", false); 
+    if (isExpanded) 
     {
-        // TODO Get Component from library by UUID
-        Component* childComponent = ComponentUtils::CreateEmptyComponent(COMPONENT_MODEL, LCG().IntFast(), uuid);
-
-        if (ImGui::CollapsingHeader("ComponentName"))   // TODO Add name from component
+        for (uint32_t child : children)
         {
+            // TODO Get Component from library by UUID
+            Component* childComponent = ComponentUtils::CreateEmptyComponent(COMPONENT_MODEL, LCG().IntFast(), uuid);
+
             childComponent->RenderEditorComponentTree(1);
         }
     }
@@ -55,13 +58,7 @@ void RootComponent::RenderEditorInspector()
 
     ImGui::SeparatorText("Modules Configuration");
 
-    ImGui::Text("Local transform");
-    localTransform.RenderEditor();
-    
-    ImGui::Spacing();
-    
-    ImGui::Text("Global transform");
-    globalTransform.RenderEditor();
+    App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform);
 
     for (uint32_t child : children)
     {

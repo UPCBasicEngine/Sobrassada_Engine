@@ -153,6 +153,21 @@ void EditorUIModule::Console(bool &consoleMenu)
     ImGui::End();
 }
 
+void EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &worldTransform)
+{
+    ImGui::Text("Transform");
+    ImGui::SameLine();
+    ImGui::RadioButton("Local", &transformType, LOCAL);
+    ImGui::SameLine();
+    ImGui::RadioButton("World", &transformType, GLOBAL);
+
+    Transform& transformToEdit = transformType == LOCAL ? localTransform : worldTransform;
+    
+    ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
+    ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians
+    ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] );
+}
+
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
 {
     ImGui::Begin("Editor settings", &editorSettingsMenu);
