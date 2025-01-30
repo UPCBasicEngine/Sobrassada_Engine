@@ -18,6 +18,9 @@ public:
 
 	void SaveToLibrary();
 
+	std::string GetName() { return name; }
+    std::vector<uint32_t> GetChildren() { return children; }
+
 private:
 
 	uint32_t parentUUID;

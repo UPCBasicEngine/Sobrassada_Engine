@@ -27,13 +27,13 @@ public:
 	void CheckObjectsToRender();
 	
 	void RenderHierarchyUI(bool &hierarchyMenu);
-    //void RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t &selectedGameObjectUUID);
+    void RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t &selectedGameObjectUUID);
 
 private:
 
 	uint32_t gameObjectRootUUID;
 
-	std::unordered_map<uint32_t, GameObject*> gameObjectsContainer; //For testing purposes
+	std::unordered_map<uint32_t, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
 	
 	/*bool hierarchyMenu = false;*/
 	//pawnClassType;

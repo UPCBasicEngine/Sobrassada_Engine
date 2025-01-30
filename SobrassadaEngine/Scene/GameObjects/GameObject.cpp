@@ -6,8 +6,12 @@ GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(paren
 
 bool GameObject::AddGameObject(uint32_t gameObjectUUID)
 {
-    children.push_back(gameObjectUUID);
-	return true; 
+    if (std::find(children.begin(), children.end(), gameObjectUUID) == children.end())
+    {
+        children.push_back(gameObjectUUID);
+        return true; 
+    }
+    return false;
 }
 
 bool GameObject::RemoveGameObject(uint32_t gameObjectUUID)
