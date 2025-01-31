@@ -41,16 +41,11 @@ class Quadtree
     Quadtree(float2 position, float size, int capacity);
     ~Quadtree();
 
-    bool InsertElementRecursive(const Box &newElement);
-    void QueryElementsRecursive(const Box &area, std::unordered_set<Box, BoxHash> &foundElements) const;
-    void GetDrawLinesRecursive(std::list<float4> &drawLines, std::list<float4> &elementLines) const;
-
     bool InsertElement(const Box &newElement);
     void QueryElements(const Box &area, std::unordered_set<Box, BoxHash> &foundElements) const;
     void GetDrawLines(std::list<float4> &drawLines, std::list<float4> &elementLines) const;
 
   private:
-    void SubdivideRecursive();
     void Subdivide();
     bool Intersects(const Box &element) const;
     bool IsLeaf() const { return topLeft == nullptr; };
