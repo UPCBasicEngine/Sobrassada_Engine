@@ -65,25 +65,6 @@ void Quadtree::QueryElementsRecursive(const Box &area, std::unordered_set<Box, B
 
 void Quadtree::GetDrawLinesRecursive(std::list<float4> &drawLines, std::list<float4> &elementLines) const
 {
-    if (elements.size() > 0)
-    {
-        for (auto &element : elements)
-        {
-            float halfSizeX    = element.sizeX / 2.f;
-            float halfSizeY    = element.sizeY / 2.f;
-
-            float2 topLeft     = float2(element.x - halfSizeX, element.y + halfSizeY);
-            float2 topRight    = float2(element.x + halfSizeX, element.y + halfSizeY);
-            float2 bottomLeft  = float2(element.x - halfSizeX, element.y - halfSizeY);
-            float2 bottomRight = float2(element.x + halfSizeX, element.y - halfSizeY);
-
-            elementLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
-            elementLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
-            elementLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
-            elementLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
-        }
-    }
-
     if (IsLeaf())
     {
         float halfSize     = size / 2.f;
@@ -97,6 +78,22 @@ void Quadtree::GetDrawLinesRecursive(std::list<float4> &drawLines, std::list<flo
         drawLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
         drawLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
         drawLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
+
+        for (auto &element : elements)
+        {
+            float halfSizeX = element.sizeX / 2.f;
+            float halfSizeY = element.sizeY / 2.f;
+
+            topLeft         = float2(element.x - halfSizeX, element.y + halfSizeY);
+            topRight        = float2(element.x + halfSizeX, element.y + halfSizeY);
+            bottomLeft      = float2(element.x - halfSizeX, element.y - halfSizeY);
+            bottomRight     = float2(element.x + halfSizeX, element.y - halfSizeY);
+
+            elementLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
+            elementLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
+            elementLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
+            elementLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
+        }
     }
     else
     {
