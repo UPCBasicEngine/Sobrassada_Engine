@@ -7,10 +7,11 @@
 #include "WindowModule.h"
 #include "Framebuffer.h"
 #include "OpenGLModule.h"
+#include "SceneImporter.h"
 
 #include "MathGeoLib.h"
 #include "glew.h"
-#include "DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include "EngineModel.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -27,7 +28,7 @@ RenderTestModule::~RenderTestModule()
 
 bool RenderTestModule::Init()
 {
-	currentLoadedModel->Load("./Test/BakerHouse.gltf");
+	//currentLoadedModel->Load("./Test/BakerHouse.gltf");
 
 	//program = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
 	program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");

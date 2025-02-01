@@ -5,7 +5,7 @@
 #include "Application.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
-#include "DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include <string>
 #include <unordered_set>
 

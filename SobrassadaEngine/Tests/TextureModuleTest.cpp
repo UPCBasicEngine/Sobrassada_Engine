@@ -1,6 +1,6 @@
 #include "TextureModuleTest.h"
 
-#include "DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include "glew.h"
 
 TextureModuleTest::TextureModuleTest()
