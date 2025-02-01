@@ -11,7 +11,7 @@
 
 #include "MathGeoLib.h"
 #include "glew.h"
-#include "DirectXTex.h"
+#include "DirectXTex/DirectXTex.h"
 #include "EngineModel.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
