@@ -31,6 +31,7 @@ namespace FileSystem
 			delete[] *buffer;
 			buffer = nullptr;
 			file.close();
+			GLOG("Failed to read data from file: %s", filePath);
 			return 0;
 		}
 	}
@@ -47,6 +48,13 @@ namespace FileSystem
 
 		file.write(static_cast<const char*>(buffer), size);
 		file.close();
+
+		if (!file)
+		{
+			GLOG("Failed to write data to file: %s", filePath);
+			return 0;
+		}
+
 		return size;
 	}
 

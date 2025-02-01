@@ -137,6 +137,7 @@
     <ClCompile Include="MeshImporter.cpp" />
     <ClCompile Include="SceneImporter.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
+    <ClCompile Include="TextureImporter.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
     <ClCompile Include="UI\EditorViewport.cpp" />
     <ClCompile Include="Tests\CameraModule.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="MeshImporter.h" />
     <ClInclude Include="SceneImporter.h" />
     <ClInclude Include="Scene\Components\Component.h" />
+    <ClInclude Include="TextureImporter.h" />
     <ClInclude Include="Utils\Framebuffer.h" />
     <ClInclude Include="UI\EditorViewport.h" />
     <ClInclude Include="Tests\CameraModule.h" />

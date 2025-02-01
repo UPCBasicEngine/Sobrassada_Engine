@@ -1,7 +1,7 @@
 #include "TextureImporter.h"
 
 #include "FileSystem.h"
-#include "DirectXTex.h"
+#include "DirectXTex/DirectXTex.h"
 #include "Globals.h"
 
 #include <string>

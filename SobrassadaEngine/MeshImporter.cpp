@@ -1,12 +1,17 @@
-#include "FileSystem.h"
-#include "Utils/Globals.h"
-#include "tiny_gltf.h"
 #include "MeshImporter.h"
+
+#include "FileSystem.h"
+#include "Globals.h"
+
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_NO_STB_IMAGE
+#define TINYGLTF_NO_EXTERNAL_IMAGE
+#include "tiny_gltf.h"
 
 
 namespace MeshImporter {
 
-    bool ImportMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh, const tinygltf::Primitive& primitive, const std::string& filepath) {
+    bool ImportMesh(const tinygltf::Model& model, const tinygltf::Mesh& mesh, const tinygltf::Primitive& primitive, const std::string& filePath) {
 
         std::vector<Vertex> vertexBuffer;
         std::vector<unsigned int> indexBuffer;
@@ -99,7 +104,7 @@ namespace MeshImporter {
         // Extract mode (0:points  1:lines  2:line loop  3:line strip  4:triangles)
         //check for no mateiral and default to triangle mode
         int materialIndex = (primitive.material != -1) ? primitive.material : 0;
-        int mode = (primitive.mode != -1) ? primitive.mode : 4; 
+        int mode = (primitive.mode != -1) ? primitive.mode : 4;
 
         // save to binary file.
         // 1 - NUMBER OF INDICES,  2 - NUMBER OF VERTICES  3 - MATERIAL  4 - DRAWING MODE
@@ -128,12 +133,20 @@ namespace MeshImporter {
         cursor += sizeof(unsigned int) * indexBuffer.size();
 
         //false = append
-        std::string fullPath = filepath + ".sobrassada";
-        const char* cFullPath = fullPath.c_str();
-        FileSystem::Save(cFullPath, fileBuffer, size, false);
+        std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
+        std::string savePath = "Library/Meshes/" + fileName + ".sobrassada";
+        unsigned int bytesWritten = FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
 
         delete[] fileBuffer;
 
+        if (bytesWritten == 0)
+        {
+            GLOG("Failed to save mesh file: %s", savePath.c_str());
+            return false;
+        }
+
+        GLOG("%s saved as binary", fileName.c_str());
+
         return true;
     }
-}
+};

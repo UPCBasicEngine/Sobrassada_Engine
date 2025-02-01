@@ -96,9 +96,7 @@ update_status InputModule::PreUpdate(float deltaTime)
             mouseWheel = sdlEvent.wheel.y;
             break;
             case SDL_DROPFILE:
-                
-            	std::string filePath = std::string(sdlEvent.drop.file);
-                SceneImporter::importGLTF(filePath);
+                SceneImporter::Import(sdlEvent.drop.file);
             //	int fileExtensionPosition = (int)filePath.find_last_of('.');
 
             //	std::string fileExtension = filePath.substr(fileExtensionPosition, filePath.length());

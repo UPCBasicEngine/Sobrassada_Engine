@@ -1,12 +1,15 @@
 #pragma once
 
-#include "tiny_gltf.h"
 #include "FileSystem.h"
-#include "Utils/Globals.h"
+#include "Globals.h"
 
-#include "Libs/MathGeoLib/include/Math/float3.h"
-#include "Libs/MathGeoLib/include/Math/float2.h"
+#include "Math/float3.h"
+#include "Math/float2.h"
 #include <vector>
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_NO_STB_IMAGE
+#define TINYGLTF_NO_EXTERNAL_IMAGE
+#include "tiny_gltf.h"
 
 struct Vertex {
     float position[3];  // Position of the vertex in 3D space
@@ -22,4 +25,4 @@ namespace MeshImporter {
         const tinygltf::Primitive& primitive,
         const std::string& filePath);
 
-}
+};
