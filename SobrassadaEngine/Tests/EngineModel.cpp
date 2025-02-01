@@ -246,6 +246,19 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 	return;
 }
 
+OBB EngineModel::GetOBBModel() const{
+	AABB aabbModel(minValues, maxValues);
+    OBB obbModel(aabbModel);
+    if (!meshes.empty())
+    {
+        float4x4 modelMatrix = meshes[0]->GetBasicModelMatrix();
+
+        obbModel.Transform(modelMatrix);
+    }
+
+	 return obbModel;
+}
+
 void EngineModel::ClearVectors()
 {
 	for (auto it : meshes)

@@ -27,6 +27,8 @@ public:
 
 	void SetBasicModelMatrix(float4x4& newModelMatrix);
 
+	float4x4 GetBasicModelMatrix();
+
 	void Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix);
 
 private:
