@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #include <Math/float3.h>
 
 enum TransformType
@@ -10,7 +9,7 @@ enum TransformType
 
 struct Transform 
 {
-    Transform(): position(0, 0, 0), rotation(0, 0, 0), scale(1, 1, 1) {}
+    Transform() : position(0, 0, 0), rotation(0, 0, 0), scale(1, 1, 1) {}
 
 public:
     

@@ -4,6 +4,7 @@
 #include "EditorViewport.h"
 #include "OpenGLModule.h"
 #include "WindowModule.h"
+#include "SceneModule.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -108,6 +109,8 @@ void EditorUIModule::Draw()
     if (consoleMenu) Console(consoleMenu);
 
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
+    
+    if (hierarchyMenu) App->GetSceneModule()->RenderHierarchyUI(hierarchyMenu);
 }
 
 void EditorUIModule::MainMenu()
@@ -123,6 +126,19 @@ void EditorUIModule::MainMenu()
 
         ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Window"))
+    {
+        if (ImGui::BeginMenu("General"))
+        {
+            if (ImGui::MenuItem("Hierarchy")) hierarchyMenu = !hierarchyMenu;
+            
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMenu();
+    }
+
 
     // Settings menu
     if (ImGui::BeginMenu("Settings"))
