@@ -30,7 +30,8 @@ bool RenderTestModule::Init()
 	currentLoadedModel->Load("./Test/BakerHouse.gltf");
 
 	//program = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
-	program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");
+    program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/BRDFPhongFragmentShader.glsl");
+	//program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");
 
 	// Triangle without UV's
 	/*float vtx_data[] = { 
@@ -100,6 +101,15 @@ update_status RenderTestModule::Render(float deltaTime)
 	// Sending texture coordiantes
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
+
+	float ambientIntensity = 1.0f;
+    glUniform1f(glGetUniformLocation(program, "ambientIntensity"), ambientIntensity);
+    float3 lightColor = float3(0.2f, 1.0f, 1.0f);
+    glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
+    float3 lightDir = float3(3.3f, 3.0f, 3.0f);
+    glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
+    float3 cameraPos = App->GetCameraModule()->getPosition();
+    glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, baboonTexture);

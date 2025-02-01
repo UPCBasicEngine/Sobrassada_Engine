@@ -31,6 +31,7 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 	// Getting required size for VBO buffer
 	const auto& positionIterator = inPrimitive.attributes.find("POSITION");
 	const auto& textureIterator = inPrimitive.attributes.find("TEXCOORD_0");
+    const auto &normalIterator   = inPrimitive.attributes.find("NORMAL");
 	
 	if (positionIterator != inPrimitive.attributes.end()) {
 		const tinygltf::Accessor& positionAccessor = inModel.accessors[positionIterator->second];
@@ -42,9 +43,15 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 		textureCoordCount = (int)textureAccessor.count;
 	}
 
-	if ((vertexCount + textureCoordCount) > 0)
+	if (normalIterator != inPrimitive.attributes.end())
+    {
+		const tinygltf::Accessor &normalAccessor = inModel.accessors[normalIterator->second];
+        normalCoordCount = (int)normalAccessor.count;
+	}
+
+	if ((vertexCount + textureCoordCount + normalCoordCount) > 0)
 	{
-		unsigned int bufferSize = (sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount);
+		unsigned int bufferSize = (sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount) + (sizeof(float) * 3 * normalCoordCount);
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
@@ -104,7 +111,37 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 	}
-	
+
+	// Loading normal vertices to VBO
+	if (normalCoordCount > 0)
+    {
+		const tinygltf::Accessor &normalAccessor = inModel.accessors[normalIterator->second];
+
+		SDL_assert(normalAccessor.type == TINYGLTF_TYPE_VEC3);
+		SDL_assert(normalAccessor.componentType == GL_FLOAT);
+
+        const tinygltf::BufferView &normalBufferView = inModel.bufferViews[normalAccessor.bufferView];
+        const tinygltf::Buffer &normalBuffer         = inModel.buffers[normalBufferView.buffer];
+
+        const unsigned char *bufferStart =
+            &(normalBuffer.data[normalAccessor.byteOffset + normalBufferView.byteOffset]);
+
+        float3 *ptr = reinterpret_cast<float3*>(glMapBufferRange(
+            GL_ARRAY_BUFFER, sizeof(float) * 3 * vertexCount + sizeof(float) * 2 * textureCoordCount,
+            sizeof(float) * 3 * normalCoordCount, GL_MAP_WRITE_BIT
+        ));
+
+        for (size_t i = 0; i < normalAccessor.count; ++i)
+		{
+            ptr[i] = *reinterpret_cast<const float3*>(bufferStart);
+
+            // bufferView.byteStride == 0 -> Only positions inside buffer, which then the stride becomes
+            // space between vertices -> sizeof(float) * 3.
+            bufferStart += normalBufferView.byteStride == 0 ? sizeof(float) * 3 : normalBufferView.byteStride;
+		}
+
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+    }	
 }
 
 void EngineMesh::LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive)
@@ -157,6 +194,14 @@ void EngineMesh::CreateVAO()
 	{
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * vertexCount));
+
+		glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)((sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount)));
+	}
+    else
+    {
+		glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(float) * 3 * vertexCount));
 	}
 
 	glBindVertexArray(0);

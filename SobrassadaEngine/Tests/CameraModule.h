@@ -27,6 +27,8 @@ public:
 
 	void EventTriggered();
 
+	const float3 getPosition() { return camera.pos; }
+
 private:
 	Frustum camera;
 
