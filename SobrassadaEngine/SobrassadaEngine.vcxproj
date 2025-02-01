@@ -133,6 +133,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="MeshImporter.cpp" />
+    <ClCompile Include="SceneImporter.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
     <ClCompile Include="UI\EditorViewport.cpp" />
@@ -192,6 +195,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="MeshImporter.h" />
+    <ClInclude Include="SceneImporter.h" />
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="Utils\Framebuffer.h" />
     <ClInclude Include="UI\EditorViewport.h" />

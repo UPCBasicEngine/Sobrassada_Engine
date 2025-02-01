@@ -1,64 +1,66 @@
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_NO_STB_IMAGE
+#define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "SceneImporter.h"
 
 #include "FileSystem.h"
 #include "Globals.h"
 #include "MeshImporter.h"
 #include "TextureImporter.h"
+#include "Utils/Globals.h"
+#include "tiny_gltf.h"
 
+namespace SceneImporter {
+	void importGLTF(const std::string& filepath) {
 #include <string>
 
-namespace SceneImporter
-{
-	bool Import(const char* filePath)
-	{
-		CreateLibraryDirectories();
+		tinygltf::TinyGLTF gltfContext;
+		tinygltf::Model model;
+		std::string err, warn, name;
+		int n = 0;
 
-		std::string extension = FileSystem::GetFileExtension(filePath);
-
+		bool ret = gltfContext.LoadASCIIFromFile(&model, &err, &warn, filepath);
+		if (!ret)
 		{
-			std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(filePath);
-			if (!FileSystem::Exists(copyPath.c_str()))
-			{
-				FileSystem::Copy(filePath, copyPath.c_str());
+			if (!warn.empty()) {
+				GLOG("Warn: %s\n", warn.c_str());
 			}
-		}
 
-		if (extension != ".gltf")
-		{
-			return TextureImporter::Import(filePath);
-		}
+			if (!err.empty()) {
+				GLOG("Err: %s\n", err.c_str());
+			}
 
-		char* buffer = nullptr;
-
-		unsigned int size = FileSystem::Load(filePath, &buffer);
-
-		if (size == 0)
-		{
-			GLOG("Failed to load: %s", filePath);
-			return false;
-		}
+			if (!ret) {
+				GLOG("Failed to parse glTF\n");
+			}
 
 		ImportMeshes(buffer);
 
 		delete[] buffer;
 		return true;
-	}
+		}
+		/*
+		//create folder if not exists
+		if (!FileSystem::CreateDirectory(outputdirectory.c_sr())) {
 
 	void CreateLibraryDirectories()
 	{
 		if (!FileSystem::CreateDirectories("Assets")) {
 			//GLOG("Failed to create directory: Assets");
 		}
-		if (!FileSystem::CreateDirectories("Library/Meshes")) {
-			//GLOG("Failed to create directory: Library/Meshes");
+		*/
+		for (const auto& srcMesh : model.meshes)
+		{
+			name = srcMesh.name;
+			n = 0;
+			for (const auto& primitive : srcMesh.primitives)
+			{
+				name += std::to_string(n);
+				MeshImporter::ImportMesh(model, srcMesh, primitive, name);
+				n++;
+			}
 		}
-		if (!FileSystem::CreateDirectories("Library/Materials")) {
-			//GLOG("Failed to create directory: Library/Materials");
-		}
-	}
 
-	void ImportMeshes(const char* buffer)
-	{
-		MeshHeader header;
 	}
+}
 };

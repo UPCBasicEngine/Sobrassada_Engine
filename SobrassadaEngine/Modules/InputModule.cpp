@@ -1,5 +1,7 @@
 #include "InputModule.h"
 #include "Application.h"
+#include "FileSystem.h"
+#include "SceneImporter.h"
 
 #include "SDL.h"
 #include "imgui_impl_sdl2.h"
@@ -93,8 +95,10 @@ update_status InputModule::PreUpdate(float deltaTime)
         case SDL_MOUSEWHEEL:
             mouseWheel = sdlEvent.wheel.y;
             break;
-            // case SDL_DROPFILE:
-            //	std::string filePath = std::string(sdlEvent.drop.file);
+            case SDL_DROPFILE:
+                
+            	std::string filePath = std::string(sdlEvent.drop.file);
+                SceneImporter::importGLTF(filePath);
             //	int fileExtensionPosition = (int)filePath.find_last_of('.');
 
             //	std::string fileExtension = filePath.substr(fileExtensionPosition, filePath.length());
