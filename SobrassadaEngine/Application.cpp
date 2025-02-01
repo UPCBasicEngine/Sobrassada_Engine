@@ -74,8 +74,8 @@ update_status Application::Update(float deltaTime)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->RenderEditor(deltaTime);
-    
-    testComponent->RenderEditorInspector();
+
+    if (returnStatus == UPDATE_CONTINUE) testComponent->RenderEditorInspector();
 
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)

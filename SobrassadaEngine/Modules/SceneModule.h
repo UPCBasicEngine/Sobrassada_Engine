@@ -1,9 +1,12 @@
 #pragma once
+
 #include "Module.h"
 
+#include <map>
 #include <unordered_map>
 
 class GameObject;
+class Component;
 
 class SceneModule : public Module
 {
@@ -28,6 +31,8 @@ public:
 	
 	void RenderHierarchyUI(bool &hierarchyMenu);
     void RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t &selectedGameObjectUUID);
+
+    std::map<uint32_t, Component*> gameComponents;
 
 private:
 

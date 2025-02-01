@@ -22,7 +22,7 @@ public:
     virtual bool RemoveComponent(const uint32_t componentUUID);
     
     virtual void RenderEditorInspector();
-    virtual void RenderEditorComponentTree(uint8_t layer);
+    virtual void RenderEditorComponentTree();
 
     uint32_t GetUUID() const;
 

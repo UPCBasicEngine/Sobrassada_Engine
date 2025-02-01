@@ -7,7 +7,7 @@ public:
     MeshComponent(const uint32_t uuid, const uint32_t ownerUUID, const char* name);
 
     void RenderEditorInspector() override;
-    void RenderEditorComponentTree(uint8_t layer) override;
+    void RenderEditorComponentTree() override;
     
     void Update() override;
 };

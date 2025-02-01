@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "EditorUIModule.h"
+#include "SceneModule.h"
 #include "imgui.h"
 
 #include <Algorithm/Random/LCG.h>
@@ -16,22 +17,24 @@ void ModelComponent::RenderEditorInspector()
     App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform);
 }
 
-void ModelComponent::RenderEditorComponentTree(const uint8_t layer)
+void ModelComponent::RenderEditorComponentTree()
 {
     ImGui::Indent( 16 );
-    
-    const bool isExpanded = ImGui::TreeNode(name);
+
+    ImGui::PushID(uuid);
+    const bool isExpanded = ImGui::TreeNodeExV((void*) nullptr, ImGuiTreeNodeFlags_Framed, name, nullptr);
+    ImGui::PopID();
     ImGui::SameLine();
     ImGui::Selectable(": Model", false); 
     if (isExpanded) 
     {
         for (uint32_t child : children)
         {
-            // TODO Get Component from library by UUID
-            Component* childComponent = ComponentUtils::CreateEmptyComponent(COMPONENT_MODEL, LCG().IntFast(), uuid);
+            Component* childComponent = App->GetSceneModule()->gameComponents[child];
 
-            childComponent->RenderEditorComponentTree(1);
+            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree();
         }
+        ImGui::TreePop();
     }
     
     ImGui::Unindent( 16 );

@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "EditorUIModule.h"
+#include "SceneModule.h"
 #include "imgui.h"
 #include "Scene/Components/Standalone/ModelComponent.h"
 
@@ -40,18 +41,22 @@ void RootComponent::RenderEditorInspector()
     
     ImGui::SeparatorText("Component hierarchy");
 
+    //ImGui::ShowDemoWindow();
+    
+    ImGui::PushID(uuid);
     const bool isExpanded = ImGui::TreeNodeExV((void*) nullptr, ImGuiTreeNodeFlags_Framed, name, nullptr);
+    ImGui::PopID();
     ImGui::SameLine();
     ImGui::Selectable(": Root", false); 
     if (isExpanded) 
     {
         for (uint32_t child : children)
         {
-            // TODO Get Component from library by UUID
-            Component* childComponent = ComponentUtils::CreateEmptyComponent(COMPONENT_MODEL, LCG().IntFast(), uuid);
+            Component* childComponent = App->GetSceneModule()->gameComponents[child];
 
-            childComponent->RenderEditorComponentTree(1);
+            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree();
         }
+        ImGui::TreePop();
     }
     
     ImGui::Spacing();

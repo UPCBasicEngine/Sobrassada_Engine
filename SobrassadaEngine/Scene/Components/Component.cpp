@@ -1,6 +1,8 @@
 ﻿#include "Component.h"
 
+#include "Application.h"
 #include "ComponentUtils.h"
+#include "SceneModule.h"
 
 #include <Algorithm/Random/LCG.h>
 
@@ -22,6 +24,7 @@ bool Component::CreateComponent(const ComponentType componentType)
     Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), uuid);
     
     if (createdComponent != nullptr) {
+        App->GetSceneModule()->gameComponents[createdComponent->GetUUID()] = createdComponent;
         children.push_back(createdComponent->GetUUID());
         return true;
     }
@@ -48,7 +51,7 @@ void Component::RenderEditorInspector()
 {
 }
 
-void Component::RenderEditorComponentTree(const uint8_t layer)
+void Component::RenderEditorComponentTree()
 {
 }
 

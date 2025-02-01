@@ -9,7 +9,7 @@ void MeshComponent::RenderEditorInspector()
 {
 }
 
-void MeshComponent::RenderEditorComponentTree(const uint8_t layer)
+void MeshComponent::RenderEditorComponentTree()
 {
 }
 
