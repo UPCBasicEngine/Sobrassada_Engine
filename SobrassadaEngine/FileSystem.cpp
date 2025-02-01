@@ -1,8 +1,10 @@
 #include "FileSystem.h"
 
+#include "Globals.h"
+
 #include <fstream>
 #include <filesystem>
-#include <Utils/Globals.h> // should not be needed
+#include <string>
 
 namespace FileSystem
 {
@@ -67,7 +69,7 @@ namespace FileSystem
 		return std::filesystem::remove(filePath);
 	}
 
-	bool CreateDirectory(const char* directoryPath)
+	bool CreateDirectories(const char* directoryPath)
 	{
 		return std::filesystem::create_directories(directoryPath);
 	}
@@ -80,5 +82,19 @@ namespace FileSystem
 	bool IsDirectory(const char* directoryPath)
 	{
 		return std::filesystem::is_directory(directoryPath);
+	}
+
+	std::string GetFileNameWithExtension(const std::string& filePath) {
+		return std::filesystem::path(filePath).filename().string();
+	}
+
+	std::string GetFileNameWithoutExtension(const std::string& filePath) {
+		std::filesystem::path path(filePath);
+		return path.stem().string();
+	}
+
+	std::string GetFileExtension(const std::string& filePath) {
+		std::filesystem::path path(filePath);
+		return path.extension().string();
 	}
 }
