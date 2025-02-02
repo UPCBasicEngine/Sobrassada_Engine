@@ -8,9 +8,10 @@
 
 #include <Algorithm/Random/LCG.h>
 
-RootComponent::RootComponent(const uint32_t uuid, const uint32_t ownerUUID, const char* name)
-        : Component(uuid, ownerUUID, name)
+RootComponent::RootComponent(const uint32_t uuid, const uint32_t uuidParent, const char* name)
+        : Component(uuid, uuidParent, uuid, name)
 {
+    selectedUUID = uuid;    // TODO Other components don´t have the correct selectedUUID
 }
 
 bool RootComponent::AddComponent(const uint32_t componentUUID)
@@ -25,7 +26,7 @@ bool RootComponent::RemoveComponent(const uint32_t componentUUID)
     return Component::RemoveComponent(componentUUID);
 }
 
-void RootComponent::RenderEditorInspector()
+void RootComponent::RenderComponentEditor()
 {
     ImGui::Begin("Inspector");    // TODO Add bool parameter at the end to then unselect the component (Add isSelected property to component?)
 
@@ -39,47 +40,67 @@ void RootComponent::RenderEditorInspector()
         CreateComponent(COMPONENT_MODEL); // TODO Add selection table dropdown to select which component to add
     }
     
-    ImGui::SeparatorText("Component hierarchy");
-
-    //ImGui::ShowDemoWindow();
+    RenderEditorComponentTree(selectedUUID);
     
-    ImGui::PushID(uuid);
-    const bool isExpanded = ImGui::TreeNodeExV((void*) nullptr, ImGuiTreeNodeFlags_Framed, name, nullptr);
-    ImGui::PopID();
-    ImGui::SameLine();
-    ImGui::Selectable(": Root", false); 
+    ImGui::Spacing();
+
+    ImGui::SeparatorText("Modules Configuration");
+
+    Component* component = App->GetSceneModule()->gameComponents[selectedUUID];
+    if (component != nullptr)  component->RenderEditorInspector();
+
+    ImGui::End();
+}
+
+void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
+{
+    ImGui::SeparatorText("Component hierarchy");
+    
+    static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+    if (selectedUUID == uuid)
+    {
+        base_flags |= ImGuiTreeNodeFlags_Selected;
+    }
+    const bool isExpanded = ImGui::TreeNodeEx((void*) uuid, base_flags, name, nullptr);
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+        SetSelectedComponent(uuid);
+    
     if (isExpanded) 
     {
         for (uint32_t child : children)
         {
             Component* childComponent = App->GetSceneModule()->gameComponents[child];
 
-            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree();
+            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedUUID);
         }
         ImGui::TreePop();
     }
-    
-    ImGui::Spacing();
+}
 
-    ImGui::SeparatorText("Modules Configuration");
-
+void RootComponent::RenderEditorInspector()
+{
     App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform);
-
-    for (uint32_t child : children)
-    {
-        // TODO Get Component from library by UUID
-        Component* childComponent = ComponentUtils::CreateEmptyComponent(COMPONENT_MODEL, LCG().IntFast(), uuid);
-
-        if (ImGui::CollapsingHeader("ComponentName"))   // TODO Add name from component
-        {
-            childComponent->RenderEditorInspector();
-        }
-    }
-    
-
-    ImGui::End();
 }
 
 void RootComponent::Update()
 {
+}
+
+void RootComponent::SetSelectedComponent(const uint32_t componentUUID)
+{
+    selectedUUID = componentUUID;
+}
+
+bool RootComponent::CreateComponent(const ComponentType componentType)
+{
+    // TODO Call library to create the component with an id instead
+    Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), selectedUUID, uuid);
+    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUUID];
+    if (createdComponent != nullptr && selectedComponent != nullptr) {
+        App->GetSceneModule()->gameComponents[createdComponent->GetUUID()] = createdComponent;
+        
+        selectedComponent->AddComponent(createdComponent->GetUUID());
+        return true;
+    }
+    return false;
 }

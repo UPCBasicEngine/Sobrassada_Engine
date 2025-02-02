@@ -6,7 +6,7 @@
 
 #include <Algorithm/Random/LCG.h>
 
-Component::Component(const uint32_t uuid, const uint32_t ownerUUID, const char* name): uuid(uuid), ownerUUID(ownerUUID), name(name), enabled(true){}
+Component::Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name): uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true){}
 
 void Component::Enable()
 {
@@ -16,19 +16,6 @@ void Component::Enable()
 void Component::Disable()
 {
     enabled = false;
-}
-
-bool Component::CreateComponent(const ComponentType componentType)
-{
-    // TODO Call library to create the component with an id instead
-    Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), uuid);
-    
-    if (createdComponent != nullptr) {
-        App->GetSceneModule()->gameComponents[createdComponent->GetUUID()] = createdComponent;
-        children.push_back(createdComponent->GetUUID());
-        return true;
-    }
-    return false;
 }
 
 bool Component::AddComponent(const uint32_t componentUUID)
@@ -51,7 +38,7 @@ void Component::RenderEditorInspector()
 {
 }
 
-void Component::RenderEditorComponentTree()
+void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
 }
 

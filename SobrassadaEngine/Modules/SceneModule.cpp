@@ -1,4 +1,6 @@
 #include "SceneModule.h"
+
+#include "ComponentUtils.h"
 #include "GameObject.h"
 
 #include "glew.h"
@@ -7,6 +9,7 @@
 #include "imgui_impl_sdl2.h"
 
 #include "Algorithm/Random/LCG.h"
+#include "Root/RootComponent.h"
 
 SceneModule::SceneModule()
 {
@@ -33,6 +36,9 @@ bool SceneModule::Init()
 
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
+    rootComponentUUID = LCG().IntFast();
+    gameComponents[rootComponentUUID] = ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, rootComponentUUID, 0, -1);
+    
     return true;
 }
 
@@ -43,6 +49,13 @@ update_status SceneModule::PreUpdate(float deltaTime)
 
 update_status SceneModule::Update(float deltaTime) 
 {
+    return UPDATE_CONTINUE;
+}
+
+update_status SceneModule::RenderEditor(float deltaTime)
+{
+    RootComponent* rootComponent = dynamic_cast<RootComponent*>(gameComponents[rootComponentUUID]);
+    if (rootComponent)  rootComponent->RenderComponentEditor();
     return UPDATE_CONTINUE;
 }
 

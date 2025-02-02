@@ -18,6 +18,7 @@ public:
 	bool Init() override;
     update_status PreUpdate(float deltaTime) override;
     update_status Update(float deltaTime) override;
+    update_status RenderEditor(float deltaTime) override;
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
@@ -37,6 +38,7 @@ public:
 private:
 
 	uint32_t gameObjectRootUUID;
+    uint32_t rootComponentUUID;
 
 	std::unordered_map<uint32_t, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
 	

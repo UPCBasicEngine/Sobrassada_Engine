@@ -9,7 +9,7 @@ class Component
 {
 public:
 
-    Component(const uint32_t uuid, const uint32_t ownerUUID, const char* name);
+    Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name);
 
     virtual ~Component() = default;
     
@@ -17,19 +17,19 @@ public:
     virtual void Update() = 0;
     virtual void Disable();
 
-    virtual bool CreateComponent(const ComponentType componentType);
     virtual bool AddComponent(const uint32_t componentUUID);
     virtual bool RemoveComponent(const uint32_t componentUUID);
     
     virtual void RenderEditorInspector();
-    virtual void RenderEditorComponentTree();
+    virtual void RenderEditorComponentTree(const uint32_t selectedComponentUUID);
 
     uint32_t GetUUID() const;
 
 protected:
     
     const uint32_t uuid;
-    const uint32_t ownerUUID;
+    const uint32_t uuidParent;
+    const uint32_t uuidRoot;
     std::vector<uint32_t> children;
 
     const char* name;

@@ -6,10 +6,10 @@
 class ModelComponent : public Component
 {
 public:
-    ModelComponent(const uint32_t uuid, const uint32_t ownerUUID, const char* name);
+    ModelComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name);
     
     void RenderEditorInspector() override;
-    void RenderEditorComponentTree() override;
+    void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
     void Update() override;
 
     void LoadModel(uint32_t modelUUID); // TODO Call library module to load data from serialized model

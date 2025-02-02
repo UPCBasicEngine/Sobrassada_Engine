@@ -21,5 +21,5 @@ enum ComponentType
 class ComponentUtils
 {
 public:
-    static Component* CreateEmptyComponent(ComponentType type, uint32_t uuid, uint32_t ownerUUID);
+    static Component* CreateEmptyComponent(ComponentType type, uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot);
 };
