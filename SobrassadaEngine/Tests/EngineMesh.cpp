@@ -43,6 +43,7 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 		textureCoordCount = (int)textureAccessor.count;
 	}
 
+	
 	if (normalIterator != inPrimitive.attributes.end())
     {
 		const tinygltf::Accessor &normalAccessor = inModel.accessors[normalIterator->second];
@@ -239,3 +240,4 @@ void EngineMesh::Render(int program, int texturePosition, float4x4& projectionMa
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 }
+

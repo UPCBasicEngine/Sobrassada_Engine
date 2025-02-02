@@ -165,6 +165,10 @@
     <ClCompile Include="UI\EditorViewport.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Component.cpp" />
+    <ClCompile Include="ComponentMaterial.cpp">
+      <Filter>TestComponents</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -187,6 +191,9 @@
     </Filter>
     <Filter Include="UI">
       <UniqueIdentifier>{b3f5d97a-4296-47c2-80a3-75724af69446}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TestComponents">
+      <UniqueIdentifier>{45454586-70e8-41be-86fe-5d8fc8d0d328}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -271,6 +278,13 @@
     </ClInclude>
     <ClInclude Include="UI\EditorViewport.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h" />
+    <ClInclude Include="Material.h">
+      <Filter>TestComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentMaterial.h">
+      <Filter>TestComponents</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

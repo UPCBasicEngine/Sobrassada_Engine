@@ -55,60 +55,182 @@ void EngineModel::Load(const char* modelPath)
 
 void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath)
 {
-	// Check to not load multiple times the same texture
-	std::unordered_set<int> loadedIndices;
-	for (const auto& srcMaterial : sourceModel.materials)
-	{
-		unsigned int textureId = 0;
-		float2 widthHeight = float2::zero;
-		
-		int textureIndex = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
-		
-		if (textureIndex >= 0)
-		{
-			const tinygltf::Texture& texture = sourceModel.textures[textureIndex];
-			const tinygltf::Image& image = sourceModel.images[texture.source];
+    std::unordered_set<int> loadedIndices;
+    materials.clear();
 
-			// Do not load the same texture twice
-			if (loadedIndices.find(texture.source) != loadedIndices.end()) return;
+    for (const auto &srcMaterial : sourceModel.materials)
+    {
+        Material material;
+        material.name          = srcMaterial.name;
+        unsigned int textureId = 0;
+        float2 widthHeight     = float2::zero;
 
-			std::string filePath = std::string(modelPath);
-			char usedSeparator = '\\';
-			
-			int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
-			
-			if (fileLocationPosition == -1)
-			{
-				usedSeparator = '/';
-				fileLocationPosition = filePath.find_last_of(usedSeparator);
-			}
-				
-			// Cant find the directory of the file
-			if(fileLocationPosition == -1) return;
+        
+        int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
+        if (textureIndex < 0)
+        {
+            material.diffuseColor = {
+                static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[0]),
+                static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[1]),
+                static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[2])
+            };
+        }
+        else
+        {
+            material.hasDiffuseMap = true;
 
-			std::string fileLocation = filePath.substr(0, fileLocationPosition) + usedSeparator;
+            const tinygltf::Texture &texture = sourceModel.textures[textureIndex];
+            const tinygltf::Image &image = sourceModel.images[texture.source];
 
-			std::string texturePathString = fileLocation.append(image.uri);
+            
+            if (loadedIndices.find(texture.source) == loadedIndices.end())
+            {
+                std::string filePath     = std::string(modelPath);
+                char usedSeparator       = '\\';
 
-			std::wstring wideUri = std::wstring(texturePathString.begin(), texturePathString.end());
-			const wchar_t* texturePath = wideUri.c_str();
+                int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
+                if (fileLocationPosition == -1)
+                {
+                    usedSeparator        = '/';
+                    fileLocationPosition = filePath.find_last_of(usedSeparator);
+                }
 
-			DirectX::TexMetadata textureMetadata;
-			textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
-			if (textureId)
-			{
-				widthHeight.x = textureMetadata.width;
-				widthHeight.y = textureMetadata.height;
-				loadedIndices.insert(texture.source);
-			}
-		}
-		if (textureId)
-		{
-			textures.push_back(textureId);
-			textureInfo.push_back(widthHeight);
-			renderTexture++;
-		}
-	}
+                
+                if (fileLocationPosition == -1) return;
+
+                std::string fileLocation      = filePath.substr(0, fileLocationPosition) + usedSeparator;
+                std::string texturePathString = fileLocation.append(image.uri);
+
+                std::wstring wideUri          = std::wstring(texturePathString.begin(), texturePathString.end());
+                const wchar_t *texturePath    = wideUri.c_str();
+
+                DirectX::TexMetadata textureMetadata;
+                textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
+                if (textureId)
+                {
+                    widthHeight.x = textureMetadata.width;
+                    widthHeight.y = textureMetadata.height;
+                    loadedIndices.insert(texture.source);
+                    material.diffuseMap = textureId; 
+                }
+            }
+        }
+
+        
+        auto it = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
+        if (it != srcMaterial.extensions.end())
+        {
+            const tinygltf::Value &ext = it->second;
+            material.isPbrSpecularGlossines = true;
+
+            if (ext.Has("diffuseFactor"))
+            {
+                const tinygltf::Value &diffuseValue = ext.Get("diffuseFactor");
+                if (diffuseValue.IsArray() && diffuseValue.ArrayLen() == 4)
+                {
+                    for (size_t i = 0; i < 4; i++)
+                    {
+                        material.diffuseFactor[i] = diffuseValue.Get(i).Get<double>();
+                    }
+                }
+            }
+
+            if (ext.Has("specularFactor"))
+            {
+                const tinygltf::Value &specularValue = ext.Get("specularFactor");
+                if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
+                {
+                    for (size_t i = 0; i < 3; i++)
+                    {
+                        material.specularFactor[i] = specularValue.Get(i).Get<double>();
+                    }
+                }
+            }
+
+            if (ext.Has("glossinessFactor"))
+            {
+                material.glossinessFactor = ext.Get("glossinessFactor").Get<double>();
+            }
+
+            if (ext.Has("specularGlossinessTexture"))
+            {
+                textureIndex = ext.Get("specularGlossinessTexture").Get("index").Get<int>();
+
+                
+                if (textureIndex >= 0)
+                {
+                    const tinygltf::Texture &texture = sourceModel.textures[textureIndex];
+                    const tinygltf::Image &image     = sourceModel.images[texture.source];
+
+                    
+                    if (loadedIndices.find(texture.source) == loadedIndices.end())
+                    {
+                        std::string filePath     = std::string(modelPath);
+                        char usedSeparator       = '\\';
+
+                        int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
+                        if (fileLocationPosition == -1)
+                        {
+                            usedSeparator        = '/';
+                            fileLocationPosition = filePath.find_last_of(usedSeparator);
+                        }
+
+                        
+                        if (fileLocationPosition == -1) return;
+
+                        std::string fileLocation      = filePath.substr(0, fileLocationPosition) + usedSeparator;
+                        std::string texturePathString = fileLocation.append(image.uri);
+
+                        std::wstring wideUri       = std::wstring(texturePathString.begin(), texturePathString.end());
+                        const wchar_t *texturePath = wideUri.c_str();
+
+                        DirectX::TexMetadata textureMetadata;
+                        textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
+                        if (textureId)
+                        {
+                            widthHeight.x = textureMetadata.width;
+                            widthHeight.y = textureMetadata.height;
+                            loadedIndices.insert(texture.source);
+                            material.specularGlossinesTexture = textureId; // Asignar la textura cargada
+                        }
+                    }
+                }
+            }
+        }
+
+        
+        if (srcMaterial.extensions.find("KHR_materials_specular") != srcMaterial.extensions.end())
+        {
+            const auto &specExt = srcMaterial.extensions.at("KHR_materials_specular");
+            if (specExt.Has("specularFactor"))
+            {
+                const tinygltf::Value &specularValue = specExt.Get("specularFactor");
+                if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
+                {
+                    for (size_t i = 0; i < 3; i++)
+                    {
+                        material.specularFactor[i] = specularValue.Get(i).Get<double>();
+                    }
+                }
+            }
+            if (specExt.Has("shininessFactor"))
+            {
+                material.glossinessFactor    = specExt.Get("shininessFactor").Get<double>();
+                material.hasShininessInAlpha = true;
+            }
+        }
+
+        
+        materials.push_back(material);
+
+        
+        if (textureId)
+        {
+            textures.push_back(textureId);
+            textureInfo.push_back(widthHeight);
+            renderTexture++;
+        }
+    }
 }
 
 void EngineModel::LoadAdditionalTexture(const char* texturePath)

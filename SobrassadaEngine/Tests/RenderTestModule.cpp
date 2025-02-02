@@ -7,7 +7,7 @@
 #include "WindowModule.h"
 #include "Framebuffer.h"
 #include "OpenGLModule.h"
-
+#include "ComponentMaterial.h"
 #include "MathGeoLib.h"
 #include "glew.h"
 #include "DirectXTex/DirectXTex.h"
@@ -102,12 +102,14 @@ update_status RenderTestModule::Render(float deltaTime)
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
 
+	//move this to materialcomponent to alter bia imgui
 	float ambientIntensity = 1.0f;
     glUniform1f(glGetUniformLocation(program, "ambientIntensity"), ambientIntensity);
     float3 lightColor = float3(0.2f, 1.0f, 1.0f);
     glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
     float3 lightDir = float3(3.3f, 3.0f, 3.0f);
     glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
+    testCompMat.OnEditorUpdate();
     float3 cameraPos = App->GetCameraModule()->getPosition();
     glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
 
@@ -134,6 +136,8 @@ bool RenderTestModule::ShutDown()
 
 	return true;
 }
+
+
 
 void RenderTestModule::RenderEditorViewport()
 {

@@ -29,7 +29,9 @@ public:
 
 	void Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix);
 
-private:
+	
+
+      private:
 	unsigned int vbo = 0;
 	unsigned int ebo = 0;
 	unsigned int vao = 0;
@@ -40,7 +42,7 @@ private:
 	unsigned int indexCount = 0; // Return indexCount/3 -> numero de triangles per mesh
 
 	float4x4 basicModelMatrix;
-
+    
 	float3 maximumPosition;
 	float3 minimumPosition;
 };

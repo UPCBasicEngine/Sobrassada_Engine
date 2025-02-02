@@ -1,10 +1,9 @@
 #pragma once
-
 #include <vector>
-#include "Math/float4x4.h"
-#include "Math/float3.h"
 #include "Math/float2.h"
-
+#include "Math/float3.h"
+#include "Math/float4x4.h"
+#include "Material.h"
 namespace tinygltf
 {
 	class Model;
@@ -41,6 +40,7 @@ private:
 	std::vector<EngineMesh*> meshes;
 	std::vector<unsigned int> textures;
 	std::vector<float2> textureInfo;
+    std::vector<Material> materials;
 
 	int totalTriangles = 0;
 	int renderTexture = -1;
