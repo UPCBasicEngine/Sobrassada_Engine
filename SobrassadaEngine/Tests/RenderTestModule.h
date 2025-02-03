@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Module.h"
-#include "ComponentMaterial.h"
+#include "Components/ComponentMaterial.h"
 class EngineModel;
 
 class RenderTestModule : public Module
@@ -23,7 +23,7 @@ private:
 	unsigned int vbo = -1;
 	unsigned int baboonTexture = -1;
 	EngineModel* currentLoadedModel;
-    ComponentMaterial testCompMat;
+    std::vector<ComponentMaterial> materials;
 
 };
 

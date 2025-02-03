@@ -2,7 +2,7 @@
 #include "Globals.h"
 #include "EngineMesh.h"
 #include "MathGeoLib.h"
-#include "ComponentMaterial.h"
+#include "Components/ComponentMaterial.h"
 #include "Application.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
@@ -117,7 +117,6 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                 }
             }
         }
-
         
         auto it = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
         if (it != srcMaterial.extensions.end())

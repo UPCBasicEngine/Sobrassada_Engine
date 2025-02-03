@@ -7,7 +7,7 @@
 #include "WindowModule.h"
 #include "Framebuffer.h"
 #include "OpenGLModule.h"
-#include "ComponentMaterial.h"
+#include "Components/ComponentMaterial.h"
 #include "MathGeoLib.h"
 #include "glew.h"
 #include "DirectXTex/DirectXTex.h"
@@ -109,9 +109,11 @@ update_status RenderTestModule::Render(float deltaTime)
     glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
     float3 lightDir = float3(3.3f, 3.0f, 3.0f);
     glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
-    testCompMat.OnEditorUpdate();
     float3 cameraPos = App->GetCameraModule()->getPosition();
     glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
+
+	materials = currentLoadedModel->GetMaterials();
+    materials[0].OnEditorUpdate();
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, baboonTexture);

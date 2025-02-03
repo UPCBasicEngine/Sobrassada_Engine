@@ -33,6 +33,7 @@ public:
 	int GetTotalLoadedTextures() const { return textures.size(); };
 	int GetRenderTexture() const { return renderTexture; };
 	void GetTextureSize(float2& outTextureSize);
+	const std::vector<ComponentMaterial> &GetMaterials() const { return materials; }
 
 	void SetRenderTexture(int texturePosition);
 
