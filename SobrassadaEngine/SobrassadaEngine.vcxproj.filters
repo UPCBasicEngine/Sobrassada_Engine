@@ -166,8 +166,8 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Component.cpp" />
-    <ClCompile Include="ComponentMaterial.cpp">
-      <Filter>TestComponents</Filter>
+    <ClCompile Include="Components\ComponentMaterial.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -192,7 +192,7 @@
     <Filter Include="UI">
       <UniqueIdentifier>{b3f5d97a-4296-47c2-80a3-75724af69446}</UniqueIdentifier>
     </Filter>
-    <Filter Include="TestComponents">
+    <Filter Include="Components">
       <UniqueIdentifier>{45454586-70e8-41be-86fe-5d8fc8d0d328}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -280,11 +280,8 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="Material.h">
-      <Filter>TestComponents</Filter>
-    </ClInclude>
-    <ClInclude Include="ComponentMaterial.h">
-      <Filter>TestComponents</Filter>
+    <ClInclude Include="Components\ComponentMaterial.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -3,13 +3,14 @@
 #include "Math/float2.h"
 #include "Math/float3.h"
 #include "Math/float4x4.h"
-#include "Material.h"
+
 namespace tinygltf
 {
 	class Model;
 }
 
 class EngineMesh;
+class ComponentMaterial;
 
 class EngineModel
 {
@@ -40,7 +41,7 @@ private:
 	std::vector<EngineMesh*> meshes;
 	std::vector<unsigned int> textures;
 	std::vector<float2> textureInfo;
-    std::vector<Material> materials;
+    std::vector<ComponentMaterial> materials;
 
 	int totalTriangles = 0;
 	int renderTexture = -1;

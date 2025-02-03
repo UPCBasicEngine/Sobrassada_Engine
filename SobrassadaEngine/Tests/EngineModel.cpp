@@ -2,6 +2,7 @@
 #include "Globals.h"
 #include "EngineMesh.h"
 #include "MathGeoLib.h"
+#include "ComponentMaterial.h"
 #include "Application.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
@@ -60,8 +61,8 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
 
     for (const auto &srcMaterial : sourceModel.materials)
     {
-        Material material;
-        material.name          = srcMaterial.name;
+        ComponentMaterial material;
+        material.SetName(srcMaterial.name);
         unsigned int textureId = 0;
         float2 widthHeight     = float2::zero;
 
@@ -69,15 +70,16 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
         int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
         if (textureIndex < 0)
         {
-            material.diffuseColor = {
+            material.SetDiffuseColor(
+            {
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[0]),
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[1]),
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[2])
-            };
+            });
         }
         else
         {
-            material.hasDiffuseMap = true;
+            material.SetHasDiffuseMap(true);
 
             const tinygltf::Texture &texture = sourceModel.textures[textureIndex];
             const tinygltf::Image &image = sourceModel.images[texture.source];
@@ -111,7 +113,7 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                     widthHeight.x = textureMetadata.width;
                     widthHeight.y = textureMetadata.height;
                     loadedIndices.insert(texture.source);
-                    material.diffuseMap = textureId; 
+                    material.SetDiffuseMap(textureId); 
                 }
             }
         }
@@ -121,17 +123,20 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
         if (it != srcMaterial.extensions.end())
         {
             const tinygltf::Value &ext = it->second;
-            material.isPbrSpecularGlossines = true;
+            material.setIsPbrSpecularGlossines(true);
 
             if (ext.Has("diffuseFactor"))
             {
                 const tinygltf::Value &diffuseValue = ext.Get("diffuseFactor");
                 if (diffuseValue.IsArray() && diffuseValue.ArrayLen() == 4)
                 {
-                    for (size_t i = 0; i < 4; i++)
+                    material.setDiffuseFactor(
                     {
-                        material.diffuseFactor[i] = diffuseValue.Get(i).Get<double>();
-                    }
+                            static_cast<float>(diffuseValue.Get(0).Get<double>()),
+                            static_cast<float>(diffuseValue.Get(1).Get<double>()),
+                            static_cast<float>(diffuseValue.Get(2).Get<double>()),
+                            static_cast<float>(diffuseValue.Get(3).Get<double>())
+                    });
                 }
             }
 
@@ -140,16 +145,18 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                 const tinygltf::Value &specularValue = ext.Get("specularFactor");
                 if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
                 {
-                    for (size_t i = 0; i < 3; i++)
+                    material.setSpecularFactor(
                     {
-                        material.specularFactor[i] = specularValue.Get(i).Get<double>();
-                    }
+                        static_cast<float>(specularValue.Get(0).Get<double>()),
+                        static_cast<float>(specularValue.Get(1).Get<double>()),
+                        static_cast<float>(specularValue.Get(2).Get<double>())
+                    });
                 }
             }
 
             if (ext.Has("glossinessFactor"))
             {
-                material.glossinessFactor = ext.Get("glossinessFactor").Get<double>();
+                material.setGlossinessFactor(ext.Get("glossinessFactor").Get<double>());
             }
 
             if (ext.Has("specularGlossinessTexture"))
@@ -191,7 +198,7 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                             widthHeight.x = textureMetadata.width;
                             widthHeight.y = textureMetadata.height;
                             loadedIndices.insert(texture.source);
-                            material.specularGlossinesTexture = textureId; // Asignar la textura cargada
+                            material.setSpecularGlossinesTexture(textureId);
                         }
                     }
                 }
@@ -207,19 +214,20 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                 const tinygltf::Value &specularValue = specExt.Get("specularFactor");
                 if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
                 {
-                    for (size_t i = 0; i < 3; i++)
+                    material.setSpecularFactor(
                     {
-                        material.specularFactor[i] = specularValue.Get(i).Get<double>();
-                    }
+                        static_cast<float>(specularValue.Get(0).Get<double>()),
+                        static_cast<float>(specularValue.Get(1).Get<double>()),
+                        static_cast<float>(specularValue.Get(2).Get<double>())
+                    });
                 }
             }
             if (specExt.Has("shininessFactor"))
             {
-                material.glossinessFactor    = specExt.Get("shininessFactor").Get<double>();
-                material.hasShininessInAlpha = true;
+                material.setGlossinessFactor(specExt.Get("shininessFactor").Get<double>());
+                material.setHasShininessInAlpha(true);
             }
         }
-
         
         materials.push_back(material);
 

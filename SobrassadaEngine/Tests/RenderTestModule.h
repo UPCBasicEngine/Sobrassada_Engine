@@ -14,7 +14,6 @@ public:
 	update_status PreUpdate(float deltaTime) override;
 	update_status Render(float deltaTime) override;
 	bool ShutDown() override;
-  
 
 private:
 	
