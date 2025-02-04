@@ -19,6 +19,7 @@
 RenderTestModule::RenderTestModule()
 {
 	currentLoadedModel = new EngineModel();
+	materials = nullptr;
 }
 
 RenderTestModule::~RenderTestModule()
@@ -112,8 +113,8 @@ update_status RenderTestModule::Render(float deltaTime)
     float3 cameraPos = App->GetCameraModule()->getPosition();
     glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
 
-	materials = currentLoadedModel->GetMaterials();
-    materials[0].OnEditorUpdate();
+	materials = &currentLoadedModel->GetMaterials();
+    materials[0].at(0).OnEditorUpdate();
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, baboonTexture);
