@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "Math/float4x4.h"
 #include "Math/float3.h"
 
@@ -26,12 +27,12 @@ public:
 	int GetIndexCount() const { return indexCount; }
 
 	void SetBasicModelMatrix(float4x4& newModelMatrix);
+	std::vector<int>& GetMaterialIndices() {  return materialIndices; }
 
 	void Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix);
-
 	
 
-      private:
+private:
 	unsigned int vbo = 0;
 	unsigned int ebo = 0;
 	unsigned int vao = 0;
@@ -45,5 +46,7 @@ public:
     
 	float3 maximumPosition;
 	float3 minimumPosition;
+
+	std::vector<int> materialIndices;
 };
 

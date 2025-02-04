@@ -58,6 +58,7 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
 {
     std::unordered_set<int> loadedIndices;
     materials.clear();
+    int id = 0;
 
     for (const auto &srcMaterial : sourceModel.materials)
     {
@@ -65,7 +66,6 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
         material.SetName(srcMaterial.name);
         unsigned int textureId = 0;
         float2 widthHeight     = float2::zero;
-
         
         int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
         if (textureIndex < 0)
@@ -203,7 +203,6 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                 }
             }
         }
-
         
         if (srcMaterial.extensions.find("KHR_materials_specular") != srcMaterial.extensions.end())
         {
@@ -229,7 +228,7 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
         }
         
         materials.push_back(material);
-
+        id++;
         
         if (textureId)
         {
@@ -266,8 +265,9 @@ void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& view
 {
 	for (EngineMesh* currentMesh : meshes)
 	{
-		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-		currentMesh->Render(program, texturePostiion, projectionMatrix, viewMatrix);
+        std::vector<int>& indices = currentMesh->GetMaterialIndices();
+		int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
+		currentMesh->Render(program, texturePosition, projectionMatrix, viewMatrix);
 	}
 }
 
@@ -394,4 +394,10 @@ void EngineModel::ClearVectors()
 	firstMesh = true;
 	indexCount = 0;
 	renderTexture = -1;
+}
+
+ComponentMaterial &EngineModel::GetMaterial(const int index){
+    if (index >= 0 && index < materials.size()) {
+        return materials[index];
+    }
 }

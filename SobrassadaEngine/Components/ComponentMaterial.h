@@ -9,24 +9,24 @@ class ComponentMaterial
         void OnEditorUpdate();
 
         void SetName(const std::string &newName) { name = newName; }
-        void SetHasDiffuseMap(bool value) { hasDiffuseMap = value; }
+        void SetHasDiffuseMap(const bool value) { hasDiffuseMap = value; }
         void SetDiffuseColor(const float3 &color) { diffuseColor = color; }
-        void SetDiffuseMap(int map) { diffuseMap = map; }
-        void SetDiffuseIntensity(float intensity) { diffuseIntensity = intensity; }
+        void SetDiffuseMap(const int map) { diffuseMap = map; }
+        void SetDiffuseIntensity(const float intensity) { diffuseIntensity = intensity; }
 
-        void setHasSpecularMap(bool value) { hasSpecularMap = value; }
-        void setSpecularColor(const float3& color) { specularColor = color; }
-        void setSpecularMap(int map) { specularMap = map; }
-        void setSpecularIntensity(float intensity) { specularIntensity = intensity; }
-        void setShininess(float value) { shininess = value; }
-        void setHasShininessInAlpha(bool value) { hasShininessInAlpha = value; }
+        void setHasSpecularMap(const bool value) { hasSpecularMap = value; }
+        void setSpecularColor(const const float3& color) { specularColor = color; }
+        void setSpecularMap(const int map) { specularMap = map; }
+        void setSpecularIntensity(const float intensity) { specularIntensity = intensity; }
+        void setShininess(const float value) { shininess = value; }
+        void setHasShininessInAlpha(const bool value) { hasShininessInAlpha = value; }
 
-        void setIsPbrSpecularGlossines(bool value) { isPbrSpecularGlossines = value; }
+        void setIsPbrSpecularGlossines(const bool value) { isPbrSpecularGlossines = value; }
         void setDiffuseFactor(const float4& factor) { diffuseFactor = factor; }
         void setSpecularFactor(const float3& factor) { specularFactor = factor; }
-        void setGlossinessFactor(float factor) { glossinessFactor = factor; }
-        void setSpecularGlossinesTexture(int texture) { specularGlossinesTexture = texture; }
-        void setSpecularGlossinessIntensity(float intensity) { specularGlossinessIntensity = intensity; }
+        void setGlossinessFactor(const float factor) { glossinessFactor = factor; }
+        void setSpecularGlossinesTexture(const int texture) { specularGlossinesTexture = texture; }
+        void setSpecularGlossinessIntensity(const float intensity) { specularGlossinessIntensity = intensity; }
 
     private:
         std::string name;

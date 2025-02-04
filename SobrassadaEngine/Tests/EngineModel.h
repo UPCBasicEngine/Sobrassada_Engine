@@ -34,6 +34,7 @@ public:
 	int GetRenderTexture() const { return renderTexture; };
 	void GetTextureSize(float2& outTextureSize);
 	std::vector<ComponentMaterial> &GetMaterials() { return materials; }
+    ComponentMaterial &GetMaterial(const int index);
 
 	void SetRenderTexture(int texturePosition);
 

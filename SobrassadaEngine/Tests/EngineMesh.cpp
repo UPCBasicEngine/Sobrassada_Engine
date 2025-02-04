@@ -215,7 +215,6 @@ void EngineMesh::SetBasicModelMatrix(float4x4& newModelMatrix)
 
 void EngineMesh::Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix)
 {
-
 	glUseProgram(program);
 
 	glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);

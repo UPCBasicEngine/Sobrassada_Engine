@@ -9,6 +9,9 @@ out vec4 outColor;
 layout(binding=0) uniform sampler2D diffuseTexture;
 layout(binding=1) uniform sampler2D specularTexture;
 
+uniform float diffFactor;
+uniform float specFactor;
+
 uniform vec3 lightColor;
 uniform vec3 lightDir;
 uniform vec3 cameraPos;
@@ -39,8 +42,8 @@ void main()
 		float cosTheta = max(dot(N, V), 0.0);
 		float fresnel = RF0 + (1 - RF0) * pow(1-cosTheta, 5);
 
-		vec3 diffuse = (1.0 - RF0) / 3.1415926535 * texColor * lightColor * NL;
-		vec3 specular = specTexColor * VR * lightColor * fresnel * normalization;
+		vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffFactor * texColor * lightColor * NL;
+		vec3 specular = specFactor * specTexColor * VR * lightColor * fresnel * normalization;
 
 		result = ambient + specular + diffuse;
 	}
