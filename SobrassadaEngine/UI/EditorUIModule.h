@@ -3,6 +3,7 @@
 #include "Module.h"
 
 #include <deque>
+#include <string>
 
 class EditorViewport;
 
@@ -32,9 +33,11 @@ class EditorUIModule : public Module
     void OpenGLConfig();
 
     void Console(bool &consoleMenu);
+    void ImportDialog(bool& import);
 
   private:
     bool consoleMenu        = false;
+    bool import             = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
 
@@ -43,4 +46,6 @@ class EditorUIModule : public Module
     std::deque<float> frametime;
 
     EditorViewport *editorViewport = nullptr;
+
+	std::string importPath;
 };

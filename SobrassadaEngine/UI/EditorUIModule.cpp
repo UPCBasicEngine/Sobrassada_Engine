@@ -4,11 +4,14 @@
 #include "EditorViewport.h"
 #include "OpenGLModule.h"
 #include "WindowModule.h"
+#include "DialogEditor.h"
+#include "FileSystem.h"
 
 #include "glew.h"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
+#include <filesystem>
 
 EditorUIModule::EditorUIModule() {}
 
@@ -104,8 +107,11 @@ void EditorUIModule::Draw()
 {
     ImGui::DockSpaceOverViewport();
     MainMenu();
+    ImGui::ShowDemoWindow();
 
     if (consoleMenu) Console(consoleMenu);
+
+	if (import) ImportDialog(import);
 
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
@@ -118,6 +124,8 @@ void EditorUIModule::MainMenu()
     if (ImGui::BeginMenu("General"))
     {
         if (ImGui::MenuItem("Console")) consoleMenu = !consoleMenu;
+
+		if (ImGui::MenuItem("Import")) import = !import;
 
         if (ImGui::MenuItem("Quit")) closeApplication = true;
 
@@ -133,6 +141,41 @@ void EditorUIModule::MainMenu()
     }
 
     ImGui::EndMainMenuBar();
+}
+
+void EditorUIModule::ImportDialog(bool& import)
+{
+    ImGui::OpenPopup("Import Dialog");
+
+    if (ImGui::BeginPopupModal("Import Dialog", & import))
+    {
+        std::filesystem::path currentPath = std::filesystem::current_path();
+
+        std::string currentPathString = currentPath.string();
+        FileSystem::ListFilesInDirectory(currentPathString);
+
+        ImGui::Dummy(ImVec2(0, 100));
+
+        ImGui::Text("File Name:");
+        ImGui::SameLine();
+        ImGui::InputText("##filename", &importPath[0], importPath.size(), ImGuiInputTextFlags_ReadOnly);
+
+        if (ImGui::Button("Cancel", ImVec2(0, 0)))
+        {
+            import = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Ok", ImVec2(0, 0)))
+        {
+            import = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
 }
 
 void EditorUIModule::Console(bool &consoleMenu)
