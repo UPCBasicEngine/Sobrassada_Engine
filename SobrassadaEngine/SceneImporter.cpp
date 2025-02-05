@@ -60,6 +60,19 @@ namespace SceneImporter {
 			}
 		}
 
+		// Copy bin to Assets folder
+		{
+			for (const auto& srcBuffers : model.buffers)
+			{
+				std::string binPath = FileSystem::GetFilePath(filePath) + srcBuffers.uri;
+				std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(binPath);
+				if (!FileSystem::Exists(copyPath.c_str()))
+				{
+					FileSystem::Copy(binPath.c_str(), copyPath.c_str());
+				}
+			}
+		}
+
 		for (const auto& srcImages : model.images)
 		{
 			std::string fullPath = FileSystem::GetFilePath(filePath) + srcImages.uri;
