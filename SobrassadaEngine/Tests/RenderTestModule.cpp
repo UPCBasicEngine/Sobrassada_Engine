@@ -29,7 +29,7 @@ RenderTestModule::~RenderTestModule()
 bool RenderTestModule::Init()
 {
 	//currentLoadedModel->Load("./Test/BakerHouse.gltf");
-	currentLoadedModel->Load("./Test/Robot.gltf");
+	currentLoadedModel->Load("./Test/Robot.gltf");	
 	
 	//program = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
     program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/BRDFPhongFragmentShader.glsl");
@@ -88,7 +88,6 @@ update_status RenderTestModule::Render(float deltaTime)
 		float3(2.0f, 0.0f, 0.0f),
 		float4x4::RotateZ(pi / 4.0f),
 		float3(2.0f, 1.0f, 1.0f));
-					
 
 	glUseProgram(program);
 	glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
@@ -105,23 +104,31 @@ update_status RenderTestModule::Render(float deltaTime)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
 
 	//move this to materialcomponent to alter bia imgui
-	float ambientIntensity = 1.0f;
+	float ambientIntensity = 0.7f;
     glUniform1f(glGetUniformLocation(program, "ambientIntensity"), ambientIntensity);
-    float3 lightColor = float3(0.2f, 1.0f, 1.0f);
+	float3 lightColor = float3(1.2f, 0.2f, 0.0f);
     glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
-    float3 lightDir = float3(3.3f, 3.0f, 3.0f);
-    glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
+
     float3 cameraPos = App->GetCameraModule()->getPosition();
     glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
 
+	float3 diffFactor = float3(1.0f, 1.0f, 1.0f);
+    glUniform3fv(glGetUniformLocation(program, "diffFactor"), 1, &diffFactor[0]);
+	float3 specFactor = float3(1.0f, 1.0f, 1.0f);
+    glUniform3fv(glGetUniformLocation(program, "specFactor"), 1, &specFactor[0]);
+    if (ImGui::CollapsingHeader("Light"))
+    {
+        ImGui::SliderFloat3("Diffuse Color", &lightDir.x, -20.0f, 20.0f);
+    }
+    glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
 	materials = &currentLoadedModel->GetMaterials();
     materials[0].at(0).OnEditorUpdate();
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, baboonTexture);
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, baboonTexture);
 
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	//glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	currentLoadedModel->Render(program, proj, view);
 

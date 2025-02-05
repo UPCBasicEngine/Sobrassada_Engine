@@ -3,6 +3,7 @@
 #include <vector>
 #include "Math/float4x4.h"
 #include "Math/float3.h"
+#include "Components/ComponentMaterial.h"
 
 namespace tinygltf
 {
@@ -30,7 +31,8 @@ public:
     void SetMaterialIndex(int index) { materialIndices.push_back(index); }
 	std::vector<int>& GetMaterialIndices() {  return materialIndices; }
 
-	void Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix);
+	void Render(
+            int program, float4x4 &projectionMatrix, float4x4 &viewMatrix, ComponentMaterial material);
 	
 
 private:

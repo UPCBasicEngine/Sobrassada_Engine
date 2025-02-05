@@ -20,7 +20,7 @@ public:
 
 	void Load(const char* modelPath);
 	void LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath);
-	void LoadTexture(const tinygltf::Model sourceModel, int textureIndex, ComponentMaterial* material, const char* modelPath);
+	unsigned int LoadTexture(const tinygltf::Model sourceModel, int textureIndex, ComponentMaterial* material, const char* modelPath);
 
 	void LoadAdditionalTexture(const char* texturePath);
 

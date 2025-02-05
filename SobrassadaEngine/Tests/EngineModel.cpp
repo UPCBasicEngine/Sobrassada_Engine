@@ -54,7 +54,7 @@ void EngineModel::Load(const char* modelPath)
 	LoadMaterials(model, modelPath);
 }
 
-void EngineModel::LoadTexture(const tinygltf::Model sourceModel, int textureIndex, ComponentMaterial* material, const char* modelPath) {
+unsigned int EngineModel::LoadTexture(const tinygltf::Model sourceModel, int textureIndex, ComponentMaterial* material, const char* modelPath) {
 	const tinygltf::Texture &texture = sourceModel.textures[textureIndex];
     const tinygltf::Image &image     = sourceModel.images[texture.source];
     std::unordered_set<int> loadedIndices;
@@ -72,7 +72,7 @@ void EngineModel::LoadTexture(const tinygltf::Model sourceModel, int textureInde
             fileLocationPosition = filePath.find_last_of(usedSeparator);
         }
                         
-        if (fileLocationPosition == -1) return;
+        if (fileLocationPosition == -1) return -1;
 
         std::string fileLocation      = filePath.substr(0, fileLocationPosition) + usedSeparator;
         std::string texturePathString = fileLocation.append(image.uri);
@@ -87,12 +87,12 @@ void EngineModel::LoadTexture(const tinygltf::Model sourceModel, int textureInde
 			widthHeight.x = textureMetadata.width;
 			widthHeight.y = textureMetadata.height;
             loadedIndices.insert(texture.source);
-            material->setSpecularID(textureId);
-            material->setHasSpecularTexture(true);
 
             textures.push_back(textureId);
             textureInfo.push_back(widthHeight);
             renderTexture++;
+
+			return textureId;
         }
     }
 }
@@ -155,7 +155,9 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                 if (textureIndex >= 0)
                 {
 					material.setHasSpecularTexture(true);
-                    LoadTexture(sourceModel, textureIndex, &material, modelPath);
+
+                    unsigned int textureId = LoadTexture(sourceModel, textureIndex, &material, modelPath);
+					material.setSpecularID(textureId);
                 }
             }
 
@@ -166,7 +168,8 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
                 if (textureIndex >= 0)
                 {
 					material.SetHasDiffuseTexture(true);
-                    LoadTexture(sourceModel, textureIndex, &material, modelPath);
+					unsigned int textureId = LoadTexture(sourceModel, textureIndex, &material, modelPath);
+					material.SetDiffuseID(textureId);
                 }
             }
         }
@@ -187,7 +190,8 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
             else
             {
                 material.SetHasDiffuseTexture(true);
-                LoadTexture(sourceModel, textureIndex, &material, modelPath);
+                unsigned int textureId = LoadTexture(sourceModel, textureIndex, &material, modelPath);
+                material.SetDiffuseID(textureId);
             }
         }
         
@@ -223,8 +227,12 @@ void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& view
 	for (EngineMesh* currentMesh : meshes)
 	{
         std::vector<int>& indices = currentMesh->GetMaterialIndices();
-		int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-		currentMesh->Render(program, texturePosition, projectionMatrix, viewMatrix);
+		for (size_t i = 0; i < indices.size(); ++i)
+		{
+            ComponentMaterial material = GetMaterial(indices[i]);
+            int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
+            currentMesh->Render(program, projectionMatrix, viewMatrix, material);
+        }
 	}
 }
 
