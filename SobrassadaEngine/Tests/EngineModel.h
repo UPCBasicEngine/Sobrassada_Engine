@@ -20,7 +20,7 @@ public:
 
 	void Load(const char* modelPath);
 	void LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath);
-
+	void LoadTexture(const tinygltf::Model sourceModel, int textureIndex, ComponentMaterial* material, const char* modelPath);
 
 	void LoadAdditionalTexture(const char* texturePath);
 
@@ -33,6 +33,7 @@ public:
 	int GetTotalLoadedTextures() const { return textures.size(); };
 	int GetRenderTexture() const { return renderTexture; };
 	void GetTextureSize(float2& outTextureSize);
+
 	std::vector<ComponentMaterial> &GetMaterials() { return materials; }
     ComponentMaterial &GetMaterial(const int index);
 

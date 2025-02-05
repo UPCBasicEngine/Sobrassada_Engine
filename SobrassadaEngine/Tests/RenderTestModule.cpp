@@ -28,8 +28,9 @@ RenderTestModule::~RenderTestModule()
 
 bool RenderTestModule::Init()
 {
-	currentLoadedModel->Load("./Test/BakerHouse.gltf");
-
+	//currentLoadedModel->Load("./Test/BakerHouse.gltf");
+	currentLoadedModel->Load("./Test/Robot.gltf");
+	
 	//program = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
     program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/BRDFPhongFragmentShader.glsl");
 	//program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");
