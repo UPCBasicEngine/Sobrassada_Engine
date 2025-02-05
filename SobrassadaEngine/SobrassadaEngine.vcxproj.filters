@@ -172,8 +172,10 @@
     <ClCompile Include="MeshImporter.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="TextureImporter.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -287,11 +289,13 @@
     <ClInclude Include="MeshImporter.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="FileSystem.h" />
     <ClInclude Include="SceneImporter.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="TextureImporter.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem.h">
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>

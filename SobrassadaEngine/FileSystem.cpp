@@ -92,6 +92,10 @@ namespace FileSystem
 		return std::filesystem::is_directory(directoryPath);
 	}
 
+	std::string GetFilePath(const std::string& filePath) {
+		return std::filesystem::path(filePath).parent_path().string() + "\\";
+	}
+
 	std::string GetFileNameWithExtension(const std::string& filePath) {
 		return std::filesystem::path(filePath).filename().string();
 	}

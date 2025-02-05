@@ -10,6 +10,15 @@ namespace TextureImporter
 {
 	bool Import(const char* filePath)
 	{
+		// Copy image to Assets folder
+		{
+			std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(filePath);
+			if (!FileSystem::Exists(copyPath.c_str()))
+			{
+				FileSystem::Copy(filePath, copyPath.c_str());
+			}
+		}
+
 		const wchar_t* wPath = ConvertToWChar(filePath);
 
 		DirectX::ScratchImage image;

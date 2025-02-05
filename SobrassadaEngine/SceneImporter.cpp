@@ -17,15 +17,6 @@ namespace SceneImporter {
 
 		std::string extension = FileSystem::GetFileExtension(filePath);
 
-		// Copy file to Assets folder
-		{
-			std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(filePath);
-			if (!FileSystem::Exists(copyPath.c_str()))
-			{
-				FileSystem::Copy(filePath, copyPath.c_str());
-			}
-		}
-
 		if (extension == ".gltf")
 		{
 			ImportGLTF(filePath);
@@ -38,6 +29,15 @@ namespace SceneImporter {
 	}
 
 	void ImportGLTF(const char* filePath) {
+
+		// Copy gltf to Assets folder
+		{
+			std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(filePath);
+			if (!FileSystem::Exists(copyPath.c_str()))
+			{
+				FileSystem::Copy(filePath, copyPath.c_str());
+			}
+		}
 
 		tinygltf::TinyGLTF gltfContext;
 		tinygltf::Model model;
@@ -58,6 +58,12 @@ namespace SceneImporter {
 			if (!ret) {
 				GLOG("Failed to parse glTF\n");
 			}
+		}
+
+		for (const auto& srcImages : model.images)
+		{
+			std::string fullPath = FileSystem::GetFilePath(filePath) + srcImages.uri;
+			TextureImporter::Import(fullPath.c_str());
 		}
 
 		for (const auto& srcMesh : model.meshes)

@@ -11,6 +11,7 @@ namespace FileSystem
 	bool CreateDirectories(const char* directoryPath);
 	bool Exists(const char* filePath);
 	bool IsDirectory(const char* directoryPath);
+	std::string GetFilePath(const std::string& filePath);
 	std::string GetFileNameWithExtension(const std::string& filePath);
 	std::string GetFileNameWithoutExtension(const std::string& filePath);
 	std::string GetFileExtension(const std::string& filePath);
