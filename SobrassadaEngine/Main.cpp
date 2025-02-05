@@ -5,6 +5,7 @@
 #include "SDL.h"
 #pragma comment(lib, "Libs/SDL/lib/SDL2.lib")
 #pragma comment(lib, "Libs/SDL/lib/SDL2main.lib")
+#include "optick.h"
 
 #include <memory>
 
@@ -31,6 +32,7 @@ int main(int argc, char **argv)
 
     while (mainState != MAIN_EXIT)
     {
+        OPTICK_FRAME("Main application update");
         switch (mainState)
         {
         case MAIN_CREATION:

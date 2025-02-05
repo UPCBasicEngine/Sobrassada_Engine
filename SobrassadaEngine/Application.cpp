@@ -12,6 +12,8 @@
 #include "RenderTestModule.h"
 #include "TextureModuleTest.h"
 
+#include "optick.h"
+
 Application::Application()
 {
     modules.push_back(windowModule = new WindowModule());
@@ -51,24 +53,30 @@ bool Application::Init()
 
 update_status Application::Update(float deltaTime)
 {
+
     update_status returnStatus = UPDATE_CONTINUE;
 
+    OPTICK_CATEGORY("Application::PreUpdate", Optick::Category::GameLogic)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->PreUpdate(deltaTime);
 
+    OPTICK_CATEGORY("Application::Update", Optick::Category::GameLogic)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->Update(deltaTime);
-
+    
+    OPTICK_CATEGORY("Application::Render", Optick::Category::Rendering)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->Render(deltaTime);
-
+    
+    OPTICK_CATEGORY("Application::RenderEditor", Optick::Category::Rendering)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->RenderEditor(deltaTime);
-
+    
+    OPTICK_CATEGORY("Application::PostUpdate", Optick::Category::GameLogic)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->PostUpdate(deltaTime);
