@@ -2,6 +2,8 @@
 
 #include "DirectXTex/DirectXTex.h"
 #include "glew.h"
+#include <string>
+#include <TextureImporter.h>
 
 TextureModuleTest::TextureModuleTest()
 {
@@ -11,7 +13,7 @@ TextureModuleTest::~TextureModuleTest()
 {
 }
 
-unsigned int TextureModuleTest::LoadTexture(const wchar_t* texturePath, DirectX::TexMetadata& outTexMetadata)
+unsigned int TextureModuleTest::LoadTexture(const char* texturePath, DirectX::TexMetadata& outTexMetadata)
 {
 	GLOG("Loading texture: %s", texturePath)
 		unsigned int textureId = 0;
@@ -19,7 +21,9 @@ unsigned int TextureModuleTest::LoadTexture(const wchar_t* texturePath, DirectX:
 	DirectX::ScratchImage scratchImage;
 	OpenGLMetadata openGlMeta;
 
-	bool succeded = LoadTextureFile(texturePath, outTexMetadata, scratchImage);
+	const wchar_t* wPath = TextureImporter::ConvertToWChar(texturePath);
+	bool succeded = LoadTextureFile(wPath, outTexMetadata, scratchImage);
+	delete[] wPath;
 	if (succeded)
 	{
 		ConvertMetadata(outTexMetadata, openGlMeta);

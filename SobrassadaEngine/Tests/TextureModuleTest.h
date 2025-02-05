@@ -22,7 +22,7 @@ public:
 	TextureModuleTest();
 	~TextureModuleTest();
 
-	unsigned int LoadTexture(const wchar_t* texturePath, DirectX::TexMetadata& outTexMetadata);
+	unsigned int LoadTexture(const char* texturePath, DirectX::TexMetadata& outTexMetadata);
 	static void ConvertMetadata(const DirectX::TexMetadata& metadata, OpenGLMetadata& outMetadata);
 
 	unsigned int CreateFramebufferTexture(int width, int height);

@@ -8,6 +8,7 @@
 #include "Framebuffer.h"
 #include "OpenGLModule.h"
 #include "SceneImporter.h"
+#include "TextureImporter.h"
 
 #include "MathGeoLib.h"
 #include "glew.h"
@@ -16,6 +17,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
+
 
 RenderTestModule::RenderTestModule()
 {
@@ -42,8 +44,12 @@ bool RenderTestModule::Init()
 
 	// Texture loading
 	DirectX::TexMetadata textureMetadata;
-	auto baboonPath = L"./Test/baboon.ppm";
-	baboonTexture = App->GetTextureModuleTest()->LoadTexture(baboonPath, textureMetadata);
+
+	SceneImporter::Import("./Test/baboon.ppm");
+	std::string texturePath = "./Library/Materials/baboon.dds";
+	
+	baboonTexture = App->GetTextureModuleTest()->LoadTexture(texturePath.c_str(), textureMetadata);
+	
 	
 	// Quad with UV's
 	float vtx_data[] = {

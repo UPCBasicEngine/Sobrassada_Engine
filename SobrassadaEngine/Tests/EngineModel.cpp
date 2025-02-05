@@ -90,11 +90,8 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
 
 			std::string texturePathString = fileLocation.append(image.uri);
 
-			std::wstring wideUri = std::wstring(texturePathString.begin(), texturePathString.end());
-			const wchar_t* texturePath = wideUri.c_str();
-
 			DirectX::TexMetadata textureMetadata;
-			textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
+			textureId = App->GetTextureModuleTest()->LoadTexture(texturePathString.c_str(), textureMetadata);
 			if (textureId)
 			{
 				widthHeight.x = textureMetadata.width;
@@ -114,13 +111,11 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
 void EngineModel::LoadAdditionalTexture(const char* texturePath)
 {
 	std::string stringPath = std::string(texturePath);
-	std::wstring widePath = std::wstring(stringPath.begin(), stringPath.end());
-	const wchar_t* wideTexturePath = widePath.c_str();
 
 	float2 widthHeight = float2::zero;
 
 	DirectX::TexMetadata textureMetadata;
-	unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(wideTexturePath, textureMetadata);
+	unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(stringPath.c_str(), textureMetadata);
 
 	if (textureId) 
 	{
