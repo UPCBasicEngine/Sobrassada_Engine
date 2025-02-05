@@ -317,6 +317,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 			}
 
 			newMesh->SetBasicModelMatrix(modelMatrix);
+            newMesh->SetMaterialIndex(primitive.material);
 			
 			indexCount += newMesh->GetIndexCount();
 			meshes.push_back(newMesh);

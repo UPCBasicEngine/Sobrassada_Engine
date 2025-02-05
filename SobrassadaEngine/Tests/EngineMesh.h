@@ -27,6 +27,7 @@ public:
 	int GetIndexCount() const { return indexCount; }
 
 	void SetBasicModelMatrix(float4x4& newModelMatrix);
+    void SetMaterialIndex(int index) { materialIndices.push_back(index); }
 	std::vector<int>& GetMaterialIndices() {  return materialIndices; }
 
 	void Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix);
