@@ -51,14 +51,15 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
     Draw();
 
     editorViewport->Render();
-
+    
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    
     return UPDATE_CONTINUE;
 }
 
 update_status EditorUIModule::PostUpdate(float deltaTime)
 {
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     
     if (closeApplication) return UPDATE_STOP;
 
