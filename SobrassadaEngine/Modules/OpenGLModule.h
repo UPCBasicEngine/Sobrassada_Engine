@@ -24,6 +24,7 @@ class OpenGLModule : public Module
 
     void SetDepthTest(bool enable);
     void SetFaceCull(bool enable);
+    void SetDepthFunc(bool enable);
     void SetFrontFaceMode(int mode);
     void SetClearRed(float newValue);
     void SetClearGreen(float newValue);
