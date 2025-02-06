@@ -35,7 +35,7 @@ public:
 	int GetRenderTexture() const { return renderTexture; };
 	void GetTextureSize(float2& outTextureSize);
     OBB GetOBBModel() const;
-
+    AABB GetABBModel() const;
 	void SetRenderTexture(int texturePosition);
 
 private:

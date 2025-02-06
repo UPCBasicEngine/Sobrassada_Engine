@@ -22,6 +22,7 @@ public:
 
 	const float4x4& GetProjectionMatrix() { return projectionMatrix; }
 	const float4x4& GetViewMatrix() { return viewMatrix; }
+    void MoveCamera();
 
 	void SetAspectRatio(float newAspectRatio);
 
@@ -32,5 +33,8 @@ private:
 
 	float4x4 viewMatrix;
 	float4x4 projectionMatrix;
+
+	float speedBase;
+    float movementSpeed = 2.0f;
 };
 

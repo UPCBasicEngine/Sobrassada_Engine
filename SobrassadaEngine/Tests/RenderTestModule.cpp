@@ -107,7 +107,43 @@ update_status RenderTestModule::Render(float deltaTime)
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	currentLoadedModel->Render(program, proj, view);
+	OBB currentModelObb = currentLoadedModel->GetOBBModel();
+    float3 corners[8];
+    currentModelObb.GetCornerPoints(corners);
+    bool insideFrustum = false;
+
+	for (int i = 0; i < 8; ++i)
+    {
+        float4 corner_local(corners[i], 1.0f);
+        float4 corner_global  = corner_local * model;
+
+        float4 transformed_corner = proj * view * corner_global;
+
+		if (transformed_corner.w != 0.0f)
+        {
+            transformed_corner.x /= transformed_corner.w;
+            transformed_corner.y /= transformed_corner.w;
+            transformed_corner.z /= transformed_corner.w;
+        }
+
+        if (transformed_corner.x >= -1.0f && transformed_corner.x <= 1.0f && transformed_corner.y >= -1.0f &&
+            transformed_corner.y <= 1.0f && transformed_corner.z >= -1.0f && transformed_corner.z <= 1.0f)
+        {
+            insideFrustum = true;
+            break;
+        }
+    }
+
+	if (insideFrustum)
+    {
+        GLOG("El objeto esta dentro del Frustum");
+        currentLoadedModel->Render(program, proj, view);
+    }
+    else
+    {
+        GLOG("El objeto esta fuera del Frustum");
+    }
+	
 
 	// Unbinding frame buffer so ui gets rendered
 	App->GetOpenGLModule()->GetFramebuffer()->Unbind();
