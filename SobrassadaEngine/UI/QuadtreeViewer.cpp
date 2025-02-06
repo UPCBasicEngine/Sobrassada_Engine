@@ -49,6 +49,7 @@ QuadtreeViewer::QuadtreeViewer()
 QuadtreeViewer::~QuadtreeViewer()
 {
     delete framebuffer;
+    delete quadtree;
 }
 
 void QuadtreeViewer::Render(bool &renderBoolean)
