@@ -29,6 +29,9 @@ public:
 	void RenderHierarchyUI(bool &hierarchyMenu);
     void RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t &selectedGameObjectUUID);
 
+	void RemoveGameObjectHierarchy(uint32_t gameObjectUUID);
+
+
 private:
 
 	uint32_t gameObjectRootUUID;

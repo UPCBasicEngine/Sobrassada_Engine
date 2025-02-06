@@ -95,9 +95,11 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
     
     ImGui::SameLine();
 
-    if(ImGui::Button("Delete GameObject"));
-    //Make basic implementation and remember to call the function
-    //instance of moduleScene is required
+    if (ImGui::Button("Delete GameObject") && selectedGameObjectUUID != gameObjectRootUUID)
+    {
+        RemoveGameObjectHierarchy(selectedGameObjectUUID);
+        selectedGameObjectUUID = gameObjectRootUUID;
+    }
 
     RenderGameObjectHierarchy(gameObjectRootUUID, selectedGameObjectUUID);
 
@@ -125,5 +127,30 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t& s
     {
         if (ImGui::IsItemClicked()) selectedGameObjectUUID = gameObjectUUID;
     }
+
+}
+
+void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
+{ 
+    if (!gameObjectsContainer.count(gameObjectUUID)) return;
+
+    GameObject *gameObject = gameObjectsContainer[gameObjectUUID];
+
+    for (uint32_t childUUID : gameObject->GetChildren())
+    {
+        RemoveGameObjectHierarchy(childUUID);
+    }
+
+    uint32_t parentUUID = gameObject->GetParent();
+
+    if (gameObjectsContainer.count(parentUUID))
+    {
+        GameObject *parentGameObject = gameObjectsContainer[parentUUID];
+        parentGameObject->RemoveGameObject(gameObjectUUID);
+    }
+
+    gameObjectsContainer.erase(gameObjectUUID);
+
+    delete gameObject;
 
 }

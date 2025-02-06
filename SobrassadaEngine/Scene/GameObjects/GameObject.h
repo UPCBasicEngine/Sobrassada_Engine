@@ -20,6 +20,9 @@ public:
 
 	std::string GetName() { return name; }
     std::vector<uint32_t> GetChildren() { return children; }
+    
+	uint32_t GetParent() { return parentUUID; }
+	void SetParent(uint32_t newParentUUID);
 
 private:
 
