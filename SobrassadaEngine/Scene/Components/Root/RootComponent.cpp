@@ -56,12 +56,12 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
 {
     ImGui::SeparatorText("Component hierarchy");
     
-    static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+    ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
     if (selectedUUID == uuid)
     {
         base_flags |= ImGuiTreeNodeFlags_Selected;
     }
-    const bool isExpanded = ImGui::TreeNodeEx((void*) uuid, base_flags, name, nullptr);
+    const bool isExpanded = ImGui::TreeNodeExV((void*) uuid, base_flags, name, nullptr);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         SetSelectedComponent(uuid);
     

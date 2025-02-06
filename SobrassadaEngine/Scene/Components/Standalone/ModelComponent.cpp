@@ -22,7 +22,7 @@ void ModelComponent::RenderEditorComponentTree(const uint32_t selectedComponentU
 {
     ImGui::Indent( 16 );
 
-    static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+    ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
     if (selectedComponentUUID == uuid)
     {
         base_flags |= ImGuiTreeNodeFlags_Selected;

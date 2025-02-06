@@ -36,6 +36,7 @@ update_status EditorUIModule::PreUpdate(float deltaTime)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+    ImGui::DockSpaceOverViewport();
 
     return UPDATE_CONTINUE;
 }
@@ -104,7 +105,7 @@ void EditorUIModule::AddFramePlotData(float deltaTime)
 
 void EditorUIModule::Draw()
 {
-    ImGui::DockSpaceOverViewport();
+    
     MainMenu();
 
     if (consoleMenu) Console(consoleMenu);
