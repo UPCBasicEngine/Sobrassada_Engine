@@ -3,6 +3,7 @@
 #include "Module.h"
 
 class EngineModel;
+class LightsConfig;
 
 class RenderTestModule : public Module
 {
@@ -25,5 +26,6 @@ private:
 	unsigned int baboonTexture = -1;
 
 	EngineModel* currentLoadedModel;
+    LightsConfig *lightsConfig;
 };
 

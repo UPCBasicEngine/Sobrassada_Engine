@@ -601,20 +601,12 @@ bool DebugDrawModule::ShutDown()
 
 update_status DebugDrawModule::Render(float deltaTime)
 {
-    float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
-    float4x4 view = App->GetCameraModule()->GetViewMatrix();
-
-    dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
-    dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
-
-    int width  = 0;
-    int height = 0;
-
-    SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
-
-    Draw(view, proj, width, height);
-
-    return UPDATE_CONTINUE;
+   dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
+   dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
+   
+   //  Don't draw the grid here because the skybox must be drawn first
+   
+   return UPDATE_CONTINUE;
 }
 
 void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height)

@@ -181,6 +181,7 @@
     <ClCompile Include="Libs\MathGeoLib\include\Math\SSEMath.cpp" />
     <ClCompile Include="Libs\MathGeoLib\include\Math\TransformOps.cpp" />
     <ClCompile Include="Libs\MathGeoLib\include\Time\Clock.cpp" />
+    <ClCompile Include="Utils\LightsConfig.cpp" />
     <ClCompile Include="Utils\log.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Modules\OpenGLModule.cpp" />
@@ -218,6 +219,7 @@
     <ClInclude Include="Tests\RenderTestModule.h" />
     <ClInclude Include="Modules\ShaderModule.h" />
     <ClInclude Include="Tests\TextureModuleTest.h" />
+    <ClInclude Include="Utils\LightsConfig.h" />
     <ClInclude Include="Utils\UPCTimer.h" />
     <ClInclude Include="Modules\WindowModule.h" />
   </ItemGroup>
