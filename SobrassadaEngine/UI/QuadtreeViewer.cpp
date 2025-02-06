@@ -13,24 +13,22 @@
 
 QuadtreeViewer::QuadtreeViewer()
 {
-    framebuffer              = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
-    quadtree                 = new Quadtree(float2(0, 0), 20, 2);
+    framebuffer               = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
+    quadtree                  = new Quadtree(float2(0, 0), 20, 2);
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
-    camera.type              = FrustumType::OrthographicFrustum;
-    camera.pos               = float3(0, 0, 5);
-    camera.front             = -float3::unitZ;
-    camera.up                = float3::unitY;
-    camera.nearPlaneDistance = 0.1f;
-    camera.farPlaneDistance  = 100.f;
+    camera.type               = FrustumType::OrthographicFrustum;
+    camera.pos                = float3(0, 0, 5);
+    camera.front              = -float3::unitZ;
+    camera.up                 = float3::unitY;
+    camera.nearPlaneDistance  = 0.1f;
+    camera.farPlaneDistance   = 100.f;
 
-    float aspectRatio        = (float)framebuffer->GetTextureHeight() / (float)framebuffer->GetTextureWidth();
+    camera.orthographicWidth  = (float)framebuffer->GetTextureWidth();
+    camera.orthographicHeight = (float)framebuffer->GetTextureHeight();
 
-    camera.orthographicWidth  = (float)framebuffer->GetTextureWidth() * aspectRatio / cameraSizeScaleFactor;
-    camera.orthographicHeight = (float)framebuffer->GetTextureHeight() * aspectRatio / cameraSizeScaleFactor;
-
-    viewMatrix               = camera.ViewMatrix();
-    projectionMatrix         = camera.ProjectionMatrix();
+    viewMatrix                = camera.ViewMatrix();
+    projectionMatrix          = camera.ProjectionMatrix();
 
     // TODO: REMOVE, JUST FOR TESTING QUADTREE GENERATION
     math::LCG randomGenerator;
@@ -110,8 +108,8 @@ void QuadtreeViewer::Render(bool &renderBoolean)
 
 void QuadtreeViewer::ChangeCameraSize(float width, float height)
 {
-    float aspectRatio         = height / width;
-    camera.orthographicHeight = height * aspectRatio / cameraSizeScaleFactor;
+    camera.orthographicHeight = height / cameraSizeScaleFactor;
+    camera.orthographicWidth = width / cameraSizeScaleFactor;
 
     viewMatrix                = camera.ViewMatrix();
     projectionMatrix          = camera.ProjectionMatrix();
