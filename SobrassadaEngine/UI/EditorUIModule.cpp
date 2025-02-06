@@ -4,7 +4,7 @@
 #include "EditorViewport.h"
 #include "OpenGLModule.h"
 #include "WindowModule.h"
-#include "QaudtreeViewer.h"
+#include "QuadtreeViewer.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -27,7 +27,7 @@ bool EditorUIModule::Init()
     ImGui_ImplOpenGL3_Init("#version 460");
 
     editorViewport = new EditorViewport();
-    quadtreeViewer = new QaudtreeViewer();
+    quadtreeViewer = new QuadtreeViewer();
 
     return true;
 }

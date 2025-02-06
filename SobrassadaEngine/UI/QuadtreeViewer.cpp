@@ -1,4 +1,4 @@
-#include "QaudtreeViewer.h"
+#include "QuadtreeViewer.h"
 
 #include "Application.h"
 #include "DebugDrawModule.h"
@@ -11,24 +11,26 @@
 #include "glew.h"
 #include "imgui.h"
 
-QaudtreeViewer::QaudtreeViewer()
+QuadtreeViewer::QuadtreeViewer()
 {
-    framebuffer               = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
-    quadtree                  = new Quadtree(float2(0, 0), 20, 2);
+    framebuffer              = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
+    quadtree                 = new Quadtree(float2(0, 0), 20, 2);
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
-    camera.type               = FrustumType::OrthographicFrustum;
-    camera.pos                = float3(0, 0, 5);
-    camera.front              = -float3::unitZ;
-    camera.up                 = float3::unitY;
-    camera.nearPlaneDistance  = 0.1f;
-    camera.farPlaneDistance   = 100.f;
+    camera.type              = FrustumType::OrthographicFrustum;
+    camera.pos               = float3(0, 0, 5);
+    camera.front             = -float3::unitZ;
+    camera.up                = float3::unitY;
+    camera.nearPlaneDistance = 0.1f;
+    camera.farPlaneDistance  = 100.f;
 
-    camera.orthographicHeight = (float)framebuffer->GetTextureHeight() / cameraSizeScaleFactor;
-    camera.orthographicWidth  = (float)framebuffer->GetTextureWidth() / cameraSizeScaleFactor;
+    float aspectRatio        = (float)framebuffer->GetTextureHeight() / (float)framebuffer->GetTextureWidth();
 
-    viewMatrix                = camera.ViewMatrix();
-    projectionMatrix          = camera.ProjectionMatrix();
+    camera.orthographicWidth  = (float)framebuffer->GetTextureWidth() * aspectRatio / cameraSizeScaleFactor;
+    camera.orthographicHeight = (float)framebuffer->GetTextureHeight() * aspectRatio / cameraSizeScaleFactor;
+
+    viewMatrix               = camera.ViewMatrix();
+    projectionMatrix         = camera.ProjectionMatrix();
 
     // TODO: REMOVE, JUST FOR TESTING QUADTREE GENERATION
     math::LCG randomGenerator;
@@ -36,20 +38,20 @@ QaudtreeViewer::QaudtreeViewer()
 
     for (int i = 0; i < samplePoints; ++i)
     {
-        float xCoord    = randomGenerator.Float(-10, 10);
-        float yCoord    = randomGenerator.Float(-10, 10);
-        Box newPoint    = Box(xCoord, yCoord, 1.f, 1.f);
+        float xCoord = randomGenerator.Float(-10, 10);
+        float yCoord = randomGenerator.Float(-10, 10);
+        Box newPoint = Box(xCoord, yCoord, 1.f, 1.f);
 
         quadtree->InsertElement(newPoint);
     }
 }
 
-QaudtreeViewer::~QaudtreeViewer()
+QuadtreeViewer::~QuadtreeViewer()
 {
     delete framebuffer;
 }
 
-void QaudtreeViewer::Render(bool &renderBoolean)
+void QuadtreeViewer::Render(bool &renderBoolean)
 {
     framebuffer->CheckResize();
     framebuffer->Bind();
@@ -70,7 +72,7 @@ void QaudtreeViewer::Render(bool &renderBoolean)
 
     CreateQueryAreaLines(queryArea, queryAreaLines);
 
-    App->GetDebugDreawModule()->RenderQuadtreeViewportLines(
+    App->GetDebugDrawModule()->RenderQuadtreeViewportLines(
         viewMatrix, projectionMatrix, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight(), drawLines,
         elementLines, queryAreaLines
     );
@@ -105,16 +107,16 @@ void QaudtreeViewer::Render(bool &renderBoolean)
     ImGui::End();
 }
 
-void QaudtreeViewer::ChangeCameraSize(float width, float height)
+void QuadtreeViewer::ChangeCameraSize(float width, float height)
 {
-    camera.orthographicHeight = width / cameraSizeScaleFactor;
-    camera.orthographicWidth  = height / cameraSizeScaleFactor;
+    float aspectRatio         = height / width;
+    camera.orthographicHeight = height * aspectRatio / cameraSizeScaleFactor;
 
     viewMatrix                = camera.ViewMatrix();
     projectionMatrix          = camera.ProjectionMatrix();
 }
 
-void QaudtreeViewer::CreateQueryAreaLines(const Box &queryArea, std::list<float4> &queryAreaLines) const
+void QuadtreeViewer::CreateQueryAreaLines(const Box &queryArea, std::list<float4> &queryAreaLines) const
 {
     float halfSizeX    = queryArea.sizeX / 2.f;
     float halfSizeY    = queryArea.sizeY / 2.f;

@@ -166,7 +166,7 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Component.cpp" />
-    <ClCompile Include="UI\QaudtreeViewer.cpp">
+    <ClCompile Include="UI\QuadtreeViewer.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="Utils\Quadtree.cpp">
@@ -280,7 +280,7 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="UI\QaudtreeViewer.h">
+    <ClInclude Include="UI\QuadtreeViewer.h">
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Quadtree.h">

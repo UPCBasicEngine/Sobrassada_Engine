@@ -5,7 +5,7 @@
 #include <deque>
 
 class EditorViewport;
-class QaudtreeViewer;
+class QuadtreeViewer;
 
 class EditorUIModule : public Module
 {
@@ -45,5 +45,5 @@ class EditorUIModule : public Module
     std::deque<float> frametime;
 
     EditorViewport *editorViewport = nullptr;
-    QaudtreeViewer *quadtreeViewer = nullptr;
+    QuadtreeViewer *quadtreeViewer = nullptr;
 };
