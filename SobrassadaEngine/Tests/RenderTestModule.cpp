@@ -114,20 +114,20 @@ update_status RenderTestModule::Render(float deltaTime)
 
 	for (int i = 0; i < 8; ++i)
     {
-        float4 corner_local(corners[i], 1.0f);
-        float4 corner_global  = corner_local * model;
+        float4 cornerLocal(corners[i], 1.0f);
+        float4 cornerGlobal = cornerLocal * model;
 
-        float4 transformed_corner = proj * view * corner_global;
+        float4 transformedCorner = proj * view * cornerGlobal;
 
-		if (transformed_corner.w != 0.0f)
+		if (transformedCorner.w != 0.0f)
         {
-            transformed_corner.x /= transformed_corner.w;
-            transformed_corner.y /= transformed_corner.w;
-            transformed_corner.z /= transformed_corner.w;
+            transformedCorner.x /= transformedCorner.w;
+            transformedCorner.y /= transformedCorner.w;
+            transformedCorner.z /= transformedCorner.w;
         }
 
-        if (transformed_corner.x >= -1.0f && transformed_corner.x <= 1.0f && transformed_corner.y >= -1.0f &&
-            transformed_corner.y <= 1.0f && transformed_corner.z >= -1.0f && transformed_corner.z <= 1.0f)
+        if (transformedCorner.x >= -1.0f && transformedCorner.x <= 1.0f && transformedCorner.y >= -1.0f &&
+            transformedCorner.y <= 1.0f && transformedCorner.z >= -1.0f && transformedCorner.z <= 1.0f)
         {
             insideFrustum = true;
             break;

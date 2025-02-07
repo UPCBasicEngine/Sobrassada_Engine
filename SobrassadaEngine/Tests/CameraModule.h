@@ -34,7 +34,7 @@ private:
 	float4x4 viewMatrix;
 	float4x4 projectionMatrix;
 
-	float speedBase;
-    float movementSpeed = 2.0f;
+	float speedBase = 0.01;
+    float movementSpeed = 0.01f;
 };
 

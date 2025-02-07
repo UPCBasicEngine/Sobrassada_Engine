@@ -69,14 +69,11 @@ void CameraModule::EventTriggered()
 
 void CameraModule::MoveCamera()
 {
+    movementSpeed = speedBase;
 
     if (App->GetInputModule()->GetKey(SDL_SCANCODE_LSHIFT))
     {
         movementSpeed = speedBase * 3;
-    }
-    else
-    {
-        movementSpeed = speedBase;
     }
 
     // if (App->GetInputModule()->IsMouseButtonPressed(SDL_BUTTON_RIGHT))
@@ -147,4 +144,6 @@ void CameraModule::MoveCamera()
             }
         }
     }
+
+    viewMatrix = camera.ViewMatrix();
 }
