@@ -3,9 +3,11 @@
 #include "Module.h"
 
 #include <map>
+#include <string>
 #include <unordered_map>
 
-class GameObject;
+
+class EngineModel;class GameObject;
 class Component;
 class RootComponent;
 
@@ -19,6 +21,7 @@ public:
 	bool Init() override;
     update_status PreUpdate(float deltaTime) override;
     update_status Update(float deltaTime) override;
+    update_status Render(float deltaTime) override;
     update_status RenderEditor(float deltaTime) override;
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
@@ -35,8 +38,12 @@ public:
     void RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t &selectedGameObjectUUID);
 
     std::map<uint32_t, Component*> gameComponents;
+    std::map<uint32_t, EngineModel*> loadedModels;
+    std::map<std::string, uint32_t> MOCKUP_libraryModels;
+    
+    RootComponent* GetRootComponent() const { return rootComponent; }
 
-    RootComponent* GetRootComponent() const { return rootComponent; };
+    void MOCKUP_loadModel(std::string path);
 
 private:
 

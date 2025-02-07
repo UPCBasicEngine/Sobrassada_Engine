@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Globals.h"
 #include "Scene/Components/Component.h"
 
 #include <cstdint>
@@ -11,13 +12,15 @@ public:
     void RenderEditorInspector() override;
     void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
     void Update() override;
+    void Render() override;
 
-    void LoadModel(uint32_t modelUUID); // TODO Call library module to load data from serialized model
+    void LoadModel(const std::string& modelName, uint32_t modelUUID); 
 
 private:
 
     // TODO Add model code, add mesh components when loading
 
-    uint32_t currentModelUUID = 0; // TODO Define value for undefined UUID 
+    std::string currentModelName = "Not selected";
+    uint32_t currentModelUUID = CONSTANT_NO_MODEL_UUID;
     
 };

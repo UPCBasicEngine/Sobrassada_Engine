@@ -15,6 +15,7 @@ public:
     
     virtual void Enable();
     virtual void Update() = 0;
+    virtual void Render();
     virtual void Disable();
 
     virtual bool AddComponent(const uint32_t componentUUID);

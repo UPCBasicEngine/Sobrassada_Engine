@@ -1,6 +1,7 @@
 #include "SceneModule.h"
 
 #include "ComponentUtils.h"
+#include "EngineModel.h"
 #include "GameObject.h"
 
 #include "glew.h"
@@ -10,6 +11,8 @@
 
 #include "Algorithm/Random/LCG.h"
 #include "Root/RootComponent.h"
+
+#include <tiny_gltf.h>
 
 SceneModule::SceneModule()
 {
@@ -37,7 +40,13 @@ bool SceneModule::Init()
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
     rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), -1, -1)); // TODO Add the gameObject UUID as parent?
-    gameComponents[rootComponent->GetUUID()] = rootComponent;  
+    gameComponents[rootComponent->GetUUID()] = rootComponent;
+
+    const uint32_t newModelID = LCG().IntFast();
+    EngineModel* model = new EngineModel();
+    model->Load("./Test/BakerHouse.gltf");
+    loadedModels[newModelID] = model;
+    MOCKUP_libraryModels["Baker house"] = newModelID;
     
     return true;
 }
@@ -49,6 +58,15 @@ update_status SceneModule::PreUpdate(float deltaTime)
 
 update_status SceneModule::Update(float deltaTime) 
 {
+    return UPDATE_CONTINUE;
+}
+
+update_status SceneModule::Render(float deltaTime)
+{
+    if (rootComponent != nullptr)
+    {
+        rootComponent->Render();
+    }
     return UPDATE_CONTINUE;
 }
 

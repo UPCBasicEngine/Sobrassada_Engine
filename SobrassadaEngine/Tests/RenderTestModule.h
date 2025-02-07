@@ -15,7 +15,7 @@ public:
 	update_status Render(float deltaTime) override;
 	bool ShutDown() override;
 
-
+        int GetProgram() const { return program; }
 private:
 	
 	void RenderEditorViewport();
@@ -23,7 +23,5 @@ private:
 	int program = -1;
 	unsigned int vbo = -1;
 	unsigned int baboonTexture = -1;
-
-	EngineModel* currentLoadedModel;
 };
 

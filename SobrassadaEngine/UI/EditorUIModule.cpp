@@ -173,8 +173,7 @@ void EditorUIModule::Console(bool &consoleMenu)
 
 void EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &worldTransform)
 {
-    ImGui::Text("Transform");
-    ImGui::SameLine();
+    ImGui::SeparatorText("Transform");
     ImGui::RadioButton("Local", &transformType, LOCAL);
     ImGui::SameLine();
     ImGui::RadioButton("World", &transformType, GLOBAL);

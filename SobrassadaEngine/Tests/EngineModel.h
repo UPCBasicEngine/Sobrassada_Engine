@@ -24,7 +24,7 @@ public:
 
 	void LoadAdditionalTexture(const char* texturePath);
 
-	void Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix);
+	void Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix);
 
 	float3 GetMaximumValues() const { return maxValues; };
 	float3 GetMinimumValues() const { return minValues; };

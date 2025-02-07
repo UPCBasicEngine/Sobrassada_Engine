@@ -14,6 +14,15 @@ void Component::Enable()
     enabled = true;
 }
 
+void Component::Render()
+{
+    for (uint32_t childUUID: children)
+    {
+        Component* child = App->GetSceneModule()->gameComponents[childUUID];
+        if (child != nullptr) child->Render();
+    }
+}
+
 void Component::Disable()
 {
     enabled = false;

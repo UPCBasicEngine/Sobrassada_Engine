@@ -45,4 +45,6 @@ enum update_status
 #define DEFAULT_CAMERA_MOUSE_SENSITIVITY 0.5f;
 #define DEFAUL_CAMERA_ZOOM_SENSITIVITY 5.f;
 
+constexpr uint32_t CONSTANT_NO_MODEL_UUID = 0;
+
 constexpr float PI = 3.14159265359f;
