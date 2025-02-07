@@ -23,7 +23,9 @@ public:
     virtual void RenderEditorInspector();
     virtual void RenderEditorComponentTree(const uint32_t selectedComponentUUID);
 
-    uint32_t GetUUID() const;
+    uint32_t GetUUID() const { return uuid; }
+
+    uint32_t GetUUIDParent() const { return uuidParent; }
 
 protected:
     

@@ -28,16 +28,29 @@ bool RootComponent::RemoveComponent(const uint32_t componentUUID)
 
 void RootComponent::RenderComponentEditor()
 {
+    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUUID];
+    
     ImGui::Begin("Inspector");    // TODO Add bool parameter at the end to then unselect the component (Add isSelected property to component?)
 
     //ImGui::InputText(name, test, 10, ImGuiInputTextFlags_None);
     ImGui::Text(name);
     ImGui::SameLine();
     ImGui::Checkbox("Enabled", &enabled); // TODO Call Enable() / Disable() instead of setting the value directly
-    ImGui::SameLine();
+    
     if (ImGui::Button("Add Component")) // TODO Get selected component to add the new one at the correct location (By UUID)
     {
         CreateComponent(COMPONENT_MODEL); // TODO Add selection table dropdown to select which component to add
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Remove Component")) 
+    {
+        if (selectedComponent != nullptr)
+        {
+            Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUUIDParent()];
+            if (selectedParentComponent != nullptr)  selectedParentComponent->RemoveComponent(selectedUUID);
+            // TODO Make sure component gets fully deleted if not used anywhere else, delete mesh from memory for example
+            // TODO Remove children components as well or assign them to the parent. To decide!
+        }
     }
     
     RenderEditorComponentTree(selectedUUID);
@@ -45,9 +58,8 @@ void RootComponent::RenderComponentEditor()
     ImGui::Spacing();
 
     ImGui::SeparatorText("Modules Configuration");
-
-    Component* component = App->GetSceneModule()->gameComponents[selectedUUID];
-    if (component != nullptr)  component->RenderEditorInspector();
+    
+    if (selectedComponent != nullptr)  selectedComponent->RenderEditorInspector();
 
     ImGui::End();
 }

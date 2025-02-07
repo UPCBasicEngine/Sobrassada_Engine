@@ -36,8 +36,8 @@ bool SceneModule::Init()
 
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
-    rootComponentUUID = LCG().IntFast();
-    gameComponents[rootComponentUUID] = ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, rootComponentUUID, 0, -1);
+    rootComponentUUID = 100;//LCG().IntFast();
+    gameComponents[rootComponentUUID] = ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, rootComponentUUID, -1, -1); // TODO Add the gameObject UUID as parent?
     
     return true;
 }

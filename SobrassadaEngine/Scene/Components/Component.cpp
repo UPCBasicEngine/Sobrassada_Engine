@@ -41,8 +41,3 @@ void Component::RenderEditorInspector()
 void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
 }
-
-uint32_t Component::GetUUID() const
-{
-    return uuid;
-}
