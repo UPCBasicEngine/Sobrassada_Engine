@@ -95,7 +95,7 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     ImGui::SeparatorText("Component hierarchy");
     
     ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (selectedUUID == uuid)
+    if (selectedComponentUUID == uuid)
     {
         base_flags |= ImGuiTreeNodeFlags_Selected;
     }
@@ -117,7 +117,7 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
 
 void RootComponent::RenderEditorInspector()
 {
-    App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform);
+    Component::RenderEditorInspector();
 }
 
 void RootComponent::Update()

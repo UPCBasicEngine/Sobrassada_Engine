@@ -7,10 +7,12 @@ MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t uuidParent, con
 
 void MeshComponent::RenderEditorInspector()
 {
+    Component::RenderEditorInspector();
 }
 
 void MeshComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
+    Component::RenderEditorComponentTree(selectedComponentUUID);
 }
 
 void MeshComponent::Update()

@@ -15,43 +15,12 @@ ModelComponent::ModelComponent(const uint32_t uuid, const uint32_t uuidParent, c
 
 void ModelComponent::RenderEditorInspector()
 {
-    App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform);
+    Component::RenderEditorInspector();
 }
 
 void ModelComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
-    ImGui::Indent( 16 );
-
-    ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (selectedComponentUUID == uuid)
-    {
-        base_flags |= ImGuiTreeNodeFlags_Selected;
-    }
-    const bool isExpanded = ImGui::TreeNodeExV((void*) uuid, base_flags, name, nullptr);
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-    {
-        RootComponent* rootComponent = dynamic_cast<RootComponent *>(App->GetSceneModule()->gameComponents[uuidRoot]);
-        if (rootComponent != nullptr)
-        {
-            rootComponent->SetSelectedComponent(uuid);
-        }
-    }
-        
-    //ImGui::PopID();
-    //ImGui::SameLine();
-    //selected = ImGui::Selectable(": Model", &selected); 
-    if (isExpanded) 
-    {
-        for (uint32_t child : children)
-        {
-            Component* childComponent = App->GetSceneModule()->gameComponents[child];
-
-            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedComponentUUID);
-        }
-        ImGui::TreePop();
-    }
-    
-    ImGui::Unindent( 16 );
+    Component::RenderEditorComponentTree(selectedComponentUUID);
 }
 
 void ModelComponent::Update()

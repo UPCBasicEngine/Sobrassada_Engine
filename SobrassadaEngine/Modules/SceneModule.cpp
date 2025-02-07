@@ -36,8 +36,8 @@ bool SceneModule::Init()
 
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
-    rootComponentUUID = 100;//LCG().IntFast();
-    gameComponents[rootComponentUUID] = ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, rootComponentUUID, -1, -1); // TODO Add the gameObject UUID as parent?
+    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), -1, -1)); // TODO Add the gameObject UUID as parent?
+    gameComponents[rootComponent->GetUUID()] = rootComponent;  
     
     return true;
 }
@@ -54,7 +54,6 @@ update_status SceneModule::Update(float deltaTime)
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
-    RootComponent* rootComponent = dynamic_cast<RootComponent*>(gameComponents[rootComponentUUID]);
     if (rootComponent)  rootComponent->RenderComponentEditor();
     return UPDATE_CONTINUE;
 }

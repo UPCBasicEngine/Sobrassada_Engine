@@ -7,6 +7,7 @@
 
 class GameObject;
 class Component;
+class RootComponent;
 
 class SceneModule : public Module
 {
@@ -35,10 +36,13 @@ public:
 
     std::map<uint32_t, Component*> gameComponents;
 
+    RootComponent* GetRootComponent() const { return rootComponent; };
+
 private:
 
 	uint32_t gameObjectRootUUID;
-    uint32_t rootComponentUUID;
+        RootComponent *rootComponent;
+    
 
 	std::unordered_map<uint32_t, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
 	
