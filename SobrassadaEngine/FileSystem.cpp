@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 namespace FileSystem
 {
@@ -73,62 +74,33 @@ namespace FileSystem
 		}
 	}
 
-	bool Delete(const char* filePath)
-	{
-		return std::filesystem::remove(filePath);
-	}
-
-	bool CreateDirectories(const char* directoryPath)
-	{
-		return std::filesystem::create_directories(directoryPath);
-	}
-
-	bool Exists(const char* filePath)
-	{
-		return std::filesystem::exists(filePath);
-	}
-
-	bool IsDirectory(const char* directoryPath)
-	{
-		return std::filesystem::is_directory(directoryPath);
-	}
-
-	std::string GetFilePath(const std::string& filePath) {
-		return std::filesystem::path(filePath).parent_path().string() + "\\";
-	}
-
-	std::string GetFileNameWithExtension(const std::string& filePath) {
-		return std::filesystem::path(filePath).filename().string();
-	}
-
-	std::string GetFileNameWithoutExtension(const std::string& filePath) {
-		std::filesystem::path path(filePath);
-		return path.stem().string();
-	}
-
-	std::string GetFileExtension(const std::string& filePath) {
-		std::filesystem::path path(filePath);
-		return path.extension().string();
-	}
-
-	void ListFilesInDirectory(const std::string& path) {
-		try {
-			// Verifica si el path es un directorio
-			if (IsDirectory(path.c_str())) {
-				std::cout << "Archivos en el directorio " << path << ":\n";
-
-				// Itera a través de los elementos en el directorio
-				for (const auto& entry : std::filesystem::directory_iterator(path)) {
-					// Muestra el nombre de cada archivo o subdirectorio
-					std::cout << entry.path() << std::endl;
-				}
-			}
-			else {
-				std::cout << path << " no es un directorio válido.\n";
+	void GetAllInDirectory(const std::string& path, std::vector<std::string>& files) {
+		files.clear();
+		if (IsDirectory(path.c_str())) {
+			for (const auto& entry : std::filesystem::directory_iterator(path)) {
+				files.push_back(GetFileNameWithExtension(entry.path().string()));
 			}
 		}
-		catch (const std::exception& e) {
-			std::cout << "Error: " << e.what() << std::endl;
+		else {
+			GLOG("%s is not a valid path", path);
+		}
+	}
+
+	void SplitAccumulatedPath(const std::string& path, std::vector<std::string>& parts)
+	{
+		parts.clear();
+		std::stringstream ss(path);
+		std::string part;
+		std::string accumulatedPath;
+
+		while (std::getline(ss, part, DELIMITER)) {
+			if (!part.empty()) {
+				if (!accumulatedPath.empty()) {
+					accumulatedPath += DELIMITER;
+				}
+				accumulatedPath += part;
+				parts.push_back(accumulatedPath);
+			}
 		}
 	}
 }

@@ -4,7 +4,6 @@
 #include "EditorViewport.h"
 #include "OpenGLModule.h"
 #include "WindowModule.h"
-#include "DialogEditor.h"
 #include "FileSystem.h"
 
 #include "glew.h"
@@ -13,324 +12,376 @@
 #include "imgui_impl_sdl2.h"
 #include <filesystem>
 
-EditorUIModule::EditorUIModule() {}
+EditorUIModule::EditorUIModule()
+{
+	startPath = std::filesystem::current_path().string();
+}
 
 EditorUIModule::~EditorUIModule() {}
 
 bool EditorUIModule::Init()
 {
-    ImGui::CreateContext();
-    ImGuiIO &io     = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // IF using Docking Branch
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // IF using Docking Branch
 
-    ImGui_ImplSDL2_InitForOpenGL(App->GetWindowModule()->window, App->GetOpenGLModule()->GetContext());
-    ImGui_ImplOpenGL3_Init("#version 460");
+	ImGui_ImplSDL2_InitForOpenGL(App->GetWindowModule()->window, App->GetOpenGLModule()->GetContext());
+	ImGui_ImplOpenGL3_Init("#version 460");
 
-    editorViewport = new EditorViewport();
+	editorViewport = new EditorViewport();
 
-    return true;
+	return true;
 }
 
 update_status EditorUIModule::PreUpdate(float deltaTime)
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame();
+	ImGui::NewFrame();
 
-    return UPDATE_CONTINUE;
+	return UPDATE_CONTINUE;
 }
 
 update_status EditorUIModule::Update(float deltaTime)
 {
-    AddFramePlotData(deltaTime);
-    return UPDATE_CONTINUE;
+	AddFramePlotData(deltaTime);
+	return UPDATE_CONTINUE;
 }
 
 update_status EditorUIModule::RenderEditor(float deltaTime)
 {
-    Draw();
+	Draw();
 
-    editorViewport->Render();
+	editorViewport->Render();
 
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    return UPDATE_CONTINUE;
+	return UPDATE_CONTINUE;
 }
 
 update_status EditorUIModule::PostUpdate(float deltaTime)
 {
-    if (closeApplication) return UPDATE_STOP;
+	if (closeApplication) return UPDATE_STOP;
 
-    return UPDATE_CONTINUE;
+	return UPDATE_CONTINUE;
 }
 
 bool EditorUIModule::ShutDown()
 {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 
-    framerate.clear();
-    frametime.clear();
+	framerate.clear();
+	frametime.clear();
 
-    delete editorViewport;
+	accPaths.clear();
+	files.clear();
 
-    return true;
+	delete editorViewport;
+
+	return true;
 }
 
 void EditorUIModule::AddFramePlotData(float deltaTime)
 {
-    if (deltaTime == 0) return;
+	if (deltaTime == 0) return;
 
-    float newFrametime = deltaTime * 1000.f;
-    float newFramerate = 1.f / deltaTime;
+	float newFrametime = deltaTime * 1000.f;
+	float newFramerate = 1.f / deltaTime;
 
-    if (frametime.size() < maximumPlotData)
-    {
-        frametime.push_back(newFrametime);
-        framerate.push_back(newFramerate);
-    }
-    else
-    {
-        frametime.pop_front();
-        framerate.pop_front();
+	if (frametime.size() < maximumPlotData)
+	{
+		frametime.push_back(newFrametime);
+		framerate.push_back(newFramerate);
+	}
+	else
+	{
+		frametime.pop_front();
+		framerate.pop_front();
 
-        frametime.push_back(newFrametime);
-        framerate.push_back(newFramerate);
-    }
+		frametime.push_back(newFrametime);
+		framerate.push_back(newFramerate);
+	}
 }
 
 void EditorUIModule::Draw()
 {
-    ImGui::DockSpaceOverViewport();
-    MainMenu();
-    ImGui::ShowDemoWindow();
+	ImGui::DockSpaceOverViewport();
+	MainMenu();
+	ImGui::ShowDemoWindow();
 
-    if (consoleMenu) Console(consoleMenu);
+	if (consoleMenu) Console(consoleMenu);
 
 	if (import) ImportDialog(import);
 
-    if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
+	if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
 
 void EditorUIModule::MainMenu()
 {
-    ImGui::BeginMainMenuBar();
+	ImGui::BeginMainMenuBar();
 
-    // General menu
-    if (ImGui::BeginMenu("General"))
-    {
-        if (ImGui::MenuItem("Console")) consoleMenu = !consoleMenu;
+	// General menu
+	if (ImGui::BeginMenu("General"))
+	{
+		if (ImGui::MenuItem("Console")) consoleMenu = !consoleMenu;
 
 		if (ImGui::MenuItem("Import")) import = !import;
 
-        if (ImGui::MenuItem("Quit")) closeApplication = true;
+		if (ImGui::MenuItem("Quit")) closeApplication = true;
 
-        ImGui::EndMenu();
-    }
+		ImGui::EndMenu();
+	}
 
-    // Settings menu
-    if (ImGui::BeginMenu("Settings"))
-    {
-        if (ImGui::MenuItem("Editor settings")) editorSettingsMenu = !editorSettingsMenu;
+	// Settings menu
+	if (ImGui::BeginMenu("Settings"))
+	{
+		if (ImGui::MenuItem("Editor settings")) editorSettingsMenu = !editorSettingsMenu;
 
-        ImGui::EndMenu();
-    }
+		ImGui::EndMenu();
+	}
 
-    ImGui::EndMainMenuBar();
+	ImGui::EndMainMenuBar();
 }
 
 void EditorUIModule::ImportDialog(bool& import)
 {
-    ImGui::OpenPopup("Import Dialog");
+	ImGui::Begin("Import Dialog", & import);
 
-    if (ImGui::BeginPopupModal("Import Dialog", & import))
-    {
-        std::filesystem::path currentPath = std::filesystem::current_path();
+	static std::string currentPath = std::filesystem::current_path().string();
 
-        std::string currentPathString = currentPath.string();
-        FileSystem::ListFilesInDirectory(currentPathString);
+	// root directory add delimiter
+	if (currentPath.back() == ':') currentPath += DELIMITER;
 
-        ImGui::Dummy(ImVec2(0, 100));
+	FileSystem::SplitAccumulatedPath(currentPath, accPaths);
 
-        ImGui::Text("File Name:");
-        ImGui::SameLine();
-        ImGui::InputText("##filename", &importPath[0], importPath.size(), ImGuiInputTextFlags_ReadOnly);
+	for (const std::string& accPath : accPaths)
+	{
+		if (accPaths[0] == accPath)
+		{
+			if (ImGui::Button(accPath.c_str())) currentPath = accPath;
+		}
+		else
+		{
+			if (ImGui::Button(FileSystem::GetFileNameWithExtension(accPath).c_str())) currentPath = accPath;
+		}
+		if (accPaths.back() != accPath) ImGui::SameLine();
+	}
 
-        if (ImGui::Button("Cancel", ImVec2(0, 0)))
-        {
-            import = false;
-            ImGui::CloseCurrentPopup();
-        }
+	//files & dir in the current directory
+	FileSystem::GetAllInDirectory(currentPath, files);
 
-        ImGui::SameLine();
+	static std::string inputFile = "";
+	static int selected = -1;
 
-        if (ImGui::Button("Ok", ImVec2(0, 0)))
-        {
-            import = false;
-            ImGui::CloseCurrentPopup();
-        }
+	for (int i = 0; i < files.size(); i++)
+	{
+		std::string file = files[i];
+		std::string filePath = currentPath + DELIMITER + file;
+		bool isDirectory = FileSystem::IsDirectory(filePath.c_str());
 
-        ImGui::EndPopup();
-    }
+		std::string tag = isDirectory ? "[Dir] " : "[File] ";
+		std::string fileWithTag = tag + file;
+
+		// ImGuiSelectableFlags_AllowDoubleClick for Directories?
+		if (ImGui::Selectable(fileWithTag.c_str(), selected == i))
+		{
+			if (isDirectory)
+			{
+				currentPath = filePath;
+				inputFile = "";
+			}
+			else
+			{
+				inputFile = FileSystem::GetFileNameWithExtension(file);
+			}
+		}
+	}
+
+	ImGui::Dummy(ImVec2(0, ImGui::GetContentRegionAvail().y - 50));
+	ImGui::Text("File Name:");
+	ImGui::SameLine();
+	ImGui::InputText("##filename", &inputFile[0], inputFile.size(), ImGuiInputTextFlags_ReadOnly);
+
+	if (ImGui::Button("Cancel", ImVec2(0, 0)))
+	{
+		inputFile = "";
+		currentPath = startPath;
+		import = false;
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Ok", ImVec2(0, 0)))
+	{
+		if (!inputFile.empty())
+		{
+			std::string importPath = currentPath + DELIMITER + inputFile;
+			// Call to SceneImporter
+		}
+		import = false;
+	}
+
+	ImGui::End();
 }
 
-void EditorUIModule::Console(bool &consoleMenu)
+void EditorUIModule::Console(bool& consoleMenu)
 {
-    ImGui::Begin("Console", &consoleMenu);
+	ImGui::Begin("Console", &consoleMenu);
 
-    for (const char *log : *Logs)
-    {
-        ImGui::TextUnformatted(log);
-    }
+	for (const char* log : *Logs)
+	{
+		ImGui::TextUnformatted(log);
+	}
 
-    // Autoscroll only if the scroll is in the bottom position
-    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-    {
-        ImGui::SetScrollHereY(1.0f);
-    }
+	// Autoscroll only if the scroll is in the bottom position
+	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+	{
+		ImGui::SetScrollHereY(1.0f);
+	}
 
-    ImGui::End();
+	ImGui::End();
 }
 
-void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
+void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
 {
-    ImGui::Begin("Editor settings", &editorSettingsMenu);
+	ImGui::Begin("Editor settings", &editorSettingsMenu);
 
-    ImGui::SeparatorText("Ms and Fps Graph");
-    FramePlots();
-    ImGui::Spacing();
+	ImGui::SeparatorText("Ms and Fps Graph");
+	FramePlots();
+	ImGui::Spacing();
 
-    ImGui::SeparatorText("Modules Configuration");
-    if (ImGui::CollapsingHeader("Window"))
-    {
-        WindowConfig();
-    }
+	ImGui::SeparatorText("Modules Configuration");
+	if (ImGui::CollapsingHeader("Window"))
+	{
+		WindowConfig();
+	}
 
-    ImGui::Spacing();
-    if (ImGui::CollapsingHeader("Editor camera"))
-    {
-        // TODO: ADD CAMERA MODULE AS TEMPORAL MEANWHILO THERE ARE NO GAMEOBJECTS
-        // CameraConfig();
-    }
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("Editor camera"))
+	{
+		// TODO: ADD CAMERA MODULE AS TEMPORAL MEANWHILO THERE ARE NO GAMEOBJECTS
+		// CameraConfig();
+	}
 
-    ImGui::Spacing();
-    if (ImGui::CollapsingHeader("OpenGL"))
-    {
-        OpenGLConfig();
-    }
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("OpenGL"))
+	{
+		OpenGLConfig();
+	}
 
-    ImGui::End();
+	ImGui::End();
 }
 
 void EditorUIModule::FramePlots()
 {
-    char title[25];
-    std::vector<float> frametimeVector(frametime.begin(), frametime.end());
-    sprintf_s(title, 25, "Milliseconds %0.1f", frametime.back());
-    ImGui::PlotHistogram(
-        "##milliseconds", &frametimeVector[0], (int)frametimeVector.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100)
-    );
+	char title[25];
+	std::vector<float> frametimeVector(frametime.begin(), frametime.end());
+	sprintf_s(title, 25, "Milliseconds %0.1f", frametime.back());
+	ImGui::PlotHistogram(
+		"##milliseconds", &frametimeVector[0], (int)frametimeVector.size(), 0, title, 0.0f, 40.0f, ImVec2(310, 100)
+	);
 
-    std::vector<float> framerateVector(framerate.begin(), framerate.end());
-    sprintf_s(title, 25, "Framerate %.1f", framerate.back());
-    ImGui::PlotHistogram(
-        "##framerate", &framerateVector.front(), (int)framerateVector.size(), 0, title, 0.0f, 200.0f, ImVec2(310, 100)
-    );
+	std::vector<float> framerateVector(framerate.begin(), framerate.end());
+	sprintf_s(title, 25, "Framerate %.1f", framerate.back());
+	ImGui::PlotHistogram(
+		"##framerate", &framerateVector.front(), (int)framerateVector.size(), 0, title, 0.0f, 200.0f, ImVec2(310, 100)
+	);
 }
 
 void EditorUIModule::WindowConfig()
 {
-    static bool borderless   = false;
-    static bool full_desktop = false;
-    static bool resizable    = true;
-    static bool fullscreen   = false;
+	static bool borderless = false;
+	static bool full_desktop = false;
+	static bool resizable = true;
+	static bool fullscreen = false;
 
-    // Brightness Slider
-    float brightness         = App->GetWindowModule()->GetBrightness();
-    if (ImGui::SliderFloat("Brightness", &brightness, 0, 1)) App->GetWindowModule()->SetBrightness(brightness);
+	// Brightness Slider
+	float brightness = App->GetWindowModule()->GetBrightness();
+	if (ImGui::SliderFloat("Brightness", &brightness, 0, 1)) App->GetWindowModule()->SetBrightness(brightness);
 
-    SDL_DisplayMode &displayMode = App->GetWindowModule()->GetDesktopDisplayMode();
-    int maxWidth                 = displayMode.w;
-    int maxHeight                = displayMode.h;
+	SDL_DisplayMode& displayMode = App->GetWindowModule()->GetDesktopDisplayMode();
+	int maxWidth = displayMode.w;
+	int maxHeight = displayMode.h;
 
-    // Width Slider
-    int width                    = App->GetWindowModule()->GetWidth();
-    if (ImGui::SliderInt("Width", &width, 0, maxWidth)) App->GetWindowModule()->SetWidth(width);
+	// Width Slider
+	int width = App->GetWindowModule()->GetWidth();
+	if (ImGui::SliderInt("Width", &width, 0, maxWidth)) App->GetWindowModule()->SetWidth(width);
 
-    // Height Slider
-    int height = App->GetWindowModule()->GetHeight();
-    if (ImGui::SliderInt("Height", &height, 0, maxHeight)) App->GetWindowModule()->SetHeight(height);
+	// Height Slider
+	int height = App->GetWindowModule()->GetHeight();
+	if (ImGui::SliderInt("Height", &height, 0, maxHeight)) App->GetWindowModule()->SetHeight(height);
 
-    // Set Fullscreen
-    if (ImGui::Checkbox("Fullscreen", &fullscreen)) App->GetWindowModule()->SetFullscreen(fullscreen);
-    ImGui::SameLine();
+	// Set Fullscreen
+	if (ImGui::Checkbox("Fullscreen", &fullscreen)) App->GetWindowModule()->SetFullscreen(fullscreen);
+	ImGui::SameLine();
 
-    // Set Resizable
-    if (ImGui::Checkbox("Resizable", &resizable)) App->GetWindowModule()->SetResizable(resizable);
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Restart to apply");
+	// Set Resizable
+	if (ImGui::Checkbox("Resizable", &resizable)) App->GetWindowModule()->SetResizable(resizable);
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Restart to apply");
 
-    // Set Borderless
-    if (ImGui::Checkbox("Borderless", &borderless)) App->GetWindowModule()->SetBorderless(borderless);
-    ImGui::SameLine();
+	// Set Borderless
+	if (ImGui::Checkbox("Borderless", &borderless)) App->GetWindowModule()->SetBorderless(borderless);
+	ImGui::SameLine();
 
-    // Set Full Desktop
-    if (ImGui::Checkbox("Full Desktop", &full_desktop)) App->GetWindowModule()->SetFullDesktop(full_desktop);
+	// Set Full Desktop
+	if (ImGui::Checkbox("Full Desktop", &full_desktop)) App->GetWindowModule()->SetFullDesktop(full_desktop);
 }
 
 void EditorUIModule::CameraConfig() {}
 
 void EditorUIModule::OpenGLConfig()
 {
-    OpenGLModule *openGLModule = App->GetOpenGLModule();
+	OpenGLModule* openGLModule = App->GetOpenGLModule();
 
-    float clearRed             = openGLModule->GetClearRed();
-    float clearGreen           = openGLModule->GetClearGreen();
-    float clearBlue            = openGLModule->GetClearBlue();
+	float clearRed = openGLModule->GetClearRed();
+	float clearGreen = openGLModule->GetClearGreen();
+	float clearBlue = openGLModule->GetClearBlue();
 
-    if (ImGui::SliderFloat("Red Clear Color", &clearRed, 0.f, 1.f)) openGLModule->SetClearRed(clearRed);
-    if (ImGui::SliderFloat("Green Clear Color", &clearGreen, 0.f, 1.f)) openGLModule->SetClearGreen(clearGreen);
-    if (ImGui::SliderFloat("Blue Clear Color", &clearBlue, 0.f, 1.f)) openGLModule->SetClearBlue(clearBlue);
+	if (ImGui::SliderFloat("Red Clear Color", &clearRed, 0.f, 1.f)) openGLModule->SetClearRed(clearRed);
+	if (ImGui::SliderFloat("Green Clear Color", &clearGreen, 0.f, 1.f)) openGLModule->SetClearGreen(clearGreen);
+	if (ImGui::SliderFloat("Blue Clear Color", &clearBlue, 0.f, 1.f)) openGLModule->SetClearBlue(clearBlue);
 
-    if (ImGui::Button("Reset Colors"))
-    {
-        clearRed   = DEFAULT_GL_CLEAR_COLOR_RED;
-        clearGreen = DEFAULT_GL_CLEAR_COLOR_GREEN;
-        clearBlue  = DEFAULT_GL_CLEAR_COLOR_BLUE;
+	if (ImGui::Button("Reset Colors"))
+	{
+		clearRed = DEFAULT_GL_CLEAR_COLOR_RED;
+		clearGreen = DEFAULT_GL_CLEAR_COLOR_GREEN;
+		clearBlue = DEFAULT_GL_CLEAR_COLOR_BLUE;
 
-        openGLModule->SetClearRed(clearRed);
-        openGLModule->SetClearGreen(clearGreen);
-        openGLModule->SetClearBlue(clearBlue);
-    }
+		openGLModule->SetClearRed(clearRed);
+		openGLModule->SetClearGreen(clearGreen);
+		openGLModule->SetClearBlue(clearBlue);
+	}
 
-    ImGui::Separator();
+	ImGui::Separator();
 
-    static bool depthTest = true;
+	static bool depthTest = true;
 
-    if (ImGui::Checkbox("Depth test", &depthTest))
-    {
-        openGLModule->SetDepthTest(depthTest);
-    }
+	if (ImGui::Checkbox("Depth test", &depthTest))
+	{
+		openGLModule->SetDepthTest(depthTest);
+	}
 
-    static bool faceCulling = true;
-    if (ImGui::Checkbox("Face cull", &faceCulling))
-    {
-        openGLModule->SetFaceCull(faceCulling);
-    }
+	static bool faceCulling = true;
+	if (ImGui::Checkbox("Face cull", &faceCulling))
+	{
+		openGLModule->SetFaceCull(faceCulling);
+	}
 
-    static int frontFaceMode = GL_CCW;
-    bool changed             = false;
-    ImGui::Text("Front face mode");
-    if (ImGui::RadioButton("Counter clock-wise", &frontFaceMode, GL_CCW))
-    {
-        openGLModule->SetFrontFaceMode(frontFaceMode);
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Clock-wise", &frontFaceMode, GL_CW))
-    {
-        openGLModule->SetFrontFaceMode(frontFaceMode);
-    }
+	static int frontFaceMode = GL_CCW;
+	bool changed = false;
+	ImGui::Text("Front face mode");
+	if (ImGui::RadioButton("Counter clock-wise", &frontFaceMode, GL_CCW))
+	{
+		openGLModule->SetFrontFaceMode(frontFaceMode);
+	}
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Clock-wise", &frontFaceMode, GL_CW))
+	{
+		openGLModule->SetFrontFaceMode(frontFaceMode);
+	}
 }

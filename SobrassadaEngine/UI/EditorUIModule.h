@@ -47,5 +47,7 @@ class EditorUIModule : public Module
 
     EditorViewport *editorViewport = nullptr;
 
-	std::string importPath;
+	std::vector<std::string> accPaths;
+	std::vector<std::string> files;
+    std::string startPath;
 };
