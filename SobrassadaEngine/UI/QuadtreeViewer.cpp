@@ -13,24 +13,24 @@
 
 QuadtreeViewer::QuadtreeViewer()
 {
-    framebuffer              = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
-    quadtree                 = new Quadtree(float2(0, 0), 20, 2);
+    framebuffer               = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
+    quadtree                  = new Quadtree(float2(0, 0), 20, 2);
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
-    camera.type              = FrustumType::OrthographicFrustum;
-    camera.pos               = float3(0, 0, 5);
-    camera.front             = -float3::unitZ;
-    camera.up                = float3::unitY;
-    camera.nearPlaneDistance = 0.1f;
-    camera.farPlaneDistance  = 100.f;
+    camera.type               = FrustumType::OrthographicFrustum;
+    camera.pos                = float3(0, 0, 5);
+    camera.front              = -float3::unitZ;
+    camera.up                 = float3::unitY;
+    camera.nearPlaneDistance  = 0.1f;
+    camera.farPlaneDistance   = 100.f;
 
-    float aspectRatio        = (float)framebuffer->GetTextureHeight() / (float)framebuffer->GetTextureWidth();
+    float aspectRatio         = (float)framebuffer->GetTextureHeight() / (float)framebuffer->GetTextureWidth();
 
     camera.orthographicWidth  = (float)framebuffer->GetTextureWidth() * aspectRatio / cameraSizeScaleFactor;
     camera.orthographicHeight = (float)framebuffer->GetTextureHeight() * aspectRatio / cameraSizeScaleFactor;
 
-    viewMatrix               = camera.ViewMatrix();
-    projectionMatrix         = camera.ProjectionMatrix();
+    viewMatrix                = camera.ViewMatrix();
+    projectionMatrix          = camera.ProjectionMatrix();
 
     // TODO: REMOVE, JUST FOR TESTING QUADTREE GENERATION
     math::LCG randomGenerator;
@@ -61,9 +61,9 @@ void QuadtreeViewer::Render(bool &renderBoolean)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    std::list<float4> drawLines;
-    std::list<float4> elementLines;
-    std::list<float4> queryAreaLines;
+    std::vector<float4> drawLines;
+    std::vector<float4> elementLines;
+    std::vector<float4> queryAreaLines;
     quadtree->GetDrawLines(drawLines, elementLines);
 
     Box queryArea = Box(5, 5, 5, 5);
@@ -116,8 +116,10 @@ void QuadtreeViewer::ChangeCameraSize(float width, float height)
     projectionMatrix          = camera.ProjectionMatrix();
 }
 
-void QuadtreeViewer::CreateQueryAreaLines(const Box &queryArea, std::list<float4> &queryAreaLines) const
+void QuadtreeViewer::CreateQueryAreaLines(const Box &queryArea, std::vector<float4> &queryAreaLines) const
 {
+    queryAreaLines     = std::vector<float4>(4);
+
     float halfSizeX    = queryArea.sizeX / 2.f;
     float halfSizeY    = queryArea.sizeY / 2.f;
 
@@ -126,8 +128,8 @@ void QuadtreeViewer::CreateQueryAreaLines(const Box &queryArea, std::list<float4
     float2 bottomLeft  = float2(queryArea.x - halfSizeX, queryArea.y - halfSizeY);
     float2 bottomRight = float2(queryArea.x + halfSizeX, queryArea.y - halfSizeY);
 
-    queryAreaLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
-    queryAreaLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
-    queryAreaLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
-    queryAreaLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
+    queryAreaLines[0]  = float4(topLeft.x, topLeft.y, topRight.x, topRight.y);
+    queryAreaLines[1]  = float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y);
+    queryAreaLines[2]  = float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y);
+    queryAreaLines[3]  = float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
 }

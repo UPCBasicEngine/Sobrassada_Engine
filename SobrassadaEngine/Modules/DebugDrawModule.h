@@ -20,8 +20,8 @@ class DebugDrawModule : public Module
 
     void Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height);
     void RenderQuadtreeViewportLines(
-        const float4x4 &viewMatrix, const float4x4 &projectionMatrix, int width, int height, const std::list<float4> &lines,
-        const std::list<float4> &elementLines, const std::list<float4> &queryArea
+        const float4x4 &viewMatrix, const float4x4 &projectionMatrix, int width, int height,
+        const std::vector<float4> &lines, const std::vector<float4> &elementLines, const std::vector<float4> &queryArea
     );
 
   private:

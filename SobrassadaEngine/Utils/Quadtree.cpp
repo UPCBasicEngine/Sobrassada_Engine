@@ -3,27 +3,25 @@
 #include <stack>
 
 Quadtree::Quadtree(float2 position, float size, int capacity)
-    : position(position), size(size), elementsCapacity(capacity)
 {
+    rootNode  = new QuadtreeNode(position, size, capacity);
+    totalLeaf = 1;
 }
 
 Quadtree::~Quadtree()
 {
-    delete topLeft;
-    delete topRight;
-    delete bottomLeft;
-    delete bottomRight;
+    delete rootNode;
 }
 
 bool Quadtree::InsertElement(const Box &newElement)
 {
     bool inserted = false;
-    std::stack<Quadtree *> nodesToVisit;
-    nodesToVisit.push(this);
+    std::stack<QuadtreeNode *> nodesToVisit;
+    nodesToVisit.push(rootNode);
 
     while (!nodesToVisit.empty())
     {
-        Quadtree *currentNode = nodesToVisit.top();
+        QuadtreeNode *currentNode = nodesToVisit.top();
         nodesToVisit.pop();
 
         if (currentNode->Intersects(newElement))
@@ -35,12 +33,16 @@ bool Quadtree::InsertElement(const Box &newElement)
                     currentNode->elements.push_back(newElement);
                     inserted = true;
                 }
-                else if (currentNode->elements.size() < elementsCapacity)
+                else if (currentNode->elements.size() < currentNode->elementsCapacity)
                 {
                     currentNode->elements.push_back(newElement);
                     inserted = true;
                 }
-                else currentNode->Subdivide();
+                else
+                {
+                    currentNode->Subdivide();
+                    totalLeaf += 3;
+                }
             }
             if (!currentNode->IsLeaf())
             {
@@ -51,18 +53,18 @@ bool Quadtree::InsertElement(const Box &newElement)
             }
         }
     }
-
+    if (inserted) ++totalElements;
     return inserted;
 }
 
 void Quadtree::QueryElements(const Box &area, std::unordered_set<Box, BoxHash> &foundElements) const
 {
-    std::stack<const Quadtree *> nodesToVisit;
-    nodesToVisit.push(this);
+    std::stack<const QuadtreeNode *> nodesToVisit;
+    nodesToVisit.push(rootNode);
 
     while (!nodesToVisit.empty())
     {
-        const Quadtree *currentNode = nodesToVisit.top();
+        const QuadtreeNode *currentNode = nodesToVisit.top();
         nodesToVisit.pop();
 
         if (currentNode->Intersects(area))
@@ -85,14 +87,21 @@ void Quadtree::QueryElements(const Box &area, std::unordered_set<Box, BoxHash> &
     }
 }
 
-void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &elementLines) const
+void Quadtree::GetDrawLines(std::vector<float4> &drawLines, std::vector<float4> &elementLines) const
 {
-    std::stack<const Quadtree *> nodesToVisit;
-    nodesToVisit.push(this);
+    std::unordered_set<Box, BoxHash> includedElement;
+    drawLines    = std::vector<float4>(totalLeaf * 4, float4(0, 0, 0, 0));
+    elementLines = std::vector<float4>(totalElements * 4, float4(0, 0, 0, 0));
+
+    std::stack<const QuadtreeNode *> nodesToVisit;
+    nodesToVisit.push(rootNode);
+
+    int currentDrawLine    = 0;
+    int currentElementLine = 0;
 
     while (!nodesToVisit.empty())
     {
-        const Quadtree *currentNode = nodesToVisit.top();
+        const QuadtreeNode *currentNode = nodesToVisit.top();
         nodesToVisit.pop();
 
         if (currentNode->IsLeaf())
@@ -105,25 +114,31 @@ void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &ele
             float2 bottomLeft  = float2(currentNode->position.x - halfSize, currentNode->position.y - halfSize);
             float2 bottomRight = float2(currentNode->position.x + halfSize, currentNode->position.y - halfSize);
 
-            drawLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
-            drawLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
-            drawLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
-            drawLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
+            drawLines[currentDrawLine++] = float4(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            drawLines[currentDrawLine++] = float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y);
+            drawLines[currentDrawLine++] = float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y);
+            drawLines[currentDrawLine++] = float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
 
             for (auto &element : currentNode->elements)
             {
-                float halfSizeX = element.sizeX / 2.f;
-                float halfSizeY = element.sizeY / 2.f;
+                if (includedElement.find(element) == includedElement.end())
+                {
+                    includedElement.insert(element);
 
-                topLeft         = float2(element.x - halfSizeX, element.y + halfSizeY);
-                topRight        = float2(element.x + halfSizeX, element.y + halfSizeY);
-                bottomLeft      = float2(element.x - halfSizeX, element.y - halfSizeY);
-                bottomRight     = float2(element.x + halfSizeX, element.y - halfSizeY);
+                    float halfSizeX                    = element.sizeX / 2.f;
+                    float halfSizeY                    = element.sizeY / 2.f;
 
-                elementLines.push_back(float4(topLeft.x, topLeft.y, topRight.x, topRight.y));
-                elementLines.push_back(float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y));
-                elementLines.push_back(float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y));
-                elementLines.push_back(float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y));
+                    topLeft                            = float2(element.x - halfSizeX, element.y + halfSizeY);
+                    topRight                           = float2(element.x + halfSizeX, element.y + halfSizeY);
+                    bottomLeft                         = float2(element.x - halfSizeX, element.y - halfSizeY);
+                    bottomRight                        = float2(element.x + halfSizeX, element.y - halfSizeY);
+
+                    elementLines[currentElementLine++] = float4(topLeft.x, topLeft.y, topRight.x, topRight.y);
+                    elementLines[currentElementLine++] = float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y);
+                    elementLines[currentElementLine++] =
+                        float4(bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y);
+                    elementLines[currentElementLine++] = float4(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
+                }
             }
         }
         else
@@ -136,18 +151,28 @@ void Quadtree::GetDrawLines(std::list<float4> &drawLines, std::list<float4> &ele
     }
 }
 
-void Quadtree::Subdivide()
+Quadtree::QuadtreeNode::~QuadtreeNode()
+{
+
+    delete topLeft;
+    delete topRight;
+    delete bottomLeft;
+    delete bottomRight;
+}
+
+void Quadtree::QuadtreeNode::Subdivide()
 {
     float childSize     = size / 2.f;
     float halfChildSize = size / 4.f;
 
-    topLeft = new Quadtree(float2(position.x - halfChildSize, position.y + halfChildSize), childSize, elementsCapacity);
+    topLeft =
+        new QuadtreeNode(float2(position.x - halfChildSize, position.y + halfChildSize), childSize, elementsCapacity);
     topRight =
-        new Quadtree(float2(position.x + halfChildSize, position.y + halfChildSize), childSize, elementsCapacity);
+        new QuadtreeNode(float2(position.x + halfChildSize, position.y + halfChildSize), childSize, elementsCapacity);
     bottomLeft =
-        new Quadtree(float2(position.x - halfChildSize, position.y - halfChildSize), childSize, elementsCapacity);
+        new QuadtreeNode(float2(position.x - halfChildSize, position.y - halfChildSize), childSize, elementsCapacity);
     bottomRight =
-        new Quadtree(float2(position.x + halfChildSize, position.y - halfChildSize), childSize, elementsCapacity);
+        new QuadtreeNode(float2(position.x + halfChildSize, position.y - halfChildSize), childSize, elementsCapacity);
 
     for (auto &element : elements)
     {
@@ -160,7 +185,7 @@ void Quadtree::Subdivide()
     elements.clear();
 }
 
-bool Quadtree::Intersects(const Box &element) const
+bool Quadtree::QuadtreeNode::Intersects(const Box &element) const
 {
     float halftSizeX          = size / 2.f;
     float halftSizeY          = size / 2.f;

@@ -2,7 +2,7 @@
 
 #include "Geometry/Frustum.h"
 #include "Math/float4x4.h"
-#include <list>
+#include <vector>
 
 class Framebuffer;
 class Quadtree;
@@ -19,7 +19,7 @@ class QuadtreeViewer
 
   private:
     void ChangeCameraSize(float width, float height);
-    void CreateQueryAreaLines(const Box &queryArea, std::list<float4> &queryAreaLines) const;
+    void CreateQueryAreaLines(const Box &queryArea, std::vector<float4> &queryAreaLines) const;
 
   private:
     Framebuffer *framebuffer;
