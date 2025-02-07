@@ -54,172 +54,19 @@ void EngineModel::Load(const char* modelPath)
 	LoadMaterials(model, modelPath);
 }
 
-unsigned int EngineModel::LoadTexture(const tinygltf::Model sourceModel, int textureIndex, ComponentMaterial* material, const char* modelPath) {
-	const tinygltf::Texture &texture = sourceModel.textures[textureIndex];
-    const tinygltf::Image &image     = sourceModel.images[texture.source];
-    std::unordered_set<int> loadedIndices;
-	float2 widthHeight     = float2::zero;
-                    
-    if (loadedIndices.find(texture.source) == loadedIndices.end())
-    {
-        std::string filePath     = std::string(modelPath);
-        char usedSeparator       = '\\';
-
-        int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
-        if (fileLocationPosition == -1)
-        {
-            usedSeparator        = '/';
-            fileLocationPosition = filePath.find_last_of(usedSeparator);
-        }
-                        
-        if (fileLocationPosition == -1) return -1;
-
-        std::string fileLocation      = filePath.substr(0, fileLocationPosition) + usedSeparator;
-        std::string texturePathString = fileLocation.append(image.uri);
-
-        std::wstring wideUri       = std::wstring(texturePathString.begin(), texturePathString.end());
-        const wchar_t *texturePath = wideUri.c_str();
-
-        DirectX::TexMetadata textureMetadata;
-        unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
-        if (textureId)
-        {
-			widthHeight.x = textureMetadata.width;
-			widthHeight.y = textureMetadata.height;
-            loadedIndices.insert(texture.source);
-
-            textures.push_back(textureId);
-            textureInfo.push_back(widthHeight);
-            renderTexture++;
-
-			return textureId;
-        }
-    }
-}
-
 void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath)
 {
-    std::unordered_set<int> loadedIndices;
     materials.clear();
     int id = 0;
 
     for (const auto &srcMaterial : sourceModel.materials)
     {
-        ComponentMaterial material;
-        material.SetName(srcMaterial.name);
-        unsigned int textureId = 0;
-        
-		auto it = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
-        if (it != srcMaterial.extensions.end())
-        {
-            const tinygltf::Value &ext = it->second;
-
-            if (ext.Has("diffuseFactor"))
-            {
-                const tinygltf::Value &diffuseValue = ext.Get("diffuseFactor");
-                if (diffuseValue.IsArray() && diffuseValue.ArrayLen() == 4)
-                {
-                    material.SetDiffuseColor(
-                    {
-                            static_cast<float>(diffuseValue.Get(0).Get<double>()),
-                            static_cast<float>(diffuseValue.Get(1).Get<double>()),
-                            static_cast<float>(diffuseValue.Get(2).Get<double>()),
-                    });
-                }
-            }
-
-            if (ext.Has("specularFactor"))
-            {
-                const tinygltf::Value &specularValue = ext.Get("specularFactor");
-                if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
-                {
-                    material.setSpecularColor(
-                    {
-                        static_cast<float>(specularValue.Get(0).Get<double>()),
-                        static_cast<float>(specularValue.Get(1).Get<double>()),
-                        static_cast<float>(specularValue.Get(2).Get<double>())
-                    });
-                }
-            }
-
-            if (ext.Has("glossinessFactor"))
-            {
-                material.setShininess(ext.Get("glossinessFactor").Get<double>());
-                material.setHasShininessInAlpha(false);
-            }
-
-            if (ext.Has("specularGlossinessTexture"))
-            {
-                int textureIndex = ext.Get("specularGlossinessTexture").Get("index").Get<int>();
-                
-                if (textureIndex >= 0)
-                {
-					material.setHasSpecularTexture(true);
-
-                    unsigned int textureId = LoadTexture(sourceModel, textureIndex, &material, modelPath);
-					material.setSpecularID(textureId);
-                }
-            }
-
-			if (ext.Has("diffuseTexture"))
-            {
-                int textureIndex = ext.Get("diffuseTexture").Get("index").Get<int>();
-                
-                if (textureIndex >= 0)
-                {
-					material.SetHasDiffuseTexture(true);
-					unsigned int textureId = LoadTexture(sourceModel, textureIndex, &material, modelPath);
-					material.SetDiffuseID(textureId);
-                }
-            }
-        }
-
-        //House
-        else
-        {  
-            int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
-            if (textureIndex < 0)
-            {
-                material.SetDiffuseColor(
-                {
-                    static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[0]),
-                    static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[1]),
-                    static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[2])
-                });
-            }
-            else
-            {
-                material.SetHasDiffuseTexture(true);
-                unsigned int textureId = LoadTexture(sourceModel, textureIndex, &material, modelPath);
-                material.SetDiffuseID(textureId);
-            }
-        }
+        ComponentMaterial *material = new ComponentMaterial;
+        material->LoadMaterial(srcMaterial, sourceModel, modelPath);
         
         materials.push_back(material);
         id++;
     }
-}
-
-void EngineModel::LoadAdditionalTexture(const char* texturePath)
-{
-	std::string stringPath = std::string(texturePath);
-	std::wstring widePath = std::wstring(stringPath.begin(), stringPath.end());
-	const wchar_t* wideTexturePath = widePath.c_str();
-
-	float2 widthHeight = float2::zero;
-
-	DirectX::TexMetadata textureMetadata;
-	unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(wideTexturePath, textureMetadata);
-
-	if (textureId) 
-	{
-		widthHeight.x = textureMetadata.width;
-		widthHeight.y = textureMetadata.height;
-
-		renderTexture++;
-		textures.push_back(textureId);
-		textureInfo.push_back(widthHeight);
-	}
 }
 
 void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix)
@@ -229,25 +76,11 @@ void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& view
         std::vector<int>& indices = currentMesh->GetMaterialIndices();
 		for (size_t i = 0; i < indices.size(); ++i)
 		{
-            ComponentMaterial material = GetMaterial(indices[i]);
-            int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
+            ComponentMaterial* material = &GetMaterial(indices[i]);
+            //int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
             currentMesh->Render(program, projectionMatrix, viewMatrix, material);
         }
 	}
-}
-
-void EngineModel::GetTextureSize(float2& outTextureSize)
-{
-	if (renderTexture > -1)
-	{
-		outTextureSize.x = textureInfo[renderTexture].x;
-		outTextureSize.y = textureInfo[renderTexture].y;
-	}
-}
-
-void EngineModel::SetRenderTexture(int texturePosition)
-{
-	renderTexture = texturePosition;
 }
 
 void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4x4& parentModelMatrix, int currentNodePosition)
@@ -348,22 +181,25 @@ void EngineModel::ClearVectors()
 		delete it;
 	}
 
-	for (unsigned int textureId : textures)
+	for (auto it : materials)
 	{
-		glDeleteTextures(1, &textureId);
+		unsigned int diffuseId = it->GetDiffuseID();
+		unsigned int specularId = it->GetSpecularID();
+		glDeleteTextures(1, &diffuseId);
+		glDeleteTextures(1, &specularId);
 	}
 
 	meshes.clear();
-	textures.clear();
-	textureInfo.clear();
+    materials.clear();
 	
 	firstMesh = true;
 	indexCount = 0;
 	renderTexture = -1;
 }
 
-ComponentMaterial &EngineModel::GetMaterial(const int index){
-    if (index >= 0 && index < materials.size()) {
-        return materials[index];
-    }
+ComponentMaterial& EngineModel::GetMaterial(const int index) {
+	if (index >= 0 && index < materials.size())
+    {
+		return *materials[index];
+	}
 }

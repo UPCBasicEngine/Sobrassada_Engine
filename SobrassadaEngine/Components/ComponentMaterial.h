@@ -2,41 +2,45 @@
 #include "imgui.h"
 #include "Math/float3.h"
 #include "Math/float4.h"
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_NO_STB_IMAGE
+#define TINYGLTF_NO_EXTERNAL_IMAGE
+#include <tiny_gltf.h>
+
+class TextureModuleTest;
+
+struct TextureInfo
+{
+	unsigned int textureID = -1;
+	int width = 0;
+	int height = 0;
+};
 
 class ComponentMaterial
 {
-    public:
-        void OnEditorUpdate();
+public:
+    void OnEditorUpdate();
 
-        void SetName(const std::string &newName) { name = newName; }
+    void LoadMaterial(const tinygltf::Material &srcMaterial, const tinygltf::Model& sourceModel, const char* modelPath);
 
-        void SetHasDiffuseTexture(const bool value) { hasDiffuseTexture = value; }
-        void SetDiffuseColor(const float3 &color) { diffuseColor = color; }
-        void SetDiffuseID(const unsigned int id) { diffuseID = id; }
+    bool GetHasDiffuseTexture() { return hasDiffuseTexture; }
+    unsigned int GetDiffuseID() { return diffuseTexture.textureID; }
+    bool GetHasSpecularTexture() { return hasSpecularTexture; }
+    unsigned int GetSpecularID() { return specularTexture.textureID; }
 
-        void setHasSpecularTexture(const bool value) { hasSpecularTexture = value; }
-        void setSpecularColor(const const float3& color) { specularColor = color; }
-        void setSpecularID(const unsigned int id) { specularID = id; }
+private:
+    std::string name;
 
-        void setShininess(const float value) { shininess = value; }
-        void setHasShininessInAlpha(const bool value) { hasShininessInAlpha = value; }
+    TextureInfo diffuseTexture;
+    bool hasDiffuseTexture             = false;
+    float3 diffuseColor                = {1.0f, 1.0f, 1.0f};
 
-        bool GetHasDiffuseTexture() { return hasDiffuseTexture; }
-        unsigned int GetDiffuseID() { return diffuseID; }
-        bool GetHasSpecularTexture() { return hasSpecularTexture; }
-        unsigned int GetSpecularID() { return specularID; }
+    TextureInfo specularTexture;
+    bool hasSpecularTexture            = false;
+    float3 specularColor               = {1.0f, 1.0f, 1.0f};
 
-    private:
-        std::string name;
+    float shininess                    = 300.00f;
+    bool hasShininessInAlpha           = false;
 
-        bool hasDiffuseTexture             = false;
-        float3 diffuseColor                = {1.0f, 1.0f, 1.0f};
-        unsigned int diffuseID                      = 0;
-
-        bool hasSpecularTexture            = false;
-        float3 specularColor               = {1.0f, 1.0f, 1.0f};
-        unsigned int specularID                      = 0;
-
-        float shininess                    = 300.00f;
-        bool hasShininessInAlpha           = true;
+    TextureInfo GetTexture(const tinygltf::Model sourceModel, int textureIndex, const char *modelPath);
 };

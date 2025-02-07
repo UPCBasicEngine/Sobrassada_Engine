@@ -31,8 +31,7 @@ public:
     void SetMaterialIndex(int index) { materialIndices.push_back(index); }
 	std::vector<int>& GetMaterialIndices() {  return materialIndices; }
 
-	void Render(
-            int program, float4x4 &projectionMatrix, float4x4 &viewMatrix, ComponentMaterial material);
+	void Render(int program, float4x4 &projectionMatrix, float4x4 &viewMatrix, ComponentMaterial* material);
 	
 
 private:

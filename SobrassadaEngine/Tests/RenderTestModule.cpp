@@ -19,7 +19,6 @@
 RenderTestModule::RenderTestModule()
 {
 	currentLoadedModel = new EngineModel();
-	materials = nullptr;
 }
 
 RenderTestModule::~RenderTestModule()
@@ -121,8 +120,9 @@ update_status RenderTestModule::Render(float deltaTime)
         ImGui::SliderFloat3("Diffuse Color", &lightDir.x, -20.0f, 20.0f);
     }
     glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
-	materials = &currentLoadedModel->GetMaterials();
-    materials[0].at(0).OnEditorUpdate();
+    materials = currentLoadedModel->GetMaterials();
+    materials.at(0)->OnEditorUpdate();
+    
 
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, baboonTexture);

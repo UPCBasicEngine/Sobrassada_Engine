@@ -20,9 +20,6 @@ public:
 
 	void Load(const char* modelPath);
 	void LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath);
-	unsigned int LoadTexture(const tinygltf::Model sourceModel, int textureIndex, ComponentMaterial* material, const char* modelPath);
-
-	void LoadAdditionalTexture(const char* texturePath);
 
 	void Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix);
 
@@ -30,21 +27,15 @@ public:
 	float3 GetMinimumValues() const { return minValues; };
 
 	int GetIndexCount() const { return indexCount; }
-	int GetTotalLoadedTextures() const { return textures.size(); };
 	int GetRenderTexture() const { return renderTexture; };
-	void GetTextureSize(float2& outTextureSize);
 
-	std::vector<ComponentMaterial> &GetMaterials() { return materials; }
+	std::vector<ComponentMaterial*> &GetMaterials() { return materials; }
     ComponentMaterial &GetMaterial(const int index);
-
-	void SetRenderTexture(int texturePosition);
 
 private:
 
 	std::vector<EngineMesh*> meshes;
-	std::vector<unsigned int> textures;
-	std::vector<float2> textureInfo;
-    std::vector<ComponentMaterial> materials;
+    std::vector<ComponentMaterial*> materials;
 
 	int totalTriangles = 0;
 	int renderTexture = -1;
