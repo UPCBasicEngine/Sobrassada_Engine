@@ -93,14 +93,14 @@ update_status InputModule::PreUpdate(float deltaTime)
         case SDL_MOUSEWHEEL:
             mouseWheel = sdlEvent.wheel.y;
             break;
-            // case SDL_DROPFILE:
-            //	std::string filePath = std::string(sdlEvent.drop.file);
-            //	int fileExtensionPosition = (int)filePath.find_last_of('.');
+        //case SDL_DROPFILE:
+            //std::string filePath = std::string(sdlEvent.drop.file);
+            //int fileExtensionPosition = (int)filePath.find_last_of('.');
 
-            //	std::string fileExtension = filePath.substr(fileExtensionPosition, filePath.length());
-            //	if (fileExtension == ".ppm" || fileExtension == ".png" || fileExtension == ".jpg")
-            //App->GetModelViewerModule()->LoadTexture(filePath.c_str()); 	else if (fileExtension == ".gltf")
-            //App->GetModelViewerModule()->LoadModel(filePath.c_str());
+            //std::string fileExtension = filePath.substr(fileExtensionPosition + 1);
+            //if (fileExtension == ".ppm" || fileExtension == ".png" || fileExtension == ".jpg")
+            // App->GetModelViewerModule()->LoadTexture(filePath.c_str());
+            //else if (fileExtension == ".gltf") App->GetModelViewerModule()->LoadModel(filePath.c_str());
         }
     }
 
@@ -108,6 +108,69 @@ update_status InputModule::PreUpdate(float deltaTime)
     if (keyboard[SDL_SCANCODE_F] == KEY_DOWN)
     {
         for (const auto it : subscribedCallbacks[SDL_SCANCODE_F])
+        {
+            it();
+        }
+    }
+    if (keyboard[SDL_SCANCODE_R] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_R])
+        {
+            it();
+        }
+    }
+    if (keyboard[SDL_SCANCODE_E] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_E])
+        {
+            it();
+        }
+    }
+    if (keyboard[SDL_SCANCODE_Q] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_Q])
+        {
+            it();
+        }
+    }
+    if (keyboard[SDL_SCANCODE_W] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_W])
+        {
+            it();
+        }
+    }
+    if (keyboard[SDL_SCANCODE_D] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_D])
+        {
+            it();
+        }
+    }
+    if (keyboard[SDL_SCANCODE_S] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_S])
+        {
+            it();
+        }
+    }
+     if (keyboard[SDL_SCANCODE_A] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_A])
+        {
+            it();
+        }
+    }
+     if (keyboard[SDL_SCANCODE_X] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_X])
+        {
+            it();
+        }
+    }
+     if (keyboard[SDL_SCANCODE_Z] == KEY_DOWN)
+    {
+        for (const auto it : subscribedCallbacks[SDL_SCANCODE_Z])
         {
             it();
         }

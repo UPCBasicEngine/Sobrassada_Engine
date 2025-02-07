@@ -1,9 +1,8 @@
 #pragma once
-
 #include <vector>
-#include "Math/float4x4.h"
-#include "Math/float3.h"
 #include "Math/float2.h"
+#include "Math/float3.h"
+#include "Math/float4x4.h"
 
 namespace tinygltf
 {
@@ -11,6 +10,7 @@ namespace tinygltf
 }
 
 class EngineMesh;
+class ComponentMaterial;
 
 class EngineModel
 {
@@ -21,26 +21,21 @@ public:
 	void Load(const char* modelPath);
 	void LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath);
 
-
-	void LoadAdditionalTexture(const char* texturePath);
-
 	void Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix);
 
 	float3 GetMaximumValues() const { return maxValues; };
 	float3 GetMinimumValues() const { return minValues; };
 
 	int GetIndexCount() const { return indexCount; }
-	int GetTotalLoadedTextures() const { return textures.size(); };
 	int GetRenderTexture() const { return renderTexture; };
-	void GetTextureSize(float2& outTextureSize);
 
-	void SetRenderTexture(int texturePosition);
+	std::vector<ComponentMaterial*> &GetMaterials() { return materials; }
+    ComponentMaterial &GetMaterial(const int index);
 
 private:
 
 	std::vector<EngineMesh*> meshes;
-	std::vector<unsigned int> textures;
-	std::vector<float2> textureInfo;
+    std::vector<ComponentMaterial*> materials;
 
 	int totalTriangles = 0;
 	int renderTexture = -1;

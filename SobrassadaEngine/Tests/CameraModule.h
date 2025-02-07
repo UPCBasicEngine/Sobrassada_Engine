@@ -4,6 +4,7 @@
 
 #include "Math/float4x4.h"
 #include "Geometry/Frustum.h"
+#include "Math/Quat.h"
 
 constexpr float DEGTORAD = PI / 180.f;
 constexpr float maximumPositivePitch = 89.f * DEGTORAD;
@@ -26,6 +27,18 @@ public:
 	void SetAspectRatio(float newAspectRatio);
 
 	void EventTriggered();
+	void MoveForward();
+	void MoveBackward();
+	void MoveLeft();
+	void MoveRight();
+	void RotateLeft();
+	void RotateRight();
+	void RotateUp();
+    void RotateDown();
+	void MoveUp();
+    void MoveDown();
+
+	const float3 getPosition() { return camera.pos; }
 
 private:
 	Frustum camera;
