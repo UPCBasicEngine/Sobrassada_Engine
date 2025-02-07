@@ -133,7 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="MockGameObject.cpp" />
+    <ClCompile Include="Tests\MockGameObject.cpp" />
     <ClCompile Include="Utils\Quadtree.cpp" />
     <ClCompile Include="UI\QuadtreeViewer.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
@@ -195,7 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="MockGameObject.h" />
+    <ClInclude Include="Tests\MockGameObject.h" />
     <ClInclude Include="Utils\Quadtree.h" />
     <ClInclude Include="UI\QuadtreeViewer.h" />
     <ClInclude Include="Scene\Components\Component.h" />
