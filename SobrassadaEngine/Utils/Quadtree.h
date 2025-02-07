@@ -4,33 +4,33 @@
 #include "Math/float3.h"
 #include "Math/float4.h"
 
-#include <unordered_set>
+#include <set>
 #include <vector>
 
 constexpr int MinimumLeafSize = 2;
 
 struct Box
 {
-    float x;
-    float y;
+    float x = 0;
+    float y = 0;
 
-    float sizeX;
-    float sizeY;
+    float sizeX = 0;
+    float sizeY = 0;
 
+    Box() = default;
     Box(float x, float y, float sizeX, float sizeY) : x(x), y(y), sizeX(sizeX), sizeY(sizeY) {};
 
     bool operator==(const Box &otherBox) const
     {
         return (x == otherBox.x && y == otherBox.y && sizeX == otherBox.sizeX && sizeY == otherBox.sizeY);
     }
-};
 
-struct BoxHash
-{
-    auto operator()(const Box &box) const -> size_t
+    bool operator<(const Box& otherBox) const
     {
-        return std::hash<float> {}(box.x) ^ std::hash<float> {}(box.y) ^ std::hash<float> {}(box.sizeX) ^
-               std::hash<float> {}(box.sizeY);
+        if (x < otherBox.x) return true;
+        else if (x == otherBox.x && y < otherBox.y) return true;
+
+        return false;
     }
 };
 
@@ -67,7 +67,7 @@ class Quadtree
     ~Quadtree();
 
     bool InsertElement(const Box &newElement);
-    void QueryElements(const Box &area, std::unordered_set<Box, BoxHash> &foundElements) const;
+    void QueryElements(const Box &area, std::set<Box> &foundElements) const;
     void GetDrawLines(std::vector<float4> &drawLines, std::vector<float4> &elementLines) const;
 
   private:

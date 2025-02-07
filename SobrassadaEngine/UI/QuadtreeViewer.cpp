@@ -68,7 +68,7 @@ void QuadtreeViewer::Render(bool &renderBoolean)
     quadtree->GetDrawLines(drawLines, elementLines);
 
     Box queryArea = Box(5, 5, 5, 5);
-    std::unordered_set<Box, BoxHash> rettrievedElements;
+    std::set<Box> rettrievedElements;
     quadtree->QueryElements(queryArea, rettrievedElements);
 
     CreateQueryAreaLines(queryArea, queryAreaLines);

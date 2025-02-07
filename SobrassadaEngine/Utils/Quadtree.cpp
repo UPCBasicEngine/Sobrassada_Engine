@@ -57,7 +57,7 @@ bool Quadtree::InsertElement(const Box &newElement)
     return inserted;
 }
 
-void Quadtree::QueryElements(const Box &area, std::unordered_set<Box, BoxHash> &foundElements) const
+void Quadtree::QueryElements(const Box &area, std::set<Box> &foundElements) const
 {
     std::stack<const QuadtreeNode *> nodesToVisit;
     nodesToVisit.push(rootNode);
@@ -89,7 +89,7 @@ void Quadtree::QueryElements(const Box &area, std::unordered_set<Box, BoxHash> &
 
 void Quadtree::GetDrawLines(std::vector<float4> &drawLines, std::vector<float4> &elementLines) const
 {
-    std::unordered_set<Box, BoxHash> includedElement;
+    std::set<Box> includedElement;
     drawLines    = std::vector<float4>(totalLeaf * 4, float4(0, 0, 0, 0));
     elementLines = std::vector<float4>(totalElements * 4, float4(0, 0, 0, 0));
 
