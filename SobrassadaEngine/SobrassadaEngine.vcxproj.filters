@@ -172,6 +172,9 @@
     <ClCompile Include="Utils\Quadtree.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="MockGameObject.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -285,6 +288,9 @@
     </ClInclude>
     <ClInclude Include="Utils\Quadtree.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="MockGameObject.h">
+      <Filter>Tests</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

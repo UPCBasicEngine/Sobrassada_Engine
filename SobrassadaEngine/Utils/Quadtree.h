@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Geometry/AABB2D.h"
 #include "Math/float2.h"
 #include "Math/float3.h"
 #include "Math/float4.h"
@@ -7,54 +8,43 @@
 #include <set>
 #include <vector>
 
+class MockGameObject;
+
 constexpr int MinimumLeafSize = 2;
-
-struct Box
-{
-    float x = 0;
-    float y = 0;
-
-    float sizeX = 0;
-    float sizeY = 0;
-
-    Box() = default;
-    Box(float x, float y, float sizeX, float sizeY) : x(x), y(y), sizeX(sizeX), sizeY(sizeY) {};
-
-    bool operator==(const Box &otherBox) const
-    {
-        return (x == otherBox.x && y == otherBox.y && sizeX == otherBox.sizeX && sizeY == otherBox.sizeY);
-    }
-
-    bool operator<(const Box& otherBox) const
-    {
-        if (x < otherBox.x) return true;
-        else if (x == otherBox.x && y < otherBox.y) return true;
-
-        return false;
-    }
-};
 
 class Quadtree
 {
   private:
+    struct QuadtreeElement
+    {
+        size_t id = -1;
+        AABB2D boundingBox;
+        const MockGameObject *gameObject = nullptr;
+
+        QuadtreeElement(const AABB2D &boundingBox, const MockGameObject *gameObject, size_t id)
+            : boundingBox(boundingBox), gameObject(gameObject), id(id) {};
+
+        bool operator==(const QuadtreeElement &otherElement) const { return id == otherElement.id; }
+
+        bool operator<(const QuadtreeElement &otherElement) const { return id < otherElement.id; }
+    };
+
     class QuadtreeNode
     {
       public:
         QuadtreeNode() = default;
-        QuadtreeNode(float2 position, float size, int capacity)
-            : position(position), size(size), elementsCapacity(capacity) {};
+        QuadtreeNode(const AABB2D &currentArea, int capacity) : currentArea(currentArea), elementsCapacity(capacity) {};
 
         ~QuadtreeNode();
 
         void Subdivide();
-        bool Intersects(const Box &element) const;
+        bool Intersects(const AABB2D &elementBoundingBox) const { return currentArea.Intersects(elementBoundingBox); };
         bool IsLeaf() const { return topLeft == nullptr; };
 
-        float2 position      = float2(0, 0);
-        float size           = 1;
+        AABB2D currentArea;
         int elementsCapacity = 0;
 
-        std::vector<Box> elements;
+        std::vector<QuadtreeElement> elements;
 
         QuadtreeNode *topLeft     = nullptr;
         QuadtreeNode *topRight    = nullptr;
@@ -63,11 +53,11 @@ class Quadtree
     };
 
   public:
-    Quadtree(float2 position, float size, int capacity);
+    Quadtree(const float2 &position, float size, int capacity);
     ~Quadtree();
 
-    bool InsertElement(const Box &newElement);
-    void QueryElements(const Box &area, std::set<Box> &foundElements) const;
+    bool InsertElement(const MockGameObject *newElement);
+    void QueryElements(const AABB &area, std::vector<const MockGameObject *> &foundElements) const;
     void GetDrawLines(std::vector<float4> &drawLines, std::vector<float4> &elementLines) const;
 
   private:
