@@ -86,7 +86,7 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
     if (ImGui::Button("Add GameObject"))
     {
         uint32_t newUUID          = LCG().IntFast();
-        GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object" + std::to_string(newUUID));
+        GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object##" + std::to_string(newUUID));
         
         gameObjectsContainer[selectedGameObjectUUID]->AddGameObject(newUUID);
 
@@ -111,17 +111,33 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t& s
     if (!gameObjectsContainer.count(gameObjectUUID)) return;
 
     GameObject *gameObject = gameObjectsContainer[gameObjectUUID];
+    
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-    if (ImGui::TreeNode(gameObject->GetName().c_str()))
+    if (gameObject->GetChildren().size() == 0)
     {
-        if (ImGui::IsItemClicked()) selectedGameObjectUUID = gameObjectUUID;
+        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    }
+
+    if (selectedGameObjectUUID == gameObjectUUID) flags |= ImGuiTreeNodeFlags_Selected;
+
+    if (ImGui::TreeNodeEx(gameObject->GetName().c_str(), flags))
+    {
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+        {
+            selectedGameObjectUUID = gameObjectUUID;
+        }
 
         for (uint32_t childUUID : gameObject->GetChildren())
         {
             if (childUUID != gameObjectUUID) RenderGameObjectHierarchy(childUUID, selectedGameObjectUUID);
         }
 
-        ImGui::TreePop();
+        if (gameObject->GetChildren().size() > 0)
+        {
+            ImGui::TreePop();
+        }
+
     }
     else
     {
