@@ -26,8 +26,8 @@ QuadtreeViewer::QuadtreeViewer()
 
     float aspectRatio         = (float)framebuffer->GetTextureHeight() / (float)framebuffer->GetTextureWidth();
 
-    camera.orthographicWidth  = (float)framebuffer->GetTextureWidth() * aspectRatio / cameraSizeScaleFactor;
-    camera.orthographicHeight = (float)framebuffer->GetTextureHeight() * aspectRatio / cameraSizeScaleFactor;
+    camera.orthographicWidth  = (float)framebuffer->GetTextureWidth();
+    camera.orthographicHeight = (float)framebuffer->GetTextureHeight();
 
     viewMatrix                = camera.ViewMatrix();
     projectionMatrix          = camera.ProjectionMatrix();
@@ -49,6 +49,7 @@ QuadtreeViewer::QuadtreeViewer()
 QuadtreeViewer::~QuadtreeViewer()
 {
     delete framebuffer;
+    delete quadtree;
 }
 
 void QuadtreeViewer::Render(bool &renderBoolean)
@@ -109,8 +110,8 @@ void QuadtreeViewer::Render(bool &renderBoolean)
 
 void QuadtreeViewer::ChangeCameraSize(float width, float height)
 {
-    float aspectRatio         = height / width;
-    camera.orthographicHeight = height * aspectRatio / cameraSizeScaleFactor;
+    camera.orthographicHeight = height / cameraSizeScaleFactor;
+    camera.orthographicWidth = width / cameraSizeScaleFactor;
 
     viewMatrix                = camera.ViewMatrix();
     projectionMatrix          = camera.ProjectionMatrix();
