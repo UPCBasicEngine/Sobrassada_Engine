@@ -14,6 +14,9 @@ RootComponent::RootComponent(const uint32_t uuid, const uint32_t uuidParent, con
     selectedUUID = uuid;    // TODO Other components don´t have the correct selectedUUID
 }
 
+RootComponent::~RootComponent(){
+}
+
 bool RootComponent::AddComponent(const uint32_t componentUUID)
 {
     // TODO Load component from storage
@@ -39,8 +42,31 @@ void RootComponent::RenderComponentEditor()
     
     if (ImGui::Button("Add Component")) // TODO Get selected component to add the new one at the correct location (By UUID)
     {
-        CreateComponent(COMPONENT_MODEL); // TODO Add selection table dropdown to select which component to add
+        ImGui::OpenPopup("ComponentSelection");
     }
+
+    if (ImGui::BeginPopup("ComponentSelection"))
+    {
+        static char searchText[255] = "";
+        ImGui::InputText("Search", searchText, 255);
+        
+        ImGui::Separator();
+        if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+        {
+            for ( const auto &componentPair : standaloneComponents ) {
+                {
+                    if (componentPair.first.find(searchText) != std::string::npos)
+                    {
+                        if (ImGui::Selectable(componentPair.first.c_str(), false))
+                            CreateComponent(componentPair.second);
+                    }
+                }
+            }
+            ImGui::EndListBox();
+        }
+        ImGui::EndPopup();
+    }
+    
     ImGui::SameLine();
     if (ImGui::Button("Remove Component")) 
     {

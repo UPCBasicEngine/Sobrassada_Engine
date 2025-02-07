@@ -6,6 +6,8 @@ class RootComponent : public Component
 public:
     RootComponent(const uint32_t uuid, const uint32_t uuidParent, const char* name);
 
+    ~RootComponent() override;
+
     virtual bool CreateComponent(const ComponentType componentType);
     
     bool AddComponent(const uint32_t componentUUID) override;

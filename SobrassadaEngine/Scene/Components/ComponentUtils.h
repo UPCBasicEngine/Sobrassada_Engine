@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include <cstdint>
+#include <map>
+#include <string>
 
 class Component;
 class RootComponent;
@@ -18,8 +20,14 @@ enum ComponentType
     COMPONENT_MESH = 3,
 };
 
+static const std::map<std::string, ComponentType> standaloneComponents = {
+    {"Model", COMPONENT_MODEL}
+};
+
 class ComponentUtils
 {
 public:
     static Component* CreateEmptyComponent(ComponentType type, uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot);
+
+    
 };
