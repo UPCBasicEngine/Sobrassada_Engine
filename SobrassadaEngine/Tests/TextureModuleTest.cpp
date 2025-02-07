@@ -36,6 +36,37 @@ unsigned int TextureModuleTest::LoadTexture(const wchar_t* texturePath, DirectX:
 	return textureId;
 }
 
+unsigned int TextureModuleTest::LoadCubemap(const wchar_t *texturePath) const
+{
+    unsigned int textureId = 0;
+
+    DirectX::ScratchImage scratchImage;
+    DirectX::TexMetadata texMetadata;
+    OpenGLMetadata openGlMeta;
+
+    bool succeded = LoadTextureFile(texturePath, texMetadata, scratchImage);
+    if (succeded)
+    {
+        ConvertMetadata(texMetadata, openGlMeta);
+
+        glGenTextures(1, &textureId);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+        // Sending texture to OpgenGL
+        for (int i = 0; i < texMetadata.arraySize; ++i)
+        {
+            const DirectX::Image* face = scratchImage.GetImage(0, i, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, openGlMeta.internalFormat, face->width, face->height, 0, openGlMeta.format, openGlMeta.type, face->pixels);
+		}
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    }
+    return textureId;
+}
+
 void TextureModuleTest::ConvertMetadata(const DirectX::TexMetadata& metadata, OpenGLMetadata& outMetadata)
 {
 	switch (metadata.format)
@@ -76,7 +107,7 @@ unsigned int TextureModuleTest::CreateFramebufferTexture(int width, int height)
 	return textureId;
 }
 
-bool TextureModuleTest::LoadTextureFile(const wchar_t* texturePath, DirectX::TexMetadata& outMetadata, DirectX::ScratchImage& outImage)
+bool TextureModuleTest::LoadTextureFile(const wchar_t* texturePath, DirectX::TexMetadata& outMetadata, DirectX::ScratchImage& outImage) const
 {
 	HRESULT hr = LoadFromDDSFile(texturePath, DirectX::DDS_FLAGS_NONE, &outMetadata, outImage);
 

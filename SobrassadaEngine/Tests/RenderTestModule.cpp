@@ -8,6 +8,10 @@
 #include "Framebuffer.h"
 #include "OpenGLModule.h"
 #include "Components/ComponentMaterial.h"
+#include "LightsConfig.h"
+#include "DebugDrawModule.h"
+#include "WindowModule.h"
+
 #include "MathGeoLib.h"
 #include "glew.h"
 #include "DirectXTex/DirectXTex.h"
@@ -19,6 +23,7 @@
 RenderTestModule::RenderTestModule()
 {
 	currentLoadedModel = new EngineModel();
+    lightsConfig       = new LightsConfig();
 }
 
 RenderTestModule::~RenderTestModule()
@@ -69,6 +74,8 @@ bool RenderTestModule::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_data), vtx_data, GL_STATIC_DRAW);
 
+	lightsConfig->InitSkybox();
+
 	return true;
 }
 
@@ -87,6 +94,9 @@ update_status RenderTestModule::Render(float deltaTime)
 		float3(2.0f, 0.0f, 0.0f),
 		float4x4::RotateZ(pi / 4.0f),
 		float3(2.0f, 1.0f, 1.0f));
+
+	// Draw the skybox before anything else
+	lightsConfig->RenderSkybox(proj, view);					
 
 	glUseProgram(program);
 	glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
@@ -130,7 +140,15 @@ update_status RenderTestModule::Render(float deltaTime)
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	//glDrawArrays(GL_TRIANGLES, 0, 6);
 
+
 	currentLoadedModel->Render(program, proj, view);
+
+	int width  = 0;
+    int height = 0;
+    SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
+
+	// Draw the grid at last
+	App->GetDebugDreawModule()->Draw(view, proj, width, height);
 
 	// Unbinding frame buffer so ui gets rendered
 	App->GetOpenGLModule()->GetFramebuffer()->Unbind();
@@ -143,7 +161,9 @@ bool RenderTestModule::ShutDown()
 	App->GetShaderModule()->DeleteProgram(program);
 	glDeleteBuffers(1, &vbo);
 	glDeleteTextures(1, &baboonTexture);
+
 	delete currentLoadedModel;
+    delete lightsConfig;
 
 	return true;
 }
