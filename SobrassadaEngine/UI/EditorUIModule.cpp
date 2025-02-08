@@ -153,26 +153,42 @@ void EditorUIModule::ImportDialog(bool& import)
 	ImGui::Begin("Import Dialog", & import);
 
 	static std::string currentPath = std::filesystem::current_path().string();
-	static char searchQuery[32] = "";
+	static char searchQuery[32];
 	static std::vector<std::string> filteredFiles;
+	static bool showDrives = false;
 
 	// root directory add delimiter
 	if (currentPath.back() == ':') currentPath += DELIMITER;
 
-	FileSystem::SplitAccumulatedPath(currentPath, accPaths);
-
-	for (size_t i = 0; i < accPaths.size(); i++)
+	if (ImGui::Button("Drives"))
 	{
-		const std::string& accPath = accPaths[i];
+		FileSystem::GetDrives(files);
+		showDrives = true;
+	}
 
-		std::string buttonLabel = (i == 0) ? accPath : FileSystem::GetFileNameWithExtension(accPath);
+	ImGui::SameLine();
+	ImGui::Text("|");
 
-		if (ImGui::Button(buttonLabel.c_str()))
+	if (!showDrives)
+	{
+		ImGui::SameLine();
+
+		FileSystem::SplitAccumulatedPath(currentPath, accPaths);
+
+		for (size_t i = 0; i < accPaths.size(); i++)
 		{
-			currentPath = accPath;
-		}
+			const std::string& accPath = accPaths[i];
 
-		if (i < accPaths.size() -1) ImGui::SameLine();
+			std::string buttonLabel = (i == 0) ? accPath : FileSystem::GetFileNameWithExtension(accPath);
+
+			if (ImGui::Button(buttonLabel.c_str()))
+			{
+				currentPath = accPath;
+				showDrives = false;
+			}
+
+			if (i < accPaths.size() - 1) ImGui::SameLine();
+		}
 	}
 
 	ImGui::Separator();
@@ -181,57 +197,78 @@ void EditorUIModule::ImportDialog(bool& import)
 	ImGui::SameLine();
 	ImGui::InputText("##search", searchQuery, IM_ARRAYSIZE(searchQuery));
 
-	GetFilesSorted(currentPath);
-	filteredFiles.clear();
-
-
-	for (const std::string& file : files)
-	{
-		if (file.find(searchQuery) != std::string::npos)
-		{
-			filteredFiles.push_back(file);
-		}
-	}
-
 	static std::string inputFile = "";
-	static int selected = -1;
 
-	for (int i = 0; i < filteredFiles.size(); i++)
+	ImGui::BeginChild("scrollFiles", ImVec2(0, -70), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+	if (showDrives)
 	{
-		const std::string& file = filteredFiles[i];
-		std::string filePath = currentPath + DELIMITER + file;
-		bool isDirectory = FileSystem::IsDirectory(filePath.c_str());
-
-		std::string tag = isDirectory ? "[Dir] " : "[File] ";
-		std::string fileWithTag = tag + file;
-
-		// ImGuiSelectableFlags_AllowDoubleClick for Directories?
-		if (ImGui::Selectable(fileWithTag.c_str(), selected == i))
+		for (const std::string& drive : files)
 		{
-			selected = i;
+			if (ImGui::Selectable(drive.c_str()))
+			{
+				currentPath = drive;
+				showDrives = false;
+			}
+		}
+	}
+	else
+	{
+		GetFilesSorted(currentPath);
 
-			if (file == "..")
+		filteredFiles.clear();
+
+		for (const std::string& file : files)
+		{
+			if (file.find(searchQuery) != std::string::npos)
 			{
-				currentPath = FileSystem::GetParentPath(currentPath);
-				inputFile = "";
-				selected = -1;
-				GetFilesSorted(currentPath);
+				filteredFiles.push_back(file);
 			}
-			else if (isDirectory)
+		}
+
+		static int selected = -1;
+
+		for (int i = 0; i < filteredFiles.size(); i++)
+		{
+			const std::string& file = filteredFiles[i];
+			std::string filePath = currentPath + DELIMITER + file;
+			bool isDirectory = FileSystem::IsDirectory(filePath.c_str());
+
+			std::string tag = isDirectory ? "[Dir] " : "[File] ";
+			std::string fileWithTag = tag + file;
+
+			// ImGuiSelectableFlags_AllowDoubleClick for Directories?
+			if (ImGui::Selectable(fileWithTag.c_str(), selected == i))
 			{
-				currentPath = filePath;
-				inputFile = "";
-				selected = -1;
-				GetFilesSorted(currentPath);
-			}
-			else
-			{
-				inputFile = FileSystem::GetFileNameWithExtension(file);
+				selected = i;
+
+				if (file == "..")
+				{
+					currentPath = FileSystem::GetParentPath(currentPath);
+					inputFile = "";
+					selected = -1;
+					GetFilesSorted(currentPath);
+					searchQuery[0] = '\0';
+				}
+				else if (isDirectory)
+				{
+					currentPath = filePath;
+					inputFile = "";
+					selected = -1;
+					GetFilesSorted(currentPath);
+					searchQuery[0] = '\0';
+				}
+				else
+				{
+					inputFile = FileSystem::GetFileNameWithExtension(file);
+				}
 			}
 		}
 	}
 
-	ImGui::Dummy(ImVec2(0, ImGui::GetContentRegionAvail().y - 50));
+	ImGui::EndChild();
+
+	ImGui::Dummy(ImVec2(0, 10));
 	ImGui::Text("File Name:");
 	ImGui::SameLine();
 	ImGui::InputText("##filename", &inputFile[0], inputFile.size(), ImGuiInputTextFlags_ReadOnly);
@@ -241,6 +278,8 @@ void EditorUIModule::ImportDialog(bool& import)
 		inputFile = "";
 		currentPath = startPath;
 		import = false;
+		showDrives = false;
+		searchQuery[0] = '\0';
 	}
 
 	ImGui::SameLine();
@@ -252,7 +291,11 @@ void EditorUIModule::ImportDialog(bool& import)
 			std::string importPath = currentPath + DELIMITER + inputFile;
 			// Call to SceneImporter import
 		}
+		inputFile = "";
+		currentPath = startPath;
 		import = false;
+		showDrives = false;
+		searchQuery[0] = '\0';
 	}
 
 	ImGui::End();
