@@ -153,6 +153,8 @@ void EditorUIModule::ImportDialog(bool& import)
 	ImGui::Begin("Import Dialog", & import);
 
 	static std::string currentPath = std::filesystem::current_path().string();
+	static char searchQuery[32] = "";
+	static std::vector<std::string> filteredFiles;
 
 	// root directory add delimiter
 	if (currentPath.back() == ':') currentPath += DELIMITER;
@@ -173,14 +175,30 @@ void EditorUIModule::ImportDialog(bool& import)
 		if (i < accPaths.size() -1) ImGui::SameLine();
 	}
 
+	ImGui::Separator();
+
+	ImGui::Text("Search:");
+	ImGui::SameLine();
+	ImGui::InputText("##search", searchQuery, IM_ARRAYSIZE(searchQuery));
+
 	GetFilesSorted(currentPath);
+	filteredFiles.clear();
+
+
+	for (const std::string& file : files)
+	{
+		if (file.find(searchQuery) != std::string::npos)
+		{
+			filteredFiles.push_back(file);
+		}
+	}
 
 	static std::string inputFile = "";
 	static int selected = -1;
 
-	for (int i = 0; i < files.size(); i++)
+	for (int i = 0; i < filteredFiles.size(); i++)
 	{
-		const std::string& file = files[i];
+		const std::string& file = filteredFiles[i];
 		std::string filePath = currentPath + DELIMITER + file;
 		bool isDirectory = FileSystem::IsDirectory(filePath.c_str());
 
