@@ -110,24 +110,20 @@ update_status RenderTestModule::Render(float deltaTime)
 	OBB currentModelObb = currentLoadedModel->GetOBBModel();
     float3 corners[8];
     currentModelObb.GetCornerPoints(corners);
+
     bool insideFrustum = false;
 
 	for (int i = 0; i < 8; ++i)
     {
         float4 cornerLocal(corners[i], 1.0f);
-        float4 cornerGlobal = cornerLocal * model;
+        float4 cornerGlobal = cornerLocal;
 
         float4 transformedCorner = proj * view * cornerGlobal;
 
-		if (transformedCorner.w != 0.0f)
-        {
-            transformedCorner.x /= transformedCorner.w;
-            transformedCorner.y /= transformedCorner.w;
-            transformedCorner.z /= transformedCorner.w;
-        }
 
-        if (transformedCorner.x >= -1.0f && transformedCorner.x <= 1.0f && transformedCorner.y >= -1.0f &&
-            transformedCorner.y <= 1.0f && transformedCorner.z >= -1.0f && transformedCorner.z <= 1.0f)
+        if (transformedCorner.x / transformedCorner.w >= -1.0f && transformedCorner.x / transformedCorner.w <= 1.0f &&
+            transformedCorner.y / transformedCorner.w >= -1.0f && transformedCorner.y / transformedCorner.w <= 1.0f &&
+            transformedCorner.z / transformedCorner.w >= -1.0f && transformedCorner.z / transformedCorner.w <= 1.0f)
         {
             insideFrustum = true;
             break;
@@ -136,7 +132,7 @@ update_status RenderTestModule::Render(float deltaTime)
 
 	if (insideFrustum)
     {
-        GLOG("El objeto esta dentro del Frustum");
+       GLOG("El objeto esta dentro del Frustum");
         currentLoadedModel->Render(program, proj, view);
     }
     else

@@ -6,6 +6,8 @@
 #include "TextureModuleTest.h"
 #include "glew.h"
 #include "DirectXTex/DirectXTex.h"
+#include "Geometry/Frustum.h"
+#include "DebugDraw/debugdraw.h"
 #include <string>
 #include <unordered_set>
 
@@ -216,7 +218,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 			newMesh->CreateVAO();
 
 			float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
-			float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
+            float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
 
 			if (firstMesh)
 			{
@@ -229,6 +231,8 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 				maxValues = float3(Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y), Max(maxValues.z, meshMaxValues.z));
 				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
 			}
+
+
 
 			newMesh->SetBasicModelMatrix(modelMatrix);
 			
@@ -249,11 +253,28 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 OBB EngineModel::GetOBBModel() const{
 	
     OBB obbModel(GetABBModel());
-    if (!meshes.empty())
-    {
-        float4x4 modelMatrix = meshes[0]->GetBasicModelMatrix();
 
-        obbModel.Transform(modelMatrix);
+    float3 corners[8];
+    obbModel.GetCornerPoints(corners);
+
+    int edges[12][2] = {
+        {0, 1},
+        {1, 5},
+        {2, 3},
+        {3, 7},
+        {4, 0},
+        {5, 4},
+        {6, 2},
+        {7, 6},
+        {0, 2},
+        {1, 3},
+        {4, 6},
+        {5, 7}
+    };
+
+    for (int i = 0; i < 12; i++)
+    {
+        dd::line(corners[edges[i][0]], corners[edges[i][1]], dd::colors::Red);
     }
 
 	 return obbModel;
@@ -262,6 +283,7 @@ OBB EngineModel::GetOBBModel() const{
 AABB EngineModel::GetABBModel() const
 {
     AABB aabbModel(minValues, maxValues);
+
     return aabbModel;
 }
 

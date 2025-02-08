@@ -76,37 +76,37 @@ void CameraModule::MoveCamera()
         movementSpeed = speedBase * 3;
     }
 
-    // if (App->GetInputModule()->IsMouseButtonPressed(SDL_BUTTON_RIGHT))
-    //{
-    // TRANSLATION
-    if (App->GetInputModule()->GetKey(SDL_SCANCODE_W))
+    if (App->GetInputModule()->GetMouseButtonDown(SDL_BUTTON_RIGHT))
     {
-        camera.pos += camera.front * movementSpeed;
+        // TRANSLATION
+        if (App->GetInputModule()->GetKey(SDL_SCANCODE_W))
+        {
+            camera.pos += camera.front * movementSpeed;
 
-    }
-    if (App->GetInputModule()->GetKey(SDL_SCANCODE_S))
-    {
-        camera.pos -= camera.front * movementSpeed;
-    }
+        }
+        if (App->GetInputModule()->GetKey(SDL_SCANCODE_S))
+        {
+            camera.pos -= camera.front * movementSpeed;
+        }
 
-    if (App->GetInputModule()->GetKey(SDL_SCANCODE_A))
-    {
-        camera.pos -= camera.WorldRight() * movementSpeed;
-    }
-    if (App->GetInputModule()->GetKey(SDL_SCANCODE_D))
-    {
-        camera.pos += camera.WorldRight() * movementSpeed;
-    }
+        if (App->GetInputModule()->GetKey(SDL_SCANCODE_A))
+        {
+            camera.pos -= camera.WorldRight() * movementSpeed;
+        }
+        if (App->GetInputModule()->GetKey(SDL_SCANCODE_D))
+        {
+            camera.pos += camera.WorldRight() * movementSpeed;
+        }
 
-    if (App->GetInputModule()->GetKey(SDL_SCANCODE_E))
-    {
-        camera.pos += camera.up * movementSpeed;
+        if (App->GetInputModule()->GetKey(SDL_SCANCODE_E))
+        {
+            camera.pos += camera.up * movementSpeed;
+        }
+        if (App->GetInputModule()->GetKey(SDL_SCANCODE_Q))
+        {
+            camera.pos -= camera.up * movementSpeed;
+        }
     }
-    if (App->GetInputModule()->GetKey(SDL_SCANCODE_Q))
-    {
-        camera.pos -= camera.up * movementSpeed;
-    }
-    //}
 
     if (App->GetInputModule()->GetMouseButtonDown(SDL_BUTTON_RIGHT))
     {
