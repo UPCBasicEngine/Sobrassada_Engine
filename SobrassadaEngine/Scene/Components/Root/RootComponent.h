@@ -4,7 +4,7 @@
 class RootComponent : public Component
 {
 public:
-    RootComponent(const uint32_t uuid, const uint32_t uuidParent, const char* name);
+    RootComponent(uint32_t uuid, uint32_t uuidParent, const char* name, const Transform& parentGlobalTransform);
 
     ~RootComponent() override;
 

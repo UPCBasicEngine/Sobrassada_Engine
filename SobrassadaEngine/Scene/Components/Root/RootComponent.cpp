@@ -8,8 +8,8 @@
 
 #include <Algorithm/Random/LCG.h>
 
-RootComponent::RootComponent(const uint32_t uuid, const uint32_t uuidParent, const char* name)
-        : Component(uuid, uuidParent, uuid, name)
+RootComponent::RootComponent(const uint32_t uuid, const uint32_t uuidParent, const char* name, const Transform& parentGlobalTransform)
+        : Component(uuid, uuidParent, uuid, name, parentGlobalTransform)
 {
     selectedUUID = uuid;    // TODO Other components don´t have the correct selectedUUID
 }
@@ -132,13 +132,16 @@ void RootComponent::SetSelectedComponent(const uint32_t componentUUID)
 bool RootComponent::CreateComponent(const ComponentType componentType)
 {
     // TODO Call library to create the component with an id instead
-    Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), selectedUUID, uuid);
     Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUUID];
-    if (createdComponent != nullptr && selectedComponent != nullptr) {
-        App->GetSceneModule()->gameComponents[createdComponent->GetUUID()] = createdComponent;
+    if (selectedComponent != nullptr) {
+        Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), selectedUUID, uuid, selectedComponent->GetGlobalTransform());
+        if (createdComponent != nullptr)
+        {
+            App->GetSceneModule()->gameComponents[createdComponent->GetUUID()] = createdComponent;
         
-        selectedComponent->AddComponent(createdComponent->GetUUID());
-        return true;
+            selectedComponent->AddComponent(createdComponent->GetUUID());
+            return true;
+        }
     }
     return false;
 }

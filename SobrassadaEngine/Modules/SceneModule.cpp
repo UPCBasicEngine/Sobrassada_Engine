@@ -39,7 +39,7 @@ bool SceneModule::Init()
 
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
-    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), -1, -1)); // TODO Add the gameObject UUID as parent?
+    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), -1, -1, Transform())); // TODO Add the gameObject UUID as parent?
     gameComponents[rootComponent->GetUUID()] = rootComponent;
 
     const uint32_t newModelID = LCG().IntFast();

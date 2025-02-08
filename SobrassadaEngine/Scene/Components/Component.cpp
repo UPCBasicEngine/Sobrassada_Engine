@@ -7,7 +7,8 @@
 #include "imgui.h"
 #include "Root/RootComponent.h"
 
-Component::Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name): uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true){}
+Component::Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform):
+uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform){}
 
 void Component::Enable()
 {

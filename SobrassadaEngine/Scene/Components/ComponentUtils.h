@@ -1,4 +1,7 @@
 ﻿#pragma once
+#include "Transform.h"
+
+
 #include <cstdint>
 #include <map>
 #include <string>
@@ -27,7 +30,7 @@ static const std::map<std::string, ComponentType> standaloneComponents = {
 class ComponentUtils
 {
 public:
-    static Component* CreateEmptyComponent(ComponentType type, uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot);
+    static Component* CreateEmptyComponent(ComponentType type, uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot, const Transform& parentGlobalTransform);
 
     
 };

@@ -11,8 +11,8 @@
 #include <Algorithm/Random/LCG.h>
 #include <Math/Quat.h>
 
-ModelComponent::ModelComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name)
-        : Component(uuid, uuidParent, uuidRoot, name)
+ModelComponent::ModelComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform)
+        : Component(uuid, uuidParent, uuidRoot, name, parentGlobalTransform)
 {
 }
 
@@ -75,6 +75,7 @@ void ModelComponent::Render(){
             currentModel->Render(App->GetRenderTestModule()->GetProgram(), model, proj, view);
         }
     }
+    Component::Render();
 }
 
 void ModelComponent::LoadModel(const std::string& modelName, uint32_t modelUUID)

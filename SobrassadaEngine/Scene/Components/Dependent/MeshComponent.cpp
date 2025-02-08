@@ -1,7 +1,7 @@
 ﻿#include "MeshComponent.h"
 
-MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name)
-        : Component(uuid, uuidParent, uuidRoot, name)
+MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform)
+        : Component(uuid, uuidParent, uuidRoot, name, parentGlobalTransform)
 {
 }
 
