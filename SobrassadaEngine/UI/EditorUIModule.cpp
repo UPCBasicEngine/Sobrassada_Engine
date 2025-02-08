@@ -173,11 +173,7 @@ void EditorUIModule::ImportDialog(bool& import)
 		if (i < accPaths.size() -1) ImGui::SameLine();
 	}
 
-	//files & dir in the current directory
-	FileSystem::GetAllInDirectory(currentPath, files);
-
-	files.insert(files.begin(), "..");
-
+	GetFilesSorted(currentPath);
 
 	static std::string inputFile = "";
 	static int selected = -1;
@@ -201,14 +197,14 @@ void EditorUIModule::ImportDialog(bool& import)
 				currentPath = FileSystem::GetParentPath(currentPath);
 				inputFile = "";
 				selected = -1;
-				FileSystem::GetAllInDirectory(currentPath, files);
+				GetFilesSorted(currentPath);
 			}
 			else if (isDirectory)
 			{
 				currentPath = filePath;
 				inputFile = "";
 				selected = -1;
-				FileSystem::GetAllInDirectory(currentPath, files);
+				GetFilesSorted(currentPath);
 			}
 			else
 			{
@@ -242,6 +238,22 @@ void EditorUIModule::ImportDialog(bool& import)
 	}
 
 	ImGui::End();
+}
+
+void EditorUIModule::GetFilesSorted(const std::string& currentPath)
+{
+	//files & dir in the current directory
+	FileSystem::GetAllInDirectory(currentPath, files);
+
+	files.insert(files.begin(), "..");
+
+	std::sort(files.begin(), files.end(), [&](const std::string& a, const std::string& b) {
+		bool isDirA = FileSystem::IsDirectory((currentPath + DELIMITER + a).c_str());
+		bool isDirB = FileSystem::IsDirectory((currentPath + DELIMITER + b).c_str());
+
+		if (isDirA != isDirB) return isDirA > isDirB;
+		return a < b;
+	});
 }
 
 void EditorUIModule::Console(bool& consoleMenu)

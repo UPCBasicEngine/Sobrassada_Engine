@@ -34,6 +34,7 @@ class EditorUIModule : public Module
 
     void Console(bool &consoleMenu);
     void ImportDialog(bool& import);
+    void GetFilesSorted(const std::string& currentPath);
 
   private:
     bool consoleMenu        = false;
