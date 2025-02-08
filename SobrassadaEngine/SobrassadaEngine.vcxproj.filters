@@ -175,6 +175,9 @@
     <ClCompile Include="Tests\MockGameObject.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Octree.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -291,6 +294,9 @@
     </ClInclude>
     <ClInclude Include="Tests\MockGameObject.h">
       <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Octree.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

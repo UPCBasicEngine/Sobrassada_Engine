@@ -2,6 +2,7 @@
 
 #include "MockGameObject.h"
 
+#include <set>
 #include <stack>
 
 Quadtree::Quadtree(const float2 &position, float size, int capacity)
@@ -126,20 +127,13 @@ void Quadtree::GetDrawLines(std::vector<float4> &drawLines, std::vector<float4> 
 
         if (currentNode->IsLeaf())
         {
-            float halfSize = currentNode->currentArea.Width() / 2.f;
+            float halfSize               = currentNode->currentArea.Width() / 2.f;
+            float2 center                = currentNode->currentArea.CenterPoint();
 
-            float2 topLeft = float2(
-                currentNode->currentArea.CenterPoint().x - halfSize, currentNode->currentArea.CenterPoint().y + halfSize
-            );
-            float2 topRight = float2(
-                currentNode->currentArea.CenterPoint().x + halfSize, currentNode->currentArea.CenterPoint().y + halfSize
-            );
-            float2 bottomLeft = float2(
-                currentNode->currentArea.CenterPoint().x - halfSize, currentNode->currentArea.CenterPoint().y - halfSize
-            );
-            float2 bottomRight = float2(
-                currentNode->currentArea.CenterPoint().x + halfSize, currentNode->currentArea.CenterPoint().y - halfSize
-            );
+            float2 topLeft               = float2(center.x - halfSize, center.y + halfSize);
+            float2 topRight              = float2(center.x + halfSize, center.y + halfSize);
+            float2 bottomLeft            = float2(center.x - halfSize, center.y - halfSize);
+            float2 bottomRight           = float2(center.x + halfSize, center.y - halfSize);
 
             drawLines[currentDrawLine++] = float4(topLeft.x, topLeft.y, topRight.x, topRight.y);
             drawLines[currentDrawLine++] = float4(topRight.x, topRight.y, bottomRight.x, bottomRight.y);
