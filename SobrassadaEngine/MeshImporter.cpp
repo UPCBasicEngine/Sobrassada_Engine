@@ -3,6 +3,7 @@
 #include "FileSystem.h"
 #include "Globals.h"
 
+
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
@@ -46,14 +47,14 @@ namespace MeshImporter {
                     for (size_t i = 0; i < posAcc.count; ++i) {
                         Vertex vertex;
 
-                        // Copy position data
-                        memcpy(vertex.position, bufferPos, sizeof(float) * 3);
+                        // Copy position data by dereferencing pointer casted to float3
+                        vertex.position = *reinterpret_cast<const float3 *>(bufferPos);
 
                         // Copy normal data
-                        memcpy(vertex.normal, bufferNormal, sizeof(float) * 3);
+                        vertex.normal   = *reinterpret_cast<const float3 *>(bufferNormal);
 
                         // Copy texture coordinate data
-                        memcpy(vertex.texCoord, bufferTexCoord, sizeof(float) * 2);
+                        vertex.texCoord  = *reinterpret_cast<const float2 *>(bufferTexCoord);
 
                         bufferPos += posView.byteStride;
                         bufferNormal += normView.byteStride;
@@ -73,11 +74,10 @@ namespace MeshImporter {
             const tinygltf::Buffer& indexBufferData = model.buffers[indexView.buffer];
             const unsigned char* bufferIndices = &(indexBufferData.data[indexAcc.byteOffset + indexView.byteOffset]);
 
-
             if (indexAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE) {
                 for (size_t i = 0; i < indexAcc.count; ++i) {
                     unsigned char index;
-                    memcpy(&index, bufferIndices, sizeof(unsigned char));
+                    index = *reinterpret_cast<const unsigned char *>(bufferIndices);
                     indexBuffer.push_back(index);
                     bufferIndices += indexView.byteStride;
                 }
@@ -85,7 +85,7 @@ namespace MeshImporter {
             else if (indexAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
                 for (size_t i = 0; i < indexAcc.count; ++i) {
                     unsigned short index;
-                    memcpy(&index, bufferIndices, sizeof(unsigned short));
+                    index = *reinterpret_cast<const unsigned short *>(bufferIndices);
                     indexBuffer.push_back(index);
                     bufferIndices += indexView.byteStride;
                 }
@@ -93,7 +93,7 @@ namespace MeshImporter {
             else if (indexAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
                 for (size_t i = 0; i < indexAcc.count; ++i) {
                     unsigned int index;
-                    memcpy(&index, bufferIndices, sizeof(unsigned int));
+                    index = *reinterpret_cast<const unsigned int *>(bufferIndices);
                     indexBuffer.push_back(index);
                     bufferIndices += indexView.byteStride;
                 }
@@ -134,7 +134,7 @@ namespace MeshImporter {
 
         //false = append
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath = "Library/Meshes/" + fileName + ".sobrassada";
+        std::string savePath = MESHES_PATH + fileName + FILE_EXTENSION;
         unsigned int bytesWritten = FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
 
         delete[] fileBuffer;
@@ -149,4 +149,64 @@ namespace MeshImporter {
 
         return true;
     }
+
+
+    std::unique_ptr<Mesh> LoadMesh(const char *path)
+    {
+        char *buffer = nullptr;
+        char *cursor = buffer;
+
+        unsigned int fileSize = FileSystem::Load(path, &buffer);
+
+        if (fileSize == 0 || buffer == nullptr)
+        {
+            GLOG("Failed to load the .sobrassada file: ");
+            return nullptr; // Return 0 or an appropriate error code
+        }
+
+        // Read header
+        unsigned int header[4];
+        memcpy(header, cursor, sizeof(header));
+        cursor += sizeof(header);
+
+        unsigned int indexCount    = header[0];
+        unsigned int vertexCount   = header[1];
+        unsigned int materialIndex = header[2];
+        unsigned int mode          = header[3];
+
+
+        // Create Mesh
+
+        auto mesh = std::make_unique<Mesh>();
+        mesh->SetMaterialIndex(materialIndex);
+        mesh->SetMode(mode);  
+
+
+        std::vector<Vertex> tmpVertices;
+        tmpVertices.reserve(vertexCount);
+
+        std::move(
+            reinterpret_cast<Vertex *>(cursor), reinterpret_cast<Vertex *>(cursor) + vertexCount, tmpVertices.begin()
+        );
+
+        mesh->SetVertices(std::move(tmpVertices));
+        cursor += vertexCount * sizeof(Vertex);
+
+
+        std::vector<unsigned int> tmpIndices;
+        tmpIndices.reserve(indexCount);
+
+        // Read index buffer
+        std::move(
+            reinterpret_cast<unsigned int *>(cursor), reinterpret_cast<unsigned int *>(cursor) + indexCount, tmpIndices.begin()
+        );
+        mesh->SetIndices(std::move(tmpIndices));
+
+        delete[] buffer;
+
+
+        return mesh;
+    }
+
+
 };

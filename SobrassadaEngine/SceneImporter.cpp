@@ -32,7 +32,7 @@ namespace SceneImporter {
 
 		// Copy gltf to Assets folder
 		{
-			std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(filePath);
+			std::string copyPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(filePath);
 			if (!FileSystem::Exists(copyPath.c_str()))
 			{
 				FileSystem::Copy(filePath, copyPath.c_str());

@@ -197,6 +197,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshImporter.h" />
     <ClInclude Include="SceneImporter.h" />
     <ClInclude Include="Scene\Components\Component.h" />
