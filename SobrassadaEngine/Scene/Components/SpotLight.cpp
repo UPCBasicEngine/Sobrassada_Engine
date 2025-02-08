@@ -29,6 +29,7 @@ void SpotLight::EditorParams()
     ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 180.0f);
 
     if (innerAngle > outerAngle) outerAngle = innerAngle;
+    if (outerAngle < innerAngle) innerAngle = outerAngle;
 
     ImGui::End();
 }

@@ -18,6 +18,7 @@ class DebugDrawModule : public Module
     bool ShutDown() override;
 
     void Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height);
+    void Render2DLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color);
 
   private:
     static DDRenderInterfaceCoreGL *implementation;

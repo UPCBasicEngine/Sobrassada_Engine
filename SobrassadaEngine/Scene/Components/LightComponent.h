@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Component.h"
+#include "Application.h"
+
 #include "Math/float3.h"
 
 class LightComponent : public Component

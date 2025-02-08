@@ -127,6 +127,8 @@ update_status RenderTestModule::Render(float deltaTime)
     glUniform1f(5, pointLight->GetIntensity());
     glUniform1f(6, pointLight->GetRange());
 
+    pointLight->DrawGizmos();
+
     // Test spotlight
     glUniform3fv(7, 1, &spotLight->GetColor()[0]);
     glUniform3fv(8, 1, &spotLight->GetPosition()[0]);

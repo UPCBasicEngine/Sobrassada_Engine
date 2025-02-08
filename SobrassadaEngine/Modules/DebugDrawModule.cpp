@@ -617,3 +617,9 @@ void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned 
 
     dd::flush();
 }
+
+void DebugDrawModule::Render2DLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color)
+{
+    float3 dir = direction * distance;
+    dd::line(ddVec3(origin.x, origin.y, origin.z), ddVec3(dir.x + origin.x, dir.y + origin.y, dir.z + origin.z), ddVec3(color.x, color.y, color.z));
+}

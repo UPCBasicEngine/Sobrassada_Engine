@@ -70,11 +70,11 @@ void main()
 
 	vec3 Lpoint = normalize(pos - pointPosition);
 	vec3 LiPoint = pointColor * pointIntensity * pointLightAttenuation();
-	float NLpoint = dot(N, Lpoint);
+	float NLpoint = dot(N, -Lpoint);
 
 	vec3 Lspot = normalize(pos - spotPosition);
 	vec3 LiSpot = spotColor * spotIntensity * spotLightAttenuation();
-	float NLspot = dot(N, Lspot);
+	float NLspot = dot(N, -Lspot);
 	
 	float NL = dot(N, -L);
 

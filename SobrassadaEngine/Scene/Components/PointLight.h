@@ -9,6 +9,7 @@ class PointLight : public LightComponent
     ~PointLight();
 
     void EditorParams();
+    void DrawGizmos() const;
 
     float3 GetPosition() const { return position; }
     float GetRange() const { return range; }
