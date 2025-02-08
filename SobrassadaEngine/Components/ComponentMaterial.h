@@ -11,9 +11,19 @@ class TextureModuleTest;
 
 struct TextureInfo
 {
-	unsigned int textureID = -1;
+	unsigned int textureID = 0;
 	int width = 0;
 	int height = 0;
+};
+
+struct Material
+{
+    float4 diffFactor;
+    float4 specFactor;
+
+    float shininess;
+    int shininessInAlpha;
+    int32_t padding[2] = {0, 0};
 };
 
 class ComponentMaterial
@@ -22,6 +32,7 @@ public:
     void OnEditorUpdate();
 
     void LoadMaterial(const tinygltf::Material &srcMaterial, const tinygltf::Model& sourceModel, const char* modelPath);
+    void RenderMaterial(int program);
 
     bool GetHasDiffuseTexture() { return hasDiffuseTexture; }
     unsigned int GetDiffuseID() { return diffuseTexture.textureID; }

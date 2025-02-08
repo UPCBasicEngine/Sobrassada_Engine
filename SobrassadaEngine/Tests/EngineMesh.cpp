@@ -221,17 +221,7 @@ void EngineMesh::Render(int program, float4x4& projectionMatrix, float4x4& viewM
 	glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
 	glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
-	if (material->GetHasDiffuseTexture())
-	{
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, material->GetDiffuseID());
-	}
-    if (material->GetHasSpecularTexture())
-    {
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, material->GetSpecularID());
-    }
-
+	material->RenderMaterial(program);
 
 	if (indexCount > 0 && vao)
 	{

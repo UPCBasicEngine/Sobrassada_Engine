@@ -1,48 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Modules\WindowModule.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\log.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\UPCTimer.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\InputModule.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\ShaderModule.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="UI\EditorUIModule.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\OpenGLModule.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui_demo.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui_draw.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui_impl_opengl3.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui_impl_sdl2.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui_tables.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui_widgets.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Components\ComponentMaterial.cpp" />
+    <ClCompile Include="Scene\Components\Component.cpp" />
+    <ClCompile Include="Utils\Framebuffer.cpp" />
+    <ClCompile Include="UI\EditorViewport.cpp" />
+    <ClCompile Include="Tests\CameraModule.cpp" />
+    <ClCompile Include="Modules\DebugDrawModule.cpp" />
+    <ClCompile Include="UI\EditorUIModule.cpp" />
+    <ClCompile Include="Tests\EngineMesh.cpp" />
+    <ClCompile Include="Tests\EngineModel.cpp" />
+    <ClCompile Include="Modules\InputModule.cpp" />
+    <ClCompile Include="Utils\LightsConfig.cpp" />
+    <ClCompile Include="Utils\log.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Modules\OpenGLModule.cpp" />
+    <ClCompile Include="Tests\RenderTestModule.cpp" />
+    <ClCompile Include="Modules\ShaderModule.cpp" />
+    <ClCompile Include="Tests\TextureModuleTest.cpp" />
+    <ClCompile Include="Utils\UPCTimer.cpp" />
+    <ClCompile Include="Modules\WindowModule.cpp" />
     <ClCompile Include="Libs\MathGeoLib\include\Geometry\AABB.cpp">
       <Filter>MathGeoLib</Filter>
     </ClCompile>
@@ -94,13 +72,13 @@
     <ClCompile Include="Libs\MathGeoLib\include\Geometry\LineSegment.cpp">
       <Filter>MathGeoLib</Filter>
     </ClCompile>
-    <ClCompile Include="Libs\MathGeoLib\include\Math\MathFunc.cpp">
-      <Filter>MathGeoLib</Filter>
-    </ClCompile>
     <ClCompile Include="Libs\MathGeoLib\include\Math\MathLog.cpp">
       <Filter>MathGeoLib</Filter>
     </ClCompile>
     <ClCompile Include="Libs\MathGeoLib\include\Math\MathOps.cpp">
+      <Filter>MathGeoLib</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\MathGeoLib\include\Math\MathFunc.cpp">
       <Filter>MathGeoLib</Filter>
     </ClCompile>
     <ClCompile Include="Libs\MathGeoLib\include\Geometry\OBB.cpp">
@@ -139,90 +117,51 @@
     <ClCompile Include="Libs\MathGeoLib\include\Geometry\TriangleMesh.cpp">
       <Filter>MathGeoLib</Filter>
     </ClCompile>
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Modules\DebugDrawModule.cpp">
-      <Filter>Debug</Filter>
+    <ClCompile Include="Libs\ImGui\imgui.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\RenderTestModule.cpp">
-      <Filter>Tests</Filter>
+    <ClCompile Include="Libs\ImGui\imgui_demo.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\TextureModuleTest.cpp">
-      <Filter>Tests</Filter>
+    <ClCompile Include="Libs\ImGui\imgui_draw.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\CameraModule.cpp">
-      <Filter>Tests</Filter>
+    <ClCompile Include="Libs\ImGui\imgui_impl_opengl3.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\EngineMesh.cpp">
-      <Filter>Tests</Filter>
+    <ClCompile Include="Libs\ImGui\imgui_impl_sdl2.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\EngineModel.cpp">
-      <Filter>Tests</Filter>
+    <ClCompile Include="Libs\ImGui\imgui_tables.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Framebuffer.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="UI\EditorViewport.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Components\Component.cpp" />
-    <ClCompile Include="Components\ComponentMaterial.cpp">
-      <Filter>Components</Filter>
-    <ClCompile Include="Utils\LightsConfig.cpp">
-      <Filter>Utils</Filter>
+    <ClCompile Include="Libs\ImGui\imgui_widgets.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Modules">
-      <UniqueIdentifier>{ceb8fbba-58d4-4d3b-927a-a6f72e75e9d5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Utils">
-      <UniqueIdentifier>{2cd12f8e-4d83-4137-a3bb-33b6ec3804a8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ImGui">
-      <UniqueIdentifier>{add34c0e-22b7-4156-b4ab-74923f0775f1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="MathGeoLib">
-      <UniqueIdentifier>{77ec05ef-e581-4de2-bda3-50c6c7bcc0d2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Debug">
-      <UniqueIdentifier>{b890b5cb-22e9-4094-8b54-814ae6ff1684}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Tests">
-      <UniqueIdentifier>{27fbe6cb-da01-4a99-989c-de397f7946c3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="UI">
-      <UniqueIdentifier>{b3f5d97a-4296-47c2-80a3-75724af69446}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components">
-      <UniqueIdentifier>{45454586-70e8-41be-86fe-5d8fc8d0d328}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Modules\Module.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\WindowModule.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\Globals.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\UPCTimer.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\InputModule.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\ShaderModule.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="UI\EditorUIModule.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\OpenGLModule.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
+    <ClInclude Include="Application.h" />
+    <ClInclude Include="Components\ComponentMaterial.h" />
+    <ClInclude Include="Scene\Components\Component.h" />
+    <ClInclude Include="Utils\Framebuffer.h" />
+    <ClInclude Include="UI\EditorViewport.h" />
+    <ClInclude Include="Tests\CameraModule.h" />
+    <ClInclude Include="DebugDraw\debugdraw.h" />
+    <ClInclude Include="Modules\DebugDrawModule.h" />
+    <ClInclude Include="DebugDraw\debug_draw.hpp" />
+    <ClInclude Include="UI\EditorUIModule.h" />
+    <ClInclude Include="Tests\EngineMesh.h" />
+    <ClInclude Include="Tests\EngineModel.h" />
+    <ClInclude Include="Utils\Globals.h" />
+    <ClInclude Include="Modules\InputModule.h" />
+    <ClInclude Include="Modules\Module.h" />
+    <ClInclude Include="Modules\OpenGLModule.h" />
+    <ClInclude Include="Tests\RenderTestModule.h" />
+    <ClInclude Include="Modules\ShaderModule.h" />
+    <ClInclude Include="Tests\TextureModuleTest.h" />
+    <ClInclude Include="Utils\LightsConfig.h" />
+    <ClInclude Include="Utils\UPCTimer.h" />
+    <ClInclude Include="Modules\WindowModule.h" />
     <ClInclude Include="Libs\ImGui\imconfig.h">
       <Filter>ImGui</Filter>
     </ClInclude>
@@ -250,48 +189,19 @@
     <ClInclude Include="Libs\ImGui\imstb_truetype.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="DebugDraw\debugdraw.h">
-      <Filter>Debug</Filter>
-    </ClInclude>
-    <ClInclude Include="DebugDraw\debug_draw.hpp">
-      <Filter>Debug</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\DebugDrawModule.h">
-      <Filter>Debug</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\RenderTestModule.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\TextureModuleTest.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\CameraModule.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\EngineMesh.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\EngineModel.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\Framebuffer.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="UI\EditorViewport.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="Components\ComponentMaterial.h">
-      <Filter>Components</Filter>
-    <ClInclude Include="Utils\LightsConfig.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include=".clang-format" />
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
       <Filter>MathGeoLib</Filter>
     </None>
-    <None Include=".clang-format" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="MathGeoLib">
+      <UniqueIdentifier>{dead7755-9cac-4f21-a69b-1493539b1d29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ImGui">
+      <UniqueIdentifier>{21c987f2-90ae-40a4-a1ec-60b9b753555c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

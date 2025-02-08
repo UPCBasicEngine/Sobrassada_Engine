@@ -17,6 +17,16 @@ uniform vec3 lightDir;
 uniform vec3 cameraPos;
 uniform float ambientIntensity;
 
+layout(std140, binding = 2) uniform Material
+{
+    vec4 diffColor;
+    vec4 specColor;
+    float shinis;
+    int shininessinalpha;
+	vec2 padding;
+};
+
+
 void main()
 {
 	vec3 texColor = pow(texture(diffuseTexture, uv0).rgb, vec3(2.2f));

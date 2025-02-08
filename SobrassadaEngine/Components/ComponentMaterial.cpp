@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include "Math/float2.h"
 #include "DirectXTex/DirectXTex.h"
+#include <glew.h>
 
 void ComponentMaterial::OnEditorUpdate() 
 { 
@@ -14,21 +15,21 @@ void ComponentMaterial::OnEditorUpdate()
         {   
             ImGui::Text("Diffuse Texture");
             ImGui::Image((ImTextureID)(intptr_t)diffuseTexture.textureID, ImVec2(256, 256));
+            if(ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
+            }
         }
-        else
-        {
-            ImGui::SliderFloat3("Diffuse Color", &diffuseColor.x, 0.0f, 1.0f);
-        }
+        ImGui::SliderFloat3("Diffuse Color", &diffuseColor.x, 0.0f, 1.0f);
 
         if (hasSpecularTexture)
         {
             ImGui::Text("Specular Texture");
             ImGui::Image((ImTextureID)(intptr_t)specularTexture.textureID, ImVec2(256, 256));
+            if(ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("Texture Dimensions: %d, %d", specularTexture.width, specularTexture.height);
+            }
         }
-        else
-        {
-            ImGui::SliderFloat3("Specular Color", &specularColor.x, 0.0f, 1.0f);
-        }
+        ImGui::SliderFloat3("Specular Color", &specularColor.x, 0.0f, 1.0f);
         if (!hasShininessInAlpha) ImGui::SliderFloat("Shininess", &shininess, 0.0f, 500.0f);
     }
 }
@@ -125,6 +126,7 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
                 hasSpecularTexture = true;
 
                 specularTexture = GetTexture(sourceModel, textureIndex, modelPath);
+                hasShininessInAlpha = true;
             }
         }
 
@@ -160,4 +162,43 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
             diffuseTexture = GetTexture(sourceModel, textureIndex, modelPath);
         }
     }
+}
+
+void ComponentMaterial::RenderMaterial(int program) {
+    if (hasDiffuseTexture)
+	{
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexture.textureID);
+	}
+    if (hasSpecularTexture)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularTexture.textureID);
+    }
+
+    Material material;
+    material.diffFactor = float4(diffuseColor, 1.0f);
+    material.specFactor = float4(specularColor, 1.0f);
+    material.shininess  = shininess;
+    material.shininessInAlpha = hasShininessInAlpha;
+
+    unsigned int ubo          = 0;
+    glGenBuffers(1, &ubo);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(material), &material, GL_STATIC_DRAW);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "Material");
+
+
+    glUniformBlockBinding(program, blockIdx, 2);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo);
+
+    if (!hasShininessInAlpha)
+    {
+        glUniform1f(glGetUniformLocation(program, "shininess"), shininess);
+    }
+    glUniform3fv(glGetUniformLocation(program, "diffFactor"), 1, &diffuseColor[0]);
+    glUniform3fv(glGetUniformLocation(program, "specFactor"), 1, &specularColor[0]);
+
+    glDeleteBuffers(1, &ubo);
 }
