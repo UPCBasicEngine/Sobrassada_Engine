@@ -6,6 +6,8 @@
 #include "WindowModule.h"
 #include "SceneModule.h"
 
+#include "Component.h"
+
 #include "glew.h"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -171,18 +173,47 @@ void EditorUIModule::Console(bool &consoleMenu)
     ImGui::End();
 }
 
-void EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &worldTransform)
+bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
 {
     ImGui::SeparatorText("Transform");
     ImGui::RadioButton("Local", &transformType, LOCAL);
     ImGui::SameLine();
-    ImGui::RadioButton("World", &transformType, GLOBAL);
+    ImGui::RadioButton("Global", &transformType, GLOBAL);
 
-    Transform& transformToEdit = transformType == LOCAL ? localTransform : worldTransform;
+    Transform& transformToEdit = transformType == LOCAL ? localTransform : globalTransform;
     
-    ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
-    ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians
-    ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] );
+    bool valueChanged = false;
+    
+    valueChanged |= ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
+    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians
+    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] );
+
+    if (valueChanged)
+    {
+        Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
+        if (transformType == GLOBAL)
+        {
+            if (parentComponent != nullptr)
+            {
+                localTransform.Set(globalTransform - parentComponent->GetGlobalTransform());
+            } else
+            {
+                localTransform.Set(globalTransform);
+            }
+        } else
+        {
+            if (parentComponent != nullptr)
+            {
+                globalTransform.Set(parentComponent->GetGlobalTransform() + localTransform);
+            } else
+            {
+                globalTransform.Set(localTransform);
+            }
+        }
+        
+    }
+
+    return valueChanged;
 }
 
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)

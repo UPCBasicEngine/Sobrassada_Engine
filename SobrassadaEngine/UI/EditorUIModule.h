@@ -21,7 +21,7 @@ class EditorUIModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    void RenderTransformModifier(Transform &localTransform, Transform &worldTransform);
+    bool RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
 
   private:
     void AddFramePlotData(float deltaTime);

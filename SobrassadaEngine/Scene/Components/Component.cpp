@@ -48,7 +48,10 @@ void Component::RenderEditorInspector()
 {
     ImGui::Text(name);
     ImGui::Separator();
-    App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform);
+    if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
+    {
+        TransformUpdated();
+    }
 }
 
 void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
@@ -82,4 +85,19 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     }
     
     ImGui::Unindent( 16 );
+}
+
+void Component::ParentGlobalTransformUpdated(const Transform &parentGlobalTransform)
+{
+    globalTransform = parentGlobalTransform + localTransform;
+    TransformUpdated();
+}
+
+void Component::TransformUpdated(){
+    for (uint32_t child : children)
+    {
+        Component* childComponent = App->GetSceneModule()->gameComponents[child];
+
+        if (childComponent != nullptr)  childComponent->ParentGlobalTransformUpdated(globalTransform);
+    }
 }
