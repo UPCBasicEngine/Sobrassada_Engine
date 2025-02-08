@@ -115,35 +115,55 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t& s
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
     if (gameObject->GetChildren().size() == 0)
-    {
         flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    }
 
-    if (selectedGameObjectUUID == gameObjectUUID) flags |= ImGuiTreeNodeFlags_Selected;
+    if (selectedGameObjectUUID == gameObjectUUID) 
+        flags |= ImGuiTreeNodeFlags_Selected;
+
 
     if (ImGui::TreeNodeEx(gameObject->GetName().c_str(), flags))
     {
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
-        {
-            selectedGameObjectUUID = gameObjectUUID;
-        }
+        HandleNodeClick(gameObjectUUID, selectedGameObjectUUID);
 
         for (uint32_t childUUID : gameObject->GetChildren())
         {
             if (childUUID != gameObjectUUID) RenderGameObjectHierarchy(childUUID, selectedGameObjectUUID);
         }
 
-        if (gameObject->GetChildren().size() > 0)
-        {
-            ImGui::TreePop();
-        }
+        if (gameObject->GetChildren().size() > 0) ImGui::TreePop();
 
     }
     else
     {
-        if (ImGui::IsItemClicked()) selectedGameObjectUUID = gameObjectUUID;
+        HandleNodeClick(gameObjectUUID, selectedGameObjectUUID);
     }
 
+    RenderContextMenu(gameObjectUUID);
+}
+
+void SceneModule::HandleNodeClick(uint32_t gameObjectUUID, uint32_t& selectedGameObjectUUID)
+{
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+    {
+        selectedGameObjectUUID = gameObjectUUID;
+    }
+
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+    {
+        selectedGameObjectUUID = gameObjectUUID;
+        ImGui::OpenPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str());
+    }
+}
+
+void SceneModule::RenderContextMenu(uint32_t gameObjectUUID) 
+{
+
+    if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str()))
+    {
+        if (ImGui::MenuItem("Delete")) RemoveGameObjectHierarchy(gameObjectUUID);
+
+        ImGui::EndPopup();
+    }
 }
 
 void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
