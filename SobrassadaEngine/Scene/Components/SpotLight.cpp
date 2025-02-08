@@ -7,11 +7,11 @@
 
 SpotLight::SpotLight() : LightComponent()
 {
-    position   = float3(0, 5, -2);
+    position   = float3(0, 0, 0);
     direction  = -float3::unitY;
-    range      = 5;
-    innerAngle = 20;
-    outerAngle = 60;
+    range      = 1;
+    innerAngle = 10;
+    outerAngle = 30;
 }
 
 SpotLight::~SpotLight() {}
@@ -58,21 +58,21 @@ void SpotLight::DrawGizmos() const
     outerDirections.push_back(float3(Quat::RotateY(7 * PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
 
     DebugDrawModule *debug = App->GetDebugDreawModule();
-    debug->Render2DLine(position, direction.Normalized(), range, float3(1, 1, 1));
+    debug->DrawLine(position, direction.Normalized(), range, float3(1, 1, 1));
 
     for (const float3 &dir : innerDirections)
     {
-        debug->Render2DLine(position, dir, range / cos(innerRads), float3(1, 1, 1));
+        debug->DrawLine(position, dir, range / cos(innerRads), float3(1, 1, 1));
     }
     
     for (const float3 &dir : outerDirections)
     {
-        debug->Render2DLine(position, dir, range / cos(outerRads), float3(1, 1, 1));
+        debug->DrawLine(position, dir, range / cos(outerRads), float3(1, 1, 1));
     }
 
     float3 center = position + (direction * range);
     float inner   = range * tan(innerRads);
     float outere  = range * tan(outerRads);
-    debug->RenderCircle(center, -direction.Normalized(), float3(1, 1, 1), inner);
-    debug->RenderCircle(center, -direction.Normalized(), float3(1, 1, 1), outere);
+    debug->DrawCircle(center, -direction.Normalized(), float3(1, 1, 1), inner);
+    debug->DrawCircle(center, -direction.Normalized(), float3(1, 1, 1), outere);
 }

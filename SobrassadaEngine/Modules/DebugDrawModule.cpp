@@ -618,13 +618,18 @@ void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned 
     dd::flush();
 }
 
-void DebugDrawModule::Render2DLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color)
+void DebugDrawModule::DrawLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color)
 {
     float3 dir = direction * distance;
-    dd::line(ddVec3(origin.x, origin.y, origin.z), ddVec3(dir.x + origin.x, dir.y + origin.y, dir.z + origin.z), ddVec3(color.x, color.y, color.z));
+    dd::line(origin, dir + origin, color);
 }
 
-void DebugDrawModule::RenderCircle(const float3 &center, const float3 &upVector, const float3 &color, const float radius) 
+void DebugDrawModule::DrawCircle(const float3 &center, const float3 &upVector, const float3 &color, const float radius) 
 { 
-    dd::circle(ddVec3(center), ddVec3(upVector), ddVec3(color), radius, 40);
+    dd::circle(center, upVector, color, radius, 40);
+}
+
+void DebugDrawModule::DrawSphere(const float3& center, const float3 &color, const float radius) 
+{ 
+    dd::sphere(center, color, radius);
 }
