@@ -33,6 +33,7 @@ public:
     void RenderContextMenu(uint32_t gameObjectUUID);
 
 	void RemoveGameObjectHierarchy(uint32_t gameObjectUUID);
+    void UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID);
 
 	//TODO: Change when filesystem defined
 	inline GameObject *GetGameObjectByUUID(uint32_t gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }

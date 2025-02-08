@@ -19,7 +19,9 @@ public:
 	void SaveToLibrary();
 
 	inline std::string GetName() { return name; }
-    inline std::vector<uint32_t> GetChildren() { return children; }
+    inline void SetName(std::string newName) { name = newName; }
+    
+	inline std::vector<uint32_t> GetChildren() { return children; }
     
 	inline uint32_t GetParent() { return parentUUID; }
     inline void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }
