@@ -137,6 +137,7 @@
     <ClCompile Include="Scene\Components\Component.cpp" />
     <ClCompile Include="Scene\Components\LightComponent.cpp" />
     <ClCompile Include="Scene\Components\PointLight.cpp" />
+    <ClCompile Include="Scene\Components\SpotLight.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
     <ClCompile Include="UI\EditorViewport.cpp" />
     <ClCompile Include="Tests\CameraModule.cpp" />
@@ -200,6 +201,7 @@
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="Scene\Components\LightComponent.h" />
     <ClInclude Include="Scene\Components\PointLight.h" />
+    <ClInclude Include="Scene\Components\SpotLight.h" />
     <ClInclude Include="Utils\Framebuffer.h" />
     <ClInclude Include="UI\EditorViewport.h" />
     <ClInclude Include="Tests\CameraModule.h" />

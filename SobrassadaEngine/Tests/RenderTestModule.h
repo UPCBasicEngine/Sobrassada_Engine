@@ -2,9 +2,11 @@
 
 #include "Components/ComponentMaterial.h"
 #include "Module.h"
+
 class EngineModel;
 class LightsConfig;
 class PointLight;
+class SpotLight;
 
 class RenderTestModule : public Module
 {
@@ -29,4 +31,5 @@ class RenderTestModule : public Module
     float3 lightDir = float3(-1.0f, -0.3f, 2.0f);
     LightsConfig *lightsConfig;
     PointLight *pointLight;
+    SpotLight *spotLight;
 };

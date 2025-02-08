@@ -13,16 +13,14 @@ PointLight::~PointLight() {}
 void PointLight::EditorParams()
 {
     ImGui::Begin("Point light");
-    if (ImGui::CollapsingHeader("Point Light"))
-    {
-        ImGui::Text("Point light parameters");
 
-        ImGui::SliderFloat3("Position", &position.x, -10.0f, 10.0f);
-        ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
+    ImGui::Text("Point light parameters");
 
-        ImGui::SliderFloat("Intensity", &intensity, 0.0f, 10.0f);
-        ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
+    ImGui::SliderFloat3("Position", &position.x, -10.0f, 10.0f);
+    ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
+
+    ImGui::SliderFloat("Intensity", &intensity, 0.0f, 10.0f);
+    ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
  
-    }
     ImGui::End();
 }

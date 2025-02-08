@@ -8,6 +8,7 @@
 #include "LightsConfig.h"
 #include "OpenGLModule.h"
 #include "Scene/Components/PointLight.h"
+#include "Scene/Components/SpotLight.h"
 #include "ShaderModule.h"
 #include "TextureModuleTest.h"
 #include "WindowModule.h"
@@ -25,6 +26,7 @@ RenderTestModule::RenderTestModule()
     currentLoadedModel = new EngineModel();
     lightsConfig       = new LightsConfig();
     pointLight         = new PointLight();
+    spotLight          = new SpotLight();
 }
 
 RenderTestModule::~RenderTestModule() {}
@@ -96,7 +98,7 @@ update_status RenderTestModule::Render(float deltaTime)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(float) * 3 * 6));
 
     // move this to materialcomponent to alter bia imgui
-    float ambientIntensity = 0.2f;
+    float ambientIntensity = 0.1f;
     glUniform1f(glGetUniformLocation(program, "ambientIntensity"), ambientIntensity);
     float3 lightColor = float3::zero;
     glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
@@ -116,14 +118,23 @@ update_status RenderTestModule::Render(float deltaTime)
     materials = currentLoadedModel->GetMaterials();
     materials.at(0)->OnEditorUpdate();
 
-
     pointLight->EditorParams();
+    spotLight->EditorParams();
 
     // Test point light
     glUniform3fv(3, 1, &pointLight->GetColor()[0]);
     glUniform3fv(4, 1, &pointLight->GetPosition()[0]);
     glUniform1f(5, pointLight->GetIntensity());
     glUniform1f(6, pointLight->GetRange());
+
+    // Test spotlight
+    glUniform3fv(7, 1, &spotLight->GetColor()[0]);
+    glUniform3fv(8, 1, &spotLight->GetPosition()[0]);
+    glUniform3fv(9, 1, &spotLight->GetDirection()[0]);
+    glUniform1f(10, spotLight->GetIntensity());
+    glUniform1f(11, spotLight->GetRange());
+    glUniform1f(12, spotLight->GetInnerAngle());
+    glUniform1f(13, spotLight->GetOuterAngle());
 
     // glActiveTexture(GL_TEXTURE0);
     // glBindTexture(GL_TEXTURE_2D, baboonTexture);
@@ -155,6 +166,7 @@ bool RenderTestModule::ShutDown()
     delete currentLoadedModel;
     delete lightsConfig;
     delete pointLight;
+    delete spotLight;
 
     return true;
 }
