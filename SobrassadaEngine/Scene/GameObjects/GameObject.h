@@ -18,11 +18,11 @@ public:
 
 	void SaveToLibrary();
 
-	std::string GetName() { return name; }
-    std::vector<uint32_t> GetChildren() { return children; }
+	inline std::string GetName() { return name; }
+    inline std::vector<uint32_t> GetChildren() { return children; }
     
-	uint32_t GetParent() { return parentUUID; }
-	void SetParent(uint32_t newParentUUID);
+	inline uint32_t GetParent() { return parentUUID; }
+    inline void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }
 
 private:
 

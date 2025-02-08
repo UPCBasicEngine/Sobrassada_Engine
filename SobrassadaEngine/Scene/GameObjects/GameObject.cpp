@@ -31,8 +31,3 @@ void GameObject::OnEditor()
 void GameObject::SaveToLibrary()
 {
 }
-
-void GameObject::SetParent(uint32_t newParentUUID)
-{ 
-    parentUUID = newParentUUID; 
-}
