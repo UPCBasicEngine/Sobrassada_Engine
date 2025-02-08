@@ -9,6 +9,7 @@ class SpotLight : public LightComponent
     ~SpotLight();
 
     void EditorParams();
+    void DrawGizmos() const;
 
     float3 GetPosition() const { return position; }
     float3 GetDirection() const { return direction; }

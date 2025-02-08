@@ -1,6 +1,9 @@
 #include "SpotLight.h"
 
+#include "DebugDrawModule.h"
+
 #include "ImGui.h"
+#include "Math/Quat.h"
 
 SpotLight::SpotLight() : LightComponent()
 {
@@ -13,9 +16,9 @@ SpotLight::SpotLight() : LightComponent()
 
 SpotLight::~SpotLight() {}
 
-void SpotLight::EditorParams() 
-{ 
-    ImGui::Begin("Spot Light"); 
+void SpotLight::EditorParams()
+{
+    ImGui::Begin("Spot Light");
 
     ImGui::Text("Spot light parameters");
 
@@ -23,13 +26,53 @@ void SpotLight::EditorParams()
     ImGui::SliderFloat3("Direction ", &direction[0], -1.0, 1.0f);
     ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
 
-    ImGui::SliderFloat("Intensity", &intensity, 0.0f, 10.0f);
+    ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
     ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
-    ImGui::SliderFloat("Inner angle", &innerAngle, 0.0f, 180.0f);
-    ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 180.0f);
-
-    if (innerAngle > outerAngle) outerAngle = innerAngle;
-    if (outerAngle < innerAngle) innerAngle = outerAngle;
+    if (ImGui::SliderFloat("Inner angle", &innerAngle, 0.0f, 90.0f))
+    {
+        if (innerAngle > outerAngle) outerAngle = innerAngle;
+    }
+    if (ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 90.0f))
+    {
+        if (outerAngle < innerAngle) innerAngle = outerAngle;
+    }
 
     ImGui::End();
+}
+
+void SpotLight::DrawGizmos() const
+{
+    const float innerRads = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
+    const float outerRads = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
+    
+    std::vector<float3> innerDirections;
+    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(direction.Normalized())));
+    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(direction.Normalized())));
+    innerDirections.push_back(float3(Quat::RotateZ(innerRads).Transform(direction.Normalized())));
+    innerDirections.push_back(float3(Quat::RotateZ(-innerRads).Transform(direction.Normalized())));
+
+    std::vector<float3> outerDirections;
+    outerDirections.push_back(float3(Quat::RotateY(PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
+    outerDirections.push_back(float3(Quat::RotateY(3 * PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
+    outerDirections.push_back(float3(Quat::RotateY(5 * PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
+    outerDirections.push_back(float3(Quat::RotateY(7 * PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
+
+    DebugDrawModule *debug = App->GetDebugDreawModule();
+    debug->Render2DLine(position, direction.Normalized(), range, float3(1, 1, 1));
+
+    for (const float3 &dir : innerDirections)
+    {
+        debug->Render2DLine(position, dir, range / cos(innerRads), float3(1, 1, 1));
+    }
+    
+    for (const float3 &dir : outerDirections)
+    {
+        debug->Render2DLine(position, dir, range / cos(outerRads), float3(1, 1, 1));
+    }
+
+    float3 center = position + (direction * range);
+    float inner   = range * tan(innerRads);
+    float outere  = range * tan(outerRads);
+    debug->RenderCircle(center, -direction.Normalized(), float3(1, 1, 1), inner);
+    debug->RenderCircle(center, -direction.Normalized(), float3(1, 1, 1), outere);
 }

@@ -19,6 +19,7 @@ class DebugDrawModule : public Module
 
     void Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height);
     void Render2DLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color);
+    void RenderCircle(const float3 &center, const float3 &upVector, const float3 &color, const float radius);
 
   private:
     static DDRenderInterfaceCoreGL *implementation;

@@ -98,7 +98,7 @@ update_status RenderTestModule::Render(float deltaTime)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(float) * 3 * 6));
 
     // move this to materialcomponent to alter bia imgui
-    float ambientIntensity = 0.1f;
+    float ambientIntensity = 0.0f;
     glUniform1f(glGetUniformLocation(program, "ambientIntensity"), ambientIntensity);
     float3 lightColor = float3::zero;
     glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
@@ -137,6 +137,8 @@ update_status RenderTestModule::Render(float deltaTime)
     glUniform1f(11, spotLight->GetRange());
     glUniform1f(12, spotLight->GetInnerAngle());
     glUniform1f(13, spotLight->GetOuterAngle());
+
+    spotLight->DrawGizmos();
 
     // glActiveTexture(GL_TEXTURE0);
     // glBindTexture(GL_TEXTURE_2D, baboonTexture);
