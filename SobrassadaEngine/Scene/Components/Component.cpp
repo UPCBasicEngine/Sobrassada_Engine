@@ -10,6 +10,14 @@
 Component::Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform):
 uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform){}
 
+Component::~Component(){
+    for (const uint32_t child : children)
+    {
+        delete App->GetSceneModule()->gameComponents[child];
+        App->GetSceneModule()->gameComponents.erase(child);
+    }
+}
+
 void Component::Enable()
 {
     enabled = true;
@@ -29,19 +37,23 @@ void Component::Disable()
     enabled = false;
 }
 
-bool Component::AddComponent(const uint32_t componentUUID)
+bool Component::AddChildComponent(const uint32_t componentUUID)
 {
     children.push_back(componentUUID);
     return true;
 }
 
-bool Component::RemoveComponent(const uint32_t componentUUID)
+bool Component::RemoveChildComponent(const uint32_t componentUUID)
 {
     if (const auto it = std::find(children.begin(), children.end(), componentUUID); it != children.end())
     {
         children.erase(it);
+        delete App->GetSceneModule()->gameComponents[componentUUID];
+        App->GetSceneModule()->gameComponents.erase(componentUUID);
+        
         return true;
     }
+    
     return false;
 }
 

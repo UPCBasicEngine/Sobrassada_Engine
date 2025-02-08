@@ -17,16 +17,16 @@ RootComponent::RootComponent(const uint32_t uuid, const uint32_t uuidParent, con
 RootComponent::~RootComponent(){
 }
 
-bool RootComponent::AddComponent(const uint32_t componentUUID)
+bool RootComponent::AddChildComponent(const uint32_t componentUUID)
 {
     // TODO Load component from storage
     // TODO Make sure passed componentUUID encodes a standalone component
-    return Component::AddComponent(componentUUID);
+    return Component::AddChildComponent(componentUUID);
 }
 
-bool RootComponent::RemoveComponent(const uint32_t componentUUID)
+bool RootComponent::RemoveChildComponent(const uint32_t componentUUID)
 {
-    return Component::RemoveComponent(componentUUID);
+    return Component::RemoveChildComponent(componentUUID);
 }
 
 void RootComponent::RenderComponentEditor()
@@ -73,7 +73,7 @@ void RootComponent::RenderComponentEditor()
         if (selectedComponent != nullptr)
         {
             Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUUIDParent()];
-            if (selectedParentComponent != nullptr)  selectedParentComponent->RemoveComponent(selectedUUID);
+            if (selectedParentComponent != nullptr)  selectedParentComponent->RemoveChildComponent(selectedUUID);
             // TODO Make sure component gets fully deleted if not used anywhere else, delete mesh from memory for example
             // TODO Remove children components as well or assign them to the parent. To decide!
         }
@@ -139,7 +139,7 @@ bool RootComponent::CreateComponent(const ComponentType componentType)
         {
             App->GetSceneModule()->gameComponents[createdComponent->GetUUID()] = createdComponent;
         
-            selectedComponent->AddComponent(createdComponent->GetUUID());
+            selectedComponent->AddChildComponent(createdComponent->GetUUID());
             return true;
         }
     }

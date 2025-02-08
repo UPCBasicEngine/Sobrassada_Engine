@@ -11,15 +11,15 @@ public:
 
     Component(uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform);
 
-    virtual ~Component() = default;
+    virtual ~Component();
     
     virtual void Enable();
     virtual void Update() = 0;
     virtual void Render();
     virtual void Disable();
 
-    virtual bool AddComponent(const uint32_t componentUUID);
-    virtual bool RemoveComponent(const uint32_t componentUUID);
+    virtual bool AddChildComponent(const uint32_t componentUUID);
+    virtual bool RemoveChildComponent(const uint32_t componentUUID);
     
     virtual void RenderEditorInspector();
     virtual void RenderEditorComponentTree(const uint32_t selectedComponentUUID);
