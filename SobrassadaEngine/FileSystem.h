@@ -38,6 +38,10 @@ namespace FileSystem
 		return std::filesystem::path(filePath).parent_path().string() + DELIMITER;
 	}
 
+	inline std::string GetParentPath(const std::string& filePath) {
+		return std::filesystem::path(filePath).parent_path().string();
+	}
+
 	inline std::string GetFileNameWithExtension(const std::string& filePath) {
 		return std::filesystem::path(filePath).filename().string();
 	}

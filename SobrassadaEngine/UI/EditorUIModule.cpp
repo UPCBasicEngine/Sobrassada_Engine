@@ -159,28 +159,32 @@ void EditorUIModule::ImportDialog(bool& import)
 
 	FileSystem::SplitAccumulatedPath(currentPath, accPaths);
 
-	for (const std::string& accPath : accPaths)
+	for (size_t i = 0; i < accPaths.size(); i++)
 	{
-		if (accPaths[0] == accPath)
+		const std::string& accPath = accPaths[i];
+
+		std::string buttonLabel = (i == 0) ? accPath : FileSystem::GetFileNameWithExtension(accPath);
+
+		if (ImGui::Button(buttonLabel.c_str()))
 		{
-			if (ImGui::Button(accPath.c_str())) currentPath = accPath;
+			currentPath = accPath;
 		}
-		else
-		{
-			if (ImGui::Button(FileSystem::GetFileNameWithExtension(accPath).c_str())) currentPath = accPath;
-		}
-		if (accPaths.back() != accPath) ImGui::SameLine();
+
+		if (i < accPaths.size() -1) ImGui::SameLine();
 	}
 
 	//files & dir in the current directory
 	FileSystem::GetAllInDirectory(currentPath, files);
+
+	files.insert(files.begin(), "..");
+
 
 	static std::string inputFile = "";
 	static int selected = -1;
 
 	for (int i = 0; i < files.size(); i++)
 	{
-		std::string file = files[i];
+		const std::string& file = files[i];
 		std::string filePath = currentPath + DELIMITER + file;
 		bool isDirectory = FileSystem::IsDirectory(filePath.c_str());
 
@@ -190,10 +194,21 @@ void EditorUIModule::ImportDialog(bool& import)
 		// ImGuiSelectableFlags_AllowDoubleClick for Directories?
 		if (ImGui::Selectable(fileWithTag.c_str(), selected == i))
 		{
-			if (isDirectory)
+			selected = i;
+
+			if (file == "..")
+			{
+				currentPath = FileSystem::GetParentPath(currentPath);
+				inputFile = "";
+				selected = -1;
+				FileSystem::GetAllInDirectory(currentPath, files);
+			}
+			else if (isDirectory)
 			{
 				currentPath = filePath;
 				inputFile = "";
+				selected = -1;
+				FileSystem::GetAllInDirectory(currentPath, files);
 			}
 			else
 			{
@@ -221,7 +236,7 @@ void EditorUIModule::ImportDialog(bool& import)
 		if (!inputFile.empty())
 		{
 			std::string importPath = currentPath + DELIMITER + inputFile;
-			// Call to SceneImporter
+			// Call to SceneImporter import
 		}
 		import = false;
 	}
