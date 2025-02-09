@@ -69,7 +69,7 @@ void Component::RenderEditorInspector()
 
 void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
-    ImGui::Indent( 16 );
+    ImGui::Indent( 8 );
 
     ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
     if (selectedComponentUUID == uuid)
@@ -97,7 +97,7 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
         ImGui::TreePop();
     }
     
-    ImGui::Unindent( 16 );
+    ImGui::Unindent( 8 );
 }
 
 void Component::ParentGlobalTransformUpdated(const Transform &parentGlobalTransform)

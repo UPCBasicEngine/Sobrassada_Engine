@@ -39,8 +39,10 @@ void MeshComponent::RenderEditorInspector()
                     if (modelPair.first.find(searchText) != std::string::npos)
                     {
                         if (ImGui::Selectable(modelPair.first.c_str(), false))
-                            
+                        {
                             LoadMesh(modelPair.first, modelPair.second);
+                            ImGui::CloseCurrentPopup();
+                        }
                     }
                 }
             }

@@ -58,7 +58,11 @@ void RootComponent::RenderComponentEditor()
                     if (componentPair.first.find(searchText) != std::string::npos)
                     {
                         if (ImGui::Selectable(componentPair.first.c_str(), false))
+                        {
                             CreateComponent(componentPair.second);
+                            ImGui::CloseCurrentPopup();
+                        }
+                            
                     }
                 }
             }
@@ -66,6 +70,8 @@ void RootComponent::RenderComponentEditor()
         }
         ImGui::EndPopup();
     }
+
+    ImGui::ShowDemoWindow();
 
     if (selectedUUID != uuid)
     {
