@@ -23,6 +23,7 @@ private:
 	int program = -1;
 	unsigned int vbo = -1;
 	unsigned int baboonTexture = -1;
+    unsigned int normalMapTextureID = -1;
 	EngineModel* currentLoadedModel;
   std::vector<ComponentMaterial*> materials;
 

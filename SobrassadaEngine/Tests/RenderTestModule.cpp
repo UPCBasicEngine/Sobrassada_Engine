@@ -50,6 +50,9 @@ bool RenderTestModule::Init()
 	DirectX::TexMetadata textureMetadata;
 	auto baboonPath = L"./Test/baboon.ppm";
 	baboonTexture = App->GetTextureModuleTest()->LoadTexture(baboonPath, textureMetadata);
+
+	auto normalMapPath  = L"./Test/RobotNormals.png";
+    normalMapTextureID = App->GetTextureModuleTest()->LoadTexture(normalMapPath, textureMetadata);
 	
 	// Quad with UV's
 	float vtx_data[] = {
@@ -132,6 +135,11 @@ update_status RenderTestModule::Render(float deltaTime)
     glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
     materials = currentLoadedModel->GetMaterials();
     materials.at(0)->OnEditorUpdate();
+
+	glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normalMapTextureID);
+    glUniform1i(glGetUniformLocation(program, "normal_map"), 1);
+
     
 
 	//glActiveTexture(GL_TEXTURE0);
