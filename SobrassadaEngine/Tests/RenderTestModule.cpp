@@ -117,14 +117,14 @@ update_status RenderTestModule::Render(float deltaTime)
 
     if (ImGui::CollapsingHeader("Light"))
     {
-		ImGui::SliderFloat("Ambient Intensity", &ambientIntensity, 0.f, 1.f);
+		ImGui::SliderFloat3("Ambient Intensity", &ambientIntensity.x, 0.f, 1.f);
 		ImGui::SliderFloat3("Light Color", &lightColor.x, 0.f, 1.f);
         ImGui::SliderFloat3("Light Direction", &lightDir.x, -20.0f, 20.0f);
     }
 
     glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
 	glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
-	glUniform1f(glGetUniformLocation(program, "ambientIntensity"), ambientIntensity);
+    glUniform3fv(glGetUniformLocation(program, "ambientIntensity"), 1, &ambientIntensity[0]);
 
     materials = currentLoadedModel->GetMaterials();
     materials.at(0)->OnEditorUpdate();

@@ -14,7 +14,7 @@ uniform vec3 specFactor;
 uniform vec3 lightColor;
 uniform vec3 lightDir;
 uniform vec3 cameraPos;
-uniform float ambientIntensity;
+uniform vec3 ambientIntensity;
 
 layout(std140, binding = 2) uniform Material
 {
@@ -29,7 +29,9 @@ layout(std140, binding = 2) uniform Material
 void main()
 {
 	vec3 texColor = pow(texture(diffuseTexture, uv0).rgb, vec3(2.2f));
-	float alpha = texture(specularTexture, uv0).a;
+
+	vec4 specTexColor = texture(specularTexture, uv0);
+	float alpha = specTexColor.a;
 
 	vec3 ambient = ambientIntensity * texColor;
 	vec3 result = ambient;
@@ -39,20 +41,20 @@ void main()
 	
 	float NL = dot(N, -L);
 	if(NL > 0){
-   		vec3 specTexColor = texture(specularTexture, uv0).rgb;
-        float shininess = alpha * 256.0f;
+
+        float shininess = exp2(alpha*7+1);
 
 		float normalization = (shininess + 2.0) / (2.0 * 3.1415926535);
 		vec3 V = normalize(cameraPos - pos);
 		vec3 R = reflect(L, N);
 		float VR = pow(max(dot(V, R), 0.0f), shininess);
 		
-		float RF0 = pow((shininess - 1)/(shininess + 1), 2);
+		vec3 RF0 = specTexColor.rgb;
                 float cosTheta = max(dot(N, V), 0.0);
-                float fresnel = RF0 + (1 - RF0) * pow(1-cosTheta, 5);
+                vec3 fresnel = RF0 + (1 - RF0) * pow(1-cosTheta, 5);
 
 		vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffFactor * texColor * lightColor * NL;
-		vec3 specular = normalization * specFactor * specTexColor * VR * lightColor * fresnel;
+		vec3 specular = normalization * specFactor * specTexColor.rgb * VR * lightColor * fresnel;
 		result = ambient + diffuse + specular;
 	}
 	
