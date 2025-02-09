@@ -1,8 +1,32 @@
 #include "GameObject.h"
 
-GameObject::GameObject(std::string name) : name(name) {}
+#include "Application.h"
+#include "EditorUIModule.h"
+#include "SceneModule.h"
 
-GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(parentUUID), name(name) {}
+#include <Algorithm/Random/LCG.h>
+
+GameObject::GameObject(std::string name) : name(name)
+{
+    CreateRootComponent();
+}
+
+GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(parentUUID), name(name)
+{
+    CreateRootComponent();
+}
+
+GameObject::~GameObject(){
+    App->GetSceneModule()->gameComponents.erase(rootComponent->GetUUID());
+    delete rootComponent;
+}
+
+bool GameObject::CreateRootComponent()
+{
+    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), parentUUID, -1, Transform())); // TODO Add the gameObject UUID as parent?
+    App->GetSceneModule()->gameComponents[rootComponent->GetUUID()] = rootComponent;
+    return true;
+}
 
 bool GameObject::AddGameObject(uint32_t gameObjectUUID)
 {
@@ -30,4 +54,21 @@ void GameObject::OnEditor()
 
 void GameObject::SaveToLibrary()
 {
+}
+
+void GameObject::Render()
+{
+    if (rootComponent != nullptr)
+    {
+        rootComponent->Render();
+    }
+}
+
+void GameObject::RenderEditor()
+{
+    if (App->GetEditorUIModule()->hierarchyMenu)
+    {
+        App->GetSceneModule()->RenderHierarchyUI(App->GetEditorUIModule()->hierarchyMenu);
+    }
+    if (rootComponent)  rootComponent->RenderComponentEditor();
 }

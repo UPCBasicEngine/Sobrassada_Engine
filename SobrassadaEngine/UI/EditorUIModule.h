@@ -23,6 +23,10 @@ class EditorUIModule : public Module
 
     bool RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
 
+public:
+    bool hierarchyMenu      = false;
+    bool inspectorMenu      = false; // TODO Implement fully
+
   private:
     void AddFramePlotData(float deltaTime);
     void Draw();
@@ -41,7 +45,6 @@ class EditorUIModule : public Module
     bool consoleMenu        = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
-    bool hierarchyMenu      = false;
 
     int maximumPlotData     = 50;
     std::deque<float> framerate;

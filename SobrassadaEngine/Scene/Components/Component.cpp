@@ -6,6 +6,7 @@
 #include "SceneModule.h"
 #include "imgui.h"
 #include "Root/RootComponent.h"
+#include "GameObject.h"
 
 Component::Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform):
 uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform){}
@@ -92,11 +93,16 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     ImGui::PopID();
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
-        RootComponent* rootComponent = App->GetSceneModule()->GetRootComponent();
-        if (rootComponent != nullptr)
+        GameObject* selectedGameObject = App->GetSceneModule()->GetSeletedGameObject();
+        if (selectedGameObject != nullptr)
         {
-            rootComponent->SetSelectedComponent(uuid);
+            RootComponent* rootComponent = selectedGameObject-> GetRootComponent();
+            if (rootComponent != nullptr)
+            {
+                rootComponent->SetSelectedComponent(uuid);
+            }
         }
+        
     }
 
     HandleDragNDrop();

@@ -48,20 +48,19 @@ public:
 	//TODO: Change when filesystem defined
 	inline GameObject *GetGameObjectByUUID(uint32_t gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
 
+    GameObject * GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
+
 
     std::map<uint32_t, Component*> gameComponents;
     std::map<uint32_t, EngineMesh*> MOCKUP_loadedMeshes;
     std::map<std::string, uint32_t> MOCKUP_libraryMeshes;
     EngineModel* MOCKUP_loadedModel;
-    
-    RootComponent* GetRootComponent() const { return rootComponent; }
 
     void MOCKUP_loadModel(std::string path);
 
 private:
 
 	uint32_t gameObjectRootUUID;
-        RootComponent *rootComponent;
     
 	uint32_t selectedGameObjectUUID;
 

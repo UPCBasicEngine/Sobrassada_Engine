@@ -113,8 +113,6 @@ void EditorUIModule::Draw()
     if (consoleMenu) Console(consoleMenu);
 
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
-    
-    if (hierarchyMenu) App->GetSceneModule()->RenderHierarchyUI(hierarchyMenu);
 }
 
 void EditorUIModule::MainMenu()

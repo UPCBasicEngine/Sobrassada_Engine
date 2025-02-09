@@ -90,8 +90,6 @@ void RootComponent::RenderComponentEditor()
     }
     
     RenderEditorComponentTree(selectedUUID);
-
-    ImGui::ShowDemoWindow();
     
     ImGui::Spacing();
 

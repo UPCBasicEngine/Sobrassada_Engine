@@ -1,5 +1,6 @@
 #pragma once
 #include "BoundingBox.h"
+#include "Root/RootComponent.h"
 
 #include <vector>
 #include <string>
@@ -11,8 +12,12 @@ public:
 	GameObject(std::string name);
 	GameObject(uint32_t parentUUID, std::string name);
 
+    ~GameObject();
+
 	bool AddGameObject(uint32_t gameObjectUUID);
     bool RemoveGameObject(uint32_t gameObjectUUID);
+
+    bool CreateRootComponent();
 
 	void OnEditor();
 
@@ -25,6 +30,11 @@ public:
     
 	inline uint32_t GetParent() { return parentUUID; }
     inline void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }
+    
+    RootComponent* GetRootComponent() const { return rootComponent; }
+    
+    void Render();
+    void RenderEditor();
 
 private:
 
@@ -33,7 +43,7 @@ private:
 
 	std::string name;
 
-	uint32_t rootComponentUUID;
+        RootComponent *rootComponent;
 
 	BoundingBox boundingBox;
 };

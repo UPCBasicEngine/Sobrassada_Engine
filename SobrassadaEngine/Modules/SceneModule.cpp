@@ -43,9 +43,6 @@ bool SceneModule::Init()
 
     // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
-
-    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), -1, -1, Transform())); // TODO Add the gameObject UUID as parent?
-    gameComponents[rootComponent->GetUUID()] = rootComponent;
     
     MOCKUP_loadedModel = new EngineModel();
     MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
@@ -73,16 +70,20 @@ update_status SceneModule::Update(float deltaTime)
 
 update_status SceneModule::Render(float deltaTime)
 {
-    if (rootComponent != nullptr)
+    for (auto& gameObject: gameObjectsContainer)
     {
-        rootComponent->Render();
+        gameObject.second->Render();
     }
     return UPDATE_CONTINUE;
 }
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
-    if (rootComponent)  rootComponent->RenderComponentEditor();
+    GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
+    if (selectedGameObject != nullptr)
+    {
+        selectedGameObject->RenderEditor();
+    }
     return UPDATE_CONTINUE;
 }
 
