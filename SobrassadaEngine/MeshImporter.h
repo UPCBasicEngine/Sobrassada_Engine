@@ -9,13 +9,13 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "tiny_gltf.h"
 
+namespace MeshImporter
+{
 
-namespace MeshImporter {
-
-	// Function to import a mesh from a GLTF model
-	bool ImportMesh(const tinygltf::Model& model,
-		const tinygltf::Mesh& mesh,
-		const tinygltf::Primitive& primitive,
-		const std::string& filePath);
-	std::unique_ptr<Mesh> LoadMesh(const char* path);
-};
+    // Function to import a mesh from a GLTF model
+    bool ImportMesh(
+        const tinygltf::Model &model, const tinygltf::Mesh &mesh, const tinygltf::Primitive &primitive,
+        const std::string &filePath
+    );
+    std::unique_ptr<Mesh> LoadMesh(const char *path);
+}; // namespace MeshImporter

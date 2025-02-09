@@ -19,7 +19,7 @@ class Mesh
     const std::vector<Vertex> &GetVertices() const { return vertices; }
     const std::vector<unsigned int> &GetIndices() const { return indices; }
 
-    //expensive -> move operators
+    // expensive -> move operators
     void SetVertices(std::vector<Vertex> &&newVertices) { vertices = std::move(newVertices); }
     void SetIndices(std::vector<unsigned int> &&newIndices) { indices = std::move(newIndices); }
 

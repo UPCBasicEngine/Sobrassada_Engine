@@ -1,60 +1,59 @@
 #pragma once
 #define NOMINMAX
-#include <windows.h>
 #include <stdio.h>
 #include <vector>
+#include <windows.h>
 
-extern std::vector<char*>* Logs;
+extern std::vector<char *> *Logs;
 
 #define GLOG(format, ...) glog(__FILE__, __LINE__, format, __VA_ARGS__);
 
-void glog(const char file[], int line, const char* format, ...);
+void glog(const char file[], int line, const char *format, ...);
 
 enum update_status
 {
-	UPDATE_CONTINUE = 1,
-	UPDATE_STOP,
-	UPDATE_ERROR
+    UPDATE_CONTINUE = 1,
+    UPDATE_STOP,
+    UPDATE_ERROR
 };
 
 // Deletes an array of buffers
-#define RELEASE_ARRAY( x ) \
-	{\
-       if( x != nullptr )\
-       {\
-           delete[] x;\
-	       x = nullptr;\
-		 }\
-	 }
-
+#define RELEASE_ARRAY(x)                                                                                               \
+    {                                                                                                                  \
+        if (x != nullptr)                                                                                              \
+        {                                                                                                              \
+            delete[] x;                                                                                                \
+            x = nullptr;                                                                                               \
+        }                                                                                                              \
+    }
 
 // Configuration -----------
-#define SCREEN_WIDTH 1280
+#define SCREEN_WIDTH  1280
 #define SCREEN_HEIGHT 720
-#define FULLSCREEN false
-#define VSYNC true
-#define TITLE "Sobrassada Engine"
-#define HFOV 90
+#define FULLSCREEN    false
+#define VSYNC         true
+#define TITLE         "Sobrassada Engine"
+#define HFOV          90
 
 #ifdef _WIN32
 #define DELIMITER '\\'
-#else 
+#else
 #define DELIMITER '/'
 #endif
 
-#define DEFAULT_GL_CLEAR_COLOR_RED 0.5f
+#define DEFAULT_GL_CLEAR_COLOR_RED   0.5f
 #define DEFAULT_GL_CLEAR_COLOR_GREEN 0.5f
-#define DEFAULT_GL_CLEAR_COLOR_BLUE 0.5f
+#define DEFAULT_GL_CLEAR_COLOR_BLUE  0.5f
 
 #define DEFAULT_CAMERA_MOVEMENT_SCALE_FACTOR 1.f;
-#define DEFAULT_CAMERA_MOVMENT_SPEED 7.5f;
-#define DEFAULT_CAMERA_MOUSE_SENSITIVITY 0.5f;
-#define DEFAUL_CAMERA_ZOOM_SENSITIVITY 5.f;
+#define DEFAULT_CAMERA_MOVMENT_SPEED         7.5f;
+#define DEFAULT_CAMERA_MOUSE_SENSITIVITY     0.5f;
+#define DEFAUL_CAMERA_ZOOM_SENSITIVITY       5.f;
 
-#define ASSETS_PATH "Assets/"
-#define MESHES_PATH "Library/Meshes/"
-#define MATERIALS_PATH "Library/Materials/"
-#define FILE_EXTENSION ".sobrassada"
+#define ASSETS_PATH        "Assets/"
+#define MESHES_PATH        "Library/Meshes/"
+#define MATERIALS_PATH     "Library/Materials/"
+#define FILE_EXTENSION     ".sobrassada"
 #define MATERIAL_EXTENSION ".dds"
 
 constexpr float PI = 3.14159265359f;

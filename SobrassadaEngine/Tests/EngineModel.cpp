@@ -1,11 +1,11 @@
 #include "EngineModel.h"
-#include "Globals.h"
-#include "EngineMesh.h"
-#include "MathGeoLib.h"
 #include "Application.h"
+#include "DirectXTex/DirectXTex.h"
+#include "EngineMesh.h"
+#include "Globals.h"
+#include "MathGeoLib.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
-#include "DirectXTex/DirectXTex.h"
 #include <string>
 #include <unordered_set>
 
@@ -17,247 +17,253 @@
 
 EngineModel::EngineModel()
 {
-	minValues = float3::zero;
-	maxValues = float3::zero;
+    minValues = float3::zero;
+    maxValues = float3::zero;
 }
 
-EngineModel::~EngineModel()
+EngineModel::~EngineModel() { ClearVectors(); }
+
+void EngineModel::Load(const char *modelPath)
 {
-	ClearVectors();
+    ClearVectors();
+
+    GLOG("Loading model: %s", modelPath);
+
+    tinygltf::TinyGLTF gltfContext;
+    tinygltf::Model model;
+    std::string error, warning;
+
+    bool loadOk = gltfContext.LoadASCIIFromFile(&model, &error, &warning, modelPath);
+
+    if (!loadOk)
+    {
+        GLOG("Error loading model %s: %s", modelPath, error.c_str());
+    }
+
+    // Checking for root node in nodes to start the model loading, if no default scene error in model doc.
+    int rootPosition =
+        model.scenes[model.defaultScene].nodes.size() > 0 ? model.scenes[model.defaultScene].nodes[0] : -1;
+    if (rootPosition < 0) return;
+
+    float4x4 basicModelMatrix = float4x4::identity;
+    LoadRecursive(model, basicModelMatrix, rootPosition);
+
+    LoadMaterials(model, modelPath);
 }
 
-void EngineModel::Load(const char* modelPath)
+void EngineModel::LoadMaterials(const tinygltf::Model &sourceModel, const char *modelPath)
 {
-	ClearVectors();
+    // Check to not load multiple times the same texture
+    std::unordered_set<int> loadedIndices;
+    for (const auto &srcMaterial : sourceModel.materials)
+    {
+        unsigned int textureId = 0;
+        float2 widthHeight     = float2::zero;
 
-	GLOG("Loading model: %s", modelPath);
+        int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
 
-	tinygltf::TinyGLTF gltfContext;
-	tinygltf::Model model;
-	std::string error, warning;
+        if (textureIndex >= 0)
+        {
+            const tinygltf::Texture &texture = sourceModel.textures[textureIndex];
+            const tinygltf::Image &image     = sourceModel.images[texture.source];
 
-	bool loadOk = gltfContext.LoadASCIIFromFile(&model, &error, &warning, modelPath);
+            // Do not load the same texture twice
+            if (loadedIndices.find(texture.source) != loadedIndices.end()) return;
 
-	if (!loadOk)
-	{
-		GLOG("Error loading model %s: %s", modelPath, error.c_str());
-	}
+            std::string filePath     = std::string(modelPath);
+            char usedSeparator       = '\\';
 
-	// Checking for root node in nodes to start the model loading, if no default scene error in model doc.
-	int rootPosition = model.scenes[model.defaultScene].nodes.size() > 0 ? model.scenes[model.defaultScene].nodes[0] : -1;
-	if (rootPosition < 0) return;
+            int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
 
-	float4x4 basicModelMatrix = float4x4::identity;
-	LoadRecursive(model, basicModelMatrix, rootPosition);
+            if (fileLocationPosition == -1)
+            {
+                usedSeparator        = '/';
+                fileLocationPosition = filePath.find_last_of(usedSeparator);
+            }
 
-	LoadMaterials(model, modelPath);
+            // Cant find the directory of the file
+            if (fileLocationPosition == -1) return;
+
+            std::string fileLocation      = filePath.substr(0, fileLocationPosition) + usedSeparator;
+
+            std::string texturePathString = fileLocation.append(image.uri);
+
+            DirectX::TexMetadata textureMetadata;
+            textureId = App->GetTextureModuleTest()->LoadTexture(texturePathString.c_str(), textureMetadata);
+            if (textureId)
+            {
+                widthHeight.x = textureMetadata.width;
+                widthHeight.y = textureMetadata.height;
+                loadedIndices.insert(texture.source);
+            }
+        }
+        if (textureId)
+        {
+            textures.push_back(textureId);
+            textureInfo.push_back(widthHeight);
+            renderTexture++;
+        }
+    }
 }
 
-void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath)
+void EngineModel::LoadAdditionalTexture(const char *texturePath)
 {
-	// Check to not load multiple times the same texture
-	std::unordered_set<int> loadedIndices;
-	for (const auto& srcMaterial : sourceModel.materials)
-	{
-		unsigned int textureId = 0;
-		float2 widthHeight = float2::zero;
-		
-		int textureIndex = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
-		
-		if (textureIndex >= 0)
-		{
-			const tinygltf::Texture& texture = sourceModel.textures[textureIndex];
-			const tinygltf::Image& image = sourceModel.images[texture.source];
+    std::string stringPath = std::string(texturePath);
 
-			// Do not load the same texture twice
-			if (loadedIndices.find(texture.source) != loadedIndices.end()) return;
+    float2 widthHeight     = float2::zero;
 
-			std::string filePath = std::string(modelPath);
-			char usedSeparator = '\\';
-			
-			int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
-			
-			if (fileLocationPosition == -1)
-			{
-				usedSeparator = '/';
-				fileLocationPosition = filePath.find_last_of(usedSeparator);
-			}
-				
-			// Cant find the directory of the file
-			if(fileLocationPosition == -1) return;
+    DirectX::TexMetadata textureMetadata;
+    unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(stringPath.c_str(), textureMetadata);
 
-			std::string fileLocation = filePath.substr(0, fileLocationPosition) + usedSeparator;
+    if (textureId)
+    {
+        widthHeight.x = textureMetadata.width;
+        widthHeight.y = textureMetadata.height;
 
-			std::string texturePathString = fileLocation.append(image.uri);
-
-			DirectX::TexMetadata textureMetadata;
-			textureId = App->GetTextureModuleTest()->LoadTexture(texturePathString.c_str(), textureMetadata);
-			if (textureId)
-			{
-				widthHeight.x = textureMetadata.width;
-				widthHeight.y = textureMetadata.height;
-				loadedIndices.insert(texture.source);
-			}
-		}
-		if (textureId)
-		{
-			textures.push_back(textureId);
-			textureInfo.push_back(widthHeight);
-			renderTexture++;
-		}
-	}
+        renderTexture++;
+        textures.push_back(textureId);
+        textureInfo.push_back(widthHeight);
+    }
 }
 
-void EngineModel::LoadAdditionalTexture(const char* texturePath)
+void EngineModel::Render(int program, float4x4 &projectionMatrix, float4x4 &viewMatrix)
 {
-	std::string stringPath = std::string(texturePath);
-
-	float2 widthHeight = float2::zero;
-
-	DirectX::TexMetadata textureMetadata;
-	unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(stringPath.c_str(), textureMetadata);
-
-	if (textureId) 
-	{
-		widthHeight.x = textureMetadata.width;
-		widthHeight.y = textureMetadata.height;
-
-		renderTexture++;
-		textures.push_back(textureId);
-		textureInfo.push_back(widthHeight);
-	}
+    for (EngineMesh *currentMesh : meshes)
+    {
+        int texturePostiion =
+            textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
+        currentMesh->Render(program, texturePostiion, projectionMatrix, viewMatrix);
+    }
 }
 
-void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix)
+void EngineModel::GetTextureSize(float2 &outTextureSize)
 {
-	for (EngineMesh* currentMesh : meshes)
-	{
-		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-		currentMesh->Render(program, texturePostiion, projectionMatrix, viewMatrix);
-	}
+    if (renderTexture > -1)
+    {
+        outTextureSize.x = textureInfo[renderTexture].x;
+        outTextureSize.y = textureInfo[renderTexture].y;
+    }
 }
 
-void EngineModel::GetTextureSize(float2& outTextureSize)
+void EngineModel::SetRenderTexture(int texturePosition) { renderTexture = texturePosition; }
+
+void EngineModel::LoadRecursive(
+    const tinygltf::Model &sourceModel, const float4x4 &parentModelMatrix, int currentNodePosition
+)
 {
-	if (renderTexture > -1)
-	{
-		outTextureSize.x = textureInfo[renderTexture].x;
-		outTextureSize.y = textureInfo[renderTexture].y;
-	}
-}
+    const tinygltf::Node currentNode = sourceModel.nodes[currentNodePosition];
 
-void EngineModel::SetRenderTexture(int texturePosition)
-{
-	renderTexture = texturePosition;
-}
+    // Creating basic model transform matrix if matrix data exists
+    float4x4 modelMatrix             = float4x4::identity;
 
-void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4x4& parentModelMatrix, int currentNodePosition)
-{
-	const tinygltf::Node currentNode = sourceModel.nodes[currentNodePosition];
+    if (currentNode.matrix.size() > 0)
+    {
+        for (int i = 0; i < currentNode.matrix.size(); ++i)
+        {
+            modelMatrix[i / 4][i % 4] = (float)currentNode.matrix[i];
+        }
+    }
+    else
+    {
+        // Creating basic model transform matrix based on tranlation, rotation and scale information
+        Quat finalRotation;
+        float3 translation, scale;
 
-	// Creating basic model transform matrix if matrix data exists
-	float4x4 modelMatrix = float4x4::identity;
+        translation   = float3::zero;
+        scale         = float3::one;
+        finalRotation = Quat(0, 0, 0, 1);
 
-	if (currentNode.matrix.size() > 0)
-	{
-		for (int i = 0; i < currentNode.matrix.size(); ++i)
-		{
-			modelMatrix[i / 4][i % 4] = (float)currentNode.matrix[i];
-		}
-	}
-	else
-	{
-		// Creating basic model transform matrix based on tranlation, rotation and scale information
-		Quat finalRotation;
-		float3 translation, scale;
+        if (currentNode.rotation.size() > 0)
+        {
+            finalRotation = Quat(
+                (float)currentNode.rotation[0], (float)currentNode.rotation[1], (float)currentNode.rotation[2],
+                (float)currentNode.rotation[3]
+            );
+        }
 
-		translation = float3::zero;
-		scale = float3::one;
-		finalRotation = Quat(0, 0, 0, 1);
+        if (currentNode.translation.size() > 0)
+        {
+            translation = float3(
+                (float)currentNode.translation[0], (float)currentNode.translation[1], (float)currentNode.translation[2]
+            );
+        }
 
-		if (currentNode.rotation.size() > 0)
-		{
-			finalRotation = Quat((float)currentNode.rotation[0], (float)currentNode.rotation[1], (float)currentNode.rotation[2], (float)currentNode.rotation[3]);
-		}
+        if (currentNode.scale.size() > 0)
+        {
+            scale = float3((float)currentNode.scale[0], (float)currentNode.scale[1], (float)currentNode.scale[2]);
+        }
 
-		if (currentNode.translation.size() > 0)
-		{
-			translation = float3((float)currentNode.translation[0], (float)currentNode.translation[1], (float)currentNode.translation[2]);
-		}
+        modelMatrix = float4x4::FromTRS(translation, finalRotation, scale);
+    }
 
-		if (currentNode.scale.size() > 0)
-		{
-			scale = float3((float)currentNode.scale[0], (float)currentNode.scale[1], (float)currentNode.scale[2]);
-		}
+    // Apply parentModelMatrix to current node one
+    modelMatrix = parentModelMatrix * modelMatrix;
 
-		modelMatrix = float4x4::FromTRS(
-			translation,
-			finalRotation,
-			scale
-		);
-	}
+    // If this node contains meshes then load them and apply the parents model matrix
+    if (currentNode.mesh >= 0)
+    {
+        for (const tinygltf::Primitive &primitive : sourceModel.meshes[currentNode.mesh].primitives)
+        {
+            EngineMesh *newMesh = new EngineMesh();
+            newMesh->LoadVBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
+            if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
+            newMesh->CreateVAO();
 
-	// Apply parentModelMatrix to current node one
-	modelMatrix = parentModelMatrix * modelMatrix;
+            float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
+            float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
 
-	// If this node contains meshes then load them and apply the parents model matrix
-	if (currentNode.mesh >= 0)
-	{
-		for (const tinygltf::Primitive& primitive : sourceModel.meshes[currentNode.mesh].primitives)
-		{
-			EngineMesh* newMesh = new EngineMesh();
-			newMesh->LoadVBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
-			if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
-			newMesh->CreateVAO();
+            if (firstMesh)
+            {
+                firstMesh = false;
+                maxValues = meshMaxValues;
+                minValues = meshMinValues;
+            }
+            else
+            {
+                maxValues = float3(
+                    Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y),
+                    Max(maxValues.z, meshMaxValues.z)
+                );
+                minValues = float3(
+                    Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y),
+                    Min(minValues.z, meshMinValues.z)
+                );
+            }
 
-			float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
-			float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
+            newMesh->SetBasicModelMatrix(modelMatrix);
 
-			if (firstMesh)
-			{
-				firstMesh = false;
-				maxValues = meshMaxValues;
-				minValues = meshMinValues;
-			}
-			else
-			{
-				maxValues = float3(Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y), Max(maxValues.z, meshMaxValues.z));
-				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
-			}
+            indexCount += newMesh->GetIndexCount();
+            meshes.push_back(newMesh);
+        }
+    }
 
-			newMesh->SetBasicModelMatrix(modelMatrix);
-			
-			indexCount += newMesh->GetIndexCount();
-			meshes.push_back(newMesh);
-		}
-	}
+    // If this node contains children, send Load function to each one with current modelMatrix
+    if (currentNode.children.size() > 0)
+    {
+        for (int i = 0; i < currentNode.children.size(); ++i)
+            LoadRecursive(sourceModel, modelMatrix, currentNode.children[i]);
+    }
 
-	// If this node contains children, send Load function to each one with current modelMatrix
-	if (currentNode.children.size() > 0)
-	{
-		for (int i = 0; i < currentNode.children.size(); ++i) LoadRecursive(sourceModel, modelMatrix, currentNode.children[i]);
-	}
-
-	return;
+    return;
 }
 
 void EngineModel::ClearVectors()
 {
-	for (auto it : meshes)
-	{
-		delete it;
-	}
+    for (auto it : meshes)
+    {
+        delete it;
+    }
 
-	for (unsigned int textureId : textures)
-	{
-		glDeleteTextures(1, &textureId);
-	}
+    for (unsigned int textureId : textures)
+    {
+        glDeleteTextures(1, &textureId);
+    }
 
-	meshes.clear();
-	textures.clear();
-	textureInfo.clear();
-	
-	firstMesh = true;
-	indexCount = 0;
-	renderTexture = -1;
+    meshes.clear();
+    textures.clear();
+    textureInfo.clear();
+
+    firstMesh     = true;
+    indexCount    = 0;
+    renderTexture = -1;
 }

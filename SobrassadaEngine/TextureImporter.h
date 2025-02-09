@@ -2,6 +2,5 @@
 
 namespace TextureImporter
 {
-	bool Import(const char* filePath);
+    bool Import(const char *filePath);
 };
-
