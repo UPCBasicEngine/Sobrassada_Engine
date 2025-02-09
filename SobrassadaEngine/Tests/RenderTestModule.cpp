@@ -28,9 +28,10 @@ RenderTestModule::RenderTestModule()
 
     pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
     pointLights.push_back(PointLight(float3(2, 0, 0), 1));
-    pointLights.push_back(PointLight(float3(0, 2, 0), 1));
     pointLights.push_back(PointLight(float3(0, 1, -2), 1));
-    spotLights.push_back(SpotLight());
+    spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
+    spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
+    spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
 }
 
 RenderTestModule::~RenderTestModule() {}
@@ -123,8 +124,8 @@ update_status RenderTestModule::Render(float deltaTime)
     materials.at(0)->OnEditorUpdate();
 
     // BEGIN LIGHTS
-    std::vector<Lights::PointLightData> lights;
-
+    // Point lights
+    std::vector<Lights::PointLightData> points;
     for (int i = 0; i < pointLights.size(); ++i)
     {
         // ImGui Menus
@@ -136,42 +137,65 @@ update_status RenderTestModule::Render(float deltaTime)
         // Fill struct data
         float4 position = float4(pointLights[i].GetPosition(), pointLights[i].GetRange());
         float4 color    = float4(pointLights[i].GetColor(), pointLights[i].GetIntensity());
-        lights.push_back(Lights::PointLightData(position, color));
+        points.emplace_back(Lights::PointLightData(position, color));
     }
 
-    unsigned int id;
-    glGenBuffers(1, &id);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
+    unsigned int pointId;
+    glGenBuffers(1, &pointId);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointId);
 
     size_t dataSize = sizeof(Lights::PointLightData);
-    int bufferSize  = dataSize * lights.size() + 16;
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
-
-    int count = lights.size();
+    int bufferSize  = dataSize * points.size() + 16;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    int count = points.size();
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
 
     int offset = 16;
-    for (const Lights::PointLightData &light : lights)
+    for (const Lights::PointLightData &light : points)
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, dataSize, &light);
         offset += dataSize;
     }
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, id);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, pointId);
 
-    spotLights[0].EditorParams();
+    // Spot lights
+    std::vector<Lights::SpotLightData> spots;
+    for (int i = 0; i < spotLights.size(); ++i)
+    {
+        // ImGui Menus
+        spotLights[i].EditorParams(i);
 
+        // Light gizmos
+        spotLights[i].DrawGizmos();
 
-    // Test spotlight
-    glUniform3fv(7, 1, &spotLights[0].GetColor()[0]);
-    glUniform3fv(8, 1, &spotLights[0].GetPosition()[0]);
-    glUniform3fv(9, 1, &spotLights[0].GetDirection()[0]);
-    glUniform1f(10, spotLights[0].GetIntensity());
-    glUniform1f(11, spotLights[0].GetRange());
-    glUniform1f(12, spotLights[0].GetInnerAngle());
-    glUniform1f(13, spotLights[0].GetOuterAngle());
+        // Fill struct data
+        float4 position = float4(spotLights[i].GetPosition(), spotLights[i].GetRange());
+        float4 color    = float4(spotLights[i].GetColor(), spotLights[i].GetIntensity());
+        float3 dir      = float3(spotLights[i].GetDirection());
+        float inner     = spotLights[i].GetInnerAngle();
+        float outer     = spotLights[i].GetOuterAngle();
+        spots.emplace_back(Lights::SpotLightData(position, color, dir, inner, outer));
+    }
 
-    spotLights[0].DrawGizmos();
+    unsigned int spotId;
+    glGenBuffers(1, &spotId);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotId);
+
+    dataSize = sizeof(Lights::SpotLightData);
+    bufferSize = (dataSize + 12) * spots.size() + 16; // 12 bytes offset between spotlights
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    count = spots.size();
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
+
+    offset = 16;
+    for (const Lights::SpotLightData &light : spots)
+    {
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, dataSize, &light);
+        offset += dataSize + 12;
+    } 
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, spotId);
     // END LIGHTS
 
     // glActiveTexture(GL_TEXTURE0);

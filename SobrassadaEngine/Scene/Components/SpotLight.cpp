@@ -9,16 +9,26 @@ SpotLight::SpotLight() : LightComponent()
 {
     position   = float3(0, 0, 0);
     direction  = -float3::unitY;
-    range      = 1;
+    range      = 3;
     innerAngle = 10;
-    outerAngle = 30;
+    outerAngle = 20;
+}
+
+SpotLight::SpotLight(const float3 &position, const float3 &direction) : LightComponent()
+{
+    this->position  = position;
+    this->direction = direction;
+    range           = 3;
+    innerAngle      = 10;
+    outerAngle      = 20;
 }
 
 SpotLight::~SpotLight() {}
 
-void SpotLight::EditorParams()
+void SpotLight::EditorParams(const int index)
 {
-    ImGui::Begin("Spot Light");
+    std::string title = "Spot light " + std::to_string(index);
+    ImGui::Begin(title.c_str());
 
     ImGui::Text("Spot light parameters");
 
@@ -37,19 +47,22 @@ void SpotLight::EditorParams()
         if (outerAngle < innerAngle) innerAngle = outerAngle;
     }
 
+    ImGui::Checkbox("Draw gizmos", &drawGizmos);
+
     ImGui::End();
 }
 
 void SpotLight::DrawGizmos() const
 {
-    const float innerRads = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
-    const float outerRads = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
+    if (!drawGizmos) return;
+
+    const float innerRads      = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
+    const float outerRads      = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
     const float3 directionNorm = direction.Normalized();
 
     std::vector<float3> innerDirections;
     innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(directionNorm)));
     innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(directionNorm)));
-    
 
     std::vector<float3> outerDirections;
     outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(directionNorm)));
@@ -62,15 +75,15 @@ void SpotLight::DrawGizmos() const
     {
         debug->DrawLine(position, dir, range / cos(innerRads), float3(1, 1, 1));
     }
-    
+
     for (const float3 &dir : outerDirections)
     {
         debug->DrawLine(position, dir, range / cos(outerRads), float3(1, 1, 1));
     }
 
-    float3 center = position + (directionNorm * range);
-    float innerCathetus   = range * tan(innerRads);
-    float outerCathetus  = range * tan(outerRads);
+    float3 center       = position + (directionNorm * range);
+    float innerCathetus = range * tan(innerRads);
+    float outerCathetus = range * tan(outerRads);
     debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), innerCathetus);
     debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), outerCathetus);
 }

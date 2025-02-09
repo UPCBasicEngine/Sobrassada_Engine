@@ -33,5 +33,5 @@ class PointLight : public LightComponent
   private:
     float3 position;
     float range;
-    int renderMode;
+    int gizmosMode;
 };

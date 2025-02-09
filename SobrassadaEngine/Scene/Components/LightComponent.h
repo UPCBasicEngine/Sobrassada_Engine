@@ -20,4 +20,6 @@ class LightComponent : public Component
   protected:
     float intensity;
     float3 color;
+
+    bool drawGizmos;
 };

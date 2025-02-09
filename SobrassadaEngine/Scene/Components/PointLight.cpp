@@ -9,25 +9,22 @@ PointLight::PointLight() : LightComponent()
 {
     range      = 1;
     position   = float3(0, 0, 0);
-    renderMode = 0;
+    gizmosMode = 0;
 }
 
 PointLight::PointLight(const float3 &position, const float range) : LightComponent()
 {
     this->position = position;
     this->range    = range;
-    renderMode     = 0;
+    gizmosMode     = 0;
 }
 
 PointLight::~PointLight() {}
 
 void PointLight::EditorParams(int index)
 {    
-    std::string title = "Point light" + std::to_string(index);
+    std::string title = "Point light " + std::to_string(index);
     ImGui::Begin(title.c_str());
-            
-    //std::string title = "Point light" + std::to_string(index);
-    ImGui::Text("Point light %d", index);
 
     ImGui::SliderFloat3("Position", &position.x, -10.0f, 10.0f);
     ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
@@ -35,16 +32,21 @@ void PointLight::EditorParams(int index)
     ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
     ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
 
+    ImGui::SeparatorText("Gizmos");
+    ImGui::Checkbox("Draw gizmos", &drawGizmos);
+
     ImGui::Text("Gizmos mode");
-    if (ImGui::RadioButton("Lines", &renderMode, 0));
+    if (ImGui::RadioButton("Lines", &gizmosMode, 0));
     ImGui::SameLine();
-    if (ImGui::RadioButton("Sphere", &renderMode, 1));
+    if (ImGui::RadioButton("Sphere", &gizmosMode, 1));
 
     ImGui::End();
 }
 
 void PointLight::DrawGizmos() const
 {
+    if (!drawGizmos) return;
+
     std::vector<float3> directions;
     directions.push_back(float3::unitX);
     directions.push_back(float3::unitY);
@@ -79,7 +81,7 @@ void PointLight::DrawGizmos() const
 
     DebugDrawModule *debug = App->GetDebugDreawModule();
 
-    if (renderMode == 0)
+    if (gizmosMode == 0)
     {
         for (int i = 0; i < directions.size(); ++i)
         {
