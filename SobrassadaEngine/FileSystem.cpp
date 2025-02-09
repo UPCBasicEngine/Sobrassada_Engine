@@ -36,13 +36,13 @@ namespace FileSystem
 			return static_cast<unsigned int>(size);
 		}
 		else {
-			delete[] *buffer;
+			delete[] * buffer;
 			buffer = nullptr;
 			file.close();
 			GLOG("Failed to read data from file: %s", filePath);
 			return 0;
-				}
-			}
+		}
+	}
 
 	unsigned int Save(const char* filePath, const void* buffer, unsigned int size, bool append)
 	{
@@ -67,12 +67,12 @@ namespace FileSystem
 	}
 
 	bool Copy(const char* sourceFilePath, const char* destinationFilePath)
-		{
+	{
 		try
-			{
+		{
 			std::filesystem::copy(sourceFilePath, destinationFilePath, std::filesystem::copy_options::overwrite_existing);
 			return true;
-			}
+		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
 			GLOG("Failed to copy: %s", e.what());
