@@ -21,7 +21,7 @@ class PointLight : public LightComponent
     PointLight(const float3 &position, const float range);
     ~PointLight();
 
-    void EditorParams(int index, bool isFirst, bool isLast);
+    void EditorParams(int index);
     void DrawGizmos() const;
 
     float3 GetPosition() const { return position; }

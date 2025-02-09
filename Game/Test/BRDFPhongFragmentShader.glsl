@@ -16,12 +16,6 @@ uniform vec3 lightDir;
 uniform vec3 cameraPos;
 uniform float ambientIntensity;
 
-// Testing point light uniforms
-layout(location = 3) uniform vec3 pointColor;
-layout(location = 4) uniform vec3 pointPosition;
-layout(location = 5) uniform float pointIntensity;
-layout(location = 6) uniform float pointRange;
-
 // Testing spotlight uniforms
 layout(location = 7) uniform vec3 spotColor;
 layout(location = 8) uniform vec3 spotPosition;
@@ -40,14 +34,14 @@ struct PointLight
 
 readonly layout(std430, binding = 5) buffer PointLights
 {
-	float pointLightsCount;
+	int pointLightsCount;
 	PointLight pointLights[];
 };
 
-float pointLightAttenuation() 
+float pointLightAttenuation(const int index) 
 {
-	float distance = length(pos - pointPosition);
-	return pow(max(1 - pow((distance / pointRange), 4), 0), 2) / (pow(distance, 2) + 1);
+	float distance = length(pos - pointLights[index].position.xyz);
+	return pow(max(1 - pow((distance / pointLights[index].position.w), 4), 0), 2) / (pow(distance, 2) + 1);
 }
 
 float spotLightAttenuation()
@@ -68,20 +62,20 @@ float spotLightAttenuation()
 	return Fatt * Catt;
 }
 
-vec3 RenderPointLight(const vec3 N, const vec3 texColor, const float alpha)
+vec3 RenderPointLight(const int index, const vec3 N, const vec3 texColor, const float alpha)
 {
-	vec3 Lpoint = normalize(pos - pointPosition);
-	vec3 LiPoint = pointColor * pointLights[0].color.a * pointLightAttenuation();
-	float NLpoint = dot(N, -Lpoint);
+	vec3 L = normalize(pos - pointLights[index].position.xyz);
+	vec3 Li = pointLights[index].color.rgb * pointLights[index].color.a * pointLightAttenuation(index);
+	float NL = dot(N, -L);
 
-	if (NLpoint > 0)
+	if (NL > 0)
 	{
    		vec3 specTexColor = texture(specularTexture, uv0).rgb;
         float shininess = alpha * 256.0f;
 
 		float normalization = (shininess + 2.0) / (2.0 * 3.1415926535);
 		vec3 V = normalize(cameraPos - pos);
-		vec3 R = reflect(Lpoint, N);
+		vec3 R = reflect(L, N);
 		float VR = pow(max(dot(V, R), 0.0f), shininess);
 		
 		shininess = (1 - alpha);
@@ -89,11 +83,8 @@ vec3 RenderPointLight(const vec3 N, const vec3 texColor, const float alpha)
         float cosTheta = max(dot(N, V), 0.0);
         float fresnel = RF0 + (1 - RF0) * pow(1-cosTheta, 5);
 
-		//vec3 diffuse = (diffFactor * (1 - RF0)) / 3.1415926535 * texColor * lightColor * NL;
-		//vec3 specular = normalization * specFactor * specTexColor * VR * fresnel * lightColor * NL;
-
-		vec3 diffuse = (diffFactor * (1 - RF0)) / 3.1415926535 * texColor * LiPoint * NLpoint;
-		vec3 specular = normalization * specFactor * specTexColor * VR * fresnel * LiPoint * NLpoint;
+		vec3 diffuse = (diffFactor * (1 - RF0)) / 3.1415926535 * texColor * Li * NL;
+		vec3 specular = normalization * specFactor * specTexColor * VR * fresnel * Li * NL;
 		return diffuse + specular;
 	}
 	else
@@ -114,8 +105,10 @@ void main()
    	//vec3 L = normalize(lightDir);
 	//float NL = dot(N, -L);
 
-	//for ()
-	hdr += RenderPointLight(N, texColor, alpha);
+	for (int i = 0; i < pointLightsCount; ++i)
+	{
+		hdr += RenderPointLight(i, N, texColor, alpha);
+	}
 
 	vec3 Lspot = normalize(pos - spotPosition);
 	vec3 LiSpot = spotColor * spotIntensity * spotLightAttenuation();

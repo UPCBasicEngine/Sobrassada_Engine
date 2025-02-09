@@ -21,14 +21,11 @@ PointLight::PointLight(const float3 &position, const float range) : LightCompone
 
 PointLight::~PointLight() {}
 
-void PointLight::EditorParams(int index, bool isFirst, bool isLast)
+void PointLight::EditorParams(int index)
 {    
-    if (isFirst)
-    {
-        ImGui::Begin("Point Lights");
-    }
-    ImGui::PushID(index);
-        
+    std::string title = "Point light" + std::to_string(index);
+    ImGui::Begin(title.c_str());
+            
     //std::string title = "Point light" + std::to_string(index);
     ImGui::Text("Point light %d", index);
 
@@ -43,11 +40,7 @@ void PointLight::EditorParams(int index, bool isFirst, bool isLast)
     ImGui::SameLine();
     if (ImGui::RadioButton("Sphere", &renderMode, 1));
 
-    ImGui::Separator();
-
-    ImGui::PopID();
-
-    if (isLast) ImGui::End();
+    ImGui::End();
 }
 
 void PointLight::DrawGizmos() const
