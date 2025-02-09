@@ -11,7 +11,7 @@ public:
     virtual bool CreateComponent(const ComponentType componentType);
     
     bool AddChildComponent(const uint32_t componentUUID) override;
-    bool RemoveChildComponent(const uint32_t componentUUID) override;
+    bool DeleteChildComponent(const uint32_t componentUUID) override;
     void RenderComponentEditor();
     void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
     void RenderEditorInspector() override;

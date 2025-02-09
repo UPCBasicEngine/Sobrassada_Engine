@@ -43,7 +43,16 @@ bool Component::AddChildComponent(const uint32_t componentUUID)
     return true;
 }
 
-bool Component::RemoveChildComponent(const uint32_t componentUUID)
+bool Component::RemoveChildComponent(const uint32_t componentUUID){
+    if (const auto it = std::find(children.begin(), children.end(), componentUUID); it != children.end())
+    {
+        children.erase(it);
+        return true;
+    }
+    return false;
+}
+
+bool Component::DeleteChildComponent(const uint32_t componentUUID)
 {
     if (const auto it = std::find(children.begin(), children.end(), componentUUID); it != children.end())
     {
@@ -69,14 +78,18 @@ void Component::RenderEditorInspector()
 
 void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
-    ImGui::Indent( 8 );
-
     ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
     if (selectedComponentUUID == uuid)
     {
         base_flags |= ImGuiTreeNodeFlags_Selected;
     }
-    const bool isExpanded = ImGui::TreeNodeExV((void*) uuid, base_flags, name, nullptr);
+    if (children.empty())
+    {
+        base_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    }
+    ImGui::PushID(uuid);
+    const bool isExpanded = ImGui::TreeNodeEx(name, base_flags);
+    ImGui::PopID();
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
         RootComponent* rootComponent = App->GetSceneModule()->GetRootComponent();
@@ -85,8 +98,44 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
             rootComponent->SetSelectedComponent(uuid);
         }
     }
+
+    if (ImGui::BeginDragDropSource())
+    {
+        GLOG("Starting component drag n drop for uuid : %d", uuid)
+        ImGui::SetDragDropPayload("ComponentTreeNode", &uuid, sizeof(uint32_t));
+        ImGui::Text(name);
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ComponentTreeNode"))
+        {
+            const uint32_t draggedUUID = *(const uint32_t*)payload->Data;
+            GLOG("Receiving component drag n drop for uuid : %d", draggedUUID)
+            if (draggedUUID != uuid && draggedUUID != uuidParent)
+            {
+                Component* draggedComponent = App->GetSceneModule()->gameComponents[draggedUUID];
+                if (draggedComponent != nullptr)
+                {
+                    Component* parentDraggedComponent = App->GetSceneModule()->gameComponents[draggedComponent->GetUUIDParent()];
+                    if (parentDraggedComponent != nullptr)
+                    {
+                        parentDraggedComponent->RemoveChildComponent(draggedUUID);
+                        draggedComponent->SetUUIDParent(uuid); // TODO Add set parent uuid into the AddChildComponent function
+                        AddChildComponent(draggedUUID);
+                        draggedComponent->localTransform.Set(draggedComponent->globalTransform - globalTransform);
+                        draggedComponent->TransformUpdated();
+                    }
+                }
+            }
+            
+            ImGui::EndDragDropTarget();
+        }
+        
+    }
     
-    if (isExpanded) 
+    if (isExpanded && !children.empty()) 
     {
         for (uint32_t child : children)
         {
@@ -96,8 +145,6 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
         }
         ImGui::TreePop();
     }
-    
-    ImGui::Unindent( 8 );
 }
 
 void Component::ParentGlobalTransformUpdated(const Transform &parentGlobalTransform)

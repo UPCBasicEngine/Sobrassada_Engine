@@ -20,6 +20,7 @@ public:
 
     virtual bool AddChildComponent(const uint32_t componentUUID);
     virtual bool RemoveChildComponent(const uint32_t componentUUID);
+    virtual bool DeleteChildComponent(const uint32_t componentUUID);
     
     virtual void RenderEditorInspector();
     virtual void RenderEditorComponentTree(const uint32_t selectedComponentUUID);
@@ -30,6 +31,8 @@ public:
 
     uint32_t GetUUIDParent() const { return uuidParent; }
 
+    void SetUUIDParent(uint32_t newUUIDParent) { uuidParent = newUUIDParent; }
+
     const Transform& GetGlobalTransform() const { return globalTransform; }
     const Transform& GetLocalTransform() const { return localTransform; }
 
@@ -38,8 +41,8 @@ protected:
     virtual void TransformUpdated();
     
     const uint32_t uuid;
-    const uint32_t uuidParent;
     const uint32_t uuidRoot;
+    uint32_t uuidParent;
     std::vector<uint32_t> children;
 
     const char* name;

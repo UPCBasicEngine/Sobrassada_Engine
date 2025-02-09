@@ -24,9 +24,9 @@ bool RootComponent::AddChildComponent(const uint32_t componentUUID)
     return Component::AddChildComponent(componentUUID);
 }
 
-bool RootComponent::RemoveChildComponent(const uint32_t componentUUID)
+bool RootComponent::DeleteChildComponent(const uint32_t componentUUID)
 {
-    return Component::RemoveChildComponent(componentUUID);
+    return Component::DeleteChildComponent(componentUUID);
 }
 
 void RootComponent::RenderComponentEditor()
@@ -71,8 +71,6 @@ void RootComponent::RenderComponentEditor()
         ImGui::EndPopup();
     }
 
-    ImGui::ShowDemoWindow();
-
     if (selectedUUID != uuid)
     {
         ImGui::SameLine();
@@ -83,7 +81,7 @@ void RootComponent::RenderComponentEditor()
                 Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUUIDParent()];
                 if (selectedParentComponent != nullptr)
                 {
-                    selectedParentComponent->RemoveChildComponent(selectedUUID);
+                    selectedParentComponent->DeleteChildComponent(selectedUUID);
                     selectedUUID = uuid;
                     selectedComponent = nullptr;
                 }
@@ -91,8 +89,9 @@ void RootComponent::RenderComponentEditor()
         }
     }
     
-    
     RenderEditorComponentTree(selectedUUID);
+
+    ImGui::ShowDemoWindow();
     
     ImGui::Spacing();
 
@@ -112,11 +111,17 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     {
         base_flags |= ImGuiTreeNodeFlags_Selected;
     }
-    const bool isExpanded = ImGui::TreeNodeExV((void*) uuid, base_flags, name, nullptr);
+    if (children.empty())
+    {
+        base_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    }
+    ImGui::PushID(uuid);
+    const bool isExpanded = ImGui::TreeNodeEx(name, base_flags);
+    ImGui::PopID();
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         SetSelectedComponent(uuid);
     
-    if (isExpanded) 
+    if (isExpanded && !children.empty()) 
     {
         for (uint32_t child : children)
         {
