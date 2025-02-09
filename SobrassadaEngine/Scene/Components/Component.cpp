@@ -99,6 +99,27 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
         }
     }
 
+    HandleDragNDrop();
+    
+    if (isExpanded && !children.empty()) 
+    {
+        for (uint32_t child : children)
+        {
+            Component* childComponent = App->GetSceneModule()->gameComponents[child];
+
+            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedComponentUUID);
+        }
+        ImGui::TreePop();
+    }
+}
+
+void Component::ParentGlobalTransformUpdated(const Transform &parentGlobalTransform)
+{
+    globalTransform = parentGlobalTransform + localTransform;
+    TransformUpdated();
+}
+
+void Component::HandleDragNDrop(){
     if (ImGui::BeginDragDropSource())
     {
         GLOG("Starting component drag n drop for uuid : %d", uuid)
@@ -134,23 +155,6 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
         }
         
     }
-    
-    if (isExpanded && !children.empty()) 
-    {
-        for (uint32_t child : children)
-        {
-            Component* childComponent = App->GetSceneModule()->gameComponents[child];
-
-            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedComponentUUID);
-        }
-        ImGui::TreePop();
-    }
-}
-
-void Component::ParentGlobalTransformUpdated(const Transform &parentGlobalTransform)
-{
-    globalTransform = parentGlobalTransform + localTransform;
-    TransformUpdated();
 }
 
 void Component::TransformUpdated(){

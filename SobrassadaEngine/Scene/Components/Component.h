@@ -27,6 +27,8 @@ public:
 
     virtual void ParentGlobalTransformUpdated(const Transform& parentGlobalTransform);
 
+    void HandleDragNDrop();
+
     uint32_t GetUUID() const { return uuid; }
 
     uint32_t GetUUIDParent() const { return uuidParent; }

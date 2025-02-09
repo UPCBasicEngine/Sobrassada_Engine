@@ -120,6 +120,8 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     ImGui::PopID();
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         SetSelectedComponent(uuid);
+
+    HandleDragNDrop();
     
     if (isExpanded && !children.empty()) 
     {
