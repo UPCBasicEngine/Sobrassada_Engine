@@ -215,6 +215,9 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
 
 void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
 {
+    static uint32_t renamingGameObjectUUID = 0;
+    static char *newNameBuffer = nullptr;
+
     if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str()))
     {
         if (ImGui::MenuItem("New GameObject"))
@@ -233,8 +236,49 @@ void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
             RemoveGameObjectHierarchy(gameObjectUUID);
 
         
+        /*if (ImGui::MenuItem("Rename"))
+        {
+            renamingGameObjectUUID = gameObjectUUID;
+            GameObject *gameObject  = GetGameObjectByUUID(gameObjectUUID);
+
+            if (!newNameBuffer)
+            {
+                newNameBuffer = new char[128];
+                strncpy_s(newNameBuffer, 128, gameObject->GetName().c_str(), _TRUNCATE);
+            }
+        }*/
+
+        if (gameObjectUUID != gameObjectRootUUID && ImGui::MenuItem("Clear Parent"))
+        {
+            UpdateGameObjectHierarchy(gameObjectUUID, gameObjectRootUUID);
+        }
 
         ImGui::EndPopup();
+
+        //Renaming Mode
+        /*if (renamingGameObjectUUID == gameObjectUUID)
+        {
+            ImGui::SetNextItemWidth(200.0f);
+            if (ImGui::InputText("Rename GameObject", newNameBuffer, 128, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                GameObject *gameObject = GetGameObjectByUUID(gameObjectUUID);
+                if (gameObject)
+                {
+                    gameObject->SetName(newNameBuffer);
+                }
+
+                renamingGameObjectUUID = 0;
+                delete[] newNameBuffer;
+                newNameBuffer = nullptr;
+            }
+
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsItemHovered())
+            {
+                renamingGameObjectUUID = 0;
+                delete[] newNameBuffer;
+                newNameBuffer = nullptr;
+            }
+        }*/
     }
 }
 
