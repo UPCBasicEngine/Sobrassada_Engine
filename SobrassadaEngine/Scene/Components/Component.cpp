@@ -69,12 +69,16 @@ bool Component::DeleteChildComponent(const uint32_t componentUUID)
 
 void Component::RenderEditorInspector()
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+    ImGui::BeginChild("ComponentInspectorWrapper", ImVec2(0, 200), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY);
     ImGui::Text(name);
     ImGui::Separator();
     if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
     {
         TransformUpdated();
     }
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
 }
 
 void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
@@ -86,11 +90,9 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     }
     if (children.empty())
     {
-        base_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        base_flags |= ImGuiTreeNodeFlags_Leaf;
     }
-    ImGui::PushID(uuid);
-    const bool isExpanded = ImGui::TreeNodeEx(name, base_flags);
-    ImGui::PopID();
+    const bool isExpanded = ImGui::TreeNodeEx(std::to_string(uuid).c_str(), base_flags);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
         GameObject* selectedGameObject = App->GetSceneModule()->GetSeletedGameObject();
@@ -107,7 +109,7 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 
     HandleDragNDrop();
     
-    if (isExpanded && !children.empty()) 
+    if (isExpanded) 
     {
         for (uint32_t child : children)
         {
@@ -133,6 +135,7 @@ void Component::HandleDragNDrop(){
         ImGui::Text(name);
         ImGui::EndDragDropSource();
     }
+    
 
     if (ImGui::BeginDragDropTarget())
     {
@@ -140,7 +143,7 @@ void Component::HandleDragNDrop(){
         {
             const uint32_t draggedUUID = *(const uint32_t*)payload->Data;
             GLOG("Receiving component drag n drop for uuid : %d", draggedUUID)
-            if (draggedUUID != uuid && draggedUUID != uuidParent)
+            if (draggedUUID != uuid)
             {
                 Component* draggedComponent = App->GetSceneModule()->gameComponents[draggedUUID];
                 if (draggedComponent != nullptr)
@@ -156,10 +159,8 @@ void Component::HandleDragNDrop(){
                     }
                 }
             }
-            
-            ImGui::EndDragDropTarget();
         }
-        
+        ImGui::EndDragDropTarget();
     }
 }
 

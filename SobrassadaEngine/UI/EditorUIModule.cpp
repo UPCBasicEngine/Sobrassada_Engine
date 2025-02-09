@@ -134,6 +134,7 @@ void EditorUIModule::MainMenu()
         if (ImGui::BeginMenu("General"))
         {
             if (ImGui::MenuItem("Hierarchy")) hierarchyMenu = !hierarchyMenu;
+            if (ImGui::MenuItem("Inspector")) inspectorMenu = !inspectorMenu;
             
             ImGui::EndMenu();
         }

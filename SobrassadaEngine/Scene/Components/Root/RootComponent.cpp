@@ -33,7 +33,7 @@ void RootComponent::RenderComponentEditor()
 {
     Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUUID];
     
-    ImGui::Begin("Inspector");    // TODO Add bool parameter at the end to then unselect the component (Add isSelected property to component?)
+    ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu);    
 
     //ImGui::InputText(name, test, 10, ImGuiInputTextFlags_None);
     ImGui::Text(name);
@@ -103,7 +103,11 @@ void RootComponent::RenderComponentEditor()
 void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
     ImGui::SeparatorText("Component hierarchy");
-    
+
+    ImGui::ShowDemoWindow();
+   
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+    ImGui::BeginChild("ComponentHierarchyWrapper", ImVec2(0, 200), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY);
     ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
     if (selectedComponentUUID == uuid)
     {
@@ -111,17 +115,15 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     }
     if (children.empty())
     {
-        base_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        base_flags |= ImGuiTreeNodeFlags_Leaf;
     }
-    ImGui::PushID(uuid);
-    const bool isExpanded = ImGui::TreeNodeEx(name, base_flags);
-    ImGui::PopID();
+    const bool isExpanded = ImGui::TreeNodeEx(std::to_string(uuid).c_str(), base_flags);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         SetSelectedComponent(uuid);
 
     HandleDragNDrop();
     
-    if (isExpanded && !children.empty()) 
+    if (isExpanded) 
     {
         for (uint32_t child : children)
         {
@@ -131,6 +133,8 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
         }
         ImGui::TreePop();
     }
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
 }
 
 void RootComponent::RenderEditorInspector()

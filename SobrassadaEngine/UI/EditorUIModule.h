@@ -24,8 +24,8 @@ class EditorUIModule : public Module
     bool RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
 
 public:
-    bool hierarchyMenu      = false;
-    bool inspectorMenu      = false; // TODO Implement fully
+    bool hierarchyMenu      = true;
+    bool inspectorMenu      = true; 
 
   private:
     void AddFramePlotData(float deltaTime);

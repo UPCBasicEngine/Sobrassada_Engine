@@ -70,5 +70,8 @@ void GameObject::RenderEditor()
     {
         App->GetSceneModule()->RenderHierarchyUI(App->GetEditorUIModule()->hierarchyMenu);
     }
-    if (rootComponent)  rootComponent->RenderComponentEditor();
+    if (App->GetEditorUIModule()->inspectorMenu)
+    {
+        if (rootComponent)  rootComponent->RenderComponentEditor();
+    }
 }
