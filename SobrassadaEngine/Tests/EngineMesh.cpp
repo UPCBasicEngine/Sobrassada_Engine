@@ -32,6 +32,7 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 	const auto& positionIterator = inPrimitive.attributes.find("POSITION");
 	const auto& textureIterator = inPrimitive.attributes.find("TEXCOORD_0");
     const auto &normalIterator   = inPrimitive.attributes.find("NORMAL");
+    const auto &tangentIterator  = inPrimitive.attributes.find("TANGENT");
 	
 	if (positionIterator != inPrimitive.attributes.end()) {
 		const tinygltf::Accessor& positionAccessor = inModel.accessors[positionIterator->second];
@@ -43,16 +44,21 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 		textureCoordCount = (int)textureAccessor.count;
 	}
 
-	
 	if (normalIterator != inPrimitive.attributes.end())
     {
 		const tinygltf::Accessor &normalAccessor = inModel.accessors[normalIterator->second];
         normalCoordCount = (int)normalAccessor.count;
 	}
 
-	if ((vertexCount + textureCoordCount + normalCoordCount) > 0)
+	if (tangentIterator != inPrimitive.attributes.end())
+    {
+		const tinygltf::Accessor &tangentAccesor = inModel.accessors[tangentIterator->second];
+		tangentCoordCount = (int)tangentAccesor.count;
+    }
+
+	if ((vertexCount + textureCoordCount + normalCoordCount + tangentCoordCount) > 0)
 	{
-		unsigned int bufferSize = (sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount) + (sizeof(float) * 3 * normalCoordCount);
+		unsigned int bufferSize = (sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount) + (sizeof(float) * 3 * normalCoordCount) + (sizeof(float) * 4 * tangentCoordCount);
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
@@ -142,7 +148,38 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 		}
 
         glUnmapBuffer(GL_ARRAY_BUFFER);
-    }	
+    }
+
+	if (tangentCoordCount > 0)
+    {
+        const tinygltf::Accessor &tangentAccessor = inModel.accessors[tangentIterator->second];
+
+        SDL_assert(tangentAccessor.type == TINYGLTF_TYPE_VEC4);
+        SDL_assert(tangentAccessor.componentType == GL_FLOAT);
+
+        const tinygltf::BufferView &tangentBufferView = inModel.bufferViews[tangentAccessor.bufferView];
+        const tinygltf::Buffer &tangentBuffer         = inModel.buffers[tangentBufferView.buffer];
+
+        const unsigned char *bufferStart =
+            &(tangentBuffer.data[tangentAccessor.byteOffset + tangentBufferView.byteOffset]);
+
+        float4 *ptr = reinterpret_cast<float4 *>(glMapBufferRange(
+            GL_ARRAY_BUFFER, sizeof(float) * 3 * vertexCount + sizeof(float) * 2 * textureCoordCount +
+                sizeof(float) * 3 * normalCoordCount,
+            sizeof(float) * 4 * tangentCoordCount, GL_MAP_WRITE_BIT
+        ));
+
+        for (size_t i = 0; i < tangentAccessor.count; ++i)
+        {
+            ptr[i]       = *reinterpret_cast<const float4 *>(bufferStart);
+
+            // bufferView.byteStride == 0 -> Only positions inside buffer, which then the stride becomes
+            // space between vertices -> sizeof(float) * 4.
+            bufferStart += tangentBufferView.byteStride == 0 ? sizeof(float) * 4 : tangentBufferView.byteStride;
+        }
+
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+    }
 }
 
 void EngineMesh::LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive)
@@ -204,6 +241,17 @@ void EngineMesh::CreateVAO()
 		glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(float) * 3 * vertexCount));
 	}
+
+	// SETTING TANGENT COORDINATES IF LOADED
+    if (tangentCoordCount > 0)
+    {
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(
+            3, 4, GL_FLOAT, GL_FALSE, 0,
+            (void *)(sizeof(float) * 3 * vertexCount + sizeof(float) * 2 * textureCoordCount +
+                     sizeof(float) * 3 * normalCoordCount)
+        );
+    }
 
 	glBindVertexArray(0);
 }
