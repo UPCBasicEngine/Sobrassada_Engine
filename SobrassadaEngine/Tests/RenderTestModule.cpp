@@ -107,28 +107,7 @@ update_status RenderTestModule::Render(float deltaTime)
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	OBB currentModelObb = currentLoadedModel->GetOBBModel();
-    float3 corners[8];
-    currentModelObb.GetCornerPoints(corners);
-
-    bool insideFrustum = false;
-
-	for (int i = 0; i < 8; ++i)
-    {
-        float4 cornerLocal(corners[i], 1.0f);
-        float4 cornerGlobal = cornerLocal;
-
-        float4 transformedCorner = proj * view * cornerGlobal;
-
-
-        if (transformedCorner.x / transformedCorner.w >= -1.0f && transformedCorner.x / transformedCorner.w <= 1.0f &&
-            transformedCorner.y / transformedCorner.w >= -1.0f && transformedCorner.y / transformedCorner.w <= 1.0f &&
-            transformedCorner.z / transformedCorner.w >= -1.0f && transformedCorner.z / transformedCorner.w <= 1.0f)
-        {
-            insideFrustum = true;
-            break;
-        }
-    }
+    bool insideFrustum = CheckFrustum(proj, view);
 
 	if (insideFrustum)
     {
@@ -177,4 +156,29 @@ void RenderTestModule::RenderEditorViewport()
 	}
 	ImGui::EndChild();
 	ImGui::End();
+}
+
+bool RenderTestModule::CheckFrustum(const math::float4x4 &proj, const math::float4x4 &view)
+{
+    OBB currentModelObb = currentLoadedModel->GetOBBModel();
+    float3 corners[8];
+    currentModelObb.GetCornerPoints(corners);
+
+    for (int i = 0; i < 8; ++i)
+    {
+        float4 cornerLocal(corners[i], 1.0f);
+        float4 cornerGlobal      = cornerLocal;
+
+        float4 transformedCorner = proj * view * cornerGlobal;
+
+        if (transformedCorner.x / transformedCorner.w >= -1.0f && transformedCorner.x / transformedCorner.w <= 1.0f &&
+            transformedCorner.y / transformedCorner.w >= -1.0f && transformedCorner.y / transformedCorner.w <= 1.0f &&
+            transformedCorner.z / transformedCorner.w >= -1.0f && transformedCorner.z / transformedCorner.w <= 1.0f)
+        {
+            return true;
+            break;
+        }
+    }
+
+	return false;
 }

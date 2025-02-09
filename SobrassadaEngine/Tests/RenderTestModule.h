@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Module.h"
+#include "MathGeoLib.h"
 
 class EngineModel;
 
@@ -14,6 +15,7 @@ public:
 	update_status PreUpdate(float deltaTime) override;
 	update_status Render(float deltaTime) override;
 	bool ShutDown() override;
+    bool CheckFrustum(const math::float4x4 &proj, const math::float4x4 &view);
 
 
 private:
