@@ -172,9 +172,15 @@
     <ClCompile Include="Utils\LightsConfig.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Components\LightComponent.cpp" />
-    <ClCompile Include="Scene\Components\PointLight.cpp" />
-    <ClCompile Include="Scene\Components\SpotLight.cpp" />
+    <ClCompile Include="Scene\Components\PointLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\SpotLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\LightComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -292,9 +298,15 @@
     <ClInclude Include="Utils\LightsConfig.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\LightComponent.h" />
-    <ClInclude Include="Scene\Components\PointLight.h" />
-    <ClInclude Include="Scene\Components\SpotLight.h" />
+    <ClInclude Include="Scene\Components\SpotLight.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\PointLight.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\LightComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

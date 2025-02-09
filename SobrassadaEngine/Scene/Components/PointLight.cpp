@@ -12,18 +12,30 @@ PointLight::PointLight() : LightComponent()
     renderMode = 0;
 }
 
+PointLight::PointLight(const float3 &position, const float range) : LightComponent()
+{
+    this->position = position;
+    this->range    = range;
+    renderMode     = 0;
+}
+
 PointLight::~PointLight() {}
 
-void PointLight::EditorParams()
-{
-    ImGui::Begin("Point light");
-
-    ImGui::Text("Point light parameters");
+void PointLight::EditorParams(int index, bool isFirst, bool isLast)
+{    
+    if (isFirst)
+    {
+        ImGui::Begin("Point Lights");
+    }
+    ImGui::PushID(index);
+        
+    //std::string title = "Point light" + std::to_string(index);
+    ImGui::Text("Point light %d", index);
 
     ImGui::SliderFloat3("Position", &position.x, -10.0f, 10.0f);
     ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
 
-    ImGui::SliderFloat("Intensity", &intensity, 0.0f, 10.0f);
+    ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
     ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
 
     ImGui::Text("Gizmos mode");
@@ -31,7 +43,11 @@ void PointLight::EditorParams()
     ImGui::SameLine();
     if (ImGui::RadioButton("Sphere", &renderMode, 1));
 
-    ImGui::End();
+    ImGui::Separator();
+
+    ImGui::PopID();
+
+    if (isLast) ImGui::End();
 }
 
 void PointLight::DrawGizmos() const

@@ -1,14 +1,27 @@
 #pragma once
 
 #include "LightComponent.h"
+#include "Math/float4.h"
+
+namespace Lights
+{
+    struct PointLightData
+    {
+        float4 position;
+        float4 color;
+
+        PointLightData(const float4 &pos, const float4 &color) : position(pos), color(color) {}
+    };
+} // namespace Lights
 
 class PointLight : public LightComponent
 {
   public:
     PointLight();
+    PointLight(const float3 &position, const float range);
     ~PointLight();
 
-    void EditorParams();
+    void EditorParams(int index, bool isFirst, bool isLast);
     void DrawGizmos() const;
 
     float3 GetPosition() const { return position; }
@@ -21,5 +34,4 @@ class PointLight : public LightComponent
     float3 position;
     float range;
     int renderMode;
-
 };

@@ -44,21 +44,19 @@ void SpotLight::DrawGizmos() const
 {
     const float innerRads = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
     const float outerRads = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
-    
+    const float3 directionNorm = direction.Normalized();
+
     std::vector<float3> innerDirections;
-    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(direction.Normalized())));
-    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(direction.Normalized())));
-    innerDirections.push_back(float3(Quat::RotateZ(innerRads).Transform(direction.Normalized())));
-    innerDirections.push_back(float3(Quat::RotateZ(-innerRads).Transform(direction.Normalized())));
+    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(directionNorm)));
+    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(directionNorm)));
+    
 
     std::vector<float3> outerDirections;
-    outerDirections.push_back(float3(Quat::RotateY(PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
-    outerDirections.push_back(float3(Quat::RotateY(3 * PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
-    outerDirections.push_back(float3(Quat::RotateY(5 * PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
-    outerDirections.push_back(float3(Quat::RotateY(7 * PI / 4).Transform(Quat::RotateX(outerRads).Transform(direction.Normalized()))));
+    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(directionNorm)));
+    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(directionNorm)));
 
     DebugDrawModule *debug = App->GetDebugDreawModule();
-    debug->DrawLine(position, direction.Normalized(), range, float3(1, 1, 1));
+    debug->DrawLine(position, directionNorm, range, float3(1, 1, 1));
 
     for (const float3 &dir : innerDirections)
     {
@@ -70,9 +68,9 @@ void SpotLight::DrawGizmos() const
         debug->DrawLine(position, dir, range / cos(outerRads), float3(1, 1, 1));
     }
 
-    float3 center = position + (direction * range);
-    float inner   = range * tan(innerRads);
-    float outere  = range * tan(outerRads);
-    debug->DrawCircle(center, -direction.Normalized(), float3(1, 1, 1), inner);
-    debug->DrawCircle(center, -direction.Normalized(), float3(1, 1, 1), outere);
+    float3 center = position + (directionNorm * range);
+    float innerCathetus   = range * tan(innerRads);
+    float outerCathetus  = range * tan(outerRads);
+    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), innerCathetus);
+    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), outerCathetus);
 }

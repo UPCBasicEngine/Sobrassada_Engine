@@ -25,8 +25,10 @@ RenderTestModule::RenderTestModule()
 {
     currentLoadedModel = new EngineModel();
     lightsConfig       = new LightsConfig();
-    pointLight         = new PointLight();
-    spotLight          = new SpotLight();
+
+    pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
+    pointLights.push_back(PointLight(float3(2, 0, 0), 1));
+    spotLights.push_back(SpotLight());
 }
 
 RenderTestModule::~RenderTestModule() {}
@@ -118,27 +120,83 @@ update_status RenderTestModule::Render(float deltaTime)
     materials = currentLoadedModel->GetMaterials();
     materials.at(0)->OnEditorUpdate();
 
-    pointLight->EditorParams();
-    spotLight->EditorParams();
+    // BEGIN LIGHTS
+    std::vector<Lights::PointLightData> lights;
+
+    for (int i = 0; i < pointLights.size(); ++i)
+    {
+        // ImGui Menus
+        if (i == 0) pointLights[i].EditorParams(i, true, false);
+        else if (i = pointLights.size() - 1) pointLights[i].EditorParams(i, false, true);
+        else pointLights[i].EditorParams(i, false, false);
+
+        // Light gizmos
+        pointLights[i].DrawGizmos();
+
+        // Fill struct data
+        float4 position = float4(pointLights[i].GetPosition(), pointLights[i].GetRange());
+        float4 color    = float4(pointLights[i].GetColor(), pointLights[i].GetIntensity());
+        lights.push_back(Lights::PointLightData(position, color));
+    }
+
+    unsigned int id;
+    glGenBuffers(1, &id);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
+
+    // struct ShaderData
+    //{
+    //     float4 count;
+    //     std::vector<Lights::PointLightData> points;
+    // };
+    //
+    // ShaderData data;
+    // data.count = float4(lights.size(), 0, 0, 0);
+    // data.points = lights;
+
+    // GLOG("Data size: %d", sizeof(Lights::PointLightData) * lights.size() + 32);
+
+    int bufferSize = sizeof(Lights::PointLightData) * lights.size() + 16;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+
+    int count = lights.size();
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 16, sizeof(Lights::PointLightData), &lights[0]);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 48, sizeof(Lights::PointLightData), &lights[1]);
+
+    //float4 *ssboPtr  = reinterpret_cast<float4*>(glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY));
+    //int i            = 0;
+    //ssboPtr[i].x     = lights.size();
+    //i               += 16;
+    //ssboPtr[i]       = lights[0].position;
+    //i               += 16;
+    //ssboPtr[i]        = lights[0].color;
+    //i               += 16;
+    //ssboPtr[i]       = lights[1].position;
+    //i               += 16;
+    //ssboPtr[i]        = lights[1].color;
+    //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, id);
+
+    spotLights[0].EditorParams();
 
     // Test point light
-    glUniform3fv(3, 1, &pointLight->GetColor()[0]);
-    glUniform3fv(4, 1, &pointLight->GetPosition()[0]);
-    glUniform1f(5, pointLight->GetIntensity());
-    glUniform1f(6, pointLight->GetRange());
-
-    pointLight->DrawGizmos();
+    glUniform3fv(3, 1, &pointLights[0].GetColor()[0]);
+    glUniform3fv(4, 1, &pointLights[0].GetPosition()[0]);
+    glUniform1f(5, pointLights[0].GetIntensity());
+    glUniform1f(6, pointLights[0].GetRange());
 
     // Test spotlight
-    glUniform3fv(7, 1, &spotLight->GetColor()[0]);
-    glUniform3fv(8, 1, &spotLight->GetPosition()[0]);
-    glUniform3fv(9, 1, &spotLight->GetDirection()[0]);
-    glUniform1f(10, spotLight->GetIntensity());
-    glUniform1f(11, spotLight->GetRange());
-    glUniform1f(12, spotLight->GetInnerAngle());
-    glUniform1f(13, spotLight->GetOuterAngle());
+    glUniform3fv(7, 1, &spotLights[0].GetColor()[0]);
+    glUniform3fv(8, 1, &spotLights[0].GetPosition()[0]);
+    glUniform3fv(9, 1, &spotLights[0].GetDirection()[0]);
+    glUniform1f(10, spotLights[0].GetIntensity());
+    glUniform1f(11, spotLights[0].GetRange());
+    glUniform1f(12, spotLights[0].GetInnerAngle());
+    glUniform1f(13, spotLights[0].GetOuterAngle());
 
-    spotLight->DrawGizmos();
+    spotLights[0].DrawGizmos();
+    // END LIGHTS
 
     // glActiveTexture(GL_TEXTURE0);
     // glBindTexture(GL_TEXTURE_2D, baboonTexture);
@@ -169,8 +227,6 @@ bool RenderTestModule::ShutDown()
 
     delete currentLoadedModel;
     delete lightsConfig;
-    delete pointLight;
-    delete spotLight;
 
     return true;
 }
