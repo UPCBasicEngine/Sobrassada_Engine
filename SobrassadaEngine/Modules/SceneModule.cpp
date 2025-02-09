@@ -28,8 +28,11 @@ bool SceneModule::Init()
     GLOG("Creating SceneModule renderer context");
 
     GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
+    
     gameObjectRootUUID = LCG().IntFast();
+    selectedGameObjectUUID      = gameObjectRootUUID;
 
+    //TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectRootUUID, sceneGameObject});
 
     //DEMO
@@ -38,6 +41,7 @@ bool SceneModule::Init()
 
     sceneGameObject->AddGameObject(gameObjectChildRootUUID);
 
+    // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
     rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), -1, -1, Transform())); // TODO Add the gameObject UUID as parent?
@@ -115,8 +119,6 @@ void SceneModule::CheckObjectsToRender()
 
 void SceneModule::RenderHierarchyUI(bool &hierarchyMenu) 
 {
-    static uint32_t selectedGameObjectUUID = gameObjectRootUUID;
-
     ImGui::Begin("Hierarchy", &hierarchyMenu);
 
     if (ImGui::Button("Add GameObject"))
@@ -124,42 +126,162 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
         uint32_t newUUID          = LCG().IntFast();
         GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object" + std::to_string(newUUID));
         
-        gameObjectsContainer[selectedGameObjectUUID]->AddGameObject(newUUID);
+        GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
+        //TODO: change when filesystem defined
         gameObjectsContainer.insert({newUUID, newGameObject});
     }
-    
+
     ImGui::SameLine();
 
-    if(ImGui::Button("Delete GameObject"));
-    //Make basic implementation and remember to call the function
-    //instance of moduleScene is required
+    if (ImGui::Button("Delete GameObject") && selectedGameObjectUUID != gameObjectRootUUID)
+    {
+        RemoveGameObjectHierarchy(selectedGameObjectUUID);
+        //selectedGameObjectUUID = gameObjectRootUUID;
+    }
 
-    RenderGameObjectHierarchy(gameObjectRootUUID, selectedGameObjectUUID);
+    RenderGameObjectHierarchy(gameObjectRootUUID);
 
     ImGui::End();
 }
 
-void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t& selectedGameObjectUUID)
+void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
 {
+    // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID)) return;
 
-    GameObject *gameObject = gameObjectsContainer[gameObjectUUID];
+    GameObject *gameObject = GetGameObjectByUUID(gameObjectUUID);
+    
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-    if (ImGui::TreeNode(gameObject->GetName().c_str()))
+    bool hasChildren = !gameObject->GetChildren().empty();
+
+    if (!hasChildren)
+        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+    if (selectedGameObjectUUID == gameObjectUUID) 
+        flags |= ImGuiTreeNodeFlags_Selected;
+
+    bool nodeOpen = ImGui::TreeNodeEx(gameObject->GetName().c_str(), flags);
+
+    HandleNodeClick(gameObjectUUID);
+    RenderContextMenu(gameObjectUUID);
+
+    if (nodeOpen && hasChildren)
     {
-        if (ImGui::IsItemClicked()) selectedGameObjectUUID = gameObjectUUID;
-
         for (uint32_t childUUID : gameObject->GetChildren())
         {
-            if (childUUID != gameObjectUUID) RenderGameObjectHierarchy(childUUID, selectedGameObjectUUID);
+            if (childUUID != gameObjectUUID) 
+                RenderGameObjectHierarchy(childUUID);
         }
 
         ImGui::TreePop();
     }
-    else
+}
+
+void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
+{
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
     {
-        if (ImGui::IsItemClicked()) selectedGameObjectUUID = gameObjectUUID;
+        selectedGameObjectUUID = gameObjectUUID;
     }
+
+    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+        selectedGameObjectUUID = gameObjectUUID;
+        ImGui::OpenPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str());
+    }
+
+    // Drag and Drop functionality
+    if (ImGui::BeginDragDropSource())
+    {
+        ImGui::SetDragDropPayload("DRAG_DROP_GAMEOBJECT", &gameObjectUUID, sizeof(uint32_t));
+        ImGui::Text("Dragging %s", GetGameObjectByUUID(gameObjectUUID)->GetName().c_str());
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
+        {
+            uint32_t draggedUUID = *reinterpret_cast<const uint32_t *>(payload->Data);
+
+            if (draggedUUID != gameObjectUUID) UpdateGameObjectHierarchy(draggedUUID, gameObjectUUID);
+        }
+
+        ImGui::EndDragDropTarget();
+    }
+}
+
+void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
+{
+    if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str()))
+    {
+        if (ImGui::MenuItem("New GameObject"))
+        {
+            uint32_t newUUID = LCG().IntFast();
+            GameObject *newGameObject =
+                new GameObject(selectedGameObjectUUID, "new Game Object" + std::to_string(newUUID));
+
+            GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
+
+            // TODO: change when filesystem defined
+            gameObjectsContainer.insert({newUUID, newGameObject});
+        }
+        
+        if (gameObjectUUID != gameObjectRootUUID && ImGui::MenuItem("Delete")) 
+            RemoveGameObjectHierarchy(gameObjectUUID);
+
+        
+
+        ImGui::EndPopup();
+    }
+}
+
+void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
+{
+    // TODO: Change when filesystem defined
+    if (!gameObjectsContainer.count(gameObjectUUID) || gameObjectUUID == gameObjectRootUUID) return;
+
+    GameObject *gameObject = GetGameObjectByUUID(gameObjectUUID);
+
+    for (uint32_t childUUID : gameObject->GetChildren())
+    {
+        RemoveGameObjectHierarchy(childUUID);
+    }
+
+    uint32_t parentUUID = gameObject->GetParent();
+
+    //TODO: change when filesystem defined
+    if (gameObjectsContainer.count(parentUUID))
+    {
+        GameObject *parentGameObject = GetGameObjectByUUID(parentUUID);
+        parentGameObject->RemoveGameObject(gameObjectUUID);
+        selectedGameObjectUUID = parentUUID;
+    }
+
+    // TODO: change when filesystem defined
+    gameObjectsContainer.erase(gameObjectUUID);
+
+    delete gameObject;
+}
+
+void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID)
+{
+    GameObject *sourceGameObject = GetGameObjectByUUID(sourceUUID);
+    GameObject *targetGameObject = GetGameObjectByUUID(targetUUID);
+
+    if (!sourceGameObject || !targetGameObject) return;
+
+    uint32_t oldParentUUID = sourceGameObject->GetParent();
+    sourceGameObject->SetParent(targetUUID);
+
+    if (gameObjectsContainer.count(oldParentUUID))
+    {
+        GameObject *oldParentGameObject = GetGameObjectByUUID(oldParentUUID);
+        oldParentGameObject->RemoveGameObject(sourceUUID);
+    }
+
+    targetGameObject->AddGameObject(sourceUUID);
 
 }

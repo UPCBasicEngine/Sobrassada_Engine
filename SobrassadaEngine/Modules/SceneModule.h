@@ -37,7 +37,17 @@ public:
 	void CheckObjectsToRender();
 	
 	void RenderHierarchyUI(bool &hierarchyMenu);
-    void RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t &selectedGameObjectUUID);
+    void RenderGameObjectHierarchy(uint32_t gameObjectUUID);
+
+	void HandleNodeClick(uint32_t gameObjectUUID);
+    void RenderContextMenu(uint32_t gameObjectUUID);
+
+	void RemoveGameObjectHierarchy(uint32_t gameObjectUUID);
+    void UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID);
+
+	//TODO: Change when filesystem defined
+	inline GameObject *GetGameObjectByUUID(uint32_t gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
+
 
     std::map<uint32_t, Component*> gameComponents;
     std::map<uint32_t, EngineMesh*> MOCKUP_loadedMeshes;
@@ -53,10 +63,10 @@ private:
 	uint32_t gameObjectRootUUID;
         RootComponent *rootComponent;
     
+	uint32_t selectedGameObjectUUID;
 
 	std::unordered_map<uint32_t, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
-	
-	/*bool hierarchyMenu = false;*/
+    
 	//pawnClassType;
 	//updatedGameObjects;
 	//sceneSpatialDataStruct;
