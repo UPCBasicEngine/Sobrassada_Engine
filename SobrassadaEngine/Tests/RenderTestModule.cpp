@@ -90,6 +90,7 @@ update_status RenderTestModule::Render(float deltaTime)
 
 	proj = App->GetCameraModule()->GetProjectionMatrix();
 	view = App->GetCameraModule()->GetViewMatrix();
+	App->GetCameraModule()->UpdateUBO();
 	model = float4x4::FromTRS(
 		float3(2.0f, 0.0f, 0.0f),
 		float4x4::RotateZ(pi / 4.0f),
@@ -99,9 +100,9 @@ update_status RenderTestModule::Render(float deltaTime)
 	lightsConfig->RenderSkybox(proj, view);					
 
 	glUseProgram(program);
-	glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
-	glUniformMatrix4fv(1, 1, GL_TRUE, &view[0][0]);
-	glUniformMatrix4fv(2, 1, GL_TRUE, &model[0][0]);
+	//glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
+	//glUniformMatrix4fv(1, 1, GL_TRUE, &view[0][0]);
+	//glUniformMatrix4fv(2, 1, GL_TRUE, &model[0][0]);
 
 	// Sending triangle vertices
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -135,8 +136,8 @@ update_status RenderTestModule::Render(float deltaTime)
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	//glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
-	currentLoadedModel->Render(program, proj, view);
+	unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
+	currentLoadedModel->Render(program, cameraUBO);
 
 	int width  = 0;
     int height = 0;
@@ -162,8 +163,6 @@ bool RenderTestModule::ShutDown()
 
 	return true;
 }
-
-
 
 void RenderTestModule::RenderEditorViewport()
 {

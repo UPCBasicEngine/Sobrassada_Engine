@@ -21,7 +21,7 @@ public:
 	void Load(const char* modelPath);
 	void LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath);
 
-	void Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix);
+	void Render(int program, unsigned int cameraUBO);
 
 	float3 GetMaximumValues() const { return maxValues; };
 	float3 GetMinimumValues() const { return minValues; };

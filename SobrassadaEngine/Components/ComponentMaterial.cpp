@@ -29,7 +29,7 @@ void ComponentMaterial::OnEditorUpdate()
 
         if (hasSpecularTexture)
         {
-            ImGui:Text("Specular Texture");
+            ImGui::Text("Specular Texture");
             ImGui::Image((ImTextureID)(intptr_t)specularTexture.textureID, ImVec2(256, 256));
             if (ImGui::IsItemHovered())
             {
@@ -42,13 +42,7 @@ void ComponentMaterial::OnEditorUpdate()
         if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
     }
 
-    if (updated)
-    {
-        UpdateUBO();
-    }
-    
-
-
+    if (updated) UpdateUBO();
 }
 
 TextureInfo ComponentMaterial::GetTexture(const tinygltf::Model sourceModel, int textureIndex, const char* modelPath) {
@@ -183,24 +177,17 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
         }
     }
 
-   if (ubo == 0)
-    {
-        glGenBuffers(1, &ubo);
-    }
-
+    glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), &material, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
-    //TODO: Method to update materials
 
 
-void ComponentMaterial::RenderMaterial(int program) {
-    
-    UpdateUBO();
+void ComponentMaterial::RenderMaterial(int program) 
+{    
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-
-    
+ 
     if (hasDiffuseTexture)
     {
         glActiveTexture(GL_TEXTURE0);
@@ -213,28 +200,13 @@ void ComponentMaterial::RenderMaterial(int program) {
     }
 
     unsigned int blockIdx = glGetUniformBlockIndex(program, "Material");
-    if (blockIdx == GL_INVALID_INDEX)
-    {
-        GLOG("Error: No se encontró el Uniform Block 'Material' en el shader.")
-        return;
-    }
-    GLOG("SUCESS: Se encontro el Uniform Block 'Material' en el shader.")
-
-    glUniformBlockBinding(program, blockIdx, 2);
-
-   
-    glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo);
-
-  
-    if (!material.shininessInAlpha)
-    {
-        glUniform1f(glGetUniformLocation(program, "shininess"), material.shininess);
-    }
-    glUniform3fv(glGetUniformLocation(program, "diffColor"), 1, &material.diffColor[0]);
-    glUniform3fv(glGetUniformLocation(program, "specColor"), 1, &material.specColor[0]);
+    glUniformBlockBinding(program, blockIdx, 1);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void ComponentMaterial::FreeMaterials() {
+void ComponentMaterial::FreeMaterials() 
+{
     glDeleteTextures(1, &diffuseTexture.textureID);
 	glDeleteTextures(1, &specularTexture.textureID);
 	glDeleteBuffers(1, &ubo);
@@ -242,12 +214,7 @@ void ComponentMaterial::FreeMaterials() {
 
 void ComponentMaterial::UpdateUBO() 
 {
-   
-
-    if (ubo != 0)
-    {
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &material);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    }
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &material);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

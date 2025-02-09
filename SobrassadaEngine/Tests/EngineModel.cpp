@@ -69,7 +69,7 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
     }
 }
 
-void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix)
+void EngineModel::Render(int program, unsigned int cameraUBO)
 {
 	for (EngineMesh* currentMesh : meshes)
 	{
@@ -78,7 +78,7 @@ void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& view
 		{
             ComponentMaterial* material = &GetMaterial(indices[i]);
             //int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-            currentMesh->Render(program, projectionMatrix, viewMatrix, material);
+            currentMesh->Render(program, material, cameraUBO);
         }
 	}
 }

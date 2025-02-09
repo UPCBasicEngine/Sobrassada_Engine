@@ -8,15 +8,12 @@ out vec4 outColor;
 layout(binding=0) uniform sampler2D diffuseTexture;
 layout(binding=1) uniform sampler2D specularTexture;
 
-uniform vec3 diffFactor;
-uniform vec3 specFactor;
-
 uniform vec3 lightColor;
 uniform vec3 lightDir;
 uniform vec3 cameraPos;
 uniform vec3 ambientIntensity;
 
-layout(std140, binding = 2) uniform Material
+layout(std140, binding = 1) uniform Material
 {
     vec4 diffColor;
     vec4 specColor;
@@ -27,7 +24,6 @@ layout(std140, binding = 2) uniform Material
 void main()
 {
     vec3 texColor = pow(texture(diffuseTexture, uv0).rgb, vec3(2.2f));
-    float shinis = shininess;  
     vec4 specTexColor = texture(specularTexture, uv0);
     float alpha = specTexColor.a;
 
@@ -40,7 +36,10 @@ void main()
     float NL = dot(N, -L);
     if (NL > 0)
     {
-        float shininessValue = exp2(alpha * 7 + 1);  
+		float shininessValue;
+		if(shininessInAlpha) shininessValue = exp2(alpha * 7 + 1);
+		else shininessValue = shininess;
+
         float normalization = (shininessValue + 2.0) / (2.0 * 3.1415926535);
         vec3 V = normalize(cameraPos - pos);
         vec3 R = reflect(L, N);

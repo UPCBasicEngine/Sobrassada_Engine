@@ -213,12 +213,18 @@ void EngineMesh::SetBasicModelMatrix(float4x4& newModelMatrix)
 	basicModelMatrix = newModelMatrix;
 }
 
-void EngineMesh::Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix, ComponentMaterial* material)
+void EngineMesh::Render(int program, ComponentMaterial* material, unsigned int cameraUBO)
 {
 	glUseProgram(program);
 
-	glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
-	glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
+	glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+	unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	//glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
+	//glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
 	glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
 	material->RenderMaterial(program);

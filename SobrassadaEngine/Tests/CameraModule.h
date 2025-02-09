@@ -11,6 +11,12 @@ constexpr float maximumPositivePitch = 89.f * DEGTORAD;
 constexpr float maximumNegativePitch = -89.f * DEGTORAD;
 constexpr float cameraRotationAngle = 135.f * DEGTORAD;
 
+struct CameraMatrices
+{
+	float4x4 projectionMatrix;
+	float4x4 viewMatrix;
+};
+
 class CameraModule : public Module
 {
 public:
@@ -23,6 +29,8 @@ public:
 
 	const float4x4& GetProjectionMatrix() { return projectionMatrix; }
 	const float4x4& GetViewMatrix() { return viewMatrix; }
+	const unsigned int GetUbo() { return ubo; }
+	void UpdateUBO();
 
 	void SetAspectRatio(float newAspectRatio);
 
@@ -42,8 +50,10 @@ public:
 
 private:
 	Frustum camera;
-
-	float4x4 viewMatrix;
 	float4x4 projectionMatrix;
+	float4x4 viewMatrix;
+	CameraMatrices matrices;
+
+	unsigned int ubo;
 };
 

@@ -22,6 +22,7 @@ struct Material
     float4 specColor =  {1.0f, 0.0f, 0.0f, 1.0f};
     bool shininessInAlpha = false;
     float shininess = 500.0f;
+    int padding[2] = {0, 0};
 };
 
 class ComponentMaterial

@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "WindowModule.h"
 #include "InputModule.h"
+#include "glew.h"
 
 #include "SDL_scancode.h"
 #include <functional>
@@ -36,6 +37,11 @@ bool CameraModule::Init()
 	viewMatrix = camera.ViewMatrix();
 	projectionMatrix = camera.ProjectionMatrix();
 
+	glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 	std::function<void(void)> rotateLeft = std::bind(&CameraModule::RotateLeft, this);
 	std::function<void(void)> rotateRight = std::bind(&CameraModule::RotateRight, this);
 	std::function<void(void)> rotateUp = std::bind(&CameraModule::RotateUp, this);
@@ -63,6 +69,15 @@ bool CameraModule::Init()
 	return true;
 }
 
+void CameraModule::UpdateUBO() 
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    matrices.projectionMatrix = projectionMatrix.Transposed();
+	matrices.viewMatrix = viewMatrix.Transposed();
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
 update_status CameraModule::Update(float deltaTime)
 {
 	return UPDATE_CONTINUE;
@@ -70,6 +85,7 @@ update_status CameraModule::Update(float deltaTime)
 
 bool CameraModule::ShutDown()
 {
+    glDeleteBuffers(1, &ubo);
 	return true;
 }
 
