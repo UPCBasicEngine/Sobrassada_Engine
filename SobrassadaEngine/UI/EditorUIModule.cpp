@@ -5,6 +5,7 @@
 #include "OpenGLModule.h"
 #include "WindowModule.h"
 #include "FileSystem.h"
+#include "SceneImporter.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -112,7 +113,7 @@ void EditorUIModule::Draw()
 {
 	ImGui::DockSpaceOverViewport();
 	MainMenu();
-	//ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 
 	if (consoleMenu) Console(consoleMenu);
 
@@ -150,7 +151,7 @@ void EditorUIModule::MainMenu()
 
 void EditorUIModule::ImportDialog(bool& import)
 {
-	ImGui::Begin("Import Dialog", & import);
+	ImGui::Begin("Import Asset", & import);
 
 	static std::string currentPath = std::filesystem::current_path().string();
 	static char searchQuery[32];
@@ -237,7 +238,6 @@ void EditorUIModule::ImportDialog(bool& import)
 			std::string tag = isDirectory ? "[Dir] " : "[File] ";
 			std::string fileWithTag = tag + file;
 
-			// ImGuiSelectableFlags_AllowDoubleClick for Directories?
 			if (ImGui::Selectable(fileWithTag.c_str(), selected == i))
 			{
 				selected = i;
@@ -289,7 +289,7 @@ void EditorUIModule::ImportDialog(bool& import)
 		if (!inputFile.empty())
 		{
 			std::string importPath = currentPath + DELIMITER + inputFile;
-			// Call to SceneImporter import
+			SceneImporter::Import(importPath.c_str());
 		}
 		inputFile = "";
 		currentPath = startPath;

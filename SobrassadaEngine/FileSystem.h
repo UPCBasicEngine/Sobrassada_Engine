@@ -15,6 +15,11 @@ namespace FileSystem
 	void SplitAccumulatedPath(const std::string& path, std::vector<std::string>& parts);
 	void GetAllInDirectory(const std::string& path, std::vector<std::string>& files);
 
+	inline size_t GetFileSize(const char* filePath)
+	{
+		return std::filesystem::file_size(filePath);
+	}
+
 	inline bool Delete(const char* filePath) 
 	{ 
 		return std::filesystem::remove(filePath); 
