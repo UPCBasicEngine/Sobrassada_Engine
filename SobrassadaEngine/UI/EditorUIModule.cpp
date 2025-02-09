@@ -112,7 +112,7 @@ void EditorUIModule::Draw()
 {
 	ImGui::DockSpaceOverViewport();
 	MainMenu();
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
 	if (consoleMenu) Console(consoleMenu);
 

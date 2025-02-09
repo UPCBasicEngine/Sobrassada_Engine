@@ -12,24 +12,31 @@ namespace TextureImporter
 	{
 		// Copy image to Assets folder
 		{
-			std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(filePath);
+			std::string copyPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(filePath);
 			if (!FileSystem::Exists(copyPath.c_str()))
 			{
 				FileSystem::Copy(filePath, copyPath.c_str());
 			}
 		}
 
-		const wchar_t* wPath = ConvertToWChar(filePath);
+		std::string textureStr = std::string(filePath);
+		std::wstring wPath = std::wstring(textureStr.begin(), textureStr.end());
 
 		DirectX::ScratchImage image;
-		HRESULT hr = DirectX::LoadFromWICFile(wPath, DirectX::WIC_FLAGS_NONE, nullptr, image);
-
-		delete[] wPath;
+		HRESULT hr = DirectX::LoadFromWICFile(wPath.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
 
 		if (FAILED(hr))
 		{
-			GLOG("Failed to load texture: %s", filePath);
-			return false;
+			hr = DirectX::LoadFromTGAFile(wPath.c_str(), DirectX::TGA_FLAGS_NONE, nullptr, image);
+			if (FAILED(hr))
+			{
+				hr = DirectX::LoadFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+				if (FAILED(hr))
+				{
+					GLOG("Failed to load texture: %s", filePath);
+					return false;
+				}
+			}
 		}
 
 		DirectX::Blob blob;
@@ -37,14 +44,14 @@ namespace TextureImporter
 
 		if (FAILED(hr))
 		{
-			GLOG("Failed to convert texture to DDS: %s", filePath);
+			GLOG("Failed to save texture in memory: %s", filePath);
 			return false;
 		}
 
 		std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
-		std::string savePath = "Library/Materials/" + fileName + ".dds";
+		std::string savePath = MATERIALS_PATH + fileName + MATERIAL_EXTENSION;
 
-		unsigned int size = FileSystem::Save(savePath.c_str(), blob.GetBufferPointer(), static_cast<unsigned int>(blob.GetBufferSize()));
+		unsigned int size = FileSystem::Save(savePath.c_str(), blob.GetBufferPointer(), (unsigned int)blob.GetBufferSize());
 
 		if (size == 0)
 		{
@@ -54,16 +61,5 @@ namespace TextureImporter
 
 		GLOG("%s saved as dds", fileName.c_str());
 		return true;
-	}
-
-	const wchar_t* ConvertToWChar(const char* filePath) {
-		size_t len = 0;
-		mbstowcs_s(&len, nullptr, 0, filePath, 0);
-
-		wchar_t* wImagePath = new wchar_t[len + 1];
-
-		mbstowcs_s(&len, wImagePath, len + 1, filePath, _TRUNCATE);
-
-		return wImagePath;
 	}
 };

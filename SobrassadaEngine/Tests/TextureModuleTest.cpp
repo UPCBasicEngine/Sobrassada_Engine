@@ -21,9 +21,10 @@ unsigned int TextureModuleTest::LoadTexture(const char* texturePath, DirectX::Te
 	DirectX::ScratchImage scratchImage;
 	OpenGLMetadata openGlMeta;
 
-	const wchar_t* wPath = TextureImporter::ConvertToWChar(texturePath);
-	bool succeded = LoadTextureFile(wPath, outTexMetadata, scratchImage);
-	delete[] wPath;
+	std::string textureStr = std::string(texturePath);
+	std::wstring wPath = std::wstring(textureStr.begin(), textureStr.end());
+	bool succeded = LoadTextureFile(wPath.c_str(), outTexMetadata, scratchImage);
+
 	if (succeded)
 	{
 		ConvertMetadata(outTexMetadata, openGlMeta);

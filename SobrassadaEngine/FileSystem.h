@@ -12,7 +12,6 @@ namespace FileSystem
 	bool Copy(const char* sourceFilePath, const char* destinationFilePath);
 
 	void GetDrives(std::vector<std::string>& drives);
-
 	void SplitAccumulatedPath(const std::string& path, std::vector<std::string>& parts);
 	void GetAllInDirectory(const std::string& path, std::vector<std::string>& files);
 

@@ -68,17 +68,24 @@ namespace FileSystem
 
 	bool Copy(const char* sourceFilePath, const char* destinationFilePath)
 	{
-		try
+		if (!Exists(sourceFilePath))
 		{
-			std::filesystem::copy(sourceFilePath, destinationFilePath, std::filesystem::copy_options::overwrite_existing);
-			return true;
-		}
-		catch (const std::filesystem::filesystem_error& e)
-		{
-			GLOG("Failed to copy: %s", e.what());
+			GLOG("Source file does not exist: %s", sourceFilePath);
 			return false;
 		}
+
+		std::error_code errorCode;
+		std::filesystem::copy(sourceFilePath, destinationFilePath, std::filesystem::copy_options::overwrite_existing, errorCode);
+
+		if (errorCode)
+		{
+			GLOG("Failed to copy: %s", errorCode.message().c_str());
+			return false;
+		}
+
+		return true;
 	}
+
 	void GetDrives(std::vector<std::string>& drives)
 	{
 		drives.clear();
@@ -136,6 +143,4 @@ namespace FileSystem
 			}
 		}
 	}
-
-		
 }

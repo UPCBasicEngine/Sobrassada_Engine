@@ -18,18 +18,13 @@ namespace SceneImporter {
 		std::string extension = FileSystem::GetFileExtension(filePath);
 
 		if (extension == ".gltf")
-		{
 			ImportGLTF(filePath);
-
-		}
 		else
-		{
 			TextureImporter::Import(filePath);
-		}
 	}
 
-	void ImportGLTF(const char* filePath) {
-
+	void ImportGLTF(const char* filePath) 
+	{
 		// Copy gltf to Assets folder
 		{
 			std::string copyPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(filePath);
@@ -63,15 +58,13 @@ namespace SceneImporter {
 		std::string path = FileSystem::GetFilePath(filePath);
 
 		// Copy bin to Assets folder
+		for (const auto& srcBuffers : model.buffers)
 		{
-			for (const auto& srcBuffers : model.buffers)
+			std::string binPath = path + srcBuffers.uri;
+			std::string copyPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(binPath);
+			if (!FileSystem::Exists(copyPath.c_str()))
 			{
-				std::string binPath = path + srcBuffers.uri;
-				std::string copyPath = "Assets/" + FileSystem::GetFileNameWithExtension(binPath);
-				if (!FileSystem::Exists(copyPath.c_str()))
-				{
-					FileSystem::Copy(binPath.c_str(), copyPath.c_str());
-				}
+				FileSystem::Copy(binPath.c_str(), copyPath.c_str());
 			}
 		}
 
