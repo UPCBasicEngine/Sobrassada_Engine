@@ -69,16 +69,14 @@ bool Component::DeleteChildComponent(const uint32_t componentUUID)
 
 void Component::RenderEditorInspector()
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-    ImGui::BeginChild("ComponentInspectorWrapper", ImVec2(0, 200), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY);
+    
     ImGui::Text(name);
     ImGui::Separator();
     if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
     {
         TransformUpdated();
     }
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
+    
 }
 
 void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)

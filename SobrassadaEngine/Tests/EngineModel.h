@@ -38,6 +38,8 @@ public:
 
     EngineMesh* GetMesh(int index) const { return meshes[index]; }
 
+    unsigned int GetActiveRenderTexture() const { return textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0; }
+
 private:
 
 	std::vector<EngineMesh*> meshes;

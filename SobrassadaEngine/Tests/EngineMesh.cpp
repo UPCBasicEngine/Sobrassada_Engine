@@ -167,7 +167,7 @@ void EngineMesh::SetBasicModelMatrix(float4x4& newModelMatrix)
 	basicModelMatrix = newModelMatrix;
 }
 
-void EngineMesh::Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
+void EngineMesh::Render(int program, unsigned int texture, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
 {
 
 	glUseProgram(program);
@@ -176,10 +176,10 @@ void EngineMesh::Render(int program, float4x4& modelMatrix, float4x4& projection
 	glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
 	glUniformMatrix4fv(2, 1, GL_TRUE, &modelMatrix[0][0]);
 
-	if (MOCKUP_TexturePosition > 0)
+	if (texture > 0)
 	{
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, MOCKUP_TexturePosition);
+		glBindTexture(GL_TEXTURE_2D, texture);
 	}
 
 	if (indexCount > 0 && vao)

@@ -15,12 +15,15 @@ public:
     void Render() override;
 
     void LoadMesh(const std::string& meshName, uint32_t meshUUID); 
-
+    
 private:
 
     // TODO Add model code, add mesh components when loading
 
     std::string currentMeshName = "Not selected";
     uint32_t currentMeshUUID = CONSTANT_NO_MESH_UUID;
+
+    std::string currentTexureName = "Not selected";
+    uint32_t currentTexureUUID = CONSTANT_NO_TEXTURE_UUID;
     
 };

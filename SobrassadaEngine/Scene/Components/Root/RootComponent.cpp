@@ -94,17 +94,21 @@ void RootComponent::RenderComponentEditor()
     ImGui::Spacing();
 
     ImGui::SeparatorText("Modules Configuration");
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+    ImGui::BeginChild("ComponentInspectorWrapper", ImVec2(0, 200), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY);
     
     if (selectedComponent != nullptr)  selectedComponent->RenderEditorInspector();
-
+    
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
+    
     ImGui::End();
 }
 
 void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
     ImGui::SeparatorText("Component hierarchy");
-
-    ImGui::ShowDemoWindow();
    
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
     ImGui::BeginChild("ComponentHierarchyWrapper", ImVec2(0, 200), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY);

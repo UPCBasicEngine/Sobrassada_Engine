@@ -27,9 +27,7 @@ public:
 
 	void SetBasicModelMatrix(float4x4& newModelMatrix);
 
-	void Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix);
-    
-        unsigned int MOCKUP_TexturePosition = 0;
+	void Render(int program, unsigned int texture, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix);
 
 private:
     

@@ -51,12 +51,6 @@ void EngineModel::Load(const char* modelPath)
 	LoadRecursive(model, basicModelMatrix, rootPosition);
 
 	LoadMaterials(model, modelPath);
-
-    // MOCKUP
-    for (EngineMesh* currentMesh : meshes)
-    {
-        currentMesh->MOCKUP_TexturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-    }
 }
 
 void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath)
@@ -144,7 +138,7 @@ void EngineModel::Render(int program, float4x4& modelMatrix, float4x4& projectio
 	for (EngineMesh* currentMesh : meshes)
 	{
 		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-		currentMesh->Render(program, modelMatrix, projectionMatrix, viewMatrix);
+		//currentMesh->Render(program, modelMatrix, projectionMatrix, viewMatrix);
 	}
 }
 

@@ -54,7 +54,13 @@ public:
     std::map<uint32_t, Component*> gameComponents;
     std::map<uint32_t, EngineMesh*> MOCKUP_loadedMeshes;
     std::map<std::string, uint32_t> MOCKUP_libraryMeshes;
+
+    std::map<uint32_t, unsigned int> MOCKUP_loadedTextures;
+    std::map<std::string, uint32_t> MOCKUP_libraryTextures;
+    
     EngineModel* MOCKUP_loadedModel;
+
+    
 
     void MOCKUP_loadModel(std::string path);
 
