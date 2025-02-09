@@ -7,8 +7,6 @@
 #include "Framebuffer.h"
 #include "LightsConfig.h"
 #include "OpenGLModule.h"
-#include "Scene/Components/PointLight.h"
-#include "Scene/Components/SpotLight.h"
 #include "ShaderModule.h"
 #include "TextureModuleTest.h"
 #include "WindowModule.h"
@@ -25,13 +23,6 @@ RenderTestModule::RenderTestModule()
 {
     currentLoadedModel = new EngineModel();
     lightsConfig       = new LightsConfig();
-
-    pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
-    pointLights.push_back(PointLight(float3(2, 0, 0), 1));
-    pointLights.push_back(PointLight(float3(0, 1, -2), 1));
-    spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
-    spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
-    spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
 }
 
 RenderTestModule::~RenderTestModule() {}
@@ -88,6 +79,10 @@ update_status RenderTestModule::Render(float deltaTime)
     // Draw the skybox before anything else
     lightsConfig->RenderSkybox(proj, view);
 
+    // Lights render
+    lightsConfig->RenderLights();
+   
+
     glUseProgram(program);
     glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
     glUniformMatrix4fv(1, 1, GL_TRUE, &view[0][0]);
@@ -122,81 +117,6 @@ update_status RenderTestModule::Render(float deltaTime)
     glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
     materials = currentLoadedModel->GetMaterials();
     materials.at(0)->OnEditorUpdate();
-
-    // BEGIN LIGHTS
-    // Point lights
-    std::vector<Lights::PointLightData> points;
-    for (int i = 0; i < pointLights.size(); ++i)
-    {
-        // ImGui Menus
-        pointLights[i].EditorParams(i);
-
-        // Light gizmos
-        pointLights[i].DrawGizmos();
-
-        // Fill struct data
-        float4 position = float4(pointLights[i].GetPosition(), pointLights[i].GetRange());
-        float4 color    = float4(pointLights[i].GetColor(), pointLights[i].GetIntensity());
-        points.emplace_back(Lights::PointLightData(position, color));
-    }
-
-    unsigned int pointId;
-    glGenBuffers(1, &pointId);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointId);
-
-    size_t dataSize = sizeof(Lights::PointLightData);
-    int bufferSize  = dataSize * points.size() + 16;
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
-    int count = points.size();
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
-
-    int offset = 16;
-    for (const Lights::PointLightData &light : points)
-    {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, dataSize, &light);
-        offset += dataSize;
-    }
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, pointId);
-
-    // Spot lights
-    std::vector<Lights::SpotLightData> spots;
-    for (int i = 0; i < spotLights.size(); ++i)
-    {
-        // ImGui Menus
-        spotLights[i].EditorParams(i);
-
-        // Light gizmos
-        spotLights[i].DrawGizmos();
-
-        // Fill struct data
-        float4 position = float4(spotLights[i].GetPosition(), spotLights[i].GetRange());
-        float4 color    = float4(spotLights[i].GetColor(), spotLights[i].GetIntensity());
-        float3 dir      = float3(spotLights[i].GetDirection());
-        float inner     = spotLights[i].GetInnerAngle();
-        float outer     = spotLights[i].GetOuterAngle();
-        spots.emplace_back(Lights::SpotLightData(position, color, dir, inner, outer));
-    }
-
-    unsigned int spotId;
-    glGenBuffers(1, &spotId);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotId);
-
-    dataSize = sizeof(Lights::SpotLightData);
-    bufferSize = (dataSize + 12) * spots.size() + 16; // 12 bytes offset between spotlights
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
-    count = spots.size();
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
-
-    offset = 16;
-    for (const Lights::SpotLightData &light : spots)
-    {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, dataSize, &light);
-        offset += dataSize + 12;
-    } 
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, spotId);
-    // END LIGHTS
 
     // glActiveTexture(GL_TEXTURE0);
     // glBindTexture(GL_TEXTURE_2D, baboonTexture);

@@ -1,23 +1,6 @@
 #pragma once
 
 #include "LightComponent.h"
-#include "Math/float4.h"
-
-namespace Lights
-{
-    struct SpotLightData
-    {
-        float4 position;
-        float4 color;
-        float3 direction;
-        float innerAngle;
-        float outerAngle;
-
-        SpotLightData(const float4 &pos, const float4 &color, const float3 &dir, const float inner, const float outer) : 
-            position(pos), color(color), direction(dir), innerAngle(inner), outerAngle(outer)
-        {}
-    };
-} // namespace Lights
 
 class SpotLight : public LightComponent
 {
