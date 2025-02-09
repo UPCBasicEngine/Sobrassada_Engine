@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EngineModel.h"
 #include "Module.h"
 
 #include <map>
@@ -7,7 +8,8 @@
 #include <unordered_map>
 
 
-class EngineModel;class GameObject;
+class EngineMesh
+;class GameObject;
 class Component;
 class RootComponent;
 
@@ -38,8 +40,9 @@ public:
     void RenderGameObjectHierarchy(uint32_t gameObjectUUID, uint32_t &selectedGameObjectUUID);
 
     std::map<uint32_t, Component*> gameComponents;
-    std::map<uint32_t, EngineModel*> loadedModels;
-    std::map<std::string, uint32_t> MOCKUP_libraryModels;
+    std::map<uint32_t, EngineMesh*> MOCKUP_loadedMeshes;
+    std::map<std::string, uint32_t> MOCKUP_libraryMeshes;
+    EngineModel* MOCKUP_loadedModel;
     
     RootComponent* GetRootComponent() const { return rootComponent; }
 

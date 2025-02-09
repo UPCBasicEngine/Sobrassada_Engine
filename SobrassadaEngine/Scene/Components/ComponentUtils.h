@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "Transform.h"
 
-
 #include <cstdint>
 #include <map>
 #include <string>
@@ -9,7 +8,6 @@
 class Component;
 class RootComponent;
 class MeshComponent;
-class ModelComponent;
 
 enum ComponentType
 {
@@ -18,13 +16,11 @@ enum ComponentType
     // Root types
     COMPONENT_ROOT = 1,
     // Standalone types
-    COMPONENT_MODEL = 2,
-    // DependentTypes
-    COMPONENT_MESH = 3,
+    COMPONENT_MESH = 2,
 };
 
 static const std::map<std::string, ComponentType> standaloneComponents = {
-    {"Model", COMPONENT_MODEL}
+    {"Mesh", COMPONENT_MESH}
 };
 
 class ComponentUtils

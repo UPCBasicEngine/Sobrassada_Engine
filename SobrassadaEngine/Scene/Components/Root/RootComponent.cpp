@@ -4,7 +4,7 @@
 #include "EditorUIModule.h"
 #include "SceneModule.h"
 #include "imgui.h"
-#include "Scene/Components/Standalone/ModelComponent.h"
+#include "Scene/Components/Standalone/MeshComponent.h"
 
 #include <Algorithm/Random/LCG.h>
 

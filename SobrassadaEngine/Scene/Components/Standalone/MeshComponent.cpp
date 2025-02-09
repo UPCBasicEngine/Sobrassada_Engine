@@ -1,26 +1,25 @@
-﻿#include "ModelComponent.h"
+﻿#include "MeshComponent.h"
 
 #include "Application.h"
 #include "CameraModule.h"
 #include "../Root/RootComponent.h"
-#include "EngineModel.h"
+#include "EngineMesh.h"
 #include "RenderTestModule.h"
 #include "SceneModule.h"
 #include "imgui.h"
 
-#include <Algorithm/Random/LCG.h>
 #include <Math/Quat.h>
 
-ModelComponent::ModelComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform)
+MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform)
         : Component(uuid, uuidParent, uuidRoot, name, parentGlobalTransform)
 {
 }
 
-void ModelComponent::RenderEditorInspector()
+void MeshComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
     ImGui::SeparatorText("Model");
-    ImGui::Text(currentModelName.c_str());
+    ImGui::Text(currentMeshName.c_str());
     ImGui::SameLine();
     if (ImGui::Button("Select"))
     {
@@ -35,13 +34,13 @@ void ModelComponent::RenderEditorInspector()
         ImGui::Separator();
         if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
         {
-            for ( const auto &modelPair : App->GetSceneModule()->MOCKUP_libraryModels ) {
+            for ( const auto &modelPair : App->GetSceneModule()->MOCKUP_libraryMeshes ) {
                 {
                     if (modelPair.first.find(searchText) != std::string::npos)
                     {
                         if (ImGui::Selectable(modelPair.first.c_str(), false))
                             
-                            LoadModel(modelPair.first, modelPair.second);
+                            LoadMesh(modelPair.first, modelPair.second);
                     }
                 }
             }
@@ -51,20 +50,20 @@ void ModelComponent::RenderEditorInspector()
     }
 }
 
-void ModelComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
+void MeshComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 {
     Component::RenderEditorComponentTree(selectedComponentUUID);
 }
 
-void ModelComponent::Update()
+void MeshComponent::Update()
 {
 }
 
-void ModelComponent::Render(){
-    if (currentModelUUID != CONSTANT_NO_MODEL_UUID)
+void MeshComponent::Render(){
+    if (currentMeshUUID != CONSTANT_NO_MESH_UUID)
     {
-        EngineModel* currentModel = App->GetSceneModule()->loadedModels[currentModelUUID];
-        if (currentModel != nullptr)
+        EngineMesh* currentMesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
+        if (currentMesh != nullptr)
         {
             float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
             float4x4 view = App->GetCameraModule()->GetViewMatrix();
@@ -72,14 +71,14 @@ void ModelComponent::Render(){
                     globalTransform.position,
                     math::Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
                     globalTransform.scale);
-            currentModel->Render(App->GetRenderTestModule()->GetProgram(), model, proj, view);
+            currentMesh->Render(App->GetRenderTestModule()->GetProgram(), model, proj, view);
         }
     }
     Component::Render();
 }
 
-void ModelComponent::LoadModel(const std::string& modelName, uint32_t modelUUID)
+void MeshComponent::LoadMesh(const std::string& meshName, uint32_t meshUUID)
 {
-    currentModelName = modelName;
-    currentModelUUID = modelUUID;
+    currentMeshName = meshName;
+    currentMeshUUID = meshUUID;
 }

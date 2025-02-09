@@ -2,8 +2,7 @@
 
 #include "Component.h"
 #include "Root/RootComponent.h"
-#include "Dependent/MeshComponent.h"
-#include "Standalone/ModelComponent.h"
+#include "Standalone/MeshComponent.h"
 
 #include <cstdint>
 
@@ -15,10 +14,8 @@ Component * ComponentUtils::CreateEmptyComponent(ComponentType type, uint32_t uu
         return nullptr;
     case COMPONENT_ROOT:
         return new RootComponent(uuid, uuidParent, "root", parentGlobalTransform);
-    case COMPONENT_MODEL:
-        return new ModelComponent(uuid, uuidParent, uuidRoot, "model", parentGlobalTransform);
     case COMPONENT_MESH:
-        return new MeshComponent(uuid, uuidParent, uuidRoot, "mesh", parentGlobalTransform);
+        return new MeshComponent(uuid, uuidParent, uuidRoot, "model", parentGlobalTransform);
     }
     return nullptr;
 }

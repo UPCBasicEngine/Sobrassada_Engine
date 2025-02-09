@@ -20,6 +20,7 @@ SceneModule::SceneModule()
 
 SceneModule::~SceneModule()
 {
+    delete MOCKUP_loadedModel;
 }
 
 bool SceneModule::Init()
@@ -41,12 +42,17 @@ bool SceneModule::Init()
 
     rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), -1, -1, Transform())); // TODO Add the gameObject UUID as parent?
     gameComponents[rootComponent->GetUUID()] = rootComponent;
+    
+    MOCKUP_loadedModel = new EngineModel();
+    MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
 
-    const uint32_t newModelID = LCG().IntFast();
-    EngineModel* model = new EngineModel();
-    model->Load("./Test/BakerHouse.gltf");
-    loadedModels[newModelID] = model;
-    MOCKUP_libraryModels["Baker house"] = newModelID;
+    const uint32_t bakerHouseID = LCG().IntFast();
+    const uint32_t bakerHouseChimneyID = LCG().IntFast();
+    
+    MOCKUP_loadedMeshes[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
+    MOCKUP_loadedMeshes[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
+    MOCKUP_libraryMeshes["Baker house"] = bakerHouseID;
+    MOCKUP_libraryMeshes["Baker house chimney"] = bakerHouseChimneyID;
     
     return true;
 }

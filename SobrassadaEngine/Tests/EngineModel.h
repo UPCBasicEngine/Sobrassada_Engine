@@ -36,6 +36,8 @@ public:
 
 	void SetRenderTexture(int texturePosition);
 
+    EngineMesh* GetMesh(int index) const { return meshes[index]; }
+
 private:
 
 	std::vector<EngineMesh*> meshes;
