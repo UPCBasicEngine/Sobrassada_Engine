@@ -1,6 +1,5 @@
 #version 460
 
-out vec4 color;
 in vec3 pos;
 in vec2 uv0;
 in vec3 normal;

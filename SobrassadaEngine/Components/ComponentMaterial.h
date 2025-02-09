@@ -18,11 +18,11 @@ struct TextureInfo
 
 struct Material
 {
-    float4 diffFactor;
-    float4 specFactor;
+    float4 diffFactor = {1.0f, 1.0f, 1.0f, 1.0f};
+    float4 specFactor = {1.0f, 1.0f, 1.0f, 1.0f};
 
-    float shininess;
-    int shininessInAlpha;
+    float shininess = 300.0f;
+    int shininessInAlpha = false;
     int32_t padding[2] = {0, 0};
 };
 
@@ -33,25 +33,19 @@ public:
 
     void LoadMaterial(const tinygltf::Material &srcMaterial, const tinygltf::Model& sourceModel, const char* modelPath);
     void RenderMaterial(int program);
-
-    bool GetHasDiffuseTexture() { return hasDiffuseTexture; }
-    unsigned int GetDiffuseID() { return diffuseTexture.textureID; }
-    bool GetHasSpecularTexture() { return hasSpecularTexture; }
-    unsigned int GetSpecularID() { return specularTexture.textureID; }
+    void FreeMaterials();
 
 private:
     std::string name;
 
     TextureInfo diffuseTexture;
     bool hasDiffuseTexture             = false;
-    float3 diffuseColor                = {1.0f, 1.0f, 1.0f};
 
     TextureInfo specularTexture;
     bool hasSpecularTexture            = false;
-    float3 specularColor               = {1.0f, 1.0f, 1.0f};
 
-    float shininess                    = 300.00f;
-    bool hasShininessInAlpha           = false;
+    Material material;
 
     TextureInfo GetTexture(const tinygltf::Model sourceModel, int textureIndex, const char *modelPath);
+    unsigned int ubo = 0;
 };

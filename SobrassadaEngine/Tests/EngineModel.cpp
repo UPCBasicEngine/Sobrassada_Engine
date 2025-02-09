@@ -183,10 +183,7 @@ void EngineModel::ClearVectors()
 
 	for (auto it : materials)
 	{
-		unsigned int diffuseId = it->GetDiffuseID();
-		unsigned int specularId = it->GetSpecularID();
-		glDeleteTextures(1, &diffuseId);
-		glDeleteTextures(1, &specularId);
+		it->FreeMaterials();
 	}
 
 	meshes.clear();
