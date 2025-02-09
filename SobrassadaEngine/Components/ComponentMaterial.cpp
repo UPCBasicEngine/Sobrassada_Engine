@@ -6,32 +6,49 @@
 #include "Math/float2.h"
 #include "DirectXTex/DirectXTex.h"
 #include <glew.h>
+#include <iostream>
 
 void ComponentMaterial::OnEditorUpdate() 
 { 
+     bool updated = false; 
+
     if (ImGui::CollapsingHeader("Material"))
     {
         if (hasDiffuseTexture)
-        {   
+        {
             ImGui::Text("Diffuse Texture");
             ImGui::Image((ImTextureID)(intptr_t)diffuseTexture.textureID, ImVec2(256, 256));
-            if(ImGui::IsItemHovered()) {
+            if (ImGui::IsItemHovered())
+            {
                 ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
             }
         }
-        ImGui::SliderFloat3("Diffuse Color", &material.diffFactor.x, 0.0f, 1.0f);
+
+        updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
+       
 
         if (hasSpecularTexture)
         {
-            ImGui::Text("Specular Texture");
+            ImGui:Text("Specular Texture");
             ImGui::Image((ImTextureID)(intptr_t)specularTexture.textureID, ImVec2(256, 256));
-            if(ImGui::IsItemHovered()) {
+            if (ImGui::IsItemHovered())
+            {
                 ImGui::SetTooltip("Texture Dimensions: %d, %d", specularTexture.width, specularTexture.height);
             }
         }
-        ImGui::SliderFloat3("Specular Color", &material.specFactor.x, 0.0f, 1.0f);
-        if (!material.shininessInAlpha) ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
+
+        updated |= ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
+
+        if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
     }
+
+    if (updated)
+    {
+        UpdateUBO();
+    }
+    
+
+
 }
 
 TextureInfo ComponentMaterial::GetTexture(const tinygltf::Model sourceModel, int textureIndex, const char* modelPath) {
@@ -89,7 +106,7 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
             const tinygltf::Value &diffuseValue = ext.Get("diffuseFactor");
             if (diffuseValue.IsArray() && diffuseValue.ArrayLen() == 4)
             {
-                material.diffFactor =
+                material.diffColor =
                 {
                         static_cast<float>(diffuseValue.Get(0).Get<double>()),
                         static_cast<float>(diffuseValue.Get(1).Get<double>()),
@@ -104,7 +121,7 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
             const tinygltf::Value &specularValue = ext.Get("specularFactor");
             if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
             {
-                material.specFactor =
+                material.specColor =
                 {
                     static_cast<float>(specularValue.Get(0).Get<double>()),
                     static_cast<float>(specularValue.Get(1).Get<double>()),
@@ -150,7 +167,7 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
         int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
         if (textureIndex < 0)
         {
-            material.diffFactor = 
+            material.diffColor= 
             {
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[0]),
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[1]),
@@ -166,21 +183,29 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
         }
     }
 
-    glGenBuffers(1, &ubo);
+   if (ubo == 0)
+    {
+        glGenBuffers(1, &ubo);
+    }
+
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), nullptr, GL_DYNAMIC_DRAW);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &material);
-    //TODO: Method to update materials
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), &material, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
+    //TODO: Method to update materials
+
 
 void ComponentMaterial::RenderMaterial(int program) {
+    
+    UpdateUBO();
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
 
+    
     if (hasDiffuseTexture)
-	{
+    {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseTexture.textureID);
-	}
+    }
     if (hasSpecularTexture)
     {
         glActiveTexture(GL_TEXTURE1);
@@ -188,19 +213,41 @@ void ComponentMaterial::RenderMaterial(int program) {
     }
 
     unsigned int blockIdx = glGetUniformBlockIndex(program, "Material");
+    if (blockIdx == GL_INVALID_INDEX)
+    {
+        GLOG("Error: No se encontró el Uniform Block 'Material' en el shader.")
+        return;
+    }
+    GLOG("SUCESS: Se encontro el Uniform Block 'Material' en el shader.")
+
     glUniformBlockBinding(program, blockIdx, 2);
+
+   
     glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo);
 
+  
     if (!material.shininessInAlpha)
     {
         glUniform1f(glGetUniformLocation(program, "shininess"), material.shininess);
     }
-    glUniform3fv(glGetUniformLocation(program, "diffFactor"), 1, &material.diffFactor[0]);
-    glUniform3fv(glGetUniformLocation(program, "specFactor"), 1, &material.specFactor[0]);
+    glUniform3fv(glGetUniformLocation(program, "diffColor"), 1, &material.diffColor[0]);
+    glUniform3fv(glGetUniformLocation(program, "specColor"), 1, &material.specColor[0]);
 }
 
 void ComponentMaterial::FreeMaterials() {
     glDeleteTextures(1, &diffuseTexture.textureID);
 	glDeleteTextures(1, &specularTexture.textureID);
 	glDeleteBuffers(1, &ubo);
+}
+
+void ComponentMaterial::UpdateUBO() 
+{
+   
+
+    if (ubo != 0)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &material);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
 }

@@ -18,12 +18,10 @@ struct TextureInfo
 
 struct Material
 {
-    float4 diffFactor = {1.0f, 1.0f, 1.0f, 1.0f};
-    float4 specFactor = {1.0f, 1.0f, 1.0f, 1.0f};
-
-    float shininess = 300.0f;
-    int shininessInAlpha = false;
-    int32_t padding[2] = {0, 0};
+    float4 diffColor = {1.0f, 0.0f, 0.0f, 1.0f};
+    float4 specColor =  {1.0f, 0.0f, 0.0f, 1.0f};
+    bool shininessInAlpha = false;
+    float shininess = 500.0f;
 };
 
 class ComponentMaterial
@@ -34,6 +32,7 @@ public:
     void LoadMaterial(const tinygltf::Material &srcMaterial, const tinygltf::Model& sourceModel, const char* modelPath);
     void RenderMaterial(int program);
     void FreeMaterials();
+    void UpdateUBO();
 
 private:
     std::string name;
