@@ -66,18 +66,25 @@ void RootComponent::RenderComponentEditor()
         }
         ImGui::EndPopup();
     }
-    
-    ImGui::SameLine();
-    if (ImGui::Button("Remove Component")) 
+
+    if (selectedUUID != uuid)
     {
-        if (selectedComponent != nullptr)
+        ImGui::SameLine();
+        if (ImGui::Button("Remove Component")) 
         {
-            Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUUIDParent()];
-            if (selectedParentComponent != nullptr)  selectedParentComponent->RemoveChildComponent(selectedUUID);
-            // TODO Make sure component gets fully deleted if not used anywhere else, delete mesh from memory for example
-            // TODO Remove children components as well or assign them to the parent. To decide!
+            if (selectedComponent != nullptr)
+            {
+                Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUUIDParent()];
+                if (selectedParentComponent != nullptr)
+                {
+                    selectedParentComponent->RemoveChildComponent(selectedUUID);
+                    selectedUUID = uuid;
+                    selectedComponent = nullptr;
+                }
+            }
         }
     }
+    
     
     RenderEditorComponentTree(selectedUUID);
     

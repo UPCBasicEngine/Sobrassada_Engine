@@ -15,7 +15,7 @@ Component * ComponentUtils::CreateEmptyComponent(ComponentType type, uint32_t uu
     case COMPONENT_ROOT:
         return new RootComponent(uuid, uuidParent, "root", parentGlobalTransform);
     case COMPONENT_MESH:
-        return new MeshComponent(uuid, uuidParent, uuidRoot, "model", parentGlobalTransform);
+        return new MeshComponent(uuid, uuidParent, uuidRoot, "mesh", parentGlobalTransform);
     }
     return nullptr;
 }
