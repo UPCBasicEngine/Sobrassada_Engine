@@ -13,10 +13,8 @@ public:
 
     virtual ~Component();
     
-    virtual void Enable();
     virtual void Update() = 0;
     virtual void Render();
-    virtual void Disable();
 
     virtual bool AddChildComponent(const uint32_t componentUUID);
     virtual bool RemoveChildComponent(const uint32_t componentUUID);

@@ -19,23 +19,16 @@ Component::~Component(){
     }
 }
 
-void Component::Enable()
-{
-    enabled = true;
-}
-
 void Component::Render()
 {
-    for (uint32_t childUUID: children)
+    if (enabled)
     {
-        Component* child = App->GetSceneModule()->gameComponents[childUUID];
-        if (child != nullptr) child->Render();
+        for (uint32_t childUUID: children)
+        {
+            Component* child = App->GetSceneModule()->gameComponents[childUUID];
+            if (child != nullptr) child->Render();
+        }
     }
-}
-
-void Component::Disable()
-{
-    enabled = false;
 }
 
 bool Component::AddChildComponent(const uint32_t componentUUID)
@@ -69,14 +62,17 @@ bool Component::DeleteChildComponent(const uint32_t componentUUID)
 
 void Component::RenderEditorInspector()
 {
-    
     ImGui::Text(name);
-    ImGui::Separator();
-    if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
+    ImGui::SameLine();
+    ImGui::Checkbox("Enabled", &enabled);
+    if (enabled)
     {
-        TransformUpdated();
+        ImGui::Separator();
+        if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
+        {
+            TransformUpdated();
+        }
     }
-    
 }
 
 void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)

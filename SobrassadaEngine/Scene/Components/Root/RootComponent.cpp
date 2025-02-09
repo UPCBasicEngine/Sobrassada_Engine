@@ -37,8 +37,6 @@ void RootComponent::RenderComponentEditor()
 
     //ImGui::InputText(name, test, 10, ImGuiInputTextFlags_None);
     ImGui::Text(name);
-    ImGui::SameLine();
-    ImGui::Checkbox("Enabled", &enabled); // TODO Call Enable() / Disable() instead of setting the value directly
     
     if (ImGui::Button("Add Component")) // TODO Get selected component to add the new one at the correct location (By UUID)
     {
@@ -93,7 +91,7 @@ void RootComponent::RenderComponentEditor()
     
     ImGui::Spacing();
 
-    ImGui::SeparatorText("Modules Configuration");
+    ImGui::SeparatorText("Component configuration");
 
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
     ImGui::BeginChild("ComponentInspectorWrapper", ImVec2(0, 200), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY);

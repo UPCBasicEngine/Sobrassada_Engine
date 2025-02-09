@@ -18,7 +18,10 @@ MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t uuidParent, con
 void MeshComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
-    ImGui::SeparatorText("Mesh");
+
+    if (enabled)
+    {
+        ImGui::SeparatorText("Mesh");
     ImGui::Text(currentMeshName.c_str());
     ImGui::SameLine();
     if (ImGui::Button("Select mesh"))
@@ -86,6 +89,8 @@ void MeshComponent::RenderEditorInspector()
         }
         ImGui::EndPopup();
     }
+    }
+    
 }
 
 void MeshComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
@@ -98,7 +103,7 @@ void MeshComponent::Update()
 }
 
 void MeshComponent::Render(){
-    if (currentMeshUUID != CONSTANT_NO_MESH_UUID)
+    if (enabled && currentMeshUUID != CONSTANT_NO_MESH_UUID)
     {
         EngineMesh* currentMesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
         if (currentMesh != nullptr)
