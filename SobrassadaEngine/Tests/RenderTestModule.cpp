@@ -80,7 +80,8 @@ update_status RenderTestModule::Render(float deltaTime)
     lightsConfig->RenderSkybox(proj, view);
 
     // Lights render
-    lightsConfig->RenderLights();
+    lightsConfig->EditorParams();
+    lightsConfig->SetLightsShaderData();
    
 
     glUseProgram(program);

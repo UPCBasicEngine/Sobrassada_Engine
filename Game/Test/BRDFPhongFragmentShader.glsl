@@ -19,17 +19,22 @@ uniform float ambientIntensity;
 
 struct PointLight
 {
-	vec4 position;	// xyz = position & w = range
-	vec4 color;		// rgb = color & alpha = intensity 
+	vec4 position;		// xyz = position & w = range
+	vec4 color;			// rgb = color & alpha = intensity 
 };
 
 struct SpotLight
 {
-	vec4 position;	// xyz = position & w = range
-	vec4 color;		// rgb = color & alpha = intensity
+	vec4 position;		// xyz = position & w = range
+	vec4 color;			// rgb = color & alpha = intensity
 	vec3 direction;	
 	float innerAngle;
 	float outerAngle;
+};
+
+layout(std140, binding = 4) uniform Ambient
+{
+	vec4 ambient_color;		// rbg = color & alpha = intensity
 };
 
 readonly layout(std430, binding = 5) buffer PointLights
@@ -113,12 +118,14 @@ void main()
 	vec3 texColor = pow(texture(diffuseTexture, uv0).rgb, vec3(2.2f));
 	float alpha = texture(specularTexture, uv0).a;
 
-	vec3 ambient = ambientIntensity * texColor;
-	vec3 hdr = ambient;
+	//vec3 ambient = ambientIntensity * texColor;
 
 	vec3 N = normalize(normal);
    	//vec3 L = normalize(lightDir);
 	//float NL = dot(N, -L);
+
+	vec3 ambient = ambient_color.rgb * ambient_color.a;
+	vec3 hdr = ambient * texColor;
 
 	for (int i = 0; i < pointLightsCount; ++i)
 	{

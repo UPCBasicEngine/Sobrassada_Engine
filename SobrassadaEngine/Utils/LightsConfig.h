@@ -15,6 +15,13 @@ class SpotLight;
 
 namespace Lights
 {
+    struct AmbientLightShaderData
+    {
+        float4 color;
+
+        AmbientLightShaderData(const float4 &color) : color(color) {}
+    };
+
     struct PointLightShaderData
     {
         float4 position;
@@ -46,13 +53,14 @@ class LightsConfig
 
   public:
     void InitSkybox();
+    void EditorParams();
     void RenderSkybox(float4x4 &projection, float4x4& view) const;
-    void RenderLights();
+    void SetLightsShaderData();
 
   private:
     unsigned int LoadSkyboxTexture(const char *filename) const;
-    void RenderPointLights();
-    void RenderSpotLights();
+    void SetPointLightsShaderData();
+    void SetSpotLightsShaderData();
 
   private:
     unsigned int skyboxVao;

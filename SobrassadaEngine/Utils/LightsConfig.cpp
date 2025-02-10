@@ -5,6 +5,7 @@
 #include "ShaderModule.h"
 #include "CameraModule.h"
 #include "OpenGLModule.h"
+#include "imgui.h"
 
 #include "../Scene/Components/PointLight.h"
 #include "../Scene/Components/SpotLight.h"
@@ -16,8 +17,8 @@ LightsConfig::LightsConfig()
     skyboxTexture    = 0;
     skyboxVao        = 0;
     skyboxProgram    = 0;
-    ambientColor     = float3(0.0f, 0.0f, 0.0f);
-    ambientIntensity = 0;
+    ambientColor     = float3(1.0f, 1.0f, 1.0f);
+    ambientIntensity = 0.2f;
 
     pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
     pointLights.push_back(PointLight(float3(2, 0, 0), 1));
@@ -93,13 +94,32 @@ void LightsConfig::RenderSkybox(float4x4 &projection, float4x4 &view) const
     App->GetOpenGLModule()->SetDepthFunc(true);
 }
 
-void LightsConfig::RenderLights()
-{
-    RenderPointLights();
-    RenderSpotLights();
+void LightsConfig::EditorParams()
+{ 
+    ImGui::Begin("Lights Config");
+
+    ImGui::SeparatorText("Ambient light");
+    ImGui::SliderFloat3("Ambient color", &ambientColor[0], 0, 1);
+    ImGui::SliderFloat("Ambient intensity", &ambientIntensity, 0, 1);
+
+    ImGui::End();
 }
 
-void LightsConfig::RenderPointLights()
+void LightsConfig::SetLightsShaderData()
+{
+    // Ambient light
+    Lights::AmbientLightShaderData ambient = Lights::AmbientLightShaderData(float4(ambientColor, ambientIntensity));
+    unsigned int ambientId;
+    glGenBuffers(1, &ambientId);
+    glBindBuffer(GL_UNIFORM_BUFFER, ambientId);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(ambient), &ambient, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 4, ambientId);
+
+    SetPointLightsShaderData();
+    SetSpotLightsShaderData();
+}
+
+void LightsConfig::SetPointLightsShaderData()
 {
     std::vector<Lights::PointLightShaderData> points;
     for (int i = 0; i < pointLights.size(); ++i)
@@ -132,7 +152,7 @@ void LightsConfig::RenderPointLights()
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, pointId);
 }
 
-void LightsConfig::RenderSpotLights()
+void LightsConfig::SetSpotLightsShaderData()
 {
     std::vector<Lights::SpotLightShaderData> spots;
     for (int i = 0; i < spotLights.size(); ++i)
