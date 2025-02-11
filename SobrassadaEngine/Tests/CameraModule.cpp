@@ -34,8 +34,8 @@ bool CameraModule::Init()
 
 	camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
 
-	viewMatrix = camera.ViewMatrix();
-	projectionMatrix = camera.ProjectionMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
+	matrices.projectionMatrix = camera.ProjectionMatrix();
 
 	glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
@@ -72,8 +72,6 @@ bool CameraModule::Init()
 void CameraModule::UpdateUBO() 
 {
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    matrices.projectionMatrix = projectionMatrix.Transposed();
-	matrices.viewMatrix = viewMatrix.Transposed();
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
@@ -92,8 +90,8 @@ bool CameraModule::ShutDown()
 void CameraModule::SetAspectRatio(float newAspectRatio)
 {
 	camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);
-	viewMatrix = camera.ViewMatrix();
-	projectionMatrix = camera.ProjectionMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
+	matrices.projectionMatrix = camera.ProjectionMatrix();
 }
 
 void CameraModule::EventTriggered()
@@ -105,14 +103,14 @@ void CameraModule::MoveForward()
 {
     float speed = 1.0f; // Velocidad de movimiento
     camera.pos += camera.front * speed;
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::MoveBackward()
 {
     float speed = 1.0f;
     camera.pos -= camera.front * speed;
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::MoveLeft()
@@ -120,7 +118,7 @@ void CameraModule::MoveLeft()
     float speed = 1.0f;
 	float3 right = camera.up.Cross(camera.front).Normalized();
     camera.pos += right * speed;
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::MoveRight()
@@ -128,21 +126,21 @@ void CameraModule::MoveRight()
     float speed = 1.0f;
     float3 right = camera.up.Cross(camera.front).Normalized();
     camera.pos -= right * speed;
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::RotateLeft()
 {
     float angle = 10.0f * DEGTORAD; // Convierte grados a radianes
     camera.front = Quat::RotateY(angle).Transform(camera.front);
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::RotateRight()
 {
     float angle = -10.0f * DEGTORAD; // Negativo para rotar a la derecha
     camera.front = Quat::RotateY(angle).Transform(camera.front);
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::RotateUp()
@@ -152,7 +150,7 @@ void CameraModule::RotateUp()
 	camera.front = pitch_rotation.Transform(camera.front);
     camera.up = pitch_rotation.Transform(camera.up);
 
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::RotateDown()
@@ -161,18 +159,18 @@ void CameraModule::RotateDown()
     Quat pitch_rotation = Quat::RotateAxisAngle(right, 5 * DEGTORAD);
 	camera.front = pitch_rotation.Transform(camera.front);
     camera.up = pitch_rotation.Transform(camera.up);
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::MoveUp()
 {
     camera.pos.y += 0.1f;
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }
 
 void CameraModule::MoveDown()
 {
 
     camera.pos.y -= 0.1f;
-	viewMatrix = camera.ViewMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
 }

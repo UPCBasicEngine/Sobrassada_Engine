@@ -27,8 +27,8 @@ public:
 	update_status Update(float deltaTime) override;
 	bool ShutDown() override;
 
-	const float4x4& GetProjectionMatrix() { return projectionMatrix; }
-	const float4x4& GetViewMatrix() { return viewMatrix; }
+	const float4x4& GetProjectionMatrix() { return matrices.projectionMatrix; }
+	const float4x4& GetViewMatrix() { return matrices.viewMatrix; }
 	const unsigned int GetUbo() { return ubo; }
 	void UpdateUBO();
 

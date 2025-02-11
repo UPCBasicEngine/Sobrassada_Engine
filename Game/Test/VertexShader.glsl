@@ -4,7 +4,7 @@ layout(location=1) in vec2 vertex_uv0;
 layout(location=2) in vec3 vertex_normal;
 
 layout(location=2) uniform mat4 model;
-layout(std140, binding = 0) uniform CameraMatrices
+layout(std140, row_major, binding = 0) uniform CameraMatrices
 {
     mat4 projMatrix;
     mat4 viewMatrix;
