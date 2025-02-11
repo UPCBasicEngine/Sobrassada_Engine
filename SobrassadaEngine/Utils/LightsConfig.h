@@ -53,6 +53,7 @@ class LightsConfig
 
   public:
     void InitSkybox();
+    void InitLightBuffers();
     void EditorParams();
     void RenderSkybox(float4x4 &projection, float4x4& view) const;
     void SetLightsShaderData();
@@ -68,6 +69,10 @@ class LightsConfig
     unsigned int skyboxProgram;
     float3 ambientColor;
     float ambientIntensity;
+
+    unsigned int ambientBufferId;
+    unsigned int pointBufferId;
+    unsigned int spotBufferId;
 
     std::vector<PointLight> pointLights;
     std::vector<SpotLight> spotLights;

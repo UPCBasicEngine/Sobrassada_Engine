@@ -1,10 +1,10 @@
 #include "LightsConfig.h"
 
 #include "Application.h"
-#include "TextureModuleTest.h"
-#include "ShaderModule.h"
 #include "CameraModule.h"
 #include "OpenGLModule.h"
+#include "ShaderModule.h"
+#include "TextureModuleTest.h"
 #include "imgui.h"
 
 #include "../Scene/Components/PointLight.h"
@@ -29,29 +29,32 @@ LightsConfig::LightsConfig()
     spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
 }
 
-LightsConfig::~LightsConfig() {}
+LightsConfig::~LightsConfig()
+{
+    glDeleteBuffers(1, &ambientBufferId);
+    glDeleteBuffers(1, &pointBufferId);
+    glDeleteBuffers(1, &spotBufferId);
+}
 
 void LightsConfig::InitSkybox()
 {
-    float skyboxVertices[] = {
-        -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
-        1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+    float skyboxVertices[] = {-1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
+                              1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
 
-        -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
-        -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
+                              -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
+                              -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
 
-        1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
+                              1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
+                              1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
 
-        -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
+                              -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
+                              1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
 
-        -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
+                              -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
+                              1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
 
-        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
-        1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f
-    };
+                              -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
+                              1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
 
     // Generate VBO
     unsigned int vbo;
@@ -63,7 +66,7 @@ void LightsConfig::InitSkybox()
     glGenVertexArrays(1, &skyboxVao);
     glBindVertexArray(skyboxVao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
@@ -71,12 +74,12 @@ void LightsConfig::InitSkybox()
 
     skyboxTexture = LoadSkyboxTexture("Test/cubemap.dds");
 
-    //Load the skybox shaders
+    // Load the skybox shaders
     skyboxProgram = App->GetShaderModule()->GetProgram("Test/skyboxVertex.glsl", "Test/skyboxFragment.glsl");
 }
 
 void LightsConfig::RenderSkybox(float4x4 &projection, float4x4 &view) const
-{ 
+{
     App->GetOpenGLModule()->SetDepthFunc(false);
 
     glUseProgram(skyboxProgram);
@@ -95,7 +98,7 @@ void LightsConfig::RenderSkybox(float4x4 &projection, float4x4 &view) const
 }
 
 void LightsConfig::EditorParams()
-{ 
+{
     ImGui::Begin("Lights Config");
 
     ImGui::SeparatorText("Ambient light");
@@ -103,17 +106,47 @@ void LightsConfig::EditorParams()
     ImGui::SliderFloat("Ambient intensity", &ambientIntensity, 0, 1);
 
     ImGui::End();
+
+    int index = 0;
+    for (SpotLight &spot : spotLights)
+    {
+        spot.EditorParams(index);
+        spot.DrawGizmos();
+        ++index;
+    }
+    index = 0;
+    for (PointLight &point : pointLights)
+    {
+        point.EditorParams(index);
+        point.DrawGizmos();
+        ++index;
+    }
+}
+
+void LightsConfig::InitLightBuffers()
+{
+    glGenBuffers(1, &ambientBufferId);
+
+    glGenBuffers(1, &pointBufferId);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
+    int bufferSize = sizeof(Lights::PointLightShaderData) * pointLights.size() + 16;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &spotBufferId);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
+    bufferSize =
+        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16; // 12 bytes offset between spotlights
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 }
 
 void LightsConfig::SetLightsShaderData()
 {
     // Ambient light
     Lights::AmbientLightShaderData ambient = Lights::AmbientLightShaderData(float4(ambientColor, ambientIntensity));
-    unsigned int ambientId;
-    glGenBuffers(1, &ambientId);
-    glBindBuffer(GL_UNIFORM_BUFFER, ambientId);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, ambientBufferId);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(ambient), &ambient, GL_STATIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 4, ambientId);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 4, ambientBufferId);
 
     SetPointLightsShaderData();
     SetSpotLightsShaderData();
@@ -124,42 +157,32 @@ void LightsConfig::SetPointLightsShaderData()
     std::vector<Lights::PointLightShaderData> points;
     for (int i = 0; i < pointLights.size(); ++i)
     {
-        pointLights[i].EditorParams(i);
-        pointLights[i].DrawGizmos();
-
         // Fill struct data
         points.emplace_back(Lights::PointLightShaderData(
             float4(pointLights[i].GetPosition(), pointLights[i].GetRange()),
             float4(pointLights[i].GetColor(), pointLights[i].GetIntensity())
         ));
     }
-    unsigned int pointId;
-    glGenBuffers(1, &pointId);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointId);
 
-    size_t dataSize = sizeof(Lights::PointLightShaderData);
-    int bufferSize  = dataSize * points.size() + 16;
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    // This only works whith a constant number of lights. If a new light is added, the buffer must be resized
     int count = points.size();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
-
-    int offset = 16;
+    int offset = 16; // Byte start offset for the point light array in the SSBO
     for (const Lights::PointLightShaderData &light : points)
     {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, dataSize, &light);
-        offset += dataSize;
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::PointLightShaderData), &light);
+        offset += sizeof(Lights::PointLightShaderData);
     }
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, pointId);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, pointBufferId);
 }
 
 void LightsConfig::SetSpotLightsShaderData()
 {
+    // This could probably include only lights that changed
     std::vector<Lights::SpotLightShaderData> spots;
     for (int i = 0; i < spotLights.size(); ++i)
     {
-        spotLights[i].EditorParams(i);
-        spotLights[i].DrawGizmos();
-
         // Fill struct data
         spots.emplace_back(Lights::SpotLightShaderData(
             float4(spotLights[i].GetPosition(), spotLights[i].GetRange()),
@@ -167,26 +190,21 @@ void LightsConfig::SetSpotLightsShaderData()
             spotLights[i].GetInnerAngle(), spotLights[i].GetOuterAngle()
         ));
     }
-    unsigned int spotId;
-    glGenBuffers(1, &spotId);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotId);
 
-    float dataSize   = sizeof(Lights::SpotLightShaderData);
-    float bufferSize = (dataSize + 12) * spots.size() + 16; // 12 bytes offset between spotlights
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    // This only works whith a constant number of lights. If a new light is added, the buffer must be resized
     int count = spots.size();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
-
-    int offset = 16;
+    int offset = 16; // Byte start offset for the point light array in the SSBO
     for (const Lights::SpotLightShaderData &light : spots)
     {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, dataSize, &light);
-        offset += dataSize + 12;
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::SpotLightShaderData), &light);
+        offset += sizeof(Lights::SpotLightShaderData) + 12;
     }
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, spotId);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, spotBufferId);
 }
 
-unsigned int LightsConfig::LoadSkyboxTexture(const char* filename) const
+unsigned int LightsConfig::LoadSkyboxTexture(const char *filename) const
 {
     std::string stringPath         = std::string(filename);
     std::wstring widePath          = std::wstring(stringPath.begin(), stringPath.end());

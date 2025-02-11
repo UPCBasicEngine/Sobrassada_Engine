@@ -62,6 +62,7 @@ bool RenderTestModule::Init()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_data), vtx_data, GL_STATIC_DRAW);
 
     lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
 
     return true;
 }
