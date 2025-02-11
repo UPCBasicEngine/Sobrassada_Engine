@@ -4,6 +4,7 @@
 
 #include "Math/float4x4.h"
 #include "Geometry/Frustum.h"
+#include "Geometry/AABB.h"
 
 
 constexpr float DEGTORAD = PI / 180.f;
@@ -24,6 +25,7 @@ public:
 	const float4x4& GetProjectionMatrix() { return projectionMatrix; }
 	const float4x4& GetViewMatrix() { return viewMatrix; }
     void MoveCamera();
+    const AABB& GetFrustumAABB();
 
 	void SetAspectRatio(float newAspectRatio);
 
@@ -31,6 +33,7 @@ public:
 
 private:
 	Frustum camera;
+	 AABB frustumAABB;
 
 	float4x4 viewMatrix;
 	float4x4 projectionMatrix;

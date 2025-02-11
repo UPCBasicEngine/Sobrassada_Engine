@@ -6,6 +6,8 @@
 
 #include "SDL_scancode.h"
 #include "Math/Quat.h"
+#include "MathGeoLib.h"
+#include "DebugDraw/debugdraw.h"
 #include <functional>
 
 CameraModule::CameraModule()
@@ -47,6 +49,7 @@ bool CameraModule::Init()
 update_status CameraModule::Update(float deltaTime)
 {
     MoveCamera();
+    GetFrustumAABB();
 	return UPDATE_CONTINUE;
 }
 
@@ -147,3 +150,15 @@ void CameraModule::MoveCamera()
 
     viewMatrix = camera.ViewMatrix();
 }
+
+const AABB& CameraModule::GetFrustumAABB()
+{
+    float3 corners[8];
+    camera.GetCornerPoints(corners);
+    
+    frustumAABB.Enclose(corners, 8); 
+
+    return frustumAABB;
+}
+
+

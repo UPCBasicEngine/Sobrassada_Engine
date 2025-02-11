@@ -38,6 +38,7 @@ public:
     AABB GetABBModel() const;
 	void SetRenderTexture(int texturePosition);
 
+
 private:
 
 	std::vector<EngineMesh*> meshes;

@@ -107,16 +107,16 @@ update_status RenderTestModule::Render(float deltaTime)
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    bool insideFrustum = CheckFrustum(proj, view);
+    bool insideFrustum = CheckFrustum(proj, view, model);
 
 	if (insideFrustum)
     {
-       GLOG("El objeto esta dentro del Frustum");
+       //GLOG("El objeto esta dentro del Frustum");
         currentLoadedModel->Render(program, proj, view);
     }
     else
     {
-        GLOG("El objeto esta fuera del Frustum");
+       // GLOG("El objeto esta fuera del Frustum");
     }
 	
 
@@ -158,27 +158,93 @@ void RenderTestModule::RenderEditorViewport()
 	ImGui::End();
 }
 
-bool RenderTestModule::CheckFrustum(const math::float4x4 &proj, const math::float4x4 &view)
+bool RenderTestModule::CheckFrustum(const math::float4x4 &proj, const math::float4x4 &view, const math::float4x4 &model)
 {
     OBB currentModelObb = currentLoadedModel->GetOBBModel();
     float3 corners[8];
     currentModelObb.GetCornerPoints(corners);
+    math::float4x4 VP = proj * view;
 
-    for (int i = 0; i < 8; ++i)
+    ExtractFrustumPlanes(VP, frustumPlanes);
+
+    for (int j = 0; j < 6; ++j)
     {
-        float4 cornerLocal(corners[i], 1.0f);
-        float4 cornerGlobal      = cornerLocal;
+        bool allOutside = true;
 
-        float4 transformedCorner = proj * view * cornerGlobal;
-
-        if (transformedCorner.x / transformedCorner.w >= -1.0f && transformedCorner.x / transformedCorner.w <= 1.0f &&
-            transformedCorner.y / transformedCorner.w >= -1.0f && transformedCorner.y / transformedCorner.w <= 1.0f &&
-            transformedCorner.z / transformedCorner.w >= -1.0f && transformedCorner.z / transformedCorner.w <= 1.0f)
+        for (int i = 0; i < 8; ++i)
         {
-            return true;
-            break;
+            if (PointInPlane(corners[i], frustumPlanes[j]))
+            {
+                allOutside = false;
+                break;
+            }
         }
+
+        if (allOutside) return false;
     }
 
-	return false;
+    return true;
+}
+
+void RenderTestModule::ExtractFrustumPlanes(const float4x4 &vpMatrix, float4 planes[6])
+{
+    for (int i = 0; i < 6; ++i)
+    {
+
+        // Plano Izquierda
+        if (i == 0)
+        {
+            planes[i].x = vpMatrix[3][0] + vpMatrix[0][0];
+            planes[i].y = vpMatrix[3][1] + vpMatrix[0][1];
+            planes[i].z = vpMatrix[3][2] + vpMatrix[0][2];
+            planes[i].w = vpMatrix[3][3] + vpMatrix[0][3];
+        }
+        // Plano Derecha
+        else if (i == 1)
+        {
+            planes[i].x = vpMatrix[3][0] - vpMatrix[0][0];
+            planes[i].y = vpMatrix[3][1] - vpMatrix[0][1];
+            planes[i].z = vpMatrix[3][2] - vpMatrix[0][2];
+            planes[i].w = vpMatrix[3][3] - vpMatrix[0][3];
+        }
+        // Plano abajo
+        else if (i == 2)
+        {
+            planes[i].x = vpMatrix[3][0] + vpMatrix[1][0];
+            planes[i].y = vpMatrix[3][1] + vpMatrix[1][1];
+            planes[i].z = vpMatrix[3][2] + vpMatrix[1][2];
+            planes[i].w = vpMatrix[3][3] + vpMatrix[1][3];
+        }
+        // Plano arriba
+        else if (i == 3)
+        {
+            planes[i].x = vpMatrix[3][0] - vpMatrix[1][0];
+            planes[i].y = vpMatrix[3][1] - vpMatrix[1][1];
+            planes[i].z = vpMatrix[3][2] - vpMatrix[1][2];
+            planes[i].w = vpMatrix[3][3] - vpMatrix[1][3];
+        }
+        // Plano Near
+        else if (i == 4)
+        {
+            planes[i].x = vpMatrix[3][0] + vpMatrix[2][0];
+            planes[i].y = vpMatrix[3][1] + vpMatrix[2][1];
+            planes[i].z = vpMatrix[3][2] + vpMatrix[2][2];
+            planes[i].w = vpMatrix[3][3] + vpMatrix[2][3];
+        }
+        // Plano Far
+        else if (i == 5)
+        {
+            planes[i].x = vpMatrix[3][0] - vpMatrix[2][0];
+            planes[i].y = vpMatrix[3][1] - vpMatrix[2][1];
+            planes[i].z = vpMatrix[3][2] - vpMatrix[2][2];
+            planes[i].w = vpMatrix[3][3] - vpMatrix[2][3];
+        }
+
+        planes[i].Normalize4();
+    }
+}
+
+bool RenderTestModule::PointInPlane(const float3 &point, const float4 &plane)
+{
+    return (plane.x * point.x + plane.y * point.y + plane.z * point.z + plane.w) >= 0.0f;
 }
