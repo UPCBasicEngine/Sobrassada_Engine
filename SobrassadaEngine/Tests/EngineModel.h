@@ -5,6 +5,7 @@
 #include "Math/float3.h"
 #include "Math/float2.h"
 
+
 namespace tinygltf
 {
 	class Model;
@@ -33,8 +34,10 @@ public:
 	int GetTotalLoadedTextures() const { return textures.size(); };
 	int GetRenderTexture() const { return renderTexture; };
 	void GetTextureSize(float2& outTextureSize);
-
+    OBB GetOBBModel() const;
+    AABB GetABBModel() const;
 	void SetRenderTexture(int texturePosition);
+
 
 private:
 

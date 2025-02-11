@@ -167,6 +167,8 @@ void EngineMesh::SetBasicModelMatrix(float4x4& newModelMatrix)
 	basicModelMatrix = newModelMatrix;
 }
 
+float4x4 EngineMesh::GetBasicModelMatrix() { return basicModelMatrix;}
+
 void EngineMesh::Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix)
 {
 
