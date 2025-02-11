@@ -30,6 +30,9 @@ bool EditorUIModule::Init()
 
     editorViewport = new EditorViewport();
 
+    width          = App->GetWindowModule()->GetWidth();
+    height         = App->GetWindowModule()->GetHeight();
+
     return true;
 }
 
@@ -76,9 +79,6 @@ bool EditorUIModule::ShutDown()
     framerate.clear();
     frametime.clear();
 
-    accPaths.clear();
-    files.clear();
-
     delete editorViewport;
 
     return true;
@@ -110,11 +110,15 @@ void EditorUIModule::Draw()
 {
     ImGui::DockSpaceOverViewport();
     MainMenu();
-    //ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     if (consoleMenu) Console(consoleMenu);
 
     if (import) ImportDialog(import);
+
+    if (load) LoadDialog(load);
+
+    if (save) SaveDialog(save);
 
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
@@ -123,14 +127,23 @@ void EditorUIModule::MainMenu()
 {
     ImGui::BeginMainMenuBar();
 
-    // General menu
-    if (ImGui::BeginMenu("General"))
+    if (ImGui::BeginMenu("File"))
     {
-        if (ImGui::MenuItem("Console")) consoleMenu = !consoleMenu;
+        if (ImGui::MenuItem("Import", "", import)) import = !import;
 
-        if (ImGui::MenuItem("Import")) import = !import;
+        if (ImGui::MenuItem("Load", "", load)) load = !load;
+
+        if (ImGui::MenuItem("Save", "", save)) save = !save;
 
         if (ImGui::MenuItem("Quit")) closeApplication = true;
+
+        ImGui::EndMenu();
+    }
+
+    // General menu
+    if (ImGui::BeginMenu("View"))
+    {
+        if (ImGui::MenuItem("Console", "", consoleMenu)) consoleMenu = !consoleMenu;
 
         ImGui::EndMenu();
     }
@@ -138,7 +151,7 @@ void EditorUIModule::MainMenu()
     // Settings menu
     if (ImGui::BeginMenu("Settings"))
     {
-        if (ImGui::MenuItem("Editor settings")) editorSettingsMenu = !editorSettingsMenu;
+        if (ImGui::MenuItem("Editor settings", "", editorSettingsMenu)) editorSettingsMenu = !editorSettingsMenu;
 
         ImGui::EndMenu();
     }
@@ -146,13 +159,99 @@ void EditorUIModule::MainMenu()
     ImGui::EndMainMenuBar();
 }
 
+void EditorUIModule::LoadDialog(bool &load)
+{
+    ImGui::SetNextWindowSize(ImVec2(width * 0.4f, height * 0.4f), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("Load Scene", &load, ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::End();
+        return;
+    }
+
+    static std::string inputFile = "";
+    static std::vector<std::string> files;
+    const std::string libraryPath = startPath + DELIMITER + SCENES_PATH;
+
+    ImGui::BeginChild("scrollFiles", ImVec2(0, -30), ImGuiChildFlags_Borders);
+
+    if (FileSystem::Exists(libraryPath.c_str()))
+    {
+        if (ImGui::TreeNode("Scenes"))
+        {
+            GetFilesSorted(libraryPath, files);
+
+            static int selected = -1;
+
+            for (int i = 0; i < files.size(); i++)
+            {
+                const std::string &file = files[i];
+                if (ImGui::Selectable(file.c_str(), selected == i))
+                {
+                    selected  = i;
+                    inputFile = file;
+                }
+            }
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::EndChild();
+
+    ImGui::InputText("##filename", &inputFile[0], inputFile.size(), ImGuiInputTextFlags_ReadOnly);
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Ok", ImVec2(0, 0)))
+    {
+        if (!inputFile.empty())
+        {
+            std::string loadPath = libraryPath + inputFile;
+            // LoadScene
+        }
+        inputFile = "";
+        load      = false;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Cancel", ImVec2(0, 0)))
+    {
+        inputFile = "";
+        load      = false;
+    }
+
+    ImGui::End();
+}
+
+void EditorUIModule::SaveDialog(bool &save)
+{
+    if (!ImGui::Begin("Save Scene", &save, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::End();
+        return;
+    }
+
+    ImGui::End();
+}
+
 void EditorUIModule::ImportDialog(bool &import)
 {
-    ImGui::Begin("Import Asset", &import);
+    ImGui::SetNextWindowSize(ImVec2(width * 0.4f, height * 0.4f), ImGuiCond_FirstUseEver);
 
-    static std::string currentPath = std::filesystem::current_path().string();
+    if (!ImGui::Begin("Import Asset", &import, ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::End();
+        return;
+    }
+
+    static std::string currentPath = startPath;
+    std::vector<std::string> accPaths;
+    static std::vector<std::string> files;
+    std::vector<std::string> filteredFiles;
+
     static char searchQuery[32];
-    static std::vector<std::string> filteredFiles;
     static bool showDrives = false;
 
     // root directory add delimiter
@@ -197,7 +296,7 @@ void EditorUIModule::ImportDialog(bool &import)
 
     static std::string inputFile = "";
 
-    ImGui::BeginChild("scrollFiles", ImVec2(0, -70), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+    ImGui::BeginChild("scrollFiles", ImVec2(0, -70), ImGuiChildFlags_Borders);
 
     if (showDrives)
     {
@@ -212,7 +311,9 @@ void EditorUIModule::ImportDialog(bool &import)
     }
     else
     {
-        GetFilesSorted(currentPath);
+        GetFilesSorted(currentPath, files);
+
+        files.insert(files.begin(), "..");
 
         filteredFiles.clear();
 
@@ -244,7 +345,7 @@ void EditorUIModule::ImportDialog(bool &import)
                     currentPath = FileSystem::GetParentPath(currentPath);
                     inputFile   = "";
                     selected    = -1;
-                    GetFilesSorted(currentPath);
+                    GetFilesSorted(currentPath, files);
                     searchQuery[0] = '\0';
                 }
                 else if (isDirectory)
@@ -252,7 +353,7 @@ void EditorUIModule::ImportDialog(bool &import)
                     currentPath = filePath;
                     inputFile   = "";
                     selected    = -1;
-                    GetFilesSorted(currentPath);
+                    GetFilesSorted(currentPath, files);
                     searchQuery[0] = '\0';
                 }
                 else
@@ -298,12 +399,10 @@ void EditorUIModule::ImportDialog(bool &import)
     ImGui::End();
 }
 
-void EditorUIModule::GetFilesSorted(const std::string &currentPath)
+void EditorUIModule::GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files)
 {
     // files & dir in the current directory
     FileSystem::GetAllInDirectory(currentPath, files);
-
-    files.insert(files.begin(), "..");
 
     std::sort(
         files.begin(), files.end(),
@@ -320,7 +419,11 @@ void EditorUIModule::GetFilesSorted(const std::string &currentPath)
 
 void EditorUIModule::Console(bool &consoleMenu)
 {
-    ImGui::Begin("Console", &consoleMenu);
+    if (!ImGui::Begin("Console", &consoleMenu))
+    {
+        ImGui::End();
+        return;
+    }
 
     for (const char *log : *Logs)
     {
@@ -338,7 +441,11 @@ void EditorUIModule::Console(bool &consoleMenu)
 
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
 {
-    ImGui::Begin("Editor settings", &editorSettingsMenu);
+    if (!ImGui::Begin("Editor settings", &editorSettingsMenu))
+    {
+        ImGui::End();
+        return;
+    }
 
     ImGui::SeparatorText("Ms and Fps Graph");
     FramePlots();

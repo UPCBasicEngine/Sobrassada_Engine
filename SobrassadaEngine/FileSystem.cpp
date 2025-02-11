@@ -137,9 +137,9 @@ namespace FileSystem
         }
     }
 
-    void SplitAccumulatedPath(const std::string &path, std::vector<std::string> &parts)
+    void SplitAccumulatedPath(const std::string &path, std::vector<std::string> &accPaths)
     {
-        parts.clear();
+        accPaths.clear();
         std::stringstream ss(path);
         std::string part;
         std::string accumulatedPath;
@@ -153,7 +153,7 @@ namespace FileSystem
                     accumulatedPath += DELIMITER;
                 }
                 accumulatedPath += part;
-                parts.push_back(accumulatedPath);
+                accPaths.push_back(accumulatedPath);
             }
         }
     }

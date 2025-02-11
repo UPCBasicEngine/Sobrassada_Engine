@@ -46,13 +46,18 @@ enum update_status
 #define DEFAULT_GL_CLEAR_COLOR_BLUE  0.5f
 
 #define DEFAULT_CAMERA_MOVEMENT_SCALE_FACTOR 1.f;
-#define DEFAULT_CAMERA_MOVMENT_SPEED         7.5f;
+#define DEFAULT_CAMERA_MOVEMENT_SPEED        7.5f;
 #define DEFAULT_CAMERA_MOUSE_SENSITIVITY     0.5f;
-#define DEFAUL_CAMERA_ZOOM_SENSITIVITY       5.f;
+#define DEFAULT_CAMERA_ZOOM_SENSITIVITY      5.f;
 
-#define ASSETS_PATH        "Assets/"
-#define MESHES_PATH        "Library/Meshes/"
-#define MATERIALS_PATH     "Library/Materials/"
+#define ASSETS_PATH     "Assets/"
+#define ANIMATIONS_PATH "Library/Animations/"
+#define AUDIO_PATH      "Library/Audio/"
+#define BONES_PATH      "Library/Bones/"
+#define MESHES_PATH     "Library/Meshes/"
+#define MATERIALS_PATH  "Library/Materials/"
+#define SCENES_PATH     "Library/Scenes/"
+
 #define FILE_EXTENSION     ".sobrassada"
 #define MATERIAL_EXTENSION ".dds"
 

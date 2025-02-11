@@ -34,11 +34,15 @@ class EditorUIModule : public Module
 
     void Console(bool &consoleMenu);
     void ImportDialog(bool &import);
-    void GetFilesSorted(const std::string &currentPath);
+    void GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files);
+    void LoadDialog(bool &load);
+    void SaveDialog(bool &save);
 
   private:
     bool consoleMenu        = false;
     bool import             = false;
+    bool load               = false;
+    bool save               = false;
     bool loadScene          = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
@@ -49,7 +53,7 @@ class EditorUIModule : public Module
 
     EditorViewport *editorViewport = nullptr;
 
-    std::vector<std::string> accPaths;
-    std::vector<std::string> files;
+    int width, height;
+
     std::string startPath;
 };

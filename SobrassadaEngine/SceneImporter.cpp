@@ -91,25 +91,53 @@ namespace SceneImporter
 
     void CreateLibraryDirectories()
     {
-        if (!FileSystem::IsDirectory("Assets"))
+        if (!FileSystem::IsDirectory(ASSETS_PATH))
         {
-            if (!FileSystem::CreateDirectories("Assets"))
+            if (!FileSystem::CreateDirectories(ASSETS_PATH))
             {
-                GLOG("Failed to create directory: Assets");
+                GLOG("Failed to create directory: %s", ASSETS_PATH);
             }
         }
-        if (!FileSystem::IsDirectory("Library/Meshes"))
+        if (!FileSystem::IsDirectory(ANIMATIONS_PATH))
         {
-            if (!FileSystem::CreateDirectories("Library/Meshes"))
+            if (!FileSystem::CreateDirectories(ANIMATIONS_PATH))
             {
-                GLOG("Failed to create directory: Library/Meshes");
+                GLOG("Failed to create directory: %s", ANIMATIONS_PATH);
             }
         }
-        if (!FileSystem::IsDirectory("Library/Materials"))
+        if (!FileSystem::IsDirectory(AUDIO_PATH))
         {
-            if (!FileSystem::CreateDirectories("Library/Materials"))
+            if (!FileSystem::CreateDirectories(AUDIO_PATH))
             {
-                GLOG("Failed to create directory: Library/Materials");
+                GLOG("Failed to create directory: %s", AUDIO_PATH);
+            }
+        }
+        if (!FileSystem::IsDirectory(BONES_PATH))
+        {
+            if (!FileSystem::CreateDirectories(BONES_PATH))
+            {
+                GLOG("Failed to create directory: %s", BONES_PATH);
+            }
+        }
+        if (!FileSystem::IsDirectory(MESHES_PATH))
+        {
+            if (!FileSystem::CreateDirectories(MESHES_PATH))
+            {
+                GLOG("Failed to create directory: %s", MESHES_PATH);
+            }
+        }
+        if (!FileSystem::IsDirectory(MATERIALS_PATH))
+        {
+            if (!FileSystem::CreateDirectories(MATERIALS_PATH))
+            {
+                GLOG("Failed to create directory: %s", MATERIALS_PATH);
+            }
+        }
+        if (!FileSystem::IsDirectory(SCENES_PATH))
+        {
+            if (!FileSystem::CreateDirectories(SCENES_PATH))
+            {
+                GLOG("Failed to create directory: %s", SCENES_PATH);
             }
         }
     }
