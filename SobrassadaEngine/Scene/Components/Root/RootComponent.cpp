@@ -16,6 +16,7 @@ RootComponent::RootComponent(const uint32_t uuid, const uint32_t uuidParent, con
 }
 
 RootComponent::~RootComponent(){
+    Component::~Component();
 }
 
 bool RootComponent::AddChildComponent(const uint32_t componentUUID)
@@ -120,7 +121,7 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     {
         base_flags |= ImGuiTreeNodeFlags_Leaf;
     }
-    const bool isExpanded = ImGui::TreeNodeEx(std::to_string(uuid).c_str(), base_flags);
+    const bool isExpanded = ImGui::TreeNodeEx((void*) uuid, base_flags, name);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         SetSelectedComponent(uuid);
 

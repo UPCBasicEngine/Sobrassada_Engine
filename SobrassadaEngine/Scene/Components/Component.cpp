@@ -101,7 +101,7 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     {
         base_flags |= ImGuiTreeNodeFlags_Leaf;
     }
-    const bool isExpanded = ImGui::TreeNodeEx(std::to_string(uuid).c_str(), base_flags);
+    const bool isExpanded = ImGui::TreeNodeEx((void*) uuid, base_flags, name);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
         GameObject* selectedGameObject = App->GetSceneModule()->GetSeletedGameObject();
@@ -219,7 +219,7 @@ void Component::CalculateGlobalAABB()
 
         if (childComponent != nullptr)
         {
-            globalComponentAABB.Enclose(childComponent->TransformUpdated(globalTransform));
+            globalComponentAABB.Enclose(childComponent->GetGlobalAABB());
         }
     }
 }

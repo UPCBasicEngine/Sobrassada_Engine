@@ -58,7 +58,7 @@ void MeshComponent::RenderEditorInspector()
     // TODO Rework texture system (Not working properly)
 
     ImGui::SeparatorText("Diffuse texture");
-    ImGui::Text(currentTexureName.c_str());
+    ImGui::Text(currentTextureName.c_str());
     ImGui::SameLine();
     if (ImGui::Button("Select texture"))
     {
@@ -79,6 +79,7 @@ void MeshComponent::RenderEditorInspector()
                     {
                         if (ImGui::Selectable(texturePair.first.c_str(), false))
                         {
+                            currentTextureName = texturePair.first;
                             currentTexureUUID = texturePair.second;
                             ImGui::CloseCurrentPopup();
                         }

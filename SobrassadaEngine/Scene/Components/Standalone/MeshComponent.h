@@ -23,7 +23,7 @@ private:
     std::string currentMeshName = "Not selected";
     uint32_t currentMeshUUID = CONSTANT_NO_MESH_UUID;
 
-    std::string currentTexureName = "Not selected";
+    std::string currentTextureName = "Not selected";
     uint32_t currentTexureUUID = CONSTANT_NO_TEXTURE_UUID;
     
 };

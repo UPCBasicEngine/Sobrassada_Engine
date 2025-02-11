@@ -20,6 +20,7 @@ GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(paren
 GameObject::~GameObject(){
     App->GetSceneModule()->gameComponents.erase(rootComponent->GetUUID());
     delete rootComponent;
+    rootComponent = nullptr;
 }
 
 bool GameObject::CreateRootComponent()
@@ -62,19 +63,22 @@ void GameObject::Render()
 {
     if (rootComponent != nullptr)
     {
-        rootComponent->Render();
-    }
+       rootComponent->Render();
+    } 
 }
 
 void GameObject::RenderEditor()
 {
+    if (App->GetEditorUIModule()->inspectorMenu)
+    {
+        if (rootComponent != nullptr)
+        {
+            rootComponent->RenderComponentEditor();
+        }
+    }
     if (App->GetEditorUIModule()->hierarchyMenu)
     {
         App->GetSceneModule()->RenderHierarchyUI(App->GetEditorUIModule()->hierarchyMenu);
-    }
-    if (App->GetEditorUIModule()->inspectorMenu)
-    {
-        if (rootComponent)  rootComponent->RenderComponentEditor();
     }
 }
 
