@@ -52,16 +52,22 @@ class LightsConfig
     ~LightsConfig();
 
   public:
-    void InitSkybox();
-    void InitLightBuffers();
     void EditorParams();
-    void RenderSkybox(float4x4 &projection, float4x4& view) const;
-    void SetLightsShaderData();
+
+    void InitSkybox();
+    void RenderSkybox(float4x4 &projection, float4x4 &view) const;
+
+    void InitLightBuffers();
+    void SetLightsShaderData() const;
+    void AddPointLight();
+    void RemovePointLight();
+    void AddSpotLight();
+    void RemoveSpotLight();
 
   private:
     unsigned int LoadSkyboxTexture(const char *filename) const;
-    void SetPointLightsShaderData();
-    void SetSpotLightsShaderData();
+    void SetPointLightsShaderData() const;
+    void SetSpotLightsShaderData() const;
 
   private:
     unsigned int skyboxVao;

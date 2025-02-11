@@ -97,6 +97,15 @@ void LightsConfig::RenderSkybox(float4x4 &projection, float4x4 &view) const
     App->GetOpenGLModule()->SetDepthFunc(true);
 }
 
+unsigned int LightsConfig::LoadSkyboxTexture(const char *filename) const
+{
+    std::string stringPath         = std::string(filename);
+    std::wstring widePath          = std::wstring(stringPath.begin(), stringPath.end());
+    const wchar_t *wideTexturePath = widePath.c_str();
+    return App->GetTextureModuleTest()->LoadCubemap(wideTexturePath);
+    delete[] wideTexturePath;
+}
+
 void LightsConfig::EditorParams()
 {
     ImGui::Begin("Lights Config");
@@ -139,7 +148,7 @@ void LightsConfig::InitLightBuffers()
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 }
 
-void LightsConfig::SetLightsShaderData()
+void LightsConfig::SetLightsShaderData() const
 {
     // Ambient light
     Lights::AmbientLightShaderData ambient = Lights::AmbientLightShaderData(float4(ambientColor, ambientIntensity));
@@ -152,7 +161,7 @@ void LightsConfig::SetLightsShaderData()
     SetSpotLightsShaderData();
 }
 
-void LightsConfig::SetPointLightsShaderData()
+void LightsConfig::SetPointLightsShaderData() const
 {
     std::vector<Lights::PointLightShaderData> points;
     for (int i = 0; i < pointLights.size(); ++i)
@@ -177,7 +186,7 @@ void LightsConfig::SetPointLightsShaderData()
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, pointBufferId);
 }
 
-void LightsConfig::SetSpotLightsShaderData()
+void LightsConfig::SetSpotLightsShaderData() const
 {
     // This could probably include only lights that changed
     std::vector<Lights::SpotLightShaderData> spots;
@@ -204,11 +213,7 @@ void LightsConfig::SetSpotLightsShaderData()
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, spotBufferId);
 }
 
-unsigned int LightsConfig::LoadSkyboxTexture(const char *filename) const
-{
-    std::string stringPath         = std::string(filename);
-    std::wstring widePath          = std::wstring(stringPath.begin(), stringPath.end());
-    const wchar_t *wideTexturePath = widePath.c_str();
-    return App->GetTextureModuleTest()->LoadCubemap(wideTexturePath);
-    delete[] wideTexturePath;
-}
+void LightsConfig::AddPointLight() {}
+void LightsConfig::AddSpotLight() {}
+void LightsConfig::RemovePointLight() {}
+void LightsConfig::RemoveSpotLight() {}
