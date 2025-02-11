@@ -14,7 +14,8 @@ public:
     bool DeleteChildComponent(const uint32_t componentUUID) override;
     void RenderComponentEditor();
     void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
-    void RenderEditorInspector() override;
+
+    AABB& TransformUpdated(const Transform& parentGlobalTransform) override;
 
     void Update() override;
 

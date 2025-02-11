@@ -2,6 +2,7 @@
 
 #include "EngineModel.h"
 #include "Module.h"
+#include "Scene/AABBUpdatable.h"
 
 #include <map>
 #include <string>
@@ -46,12 +47,13 @@ public:
     void UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID);
 
 	//TODO: Change when filesystem defined
-	inline GameObject *GetGameObjectByUUID(uint32_t gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
+    GameObject *GetGameObjectByUUID(uint32_t gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
 
     GameObject * GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
 
 
     std::map<uint32_t, Component*> gameComponents;
+    
     std::map<uint32_t, EngineMesh*> MOCKUP_loadedMeshes;
     std::map<std::string, uint32_t> MOCKUP_libraryMeshes;
 
@@ -60,7 +62,7 @@ public:
     
     EngineModel* MOCKUP_loadedModel;
 
-    
+    AABBUpdatable* GetTargetForAABBUpdate(uint32_t uuid);
 
     void MOCKUP_loadModel(std::string path);
 
@@ -71,6 +73,8 @@ private:
 	uint32_t selectedGameObjectUUID;
 
 	std::unordered_map<uint32_t, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
+
+    // Scene* loadedScene = nullptr;
     
 	//pawnClassType;
 	//updatedGameObjects;

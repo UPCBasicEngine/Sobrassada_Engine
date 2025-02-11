@@ -1,7 +1,10 @@
 #pragma once
 
+#include "debug_draw.hpp"
 #include "Math/float4x4.h"
 #include "Math/float3.h"
+
+#include <Geometry/AABB.h>
 
 namespace tinygltf
 {
@@ -20,14 +23,13 @@ public:
 	void LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
 	void CreateVAO();
 
-	float3 GetMaximumPosition() const { return maximumPosition; } 
-	float3 GetMinimumPosition() const { return minimumPosition; }
-
 	int GetIndexCount() const { return indexCount; }
 
 	void SetBasicModelMatrix(float4x4& newModelMatrix);
 
 	void Render(int program, unsigned int texture, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix);
+
+    const AABB& GetAABB() const { return aabb;}
 
 private:
     
@@ -41,7 +43,6 @@ private:
 
 	float4x4 basicModelMatrix;
 
-	float3 maximumPosition;
-	float3 minimumPosition;
+    AABB aabb;
 };
 

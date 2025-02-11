@@ -7,9 +7,17 @@
 #include "imgui.h"
 #include "Root/RootComponent.h"
 #include "GameObject.h"
+#include "debug_draw.hpp"
+
+#include <Geometry/OBB.h>
+#include <Math/Quat.h>
 
 Component::Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform):
-uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform){}
+uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform)
+{
+    localComponentAABB.SetNegativeInfinity();
+    globalComponentAABB.SetNegativeInfinity();
+}
 
 Component::~Component(){
     for (const uint32_t child : children)
@@ -70,7 +78,14 @@ void Component::RenderEditorInspector()
         ImGui::Separator();
         if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
         {
-            TransformUpdated();
+            Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
+            if (parentComponent != nullptr)
+            {
+                TransformUpdated(parentComponent->globalTransform);
+            } else
+            {
+                TransformUpdated(Transform());
+            }
         }
     }
 }
@@ -115,12 +130,6 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     }
 }
 
-void Component::ParentGlobalTransformUpdated(const Transform &parentGlobalTransform)
-{
-    globalTransform = parentGlobalTransform + localTransform;
-    TransformUpdated();
-}
-
 void Component::HandleDragNDrop(){
     if (ImGui::BeginDragDropSource())
     {
@@ -149,7 +158,7 @@ void Component::HandleDragNDrop(){
                         draggedComponent->SetUUIDParent(uuid); // TODO Add set parent uuid into the AddChildComponent function
                         AddChildComponent(draggedUUID);
                         draggedComponent->localTransform.Set(draggedComponent->globalTransform - globalTransform);
-                        draggedComponent->TransformUpdated();
+                        draggedComponent->TransformUpdated(globalTransform);
                     }
                 }
             }
@@ -158,11 +167,54 @@ void Component::HandleDragNDrop(){
     }
 }
 
-void Component::TransformUpdated(){
+void Component::OnTransformUpdate(const Transform &parentGlobalTransform)
+{
+    TransformUpdated(globalTransform);
+    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+    if (parent != nullptr)
+    {
+        parent->PassAABBUpdateToParent();
+    }
+}
+
+AABB& Component::TransformUpdated(const Transform &parentGlobalTransform)
+{
+    globalTransform = parentGlobalTransform + localTransform;
+
+    CalculateGlobalAABB();
+
+    return globalComponentAABB;
+}
+
+void Component::PassAABBUpdateToParent()
+{
+    CalculateGlobalAABB();
+
+    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+    if (parent != nullptr)
+    {
+        parent->PassAABBUpdateToParent();
+    }
+}
+
+void Component::CalculateGlobalAABB()
+{
+    OBB globalComponentOBB = OBB(localComponentAABB);
+    globalComponentOBB.Transform(float4x4::FromTRS(
+                    globalTransform.position,
+                    Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
+                    globalTransform.scale)); // TODO Testing once the aabb debug renderer is available
+    
+    
+    globalComponentAABB = AABB(globalComponentOBB);
+    
     for (uint32_t child : children)
     {
         Component* childComponent = App->GetSceneModule()->gameComponents[child];
 
-        if (childComponent != nullptr)  childComponent->ParentGlobalTransformUpdated(globalTransform);
+        if (childComponent != nullptr)
+        {
+            globalComponentAABB.Enclose(childComponent->TransformUpdated(globalTransform));
+        }
     }
 }

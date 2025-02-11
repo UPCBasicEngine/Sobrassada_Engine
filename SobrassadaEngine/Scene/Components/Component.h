@@ -2,10 +2,13 @@
 
 #include "Transform.h"
 #include "ComponentUtils.h"
+#include "debug_draw.hpp"
+#include "Scene/AABBUpdatable.h"
 
 #include <vector>
+#include <Geometry/AABB.h>
 
-class Component
+class Component : public AABBUpdatable
 {
 public:
 
@@ -23,7 +26,9 @@ public:
     virtual void RenderEditorInspector();
     virtual void RenderEditorComponentTree(const uint32_t selectedComponentUUID);
 
-    virtual void ParentGlobalTransformUpdated(const Transform& parentGlobalTransform);
+    virtual void OnTransformUpdate(const Transform &parentGlobalTransform);
+    virtual AABB& TransformUpdated(const Transform &parentGlobalTransform);
+    void PassAABBUpdateToParent() override;
 
     void HandleDragNDrop();
 
@@ -36,9 +41,13 @@ public:
     const Transform& GetGlobalTransform() const { return globalTransform; }
     const Transform& GetLocalTransform() const { return localTransform; }
 
-protected:
+    const AABB& GetGlobalAABB() const { return globalComponentAABB; }
 
-    virtual void TransformUpdated();
+    void CalculateGlobalAABB();
+
+    
+
+protected:
     
     const uint32_t uuid;
     const uint32_t uuidRoot;
@@ -50,5 +59,8 @@ protected:
     
     Transform localTransform;
     Transform globalTransform;
+
+    AABB localComponentAABB;
+    AABB globalComponentAABB;
     
 };

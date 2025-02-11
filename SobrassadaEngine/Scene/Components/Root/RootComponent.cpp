@@ -5,6 +5,7 @@
 #include "SceneModule.h"
 #include "imgui.h"
 #include "Scene/Components/Standalone/MeshComponent.h"
+#include "Scene/GameObjects/GameObject.h"
 
 #include <Algorithm/Random/LCG.h>
 
@@ -139,9 +140,18 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     ImGui::PopStyleVar();
 }
 
-void RootComponent::RenderEditorInspector()
+AABB& RootComponent::TransformUpdated(const Transform &parentGlobalTransform)
 {
-    Component::RenderEditorInspector();
+    Component::TransformUpdated(parentGlobalTransform);
+
+    // TODO Readd as soon as the uuidParent is set correctly
+    /*GameObject* parentGameObject = App->GetSceneModule()->GetGameObjectByUUID(uuidParent);
+    if (parentGameObject != nullptr)
+    {
+        parentGameObject->AABBUpdated();
+    }*/
+
+    return globalComponentAABB;
 }
 
 void RootComponent::Update()

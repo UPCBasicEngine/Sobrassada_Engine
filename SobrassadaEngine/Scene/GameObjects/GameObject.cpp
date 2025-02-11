@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "EditorUIModule.h"
 #include "SceneModule.h"
+#include "Root/RootComponent.h"
 
 #include <Algorithm/Random/LCG.h>
 
@@ -24,6 +25,7 @@ GameObject::~GameObject(){
 bool GameObject::CreateRootComponent()
 {
     rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), parentUUID, -1, Transform())); // TODO Add the gameObject UUID as parent?
+    // TODO Replace parentUUID above with the UUID of this gameObject
     App->GetSceneModule()->gameComponents[rootComponent->GetUUID()] = rootComponent;
     return true;
 }
@@ -74,4 +76,9 @@ void GameObject::RenderEditor()
     {
         if (rootComponent)  rootComponent->RenderComponentEditor();
     }
+}
+
+void GameObject::PassAABBUpdateToParent()
+{
+    // TODO Update AABBs further up the gameObject tree
 }

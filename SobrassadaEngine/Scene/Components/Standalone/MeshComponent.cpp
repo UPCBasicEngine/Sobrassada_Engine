@@ -125,4 +125,9 @@ void MeshComponent::LoadMesh(const std::string& meshName, uint32_t meshUUID)
 {
     currentMeshName = meshName;
     currentMeshUUID = meshUUID;
+    EngineMesh* mesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
+    if (mesh != nullptr)
+    {
+        localComponentAABB = AABB(mesh->GetAABB());
+    }
 }

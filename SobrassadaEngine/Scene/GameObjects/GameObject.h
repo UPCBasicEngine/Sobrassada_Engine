@@ -1,11 +1,13 @@
 #pragma once
 #include "BoundingBox.h"
-#include "Root/RootComponent.h"
+#include "Scene/AABBUpdatable.h"
 
 #include <vector>
 #include <string>
 
-class GameObject
+class RootComponent;
+
+class GameObject : public AABBUpdatable
 {
 public:
 
@@ -35,6 +37,8 @@ public:
     
     void Render();
     void RenderEditor();
+    
+    void PassAABBUpdateToParent() override;
 
 private:
 

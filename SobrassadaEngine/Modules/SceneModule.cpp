@@ -9,10 +9,10 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
 
-#include "Algorithm/Random/LCG.h"
 #include "Root/RootComponent.h"
 
 #include <tiny_gltf.h>
+#include <Algorithm/Random/LCG.h>
 
 SceneModule::SceneModule()
 {
@@ -335,4 +335,19 @@ void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t target
 
     targetGameObject->AddGameObject(sourceUUID);
 
+}
+
+AABBUpdatable * SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
+{
+    if (gameObjectsContainer.count(uuid))
+    {
+        return gameObjectsContainer[uuid];
+    }
+
+    if (gameComponents.count(uuid))
+    {
+        return gameComponents[uuid];
+    }
+
+    return nullptr;
 }

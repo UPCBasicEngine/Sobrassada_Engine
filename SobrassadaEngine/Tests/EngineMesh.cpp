@@ -14,9 +14,9 @@
 
 EngineMesh::EngineMesh()
 {
-	basicModelMatrix = float4x4::identity;
-	maximumPosition = float3(0.f, 0.f, 0.f);
-	minimumPosition = float3(0.f, 0.f, 0.f);
+    basicModelMatrix = float4x4::identity;
+    
+    aabb.SetNegativeInfinity();
 }
 
 EngineMesh::~EngineMesh()
@@ -58,9 +58,10 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 		SDL_assert(positionAccessor.type == TINYGLTF_TYPE_VEC3);
 		SDL_assert(positionAccessor.componentType == GL_FLOAT);
 
-		maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
-		minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
-
+		const float3 maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
+		const float3 minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
+                aabb = AABB(minimumPosition, maximumPosition);
+	    
 		const tinygltf::BufferView& positionBufferView = inModel.bufferViews[positionAccessor.bufferView];
 		const tinygltf::Buffer& positionBuffer = inModel.buffers[positionBufferView.buffer];
 

@@ -341,6 +341,7 @@
     <ClCompile Include="Tests\RenderTestModule.cpp" />
     <ClCompile Include="Modules\ShaderModule.cpp" />
     <ClCompile Include="Tests\TextureModuleTest.cpp" />
+    <ClCompile Include="Utils\Scene.cpp" />
     <ClCompile Include="Utils\UPCTimer.cpp" />
     <ClCompile Include="Modules\WindowModule.cpp" />
   </ItemGroup>
@@ -348,6 +349,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="Modules\SceneModule.h" />
+    <ClInclude Include="Scene\AABBUpdatable.h" />
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="Scene\Components\Root\RootComponent.h" />
     <ClInclude Include="Scene\Components\Standalone\MeshComponent.h" />
@@ -379,6 +381,7 @@
     <ClInclude Include="Tests\RenderTestModule.h" />
     <ClInclude Include="Modules\ShaderModule.h" />
     <ClInclude Include="Tests\TextureModuleTest.h" />
+    <ClInclude Include="Utils\Scene.h" />
     <ClInclude Include="Utils\Transform.h" />
     <ClInclude Include="Utils\UPCTimer.h" />
     <ClInclude Include="Modules\WindowModule.h" />

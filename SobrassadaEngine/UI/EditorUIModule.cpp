@@ -184,8 +184,8 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     bool valueChanged = false;
     
     valueChanged |= ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
-    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians
-    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] );
+    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians, rotate around mesh center / game object center
+    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] ); // Add option to lock scale over all axis
 
     if (valueChanged)
     {
