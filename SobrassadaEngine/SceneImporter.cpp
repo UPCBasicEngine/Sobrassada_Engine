@@ -4,6 +4,7 @@
 #include "Globals.h"
 #include "MeshImporter.h"
 #include "TextureImporter.h"
+#include "Algorithm/Random/LCG.h"
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
@@ -83,6 +84,10 @@ namespace SceneImporter
             for (const auto &primitive : srcMesh.primitives)
             {
                 name += std::to_string(n);
+                
+                uint64_t uuid = GenerateUUID();
+                name += "_" + std::to_string(uuid);
+
                 MeshImporter::ImportMesh(model, srcMesh, primitive, name);
                 n++;
             }
@@ -141,4 +146,18 @@ namespace SceneImporter
             }
         }
     }
-}; // namespace SceneImporter
+
+    uint64_t GenerateUUID() {
+        // Set a 64-bit seed (choose any nonzero value)
+        uint32_t seed = 0x12345678;
+
+        // Construct the LCG with the seed.
+        LCG rng;
+        rng.Seed(seed);
+
+        // Generate a 64-bit UUID using two calls to Int(), as the LCG generates 32-bit numbers.
+        uint64_t uuid = static_cast<uint64_t>(rng.Int()) << 32 | rng.Int();  // Combine two 32-bit values
+
+        return uuid;
+    }
+};
