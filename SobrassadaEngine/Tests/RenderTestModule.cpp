@@ -136,10 +136,6 @@ update_status RenderTestModule::Render(float deltaTime)
     materials = currentLoadedModel->GetMaterials();
     materials.at(0)->OnEditorUpdate();
 
-	glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, normalMapTextureID);
-    glUniform1i(glGetUniformLocation(program, "normal_map"), 1);
-
     
 
 	//glActiveTexture(GL_TEXTURE0);

@@ -29,6 +29,16 @@ void ComponentMaterial::OnEditorUpdate()
         {
             ImGui::SliderFloat3("Specular Color", &specularColor.x, 0.0f, 1.0f);
         }
+        if (hasNormalTexture)
+        {
+            ImGui::Text("Normal Texture");
+            ImGui::Image((ImTextureID)(intptr_t)normalTexture.textureID, ImVec2(256, 256));
+        }
+        else
+        {
+            ImGui::Text("Not Normal Texture");
+        }
+        
         if (!hasShininessInAlpha) ImGui::SliderFloat("Shininess", &shininess, 0.0f, 500.0f);
     }
 }
@@ -73,12 +83,14 @@ TextureInfo ComponentMaterial::GetTexture(const tinygltf::Model sourceModel, int
     }
 }
 
-void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, const tinygltf::Model &sourceModel, const char *modelPath)
+void ComponentMaterial::LoadMaterial(
+    const tinygltf::Material &srcMaterial, const tinygltf::Model &sourceModel, const char *modelPath
+)
 {
-    name = srcMaterial.name;
+    name                   = srcMaterial.name;
     unsigned int textureId = 0;
-        
-	auto it = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
+
+    auto it                = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
     if (it != srcMaterial.extensions.end())
     {
         const tinygltf::Value &ext = it->second;
@@ -88,11 +100,10 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
             const tinygltf::Value &diffuseValue = ext.Get("diffuseFactor");
             if (diffuseValue.IsArray() && diffuseValue.ArrayLen() == 4)
             {
-                diffuseColor =
-                {
-                        static_cast<float>(diffuseValue.Get(0).Get<double>()),
-                        static_cast<float>(diffuseValue.Get(1).Get<double>()),
-                        static_cast<float>(diffuseValue.Get(2).Get<double>()),
+                diffuseColor = {
+                    static_cast<float>(diffuseValue.Get(0).Get<double>()),
+                    static_cast<float>(diffuseValue.Get(1).Get<double>()),
+                    static_cast<float>(diffuseValue.Get(2).Get<double>())
                 };
             }
         }
@@ -102,8 +113,7 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
             const tinygltf::Value &specularValue = ext.Get("specularFactor");
             if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
             {
-                specularColor =
-                {
+                specularColor = {
                     static_cast<float>(specularValue.Get(0).Get<double>()),
                     static_cast<float>(specularValue.Get(1).Get<double>()),
                     static_cast<float>(specularValue.Get(2).Get<double>())
@@ -119,35 +129,37 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
         if (ext.Has("specularGlossinessTexture"))
         {
             int textureIndex = ext.Get("specularGlossinessTexture").Get("index").Get<int>();
-                
+
             if (textureIndex >= 0)
             {
                 hasSpecularTexture = true;
-
-                specularTexture = GetTexture(sourceModel, textureIndex, modelPath);
+                specularTexture    = GetTexture(sourceModel, textureIndex, modelPath);
             }
         }
 
-		if (ext.Has("diffuseTexture"))
+        if (ext.Has("diffuseTexture"))
         {
             int textureIndex = ext.Get("diffuseTexture").Get("index").Get<int>();
-                
+
             if (textureIndex >= 0)
             {
-				hasDiffuseTexture = true;
-
-                diffuseTexture = GetTexture(sourceModel, textureIndex, modelPath);
+                hasDiffuseTexture = true;
+                diffuseTexture    = GetTexture(sourceModel, textureIndex, modelPath);
             }
         }
-    }
 
+        if (srcMaterial.normalTexture.index >= 0)
+        {
+            hasNormalTexture = true;
+            normalTexture    = GetTexture(sourceModel, srcMaterial.normalTexture.index, modelPath);
+        }
+    }
     else
-    {  
-        int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
+    {
+        int textureIndex = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
         if (textureIndex < 0)
         {
-            diffuseColor = 
-            {
+            diffuseColor = {
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[0]),
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[1]),
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[2])
@@ -155,9 +167,15 @@ void ComponentMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, cons
         }
         else
         {
-			hasDiffuseTexture = true;
+            hasDiffuseTexture = true;
+            diffuseTexture    = GetTexture(sourceModel, textureIndex, modelPath);
+        }
 
-            diffuseTexture = GetTexture(sourceModel, textureIndex, modelPath);
+        // Carrega el normal map si està definit en el material estàndard
+        if (srcMaterial.normalTexture.index >= 0)
+        {
+            hasNormalTexture = true;
+            normalTexture    = GetTexture(sourceModel, srcMaterial.normalTexture.index, modelPath);
         }
     }
 }

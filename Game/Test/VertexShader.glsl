@@ -16,8 +16,9 @@ out vec4 tangent;
 void main()
 {
 	pos = vec3(model * vec4(vertex_position, 1.0));
-    normal = vertex_normal;
+    mat3 normalMatrix = mat3(transpose(inverse(model)));
+    normal = normalMatrix * vertex_normal;
     uv0 = vertex_uv0;
-    tangent = vertex_tangent;
+    tangent = vec4(normalMatrix * vertex_tangent.xyz, vertex_tangent.w);
 	gl_Position = proj * view * model * vec4(vertex_position, 1.0f);
 }

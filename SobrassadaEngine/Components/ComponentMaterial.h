@@ -27,6 +27,8 @@ public:
     unsigned int GetDiffuseID() { return diffuseTexture.textureID; }
     bool GetHasSpecularTexture() { return hasSpecularTexture; }
     unsigned int GetSpecularID() { return specularTexture.textureID; }
+    bool GetHasNormalTexture() { return hasSpecularTexture; }
+    unsigned int GetNormalID() { return normalTexture.textureID; }
 
 private:
     std::string name;
@@ -38,6 +40,9 @@ private:
     TextureInfo specularTexture;
     bool hasSpecularTexture            = false;
     float3 specularColor               = {1.0f, 1.0f, 1.0f};
+
+    TextureInfo normalTexture;
+    bool hasNormalTexture            = false;
 
     float shininess                    = 300.00f;
     bool hasShininessInAlpha           = false;

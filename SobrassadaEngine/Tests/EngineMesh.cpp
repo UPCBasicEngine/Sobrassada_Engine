@@ -279,6 +279,12 @@ void EngineMesh::Render(int program, float4x4& projectionMatrix, float4x4& viewM
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, material->GetSpecularID());
     }
+    if (material->GetHasNormalTexture())
+    {
+        glActiveTexture(GL_TEXTURE2);
+        //glBindTexture(GL_TEXTURE_2D, normalMapTextureID);
+        glBindTexture(GL_TEXTURE_2D, material->GetNormalID());
+    }
 
 
 	if (indexCount > 0 && vao)
