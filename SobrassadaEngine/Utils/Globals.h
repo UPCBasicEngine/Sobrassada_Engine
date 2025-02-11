@@ -60,5 +60,6 @@ enum update_status
 
 #define FILE_EXTENSION     ".sobrassada"
 #define MATERIAL_EXTENSION ".dds"
+#define SCENE_EXTENSION    ".scene"
 
 constexpr float PI = 3.14159265359f;

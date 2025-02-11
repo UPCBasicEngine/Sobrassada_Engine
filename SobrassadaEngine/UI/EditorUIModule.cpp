@@ -13,7 +13,7 @@
 #include "imgui_impl_sdl2.h"
 #include <filesystem>
 
-EditorUIModule::EditorUIModule() { startPath = std::filesystem::current_path().string(); }
+EditorUIModule::EditorUIModule() {}
 
 EditorUIModule::~EditorUIModule() {}
 
@@ -32,6 +32,9 @@ bool EditorUIModule::Init()
 
     width          = App->GetWindowModule()->GetWidth();
     height         = App->GetWindowModule()->GetHeight();
+
+    startPath      = std::filesystem::current_path().string();
+    libraryPath    = startPath + DELIMITER + SCENES_PATH;
 
     return true;
 }
@@ -110,7 +113,7 @@ void EditorUIModule::Draw()
 {
     ImGui::DockSpaceOverViewport();
     MainMenu();
-    // ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
 
     if (consoleMenu) Console(consoleMenu);
 
@@ -161,7 +164,7 @@ void EditorUIModule::MainMenu()
 
 void EditorUIModule::LoadDialog(bool &load)
 {
-    ImGui::SetNextWindowSize(ImVec2(width * 0.4f, height * 0.4f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(width * 0.25f, height * 0.4f), ImGuiCond_FirstUseEver);
 
     if (!ImGui::Begin("Load Scene", &load, ImGuiWindowFlags_NoCollapse))
     {
@@ -171,13 +174,13 @@ void EditorUIModule::LoadDialog(bool &load)
 
     static std::string inputFile = "";
     static std::vector<std::string> files;
-    const std::string libraryPath = startPath + DELIMITER + SCENES_PATH;
 
     ImGui::BeginChild("scrollFiles", ImVec2(0, -30), ImGuiChildFlags_Borders);
 
     if (FileSystem::Exists(libraryPath.c_str()))
     {
-        if (ImGui::TreeNode("Scenes"))
+        // Only scenes for now
+        if (ImGui::TreeNode("Scenes/"))
         {
             GetFilesSorted(libraryPath, files);
 
@@ -208,7 +211,7 @@ void EditorUIModule::LoadDialog(bool &load)
         if (!inputFile.empty())
         {
             std::string loadPath = libraryPath + inputFile;
-            // LoadScene
+            // LoadScene call
         }
         inputFile = "";
         load      = false;
@@ -227,10 +230,60 @@ void EditorUIModule::LoadDialog(bool &load)
 
 void EditorUIModule::SaveDialog(bool &save)
 {
-    if (!ImGui::Begin("Save Scene", &save, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    ImGui::SetNextWindowSize(ImVec2(width * 0.25f, height * 0.4f), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("Save Scene", &save, ImGuiWindowFlags_NoCollapse))
     {
         ImGui::End();
         return;
+    }
+
+    static std::vector<std::string> files;
+    static char inputFile[32];
+
+    ImGui::BeginChild("scrollFiles", ImVec2(0, -30), ImGuiChildFlags_Borders);
+
+    if (FileSystem::Exists(libraryPath.c_str()))
+    {
+        if (ImGui::TreeNode("Scenes/"))
+        {
+            GetFilesSorted(libraryPath, files);
+
+            for (int i = 0; i < files.size(); i++)
+            {
+                const std::string &file = files[i];
+                if (ImGui::Selectable(file.c_str()))
+                {
+                }
+            }
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::EndChild();
+
+    ImGui::InputText("##filename", inputFile, IM_ARRAYSIZE(inputFile));
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Ok", ImVec2(0, 0)))
+    {
+        if (strlen(inputFile) > 0)
+        {
+            std::string savePath = libraryPath + inputFile + SCENE_EXTENSION;
+            // SaveScene call
+        }
+        inputFile[0] = '\0';
+        save         = false;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Cancel", ImVec2(0, 0)))
+    {
+        inputFile[0] = '\0';
+        save         = false;
     }
 
     ImGui::End();

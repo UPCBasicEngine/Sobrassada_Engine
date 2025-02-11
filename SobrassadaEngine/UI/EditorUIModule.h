@@ -56,4 +56,5 @@ class EditorUIModule : public Module
     int width, height;
 
     std::string startPath;
+    std::string libraryPath;
 };
