@@ -17,5 +17,5 @@ namespace MeshImporter
         const tinygltf::Model &model, const tinygltf::Mesh &mesh, const tinygltf::Primitive &primitive,
         const std::string &filePath
     );
-    std::unique_ptr<Mesh> LoadMesh(const char *path);
+    std::shared_ptr<Mesh> LoadMesh(const char *path);
 }; // namespace MeshImporter

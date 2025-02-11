@@ -2,11 +2,13 @@
 
 #include "Math/float2.h"
 #include "Math/float3.h"
+#include "Math/float4.h"
 #include <vector>
 
 struct Vertex
 {
     float3 position;
+    float4 tangent;
     float3 normal;
     float2 texCoord;
 };

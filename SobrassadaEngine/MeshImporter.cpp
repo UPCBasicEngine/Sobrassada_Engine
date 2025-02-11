@@ -20,54 +20,65 @@ namespace MeshImporter
         std::vector<Vertex> vertexBuffer;
         std::vector<unsigned int> indexBuffer;
 
-        // assumes there's always position,normal and texcoord0 !
         const auto &itPos =
             primitive.attributes.find("POSITION"); // holds iterator position pointing for the POSITION key
         if (itPos != primitive.attributes.end())
         {
             const tinygltf::Accessor &posAcc = model.accessors[itPos->second]; // gives index of position accessor
-            const tinygltf::BufferView &posView =
-                model.bufferViews[posAcc.bufferView]; // defines byte offset, stride and buffer
+            const tinygltf::BufferView &posView = model.bufferViews[posAcc.bufferView]; // defines byte offset, stride and buffer
             const tinygltf::Buffer &posBuffer = model.buffers[posView.buffer];
             const unsigned char *bufferPos =
                 &(posBuffer.data[posAcc.byteOffset + posView.byteOffset]); // position data begins here
 
-            const auto &itNormal = primitive.attributes.find("NORMAL");
-            if (itNormal != primitive.attributes.end())
+            const auto &itTan =
+                primitive.attributes.find("TANGENT"); if (itTan != primitive.attributes.end())
             {
-                const tinygltf::Accessor &normAcc    = model.accessors[itNormal->second];
-                const tinygltf::BufferView &normView = model.bufferViews[normAcc.bufferView];
-                const tinygltf::Buffer &normBuffer   = model.buffers[normView.buffer];
-                const unsigned char *bufferNormal    = &(normBuffer.data[normAcc.byteOffset + normView.byteOffset]);
+                const tinygltf::Accessor &tanAcc = model.accessors[itTan->second];
+                const tinygltf::BufferView &tanView = model.bufferViews[tanAcc.bufferView];
+                const tinygltf::Buffer &tanBuffer = model.buffers[tanView.buffer];
+                const unsigned char *bufferTan =
+                    &(tanBuffer.data[tanAcc.byteOffset + tanView.byteOffset]); 
 
-                const auto &itTexCoord               = primitive.attributes.find("TEXCOORD_0"); // repeat for textures
-                if (itTexCoord != primitive.attributes.end())
+                const auto &itNormal = primitive.attributes.find("NORMAL");
+                if (itNormal != primitive.attributes.end())
                 {
-                    const tinygltf::Accessor &texAcc    = model.accessors[itTexCoord->second];
-                    const tinygltf::BufferView &texView = model.bufferViews[texAcc.bufferView];
-                    const tinygltf::Buffer &texBuffer   = model.buffers[texView.buffer];
-                    const unsigned char *bufferTexCoord = &(texBuffer.data[texAcc.byteOffset + texView.byteOffset]);
+                    const tinygltf::Accessor &normAcc    = model.accessors[itNormal->second];
+                    const tinygltf::BufferView &normView = model.bufferViews[normAcc.bufferView];
+                    const tinygltf::Buffer &normBuffer   = model.buffers[normView.buffer];
+                    const unsigned char *bufferNormal    = &(normBuffer.data[normAcc.byteOffset + normView.byteOffset]);
 
-                    // Combine positions, normals and texture coordinates - interleaved format
-
-                    for (size_t i = 0; i < posAcc.count; ++i)
+                    const auto &itTexCoord = primitive.attributes.find("TEXCOORD_0"); // repeat for textures
+                    if (itTexCoord != primitive.attributes.end())
                     {
-                        Vertex vertex;
+                        const tinygltf::Accessor &texAcc    = model.accessors[itTexCoord->second];
+                        const tinygltf::BufferView &texView = model.bufferViews[texAcc.bufferView];
+                        const tinygltf::Buffer &texBuffer   = model.buffers[texView.buffer];
+                        const unsigned char *bufferTexCoord = &(texBuffer.data[texAcc.byteOffset + texView.byteOffset]);
 
-                        // Copy position data by dereferencing pointer casted to float3
-                        vertex.position  = *reinterpret_cast<const float3 *>(bufferPos);
+                        // Combine positions, normals and texture coordinates - interleaved format
 
-                        // Copy normal data
-                        vertex.normal    = *reinterpret_cast<const float3 *>(bufferNormal);
+                        for (size_t i = 0; i < posAcc.count; ++i)
+                        {
+                            Vertex vertex;
 
-                        // Copy texture coordinate data
-                        vertex.texCoord  = *reinterpret_cast<const float2 *>(bufferTexCoord);
+                            // Copy position data by dereferencing pointer casted to float3
+                            vertex.position  = *reinterpret_cast<const float3 *>(bufferPos);
 
-                        bufferPos       += posView.byteStride;
-                        bufferNormal    += normView.byteStride;
-                        bufferTexCoord  += texView.byteStride;
+                            vertex.tangent = *reinterpret_cast<const float4 *>(bufferTan);
 
-                        vertexBuffer.push_back(vertex);
+                            // Copy normal data
+                            vertex.normal    = *reinterpret_cast<const float3 *>(bufferNormal);
+
+                            // Copy texture coordinate data
+                            vertex.texCoord  = *reinterpret_cast<const float2 *>(bufferTexCoord);
+
+                            bufferPos       += posView.byteStride;
+                            bufferTan       += tanView.byteStride;
+                            bufferNormal    += normView.byteStride;
+                            bufferTexCoord  += texView.byteStride;
+
+                            vertexBuffer.push_back(vertex);
+                        }
                     }
                 }
             }
@@ -80,6 +91,7 @@ namespace MeshImporter
             const tinygltf::BufferView &indexView   = model.bufferViews[indexAcc.bufferView];
             const tinygltf::Buffer &indexBufferData = model.buffers[indexView.buffer];
             const unsigned char *bufferIndices = &(indexBufferData.data[indexAcc.byteOffset + indexView.byteOffset]);
+
 
             if (indexAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
             {
@@ -118,6 +130,9 @@ namespace MeshImporter
         // check for no mateiral and default to triangle mode
         int materialIndex      = (primitive.material != -1) ? primitive.material : 0;
         int mode               = (primitive.mode != -1) ? primitive.mode : 4;
+
+
+
 
         // save to binary file.
         // 1 - NUMBER OF INDICES,  2 - NUMBER OF VERTICES  3 - MATERIAL  4 - DRAWING MODE
@@ -162,10 +177,10 @@ namespace MeshImporter
         return true;
     }
 
-    std::unique_ptr<Mesh> LoadMesh(const char *path)
+    std::shared_ptr<Mesh> LoadMesh(const char *path)
     {
-        char *buffer          = nullptr;
-        char *cursor          = buffer;
+        char *buffer = nullptr;
+        char *cursor = buffer;
 
         unsigned int fileSize = FileSystem::Load(path, &buffer);
 
@@ -178,7 +193,7 @@ namespace MeshImporter
         // Read header
         unsigned int header[4];
         memcpy(header, cursor, sizeof(header));
-        cursor                     += sizeof(header);
+        cursor += sizeof(header);
 
         unsigned int indexCount     = header[0];
         unsigned int vertexCount    = header[1];
@@ -216,4 +231,4 @@ namespace MeshImporter
         return mesh;
     }
 
-}; // namespace MeshImporter
+};
