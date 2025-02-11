@@ -199,17 +199,7 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
             {
                 localTransform.Set(globalTransform);
             }
-        } else
-        {
-            if (parentComponent != nullptr)
-            {
-                globalTransform.Set(parentComponent->GetGlobalTransform() + localTransform);
-            } else
-            {
-                globalTransform.Set(localTransform);
-            }
         }
-        
     }
 
     return valueChanged;

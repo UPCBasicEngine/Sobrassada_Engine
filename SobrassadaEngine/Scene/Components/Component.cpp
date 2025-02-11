@@ -169,7 +169,7 @@ void Component::HandleDragNDrop(){
 
 void Component::OnTransformUpdate(const Transform &parentGlobalTransform)
 {
-    TransformUpdated(globalTransform);
+    TransformUpdated(parentGlobalTransform);
     
     AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
     if (parent != nullptr)
@@ -182,36 +182,24 @@ AABB& Component::TransformUpdated(const Transform &parentGlobalTransform)
 {
     globalTransform = parentGlobalTransform + localTransform;
 
-    CalculateGlobalAABB();
+    CalculateLocalAABB();
+
+    for (uint32_t child : children)
+    {
+        Component* childComponent = App->GetSceneModule()->gameComponents[child];
+
+        if (childComponent != nullptr)
+        {
+            globalComponentAABB.Enclose(childComponent->TransformUpdated(globalTransform));
+        }
+    }
 
     return globalComponentAABB;
 }
 
 void Component::PassAABBUpdateToParent()
 {
-    CalculateGlobalAABB();
-
-    GLOG("AABB updated")
-   GLOG("AABB: (%f, %f, %f), (%f, %f, %f)", globalComponentAABB.minPoint.x, globalComponentAABB.minPoint.y, globalComponentAABB.minPoint.z,
-       globalComponentAABB.maxPoint.x, globalComponentAABB.maxPoint.y, globalComponentAABB.maxPoint.z)
-
-    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
-    if (parent != nullptr)
-    {
-        parent->PassAABBUpdateToParent();
-    }
-}
-
-void Component::CalculateGlobalAABB()
-{
-    OBB globalComponentOBB = OBB(localComponentAABB);
-    globalComponentOBB.Transform(float4x4::FromTRS(
-                    globalTransform.position,
-                    Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
-                    globalTransform.scale)); // TODO Testing once the aabb debug renderer is available
-    
-    
-    globalComponentAABB = AABB(globalComponentOBB);
+    CalculateLocalAABB();
     
     for (uint32_t child : children)
     {
@@ -222,4 +210,26 @@ void Component::CalculateGlobalAABB()
             globalComponentAABB.Enclose(childComponent->GetGlobalAABB());
         }
     }
+
+    GLOG("AABB updated")
+    GLOG("AABB: (%f, %f, %f), (%f, %f, %f)", globalComponentAABB.minPoint.x, globalComponentAABB.minPoint.y, globalComponentAABB.minPoint.z,
+       globalComponentAABB.maxPoint.x, globalComponentAABB.maxPoint.y, globalComponentAABB.maxPoint.z)
+
+    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+    if (parent != nullptr)
+    {
+        parent->PassAABBUpdateToParent();
+    }
+}
+
+void Component::CalculateLocalAABB()
+{
+    OBB globalComponentOBB = OBB(localComponentAABB);
+    globalComponentOBB.Transform(float4x4::FromTRS(
+                    globalTransform.position,
+                    Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
+                    globalTransform.scale)); // TODO Testing once the aabb debug renderer is available
+    
+    
+    globalComponentAABB = AABB(globalComponentOBB);
 }

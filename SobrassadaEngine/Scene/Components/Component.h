@@ -43,9 +43,7 @@ public:
 
     const AABB& GetGlobalAABB() const { return globalComponentAABB; }
 
-    void CalculateGlobalAABB();
-
-    
+    void CalculateLocalAABB();
 
 protected:
     
