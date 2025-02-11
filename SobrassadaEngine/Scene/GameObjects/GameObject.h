@@ -27,12 +27,14 @@ public:
 	void SaveToLibrary();
 
 	inline std::string GetName() { return name; }
-    inline void SetName(std::string newName) { name = newName; }
+    void SetName(std::string newName) { name = newName; }
     
 	inline std::vector<uint32_t> GetChildren() { return children; }
     
 	inline uint32_t GetParent() { return parentUUID; }
-    inline void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }
+    void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }
+
+	void SetUUID(uint32_t newUUID) { uuid = newUUID; }
     
     RootComponent* GetRootComponent() const { return rootComponent; }
     
@@ -45,6 +47,7 @@ public:
 private:
 
 	uint32_t parentUUID;
+	uint32_t uuid;
 	std::vector<uint32_t> children;
 
 	std::string name;

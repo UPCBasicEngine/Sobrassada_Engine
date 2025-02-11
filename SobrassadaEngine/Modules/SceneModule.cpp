@@ -31,6 +31,7 @@ bool SceneModule::Init()
     
     gameObjectRootUUID = LCG().IntFast();
     selectedGameObjectUUID      = gameObjectRootUUID;
+    sceneGameObject->SetUUID(gameObjectRootUUID);
 
     //TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectRootUUID, sceneGameObject});
@@ -38,7 +39,7 @@ bool SceneModule::Init()
     //DEMO
     GameObject *sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
     uint32_t gameObjectChildRootUUID = LCG().IntFast();
-
+    sceneGameChildObject->SetUUID(gameObjectChildRootUUID);
     sceneGameObject->AddGameObject(gameObjectChildRootUUID);
 
     // TODO: Change when filesystem defined
@@ -131,8 +132,8 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
     if (ImGui::Button("Add GameObject"))
     {
         uint32_t newUUID          = LCG().IntFast();
-        GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object" + std::to_string(newUUID));
-        
+        GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
+        newGameObject->SetUUID(newUUID);
         GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
         //TODO: change when filesystem defined
@@ -169,6 +170,7 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
     if (selectedGameObjectUUID == gameObjectUUID) 
         flags |= ImGuiTreeNodeFlags_Selected;
 
+    ImGui::PushID(gameObjectUUID);
     bool nodeOpen = ImGui::TreeNodeEx(gameObject->GetName().c_str(), flags);
 
     HandleNodeClick(gameObjectUUID);
@@ -184,6 +186,8 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
 
         ImGui::TreePop();
     }
+
+    ImGui::PopID();
 }
 
 void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
@@ -231,7 +235,7 @@ void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
         {
             uint32_t newUUID = LCG().IntFast();
             GameObject *newGameObject =
-                new GameObject(selectedGameObjectUUID, "new Game Object" + std::to_string(newUUID));
+                new GameObject(selectedGameObjectUUID, "new Game Object");
 
             GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
