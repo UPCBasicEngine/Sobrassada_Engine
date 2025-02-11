@@ -4,6 +4,9 @@
 #include "EditorViewport.h"
 #include "OpenGLModule.h"
 #include "WindowModule.h"
+#include "SceneModule.h"
+
+#include "Component.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -35,6 +38,7 @@ update_status EditorUIModule::PreUpdate(float deltaTime)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+    ImGui::DockSpaceOverViewport();
 
     return UPDATE_CONTINUE;
 }
@@ -50,15 +54,16 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
     Draw();
 
     editorViewport->Render();
-
+    
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+    
     return UPDATE_CONTINUE;
 }
 
 update_status EditorUIModule::PostUpdate(float deltaTime)
 {
+    
     if (closeApplication) return UPDATE_STOP;
 
     return UPDATE_CONTINUE;
@@ -102,7 +107,7 @@ void EditorUIModule::AddFramePlotData(float deltaTime)
 
 void EditorUIModule::Draw()
 {
-    ImGui::DockSpaceOverViewport();
+    
     MainMenu();
 
     if (consoleMenu) Console(consoleMenu);
@@ -123,6 +128,20 @@ void EditorUIModule::MainMenu()
 
         ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Window"))
+    {
+        if (ImGui::BeginMenu("General"))
+        {
+            if (ImGui::MenuItem("Hierarchy")) hierarchyMenu = !hierarchyMenu;
+            if (ImGui::MenuItem("Inspector")) inspectorMenu = !inspectorMenu;
+            
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMenu();
+    }
+
 
     // Settings menu
     if (ImGui::BeginMenu("Settings"))
@@ -151,6 +170,39 @@ void EditorUIModule::Console(bool &consoleMenu)
     }
 
     ImGui::End();
+}
+
+bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
+{
+    ImGui::SeparatorText("Transform");
+    ImGui::RadioButton("Local", &transformType, LOCAL);
+    ImGui::SameLine();
+    ImGui::RadioButton("Global", &transformType, GLOBAL);
+
+    Transform& transformToEdit = transformType == LOCAL ? localTransform : globalTransform;
+    
+    bool valueChanged = false;
+    
+    valueChanged |= ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
+    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians, rotate around mesh center / game object center
+    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] ); // Add option to lock scale over all axis
+
+    if (valueChanged)
+    {
+        Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
+        if (transformType == GLOBAL)
+        {
+            if (parentComponent != nullptr)
+            {
+                localTransform.Set(globalTransform - parentComponent->GetGlobalTransform());
+            } else
+            {
+                localTransform.Set(globalTransform);
+            }
+        }
+    }
+
+    return valueChanged;
 }
 
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)

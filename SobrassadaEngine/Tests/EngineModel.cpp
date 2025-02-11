@@ -133,12 +133,12 @@ void EngineModel::LoadAdditionalTexture(const char* texturePath)
 	}
 }
 
-void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix)
+void EngineModel::Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
 {
 	for (EngineMesh* currentMesh : meshes)
 	{
 		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-		currentMesh->Render(program, texturePostiion, projectionMatrix, viewMatrix);
+		//currentMesh->Render(program, modelMatrix, projectionMatrix, viewMatrix);
 	}
 }
 
@@ -215,7 +215,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 			if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
 			newMesh->CreateVAO();
 
-			float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
+			/*float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
 			float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
 
 			if (firstMesh)
@@ -230,7 +230,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
 			}
 
-			newMesh->SetBasicModelMatrix(modelMatrix);
+			newMesh->SetBasicModelMatrix(modelMatrix);*/
 			
 			indexCount += newMesh->GetIndexCount();
 			meshes.push_back(newMesh);
