@@ -38,7 +38,7 @@ public:
 
     void SetUUIDParent(uint32_t newUUIDParent) { uuidParent = newUUIDParent; }
 
-    const Transform& GetGlobalTransform() const { return globalTransform; }
+    const Transform& GetGlobalTransform() const override { return globalTransform; }
     const Transform& GetLocalTransform() const { return localTransform; }
 
     const AABB& GetGlobalAABB() const { return globalComponentAABB; }

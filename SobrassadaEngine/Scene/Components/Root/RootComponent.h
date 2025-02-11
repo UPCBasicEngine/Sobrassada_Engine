@@ -15,8 +15,6 @@ public:
     void RenderComponentEditor();
     void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
 
-    AABB& TransformUpdated(const Transform& parentGlobalTransform) override;
-
     void Update() override;
 
     void SetSelectedComponent(const uint32_t componentUUID);

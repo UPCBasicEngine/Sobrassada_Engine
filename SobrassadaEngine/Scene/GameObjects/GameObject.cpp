@@ -82,3 +82,8 @@ void GameObject::PassAABBUpdateToParent()
 {
     // TODO Update AABBs further up the gameObject tree
 }
+
+const Transform & GameObject::GetGlobalTransform() const
+{
+    return rootComponent->GetGlobalTransform();
+}

@@ -129,5 +129,10 @@ void MeshComponent::LoadMesh(const std::string& meshName, uint32_t meshUUID)
     if (mesh != nullptr)
     {
         localComponentAABB = AABB(mesh->GetAABB());
+        AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+        if (parent != nullptr)
+        {
+            parent->PassAABBUpdateToParent();
+        }
     }
 }

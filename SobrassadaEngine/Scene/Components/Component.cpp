@@ -78,13 +78,13 @@ void Component::RenderEditorInspector()
         ImGui::Separator();
         if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
         {
-            Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
-            if (parentComponent != nullptr)
+            AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+            if (parent != nullptr)
             {
-                TransformUpdated(parentComponent->globalTransform);
+                OnTransformUpdate(parent->GetGlobalTransform());
             } else
             {
-                TransformUpdated(Transform());
+                OnTransformUpdate(Transform());
             }
         }
     }
@@ -158,7 +158,7 @@ void Component::HandleDragNDrop(){
                         draggedComponent->SetUUIDParent(uuid); // TODO Add set parent uuid into the AddChildComponent function
                         AddChildComponent(draggedUUID);
                         draggedComponent->localTransform.Set(draggedComponent->globalTransform - globalTransform);
-                        draggedComponent->TransformUpdated(globalTransform);
+                        draggedComponent->OnTransformUpdate(globalTransform);
                     }
                 }
             }
@@ -170,6 +170,7 @@ void Component::HandleDragNDrop(){
 void Component::OnTransformUpdate(const Transform &parentGlobalTransform)
 {
     TransformUpdated(globalTransform);
+    
     AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
     if (parent != nullptr)
     {
@@ -189,6 +190,10 @@ AABB& Component::TransformUpdated(const Transform &parentGlobalTransform)
 void Component::PassAABBUpdateToParent()
 {
     CalculateGlobalAABB();
+
+    GLOG("AABB updated")
+   GLOG("AABB: (%f, %f, %f), (%f, %f, %f)", globalComponentAABB.minPoint.x, globalComponentAABB.minPoint.y, globalComponentAABB.minPoint.z,
+       globalComponentAABB.maxPoint.x, globalComponentAABB.maxPoint.y, globalComponentAABB.maxPoint.z)
 
     AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
     if (parent != nullptr)

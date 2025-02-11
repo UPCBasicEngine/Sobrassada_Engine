@@ -42,7 +42,7 @@ public:
     void Console(bool &consoleMenu);
 
   private:
-    bool consoleMenu        = false;
+    bool consoleMenu        = true;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
 

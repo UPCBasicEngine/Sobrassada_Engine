@@ -1,5 +1,6 @@
 #pragma once
 #include "BoundingBox.h"
+#include "Transform.h"
 #include "Scene/AABBUpdatable.h"
 
 #include <vector>
@@ -39,6 +40,7 @@ public:
     void RenderEditor();
     
     void PassAABBUpdateToParent() override;
+    const Transform& GetGlobalTransform() const override;
 
 private:
 
