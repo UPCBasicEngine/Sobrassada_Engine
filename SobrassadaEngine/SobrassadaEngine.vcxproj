@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>.\Tests;.\Libs\SDL\include;.\Libs\glew-2.1.0\include;.\Libs\MathGeoLib\include;.\Libs\ImGui;.\DirectXTex;.\Libs\Tinygltf;.\;.\Modules;.\UI;.\Utils;.\DebugDraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Tests;.\Libs\SDL\include;.\Libs\glew-2.1.0\include;.\Libs\MathGeoLib\include;.\Libs\ImGui;.\DirectXTex;.\Libs\Tinygltf;.\;.\Modules;.\UI;.\Utils;.\FileSystem;.\DebugDraw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,11 +133,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="FileSystem.cpp" />
-    <ClCompile Include="MeshImporter.cpp" />
-    <ClCompile Include="SceneImporter.cpp" />
+    <ClCompile Include="FileSystem\FileSystem.cpp" />
+    <ClCompile Include="FileSystem\MeshImporter.cpp" />
+    <ClCompile Include="FileSystem\SceneImporter.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
-    <ClCompile Include="TextureImporter.cpp" />
+    <ClCompile Include="FileSystem\TextureImporter.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
     <ClCompile Include="UI\EditorViewport.cpp" />
     <ClCompile Include="Tests\CameraModule.cpp" />
@@ -196,12 +196,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="FileSystem\FileSystem.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MeshImporter.h" />
-    <ClInclude Include="SceneImporter.h" />
+    <ClInclude Include="FileSystem\MeshImporter.h" />
+    <ClInclude Include="FileSystem\SceneImporter.h" />
     <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="TextureImporter.h" />
+    <ClInclude Include="FileSystem\TextureImporter.h" />
     <ClInclude Include="Utils\Framebuffer.h" />
     <ClInclude Include="UI\EditorViewport.h" />
     <ClInclude Include="Tests\CameraModule.h" />

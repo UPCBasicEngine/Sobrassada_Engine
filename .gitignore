@@ -365,8 +365,3 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Game/imgui.ini
-/Game/Assets
-/Game/Library/Meshes
-/Game/Library/Materials/Baker_house.dds
-/Game/imgui.ini
-/Game/Library/Scenes/Chimney0.sobrassada

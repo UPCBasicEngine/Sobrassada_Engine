@@ -166,17 +166,17 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Component.cpp" />
-    <ClCompile Include="SceneImporter.cpp">
-      <Filter>Utils</Filter>
+    <ClCompile Include="FileSystem\FileSystem.cpp">
+      <Filter>FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="MeshImporter.cpp">
-      <Filter>Utils</Filter>
+    <ClCompile Include="FileSystem\MeshImporter.cpp">
+      <Filter>FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="TextureImporter.cpp">
-      <Filter>Utils</Filter>
+    <ClCompile Include="FileSystem\SceneImporter.cpp">
+      <Filter>FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="FileSystem.cpp">
-      <Filter>Utils</Filter>
+    <ClCompile Include="FileSystem\TextureImporter.cpp">
+      <Filter>FileSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +200,9 @@
     </Filter>
     <Filter Include="UI">
       <UniqueIdentifier>{b3f5d97a-4296-47c2-80a3-75724af69446}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileSystem">
+      <UniqueIdentifier>{71717f5e-3c10-4a82-a6fa-814368871f96}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -286,20 +289,20 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="MeshImporter.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneImporter.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureImporter.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="FileSystem.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\FileSystem.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\MeshImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\SceneImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\TextureImporter.h">
+      <Filter>FileSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
