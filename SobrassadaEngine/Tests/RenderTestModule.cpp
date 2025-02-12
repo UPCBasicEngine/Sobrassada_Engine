@@ -42,7 +42,7 @@ bool RenderTestModule::Init()
     DirectX::TexMetadata textureMetadata;
 
     SceneImporter::Import("./Test/baboon.ppm");
-    std::string texturePath = "./Library/Materials/baboon.dds";
+    std::string texturePath = "./Library/Textures/baboon.dds";
 
     baboonTexture           = App->GetTextureModuleTest()->LoadTexture(texturePath.c_str(), textureMetadata);
 

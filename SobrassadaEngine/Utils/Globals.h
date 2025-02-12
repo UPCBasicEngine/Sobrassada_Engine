@@ -55,12 +55,14 @@ enum update_status
 #define AUDIO_PATH      "Library/Audio/"
 #define BONES_PATH      "Library/Bones/"
 #define MESHES_PATH     "Library/Meshes/"
+#define TEXTURES_PATH  "Library/Textures/"
 #define MATERIALS_PATH  "Library/Materials/"
 #define SCENES_PATH     "Library/Scenes/"
 
 #define ASSET_EXTENSION   ".gltf"
 #define FILE_EXTENSION     ".sobrassada"
-#define MATERIAL_EXTENSION ".dds"
+#define TEXTURE_EXTENSION ".dds"
+#define MATERIAL_EXTENSION ".mat"
 #define SCENE_EXTENSION    ".scene"
 
 constexpr float PI = 3.14159265359f;

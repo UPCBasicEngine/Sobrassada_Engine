@@ -51,7 +51,7 @@ namespace TextureImporter
         }
 
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath = MATERIALS_PATH + fileName + MATERIAL_EXTENSION;
+        std::string savePath = TEXTURES_PATH + fileName + TEXTURE_EXTENSION;
 
         unsigned int size =
             FileSystem::Save(savePath.c_str(), blob.GetBufferPointer(), (unsigned int)blob.GetBufferSize());

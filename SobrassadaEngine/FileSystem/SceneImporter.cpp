@@ -90,8 +90,8 @@ namespace SceneImporter
         int matIndex = 0;
         for (const auto &srcMaterials : model.materials)
         {
-            std::string srcMaterialName = srcMaterials.name;
-            std::string materialName = MATERIALS_PATH + materialName + ".mat";
+            std::string materialName = srcMaterials.name;
+            std::string materialPath = MATERIALS_PATH + materialName + MATERIAL_EXTENSION;
 
             MaterialImporter::ImportMaterial(model, matIndex, materialName);
             matIndex++;
@@ -149,6 +149,13 @@ namespace SceneImporter
             if (!FileSystem::CreateDirectories(MESHES_PATH))
             {
                 GLOG("Failed to create directory: %s", MESHES_PATH);
+            }
+        }
+        if (!FileSystem::IsDirectory(TEXTURES_PATH))
+        {
+            if (!FileSystem::CreateDirectories(TEXTURES_PATH))
+            {
+                GLOG("Failed to create directory: %s", TEXTURES_PATH);
             }
         }
         if (!FileSystem::IsDirectory(MATERIALS_PATH))
