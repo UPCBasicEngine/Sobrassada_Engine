@@ -94,6 +94,12 @@ void OpenGLModule::SetFaceCull(bool enable)
     else glDisable(GL_CULL_FACE);
 }
 
+void OpenGLModule::SetDepthFunc(bool enable)
+{
+    if (enable) glDepthFunc(GL_LESS);
+    else glDepthFunc(GL_ALWAYS);
+}
+
 void OpenGLModule::SetFrontFaceMode(int mode) { glFrontFace(mode); }
 
 void OpenGLModule::SetClearRed(float newValue) { clearColorRed = newValue; }

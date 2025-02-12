@@ -27,6 +27,7 @@ void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh&
 	// Getting required size for VBO buffer
 	const auto& positionIterator = inPrimitive.attributes.find("POSITION");
 	const auto& textureIterator = inPrimitive.attributes.find("TEXCOORD_0");
+    const auto &normalIterator   = inPrimitive.attributes.find("NORMAL");
 	
 	if (positionIterator != inPrimitive.attributes.end()) {
 		const tinygltf::Accessor& positionAccessor = inModel.accessors[positionIterator->second];
@@ -38,9 +39,16 @@ void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh&
 		textureCoordCount = (int)textureAccessor.count;
 	}
 
-	if ((vertexCount + textureCoordCount) > 0)
+	
+	if (normalIterator != inPrimitive.attributes.end())
+    {
+		const tinygltf::Accessor &normalAccessor = inModel.accessors[normalIterator->second];
+        normalCoordCount = (int)normalAccessor.count;
+	}
+
+	if ((vertexCount + textureCoordCount + normalCoordCount) > 0)
 	{
-		unsigned int bufferSize = (sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount);
+		unsigned int bufferSize = (sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount) + (sizeof(float) * 3 * normalCoordCount);
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
@@ -54,10 +62,12 @@ void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh&
 		SDL_assert(positionAccessor.type == TINYGLTF_TYPE_VEC3);
 		SDL_assert(positionAccessor.componentType == GL_FLOAT);
 
+		//maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
+		//minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
 		const float3 maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
 		const float3 minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
-                aabb = AABB(minimumPosition, maximumPosition);
-	    
+		aabb = AABB(minimumPosition, maximumPosition);
+
 		const tinygltf::BufferView& positionBufferView = inModel.bufferViews[positionAccessor.bufferView];
 		const tinygltf::Buffer& positionBuffer = inModel.buffers[positionBufferView.buffer];
 
@@ -101,7 +111,37 @@ void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh&
 
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 	}
-	
+
+	// Loading normal vertices to VBO
+	if (normalCoordCount > 0)
+    {
+		const tinygltf::Accessor &normalAccessor = inModel.accessors[normalIterator->second];
+
+		SDL_assert(normalAccessor.type == TINYGLTF_TYPE_VEC3);
+		SDL_assert(normalAccessor.componentType == GL_FLOAT);
+
+        const tinygltf::BufferView &normalBufferView = inModel.bufferViews[normalAccessor.bufferView];
+        const tinygltf::Buffer &normalBuffer         = inModel.buffers[normalBufferView.buffer];
+
+        const unsigned char *bufferStart =
+            &(normalBuffer.data[normalAccessor.byteOffset + normalBufferView.byteOffset]);
+
+        float3 *ptr = reinterpret_cast<float3*>(glMapBufferRange(
+            GL_ARRAY_BUFFER, sizeof(float) * 3 * vertexCount + sizeof(float) * 2 * textureCoordCount,
+            sizeof(float) * 3 * normalCoordCount, GL_MAP_WRITE_BIT
+        ));
+
+        for (size_t i = 0; i < normalAccessor.count; ++i)
+		{
+            ptr[i] = *reinterpret_cast<const float3*>(bufferStart);
+
+            // bufferView.byteStride == 0 -> Only positions inside buffer, which then the stride becomes
+            // space between vertices -> sizeof(float) * 3.
+            bufferStart += normalBufferView.byteStride == 0 ? sizeof(float) * 3 : normalBufferView.byteStride;
+		}
+
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+    }	
 }
 
 void ResourceMesh::LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive)
@@ -154,25 +194,43 @@ void ResourceMesh::CreateVAO()
 	{
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * vertexCount));
+
+		glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)((sizeof(float) * 3 * vertexCount) + (sizeof(float) * 2 * textureCoordCount)));
+	}
+    else
+    {
+		glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(float) * 3 * vertexCount));
 	}
 
 	glBindVertexArray(0);
 }
 
-void ResourceMesh::Render(int program, unsigned int texture, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
+void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int cameraUBO, ComponentMaterial* material)
 {
-
 	glUseProgram(program);
 
-	glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
-	glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
-	glUniformMatrix4fv(2, 1, GL_TRUE, &modelMatrix[0][0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    
+    glUniformMatrix4fv(2, 1, GL_TRUE, &modelMatrix[0][0]);
 
-	if (texture > 0)
-	{
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-	}
+	float3 lightDir = float3(-1.0f, -0.3f, 2.0f);
+    float3 lightColor = float3(1.0f, 1.0f, 1.0f);
+    float3 ambientIntensity = float3(1.0f, 1.0f, 1.0f);
+	float3 cameraPos = App->GetCameraModule()->getPosition();
+	glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
+
+	glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
+    glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
+	glUniform3fv(glGetUniformLocation(program, "ambientIntensity"), 1, &ambientIntensity[0]);
+
+
+    material->RenderMaterial(program);
 
 	if (indexCount > 0 && vao)
 	{
@@ -186,3 +244,4 @@ void ResourceMesh::Render(int program, unsigned int texture, float4x4& modelMatr
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 }
+

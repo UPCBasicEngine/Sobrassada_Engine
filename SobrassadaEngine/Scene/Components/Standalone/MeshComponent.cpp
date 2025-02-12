@@ -51,14 +51,16 @@ void MeshComponent::Update()
 void MeshComponent::Render(){
     if (enabled && currentMesh != nullptr)
     {
-        float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
-        float4x4 view = App->GetCameraModule()->GetViewMatrix();
+        std::vector<int>& indices = currentMesh->GetMaterialIndices();
+        ComponentMaterial *material = &App->GetSceneModule()->MOCKUP_loadedModel->GetMaterial(indices[0]);
+
+        unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
+        
         float4x4 model = float4x4::FromTRS(
                 globalTransform.position,
                 Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
                 globalTransform.scale);
-        currentMesh->Render(App->GetResourcesModule()->GetProgram(), 0,
-            model, proj, view);
+        currentMesh->Render(App->GetResourcesModule()->GetProgram(), model, cameraUBO, material);
     }
     Component::Render();
 }
