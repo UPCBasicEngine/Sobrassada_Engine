@@ -78,7 +78,7 @@ void EngineModel::Render(int program, unsigned int cameraUBO)
 		{
             ComponentMaterial* material = &GetMaterial(indices[i]);
             //int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-            currentMesh->Render(program, material, cameraUBO);
+            //currentMesh->Render(program, material, cameraUBO);
         }
 	}
 }
@@ -142,7 +142,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 			if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
 			newMesh->CreateVAO();
 
-			float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
+			/*float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
 			float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
 
 			if (firstMesh)
@@ -155,8 +155,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 			{
 				maxValues = float3(Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y), Max(maxValues.z, meshMaxValues.z));
 				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
-			}
-
+			}*/
 			newMesh->SetBasicModelMatrix(modelMatrix);
             newMesh->SetMaterialIndex(primitive.material);
 			

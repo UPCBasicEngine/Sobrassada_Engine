@@ -16,6 +16,7 @@ public:
 	update_status Render(float deltaTime) override;
 	bool ShutDown() override;
 
+    int GetProgram() const { return program; }
 private:
 	
 	void RenderEditorViewport();

@@ -32,10 +32,17 @@ public:
 	std::vector<ComponentMaterial*> &GetMaterials() { return materials; }
     ComponentMaterial &GetMaterial(const int index);
 
+    EngineMesh* GetMesh(int index) const { return meshes[index]; }
+
+    unsigned int GetActiveRenderTexture() const { return textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0; }
+
 private:
 
 	std::vector<EngineMesh*> meshes;
     std::vector<ComponentMaterial*> materials;
+
+    std::vector<unsigned int> textures;
+    std::vector<float2> textureInfo;
 
 	int totalTriangles = 0;
 	int renderTexture = -1;
