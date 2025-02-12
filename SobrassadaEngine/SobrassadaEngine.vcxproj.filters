@@ -7,7 +7,7 @@
     <ClCompile Include="Utils\log.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\UPCTimer.cpp">
+    <ClCompile Include="Utils\Timer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="Modules\InputModule.cpp">
@@ -200,7 +200,7 @@
     <ClInclude Include="Utils\Globals.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\UPCTimer.h">
+    <ClInclude Include="Utils\Timer.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Modules\InputModule.h">

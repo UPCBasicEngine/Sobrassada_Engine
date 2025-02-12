@@ -187,7 +187,7 @@
     <ClCompile Include="Tests\RenderTestModule.cpp" />
     <ClCompile Include="Modules\ShaderModule.cpp" />
     <ClCompile Include="Tests\TextureModuleTest.cpp" />
-    <ClCompile Include="Utils\UPCTimer.cpp" />
+    <ClCompile Include="Utils\Timer.cpp" />
     <ClCompile Include="Modules\WindowModule.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -218,7 +218,7 @@
     <ClInclude Include="Tests\RenderTestModule.h" />
     <ClInclude Include="Modules\ShaderModule.h" />
     <ClInclude Include="Tests\TextureModuleTest.h" />
-    <ClInclude Include="Utils\UPCTimer.h" />
+    <ClInclude Include="Utils\Timer.h" />
     <ClInclude Include="Modules\WindowModule.h" />
   </ItemGroup>
   <ItemGroup>
