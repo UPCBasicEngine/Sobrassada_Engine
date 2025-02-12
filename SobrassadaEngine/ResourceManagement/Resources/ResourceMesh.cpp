@@ -10,6 +10,10 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "tiny_gltf.h"
 
+#include "Application.h"
+#include "CameraModule.h"
+#include "ResourceMaterial.h"
+
 ResourceMesh::ResourceMesh(UID uid): Resource(uid, ResourceType::Mesh)
 {
     aabb.SetNegativeInfinity();
@@ -207,7 +211,7 @@ void ResourceMesh::CreateVAO()
 	glBindVertexArray(0);
 }
 
-void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int cameraUBO, ComponentMaterial* material)
+void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int cameraUBO, ResourceMaterial* material)
 {
 	glUseProgram(program);
 
@@ -230,7 +234,10 @@ void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int camer
 	glUniform3fv(glGetUniformLocation(program, "ambientIntensity"), 1, &ambientIntensity[0]);
 
 
-    material->RenderMaterial(program);
+    if (material != nullptr)
+    {
+        material->RenderMaterial(program);
+    }
 
 	if (indexCount > 0 && vao)
 	{

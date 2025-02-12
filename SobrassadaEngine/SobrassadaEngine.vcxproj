@@ -210,7 +210,6 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="Modules\SceneModule.cpp" />
-      <ClCompile Include="Components\ComponentMaterial.cpp" />
     <ClCompile Include="ResourceManagement\Resources\Resource.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -492,7 +491,6 @@
     <ClCompile Include="Utils\log.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Modules\OpenGLModule.cpp" />
-    <ClCompile Include="Tests\RenderTestModule.cpp" />
     <ClCompile Include="Modules\ShaderModule.cpp" />
     <ClCompile Include="Tests\TextureModuleTest.cpp" />
     <ClCompile Include="Utils\Scene.cpp" />
@@ -509,7 +507,6 @@
     <ClInclude Include="ResourceManagement\Resources\ResourceMesh.h" />
     <ClInclude Include="ResourceManagement\Resources\ResourceTexture.h" />
     <ClInclude Include="Scene\AABBUpdatable.h" />
-    <ClInclude Include="Components\ComponentMaterial.h" />
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="Scene\Components\Root\RootComponent.h" />
     <ClInclude Include="Scene\Components\Standalone\MeshComponent.h" />
@@ -537,7 +534,6 @@
     <ClInclude Include="Libs\ImGui\imstb_truetype.h" />
     <ClInclude Include="Modules\Module.h" />
     <ClInclude Include="Modules\OpenGLModule.h" />
-    <ClInclude Include="Tests\RenderTestModule.h" />
     <ClInclude Include="Modules\ShaderModule.h" />
     <ClInclude Include="Tests\TextureModuleTest.h" />
     <ClInclude Include="Utils\Scene.h" />

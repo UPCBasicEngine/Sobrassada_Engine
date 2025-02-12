@@ -22,6 +22,9 @@ public:
 
     int GetProgram() const { return program; }
 
+    std::map<std::string, uint32_t> MOCKUP_libraryMeshes;   // TODO Move to library file
+    std::map<std::string, uint32_t> MOCKUP_libraryTextures; // TODO Move to library file
+
 private:
     int program = -1;
     

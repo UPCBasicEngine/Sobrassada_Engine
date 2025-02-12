@@ -4,7 +4,6 @@
 #include "CameraModule.h"
 #include "EditorUIModule.h"
 #include "../Root/RootComponent.h"
-#include "RenderTestModule.h"
 #include "SceneModule.h"
 #include "imgui.h"
 
@@ -26,20 +25,26 @@ void MeshComponent::RenderEditorInspector()
         ImGui::SameLine();
         if (ImGui::Button("Select mesh"))
         {
-            ImGui::OpenPopup(CONSTANT_RESOURCE_SELECT_DIALOG_ID);
+            ImGui::OpenPopup(CONSTANT_MESH_SELECT_DIALOG_ID);
         }
 
-        AddMesh(App->GetEditorUIModule()->RenderResourceSelectDialog(App->GetSceneModule()->MOCKUP_libraryMeshes));
+        if (ImGui::IsPopupOpen(CONSTANT_MESH_SELECT_DIALOG_ID))
+        {
+            AddMesh(App->GetEditorUIModule()->RenderResourceSelectDialog(CONSTANT_MESH_SELECT_DIALOG_ID, App->GetResourcesModule()->MOCKUP_libraryMeshes));
+        }
 
         ImGui::SeparatorText("Diffuse texture");
         ImGui::Text(currentTextureName.c_str());
         ImGui::SameLine();
         if (ImGui::Button("Select texture"))
         {
-            ImGui::OpenPopup("CONSTANT_RESOURCE_SELECT_DIALOG_ID");
+            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
         }
 
-        AddMaterial(App->GetEditorUIModule()->RenderResourceSelectDialog(App->GetSceneModule()->MOCKUP_libraryTextures));
+        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+        {
+            AddMaterial(App->GetEditorUIModule()->RenderResourceSelectDialog(CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetResourcesModule()->MOCKUP_libraryTextures));
+        }
     }
     
 }
@@ -51,22 +56,21 @@ void MeshComponent::Update()
 void MeshComponent::Render(){
     if (enabled && currentMesh != nullptr)
     {
-        std::vector<int>& indices = currentMesh->GetMaterialIndices();
-        ComponentMaterial *material = &App->GetSceneModule()->MOCKUP_loadedModel->GetMaterial(indices[0]);
-
         unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
         
         float4x4 model = float4x4::FromTRS(
                 globalTransform.position,
                 Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
                 globalTransform.scale);
-        currentMesh->Render(App->GetResourcesModule()->GetProgram(), model, cameraUBO, material);
+        currentMesh->Render(App->GetResourcesModule()->GetProgram(), model, cameraUBO, currentMaterial);
     }
     Component::Render();
 }
 
 void MeshComponent::AddMesh(UID resource)
 {
+    if (resource == CONSTANT_EMPTY_UID) return;
+    
     ResourceMesh* newMesh = dynamic_cast<ResourceMesh*>(App->GetResourcesModule()->RequestResource(resource));
     if (newMesh != nullptr)
     {

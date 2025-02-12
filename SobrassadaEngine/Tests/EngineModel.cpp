@@ -1,7 +1,6 @@
 #include "EngineModel.h"
 #include "Globals.h"
 #include "MathGeoLib.h"
-#include "Components/ComponentMaterial.h"
 #include "Application.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
@@ -14,6 +13,8 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #define TINYGLTF_IMPLEMENTATION /* Only in one of the includes */
 #include "tiny_gltf.h"
+#include "ResourceManagement/Resources/ResourceMaterial.h"
+#include "ResourceManagement/Resources/ResourceMesh.h"
 
 EngineModel::EngineModel()
 {
@@ -60,7 +61,7 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
 
     for (const auto &srcMaterial : sourceModel.materials)
     {
-        ComponentMaterial *material = new ComponentMaterial;
+        ResourceMaterial *material = new ResourceMaterial(0);
         material->LoadMaterial(srcMaterial, sourceModel, modelPath);
         
         materials.push_back(material);
@@ -70,16 +71,16 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
 
 void EngineModel::Render(int program, unsigned int cameraUBO)
 {
-	for (ResourceMesh* currentMesh : meshes)
+	/*for (ResourceMesh* currentMesh : meshes)
 	{
         std::vector<int>& indices = currentMesh->GetMaterialIndices();
 		for (size_t i = 0; i < indices.size(); ++i)
 		{
-            ComponentMaterial* material = &GetMaterial(indices[i]);
+            ResourceMaterial* material = &GetMaterial(indices[i]);
 			int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
             //currentMesh->Render(program, material, cameraUBO);
         }
-	}
+	}*/
 }
 
 void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4x4& parentModelMatrix, int currentNodePosition)
@@ -156,7 +157,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
 			}*/
 			//newMesh->SetBasicModelMatrix(modelMatrix);
-            newMesh->SetMaterialIndex(primitive.material);
+            //newMesh->SetMaterialIndex(primitive.material);
 			
 			indexCount += newMesh->GetIndexCount();
 			meshes.push_back(newMesh);
@@ -192,9 +193,9 @@ void EngineModel::ClearVectors()
 	renderTexture = -1;
 }
 
-ComponentMaterial& EngineModel::GetMaterial(const int index) {
+ResourceMaterial* EngineModel::GetMaterial(const int index) {
 	if (index >= 0 && index < materials.size())
     {
-		return *materials[index];
+		return materials[index];
 	}
 }

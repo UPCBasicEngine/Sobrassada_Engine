@@ -1,7 +1,10 @@
 #include "ResourcesModule.h"
 
 #include "Application.h"
+#include "SceneModule.h"
 #include "ShaderModule.h"
+#include "ResourceManagement/Resources/ResourceMaterial.h"
+#include "ResourceManagement/Resources/ResourceMesh.h"
 
 #include <Algorithm/Random/LCG.h>
 
@@ -16,8 +19,8 @@ ResourcesModule::~ResourcesModule()
 
 bool ResourcesModule::Init()
 {
-    //CreateNewResource("", ResourceType::Mesh);
-    program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");
+    CreateNewResource("", ResourceType::Mesh);
+    program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/BRDFPhongFragmentShader.glsl");
     
     return true;
 }
@@ -67,9 +70,17 @@ Resource * ResourcesModule::CreateNewResource(const char *assetsFile, ResourceTy
 
     const uint32_t bakerHouseID = LCG().IntFast();
     const uint32_t bakerHouseChimneyID = LCG().IntFast();
+    const uint32_t bakerHouseMaterial = LCG().IntFast();
+
+    MOCKUP_libraryMeshes["House"] = bakerHouseID;
+    MOCKUP_libraryMeshes["Chimney"] = bakerHouseChimneyID;
+    
+    MOCKUP_libraryTextures["Basic"] = bakerHouseMaterial;
     
     resources[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
     resources[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
+    
+    resources[bakerHouseMaterial] = MOCKUP_loadedModel->GetMaterial(0);
 
     return nullptr;
 }

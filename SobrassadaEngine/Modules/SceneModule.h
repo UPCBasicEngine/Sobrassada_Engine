@@ -53,9 +53,6 @@ public:
 
 
     std::map<uint32_t, Component*> gameComponents;          // TODO Move to Scene class
-    
-    std::map<std::string, uint32_t> MOCKUP_libraryMeshes;   // TODO Move to library file
-    std::map<std::string, uint32_t> MOCKUP_libraryTextures; // TODO Move to library file
 
     AABBUpdatable* GetTargetForAABBUpdate(uint32_t uuid);
 

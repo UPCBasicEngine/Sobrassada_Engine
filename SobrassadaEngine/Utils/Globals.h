@@ -51,6 +51,7 @@ constexpr uint32_t CONSTANT_NO_MESH_UID = 0;
 constexpr uint32_t CONSTANT_NO_TEXTURE_UID = 0;
 constexpr uint32_t CONSTANT_EMPTY_UID = 0;
 
-constexpr const char* CONSTANT_RESOURCE_SELECT_DIALOG_ID = "resource-select";
+constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID = "mesh-select";
+constexpr const char* CONSTANT_TEXTURE_SELECT_DIALOG_ID = "texture-select";
 
 constexpr float PI = 3.14159265359f;

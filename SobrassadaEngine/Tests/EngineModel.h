@@ -3,14 +3,14 @@
 #include "Math/float4x4.h"
 #include "Math/float3.h"
 #include "Math/float2.h"
-#include "ResourceManagement/Resources/ResourceMesh.h"
 
 namespace tinygltf
 {
 	class Model;
 }
 
-class ComponentMaterial;
+class ResourceMaterial;
+class ResourceMesh;
 
 class EngineModel
 {
@@ -29,8 +29,8 @@ public:
 	int GetIndexCount() const { return indexCount; }
 	int GetRenderTexture() const { return renderTexture; };
 
-	std::vector<ComponentMaterial*> &GetMaterials() { return materials; }
-    ComponentMaterial &GetMaterial(const int index);
+	std::vector<ResourceMaterial*> &GetMaterials() { return materials; }
+    ResourceMaterial* GetMaterial(const int index);
 
     ResourceMesh* GetMesh(int index) const { return meshes[index]; }
 
@@ -41,7 +41,7 @@ private:
 	std::vector<ResourceMesh*> meshes;
 	std::vector<unsigned int> textures;
 	std::vector<float2> textureInfo;
-    std::vector<ComponentMaterial*> materials;
+    std::vector<ResourceMaterial*> materials;
 
 	int totalTriangles = 0;
 	int renderTexture = -1;

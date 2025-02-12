@@ -13,6 +13,9 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
 
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_NO_STB_IMAGE
+#define TINYGLTF_NO_EXTERNAL_IMAGE
 #include <tiny_gltf.h>
 
 EditorUIModule::EditorUIModule() {}
@@ -207,9 +210,10 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     return valueChanged;
 }
 
-UID EditorUIModule::RenderResourceSelectDialog(const std::map<std::string, uint32_t> &availableResources)
+UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::map<std::string, uint32_t> &availableResources)
 {
-    if (ImGui::BeginPopup(CONSTANT_RESOURCE_SELECT_DIALOG_ID))
+    UID result = CONSTANT_EMPTY_UID;
+    if (ImGui::BeginPopup(id))
     {
         static char searchText[255] = "";
         ImGui::InputText("Search", searchText, 255);
@@ -223,8 +227,8 @@ UID EditorUIModule::RenderResourceSelectDialog(const std::map<std::string, uint3
                     {
                         if (ImGui::Selectable(valuePair.first.c_str(), false))
                         {
+                            result = valuePair.second;
                             ImGui::CloseCurrentPopup();
-                            return valuePair.second;
                         }
                     }
                 }
@@ -233,7 +237,7 @@ UID EditorUIModule::RenderResourceSelectDialog(const std::map<std::string, uint3
         }
         ImGui::EndPopup();
     }
-    return CONSTANT_EMPTY_UID;
+    return result;
 }
 
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
