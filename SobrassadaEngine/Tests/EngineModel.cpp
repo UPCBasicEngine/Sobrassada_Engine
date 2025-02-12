@@ -67,61 +67,6 @@ void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* 
         materials.push_back(material);
         id++;
     }
-
-	// Check to not load multiple times the same texture
-	std::unordered_set<int> loadedIndices;
-	for (const auto& srcMaterial : sourceModel.materials)
-	{
-		unsigned int textureId = 0;
-		float2 widthHeight = float2::zero;
-		
-		int textureIndex = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
-		
-		if (textureIndex >= 0)
-		{
-			const tinygltf::Texture& texture = sourceModel.textures[textureIndex];
-			const tinygltf::Image& image = sourceModel.images[texture.source];
-
-			// Do not load the same texture twice
-			if (loadedIndices.find(texture.source) != loadedIndices.end()) return;
-
-			std::string filePath = std::string(modelPath);
-			char usedSeparator = '\\';
-			
-			int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
-			
-			if (fileLocationPosition == -1)
-			{
-				usedSeparator = '/';
-				fileLocationPosition = filePath.find_last_of(usedSeparator);
-			}
-				
-			// Cant find the directory of the file
-			if(fileLocationPosition == -1) return;
-
-			std::string fileLocation = filePath.substr(0, fileLocationPosition) + usedSeparator;
-
-			std::string texturePathString = fileLocation.append(image.uri);
-
-			std::wstring wideUri = std::wstring(texturePathString.begin(), texturePathString.end());
-			const wchar_t* texturePath = wideUri.c_str();
-
-			DirectX::TexMetadata textureMetadata;
-			textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
-			if (textureId)
-			{
-				widthHeight.x = textureMetadata.width;
-				widthHeight.y = textureMetadata.height;
-				loadedIndices.insert(texture.source);
-			}
-		}
-		if (textureId)
-		{
-			textures.push_back(textureId);
-			textureInfo.push_back(widthHeight);
-			renderTexture++;
-		}
-	}
 }
 
 void EngineModel::Render(int program, unsigned int cameraUBO)
