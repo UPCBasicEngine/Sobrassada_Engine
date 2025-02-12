@@ -2,12 +2,9 @@
 
 #include "FileSystem.h"
 #include "Globals.h"
-#include "Application.h"
 #include "MeshImporter.h"
-#include "TextureImporter.h"
 #include "MaterialImporter.h"
-#include "LibraryModule.h"
-
+#include "TextureImporter.h"
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
@@ -75,38 +72,38 @@ namespace SceneImporter
             }
         }
 
-        for (const auto &srcImages : model.images)
-        {
-            std::string fullPath = path + srcImages.uri;
+        // for (const auto &srcImages : model.images)
+        //{
+        //     std::string fullPath = path + srcImages.uri;
 
-            std::string ddsPath  = TextureImporter::Import(fullPath.c_str());
-            //mapping dds path to texture name(png)
-            if (!ddsPath.empty())
-            {
-                App->GetLibraryModule()->AddTexture(srcImages.uri, ddsPath);
-            }  
-        }
+        //    UID ddsPath  = TextureImporter::Import(fullPath.c_str());
+        //    //mapping dds path to texture name(png)
+        //    if (!ddsPath.empty())
+        //    {
+        //        App->GetLibraryModule()->AddTexture(srcImages.uri, ddsPath);
+        //    }
+        //}
 
-        int matIndex = 0;
-        for (const auto &srcMaterials : model.materials)
-        {
-            std::string materialName = srcMaterials.name;
-            std::string materialPath = MATERIALS_PATH + materialName + MATERIAL_EXTENSION;
+        // int matIndex = 0;
+        // for (const auto &srcMaterials : model.materials)
+        //{
+        //     std::string materialName = srcMaterials.name;
+        //     std::string materialPath = MATERIALS_PATH + materialName + MATERIAL_EXTENSION;
 
-            MaterialImporter::ImportMaterial(model, matIndex, materialName);
-        }
+        //    MaterialImporter::ImportMaterial(model, matIndex);
+        //}
 
         for (const auto &srcMesh : model.meshes)
         {
-            name = srcMesh.name;
-            n    = 0;
+            name         = srcMesh.name;
+            n            = 0;
             int matIndex = 0;
             for (const auto &primitive : srcMesh.primitives)
             {
-                name += std::to_string(n);
-                
-                uint64_t uuid = GenerateUUID();
-                name += "_" + std::to_string(uuid);
+                name     += std::to_string(n);
+
+                UID uuid  = GenerateUID();
+                name     += "_" + std::to_string(uuid);
 
                 MeshImporter::ImportMesh(model, srcMesh, primitive, name);
                 matIndex = primitive.material;
@@ -177,4 +174,4 @@ namespace SceneImporter
         }
     }
 
-};
+}; // namespace SceneImporter

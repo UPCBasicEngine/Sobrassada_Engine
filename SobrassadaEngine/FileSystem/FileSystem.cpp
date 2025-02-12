@@ -1,6 +1,5 @@
 #include "FileSystem.h"
 
-#include "Globals.h"
 #include "document.h"
 #include "istreamwrapper.h"
 

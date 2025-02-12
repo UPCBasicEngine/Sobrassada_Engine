@@ -66,11 +66,11 @@ enum update_status
 #define MATERIAL_EXTENSION ".mat"
 #define SCENE_EXTENSION    ".scene"
 
-#define UID uint64_t
-
 constexpr float PI = 3.14159265359f;
 
-UID GenerateUID()
+#define UID uint64_t
+
+inline UID GenerateUID()
 {
     // Set a 64-bit seed (choose any nonzero value)
     uint32_t seed = 0x12345678;

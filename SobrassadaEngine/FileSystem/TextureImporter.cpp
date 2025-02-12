@@ -5,10 +5,9 @@
 #include "LibraryModule.h"
 #include "Application.h"
 
-
 namespace TextureImporter
 {
-    UID Import(const char *filePath)
+    uint64_t Import(const char *filePath)
     {
         // Copy image to Assets folder
         {

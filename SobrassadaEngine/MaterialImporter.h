@@ -4,8 +4,9 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "tiny_gltf.h"
+#include "Globals.h"
 
 namespace MaterialImporter
 {
-    bool ImportMaterial(const tinygltf::Model &model, int materialIndex);
+    UID ImportMaterial(const tinygltf::Model &model, int materialIndex);
 };

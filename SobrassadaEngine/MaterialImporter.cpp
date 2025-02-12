@@ -1,8 +1,7 @@
-
 #include "MaterialImporter.h"
+
 #include "Application.h"
 #include "FileSystem.h"
-#include "Globals.h"
 #include "LibraryModule.h"
 #include "Material.h"
 #include "TextureImporter.h"
@@ -12,8 +11,6 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
 {
 
     const tinygltf::Material &gltfMaterial = model.materials[materialIndex];
-
-    std::string name                       = gltfMaterial.name;
 
     auto it                                = gltfMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
     //ADD OLD LOADING
@@ -53,7 +50,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
               return 0;
             }
 
-            material.SetDiffuseTexture(&diffuseUID);
+            material.SetDiffuseTexture(diffuseUID);
         }
 
         if (specGloss.Has("glossinessFactor"))
@@ -88,7 +85,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
                 return 0;
             }
 
-            material.SetSpecularGlossinessTexture(&specularGlossinessUID);
+            material.SetSpecularGlossinessTexture(specularGlossinessUID);
         }
     }
 
@@ -104,7 +101,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             return 0;
         }
 
-        material.SetNormalTexture(&normalUID);
+        material.SetNormalTexture(normalUID);
     }
 
 
@@ -121,7 +118,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             return 0;
         }
 
-        material.SetOcclusionTexture(&occlusionUID);
+        material.SetOcclusionTexture(occlusionUID);
     }
 
     return true;

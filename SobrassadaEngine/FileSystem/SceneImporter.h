@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 namespace SceneImporter
 {
     void Import(const char *filePath);
