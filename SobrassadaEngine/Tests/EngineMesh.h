@@ -31,7 +31,7 @@ public:
     void SetMaterialIndex(int index) { materialIndices.push_back(index); }
 	std::vector<int>& GetMaterialIndices() {  return materialIndices; }
 
-	void Render(int program, ComponentMaterial* material, float4x4& modelMatrix, unsigned int cameraUBO);
+	void Render(int program, float4x4& modelMatrix, unsigned int cameraUBO, ComponentMaterial* material);
 
     const AABB& GetAABB() const { return aabb;}
 

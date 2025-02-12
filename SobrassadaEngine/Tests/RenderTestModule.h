@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Module.h"
-#include "Components/ComponentMaterial.h"
 class EngineModel;
-class LightsConfig;
 
 class RenderTestModule : public Module
 {
@@ -25,11 +23,5 @@ private:
 	unsigned int vbo = -1;
 	unsigned int baboonTexture = -1;
 	EngineModel* currentLoadedModel;
-    std::vector<ComponentMaterial*> materials;
-
-	float3 lightDir = float3(-1.0f, -0.3f, 2.0f);
-	float3 lightColor = float3(1.0f, 1.0f, 1.0f);
-	float3 ambientIntensity = float3(1.0f, 1.0f, 1.0f);
-    LightsConfig *lightsConfig;
 };
 

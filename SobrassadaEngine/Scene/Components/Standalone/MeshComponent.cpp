@@ -109,14 +109,18 @@ void MeshComponent::Render(){
         EngineMesh* currentMesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
         if (currentMesh != nullptr)
         {
+            std::vector<int>& indices = currentMesh->GetMaterialIndices();
+            ComponentMaterial *material = &App->GetSceneModule()->MOCKUP_loadedModel->GetMaterial(indices[0]);
+
             float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
             float4x4 view = App->GetCameraModule()->GetViewMatrix();
+            unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
+
             float4x4 model = float4x4::FromTRS(
                     globalTransform.position,
                     math::Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
                     globalTransform.scale);
-            currentMesh->Render(App->GetRenderTestModule()->GetProgram(), App->GetSceneModule()->MOCKUP_loadedTextures[currentTexureUUID],
-                model, proj, view);
+            currentMesh->Render(App->GetRenderTestModule()->GetProgram(), model, cameraUBO, material);
         }
     }
     Component::Render();

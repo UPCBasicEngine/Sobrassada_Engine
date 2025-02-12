@@ -22,8 +22,8 @@
 
 RenderTestModule::RenderTestModule()
 {
-	currentLoadedModel = new EngineModel();
-    lightsConfig       = new LightsConfig();
+	//currentLoadedModel = new EngineModel();
+    //lightsConfig       = new LightsConfig();
 }
 
 RenderTestModule::~RenderTestModule()
@@ -33,7 +33,7 @@ RenderTestModule::~RenderTestModule()
 bool RenderTestModule::Init()
 {
 	//currentLoadedModel->Load("./Test/BakerHouse.gltf");
-	currentLoadedModel->Load("./Test/Robot.gltf");	
+	//currentLoadedModel->Load("./Test/Robot.gltf");	
 	
 	//program = App->GetShaderModule()->GetProgram("./Test/basicVertexShader.vs", "./Test/basicFragmentShader.fs");
     program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/BRDFPhongFragmentShader.glsl");
@@ -74,8 +74,6 @@ bool RenderTestModule::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_data), vtx_data, GL_STATIC_DRAW);
 
-	lightsConfig->InitSkybox();
-
 	return true;
 }
 
@@ -97,38 +95,21 @@ update_status RenderTestModule::Render(float deltaTime)
 		float3(2.0f, 1.0f, 1.0f));
 
 	// Draw the skybox before anything else
-	lightsConfig->RenderSkybox(proj, view);					
+	//lightsConfig->RenderSkybox(proj, view);					
 
-	glUseProgram(program);
+	//glUseProgram(program);
 	//glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
 	//glUniformMatrix4fv(1, 1, GL_TRUE, &view[0][0]);
 	//glUniformMatrix4fv(2, 1, GL_TRUE, &model[0][0]);
 
 	// Sending triangle vertices
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 	// Sending texture coordiantes
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
-
-    float3 cameraPos = App->GetCameraModule()->getPosition();
-    glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
-
-    if (ImGui::CollapsingHeader("Light"))
-    {
-		ImGui::SliderFloat3("Ambient Intensity", &ambientIntensity.x, 0.f, 1.f);
-		ImGui::SliderFloat3("Light Color", &lightColor.x, 0.f, 1.f);
-        ImGui::SliderFloat3("Light Direction", &lightDir.x, -20.0f, 20.0f);
-    }
-
-    glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
-	glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
-    glUniform3fv(glGetUniformLocation(program, "ambientIntensity"), 1, &ambientIntensity[0]);
-
-    materials = currentLoadedModel->GetMaterials();
-    materials.at(0)->OnEditorUpdate();
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
 
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, baboonTexture);
@@ -136,8 +117,8 @@ update_status RenderTestModule::Render(float deltaTime)
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	//glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
-	currentLoadedModel->Render(program, cameraUBO);
+	//unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
+	//currentLoadedModel->Render(program, cameraUBO);
 
 	int width  = 0;
     int height = 0;
@@ -159,7 +140,7 @@ bool RenderTestModule::ShutDown()
 	glDeleteTextures(1, &baboonTexture);
 
 	delete currentLoadedModel;
-    delete lightsConfig;
+    //delete lightsConfig;
 
 	return true;
 }

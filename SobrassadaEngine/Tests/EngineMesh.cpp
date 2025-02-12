@@ -66,10 +66,12 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 		SDL_assert(positionAccessor.type == TINYGLTF_TYPE_VEC3);
 		SDL_assert(positionAccessor.componentType == GL_FLOAT);
 
+		//maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
+		//minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
 		const float3 maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
 		const float3 minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
-                aabb = AABB(minimumPosition, maximumPosition);
-	    
+		aabb = AABB(minimumPosition, maximumPosition);
+
 		const tinygltf::BufferView& positionBufferView = inModel.bufferViews[positionAccessor.bufferView];
 		const tinygltf::Buffer& positionBuffer = inModel.buffers[positionBufferView.buffer];
 
@@ -214,7 +216,7 @@ void EngineMesh::SetBasicModelMatrix(float4x4& newModelMatrix)
 	basicModelMatrix = newModelMatrix;
 }
 
-void EngineMesh::Render(int program, ComponentMaterial* material, float4x4& modelMatrix, unsigned int cameraUBO)
+void EngineMesh::Render(int program, float4x4 &modelMatrix, unsigned int cameraUBO, ComponentMaterial* material)
 {
 	glUseProgram(program);
 
@@ -225,6 +227,17 @@ void EngineMesh::Render(int program, ComponentMaterial* material, float4x4& mode
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     
     glUniformMatrix4fv(2, 1, GL_TRUE, &modelMatrix[0][0]);
+
+	float3 lightDir = float3(-1.0f, -0.3f, 2.0f);
+    float3 lightColor = float3(1.0f, 1.0f, 1.0f);
+    float3 ambientIntensity = float3(1.0f, 1.0f, 1.0f);
+	float3 cameraPos = App->GetCameraModule()->getPosition();
+	glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
+
+	glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
+    glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
+	glUniform3fv(glGetUniformLocation(program, "ambientIntensity"), 1, &ambientIntensity[0]);
+
 
     material->RenderMaterial(program);
 
