@@ -16,9 +16,9 @@
 
 namespace FileSystem
 {
-    unsigned int Load(const char *filePath, char **buffer)
+    unsigned int Load(const char *filePath, char **buffer, bool asBinary)
     {
-        std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+        std::ifstream file(filePath, (asBinary ? std::ios::binary : 0) | std::ios::ate);
 
         if (!file.is_open())
         {

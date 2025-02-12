@@ -15,6 +15,21 @@
                 ],
                 "rootComponentUUID": 2001
             }
+        ],
+        "components": [
+            {
+                "uuid": 2001,
+                "parentuuid": 1001,
+                "childuuids": [
+                    1,
+                    2,
+                    3,
+                    4
+                ],
+                "type": "MeshRenderer",
+                "meshUUID": 3001,
+                "materialUUID": 4001
+            }
         ]
     }
 }

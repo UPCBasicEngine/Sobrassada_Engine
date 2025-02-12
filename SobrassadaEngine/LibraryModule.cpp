@@ -5,9 +5,9 @@
 #include "SceneImporter.h"
 
 #include "document.h"
+#include "prettywriter.h"
 #include "stringbuffer.h"
 #include "writer.h"
-#include "prettywriter.h"
 
 LibraryModule::LibraryModule() {}
 
@@ -33,9 +33,9 @@ bool LibraryModule::SaveScene(const char *path)
     rapidjson::Value scene(rapidjson::kObjectType);
 
     // Scene values
-    uint64_t uuid                                 = 0;
-    std::string name                              = "Test Scene";
-    uint64_t rootGameObject                       = 0;
+    uint64_t uuid           = 0;
+    std::string name        = "Test Scene";
+    uint64_t rootGameObject = 0;
 
     // Create structure
     scene.AddMember("uuid", uuid, allocator);
@@ -51,15 +51,40 @@ bool LibraryModule::SaveScene(const char *path)
     A.AddMember("parentuuid", 987654321, allocator);
 
     // Child UUIDs
-    rapidjson::Value childUUIDs(rapidjson::kArrayType);
-    childUUIDs.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
-    A.AddMember("childuuids", childUUIDs, allocator);
+    rapidjson::Value childUUIDsGO(rapidjson::kArrayType);
+    childUUIDsGO.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
+    A.AddMember("childuuids", childUUIDsGO, allocator);
     A.AddMember("rootComponentUUID", 2001, allocator);
 
     gameObjects.PushBack(A, allocator);
 
-    // Add gameObjects to doc
+    // Add gameObjects to scene
     scene.AddMember("gameObjects", gameObjects, allocator);
+
+    // Serialize Components
+    rapidjson::Value components(rapidjson::kArrayType);
+
+    // 1 component
+    rapidjson::Value B(rapidjson::kObjectType);
+
+    B.AddMember("uuid", 2001, allocator);
+    B.AddMember("parentuuid", 1001, allocator);
+
+    // Child UUIDs
+    rapidjson::Value childUUIDsComp(rapidjson::kArrayType);
+    childUUIDsComp.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
+    B.AddMember("childuuids", childUUIDsComp, allocator);
+
+    B.AddMember("type", "MeshRenderer", allocator);
+
+    // Dependent
+    B.AddMember("meshUUID", 3001, allocator);
+    B.AddMember("materialUUID", 4001, allocator);
+
+    components.PushBack(B, allocator);
+
+    // Add components to scene
+    scene.AddMember("components", components, allocator);
 
     doc.AddMember("Scene", scene, allocator);
 
@@ -83,4 +108,62 @@ bool LibraryModule::SaveScene(const char *path)
     return true;
 }
 
-bool LibraryModule::LoadScene(const char *path) { return true; }
+bool LibraryModule::LoadScene(const char *path)
+{
+    char *buffer      = nullptr;
+    unsigned int size = FileSystem::Load(path, &buffer, false);
+
+    if (size == 0 || buffer == nullptr)
+    {
+        GLOG("Failed to load scene file: %s", path);
+        return false;
+    }
+
+    rapidjson::Document doc;
+    if (doc.Parse(buffer).HasParseError())
+    {
+        GLOG("Failed to parse scene JSON: %s", path);
+        delete[] buffer;
+        return false;
+    }
+
+    delete[] buffer;
+
+    if (doc.HasMember("Scene") || !doc["Scene"].IsObject())
+    {
+        GLOG("Invalid scene format: %s", path);
+        return false;
+    }
+
+    rapidjson::Value &scene = doc["Scene"];
+
+    // Scene values
+    uint64_t uuid           = scene["uuid"].GetUint64();
+    std::string name        = scene["name"].GetString();
+    uint64_t rootGameObject = scene["rootGameObject"].GetUint64();
+
+    // Deserialize GameObjects
+    if (scene.HasMember("gameObjects") && scene["gameObjects"].IsArray())
+    {
+        const rapidjson::Value &gameObjects = scene["gameObjects"];
+        for (rapidjson::SizeType i = 0; i < gameObjects.Size(); i++)
+        {
+            const rapidjson::Value &gameObject = gameObjects[i];
+
+            uint64_t uuidGO                    = gameObject["uuid"].GetUint64();
+            uint64_t parentuuid                = gameObject["parentuuid"].GetUint64();
+
+            if (gameObject.HasMember("childuuids") && gameObject["childuuids"].IsArray())
+            {
+                const rapidjson::Value &childUUIDs = gameObject["childuuids"];
+                for (rapidjson::SizeType j = 0; j < childUUIDs.Size(); j++)
+                {
+                    uint64_t childUUID = childUUIDs[j].GetUint64();
+                }
+            }
+            uint64_t rootComponentUUID = gameObject["rootComponentUUID"].GetUint64();
+        }
+    }
+
+    return true;
+}
