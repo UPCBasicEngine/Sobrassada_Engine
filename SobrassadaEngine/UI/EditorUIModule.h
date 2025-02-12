@@ -6,6 +6,7 @@
 #include "ResourceManagement/Resources/Resource.h"
 
 #include <deque>
+#include <string>
 #include <map>
 
 class EditorViewport;
@@ -43,9 +44,17 @@ public:
     void OpenGLConfig();
 
     void Console(bool &consoleMenu);
+    void ImportDialog(bool &import);
+    void GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files);
+    void LoadDialog(bool &load);
+    void SaveDialog(bool &save);
 
   private:
     bool consoleMenu        = true;
+    bool import             = false;
+    bool load               = false;
+    bool save               = false;
+    bool loadScene          = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
 
@@ -56,4 +65,9 @@ public:
     int transformType = LOCAL;
 
     EditorViewport *editorViewport = nullptr;
+
+    int width, height;
+
+    std::string startPath;
+    std::string libraryPath;
 };

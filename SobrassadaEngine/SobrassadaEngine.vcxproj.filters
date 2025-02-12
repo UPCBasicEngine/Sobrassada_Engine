@@ -179,6 +179,24 @@
     <ClCompile Include="Scene\Components\Standalone\ModelComponent.cpp" />
     <ClCompile Include="Scene\Components\ComponentUtils.cpp" />
     <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp" />
+    <ClCompile Include="FileSystem\FileSystem.cpp">
+          <Filter>FileSystem</Filter>
+        </ClCompile>
+        <ClCompile Include="FileSystem\MeshImporter.cpp">
+          <Filter>FileSystem</Filter>
+        </ClCompile>
+        <ClCompile Include="FileSystem\SceneImporter.cpp">
+          <Filter>FileSystem</Filter>
+        </ClCompile>
+        <ClCompile Include="FileSystem\TextureImporter.cpp">
+          <Filter>FileSystem</Filter>
+        </ClCompile>
+        <ClCompile Include="LibraryModule.cpp">
+          <Filter>Modules</Filter>
+        </ClCompile>
+        <ClCompile Include="MaterialImporter.cpp">
+          <Filter>FileSystem</Filter>
+        </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -214,6 +232,9 @@
     <Filter Include="ImGuizmo">
       <UniqueIdentifier>{557b3855-2c1e-41d1-b6ab-ecab1faac98c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FileSystem">
+          <UniqueIdentifier>{71717f5e-3c10-4a82-a6fa-814368871f96}</UniqueIdentifier>
+        </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Modules\Module.h">
@@ -297,6 +318,31 @@
     </ClInclude>
     <ClInclude Include="UI\EditorViewport.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h" />
+    <ClInclude Include="FileSystem\FileSystem.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\MeshImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\SceneImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\TextureImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="LibraryModule.h">
+      <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h">
       <Filter>Scene\Components</Filter>

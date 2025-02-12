@@ -1,4 +1,4 @@
-/* Copyright 2011 Jukka Jylänki
+/* Copyright 2011 Jukka Jylï¿½nki
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
    limitations under the License. */
 
 /** @file float2.h
-	@author Jukka Jylänki
+	@author Jukka Jylï¿½nki
 	@brief A 2D (x,y) ordered pair. */
 #pragma once
 

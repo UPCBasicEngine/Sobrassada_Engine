@@ -4,6 +4,7 @@
 #include "InputModule.h"
 #include "OpenGLModule.h"
 #include "ShaderModule.h"
+#include "LibraryModule.h"
 #include "WindowModule.h"
 #include "SceneModule.h"
 
@@ -25,6 +26,7 @@ Application::Application()
     modules.push_back(resourcesModule = new ResourcesModule());
     modules.push_back(inputModule = new InputModule());
     modules.push_back(shaderModule = new ShaderModule());
+    modules.push_back(libraryModule = new LibraryModule());
     modules.push_back(sceneModule = new SceneModule());
 
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER

@@ -11,6 +11,7 @@ class OpenGLModule;
 class ResourcesModule;
 class InputModule;
 class ShaderModule;
+class LibraryModule;
 class EditorUIModule;
 class SceneModule;
 
@@ -34,6 +35,7 @@ class Application
     ResourcesModule* GetResourcesModule() { return resourcesModule; }
     InputModule *GetInputModule() { return inputModule; }
     ShaderModule *GetShaderModule() { return shaderModule; }
+    LibraryModule *GetLibraryModule() { return libraryModule; }
     EditorUIModule *GetEditorUIModule() { return editorUIModule; };
     SceneModule *GetSceneModule() { return sceneModule; }
 
@@ -50,6 +52,7 @@ class Application
     ResourcesModule *resourcesModule     = nullptr;
     InputModule *inputModule             = nullptr;
     ShaderModule *shaderModule           = nullptr;
+    LibraryModule *libraryModule         = nullptr;
     EditorUIModule *editorUIModule       = nullptr;
     SceneModule *sceneModule             = nullptr;
 

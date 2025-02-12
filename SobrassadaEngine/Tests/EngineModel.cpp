@@ -1,10 +1,10 @@
 #include "EngineModel.h"
+#include "Application.h"
+#include "DirectXTex/DirectXTex.h"
 #include "Globals.h"
 #include "MathGeoLib.h"
-#include "Application.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
-#include "DirectXTex/DirectXTex.h"
 #include <string>
 #include <unordered_set>
 
@@ -18,43 +18,41 @@
 
 EngineModel::EngineModel()
 {
-	minValues = float3::zero;
-	maxValues = float3::zero;
+    minValues = float3::zero;
+    maxValues = float3::zero;
 }
 
-EngineModel::~EngineModel()
+EngineModel::~EngineModel() { ClearVectors(); }
+
+void EngineModel::Load(const char *modelPath)
 {
-	ClearVectors();
+    ClearVectors();
+
+    GLOG("Loading model: %s", modelPath);
+
+    tinygltf::TinyGLTF gltfContext;
+    tinygltf::Model model;
+    std::string error, warning;
+
+    bool loadOk = gltfContext.LoadASCIIFromFile(&model, &error, &warning, modelPath);
+
+    if (!loadOk)
+    {
+        GLOG("Error loading model %s: %s", modelPath, error.c_str());
+    }
+
+    // Checking for root node in nodes to start the model loading, if no default scene error in model doc.
+    int rootPosition =
+        model.scenes[model.defaultScene].nodes.size() > 0 ? model.scenes[model.defaultScene].nodes[0] : -1;
+    if (rootPosition < 0) return;
+
+    float4x4 basicModelMatrix = float4x4::identity;
+    LoadRecursive(model, basicModelMatrix, rootPosition);
+
+    LoadMaterials(model, modelPath);
 }
 
-void EngineModel::Load(const char* modelPath)
-{
-	ClearVectors();
-
-	GLOG("Loading model: %s", modelPath);
-
-	tinygltf::TinyGLTF gltfContext;
-	tinygltf::Model model;
-	std::string error, warning;
-
-	bool loadOk = gltfContext.LoadASCIIFromFile(&model, &error, &warning, modelPath);
-
-	if (!loadOk)
-	{
-		GLOG("Error loading model %s: %s", modelPath, error.c_str());
-	}
-
-	// Checking for root node in nodes to start the model loading, if no default scene error in model doc.
-	int rootPosition = model.scenes[model.defaultScene].nodes.size() > 0 ? model.scenes[model.defaultScene].nodes[0] : -1;
-	if (rootPosition < 0) return;
-
-	float4x4 basicModelMatrix = float4x4::identity;
-	LoadRecursive(model, basicModelMatrix, rootPosition);
-
-	LoadMaterials(model, modelPath);
-}
-
-void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath)
+void EngineModel::LoadMaterials(const tinygltf::Model &sourceModel, const char *modelPath)
 {
     materials.clear();
     int id = 0;
@@ -83,54 +81,57 @@ void EngineModel::Render(int program, unsigned int cameraUBO)
 	}*/
 }
 
-void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4x4& parentModelMatrix, int currentNodePosition)
+void EngineModel::LoadRecursive(
+    const tinygltf::Model &sourceModel, const float4x4 &parentModelMatrix, int currentNodePosition
+)
 {
-	const tinygltf::Node currentNode = sourceModel.nodes[currentNodePosition];
+    const tinygltf::Node currentNode = sourceModel.nodes[currentNodePosition];
 
-	// Creating basic model transform matrix if matrix data exists
-	float4x4 modelMatrix = float4x4::identity;
+    // Creating basic model transform matrix if matrix data exists
+    float4x4 modelMatrix             = float4x4::identity;
 
-	if (currentNode.matrix.size() > 0)
-	{
-		for (int i = 0; i < currentNode.matrix.size(); ++i)
-		{
-			modelMatrix[i / 4][i % 4] = (float)currentNode.matrix[i];
-		}
-	}
-	else
-	{
-		// Creating basic model transform matrix based on tranlation, rotation and scale information
-		Quat finalRotation;
-		float3 translation, scale;
+    if (currentNode.matrix.size() > 0)
+    {
+        for (int i = 0; i < currentNode.matrix.size(); ++i)
+        {
+            modelMatrix[i / 4][i % 4] = (float)currentNode.matrix[i];
+        }
+    }
+    else
+    {
+        // Creating basic model transform matrix based on tranlation, rotation and scale information
+        Quat finalRotation;
+        float3 translation, scale;
 
-		translation = float3::zero;
-		scale = float3::one;
-		finalRotation = Quat(0, 0, 0, 1);
+        translation   = float3::zero;
+        scale         = float3::one;
+        finalRotation = Quat(0, 0, 0, 1);
 
-		if (currentNode.rotation.size() > 0)
-		{
-			finalRotation = Quat((float)currentNode.rotation[0], (float)currentNode.rotation[1], (float)currentNode.rotation[2], (float)currentNode.rotation[3]);
-		}
+        if (currentNode.rotation.size() > 0)
+        {
+            finalRotation = Quat(
+                (float)currentNode.rotation[0], (float)currentNode.rotation[1], (float)currentNode.rotation[2],
+                (float)currentNode.rotation[3]
+            );
+        }
 
-		if (currentNode.translation.size() > 0)
-		{
-			translation = float3((float)currentNode.translation[0], (float)currentNode.translation[1], (float)currentNode.translation[2]);
-		}
+        if (currentNode.translation.size() > 0)
+        {
+            translation = float3(
+                (float)currentNode.translation[0], (float)currentNode.translation[1], (float)currentNode.translation[2]
+            );
+        }
 
-		if (currentNode.scale.size() > 0)
-		{
-			scale = float3((float)currentNode.scale[0], (float)currentNode.scale[1], (float)currentNode.scale[2]);
-		}
+        if (currentNode.scale.size() > 0)
+        {
+            scale = float3((float)currentNode.scale[0], (float)currentNode.scale[1], (float)currentNode.scale[2]);
+        }
 
-		modelMatrix = float4x4::FromTRS(
-			translation,
-			finalRotation,
-			scale
-		);
-	}
+        modelMatrix = float4x4::FromTRS(translation, finalRotation, scale);
+    }
 
-	// Apply parentModelMatrix to current node one
-	modelMatrix = parentModelMatrix * modelMatrix;
+    // Apply parentModelMatrix to current node one
+    modelMatrix = parentModelMatrix * modelMatrix;
 
 	// If this node contains meshes then load them and apply the parents model matrix
 	if (currentNode.mesh >= 0)
@@ -164,21 +165,22 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 		}
 	}
 
-	// If this node contains children, send Load function to each one with current modelMatrix
-	if (currentNode.children.size() > 0)
-	{
-		for (int i = 0; i < currentNode.children.size(); ++i) LoadRecursive(sourceModel, modelMatrix, currentNode.children[i]);
-	}
+    // If this node contains children, send Load function to each one with current modelMatrix
+    if (currentNode.children.size() > 0)
+    {
+        for (int i = 0; i < currentNode.children.size(); ++i)
+            LoadRecursive(sourceModel, modelMatrix, currentNode.children[i]);
+    }
 
-	return;
+    return;
 }
 
 void EngineModel::ClearVectors()
 {
-	for (auto it : meshes)
-	{
-		delete it;
-	}
+    for (auto it : meshes)
+    {
+        delete it;
+    }
 
 	for (auto it : materials)
 	{
