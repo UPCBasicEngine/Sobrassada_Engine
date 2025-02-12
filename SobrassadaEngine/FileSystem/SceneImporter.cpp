@@ -4,6 +4,8 @@
 #include "Globals.h"
 #include "MeshImporter.h"
 #include "TextureImporter.h"
+#include "MaterialImporter.h"
+#include "LibraryModule.h"
 #include "Algorithm/Random/LCG.h"
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
@@ -28,6 +30,7 @@ namespace SceneImporter
         // Copy gltf to Assets folder
         {
             std::string copyPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(filePath);
+
             if (!FileSystem::Exists(copyPath.c_str()))
             {
                 FileSystem::Copy(filePath, copyPath.c_str());
@@ -74,7 +77,20 @@ namespace SceneImporter
         for (const auto &srcImages : model.images)
         {
             std::string fullPath = path + srcImages.uri;
-            TextureImporter::Import(fullPath.c_str());
+
+            std::string ddsPath  = TextureImporter::Import(fullPath.c_str());
+            //mapping dds path to texture name(png)
+            FileSystem::libraryModule.AddTexture(srcImages.uri, ddsPath);
+        }
+
+        int matIndex = 0;
+        for (const auto &srcMaterials : model.materials)
+        {
+            std::string materialName = srcMaterials.name;
+            std::string materialPath = MATERIALS_PATH + materialName + ".mat";
+
+            MaterialImporter::ImportMaterial(model, srcMaterials);
+            matIndex++;
         }
 
         for (const auto &srcMesh : model.meshes)

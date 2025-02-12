@@ -4,11 +4,11 @@
 #include "FileSystem.h"
 #include "Globals.h"
 
-#include <string>
+
 
 namespace TextureImporter
 {
-    bool Import(const char *filePath)
+    std::string Import(const char *filePath)
     {
         // Copy image to Assets folder
         {
@@ -63,6 +63,7 @@ namespace TextureImporter
         }
 
         GLOG("%s saved as dds", fileName.c_str());
-        return true;
+
+        return savePath.c_str();
     }
-}; // namespace TextureImporter
+};

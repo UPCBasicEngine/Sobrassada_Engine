@@ -16,6 +16,9 @@
 
 namespace FileSystem
 {
+
+    LibraryModule FileSystem::libraryModule;
+
     unsigned int Load(const char *filePath, char **buffer)
     {
         std::ifstream file(filePath, std::ios::binary | std::ios::ate);
