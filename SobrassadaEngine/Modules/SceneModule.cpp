@@ -38,7 +38,7 @@ bool SceneModule::Init()
 
     //DEMO
     GameObject *sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
-    uint32_t gameObjectChildRootUUID = LCG().IntFast();
+    UID gameObjectChildRootUUID = LCG().IntFast();
     sceneGameChildObject->SetUUID(gameObjectChildRootUUID);
     sceneGameObject->AddGameObject(gameObjectChildRootUUID);
 
@@ -48,10 +48,10 @@ bool SceneModule::Init()
     MOCKUP_loadedModel = new EngineModel();
     MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
 
-    const uint32_t bakerHouseID = LCG().IntFast();
-    const uint32_t bakerHouseChimneyID = LCG().IntFast();
+    const UID bakerHouseID = LCG().IntFast();
+    const UID bakerHouseChimneyID = LCG().IntFast();
 
-    const uint32_t bakerHouseTextureID = LCG().IntFast();
+    const UID bakerHouseTextureID = LCG().IntFast();
     
     MOCKUP_loadedMeshes[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
     MOCKUP_loadedMeshes[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
@@ -131,7 +131,7 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
 
     if (ImGui::Button("Add GameObject"))
     {
-        uint32_t newUUID          = LCG().IntFast();
+        UID newUUID          = LCG().IntFast();
         GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
         newGameObject->SetUUID(newUUID);
         GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
@@ -153,7 +153,7 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
     ImGui::End();
 }
 
-void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
+void SceneModule::RenderGameObjectHierarchy(UID gameObjectUUID)
 {
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID)) return;
@@ -178,7 +178,7 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
 
     if (nodeOpen && hasChildren)
     {
-        for (uint32_t childUUID : gameObject->GetChildren())
+        for (UID childUUID : gameObject->GetChildren())
         {
             if (childUUID != gameObjectUUID) 
                 RenderGameObjectHierarchy(childUUID);
@@ -190,7 +190,7 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
     ImGui::PopID();
 }
 
-void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
+void SceneModule::HandleNodeClick(UID gameObjectUUID)
 {
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
     {
@@ -206,7 +206,7 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
     // Drag and Drop functionality
     if (ImGui::BeginDragDropSource())
     {
-        ImGui::SetDragDropPayload("DRAG_DROP_GAMEOBJECT", &gameObjectUUID, sizeof(uint32_t));
+        ImGui::SetDragDropPayload("DRAG_DROP_GAMEOBJECT", &gameObjectUUID, sizeof(UID));
         ImGui::Text("Dragging %s", GetGameObjectByUUID(gameObjectUUID)->GetName().c_str());
         ImGui::EndDragDropSource();
     }
@@ -215,7 +215,7 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
     {
         if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
         {
-            uint32_t draggedUUID = *reinterpret_cast<const uint32_t *>(payload->Data);
+            UID draggedUUID = *reinterpret_cast<const UID *>(payload->Data);
 
             if (draggedUUID != gameObjectUUID) UpdateGameObjectHierarchy(draggedUUID, gameObjectUUID);
         }
@@ -224,16 +224,16 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
     }
 }
 
-void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
+void SceneModule::RenderContextMenu(UID gameObjectUUID)
 {
-    static uint32_t renamingGameObjectUUID = 0;
+    static UID renamingGameObjectUUID = 0;
     static char *newNameBuffer = nullptr;
 
     if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str()))
     {
         if (ImGui::MenuItem("New GameObject"))
         {
-            uint32_t newUUID = LCG().IntFast();
+            UID newUUID = LCG().IntFast();
             GameObject *newGameObject =
                 new GameObject(selectedGameObjectUUID, "new Game Object");
 
@@ -293,19 +293,19 @@ void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
     }
 }
 
-void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
+void SceneModule::RemoveGameObjectHierarchy(UID gameObjectUUID)
 {
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID) || gameObjectUUID == gameObjectRootUUID) return;
 
     GameObject *gameObject = GetGameObjectByUUID(gameObjectUUID);
 
-    for (uint32_t childUUID : gameObject->GetChildren())
+    for (UID childUUID : gameObject->GetChildren())
     {
         RemoveGameObjectHierarchy(childUUID);
     }
 
-    uint32_t parentUUID = gameObject->GetParent();
+    UID parentUUID = gameObject->GetParent();
 
     //TODO: change when filesystem defined
     if (gameObjectsContainer.count(parentUUID))
@@ -321,14 +321,14 @@ void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
     delete gameObject;
 }
 
-void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID)
+void SceneModule::UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID)
 {
     GameObject *sourceGameObject = GetGameObjectByUUID(sourceUUID);
     GameObject *targetGameObject = GetGameObjectByUUID(targetUUID);
 
     if (!sourceGameObject || !targetGameObject) return;
 
-    uint32_t oldParentUUID = sourceGameObject->GetParent();
+    UID oldParentUUID = sourceGameObject->GetParent();
     sourceGameObject->SetParent(targetUUID);
 
     if (gameObjectsContainer.count(oldParentUUID))
@@ -341,7 +341,7 @@ void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t target
 
 }
 
-AABBUpdatable * SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
+AABBUpdatable * SceneModule::GetTargetForAABBUpdate(UID uuid)
 {
     if (gameObjectsContainer.count(uuid))
     {

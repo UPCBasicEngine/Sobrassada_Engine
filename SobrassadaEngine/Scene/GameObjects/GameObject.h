@@ -1,4 +1,5 @@
 #pragma once
+#include "Globals.h"
 #include "BoundingBox.h"
 #include "Transform.h"
 #include "Scene/AABBUpdatable.h"
@@ -13,12 +14,12 @@ class GameObject : public AABBUpdatable
 public:
 
 	GameObject(std::string name);
-	GameObject(uint32_t parentUUID, std::string name);
+	GameObject(UID parentUUID, std::string name);
 
     ~GameObject();
 
-	bool AddGameObject(uint32_t gameObjectUUID);
-    bool RemoveGameObject(uint32_t gameObjectUUID);
+	bool AddGameObject(UID gameObjectUUID);
+    bool RemoveGameObject(UID gameObjectUUID);
 
     bool CreateRootComponent();
 
@@ -29,12 +30,12 @@ public:
 	inline std::string GetName() { return name; }
     void SetName(std::string newName) { name = newName; }
     
-	inline std::vector<uint32_t> GetChildren() { return children; }
+	inline std::vector<UID> GetChildren() { return children; }
     
-	inline uint32_t GetParent() { return parentUUID; }
-    void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }
+	inline UID GetParent() { return parentUUID; }
+    void SetParent(UID newParentUUID) { parentUUID = newParentUUID; }
 
-	void SetUUID(uint32_t newUUID) { uuid = newUUID; }
+	void SetUUID(UID newUUID) { uuid = newUUID; }
     
     RootComponent* GetRootComponent() const { return rootComponent; }
     
@@ -46,9 +47,9 @@ public:
 
 private:
 
-	uint32_t parentUUID;
-	uint32_t uuid;
-	std::vector<uint32_t> children;
+	UID parentUUID;
+	UID uuid;
+	std::vector<UID> children;
 
 	std::string name;
 

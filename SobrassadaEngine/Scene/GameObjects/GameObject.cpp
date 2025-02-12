@@ -12,7 +12,7 @@ GameObject::GameObject(std::string name) : name(name)
     CreateRootComponent();
 }
 
-GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(parentUUID), name(name)
+GameObject::GameObject(UID parentUUID, std::string name) : parentUUID(parentUUID), name(name)
 {
     CreateRootComponent();
 }
@@ -31,7 +31,7 @@ bool GameObject::CreateRootComponent()
     return true;
 }
 
-bool GameObject::AddGameObject(uint32_t gameObjectUUID)
+bool GameObject::AddGameObject(UID gameObjectUUID)
 {
     if (std::find(children.begin(), children.end(), gameObjectUUID) == children.end())
     {
@@ -41,7 +41,7 @@ bool GameObject::AddGameObject(uint32_t gameObjectUUID)
     return false;
 }
 
-bool GameObject::RemoveGameObject(uint32_t gameObjectUUID)
+bool GameObject::RemoveGameObject(UID gameObjectUUID)
 {
     if (const auto it = std::find(children.begin(), children.end(), gameObjectUUID); it != children.end())
     {
