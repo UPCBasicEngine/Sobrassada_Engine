@@ -19,7 +19,6 @@ public:
 
 private:
 	
-	void RenderEditorViewport();
     bool PointInPlane(const math::float3 &point, const math::float4 &plane);
 	
 	int program = -1;

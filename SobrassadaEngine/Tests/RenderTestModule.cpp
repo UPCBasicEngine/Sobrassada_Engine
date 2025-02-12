@@ -2,11 +2,11 @@
 
 #include "Application.h"
 #include "CameraModule.h"
+#include "DebugDrawModule.h"
 #include "Framebuffer.h"
 #include "OpenGLModule.h"
 #include "ShaderModule.h"
 #include "TextureModuleTest.h"
-#include "DebugDrawModule.h"
 #include "WindowModule.h"
 
 #include "DirectXTex/DirectXTex.h"
@@ -98,12 +98,12 @@ update_status RenderTestModule::Render(float deltaTime)
 
     if (insideFrustum)
     {
-        GLOG("El objeto esta dentro del Frustum");
+        // GLOG("El objeto esta dentro del Frustum");
         currentLoadedModel->Render(program, proj, view);
     }
     else
     {
-        GLOG("El objeto esta fuera del Frustum");
+        // GLOG("El objeto esta fuera del Frustum");
     }
     auto framebuffer = App->GetOpenGLModule()->GetFramebuffer();
     App->GetDebugDrawModule()->Draw(view, proj, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight());
@@ -121,23 +121,6 @@ bool RenderTestModule::ShutDown()
     delete currentLoadedModel;
 
     return true;
-}
-
-void RenderTestModule::RenderEditorViewport()
-{
-    ImGui::SetNextWindowSize(ImVec2(500, 500));
-    ImGui::SetNextWindowPos(ImVec2(0, 50));
-    ImGui::Begin("Scene");
-    {
-        ImGui::BeginChild("GameRender");
-
-        float width  = ImGui::GetContentRegionAvail().x;
-        float height = ImGui::GetContentRegionAvail().y;
-
-        ImGui::Image((ImTextureID)0, ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
-    }
-    ImGui::EndChild();
-    ImGui::End();
 }
 
 bool RenderTestModule::CheckFrustum()
