@@ -3,8 +3,10 @@
 #include "Globals.h"
 #include "Material.h"
 #include "TextureImporter.h"
+#include "Application.h"
+#include "LibraryModule.h"
 #include <FileSystem>
-/*
+
 bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex)
 {
 
@@ -21,7 +23,7 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
 
     if (it != gltfMaterial.extensions.end())
     {
-        const tinygltf::Value &specGloss    = it->second;
+        const tinygltf::Value &specGloss = it->second;
 
         // Diffuse Factor
         const tinygltf::Value &diffuseValue = specGloss.Get("diffuseFactor");
@@ -43,8 +45,11 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
             // need a pointer to corresponding texture from textureImporter
             const tinygltf::Value &diffuseTex = specGloss.Get("diffuseTexture");
             int texIndex = diffuseTex.Get("index").Get<int>();
+            //&model.images[model.textures[texIndex].source].uri png name
+            std::string pathToDds =
+                App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
 
-            material.SetDiffuseTexture(&model.images[model.textures[texIndex].source].uri);
+            material.SetDiffuseTexture(&pathToDds);
         }
 
         if (specGloss.Has("glossinessFactor"))
@@ -57,7 +62,7 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
         {
             const std::vector<tinygltf::Value> &specArray = diffuseValue.Get<tinygltf::Value::Array>();
 
-            float3 specular                               = {
+            float3 specular = {
                 static_cast<float>(specArray[0].Get<double>()), static_cast<float>(specArray[1].Get<double>()),
                 static_cast<float>(specArray[2].Get<double>())
             };
@@ -70,28 +75,37 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
         // Specular-Glossiness Texture
         if (specGloss.Has("specularGlossinessTexture"))
         {
-            // need a pointer to corresponding texture from textureImporter
-            // int texIndex = specGlossExt.Get("specularGlossinessTexture").Get("index").Get<int>();
-            // material.SetSpecularGlossinessTexture(&model.images[model.textures[texIndex].source].uri);
+            const tinygltf::Value &specTex = specGloss.Get("specularGlossinessTexture");
+            int texIndex = specTex.Get("index").Get<int>();
+            std::string pathToDds =
+                App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
+
+            material.SetSpecularGlossinessTexture(&pathToDds);
         }
     }
 
     // Normal Map
     if (gltfMaterial.normalTexture.index >= 0)
     {
-        // need a pointer to corresponding texture from textureImporter
-        // int texIndex = gltfMaterial.normalTexture.index;
-        // material.SetNormalTexture(&model.images[model.textures[texIndex].source].uri);
+            int texIndex = gltfMaterial.normalTexture.index;
+            std::string pathToDds =
+                App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
+
+            material.SetNormalTexture(&pathToDds);
+        
     }
 
     // Occlusion Map
     if (gltfMaterial.occlusionTexture.index >= 0)
     {
-        // need a pointer to corresponding texture from textureImporter
-        // int texIndex = gltfMaterial.occlusionTexture.index;
-        // material.SetOcclusionTexture(&model.images[model.textures[texIndex].source].uri);
-        // material.SetOcclusionStrength(static_cast<float>(gltfMaterial.occlusionTexture.strength));
+         int texIndex = gltfMaterial.occlusionTexture.index;
+         material.SetOcclusionStrength(static_cast<float>(gltfMaterial.occlusionTexture.strength));
+
+         std::string pathToDds =
+             App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
+
+         material.SetOcclusionTexture(&pathToDds);
     }
 
     return true;
-}*/
+}

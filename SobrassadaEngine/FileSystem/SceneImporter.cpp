@@ -90,10 +90,10 @@ namespace SceneImporter
         int matIndex = 0;
         for (const auto &srcMaterials : model.materials)
         {
-            std::string materialName = srcMaterials.name;
-            std::string materialPath = MATERIALS_PATH + materialName + ".mat";
+            std::string srcMaterialName = srcMaterials.name;
+            std::string materialName = MATERIALS_PATH + materialName + ".mat";
 
-            //MaterialImporter::ImportMaterial(model, srcMaterials);
+            MaterialImporter::ImportMaterial(model, matIndex, materialName);
             matIndex++;
         }
 
