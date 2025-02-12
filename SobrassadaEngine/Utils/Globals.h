@@ -36,6 +36,8 @@ enum update_status
 #define TITLE "Sobrassada Engine"
 #define HFOV 90
 
+#define UID uint32_t
+
 #define DEFAULT_GL_CLEAR_COLOR_RED 0.5f
 #define DEFAULT_GL_CLEAR_COLOR_GREEN 0.5f
 #define DEFAULT_GL_CLEAR_COLOR_BLUE 0.5f
@@ -47,5 +49,6 @@ enum update_status
 
 constexpr uint32_t CONSTANT_NO_MESH_UUID = 0;
 constexpr uint32_t CONSTANT_NO_TEXTURE_UUID = 0;
+constexpr uint32_t CONSTANT_EMPTY_UID = 0;
 
 constexpr float PI = 3.14159265359f;

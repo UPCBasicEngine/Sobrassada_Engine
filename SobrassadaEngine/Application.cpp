@@ -23,6 +23,7 @@ Application::Application()
     modules.push_back(textureModuleTest = new TextureModuleTest());
 
     modules.push_back(openGLModule = new OpenGLModule());
+    modules.push_back(resourcesModule = new ResourcesModule());
     modules.push_back(inputModule = new InputModule());
     modules.push_back(shaderModule = new ShaderModule());
     modules.push_back(sceneModule = new SceneModule());

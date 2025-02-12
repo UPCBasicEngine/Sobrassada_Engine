@@ -2,11 +2,13 @@
 
 #include "Globals.h"
 #include "Module.h"
+#include "ResourcesModule.h"
 
 #include <list>
 
 class WindowModule;
 class OpenGLModule;
+class ResourcesModule;
 class InputModule;
 class ShaderModule;
 class EditorUIModule;
@@ -30,6 +32,7 @@ class Application
 
     WindowModule *GetWindowModule() { return windowModule; }
     OpenGLModule *GetOpenGLModule() { return openGLModule; }
+    ResourcesModule* GetResourcesModule() { return resourcesModule; }
     InputModule *GetInputModule() { return inputModule; }
     ShaderModule *GetShaderModule() { return shaderModule; }
     EditorUIModule *GetEditorUIModule() { return editorUIModule; };
@@ -46,6 +49,7 @@ class Application
 
     WindowModule *windowModule           = nullptr;
     OpenGLModule *openGLModule           = nullptr;
+    ResourcesModule *resourcesModule     = nullptr;
     InputModule *inputModule             = nullptr;
     ShaderModule *shaderModule           = nullptr;
     EditorUIModule *editorUIModule       = nullptr;
