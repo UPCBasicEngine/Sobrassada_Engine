@@ -84,5 +84,8 @@ private:
 
 	//lightsConfig;
 
+    // REMOVE JUST FOR TESTING
+
+    void CreateHouseGameObject(int totalGameobjects);
 
 };

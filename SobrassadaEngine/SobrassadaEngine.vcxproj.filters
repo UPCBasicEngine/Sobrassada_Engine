@@ -165,7 +165,6 @@
     <ClCompile Include="UI\EditorViewport.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Components\Component.cpp" />
     <ClCompile Include="UI\QuadtreeViewer.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -187,11 +186,24 @@
     <ClCompile Include="Modules\SceneModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Components\Dependent\MeshComponent.cpp" />
-    <ClCompile Include="Scene\Components\Root\RootComponent.cpp" />
-    <ClCompile Include="Scene\Components\Standalone\ModelComponent.cpp" />
-    <ClCompile Include="Scene\Components\ComponentUtils.cpp" />
-    <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp" />
+    <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp">
+      <Filter>ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\MeshComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Component.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\ComponentUtils.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Scene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -311,7 +323,6 @@
     <ClInclude Include="UI\EditorViewport.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="UI\QuadtreeViewer.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -339,11 +350,27 @@
     <ClInclude Include="Modules\SceneModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Dependent\MeshComponent.h" />
-    <ClInclude Include="Scene\Components\Root\RootComponent.h" />
-    <ClInclude Include="Scene\Components\Standalone\ModelComponent.h" />
-    <ClInclude Include="Scene\Components\ComponentUtils.h" />
-    <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h" />
+    <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h">
+      <Filter>ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\MeshComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Root\RootComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\ComponentUtils.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Scene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\AABBUpdatable.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

@@ -137,3 +137,9 @@ void MeshComponent::LoadMesh(const std::string& meshName, uint32_t meshUUID)
         }
     }
 }
+
+void MeshComponent::SetTexture(const std::string &textureName, uint32_t textureUUID)
+{
+    currentTextureName = textureName;
+    currentTexureUUID  = textureUUID;
+}

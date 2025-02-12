@@ -10,9 +10,10 @@
 #include "imgui_impl_sdl2.h"
 
 #include "Root/RootComponent.h"
+#include "Scene/Components/Standalone/MeshComponent.h"
 
-#include <tiny_gltf.h>
 #include <Algorithm/Random/LCG.h>
+#include <tiny_gltf.h>
 
 SceneModule::SceneModule()
 {
@@ -27,16 +28,16 @@ bool SceneModule::Init()
 {
     GLOG("Creating SceneModule renderer context");
 
-    GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
-    
-    gameObjectRootUUID = LCG().IntFast();
+    GameObject *sceneGameObject = new GameObject("SceneModule GameObject");
+
+    gameObjectRootUUID          = LCG().IntFast();
     selectedGameObjectUUID      = gameObjectRootUUID;
     sceneGameObject->SetUUID(gameObjectRootUUID);
 
-    //TODO: Change when filesystem defined
+    // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectRootUUID, sceneGameObject});
 
-    //DEMO
+    // DEMO
     GameObject *sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
     uint32_t gameObjectChildRootUUID = LCG().IntFast();
     sceneGameChildObject->SetUUID(gameObjectChildRootUUID);
@@ -44,40 +45,44 @@ bool SceneModule::Init()
 
     // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
-    
+
     MOCKUP_loadedModel = new EngineModel();
     MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
 
-    const uint32_t bakerHouseID = LCG().IntFast();
-    const uint32_t bakerHouseChimneyID = LCG().IntFast();
+    const uint32_t bakerHouseID                   = LCG().IntFast();
+    const uint32_t bakerHouseChimneyID            = LCG().IntFast();
 
-    const uint32_t bakerHouseTextureID = LCG().IntFast();
-    
-    MOCKUP_loadedMeshes[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
-    MOCKUP_loadedMeshes[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
-    MOCKUP_libraryMeshes["Baker house"] = bakerHouseID;
-    MOCKUP_libraryMeshes["Baker house chimney"] = bakerHouseChimneyID;
+    const uint32_t bakerHouseTextureID            = LCG().IntFast();
+
+    MOCKUP_loadedMeshes[bakerHouseID]             = MOCKUP_loadedModel->GetMesh(1);
+    MOCKUP_loadedMeshes[bakerHouseChimneyID]      = MOCKUP_loadedModel->GetMesh(0);
+    MOCKUP_libraryMeshes["Baker house"]           = bakerHouseID;
+    MOCKUP_libraryMeshes["Baker house chimney"]   = bakerHouseChimneyID;
 
     // TODO Always have a default grid texture loaded to apply as standard
-    MOCKUP_loadedTextures[bakerHouseTextureID] = MOCKUP_loadedModel->GetActiveRenderTexture();
+    MOCKUP_loadedTextures[bakerHouseTextureID]    = MOCKUP_loadedModel->GetActiveRenderTexture();
     MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
-    
+
+    // DELETE JUST TESTING RENDERING
+
+    CreateHouseGameObject(2000);
+
     return true;
 }
 
-update_status SceneModule::PreUpdate(float deltaTime) 
+update_status SceneModule::PreUpdate(float deltaTime)
 {
     return UPDATE_CONTINUE;
 }
 
-update_status SceneModule::Update(float deltaTime) 
+update_status SceneModule::Update(float deltaTime)
 {
     return UPDATE_CONTINUE;
 }
 
 update_status SceneModule::Render(float deltaTime)
 {
-    for (auto& gameObject: gameObjectsContainer)
+    for (auto &gameObject : gameObjectsContainer)
     {
         gameObject.second->Render();
     }
@@ -86,7 +91,7 @@ update_status SceneModule::Render(float deltaTime)
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
-    GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
+    GameObject *selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
     if (selectedGameObject != nullptr)
     {
         selectedGameObject->RenderEditor();
@@ -125,7 +130,7 @@ void SceneModule::CheckObjectsToRender()
 {
 }
 
-void SceneModule::RenderHierarchyUI(bool &hierarchyMenu) 
+void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
 {
     ImGui::Begin("Hierarchy", &hierarchyMenu);
 
@@ -136,7 +141,7 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
         newGameObject->SetUUID(newUUID);
         GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
-        //TODO: change when filesystem defined
+        // TODO: change when filesystem defined
         gameObjectsContainer.insert({newUUID, newGameObject});
     }
 
@@ -145,7 +150,7 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
     if (ImGui::Button("Delete GameObject") && selectedGameObjectUUID != gameObjectRootUUID)
     {
         RemoveGameObjectHierarchy(selectedGameObjectUUID);
-        //selectedGameObjectUUID = gameObjectRootUUID;
+        // selectedGameObjectUUID = gameObjectRootUUID;
     }
 
     RenderGameObjectHierarchy(gameObjectRootUUID);
@@ -158,17 +163,15 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID)) return;
 
-    GameObject *gameObject = GetGameObjectByUUID(gameObjectUUID);
-    
+    GameObject *gameObject   = GetGameObjectByUUID(gameObjectUUID);
+
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-    bool hasChildren = !gameObject->GetChildren().empty();
+    bool hasChildren         = !gameObject->GetChildren().empty();
 
-    if (!hasChildren)
-        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    if (!hasChildren) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-    if (selectedGameObjectUUID == gameObjectUUID) 
-        flags |= ImGuiTreeNodeFlags_Selected;
+    if (selectedGameObjectUUID == gameObjectUUID) flags |= ImGuiTreeNodeFlags_Selected;
 
     ImGui::PushID(gameObjectUUID);
     bool nodeOpen = ImGui::TreeNodeEx(gameObject->GetName().c_str(), flags);
@@ -180,8 +183,7 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
     {
         for (uint32_t childUUID : gameObject->GetChildren())
         {
-            if (childUUID != gameObjectUUID) 
-                RenderGameObjectHierarchy(childUUID);
+            if (childUUID != gameObjectUUID) RenderGameObjectHierarchy(childUUID);
         }
 
         ImGui::TreePop();
@@ -227,26 +229,24 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
 void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
 {
     static uint32_t renamingGameObjectUUID = 0;
-    static char *newNameBuffer = nullptr;
+    static char *newNameBuffer             = nullptr;
 
     if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str()))
     {
         if (ImGui::MenuItem("New GameObject"))
         {
-            uint32_t newUUID = LCG().IntFast();
-            GameObject *newGameObject =
-                new GameObject(selectedGameObjectUUID, "new Game Object");
+            uint32_t newUUID          = LCG().IntFast();
+            GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
 
             GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
             // TODO: change when filesystem defined
             gameObjectsContainer.insert({newUUID, newGameObject});
         }
-        
-        if (gameObjectUUID != gameObjectRootUUID && ImGui::MenuItem("Delete")) 
+
+        if (gameObjectUUID != gameObjectRootUUID && ImGui::MenuItem("Delete"))
             RemoveGameObjectHierarchy(gameObjectUUID);
 
-        
         /*if (ImGui::MenuItem("Rename"))
         {
             renamingGameObjectUUID = gameObjectUUID;
@@ -266,7 +266,7 @@ void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
 
         ImGui::EndPopup();
 
-        //Renaming Mode
+        // Renaming Mode
         /*if (renamingGameObjectUUID == gameObjectUUID)
         {
             ImGui::SetNextItemWidth(200.0f);
@@ -307,7 +307,7 @@ void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
 
     uint32_t parentUUID = gameObject->GetParent();
 
-    //TODO: change when filesystem defined
+    // TODO: change when filesystem defined
     if (gameObjectsContainer.count(parentUUID))
     {
         GameObject *parentGameObject = GetGameObjectByUUID(parentUUID);
@@ -338,10 +338,9 @@ void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t target
     }
 
     targetGameObject->AddGameObject(sourceUUID);
-
 }
 
-AABBUpdatable * SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
+AABBUpdatable *SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
 {
     if (gameObjectsContainer.count(uuid))
     {
@@ -354,4 +353,48 @@ AABBUpdatable * SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
     }
 
     return nullptr;
+}
+
+// REMOVE JUST FOR TESTING
+void SceneModule::CreateHouseGameObject(int totalGameobjects)
+{
+    math::LCG randomGenerator;
+
+    for (int i = 0; i < totalGameobjects; ++i)
+    {
+        uint32_t newUUID          = LCG().IntFast();
+        GameObject *newGameObject = new GameObject(gameObjectRootUUID, "House_" + std::to_string(i));
+        newGameObject->SetUUID(newUUID);
+        GetGameObjectByUUID(gameObjectRootUUID)->AddGameObject(newUUID);
+        gameObjectsContainer.insert({newUUID, newGameObject});
+
+        auto gameObjectChildrenUUID  = newGameObject->GetRootComponent()->GetUUID();
+        ComponentType componentType  = ComponentType::COMPONENT_MESH;
+
+        Component *selectedComponent = gameComponents[gameObjectChildrenUUID];
+        Component *createdComponent  = ComponentUtils::CreateEmptyComponent(
+            componentType, LCG().IntFast(), gameObjectChildrenUUID, gameObjectChildrenUUID,
+            selectedComponent->GetGlobalTransform()
+        );
+
+        gameComponents[createdComponent->GetUUID()] = createdComponent;
+        selectedComponent->AddChildComponent(createdComponent->GetUUID());
+
+        MeshComponent *createdMesh = reinterpret_cast<MeshComponent *>(createdComponent);
+        auto meshIT                = MOCKUP_libraryMeshes.begin();
+        createdMesh->LoadMesh(meshIT->first, meshIT->second);
+
+        auto textureIT = MOCKUP_libraryTextures.begin();
+        createdMesh->SetTexture(textureIT->first, textureIT->second);
+
+        float xPosition        = randomGenerator.Float(-50, 50);
+        float zPosition        = randomGenerator.Float(-50, 50);
+
+        float yRotation        = randomGenerator.Float(-180, 180);
+
+        Transform newTransform =
+            Transform(float3(xPosition, 0, zPosition), float3(0, yRotation, 0), float3(100, 100, 100));
+
+        selectedComponent->OnTransformUpdate(newTransform);
+    }
 }
