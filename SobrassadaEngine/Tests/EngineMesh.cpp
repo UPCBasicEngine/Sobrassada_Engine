@@ -14,9 +14,9 @@
 
 EngineMesh::EngineMesh()
 {
-	basicModelMatrix = float4x4::identity;
-	maximumPosition = float3(0.f, 0.f, 0.f);
-	minimumPosition = float3(0.f, 0.f, 0.f);
+    basicModelMatrix = float4x4::identity;
+    
+    aabb.SetNegativeInfinity();
 }
 
 EngineMesh::~EngineMesh()
@@ -58,9 +58,10 @@ void EngineMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& i
 		SDL_assert(positionAccessor.type == TINYGLTF_TYPE_VEC3);
 		SDL_assert(positionAccessor.componentType == GL_FLOAT);
 
-		maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
-		minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
-
+		const float3 maximumPosition = float3((float)positionAccessor.maxValues[0], (float)positionAccessor.maxValues[1], (float)positionAccessor.maxValues[2]);
+		const float3 minimumPosition = float3((float)positionAccessor.minValues[0], (float)positionAccessor.minValues[1], (float)positionAccessor.minValues[2]);
+                aabb = AABB(minimumPosition, maximumPosition);
+	    
 		const tinygltf::BufferView& positionBufferView = inModel.bufferViews[positionAccessor.bufferView];
 		const tinygltf::Buffer& positionBuffer = inModel.buffers[positionBufferView.buffer];
 
@@ -166,22 +167,20 @@ void EngineMesh::SetBasicModelMatrix(float4x4& newModelMatrix)
 {
 	basicModelMatrix = newModelMatrix;
 }
-
-float4x4 EngineMesh::GetBasicModelMatrix() { return basicModelMatrix;}
-
-void EngineMesh::Render(int program, int texturePosition, float4x4& projectionMatrix, float4x4& viewMatrix)
+float4x4 EngineMesh::GetBasicModelMatrix() { return basicModelMatrix; }
+void EngineMesh::Render(int program, unsigned int texture, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
 {
 
 	glUseProgram(program);
 
 	glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
 	glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
-	glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
+	glUniformMatrix4fv(2, 1, GL_TRUE, &modelMatrix[0][0]);
 
-	if (texturePosition > 0)
+	if (texture > 0)
 	{
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texturePosition);
+		glBindTexture(GL_TEXTURE_2D, texture);
 	}
 
 	if (indexCount > 0 && vao)

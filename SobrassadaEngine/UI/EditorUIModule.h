@@ -2,6 +2,8 @@
 
 #include "Module.h"
 
+#include "Transform.h"
+
 #include <deque>
 
 class EditorViewport;
@@ -19,6 +21,12 @@ class EditorUIModule : public Module
     update_status RenderEditor(float deltaTime) override;
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
+
+    bool RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
+
+public:
+    bool hierarchyMenu      = true;
+    bool inspectorMenu      = true; 
 
   private:
     void AddFramePlotData(float deltaTime);
@@ -43,6 +51,8 @@ class EditorUIModule : public Module
     int maximumPlotData         = 50;
     std::deque<float> framerate;
     std::deque<float> frametime;
+
+    int transformType = LOCAL;
 
     EditorViewport *editorViewport = nullptr;
     QuadtreeViewer *quadtreeViewer = nullptr;

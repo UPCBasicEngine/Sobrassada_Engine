@@ -10,6 +10,7 @@ class OpenGLModule;
 class InputModule;
 class ShaderModule;
 class EditorUIModule;
+class SceneModule;
 
 // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 class CameraModule;
@@ -32,6 +33,7 @@ class Application
     InputModule *GetInputModule() { return inputModule; }
     ShaderModule *GetShaderModule() { return shaderModule; }
     EditorUIModule *GetEditorUIModule() { return editorUIModule; };
+    SceneModule *GetSceneModule() { return sceneModule; }
 
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *GetCameraModule() { return cameraModule; }
@@ -47,6 +49,7 @@ class Application
     InputModule *inputModule             = nullptr;
     ShaderModule *shaderModule           = nullptr;
     EditorUIModule *editorUIModule       = nullptr;
+    SceneModule *sceneModule             = nullptr;
 
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *cameraModule           = nullptr;

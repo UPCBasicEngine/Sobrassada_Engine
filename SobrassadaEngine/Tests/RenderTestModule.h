@@ -17,6 +17,7 @@ public:
 	bool ShutDown() override;
     bool CheckFrustum();
 
+        int GetProgram() const { return program; }
 private:
 	
     bool PointInPlane(const math::float3 &point, const math::float4 &plane);

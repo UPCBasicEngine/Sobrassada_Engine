@@ -135,12 +135,12 @@ void EngineModel::LoadAdditionalTexture(const char* texturePath)
 	}
 }
 
-void EngineModel::Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix)
+void EngineModel::Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
 {
 	for (EngineMesh* currentMesh : meshes)
 	{
 		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-		currentMesh->Render(program, texturePostiion, projectionMatrix, viewMatrix);
+		//currentMesh->Render(program, modelMatrix, projectionMatrix, viewMatrix);
 	}
 }
 
