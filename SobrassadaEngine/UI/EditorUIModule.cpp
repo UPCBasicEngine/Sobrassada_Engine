@@ -11,9 +11,14 @@
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
+#include <cstring>
 #include <filesystem>
 
-EditorUIModule::EditorUIModule() {}
+EditorUIModule::EditorUIModule()
+    : width(0), height(0), closeApplication(false), consoleMenu(false), import(false), load(false), save(false),
+      editorSettingsMenu(false)
+{
+}
 
 EditorUIModule::~EditorUIModule() {}
 
@@ -113,7 +118,7 @@ void EditorUIModule::Draw()
 {
     ImGui::DockSpaceOverViewport();
     MainMenu();
-    //ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     if (consoleMenu) Console(consoleMenu);
 
@@ -300,15 +305,17 @@ void EditorUIModule::ImportDialog(bool &import)
     }
 
     static std::string currentPath = startPath;
-    std::vector<std::string> accPaths;
+    static std::vector<std::string> accPaths;
+    static bool loadButtons = true;
+
     static std::vector<std::string> files;
-    std::vector<std::string> filteredFiles;
+    static bool loadFiles = false;
+    static std::vector<std::string> filteredFiles;
+    static bool loadFilteredFiles = false;
 
     static char searchQuery[32];
-    static bool showDrives = false;
-
-    // root directory add delimiter
-    if (currentPath.back() == ':') currentPath += DELIMITER;
+    static char lastQuery[32] = "default";
+    static bool showDrives    = false;
 
     if (ImGui::Button("Drives"))
     {
@@ -323,7 +330,11 @@ void EditorUIModule::ImportDialog(bool &import)
     {
         ImGui::SameLine();
 
-        FileSystem::SplitAccumulatedPath(currentPath, accPaths);
+        if (loadButtons)
+        {
+            FileSystem::SplitAccumulatedPath(currentPath, accPaths);
+            loadButtons = false;
+        }
 
         for (size_t i = 0; i < accPaths.size(); i++)
         {
@@ -335,6 +346,9 @@ void EditorUIModule::ImportDialog(bool &import)
             {
                 currentPath = accPath;
                 showDrives  = false;
+                loadFiles   = true;
+                loadButtons = true;
+                searchQuery[0] = '\0';
             }
 
             if (i < accPaths.size() - 1) ImGui::SameLine();
@@ -359,23 +373,41 @@ void EditorUIModule::ImportDialog(bool &import)
             {
                 currentPath = drive;
                 showDrives  = false;
+                loadFiles   = true;
+                loadButtons = true;
             }
         }
     }
     else
     {
-        GetFilesSorted(currentPath, files);
+        // root directory add delimiter
+        if (currentPath.back() == ':') currentPath += DELIMITER;
 
-        files.insert(files.begin(), "..");
-
-        filteredFiles.clear();
-
-        for (const std::string &file : files)
+        if (files.empty() || loadFiles)
         {
-            if (file.find(searchQuery) != std::string::npos)
+            GetFilesSorted(currentPath, files);
+
+            files.insert(files.begin(), "..");
+
+            loadFiles         = false;
+            loadFilteredFiles = true;
+        }
+
+        if (strcmp(lastQuery, searchQuery) != 0 || loadFilteredFiles) // if the search query has changed
+        {
+            strcpy_s(lastQuery, searchQuery);
+
+            filteredFiles.clear();
+
+            for (const std::string &file : files)
             {
-                filteredFiles.push_back(file);
+                if (file.find(searchQuery) != std::string::npos)
+                {
+                    filteredFiles.push_back(file);
+                }
             }
+
+            loadFilteredFiles = false;
         }
 
         static int selected = -1;
@@ -400,6 +432,8 @@ void EditorUIModule::ImportDialog(bool &import)
                     selected    = -1;
                     GetFilesSorted(currentPath, files);
                     searchQuery[0] = '\0';
+                    loadFiles      = true;
+                    loadButtons    = true;
                 }
                 else if (isDirectory)
                 {
@@ -408,6 +442,8 @@ void EditorUIModule::ImportDialog(bool &import)
                     selected    = -1;
                     GetFilesSorted(currentPath, files);
                     searchQuery[0] = '\0';
+                    loadFiles      = true;
+                    loadButtons    = true;
                 }
                 else
                 {
@@ -431,6 +467,7 @@ void EditorUIModule::ImportDialog(bool &import)
         import         = false;
         showDrives     = false;
         searchQuery[0] = '\0';
+        loadFiles      = true;
     }
 
     ImGui::SameLine();
@@ -447,6 +484,7 @@ void EditorUIModule::ImportDialog(bool &import)
         import         = false;
         showDrives     = false;
         searchQuery[0] = '\0';
+        loadFiles      = true;
     }
 
     ImGui::End();
