@@ -3,8 +3,10 @@
 #include "Module.h"
 
 #include "Transform.h"
+#include "ResourceManagement/Resources/Resource.h"
 
 #include <deque>
+#include <map>
 
 class EditorViewport;
 
@@ -22,6 +24,7 @@ class EditorUIModule : public Module
     bool ShutDown() override;
 
     bool RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
+    Resource* RenderResourceSelectDialog(const std::map<std::string, UID>& availableResources);
 
 public:
     bool hierarchyMenu      = true;

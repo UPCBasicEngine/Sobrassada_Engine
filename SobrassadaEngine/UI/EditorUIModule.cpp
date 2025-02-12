@@ -205,6 +205,35 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     return valueChanged;
 }
 
+Resource * EditorUIModule::RenderResourceSelectDialog(const std::map<std::string, uint32_t> &availableResources)
+{
+    if (ImGui::BeginPopup(CONSTANT_RESOURCE_SELECT_DIALOG_ID))
+    {
+        static char searchText[255] = "";
+        ImGui::InputText("Search", searchText, 255);
+        
+        ImGui::Separator();
+        if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+        {
+            for ( const auto &valuePair: availableResources ) {
+                {
+                    if (valuePair.first.find(searchText) != std::string::npos)
+                    {
+                        if (ImGui::Selectable(valuePair.first.c_str(), false))
+                        {
+                            ImGui::CloseCurrentPopup();
+                            return App->GetResourcesModule()->RequestResource(valuePair.second);
+                        }
+                    }
+                }
+            }
+            ImGui::EndListBox();
+        }
+        ImGui::EndPopup();
+    }
+    return nullptr;
+}
+
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
 {
     ImGui::Begin("Editor settings", &editorSettingsMenu);

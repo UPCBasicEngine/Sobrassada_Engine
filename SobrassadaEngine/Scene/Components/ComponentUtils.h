@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Globals.h"
 #include "Transform.h"
 
 #include <cstdint>
@@ -26,7 +27,7 @@ static const std::map<std::string, ComponentType> standaloneComponents = {
 class ComponentUtils
 {
 public:
-    static Component* CreateEmptyComponent(ComponentType type, uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot, const Transform& parentGlobalTransform);
+    static Component* CreateEmptyComponent(ComponentType type, UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform);
 
     
 };

@@ -52,19 +52,12 @@ public:
     GameObject * GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
 
 
-    std::map<uint32_t, Component*> gameComponents;
+    std::map<uint32_t, Component*> gameComponents;          // TODO Move to Scene class
     
-    std::map<uint32_t, EngineMesh*> MOCKUP_loadedMeshes;
-    std::map<std::string, uint32_t> MOCKUP_libraryMeshes;
-
-    std::map<uint32_t, unsigned int> MOCKUP_loadedTextures;
-    std::map<std::string, uint32_t> MOCKUP_libraryTextures;
-    
-    EngineModel* MOCKUP_loadedModel;
+    std::map<std::string, uint32_t> MOCKUP_libraryMeshes;   // TODO Move to library file
+    std::map<std::string, uint32_t> MOCKUP_libraryTextures; // TODO Move to library file
 
     AABBUpdatable* GetTargetForAABBUpdate(uint32_t uuid);
-
-    void MOCKUP_loadModel(std::string path);
 
 private:
 

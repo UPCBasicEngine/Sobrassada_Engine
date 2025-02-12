@@ -18,7 +18,7 @@ GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(paren
 }
 
 GameObject::~GameObject(){
-    App->GetSceneModule()->gameComponents.erase(rootComponent->GetUUID());
+    App->GetSceneModule()->gameComponents.erase(rootComponent->GetUID());
     delete rootComponent;
     rootComponent = nullptr;
 }
@@ -27,7 +27,7 @@ bool GameObject::CreateRootComponent()
 {
     rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), parentUUID, -1, Transform())); // TODO Add the gameObject UUID as parent?
     // TODO Replace parentUUID above with the UUID of this gameObject
-    App->GetSceneModule()->gameComponents[rootComponent->GetUUID()] = rootComponent;
+    App->GetSceneModule()->gameComponents[rootComponent->GetUID()] = rootComponent;
     return true;
 }
 

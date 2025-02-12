@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "CameraModule.h"
+#include "EditorUIModule.h"
 #include "../Root/RootComponent.h"
 #include "EngineMesh.h"
 #include "RenderTestModule.h"
@@ -10,8 +11,8 @@
 
 #include <Math/Quat.h>
 
-MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform)
-        : Component(uuid, uuidParent, uuidRoot, name, parentGlobalTransform)
+MeshComponent::MeshComponent(const UID uid, const UID uidParent, const UID uidRoot, const char* name, const Transform& parentGlobalTransform)
+        : Component(uid, uidParent, uidRoot, name, parentGlobalTransform)
 {
 }
 
@@ -22,81 +23,63 @@ void MeshComponent::RenderEditorInspector()
     if (enabled)
     {
         ImGui::SeparatorText("Mesh");
-    ImGui::Text(currentMeshName.c_str());
-    ImGui::SameLine();
-    if (ImGui::Button("Select mesh"))
-    {
-        ImGui::OpenPopup("MeshSelection");
-    }
-
-    if (ImGui::BeginPopup("MeshSelection"))
-    {
-        static char searchText[255] = "";
-        ImGui::InputText("Search mesh", searchText, 255);
-        
-        ImGui::Separator();
-        if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+        ImGui::Text(currentMeshName.c_str());
+        ImGui::SameLine();
+        if (ImGui::Button("Select mesh"))
         {
-            for ( const auto &modelPair : App->GetSceneModule()->MOCKUP_libraryMeshes ) {
-                {
-                    if (modelPair.first.find(searchText) != std::string::npos)
-                    {
-                        if (ImGui::Selectable(modelPair.first.c_str(), false))
-                        {
-                            LoadMesh(modelPair.first, modelPair.second);
-                            ImGui::CloseCurrentPopup();
-                        }
-                    }
-                }
-            }
-            ImGui::EndListBox();
+            ImGui::OpenPopup("CONSTANT_RESOURCE_SELECT_DIALOG_ID");
         }
-        ImGui::EndPopup();
-    }
 
-    // TODO Remove duplicated code for popups
-    // TODO Rework texture system (Not working properly)
-
-    ImGui::SeparatorText("Diffuse texture");
-    ImGui::Text(currentTextureName.c_str());
-    ImGui::SameLine();
-    if (ImGui::Button("Select texture"))
-    {
-        ImGui::OpenPopup("TextureSelection");
-    }
-
-    if (ImGui::BeginPopup("TextureSelection"))
-    {
-        static char searchText[255] = "";
-        ImGui::InputText("Search texture", searchText, 255);
-        
-        ImGui::Separator();
-        if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+        Resource* selectedResource = App->GetEditorUIModule()->RenderResourceSelectDialog(App->GetSceneModule()->MOCKUP_libraryMeshes);
+        if (selectedResource != nullptr)
         {
-            for ( const auto &texturePair : App->GetSceneModule()->MOCKUP_libraryTextures ) {
-                {
-                    if (texturePair.first.find(searchText) != std::string::npos)
-                    {
-                        if (ImGui::Selectable(texturePair.first.c_str(), false))
-                        {
-                            currentTextureName = texturePair.first;
-                            currentTexureUUID = texturePair.second;
-                            ImGui::CloseCurrentPopup();
-                        }
-                    }
-                }
-            }
-            ImGui::EndListBox();
+            AddMesh(selectedResource);
         }
-        ImGui::EndPopup();
-    }
+    
+        if (ImGui::BeginPopup("MeshSelection"))
+        {
+            static char searchText[255] = "";
+            ImGui::InputText("Search mesh", searchText, 255);
+        
+            ImGui::Separator();
+            if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+            {
+                for ( const auto &modelPair : App->GetSceneModule()->MOCKUP_libraryMeshes ) {
+                    {
+                      if (modelPair.first.find(searchText) != std::string::npos)
+                     {
+                            if (ImGui::Selectable(modelPair.first.c_str(), false))
+                         {
+                              LoadMesh(modelPair.first, modelPair.second);
+                              ImGui::CloseCurrentPopup();
+                           }
+                       }
+                  }}
+                ImGui::EndListBox();
+            }
+            ImGui::EndPopup();
+        }
+
+        ImGui::SeparatorText("Diffuse texture");
+        ImGui::Text(currentTextureName.c_str());
+        ImGui::SameLine();
+        if (ImGui::Button("Select texture"))
+        {
+            ImGui::OpenPopup("CONSTANT_RESOURCE_SELECT_DIALOG_ID");
+        }
+
+        Resource* selectedResource = App->GetEditorUIModule()->RenderResourceSelectDialog(App->GetSceneModule()->MOCKUP_libraryTextures);
+        if (selectedResource != nullptr)
+        {
+            AddMaterial(selectedResource);
+        }
     }
     
 }
 
-void MeshComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
+void MeshComponent::RenderEditorComponentTree(const uint32_t selectedComponentUID)
 {
-    Component::RenderEditorComponentTree(selectedComponentUUID);
+    Component::RenderEditorComponentTree(selectedComponentUID);
 }
 
 void MeshComponent::Update()
@@ -104,9 +87,9 @@ void MeshComponent::Update()
 }
 
 void MeshComponent::Render(){
-    if (enabled && currentMeshUUID != CONSTANT_NO_MESH_UUID)
+    if (enabled && currentMesh != CONSTANT_NO_MESH_UUID)
     {
-        EngineMesh* currentMesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
+        EngineMesh* currentMesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMesh];
         if (currentMesh != nullptr)
         {
             float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
@@ -115,25 +98,40 @@ void MeshComponent::Render(){
                     globalTransform.position,
                     math::Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
                     globalTransform.scale);
-            currentMesh->Render(App->GetRenderTestModule()->GetProgram(), App->GetSceneModule()->MOCKUP_loadedTextures[currentTexureUUID],
+            currentMesh->Render(App->GetRenderTestModule()->GetProgram(), App->GetSceneModule()->MOCKUP_loadedTextures[currentTexure],
                 model, proj, view);
         }
     }
     Component::Render();
 }
 
-void MeshComponent::LoadMesh(const std::string& meshName, uint32_t meshUUID)
+void MeshComponent::AddMesh(Resource* resource)
 {
-    currentMeshName = meshName;
-    currentMeshUUID = meshUUID;
-    EngineMesh* mesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
-    if (mesh != nullptr)
+    ResourceMesh* newMesh = dynamic_cast<ResourceMesh*>(resource);
+    if (newMesh != nullptr)
     {
-        localComponentAABB = AABB(mesh->GetAABB());
-        AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
-        if (parent != nullptr)
+        App->GetResourcesModule()->ReleaseResource(currentMesh);
+        currentMeshName = newMesh->GetName();
+        currentMesh = newMesh;
+        if (mesh != nullptr)
         {
-            parent->PassAABBUpdateToParent();
+            localComponentAABB = AABB(mesh->GetAABB());
+            AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
+            if (parent != nullptr)
+            {
+                parent->PassAABBUpdateToParent();
+            }
         }
+    }
+}
+
+void MeshComponent::AddMaterial(Resource *resource)
+{
+    ResourceMaterial* newMaterial = dynamic_cast<ResourceMaterial*>(resource);
+    if (newMaterial != nullptr)
+    {
+        App->GetResourcesModule()->ReleaseResource(currentMaterial);
+        currentMaterial = newMaterial;
+        currentTextureName = currentMaterial->GetName();
     }
 }

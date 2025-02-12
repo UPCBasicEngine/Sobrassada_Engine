@@ -285,6 +285,9 @@
       <AdditionalIncludeDirectories>.\Tests;.\Libs\SDL\include;.\Libs\glew-2.1.0\include;.\Libs\MathGeoLib\include;.\Libs\ImGui;.\Libs\ImGuizmo;.\DirectXTex;.\Libs\Tinygltf;.\;.\Modules;.\UI;.\Utils;.\DebugDraw;.\Scene\GameObjects;.\Scene\Components;</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="ResourceManagement\Resources\ResourceMaterial.cpp" />
+    <ClCompile Include="ResourceManagement\Resources\ResourceMesh.cpp" />
+    <ClCompile Include="ResourceManagement\Resources\ResourceTexture.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
     <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
@@ -501,6 +504,9 @@
     <ClInclude Include="Modules\ResourcesModule.h" />
     <ClInclude Include="Modules\SceneModule.h" />
     <ClInclude Include="ResourceManagement\Resources\Resource.h" />
+    <ClInclude Include="ResourceManagement\Resources\ResourceMaterial.h" />
+    <ClInclude Include="ResourceManagement\Resources\ResourceMesh.h" />
+    <ClInclude Include="ResourceManagement\Resources\ResourceTexture.h" />
     <ClInclude Include="Scene\AABBUpdatable.h" />
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="Scene\Components\Root\RootComponent.h" />

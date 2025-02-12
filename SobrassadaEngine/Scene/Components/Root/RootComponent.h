@@ -4,22 +4,22 @@
 class RootComponent : public Component
 {
 public:
-    RootComponent(uint32_t uuid, uint32_t uuidParent, const char* name, const Transform& parentGlobalTransform);
+    RootComponent(UID uid, UID uidParent, const char* name, const Transform& parentGlobalTransform);
 
     ~RootComponent() override;
 
-    virtual bool CreateComponent(const ComponentType componentType);
+    virtual bool CreateComponent(ComponentType componentType);
     
-    bool AddChildComponent(const uint32_t componentUUID) override;
-    bool DeleteChildComponent(const uint32_t componentUUID) override;
+    bool AddChildComponent(UID componentUID) override;
+    bool DeleteChildComponent( UID componentUID) override;
     void RenderComponentEditor();
-    void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
+    void RenderEditorComponentTree(UID selectedComponentUID) override;
 
     void Update() override;
 
-    void SetSelectedComponent(const uint32_t componentUUID);
+    void SetSelectedComponent(UID componentUID);
 
 private:
     
-    uint32_t selectedUUID;
+    UID selectedUID;
 };

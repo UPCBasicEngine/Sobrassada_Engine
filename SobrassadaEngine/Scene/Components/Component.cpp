@@ -12,15 +12,15 @@
 #include <Geometry/OBB.h>
 #include <Math/Quat.h>
 
-Component::Component(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform):
-uuid(uuid), uuidParent(uuidParent), uuidRoot(uuidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform)
+Component::Component(const UID uid, const UID uidParent, const UID uidRoot, const char* name, const Transform& parentGlobalTransform):
+uid(uid), uidParent(uidParent), uidRoot(uidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform)
 {
     localComponentAABB.SetNegativeInfinity();
     globalComponentAABB.SetNegativeInfinity();
 }
 
 Component::~Component(){
-    for (const uint32_t child : children)
+    for (const UID child : children)
     {
         delete App->GetSceneModule()->gameComponents[child];
         App->GetSceneModule()->gameComponents.erase(child);
@@ -31,22 +31,22 @@ void Component::Render()
 {
     if (enabled)
     {
-        for (uint32_t childUUID: children)
+        for (UID childUID: children)
         {
-            Component* child = App->GetSceneModule()->gameComponents[childUUID];
+            Component* child = App->GetSceneModule()->gameComponents[childUID];
             if (child != nullptr) child->Render();
         }
     }
 }
 
-bool Component::AddChildComponent(const uint32_t componentUUID)
+bool Component::AddChildComponent(const uint32_t componentUID)
 {
-    children.push_back(componentUUID);
+    children.push_back(componentUID);
     return true;
 }
 
-bool Component::RemoveChildComponent(const uint32_t componentUUID){
-    if (const auto it = std::find(children.begin(), children.end(), componentUUID); it != children.end())
+bool Component::RemoveChildComponent(const uint32_t componentUID){
+    if (const auto it = std::find(children.begin(), children.end(), componentUID); it != children.end())
     {
         children.erase(it);
         return true;
@@ -54,13 +54,13 @@ bool Component::RemoveChildComponent(const uint32_t componentUUID){
     return false;
 }
 
-bool Component::DeleteChildComponent(const uint32_t componentUUID)
+bool Component::DeleteChildComponent(const uint32_t componentUID)
 {
-    if (const auto it = std::find(children.begin(), children.end(), componentUUID); it != children.end())
+    if (const auto it = std::find(children.begin(), children.end(), componentUID); it != children.end())
     {
         children.erase(it);
-        delete App->GetSceneModule()->gameComponents[componentUUID];
-        App->GetSceneModule()->gameComponents.erase(componentUUID);
+        delete App->GetSceneModule()->gameComponents[componentUID];
+        App->GetSceneModule()->gameComponents.erase(componentUID);
         
         return true;
     }
@@ -76,9 +76,9 @@ void Component::RenderEditorInspector()
     if (enabled)
     {
         ImGui::Separator();
-        if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
+        if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uidParent))
         {
-            AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+            AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
             if (parent != nullptr)
             {
                 OnTransformUpdate(parent->GetGlobalTransform());
@@ -90,10 +90,10 @@ void Component::RenderEditorInspector()
     }
 }
 
-void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
+void Component::RenderEditorComponentTree(const UID selectedComponentUID)
 {
     ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (selectedComponentUUID == uuid)
+    if (selectedComponentUID == uid)
     {
         base_flags |= ImGuiTreeNodeFlags_Selected;
     }
@@ -101,7 +101,7 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     {
         base_flags |= ImGuiTreeNodeFlags_Leaf;
     }
-    const bool isExpanded = ImGui::TreeNodeEx((void*) uuid, base_flags, name);
+    const bool isExpanded = ImGui::TreeNodeEx((void*) uid, base_flags, name);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
         GameObject* selectedGameObject = App->GetSceneModule()->GetSeletedGameObject();
@@ -110,7 +110,7 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
             RootComponent* rootComponent = selectedGameObject-> GetRootComponent();
             if (rootComponent != nullptr)
             {
-                rootComponent->SetSelectedComponent(uuid);
+                rootComponent->SetSelectedComponent(uid);
             }
         }
         
@@ -120,11 +120,11 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     
     if (isExpanded) 
     {
-        for (uint32_t child : children)
+        for (UID child : children)
         {
             Component* childComponent = App->GetSceneModule()->gameComponents[child];
 
-            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedComponentUUID);
+            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedComponentUID);
         }
         ImGui::TreePop();
     }
@@ -133,8 +133,8 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
 void Component::HandleDragNDrop(){
     if (ImGui::BeginDragDropSource())
     {
-        GLOG("Starting component drag n drop for uuid : %d", uuid)
-        ImGui::SetDragDropPayload("ComponentTreeNode", &uuid, sizeof(uint32_t));
+        GLOG("Starting component drag n drop for uuid : %d", uid)
+        ImGui::SetDragDropPayload("ComponentTreeNode", &uid, sizeof(UID));
         ImGui::Text(name);
         ImGui::EndDragDropSource();
     }
@@ -144,19 +144,19 @@ void Component::HandleDragNDrop(){
     {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ComponentTreeNode"))
         {
-            const uint32_t draggedUUID = *(const uint32_t*)payload->Data;
-            GLOG("Receiving component drag n drop for uuid : %d", draggedUUID)
-            if (draggedUUID != uuid)
+            const uint32_t draggedUID = *(const UID*)payload->Data;
+            GLOG("Receiving component drag n drop for uuid : %d", draggedUID)
+            if (draggedUID != uid)
             {
-                Component* draggedComponent = App->GetSceneModule()->gameComponents[draggedUUID];
+                Component* draggedComponent = App->GetSceneModule()->gameComponents[draggedUID];
                 if (draggedComponent != nullptr)
                 {
-                    Component* parentDraggedComponent = App->GetSceneModule()->gameComponents[draggedComponent->GetUUIDParent()];
+                    Component* parentDraggedComponent = App->GetSceneModule()->gameComponents[draggedComponent->GetUIDParent()];
                     if (parentDraggedComponent != nullptr)
                     {
-                        parentDraggedComponent->RemoveChildComponent(draggedUUID);
-                        draggedComponent->SetUUIDParent(uuid); // TODO Add set parent uuid into the AddChildComponent function
-                        AddChildComponent(draggedUUID);
+                        parentDraggedComponent->RemoveChildComponent(draggedUID);
+                        draggedComponent->SetUIDParent(uid); // TODO Add set parent uid into the AddChildComponent function
+                        AddChildComponent(draggedUID);
                         draggedComponent->localTransform.Set(draggedComponent->globalTransform - globalTransform);
                         draggedComponent->OnTransformUpdate(globalTransform);
                     }
@@ -171,7 +171,7 @@ void Component::OnTransformUpdate(const Transform &parentGlobalTransform)
 {
     TransformUpdated(parentGlobalTransform);
     
-    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
     if (parent != nullptr)
     {
         parent->PassAABBUpdateToParent();
@@ -184,7 +184,7 @@ AABB& Component::TransformUpdated(const Transform &parentGlobalTransform)
 
     CalculateLocalAABB();
 
-    for (uint32_t child : children)
+    for (UID child : children)
     {
         Component* childComponent = App->GetSceneModule()->gameComponents[child];
 
@@ -201,7 +201,7 @@ void Component::PassAABBUpdateToParent()
 {
     CalculateLocalAABB();
     
-    for (uint32_t child : children)
+    for (UID child : children)
     {
         Component* childComponent = App->GetSceneModule()->gameComponents[child];
 
@@ -215,7 +215,7 @@ void Component::PassAABBUpdateToParent()
     GLOG("AABB: (%f, %f, %f), (%f, %f, %f)", globalComponentAABB.minPoint.x, globalComponentAABB.minPoint.y, globalComponentAABB.minPoint.z,
        globalComponentAABB.maxPoint.x, globalComponentAABB.maxPoint.y, globalComponentAABB.maxPoint.z)
 
-    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+    AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
     if (parent != nullptr)
     {
         parent->PassAABBUpdateToParent();
