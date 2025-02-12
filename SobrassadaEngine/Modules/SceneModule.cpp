@@ -138,7 +138,7 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
     ImGui::End();
 }
 
-void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
+void SceneModule::RenderGameObjectHierarchy(UID gameObjectUUID)
 {
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID)) return;
@@ -175,7 +175,7 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
     ImGui::PopID();
 }
 
-void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
+void SceneModule::HandleNodeClick(UID gameObjectUUID)
 {
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
     {
@@ -209,7 +209,7 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
     }
 }
 
-void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
+void SceneModule::RenderContextMenu(UID gameObjectUUID)
 {
     static uint32_t renamingGameObjectUUID = 0;
     static char *newNameBuffer = nullptr;
@@ -278,7 +278,7 @@ void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
     }
 }
 
-void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
+void SceneModule::RemoveGameObjectHierarchy(UID gameObjectUUID)
 {
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID) || gameObjectUUID == gameObjectRootUUID) return;
@@ -306,7 +306,7 @@ void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
     delete gameObject;
 }
 
-void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID)
+void SceneModule::UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID)
 {
     GameObject *sourceGameObject = GetGameObjectByUUID(sourceUUID);
     GameObject *targetGameObject = GetGameObjectByUUID(targetUUID);
@@ -326,7 +326,7 @@ void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t target
 
 }
 
-AABBUpdatable * SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
+AABBUpdatable * SceneModule::GetTargetForAABBUpdate(UID uuid)
 {
     if (gameObjectsContainer.count(uuid))
     {

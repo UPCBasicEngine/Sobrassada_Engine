@@ -589,7 +589,7 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     return valueChanged;
 }
 
-UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::map<std::string, uint32_t> &availableResources)
+UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::map<std::string, UID> &availableResources)
 {
     UID result = CONSTANT_EMPTY_UID;
     if (ImGui::BeginPopup(id))

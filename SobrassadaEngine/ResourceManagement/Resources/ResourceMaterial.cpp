@@ -13,7 +13,7 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include <tiny_gltf.h>
 
- ResourceMaterial::ResourceMaterial(uint32_t uid): Resource(uid, ResourceType::Material){}
+ ResourceMaterial::ResourceMaterial(UID uid): Resource(uid, ResourceType::Material){}
 
 ResourceMaterial::~ResourceMaterial(){
      FreeMaterials();

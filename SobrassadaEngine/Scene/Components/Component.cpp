@@ -40,13 +40,13 @@ void Component::Render()
     }
 }
 
-bool Component::AddChildComponent(const uint32_t componentUID)
+bool Component::AddChildComponent(const UID componentUID)
 {
     children.push_back(componentUID);
     return true;
 }
 
-bool Component::RemoveChildComponent(const uint32_t componentUID){
+bool Component::RemoveChildComponent(const UID componentUID){
     if (const auto it = std::find(children.begin(), children.end(), componentUID); it != children.end())
     {
         children.erase(it);
@@ -55,7 +55,7 @@ bool Component::RemoveChildComponent(const uint32_t componentUID){
     return false;
 }
 
-bool Component::DeleteChildComponent(const uint32_t componentUID)
+bool Component::DeleteChildComponent(const UID componentUID)
 {
     if (const auto it = std::find(children.begin(), children.end(), componentUID); it != children.end())
     {
@@ -71,7 +71,6 @@ bool Component::DeleteChildComponent(const uint32_t componentUID)
 
 void Component::RenderEditorInspector()
 {
-    ImGui::ShowDemoWindow();
     ImGui::InputText("Name", name, sizeof(name));
     ImGui::SameLine();
     ImGui::Checkbox("Enabled", &enabled);

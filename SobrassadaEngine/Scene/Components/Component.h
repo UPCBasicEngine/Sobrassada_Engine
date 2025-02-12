@@ -14,6 +14,8 @@ public:
 
     Component(UID uid, UID uidParent, UID uidRoot, const char* initName, const Transform& parentGlobalTransform);
 
+    Component();
+
     ~Component() override;
     
     virtual void Update() = 0;

@@ -9,17 +9,15 @@ TextureModuleTest::TextureModuleTest() {}
 
 TextureModuleTest::~TextureModuleTest() {}
 
-unsigned int TextureModuleTest::LoadTexture(const char *texturePath, DirectX::TexMetadata &outTexMetadata)
+unsigned int TextureModuleTest::LoadTexture(const wchar_t *texturePath, DirectX::TexMetadata &outTexMetadata)
 {
     GLOG("Loading texture: %s", texturePath)
     unsigned int textureId = 0;
 
     DirectX::ScratchImage scratchImage;
     OpenGLMetadata openGlMeta;
-
-    std::string textureStr = std::string(texturePath);
-    std::wstring wPath     = std::wstring(textureStr.begin(), textureStr.end());
-    bool succeded          = LoadTextureFile(wPath.c_str(), outTexMetadata, scratchImage);
+    
+    bool succeded          = LoadTextureFile(texturePath, outTexMetadata, scratchImage);
 
     if (succeded)
     {

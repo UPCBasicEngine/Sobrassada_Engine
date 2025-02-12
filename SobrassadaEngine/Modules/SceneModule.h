@@ -38,31 +38,31 @@ public:
 	void CheckObjectsToRender();
 	
 	void RenderHierarchyUI(bool &hierarchyMenu);
-    void RenderGameObjectHierarchy(uint32_t gameObjectUUID);
+    void RenderGameObjectHierarchy(UID gameObjectUUID);
 
-	void HandleNodeClick(uint32_t gameObjectUUID);
-    void RenderContextMenu(uint32_t gameObjectUUID);
+	void HandleNodeClick(UID gameObjectUUID);
+    void RenderContextMenu(UID gameObjectUUID);
 
-	void RemoveGameObjectHierarchy(uint32_t gameObjectUUID);
-    void UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID);
+	void RemoveGameObjectHierarchy(UID gameObjectUUID);
+    void UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID);
 
 	//TODO: Change when filesystem defined
-    GameObject *GetGameObjectByUUID(uint32_t gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
+    GameObject *GetGameObjectByUUID(UID gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
 
     GameObject * GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
 
 
-    std::map<uint32_t, Component*> gameComponents;          // TODO Move to Scene class
+    std::map<UID, Component*> gameComponents;          // TODO Move to Scene class
 
-    AABBUpdatable* GetTargetForAABBUpdate(uint32_t uuid);
+    AABBUpdatable* GetTargetForAABBUpdate(UID uuid);
 
 private:
 
-	uint32_t gameObjectRootUUID;
+	UID gameObjectRootUUID;
     
-	uint32_t selectedGameObjectUUID;
+	UID selectedGameObjectUUID;
 
-	std::unordered_map<uint32_t, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
+	std::unordered_map<UID, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
 
     // Scene* loadedScene = nullptr;
     
