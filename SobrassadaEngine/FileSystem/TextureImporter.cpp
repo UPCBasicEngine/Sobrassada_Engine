@@ -7,7 +7,7 @@
 
 namespace TextureImporter
 {
-    uint64_t Import(const char *filePath)
+    UID Import(const char *filePath)
     {
         // Copy image to Assets folder
         {
@@ -51,7 +51,7 @@ namespace TextureImporter
 
         UID textureUID       = GenerateUID();
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath = TEXTURES_PATH + fileName + TEXTURE_EXTENSION;
+        std::string savePath = TEXTURES_PATH + std::to_string(textureUID) + TEXTURE_EXTENSION;
 
         unsigned int size =
             FileSystem::Save(savePath.c_str(), blob.GetBufferPointer(), (unsigned int)blob.GetBufferSize());
@@ -61,7 +61,7 @@ namespace TextureImporter
             GLOG("Failed to save DDS file: %s", savePath.c_str());
             return 0;
         } 
-        std::string libraryPath = fileName + TEXTURE_EXTENSION;
+        std::string libraryPath =  FileSystem::GetFileNameWithExtension(savePath);
 
         App->GetLibraryModule()->AddTexture(textureUID, libraryPath);
 

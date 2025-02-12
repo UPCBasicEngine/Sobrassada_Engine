@@ -100,15 +100,12 @@ namespace SceneImporter
             int matIndex = 0;
             for (const auto &primitive : srcMesh.primitives)
             {
-                name     += std::to_string(n);
+                name += std::to_string(n);
 
-                UID uuid  = GenerateUID();
-                name     += "_" + std::to_string(uuid);
-
-                MeshImporter::ImportMesh(model, srcMesh, primitive, name);
+                MeshImporter::ImportMesh(model, srcMesh, primitive, name, filePath);
                 matIndex = primitive.material;
 
-                MaterialImporter::ImportMaterial(model, matIndex);
+                MaterialImporter::ImportMaterial(model, matIndex, filePath);
                 n++;
             }
         }

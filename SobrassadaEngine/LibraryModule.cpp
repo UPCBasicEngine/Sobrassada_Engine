@@ -171,45 +171,63 @@ bool LibraryModule::LoadScene(const char *path)
 
 void LibraryModule::AddTexture(UID textureUID, const std::string &ddsPath)
 {
-    textureMap[textureUID] = ddsPath; // Map the texture UID to its DDS path
+    textureMap[ddsPath] = textureUID; // Map the texture UID to its DDS path
 }
 
 void LibraryModule::AddMesh(UID meshUID, const std::string &sobPath)
 {
-    meshMap[meshUID] = sobPath; // Map the texture UID to its DDS path
+    meshMap[sobPath] = meshUID; // Map the texture UID to its DDS path
 }
 
 void LibraryModule::AddMaterial(UID materialUID, const std::string &matPath)
 {
-    meshMap[materialUID] = matPath; // Map the texture UID to its DDS path
+    meshMap[matPath] = materialUID; // Map the texture UID to its DDS path
 }
 
-std::string LibraryModule::GetTextureName(UID textureUID) const
+UID LibraryModule::GetTextureUID(const std::string &texturePath) const
 {
-    auto it = textureMap.find(textureUID);
+
+    auto it = textureMap.find(texturePath);
     if (it != textureMap.end())
     {
-        return it->second; // Return the DDS path if the texture is found
+        return it->second;
     }
-    return ""; // Return an empty string if texture is not found
+
+    return 0;
 }
 
-std::string LibraryModule::GetMeshName(UID meshUID) const
+UID LibraryModule::GetMeshUID(const std::string &meshPath) const
 {
-    auto it = meshMap.find(meshUID);
+
+    auto it = meshMap.find(meshPath);
     if (it != meshMap.end())
     {
-        return it->second; // Return the DDS path if the texture is found
+        return it->second; 
     }
-    return "";
+
+    return 0;
 }
 
-std::string LibraryModule::GetMaterialName(UID materialUID) const
+UID LibraryModule::GetMaterialUID(const std::string &materialPath) const
 {
-    auto it = materialMap.find(materialUID);
+
+    auto it = materialMap.find(materialPath);
     if (it != materialMap.end())
     {
-        return it->second; // Return the DDS path if the texture is found
+        return it->second; 
     }
+
+    return 0;
+
+}
+
+const std::string &LibraryModule::GetResourcePath(UID resourceID)
+{
+    auto it = resourcePathsMap.find(resourceID);
+    if (it != resourcePathsMap.end())
+    {
+        return it->second;
+    }
+
     return "";
 }

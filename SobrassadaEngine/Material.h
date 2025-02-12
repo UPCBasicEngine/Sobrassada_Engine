@@ -6,6 +6,21 @@
 #include <string>
 #include <vector>
 
+struct MaterialStruct
+{
+
+    float4 diffuseFactor          = {1.0f, 1.0f, 1.0f, 1.0f}; // RGBA
+    float3 specularFactor         = {1.0f, 1.0f, 1.0f};       // RGB
+    float glossinessFactor        = 1.0f;
+    float occlusionStrength       = 1.0f;
+
+    // pointers to the dds paths
+    UID diffuseTexture            = 0;
+    UID specularGlossinessTexture = 0;
+    UID normalTexture             = 0;
+    UID occlusionTexture          = 0;
+};
+
 class Material
 {
   public:

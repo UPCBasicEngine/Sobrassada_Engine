@@ -8,5 +8,5 @@
 
 namespace MaterialImporter
 {
-    UID ImportMaterial(const tinygltf::Model &model, int materialIndex);
-};
+    UID ImportMaterial(const tinygltf::Model &model, int materialIndex, const char *filePath);
+}

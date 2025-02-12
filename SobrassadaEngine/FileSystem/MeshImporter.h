@@ -2,6 +2,7 @@
 
 #include "FileSystem.h"
 #include "Mesh.h"
+#include "Globals.h"
 #include <memory>
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
@@ -13,9 +14,9 @@ namespace MeshImporter
 {
 
     // Function to import a mesh from a GLTF model
-    bool ImportMesh(
+    UID ImportMesh(
         const tinygltf::Model &model, const tinygltf::Mesh &mesh, const tinygltf::Primitive &primitive,
-        const std::string &filePath
+        const std::string &name, const char * filePath
     );
     std::shared_ptr<Mesh> LoadMesh(const char *path);
 }; // namespace MeshImporter

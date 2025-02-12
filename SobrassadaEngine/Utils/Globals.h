@@ -72,15 +72,10 @@ constexpr float PI = 3.14159265359f;
 
 inline UID GenerateUID()
 {
-    // Set a 64-bit seed (choose any nonzero value)
-    uint32_t seed = 0x12345678;
-
-    // Construct the LCG with the seed.
     LCG rng;
-    rng.Seed(seed);
+    rng.IntFast();
 
-    // Generate a 64-bit UUID using two calls to Int(), as the LCG generates 32-bit numbers.
-    uint64_t uid = static_cast<uint64_t>(rng.Int()) << 32 | rng.Int(); // Combine two 32-bit values
+    uint64_t uid = static_cast<uint64_t>(rng.IntFast()) << 32 | rng.IntFast(); // Combine two 32-bit values
 
     return uid;
 }

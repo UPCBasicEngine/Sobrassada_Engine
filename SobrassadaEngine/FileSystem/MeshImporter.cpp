@@ -1,7 +1,7 @@
 #include "MeshImporter.h"
 
 #include "FileSystem.h"
-#include "Globals.h"
+
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
@@ -11,9 +11,9 @@
 namespace MeshImporter
 {
 
-    bool ImportMesh(
+    UID ImportMesh(
         const tinygltf::Model &model, const tinygltf::Mesh &mesh, const tinygltf::Primitive &primitive,
-        const std::string &filePath
+        const std::string &name, const char * filePath
     )
     {
 
@@ -159,22 +159,23 @@ namespace MeshImporter
         memcpy(cursor, indexBuffer.data(), sizeof(unsigned int) * indexBuffer.size());
         cursor                    += sizeof(unsigned int) * indexBuffer.size();
 
+        UID meshUID               = GenerateUID();
         // false = append
         std::string fileName       = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath       = MESHES_PATH + fileName + FILE_EXTENSION;
-        unsigned int bytesWritten  = FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
+        std::string savePath       = MESHES_PATH + std::to_string(meshUID) + FILE_EXTENSION;
+        unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
 
         delete[] fileBuffer;
 
         if (bytesWritten == 0)
         {
             GLOG("Failed to save mesh file: %s", savePath.c_str());
-            return false;
+            return 0;
         }
 
         GLOG("%s saved as binary", fileName.c_str());
 
-        return true;
+        return meshUID;
     }
 
     std::shared_ptr<Mesh> LoadMesh(const char *path)

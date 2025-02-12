@@ -7,10 +7,11 @@
 #include "TextureImporter.h"
 #include <FileSystem>
 
-UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex)
+UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex, const char * filePath)
 {
-
+    std::string path = FileSystem::GetFilePath(filePath);
     const tinygltf::Material &gltfMaterial = model.materials[materialIndex];
+    const std::string materialName = gltfMaterial.name;
 
     auto it                                = gltfMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
     //ADD OLD LOADING
@@ -43,7 +44,8 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             const tinygltf::Value &diffuseTex = specGloss.Get("diffuseTexture");
             int texIndex                      = diffuseTex.Get("index").Get<int>();
 
-            UID diffuseUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
+            UID diffuseUID =
+                TextureImporter::Import((path + model.images[model.textures[texIndex].source].uri).c_str());
 
             if (diffuseUID == 0)
             {
@@ -77,9 +79,8 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             const tinygltf::Value &specTex = specGloss.Get("specularGlossinessTexture");
             int texIndex                   = specTex.Get("index").Get<int>();
 
-
-            UID specularGlossinessUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
-
+            UID specularGlossinessUID = TextureImporter::Import((path + model.images[model.textures[texIndex].source].uri).c_str()
+            );
             if (specularGlossinessUID == 0)
             {
                 return 0;
@@ -94,8 +95,8 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
     {
         int texIndex = gltfMaterial.normalTexture.index;
 
-        UID normalUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
-
+        UID normalUID = TextureImporter::Import((path + model.images[model.textures[texIndex].source].uri).c_str()
+            );
         if (normalUID == 0)
         {
             return 0;
@@ -111,8 +112,8 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
 
         material.SetOcclusionStrength(static_cast<float>(gltfMaterial.occlusionTexture.strength));
 
-        UID occlusionUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
-
+        UID occlusionUID = TextureImporter::Import((path + model.images[model.textures[texIndex].source].uri).c_str()
+            );
         if (occlusionUID == 0)
         {
             return 0;
@@ -120,6 +121,22 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
 
         material.SetOcclusionTexture(occlusionUID);
     }
+
+    unsigned int size = sizeof(MaterialStruct);
+    char *fileBuffer = new char[size];
+    UID materialUID           = GenerateUID();
+    std::string savePath      = MATERIALS_PATH + std::to_string(materialUID) + MATERIAL_EXTENSION;
+    unsigned int bytesWritten = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
+
+    delete[] fileBuffer;
+
+    if (bytesWritten == 0)
+    {
+        GLOG("Failed to save material: %s", savePath.c_str());
+        return 0;
+    }
+
+    GLOG("%s saved as material", materialName.c_str());
 
     return true;
 }
