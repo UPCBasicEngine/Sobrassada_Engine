@@ -10,7 +10,7 @@
 class MeshComponent : public Component
 {
 public:
-    MeshComponent(UID uid, UID uidParent, UID uidRoot, const char* name, const Transform& parentGlobalTransform);
+    MeshComponent(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform);
     
     void RenderEditorInspector() override;
     void Update() override;

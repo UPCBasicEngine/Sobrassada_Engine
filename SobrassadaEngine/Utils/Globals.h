@@ -47,8 +47,9 @@ enum update_status
 #define DEFAULT_CAMERA_MOUSE_SENSITIVITY 0.5f;
 #define DEFAUL_CAMERA_ZOOM_SENSITIVITY 5.f;
 
-constexpr uint32_t CONSTANT_NO_MESH_UID = 0;
-constexpr uint32_t CONSTANT_NO_TEXTURE_UID = 0;
+#define MAX_COMPONENT_NAME_LENGTH 64;
+
+
 constexpr uint32_t CONSTANT_EMPTY_UID = 0;
 
 constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID = "mesh-select";

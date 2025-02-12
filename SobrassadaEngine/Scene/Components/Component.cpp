@@ -12,11 +12,12 @@
 #include <Geometry/OBB.h>
 #include <Math/Quat.h>
 
-Component::Component(const UID uid, const UID uidParent, const UID uidRoot, const char* name, const Transform& parentGlobalTransform):
-uid(uid), uidParent(uidParent), uidRoot(uidRoot), name(name), enabled(true), globalTransform(parentGlobalTransform)
+Component::Component(const UID uid, const UID uidParent, const UID uidRoot, const char* initName, const Transform& parentGlobalTransform):
+uid(uid), uidParent(uidParent), uidRoot(uidRoot), enabled(true), globalTransform(parentGlobalTransform)
 {
     localComponentAABB.SetNegativeInfinity();
     globalComponentAABB.SetNegativeInfinity();
+    memcpy(name, initName, strlen(initName));
 }
 
 Component::~Component(){
@@ -70,7 +71,8 @@ bool Component::DeleteChildComponent(const uint32_t componentUID)
 
 void Component::RenderEditorInspector()
 {
-    ImGui::Text(name);
+    ImGui::ShowDemoWindow();
+    ImGui::InputText("Name", name, sizeof(name));
     ImGui::SameLine();
     ImGui::Checkbox("Enabled", &enabled);
     if (enabled)

@@ -3,7 +3,6 @@
 #include "Transform.h"
 #include "ComponentUtils.h"
 #include "Globals.h"
-#include "debug_draw.hpp"
 #include "Scene/AABBUpdatable.h"
 
 #include <vector>
@@ -13,9 +12,9 @@ class Component : public AABBUpdatable
 {
 public:
 
-    Component(UID uid, UID uidParent, UID uidRoot, const char* name, const Transform& parentGlobalTransform);
+    Component(UID uid, UID uidParent, UID uidRoot, const char* initName, const Transform& parentGlobalTransform);
 
-    virtual ~Component();
+    ~Component() override;
     
     virtual void Update() = 0;
     virtual void Render();
@@ -53,7 +52,7 @@ protected:
     UID uidParent;
     std::vector<UID> children;
 
-    const char* name;
+    char name[64];
     bool enabled;
     
     Transform localTransform;

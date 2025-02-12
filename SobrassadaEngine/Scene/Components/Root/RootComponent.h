@@ -4,14 +4,12 @@
 class RootComponent : public Component
 {
 public:
-    RootComponent(UID uid, UID uidParent, const char* name, const Transform& parentGlobalTransform);
+    RootComponent(UID uid, UID uidParent, const Transform& parentGlobalTransform);
 
     ~RootComponent() override;
 
     virtual bool CreateComponent(ComponentType componentType);
     
-    bool AddChildComponent(UID componentUID) override;
-    bool DeleteChildComponent( UID componentUID) override;
     void RenderComponentEditor();
     void RenderEditorComponentTree(UID selectedComponentUID) override;
 

@@ -9,8 +9,8 @@
 
 #include <Math/Quat.h>
 
-MeshComponent::MeshComponent(const UID uid, const UID uidParent, const UID uidRoot, const char* name, const Transform& parentGlobalTransform)
-        : Component(uid, uidParent, uidRoot, name, parentGlobalTransform)
+MeshComponent::MeshComponent(const UID uid, const UID uidParent, const UID uidRoot, const Transform& parentGlobalTransform)
+        : Component(uid, uidParent, uidRoot, "Mesh component", parentGlobalTransform)
 {
 }
 

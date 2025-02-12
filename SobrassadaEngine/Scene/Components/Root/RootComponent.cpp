@@ -9,26 +9,14 @@
 
 #include <Algorithm/Random/LCG.h>
 
-RootComponent::RootComponent(const UID uid, const UID uidParent, const char* name, const Transform& parentGlobalTransform)
-        : Component(uid, uidParent, uid, name, parentGlobalTransform)
+RootComponent::RootComponent(const UID uid, const UID uidParent, const Transform& parentGlobalTransform)
+        : Component(uid, uidParent, uid, "Root component", parentGlobalTransform)
 {
-    selectedUID = uid;    // TODO Other components don´t have the correct selectedUUID
+    selectedUID = uid;  
 }
 
 RootComponent::~RootComponent(){
     Component::~Component();
-}
-
-bool RootComponent::AddChildComponent(const UID componentUID)
-{
-    // TODO Load component from storage
-    // TODO Make sure passed componentUUID encodes a standalone component
-    return Component::AddChildComponent(componentUID);
-}
-
-bool RootComponent::DeleteChildComponent(const UID componentUID)
-{
-    return Component::DeleteChildComponent(componentUID);
 }
 
 void RootComponent::RenderComponentEditor()
