@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "WindowModule.h"
 #include "InputModule.h"
+#include "glew.h"
 
 #include "SDL_scancode.h"
 #include <functional>
@@ -33,14 +34,46 @@ bool CameraModule::Init()
 
 	camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
 
-	viewMatrix = camera.ViewMatrix();
-	projectionMatrix = camera.ProjectionMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
+	matrices.projectionMatrix = camera.ProjectionMatrix();
 
-	std::function<void(void)> fPressed = std::bind(&CameraModule::EventTriggered, this);
+	glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_F, fPressed);
+	std::function<void(void)> rotateLeft = std::bind(&CameraModule::RotateLeft, this);
+	std::function<void(void)> rotateRight = std::bind(&CameraModule::RotateRight, this);
+	std::function<void(void)> rotateUp = std::bind(&CameraModule::RotateUp, this);
+	std::function<void(void)> rotateDown = std::bind(&CameraModule::RotateDown, this);
+
+	std::function<void(void)> moveForward = std::bind(&CameraModule::MoveForward, this);
+	std::function<void(void)> moveBackward = std::bind(&CameraModule::MoveBackward, this);
+	std::function<void(void)> moveLeft = std::bind(&CameraModule::MoveLeft, this);
+	std::function<void(void)> moveRight = std::bind(&CameraModule::MoveRight, this);
+	std::function<void(void)> moveUp = std::bind(&CameraModule::MoveUp, this);
+	std::function<void(void)> moveDown = std::bind(&CameraModule::MoveDown, this);
+
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_Q, rotateLeft);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_E, rotateRight);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_R, rotateUp);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_F, rotateDown);
+
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_W, moveForward);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_S, moveBackward);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_A, moveLeft);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_D, moveRight);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_Z, moveUp);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_X, moveDown);
 
 	return true;
+}
+
+void CameraModule::UpdateUBO() 
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 update_status CameraModule::Update(float deltaTime)
@@ -50,17 +83,94 @@ update_status CameraModule::Update(float deltaTime)
 
 bool CameraModule::ShutDown()
 {
+    glDeleteBuffers(1, &ubo);
 	return true;
 }
 
 void CameraModule::SetAspectRatio(float newAspectRatio)
 {
 	camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);
-	viewMatrix = camera.ViewMatrix();
-	projectionMatrix = camera.ProjectionMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
+	matrices.projectionMatrix = camera.ProjectionMatrix();
 }
 
 void CameraModule::EventTriggered()
 {
 	GLOG("Event Trigered!!!!")
+}
+
+void CameraModule::MoveForward()
+{
+    float speed = 1.0f; // Velocidad de movimiento
+    camera.pos += camera.front * speed;
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::MoveBackward()
+{
+    float speed = 1.0f;
+    camera.pos -= camera.front * speed;
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::MoveLeft()
+{
+    float speed = 1.0f;
+	float3 right = camera.up.Cross(camera.front).Normalized();
+    camera.pos += right * speed;
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::MoveRight()
+{
+    float speed = 1.0f;
+    float3 right = camera.up.Cross(camera.front).Normalized();
+    camera.pos -= right * speed;
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::RotateLeft()
+{
+    float angle = 10.0f * DEGTORAD; // Convierte grados a radianes
+    camera.front = Quat::RotateY(angle).Transform(camera.front);
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::RotateRight()
+{
+    float angle = -10.0f * DEGTORAD; // Negativo para rotar a la derecha
+    camera.front = Quat::RotateY(angle).Transform(camera.front);
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::RotateUp()
+{
+	float3 right = camera.up.Cross(camera.front).Normalized();  // Calculate right vector for local rotation
+    Quat pitch_rotation = Quat::RotateAxisAngle(right, -5 * DEGTORAD);
+	camera.front = pitch_rotation.Transform(camera.front);
+    camera.up = pitch_rotation.Transform(camera.up);
+
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::RotateDown()
+{
+    float3 right = camera.up.Cross(camera.front).Normalized();  // Calculate right vector for local rotation
+    Quat pitch_rotation = Quat::RotateAxisAngle(right, 5 * DEGTORAD);
+	camera.front = pitch_rotation.Transform(camera.front);
+    camera.up = pitch_rotation.Transform(camera.up);
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::MoveUp()
+{
+    camera.pos.y += 0.1f;
+	matrices.viewMatrix = camera.ViewMatrix();
+}
+
+void CameraModule::MoveDown()
+{
+
+    camera.pos.y -= 0.1f;
+	matrices.viewMatrix = camera.ViewMatrix();
 }

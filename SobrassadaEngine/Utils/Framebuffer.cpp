@@ -47,7 +47,7 @@ void Framebuffer::CheckResize()
 
 	Initialize();
 
-	shouldResize = true;
+	shouldResize = false;
 }
 
 bool Framebuffer::Initialize()

@@ -2,6 +2,7 @@
 #include "Globals.h"
 #include "EngineMesh.h"
 #include "MathGeoLib.h"
+#include "Components/ComponentMaterial.h"
 #include "Application.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
@@ -55,105 +56,31 @@ void EngineModel::Load(const char* modelPath)
 
 void EngineModel::LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath)
 {
-	// Check to not load multiple times the same texture
-	std::unordered_set<int> loadedIndices;
-	for (const auto& srcMaterial : sourceModel.materials)
-	{
-		unsigned int textureId = 0;
-		float2 widthHeight = float2::zero;
-		
-		int textureIndex = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
-		
-		if (textureIndex >= 0)
-		{
-			const tinygltf::Texture& texture = sourceModel.textures[textureIndex];
-			const tinygltf::Image& image = sourceModel.images[texture.source];
+    materials.clear();
+    int id = 0;
 
-			// Do not load the same texture twice
-			if (loadedIndices.find(texture.source) != loadedIndices.end()) return;
-
-			std::string filePath = std::string(modelPath);
-			char usedSeparator = '\\';
-			
-			int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
-			
-			if (fileLocationPosition == -1)
-			{
-				usedSeparator = '/';
-				fileLocationPosition = filePath.find_last_of(usedSeparator);
-			}
-				
-			// Cant find the directory of the file
-			if(fileLocationPosition == -1) return;
-
-			std::string fileLocation = filePath.substr(0, fileLocationPosition) + usedSeparator;
-
-			std::string texturePathString = fileLocation.append(image.uri);
-
-			std::wstring wideUri = std::wstring(texturePathString.begin(), texturePathString.end());
-			const wchar_t* texturePath = wideUri.c_str();
-
-			DirectX::TexMetadata textureMetadata;
-			textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
-			if (textureId)
-			{
-				widthHeight.x = textureMetadata.width;
-				widthHeight.y = textureMetadata.height;
-				loadedIndices.insert(texture.source);
-			}
-		}
-		if (textureId)
-		{
-			textures.push_back(textureId);
-			textureInfo.push_back(widthHeight);
-			renderTexture++;
-		}
-	}
+    for (const auto &srcMaterial : sourceModel.materials)
+    {
+        ComponentMaterial *material = new ComponentMaterial;
+        material->LoadMaterial(srcMaterial, sourceModel, modelPath);
+        
+        materials.push_back(material);
+        id++;
+    }
 }
 
-void EngineModel::LoadAdditionalTexture(const char* texturePath)
-{
-	std::string stringPath = std::string(texturePath);
-	std::wstring widePath = std::wstring(stringPath.begin(), stringPath.end());
-	const wchar_t* wideTexturePath = widePath.c_str();
-
-	float2 widthHeight = float2::zero;
-
-	DirectX::TexMetadata textureMetadata;
-	unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(wideTexturePath, textureMetadata);
-
-	if (textureId) 
-	{
-		widthHeight.x = textureMetadata.width;
-		widthHeight.y = textureMetadata.height;
-
-		renderTexture++;
-		textures.push_back(textureId);
-		textureInfo.push_back(widthHeight);
-	}
-}
-
-void EngineModel::Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
+void EngineModel::Render(int program, unsigned int cameraUBO)
 {
 	for (EngineMesh* currentMesh : meshes)
 	{
-		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-		//currentMesh->Render(program, modelMatrix, projectionMatrix, viewMatrix);
+        std::vector<int>& indices = currentMesh->GetMaterialIndices();
+		for (size_t i = 0; i < indices.size(); ++i)
+		{
+            ComponentMaterial* material = &GetMaterial(indices[i]);
+            //int texturePosition = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
+            currentMesh->Render(program, material, cameraUBO);
+        }
 	}
-}
-
-void EngineModel::GetTextureSize(float2& outTextureSize)
-{
-	if (renderTexture > -1)
-	{
-		outTextureSize.x = textureInfo[renderTexture].x;
-		outTextureSize.y = textureInfo[renderTexture].y;
-	}
-}
-
-void EngineModel::SetRenderTexture(int texturePosition)
-{
-	renderTexture = texturePosition;
 }
 
 void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4x4& parentModelMatrix, int currentNodePosition)
@@ -215,7 +142,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 			if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
 			newMesh->CreateVAO();
 
-			/*float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
+			float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
 			float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
 
 			if (firstMesh)
@@ -230,7 +157,8 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
 			}
 
-			newMesh->SetBasicModelMatrix(modelMatrix);*/
+			newMesh->SetBasicModelMatrix(modelMatrix);
+            newMesh->SetMaterialIndex(primitive.material);
 			
 			indexCount += newMesh->GetIndexCount();
 			meshes.push_back(newMesh);
@@ -253,16 +181,22 @@ void EngineModel::ClearVectors()
 		delete it;
 	}
 
-	for (unsigned int textureId : textures)
+	for (auto it : materials)
 	{
-		glDeleteTextures(1, &textureId);
+		it->FreeMaterials();
 	}
 
 	meshes.clear();
-	textures.clear();
-	textureInfo.clear();
+    materials.clear();
 	
 	firstMesh = true;
 	indexCount = 0;
 	renderTexture = -1;
+}
+
+ComponentMaterial& EngineModel::GetMaterial(const int index) {
+	if (index >= 0 && index < materials.size())
+    {
+		return *materials[index];
+	}
 }
