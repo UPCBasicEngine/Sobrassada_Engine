@@ -2,13 +2,13 @@
 
 #include "DirectXTex/DirectXTex.h"
 #include "FileSystem.h"
-#include "Globals.h"
-
+#include "LibraryModule.h"
+#include "Application.h"
 
 
 namespace TextureImporter
 {
-    std::string Import(const char *filePath)
+    UID Import(const char *filePath)
     {
         // Copy image to Assets folder
         {
@@ -34,7 +34,7 @@ namespace TextureImporter
                 if (FAILED(hr))
                 {
                     GLOG("Failed to load texture: %s", filePath);
-                    return "";
+                    return 0;
                 }
             }
         }
@@ -47,9 +47,10 @@ namespace TextureImporter
         if (FAILED(hr))
         {
             GLOG("Failed to save texture in memory: %s", filePath);
-            return "";
+            return 0;
         }
 
+        UID textureUID       = GenerateUID();
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
         std::string savePath = TEXTURES_PATH + fileName + TEXTURE_EXTENSION;
 
@@ -59,11 +60,14 @@ namespace TextureImporter
         if (size == 0)
         {
             GLOG("Failed to save DDS file: %s", savePath.c_str());
-            return "";
-        }
+            return 0;
+        } 
+        std::string libraryPath = fileName + TEXTURE_EXTENSION;
+
+        App->GetLibraryModule()->AddTexture(textureUID, libraryPath);
 
         GLOG("%s saved as dds", fileName.c_str());
 
-        return savePath.c_str();
+        return textureUID;
     }
 };

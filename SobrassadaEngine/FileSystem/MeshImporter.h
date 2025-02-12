@@ -19,3 +19,5 @@ namespace MeshImporter
     );
     std::shared_ptr<Mesh> LoadMesh(const char *path);
 }; // namespace MeshImporter
+
+//save two first digits of uid to identify material or mesh 00 01

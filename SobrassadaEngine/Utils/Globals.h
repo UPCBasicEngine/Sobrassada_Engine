@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <vector>
 #include <windows.h>
+#include "Algorithm/Random/LCG.h"
 
 extern std::vector<char *> *Logs;
 
@@ -55,14 +56,31 @@ enum update_status
 #define AUDIO_PATH      "Library/Audio/"
 #define BONES_PATH      "Library/Bones/"
 #define MESHES_PATH     "Library/Meshes/"
-#define TEXTURES_PATH  "Library/Textures/"
+#define TEXTURES_PATH   "Library/Textures/"
 #define MATERIALS_PATH  "Library/Materials/"
 #define SCENES_PATH     "Library/Scenes/"
 
-#define ASSET_EXTENSION   ".gltf"
+#define ASSET_EXTENSION    ".gltf"
 #define FILE_EXTENSION     ".sobrassada"
-#define TEXTURE_EXTENSION ".dds"
+#define TEXTURE_EXTENSION  ".dds"
 #define MATERIAL_EXTENSION ".mat"
 #define SCENE_EXTENSION    ".scene"
 
+#define UID uint64_t
+
 constexpr float PI = 3.14159265359f;
+
+UID GenerateUID()
+{
+    // Set a 64-bit seed (choose any nonzero value)
+    uint32_t seed = 0x12345678;
+
+    // Construct the LCG with the seed.
+    LCG rng;
+    rng.Seed(seed);
+
+    // Generate a 64-bit UUID using two calls to Int(), as the LCG generates 32-bit numbers.
+    uint64_t uid = static_cast<uint64_t>(rng.Int()) << 32 | rng.Int(); // Combine two 32-bit values
+
+    return uid;
+}

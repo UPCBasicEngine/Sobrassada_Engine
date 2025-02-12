@@ -1,26 +1,28 @@
 
 #include "MaterialImporter.h"
+#include "Application.h"
+#include "FileSystem.h"
 #include "Globals.h"
+#include "LibraryModule.h"
 #include "Material.h"
 #include "TextureImporter.h"
-#include "Application.h"
-#include "LibraryModule.h"
-#include "FileSystem.h"
 #include <FileSystem>
 
-bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex, std::string materialName)
+UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex)
 {
-
 
     const tinygltf::Material &gltfMaterial = model.materials[materialIndex];
 
-    Material material(std::move(gltfMaterial.name));
+    std::string name                       = gltfMaterial.name;
 
-    auto it = gltfMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
+    auto it                                = gltfMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
+    //ADD OLD LOADING
 
+    Material material;
     if (it != gltfMaterial.extensions.end())
     {
-        const tinygltf::Value &specGloss = it->second;
+        
+        const tinygltf::Value &specGloss    = it->second;
 
         // Diffuse Factor
         const tinygltf::Value &diffuseValue = specGloss.Get("diffuseFactor");
@@ -40,13 +42,18 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
         if (specGloss.Has("diffuseTexture"))
         {
             // need a pointer to corresponding texture from textureImporter
-            const tinygltf::Value &diffuseTex = specGloss.Get("diffuseTexture");
-            int texIndex = diffuseTex.Get("index").Get<int>();
-            //&model.images[model.textures[texIndex].source].uri png name
-            std::string pathToDds =
-                App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
 
-            material.SetDiffuseTexture(&pathToDds);
+            const tinygltf::Value &diffuseTex = specGloss.Get("diffuseTexture");
+            int texIndex                      = diffuseTex.Get("index").Get<int>();
+
+            UID diffuseUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
+
+            if (diffuseUID == 0)
+            {
+              return 0;
+            }
+
+            material.SetDiffuseTexture(&diffuseUID);
         }
 
         if (specGloss.Has("glossinessFactor"))
@@ -59,7 +66,7 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
         {
             const std::vector<tinygltf::Value> &specArray = diffuseValue.Get<tinygltf::Value::Array>();
 
-            float3 specular = {
+            float3 specular                               = {
                 static_cast<float>(specArray[0].Get<double>()), static_cast<float>(specArray[1].Get<double>()),
                 static_cast<float>(specArray[2].Get<double>())
             };
@@ -67,44 +74,55 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
             material.SetSpecularFactor(specular);
         }
 
-        // Glossiness Factor
-
         // Specular-Glossiness Texture
         if (specGloss.Has("specularGlossinessTexture"))
         {
             const tinygltf::Value &specTex = specGloss.Get("specularGlossinessTexture");
-            int texIndex = specTex.Get("index").Get<int>();
-            std::string pathToDds =
-                App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
+            int texIndex                   = specTex.Get("index").Get<int>();
 
-            material.SetSpecularGlossinessTexture(&pathToDds);
+
+            UID specularGlossinessUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
+
+            if (specularGlossinessUID == 0)
+            {
+                return 0;
+            }
+
+            material.SetSpecularGlossinessTexture(&specularGlossinessUID);
         }
     }
 
     // Normal Map
     if (gltfMaterial.normalTexture.index >= 0)
     {
-            int texIndex = gltfMaterial.normalTexture.index;
-            std::string pathToDds =
-                App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
+        int texIndex = gltfMaterial.normalTexture.index;
 
-            material.SetNormalTexture(&pathToDds);
-        
+        UID normalUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
+
+        if (normalUID == 0)
+        {
+            return 0;
+        }
+
+        material.SetNormalTexture(&normalUID);
     }
 
-    // Occlusion Map
+
     if (gltfMaterial.occlusionTexture.index >= 0)
     {
-         int texIndex = gltfMaterial.occlusionTexture.index;
-         material.SetOcclusionStrength(static_cast<float>(gltfMaterial.occlusionTexture.strength));
+        int texIndex = gltfMaterial.occlusionTexture.index;
 
-         std::string pathToDds =
-             App->GetLibraryModule()->GetTextureDDSPath(model.images[model.textures[texIndex].source].uri);
+        material.SetOcclusionStrength(static_cast<float>(gltfMaterial.occlusionTexture.strength));
 
-         material.SetOcclusionTexture(&pathToDds);
+        UID occlusionUID = TextureImporter::Import(model.images[model.textures[texIndex].source].uri.c_str());
+
+        if (occlusionUID == 0)
+        {
+            return 0;
+        }
+
+        material.SetOcclusionTexture(&occlusionUID);
     }
-
-
 
     return true;
 }

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
+#include "Globals.h"
 
 namespace TextureImporter
 {
-    std::string Import(const char *filePath);
+    UID Import(const char *filePath);
 };

@@ -45,7 +45,7 @@ class Material
     float4 diffuseFactor     = {1.0f, 1.0f, 1.0f, 1.0f}; // RGBA
     float3 specularFactor    = {1.0f, 1.0f, 1.0f};       // RGB
     float glossinessFactor   = 1.0f;
-    float occlusionStrength  = 1.0f;
+    float occlusionStrength  = 1.0f;    
 
     //pointers to the dds paths
     std::string *diffuseTexture            = nullptr;

@@ -185,17 +185,50 @@ bool LibraryModule::LoadScene(const char *path)
     return true;
 }
 
-void LibraryModule::AddTexture(const std::string &imageName, const std::string &ddsPath)
+void LibraryModule::AddTexture(UID textureUID, const std::string &ddsPath)
 {
-    textureMap[imageName] = ddsPath; // Map the texture name to its DDS path
+    textureMap[textureUID] = ddsPath; // Map the texture UID to its DDS path
 }
 
-std::string LibraryModule::GetTextureDDSPath(const std::string &imageName) const
+void LibraryModule::AddMesh(UID meshUID, const std::string &sobPath)
 {
-    auto it = textureMap.find(imageName);
+    meshMap[meshUID] = sobPath; // Map the texture UID to its DDS path
+}
+
+void LibraryModule::AddMaterial(UID materialUID, const std::string &matPath)
+{
+    meshMap[materialUID] = matPath; // Map the texture UID to its DDS path
+}
+
+
+std::string LibraryModule::GetTextureName(UID textureUID) const
+{
+    auto it = textureMap.find(textureUID);
     if (it != textureMap.end())
     {
         return it->second; // Return the DDS path if the texture is found
     }
     return ""; // Return an empty string if texture is not found
+}
+
+
+std::string LibraryModule::GetMeshName(UID meshUID) const 
+{
+    auto it = meshMap.find(meshUID);
+    if (it != meshMap.end())
+    {
+        return it->second; // Return the DDS path if the texture is found
+    }
+    return "";
+}
+
+
+std::string LibraryModule::GetMaterialName(UID materialUID) const
+{
+    auto it = materialMap.find(materialUID);
+if (it != materialMap.end())
+{
+    return it->second; // Return the DDS path if the texture is found
+}
+return "";
 }

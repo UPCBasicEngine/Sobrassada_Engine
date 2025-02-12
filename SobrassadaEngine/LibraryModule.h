@@ -17,12 +17,19 @@ class LibraryModule : public Module
     bool SaveScene(const char *path);
     bool LoadScene(const char *path);
 
-    void AddTexture(const std::string &imageName, const std::string &ddsPath);
-    std::string GetTextureDDSPath(const std::string &imageName) const;
+    void AddTexture(UID textureUID, const std::string &ddsPath);
+    void AddMesh(UID meshUID, const std::string &matPath);
+    void AddMaterial(UID materialUID, const std::string &sobPath);
 
-
+    std::string GetTextureName(UID textureUID) const;
+    std::string GetMeshName(UID textureUID) const;
+    std::string GetMaterialName(UID textureUID) const;
+    
     private:
-        std::unordered_map<std::string, std::string> textureMap; // Name -> DDS path
+
+      std::unordered_map<UID, std::string> textureMap; // UID -> name.dds
+      std::unordered_map<UID, std::string> materialMap; //UID-> name.mat
+      std::unordered_map<UID, std::string> meshMap; // UID-> name.sob
 
     // scenes
     // models
