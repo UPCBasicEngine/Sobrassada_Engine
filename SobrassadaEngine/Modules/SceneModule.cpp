@@ -140,12 +140,12 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
         gameObjectsContainer.insert({newUUID, newGameObject});
     }
 
-    ImGui::SameLine();
-
-    if (ImGui::Button("Delete GameObject") && selectedGameObjectUUID != gameObjectRootUUID)
+    if (selectedGameObjectUUID != gameObjectRootUUID)
     {
-        RemoveGameObjectHierarchy(selectedGameObjectUUID);
-        //selectedGameObjectUUID = gameObjectRootUUID;
+        ImGui::SameLine();
+        
+        if (ImGui::Button("Delete GameObject")) 
+            RemoveGameObjectHierarchy(selectedGameObjectUUID);
     }
 
     RenderGameObjectHierarchy(gameObjectRootUUID);
