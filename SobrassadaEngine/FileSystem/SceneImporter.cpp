@@ -19,7 +19,7 @@ namespace SceneImporter
 
         std::string extension = FileSystem::GetFileExtension(filePath);
 
-        if (extension == ".gltf") ImportGLTF(filePath);
+        if (extension == ASSET_EXTENSION) ImportGLTF(filePath);
         else TextureImporter::Import(filePath);
     }
 

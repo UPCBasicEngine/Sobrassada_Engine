@@ -9,6 +9,7 @@
 #include "TextureImporter.h"
 #include "TextureModuleTest.h"
 #include "WindowModule.h"
+#include "LibraryModule.h"
 
 #include "DirectXTex/DirectXTex.h"
 #include "EngineModel.h"

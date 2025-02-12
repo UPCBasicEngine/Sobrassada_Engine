@@ -1,0 +1,20 @@
+{
+    "Scene": {
+        "uuid": 0,
+        "name": "Test Scene",
+        "rootGameObject": 0,
+        "gameObjects": [
+            {
+                "uuid": 1001,
+                "parentuuid": 987654321,
+                "childuuids": [
+                    1,
+                    2,
+                    3,
+                    4
+                ],
+                "rootComponentUUID": 2001
+            }
+        ]
+    }
+}

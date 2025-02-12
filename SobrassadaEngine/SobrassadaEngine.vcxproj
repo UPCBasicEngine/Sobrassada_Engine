@@ -136,6 +136,7 @@
     <ClCompile Include="FileSystem\FileSystem.cpp" />
     <ClCompile Include="FileSystem\MeshImporter.cpp" />
     <ClCompile Include="FileSystem\SceneImporter.cpp" />
+    <ClCompile Include="LibraryModule.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
     <ClCompile Include="FileSystem\TextureImporter.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
@@ -197,6 +198,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="FileSystem\FileSystem.h" />
+    <ClInclude Include="LibraryModule.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="FileSystem\MeshImporter.h" />
     <ClInclude Include="FileSystem\SceneImporter.h" />

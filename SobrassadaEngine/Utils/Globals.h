@@ -58,6 +58,7 @@ enum update_status
 #define MATERIALS_PATH  "Library/Materials/"
 #define SCENES_PATH     "Library/Scenes/"
 
+#define ASSET_EXTENSION   ".gltf"
 #define FILE_EXTENSION     ".sobrassada"
 #define MATERIAL_EXTENSION ".dds"
 #define SCENE_EXTENSION    ".scene"

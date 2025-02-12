@@ -178,6 +178,9 @@
     <ClCompile Include="FileSystem\TextureImporter.cpp">
       <Filter>FileSystem</Filter>
     </ClCompile>
+    <ClCompile Include="LibraryModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -303,6 +306,9 @@
     </ClInclude>
     <ClInclude Include="FileSystem\TextureImporter.h">
       <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="LibraryModule.h">
+      <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

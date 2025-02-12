@@ -8,7 +8,7 @@
 namespace FileSystem
 {
     unsigned int Load(const char *filePath, char **buffer);
-    unsigned int Save(const char *filePath, const void *buffer, unsigned int size, bool append = false);
+    unsigned int Save(const char *filePath, const void *buffer, unsigned int size, bool asBinary = true, bool append = false);
     bool Copy(const char *sourceFilePath, const char *destinationFilePath);
 
     void GetDrives(std::vector<std::string> &drives);

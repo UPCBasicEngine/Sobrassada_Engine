@@ -45,9 +45,9 @@ namespace FileSystem
         }
     }
 
-    unsigned int Save(const char *filePath, const void *buffer, unsigned int size, bool append)
+    unsigned int Save(const char *filePath, const void *buffer, unsigned int size, bool asBinary, bool append)
     {
-        std::ofstream file(filePath, std::ios::binary | (append ? std::ios::app : 0));
+        std::ofstream file(filePath, (asBinary ? std::ios::binary : 0) | (append ? std::ios::app : 0));
 
         if (!file.is_open())
         {
