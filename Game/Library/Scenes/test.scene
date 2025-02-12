@@ -1,34 +1,34 @@
 {
     "Scene": {
-        "uuid": 0,
-        "name": "Test Scene",
-        "rootGameObject": 0,
-        "gameObjects": [
+        "UID": 0,
+        "Name": "Test Scene",
+        "RootGameObject": 0,
+        "GameObjects": [
             {
-                "uuid": 1001,
-                "parentuuid": 987654321,
-                "childuuids": [
+                "UID": 1001,
+                "ParentUID": 987654321,
+                "ChildUIDS": [
                     1,
                     2,
                     3,
                     4
                 ],
-                "rootComponentUUID": 2001
+                "RootComponentUID": 2001
             }
         ],
-        "components": [
+        "Components": [
             {
-                "uuid": 2001,
-                "parentuuid": 1001,
-                "childuuids": [
+                "UID": 2001,
+                "ParentUID": 1001,
+                "ChildUIDS": [
                     1,
                     2,
                     3,
                     4
                 ],
-                "type": "MeshRenderer",
-                "meshUUID": 3001,
-                "materialUUID": 4001
+                "Type": "MeshRenderer",
+                "MeshUID": 3001,
+                "MaterialUID": 4001
             }
         ]
     }

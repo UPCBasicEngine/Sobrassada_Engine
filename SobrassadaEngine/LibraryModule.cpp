@@ -4,12 +4,10 @@
 #include "Globals.h"
 #include "SceneImporter.h"
 
-
 #include "document.h"
 #include "prettywriter.h"
 #include "stringbuffer.h"
 #include "writer.h"
-
 
 LibraryModule::LibraryModule() {}
 
@@ -40,28 +38,28 @@ bool LibraryModule::SaveScene(const char *path)
     uint64_t rootGameObject = 0;
 
     // Create structure
-    scene.AddMember("uuid", uuid, allocator);
-    scene.AddMember("name", rapidjson::Value(name.c_str(), allocator), allocator);
-    scene.AddMember("rootGameObject", rootGameObject, allocator);
+    scene.AddMember("UID", uuid, allocator);
+    scene.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
+    scene.AddMember("RootGameObject", rootGameObject, allocator);
 
     // Serialize GameObjects
     rapidjson::Value gameObjects(rapidjson::kArrayType);
 
     // 1 gameobject
     rapidjson::Value A(rapidjson::kObjectType);
-    A.AddMember("uuid", 1001, allocator);
-    A.AddMember("parentuuid", 987654321, allocator);
+    A.AddMember("UID", 1001, allocator);
+    A.AddMember("ParentUID", 987654321, allocator);
 
     // Child UUIDs
     rapidjson::Value childUUIDsGO(rapidjson::kArrayType);
     childUUIDsGO.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
-    A.AddMember("childuuids", childUUIDsGO, allocator);
-    A.AddMember("rootComponentUUID", 2001, allocator);
+    A.AddMember("ChildUIDS", childUUIDsGO, allocator);
+    A.AddMember("RootComponentUID", 2001, allocator);
 
     gameObjects.PushBack(A, allocator);
 
     // Add gameObjects to scene
-    scene.AddMember("gameObjects", gameObjects, allocator);
+    scene.AddMember("GameObjects", gameObjects, allocator);
 
     // Serialize Components
     rapidjson::Value components(rapidjson::kArrayType);
@@ -69,24 +67,24 @@ bool LibraryModule::SaveScene(const char *path)
     // 1 component
     rapidjson::Value B(rapidjson::kObjectType);
 
-    B.AddMember("uuid", 2001, allocator);
-    B.AddMember("parentuuid", 1001, allocator);
+    B.AddMember("UID", 2001, allocator);
+    B.AddMember("ParentUID", 1001, allocator);
 
     // Child UUIDs
     rapidjson::Value childUUIDsComp(rapidjson::kArrayType);
     childUUIDsComp.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
-    B.AddMember("childuuids", childUUIDsComp, allocator);
+    B.AddMember("ChildUIDS", childUUIDsComp, allocator);
 
-    B.AddMember("type", "MeshRenderer", allocator);
+    B.AddMember("Type", "MeshRenderer", allocator);
 
     // Dependent
-    B.AddMember("meshUUID", 3001, allocator);
-    B.AddMember("materialUUID", 4001, allocator);
+    B.AddMember("MeshUID", 3001, allocator);
+    B.AddMember("MaterialUID", 4001, allocator);
 
     components.PushBack(B, allocator);
 
     // Add components to scene
-    scene.AddMember("components", components, allocator);
+    scene.AddMember("Components", components, allocator);
 
     doc.AddMember("Scene", scene, allocator);
 
@@ -139,43 +137,61 @@ bool LibraryModule::LoadScene(const char *path)
     rapidjson::Value &scene = doc["Scene"];
 
     // Scene values
-    uint64_t uuid           = scene["uuid"].GetUint64();
-    std::string name        = scene["name"].GetString();
-    uint64_t rootGameObject = scene["rootGameObject"].GetUint64();
+    uint64_t uuid           = scene["UID"].GetUint64();
+    std::string name        = scene["Name"].GetString();
+    uint64_t rootGameObject = scene["RootGameObject"].GetUint64();
 
     // Deserialize GameObjects
-    if (scene.HasMember("gameObjects") && scene["gameObjects"].IsArray())
+    if (scene.HasMember("GameObjects") && scene["GameObjects"].IsArray())
     {
-        const rapidjson::Value &gameObjects = scene["gameObjects"];
+        const rapidjson::Value &gameObjects = scene["GameObjects"];
         for (rapidjson::SizeType i = 0; i < gameObjects.Size(); i++)
         {
             const rapidjson::Value &gameObject = gameObjects[i];
 
-            uint64_t uuidGO                    = gameObject["uuid"].GetUint64();
-            uint64_t parentuuid                = gameObject["parentuuid"].GetUint64();
+            uint64_t uuidGO                    = gameObject["UID"].GetUint64();
+            uint64_t parentuuid                = gameObject["ParentUID"].GetUint64();
 
-            if (gameObject.HasMember("childuuids") && gameObject["childuuids"].IsArray())
+            if (gameObject.HasMember("ChildUIDS") && gameObject["ChildUIDS"].IsArray())
             {
-                const rapidjson::Value &childUUIDs = gameObject["childuuids"];
+                const rapidjson::Value &childUUIDs = gameObject["ChildUIDS"];
                 for (rapidjson::SizeType j = 0; j < childUUIDs.Size(); j++)
                 {
                     uint64_t childUUID = childUUIDs[j].GetUint64();
                 }
             }
-            uint64_t rootComponentUUID = gameObject["rootComponentUUID"].GetUint64();
+            uint64_t rootComponentUUID = gameObject["RootComponentUID"].GetUint64();
         }
     }
 
+    // Deserialize Components
+    if (scene.HasMember("Components") && scene["Components"].IsArray())
+    {
+        const rapidjson::Value &components = scene["Components"];
+
+        for (rapidjson::SizeType i = 0; i < components.Size(); i++)
+        {
+            const rapidjson::Value &component = components[i];
+
+            uint64_t compUUID                 = component["UID"].GetUint64();
+            uint64_t parentUUID               = component["ParentUID"].GetUint64();
+            std::string type                  = component["Type"].GetString();
+
+            // dependent
+        }
+    }
+
+    GLOG("Scene loaded successfully: %s", name.c_str());
     return true;
 }
 
-void LibraryModule::AddTexture(const std::string& imageName, const std::string& ddsPath) {
+void LibraryModule::AddTexture(const std::string &imageName, const std::string &ddsPath)
+{
     textureMap[imageName] = ddsPath; // Map the texture name to its DDS path
 }
 
-std::string LibraryModule::GetTextureDDSPath(const std::string& imageName) const
+std::string LibraryModule::GetTextureDDSPath(const std::string &imageName) const
 {
-
     auto it = textureMap.find(imageName);
     if (it != textureMap.end())
     {
