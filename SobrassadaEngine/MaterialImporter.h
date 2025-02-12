@@ -7,5 +7,5 @@
 
 namespace MaterialImporter
 {
-    bool ImportMaterial(const tinygltf::Model &model, int materialIndex, const std::string &filePath);
+    bool ImportMaterial(const tinygltf::Model &model, int materialIndex, std::string materialName);
 };

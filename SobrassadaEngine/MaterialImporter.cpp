@@ -5,15 +5,12 @@
 #include "TextureImporter.h"
 #include "Application.h"
 #include "LibraryModule.h"
+#include "FileSystem.h"
 #include <FileSystem>
 
-bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex)
+bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex, std::string materialName)
 {
 
-    if (materialIndex < 0 || materialIndex >= model.materials.size())
-    {
-        GLOG("No material found.");
-    }
 
     const tinygltf::Material &gltfMaterial = model.materials[materialIndex];
 
@@ -106,6 +103,8 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
 
          material.SetOcclusionTexture(&pathToDds);
     }
+
+
 
     return true;
 }

@@ -31,21 +31,23 @@ class Material
     void SetDiffuseFactor(const float4 &newDiffuseFactor) { diffuseFactor = newDiffuseFactor; }
     void SetSpecularFactor(const float3 &newSpecularFactor) { specularFactor = newSpecularFactor; }
     void SetGlossinessFactor(float newGlossiness) { glossinessFactor = newGlossiness; }
+    void SetOcclusionStrength(float strength) { occlusionStrength = strength; }
 
     void SetSpecularGlossinessTexture(std::string *texture) { specularGlossinessTexture = texture; }
     void SetNormalTexture(std::string *texture) { normalTexture = texture; }
     void SetDiffuseTexture(std::string *texture) { diffuseTexture = texture; }
     void SetOcclusionTexture(std::string *texture) { occlusionTexture = texture; }
-    void SetOcclusionStrength(float strength) { occlusionStrength = strength; }
+    
 
   private:
     std::string name;
 
-    float4 diffuseFactor                   = {1.0f, 1.0f, 1.0f, 1.0f}; // RGBA
-    float3 specularFactor                  = {1.0f, 1.0f, 1.0f};       // RGB
-    float glossinessFactor                 = 1.0f;
-    float occlusionStrength                = 1.0f;
+    float4 diffuseFactor     = {1.0f, 1.0f, 1.0f, 1.0f}; // RGBA
+    float3 specularFactor    = {1.0f, 1.0f, 1.0f};       // RGB
+    float glossinessFactor   = 1.0f;
+    float occlusionStrength  = 1.0f;
 
+    //pointers to the dds paths
     std::string *diffuseTexture            = nullptr;
     std::string *specularGlossinessTexture = nullptr;
     std::string *normalTexture             = nullptr;
