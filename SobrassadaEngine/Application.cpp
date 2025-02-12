@@ -12,6 +12,9 @@
 #include "RenderTestModule.h"
 #include "TextureModuleTest.h"
 
+#include "EngineTimer.h"
+#include "GameTimer.h"
+
 #include "optick.h"
 
 Application::Application()
@@ -31,6 +34,11 @@ Application::Application()
     modules.push_back(renderTest = new RenderTestModule());
 
     modules.push_back(editorUIModule = new EditorUIModule());
+
+    // Init timers
+    engineTimer = new EngineTimer();
+    engineTimer->Start();
+    gameTimer   = new GameTimer();
 }
 
 Application::~Application()
@@ -51,8 +59,9 @@ bool Application::Init()
     return returnStatus;
 }
 
-update_status Application::Update(float deltaTime)
+update_status Application::Update()
 {
+    const float deltaTime = engineTimer->Tick() / 1000;
 
     update_status returnStatus = UPDATE_CONTINUE;
 

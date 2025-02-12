@@ -17,6 +17,9 @@ class DebugDrawModule;
 class RenderTestModule;
 class TextureModuleTest;
 
+class EngineTimer;
+class GameTimer;
+
 class Application
 {
   public:
@@ -24,7 +27,7 @@ class Application
     ~Application();
 
     bool Init();
-    update_status Update(float deltaTime);
+    update_status Update();
     bool ShutDown();
 
     WindowModule *GetWindowModule() { return windowModule; }
@@ -38,6 +41,8 @@ class Application
     DebugDrawModule *GetDebugDreawModule() { return debugDraw; }
     RenderTestModule *GetRenderTestModule() { return renderTest; }
     TextureModuleTest *GetTextureModuleTest() { return textureModuleTest; }
+
+    GameTimer *GetGameTimer() { return gameTimer; }
 
   private:
     std::list<Module *> modules;
@@ -54,7 +59,8 @@ class Application
     RenderTestModule *renderTest         = nullptr;
     TextureModuleTest *textureModuleTest = nullptr;
 
-    uint32_t previousElapsedTime         = 0;
+    EngineTimer *engineTimer             = nullptr;
+    GameTimer *gameTimer                 = nullptr;
 };
 
 extern Application *App;

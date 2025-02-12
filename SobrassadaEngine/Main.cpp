@@ -1,6 +1,5 @@
 #include "Application.h"
 #include "Globals.h"
-#include "UPCTimer.h"
 
 #include "SDL.h"
 #pragma comment(lib, "Libs/SDL/lib/SDL2.lib")
@@ -23,8 +22,6 @@ std::vector<char *> *Logs = NULL;
 
 int main(int argc, char **argv)
 {
-    UPCTimer *timer     = new UPCTimer();
-
     int mainReturn      = EXIT_SUCCESS;
     MainState mainState = MAIN_CREATION;
 
@@ -60,8 +57,7 @@ int main(int argc, char **argv)
 
         case MAIN_UPDATE:
         {
-            float deltaTime   = timer->Tick();
-            int update_return = App->Update(deltaTime);
+            int update_return = App->Update();
 
             if (update_return == UPDATE_ERROR)
             {
@@ -89,7 +85,6 @@ int main(int argc, char **argv)
     }
 
     delete App;
-    delete timer;
 
     // Free memory from log*
     for (auto log : *Logs)

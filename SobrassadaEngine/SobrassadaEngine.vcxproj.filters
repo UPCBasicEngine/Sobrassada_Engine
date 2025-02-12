@@ -7,7 +7,7 @@
     <ClCompile Include="Utils\log.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Timer.cpp">
+    <ClCompile Include="Utils\GameTimer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="Modules\InputModule.cpp">
@@ -166,6 +166,9 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Component.cpp" />
+    <ClCompile Include="EngineTimer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -200,7 +203,7 @@
     <ClInclude Include="Utils\Globals.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\Timer.h">
+    <ClInclude Include="Utils\GameTimer.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Modules\InputModule.h">
@@ -274,6 +277,9 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h" />
+    <ClInclude Include="EngineTimer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
