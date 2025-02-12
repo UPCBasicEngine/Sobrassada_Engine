@@ -57,6 +57,7 @@ void CameraModule::UpdateUBO()
 
 update_status CameraModule::Update(float deltaTime)
 {
+    UpdateUBO();
 	return UPDATE_CONTINUE;
 }
 

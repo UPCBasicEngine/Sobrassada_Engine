@@ -214,7 +214,7 @@ void ResourceMesh::CreateVAO()
 void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int cameraUBO, ResourceMaterial* material)
 {
 	glUseProgram(program);
-
+	
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
     unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
     glUniformBlockBinding(program, blockIdx, 0);
