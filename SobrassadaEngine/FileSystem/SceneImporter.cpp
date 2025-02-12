@@ -2,6 +2,7 @@
 
 #include "FileSystem.h"
 #include "Globals.h"
+#include "Application.h"
 #include "MeshImporter.h"
 #include "TextureImporter.h"
 #include "MaterialImporter.h"
@@ -80,7 +81,10 @@ namespace SceneImporter
 
             std::string ddsPath  = TextureImporter::Import(fullPath.c_str());
             //mapping dds path to texture name(png)
-            FileSystem::libraryModule.AddTexture(srcImages.uri, ddsPath);
+            if (!ddsPath.empty())
+            {
+                App->GetLibraryModule()->AddTexture(srcImages.uri, ddsPath);
+            }  
         }
 
         int matIndex = 0;
@@ -89,7 +93,7 @@ namespace SceneImporter
             std::string materialName = srcMaterials.name;
             std::string materialPath = MATERIALS_PATH + materialName + ".mat";
 
-            MaterialImporter::ImportMaterial(model, srcMaterials);
+            //MaterialImporter::ImportMaterial(model, srcMaterials);
             matIndex++;
         }
 

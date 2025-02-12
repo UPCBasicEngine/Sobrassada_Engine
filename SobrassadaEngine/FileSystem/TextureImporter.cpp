@@ -34,7 +34,7 @@ namespace TextureImporter
                 if (FAILED(hr))
                 {
                     GLOG("Failed to load texture: %s", filePath);
-                    return false;
+                    return "";
                 }
             }
         }
@@ -47,7 +47,7 @@ namespace TextureImporter
         if (FAILED(hr))
         {
             GLOG("Failed to save texture in memory: %s", filePath);
-            return false;
+            return "";
         }
 
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
@@ -59,7 +59,7 @@ namespace TextureImporter
         if (size == 0)
         {
             GLOG("Failed to save DDS file: %s", savePath.c_str());
-            return false;
+            return "";
         }
 
         GLOG("%s saved as dds", fileName.c_str());

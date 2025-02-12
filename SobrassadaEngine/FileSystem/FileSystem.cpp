@@ -17,7 +17,6 @@
 namespace FileSystem
 {
 
-    LibraryModule FileSystem::libraryModule;
 
     unsigned int Load(const char *filePath, char **buffer)
     {

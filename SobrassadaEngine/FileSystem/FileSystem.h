@@ -1,14 +1,12 @@
 #pragma once
 
 #include "Globals.h"
-#include "LibraryModule.h"
 
 #include <filesystem>
 #include <string>
 
 namespace FileSystem
 {
-    extern LibraryModule libraryModule;
 
     unsigned int Load(const char *filePath, char **buffer);
     unsigned int Save(const char *filePath, const void *buffer, unsigned int size, bool asBinary = true, bool append = false);

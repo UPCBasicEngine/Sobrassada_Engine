@@ -4,7 +4,7 @@
 #include "Material.h"
 #include "TextureImporter.h"
 #include <FileSystem>
-
+/*
 bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialIndex)
 {
 
@@ -94,4 +94,4 @@ bool MaterialImporter::ImportMaterial(const tinygltf::Model &model, int material
     }
 
     return true;
-}
+}*/

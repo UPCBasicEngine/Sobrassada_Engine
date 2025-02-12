@@ -9,7 +9,7 @@
 #include "stringbuffer.h"
 #include "writer.h"
 #include "prettywriter.h"
- textureMap[imageName] = ddsPath; // Map the texture name to its DDS path
+
 
 LibraryModule::LibraryModule() {}
 
@@ -73,23 +73,30 @@ bool LibraryModule::SaveScene(const char *path)
     std::string fileName      = FileSystem::GetFileNameWithoutExtension(path);
 
     unsigned int bytesWritten = FileSystem::Save(path, buffer.GetString(), buffer.GetSize(), false);
-//main purpouse is to return the dds path using the texture name (So that we can store pointers to the dds files on material)
-std::string LibraryModule::GetTextureDDSPath(const std::string &imageName) const { 
-	
-	auto it = textureMap.find(imageName);
-    if (it != textureMap.end())
     if (bytesWritten == 0)
     {
-        return it->second; // Return the DDS path if the texture is found
         GLOG("Failed to save scene file: %s", path);
         return false;
     }
-    return ""; // Return an empty string if texture is not found
 
     GLOG("%s saved as scene", fileName.c_str());
 
     return true;
 }
-void LibraryModule::AddTexture(const std::string& imageName, const std::string& ddsPath) {
 
 bool LibraryModule::LoadScene(const char *path) { return true; }
+
+void LibraryModule::AddTexture(const std::string &imageName, const std::string &ddsPath) {
+    textureMap[imageName] = ddsPath; // Map the texture name to its DDS path
+}
+
+std::string LibraryModule::GetTextureDDSPath(const std::string &imageName) const
+{
+
+    auto it = textureMap.find(imageName);
+    if (it != textureMap.end())
+    {
+        return it->second; // Return the DDS path if the texture is found
+    }
+    return ""; // Return an empty string if texture is not found
+}
