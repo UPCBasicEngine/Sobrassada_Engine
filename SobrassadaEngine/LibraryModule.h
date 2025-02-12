@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Module.h"
-
 #include <string>
 #include <unordered_map>
 
@@ -11,30 +10,23 @@ class LibraryModule : public Module
     public:
     LibraryModule();
     ~LibraryModule();
+    // Add a texture to the manager (maps texture name to DDS path)
+    void AddTexture(const std::string &imageName, const std::string &ddsPath);
 
     bool Init() override;
 
     bool SaveScene(const char *path);
     bool LoadScene(const char *path);
+    // Get the DDS path for a texture by its name (returns an empty string if not found)
+    std::string GetTextureDDSPath(const std::string &imageName) const;
 
-    void AddTexture(UID textureUID, const std::string &ddsPath);
-    void AddMesh(UID meshUID, const std::string &matPath);
-    void AddMaterial(UID materialUID, const std::string &sobPath);
-
-    std::string GetTextureName(UID textureUID) const;
-    std::string GetMeshName(UID textureUID) const;
-    std::string GetMaterialName(UID textureUID) const;
-    
     private:
-
-      std::unordered_map<UID, std::string> textureMap; // UID -> name.dds
-      std::unordered_map<UID, std::string> materialMap; //UID-> name.mat
-      std::unordered_map<UID, std::string> meshMap; // UID-> name.sob
-
     // scenes
     // models
     // materials
     // textures
     // lights
+
+    std::unordered_map<std::string, std::string> textureMap; // Name -> DDS path
 
 };

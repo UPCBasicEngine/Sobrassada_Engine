@@ -1,6 +1,8 @@
 #include "FileSystem.h"
 
 #include "Globals.h"
+#include "document.h"
+#include "istreamwrapper.h"
 
 #include <filesystem>
 #include <fstream>
@@ -18,7 +20,7 @@ namespace FileSystem
 {
     unsigned int Load(const char *filePath, char **buffer, bool asBinary)
     {
-        std::ifstream file(filePath, (asBinary ? std::ios::binary : 0) | std::ios::ate);
+        std::ifstream file(filePath, std::ifstream::in | std::ifstream::ate | (asBinary ? std::ios::binary : 0));
 
         if (!file.is_open())
         {
@@ -45,9 +47,32 @@ namespace FileSystem
         }
     }
 
+    bool LoadJSON(const char *scenePath, rapidjson::Document &doc)
+    {
+        std::ifstream file(scenePath);
+        if (!file.is_open())
+        {
+            GLOG("Failed to open file: %s", scenePath);
+            return false;
+        }
+
+        rapidjson::IStreamWrapper sw(file);
+
+        doc.ParseStream(sw);
+
+        if (doc.HasParseError())
+        {
+            GLOG("Failed to parse scene JSON: %s", scenePath);
+            return false;
+        }
+
+        file.close();
+        return true;
+    }
+
     unsigned int Save(const char *filePath, const void *buffer, unsigned int size, bool asBinary, bool append)
     {
-        std::ofstream file(filePath, (asBinary ? std::ios::binary : 0) | (append ? std::ios::app : 0));
+        std::ofstream file(filePath, std::ios::out | (asBinary ? std::ios::binary : 0) | (append ? std::ios::app : 0));
 
         if (!file.is_open())
         {
