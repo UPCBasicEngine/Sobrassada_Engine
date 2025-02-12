@@ -7,7 +7,6 @@
 #include "document.h"
 #include "prettywriter.h"
 #include "stringbuffer.h"
-#include "writer.h"
 
 LibraryModule::LibraryModule() {}
 
@@ -16,14 +15,11 @@ LibraryModule::~LibraryModule() {}
 bool LibraryModule::Init()
 {
     SceneImporter::CreateLibraryDirectories();
-    std::string fileName = std::string("test.scene");
-    std::string scene    = SCENES_PATH + fileName;
-    SaveScene(scene.c_str());
 
     return true;
 }
 
-bool LibraryModule::SaveScene(const char *path)
+bool LibraryModule::SaveScene(const char *path) const
 {
     // Create doc JSON
     rapidjson::Document doc;
@@ -33,12 +29,12 @@ bool LibraryModule::SaveScene(const char *path)
     rapidjson::Value scene(rapidjson::kObjectType);
 
     // Scene values
-    uint64_t uuid           = 0;
+    uint64_t uid            = 0;
     std::string name        = "Test Scene";
     uint64_t rootGameObject = 0;
 
     // Create structure
-    scene.AddMember("UID", uuid, allocator);
+    scene.AddMember("UID", uid, allocator);
     scene.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
     scene.AddMember("RootGameObject", rootGameObject, allocator);
 
@@ -51,9 +47,9 @@ bool LibraryModule::SaveScene(const char *path)
     A.AddMember("ParentUID", 987654321, allocator);
 
     // Child UUIDs
-    rapidjson::Value childUUIDsGO(rapidjson::kArrayType);
-    childUUIDsGO.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
-    A.AddMember("ChildUIDS", childUUIDsGO, allocator);
+    rapidjson::Value childUIDsGO(rapidjson::kArrayType);
+    childUIDsGO.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
+    A.AddMember("ChildUIDS", childUIDsGO, allocator);
     A.AddMember("RootComponentUID", 2001, allocator);
 
     gameObjects.PushBack(A, allocator);
@@ -71,9 +67,9 @@ bool LibraryModule::SaveScene(const char *path)
     B.AddMember("ParentUID", 1001, allocator);
 
     // Child UUIDs
-    rapidjson::Value childUUIDsComp(rapidjson::kArrayType);
-    childUUIDsComp.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
-    B.AddMember("ChildUIDS", childUUIDsComp, allocator);
+    rapidjson::Value childUIDsComp(rapidjson::kArrayType);
+    childUIDsComp.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
+    B.AddMember("ChildUIDS", childUIDsComp, allocator);
 
     B.AddMember("Type", "MeshRenderer", allocator);
 
@@ -109,26 +105,16 @@ bool LibraryModule::SaveScene(const char *path)
 
 bool LibraryModule::LoadScene(const char *path)
 {
-    char *buffer      = nullptr;
-    unsigned int size = FileSystem::Load(path, &buffer, false);
+    rapidjson::Document doc;
+    bool loaded = FileSystem::LoadJSON(path, doc);
 
-    if (size == 0 || buffer == nullptr)
+    if (!loaded)
     {
         GLOG("Failed to load scene file: %s", path);
         return false;
     }
 
-    rapidjson::Document doc;
-    if (doc.Parse(buffer).HasParseError())
-    {
-        GLOG("Failed to parse scene JSON: %s", path);
-        delete[] buffer;
-        return false;
-    }
-
-    delete[] buffer;
-
-    if (doc.HasMember("Scene") || !doc["Scene"].IsObject())
+    if (!doc.HasMember("Scene") || !doc["Scene"].IsObject())
     {
         GLOG("Invalid scene format: %s", path);
         return false;
@@ -137,7 +123,7 @@ bool LibraryModule::LoadScene(const char *path)
     rapidjson::Value &scene = doc["Scene"];
 
     // Scene values
-    uint64_t uuid           = scene["UID"].GetUint64();
+    uint64_t uid            = scene["UID"].GetUint64();
     std::string name        = scene["Name"].GetString();
     uint64_t rootGameObject = scene["RootGameObject"].GetUint64();
 
@@ -149,15 +135,15 @@ bool LibraryModule::LoadScene(const char *path)
         {
             const rapidjson::Value &gameObject = gameObjects[i];
 
-            uint64_t uuidGO                    = gameObject["UID"].GetUint64();
-            uint64_t parentuuid                = gameObject["ParentUID"].GetUint64();
+            uint64_t uidGO                     = gameObject["UID"].GetUint64();
+            uint64_t parentuid                 = gameObject["ParentUID"].GetUint64();
 
             if (gameObject.HasMember("ChildUIDS") && gameObject["ChildUIDS"].IsArray())
             {
-                const rapidjson::Value &childUUIDs = gameObject["ChildUIDS"];
-                for (rapidjson::SizeType j = 0; j < childUUIDs.Size(); j++)
+                const rapidjson::Value &childUIDs = gameObject["ChildUIDS"];
+                for (rapidjson::SizeType j = 0; j < childUIDs.Size(); j++)
                 {
-                    uint64_t childUUID = childUUIDs[j].GetUint64();
+                    uint64_t childUID = childUIDs[j].GetUint64();
                 }
             }
             uint64_t rootComponentUUID = gameObject["RootComponentUID"].GetUint64();
@@ -173,8 +159,8 @@ bool LibraryModule::LoadScene(const char *path)
         {
             const rapidjson::Value &component = components[i];
 
-            uint64_t compUUID                 = component["UID"].GetUint64();
-            uint64_t parentUUID               = component["ParentUID"].GetUint64();
+            uint64_t compUID                  = component["UID"].GetUint64();
+            uint64_t parentUID                = component["ParentUID"].GetUint64();
             std::string type                  = component["Type"].GetString();
 
             // dependent
@@ -184,6 +170,7 @@ bool LibraryModule::LoadScene(const char *path)
     GLOG("Scene loaded successfully: %s", name.c_str());
     return true;
 }
+
 
 void LibraryModule::AddTexture(const std::string &imageName, const std::string &ddsPath)
 {

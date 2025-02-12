@@ -8,26 +8,19 @@
 class LibraryModule : public Module
 {
 
-    public:
+  public:
     LibraryModule();
     ~LibraryModule();
 
     bool Init() override;
 
-    bool SaveScene(const char *path);
+    bool SaveScene(const char *path) const;
     bool LoadScene(const char *path);
 
     void AddTexture(const std::string &imageName, const std::string &ddsPath);
     std::string GetTextureDDSPath(const std::string &imageName) const;
 
-
-    private:
-        std::unordered_map<std::string, std::string> textureMap; // Name -> DDS path
-
-    // scenes
-    // models
-    // materials
-    // textures
-    // lights
-
+  private:
+    std::unordered_map<std::string, std::string> textureMap; // Name -> DDS path
+    // librarymeshes & librarytextures map
 };

@@ -1,6 +1,7 @@
 #include "EditorUIModule.h"
 
 #include "Application.h"
+#include "LibraryModule.h"
 #include "EditorViewport.h"
 #include "FileSystem.h"
 #include "OpenGLModule.h"
@@ -215,8 +216,9 @@ void EditorUIModule::LoadDialog(bool &load)
     {
         if (!inputFile.empty())
         {
-            std::string loadPath = libraryPath + inputFile;
-            // LoadScene call
+            std::string loadPath = SCENES_PATH + inputFile;
+            App->GetLibraryModule()->LoadScene(loadPath.c_str());
+
         }
         inputFile = "";
         load      = false;
@@ -277,7 +279,7 @@ void EditorUIModule::SaveDialog(bool &save)
         if (strlen(inputFile) > 0)
         {
             std::string savePath = libraryPath + inputFile + SCENE_EXTENSION;
-            // SaveScene call
+            App->GetLibraryModule()->SaveScene(savePath.c_str());
         }
         inputFile[0] = '\0';
         save         = false;
