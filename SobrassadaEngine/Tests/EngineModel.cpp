@@ -217,20 +217,20 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 			if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
 			newMesh->CreateVAO();
 
-			float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
-            float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
+			//float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
+   //         float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
 
-			if (firstMesh)
-			{
-				firstMesh = false;
-				maxValues = meshMaxValues;
-				minValues = meshMinValues;
-			}
-			else
-			{
-				maxValues = float3(Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y), Max(maxValues.z, meshMaxValues.z));
-				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
-			}
+			//if (firstMesh)
+			//{
+			//	firstMesh = false;
+			//	maxValues = meshMaxValues;
+			//	minValues = meshMinValues;
+			//}
+			//else
+			//{
+			//	maxValues = float3(Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y), Max(maxValues.z, meshMaxValues.z));
+			//	minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
+			//}
 
 
 
@@ -272,10 +272,10 @@ OBB EngineModel::GetOBBModel() const{
         {5, 7}
     };
 
-    for (int i = 0; i < 12; i++)
-    {
-        dd::line(corners[edges[i][0]], corners[edges[i][1]], dd::colors::Red);
-    }
+    //for (int i = 0; i < 12; i++)
+    //{
+    //    dd::line(corners[edges[i][0]], corners[edges[i][1]], dd::colors::Red);
+    //}
 
 	 return obbModel;
 }

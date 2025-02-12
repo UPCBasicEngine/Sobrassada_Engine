@@ -45,7 +45,7 @@ public:
   private:
     bool consoleMenu            = false;
     bool editorSettingsMenu     = false;
-    bool quadtreeViewerViewport = true;
+    bool quadtreeViewerViewport = false;
     bool closeApplication       = false;
 
     int maximumPlotData         = 50;

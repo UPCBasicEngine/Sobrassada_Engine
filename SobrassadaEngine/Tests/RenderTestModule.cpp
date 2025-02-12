@@ -96,15 +96,15 @@ update_status RenderTestModule::Render(float deltaTime)
 
     bool insideFrustum = CheckFrustum();
 
-    if (insideFrustum)
-    {
-        // GLOG("El objeto esta dentro del Frustum");
-        currentLoadedModel->Render(program, proj, view);
-    }
-    else
-    {
-        // GLOG("El objeto esta fuera del Frustum");
-    }
+    //if (insideFrustum)
+    //{
+    //    // GLOG("El objeto esta dentro del Frustum");
+    //    currentLoadedModel->Render(program, proj, view);
+    //}
+    //else
+    //{
+    //    // GLOG("El objeto esta fuera del Frustum");
+    //}
     auto framebuffer = App->GetOpenGLModule()->GetFramebuffer();
     App->GetDebugDrawModule()->Draw(view, proj, framebuffer->GetTextureWidth(), framebuffer->GetTextureHeight());
 

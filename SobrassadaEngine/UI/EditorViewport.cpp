@@ -25,7 +25,6 @@ void EditorViewport::Render()
 		{
 			const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
 
-
 			ImGui::SetCursorPos(ImVec2(0.f, 0.f));
 
 			ImGui::Image(
