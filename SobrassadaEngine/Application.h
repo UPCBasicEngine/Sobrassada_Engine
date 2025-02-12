@@ -17,7 +17,6 @@ class SceneModule;
 // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 class CameraModule;
 class DebugDrawModule;
-class RenderTestModule;
 class TextureModuleTest;
 
 class Application
@@ -41,7 +40,6 @@ class Application
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *GetCameraModule() { return cameraModule; }
     DebugDrawModule *GetDebugDreawModule() { return debugDraw; }
-    RenderTestModule *GetRenderTestModule() { return renderTest; }
     TextureModuleTest *GetTextureModuleTest() { return textureModuleTest; }
 
   private:
@@ -58,7 +56,6 @@ class Application
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *cameraModule           = nullptr;
     DebugDrawModule *debugDraw           = nullptr;
-    RenderTestModule *renderTest         = nullptr;
     TextureModuleTest *textureModuleTest = nullptr;
 
     uint32_t previousElapsedTime         = 0;

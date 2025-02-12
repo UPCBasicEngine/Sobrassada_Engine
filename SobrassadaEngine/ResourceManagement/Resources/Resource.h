@@ -9,9 +9,8 @@ enum class ResourceType
 {
     Unknown = 0,
     Texture,
+    Material,
     Mesh,
-    Audio,
-    Scene,
 };
 
 class Resource

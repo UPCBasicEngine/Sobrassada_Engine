@@ -4,13 +4,12 @@
 #include "Math/float4x4.h"
 #include "Math/float3.h"
 #include "Math/float2.h"
+#include "ResourceManagement/Resources/ResourceMesh.h"
 
 namespace tinygltf
 {
 	class Model;
 }
-
-class EngineMesh;
 
 class EngineModel
 {
@@ -36,13 +35,13 @@ public:
 
 	void SetRenderTexture(int texturePosition);
 
-    EngineMesh* GetMesh(int index) const { return meshes[index]; }
+    ResourceMesh* GetMesh(int index) const { return meshes[index]; }
 
     unsigned int GetActiveRenderTexture() const { return textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0; }
 
 private:
 
-	std::vector<EngineMesh*> meshes;
+	std::vector<ResourceMesh*> meshes;
 	std::vector<unsigned int> textures;
 	std::vector<float2> textureInfo;
 

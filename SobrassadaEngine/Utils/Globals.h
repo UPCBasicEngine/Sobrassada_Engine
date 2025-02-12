@@ -47,8 +47,8 @@ enum update_status
 #define DEFAULT_CAMERA_MOUSE_SENSITIVITY 0.5f;
 #define DEFAUL_CAMERA_ZOOM_SENSITIVITY 5.f;
 
-constexpr uint32_t CONSTANT_NO_MESH_UUID = 0;
-constexpr uint32_t CONSTANT_NO_TEXTURE_UUID = 0;
+constexpr uint32_t CONSTANT_NO_MESH_UID = 0;
+constexpr uint32_t CONSTANT_NO_TEXTURE_UID = 0;
 constexpr uint32_t CONSTANT_EMPTY_UID = 0;
 
 constexpr const char* CONSTANT_RESOURCE_SELECT_DIALOG_ID = "resource-select";

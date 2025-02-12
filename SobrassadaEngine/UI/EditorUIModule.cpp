@@ -13,6 +13,8 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
 
+#include <tiny_gltf.h>
+
 EditorUIModule::EditorUIModule() {}
 
 EditorUIModule::~EditorUIModule() {}
@@ -205,7 +207,7 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     return valueChanged;
 }
 
-Resource * EditorUIModule::RenderResourceSelectDialog(const std::map<std::string, uint32_t> &availableResources)
+UID EditorUIModule::RenderResourceSelectDialog(const std::map<std::string, uint32_t> &availableResources)
 {
     if (ImGui::BeginPopup(CONSTANT_RESOURCE_SELECT_DIALOG_ID))
     {
@@ -222,7 +224,7 @@ Resource * EditorUIModule::RenderResourceSelectDialog(const std::map<std::string
                         if (ImGui::Selectable(valuePair.first.c_str(), false))
                         {
                             ImGui::CloseCurrentPopup();
-                            return App->GetResourcesModule()->RequestResource(valuePair.second);
+                            return valuePair.second;
                         }
                     }
                 }
@@ -231,7 +233,7 @@ Resource * EditorUIModule::RenderResourceSelectDialog(const std::map<std::string
         }
         ImGui::EndPopup();
     }
-    return nullptr;
+    return CONSTANT_EMPTY_UID;
 }
 
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)

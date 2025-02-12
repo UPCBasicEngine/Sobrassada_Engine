@@ -1,5 +1,10 @@
 #include "ResourcesModule.h"
 
+#include "Application.h"
+#include "ShaderModule.h"
+
+#include <Algorithm/Random/LCG.h>
+
 ResourcesModule::ResourcesModule()
 {
 }
@@ -11,6 +16,9 @@ ResourcesModule::~ResourcesModule()
 
 bool ResourcesModule::Init()
 {
+    //CreateNewResource("", ResourceType::Mesh);
+    program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/FragmentShader.glsl");
+    
     return true;
 }
 
@@ -53,21 +61,15 @@ void ResourcesModule::ReleaseResource(Resource *resource)
 
 Resource * ResourcesModule::CreateNewResource(const char *assetsFile, ResourceType type)
 {
-    MOCKUP_loadedModel = new EngineModel();
+    
+    EngineModel* MOCKUP_loadedModel = new EngineModel();
     MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
 
     const uint32_t bakerHouseID = LCG().IntFast();
     const uint32_t bakerHouseChimneyID = LCG().IntFast();
-
-    const uint32_t bakerHouseTextureID = LCG().IntFast();
     
-    MOCKUP_loadedMeshes[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
-    MOCKUP_loadedMeshes[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
-    MOCKUP_libraryMeshes["Baker house"] = bakerHouseID;
-    MOCKUP_libraryMeshes["Baker house chimney"] = bakerHouseChimneyID;
+    resources[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
+    resources[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
 
-    // TODO Always have a default grid texture loaded to apply as standard
-    MOCKUP_loadedTextures[bakerHouseTextureID] = MOCKUP_loadedModel->GetActiveRenderTexture();
-    MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
     return nullptr;
 }

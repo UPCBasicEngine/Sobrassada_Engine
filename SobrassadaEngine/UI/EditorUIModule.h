@@ -24,7 +24,7 @@ class EditorUIModule : public Module
     bool ShutDown() override;
 
     bool RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
-    Resource* RenderResourceSelectDialog(const std::map<std::string, UID>& availableResources);
+    UID RenderResourceSelectDialog(const std::map<std::string, UID>& availableResources);
 
 public:
     bool hierarchyMenu      = true;

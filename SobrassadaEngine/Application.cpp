@@ -31,7 +31,6 @@ Application::Application()
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     modules.push_back(cameraModule = new CameraModule());
     modules.push_back(debugDraw = new DebugDrawModule());
-    modules.push_back(renderTest = new RenderTestModule());
 
     modules.push_back(editorUIModule = new EditorUIModule());
 }

@@ -20,7 +20,11 @@ public:
     Resource* RequestResource(UID uid);
     void ReleaseResource(Resource* resource);
 
+    int GetProgram() const { return program; }
+
 private:
+    int program = -1;
+    
     Resource* CreateNewResource(const char* assetsFile, ResourceType type);
 
     std::map<UID, Resource*> resources;

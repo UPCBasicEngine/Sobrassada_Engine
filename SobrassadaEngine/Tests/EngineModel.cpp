@@ -1,6 +1,5 @@
 #include "EngineModel.h"
 #include "Globals.h"
-#include "EngineMesh.h"
 #include "MathGeoLib.h"
 #include "Application.h"
 #include "TextureModuleTest.h"
@@ -135,7 +134,7 @@ void EngineModel::LoadAdditionalTexture(const char* texturePath)
 
 void EngineModel::Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
 {
-	for (EngineMesh* currentMesh : meshes)
+	for (ResourceMesh* currentMesh : meshes)
 	{
 		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
 		//currentMesh->Render(program, modelMatrix, projectionMatrix, viewMatrix);
@@ -210,7 +209,7 @@ void EngineModel::LoadRecursive(const tinygltf::Model& sourceModel, const float4
 	{
 		for (const tinygltf::Primitive& primitive : sourceModel.meshes[currentNode.mesh].primitives)
 		{
-			EngineMesh* newMesh = new EngineMesh();
+			ResourceMesh* newMesh = new ResourceMesh(0);
 			newMesh->LoadVBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
 			if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
 			newMesh->CreateVAO();
