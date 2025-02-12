@@ -2,9 +2,13 @@
 
 #include "Module.h"
 
+#include <string>
+#include <unordered_map>
+
 class LibraryModule : public Module
 {
-  public:
+
+    public:
     LibraryModule();
     ~LibraryModule();
 
@@ -13,10 +17,17 @@ class LibraryModule : public Module
     bool SaveScene(const char *path);
     bool LoadScene(const char *path);
 
-  private:
+    void AddTexture(const std::string &imageName, const std::string &ddsPath);
+    std::string GetTextureDDSPath(const std::string &imageName) const;
+
+
+    private:
+        std::unordered_map<std::string, std::string> textureMap; // Name -> DDS path
+
     // scenes
     // models
     // materials
     // textures
     // lights
+
 };

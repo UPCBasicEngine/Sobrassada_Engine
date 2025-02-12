@@ -4,10 +4,12 @@
 #include "Globals.h"
 #include "SceneImporter.h"
 
+
 #include "document.h"
 #include "prettywriter.h"
 #include "stringbuffer.h"
 #include "writer.h"
+
 
 LibraryModule::LibraryModule() {}
 
@@ -96,7 +98,6 @@ bool LibraryModule::SaveScene(const char *path)
     std::string fileName      = FileSystem::GetFileNameWithoutExtension(path);
 
     unsigned int bytesWritten = FileSystem::Save(path, buffer.GetString(), buffer.GetSize(), false);
-
     if (bytesWritten == 0)
     {
         GLOG("Failed to save scene file: %s", path);
@@ -166,4 +167,19 @@ bool LibraryModule::LoadScene(const char *path)
     }
 
     return true;
+}
+
+void LibraryModule::AddTexture(const std::string& imageName, const std::string& ddsPath) {
+    textureMap[imageName] = ddsPath; // Map the texture name to its DDS path
+}
+
+std::string LibraryModule::GetTextureDDSPath(const std::string& imageName) const
+{
+
+    auto it = textureMap.find(imageName);
+    if (it != textureMap.end())
+    {
+        return it->second; // Return the DDS path if the texture is found
+    }
+    return ""; // Return an empty string if texture is not found
 }

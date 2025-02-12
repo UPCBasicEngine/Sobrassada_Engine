@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string>
+
 namespace TextureImporter
 {
-    bool Import(const char *filePath);
+    std::string Import(const char *filePath);
 };

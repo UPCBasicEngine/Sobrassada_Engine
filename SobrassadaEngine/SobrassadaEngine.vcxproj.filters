@@ -181,6 +181,9 @@
     <ClCompile Include="LibraryModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="MaterialImporter.cpp">
+      <Filter>FileSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -292,9 +295,6 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="Mesh.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="FileSystem\FileSystem.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
@@ -305,6 +305,15 @@
       <Filter>FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="FileSystem\TextureImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialImporter.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="LibraryModule.h">
