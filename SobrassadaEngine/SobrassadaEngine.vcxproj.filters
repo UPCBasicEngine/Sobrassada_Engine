@@ -168,8 +168,18 @@
     <ClCompile Include="Scene\Components\Component.cpp" />
     <ClCompile Include="Components\ComponentMaterial.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
     <ClCompile Include="Utils\LightsConfig.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\PointLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\SpotLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\LightComponent.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -284,8 +294,18 @@
     <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="Components\ComponentMaterial.h">
       <Filter>Components</Filter>
+    </ClInclude>
     <ClInclude Include="Utils\LightsConfig.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\SpotLight.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\PointLight.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\LightComponent.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
