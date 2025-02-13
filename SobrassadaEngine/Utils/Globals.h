@@ -68,15 +68,14 @@ enum update_status
 
 #define MAX_COMPONENT_NAME_LENGTH 64;
 
+#define UID uint64_t
 
-constexpr uint32_t CONSTANT_EMPTY_UID = 0;
+constexpr UID CONSTANT_EMPTY_UID = 0;
 
 constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID = "mesh-select";
 constexpr const char* CONSTANT_TEXTURE_SELECT_DIALOG_ID = "texture-select";
 
 constexpr float PI = 3.14159265359f;
-
-#define UID uint64_t
 
 inline UID GenerateUID()
 {

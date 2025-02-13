@@ -6,12 +6,33 @@
 #include "../Root/RootComponent.h"
 #include "SceneModule.h"
 #include "imgui.h"
+#include "FileSystem/MeshImporter.h"
 
 #include <Math/Quat.h>
 
 MeshComponent::MeshComponent(const UID uid, const UID uidParent, const UID uidRoot, const Transform& parentGlobalTransform)
         : Component(uid, uidParent, uidRoot, "Mesh component", parentGlobalTransform)
 {
+    
+}
+
+MeshComponent::MeshComponent(const rapidjson::Value &initialState) : Component(initialState)
+{
+    if (initialState.HasMember("UIDMesh"))
+    {
+        AddMesh(initialState["UIDMesh"].GetUint64(), false); // Do not update aabb, will be done once at the end
+    }
+    if (initialState.HasMember("UIDMaterial"))
+    {
+        AddMaterial(initialState["UIDMaterial"].GetUint64());
+    }
+}
+
+void MeshComponent::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
+{
+    Component::Save(targetState, allocator);
+    targetState.AddMember("UIDMesh", currentMesh == nullptr ? CONSTANT_EMPTY_UID : currentMesh->GetUID(), allocator);
+    targetState.AddMember("UIDMaterial", currentMaterial == nullptr ? CONSTANT_EMPTY_UID : currentMaterial->GetUID(), allocator);
 }
 
 void MeshComponent::RenderEditorInspector()
@@ -67,7 +88,7 @@ void MeshComponent::Render(){
     Component::Render();
 }
 
-void MeshComponent::AddMesh(UID resource)
+void MeshComponent::AddMesh(UID resource, bool reloadAABB)
 {
     if (resource == CONSTANT_EMPTY_UID) return;
     
@@ -78,11 +99,14 @@ void MeshComponent::AddMesh(UID resource)
         currentMeshName = newMesh->GetName();
         currentMesh = newMesh;
 
-        localComponentAABB = AABB(currentMesh->GetAABB());
-        AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
-        if (parent != nullptr)
+        if (reloadAABB)
         {
-            parent->PassAABBUpdateToParent();
+            localComponentAABB = AABB(currentMesh->GetAABB());
+            AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
+            if (parent != nullptr)
+            {
+                parent->PassAABBUpdateToParent();
+            }
         }
     }
 }

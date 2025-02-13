@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Globals.h"
-#include "document.h"
+#include <Libs/rapidjson/document.h>
 
 #include <filesystem>
 #include <string>

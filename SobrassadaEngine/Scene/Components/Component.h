@@ -5,6 +5,7 @@
 #include "Globals.h"
 #include "Scene/AABBUpdatable.h"
 
+#include <Libs/rapidjson/document.h>
 #include <vector>
 #include <Geometry/AABB.h>
 
@@ -14,9 +15,11 @@ public:
 
     Component(UID uid, UID uidParent, UID uidRoot, const char* initName, const Transform& parentGlobalTransform);
 
-    Component();
+    Component(const rapidjson::Value &initialState);
 
     ~Component() override;
+
+    virtual void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const;
     
     virtual void Update() = 0;
     virtual void Render();

@@ -20,6 +20,38 @@ uid(uid), uidParent(uidParent), uidRoot(uidRoot), enabled(true), globalTransform
     memcpy(name, initName, strlen(initName));
 }
 
+Component::Component(const rapidjson::Value &initialState): uid(initialState["UID"].GetUint64()), uidRoot(initialState["UIDRoot"].GetUint64())
+{
+    uidParent = initialState["UIDParent"].GetUint64();
+    enabled = initialState["Enabled"].GetBool();
+    
+    if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() && initialState["LocalTransform"].Size() == 9)
+    {
+        const rapidjson::Value &initLocalTransform = initialState["LocalTransform"];
+
+        localTransform = Transform(float3(initLocalTransform[0].GetFloat(), initLocalTransform[1].GetFloat(), initLocalTransform[2].GetFloat()),
+            float3(initLocalTransform[3].GetFloat(), initLocalTransform[4].GetFloat(), initLocalTransform[5].GetFloat()),
+            float3(initLocalTransform[6].GetFloat(), initLocalTransform[7].GetFloat(), initLocalTransform[8].GetFloat()));
+    }
+
+    if (initialState.HasMember("Children") && initialState["Children"].IsArray())
+    {
+        const rapidjson::Value &initChildren = initialState["Children"];
+        
+        for (rapidjson::SizeType i = 0; i < initChildren.Size(); i++)
+        {
+            children.push_back(initChildren[i].GetUint64());
+        }
+    }
+    const char* initName = initialState["Name"].GetString();
+    memcpy(name, initName, strlen(initName));
+
+    // TODO Call OnTransformUpdated on the root gameobject once every component and gameobject is initiated. That will
+    // TODO generate the missing global transforms and aabbs for every gameobject and component
+
+    // TODO Include for document is messed up, include <document.h> doesnt work, only #include <Libs/rapidjson/document.h>
+}
+
 Component::~Component(){
     for (const UID child : children)
     {
@@ -27,6 +59,34 @@ Component::~Component(){
         App->GetSceneModule()->gameComponents.erase(child);
     }
 }
+
+void Component::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
+{
+    targetState.AddMember("UID", uid, allocator);
+    targetState.AddMember("UIDParent", uidParent, allocator);
+    targetState.AddMember("UIDRoot", uidRoot, allocator);
+
+    rapidjson::Value valLocalTransform(rapidjson::kArrayType);
+    valLocalTransform.PushBack(localTransform.position.x, allocator).PushBack(localTransform.position.y, allocator).
+    PushBack(localTransform.position.z, allocator).PushBack(localTransform.rotation.x, allocator).
+    PushBack(localTransform.rotation.y, allocator).PushBack(localTransform.rotation.z, allocator).
+    PushBack(localTransform.scale.x, allocator).PushBack(localTransform.scale.y, allocator).
+    PushBack(localTransform.scale.z, allocator);
+    
+    targetState.AddMember("LocalTransform", valLocalTransform, allocator);
+
+    rapidjson::Value valChildren(rapidjson::kArrayType);
+
+    for (const UID child : children)
+    {
+        valChildren.PushBack(child, allocator);
+    }
+
+    targetState.AddMember("Children", valChildren, allocator);
+    targetState.AddMember("Enabled", enabled, allocator);
+    targetState.AddMember("Name", name, allocator);
+}
+
 
 void Component::Render()
 {
