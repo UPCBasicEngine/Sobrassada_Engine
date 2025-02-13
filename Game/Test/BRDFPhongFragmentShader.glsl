@@ -95,21 +95,23 @@ vec3 RenderLight(const vec3 N, const vec3 texColor, const float alpha, const vec
 
 vec3 RenderPointLight(const int index, const vec3 N, const vec3 texColor, const float alpha)
 {
+	float attenuation = pointLightAttenuation(index);
 	vec3 L = normalize(pos - pointLights[index].position.xyz);
-	vec3 Li = pointLights[index].color.rgb * pointLights[index].color.a * pointLightAttenuation(index);
+	vec3 Li = pointLights[index].color.rgb * pointLights[index].color.a * attenuation;
 	float NdotL = dot(N, -L);
 
-	if (NdotL > 0) return RenderLight(N, texColor, alpha, L, Li, NdotL);
+	if (NdotL > 0 && attenuation > 0) return RenderLight(N, texColor, alpha, L, Li, NdotL);
 	else return vec3(0);	
 }
 
 vec3 RenderSpotLight(const int index, const vec3 N, const vec3 texColor, const float alpha)
 {
+	float attenuation = spotLightAttenuation(index);
 	vec3 L = normalize(pos - spotLights[index].position.xyz);
-	vec3 Li = spotLights[index].color.rgb * spotLights[index].color.a * spotLightAttenuation(index);
+	vec3 Li = spotLights[index].color.rgb * spotLights[index].color.a * attenuation;
 	float NdotL = dot(N, -L);
 
-	if (NdotL > 0) return RenderLight(N, texColor, alpha, L, Li, NdotL);
+	if (NdotL > 0 && attenuation > 0) return RenderLight(N, texColor, alpha, L, Li, NdotL);
 	else return vec3(0);
 }
 
