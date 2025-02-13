@@ -15,8 +15,17 @@ RootComponent::RootComponent(const UID uid, const UID uidParent, const Transform
     selectedUID = uid;  
 }
 
+RootComponent::RootComponent(const rapidjson::Value &initialState) : Component(initialState){}
+
+
 RootComponent::~RootComponent(){
     Component::~Component();
+}
+
+void RootComponent::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
+{
+    Component::Save(targetState, allocator);
+    targetState.AddMember("Type", COMPONENT_ROOT, allocator);
 }
 
 void RootComponent::RenderComponentEditor()

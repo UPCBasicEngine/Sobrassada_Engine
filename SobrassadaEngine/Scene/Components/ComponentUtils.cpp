@@ -19,3 +19,22 @@ Component * ComponentUtils::CreateEmptyComponent(ComponentType type, UID uid, UI
     }
     return nullptr;
 }
+
+Component * ComponentUtils::CreateExistingComponent(const rapidjson::Value &initialState)
+{
+    if (initialState.HasMember("Type"))
+    {
+        switch (initialState["Type"].GetInt())
+        {
+        case COMPONENT_NONE:
+            return nullptr;
+        case COMPONENT_ROOT:
+            return new RootComponent(initialState);
+        case COMPONENT_MESH:
+            return new MeshComponent(initialState);
+        default:
+            return nullptr;
+        }
+    }
+    return nullptr;
+}

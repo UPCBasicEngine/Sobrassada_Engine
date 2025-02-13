@@ -31,6 +31,7 @@ MeshComponent::MeshComponent(const rapidjson::Value &initialState) : Component(i
 void MeshComponent::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
 {
     Component::Save(targetState, allocator);
+    targetState.AddMember("Type", COMPONENT_MESH, allocator);
     targetState.AddMember("UIDMesh", currentMesh == nullptr ? CONSTANT_EMPTY_UID : currentMesh->GetUID(), allocator);
     targetState.AddMember("UIDMaterial", currentMaterial == nullptr ? CONSTANT_EMPTY_UID : currentMaterial->GetUID(), allocator);
 }

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <Libs/rapidjson/document.h>
 
 class Component;
 class RootComponent;
@@ -29,5 +30,5 @@ class ComponentUtils
 public:
     static Component* CreateEmptyComponent(ComponentType type, UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform);
 
-    
+    static Component* CreateExistingComponent(const rapidjson::Value &initialState);
 };
