@@ -41,7 +41,7 @@ void main()
     vec3 texNormal = texture(normal_map, uv0).xyz;
     texNormal = normalize(texNormal * 2.0 - 1.0);
 
-    // Transforma normal to world space
+    // Transform normal to world space
     mat3 tbn = CreateTBN(normal, tangent);
     vec3 finalNormal = normalize(tbn * texNormal);
 
@@ -49,7 +49,7 @@ void main()
     float alpha = texture(specularTexture, uv0).a;
 
     // Retrive directional light
-    vec3 lightDir = normalize(-directional_dir.xyz); // Direction where the light is comming
+    vec3 lightDir = normalize(-directional_dir.xyz); // Direction where the light comes
     vec3 lightColor = directional_color.rgb;
     float lightIntensity = directional_color.a;
 

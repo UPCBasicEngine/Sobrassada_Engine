@@ -112,7 +112,9 @@ void LightsConfig::InitLightBuffers()
     // Buffer for the Directional Light
     glGenBuffers(1, &directionalBufferId);
     glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(Lights::DirectionalLightShaderData), nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(Lights::DirectionalLightShaderData), nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 7, directionalBufferId);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void LightsConfig::SetLightsShaderData() const
@@ -129,9 +131,10 @@ void LightsConfig::SetDirectionalLightShaderData() const
             float4(directionalLight->GetColor(), directionalLight->GetIntensity())
         );
 
-        glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(Lights::DirectionalLightShaderData), &dirLightData, GL_STATIC_DRAW);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 7, directionalBufferId);
+       glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
+       glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Lights::DirectionalLightShaderData), &dirLightData);
+       glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     }
 }
 

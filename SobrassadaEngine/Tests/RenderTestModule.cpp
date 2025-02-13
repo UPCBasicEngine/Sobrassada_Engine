@@ -78,6 +78,7 @@ bool RenderTestModule::Init()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_data), vtx_data, GL_STATIC_DRAW);
 
 	lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
 
 	return true;
 }
@@ -99,7 +100,10 @@ update_status RenderTestModule::Render(float deltaTime)
 		float3(2.0f, 1.0f, 1.0f));
 
 	// Draw the skybox before anything else
-	lightsConfig->RenderSkybox(proj, view);					
+	lightsConfig->RenderSkybox(proj, view);	
+
+	lightsConfig->EditorParams();
+    lightsConfig->SetLightsShaderData();
 
 	glUseProgram(program);
 	glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
