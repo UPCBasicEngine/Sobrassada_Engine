@@ -17,7 +17,8 @@ RootComponent::RootComponent(const UID uid, const UID uidParent, const Transform
 
 RootComponent::RootComponent(const rapidjson::Value &initialState) : Component(initialState)
 {
-    selectedUID = uid;  
+    selectedUID = uid;
+    movabilitySettings = static_cast<ComponentMovabilitySettings>(initialState["Movability"].GetInt());
 }
 
 
@@ -29,6 +30,7 @@ void RootComponent::Save(rapidjson::Value &targetState, rapidjson::Document::All
 {
     Component::Save(targetState, allocator);
     targetState.AddMember("Type", COMPONENT_ROOT, allocator);
+    targetState.AddMember("Movability", movabilitySettings, allocator);
 }
 
 void RootComponent::RenderComponentEditor()
@@ -139,6 +141,21 @@ void RootComponent::RenderEditorComponentTree(const UID selectedComponentUID)
     }
     ImGui::EndChild();
     ImGui::PopStyleVar();
+}
+
+void RootComponent::RenderEditorInspector()
+{
+    Component::RenderEditorInspector();
+    if (enabled)
+    {
+        // Casting to use ImGui to set values and at the same type keep the enum type for the variable
+        int castedMovability = movabilitySettings;
+        ImGui::SeparatorText("Movability");
+        ImGui::RadioButton("Static", &castedMovability, STATIC);
+        ImGui::SameLine();
+        ImGui::RadioButton("Dynamic", &castedMovability, DYNAMIC);
+        movabilitySettings = static_cast<ComponentMovabilitySettings>(castedMovability);
+    }
 }
 
 void RootComponent::Update()
