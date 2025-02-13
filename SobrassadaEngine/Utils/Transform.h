@@ -13,6 +13,8 @@ struct Transform
 
     Transform(const float3& position, const float3& rotation, const float3& scale): position(position), rotation(rotation), scale(scale) {}
 
+    Transform(const Transform& other) = default;
+
 public:
 
     Transform operator+(const Transform &transform) const

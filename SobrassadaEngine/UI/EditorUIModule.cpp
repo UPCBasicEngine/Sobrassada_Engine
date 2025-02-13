@@ -562,17 +562,40 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     ImGui::RadioButton("Local", &transformType, LOCAL);
     ImGui::SameLine();
     ImGui::RadioButton("Global", &transformType, GLOBAL);
-
-    Transform& transformToEdit = transformType == LOCAL ? localTransform : globalTransform;
     
     bool valueChanged = false;
+    static bool lockScaleAxis = false;
+    static bool bUseRad = true;
+
+    // TODO Create new ImGui modification widgets to avoid generating a transform copy every frame
+    Transform transformToEdit = Transform(transformType == LOCAL ? localTransform : globalTransform);
+    
+    if (!bUseRad)
+    {
+        transformToEdit.rotation *= RAD_DEGREE_CONV;
+    }
     
     valueChanged |= ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
-    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians, rotate around mesh center / game object center
-    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] ); // Add option to lock scale over all axis
+    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] );
+    if (!bUseRad)
+    {
+        transformToEdit.rotation /= RAD_DEGREE_CONV;
+    }
+    ImGui::SameLine();
+    ImGui::Checkbox("Radians", &bUseRad);
+    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] );
+    ImGui::SameLine();
+    ImGui::Checkbox("Lock axis", &lockScaleAxis);
 
     if (valueChanged)
     {
+        if (transformType == LOCAL)
+        {
+            localTransform.Set(transformToEdit);
+        } else
+        {
+            globalTransform.Set(transformToEdit);
+        }
         Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
         if (transformType == GLOBAL)
         {

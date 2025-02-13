@@ -32,7 +32,6 @@ public:
     virtual void RenderEditorComponentTree(UID selectedComponentUID);
 
     virtual void OnTransformUpdate(const Transform &parentGlobalTransform);
-    virtual AABB& TransformUpdated(const Transform &parentGlobalTransform);
     void PassAABBUpdateToParent() override;
 
     void HandleDragNDrop();
@@ -49,6 +48,10 @@ public:
     const AABB& GetGlobalAABB() const { return globalComponentAABB; }
 
     void CalculateLocalAABB();
+
+protected:
+    
+    virtual AABB& TransformUpdated(const Transform &parentGlobalTransform);
 
 protected:
     

@@ -76,6 +76,7 @@ constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID = "mesh-select";
 constexpr const char* CONSTANT_TEXTURE_SELECT_DIALOG_ID = "texture-select";
 
 constexpr float PI = 3.14159265359f;
+constexpr float RAD_DEGREE_CONV = 180.f / PI;
 
 inline UID GenerateUID()
 {
