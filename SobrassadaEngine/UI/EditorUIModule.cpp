@@ -563,42 +563,54 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     ImGui::SameLine();
     ImGui::RadioButton("Global", &transformType, GLOBAL);
     
-    bool valueChanged = false;
+    bool positionValueChanged = false;
+    bool rotationValueChanged = false;
+    bool scaleValueChanged = false;
     static bool lockScaleAxis = false;
     static bool bUseRad = true;
 
-    // TODO Create new ImGui modification widgets to avoid generating a transform copy every frame
-    Transform transformToEdit = Transform(transformType == LOCAL ? localTransform : globalTransform);
+    Transform& OutputTransform = transformType == LOCAL ? localTransform : globalTransform;
+    float3 originalScale = float3(OutputTransform.scale);
     
     if (!bUseRad)
     {
-        transformToEdit.rotation *= RAD_DEGREE_CONV;
+        OutputTransform.rotation *= RAD_DEGREE_CONV;
     }
     
-    valueChanged |= ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
-    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] );
+    positionValueChanged |= ImGui::InputFloat3( "Position", &OutputTransform.position[0] );
+    rotationValueChanged |= ImGui::InputFloat3( "Rotation", &OutputTransform.rotation[0] );
     if (!bUseRad)
     {
-        transformToEdit.rotation /= RAD_DEGREE_CONV;
+        OutputTransform.rotation /= RAD_DEGREE_CONV;
     }
     ImGui::SameLine();
     ImGui::Checkbox("Radians", &bUseRad);
-    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] );
+    scaleValueChanged |= ImGui::InputFloat3( "Scale", &OutputTransform.scale[0] );
     ImGui::SameLine();
     ImGui::Checkbox("Lock axis", &lockScaleAxis);
 
-    if (valueChanged)
+    if (positionValueChanged || rotationValueChanged || scaleValueChanged)
     {
-        if (transformType == LOCAL)
+        if (scaleValueChanged && lockScaleAxis)
         {
-            localTransform.Set(transformToEdit);
-        } else
-        {
-            globalTransform.Set(transformToEdit);
+            float scaleFactor = 1;
+            if (OutputTransform.scale.x != originalScale.x)
+            {
+                scaleFactor = originalScale.x == 0 ? 1 : OutputTransform.scale.x / originalScale.x;
+                
+            } else if (OutputTransform.scale.y != originalScale.y)
+            {
+                scaleFactor = originalScale.y == 0 ? 1 : OutputTransform.scale.y / originalScale.y;
+            } else if (OutputTransform.scale.z != originalScale.z)
+            {
+                scaleFactor = originalScale.z == 0 ? 1 : OutputTransform.scale.z / originalScale.z;
+            }
+            OutputTransform.scale *= scaleFactor;
         }
-        Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
+        
         if (transformType == GLOBAL)
         {
+            Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
             if (parentComponent != nullptr)
             {
                 localTransform.Set(globalTransform - parentComponent->GetGlobalTransform());
@@ -609,7 +621,7 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
         }
     }
 
-    return valueChanged;
+    return positionValueChanged || rotationValueChanged || scaleValueChanged;
 }
 
 UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::map<std::string, UID> &availableResources)
