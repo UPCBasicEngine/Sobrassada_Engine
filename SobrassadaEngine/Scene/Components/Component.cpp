@@ -205,7 +205,7 @@ void Component::HandleDragNDrop(){
     {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ComponentTreeNode"))
         {
-            const uint32_t draggedUID = *(const UID*)payload->Data;
+            const UID draggedUID = *(const UID*)payload->Data;
             GLOG("Receiving component drag n drop for uuid : %d", draggedUID)
             if (draggedUID != uid)
             {
@@ -216,6 +216,7 @@ void Component::HandleDragNDrop(){
                     if (parentDraggedComponent != nullptr)
                     {
                         parentDraggedComponent->RemoveChildComponent(draggedUID);
+                        parentDraggedComponent->PassAABBUpdateToParent();
                         draggedComponent->SetUIDParent(uid); // TODO Add set parent uid into the AddChildComponent function
                         AddChildComponent(draggedUID);
                         draggedComponent->localTransform.Set(draggedComponent->globalTransform - globalTransform);
