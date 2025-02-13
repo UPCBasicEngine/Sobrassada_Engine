@@ -91,3 +91,36 @@ const Transform & GameObject::GetGlobalTransform() const
 {
     return rootComponent->GetGlobalTransform();
 }
+
+// SPATIAL_PARTITIONING TESTING
+const AABB &GameObject::GetGlobalBoundingBox()
+{
+    bool first = true;
+
+    for (const auto id : children)
+    {
+        Component *childComponent = App->GetSceneModule()->gameComponents[id];
+
+        if (childComponent != nullptr)
+        {
+            AABB componentAABB = childComponent->GetGlobalAABB();
+            if (first)
+            {
+                first = false;
+                globalBB = componentAABB;
+            }
+            else
+            {
+                globalBB.minPoint.x = globalBB.MinX() < componentAABB.MinX() ? globalBB.MinX() : componentAABB.MinX();
+                globalBB.minPoint.y = globalBB.MinY() < componentAABB.MinY() ? globalBB.MinY() : componentAABB.MinY();
+                globalBB.minPoint.z = globalBB.MinZ() < componentAABB.MinZ() ? globalBB.MinZ() : componentAABB.MinZ();
+
+                globalBB.maxPoint.x = globalBB.MaxX() > componentAABB.MaxX() ? globalBB.MaxX() : componentAABB.MaxX();
+                globalBB.maxPoint.y = globalBB.MaxY() > componentAABB.MaxY() ? globalBB.MaxY() : componentAABB.MaxY();
+                globalBB.maxPoint.z = globalBB.MaxZ() > componentAABB.MaxZ() ? globalBB.MaxZ() : componentAABB.MaxZ();
+            }
+        }
+    }
+
+    return globalBB;
+}

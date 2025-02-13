@@ -1,9 +1,9 @@
 #include "Octree.h"
 
-#include "MockGameObject.h"
+#include "GameObject.h"
 
-#include <stack>
 #include <set>
+#include <stack>
 
 Octree::OctreeNode::~OctreeNode()
 {
@@ -19,32 +19,32 @@ Octree::OctreeNode::~OctreeNode()
 
 void Octree::OctreeNode::Subdivide()
 {
-    float childSize              = currentArea.HalfSize().x;
-    float3 center                = currentArea.CenterPoint();
+    float childSize          = currentArea.HalfSize().x;
+    float3 center            = currentArea.CenterPoint();
 
-    float3 pTop                  = center + float3(0, childSize, 0);
-    float3 pTopFront             = center + float3(0, childSize, childSize);
-    float3 pTopRight             = center + float3(childSize, childSize, 0);
-    float3 pTopFrontRight        = center + float3(childSize, childSize, childSize);
-    float3 pBack                 = center + float3(0, 0, -childSize);
-    float3 pFront                = center + float3(0, 0, childSize);
-    float3 pRight                = center + float3(childSize, 0, 0);
-    float3 pLeft                 = center + float3(-childSize, 0, 0);
-    float3 pCenterBackLeft       = center + float3(-childSize, 0, -childSize);
-    float3 pCenterFrontRight     = center + float3(childSize, 0, childSize);
-    float3 pBottom               = center + float3(0, -childSize, 0);
-    float3 pBottomLeft           = center + float3(-childSize, -childSize, 0);
-    float3 pBottomBack           = center + float3(0, -childSize, -childSize);
-    float3 pBottomLeftBack       = center + float3(-childSize, -childSize, -childSize);
+    float3 pTop              = center + float3(0, childSize, 0);
+    float3 pTopFront         = center + float3(0, childSize, childSize);
+    float3 pTopRight         = center + float3(childSize, childSize, 0);
+    float3 pTopFrontRight    = center + float3(childSize, childSize, childSize);
+    float3 pBack             = center + float3(0, 0, -childSize);
+    float3 pFront            = center + float3(0, 0, childSize);
+    float3 pRight            = center + float3(childSize, 0, 0);
+    float3 pLeft             = center + float3(-childSize, 0, 0);
+    float3 pCenterBackLeft   = center + float3(-childSize, 0, -childSize);
+    float3 pCenterFrontRight = center + float3(childSize, 0, childSize);
+    float3 pBottom           = center + float3(0, -childSize, 0);
+    float3 pBottomLeft       = center + float3(-childSize, -childSize, 0);
+    float3 pBottomBack       = center + float3(0, -childSize, -childSize);
+    float3 pBottomLeftBack   = center + float3(-childSize, -childSize, -childSize);
 
-    OctreeNode *topLeftFront     = new OctreeNode(AABB(pLeft, pTopFront), elementsCapacity);
-    OctreeNode *topRightFront    = new OctreeNode(AABB(center, pTopFrontRight), elementsCapacity);
-    OctreeNode *bottomLeftFront  = new OctreeNode(AABB(pBottomLeft, pFront), elementsCapacity);
-    OctreeNode *bottomRightFront = new OctreeNode(AABB(pBottom, pCenterFrontRight), elementsCapacity);
-    OctreeNode *topLeftBack      = new OctreeNode(AABB(pCenterBackLeft, pTop), elementsCapacity);
-    OctreeNode *topRightBack     = new OctreeNode(AABB(pBack, pTopRight), elementsCapacity);
-    OctreeNode *bottomLeftBack   = new OctreeNode(AABB(pBottomLeftBack, center), elementsCapacity);
-    OctreeNode *bottomRightBack  = new OctreeNode(AABB(pBottomBack, pRight), elementsCapacity);
+    topLeftFront             = new OctreeNode(AABB(pLeft, pTopFront), elementsCapacity);
+    topRightFront            = new OctreeNode(AABB(center, pTopFrontRight), elementsCapacity);
+    bottomLeftFront          = new OctreeNode(AABB(pBottomLeft, pFront), elementsCapacity);
+    bottomRightFront         = new OctreeNode(AABB(pBottom, pCenterFrontRight), elementsCapacity);
+    topLeftBack              = new OctreeNode(AABB(pCenterBackLeft, pTop), elementsCapacity);
+    topRightBack             = new OctreeNode(AABB(pBack, pTopRight), elementsCapacity);
+    bottomLeftBack           = new OctreeNode(AABB(pBottomLeftBack, center), elementsCapacity);
+    bottomRightBack          = new OctreeNode(AABB(pBottomBack, pRight), elementsCapacity);
 
     for (auto &element : elements)
     {
@@ -78,7 +78,7 @@ Octree::~Octree()
     delete rootNode;
 }
 
-bool Octree::InsertElement(const MockGameObject *gameObject)
+bool Octree::InsertElement(GameObject *gameObject)
 {
     if (gameObject == nullptr) return false;
 
@@ -86,7 +86,7 @@ bool Octree::InsertElement(const MockGameObject *gameObject)
     std::stack<OctreeNode *> nodesToVisit;
     nodesToVisit.push(rootNode);
 
-    const AABB objectBoundingBox = gameObject->GetWorldBoundingBox();
+    const AABB objectBoundingBox = gameObject->GetGlobalBoundingBox();
     OctreeElement octreeElement  = OctreeElement(objectBoundingBox, gameObject, totalElements);
 
     while (!nodesToVisit.empty())
@@ -133,7 +133,7 @@ bool Octree::InsertElement(const MockGameObject *gameObject)
     return false;
 }
 
-void Octree::QueryElements(const AABB &area, std::vector<const MockGameObject *> &foundElements) const
+void Octree::QueryElements(const AABB &area, std::vector< GameObject *> &foundElements) const
 {
     std::vector<bool> insertedElements = std::vector<bool>(totalElements, false);
 
@@ -197,11 +197,16 @@ void Octree::GetDrawLines(std::vector<LineSegment> &drawLines, std::vector<LineS
                 drawLines[currentDrawLine++] = currentNode->currentArea.Edge(i);
             }
 
-            for (const auto& element : currentNode->elements)
+            for (const auto &element : currentNode->elements)
             {
-                for (int i = 0; i < 12; ++i)
+                if (includedElement.find(element) == includedElement.end())
                 {
-                    elementLines[currentElementLine++] = element.boundingBox.Edge(i);
+                    includedElement.insert(element);
+
+                    for (int i = 0; i < 12; ++i)
+                    {
+                        elementLines[currentElementLine++] = element.boundingBox.Edge(i);
+                    }
                 }
             }
         }

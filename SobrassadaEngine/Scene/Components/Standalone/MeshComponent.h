@@ -16,7 +16,7 @@ public:
 
     void LoadMesh(const std::string& meshName, uint32_t meshUUID); 
     
-    // REMOVE JUST FOR TEMPORAL TESTING
+    // SPATIAL_PARTITIONING TESTING
     void SetTexture(const std::string &textureName, uint32_t textureUUID);
     
 private:

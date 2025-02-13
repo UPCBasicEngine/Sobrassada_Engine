@@ -3,6 +3,7 @@
 #include "ComponentUtils.h"
 #include "EngineModel.h"
 #include "GameObject.h"
+#include "Octree.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -15,6 +16,15 @@
 #include <Algorithm/Random/LCG.h>
 #include <tiny_gltf.h>
 
+// SPATIAL_PARTITIONING TESTING
+#include "Application.h"
+#include "CameraModule.h"
+#include "DebugDrawModule.h"
+#include "Framebuffer.h"
+#include "Geometry/LineSegment.h"
+#include "Geometry/OBB.h"
+#include "OpenGLModule.h"
+
 SceneModule::SceneModule()
 {
 }
@@ -22,6 +32,11 @@ SceneModule::SceneModule()
 SceneModule::~SceneModule()
 {
     delete MOCKUP_loadedModel;
+    
+    for (auto gameObject : gameObjectsContainer)
+    {
+        delete gameObject.second;
+    }
 }
 
 bool SceneModule::Init()
@@ -63,9 +78,9 @@ bool SceneModule::Init()
     MOCKUP_loadedTextures[bakerHouseTextureID]    = MOCKUP_loadedModel->GetActiveRenderTexture();
     MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
 
-    // DELETE JUST TESTING RENDERING
-
-    CreateHouseGameObject(2000);
+    // SPATIAL_PARTITIONING TESTING
+    CreateHouseGameObject(1000);
+    CreateSpatialDataStruct();
 
     return true;
 }
@@ -82,10 +97,18 @@ update_status SceneModule::Update(float deltaTime)
 
 update_status SceneModule::Render(float deltaTime)
 {
-    for (auto &gameObject : gameObjectsContainer)
+    std::vector< GameObject *> objectsToRender;
+
+    CheckObjectsToRender(objectsToRender);
+
+    for (const auto gameObject : objectsToRender)
     {
-        gameObject.second->Render();
+        gameObject->Render();
     }
+
+    //RenderBoundingBoxes();
+    //RenderOctree();
+
     return UPDATE_CONTINUE;
 }
 
@@ -106,7 +129,8 @@ update_status SceneModule::PostUpdate(float deltaTime)
 
 bool SceneModule::ShutDown()
 {
-    GLOG("Destroying renderer");
+    delete sceneOctree;
+
     return true;
 }
 
@@ -120,14 +144,62 @@ void SceneModule::CloseScene()
 
 void SceneModule::CreateSpatialDataStruct()
 {
+    float3 octreeCenter = float3::zero;
+    float octreeLength  = 100;
+    int nodeCapacity    = 5;
+    sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
+
+    for (auto& objectIterator : gameObjectsContainer)
+    {
+        AABB objectBB = objectIterator.second->GetGlobalBoundingBox();
+
+        if (objectBB.Size().x == 0 && objectBB.Size().y == 0 && objectBB.Size().z == 0) continue;
+
+        sceneOctree->InsertElement(objectIterator.second);
+    }
 }
 
 void SceneModule::UpdateSpatialDataStruct()
 {
+    delete sceneOctree;
+
+    CreateSpatialDataStruct();
 }
 
-void SceneModule::CheckObjectsToRender()
+void SceneModule::CheckObjectsToRender(std::vector< GameObject *> &outRenderGameObjects) const
 {
+    std::vector< GameObject *> queriedObjects;
+    AABB cameraAABB = App->GetCameraModule()->GetFrustumAABB();
+
+    sceneOctree->QueryElements(cameraAABB, queriedObjects);
+
+    const auto &frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+
+    for (auto gameObject : queriedObjects)
+    {
+        OBB objectOBB = OBB(gameObject->GetGlobalBoundingBox());
+
+        float3 corners[8];
+        objectOBB.GetCornerPoints(corners);
+
+        bool allOutside = true;
+
+        for (int plane = 0; plane < 6; ++plane)
+        {
+            for (int corner = 0; corner < 8; ++corner)
+            {
+                if (PointInPlane(corners[corner], frustumPlanes[plane]))
+                {
+                    allOutside = false;
+                    break;
+                }
+            }
+        }
+
+        if (!allOutside) outRenderGameObjects.push_back(gameObject);
+    }
+
+    int i = 0;
 }
 
 void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
@@ -355,7 +427,7 @@ AABBUpdatable *SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
     return nullptr;
 }
 
-// REMOVE JUST FOR TESTING
+// SPATIAL_PARTITIONING TESTING
 void SceneModule::CreateHouseGameObject(int totalGameobjects)
 {
     math::LCG randomGenerator;
@@ -372,8 +444,9 @@ void SceneModule::CreateHouseGameObject(int totalGameobjects)
         ComponentType componentType  = ComponentType::COMPONENT_MESH;
 
         Component *selectedComponent = gameComponents[gameObjectChildrenUUID];
+        uint32_t createdComponentUID = LCG().IntFast();
         Component *createdComponent  = ComponentUtils::CreateEmptyComponent(
-            componentType, LCG().IntFast(), gameObjectChildrenUUID, gameObjectChildrenUUID,
+            componentType, createdComponentUID, gameObjectChildrenUUID, gameObjectChildrenUUID,
             selectedComponent->GetGlobalTransform()
         );
 
@@ -387,14 +460,66 @@ void SceneModule::CreateHouseGameObject(int totalGameobjects)
         auto textureIT = MOCKUP_libraryTextures.begin();
         createdMesh->SetTexture(textureIT->first, textureIT->second);
 
-        float xPosition        = randomGenerator.Float(-50, 50);
-        float zPosition        = randomGenerator.Float(-50, 50);
+        float xPosition = randomGenerator.Float(-50, 50);
+        float yPosition = randomGenerator.Float(-50, 50);
+        float zPosition = randomGenerator.Float(-50, 50);
 
-        float yRotation        = randomGenerator.Float(-180, 180);
+        float yRotation = randomGenerator.Float(-180, 180);
 
         Transform newTransform =
-            Transform(float3(xPosition, 0, zPosition), float3(0, yRotation, 0), float3(100, 100, 100));
+            Transform(float3(xPosition, yPosition, zPosition), float3(0, yRotation, 0), float3(100, 100, 100));
+
+        newGameObject->AddGameObject(createdComponentUID);
 
         selectedComponent->OnTransformUpdate(newTransform);
     }
 }
+
+// SPATIAL_PARTITIONING TESTING
+void SceneModule::RenderBoundingBoxes()
+{
+    std::vector<LineSegment> elementLines = std::vector<LineSegment>(gameObjectsContainer.size() * 12, LineSegment());
+    int currentDrawLine                   = 0;
+
+    for (auto &gameObject : gameObjectsContainer)
+    {
+        AABB gameObjectBB = gameObject.second->GetGlobalBoundingBox();
+
+        for (int i = 0; i < 12; ++i)
+        {
+            elementLines[currentDrawLine++] = gameObjectBB.Edge(i);
+        }
+    }
+
+    float4x4 view = App->GetCameraModule()->GetViewMatrix();
+    float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
+    int width     = App->GetOpenGLModule()->GetFramebuffer()->GetTextureWidth();
+    int height    = App->GetOpenGLModule()->GetFramebuffer()->GetTextureHeight();
+
+    App->GetDebugDrawModule()->RenderLines(elementLines, float3(1.f, 0.f, 0.f));
+
+    App->GetDebugDrawModule()->Draw(view, proj, width, height);
+}
+
+void SceneModule::RenderOctree()
+{
+    std::vector<LineSegment> octreeLines;
+    std::vector<LineSegment> gameObjectLines;
+
+    sceneOctree->GetDrawLines(octreeLines, gameObjectLines);
+
+    App->GetDebugDrawModule()->RenderLines(octreeLines, float3(1.f, 0.f, 0.f));
+
+    float4x4 view = App->GetCameraModule()->GetViewMatrix();
+    float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
+    int width     = App->GetOpenGLModule()->GetFramebuffer()->GetTextureWidth();
+    int height    = App->GetOpenGLModule()->GetFramebuffer()->GetTextureHeight();
+
+    App->GetDebugDrawModule()->Draw(view, proj, width, height);
+}
+
+bool SceneModule::PointInPlane(const float3 &point, const float4 &plane) const
+{
+    return (plane.x * point.x + plane.y * point.y + plane.z * point.z + plane.w) >= 0.0f;
+}
+

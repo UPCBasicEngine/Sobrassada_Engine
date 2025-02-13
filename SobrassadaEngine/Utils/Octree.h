@@ -7,9 +7,9 @@
 
 #include <vector>
 
-class MockGameObject;
+class GameObject;
 
-constexpr int MinimumLeafSize = 2;
+constexpr float MinimumLeafSize = 1;
 
 class Octree
 {
@@ -18,9 +18,9 @@ class Octree
     {
         size_t id = -1;
         AABB boundingBox;
-        const MockGameObject *gameObject = nullptr;
+        GameObject *gameObject = nullptr;
 
-        OctreeElement(const AABB &boundingBox, const MockGameObject *gameObject, size_t id)
+        OctreeElement(const AABB &boundingBox, GameObject *gameObject, size_t id)
             : boundingBox(boundingBox), gameObject(gameObject), id(id) {};
 
         bool operator==(const OctreeElement &otherElement) const { return id == otherElement.id; }
@@ -59,8 +59,8 @@ class Octree
     Octree(const float3 &position, float size, int capacity);
     ~Octree();
 
-    bool InsertElement(const MockGameObject *gameObject);
-    void QueryElements(const AABB &area, std::vector<const MockGameObject *> &foundElements) const;
+    bool InsertElement(GameObject *gameObject);
+    void QueryElements(const AABB &area, std::vector<GameObject *> &foundElements) const;
     void GetDrawLines(std::vector<LineSegment> &drawLines, std::vector<LineSegment> &elementLines) const;
 
   private:

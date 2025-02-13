@@ -20,6 +20,7 @@ class DebugDrawModule : public Module
 
     void Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height);
     void Render2DLines(const std::vector<float4> &lines, const float3 &color, float depth);
+    void RenderLines(const std::vector<LineSegment> &lines, const float3& color);
 
   private:
     static DDRenderInterfaceCoreGL *implementation;

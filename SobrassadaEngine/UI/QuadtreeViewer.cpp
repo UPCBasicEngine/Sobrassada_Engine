@@ -5,6 +5,7 @@
 #include "Framebuffer.h"
 #include "Globals.h"
 #include "Quadtree.h"
+#include "CameraModule.h"
 
 #include "MockGameObject.h"
 
@@ -21,11 +22,11 @@ QuadtreeViewer::QuadtreeViewer()
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
     camera.type               = FrustumType::OrthographicFrustum;
-    camera.pos                = float3(0, 0, 5);
+    camera.pos                = float3(0, 0, 100);
     camera.front              = -float3::unitZ;
     camera.up                 = float3::unitY;
     camera.nearPlaneDistance  = 0.1f;
-    camera.farPlaneDistance   = 100.f;
+    camera.farPlaneDistance   = 200.f;
 
     float aspectRatio         = (float)framebuffer->GetTextureHeight() / (float)framebuffer->GetTextureWidth();
 
@@ -91,6 +92,7 @@ void QuadtreeViewer::Render(bool &renderBoolean)
     std::vector<const MockGameObject *> retrievedElements;
     quadtree->QueryElements(queryArea, retrievedElements);
 
+    queryArea = App->GetCameraModule()->GetFrustumAABB();
     CreateQueryAreaLines(queryArea, queryAreaLines);
     CreateGameObjectsAreaLines(gameObjectLines);
 
@@ -142,8 +144,8 @@ void QuadtreeViewer::Render(bool &renderBoolean)
 
 void QuadtreeViewer::ChangeCameraSize(float width, float height)
 {
-    camera.orthographicHeight = height / cameraSizeScaleFactor;
-    camera.orthographicWidth  = width / cameraSizeScaleFactor;
+    camera.orthographicHeight = height;
+    camera.orthographicWidth  = width;
 
     viewMatrix                = camera.ViewMatrix();
     projectionMatrix          = camera.ProjectionMatrix();

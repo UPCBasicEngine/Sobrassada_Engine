@@ -638,3 +638,11 @@ void DebugDrawModule::Render2DLines(const std::vector<float4> &lines, const floa
         dd::line(ddVec3(line.x, line.y, depth), ddVec3(line.z, line.w, depth), ddVec3(color.x, color.y, color.z));
     }
 }
+
+void DebugDrawModule::RenderLines(const std::vector<LineSegment> &lines, const float3 &color)
+{
+    for (auto &line : lines)
+    {
+        dd::line(line.a, line.b, color);
+    }
+}
