@@ -7,7 +7,7 @@
 #include "TextureModuleTest.h"
 #include "imgui.h"
 
-#include "./Components/DirectionalLight.h"
+#include "../Scene/Components/DirectionalLight.h"
 
 #include "glew.h"
 

@@ -172,10 +172,10 @@
     <ClCompile Include="Utils\LightsConfig.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Components\LightComponent.cpp">
+    <ClCompile Include="Scene\Components\DirectionalLight.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="Components\DirectionalLight.cpp">
+    <ClCompile Include="Scene\Components\LightComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
@@ -295,10 +295,10 @@
     <ClInclude Include="Utils\LightsConfig.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Components\LightComponent.h">
+    <ClInclude Include="Scene\Components\DirectionalLight.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="Components\DirectionalLight.h">
+    <ClInclude Include="Scene\Components\LightComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
