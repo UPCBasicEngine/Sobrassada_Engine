@@ -9,7 +9,8 @@ class EngineTimer
     virtual void Start();
     virtual float Tick();
 
-    float GetTotalTime() const { return time; }
+    float GetTime() const { return time; }
+    float GetDeltaTime() const { return deltaTime; }
 
   protected:
     virtual float TicksSinceStartup() const;

@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "EditorViewport.h"
+#include "GameTimer.h"
 #include "OpenGLModule.h"
 #include "WindowModule.h"
 
@@ -135,7 +136,7 @@ void EditorUIModule::MainMenu()
     ImGui::EndMainMenuBar();
 }
 
-void EditorUIModule::Console(bool &consoleMenu)
+void EditorUIModule::Console(bool &consoleMenu) const
 {
     ImGui::Begin("Console", &consoleMenu);
 
@@ -153,7 +154,7 @@ void EditorUIModule::Console(bool &consoleMenu)
     ImGui::End();
 }
 
-void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
+void EditorUIModule::EditorSettings(bool &editorSettingsMenu) const
 {
     ImGui::Begin("Editor settings", &editorSettingsMenu);
 
@@ -180,10 +181,16 @@ void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
         OpenGLConfig();
     }
 
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Game timer"))
+    {
+        GameTimerConfig();
+    }
+
     ImGui::End();
 }
 
-void EditorUIModule::FramePlots()
+void EditorUIModule::FramePlots() const
 {
     char title[25];
     std::vector<float> frametimeVector(frametime.begin(), frametime.end());
@@ -199,7 +206,7 @@ void EditorUIModule::FramePlots()
     );
 }
 
-void EditorUIModule::WindowConfig()
+void EditorUIModule::WindowConfig() const
 {
     static bool borderless   = false;
     static bool full_desktop = false;
@@ -238,9 +245,9 @@ void EditorUIModule::WindowConfig()
     if (ImGui::Checkbox("Full Desktop", &full_desktop)) App->GetWindowModule()->SetFullDesktop(full_desktop);
 }
 
-void EditorUIModule::CameraConfig() {}
+void EditorUIModule::CameraConfig() const {}
 
-void EditorUIModule::OpenGLConfig()
+void EditorUIModule::OpenGLConfig() const
 {
     OpenGLModule *openGLModule = App->GetOpenGLModule();
 
@@ -290,4 +297,40 @@ void EditorUIModule::OpenGLConfig()
     {
         openGLModule->SetFrontFaceMode(frontFaceMode);
     }
+}
+
+void EditorUIModule::GameTimerConfig() const
+{
+    GameTimer *gameTimer = App->GetGameTimer();
+    float timeScale = gameTimer->GetTimeScale();
+
+    if (ImGui::Button("Play"))
+    {
+        gameTimer->Start();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Pause"))
+    {
+        gameTimer->TogglePause();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Step"))
+    {
+        gameTimer->Step();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Stop"))
+    {
+        gameTimer->Reset();
+    }
+
+    if (ImGui::SliderFloat("Time scale", &timeScale, 0, 4)) gameTimer->SetTimeScale(timeScale);
+
+    ImGui::Separator();
+
+    ImGui::Text("Frame count: %d", gameTimer->GetFrameCount());
+    ImGui::Text("Game time: %.3f", gameTimer->GetTime() / 1000.0f);
+    ImGui::Text("Delta time: %.3f", gameTimer->GetDeltaTime() / 1000.0f);
+    ImGui::Text("Unscaled game time: %.3f", gameTimer->GetUnscaledTime() / 1000.0f);
+    ImGui::Text("Unscaled delta time: %.3f", gameTimer->GetUnscaledDeltaTime() / 1000.0f);
 }

@@ -24,14 +24,15 @@ class EditorUIModule : public Module
     void Draw();
 
     void MainMenu();
-    void EditorSettings(bool &editorSettingsMenu);
+    void EditorSettings(bool &editorSettingsMenu) const;
 
-    void FramePlots();
-    void WindowConfig();
-    void CameraConfig();
-    void OpenGLConfig();
+    void FramePlots() const;
+    void WindowConfig() const;
+    void CameraConfig() const;
+    void OpenGLConfig() const;
+    void GameTimerConfig() const;
 
-    void Console(bool &consoleMenu);
+    void Console(bool &consoleMenu) const;
 
   private:
     bool consoleMenu        = false;
