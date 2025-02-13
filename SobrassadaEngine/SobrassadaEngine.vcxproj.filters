@@ -175,6 +175,9 @@
     <ClCompile Include="Components\LightComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="Components\DirectionalLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -293,6 +296,9 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Components\LightComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\DirectionalLight.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
