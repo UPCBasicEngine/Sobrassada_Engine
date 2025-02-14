@@ -34,7 +34,7 @@ class LibraryModule : public Module
     UID GetMeshUID(const std::string &meshPath) const;
     UID GetMaterialUID(const std::string &materialPath) const;
 
-    const std::string &GetResourcePath(UID resourceID);
+    const std::string &GetResourcePath(UID resourceID) const;
 
     const std::unordered_map<std::string, UID> &GetTextureMap() const { return textureMap; }
     const std::unordered_map<std::string, UID> &GetMaterialMap() const { return materialMap; }
