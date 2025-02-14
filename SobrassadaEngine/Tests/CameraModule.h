@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FrustumPlanes.h"
 #include "Module.h"
 
 #include "Geometry/AABB.h"
@@ -23,16 +24,13 @@ class CameraModule : public Module
 
     const float4x4 &GetProjectionMatrix() { return projectionMatrix; }
     const float4x4 &GetViewMatrix() { return viewMatrix; }
-    const std::vector<float4> &GetFrustrumPlanes() const { return frustumPlanes; }
-    void MoveCamera();
-    const AABB &GetFrustumAABB();
+    const FrustumPlanes &GetFrustrumPlanes() const { return frustumPlanes; }
 
     void SetAspectRatio(float newAspectRatio);
 
-    void EventTriggered();
-
   private:
-    void ExtractFrustumPlanes();
+    void EventTriggered();
+    void MoveCamera();
 
   private:
     Frustum camera;
@@ -40,7 +38,7 @@ class CameraModule : public Module
 
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
-    std::vector<float4> frustumPlanes;
+    FrustumPlanes frustumPlanes;
 
     float speedBase     = 0.01f;
     float movementSpeed = 0.01f;

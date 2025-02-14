@@ -1,7 +1,9 @@
 #include "SceneModule.h"
 
+#include "CameraModule.h"
 #include "ComponentUtils.h"
 #include "EngineModel.h"
+#include "FrustumPlanes.h"
 #include "GameObject.h"
 #include "Octree.h"
 
@@ -33,7 +35,7 @@ SceneModule::SceneModule()
 SceneModule::~SceneModule()
 {
     delete MOCKUP_loadedModel;
-    
+
     for (auto gameObject : gameObjectsContainer)
     {
         delete gameObject.second;
@@ -44,7 +46,7 @@ bool SceneModule::Init()
 {
     GLOG("Creating SceneModule renderer context");
 
-    GameObject *sceneGameObject = new GameObject("SceneModule GameObject");
+    GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
 
     gameObjectRootUUID          = LCG().IntFast();
     selectedGameObjectUUID      = gameObjectRootUUID;
@@ -54,7 +56,7 @@ bool SceneModule::Init()
     gameObjectsContainer.insert({gameObjectRootUUID, sceneGameObject});
 
     // DEMO
-    GameObject *sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
+    GameObject* sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
     uint32_t gameObjectChildRootUUID = LCG().IntFast();
     sceneGameChildObject->SetUUID(gameObjectChildRootUUID);
     sceneGameObject->AddGameObject(gameObjectChildRootUUID);
@@ -80,7 +82,7 @@ bool SceneModule::Init()
     MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
 
     // SPATIAL_PARTITIONING TESTING
-    CreateHouseGameObject(10);
+    CreateHouseGameObject(1000);
     CreateSpatialDataStruct();
 
     return true;
@@ -98,7 +100,7 @@ update_status SceneModule::Update(float deltaTime)
 
 update_status SceneModule::Render(float deltaTime)
 {
-    std::vector< GameObject *> objectsToRender;
+    std::vector<GameObject*> objectsToRender;
 
     CheckObjectsToRender(objectsToRender);
 
@@ -108,14 +110,14 @@ update_status SceneModule::Render(float deltaTime)
     }
 
     RenderBoundingBoxes();
-    //RenderOctree();
+    // RenderOctree();
 
     return UPDATE_CONTINUE;
 }
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
-    GameObject *selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
+    GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
     if (selectedGameObject != nullptr)
     {
         selectedGameObject->RenderEditor();
@@ -167,50 +169,31 @@ void SceneModule::UpdateSpatialDataStruct()
     CreateSpatialDataStruct();
 }
 
-void SceneModule::CheckObjectsToRender(std::vector< GameObject *> &outRenderGameObjects) const
+void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects) const
 {
-    std::vector< GameObject *> queriedObjects;
-    AABB cameraAABB = App->GetCameraModule()->GetFrustumAABB();
+    std::vector<GameObject*> queriedObjects;
+    const FrustumPlanes& frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
 
-    sceneOctree->QueryElements(cameraAABB, queriedObjects);
-
-    const auto &frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+    sceneOctree->QueryElements(frustumPlanes, queriedObjects);
 
     for (auto gameObject : queriedObjects)
     {
         OBB objectOBB = gameObject->GetGlobalOrientedBoundingBox();
 
-        float3 corners[8];
-        objectOBB.GetCornerPoints(corners);
-
-        bool allOutside = true;
-
-        for (int plane = 0; plane < 6; ++plane)
-        {
-            for (int corner = 0; corner < 8; ++corner)
-            {
-                if (PointInPlane(corners[corner], frustumPlanes[plane]))
-                {
-                    allOutside = false;
-                    break;
-                }
-            }
-        }
-
-        if (!allOutside) outRenderGameObjects.push_back(gameObject);
+        if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
     }
 
     int i = 0;
 }
 
-void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
+void SceneModule::RenderHierarchyUI(bool& hierarchyMenu)
 {
     ImGui::Begin("Hierarchy", &hierarchyMenu);
 
     if (ImGui::Button("Add GameObject"))
     {
         uint32_t newUUID          = LCG().IntFast();
-        GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
+        GameObject* newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
         newGameObject->SetUUID(newUUID);
         GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
@@ -236,7 +219,7 @@ void SceneModule::RenderGameObjectHierarchy(uint32_t gameObjectUUID)
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID)) return;
 
-    GameObject *gameObject   = GetGameObjectByUUID(gameObjectUUID);
+    GameObject* gameObject   = GetGameObjectByUUID(gameObjectUUID);
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
@@ -288,9 +271,9 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
 
     if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
         {
-            uint32_t draggedUUID = *reinterpret_cast<const uint32_t *>(payload->Data);
+            uint32_t draggedUUID = *reinterpret_cast<const uint32_t*>(payload->Data);
 
             if (draggedUUID != gameObjectUUID) UpdateGameObjectHierarchy(draggedUUID, gameObjectUUID);
         }
@@ -302,14 +285,14 @@ void SceneModule::HandleNodeClick(uint32_t gameObjectUUID)
 void SceneModule::RenderContextMenu(uint32_t gameObjectUUID)
 {
     static uint32_t renamingGameObjectUUID = 0;
-    static char *newNameBuffer             = nullptr;
+    static char* newNameBuffer             = nullptr;
 
     if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(gameObjectUUID)).c_str()))
     {
         if (ImGui::MenuItem("New GameObject"))
         {
             uint32_t newUUID          = LCG().IntFast();
-            GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
+            GameObject* newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
 
             GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
@@ -371,7 +354,7 @@ void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID) || gameObjectUUID == gameObjectRootUUID) return;
 
-    GameObject *gameObject = GetGameObjectByUUID(gameObjectUUID);
+    GameObject* gameObject = GetGameObjectByUUID(gameObjectUUID);
 
     for (uint32_t childUUID : gameObject->GetChildren())
     {
@@ -383,7 +366,7 @@ void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
     // TODO: change when filesystem defined
     if (gameObjectsContainer.count(parentUUID))
     {
-        GameObject *parentGameObject = GetGameObjectByUUID(parentUUID);
+        GameObject* parentGameObject = GetGameObjectByUUID(parentUUID);
         parentGameObject->RemoveGameObject(gameObjectUUID);
         selectedGameObjectUUID = parentUUID;
     }
@@ -396,8 +379,8 @@ void SceneModule::RemoveGameObjectHierarchy(uint32_t gameObjectUUID)
 
 void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID)
 {
-    GameObject *sourceGameObject = GetGameObjectByUUID(sourceUUID);
-    GameObject *targetGameObject = GetGameObjectByUUID(targetUUID);
+    GameObject* sourceGameObject = GetGameObjectByUUID(sourceUUID);
+    GameObject* targetGameObject = GetGameObjectByUUID(targetUUID);
 
     if (!sourceGameObject || !targetGameObject) return;
 
@@ -406,14 +389,14 @@ void SceneModule::UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t target
 
     if (gameObjectsContainer.count(oldParentUUID))
     {
-        GameObject *oldParentGameObject = GetGameObjectByUUID(oldParentUUID);
+        GameObject* oldParentGameObject = GetGameObjectByUUID(oldParentUUID);
         oldParentGameObject->RemoveGameObject(sourceUUID);
     }
 
     targetGameObject->AddGameObject(sourceUUID);
 }
 
-AABBUpdatable *SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
+AABBUpdatable* SceneModule::GetTargetForAABBUpdate(uint32_t uuid)
 {
     if (gameObjectsContainer.count(uuid))
     {
@@ -436,7 +419,7 @@ void SceneModule::CreateHouseGameObject(int totalGameobjects)
     for (int i = 0; i < totalGameobjects; ++i)
     {
         uint32_t newUUID          = LCG().IntFast();
-        GameObject *newGameObject = new GameObject(gameObjectRootUUID, "House_" + std::to_string(i));
+        GameObject* newGameObject = new GameObject(gameObjectRootUUID, "House_" + std::to_string(i));
         newGameObject->SetUUID(newUUID);
         GetGameObjectByUUID(gameObjectRootUUID)->AddGameObject(newUUID);
         gameObjectsContainer.insert({newUUID, newGameObject});
@@ -444,9 +427,9 @@ void SceneModule::CreateHouseGameObject(int totalGameobjects)
         auto gameObjectChildrenUUID  = newGameObject->GetRootComponent()->GetUUID();
         ComponentType componentType  = ComponentType::COMPONENT_MESH;
 
-        Component *selectedComponent = gameComponents[gameObjectChildrenUUID];
+        Component* selectedComponent = gameComponents[gameObjectChildrenUUID];
         uint32_t createdComponentUID = LCG().IntFast();
-        Component *createdComponent  = ComponentUtils::CreateEmptyComponent(
+        Component* createdComponent  = ComponentUtils::CreateEmptyComponent(
             componentType, createdComponentUID, gameObjectChildrenUUID, gameObjectChildrenUUID,
             selectedComponent->GetGlobalTransform()
         );
@@ -454,7 +437,7 @@ void SceneModule::CreateHouseGameObject(int totalGameobjects)
         gameComponents[createdComponent->GetUUID()] = createdComponent;
         selectedComponent->AddChildComponent(createdComponent->GetUUID());
 
-        MeshComponent *createdMesh = reinterpret_cast<MeshComponent *>(createdComponent);
+        MeshComponent* createdMesh = reinterpret_cast<MeshComponent*>(createdComponent);
         auto meshIT                = MOCKUP_libraryMeshes.begin();
         createdMesh->LoadMesh(meshIT->first, meshIT->second);
 
@@ -482,10 +465,10 @@ void SceneModule::RenderBoundingBoxes()
     std::vector<LineSegment> elementLines = std::vector<LineSegment>(gameObjectsContainer.size() * 12, LineSegment());
     int currentDrawLine                   = 0;
 
-    for (auto &gameObject : gameObjectsContainer)
+    for (auto& gameObject : gameObjectsContainer)
     {
-        //AABB gameObjectBB = gameObject.second->GetGlobalBoundingBox();
-        OBB objectOBB     = gameObject.second->GetGlobalOrientedBoundingBox();
+        // AABB gameObjectBB = gameObject.second->GetGlobalBoundingBox();
+        OBB objectOBB = gameObject.second->GetGlobalOrientedBoundingBox();
 
         for (int i = 0; i < 12; ++i)
         {
@@ -519,9 +502,3 @@ void SceneModule::RenderOctree()
 
     App->GetDebugDrawModule()->Draw(view, proj, width, height);
 }
-
-bool SceneModule::PointInPlane(const float3 &point, const float4 &plane) const
-{
-    return (plane.x * point.x + plane.y * point.y + plane.z * point.z + plane.w) >= 0.0f;
-}
-

@@ -94,8 +94,6 @@ update_status RenderTestModule::Render(float deltaTime)
     // glDrawArrays(GL_TRIANGLES, 0, 3);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    bool insideFrustum = CheckFrustum();
-
     //if (insideFrustum)
     //{
     //    // GLOG("El objeto esta dentro del Frustum");
@@ -121,36 +119,4 @@ bool RenderTestModule::ShutDown()
     delete currentLoadedModel;
 
     return true;
-}
-
-bool RenderTestModule::CheckFrustum()
-{
-    OBB currentModelObb = currentLoadedModel->GetOBBModel();
-    float3 corners[8];
-    currentModelObb.GetCornerPoints(corners);
-
-    const auto &frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-
-    for (int j = 0; j < 6; ++j)
-    {
-        bool allOutside = true;
-
-        for (int i = 0; i < 8; ++i)
-        {
-            if (PointInPlane(corners[i], frustumPlanes[j]))
-            {
-                allOutside = false;
-                break;
-            }
-        }
-
-        if (allOutside) return false;
-    }
-
-    return true;
-}
-
-bool RenderTestModule::PointInPlane(const float3 &point, const float4 &plane)
-{
-    return (plane.x * point.x + plane.y * point.y + plane.z * point.z + plane.w) >= 0.0f;
 }

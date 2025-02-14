@@ -62,13 +62,12 @@ class SceneModule : public Module
   private:
     void CreateSpatialDataStruct();
     void UpdateSpatialDataStruct();
-    void CheckObjectsToRender(std::vector< GameObject*>& outRenderGameObjects) const;
+    void CheckObjectsToRender(std::vector<GameObject *> &outRenderGameObjects) const;
 
     // SPATIAL_PARTITIONING TESTING
     void CreateHouseGameObject(int totalGameobjects);
     void RenderBoundingBoxes();
     void RenderOctree();
-    bool PointInPlane(const float3 &point, const float4 &plane) const;
 
   private:
     uint32_t gameObjectRootUUID;
@@ -88,6 +87,4 @@ class SceneModule : public Module
     // gameConfigClassType;
 
     // lightsConfig;
-
-    
 };

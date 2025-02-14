@@ -204,6 +204,9 @@
     <ClCompile Include="Utils\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\FrustumPlanes.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -369,6 +372,9 @@
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Scene\AABBUpdatable.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\FrustumPlanes.h">
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>

@@ -92,7 +92,6 @@ void QuadtreeViewer::Render(bool &renderBoolean)
     std::vector<const MockGameObject *> retrievedElements;
     quadtree->QueryElements(queryArea, retrievedElements);
 
-    queryArea = App->GetCameraModule()->GetFrustumAABB();
     CreateQueryAreaLines(queryArea, queryAreaLines);
     CreateGameObjectsAreaLines(gameObjectLines);
 
