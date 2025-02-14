@@ -55,7 +55,7 @@ void MeshComponent::RenderEditorInspector()
             AddMesh(App->GetEditorUIModule()->RenderResourceSelectDialog(CONSTANT_MESH_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMeshMap()));
         }
 
-        ImGui::SeparatorText("Diffuse texture");
+        ImGui::SeparatorText("Material");
         ImGui::Text(currentTextureName.c_str());
         ImGui::SameLine();
         if (ImGui::Button("Select texture"))
@@ -67,6 +67,8 @@ void MeshComponent::RenderEditorInspector()
         {
             AddMaterial(App->GetEditorUIModule()->RenderResourceSelectDialog(CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap()));
         }
+
+        if(currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
     }
     
 }

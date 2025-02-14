@@ -23,35 +23,32 @@ void ResourceMaterial::OnEditorUpdate()
 { 
      bool updated = false; 
 
-    if (ImGui::CollapsingHeader("Material"))
+    if (hasDiffuseTexture)
     {
-        if (hasDiffuseTexture)
+        ImGui::Text("Diffuse Texture");
+        ImGui::Image((ImTextureID)(intptr_t)diffuseTexture.textureID, ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
         {
-            ImGui::Text("Diffuse Texture");
-            ImGui::Image((ImTextureID)(intptr_t)diffuseTexture.textureID, ImVec2(256, 256));
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
-            }
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
         }
+    }
 
-        updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
+    updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
        
 
-        if (hasSpecularTexture)
+    if (hasSpecularTexture)
+    {
+        ImGui::Text("Specular Texture");
+        ImGui::Image((ImTextureID)(intptr_t)specularTexture.textureID, ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
         {
-            ImGui::Text("Specular Texture");
-            ImGui::Image((ImTextureID)(intptr_t)specularTexture.textureID, ImVec2(256, 256));
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("Texture Dimensions: %d, %d", specularTexture.width, specularTexture.height);
-            }
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", specularTexture.width, specularTexture.height);
         }
-
-        updated |= ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
-
-        if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
     }
+
+    updated |= ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
+
+    if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
 
     if (updated) UpdateUBO();
 }
