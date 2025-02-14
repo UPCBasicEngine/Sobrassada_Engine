@@ -8,6 +8,8 @@
 #include "imgui.h"
 
 #include "../Scene/Components/DirectionalLight.h"
+#include "../Scene/Components/PointLight.h"
+#include "../Scene/Components/SpotLight.h"
 #include "glew.h"
 
 LightsConfig::LightsConfig()
@@ -25,6 +27,8 @@ LightsConfig::LightsConfig()
     spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
     spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
     spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
+
+     directionalLight = new DirectionalLight();
 }
 
 LightsConfig::~LightsConfig()

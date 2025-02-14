@@ -61,7 +61,6 @@ bool RenderTestModule::Init()
 
                         1.0f,  1.0f,  1.0f, 0.0f,  0.0f,  0.0f};
 
-	lightsConfig->InitSkybox();
 
     lightsConfig->InitSkybox();
     lightsConfig->InitLightBuffers();

@@ -152,17 +152,9 @@ void main()
     vec3 lightColor = directional_color.rgb;
     float lightIntensity = directional_color.a;
 
-    vec3 ambient = ambientIntensity * texColor;
-    vec3 result = ambient;
 
     vec3 N = finalNormal;
     float NL = dot(N, lightDir);
-
-    if (NL > 0) {
-        vec3 diffuse = diffFactor * texColor * lightColor * lightIntensity * NL;
-
-        vec3 specTexColor = texture(specularTexture, uv0).rgb;
-        float shininess = alpha * 256.0f;
 
 	vec3 ambient = ambient_color.rgb * ambient_color.a;
 	vec3 hdr = ambient * texColor;
@@ -176,7 +168,9 @@ void main()
 	{
 		hdr += RenderSpotLight(i, N, texColor, alpha);
 	}
-	
+
+	hdr += RenderLight(N, texColor, alpha, lightDir, lightColor*lightIntensity, dot(N, -lightDir));
+
 	// Tone mapping
 	vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
 	ldr = pow(ldr, vec3(1/2.2));
