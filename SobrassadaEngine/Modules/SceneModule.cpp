@@ -46,6 +46,10 @@ bool SceneModule::Init()
     // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
+    lightsConfig = new LightsConfig();
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
+
     return true;
 }
 
@@ -55,10 +59,20 @@ update_status SceneModule::Update(float deltaTime) { return UPDATE_CONTINUE; }
 
 update_status SceneModule::Render(float deltaTime)
 {
+    lightsConfig->RenderSkybox();
+    lightsConfig->SetLightsShaderData();
+    lightsConfig->EditorParams();
+
     for (auto &gameObject : gameObjectsContainer)
     {
         gameObject.second->Render();
     }
+
+    //TEMP
+    auto projection = App->GetCameraModule()->GetProjectionMatrix();
+    auto view       = App->GetCameraModule()->GetViewMatrix();
+    App->GetDebugDreawModule()->Draw(view, projection, SCREEN_WIDTH, SCREEN_HEIGHT);
+
     return UPDATE_CONTINUE;
 }
 
@@ -104,6 +118,8 @@ void SceneModule::CloseScene()
 
     gameObjectRootUUID     = 0;
     selectedGameObjectUUID = 0;
+
+    lightsConfig           = nullptr;
 
     GLOG("%s scene closed", sceneName.c_str());
 }

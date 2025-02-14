@@ -4,6 +4,13 @@
 #include "EngineModel.h"
 #include "Module.h"
 #include "Scene/AABBUpdatable.h"
+#include "LightsConfig.h"
+
+//TEMP
+#include "Application.h"
+#include "DebugDrawModule.h"
+#include "CameraModule.h"
+
 
 #include <map>
 #include <string>
@@ -91,5 +98,5 @@ class SceneModule : public Module
     // inputClassType;
     // gameConfigClassType;
 
-    // lightsConfig;
+    LightsConfig *lightsConfig;
 };

@@ -5,7 +5,7 @@
 
 #include "Math/float3.h"
 
-class LightComponent : public Component
+class LightComponent
 {
   public:
     LightComponent();

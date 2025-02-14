@@ -36,6 +36,7 @@ private:
     int vertexCount = 0;
     int textureCoordCount = 0;
     int normalCoordCount = 0;
+    int tangentCoordCount   = 0;
     unsigned int indexCount = 0; // Return indexCount/3 -> numero de triangles per mesh
 
     AABB aabb;

@@ -81,9 +81,13 @@ void LightsConfig::InitSkybox()
     skyboxProgram = App->GetShaderModule()->GetProgram("Test/skyboxVertex.glsl", "Test/skyboxFragment.glsl");
 }
 
-void LightsConfig::RenderSkybox(float4x4 &projection, float4x4 &view) const
+void LightsConfig::RenderSkybox() const
 {
     App->GetOpenGLModule()->SetDepthFunc(false);
+
+    auto projection = App->GetCameraModule()->GetProjectionMatrix();
+    auto view       = App->GetCameraModule()->GetViewMatrix();
+
 
     glUseProgram(skyboxProgram);
     glUniformMatrix4fv(0, 1, GL_TRUE, &projection[0][0]);

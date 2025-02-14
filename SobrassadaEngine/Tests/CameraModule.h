@@ -35,20 +35,10 @@ public:
 	void SetAspectRatio(float newAspectRatio);
 
 	void EventTriggered();
-	void MoveForward();
-	void MoveBackward();
-	void MoveLeft();
-	void MoveRight();
-	void RotateLeft();
-	void RotateRight();
-	void RotateUp();
-    void RotateDown();
-	void MoveUp();
-    void MoveDown();
+
 
 	const float3 getPosition() { return camera.pos; }
 
-	const float3 getPosition() { return camera.pos; }
 
 private:
 	Frustum camera;

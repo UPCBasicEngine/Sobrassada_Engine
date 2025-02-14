@@ -65,7 +65,7 @@ class LightsConfig
     void EditorParams();
 
     void InitSkybox();
-    void RenderSkybox(float4x4 &projection, float4x4 &view) const;
+    void RenderSkybox() const;
 
     void InitLightBuffers();
     void SetLightsShaderData() const;
