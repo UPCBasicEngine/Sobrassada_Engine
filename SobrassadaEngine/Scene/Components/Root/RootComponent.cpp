@@ -18,7 +18,7 @@ RootComponent::RootComponent(const UID uid, const UID uidParent, const Transform
 RootComponent::RootComponent(const rapidjson::Value &initialState) : Component(initialState)
 {
     selectedUID = uid;
-    movabilitySettings = static_cast<ComponentMovabilitySettings>(initialState["Movability"].GetInt());
+    mobilitySettings = static_cast<ComponentMobilitySettings>(initialState["Mobility"].GetInt());
 }
 
 
@@ -30,7 +30,7 @@ void RootComponent::Save(rapidjson::Value &targetState, rapidjson::Document::All
 {
     Component::Save(targetState, allocator);
     targetState.AddMember("Type", COMPONENT_ROOT, allocator);
-    targetState.AddMember("Movability", movabilitySettings, allocator);
+    targetState.AddMember("Mobility", mobilitySettings, allocator);
 }
 
 void RootComponent::RenderComponentEditor()
@@ -150,12 +150,12 @@ void RootComponent::RenderEditorInspector()
     if (enabled)
     {
         // Casting to use ImGui to set values and at the same type keep the enum type for the variable
-        int castedMovability = movabilitySettings;
-        ImGui::SeparatorText("Movability");
+        int castedMovability = mobilitySettings;
+        ImGui::SeparatorText("Mobility");
         ImGui::RadioButton("Static", &castedMovability, STATIC);
         ImGui::SameLine();
         ImGui::RadioButton("Dynamic", &castedMovability, DYNAMIC);
-        movabilitySettings = static_cast<ComponentMovabilitySettings>(castedMovability);
+        mobilitySettings = static_cast<ComponentMobilitySettings>(castedMovability);
     }
 }
 
