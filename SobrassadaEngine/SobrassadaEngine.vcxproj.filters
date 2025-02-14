@@ -180,10 +180,10 @@
     <ClCompile Include="FileSystem\TextureImporter.cpp">
       <Filter>FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="LibraryModule.cpp">
+    <ClCompile Include="Modules\LibraryModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialImporter.cpp">
+    <ClCompile Include="FileSystem\MaterialImporter.cpp">
       <Filter>FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="Utils\LightsConfig.cpp" />
@@ -352,7 +352,7 @@
     <ClInclude Include="FileSystem\TextureImporter.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialImporter.h">
+    <ClInclude Include="FileSystem\MaterialImporter.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
@@ -361,7 +361,7 @@
     <ClInclude Include="Mesh.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
-    <ClInclude Include="LibraryModule.h">
+    <ClInclude Include="Modules\LibraryModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h">

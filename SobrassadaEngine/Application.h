@@ -2,7 +2,6 @@
 
 #include "Globals.h"
 #include "Module.h"
-#include "ResourcesModule.h"
 
 #include <list>
 

@@ -7,6 +7,7 @@
 #include "LibraryModule.h"
 #include "WindowModule.h"
 #include "SceneModule.h"
+#include "ResourcesModule.h"
 
 // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 #include "CameraModule.h"
