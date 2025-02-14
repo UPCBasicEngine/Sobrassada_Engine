@@ -251,11 +251,11 @@ AABB& Component::TransformUpdated(const Transform &parentGlobalTransform)
     return globalComponentAABB;
 }
 
-Component * Component::GetRootComponent()
+RootComponent * Component::GetRootComponent()
 {
     if (rootComponent == nullptr)
     {
-        rootComponent = App->GetSceneModule()->gameComponents[uidRoot];
+        rootComponent = dynamic_cast<RootComponent* >(App->GetSceneModule()->gameComponents[uidRoot]);
         if (rootComponent == nullptr)
         {
             GLOG("Could not load parent with UID: %s - Object does not exist", uidRoot)

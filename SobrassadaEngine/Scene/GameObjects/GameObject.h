@@ -1,12 +1,11 @@
 #pragma once
 #include "Globals.h"
-#include "BoundingBox.h"
-#include "Globals.h"
 #include "Scene/AABBUpdatable.h"
 #include "Transform.h"
 
 #include <string>
 #include <vector>
+#include <Geometry/AABB.h>
 
 class RootComponent;
 
@@ -14,8 +13,9 @@ class GameObject : public AABBUpdatable
 {
 public:
 
-	GameObject(std::string name);
-	GameObject(UID parentUUID, std::string name);
+    GameObject(std::string name);
+    GameObject(UID parentUUID, std::string name);
+    GameObject(UID parentUUID, std::string name, UID rootComponent);
 
     ~GameObject();
 
@@ -32,6 +32,7 @@ public:
     void SetName(std::string newName) { name = newName; }
     
 	inline std::vector<UID> GetChildren() { return children; }
+    inline void AddChildren(UID childUUID) { children.push_back(childUUID); }
     
 	inline UID GetParent() const { return parentUUID; }
     void SetParent(UID newParentUUID) { parentUUID = newParentUUID; }
@@ -47,7 +48,7 @@ public:
     void RenderEditor();
 
     void PassAABBUpdateToParent() override;
-    void ComponentGlobalTransformUpdated() /*override*/;
+    void ComponentGlobalTransformUpdated() override;
     const Transform& GetGlobalTransform() const override;
 
 private:

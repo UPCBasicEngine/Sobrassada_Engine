@@ -66,15 +66,18 @@ class SceneModule : public Module
 
     AABBUpdatable* GetTargetForAABBUpdate(UID uuid);
 
+    UID GetSceneUID() const { return sceneUID; }
+    const std::string &GetSceneName() const { return sceneName; }
+
     void AddGameObject(UID uid, GameObject *newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
     void AddComponent(UID uid, Component *newComponent) { gameComponents.insert({uid, newComponent}); }
+
+    
 
   private:
     UID sceneUID;
     UID gameObjectRootUUID;
     std::string sceneName;
-
-	UID gameObjectRootUUID;
     
 	UID selectedGameObjectUUID;
 

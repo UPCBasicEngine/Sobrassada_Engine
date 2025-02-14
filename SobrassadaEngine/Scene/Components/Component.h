@@ -57,7 +57,7 @@ class Component : public AABBUpdatable
 
   protected:
 
-    Component* GetRootComponent();
+    RootComponent* GetRootComponent();
     AABBUpdatable* GetParent();
     std::vector<Component*>& GetChildComponents();
 
@@ -80,7 +80,7 @@ class Component : public AABBUpdatable
 
 private:
     
-    Component* rootComponent = nullptr;
+    RootComponent* rootComponent = nullptr;
     AABBUpdatable* parent = nullptr;
     std::vector<Component*> childComponents;
 };
