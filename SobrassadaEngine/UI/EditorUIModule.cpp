@@ -558,21 +558,19 @@ void EditorUIModule::Console(bool &consoleMenu)
 
 bool EditorUIModule::RenderTransformWidget(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
 {
+    bool positionValueChanged = false;
+    bool rotationValueChanged = false;
+    bool scaleValueChanged = false;
+    static bool lockScaleAxis = false;
     static int transformType = LOCAL;
     static int pivotType = OBJECT;
+    float3 originalScale;
     
     ImGui::SeparatorText("Transform");
     ImGui::RadioButton("Use object pivot", &pivotType, OBJECT);
     // TODO Add later if necessary
     //ImGui::SameLine();
     //ImGui::RadioButton("Use root pivot", &pivotType, ROOT);
-    
-    bool positionValueChanged = false;
-    bool rotationValueChanged = false;
-    bool scaleValueChanged = false;
-    static bool lockScaleAxis = false;
-    
-    float3 originalScale;
     
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("TransformType##", tab_bar_flags))
