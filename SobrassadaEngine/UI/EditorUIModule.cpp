@@ -605,7 +605,8 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
             {
                 scaleFactor = originalScale.z == 0 ? 1 : OutputTransform.scale.z / originalScale.z;
             }
-            OutputTransform.scale *= scaleFactor;
+            originalScale *= scaleFactor;
+            OutputTransform.scale = originalScale;
         }
         
         if (transformType == GLOBAL)
