@@ -1,0 +1,93 @@
+{
+    "Scene": {
+        "UID": 11317094258709227027,
+        "Name": "ha",
+        "RootGameObject": 1348484519,
+        "GameObjects": [
+            {
+                "UID": 1348484519,
+                "ParentUID": 0,
+                "Name": "SceneModule GameObject",
+                "Children": [
+                    1355585861
+                ],
+                "RootComponentUID": 1334769182
+            },
+            {
+                "UID": 1355585861,
+                "ParentUID": 1348484519,
+                "Name": "SceneModule GameObject child",
+                "Children": [],
+                "RootComponentUID": 1353706094
+            }
+        ],
+        "Components": [
+            {
+                "UID": 1334769182,
+                "ParentUID": 0,
+                "RootUID": 1334769182,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [
+                    2242937939
+                ],
+                "Enabled": true,
+                "Name": "HA",
+                "Type": 1,
+                "Mobility": 1
+            },
+            {
+                "UID": 1353706094,
+                "ParentUID": 1348484519,
+                "RootUID": 1353706094,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
+            },
+            {
+                "UID": 2242937939,
+                "ParentUID": 1334769182,
+                "RootUID": 1334769182,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Mesh component",
+                "Type": 2,
+                "UIDMesh": 0,
+                "UIDMaterial": 0
+            }
+        ]
+    }
+}

@@ -152,7 +152,15 @@ void EditorUIModule::MainMenu()
 
         if (ImGui::MenuItem("Load", "", load)) load = !load;
 
-        if (ImGui::MenuItem("Save", "", save)) save = !save;
+        if (ImGui::MenuItem("Save"))
+        {
+            if (!App->GetLibraryModule()->SaveScene(libraryPath.c_str(), SaveMode::Save))
+            {
+                save = !save;
+            }
+        }
+
+        if (ImGui::MenuItem("Save as")) save = !save;
 
         if (ImGui::MenuItem("Quit")) closeApplication = true;
 
@@ -303,7 +311,7 @@ void EditorUIModule::SaveDialog(bool &save)
         if (strlen(inputFile) > 0)
         {
             std::string savePath = libraryPath + inputFile + SCENE_EXTENSION;
-            App->GetLibraryModule()->SaveScene(savePath.c_str());
+            App->GetLibraryModule()->SaveScene(savePath.c_str(), SaveMode::SaveAs);
         }
         inputFile[0] = '\0';
         save         = false;

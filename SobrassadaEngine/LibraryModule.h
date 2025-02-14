@@ -5,6 +5,12 @@
 #include <string>
 #include <unordered_map>
 
+enum class SaveMode
+{
+    Save,
+    SaveAs
+};
+
 class LibraryModule : public Module
 {
 
@@ -14,8 +20,8 @@ class LibraryModule : public Module
 
     bool Init() override;
 
-    bool SaveScene(const char *path) const;
-    bool LoadScene(const char *path);
+    bool SaveScene(const char *path, SaveMode saveMode) const;
+    bool LoadScene(const char *path); // const?
 
     bool LoadLibraryMaps();
     UID AssignFiletypeUID(UID originalUID, const std::string &filePath);
