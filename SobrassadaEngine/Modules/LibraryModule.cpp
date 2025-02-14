@@ -340,7 +340,7 @@ UID LibraryModule::GetMaterialUID(const std::string &materialPath) const
     return 0;
 }
 
-const std::string &LibraryModule::GetResourcePath(UID resourceID)
+const std::string &LibraryModule::GetResourcePath(UID resourceID) const
 {
     auto it = resourcePathsMap.find(resourceID);
     if (it != resourcePathsMap.end())
