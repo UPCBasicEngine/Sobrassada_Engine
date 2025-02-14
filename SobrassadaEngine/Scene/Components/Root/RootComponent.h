@@ -28,10 +28,10 @@ public:
 
     void SetSelectedComponent(UID componentUID);
 
-    ComponentMobilitySettings GetMobilitySettings() const { return mobilitySettings; };
+    int GetMobilitySettings() const { return mobilitySettings; }
 
 private:
     
     UID selectedUID;
-    ComponentMobilitySettings mobilitySettings = DYNAMIC;
+    int mobilitySettings = DYNAMIC;
 };

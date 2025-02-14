@@ -138,7 +138,7 @@ void Component::RenderEditorInspector()
     if (enabled)
     {
         ImGui::Separator();
-        if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uidParent))
+        if (App->GetEditorUIModule()->RenderTransformWidget(localTransform, globalTransform, uidParent))
         {
             AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
             if (parent != nullptr)
