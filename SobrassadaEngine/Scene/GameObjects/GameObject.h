@@ -6,10 +6,6 @@
 #include <string>
 #include <vector>
 
-// SPATIAL_PARTITIONING TESTING
-#include "Geometry/AABB.h"
-#include "Geometry/Obb.h"
-
 class RootComponent;
 
 class GameObject : public AABBUpdatable
@@ -46,12 +42,7 @@ class GameObject : public AABBUpdatable
 
     void PassAABBUpdateToParent() override;
     const Transform &GetGlobalTransform() const override;
-    
-    // SPATIAL_PARTITIONING TESTING
-    const AABB &GetGlobalBoundingBox();
-    const OBB &GetGlobalOrientedBoundingBox();
   
-
   private:
     uint32_t parentUUID;
     uint32_t uuid;
@@ -62,9 +53,4 @@ class GameObject : public AABBUpdatable
     RootComponent *rootComponent;
 
     BoundingBox boundingBox;
-
-    // SPATIAL_PARTITIONING TESTING
-    AABB globalBB;
-    OBB obbObject;
-
 };

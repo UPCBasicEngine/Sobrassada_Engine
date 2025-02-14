@@ -64,11 +64,6 @@ class SceneModule : public Module
     void UpdateSpatialDataStruct();
     void CheckObjectsToRender(std::vector<GameObject *> &outRenderGameObjects) const;
 
-    // SPATIAL_PARTITIONING TESTING
-    void CreateHouseGameObject(int totalGameobjects);
-    void RenderBoundingBoxes();
-    void RenderOctree();
-
   private:
     uint32_t gameObjectRootUUID;
 
