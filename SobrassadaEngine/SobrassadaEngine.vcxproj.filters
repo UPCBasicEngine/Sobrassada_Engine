@@ -165,6 +165,48 @@
     <ClCompile Include="UI\EditorViewport.cpp">
       <Filter>UI</Filter>
     </ClCompile>
+    <ClCompile Include="UI\QuadtreeViewer.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Quadtree.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\MockGameObject.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Octree.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Component.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\GameObjects\GameObject.cpp">
+      <Filter>Scene\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\SceneModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp">
+      <Filter>ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\MeshComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Component.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\ComponentUtils.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Scene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\FrustumPlanes.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -187,6 +229,18 @@
     </Filter>
     <Filter Include="UI">
       <UniqueIdentifier>{b3f5d97a-4296-47c2-80a3-75724af69446}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{17967f25-7595-4f99-b9c6-c6a1934b81a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Components">
+      <UniqueIdentifier>{0ddc598f-b276-4bbc-939f-c700f4c15d81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\GameObjects">
+      <UniqueIdentifier>{ba55c87b-9ef3-442f-a67f-7017601a591f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ImGuizmo">
+      <UniqueIdentifier>{557b3855-2c1e-41d1-b6ab-ecab1faac98c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -271,6 +325,57 @@
     </ClInclude>
     <ClInclude Include="UI\EditorViewport.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\QuadtreeViewer.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Quadtree.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MockGameObject.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Octree.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Transform.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\GameObjects\GameObject.h">
+      <Filter>Scene\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\BoundingBox.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\SceneModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h">
+      <Filter>ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\MeshComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Root\RootComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\ComponentUtils.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Scene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\AABBUpdatable.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\FrustumPlanes.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

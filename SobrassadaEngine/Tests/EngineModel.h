@@ -24,7 +24,7 @@ public:
 
 	void LoadAdditionalTexture(const char* texturePath);
 
-	void Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix);
+	void Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix);
 
 	float3 GetMaximumValues() const { return maxValues; };
 	float3 GetMinimumValues() const { return minValues; };
@@ -33,8 +33,14 @@ public:
 	int GetTotalLoadedTextures() const { return textures.size(); };
 	int GetRenderTexture() const { return renderTexture; };
 	void GetTextureSize(float2& outTextureSize);
-
+    OBB GetOBBModel() const;
+    AABB GetABBModel() const;
 	void SetRenderTexture(int texturePosition);
+
+
+    EngineMesh* GetMesh(int index) const { return meshes[index]; }
+
+    unsigned int GetActiveRenderTexture() const { return textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0; }
 
 private:
 

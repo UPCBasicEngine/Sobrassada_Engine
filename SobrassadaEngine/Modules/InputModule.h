@@ -5,8 +5,7 @@
 #include "Math/float2.h"
 #include "SDL_scancode.h"
 #include <functional>
-#include <list>
-#include <unordered_map>
+#include <vector>
 
 typedef unsigned __int8 Uint8;
 #define NUM_MOUSE_BUTTONS 5
@@ -46,5 +45,5 @@ class InputModule : public Module
     float2 mouse;
     int mouseWheel = 0;
 
-    std::unordered_map<int, std::list<std::function<void(void)>>> subscribedCallbacks;
+    std::vector<std::vector<std::function<void(void)>>> subscribedCallbacks;
 };
