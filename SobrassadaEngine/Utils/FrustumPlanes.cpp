@@ -93,10 +93,10 @@ bool FrustumPlanes::Intersects(const OBB& boundingBox) const
 
 bool FrustumPlanes::CheckInsideFrustum(const float3 (&corners)[8]) const
 {
-    bool allOutside = true;
 
     for (int plane = 0; plane < 6; ++plane)
     {
+        bool allOutside = true;
         for (int corner = 0; corner < 8; ++corner)
         {
             if (PointInPlane(corners[corner], frustumPlanes[plane]))
@@ -105,8 +105,12 @@ bool FrustumPlanes::CheckInsideFrustum(const float3 (&corners)[8]) const
                 break;
             }
         }
+        if (allOutside)
+        {
+            return false;
+        }
     }
-    return !allOutside;
+    return true;
 }
 
 bool FrustumPlanes::PointInPlane(const float3& point, const float4& plane) const
