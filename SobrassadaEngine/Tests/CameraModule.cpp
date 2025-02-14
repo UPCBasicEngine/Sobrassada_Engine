@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "WindowModule.h"
 #include "InputModule.h"
+#include "glew.h"
 
 #include "SDL_scancode.h"
 #include <functional>
@@ -33,9 +34,11 @@ bool CameraModule::Init()
 
 	camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
 
-	viewMatrix = camera.ViewMatrix();
-	projectionMatrix = camera.ProjectionMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
+	matrices.projectionMatrix = camera.ProjectionMatrix();
 
+	std::function<void(void)> fPressed = std::bind(&CameraModule::EventTriggered, this);
+	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_F, fPressed);
 	std::function<void(void)> rotateLeft = std::bind(&CameraModule::RotateLeft, this);
 	std::function<void(void)> rotateRight = std::bind(&CameraModule::RotateRight, this);
 	std::function<void(void)> rotateUp = std::bind(&CameraModule::RotateUp, this);
@@ -47,6 +50,11 @@ bool CameraModule::Init()
 	std::function<void(void)> moveRight = std::bind(&CameraModule::MoveRight, this);
 	std::function<void(void)> moveUp = std::bind(&CameraModule::MoveUp, this);
 	std::function<void(void)> moveDown = std::bind(&CameraModule::MoveDown, this);
+
+	glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_Q, rotateLeft);
 	App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_E, rotateRight);
@@ -63,21 +71,30 @@ bool CameraModule::Init()
 	return true;
 }
 
+void CameraModule::UpdateUBO() 
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
 update_status CameraModule::Update(float deltaTime)
 {
+    UpdateUBO();
 	return UPDATE_CONTINUE;
 }
 
 bool CameraModule::ShutDown()
 {
+    glDeleteBuffers(1, &ubo);
 	return true;
 }
 
 void CameraModule::SetAspectRatio(float newAspectRatio)
 {
 	camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);
-	viewMatrix = camera.ViewMatrix();
-	projectionMatrix = camera.ProjectionMatrix();
+	matrices.viewMatrix = camera.ViewMatrix();
+	matrices.projectionMatrix = camera.ProjectionMatrix();
 }
 
 void CameraModule::EventTriggered()

@@ -2,7 +2,14 @@
 
 #include "Module.h"
 
+#include "Transform.h"
+#include "ResourceManagement/Resources/Resource.h"
+#include "Scene/AABBUpdatable.h"
+
 #include <deque>
+#include <string>
+#include <map>
+#include <unordered_map>
 
 class EditorViewport;
 
@@ -19,7 +26,18 @@ class EditorUIModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
+    bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform& parentTransform);
+    
+    UID RenderResourceSelectDialog(const char* id, const std::unordered_map<std::string, UID>& availableResources);
+
+public:
+    bool hierarchyMenu      = true;
+    bool inspectorMenu      = true; 
+
   private:
+    
+    void RenderBasicTransformModifiers(Transform &transform, bool& lockScaleAxis, bool& positionValueChanged, bool& rotationValueChanged, bool& scaleValueChanged);
+    
     void AddFramePlotData(float deltaTime);
     void Draw();
 
@@ -32,9 +50,17 @@ class EditorUIModule : public Module
     void OpenGLConfig();
 
     void Console(bool &consoleMenu);
+    void ImportDialog(bool &import);
+    void GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files);
+    void LoadDialog(bool &load);
+    void SaveDialog(bool &save);
 
   private:
-    bool consoleMenu        = false;
+    bool consoleMenu        = true;
+    bool import             = false;
+    bool load               = false;
+    bool save               = false;
+    bool loadScene          = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
 
@@ -43,4 +69,9 @@ class EditorUIModule : public Module
     std::deque<float> frametime;
 
     EditorViewport *editorViewport = nullptr;
+
+    int width, height;
+
+    std::string startPath;
+    std::string libraryPath;
 };

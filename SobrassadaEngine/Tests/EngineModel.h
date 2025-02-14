@@ -9,8 +9,8 @@ namespace tinygltf
 	class Model;
 }
 
-class EngineMesh;
-class ComponentMaterial;
+class ResourceMaterial;
+class ResourceMesh;
 
 class EngineModel
 {
@@ -21,7 +21,7 @@ public:
 	void Load(const char* modelPath);
 	void LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath);
 
-	void Render(int program, float4x4& projectionMatrix, float4x4& viewMatrix);
+	void Render(int program, unsigned int cameraUBO);
 
 	float3 GetMaximumValues() const { return maxValues; };
 	float3 GetMinimumValues() const { return minValues; };
@@ -29,13 +29,19 @@ public:
 	int GetIndexCount() const { return indexCount; }
 	int GetRenderTexture() const { return renderTexture; };
 
-	std::vector<ComponentMaterial*> &GetMaterials() { return materials; }
-    ComponentMaterial &GetMaterial(const int index);
+	std::vector<ResourceMaterial*> &GetMaterials() { return materials; }
+    ResourceMaterial* GetMaterial(const int index);
+
+    ResourceMesh* GetMesh(int index) const { return meshes[index]; }
+
+    unsigned int GetActiveRenderTexture() const { return textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0; }
 
 private:
 
-	std::vector<EngineMesh*> meshes;
-    std::vector<ComponentMaterial*> materials;
+	std::vector<ResourceMesh*> meshes;
+	std::vector<unsigned int> textures;
+	std::vector<float2> textureInfo;
+    std::vector<ResourceMaterial*> materials;
 
 	int totalTriangles = 0;
 	int renderTexture = -1;

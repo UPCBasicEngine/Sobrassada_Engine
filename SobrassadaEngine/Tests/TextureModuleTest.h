@@ -11,8 +11,8 @@ struct OpenGLMetadata
 
 namespace DirectX
 {
-struct TexMetadata;
-class ScratchImage;
+    struct TexMetadata;
+    class ScratchImage;
 } // namespace DirectX
 
 class TextureModuleTest : public Module
@@ -28,5 +28,6 @@ class TextureModuleTest : public Module
     unsigned int CreateFramebufferTexture(int width, int height);
 
   private:
-    bool LoadTextureFile(const wchar_t *texturePath, DirectX::TexMetadata &outMetadata, DirectX::ScratchImage &outImage) const;
+    bool
+    LoadTextureFile(const wchar_t *texturePath, DirectX::TexMetadata &outMetadata, DirectX::ScratchImage &outImage) const;
 };
