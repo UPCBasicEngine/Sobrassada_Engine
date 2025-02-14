@@ -71,6 +71,7 @@ enum update_status
 
 #define UID uint64_t
 
+constexpr UID INVALID_UUID = 0;
 constexpr UID CONSTANT_EMPTY_UID = 0;
 
 constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID = "mesh-select";

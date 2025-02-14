@@ -71,11 +71,6 @@ Resource * ResourcesModule::CreateNewResource(const char *assetsFile, ResourceTy
     const uint32_t bakerHouseID = LCG().IntFast();
     const uint32_t bakerHouseChimneyID = LCG().IntFast();
     const uint32_t bakerHouseMaterial = LCG().IntFast();
-
-    MOCKUP_libraryMeshes["House"] = bakerHouseID;
-    MOCKUP_libraryMeshes["Chimney"] = bakerHouseChimneyID;
-    
-    MOCKUP_libraryTextures["Basic"] = bakerHouseMaterial;
     
     resources[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
     resources[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
