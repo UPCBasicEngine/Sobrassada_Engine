@@ -14,7 +14,6 @@
 
 #include <filesystem>
 
-
 LibraryModule::LibraryModule() {}
 
 LibraryModule::~LibraryModule() {}
@@ -27,14 +26,27 @@ bool LibraryModule::Init()
     return true;
 }
 
-bool LibraryModule::SaveScene(const char *path) const
+// Save = library/scenes/
+// SaveAs = all path + name.scene
+bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
 {
-    const std::unordered_map<UID, GameObject *> &gameObjects = App->GetSceneModule()->GetAllGameObjects();
-    const std::map<UID, Component *> &components             = App->GetSceneModule()->GetAllComponents();
-    UID sceneUID                                             = App->GetSceneModule()->GetSceneUID();
-    UID gameObjectRootUID                                    = App->GetSceneModule()->GetGameObjectRootUID();
+    SceneModule *sceneModule = App->GetSceneModule();
+    if (sceneModule == nullptr)
+    {
+        GLOG("Scene module not found");
+        return false;
+    }
 
-    std::string sceneName                                    = FileSystem::GetFileNameWithoutExtension(path);
+    UID sceneUID = (saveMode == SaveMode::Save) ? sceneModule->GetSceneUID() : GenerateUID();
+    const std::string &sceneName =
+        (saveMode == SaveMode::Save) ? sceneModule->GetSceneName() : FileSystem::GetFileNameWithoutExtension(path);
+
+    if (sceneUID == 0 && saveMode == SaveMode::Save) return false;
+
+    UID gameObjectRootUID   = sceneModule->GetGameObjectRootUID();
+
+    const auto &gameObjects = sceneModule->GetAllGameObjects();
+    const auto &components  = sceneModule->GetAllComponents();
 
     // Create doc JSON
     rapidjson::Document doc;
@@ -44,9 +56,9 @@ bool LibraryModule::SaveScene(const char *path) const
     rapidjson::Value scene(rapidjson::kObjectType);
 
     // Scene values
-    UID uid            = sceneUID;
-    std::string name   = sceneName;
-    UID rootGameObject = gameObjectRootUID;
+    UID uid                 = sceneUID;
+    const std::string &name = sceneName;
+    UID rootGameObject      = gameObjectRootUID;
 
     // Create structure
     scene.AddMember("UID", uid, allocator);
@@ -100,14 +112,27 @@ bool LibraryModule::SaveScene(const char *path) const
 
     doc.AddMember("Scene", scene, allocator);
 
-    // Save file as JSON
+    // Save file like JSON
     rapidjson::StringBuffer buffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
     doc.Accept(writer);
 
-    std::string fileName      = FileSystem::GetFileNameWithoutExtension(path);
+    std::string sceneFilePath;
+    std::string fileName;
 
-    unsigned int bytesWritten = (unsigned int)FileSystem::Save(path, buffer.GetString(), buffer.GetSize(), false);
+    if (saveMode == SaveMode::Save)
+    {
+        sceneFilePath = std::string(path) + std::to_string(sceneUID) + SCENE_EXTENSION;
+        fileName      = sceneName;
+    }
+    else
+    {
+        sceneFilePath = FileSystem::GetFilePath(path) + std::to_string(sceneUID) + SCENE_EXTENSION;
+        fileName      = FileSystem::GetFileNameWithoutExtension(path);
+    }
+
+    unsigned int bytesWritten =
+        (unsigned int)FileSystem::Save(sceneFilePath.c_str(), buffer.GetString(), buffer.GetSize(), false);
     if (bytesWritten == 0)
     {
         GLOG("Failed to save scene file: %s", path);
@@ -199,26 +224,27 @@ bool LibraryModule::LoadScene(const char *path)
 
     App->GetSceneModule()->LoadScene(sceneUID, name.c_str(), rootGameObject);
 
-    GLOG("Scene loaded successfully: %s", name.c_str());
+    GLOG("%s scene loaded", name.c_str());
     return true;
 }
 
-bool LibraryModule::LoadLibraryMaps() { 
+bool LibraryModule::LoadLibraryMaps()
+{
 
     for (const auto &entry : std::filesystem::recursive_directory_iterator(LIBRARY_PATH))
     {
-        
+
         if (entry.is_regular_file())
         {
             std::string filePath = entry.path().string();
 
             // Generate UID using the function from globals.h
-            UID originalUID = GenerateUID();
-            
-            // Modify the UID based on file extension
-            UID finalUID = LibraryModule::AssignFiletypeUID(originalUID, filePath);
+            UID originalUID      = GenerateUID();
 
-            UID prefix = finalUID / 100000000000000; 
+            // Modify the UID based on file extension
+            UID finalUID         = LibraryModule::AssignFiletypeUID(originalUID, filePath);
+
+            UID prefix           = finalUID / 100000000000000;
 
             switch (prefix)
             {
@@ -236,13 +262,13 @@ bool LibraryModule::LoadLibraryMaps() {
                 break;
             }
         }
-            
     }
 
-    return true; 
+    return true;
 }
 
-UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string &filePath) { 
+UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string &filePath)
+{
 
     uint64_t prefix = 99; // Default prefix "99" for unknown files
     if (FileSystem::GetFileExtension(filePath) == MESH_EXTENSION)
@@ -257,12 +283,10 @@ UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string &filePat
     {
         prefix = 03;
     }
-    //GLOG("%llu", prefix)
-    uint64_t final=  (prefix * 100000000000000) + (originalUID % 100000000000000);
+    // GLOG("%llu", prefix)
+    uint64_t final = (prefix * 100000000000000) + (originalUID % 100000000000000);
     GLOG("%llu", final);
     return final;
-
-
 }
 
 void LibraryModule::AddTexture(UID textureUID, const std::string &ddsPath)
@@ -279,7 +303,6 @@ void LibraryModule::AddMaterial(UID materialUID, const std::string &matPath)
 {
     meshMap[matPath] = materialUID; // Map the texture UID to its DDS path
 }
-
 
 UID LibraryModule::GetTextureUID(const std::string &texturePath) const
 {

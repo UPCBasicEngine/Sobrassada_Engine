@@ -25,7 +25,8 @@ bool SceneModule::Init()
 {
     GLOG("Creating SceneModule renderer context");
 
-    sceneUID                    = GenerateUID();
+    sceneUID                    = 0;
+    sceneName                   = "Default Scene";
 
     GameObject *sceneGameObject = new GameObject("SceneModule GameObject");
 
@@ -81,9 +82,10 @@ bool SceneModule::ShutDown()
 
 void SceneModule::LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject)
 {
-    sceneUID                    = sceneUID;
-    gameObjectRootUUID          = rootGameObject;
-    selectedGameObjectUUID      = gameObjectRootUUID;
+    this->sceneUID         = sceneUID;
+    gameObjectRootUUID     = rootGameObject;
+    selectedGameObjectUUID = gameObjectRootUUID;
+    this->sceneName        = sceneName;
 }
 
 void SceneModule::CloseScene()
@@ -103,7 +105,7 @@ void SceneModule::CloseScene()
     gameObjectRootUUID     = 0;
     selectedGameObjectUUID = 0;
 
-    GLOG("Scene closed");
+    GLOG("%s scene closed", sceneName.c_str());
 }
 
 void SceneModule::CreateSpatialDataStruct() {}
