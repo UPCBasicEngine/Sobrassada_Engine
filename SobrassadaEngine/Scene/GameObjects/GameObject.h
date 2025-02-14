@@ -39,14 +39,15 @@ public:
 	void SetUUID(UID newUUID) { uuid = newUUID; }
     
     RootComponent* GetRootComponent() const { return rootComponent; }
+
+    inline const AABB &GetAABB() const { return globalAABB; };
     
     void Render();
     void RenderEditor();
     
     void PassAABBUpdateToParent() override;
+    void ComponentGlobalTransformUpdated() /*override*/;
     const Transform& GetGlobalTransform() const override;
-
-    void UpdateTransformByHierarchy();
 
 private:
 
@@ -56,7 +57,7 @@ private:
 
 	std::string name;
 
-        RootComponent *rootComponent;
+    RootComponent *rootComponent;
 
-	BoundingBox boundingBox;
+    AABB globalAABB;
 };

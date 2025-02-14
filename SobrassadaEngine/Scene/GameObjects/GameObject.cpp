@@ -11,12 +11,14 @@ GameObject::GameObject(std::string name) : name(name)
 {
     uuid       = LCG().IntFast();
     parentUUID = INVALID_UUID;
+    globalAABB.SetNegativeInfinity();
     CreateRootComponent();
 }
 
 GameObject::GameObject(UID parentUUID, std::string name) : parentUUID(parentUUID), name(name)
 {
     uuid = LCG().IntFast();
+    globalAABB.SetNegativeInfinity();
     CreateRootComponent();
 }
 
@@ -88,37 +90,43 @@ void GameObject::RenderEditor()
 void GameObject::PassAABBUpdateToParent()
 {
     // TODO Update AABBs further up the gameObject tree
+    globalAABB = AABB(rootComponent->GetGlobalAABB());
+
+    for (UID child : children)
+    {
+        GameObject *gameObject = App->GetSceneModule()->GetGameObjectByUUID(child);
+
+        if (gameObject != nullptr)
+        {
+            globalAABB.Enclose(gameObject->GetAABB());
+        }
+    }
+
+    GameObject *parentGameObject = App->GetSceneModule()->GetGameObjectByUUID(parentUUID);
+
+    if (parentGameObject != nullptr)
+    {
+        parentGameObject->PassAABBUpdateToParent();
+    }
+}
+
+void GameObject::ComponentGlobalTransformUpdated()
+{
+    if (rootComponent != nullptr)
+        globalAABB = AABB(rootComponent->GetGlobalAABB());
+
+    for (UID child : children)
+    {
+        GameObject *childGameObject = App->GetSceneModule()->GetGameObjectByUUID(child);
+
+        if (childGameObject != nullptr)
+        {
+            globalAABB.Enclose(childGameObject->rootComponent->TransformUpdated(rootComponent == nullptr ? Transform():rootComponent->GetGlobalTransform()));
+        }
+    }
 }
 
 const Transform & GameObject::GetGlobalTransform() const
 {
     return rootComponent->GetGlobalTransform();
-}
-
-void GameObject::UpdateTransformByHierarchy()
-{
-    if (!rootComponent) return;
-
-    RootComponent *parentRootComponent = nullptr;
-
-    if (parentUUID != INVALID_UUID)
-    {
-        GameObject *parentGameObject = App->GetSceneModule()->GetGameObjectByUUID(parentUUID);
-        
-        if (parentGameObject) 
-            parentRootComponent = parentGameObject->GetRootComponent();
-    }
-
-    if (parentRootComponent) 
-        rootComponent->OnTransformUpdate(parentRootComponent->GetGlobalTransform());
-    else 
-        rootComponent->OnTransformUpdate(rootComponent->GetLocalTransform());
-
-    for (UID childUUID : children)
-    {
-        GameObject *childGameObject = App->GetSceneModule()->GetGameObjectByUUID(childUUID);
-
-        if (childGameObject) 
-            childGameObject->UpdateTransformByHierarchy();
-    }
 }

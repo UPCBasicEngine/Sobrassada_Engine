@@ -82,13 +82,6 @@ void Component::RenderEditorInspector()
             
             if (parent != nullptr)
             {
-                GameObject *parentGameObject = dynamic_cast<GameObject *>(parent);
-                if (parentGameObject)
-                {
-                    parentGameObject->UpdateTransformByHierarchy();
-                    return;
-                }
-                
                 OnTransformUpdate(parent->GetGlobalTransform());
             } else
             {
@@ -113,15 +106,13 @@ void Component::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
         GameObject* selectedGameObject = App->GetSceneModule()->GetSeletedGameObject();
-        if (selectedGameObject != nullptr)
+
+        RootComponent* rootComponent = selectedGameObject-> GetRootComponent();
+        if (rootComponent != nullptr)
         {
-            RootComponent* rootComponent = selectedGameObject-> GetRootComponent();
-            if (rootComponent != nullptr)
-            {
-                rootComponent->SetSelectedComponent(uuid);
-            }
+            rootComponent->SetSelectedComponent(uuid);
         }
-        
+                
     }
 
     HandleDragNDrop();
