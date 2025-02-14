@@ -23,25 +23,25 @@
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_demo.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_draw.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_impl_opengl3.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_impl_sdl2.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_tables.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_widgets.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Libs\MathGeoLib\include\Geometry\AABB.cpp">
       <Filter>MathGeoLib</Filter>
@@ -180,10 +180,10 @@
     <ClCompile Include="FileSystem\TextureImporter.cpp">
       <Filter>FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="LibraryModule.cpp">
+    <ClCompile Include="Modules\LibraryModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialImporter.cpp">
+    <ClCompile Include="FileSystem\MaterialImporter.cpp">
       <Filter>FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="Utils\LightsConfig.cpp" />
@@ -209,7 +209,7 @@
       <Filter>Resources</Filter>
     </ClCompile>
     <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp">
-      <Filter>ImGuizmo</Filter>
+      <Filter>Libs\ImGuizmo</Filter>
     </ClCompile>
     <ClCompile Include="ResourceManagement\Resources\Resource.cpp">
       <Filter>Resources</Filter>
@@ -224,9 +224,6 @@
     </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{2cd12f8e-4d83-4137-a3bb-33b6ec3804a8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ImGui">
-      <UniqueIdentifier>{add34c0e-22b7-4156-b4ab-74923f0775f1}</UniqueIdentifier>
     </Filter>
     <Filter Include="MathGeoLib">
       <UniqueIdentifier>{77ec05ef-e581-4de2-bda3-50c6c7bcc0d2}</UniqueIdentifier>
@@ -249,17 +246,23 @@
     <Filter Include="Scene\GameObjects">
       <UniqueIdentifier>{ba55c87b-9ef3-442f-a67f-7017601a591f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ImGuizmo">
-      <UniqueIdentifier>{557b3855-2c1e-41d1-b6ab-ecab1faac98c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="FileSystem">
       <UniqueIdentifier>{71717f5e-3c10-4a82-a6fa-814368871f96}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Component">
-      <UniqueIdentifier>{4703276c-c78f-40d2-95ff-988860911c40}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{d7c688e0-aa2a-4d05-b818-bca402d54e0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs">
+      <UniqueIdentifier>{b4ceb591-6973-4bd0-9e0a-9b04469f17ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\rapidjson">
+      <UniqueIdentifier>{c635a4d7-8c45-4dbe-9753-714eedffdda8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\ImGui">
+      <UniqueIdentifier>{add34c0e-22b7-4156-b4ab-74923f0775f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libs\ImGuizmo">
+      <UniqueIdentifier>{557b3855-2c1e-41d1-b6ab-ecab1faac98c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -288,31 +291,31 @@
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imconfig.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_impl_opengl3.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_impl_opengl3_loader.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_impl_sdl2.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_internal.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imstb_rectpack.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imstb_textedit.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imstb_truetype.h">
-      <Filter>ImGui</Filter>
+      <Filter>Libs\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Application.h" />
     <ClInclude Include="DebugDraw\debugdraw.h">
@@ -339,7 +342,6 @@
     <ClInclude Include="UI\EditorViewport.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="FileSystem\FileSystem.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
@@ -352,7 +354,7 @@
     <ClInclude Include="FileSystem\TextureImporter.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialImporter.h">
+    <ClInclude Include="FileSystem\MaterialImporter.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
@@ -361,7 +363,7 @@
     <ClInclude Include="Mesh.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
-    <ClInclude Include="LibraryModule.h">
+    <ClInclude Include="Modules\LibraryModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h">
@@ -403,13 +405,79 @@
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h">
-      <Filter>ImGuizmo</Filter>
+      <Filter>Libs\ImGuizmo</Filter>
     </ClInclude>
     <ClInclude Include="ResourceManagement\Resources\Resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Scene.h">
       <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\ostreamwrapper.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\pointer.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\prettywriter.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\rapidjson.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\reader.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\schema.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\stream.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\stringbuffer.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\uri.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\writer.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\cursorstreamwrapper.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\document.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\encodedstream.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\encodings.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\filereadstream.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\filewritestream.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\fwd.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\istreamwrapper.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\memorybuffer.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\memorystream.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\rapidjson\allocators.h">
+      <Filter>Libs\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h">
+      <Filter>Scene\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
