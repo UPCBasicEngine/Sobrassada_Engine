@@ -13,6 +13,7 @@ class EngineMesh;
 class GameObject;
 class Component;
 class RootComponent;
+class Octree;
 
 class SceneModule : public Module
 {
@@ -31,18 +32,13 @@ class SceneModule : public Module
     void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject);
     void CloseScene();
 
-    void CreateSpatialDataStruct();
-    void UpdateSpatialDataStruct();
-
-	void CheckObjectsToRender();
-	
-	void RenderHierarchyUI(bool &hierarchyMenu);
+    void RenderHierarchyUI(bool &hierarchyMenu);
     void RenderGameObjectHierarchy(UID gameObjectUUID);
 
-	void HandleNodeClick(UID gameObjectUUID);
+    void HandleNodeClick(UID gameObjectUUID);
     void RenderContextMenu(UID gameObjectUUID);
 
-	void RemoveGameObjectHierarchy(UID gameObjectUUID);
+    void RemoveGameObjectHierarchy(UID gameObjectUUID);
     void UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID);
 
 	//TODO: Change when filesystem defined
@@ -75,13 +71,21 @@ class SceneModule : public Module
     
 
   private:
+    void CreateSpatialDataStruct();
+    void UpdateSpatialDataStruct();
+    void CheckObjectsToRender(std::vector<GameObject *> &outRenderGameObjects) const;
+
+  private:
+    uint32_t gameObjectRootUUID;
     UID sceneUID;
     UID gameObjectRootUUID;
     std::string sceneName;
     
-	UID selectedGameObjectUUID;
+    UID selectedGameObjectUUID;
 
-	std::unordered_map<UID, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
+    std::unordered_map<UID, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
+
+    Octree *sceneOctree = nullptr;
 
     // Scene* loadedScene = nullptr;
 

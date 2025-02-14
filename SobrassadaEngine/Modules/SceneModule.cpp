@@ -1,8 +1,11 @@
 #include "SceneModule.h"
 
+#include "CameraModule.h"
 #include "ComponentUtils.h"
 #include "EngineModel.h"
+#include "FrustumPlanes.h"
 #include "GameObject.h"
+#include "Octree.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -10,6 +13,7 @@
 #include "imgui_impl_sdl2.h"
 
 #include "Root/RootComponent.h"
+#include "Scene/Components/Standalone/MeshComponent.h"
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
@@ -46,6 +50,23 @@ bool SceneModule::Init()
     // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
+    MOCKUP_loadedModel = new EngineModel();
+    MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
+
+    const uint32_t bakerHouseID                   = LCG().IntFast();
+    const uint32_t bakerHouseChimneyID            = LCG().IntFast();
+
+    const uint32_t bakerHouseTextureID            = LCG().IntFast();
+
+    MOCKUP_loadedMeshes[bakerHouseID]             = MOCKUP_loadedModel->GetMesh(1);
+    MOCKUP_loadedMeshes[bakerHouseChimneyID]      = MOCKUP_loadedModel->GetMesh(0);
+    MOCKUP_libraryMeshes["Baker house"]           = bakerHouseID;
+    MOCKUP_libraryMeshes["Baker house chimney"]   = bakerHouseChimneyID;
+
+    // TODO Always have a default grid texture loaded to apply as standard
+    MOCKUP_loadedTextures[bakerHouseTextureID]    = MOCKUP_loadedModel->GetActiveRenderTexture();
+    MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
+
     return true;
 }
 
@@ -55,7 +76,7 @@ update_status SceneModule::Update(float deltaTime) { return UPDATE_CONTINUE; }
 
 update_status SceneModule::Render(float deltaTime)
 {
-    for (auto &gameObject : gameObjectsContainer)
+    for (auto& gameObject : gameObjectsContainer)
     {
         gameObject.second->Render();
     }
@@ -64,7 +85,7 @@ update_status SceneModule::Render(float deltaTime)
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
-    GameObject *selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
+    GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
     if (selectedGameObject != nullptr)
     {
         selectedGameObject->RenderEditor();
@@ -76,7 +97,9 @@ update_status SceneModule::PostUpdate(float deltaTime) { return UPDATE_CONTINUE;
 
 bool SceneModule::ShutDown()
 {
-    GLOG("Destroying renderer");
+    delete sceneOctree;
+
+    GLOG("Destroying octree");
     return true;
 }
 
@@ -108,13 +131,48 @@ void SceneModule::CloseScene()
     GLOG("%s scene closed", sceneName.c_str());
 }
 
-void SceneModule::CreateSpatialDataStruct() {}
+void SceneModule::CreateSpatialDataStruct()
+{
+    //float3 octreeCenter = float3::zero;
+    //float octreeLength  = 100;
+    //int nodeCapacity    = 5;
+    //sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
 
-void SceneModule::UpdateSpatialDataStruct() {}
+    //for (auto& objectIterator : gameObjectsContainer)
+    //{
+    //    AABB objectBB = objectIterator.second->GetGlobalBoundingBox();
 
-void SceneModule::CheckObjectsToRender() {}
+    //    if (objectBB.Size().x == 0 && objectBB.Size().y == 0 && objectBB.Size().z == 0) continue;
 
-void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
+    //    sceneOctree->InsertElement(objectIterator.second);
+    //}
+}
+
+void SceneModule::UpdateSpatialDataStruct()
+{
+    delete sceneOctree;
+
+    CreateSpatialDataStruct();
+}
+
+void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects) const
+{
+    //std::vector<GameObject*> queriedObjects;
+    //const FrustumPlanes& frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+
+    //sceneOctree->QueryElements(frustumPlanes, queriedObjects);
+
+    //for (auto gameObject : queriedObjects)
+    //{
+    //    OBB objectOBB = gameObject->GetGlobalOrientedBoundingBox();
+
+    //    if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
+    //}
+}
+
+
+
+void SceneModule::RenderHierarchyUI(bool& hierarchyMenu)
 {
     ImGui::Begin("Hierarchy", &hierarchyMenu);
 
@@ -150,7 +208,7 @@ void SceneModule::RenderGameObjectHierarchy(UID gameObjectUUID)
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID)) return;
 
-    GameObject *gameObject   = GetGameObjectByUUID(gameObjectUUID);
+    GameObject* gameObject   = GetGameObjectByUUID(gameObjectUUID);
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
@@ -202,7 +260,7 @@ void SceneModule::HandleNodeClick(UID gameObjectUUID)
 
     if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
         {
             UID draggedUUID = *reinterpret_cast<const UID *>(payload->Data);
 
@@ -286,7 +344,7 @@ void SceneModule::RemoveGameObjectHierarchy(UID gameObjectUUID)
     // TODO: Change when filesystem defined
     if (!gameObjectsContainer.count(gameObjectUUID) || gameObjectUUID == gameObjectRootUUID) return;
 
-    GameObject *gameObject = GetGameObjectByUUID(gameObjectUUID);
+    GameObject* gameObject = GetGameObjectByUUID(gameObjectUUID);
 
     for (UID childUUID : gameObject->GetChildren())
     {
@@ -298,7 +356,7 @@ void SceneModule::RemoveGameObjectHierarchy(UID gameObjectUUID)
     // TODO: change when filesystem defined
     if (gameObjectsContainer.count(parentUUID))
     {
-        GameObject *parentGameObject = GetGameObjectByUUID(parentUUID);
+        GameObject* parentGameObject = GetGameObjectByUUID(parentUUID);
         parentGameObject->RemoveGameObject(gameObjectUUID);
         selectedGameObjectUUID = parentUUID;
     }
@@ -311,8 +369,8 @@ void SceneModule::RemoveGameObjectHierarchy(UID gameObjectUUID)
 
 void SceneModule::UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID)
 {
-    GameObject *sourceGameObject = GetGameObjectByUUID(sourceUUID);
-    GameObject *targetGameObject = GetGameObjectByUUID(targetUUID);
+    GameObject* sourceGameObject = GetGameObjectByUUID(sourceUUID);
+    GameObject* targetGameObject = GetGameObjectByUUID(targetUUID);
 
     if (!sourceGameObject || !targetGameObject) return;
 
@@ -321,7 +379,7 @@ void SceneModule::UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID)
 
     if (gameObjectsContainer.count(oldParentUUID))
     {
-        GameObject *oldParentGameObject = GetGameObjectByUUID(oldParentUUID);
+        GameObject* oldParentGameObject = GetGameObjectByUUID(oldParentUUID);
         oldParentGameObject->RemoveGameObject(sourceUUID);
     }
 

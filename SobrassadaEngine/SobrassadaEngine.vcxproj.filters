@@ -217,6 +217,48 @@
     <ClCompile Include="Utils\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="UI\QuadtreeViewer.cpp">
+          <Filter>UI</Filter>
+        </ClCompile>
+        <ClCompile Include="Utils\Quadtree.cpp">
+          <Filter>Utils</Filter>
+        </ClCompile>
+        <ClCompile Include="Tests\MockGameObject.cpp">
+          <Filter>Tests</Filter>
+        </ClCompile>
+        <ClCompile Include="Utils\Octree.cpp">
+          <Filter>Utils</Filter>
+        </ClCompile>
+        <ClCompile Include="Scene\Components\Component.cpp">
+          <Filter>Scene\Components</Filter>
+        </ClCompile>
+        <ClCompile Include="Scene\GameObjects\GameObject.cpp">
+          <Filter>Scene\GameObjects</Filter>
+        </ClCompile>
+        <ClCompile Include="Modules\SceneModule.cpp">
+          <Filter>Modules</Filter>
+        </ClCompile>
+        <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp">
+          <Filter>ImGuizmo</Filter>
+        </ClCompile>
+        <ClCompile Include="Scene\Components\Standalone\MeshComponent.cpp">
+          <Filter>Scene\Components</Filter>
+        </ClCompile>
+        <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
+          <Filter>Scene\Components</Filter>
+        </ClCompile>
+        <ClCompile Include="Scene\Components\Component.cpp">
+          <Filter>Scene\Components</Filter>
+        </ClCompile>
+        <ClCompile Include="Scene\Components\ComponentUtils.cpp">
+          <Filter>Scene\Components</Filter>
+        </ClCompile>
+        <ClCompile Include="Utils\Scene.cpp">
+          <Filter>Scene</Filter>
+        </ClCompile>
+        <ClCompile Include="Utils\FrustumPlanes.cpp">
+          <Filter>Utils</Filter>
+        </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -411,6 +453,21 @@
     <ClInclude Include="Utils\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="UI\QuadtreeViewer.h">
+          <Filter>UI</Filter>
+        </ClInclude>
+        <ClInclude Include="Utils\Quadtree.h">
+          <Filter>Utils</Filter>
+        </ClInclude>
+        <ClInclude Include="Tests\MockGameObject.h">
+          <Filter>Tests</Filter>
+        </ClInclude>
+        <ClInclude Include="Utils\Octree.h">
+          <Filter>Utils</Filter>
+        </ClInclude>
+        <ClInclude Include="Utils\FrustumPlanes.h">
+              <Filter>Utils</Filter>
+            </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

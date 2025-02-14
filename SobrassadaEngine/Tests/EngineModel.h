@@ -21,18 +21,23 @@ public:
 	void Load(const char* modelPath);
 	void LoadMaterials(const tinygltf::Model& sourceModel, const char* modelPath);
 
-	void Render(int program, unsigned int cameraUBO);
+
+	void LoadAdditionalTexture(const char* texturePath);
+
+	void Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix);
 
 	float3 GetMaximumValues() const { return maxValues; };
 	float3 GetMinimumValues() const { return minValues; };
 
 	int GetIndexCount() const { return indexCount; }
 	int GetRenderTexture() const { return renderTexture; };
+	void GetTextureSize(float2& outTextureSize);
+    OBB GetOBBModel() const;
+    AABB GetABBModel() const;
+	void SetRenderTexture(int texturePosition);
 
-	std::vector<ResourceMaterial*> &GetMaterials() { return materials; }
-    ResourceMaterial* GetMaterial(const int index);
 
-    ResourceMesh* GetMesh(int index) const { return meshes[index]; }
+    EngineMesh* GetMesh(int index) const { return meshes[index]; }
 
     unsigned int GetActiveRenderTexture() const { return textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0; }
 

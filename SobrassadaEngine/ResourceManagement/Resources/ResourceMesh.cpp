@@ -250,5 +250,7 @@ void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int camer
 
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
+
+	glBindVertexArray(0);
 }
 

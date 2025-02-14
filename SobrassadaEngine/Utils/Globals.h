@@ -77,6 +77,9 @@ constexpr UID CONSTANT_EMPTY_UID = 0;
 constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID = "mesh-select";
 constexpr const char* CONSTANT_TEXTURE_SELECT_DIALOG_ID = "texture-select";
 
+constexpr uint32_t CONSTANT_NO_MESH_UUID = 0;
+constexpr uint32_t CONSTANT_NO_TEXTURE_UUID = 0;
+
 constexpr float PI = 3.14159265359f;
 constexpr float RAD_DEGREE_CONV = 180.f / PI;
 

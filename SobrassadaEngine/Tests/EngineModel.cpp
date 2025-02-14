@@ -5,6 +5,9 @@
 #include "MathGeoLib.h"
 #include "TextureModuleTest.h"
 #include "glew.h"
+#include "DirectXTex/DirectXTex.h"
+#include "Geometry/Frustum.h"
+#include "DebugDraw/debugdraw.h"
 #include <string>
 #include <unordered_set>
 
@@ -71,14 +74,22 @@ void EngineModel::Render(int program, unsigned int cameraUBO)
 {
 	/*for (ResourceMesh* currentMesh : meshes)
 	{
-        std::vector<int>& indices = currentMesh->GetMaterialIndices();
-		for (size_t i = 0; i < indices.size(); ++i)
-		{
-            ResourceMaterial* material = &GetMaterial(indices[i]);
-			int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
-            //currentMesh->Render(program, material, cameraUBO);
-        }
-	}*/
+		widthHeight.x = textureMetadata.width;
+		widthHeight.y = textureMetadata.height;
+
+		renderTexture++;
+		textures.push_back(textureId);
+		textureInfo.push_back(widthHeight);
+	}
+}
+
+void EngineModel::Render(int program, float4x4& modelMatrix, float4x4& projectionMatrix, float4x4& viewMatrix)
+{
+	for (EngineMesh* currentMesh : meshes)
+	{
+		int texturePostiion = textures.size() > 0 ? renderTexture > -1 ? textures[renderTexture] : textures[textures.size() - 1] : 0;
+		//currentMesh->Render(program, modelMatrix, projectionMatrix, viewMatrix);
+	}
 }
 
 void EngineModel::LoadRecursive(
@@ -143,22 +154,24 @@ void EngineModel::LoadRecursive(
 			if (primitive.indices >= 0) newMesh->LoadEBO(sourceModel, sourceModel.meshes[currentNode.mesh], primitive);
 			newMesh->CreateVAO();
 
-			/*float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
-			float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
+			//float3 meshMaxValues = modelMatrix.MulPos(newMesh->GetMaximumPosition());
+   //         float3 meshMinValues = modelMatrix.MulPos(newMesh->GetMinimumPosition());
 
-			if (firstMesh)
-			{
-				firstMesh = false;
-				maxValues = meshMaxValues;
-				minValues = meshMinValues;
-			}
-			else
-			{
-				maxValues = float3(Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y), Max(maxValues.z, meshMaxValues.z));
-				minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
-			}*/
-			//newMesh->SetBasicModelMatrix(modelMatrix);
-            //newMesh->SetMaterialIndex(primitive.material);
+			//if (firstMesh)
+			//{
+			//	firstMesh = false;
+			//	maxValues = meshMaxValues;
+			//	minValues = meshMinValues;
+			//}
+			//else
+			//{
+			//	maxValues = float3(Max(maxValues.x, meshMaxValues.x), Max(maxValues.y, meshMaxValues.y), Max(maxValues.z, meshMaxValues.z));
+			//	minValues = float3(Min(minValues.x, meshMinValues.x), Min(minValues.y, meshMinValues.y), Min(minValues.z, meshMinValues.z));
+			//}
+
+
+
+			newMesh->SetBasicModelMatrix(modelMatrix);
 			
 			indexCount += newMesh->GetIndexCount();
 			meshes.push_back(newMesh);
@@ -174,6 +187,44 @@ void EngineModel::LoadRecursive(
 
     return;
 }
+
+OBB EngineModel::GetOBBModel() const{
+	
+    OBB obbModel(GetABBModel());
+
+    float3 corners[8];
+    obbModel.GetCornerPoints(corners);
+
+    int edges[12][2] = {
+        {0, 1},
+        {1, 5},
+        {2, 3},
+        {3, 7},
+        {4, 0},
+        {5, 4},
+        {6, 2},
+        {7, 6},
+        {0, 2},
+        {1, 3},
+        {4, 6},
+        {5, 7}
+    };
+
+    //for (int i = 0; i < 12; i++)
+    //{
+    //    dd::line(corners[edges[i][0]], corners[edges[i][1]], dd::colors::Red);
+    //}
+
+	 return obbModel;
+}
+
+AABB EngineModel::GetABBModel() const
+{
+    AABB aabbModel(minValues, maxValues);
+
+    return aabbModel;
+}
+
 
 void EngineModel::ClearVectors()
 {

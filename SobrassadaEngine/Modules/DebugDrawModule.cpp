@@ -3,6 +3,7 @@
 #include "CameraModule.h"
 #include "Globals.h"
 #include "MathGeoLib.h"
+#include "QaudtreeViewer.h"
 #include "SDL_video.h"
 #include "WindowModule.h"
 
@@ -578,9 +579,13 @@ const char *DDRenderInterfaceCoreGL::textFragShaderSrc =
 
 DDRenderInterfaceCoreGL *DebugDrawModule::implementation = 0;
 
-DebugDrawModule::DebugDrawModule() {}
+DebugDrawModule::DebugDrawModule()
+{
+}
 
-DebugDrawModule::~DebugDrawModule() {}
+DebugDrawModule::~DebugDrawModule()
+{
+}
 
 bool DebugDrawModule::Init()
 {
@@ -624,4 +629,20 @@ void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned 
     implementation->mvpMatrix = proj * view;
 
     dd::flush();
+}
+
+void DebugDrawModule::Render2DLines(const std::vector<float4> &lines, const float3 &color, float depth)
+{
+    for (auto &line : lines)
+    {
+        dd::line(ddVec3(line.x, line.y, depth), ddVec3(line.z, line.w, depth), ddVec3(color.x, color.y, color.z));
+    }
+}
+
+void DebugDrawModule::RenderLines(const std::vector<LineSegment> &lines, const float3 &color)
+{
+    for (auto &line : lines)
+    {
+        dd::line(line.a, line.b, color);
+    }
 }

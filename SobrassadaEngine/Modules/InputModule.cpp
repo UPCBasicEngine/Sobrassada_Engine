@@ -15,6 +15,7 @@ InputModule::InputModule()
     keyboard = new KeyState[MAX_KEYS];
     memset(keyboard, KEY_IDLE, sizeof(KeyState) * MAX_KEYS);
     memset(mouseButtons, KEY_IDLE, sizeof(KeyState) * NUM_MOUSE_BUTTONS);
+    subscribedCallbacks.assign(MAX_KEYS, std::vector<std::function<void(void)>>());
 }
 
 InputModule::~InputModule() { RELEASE_ARRAY(keyboard); }
@@ -156,12 +157,15 @@ update_status InputModule::PreUpdate(float deltaTime)
         }
     }
 
-    // TESTING EVENT DISPATCHER
-    if (keyboard[SDL_SCANCODE_F] == KEY_DOWN)
+    // Dispatch events
+    for (int key = 0; key < MAX_KEYS; ++key)
     {
-        for (const auto it : subscribedCallbacks[SDL_SCANCODE_F])
+        if (keyboard[key] == KEY_DOWN)
         {
-            it();
+            for (const auto& it : subscribedCallbacks[key])
+            {
+                it();
+            }
         }
     }
     if (keyboard[SDL_SCANCODE_R] == KEY_DOWN)
@@ -240,15 +244,7 @@ bool InputModule::ShutDown()
 
 void InputModule::SubscribeToEvent(int keyEvent, std::function<void(void)> &functionCallback)
 {
-    auto eventIterator = subscribedCallbacks.find(keyEvent);
-    if (eventIterator != subscribedCallbacks.end())
-    {
-        eventIterator->second.push_back(functionCallback);
-    }
-    else
-    {
-        auto newList = std::list<std::function<void(void)>>();
-        newList.push_back(functionCallback);
-        subscribedCallbacks.insert({keyEvent, newList});
-    }
+    if (keyEvent > MAX_KEYS || keyEvent < 0) return;
+    
+    subscribedCallbacks[keyEvent].push_back(functionCallback);
 }

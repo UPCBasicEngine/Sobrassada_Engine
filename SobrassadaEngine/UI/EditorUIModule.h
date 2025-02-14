@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 class EditorViewport;
+class QuadtreeViewer;
 
 class EditorUIModule : public Module
 {
@@ -56,19 +57,23 @@ public:
     void SaveDialog(bool &save);
 
   private:
-    bool consoleMenu        = true;
+    bool consoleMenu            = true;
     bool import             = false;
     bool load               = false;
     bool save               = false;
     bool loadScene          = false;
-    bool editorSettingsMenu = false;
-    bool closeApplication   = false;
+    bool editorSettingsMenu     = false;
+    bool quadtreeViewerViewport = false;
+    bool closeApplication       = false;
 
-    int maximumPlotData     = 50;
+    int maximumPlotData         = 50;
     std::deque<float> framerate;
     std::deque<float> frametime;
 
+    int transformType = LOCAL;
+
     EditorViewport *editorViewport = nullptr;
+    QuadtreeViewer *quadtreeViewer = nullptr;
 
     int width, height;
 

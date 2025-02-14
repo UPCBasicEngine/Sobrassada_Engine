@@ -7,10 +7,13 @@
 #include "OpenGLModule.h"
 #include "SceneImporter.h"
 #include "WindowModule.h"
+#include "QuadtreeViewer.h"
+#include "SceneModule.h"
+
+#include "Component.h"
 #include "SceneModule.h"
 
 #include "GameObject.h"
-#include "Component.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -44,6 +47,7 @@ bool EditorUIModule::Init()
     ImGui_ImplOpenGL3_Init("#version 460");
 
     editorViewport = new EditorViewport();
+    quadtreeViewer = new QuadtreeViewer();
 
     width          = App->GetWindowModule()->GetWidth();
     height         = App->GetWindowModule()->GetHeight();
@@ -75,7 +79,9 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
     Draw();
 
     editorViewport->Render();
-    
+
+    if (quadtreeViewerViewport) quadtreeViewer->Render(quadtreeViewerViewport);
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     
@@ -100,6 +106,7 @@ bool EditorUIModule::ShutDown()
     frametime.clear();
 
     delete editorViewport;
+    delete quadtreeViewer;
 
     return true;
 }
@@ -169,9 +176,13 @@ void EditorUIModule::MainMenu()
     }
 
     // General menu
-    if (ImGui::BeginMenu("View"))
+    if (ImGui::BeginMenu("General"))
     {
-        if (ImGui::MenuItem("Console", "", consoleMenu)) consoleMenu = !consoleMenu;
+        if (ImGui::MenuItem("Console")) consoleMenu = !consoleMenu;
+        
+        if (ImGui::MenuItem("Quadtree")) quadtreeViewerViewport = !quadtreeViewerViewport;
+
+        if (ImGui::MenuItem("Quit")) closeApplication = true;
 
         ImGui::EndMenu();
     }

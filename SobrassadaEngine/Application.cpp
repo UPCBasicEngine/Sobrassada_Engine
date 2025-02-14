@@ -13,6 +13,7 @@
 #include "CameraModule.h"
 #include "DebugDrawModule.h"
 #include "Framebuffer.h"
+#include "RenderTestModule.h"
 #include "TextureModuleTest.h"
 #include "Root/RootComponent.h"
 
@@ -24,10 +25,10 @@ Application::Application()
     modules.push_back(textureModuleTest = new TextureModuleTest());
 
     modules.push_back(openGLModule = new OpenGLModule());
+    modules.push_back(libraryModule = new LibraryModule());
     modules.push_back(resourcesModule = new ResourcesModule());
     modules.push_back(inputModule = new InputModule());
     modules.push_back(shaderModule = new ShaderModule());
-    modules.push_back(libraryModule = new LibraryModule());
     modules.push_back(sceneModule = new SceneModule());
 
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
