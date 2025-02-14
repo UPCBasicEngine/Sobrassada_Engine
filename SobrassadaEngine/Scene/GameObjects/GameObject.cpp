@@ -104,10 +104,12 @@ const AABB &GameObject::GetGlobalBoundingBox()
         if (childComponent != nullptr)
         {
             AABB componentAABB = childComponent->GetGlobalAABB();
+           
             if (first)
             {
                 first = false;
                 globalBB = componentAABB;
+                
             }
             else
             {
@@ -123,4 +125,24 @@ const AABB &GameObject::GetGlobalBoundingBox()
     }
 
     return globalBB;
+}
+// SPATIAL_PARTITIONING TESTING
+const OBB &GameObject::GetGlobalOrientedBoundingBox()
+{
+    bool first = true;
+    for (const auto id : children)
+    {
+        Component *childComponent = App->GetSceneModule()->gameComponents[id];
+
+        if (childComponent != nullptr)
+        {
+            OBB componentOBB = childComponent->GetGlobalOBB();
+            if (first)
+            {
+                first    = false;
+                obbObject = componentOBB;
+            }
+        }
+    }
+    return obbObject;
 }

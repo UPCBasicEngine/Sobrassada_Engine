@@ -224,7 +224,7 @@ void Component::PassAABBUpdateToParent()
 
 void Component::CalculateLocalAABB()
 {
-    OBB globalComponentOBB = OBB(localComponentAABB);
+    globalComponentOBB = OBB(localComponentAABB);
     globalComponentOBB.Transform(float4x4::FromTRS(
                     globalTransform.position,
                     Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),

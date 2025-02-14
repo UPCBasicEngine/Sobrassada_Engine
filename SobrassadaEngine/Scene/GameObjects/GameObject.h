@@ -8,6 +8,7 @@
 
 // SPATIAL_PARTITIONING TESTING
 #include "Geometry/AABB.h"
+#include "Geometry/Obb.h"
 
 class RootComponent;
 
@@ -48,6 +49,8 @@ class GameObject : public AABBUpdatable
     
     // SPATIAL_PARTITIONING TESTING
     const AABB &GetGlobalBoundingBox();
+    const OBB &GetGlobalOrientedBoundingBox();
+  
 
   private:
     uint32_t parentUUID;
@@ -62,4 +65,6 @@ class GameObject : public AABBUpdatable
 
     // SPATIAL_PARTITIONING TESTING
     AABB globalBB;
+    OBB obbObject;
+
 };

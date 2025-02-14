@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <Geometry/AABB.h>
+#include <Geometry/OBB.h>
 
 class Component : public AABBUpdatable
 {
@@ -45,6 +46,9 @@ public:
 
     void CalculateLocalAABB();
 
+    // SPATIAL_PARTITIONING TESTING
+    const OBB &GetGlobalOBB() const { return globalComponentOBB; }
+
 protected:
     
     const uint32_t uuid;
@@ -60,5 +64,7 @@ protected:
 
     AABB localComponentAABB;
     AABB globalComponentAABB;
+    OBB globalComponentOBB; 
+    
     
 };

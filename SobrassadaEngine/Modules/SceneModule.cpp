@@ -23,6 +23,7 @@
 #include "Framebuffer.h"
 #include "Geometry/LineSegment.h"
 #include "Geometry/OBB.h"
+#include "Math/Quat.h"
 #include "OpenGLModule.h"
 
 SceneModule::SceneModule()
@@ -79,7 +80,7 @@ bool SceneModule::Init()
     MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
 
     // SPATIAL_PARTITIONING TESTING
-    CreateHouseGameObject(1000);
+    CreateHouseGameObject(10);
     CreateSpatialDataStruct();
 
     return true;
@@ -106,7 +107,7 @@ update_status SceneModule::Render(float deltaTime)
         gameObject->Render();
     }
 
-    //RenderBoundingBoxes();
+    RenderBoundingBoxes();
     //RenderOctree();
 
     return UPDATE_CONTINUE;
@@ -177,7 +178,7 @@ void SceneModule::CheckObjectsToRender(std::vector< GameObject *> &outRenderGame
 
     for (auto gameObject : queriedObjects)
     {
-        OBB objectOBB = OBB(gameObject->GetGlobalBoundingBox());
+        OBB objectOBB = gameObject->GetGlobalOrientedBoundingBox();
 
         float3 corners[8];
         objectOBB.GetCornerPoints(corners);
@@ -483,11 +484,12 @@ void SceneModule::RenderBoundingBoxes()
 
     for (auto &gameObject : gameObjectsContainer)
     {
-        AABB gameObjectBB = gameObject.second->GetGlobalBoundingBox();
+        //AABB gameObjectBB = gameObject.second->GetGlobalBoundingBox();
+        OBB objectOBB     = gameObject.second->GetGlobalOrientedBoundingBox();
 
         for (int i = 0; i < 12; ++i)
         {
-            elementLines[currentDrawLine++] = gameObjectBB.Edge(i);
+            elementLines[currentDrawLine++] = objectOBB.Edge(i);
         }
     }
 
