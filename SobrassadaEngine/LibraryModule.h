@@ -17,6 +17,9 @@ class LibraryModule : public Module
     bool SaveScene(const char *path) const;
     bool LoadScene(const char *path);
 
+    bool LoadLibraryMaps();
+    UID AssignFiletypeUID(UID originalUID, const std::string &filePath);
+
     void AddTexture(UID textureUID, const std::string &ddsPath);
     void AddMesh(UID meshUID, const std::string &matPath);
     void AddMaterial(UID materialUID, const std::string &sobPath);
