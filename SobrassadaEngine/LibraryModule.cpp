@@ -11,6 +11,9 @@
 #include "prettywriter.h"
 #include "stringbuffer.h"
 
+#include <filesystem>
+
+
 LibraryModule::LibraryModule() {}
 
 LibraryModule::~LibraryModule() {}
@@ -18,6 +21,7 @@ LibraryModule::~LibraryModule() {}
 bool LibraryModule::Init()
 {
     SceneImporter::CreateLibraryDirectories();
+    LibraryModule::LoadLibraryMaps();
 
     return true;
 }
@@ -180,6 +184,68 @@ bool LibraryModule::LoadScene(const char *path)
     return true;
 }
 
+bool LibraryModule::LoadLibraryMaps() { 
+
+    for (const auto &entry : std::filesystem::recursive_directory_iterator(LIBRARY_PATH))
+    {
+        
+        if (entry.is_regular_file())
+        {
+            std::string filePath = entry.path().string();
+
+            // Generate UID using the function from globals.h
+            UID originalUID = GenerateUID();
+            
+            // Modify the UID based on file extension
+            UID finalUID = LibraryModule::AssignFiletypeUID(originalUID, filePath);
+
+            UID prefix = finalUID / 100000000000000; 
+
+            switch (prefix)
+            {
+            case 1:
+                AddMesh(finalUID, filePath);
+                break;
+            case 2:
+                AddMaterial(finalUID, filePath);
+                break;
+            case 3:
+                AddTexture(finalUID, filePath);
+                break;
+            default:
+                GLOG("Category: Unknown File Type (99)");
+                break;
+            }
+        }
+            
+    }
+
+    return true; 
+}
+
+UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string &filePath) { 
+
+    uint64_t prefix = 99; // Default prefix "99" for unknown files
+    if (FileSystem::GetFileExtension(filePath) == MESH_EXTENSION)
+    {
+        prefix = 01;
+    }
+    if (FileSystem::GetFileExtension(filePath) == MATERIAL_EXTENSION)
+    {
+        prefix = 02;
+    }
+    if (FileSystem::GetFileExtension(filePath) == TEXTURE_EXTENSION)
+    {
+        prefix = 03;
+    }
+    //GLOG("%llu", prefix)
+    uint64_t final=  (prefix * 100000000000000) + (originalUID % 100000000000000);
+    GLOG("%llu", final);
+    return final;
+
+
+}
+
 void LibraryModule::AddTexture(UID textureUID, const std::string &ddsPath)
 {
     textureMap[ddsPath] = textureUID; // Map the texture UID to its DDS path
@@ -194,6 +260,7 @@ void LibraryModule::AddMaterial(UID materialUID, const std::string &matPath)
 {
     meshMap[matPath] = materialUID; // Map the texture UID to its DDS path
 }
+
 
 UID LibraryModule::GetTextureUID(const std::string &texturePath) const
 {

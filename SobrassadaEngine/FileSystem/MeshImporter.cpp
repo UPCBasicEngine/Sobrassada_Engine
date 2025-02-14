@@ -162,7 +162,7 @@ namespace MeshImporter
         UID meshUID               = GenerateUID();
         // false = append
         std::string fileName       = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath       = MESHES_PATH + std::to_string(meshUID) + FILE_EXTENSION;
+        std::string savePath       = MESHES_PATH + std::to_string(meshUID) + MESH_EXTENSION;
         unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
 
         delete[] fileBuffer;
