@@ -6,7 +6,9 @@
 
 #include <cstdint>
 
-Component * ComponentUtils::CreateEmptyComponent(ComponentType type, UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform)
+Component *ComponentUtils::CreateEmptyComponent(
+    ComponentType type, UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform
+)
 {
     switch (type)
     {
@@ -20,7 +22,7 @@ Component * ComponentUtils::CreateEmptyComponent(ComponentType type, UID uid, UI
     return nullptr;
 }
 
-Component * ComponentUtils::CreateExistingComponent(const rapidjson::Value &initialState)
+Component *ComponentUtils::CreateExistingComponent(const rapidjson::Value &initialState)
 {
     if (initialState.HasMember("Type"))
     {

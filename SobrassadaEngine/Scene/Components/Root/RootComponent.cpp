@@ -123,6 +123,7 @@ void RootComponent::RenderEditorComponentTree(const UID selectedComponentUID)
     {
         base_flags |= ImGuiTreeNodeFlags_Leaf;
     }
+
     const bool isExpanded = ImGui::TreeNodeEx((void*) uid, base_flags, name);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         SetSelectedComponent(uid);

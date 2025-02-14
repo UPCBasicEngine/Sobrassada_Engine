@@ -14,6 +14,7 @@ class GameObject : public AABBUpdatable
   public:
     GameObject(std::string name);
     GameObject(uint32_t parentUUID, std::string name);
+    GameObject(UID parentUUID, std::string name, UID rootComponent);
 
     ~GameObject();
 
@@ -30,6 +31,7 @@ class GameObject : public AABBUpdatable
     void SetName(std::string newName) { name = newName; }
 
     inline const std::vector<uint32_t> &GetChildren() { return children; }
+    inline void AddChildren(UID childUUID) { children.push_back(childUUID); }
 
     inline uint32_t GetParent() { return parentUUID; }
     void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }

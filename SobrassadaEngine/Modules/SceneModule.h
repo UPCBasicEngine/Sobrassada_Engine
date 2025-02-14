@@ -27,7 +27,7 @@ class SceneModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    void LoadScene();
+    void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject);
     void CloseScene();
 
     void CreateSpatialDataStruct();
@@ -46,19 +46,25 @@ class SceneModule : public Module
 
     // TODO: Change when filesystem defined
     GameObject *GetGameObjectByUUID(UID gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
+    Component *GetComponentByUUID(UID componentUUID) { return gameComponents[componentUUID]; }
 
     GameObject *GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
 
     const std::unordered_map<UID, GameObject *> &GetAllGameObjects() const { return gameObjectsContainer; }
     const std::map<UID, Component *> &GetAllComponents() const { return gameComponents; }
     UID GetGameObjectRootUID() const { return gameObjectRootUUID; }
-    
-    // why public?
+
     std::map<UID, Component *> gameComponents; // TODO Move to Scene class
 
     AABBUpdatable *GetTargetForAABBUpdate(UID uuid);
 
+    UID GetSceneUID() const { return sceneUID; }
+
+    void AddGameObject(UID uid, GameObject *newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
+    void AddComponent(UID uid, Component *newComponent) { gameComponents.insert({uid, newComponent}); }
+
   private:
+    UID sceneUID;
     UID gameObjectRootUUID;
 
     UID selectedGameObjectUUID;

@@ -1,12 +1,13 @@
 #include "LibraryModule.h"
 
 #include "Application.h"
+#include "Component.h"
+#include "ComponentUtils.h"
 #include "FileSystem.h"
+#include "GameObject.h"
+#include "Root/RootComponent.h"
 #include "SceneImporter.h"
 #include "SceneModule.h"
-#include "GameObject.h"
-#include "Component.h"
-#include "Root/RootComponent.h"
 #include "document.h"
 #include "prettywriter.h"
 #include "stringbuffer.h"
@@ -26,6 +27,7 @@ bool LibraryModule::SaveScene(const char *path) const
 {
     const std::unordered_map<UID, GameObject *> &gameObjects = App->GetSceneModule()->GetAllGameObjects();
     const std::map<UID, Component *> &components             = App->GetSceneModule()->GetAllComponents();
+    UID sceneUID                                             = App->GetSceneModule()->GetSceneUID();
     UID gameObjectRootUID                                    = App->GetSceneModule()->GetGameObjectRootUID();
 
     std::string sceneName                                    = FileSystem::GetFileNameWithoutExtension(path);
@@ -38,7 +40,7 @@ bool LibraryModule::SaveScene(const char *path) const
     rapidjson::Value scene(rapidjson::kObjectType);
 
     // Scene values
-    UID uid            = GenerateUID();
+    UID uid            = sceneUID;
     std::string name   = sceneName;
     UID rootGameObject = gameObjectRootUID;
 
@@ -58,6 +60,7 @@ bool LibraryModule::SaveScene(const char *path) const
 
         goJSON.AddMember("UID", uid, allocator);
         goJSON.AddMember("ParentUID", gameObject->GetParent(), allocator);
+        goJSON.AddMember("Name", rapidjson::Value(gameObject->GetName().c_str(), allocator), allocator);
 
         // Child UUIDs
         rapidjson::Value childUIDs(rapidjson::kArrayType);
@@ -65,7 +68,7 @@ bool LibraryModule::SaveScene(const char *path) const
         {
             childUIDs.PushBack(childUID, allocator);
         }
-        goJSON.AddMember("ChildUIDS", childUIDs, allocator);
+        goJSON.AddMember("Children", childUIDs, allocator);
         goJSON.AddMember("RootComponentUID", gameObject->GetRootComponent()->GetUID(), allocator);
 
         gameObjectsJSON.PushBack(goJSON, allocator);
@@ -132,32 +135,17 @@ bool LibraryModule::LoadScene(const char *path)
     rapidjson::Value &scene = doc["Scene"];
 
     // Scene values
-    UID uid                 = scene["UID"].GetUint64();
+    UID sceneUID            = scene["UID"].GetUint64();
     std::string name        = scene["Name"].GetString();
     UID rootGameObject      = scene["RootGameObject"].GetUint64();
 
-    // Deserialize GameObjects
-    if (scene.HasMember("GameObjects") && scene["GameObjects"].IsArray())
+    if (sceneUID == App->GetSceneModule()->GetSceneUID())
     {
-        const rapidjson::Value &gameObjects = scene["GameObjects"];
-        for (rapidjson::SizeType i = 0; i < gameObjects.Size(); i++)
-        {
-            const rapidjson::Value &gameObject = gameObjects[i];
-
-            UID uidGO                          = gameObject["UID"].GetUint64();
-            UID parentuid                      = gameObject["ParentUID"].GetUint64();
-
-            if (gameObject.HasMember("ChildUIDS") && gameObject["ChildUIDS"].IsArray())
-            {
-                const rapidjson::Value &childUIDs = gameObject["ChildUIDS"];
-                for (rapidjson::SizeType j = 0; j < childUIDs.Size(); j++)
-                {
-                    UID childUID = childUIDs[j].GetUint64();
-                }
-            }
-            UID rootComponentUUID = gameObject["RootComponentUID"].GetUint64();
-        }
+        GLOG("Scene already loaded: %s", name.c_str());
+        return false;
     }
+
+    App->GetSceneModule()->CloseScene();
 
     // Deserialize Components
     if (scene.HasMember("Components") && scene["Components"].IsArray())
@@ -168,13 +156,44 @@ bool LibraryModule::LoadScene(const char *path)
         {
             const rapidjson::Value &component = components[i];
 
-            UID compUID                       = component["UID"].GetUint64();
-            UID parentUID                     = component["ParentUID"].GetUint64();
-            std::string type                  = component["Type"].GetString();
+            Component *newComponent           = ComponentUtils::CreateExistingComponent(component);
 
-            // dependent
+            UID componentUID                  = component["UID"].GetUint64();
+            if (newComponent != nullptr) App->GetSceneModule()->AddComponent(componentUID, newComponent);
         }
     }
+
+    // Deserialize GameObjects
+    if (scene.HasMember("GameObjects") && scene["GameObjects"].IsArray())
+    {
+        const rapidjson::Value &gameObjects = scene["GameObjects"];
+        for (rapidjson::SizeType i = 0; i < gameObjects.Size(); i++)
+        {
+            const rapidjson::Value &gameObject = gameObjects[i];
+
+            UID goUID                          = gameObject["UID"].GetUint64();
+            UID parentUID                      = gameObject["ParentUID"].GetUint64();
+            std::string goName                 = gameObject["Name"].GetString();
+            UID rootComponentUUID              = gameObject["RootComponentUID"].GetUint64();
+
+            GameObject *newGameObject          = new GameObject(parentUID, goName, rootComponentUUID);
+            newGameObject->SetUUID(goUID);
+
+            if (gameObject.HasMember("Children") && gameObject["Children"].IsArray())
+            {
+                const rapidjson::Value &childUIDs = gameObject["Children"];
+                for (rapidjson::SizeType j = 0; j < childUIDs.Size(); j++)
+                {
+                    UID childUID = childUIDs[j].GetUint64();
+                    newGameObject->AddChildren(childUID);
+                }
+            }
+
+            if (newGameObject != nullptr) App->GetSceneModule()->AddGameObject(goUID, newGameObject);
+        }
+    }
+
+    App->GetSceneModule()->LoadScene(sceneUID, name.c_str(), rootGameObject);
 
     GLOG("Scene loaded successfully: %s", name.c_str());
     return true;

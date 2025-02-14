@@ -21,9 +21,9 @@ uid(uid), uidParent(uidParent), uidRoot(uidRoot), enabled(true), globalTransform
     memcpy(name, initName, strlen(initName));
 }
 
-Component::Component(const rapidjson::Value &initialState): uid(initialState["UID"].GetUint64()), uidRoot(initialState["UIDRoot"].GetUint64())
+Component::Component(const rapidjson::Value &initialState): uid(initialState["UID"].GetUint64()), uidRoot(initialState["RootUID"].GetUint64())
 {
-    uidParent = initialState["UIDParent"].GetUint64();
+    uidParent = initialState["ParentUID"].GetUint64();
     enabled = initialState["Enabled"].GetBool();
     
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() && initialState["LocalTransform"].Size() == 9)

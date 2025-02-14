@@ -18,13 +18,13 @@ MeshComponent::MeshComponent(const UID uid, const UID uidParent, const UID uidRo
 
 MeshComponent::MeshComponent(const rapidjson::Value &initialState) : Component(initialState)
 {
-    if (initialState.HasMember("UIDMesh"))
+    if (initialState.HasMember("MeshUID"))
     {
-        AddMesh(initialState["UIDMesh"].GetUint64(), false); // Do not update aabb, will be done once at the end
+        AddMesh(initialState["MeshUID"].GetUint64(), false); // Do not update aabb, will be done once at the end
     }
-    if (initialState.HasMember("UIDMaterial"))
+    if (initialState.HasMember("MaterialUID"))
     {
-        AddMaterial(initialState["UIDMaterial"].GetUint64());
+        AddMaterial(initialState["MaterialUID"].GetUint64());
     }
 }
 
