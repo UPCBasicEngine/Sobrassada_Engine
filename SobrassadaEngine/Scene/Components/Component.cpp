@@ -162,16 +162,12 @@ void Component::RenderEditorComponentTree(const UID selectedComponentUID)
     const bool isExpanded = ImGui::TreeNodeEx((void*) uid, base_flags, name);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
-        GameObject* selectedGameObject = App->GetSceneModule()->GetSeletedGameObject();
-        if (selectedGameObject != nullptr)
+        RootComponent* rootComponent = GetRootComponent();
+        if (rootComponent != nullptr)
         {
-            RootComponent* rootComponent = selectedGameObject-> GetRootComponent();
-            if (rootComponent != nullptr)
-            {
-                rootComponent->SetSelectedComponent(uid);
-            }
+            rootComponent->SetSelectedComponent(uid);
         }
-        
+                
     }
 
     HandleDragNDrop();

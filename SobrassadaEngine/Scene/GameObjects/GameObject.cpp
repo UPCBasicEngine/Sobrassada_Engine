@@ -7,10 +7,18 @@
 
 #include <Algorithm/Random/LCG.h>
 
-GameObject::GameObject(std::string name) : name(name) { CreateRootComponent(); }
-
-GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(parentUUID), name(name)
+GameObject::GameObject(std::string name) : name(name)
 {
+    uuid       = LCG().IntFast();
+    parentUUID = INVALID_UUID;
+    globalAABB.SetNegativeInfinity();
+    CreateRootComponent();
+}
+
+GameObject::GameObject(UID parentUUID, std::string name) : parentUUID(parentUUID), name(name)
+{
+    uuid = LCG().IntFast();
+    globalAABB.SetNegativeInfinity();
     CreateRootComponent();
 }
 
@@ -38,7 +46,7 @@ bool GameObject::CreateRootComponent()
     return true;
 }
 
-bool GameObject::AddGameObject(uint32_t gameObjectUUID)
+bool GameObject::AddGameObject(UID gameObjectUUID)
 {
     if (std::find(children.begin(), children.end(), gameObjectUUID) == children.end())
     {
@@ -48,7 +56,7 @@ bool GameObject::AddGameObject(uint32_t gameObjectUUID)
     return false;
 }
 
-bool GameObject::RemoveGameObject(uint32_t gameObjectUUID)
+bool GameObject::RemoveGameObject(UID gameObjectUUID)
 {
     if (const auto it = std::find(children.begin(), children.end(), gameObjectUUID); it != children.end())
     {
@@ -88,6 +96,40 @@ void GameObject::RenderEditor()
 void GameObject::PassAABBUpdateToParent()
 {
     // TODO Update AABBs further up the gameObject tree
+    globalAABB = AABB(rootComponent->GetGlobalAABB());
+
+    for (UID child : children)
+    {
+        GameObject *gameObject = App->GetSceneModule()->GetGameObjectByUUID(child);
+
+        if (gameObject != nullptr)
+        {
+            globalAABB.Enclose(gameObject->GetAABB());
+        }
+    }
+
+    GameObject *parentGameObject = App->GetSceneModule()->GetGameObjectByUUID(parentUUID);
+
+    if (parentGameObject != nullptr)
+    {
+        parentGameObject->PassAABBUpdateToParent();
+    }
+}
+
+void GameObject::ComponentGlobalTransformUpdated()
+{
+    if (rootComponent != nullptr)
+        globalAABB = AABB(rootComponent->GetGlobalAABB());
+
+    for (UID child : children)
+    {
+        GameObject *childGameObject = App->GetSceneModule()->GetGameObjectByUUID(child);
+
+        if (childGameObject != nullptr)
+        {
+            globalAABB.Enclose(childGameObject->rootComponent->TransformUpdated(rootComponent == nullptr ? Transform():rootComponent->GetGlobalTransform()));
+        }
+    }
 }
 
 const Transform &GameObject::GetGlobalTransform() const { return rootComponent->GetGlobalTransform(); }

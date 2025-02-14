@@ -9,6 +9,7 @@
 #include "WindowModule.h"
 #include "SceneModule.h"
 
+#include "GameObject.h"
 #include "Component.h"
 
 #include "glew.h"
