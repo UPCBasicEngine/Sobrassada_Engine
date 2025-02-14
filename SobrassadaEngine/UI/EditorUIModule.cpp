@@ -333,4 +333,5 @@ void EditorUIModule::GameTimerConfig() const
     ImGui::Text("Delta time: %.3f", gameTimer->GetDeltaTime() / 1000.0f);
     ImGui::Text("Unscaled game time: %.3f", gameTimer->GetUnscaledTime() / 1000.0f);
     ImGui::Text("Unscaled delta time: %.3f", gameTimer->GetUnscaledDeltaTime() / 1000.0f);
+    ImGui::Text("Reference time: %.3f", gameTimer->GetReferenceTime() / 1000.0f);
 }

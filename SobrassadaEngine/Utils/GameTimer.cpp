@@ -5,7 +5,7 @@
 
 GameTimer::GameTimer()
     : EngineTimer(), isPaused(false), frameCount(0), unscaledTime(0), unscaledDeltaTime(0), timeScale(1),
-      referenceTime(0), pausedTime(0)
+      referenceTime(0), unstoppableTime(0), unstoppableDeltaTime(0)
 {
 }
 
@@ -14,9 +14,9 @@ GameTimer::~GameTimer() {}
 void GameTimer::Start()
 {
     EngineTimer::Start();
-    isPaused      = false;
-    referenceTime = startTime;
-    unstoppableDeltaTime = startTime;
+    isPaused        = false;
+    referenceTime   = startTime;
+    unstoppableTime = startTime;
 }
 
 float GameTimer::Tick()
@@ -28,29 +28,26 @@ float GameTimer::Tick()
         unstoppableDeltaTime = TicksSinceStartup() - unstoppableTime;
         unstoppableTime      = TicksSinceStartup();
 
-        if (!isPaused) delta = UpdateTimes();
+        if (!isPaused)
+        {
+            ++frameCount;
+
+            deltaTime          = (TicksSinceReference() - unscaledTime) * timeScale;
+            time              += deltaTime;
+
+            unscaledDeltaTime  = unstoppableDeltaTime;
+            unscaledTime       = TicksSinceReference();
+        }
         else
         {
             referenceTime += unstoppableDeltaTime;
-            pausedTime     = TicksSinceStartup();
         }
     }
 
     return delta;
 }
 
-void GameTimer::TogglePause()
-{
-    if (isPaused)
-    {
-        isPaused = false;
-    }
-    else
-    {
-        isPaused   = true;
-        pausedTime = TicksSinceStartup();
-    }
-}
+void GameTimer::TogglePause() { isPaused = !isPaused; }
 
 void GameTimer::Reset()
 {
@@ -61,7 +58,6 @@ void GameTimer::Reset()
     unscaledDeltaTime    = 0;
     frameCount           = 0;
     referenceTime        = 0;
-    pausedTime           = 0;
     isPaused             = false;
     isEnabled            = false;
 
@@ -71,21 +67,23 @@ void GameTimer::Reset()
 
 float GameTimer::Step()
 {
-    if (isEnabled && isPaused) return UpdateTimes();
+    if (isEnabled && isPaused)
+    {
+        ++frameCount;
+
+        deltaTime          = unstoppableDeltaTime * timeScale;
+        time              += deltaTime;
+
+        unscaledDeltaTime  = unstoppableDeltaTime;
+        unscaledTime      += unscaledDeltaTime;
+
+        referenceTime      -= unscaledDeltaTime;
+
+        return deltaTime;
+    }
     else return 0;
 }
 
 float GameTimer::TicksSinceReference() const { return SDL_GetTicks() - referenceTime; }
 
-float GameTimer::UpdateTimes()
-{
-    ++frameCount;
-
-    deltaTime          = (unstoppableDeltaTime) * timeScale;
-    time               += deltaTime;
-
-    unscaledDeltaTime  = unstoppableDeltaTime;
-    unscaledTime       = TicksSinceReference();
-
-    return deltaTime;
-}
+float GameTimer::UpdateTimes() { return deltaTime; }

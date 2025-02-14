@@ -18,6 +18,7 @@ class GameTimer : public EngineTimer
     float GetUnscaledTime() const { return unscaledTime; }
     float GetUnscaledDeltaTime() const { return unscaledDeltaTime; }
     float GetTimeScale() const { return timeScale; }
+    float GetReferenceTime() const { return referenceTime; }
 
     void SetTimeScale(const float newScale) { timeScale = newScale; }
 
@@ -35,6 +36,5 @@ class GameTimer : public EngineTimer
     float unstoppableDeltaTime;
 
     float referenceTime;
-    float pausedTime;
     float timeScale;
 };
