@@ -41,6 +41,7 @@ update_status EditorUIModule::PreUpdate(float deltaTime)
 
 update_status EditorUIModule::Update(float deltaTime)
 {
+    LimitFPS(deltaTime);
     AddFramePlotData(deltaTime);
     return UPDATE_CONTINUE;
 }
@@ -76,6 +77,18 @@ bool EditorUIModule::ShutDown()
     delete editorViewport;
 
     return true;
+}
+
+void EditorUIModule::LimitFPS(float deltaTime)
+{
+    if (deltaTime == 0) return;
+
+    float targetFrameTime = 1000.f / maxFPS;
+
+    if (maxFPS != 0)
+    {
+        if (deltaTime < targetFrameTime) SDL_Delay(targetFrameTime - deltaTime);
+    }
 }
 
 void EditorUIModule::AddFramePlotData(float deltaTime)
@@ -157,14 +170,29 @@ void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
 {
     ImGui::Begin("Editor settings", &editorSettingsMenu);
 
-    ImGui::SeparatorText("Ms and Fps Graph");
-    FramePlots();
+    static bool vsync = VSYNC;
+
+    if (ImGui::CollapsingHeader("Application"))
+    {
+        ImGui::SeparatorText("Information");
+        ImGui::InputText(
+            "App Name", const_cast<char *>(ENGINE_NAME), IM_ARRAYSIZE(ENGINE_NAME), ImGuiInputTextFlags_ReadOnly
+        );
+        ImGui::InputText(
+            "Organization", const_cast<char *>(ORGANIZATION_NAME), IM_ARRAYSIZE(ORGANIZATION_NAME),
+            ImGuiInputTextFlags_ReadOnly
+        );
+
+        ImGui::SeparatorText("Ms and Fps Graph");
+        FramePlots(vsync);
+    }
+
     ImGui::Spacing();
 
     ImGui::SeparatorText("Modules Configuration");
     if (ImGui::CollapsingHeader("Window"))
     {
-        WindowConfig();
+        WindowConfig(vsync);
     }
 
     ImGui::Spacing();
@@ -183,8 +211,37 @@ void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
     ImGui::End();
 }
 
-void EditorUIModule::FramePlots()
+void EditorUIModule::FramePlots(bool &vsync)
 {
+    static int refreshRate = App->GetWindowModule()->GetDesktopDisplayMode().refresh_rate;
+
+    static int sliderFPS   = 0;
+    ImGui::SliderInt("Max FPS", &sliderFPS, 0, refreshRate);
+
+    static float maxYAxis;
+    if (sliderFPS == 0)
+    {
+        if (vsync)
+        {
+            maxFPS   = refreshRate;
+            maxYAxis = maxFPS * 1.66f;
+        }
+        else
+        {
+            maxFPS   = 0;
+            maxYAxis = 1000.f * 1.66f;
+        }
+    }
+    else
+    {
+        maxFPS   = sliderFPS;
+        maxYAxis = maxFPS * 1.66f;
+    }
+
+    ImGui::Text("Limit Framerate: ");
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%d", maxFPS);
+
     char title[25];
     std::vector<float> frametimeVector(frametime.begin(), frametime.end());
     sprintf_s(title, 25, "Milliseconds %0.1f", frametime.back());
@@ -195,16 +252,16 @@ void EditorUIModule::FramePlots()
     std::vector<float> framerateVector(framerate.begin(), framerate.end());
     sprintf_s(title, 25, "Framerate %.1f", framerate.back());
     ImGui::PlotHistogram(
-        "##framerate", &framerateVector.front(), (int)framerateVector.size(), 0, title, 0.0f, 200.0f, ImVec2(310, 100)
+        "##framerate", &framerateVector.front(), (int)framerateVector.size(), 0, title, 0.0f, maxYAxis, ImVec2(310, 100)
     );
 }
 
-void EditorUIModule::WindowConfig()
+void EditorUIModule::WindowConfig(bool &vsync)
 {
-    static bool borderless   = false;
-    static bool full_desktop = false;
-    static bool resizable    = true;
-    static bool fullscreen   = false;
+    static bool borderless   = BORDERLESS;
+    static bool full_desktop = FULL_DESKTOP;
+    static bool resizable    = RESIZABLE;
+    static bool fullscreen   = FULLSCREEN;
 
     // Brightness Slider
     float brightness         = App->GetWindowModule()->GetBrightness();
@@ -236,6 +293,9 @@ void EditorUIModule::WindowConfig()
 
     // Set Full Desktop
     if (ImGui::Checkbox("Full Desktop", &full_desktop)) App->GetWindowModule()->SetFullDesktop(full_desktop);
+
+    // Set Vsync
+    if (ImGui::Checkbox("Vsync", &vsync)) App->GetWindowModule()->SetVsync(vsync);
 }
 
 void EditorUIModule::CameraConfig() {}
