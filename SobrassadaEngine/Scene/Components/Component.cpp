@@ -79,8 +79,16 @@ void Component::RenderEditorInspector()
         if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uuidParent))
         {
             AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
+            
             if (parent != nullptr)
             {
+                GameObject *parentGameObject = dynamic_cast<GameObject *>(parent);
+                if (parentGameObject)
+                {
+                    parentGameObject->UpdateTransformByHierarchy();
+                    return;
+                }
+                
                 OnTransformUpdate(parent->GetGlobalTransform());
             } else
             {

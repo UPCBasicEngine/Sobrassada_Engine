@@ -29,7 +29,7 @@ bool SceneModule::Init()
 
     GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
     
-    gameObjectRootUUID = LCG().IntFast();
+    gameObjectRootUUID = sceneGameObject->GetUID();
     selectedGameObjectUUID      = gameObjectRootUUID;
     sceneGameObject->SetUUID(gameObjectRootUUID);
 
@@ -38,7 +38,7 @@ bool SceneModule::Init()
 
     //DEMO
     GameObject *sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
-    UID gameObjectChildRootUUID = LCG().IntFast();
+    UID gameObjectChildRootUUID      = sceneGameChildObject->GetUID();
     sceneGameChildObject->SetUUID(gameObjectChildRootUUID);
     sceneGameObject->AddGameObject(gameObjectChildRootUUID);
 
@@ -131,9 +131,12 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
 
     if (ImGui::Button("Add GameObject"))
     {
-        UID newUUID          = LCG().IntFast();
+        //UID newUUID          = LCG().IntFast();
+        //if (newUUID == INVALID_UUID) newUUID = LCG().IntFast();
+
         GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
-        newGameObject->SetUUID(newUUID);
+        UID newUUID               = newGameObject->GetUID();
+        //newGameObject->SetUUID(newUUID);
         GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
         //TODO: change when filesystem defined

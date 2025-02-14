@@ -9,11 +9,14 @@
 
 GameObject::GameObject(std::string name) : name(name)
 {
+    uuid       = LCG().IntFast();
+    parentUUID = INVALID_UUID;
     CreateRootComponent();
 }
 
 GameObject::GameObject(UID parentUUID, std::string name) : parentUUID(parentUUID), name(name)
 {
+    uuid = LCG().IntFast();
     CreateRootComponent();
 }
 
@@ -25,7 +28,7 @@ GameObject::~GameObject(){
 
 bool GameObject::CreateRootComponent()
 {
-    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), parentUUID, -1, Transform())); // TODO Add the gameObject UUID as parent?
+    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), uuid, -1, Transform())); // TODO Add the gameObject UUID as parent?
     // TODO Replace parentUUID above with the UUID of this gameObject
     App->GetSceneModule()->gameComponents[rootComponent->GetUUID()] = rootComponent;
     return true;
@@ -90,4 +93,32 @@ void GameObject::PassAABBUpdateToParent()
 const Transform & GameObject::GetGlobalTransform() const
 {
     return rootComponent->GetGlobalTransform();
+}
+
+void GameObject::UpdateTransformByHierarchy()
+{
+    if (!rootComponent) return;
+
+    RootComponent *parentRootComponent = nullptr;
+
+    if (parentUUID != INVALID_UUID)
+    {
+        GameObject *parentGameObject = App->GetSceneModule()->GetGameObjectByUUID(parentUUID);
+        
+        if (parentGameObject) 
+            parentRootComponent = parentGameObject->GetRootComponent();
+    }
+
+    if (parentRootComponent) 
+        rootComponent->OnTransformUpdate(parentRootComponent->GetGlobalTransform());
+    else 
+        rootComponent->OnTransformUpdate(rootComponent->GetLocalTransform());
+
+    for (UID childUUID : children)
+    {
+        GameObject *childGameObject = App->GetSceneModule()->GetGameObjectByUUID(childUUID);
+
+        if (childGameObject) 
+            childGameObject->UpdateTransformByHierarchy();
+    }
 }

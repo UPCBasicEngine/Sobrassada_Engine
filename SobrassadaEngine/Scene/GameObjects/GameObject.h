@@ -27,14 +27,15 @@ public:
 
 	void SaveToLibrary();
 
-	inline std::string GetName() { return name; }
+	inline std::string GetName() const { return name; }
     void SetName(std::string newName) { name = newName; }
     
 	inline std::vector<UID> GetChildren() { return children; }
     
-	inline UID GetParent() { return parentUUID; }
+	inline UID GetParent() const { return parentUUID; }
     void SetParent(UID newParentUUID) { parentUUID = newParentUUID; }
 
+    inline UID GetUID() const { return uuid; }
 	void SetUUID(UID newUUID) { uuid = newUUID; }
     
     RootComponent* GetRootComponent() const { return rootComponent; }
@@ -44,6 +45,8 @@ public:
     
     void PassAABBUpdateToParent() override;
     const Transform& GetGlobalTransform() const override;
+
+    void UpdateTransformByHierarchy();
 
 private:
 

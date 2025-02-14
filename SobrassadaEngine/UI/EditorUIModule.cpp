@@ -6,6 +6,7 @@
 #include "WindowModule.h"
 #include "SceneModule.h"
 
+#include "GameObject.h"
 #include "Component.h"
 
 #include "glew.h"
@@ -172,7 +173,7 @@ void EditorUIModule::Console(bool &consoleMenu)
     ImGui::End();
 }
 
-bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
+bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &globalTransform, UID uuidParent)
 {
     ImGui::SeparatorText("Transform");
     ImGui::RadioButton("Local", &transformType, LOCAL);

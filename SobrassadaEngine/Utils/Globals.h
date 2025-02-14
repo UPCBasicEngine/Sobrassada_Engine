@@ -37,6 +37,8 @@ enum update_status
 #define HFOV 90
 
 #define UID uint32_t
+constexpr uint32_t INVALID_UUID = UINT32_MAX;
+//constexpr uint64_t INVALID_UUID = UINT64_MAX;
 
 #define DEFAULT_GL_CLEAR_COLOR_RED 0.5f
 #define DEFAULT_GL_CLEAR_COLOR_GREEN 0.5f
