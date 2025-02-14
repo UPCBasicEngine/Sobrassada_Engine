@@ -38,7 +38,7 @@ bool GameObject::CreateRootComponent()
 {
 
     rootComponent = dynamic_cast<RootComponent *>(
-        ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), parentUUID, -1, Transform())
+        ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), uuid, -1, Transform())
     ); // TODO Add the gameObject UUID as parent?
 
     // TODO Replace parentUUID above with the UUID of this gameObject
@@ -108,11 +108,14 @@ void GameObject::PassAABBUpdateToParent()
         }
     }
 
-    GameObject *parentGameObject = App->GetSceneModule()->GetGameObjectByUUID(parentUUID);
-
-    if (parentGameObject != nullptr)
+    if (parentUUID != INVALID_UUID) //Filters the case of Scene GameObject (which parent is INVALID_UUID)
     {
-        parentGameObject->PassAABBUpdateToParent();
+        GameObject *parentGameObject = App->GetSceneModule()->GetGameObjectByUUID(parentUUID);
+
+        if (parentGameObject != nullptr)
+        {
+            parentGameObject->PassAABBUpdateToParent();
+        }
     }
 }
 
