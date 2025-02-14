@@ -4,8 +4,9 @@
 #include "ResourceManagement/Resources/ResourceMaterial.h"
 #include "ResourceManagement/Resources/ResourceMesh.h"
 #include "Scene/Components/Component.h"
-#include "Libs/rapidjson/document.h"
+
 #include <cstdint>
+#include <Libs/rapidjson/document.h>
 
 class MeshComponent : public Component
 {
