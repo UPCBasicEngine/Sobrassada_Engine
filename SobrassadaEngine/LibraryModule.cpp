@@ -1,7 +1,12 @@
 #include "LibraryModule.h"
 
+#include "Application.h"
 #include "FileSystem.h"
 #include "SceneImporter.h"
+#include "SceneModule.h"
+#include "GameObject.h"
+#include "Component.h"
+#include "Root/RootComponent.h"
 #include "document.h"
 #include "prettywriter.h"
 #include "stringbuffer.h"
@@ -19,6 +24,12 @@ bool LibraryModule::Init()
 
 bool LibraryModule::SaveScene(const char *path) const
 {
+    const std::unordered_map<UID, GameObject *> &gameObjects = App->GetSceneModule()->GetAllGameObjects();
+    const std::map<UID, Component *> &components             = App->GetSceneModule()->GetAllComponents();
+    UID gameObjectRootUID                                    = App->GetSceneModule()->GetGameObjectRootUID();
+
+    std::string sceneName                                    = FileSystem::GetFileNameWithoutExtension(path);
+
     // Create doc JSON
     rapidjson::Document doc;
     doc.SetObject();
@@ -27,9 +38,9 @@ bool LibraryModule::SaveScene(const char *path) const
     rapidjson::Value scene(rapidjson::kObjectType);
 
     // Scene values
-    UID uid            = 0;
-    std::string name   = "Test Scene";
-    UID rootGameObject = 0;
+    UID uid            = GenerateUID();
+    std::string name   = sceneName;
+    UID rootGameObject = gameObjectRootUID;
 
     // Create structure
     scene.AddMember("UID", uid, allocator);
@@ -37,48 +48,48 @@ bool LibraryModule::SaveScene(const char *path) const
     scene.AddMember("RootGameObject", rootGameObject, allocator);
 
     // Serialize GameObjects
-    rapidjson::Value gameObjects(rapidjson::kArrayType);
+    rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
 
-    // 1 gameobject
-    rapidjson::Value A(rapidjson::kObjectType);
-    A.AddMember("UID", 1001, allocator);
-    A.AddMember("ParentUID", 987654321, allocator);
+    for (const auto &[uid, gameObject] : gameObjects)
+    {
+        if (!gameObject) continue;
 
-    // Child UUIDs
-    rapidjson::Value childUIDsGO(rapidjson::kArrayType);
-    childUIDsGO.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
-    A.AddMember("ChildUIDS", childUIDsGO, allocator);
-    A.AddMember("RootComponentUID", 2001, allocator);
+        rapidjson::Value goJSON(rapidjson::kObjectType);
 
-    gameObjects.PushBack(A, allocator);
+        goJSON.AddMember("UID", uid, allocator);
+        goJSON.AddMember("ParentUID", gameObject->GetParent(), allocator);
+
+        // Child UUIDs
+        rapidjson::Value childUIDs(rapidjson::kArrayType);
+        for (UID childUID : gameObject->GetChildren())
+        {
+            childUIDs.PushBack(childUID, allocator);
+        }
+        goJSON.AddMember("ChildUIDS", childUIDs, allocator);
+        goJSON.AddMember("RootComponentUID", gameObject->GetRootComponent()->GetUID(), allocator);
+
+        gameObjectsJSON.PushBack(goJSON, allocator);
+    }
 
     // Add gameObjects to scene
-    scene.AddMember("GameObjects", gameObjects, allocator);
+    scene.AddMember("GameObjects", gameObjectsJSON, allocator);
 
     // Serialize Components
-    rapidjson::Value components(rapidjson::kArrayType);
+    rapidjson::Value componentsJSON(rapidjson::kArrayType);
 
-    // 1 component
-    rapidjson::Value B(rapidjson::kObjectType);
+    for (const auto &[uid, component] : components)
+    {
+        if (!component) continue;
 
-    B.AddMember("UID", 2001, allocator);
-    B.AddMember("ParentUID", 1001, allocator);
+        rapidjson::Value componentJSON(rapidjson::kObjectType);
 
-    // Child UUIDs
-    rapidjson::Value childUIDsComp(rapidjson::kArrayType);
-    childUIDsComp.PushBack(1, allocator).PushBack(2, allocator).PushBack(3, allocator).PushBack(4, allocator);
-    B.AddMember("ChildUIDS", childUIDsComp, allocator);
+        component->Save(componentJSON, allocator);
 
-    B.AddMember("Type", "MeshRenderer", allocator);
-
-    // Dependent
-    B.AddMember("MeshUID", 3001, allocator);
-    B.AddMember("MaterialUID", 4001, allocator);
-
-    components.PushBack(B, allocator);
+        componentsJSON.PushBack(componentJSON, allocator);
+    }
 
     // Add components to scene
-    scene.AddMember("Components", components, allocator);
+    scene.AddMember("Components", componentsJSON, allocator);
 
     doc.AddMember("Scene", scene, allocator);
 
@@ -89,7 +100,7 @@ bool LibraryModule::SaveScene(const char *path) const
 
     std::string fileName      = FileSystem::GetFileNameWithoutExtension(path);
 
-    unsigned int bytesWritten = FileSystem::Save(path, buffer.GetString(), buffer.GetSize(), false);
+    unsigned int bytesWritten = (unsigned int)FileSystem::Save(path, buffer.GetString(), buffer.GetSize(), false);
     if (bytesWritten == 0)
     {
         GLOG("Failed to save scene file: %s", path);
@@ -202,7 +213,7 @@ UID LibraryModule::GetMeshUID(const std::string &meshPath) const
     auto it = meshMap.find(meshPath);
     if (it != meshMap.end())
     {
-        return it->second; 
+        return it->second;
     }
 
     return 0;
@@ -214,11 +225,10 @@ UID LibraryModule::GetMaterialUID(const std::string &materialPath) const
     auto it = materialMap.find(materialPath);
     if (it != materialMap.end())
     {
-        return it->second; 
+        return it->second;
     }
 
     return 0;
-
 }
 
 const std::string &LibraryModule::GetResourcePath(UID resourceID)

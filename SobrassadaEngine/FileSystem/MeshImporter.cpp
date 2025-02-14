@@ -142,7 +142,7 @@ namespace MeshImporter
         };
 
         unsigned int size =
-            sizeof(header) + sizeof(Vertex) * vertexBuffer.size() + sizeof(unsigned int) * indexBuffer.size();
+            (unsigned int)(sizeof(header) + sizeof(Vertex) * vertexBuffer.size() + sizeof(unsigned int) * indexBuffer.size());
 
         char *fileBuffer = new char[size];
         char *cursor     = fileBuffer;

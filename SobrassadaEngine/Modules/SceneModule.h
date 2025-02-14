@@ -8,20 +8,18 @@
 #include <string>
 #include <unordered_map>
 
-
-class EngineMesh
-;class GameObject;
+class EngineMesh;
+class GameObject;
 class Component;
 class RootComponent;
 
 class SceneModule : public Module
 {
-public:
+  public:
+    SceneModule();
+    ~SceneModule();
 
-	SceneModule();
-	~SceneModule();
-
-	bool Init() override;
+    bool Init() override;
     update_status PreUpdate(float deltaTime) override;
     update_status Update(float deltaTime) override;
     update_status Render(float deltaTime) override;
@@ -29,50 +27,51 @@ public:
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-	void LoadScene();
-	void CloseScene();
+    void LoadScene();
+    void CloseScene();
 
-	void CreateSpatialDataStruct();
-	void UpdateSpatialDataStruct();
+    void CreateSpatialDataStruct();
+    void UpdateSpatialDataStruct();
 
-	void CheckObjectsToRender();
-	
-	void RenderHierarchyUI(bool &hierarchyMenu);
+    void CheckObjectsToRender();
+
+    void RenderHierarchyUI(bool &hierarchyMenu);
     void RenderGameObjectHierarchy(UID gameObjectUUID);
 
-	void HandleNodeClick(UID gameObjectUUID);
+    void HandleNodeClick(UID gameObjectUUID);
     void RenderContextMenu(UID gameObjectUUID);
 
-	void RemoveGameObjectHierarchy(UID gameObjectUUID);
+    void RemoveGameObjectHierarchy(UID gameObjectUUID);
     void UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID);
 
-	//TODO: Change when filesystem defined
+    // TODO: Change when filesystem defined
     GameObject *GetGameObjectByUUID(UID gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
 
-    GameObject * GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
+    GameObject *GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
 
-
-    std::map<UID, Component*> gameComponents;          // TODO Move to Scene class
-
-    AABBUpdatable* GetTargetForAABBUpdate(UID uuid);
-
-private:
-
-	UID gameObjectRootUUID;
+    const std::unordered_map<UID, GameObject *> &GetAllGameObjects() const { return gameObjectsContainer; }
+    const std::map<UID, Component *> &GetAllComponents() const { return gameComponents; }
+    UID GetGameObjectRootUID() const { return gameObjectRootUUID; }
     
-	UID selectedGameObjectUUID;
+    // why public?
+    std::map<UID, Component *> gameComponents; // TODO Move to Scene class
 
-	std::unordered_map<UID, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
+    AABBUpdatable *GetTargetForAABBUpdate(UID uuid);
+
+  private:
+    UID gameObjectRootUUID;
+
+    UID selectedGameObjectUUID;
+
+    std::unordered_map<UID, GameObject *> gameObjectsContainer; // For testing purposes until FileSystem available
 
     // Scene* loadedScene = nullptr;
-    
-	//pawnClassType;
-	//updatedGameObjects;
-	//sceneSpatialDataStruct;
-	//inputClassType;
-	//gameConfigClassType;
 
-	//lightsConfig;
+    // pawnClassType;
+    // updatedGameObjects;
+    // sceneSpatialDataStruct;
+    // inputClassType;
+    // gameConfigClassType;
 
-
+    // lightsConfig;
 };
