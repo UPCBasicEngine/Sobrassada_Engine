@@ -12,7 +12,7 @@
 class Component : public AABBUpdatable
 {
   public:
-    Component(UID uid, UID uidParent, UID uidRoot, const char *initName, const Transform &parentGlobalTransform);
+    Component(UID uid, UID uidParent, UID uidRoot, const char *initName, int type, const Transform &parentGlobalTransform);
 
     Component(const rapidjson::Value &initialState);
 
@@ -31,7 +31,10 @@ class Component : public AABBUpdatable
     virtual void RenderEditorComponentTree(UID selectedComponentUID);
 
     virtual void OnTransformUpdate(const Transform &parentGlobalTransform);
+    virtual AABB &TransformUpdated(const Transform &parentGlobalTransform);
     void PassAABBUpdateToParent() override;
+
+    void ComponentGlobalTransformUpdated() override {}
 
     void HandleDragNDrop();
 
@@ -41,7 +44,7 @@ class Component : public AABBUpdatable
 
     const std::vector<UID> &GetChildren() const { return children; }
 
-    void SetUIDParent(UID newUIDParent) { uidParent = newUIDParent; }
+    void SetUIDParent(UID newUIDParent);
 
     const Transform &GetGlobalTransform() const override { return globalTransform; }
     const Transform &GetLocalTransform() const { return localTransform; }
@@ -50,8 +53,13 @@ class Component : public AABBUpdatable
 
     void CalculateLocalAABB();
 
+    int GetType() const { return type; }
+
   protected:
-    virtual AABB &TransformUpdated(const Transform &parentGlobalTransform);
+
+    Component* GetRootComponent();
+    AABBUpdatable* GetParent();
+    std::vector<Component*>& GetChildComponents();
 
   protected:
     const UID uid;
@@ -67,4 +75,12 @@ class Component : public AABBUpdatable
 
     AABB localComponentAABB;
     AABB globalComponentAABB;
+
+    const int type = COMPONENT_NONE;
+
+private:
+    
+    Component* rootComponent = nullptr;
+    AABBUpdatable* parent = nullptr;
+    std::vector<Component*> childComponents;
 };

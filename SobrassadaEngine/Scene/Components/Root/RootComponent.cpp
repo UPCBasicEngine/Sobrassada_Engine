@@ -10,7 +10,7 @@
 #include <Algorithm/Random/LCG.h>
 
 RootComponent::RootComponent(const UID uid, const UID uidParent, const Transform& parentGlobalTransform)
-        : Component(uid, uidParent, uid, "Root component", parentGlobalTransform)
+        : Component(uid, uidParent, uid, "Root component", COMPONENT_ROOT, parentGlobalTransform)
 {
     selectedUID = uid;  
 }
@@ -31,6 +31,19 @@ void RootComponent::Save(rapidjson::Value &targetState, rapidjson::Document::All
     Component::Save(targetState, allocator);
     targetState.AddMember("Type", COMPONENT_ROOT, allocator);
     targetState.AddMember("Mobility", mobilitySettings, allocator);
+}
+
+AABB & RootComponent::TransformUpdated(const Transform &parentGlobalTransform)
+{
+    AABB& result = Component::TransformUpdated(parentGlobalTransform);
+
+    AABBUpdatable* parentObject = GetParent();
+    if (parentObject != nullptr)
+    {
+        parentObject->ComponentGlobalTransformUpdated();
+    }
+
+    return result;
 }
 
 void RootComponent::RenderComponentEditor()
@@ -132,11 +145,9 @@ void RootComponent::RenderEditorComponentTree(const UID selectedComponentUID)
     
     if (isExpanded) 
     {
-        for (UID child : children)
+        for (Component* childComponent : GetChildComponents())
         {
-            Component* childComponent = App->GetSceneModule()->gameComponents[child];
-
-            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedUID);
+            childComponent->RenderEditorComponentTree(selectedUID);
         }
         ImGui::TreePop();
     }

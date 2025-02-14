@@ -4,10 +4,12 @@
 
 #include "Transform.h"
 #include "ResourceManagement/Resources/Resource.h"
+#include "Scene/AABBUpdatable.h"
 
 #include <deque>
 #include <string>
 #include <map>
+#include <unordered_map>
 
 class EditorViewport;
 
@@ -24,9 +26,9 @@ class EditorUIModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
+    bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform& parentTransform);
     
-    UID RenderResourceSelectDialog(const char* id, const std::map<std::string, UID>& availableResources);
+    UID RenderResourceSelectDialog(const char* id, const std::unordered_map<std::string, UID>& availableResources);
 
 public:
     bool hierarchyMenu      = true;

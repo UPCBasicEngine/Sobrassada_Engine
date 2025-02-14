@@ -556,7 +556,7 @@ void EditorUIModule::Console(bool &consoleMenu)
     ImGui::End();
 }
 
-bool EditorUIModule::RenderTransformWidget(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
+bool EditorUIModule::RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform& parentTransform)
 {
     bool positionValueChanged = false;
     bool rotationValueChanged = false;
@@ -616,14 +616,7 @@ bool EditorUIModule::RenderTransformWidget(Transform &localTransform, Transform 
         
         if (transformType == GLOBAL)
         {
-            Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
-            if (parentComponent != nullptr)
-            {
-                localTransform.Set(globalTransform - parentComponent->GetGlobalTransform());
-            } else
-            {
-                localTransform.Set(globalTransform);
-            }
+            localTransform.Set(globalTransform - parentTransform);
         }
     }
 
@@ -651,7 +644,7 @@ void EditorUIModule::RenderBasicTransformModifiers(Transform &outputTransform, b
     ImGui::Checkbox("Lock axis", &lockScaleAxis);
 }
 
-UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::map<std::string, UID> &availableResources)
+UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::unordered_map<std::string, UID> &availableResources)
 {
     UID result = CONSTANT_EMPTY_UID;
     if (ImGui::BeginPopup(id))

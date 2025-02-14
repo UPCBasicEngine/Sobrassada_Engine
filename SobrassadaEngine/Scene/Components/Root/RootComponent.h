@@ -18,6 +18,8 @@ public:
 
     void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const override;
 
+    AABB & TransformUpdated(const Transform &parentGlobalTransform) override;
+
     virtual bool CreateComponent(ComponentType componentType);
     
     void RenderComponentEditor();
