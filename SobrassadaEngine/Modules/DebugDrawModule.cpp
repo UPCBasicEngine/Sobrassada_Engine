@@ -601,12 +601,12 @@ bool DebugDrawModule::ShutDown()
 
 update_status DebugDrawModule::Render(float deltaTime)
 {
-   dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
-   dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
-   
-   //  Don't draw the grid here because the skybox must be drawn first
-   
-   return UPDATE_CONTINUE;
+    dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
+    dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
+
+    //  Don't draw the grid here because the skybox must be drawn first
+
+    return UPDATE_CONTINUE;
 }
 
 void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height)
@@ -616,4 +616,20 @@ void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned 
     implementation->mvpMatrix = proj * view;
 
     dd::flush();
+}
+
+void DebugDrawModule::DrawLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color)
+{
+    float3 dir = direction * distance;
+    dd::line(origin, dir + origin, color);
+}
+
+void DebugDrawModule::DrawCircle(const float3 &center, const float3 &upVector, const float3 &color, const float radius) 
+{ 
+    dd::circle(center, upVector, color, radius, 40);
+}
+
+void DebugDrawModule::DrawSphere(const float3& center, const float3 &color, const float radius) 
+{ 
+    dd::sphere(center, color, radius);
 }

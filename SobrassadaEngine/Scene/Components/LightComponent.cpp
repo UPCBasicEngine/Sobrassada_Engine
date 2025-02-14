@@ -2,8 +2,9 @@
 
 LightComponent::LightComponent()
 {
-    intensity = 0;
+    intensity = 1;
     color     = float3(1.0f, 1.0f, 1.0f);
+    drawGizmos = true;
 }
 
 LightComponent::~LightComponent() {}

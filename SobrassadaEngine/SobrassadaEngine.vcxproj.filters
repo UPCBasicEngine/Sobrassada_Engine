@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Modules\WindowModule.cpp">
@@ -175,6 +175,12 @@
     <ClCompile Include="Scene\Components\DirectionalLight.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\PointLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\SpotLight.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
     <ClCompile Include="Scene\Components\LightComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -296,6 +302,12 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\DirectionalLight.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\SpotLight.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\PointLight.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\LightComponent.h">

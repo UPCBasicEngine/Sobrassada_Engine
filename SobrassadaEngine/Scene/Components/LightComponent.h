@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../Scene/Components/Component.h"
-#include "Math/float4.h"
+#include "Component.h"
+#include "Application.h"
+
+#include "Math/float3.h"
 
 class LightComponent : public Component
 {
@@ -13,9 +15,11 @@ class LightComponent : public Component
     float3 GetColor() const { return color; }
 
     void SetIntensity(const float newIntensity) { intensity = newIntensity; }
-    void SetColor(const float3 newColor) { color = newColor; }
+    void SetColor(const float3& newColor) { color = newColor; }
 
   protected:
     float intensity;
     float3 color;
+
+    bool drawGizmos;
 };
