@@ -144,16 +144,10 @@
     <ClCompile Include="Modules\DebugDrawModule.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\RenderTestModule.cpp">
-      <Filter>Tests</Filter>
-    </ClCompile>
     <ClCompile Include="Tests\TextureModuleTest.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
     <ClCompile Include="Tests\CameraModule.cpp">
-      <Filter>Tests</Filter>
-    </ClCompile>
-    <ClCompile Include="Tests\EngineMesh.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
     <ClCompile Include="Tests\EngineModel.cpp">
@@ -174,29 +168,55 @@
     <ClCompile Include="Modules\SceneModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Components\Dependent\MeshComponent.cpp" />
-    <ClCompile Include="Scene\Components\Root\RootComponent.cpp" />
-    <ClCompile Include="Scene\Components\Standalone\ModelComponent.cpp" />
-    <ClCompile Include="Scene\Components\ComponentUtils.cpp" />
-    <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp" />
     <ClCompile Include="FileSystem\FileSystem.cpp">
-          <Filter>FileSystem</Filter>
-        </ClCompile>
-        <ClCompile Include="FileSystem\MeshImporter.cpp">
-          <Filter>FileSystem</Filter>
-        </ClCompile>
-        <ClCompile Include="FileSystem\SceneImporter.cpp">
-          <Filter>FileSystem</Filter>
-        </ClCompile>
-        <ClCompile Include="FileSystem\TextureImporter.cpp">
-          <Filter>FileSystem</Filter>
-        </ClCompile>
-        <ClCompile Include="LibraryModule.cpp">
-          <Filter>Modules</Filter>
-        </ClCompile>
-        <ClCompile Include="MaterialImporter.cpp">
-          <Filter>FileSystem</Filter>
-        </ClCompile>
+      <Filter>FileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem\MeshImporter.cpp">
+      <Filter>FileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem\SceneImporter.cpp">
+      <Filter>FileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem\TextureImporter.cpp">
+      <Filter>FileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="LibraryModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialImporter.cpp">
+      <Filter>FileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\LightsConfig.cpp" />
+    <ClCompile Include="Scene\Components\ComponentUtils.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\MeshComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManagement\Resources\ResourceMaterial.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManagement\Resources\ResourceMesh.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ResourcesModule.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManagement\Resources\ResourceTexture.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp">
+      <Filter>ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManagement\Resources\Resource.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Scene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -233,8 +253,14 @@
       <UniqueIdentifier>{557b3855-2c1e-41d1-b6ab-ecab1faac98c}</UniqueIdentifier>
     </Filter>
     <Filter Include="FileSystem">
-          <UniqueIdentifier>{71717f5e-3c10-4a82-a6fa-814368871f96}</UniqueIdentifier>
-        </Filter>
+      <UniqueIdentifier>{71717f5e-3c10-4a82-a6fa-814368871f96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component">
+      <UniqueIdentifier>{4703276c-c78f-40d2-95ff-988860911c40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{d7c688e0-aa2a-4d05-b818-bca402d54e0f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Modules\Module.h">
@@ -298,16 +324,10 @@
     <ClInclude Include="Modules\DebugDrawModule.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="Tests\RenderTestModule.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
     <ClInclude Include="Tests\TextureModuleTest.h">
       <Filter>Tests</Filter>
     </ClInclude>
     <ClInclude Include="Tests\CameraModule.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\EngineMesh.h">
       <Filter>Tests</Filter>
     </ClInclude>
     <ClInclude Include="Tests\EngineModel.h">
@@ -359,11 +379,38 @@
     <ClInclude Include="Modules\SceneModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Dependent\MeshComponent.h" />
-    <ClInclude Include="Scene\Components\Root\RootComponent.h" />
-    <ClInclude Include="Scene\Components\Standalone\ModelComponent.h" />
-    <ClInclude Include="Scene\Components\ComponentUtils.h" />
-    <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h" />
+    <ClInclude Include="Scene\AABBUpdatable.h" />
+    <ClInclude Include="Utils\LightsConfig.h" />
+    <ClInclude Include="Scene\Components\Root\RootComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\MeshComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\ComponentUtils.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManagement\Resources\ResourceMaterial.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManagement\Resources\ResourceMesh.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ResourcesModule.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManagement\Resources\ResourceTexture.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h">
+      <Filter>ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManagement\Resources\Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Scene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

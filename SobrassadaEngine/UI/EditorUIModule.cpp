@@ -556,56 +556,62 @@ void EditorUIModule::Console(bool &consoleMenu)
     ImGui::End();
 }
 
-bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
+bool EditorUIModule::RenderTransformWidget(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
 {
-    ImGui::SeparatorText("Transform");
-    ImGui::RadioButton("Local", &transformType, LOCAL);
-    ImGui::SameLine();
-    ImGui::RadioButton("Global", &transformType, GLOBAL);
-    
     bool positionValueChanged = false;
     bool rotationValueChanged = false;
     bool scaleValueChanged = false;
     static bool lockScaleAxis = false;
-    static bool bUseRad = true;
-
-    Transform& OutputTransform = transformType == LOCAL ? localTransform : globalTransform;
-    float3 originalScale = float3(OutputTransform.scale);
+    static int transformType = LOCAL;
+    static int pivotType = OBJECT;
+    float3 originalScale;
     
-    if (!bUseRad)
-    {
-        OutputTransform.rotation *= RAD_DEGREE_CONV;
-    }
+    ImGui::SeparatorText("Transform");
+    ImGui::RadioButton("Use object pivot", &pivotType, OBJECT);
+    // TODO Add later if necessary
+    //ImGui::SameLine();
+    //ImGui::RadioButton("Use root pivot", &pivotType, ROOT);
     
-    positionValueChanged |= ImGui::InputFloat3( "Position", &OutputTransform.position[0] );
-    rotationValueChanged |= ImGui::InputFloat3( "Rotation", &OutputTransform.rotation[0] );
-    if (!bUseRad)
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+    if (ImGui::BeginTabBar("TransformType##", tab_bar_flags))
     {
-        OutputTransform.rotation /= RAD_DEGREE_CONV;
+        if (ImGui::BeginTabItem("Local transform"))
+        {
+            transformType = LOCAL;
+            originalScale = float3(localTransform.scale);
+            RenderBasicTransformModifiers(localTransform, lockScaleAxis, positionValueChanged, rotationValueChanged, scaleValueChanged);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Global transform"))
+        {
+            transformType = GLOBAL;
+            originalScale = float3(globalTransform.scale);
+            RenderBasicTransformModifiers(globalTransform, lockScaleAxis, positionValueChanged, rotationValueChanged, scaleValueChanged);
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
-    ImGui::SameLine();
-    ImGui::Checkbox("Radians", &bUseRad);
-    scaleValueChanged |= ImGui::InputFloat3( "Scale", &OutputTransform.scale[0] );
-    ImGui::SameLine();
-    ImGui::Checkbox("Lock axis", &lockScaleAxis);
 
+    Transform& outputTransform = transformType == LOCAL ? localTransform : globalTransform;
+    
     if (positionValueChanged || rotationValueChanged || scaleValueChanged)
     {
         if (scaleValueChanged && lockScaleAxis)
         {
             float scaleFactor = 1;
-            if (OutputTransform.scale.x != originalScale.x)
+            if (outputTransform.scale.x != originalScale.x)
             {
-                scaleFactor = originalScale.x == 0 ? 1 : OutputTransform.scale.x / originalScale.x;
+                scaleFactor = originalScale.x == 0 ? 1 : outputTransform.scale.x / originalScale.x;
                 
-            } else if (OutputTransform.scale.y != originalScale.y)
+            } else if (outputTransform.scale.y != originalScale.y)
             {
-                scaleFactor = originalScale.y == 0 ? 1 : OutputTransform.scale.y / originalScale.y;
-            } else if (OutputTransform.scale.z != originalScale.z)
+                scaleFactor = originalScale.y == 0 ? 1 : outputTransform.scale.y / originalScale.y;
+            } else if (outputTransform.scale.z != originalScale.z)
             {
-                scaleFactor = originalScale.z == 0 ? 1 : OutputTransform.scale.z / originalScale.z;
+                scaleFactor = originalScale.z == 0 ? 1 : outputTransform.scale.z / originalScale.z;
             }
-            OutputTransform.scale *= scaleFactor;
+            originalScale *= scaleFactor;
+            outputTransform.scale = originalScale;
         }
         
         if (transformType == GLOBAL)
@@ -622,6 +628,27 @@ bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transfor
     }
 
     return positionValueChanged || rotationValueChanged || scaleValueChanged;
+}
+
+void EditorUIModule::RenderBasicTransformModifiers(Transform &outputTransform, bool& lockScaleAxis, bool& positionValueChanged, bool& rotationValueChanged, bool& scaleValueChanged)
+{
+    static bool bUseRad = true;
+    if (!bUseRad)
+    {
+        outputTransform.rotation *= RAD_DEGREE_CONV;
+    }
+    
+    positionValueChanged |= ImGui::InputFloat3( "Position", &outputTransform.position[0] );
+    rotationValueChanged |= ImGui::InputFloat3( "Rotation", &outputTransform.rotation[0] );
+    if (!bUseRad)
+    {
+        outputTransform.rotation /= RAD_DEGREE_CONV;
+    }
+    ImGui::SameLine();
+    ImGui::Checkbox("Radians", &bUseRad);
+    scaleValueChanged |= ImGui::InputFloat3( "Scale", &outputTransform.scale[0] );
+    ImGui::SameLine();
+    ImGui::Checkbox("Lock axis", &lockScaleAxis);
 }
 
 UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::map<std::string, UID> &availableResources)

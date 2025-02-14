@@ -2,22 +2,25 @@
 
 #include "Application.h"
 #include "EditorUIModule.h"
-#include "SceneModule.h"
 #include "Root/RootComponent.h"
+#include "SceneModule.h"
 
 #include <Algorithm/Random/LCG.h>
 
-GameObject::GameObject(std::string name) : name(name)
-{
-    CreateRootComponent();
-}
+GameObject::GameObject(std::string name) : name(name) { CreateRootComponent(); }
 
 GameObject::GameObject(uint32_t parentUUID, std::string name) : parentUUID(parentUUID), name(name)
 {
     CreateRootComponent();
 }
 
-GameObject::~GameObject(){
+GameObject::GameObject(UID parentUUID, std::string name, UID rootComponentUID) : parentUUID(parentUUID), name(name)
+{
+    rootComponent = dynamic_cast<RootComponent *>(App->GetSceneModule()->gameComponents[rootComponentUID]);
+}
+
+GameObject::~GameObject()
+{
     App->GetSceneModule()->gameComponents.erase(rootComponent->GetUID());
     delete rootComponent;
     rootComponent = nullptr;
@@ -25,7 +28,11 @@ GameObject::~GameObject(){
 
 bool GameObject::CreateRootComponent()
 {
-    rootComponent = dynamic_cast<RootComponent *>(ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), parentUUID, -1, Transform())); // TODO Add the gameObject UUID as parent?
+
+    rootComponent = dynamic_cast<RootComponent *>(
+        ComponentUtils::CreateEmptyComponent(COMPONENT_ROOT, LCG().IntFast(), parentUUID, -1, Transform())
+    ); // TODO Add the gameObject UUID as parent?
+
     // TODO Replace parentUUID above with the UUID of this gameObject
     App->GetSceneModule()->gameComponents[rootComponent->GetUID()] = rootComponent;
     return true;
@@ -36,7 +43,7 @@ bool GameObject::AddGameObject(uint32_t gameObjectUUID)
     if (std::find(children.begin(), children.end(), gameObjectUUID) == children.end())
     {
         children.push_back(gameObjectUUID);
-        return true; 
+        return true;
     }
     return false;
 }
@@ -51,20 +58,16 @@ bool GameObject::RemoveGameObject(uint32_t gameObjectUUID)
     return false;
 }
 
-void GameObject::OnEditor()
-{
-}
+void GameObject::OnEditor() {}
 
-void GameObject::SaveToLibrary()
-{
-}
+void GameObject::SaveToLibrary() {}
 
 void GameObject::Render()
 {
     if (rootComponent != nullptr)
     {
-       rootComponent->Render();
-    } 
+        rootComponent->Render();
+    }
 }
 
 void GameObject::RenderEditor()
@@ -87,7 +90,4 @@ void GameObject::PassAABBUpdateToParent()
     // TODO Update AABBs further up the gameObject tree
 }
 
-const Transform & GameObject::GetGlobalTransform() const
-{
-    return rootComponent->GetGlobalTransform();
-}
+const Transform &GameObject::GetGlobalTransform() const { return rootComponent->GetGlobalTransform(); }

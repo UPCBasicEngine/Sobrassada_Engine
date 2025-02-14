@@ -142,7 +142,7 @@ namespace MeshImporter
         };
 
         unsigned int size =
-            sizeof(header) + sizeof(Vertex) * vertexBuffer.size() + sizeof(unsigned int) * indexBuffer.size();
+            (unsigned int)(sizeof(header) + sizeof(Vertex) * vertexBuffer.size() + sizeof(unsigned int) * indexBuffer.size());
 
         char *fileBuffer = new char[size];
         char *cursor     = fileBuffer;
@@ -162,7 +162,7 @@ namespace MeshImporter
         UID meshUID               = GenerateUID();
         // false = append
         std::string fileName       = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath       = MESHES_PATH + std::to_string(meshUID) + FILE_EXTENSION;
+        std::string savePath       = MESHES_PATH + std::to_string(meshUID) + MESH_EXTENSION;
         unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
 
         delete[] fileBuffer;

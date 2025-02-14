@@ -1,33 +1,32 @@
 ﻿#pragma once
 
-#include "Transform.h"
 #include "ComponentUtils.h"
 #include "Globals.h"
 #include "Scene/AABBUpdatable.h"
+#include "Transform.h"
 
+#include <Geometry/AABB.h>
 #include <Libs/rapidjson/document.h>
 #include <vector>
-#include <Geometry/AABB.h>
 
 class Component : public AABBUpdatable
 {
-public:
-
-    Component(UID uid, UID uidParent, UID uidRoot, const char* initName, const Transform& parentGlobalTransform);
+  public:
+    Component(UID uid, UID uidParent, UID uidRoot, const char *initName, const Transform &parentGlobalTransform);
 
     Component(const rapidjson::Value &initialState);
 
     ~Component() override;
 
     virtual void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const;
-    
+
     virtual void Update() = 0;
     virtual void Render();
 
     virtual bool AddChildComponent(UID componentUID);
     virtual bool RemoveChildComponent(UID componentUID);
     virtual bool DeleteChildComponent(UID componentUID);
-    
+
     virtual void RenderEditorInspector();
     virtual void RenderEditorComponentTree(UID selectedComponentUID);
 
@@ -36,25 +35,25 @@ public:
 
     void HandleDragNDrop();
 
-    UID  GetUID() const { return uid; }
+    UID GetUID() const { return uid; }
 
-    UID  GetUIDParent() const { return uidParent; }
+    UID GetUIDParent() const { return uidParent; }
+
+    const std::vector<UID> &GetChildren() const { return children; }
 
     void SetUIDParent(UID newUIDParent) { uidParent = newUIDParent; }
 
-    const Transform& GetGlobalTransform() const override { return globalTransform; }
-    const Transform& GetLocalTransform() const { return localTransform; }
+    const Transform &GetGlobalTransform() const override { return globalTransform; }
+    const Transform &GetLocalTransform() const { return localTransform; }
 
-    const AABB& GetGlobalAABB() const { return globalComponentAABB; }
+    const AABB &GetGlobalAABB() const { return globalComponentAABB; }
 
     void CalculateLocalAABB();
 
-protected:
-    
-    virtual AABB& TransformUpdated(const Transform &parentGlobalTransform);
+  protected:
+    virtual AABB &TransformUpdated(const Transform &parentGlobalTransform);
 
-protected:
-    
+  protected:
     const UID uid;
     const UID uidRoot;
     UID uidParent;
@@ -62,11 +61,10 @@ protected:
 
     char name[64];
     bool enabled;
-    
+
     Transform localTransform;
     Transform globalTransform;
 
     AABB localComponentAABB;
     AABB globalComponentAABB;
-    
 };

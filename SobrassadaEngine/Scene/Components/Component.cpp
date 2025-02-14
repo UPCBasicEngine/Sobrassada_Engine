@@ -11,6 +11,7 @@
 
 #include <Geometry/OBB.h>
 #include <Math/Quat.h>
+#include <string>
 
 Component::Component(const UID uid, const UID uidParent, const UID uidRoot, const char* initName, const Transform& parentGlobalTransform):
 uid(uid), uidParent(uidParent), uidRoot(uidRoot), enabled(true), globalTransform(parentGlobalTransform)
@@ -20,9 +21,9 @@ uid(uid), uidParent(uidParent), uidRoot(uidRoot), enabled(true), globalTransform
     memcpy(name, initName, strlen(initName));
 }
 
-Component::Component(const rapidjson::Value &initialState): uid(initialState["UID"].GetUint64()), uidRoot(initialState["UIDRoot"].GetUint64())
+Component::Component(const rapidjson::Value &initialState): uid(initialState["UID"].GetUint64()), uidRoot(initialState["RootUID"].GetUint64())
 {
-    uidParent = initialState["UIDParent"].GetUint64();
+    uidParent = initialState["ParentUID"].GetUint64();
     enabled = initialState["Enabled"].GetBool();
     
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() && initialState["LocalTransform"].Size() == 9)
@@ -63,8 +64,8 @@ Component::~Component(){
 void Component::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
 {
     targetState.AddMember("UID", uid, allocator);
-    targetState.AddMember("UIDParent", uidParent, allocator);
-    targetState.AddMember("UIDRoot", uidRoot, allocator);
+    targetState.AddMember("ParentUID", uidParent, allocator);
+    targetState.AddMember("RootUID", uidRoot, allocator);
 
     rapidjson::Value valLocalTransform(rapidjson::kArrayType);
     valLocalTransform.PushBack(localTransform.position.x, allocator).PushBack(localTransform.position.y, allocator).
@@ -84,7 +85,7 @@ void Component::Save(rapidjson::Value &targetState, rapidjson::Document::Allocat
 
     targetState.AddMember("Children", valChildren, allocator);
     targetState.AddMember("Enabled", enabled, allocator);
-    targetState.AddMember("Name", name, allocator);
+    targetState.AddMember("Name", rapidjson::Value(std::string(name).c_str(), allocator), allocator);
 }
 
 
@@ -137,7 +138,7 @@ void Component::RenderEditorInspector()
     if (enabled)
     {
         ImGui::Separator();
-        if (App->GetEditorUIModule()->RenderTransformModifier(localTransform, globalTransform, uidParent))
+        if (App->GetEditorUIModule()->RenderTransformWidget(localTransform, globalTransform, uidParent))
         {
             AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
             if (parent != nullptr)

@@ -52,6 +52,7 @@ enum update_status
 #define DEFAULT_CAMERA_ZOOM_SENSITIVITY      5.f;
 
 #define ASSETS_PATH     "Assets/"
+#define LIBRARY_PATH    "Library/"
 #define ANIMATIONS_PATH "Library/Animations/"
 #define AUDIO_PATH      "Library/Audio/"
 #define BONES_PATH      "Library/Bones/"
@@ -61,7 +62,7 @@ enum update_status
 #define SCENES_PATH     "Library/Scenes/"
 
 #define ASSET_EXTENSION    ".gltf"
-#define FILE_EXTENSION     ".sobrassada"
+#define MESH_EXTENSION     ".sobrassada"
 #define TEXTURE_EXTENSION  ".dds"
 #define MATERIAL_EXTENSION ".mat"
 #define SCENE_EXTENSION    ".scene"
@@ -84,6 +85,7 @@ inline UID GenerateUID()
     rng.IntFast();
 
     uint64_t uid = static_cast<uint64_t>(rng.IntFast()) << 32 | rng.IntFast(); // Combine two 32-bit values
+
 
     return uid;
 }

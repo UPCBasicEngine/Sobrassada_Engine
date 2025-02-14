@@ -24,7 +24,8 @@ class EditorUIModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    bool RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
+    bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent);
+    
     UID RenderResourceSelectDialog(const char* id, const std::map<std::string, UID>& availableResources);
 
 public:
@@ -32,6 +33,9 @@ public:
     bool inspectorMenu      = true; 
 
   private:
+    
+    void RenderBasicTransformModifiers(Transform &transform, bool& lockScaleAxis, bool& positionValueChanged, bool& rotationValueChanged, bool& scaleValueChanged);
+    
     void AddFramePlotData(float deltaTime);
     void Draw();
 
@@ -61,8 +65,6 @@ public:
     int maximumPlotData     = 50;
     std::deque<float> framerate;
     std::deque<float> frametime;
-
-    int transformType = LOCAL;
 
     EditorViewport *editorViewport = nullptr;
 
