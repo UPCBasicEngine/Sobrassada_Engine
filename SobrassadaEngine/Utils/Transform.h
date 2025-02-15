@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include <Math/float3.h>
 
 enum TransformType
@@ -39,16 +40,13 @@ public:
         return {position - transform.position, rotation - transform.rotation, newScale};
     }
 
-    void Set(const Transform &transform)
-    {
-        this->position = float3(transform.position);
-        this->rotation = float3(transform.rotation);
-        this->scale = float3(transform.scale);
-    }
+    void Set(const Transform &transform);
     
 public:
     
     float3 position;
     float3 rotation;
     float3 scale;
+
+    static const Transform identity;
 };

@@ -31,14 +31,15 @@ class EditorUIModule : public Module
     bool ShutDown() override;
 
     bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform &parentTransform);
+    bool RenderImGuizmo(Transform& gameObjectTransform);
 
     UID RenderResourceSelectDialog(const char *id, const std::unordered_map<std::string, UID> &availableResources);
-
-    void DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model);
 
   public:
     bool hierarchyMenu = true;
     bool inspectorMenu = true;
+
+    EditorViewport *editorViewport = nullptr;
 
   private:
     void RenderBasicTransformModifiers(
@@ -79,7 +80,7 @@ class EditorUIModule : public Module
 
     int transformType = LOCAL;
 
-    EditorViewport *editorViewport = nullptr;
+    
     QuadtreeViewer *quadtreeViewer = nullptr;
 
     int width, height;

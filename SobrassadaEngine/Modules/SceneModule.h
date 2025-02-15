@@ -25,7 +25,7 @@ class SceneModule : public Module
 {
   public:
     SceneModule();
-    ~SceneModule();
+    ~SceneModule() override;
 
     bool Init() override;
     update_status PreUpdate(float deltaTime) override;

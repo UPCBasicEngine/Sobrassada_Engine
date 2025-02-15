@@ -24,7 +24,7 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #define TINYGLTF_IMPLEMENTATION /* Only in one of the includes */
-#include <tiny_gltf.h>
+#include <tiny_gltf.h>  // TODO Remove
 
 #include "InputModule.h"
 
@@ -85,7 +85,7 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 {
     Draw();
 
-    editorViewport->Render();
+    //editorViewport->Render();
 
     if (quadtreeViewerViewport) quadtreeViewer->Render(quadtreeViewerViewport);
 
@@ -650,15 +650,36 @@ bool EditorUIModule::RenderTransformWidget(Transform &localTransform, Transform 
     return positionValueChanged || rotationValueChanged || scaleValueChanged;
 }
 
+bool EditorUIModule::RenderImGuizmo(Transform& gameObjectTransform)
+{
+    float4x4 view = float4x4(App->GetCameraModule()->GetViewMatrix());
+    view.Transpose();
+
+    float4x4 proj = float4x4(App->GetCameraModule()->GetProjectionMatrix());
+    proj.Transpose();
+
+    float4x4 gizmoMatrix = float4x4::identity;
+    gameObjectTransform.rotation *= RAD_DEGREE_CONV;
+    ImGuizmo::RecomposeMatrixFromComponents(gameObjectTransform.position.ptr(), gameObjectTransform.rotation.ptr(), gameObjectTransform.scale.ptr(), gizmoMatrix.ptr());
+
+    Manipulate(view.ptr(), proj.ptr(), mCurrentGizmoOperation, ImGuizmo::MODE::LOCAL, gizmoMatrix.ptr());
+
+    ImGuizmo::DecomposeMatrixToComponents(gizmoMatrix.ptr(), gameObjectTransform.position.ptr(), gameObjectTransform.rotation.ptr(), gameObjectTransform.scale.ptr());
+    gameObjectTransform.rotation /= RAD_DEGREE_CONV;
+
+    return ImGuizmo::IsUsing();
+}
+
 void EditorUIModule::RenderBasicTransformModifiers(Transform &outputTransform, bool& lockScaleAxis, bool& positionValueChanged, bool& rotationValueChanged, bool& scaleValueChanged)
 {
     static bool bUseRad = true;
+    
+    positionValueChanged |= ImGui::InputFloat3( "Position", &outputTransform.position[0] );
+
     if (!bUseRad)
     {
         outputTransform.rotation *= RAD_DEGREE_CONV;
     }
-    
-    positionValueChanged |= ImGui::InputFloat3( "Position", &outputTransform.position[0] );
     rotationValueChanged |= ImGui::InputFloat3( "Rotation", &outputTransform.rotation[0] );
     if (!bUseRad)
     {
@@ -842,53 +863,4 @@ void EditorUIModule::OpenGLConfig()
     {
         openGLModule->SetFrontFaceMode(frontFaceMode);
     }
-}
-
-void EditorUIModule::DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
-    if (ImGuizmo::IsUsing())
-    {
-        ImGui::Text("Using gizmo");
-    } else
-    {
-        ImGui::Text("Trying to use gizmo ... Failed");
-        ImGui::Text(ImGuizmo::IsOver()?"Over gizmo":"");
-        ImGui::SameLine();
-        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::TRANSLATE) ? "Over translate gizmo" : "");
-        ImGui::SameLine();
-        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::ROTATE) ? "Over rotate gizmo" : "");
-        ImGui::SameLine();
-        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::SCALE) ? "Over scale gizmo" : "");
-    }
-    ImGui::Separator();
-
-    static float4x4 matrix = float4x4::identity;
-    
-    if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
-        mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
-        mCurrentGizmoOperation = ImGuizmo::ROTATE;
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
-        mCurrentGizmoOperation = ImGuizmo::SCALE;
-    float matrixTranslation[3], matrixRotation[3], matrixScale[3];
-    ImGuizmo::DecomposeMatrixToComponents(matrix.ptr(), matrixTranslation, matrixRotation, matrixScale);
-    ImGui::InputFloat3("Tr", matrixTranslation);
-    ImGui::InputFloat3("Rt", matrixRotation);
-    ImGui::InputFloat3("Sc", matrixScale);
-    ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix.ptr());
-
-    ImGui::Begin("Gizmo", 0, 0);
-    ImGuizmo::SetDrawlist();
-    
-    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-
-    ImGuizmo::PushID(420);
-    ImGuizmo::Manipulate(view.ptr(), proj.ptr(), mCurrentGizmoOperation, mCurrentGizmoMode, matrix.ptr());
-    ImGuizmo::PopID();
-
-    ImGui::End();
 }

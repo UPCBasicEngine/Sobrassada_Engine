@@ -243,6 +243,7 @@ void GameObject::RenderEditor()
         if (rootComponent != nullptr)
         {
             rootComponent->RenderComponentEditor();
+            rootComponent->RenderGuizmo();
         }
     }
     if (App->GetEditorUIModule()->hierarchyMenu)
@@ -288,9 +289,19 @@ void GameObject::ComponentGlobalTransformUpdated()
 
         if (childGameObject != nullptr)
         {
-            globalAABB.Enclose(childGameObject->rootComponent->TransformUpdated(rootComponent == nullptr ? Transform():rootComponent->GetGlobalTransform()));
+            globalAABB.Enclose(childGameObject->rootComponent->TransformUpdated(rootComponent == nullptr ? Transform::identity : rootComponent->GetGlobalTransform()));
         }
     }
 }
 
 const Transform &GameObject::GetGlobalTransform() const { return rootComponent->GetGlobalTransform(); }
+
+const Transform& GameObject::GetParentGlobalTransform()
+{
+    GameObject* parent = App->GetSceneModule()->GetGameObjectByUUID(parentUUID);
+    if (parent != nullptr)
+    {
+        return parent->GetGlobalTransform();
+    }
+    return Transform::identity;
+}

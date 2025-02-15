@@ -36,6 +36,8 @@ class Component : public AABBUpdatable
 
     void ComponentGlobalTransformUpdated() override {}
 
+    const Transform& GetParentGlobalTransform() override;
+
     void HandleDragNDrop();
 
     UID GetUID() const { return uid; }
