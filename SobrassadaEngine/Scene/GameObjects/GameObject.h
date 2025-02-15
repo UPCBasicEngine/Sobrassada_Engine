@@ -18,6 +18,8 @@ public:
     GameObject(UID parentUUID, std::string name);
     GameObject(UID parentUUID, std::string name, UID rootComponent);
 
+    GameObject(const rapidjson::Value &initialState);
+
     ~GameObject();
 
 	bool AddGameObject(UID gameObjectUUID);

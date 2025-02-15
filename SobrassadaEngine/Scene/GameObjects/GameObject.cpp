@@ -29,6 +29,25 @@ GameObject::GameObject(UID parentUUID, std::string name, UID rootComponentUID) :
     rootComponent = dynamic_cast<RootComponent *>(App->GetSceneModule()->gameComponents[rootComponentUID]);
 }
 
+GameObject::GameObject(const rapidjson::Value& initialState)
+    : uuid(initialState["UID"].GetUint64())
+{
+    parentUUID = initialState["ParentUID"].GetUint64();
+    name = initialState["Name"].GetString();
+
+    if (initialState.HasMember("Children") && initialState["Children"].IsArray())
+    {
+        const rapidjson::Value &initChildren = initialState["Children"];
+
+        for (rapidjson::SizeType i = 0; i < initChildren.Size(); i++)
+        {
+            children.push_back(initChildren[i].GetUint64());
+        }
+    }
+    rootComponent =
+        dynamic_cast<RootComponent *>(App->GetSceneModule()->gameComponents[initialState["RootComponentUID"].GetUint64()]);
+}
+
 GameObject::~GameObject()
 {
     App->GetSceneModule()->gameComponents.erase(rootComponent->GetUID());
