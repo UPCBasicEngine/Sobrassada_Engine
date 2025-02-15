@@ -36,7 +36,7 @@ void ResourceMesh::LoadData(unsigned int mode, UID defaultMaterial, const std::v
 
 void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive)
 {
-	// Getting required size for VBO buffer
+/*	// Getting required size for VBO buffer
 	const auto& positionIterator = inPrimitive.attributes.find("POSITION");
 	const auto& textureIterator = inPrimitive.attributes.find("TEXCOORD_0");
     const auto &normalIterator   = inPrimitive.attributes.find("NORMAL");
@@ -153,12 +153,12 @@ void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh&
 		}
 
         glUnmapBuffer(GL_ARRAY_BUFFER);
-    }	
+    }*/	
 }
 
 void ResourceMesh::LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive)
 {
-	if (inPrimitive.indices >= 0)
+	/*if (inPrimitive.indices >= 0)
 	{
 		const tinygltf::Accessor& indexAccessor = inModel.accessors[inPrimitive.indices];
 		const tinygltf::BufferView& indexBufferView = inModel.bufferViews[indexAccessor.bufferView];
@@ -185,12 +185,12 @@ void ResourceMesh::LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh&
 		}
 
 		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-	}
+	}*/
 }
 
 void ResourceMesh::CreateVAO()
 {
-	glGenVertexArrays(1, &vao);
+	/*glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -216,12 +216,12 @@ void ResourceMesh::CreateVAO()
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void *)(sizeof(float) * 3 * vertexCount));
 	}
 
-	glBindVertexArray(0);
+	glBindVertexArray(0);*/
 }
 
 void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int cameraUBO, ResourceMaterial* material)
 {
-	glUseProgram(program);
+	/*glUseProgram(program);
 	
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
     unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
@@ -259,6 +259,6 @@ void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int camer
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 
-	glBindVertexArray(0);
+	glBindVertexArray(0);*/
 }
 

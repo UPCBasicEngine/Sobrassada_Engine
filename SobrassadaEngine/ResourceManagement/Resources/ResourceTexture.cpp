@@ -4,14 +4,18 @@
  ResourceTexture::ResourceTexture(uint64_t uid, const std::string& name) : Resource(uid, name, ResourceType::Texture){
 }
 
-void ResourceTexture::LoadData(const DirectX::TexMetadata& metadata, const DirectX::ScratchImage& scratchImage)
+ResourceTexture::~ResourceTexture()
 {
-    this->metadata = metadata;
-    this->scratchImage = scratchImage;
-    ConvertMetadata(this->metadata, openGLMetadata);
 }
 
-void TextureModuleTest::ConvertMetadata(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata)
+void ResourceTexture::LoadData(const DirectX::TexMetadata& metadata, const DirectX::ScratchImage& scratchImage)
+{
+    //this->metadata = metadata;
+    //this->scratchImage = scratchImage;
+    //ConvertMetadata(this->metadata, openGLMetadata);
+}
+
+void ResourceTexture::ConvertMetadata(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata)
 {
     switch (metadata.format)
     {

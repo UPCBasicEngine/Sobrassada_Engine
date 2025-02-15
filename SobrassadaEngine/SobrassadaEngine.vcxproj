@@ -461,7 +461,6 @@
     <ClCompile Include="Tests\CameraModule.cpp" />
     <ClCompile Include="Modules\DebugDrawModule.cpp" />
     <ClCompile Include="UI\EditorUIModule.cpp" />
-    <ClCompile Include="Tests\EngineModel.cpp" />
     <ClCompile Include="Modules\InputModule.cpp" />
     <ClCompile Include="Libs\ImGui\imgui.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_demo.cpp" />
@@ -549,7 +548,6 @@
     <ClInclude Include="Modules\DebugDrawModule.h" />
     <ClInclude Include="DebugDraw\debug_draw.hpp" />
     <ClInclude Include="UI\EditorUIModule.h" />
-    <ClInclude Include="Tests\EngineModel.h" />
     <ClInclude Include="Utils\Globals.h" />
     <ClInclude Include="Modules\InputModule.h" />
     <ClInclude Include="Libs\ImGui\imconfig.h" />

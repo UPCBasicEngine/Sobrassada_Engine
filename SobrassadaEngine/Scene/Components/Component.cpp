@@ -12,6 +12,7 @@
 #include <Geometry/OBB.h>
 #include <Math/Quat.h>
 #include <string>
+#include <Math/float4x4.h>
 
 Component::Component(const UID uid, const UID uidParent, const UID uidRoot, const char* initName, int type, const Transform& parentGlobalTransform):
 uid(uid), uidParent(uidParent), uidRoot(uidRoot), type(type), enabled(true), globalTransform(parentGlobalTransform)

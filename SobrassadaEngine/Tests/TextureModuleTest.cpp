@@ -21,7 +21,7 @@ unsigned int TextureModuleTest::LoadTexture(const wchar_t *texturePath, DirectX:
 
     if (succeded)
     {
-        ConvertMetadata(outTexMetadata, openGlMeta);
+        ConvertMetadataOld(outTexMetadata, openGlMeta);
 
         glGenTextures(1, &textureId);
         glBindTexture(GL_TEXTURE_2D, textureId);
@@ -49,7 +49,7 @@ unsigned int TextureModuleTest::LoadCubemap(const wchar_t *texturePath) const
     bool succeded = LoadTextureFile(texturePath, texMetadata, scratchImage);
     if (succeded)
     {
-        ConvertMetadata(texMetadata, openGlMeta);
+        ConvertMetadataOld(texMetadata, openGlMeta);
 
         glGenTextures(1, &textureId);
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
@@ -69,7 +69,7 @@ unsigned int TextureModuleTest::LoadCubemap(const wchar_t *texturePath) const
     return textureId;
 }
 
-void TextureModuleTest::ConvertMetadata(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata)
+void TextureModuleTest::ConvertMetadataOld(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata)
 {
     switch (metadata.format)
     {

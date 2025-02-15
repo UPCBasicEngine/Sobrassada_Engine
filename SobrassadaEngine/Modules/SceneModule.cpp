@@ -2,7 +2,6 @@
 
 #include "CameraModule.h"
 #include "ComponentUtils.h"
-#include "EngineModel.h"
 #include "FrustumPlanes.h"
 #include "GameObject.h"
 #include "Octree.h"
@@ -18,8 +17,8 @@
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
-#include <Algorithm/Random/LCG.h>
 #include <tiny_gltf.h>
+#include <Algorithm/Random/LCG.h>
 
 SceneModule::SceneModule() {}
 
@@ -49,23 +48,6 @@ bool SceneModule::Init()
 
     // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
-
-    MOCKUP_loadedModel = new EngineModel();
-    MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
-
-    const uint32_t bakerHouseID                   = LCG().IntFast();
-    const uint32_t bakerHouseChimneyID            = LCG().IntFast();
-
-    const uint32_t bakerHouseTextureID            = LCG().IntFast();
-
-    MOCKUP_loadedMeshes[bakerHouseID]             = MOCKUP_loadedModel->GetMesh(1);
-    MOCKUP_loadedMeshes[bakerHouseChimneyID]      = MOCKUP_loadedModel->GetMesh(0);
-    MOCKUP_libraryMeshes["Baker house"]           = bakerHouseID;
-    MOCKUP_libraryMeshes["Baker house chimney"]   = bakerHouseChimneyID;
-
-    // TODO Always have a default grid texture loaded to apply as standard
-    MOCKUP_loadedTextures[bakerHouseTextureID]    = MOCKUP_loadedModel->GetActiveRenderTexture();
-    MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
 
     return true;
 }

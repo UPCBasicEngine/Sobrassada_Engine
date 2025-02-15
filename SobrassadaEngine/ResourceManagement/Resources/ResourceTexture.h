@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include "Resource.h"
 #include "TextureModuleTest.h"
 #include "DirectXTex/DirectXTex.h"

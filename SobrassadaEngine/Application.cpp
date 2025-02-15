@@ -13,7 +13,6 @@
 #include "CameraModule.h"
 #include "DebugDrawModule.h"
 #include "Framebuffer.h"
-#include "RenderTestModule.h"
 #include "TextureModuleTest.h"
 #include "Root/RootComponent.h"
 

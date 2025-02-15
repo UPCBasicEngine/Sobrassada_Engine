@@ -23,7 +23,7 @@ class TextureModuleTest : public Module
 
     unsigned int LoadTexture(const wchar_t *texturePath, DirectX::TexMetadata &outTexMetadata);
     unsigned int LoadCubemap(const wchar_t *texturePath) const;
-    static void ConvertMetadata(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata);
+    static void ConvertMetadataOld(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata);
 
     unsigned int CreateFramebufferTexture(int width, int height);
 

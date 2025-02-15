@@ -208,9 +208,6 @@ namespace MeshImporter
         std::vector<Vertex> tmpVertices;
         tmpVertices.reserve(vertexCount);
 
-        ResourceMesh* mesh = new ResourceMesh(0, "TODO");
-        mesh->LoadData(mode, materialIndex);
-
         std::move(
             reinterpret_cast<Vertex *>(cursor), reinterpret_cast<Vertex *>(cursor) + vertexCount, tmpVertices.begin()
         );
@@ -228,7 +225,9 @@ namespace MeshImporter
             reinterpret_cast<unsigned int *>(cursor), reinterpret_cast<unsigned int *>(cursor) + indexCount,
             tmpIndices.begin()
         );
-        mesh->SetIndices(std::move(tmpIndices));
+
+        ResourceMesh* mesh = new ResourceMesh(0, "TODO");
+        mesh->LoadData(mode, materialIndex, tmpVertices, tmpIndices);
 
         delete[] buffer;
 

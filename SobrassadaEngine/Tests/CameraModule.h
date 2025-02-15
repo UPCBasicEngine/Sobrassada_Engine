@@ -31,6 +31,8 @@ class CameraModule : public Module
 
     const float4x4 &GetProjectionMatrix() { return projectionMatrix; }
     const float4x4 &GetViewMatrix() { return viewMatrix; }
+    const unsigned int GetUbo() { return ubo; }
+    void UpdateUBO();
     const FrustumPlanes &GetFrustrumPlanes() const { return frustumPlanes; }
 
     void SetAspectRatio(float newAspectRatio);
@@ -49,4 +51,8 @@ class CameraModule : public Module
 
     float speedBase     = 0.01f;
     float movementSpeed = 0.01f;
+
+    CameraMatrices matrices;
+
+    unsigned int ubo;
 };

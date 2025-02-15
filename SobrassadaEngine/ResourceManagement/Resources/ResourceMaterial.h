@@ -24,7 +24,7 @@ class ResourceMaterial : public Resource
 {
 public:
 
-    ResourceMaterial(UID uid);
+    ResourceMaterial(UID uid, const std::string & name);
 
     ~ResourceMaterial() override;
     

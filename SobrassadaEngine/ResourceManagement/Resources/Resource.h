@@ -36,7 +36,7 @@ public:
 protected:
 
     UID uid = CONSTANT_EMPTY_UID;
-    const std::string name;
+    std::string name;
 
     ResourceType type = ResourceType::Unknown;
     unsigned int referenceCount = 0;

@@ -13,7 +13,7 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include <tiny_gltf.h>
 
- ResourceMaterial::ResourceMaterial(UID uid): Resource(uid, ResourceType::Material){}
+ResourceMaterial::ResourceMaterial(UID uid, const std::string & name): Resource(uid, name, ResourceType::Material){}
 
 ResourceMaterial::~ResourceMaterial(){
      FreeMaterials();
@@ -95,7 +95,7 @@ TextureInfo ResourceMaterial::GetTexture(const tinygltf::Model sourceModel, int 
 
 void ResourceMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, const tinygltf::Model &sourceModel, const char *modelPath)
 {
-    assetName = srcMaterial.name;
+    name = srcMaterial.name;
     unsigned int textureId = 0;
         
 	auto it = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");

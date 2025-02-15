@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Globals.h"
-#include "EngineModel.h"
 #include "Module.h"
 #include "Scene/AABBUpdatable.h"
 
@@ -51,14 +50,6 @@ class SceneModule : public Module
     UID GetGameObjectRootUID() const { return gameObjectRootUUID; }
 
     std::map<UID, Component*> gameComponents;
-    
-    std::map<UID, EngineMesh*> MOCKUP_loadedMeshes;
-    std::map<std::string, UID> MOCKUP_libraryMeshes;
-
-    std::map<UID, unsigned int> MOCKUP_loadedTextures;
-    std::map<std::string, UID> MOCKUP_libraryTextures;
-    
-    EngineModel* MOCKUP_loadedModel;
 
     AABBUpdatable* GetTargetForAABBUpdate(UID uuid);
 
@@ -76,7 +67,6 @@ class SceneModule : public Module
     void CheckObjectsToRender(std::vector<GameObject *> &outRenderGameObjects) const;
 
   private:
-    uint32_t gameObjectRootUUID;
     UID sceneUID;
     UID gameObjectRootUUID;
     std::string sceneName;

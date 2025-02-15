@@ -40,7 +40,7 @@ class Application
 
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *GetCameraModule() { return cameraModule; }
-    DebugDrawModule *GetDebugDreawModule() { return debugDraw; }
+    DebugDrawModule *GetDebugDrawModule() { return debugDraw; }
     TextureModuleTest *GetTextureModuleTest() { return textureModuleTest; }
 
   private:
