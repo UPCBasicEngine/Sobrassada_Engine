@@ -232,7 +232,7 @@ void CameraModule::FocusCamera()
     float3 center          = focusedObjectAABB.CenterPoint();
 
     // IN CASE THE SELECTED OBJECT HAS NO AABB, CLAMP VERY SMALL VALUES TO 0 (errors in float operations)
-    int distance           = (focusedObjectAABB.maxPoint - focusedObjectAABB.minPoint).Length();
+    int distance           = (int)(focusedObjectAABB.maxPoint - focusedObjectAABB.minPoint).Length();
     if (distance == 0) distance = 1;
 
     float3 direction   = camera.front.Normalized();
