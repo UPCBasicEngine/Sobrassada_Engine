@@ -31,8 +31,10 @@ class InputModule : public Module
 
     void SubscribeToEvent(int keyEvent, std::function<void(void)> &functionCallback);
 
+    const KeyState *GetKeyboard() const { return keyboard; }
     KeyState GetKey(int id) const { return keyboard[id]; }
 
+    const KeyState *GetMouseButtons() const { return mouseButtons; }
     KeyState GetMouseButtonDown(int id) const { return mouseButtons[id - 1]; }
 
     const float2 &GetMouseMotion() const { return mouseMotion; };
