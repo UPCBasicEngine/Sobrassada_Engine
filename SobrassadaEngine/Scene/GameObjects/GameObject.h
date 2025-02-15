@@ -28,6 +28,12 @@ public:
 
     void SaveToLibrary();
 
+    void RenderHierarchyNode(UID &selectedGameObjectUUID);
+    void HandleNodeClick(UID &selectedGameObjectUUID);
+    void RenderContextMenu();
+
+    bool UpdateGameObjectHierarchy(UID sourceUID, UID targetUID);
+
 	inline std::string GetName() const { return name; }
     void SetName(std::string newName) { name = newName; }
     
@@ -62,4 +68,5 @@ private:
     RootComponent *rootComponent;
 
     AABB globalAABB;
+
 };

@@ -5,6 +5,8 @@
 #include "Root/RootComponent.h"
 #include "SceneModule.h"
 
+#include "imgui.h"
+
 #include <Algorithm/Random/LCG.h>
 
 GameObject::GameObject(std::string name) : name(name)
@@ -69,6 +71,129 @@ bool GameObject::RemoveGameObject(UID gameObjectUUID)
 void GameObject::OnEditor() {}
 
 void GameObject::SaveToLibrary() {}
+
+void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID) 
+{
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+    
+    bool hasChildren         = !children.empty();
+    
+    if (!hasChildren) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    if (selectedGameObjectUUID == uuid)
+    {
+
+        flags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    ImGui::PushID(uuid);
+    bool nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
+
+    HandleNodeClick(selectedGameObjectUUID);
+    RenderContextMenu();
+
+    if (nodeOpen && hasChildren)
+    {
+        for (UID childUUID : children)
+        {
+            GameObject *childGameObject = App->GetSceneModule()->GetGameObjectByUUID(childUUID);
+            if (childUUID != uuid)
+            {
+                childGameObject->RenderHierarchyNode(selectedGameObjectUUID);
+            }
+        }
+
+        ImGui::TreePop();
+    }
+
+    ImGui::PopID();
+}
+
+void GameObject::HandleNodeClick(UID &selectedGameObjectUUID) 
+{
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+    {
+        selectedGameObjectUUID = uuid;
+    }
+
+    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+        selectedGameObjectUUID = uuid;
+        ImGui::OpenPopup(("Game Object Context Menu##" + std::to_string(uuid)).c_str());
+    }
+
+    // Drag and Drop
+    if (ImGui::BeginDragDropSource())
+    {
+        ImGui::SetDragDropPayload("DRAG_DROP_GAMEOBJECT", &uuid, sizeof(UID));
+        ImGui::Text("Dragging %s", name.c_str());
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
+        {
+            UID draggedUUID = *reinterpret_cast<const UID *>(payload->Data);
+            if (draggedUUID != uuid)
+            {
+                if (UpdateGameObjectHierarchy(draggedUUID, uuid))
+                {
+                    //TODO: update the transform and AABB from all children
+                }
+            }
+        }
+        
+        ImGui::EndDragDropTarget();
+    }
+}
+
+void GameObject::RenderContextMenu() 
+{
+    if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(uuid)).c_str()))
+    {
+        if (ImGui::MenuItem("New GameObject"))
+        {
+            UID newUUID               = LCG().IntFast();
+            GameObject *newGameObject = new GameObject(uuid, "new Game Object");
+            App->GetSceneModule()->GetGameObjectByUUID(uuid)->AddGameObject(newUUID);
+            App->GetSceneModule()->AddGameObject(newUUID, newGameObject);
+        }
+
+        if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Delete"))
+        {
+            App->GetSceneModule()->RemoveGameObjectHierarchy(uuid);
+        }
+
+        if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Clear Parent"))
+        {
+            UpdateGameObjectHierarchy(uuid, App->GetSceneModule()->GetGameObjectRootUID());
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+bool GameObject::UpdateGameObjectHierarchy(UID sourceUID, UID targetUID)
+{
+    GameObject *sourceGameObject = App->GetSceneModule()->GetGameObjectByUUID(sourceUID);
+    GameObject *targetGameObject  = App->GetSceneModule()->GetGameObjectByUUID(targetUID);
+
+    if (!sourceGameObject || !targetGameObject) return false;
+
+    UID oldParentUUID = sourceGameObject->GetParent();
+    sourceGameObject->SetParent(targetUID);
+
+    GameObject *oldParentGameObject = App->GetSceneModule()->GetGameObjectByUUID(oldParentUUID);
+
+    if (oldParentGameObject)
+    {
+        oldParentGameObject->RemoveGameObject(sourceGameObject->GetUID());
+    }
+
+    targetGameObject->AddGameObject(sourceGameObject->GetUID());
+
+    return true;
+}
 
 void GameObject::Render()
 {

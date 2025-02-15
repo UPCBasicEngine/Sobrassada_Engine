@@ -37,13 +37,8 @@ class SceneModule : public Module
 	void CheckObjectsToRender();
 	
 	void RenderHierarchyUI(bool &hierarchyMenu);
-    void RenderGameObjectHierarchy(UID gameObjectUUID);
-
-	void HandleNodeClick(UID gameObjectUUID);
-    void RenderContextMenu(UID gameObjectUUID);
 
 	void RemoveGameObjectHierarchy(UID gameObjectUUID);
-    void UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID);
 
 	//TODO: Change when filesystem defined
     GameObject *GetGameObjectByUUID(UID gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
