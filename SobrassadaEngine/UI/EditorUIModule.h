@@ -2,13 +2,13 @@
 
 #include "Module.h"
 
-#include "Transform.h"
 #include "ResourceManagement/Resources/Resource.h"
 #include "Scene/AABBUpdatable.h"
+#include "Transform.h"
 
 #include <deque>
-#include <string>
 #include <map>
+#include <string>
 #include <unordered_map>
 
 class EditorViewport;
@@ -27,18 +27,20 @@ class EditorUIModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform& parentTransform);
-    
-    UID RenderResourceSelectDialog(const char* id, const std::unordered_map<std::string, UID>& availableResources);
+    bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform &parentTransform);
 
-public:
-    bool hierarchyMenu      = true;
-    bool inspectorMenu      = true; 
+    UID RenderResourceSelectDialog(const char *id, const std::unordered_map<std::string, UID> &availableResources);
+
+  public:
+    bool hierarchyMenu = true;
+    bool inspectorMenu = true;
 
   private:
-    
-    void RenderBasicTransformModifiers(Transform &transform, bool& lockScaleAxis, bool& positionValueChanged, bool& rotationValueChanged, bool& scaleValueChanged);
-    
+    void RenderBasicTransformModifiers(
+        Transform &transform, bool &lockScaleAxis, bool &positionValueChanged, bool &rotationValueChanged,
+        bool &scaleValueChanged
+    );
+
     void AddFramePlotData(float deltaTime);
     void Draw();
 
@@ -62,9 +64,9 @@ public:
     bool load               = false;
     bool save               = false;
     bool loadScene          = false;
-    bool editorSettingsMenu     = false;
+    bool editorSettingsMenu = false;
     bool quadtreeViewerViewport = false;
-    bool closeApplication       = false;
+    bool closeApplication   = false;
 
     int maximumPlotData         = 50;
     std::deque<float> framerate;

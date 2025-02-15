@@ -249,13 +249,13 @@ bool LibraryModule::LoadLibraryMaps()
             switch (prefix)
             {
             case 1:
-                AddMesh(finalUID, filePath);
+                AddMesh(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
                 break;
             case 2:
-                AddMaterial(finalUID, filePath);
+                AddMaterial(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
                 break;
             case 3:
-                AddTexture(finalUID, filePath);
+                AddTexture(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
                 break;
             default:
                 GLOG("Category: Unknown File Type (99)");
@@ -301,7 +301,7 @@ void LibraryModule::AddMesh(UID meshUID, const std::string &sobPath)
 
 void LibraryModule::AddMaterial(UID materialUID, const std::string &matPath)
 {
-    meshMap[matPath] = materialUID; // Map the texture UID to its DDS path
+    materialMap[matPath] = materialUID; // Map the texture UID to its DDS path
 }
 
 UID LibraryModule::GetTextureUID(const std::string &texturePath) const
@@ -340,7 +340,7 @@ UID LibraryModule::GetMaterialUID(const std::string &materialPath) const
     return 0;
 }
 
-const std::string &LibraryModule::GetResourcePath(UID resourceID)
+const std::string &LibraryModule::GetResourcePath(UID resourceID) const
 {
     auto it = resourcePathsMap.find(resourceID);
     if (it != resourcePathsMap.end())
