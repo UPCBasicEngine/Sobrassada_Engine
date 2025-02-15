@@ -19,12 +19,11 @@ void GameTimer::Start()
     }
     else
     {
+        Reset();
         EngineTimer::Start();
-        isPaused        = false;
         referenceTime   = startTime;
         unstoppableTime = startTime;
-        frameCount      = 0;
-    } 
+    }
 }
 
 float GameTimer::Tick()
@@ -85,7 +84,7 @@ float GameTimer::Step()
         unscaledDeltaTime  = unstoppableDeltaTime;
         unscaledTime      += unscaledDeltaTime;
 
-        referenceTime      -= unscaledDeltaTime;
+        referenceTime     -= unscaledDeltaTime;
 
         return deltaTime;
     }
