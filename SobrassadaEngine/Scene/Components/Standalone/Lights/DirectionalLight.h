@@ -10,6 +10,7 @@ class DirectionalLight : public LightComponent
     ~DirectionalLight();
 
     void RenderEditorInspector() override;
+    void Render() override;
 
     float3 GetDirection() const { return direction; }
 

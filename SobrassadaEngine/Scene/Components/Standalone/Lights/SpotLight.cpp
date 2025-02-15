@@ -33,7 +33,6 @@ void SpotLight::RenderEditorInspector()
     {
         ImGui::Text("Spot light parameters");
 
-        ImGui::SliderFloat3("Direction ", &direction[0], -1.0, 1.0f);
         ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
 
         ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
@@ -57,18 +56,22 @@ void SpotLight::Render()
 
     const float innerRads      = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
     const float outerRads      = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
-    const float3 directionNorm = direction.Normalized();
+
+    float4x4 rot = float4x4::FromQuat(
+        Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z)
+    );
+    direction = (-float3::unitY * rot.RotatePart()).Normalized();    
 
     std::vector<float3> innerDirections;
-    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(directionNorm)));
-    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(directionNorm)));
+    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(direction)));
+    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(direction)));
 
     std::vector<float3> outerDirections;
-    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(directionNorm)));
-    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(directionNorm)));
+    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(direction)));
+    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(direction)));
 
     DebugDrawModule *debug = App->GetDebugDrawModule();
-    debug->DrawLine(globalTransform.position, directionNorm, range, float3(1, 1, 1));
+    debug->DrawLine(globalTransform.position, direction, range, float3(1, 1, 1));
 
     for (const float3 &dir : innerDirections)
     {
@@ -80,9 +83,9 @@ void SpotLight::Render()
         debug->DrawLine(globalTransform.position, dir, range / cos(outerRads), float3(1, 1, 1));
     }
 
-    float3 center       = globalTransform.position + (directionNorm * range);
+    float3 center       = globalTransform.position + (direction * range);
     float innerCathetus = range * tan(innerRads);
     float outerCathetus = range * tan(outerRads);
-    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), innerCathetus);
-    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), outerCathetus);
+    debug->DrawCircle(center, -direction, float3(1, 1, 1), innerCathetus);
+    debug->DrawCircle(center, -direction, float3(1, 1, 1), outerCathetus);
 }
