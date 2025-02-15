@@ -161,7 +161,7 @@ void GameObject::HandleNodeClick(UID &selectedGameObjectUUID)
     if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
     {
         selectedGameObjectUUID = uuid;
-        ImGui::OpenPopup(("Game Object Context Menu##" + std::to_string(uuid)).c_str());
+        ImGui::OpenPopup(("##GameObjectContextMenu" + std::to_string(uuid)).c_str());
     }
 
     // Drag and Drop
@@ -193,7 +193,7 @@ void GameObject::HandleNodeClick(UID &selectedGameObjectUUID)
 
 void GameObject::RenderContextMenu() 
 {
-    if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(uuid)).c_str()))
+    if (ImGui::BeginPopup(("##GameObjectContextMenu" + std::to_string(uuid)).c_str()))
     {
         if (ImGui::MenuItem("New GameObject"))
         {
@@ -242,6 +242,18 @@ void GameObject::RenameGameObjectHierarchy()
     {
         name       = renameBuffer;
         isRenaming = false;
+        currentRenamingUID = INVALID_UUID;
+    }
+
+    bool isClickedOutside = 
+        !ImGui::IsItemFocused() 
+        && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) 
+        && !ImGui::IsAnyItemHovered();
+
+    if (isClickedOutside)
+    {
+        name               = renameBuffer;
+        isRenaming         = false;
         currentRenamingUID = INVALID_UUID;
     }
 }
