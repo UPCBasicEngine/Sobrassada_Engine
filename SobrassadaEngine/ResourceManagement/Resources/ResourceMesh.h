@@ -19,7 +19,7 @@ public:
     ResourceMesh(UID uid, const std::string & name);
     ~ResourceMesh() override;
 
-    void LoadData(unsigned int mode, UID defaultMaterial, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
+    void LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 
     void LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
     void LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);

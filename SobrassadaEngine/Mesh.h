@@ -26,15 +26,15 @@ class Mesh
     void SetIndices(std::vector<unsigned int> &&newIndices) { indices = std::move(newIndices); }
 
     unsigned int GetMode() const { return mode; }
-    unsigned int GetMaterialIndex() const { return materialIndex; }
+   // unsigned int GetMaterialIndex() const { return materialIndex; }
 
     // 4 bytes -> cheap, move not worth it
-    void SetMaterialIndex(unsigned int newMaterialIndex) { materialIndex = newMaterialIndex; }
+    //void SetMaterialIndex(unsigned int newMaterialIndex) { materialIndex = newMaterialIndex; }
     void SetMode(unsigned int newMode) { mode = newMode; }
 
   private:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    unsigned int materialIndex = 0;
+    //unsigned int materialIndex = 0;
     unsigned int mode          = 4; // Default: GL_TRIANGLES
 };

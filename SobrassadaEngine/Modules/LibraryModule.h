@@ -40,6 +40,8 @@ class LibraryModule : public Module
     const std::unordered_map<std::string, UID> &GetMaterialMap() const { return materialMap; }
     const std::unordered_map<std::string, UID> &GetMeshMap() const { return meshMap; }
 
+    void AddResource(const std::string& resourcePath, UID resourceUID);
+
   private:
     // maps for user visual
     std::unordered_map<std::string, UID> textureMap;  // UID -> name.dds
