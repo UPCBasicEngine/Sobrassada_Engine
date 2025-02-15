@@ -72,7 +72,7 @@ update_status SceneModule::Render(float deltaTime)
     }
 
     //Probably should go somewhere else, but must go after skybox and meshes
-    App->GetDebugDreawModule()->Draw();
+    App->GetDebugDrawModule()->Draw();
 
     return UPDATE_CONTINUE;
 }

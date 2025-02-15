@@ -93,7 +93,7 @@ void SpotLight::Render()
     outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(directionNorm)));
     outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(directionNorm)));
 
-    DebugDrawModule *debug = App->GetDebugDreawModule();
+    DebugDrawModule *debug = App->GetDebugDrawModule();
     debug->DrawLine(globalTransform.position, directionNorm, range, float3(1, 1, 1));
 
     for (const float3 &dir : innerDirections)
@@ -129,7 +129,7 @@ void SpotLight::DrawGizmos() const
     outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(directionNorm)));
     outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(directionNorm)));
 
-    DebugDrawModule *debug = App->GetDebugDreawModule();
+    DebugDrawModule *debug = App->GetDebugDrawModule();
     debug->DrawLine(globalTransform.position, directionNorm, range, float3(1, 1, 1));
 
     for (const float3 &dir : innerDirections)

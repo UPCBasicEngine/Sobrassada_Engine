@@ -105,7 +105,7 @@ void PointLight::Render()
     directions.push_back(float3(1, 1, -1).Normalized());
     directions.push_back(float3(1, -1, -1).Normalized());
 
-    DebugDrawModule *debug = App->GetDebugDreawModule();
+    DebugDrawModule *debug = App->GetDebugDrawModule();
 
     if (gizmosMode == 0)
     {
@@ -156,7 +156,7 @@ void PointLight::DrawGizmos() const
     directions.push_back(float3(1, 1, -1).Normalized());
     directions.push_back(float3(1, -1, -1).Normalized());
 
-    DebugDrawModule *debug = App->GetDebugDreawModule();
+    DebugDrawModule *debug = App->GetDebugDrawModule();
 
     if (gizmosMode == 0)
     {
