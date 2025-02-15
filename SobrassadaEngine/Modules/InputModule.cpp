@@ -242,7 +242,7 @@ bool InputModule::ShutDown()
     return true;
 }
 
-void InputModule::SubscribeToEvent(int keyEvent, std::function<void(void)> &functionCallback)
+void InputModule::SubscribeToEvent(int keyEvent, const std::function<void(void)> &functionCallback)
 {
     if (keyEvent > MAX_KEYS || keyEvent < 0) return;
     

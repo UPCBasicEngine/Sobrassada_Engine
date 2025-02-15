@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ImGuizmo.h"
 #include "Module.h"
 
 #include "ResourceManagement/Resources/Resource.h"
@@ -10,6 +11,9 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+
+//namespace ImGuizmo {
+//struct matrix_t;}
 
 class EditorViewport;
 class QuadtreeViewer;
@@ -30,6 +34,8 @@ class EditorUIModule : public Module
     bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform &parentTransform);
 
     UID RenderResourceSelectDialog(const char *id, const std::unordered_map<std::string, UID> &availableResources);
+
+    void DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model);
 
   public:
     bool hierarchyMenu = true;
@@ -81,4 +87,7 @@ class EditorUIModule : public Module
 
     std::string startPath;
     std::string libraryPath;
+
+    //static ImGuizmo::OPERATION mCurrentGizmoOperation;
+    //ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::LOCAL;
 };

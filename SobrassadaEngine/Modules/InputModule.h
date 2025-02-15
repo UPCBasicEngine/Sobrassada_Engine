@@ -28,7 +28,7 @@ class InputModule : public Module
     update_status PreUpdate(float deltaTime) override;
     bool ShutDown();
 
-    void SubscribeToEvent(int keyEvent, std::function<void(void)> &functionCallback);
+    void SubscribeToEvent(int keyEvent, const std::function<void(void)> &functionCallback);
 
     KeyState GetKey(int id) const { return keyboard[id]; }
 

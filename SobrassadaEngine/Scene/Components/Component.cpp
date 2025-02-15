@@ -146,6 +146,12 @@ void Component::RenderEditorInspector()
         {
             OnTransformUpdate(parentTransform);
         }
+        float4x4 model         = float4x4::FromTRS(
+            globalTransform.position,
+            Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
+            globalTransform.scale
+        );
+        //App->GetEditorUIModule()->DrawGizmos(App->GetCameraModule()->GetViewMatrix(), App->GetCameraModule()->GetProjectionMatrix(), model);
     }
 }
 
