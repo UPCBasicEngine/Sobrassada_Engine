@@ -38,16 +38,13 @@ class SceneModule : public Module
     void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject);
     void CloseScene();
 
+    void CheckObjectsToRender();
+	
     void RenderHierarchyUI(bool &hierarchyMenu);
-    void RenderGameObjectHierarchy(UID gameObjectUUID);
-
-    void HandleNodeClick(UID gameObjectUUID);
-    void RenderContextMenu(UID gameObjectUUID);
 
     void RemoveGameObjectHierarchy(UID gameObjectUUID);
-    void UpdateGameObjectHierarchy(UID sourceUUID, UID targetUUID);
 
-	//TODO: Change when filesystem defined
+    //TODO: Change when filesystem defined
     GameObject *GetGameObjectByUUID(UID gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
 
     GameObject *GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
