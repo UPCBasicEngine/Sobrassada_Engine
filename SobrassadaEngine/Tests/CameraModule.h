@@ -7,8 +7,10 @@
 #include "Geometry/Frustum.h"
 #include "Math/float4x4.h"
 
-constexpr float DEGTORAD             = PI / 180.f;
-constexpr float cameraRotationAngle  = 135.f * DEGTORAD;
+constexpr float DEGTORAD            = PI / 180.f;
+constexpr float cameraRotationAngle = 135.f * DEGTORAD;
+constexpr float maximumPositivePitch = 89.f * DEGTORAD;
+constexpr float maximumNegativePitch = -89.f * DEGTORAD;
 
 class CameraModule : public Module
 {
@@ -32,9 +34,11 @@ class CameraModule : public Module
     void SetAspectRatio(float newAspectRatio);
 
   private:
-    void EventTriggered();
+    void TriggerFocusCamera();
     void ToggleDetachedCamera();
     void MoveCamera(float deltaTime);
+    void FocusCamera();
+    const float4x4& LookAt(const float3& cameraPosition, const float3& targetPosition, const float3& upVector) const;
 
   private:
     Frustum camera;
@@ -49,9 +53,10 @@ class CameraModule : public Module
     FrustumPlanes frustumPlanes;
 
     float movementScaleFactor = DEFAULT_CAMERA_MOVEMENT_SCALE_FACTOR;
-    float cameraMoveSpeed  = DEFAULT_CAMERA_MOVMENT_SPEED;
-    float mouseSensitivity = DEFAULT_CAMERA_MOUSE_SENSITIVITY;
-    float zoomSensitivity  = DEFAUL_CAMERA_ZOOM_SENSITIVITY;
+    float cameraMoveSpeed     = DEFAULT_CAMERA_MOVMENT_SPEED;
+    float mouseSensitivity    = DEFAULT_CAMERA_MOUSE_SENSITIVITY;
+    float zoomSensitivity     = DEFAUL_CAMERA_ZOOM_SENSITIVITY;
+    float currentPitchAngle   = 0.f;
 
-    bool isCameraDetached = false;
+    bool isCameraDetached     = false;
 };
