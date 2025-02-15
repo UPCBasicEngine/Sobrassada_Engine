@@ -12,8 +12,20 @@ DirectionalLight::DirectionalLight(UID uid, UID uidParent, UID uidRoot, const Tr
     App->GetSceneModule()->GetLightsConfig()->AddDirectionalLight(this);
 }
 
+DirectionalLight::DirectionalLight(const rapidjson::Value& initialState) : LightComponent(initialState)
+{
+    direction = -float3::unitY;
+    App->GetSceneModule()->GetLightsConfig()->AddDirectionalLight(this);
+}
+
 DirectionalLight::~DirectionalLight()
 {
+    App->GetSceneModule()->GetLightsConfig()->RemoveDirectionalLight();
+}
+
+void DirectionalLight::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+{
+    LightComponent::Save(targetState, allocator);
 }
 
 void DirectionalLight::Render()

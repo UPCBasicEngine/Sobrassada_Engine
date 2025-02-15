@@ -16,15 +16,30 @@ PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform &par
     App->GetSceneModule()->GetLightsConfig()->AddPointLight(this);
 }
 
-// PointLight::PointLight(const float3 &position, const float range) : LightComponent()
-//{
-//     this->position = position;
-//     this->range    = range;
-//     gizmosMode     = 0;
-// }
+PointLight::PointLight(const rapidjson::Value& initialState) : LightComponent(initialState)
+{
+    if (initialState.HasMember("Range"))
+    {
+        range = initialState["Range"].GetFloat();
+    }
+    if (initialState.HasMember("GizmosMode"))
+    {
+        gizmosMode = initialState["GizmosMode"].GetInt();
+    }
+    App->GetSceneModule()->GetLightsConfig()->AddPointLight(this);
+}
+
 
 PointLight::~PointLight() {
     App->GetSceneModule()->GetLightsConfig()->RemovePointLight(uid);
+}
+
+void PointLight::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+{
+    LightComponent::Save(targetState, allocator);
+
+    targetState.AddMember("Range", range, allocator);
+    targetState.AddMember("GizmosMode", gizmosMode, allocator);
 }
 
 void PointLight::RenderEditorInspector()

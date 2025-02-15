@@ -19,16 +19,6 @@ LightsConfig::LightsConfig()
     skyboxProgram    = 0;
     ambientColor     = float3(1.0f, 1.0f, 1.0f);
     ambientIntensity = 0.2f;
-
-    // pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
-    // pointLights.push_back(PointLight(float3(2, 0, 0), 1));
-    // pointLights.push_back(PointLight(float3(0, 1, -2), 1));
-    //
-    // spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
-    // spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
-    // spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
-
-    // directionalLight = new DirectionalLight();
 }
 
 LightsConfig::~LightsConfig()

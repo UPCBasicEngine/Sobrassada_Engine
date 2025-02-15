@@ -18,18 +18,37 @@ SpotLight::SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &paren
     App->GetSceneModule()->GetLightsConfig()->AddSpotLight(this);
 }
 
-// SpotLight::SpotLight(const float3 &position, const float3 &direction) : LightComponent()
-//{
-//     this->position  = position;
-//     this->direction = direction;
-//     range           = 3;
-//     innerAngle      = 10;
-//     outerAngle      = 20;
-// }
+SpotLight::SpotLight(const rapidjson::Value& initialState) : LightComponent(initialState)
+{
+    direction = -float3::unitY;
+    if (initialState.HasMember("Range"))
+    {
+        range = initialState["Range"].GetFloat();
+    }
+    if (initialState.HasMember("InnerAngle"))
+    {
+        innerAngle = initialState["InnerAngle"].GetInt();
+    }
+    if (initialState.HasMember("OuterAngle"))
+    {
+        outerAngle = initialState["OuterAngle"].GetFloat();
+    }
+
+    App->GetSceneModule()->GetLightsConfig()->AddSpotLight(this);
+}
 
 SpotLight::~SpotLight()
 {
     App->GetSceneModule()->GetLightsConfig()->RemoveSpotLight(uid);
+}
+
+void SpotLight::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+{
+    LightComponent::Save(targetState, allocator);
+
+    targetState.AddMember("Range", range, allocator);
+    targetState.AddMember("InnerAngle", innerAngle, allocator);
+    targetState.AddMember("OuterAngle", outerAngle, allocator);
 }
 
 void SpotLight::RenderEditorInspector()

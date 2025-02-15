@@ -1,7 +1,7 @@
 {
     "Scene": {
-        "UID": 3306118570763911546,
-        "Name": "haha",
+        "UID": 16525923259617162216,
+        "Name": "LightScene",
         "RootGameObject": 1348484519,
         "GameObjects": [
             {
@@ -89,12 +89,12 @@
                 "Children": [],
                 "Enabled": true,
                 "Name": "Point Light",
-                "Intensity": 20.709999084472656,
+                "Intensity": 1.0,
                 "ColorRed": 1.0,
-                "ColorGreen": 0.5450000166893005,
+                "ColorGreen": 1.0,
                 "ColorBlue": 1.0,
                 "DrawGizmos": true,
-                "Range": 2.2190001010894775,
+                "Range": 1.0,
                 "GizmosMode": 0
             },
             {

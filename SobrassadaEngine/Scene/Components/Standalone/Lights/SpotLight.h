@@ -2,12 +2,16 @@
 
 #include "../LightComponent.h"
 
+#include <Libs/rapidjson/document.h>
+
 class SpotLight : public LightComponent
 {
   public:
     SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform);
-    //SpotLight(const float3 &position, const float3 &direction);
+    SpotLight(const rapidjson::Value& initialState);
     ~SpotLight();
+
+    virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
     void RenderEditorInspector() override;
     void Render() override;

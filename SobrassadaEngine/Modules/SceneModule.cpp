@@ -103,6 +103,17 @@ void SceneModule::LoadScene(UID sceneUID, const char *sceneName, UID rootGameObj
     gameObjectRootUUID     = rootGameObject;
     selectedGameObjectUUID = gameObjectRootUUID;
     this->sceneName        = sceneName;
+
+
+    //Probably LightsConfig should be saved and loaded instead of this
+    if (lightsConfig != nullptr)
+    {
+        delete lightsConfig;
+        lightsConfig = nullptr;
+    }
+    lightsConfig = new LightsConfig();
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
 }
 
 void SceneModule::CloseScene()
