@@ -167,7 +167,7 @@ void EditorUIModule::Console(bool &consoleMenu) const
     ImGui::End();
 }
 
-void EditorUIModule::EditorSettings(bool &editorSettingsMenu) const
+void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
 {
     ImGui::Begin("Editor settings", &editorSettingsMenu);
 
@@ -305,9 +305,9 @@ void EditorUIModule::WindowConfig(bool &vsync)
     if (ImGui::Checkbox("Vsync", &vsync)) App->GetWindowModule()->SetVsync(vsync);
 }
 
-void EditorUIModule::CameraConfig() const {}
+void EditorUIModule::CameraConfig() {}
 
-void EditorUIModule::OpenGLConfig() const
+void EditorUIModule::OpenGLConfig()
 {
     OpenGLModule *openGLModule = App->GetOpenGLModule();
 

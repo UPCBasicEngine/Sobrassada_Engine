@@ -54,7 +54,7 @@ float GameTimer::Tick()
     return delta;
 }
 
-void GameTimer::TogglePause() { isPaused = !isPaused; }
+void GameTimer::TogglePause() { if (isEnabled) isPaused = !isPaused; }
 
 void GameTimer::Reset()
 {

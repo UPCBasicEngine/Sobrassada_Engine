@@ -25,7 +25,7 @@ class EditorUIModule : public Module
     void Draw();
 
     void MainMenu();
-    void EditorSettings(bool &editorSettingsMenu) const;
+    void EditorSettings(bool &editorSettingsMenu);
 
     void FramePlots(bool &vsync);
     void WindowConfig(bool &vsync);
