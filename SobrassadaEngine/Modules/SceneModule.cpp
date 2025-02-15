@@ -66,6 +66,9 @@ update_status SceneModule::Render(float deltaTime)
     lightsConfig->RenderSkybox();
     lightsConfig->SetLightsShaderData();
 
+    //TODO: Remove
+    lightsConfig->EditorParams();
+
     for (auto &gameObject : gameObjectsContainer)
     {
         gameObject.second->Render();

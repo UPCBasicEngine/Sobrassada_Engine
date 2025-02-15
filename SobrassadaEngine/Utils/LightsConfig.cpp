@@ -5,6 +5,8 @@
 #include "OpenGLModule.h"
 #include "ShaderModule.h"
 #include "TextureModuleTest.h"
+#include "EditorUIModule.h"
+#include "LibraryModule.h"
 #include "imgui.h"
 
 #include "../Scene/Components/Standalone/Lights/DirectionalLight.h"
@@ -106,7 +108,20 @@ void LightsConfig::EditorParams()
     ImGui::Begin("Lights Config");
 
     // TODO Skybox texture
-    ImGui::Text("Skybo xtexture");
+    ImGui::SeparatorText("Skybox texture");
+    ImGui::Text("TODO Current texture name");
+    ImGui::SameLine();
+    if (ImGui::Button("Select texture"))
+    {
+        ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+    }
+
+    if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+    {
+        App->GetEditorUIModule()->RenderResourceSelectDialog(
+            CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap()
+        );
+    }
 
     ImGui::SeparatorText("Ambient light");
     ImGui::SliderFloat3("Ambient color", &ambientColor[0], 0, 1);
