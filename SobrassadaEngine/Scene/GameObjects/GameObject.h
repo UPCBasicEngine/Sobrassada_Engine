@@ -64,6 +64,8 @@ public:
     void ComponentGlobalTransformUpdated() override;
     const Transform& GetGlobalTransform() const override;
 
+    inline static UID currentRenamingUID = INVALID_UUID;
+
 private:
 
 	UID parentUUID;

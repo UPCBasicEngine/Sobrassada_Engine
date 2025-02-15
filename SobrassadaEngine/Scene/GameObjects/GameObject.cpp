@@ -121,14 +121,14 @@ void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID)
 
     bool nodeOpen = false;
     
-    if (!isRenaming)
-    {
-        nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
-    }
-    else
+    if (isRenaming && currentRenamingUID == uuid)
     {
         nodeOpen = ImGui::TreeNodeEx("##RenamingNode", flags, "");
         RenameGameObjectHierarchy();
+    }
+    else
+    {
+        nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
     }
 
     HandleNodeClick(selectedGameObjectUUID);
@@ -205,8 +205,21 @@ void GameObject::RenderContextMenu()
 
         if (ImGui::MenuItem("Rename"))
         {
+            if (currentRenamingUID != INVALID_UUID && currentRenamingUID != uuid)
+            {
+                GameObject* oldGameObject = App->GetSceneModule()->GetGameObjectByUUID(currentRenamingUID);
+
+                if (oldGameObject)
+                {
+                    oldGameObject->name       = oldGameObject->renameBuffer;
+                    oldGameObject->isRenaming = false;
+                }
+            }
+            
             isRenaming = true;
             strncpy_s(renameBuffer, sizeof(renameBuffer), name.c_str(),_TRUNCATE);
+
+            currentRenamingUID = uuid;
         }
 
         if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Delete"))
@@ -229,6 +242,7 @@ void GameObject::RenameGameObjectHierarchy()
     {
         name       = renameBuffer;
         isRenaming = false;
+        currentRenamingUID = INVALID_UUID;
     }
 }
 
