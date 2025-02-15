@@ -2,6 +2,8 @@
 
 #include "Globals.h"
 
+#include "../ResourceManagement/Resources/ResourceTexture.h"
+
 #include "Math/float3.h"
 #include "Math/float4.h"
 
@@ -69,6 +71,8 @@ class LightsConfig
     void InitSkybox();
     void RenderSkybox() const;
 
+    void AddSkyboxTexture(UID resource);
+
     void InitLightBuffers();
     void SetLightsShaderData() const;
 
@@ -101,4 +105,7 @@ class LightsConfig
     DirectionalLight *directionalLight = nullptr;
     std::vector<PointLight*> pointLights;
     std::vector<SpotLight*> spotLights;
+
+    ResourceTexture* currentTexture;
+    std::string currentTextureName;
 };

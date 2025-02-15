@@ -7,6 +7,7 @@
 #include "TextureModuleTest.h"
 #include "EditorUIModule.h"
 #include "LibraryModule.h"
+#include "ResourcesModule.h"
 #include "imgui.h"
 
 #include "../Scene/Components/Standalone/Lights/DirectionalLight.h"
@@ -103,6 +104,18 @@ unsigned int LightsConfig::LoadSkyboxTexture(const char* filename) const
     return App->GetTextureModuleTest()->LoadCubemap(wideTexturePath);
     delete[] wideTexturePath;
 }
+
+void LightsConfig::AddSkyboxTexture(UID resource)
+{
+    ResourceTexture* newTexture = dynamic_cast<ResourceTexture*>(App->GetResourcesModule()->RequestResource(resource));
+    if (newTexture != nullptr)
+    {
+        App->GetResourcesModule()->ReleaseResource(currentTexture);
+        currentTexture     = newTexture;
+        currentTextureName = currentTexture->GetName();
+    }
+}
+
 void LightsConfig::EditorParams()
 {
     ImGui::Begin("Lights Config");
