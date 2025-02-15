@@ -49,6 +49,10 @@ bool SceneModule::Init()
     // TODO: Change when filesystem defined
     gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
 
+    lightsConfig = new LightsConfig();
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
+
     return true;
 }
 
@@ -58,10 +62,18 @@ update_status SceneModule::Update(float deltaTime) { return UPDATE_CONTINUE; }
 
 update_status SceneModule::Render(float deltaTime)
 {
-    for (auto& gameObject : gameObjectsContainer)
+    // Render skybox and lights
+    lightsConfig->RenderSkybox();
+    lightsConfig->SetLightsShaderData();
+
+    for (auto &gameObject : gameObjectsContainer)
     {
         gameObject.second->Render();
     }
+
+    //Probably should go somewhere else, but must go after skybox and meshes
+    App->GetDebugDreawModule()->Draw();
+
     return UPDATE_CONTINUE;
 }
 
@@ -109,6 +121,8 @@ void SceneModule::CloseScene()
 
     gameObjectRootUUID     = 0;
     selectedGameObjectUUID = 0;
+
+    lightsConfig           = nullptr;
 
     GLOG("%s scene closed", sceneName.c_str());
 }

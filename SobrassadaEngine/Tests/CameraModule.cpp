@@ -44,7 +44,14 @@ bool CameraModule::Init()
 
     App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_F, fPressed);
 
-    return true;
+
+	glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
+	return true;
 }
 
 void CameraModule::UpdateUBO() 

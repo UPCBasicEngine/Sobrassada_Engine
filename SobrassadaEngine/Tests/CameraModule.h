@@ -37,8 +37,11 @@ class CameraModule : public Module
 
     void SetAspectRatio(float newAspectRatio);
 
+	void EventTriggered();
+
+
+	const float3 getPosition() { return camera.pos; }
   private:
-    void EventTriggered();
     void MoveCamera();
 
   private:

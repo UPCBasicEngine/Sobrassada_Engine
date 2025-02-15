@@ -3,6 +3,9 @@
 #include "Component.h"
 #include "Root/RootComponent.h"
 #include "Standalone/MeshComponent.h"
+#include "Standalone/Lights/PointLight.h"
+#include "Standalone/Lights/SpotLight.h"
+#include "Standalone/Lights/DirectionalLight.h"
 
 #include <cstdint>
 
@@ -18,6 +21,12 @@ Component *ComponentUtils::CreateEmptyComponent(
         return new RootComponent(uid, uidParent, parentGlobalTransform);
     case COMPONENT_MESH:
         return new MeshComponent(uid, uidParent, uidRoot, parentGlobalTransform);
+    case COMPONENT_POINT_LIGHT:
+        return new PointLight(uid, uidParent, uidRoot, parentGlobalTransform);
+    case COMPONENT_SPOT_LIGHT:
+        return new SpotLight(uid, uidParent, uidRoot, parentGlobalTransform);
+    case COMPONENT_DIRECTIONAL_LIGHT:
+        return new DirectionalLight(uid, uidParent, uidRoot, parentGlobalTransform);
     }
     return nullptr;
 }
