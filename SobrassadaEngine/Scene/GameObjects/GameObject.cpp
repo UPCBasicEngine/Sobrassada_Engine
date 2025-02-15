@@ -164,11 +164,6 @@ void GameObject::RenderContextMenu()
             App->GetSceneModule()->RemoveGameObjectHierarchy(uuid);
         }
 
-        if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Clear Parent"))
-        {
-            UpdateGameObjectHierarchy(uuid, App->GetSceneModule()->GetGameObjectRootUID());
-        }
-
         ImGui::EndPopup();
     }
 }
