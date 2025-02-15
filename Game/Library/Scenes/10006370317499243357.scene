@@ -23,9 +23,10 @@
         ],
         "Components": [
             {
-                "UID": 1334769182,
-                "ParentUID": 0,
+                "UID": 12549727,
+                "ParentUID": 1507016670,
                 "RootUID": 1334769182,
+                "Type": 4,
                 "LocalTransform": [
                     0.0,
                     0.0,
@@ -39,6 +40,63 @@
                 ],
                 "Children": [],
                 "Enabled": true,
+                "Name": "Point Light",
+                "Intensity": 1.0,
+                "ColorRed": 1.0,
+                "ColorGreen": 1.0,
+                "ColorBlue": 1.0,
+                "DrawGizmos": true,
+                "Range": 1.0,
+                "GizmosMode": 0
+            },
+            {
+                "UID": 305464497,
+                "ParentUID": 1334769182,
+                "RootUID": 1334769182,
+                "Type": 6,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Directional Light",
+                "Intensity": 1.0,
+                "ColorRed": 1.0,
+                "ColorGreen": 1.0,
+                "ColorBlue": 1.0,
+                "DrawGizmos": true
+            },
+            {
+                "UID": 1334769182,
+                "ParentUID": 0,
+                "RootUID": 1334769182,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [
+                    2864331717,
+                    1507016670,
+                    305464497,
+                    1791939976
+                ],
+                "Enabled": true,
                 "Name": "BOO",
                 "Type": 1,
                 "Mobility": 1
@@ -47,6 +105,7 @@
                 "UID": 1353706094,
                 "ParentUID": 1348484519,
                 "RootUID": 1353706094,
+                "Type": 1,
                 "LocalTransform": [
                     0.0,
                     0.0,
@@ -63,6 +122,85 @@
                 "Name": "Root component",
                 "Type": 1,
                 "Mobility": 1
+            },
+            {
+                "UID": 1507016670,
+                "ParentUID": 1334769182,
+                "RootUID": 1334769182,
+                "Type": 4,
+                "LocalTransform": [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [
+                    12549727
+                ],
+                "Enabled": true,
+                "Name": "Point Light",
+                "Intensity": 1.0,
+                "ColorRed": 1.0,
+                "ColorGreen": 1.0,
+                "ColorBlue": 1.0,
+                "DrawGizmos": true,
+                "Range": 1.0,
+                "GizmosMode": 0
+            },
+            {
+                "UID": 1791939976,
+                "ParentUID": 1334769182,
+                "RootUID": 1334769182,
+                "Type": 5,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Spot Light",
+                "Intensity": 1.0,
+                "ColorRed": 1.0,
+                "ColorGreen": 1.0,
+                "ColorBlue": 1.0,
+                "DrawGizmos": true,
+                "Range": 3.0,
+                "InnerAngle": 10.0,
+                "OuterAngle": 20.0
+            },
+            {
+                "UID": 2864331717,
+                "ParentUID": 1334769182,
+                "RootUID": 1334769182,
+                "Type": 2,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Mesh component",
+                "UIDMesh": 0,
+                "UIDMaterial": 0
             }
         ]
     }

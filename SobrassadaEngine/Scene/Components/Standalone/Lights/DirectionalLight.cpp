@@ -9,13 +9,15 @@ DirectionalLight::DirectionalLight(UID uid, UID uidParent, UID uidRoot, const Tr
     : LightComponent(uid, uidParent, uidRoot, "Directional Light", COMPONENT_DIRECTIONAL_LIGHT, parentGlobalTransform)
 {
     direction = -float3::unitY;
-    App->GetSceneModule()->GetLightsConfig()->AddDirectionalLight(this);
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddDirectionalLight(this);
 }
 
 DirectionalLight::DirectionalLight(const rapidjson::Value& initialState) : LightComponent(initialState)
 {
     direction = -float3::unitY;
-    App->GetSceneModule()->GetLightsConfig()->AddDirectionalLight(this);
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddDirectionalLight(this);
 }
 
 DirectionalLight::~DirectionalLight()

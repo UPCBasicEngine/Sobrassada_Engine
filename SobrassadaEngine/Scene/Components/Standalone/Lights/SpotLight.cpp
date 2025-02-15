@@ -15,7 +15,8 @@ SpotLight::SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &paren
     innerAngle = 10;
     outerAngle = 20;
     
-    App->GetSceneModule()->GetLightsConfig()->AddSpotLight(this);
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddSpotLight(this);
 }
 
 SpotLight::SpotLight(const rapidjson::Value& initialState) : LightComponent(initialState)
@@ -27,14 +28,15 @@ SpotLight::SpotLight(const rapidjson::Value& initialState) : LightComponent(init
     }
     if (initialState.HasMember("InnerAngle"))
     {
-        innerAngle = initialState["InnerAngle"].GetInt();
+        innerAngle = initialState["InnerAngle"].GetFloat();
     }
     if (initialState.HasMember("OuterAngle"))
     {
         outerAngle = initialState["OuterAngle"].GetFloat();
     }
 
-    App->GetSceneModule()->GetLightsConfig()->AddSpotLight(this);
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddSpotLight(this);
 }
 
 SpotLight::~SpotLight()

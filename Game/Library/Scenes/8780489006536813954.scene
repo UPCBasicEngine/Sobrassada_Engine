@@ -66,7 +66,8 @@
                     1.0
                 ],
                 "Children": [
-                    555515639
+                    555515639,
+                    4036880113
                 ],
                 "Enabled": true,
                 "Name": "BOO",
@@ -94,7 +95,7 @@
                 "Name": "Root component",
                 "Type": 1,
                 "Mobility": 1
-            }
+            },
         ]
     }
 }
