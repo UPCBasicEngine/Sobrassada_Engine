@@ -132,7 +132,7 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
     }
 
     unsigned int bytesWritten =
-        (unsigned int)FileSystem::Save(sceneFilePath.c_str(), buffer.GetString(), buffer.GetSize(), false);
+        (unsigned int)FileSystem::Save(sceneFilePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
     if (bytesWritten == 0)
     {
         GLOG("Failed to save scene file: %s", path);
@@ -347,6 +347,6 @@ const std::string &LibraryModule::GetResourcePath(UID resourceID) const
     {
         return it->second;
     }
-
-    return "";
+    static const std::string emptyString = "";
+    return emptyString;
 }

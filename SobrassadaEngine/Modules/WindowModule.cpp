@@ -63,9 +63,8 @@ void WindowModule::WindowResized(const unsigned int width, const unsigned int he
     windowHeight = height;
 }
 
-SDL_DisplayMode &WindowModule::GetDesktopDisplayMode() const
+SDL_DisplayMode &WindowModule::GetDesktopDisplayMode()
 {
-    SDL_DisplayMode displayMode;
     SDL_GetDesktopDisplayMode(0, &displayMode);
 
     return displayMode;
