@@ -31,8 +31,9 @@ class EditorUIModule : public Module
     void WindowConfig(bool &vsync);
     void CameraConfig();
     void OpenGLConfig();
+    void GameTimerConfig() const;
 
-    void Console(bool &consoleMenu);
+    void Console(bool &consoleMenu) const;
 
   private:
     bool consoleMenu        = false;
