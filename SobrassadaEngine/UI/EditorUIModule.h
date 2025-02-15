@@ -20,16 +20,17 @@ class EditorUIModule : public Module
     bool ShutDown() override;
 
   private:
+    void LimitFPS(float deltaTime);
     void AddFramePlotData(float deltaTime);
     void Draw();
 
     void MainMenu();
     void EditorSettings(bool &editorSettingsMenu) const;
 
-    void FramePlots() const;
-    void WindowConfig() const;
-    void CameraConfig() const;
-    void OpenGLConfig() const;
+    void FramePlots(bool &vsync);
+    void WindowConfig(bool &vsync);
+    void CameraConfig();
+    void OpenGLConfig();
     void GameTimerConfig() const;
 
     void Console(bool &consoleMenu) const;
@@ -39,6 +40,7 @@ class EditorUIModule : public Module
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
 
+    int maxFPS              = 60;
     int maximumPlotData     = 50;
     std::deque<float> framerate;
     std::deque<float> frametime;
