@@ -24,7 +24,6 @@ class GameTimer : public EngineTimer
 
   private:
     float TicksSinceReference() const;
-    float UpdateTimes();
 
     bool isPaused;
 

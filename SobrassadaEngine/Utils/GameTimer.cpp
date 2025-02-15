@@ -13,10 +13,18 @@ GameTimer::~GameTimer() {}
 
 void GameTimer::Start()
 {
-    EngineTimer::Start();
-    isPaused        = false;
-    referenceTime   = startTime;
-    unstoppableTime = startTime;
+    if (isPaused)
+    {
+        TogglePause();
+    }
+    else
+    {
+        EngineTimer::Start();
+        isPaused        = false;
+        referenceTime   = startTime;
+        unstoppableTime = startTime;
+        frameCount      = 0;
+    } 
 }
 
 float GameTimer::Tick()
@@ -85,5 +93,3 @@ float GameTimer::Step()
 }
 
 float GameTimer::TicksSinceReference() const { return SDL_GetTicks() - referenceTime; }
-
-float GameTimer::UpdateTimes() { return deltaTime; }

@@ -4,7 +4,7 @@ class EngineTimer
 {
   public:
     EngineTimer();
-    ~EngineTimer();
+    virtual ~EngineTimer();
 
     virtual void Start();
     virtual float Tick();

@@ -166,7 +166,7 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Component.cpp" />
-    <ClCompile Include="EngineTimer.cpp">
+    <ClCompile Include="Utils\EngineTimer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -277,7 +277,7 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="EngineTimer.h">
+    <ClInclude Include="Utils\EngineTimer.h">
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
