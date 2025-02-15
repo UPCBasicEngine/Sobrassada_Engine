@@ -1,63 +1,86 @@
 ﻿#pragma once
 
-#include "Transform.h"
 #include "ComponentUtils.h"
-#include "debug_draw.hpp"
+#include "Globals.h"
 #include "Scene/AABBUpdatable.h"
+#include "Transform.h"
 
-#include <vector>
 #include <Geometry/AABB.h>
+#include <Libs/rapidjson/document.h>
+#include <vector>
 
 class Component : public AABBUpdatable
 {
-public:
+  public:
+    Component(UID uid, UID uidParent, UID uidRoot, const char *initName, int type, const Transform &parentGlobalTransform);
 
-    Component(uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform);
+    Component(const rapidjson::Value &initialState);
 
-    virtual ~Component();
-    
+    ~Component() override;
+
+    virtual void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const;
+
     virtual void Update() = 0;
     virtual void Render();
 
-    virtual bool AddChildComponent(const uint32_t componentUUID);
-    virtual bool RemoveChildComponent(const uint32_t componentUUID);
-    virtual bool DeleteChildComponent(const uint32_t componentUUID);
-    
+    virtual bool AddChildComponent(UID componentUID);
+    virtual bool RemoveChildComponent(UID componentUID);
+    virtual bool DeleteChildComponent(UID componentUID);
+
     virtual void RenderEditorInspector();
-    virtual void RenderEditorComponentTree(const uint32_t selectedComponentUUID);
+    virtual void RenderEditorComponentTree(UID selectedComponentUID);
 
     virtual void OnTransformUpdate(const Transform &parentGlobalTransform);
-    virtual AABB& TransformUpdated(const Transform &parentGlobalTransform);
+    virtual AABB &TransformUpdated(const Transform &parentGlobalTransform);
     void PassAABBUpdateToParent() override;
+
+    void ComponentGlobalTransformUpdated() override {}
 
     void HandleDragNDrop();
 
-    uint32_t GetUUID() const { return uuid; }
+    UID GetUID() const { return uid; }
 
-    uint32_t GetUUIDParent() const { return uuidParent; }
+    UID GetUIDParent() const { return uidParent; }
 
-    void SetUUIDParent(uint32_t newUUIDParent) { uuidParent = newUUIDParent; }
+    const std::vector<UID> &GetChildren() const { return children; }
 
-    const Transform& GetGlobalTransform() const override { return globalTransform; }
-    const Transform& GetLocalTransform() const { return localTransform; }
+    void SetUIDParent(UID newUIDParent);
 
-    const AABB& GetGlobalAABB() const { return globalComponentAABB; }
+    const Transform &GetGlobalTransform() const override { return globalTransform; }
+    const Transform &GetLocalTransform() const { return localTransform; }
+
+    const AABB &GetGlobalAABB() const { return globalComponentAABB; }
 
     void CalculateLocalAABB();
 
-protected:
-    
-    const uint32_t uuid;
-    const uint32_t uuidRoot;
-    uint32_t uuidParent;
-    std::vector<uint32_t> children;
+    int GetType() const { return type; }
 
-    const char* name;
+  protected:
+
+    RootComponent* GetRootComponent();
+    AABBUpdatable* GetParent();
+    std::vector<Component*>& GetChildComponents();
+
+  protected:
+    const UID uid;
+    const UID uidRoot;
+    UID uidParent;
+    std::vector<UID> children;
+
+    char name[64];
     bool enabled;
-    
+
     Transform localTransform;
     Transform globalTransform;
 
     AABB localComponentAABB;
-    AABB globalComponentAABB; 
+    AABB globalComponentAABB;
+
+    const int type = COMPONENT_NONE;
+
+private:
+    
+    RootComponent* rootComponent = nullptr;
+    AABBUpdatable* parent = nullptr;
+    std::vector<Component*> childComponents;
 };

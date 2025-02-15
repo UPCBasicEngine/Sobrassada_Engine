@@ -1,25 +1,39 @@
 ﻿#pragma once
 #include "Scene/Components/Component.h"
 
+enum ComponentMobilitySettings
+{
+    STATIC = 0,
+    DYNAMIC = 1,
+};
+
 class RootComponent : public Component
 {
 public:
-    RootComponent(uint32_t uuid, uint32_t uuidParent, const char* name, const Transform& parentGlobalTransform);
+    RootComponent(UID uid, UID uidParent, const Transform& parentGlobalTransform);
+
+    RootComponent(const rapidjson::Value &initialState);
 
     ~RootComponent() override;
 
-    virtual bool CreateComponent(const ComponentType componentType);
+    void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const override;
+
+    AABB & TransformUpdated(const Transform &parentGlobalTransform) override;
+
+    virtual bool CreateComponent(ComponentType componentType);
     
-    bool AddChildComponent(const uint32_t componentUUID) override;
-    bool DeleteChildComponent(const uint32_t componentUUID) override;
     void RenderComponentEditor();
-    void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
+    void RenderEditorComponentTree(UID selectedComponentUID) override;
+    void RenderEditorInspector() override;
 
     void Update() override;
 
-    void SetSelectedComponent(const uint32_t componentUUID);
+    void SetSelectedComponent(UID componentUID);
+
+    int GetMobilitySettings() const { return mobilitySettings; }
 
 private:
     
-    uint32_t selectedUUID;
+    UID selectedUID;
+    int mobilitySettings = DYNAMIC;
 };

@@ -1,8 +1,15 @@
 #pragma once
 
-#include "EngineModel.h"
+#include "Globals.h"
 #include "Module.h"
 #include "Scene/AABBUpdatable.h"
+#include "LightsConfig.h"
+
+//TEMP
+#include "Application.h"
+#include "DebugDrawModule.h"
+#include "CameraModule.h"
+
 
 #include <map>
 #include <string>
@@ -28,36 +35,35 @@ class SceneModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    void LoadScene();
+    void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject);
     void CloseScene();
 
+    void CheckObjectsToRender();
+	
     void RenderHierarchyUI(bool &hierarchyMenu);
-    void RenderGameObjectHierarchy(uint32_t gameObjectUUID);
 
-    void HandleNodeClick(uint32_t gameObjectUUID);
-    void RenderContextMenu(uint32_t gameObjectUUID);
+    void RemoveGameObjectHierarchy(UID gameObjectUUID);
 
-    void RemoveGameObjectHierarchy(uint32_t gameObjectUUID);
-    void UpdateGameObjectHierarchy(uint32_t sourceUUID, uint32_t targetUUID);
-
-    // TODO: Change when filesystem defined
-    GameObject *GetGameObjectByUUID(uint32_t gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
+    //TODO: Change when filesystem defined
+    GameObject *GetGameObjectByUUID(UID gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
 
     GameObject *GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
 
-    std::map<uint32_t, Component *> gameComponents;
+    const std::unordered_map<UID, GameObject *> &GetAllGameObjects() const { return gameObjectsContainer; }
+    const std::map<UID, Component *> &GetAllComponents() const { return gameComponents; }
+    UID GetGameObjectRootUID() const { return gameObjectRootUUID; }
 
-    std::map<uint32_t, EngineMesh *> MOCKUP_loadedMeshes;
-    std::map<std::string, uint32_t> MOCKUP_libraryMeshes;
+    std::map<UID, Component*> gameComponents;
 
-    std::map<uint32_t, unsigned int> MOCKUP_loadedTextures;
-    std::map<std::string, uint32_t> MOCKUP_libraryTextures;
+    AABBUpdatable* GetTargetForAABBUpdate(UID uuid);
 
-    EngineModel *MOCKUP_loadedModel;
+    UID GetSceneUID() const { return sceneUID; }
+    const std::string &GetSceneName() const { return sceneName; }
 
-    AABBUpdatable *GetTargetForAABBUpdate(uint32_t uuid);
+    void AddGameObject(UID uid, GameObject *newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
+    void AddComponent(UID uid, Component *newComponent) { gameComponents.insert({uid, newComponent}); }
 
-    void MOCKUP_loadModel(std::string path);
+    
 
   private:
     void CreateSpatialDataStruct();
@@ -65,11 +71,13 @@ class SceneModule : public Module
     void CheckObjectsToRender(std::vector<GameObject *> &outRenderGameObjects) const;
 
   private:
-    uint32_t gameObjectRootUUID;
+    UID sceneUID;
+    UID gameObjectRootUUID;
+    std::string sceneName;
+    
+    UID selectedGameObjectUUID;
 
-    uint32_t selectedGameObjectUUID;
-
-    std::unordered_map<uint32_t, GameObject *> gameObjectsContainer; // For testing purposes until FileSystem available
+    std::unordered_map<UID, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
 
     Octree *sceneOctree = nullptr;
 
@@ -81,5 +89,5 @@ class SceneModule : public Module
     // inputClassType;
     // gameConfigClassType;
 
-    // lightsConfig;
+    LightsConfig *lightsConfig;
 };

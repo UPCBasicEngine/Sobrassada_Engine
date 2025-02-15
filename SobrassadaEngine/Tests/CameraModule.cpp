@@ -3,11 +3,10 @@
 #include "Application.h"
 #include "GameObject.h"
 #include "InputModule.h"
-#include "SceneModule.h"
+#include "glew.h"
 #include "WindowModule.h"
 
 #include "DebugDraw/debugdraw.h"
-#include "Geometry/AABB.h"
 #include "Math/Quat.h"
 #include "MathGeoLib.h"
 #include "SDL_scancode.h"
@@ -62,6 +61,21 @@ bool CameraModule::Init()
     detachedProjectionMatrix         = detachedCamera.ProjectionMatrix();
 
     return true;
+
+	glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
+	return true;
+}
+
+void CameraModule::UpdateUBO() 
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 update_status CameraModule::Update(float deltaTime)

@@ -1,18 +1,43 @@
 ﻿#include "MeshComponent.h"
 
-#include "Application.h"
-#include "CameraModule.h"
 #include "../Root/RootComponent.h"
-#include "EngineMesh.h"
-#include "RenderTestModule.h"
+#include "Application.h"
+#include "ResourcesModule.h"
+#include "CameraModule.h"
+#include "EditorUIModule.h"
+#include "FileSystem/MeshImporter.h"
+#include "LibraryModule.h"
 #include "SceneModule.h"
 #include "imgui.h"
 
 #include <Math/Quat.h>
 
-MeshComponent::MeshComponent(const uint32_t uuid, const uint32_t uuidParent, const uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform)
-        : Component(uuid, uuidParent, uuidRoot, name, parentGlobalTransform)
+MeshComponent::MeshComponent(
+    const UID uid, const UID uidParent, const UID uidRoot, const Transform &parentGlobalTransform
+)
+    : Component(uid, uidParent, uidRoot, "Mesh component", COMPONENT_MESH, parentGlobalTransform)
 {
+}
+
+MeshComponent::MeshComponent(const rapidjson::Value &initialState) : Component(initialState)
+{
+    if (initialState.HasMember("MeshUID"))
+    {
+        AddMesh(initialState["MeshUID"].GetUint64(), false); // Do not update aabb, will be done once at the end
+    }
+    if (initialState.HasMember("MaterialUID"))
+    {
+        AddMaterial(initialState["MaterialUID"].GetUint64());
+    }
+}
+
+void MeshComponent::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
+{
+    Component::Save(targetState, allocator);
+    targetState.AddMember("UIDMesh", currentMesh == nullptr ? CONSTANT_EMPTY_UID : currentMesh->GetUID(), allocator);
+    targetState.AddMember(
+        "UIDMaterial", currentMaterial == nullptr ? CONSTANT_EMPTY_UID : currentMaterial->GetUID(), allocator
+    );
 }
 
 void MeshComponent::RenderEditorInspector()
@@ -22,118 +47,88 @@ void MeshComponent::RenderEditorInspector()
     if (enabled)
     {
         ImGui::SeparatorText("Mesh");
-    ImGui::Text(currentMeshName.c_str());
-    ImGui::SameLine();
-    if (ImGui::Button("Select mesh"))
-    {
-        ImGui::OpenPopup("MeshSelection");
-    }
-
-    if (ImGui::BeginPopup("MeshSelection"))
-    {
-        static char searchText[255] = "";
-        ImGui::InputText("Search mesh", searchText, 255);
-        
-        ImGui::Separator();
-        if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+        ImGui::Text(currentMeshName.c_str());
+        ImGui::SameLine();
+        if (ImGui::Button("Select mesh"))
         {
-            for ( const auto &modelPair : App->GetSceneModule()->MOCKUP_libraryMeshes ) {
-                {
-                    if (modelPair.first.find(searchText) != std::string::npos)
-                    {
-                        if (ImGui::Selectable(modelPair.first.c_str(), false))
-                        {
-                            LoadMesh(modelPair.first, modelPair.second);
-                            ImGui::CloseCurrentPopup();
-                        }
-                    }
-                }
-            }
-            ImGui::EndListBox();
+            ImGui::OpenPopup(CONSTANT_MESH_SELECT_DIALOG_ID);
         }
-        ImGui::EndPopup();
-    }
 
-    // TODO Remove duplicated code for popups
-    // TODO Rework texture system (Not working properly)
-
-    ImGui::SeparatorText("Diffuse texture");
-    ImGui::Text(currentTextureName.c_str());
-    ImGui::SameLine();
-    if (ImGui::Button("Select texture"))
-    {
-        ImGui::OpenPopup("TextureSelection");
-    }
-
-    if (ImGui::BeginPopup("TextureSelection"))
-    {
-        static char searchText[255] = "";
-        ImGui::InputText("Search texture", searchText, 255);
-        
-        ImGui::Separator();
-        if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+        if (ImGui::IsPopupOpen(CONSTANT_MESH_SELECT_DIALOG_ID))
         {
-            for ( const auto &texturePair : App->GetSceneModule()->MOCKUP_libraryTextures ) {
-                {
-                    if (texturePair.first.find(searchText) != std::string::npos)
-                    {
-                        if (ImGui::Selectable(texturePair.first.c_str(), false))
-                        {
-                            currentTextureName = texturePair.first;
-                            currentTexureUUID = texturePair.second;
-                            ImGui::CloseCurrentPopup();
-                        }
-                    }
-                }
-            }
-            ImGui::EndListBox();
+            AddMesh(App->GetEditorUIModule()->RenderResourceSelectDialog(
+                CONSTANT_MESH_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMeshMap()
+            ));
         }
-        ImGui::EndPopup();
+
+        ImGui::SeparatorText("Material");
+        ImGui::Text(currentTextureName.c_str());
+        ImGui::SameLine();
+        if (ImGui::Button("Select texture"))
+        {
+            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+        }
+
+        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+        {
+            AddMaterial(App->GetEditorUIModule()->RenderResourceSelectDialog(
+                CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap()
+            ));
+        }
+
+        if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
     }
-    }
-    
 }
 
-void MeshComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
+void MeshComponent::Update() {}
+
+void MeshComponent::Render()
 {
-    Component::RenderEditorComponentTree(selectedComponentUUID);
-}
-
-void MeshComponent::Update()
-{
-}
-
-void MeshComponent::Render(){
-    if (enabled && currentMeshUUID != CONSTANT_NO_MESH_UUID)
+    if (enabled && currentMesh != nullptr)
     {
-        EngineMesh* currentMesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
-        if (currentMesh != nullptr)
-        {
-            float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
-            float4x4 view = App->GetCameraModule()->GetViewMatrix();
-            float4x4 model = float4x4::FromTRS(
-                    globalTransform.position,
-                    math::Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
-                    globalTransform.scale);
-            currentMesh->Render(App->GetRenderTestModule()->GetProgram(), App->GetSceneModule()->MOCKUP_loadedTextures[currentTexureUUID],
-                model, proj, view);
-        }
+        unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
+
+        float4x4 model         = float4x4::FromTRS(
+            globalTransform.position,
+            Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
+            globalTransform.scale
+        );
+        currentMesh->Render(App->GetResourcesModule()->GetProgram(), model, cameraUBO, currentMaterial);
     }
     Component::Render();
 }
 
-void MeshComponent::LoadMesh(const std::string& meshName, uint32_t meshUUID)
+void MeshComponent::AddMesh(UID resource, bool reloadAABB)
 {
-    currentMeshName = meshName;
-    currentMeshUUID = meshUUID;
-    EngineMesh* mesh = App->GetSceneModule()->MOCKUP_loadedMeshes[currentMeshUUID];
-    if (mesh != nullptr)
+    if (resource == CONSTANT_EMPTY_UID) return;
+
+    ResourceMesh *newMesh = dynamic_cast<ResourceMesh *>(App->GetResourcesModule()->RequestResource(resource));
+    if (newMesh != nullptr)
     {
-        localComponentAABB = AABB(mesh->GetAABB());
-        AABBUpdatable* parent = App->GetSceneModule()->GetTargetForAABBUpdate(uuidParent);
-        if (parent != nullptr)
+        App->GetResourcesModule()->ReleaseResource(currentMesh);
+        currentMeshName = newMesh->GetName();
+        currentMesh     = newMesh;
+
+        if (reloadAABB)
         {
-            parent->PassAABBUpdateToParent();
+            localComponentAABB    = AABB(currentMesh->GetAABB());
+            AABBUpdatable *parent = GetParent();
+            if (parent != nullptr)
+            {
+                parent->PassAABBUpdateToParent();
+            }
         }
+    }
+}
+
+void MeshComponent::AddMaterial(UID resource)
+{
+    ResourceMaterial *newMaterial =
+        dynamic_cast<ResourceMaterial *>(App->GetResourcesModule()->RequestResource(resource));
+    if (newMaterial != nullptr)
+    {
+        App->GetResourcesModule()->ReleaseResource(currentMaterial);
+        currentMaterial    = newMaterial;
+        currentTextureName = currentMaterial->GetName();
     }
 }

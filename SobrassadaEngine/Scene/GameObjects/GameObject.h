@@ -1,56 +1,77 @@
 #pragma once
-#include "BoundingBox.h"
+#include "Globals.h"
 #include "Scene/AABBUpdatable.h"
 #include "Transform.h"
 
 #include <string>
 #include <vector>
+#include <Libs/rapidjson/document.h>
+#include <Geometry/AABB.h>
 
 class RootComponent;
 
 class GameObject : public AABBUpdatable
 {
-  public:
+public:
+
     GameObject(std::string name);
-    GameObject(uint32_t parentUUID, std::string name);
+    GameObject(UID parentUUID, std::string name);
+    GameObject(UID parentUUID, std::string name, UID rootComponent);
+
+    GameObject(const rapidjson::Value &initialState);
 
     ~GameObject();
 
-    bool AddGameObject(uint32_t gameObjectUUID);
-    bool RemoveGameObject(uint32_t gameObjectUUID);
+	bool AddGameObject(UID gameObjectUUID);
+    bool RemoveGameObject(UID gameObjectUUID);
 
     bool CreateRootComponent();
 
     void OnEditor();
 
+    void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator)const;
+
     void SaveToLibrary();
 
-    inline std::string GetName() { return name; }
+    void RenderHierarchyNode(UID &selectedGameObjectUUID);
+    void HandleNodeClick(UID &selectedGameObjectUUID);
+    void RenderContextMenu();
+
+    bool UpdateGameObjectHierarchy(UID sourceUID, UID targetUID);
+
+	inline std::string GetName() const { return name; }
     void SetName(std::string newName) { name = newName; }
+    
+	inline std::vector<UID> GetChildren() { return children; }
+    inline void AddChildren(UID childUUID) { children.push_back(childUUID); }
+    
+	inline UID GetParent() const { return parentUUID; }
+    void SetParent(UID newParentUUID) { parentUUID = newParentUUID; }
 
-    inline std::vector<uint32_t> GetChildren() { return children; }
+    inline UID GetUID() const { return uuid; }
+	void SetUUID(UID newUUID) { uuid = newUUID; }
+    
+    RootComponent* GetRootComponent() const { return rootComponent; }
 
-    inline uint32_t GetParent() { return parentUUID; }
-    void SetParent(uint32_t newParentUUID) { parentUUID = newParentUUID; }
-
-    void SetUUID(uint32_t newUUID) { uuid = newUUID; }
-
-    RootComponent *GetRootComponent() const { return rootComponent; }
-
+    inline const AABB &GetAABB() const { return globalAABB; };
+    
     void Render();
     void RenderEditor();
 
     void PassAABBUpdateToParent() override;
-    const Transform &GetGlobalTransform() const override;
-  
-  private:
-    uint32_t parentUUID;
-    uint32_t uuid;
-    std::vector<uint32_t> children;
+    void ComponentGlobalTransformUpdated() override;
+    const Transform& GetGlobalTransform() const override;
+
+private:
+
+	UID parentUUID;
+	UID uuid;
+	std::vector<UID> children;
 
     std::string name;
 
     RootComponent *rootComponent;
 
-    BoundingBox boundingBox;
+    AABB globalAABB;
+
 };

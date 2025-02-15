@@ -11,6 +11,7 @@
 #include "DebugDraw.h" // Debug Draw API. Notice that we need the DEBUG_DRAW_IMPLEMENTATION macro here!
 
 #include "glew.h"
+#include "imgui.h"
 
 class DDRenderInterfaceCoreGL final : public dd::RenderInterface
 {
@@ -606,14 +607,30 @@ bool DebugDrawModule::ShutDown()
 
 update_status DebugDrawModule::Render(float deltaTime)
 {
-    float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
-    float4x4 view = App->GetCameraModule()->GetViewMatrix();
-
     dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
     dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
 
-    int width  = 0;
-    int height = 0;
+    //TODO: Maybe the above code can go in Update() and the Draw in Render(), as long as it is later in order than the SceneModule
+
+    //  Don't draw the grid here because the skybox must be drawn first
+   //auto projection = App->GetCameraModule()->GetProjectionMatrix();
+   //auto view       = App->GetCameraModule()->GetViewMatrix();
+   //
+   //int width       = 0;
+   //int height      = 0;
+   //
+   //SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
+   //Draw(projection, view, width, height);
+
+    return UPDATE_CONTINUE;
+}
+
+void DebugDrawModule::Draw()
+{
+    auto projection = App->GetCameraModule()->GetProjectionMatrix();
+    auto view       = App->GetCameraModule()->GetViewMatrix();
+    int width       = 0;
+    int height      = 0;
 
     if (App->GetCameraModule()->IsCameraDetached())
     {
@@ -626,17 +643,9 @@ update_status DebugDrawModule::Render(float deltaTime)
     }
 
     SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
-
-    Draw(view, proj, width, height);
-
-    return UPDATE_CONTINUE;
-}
-
-void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height)
-{
     implementation->width     = width;
     implementation->height    = height;
-    implementation->mvpMatrix = proj * view;
+    implementation->mvpMatrix = projection * view;
 
     dd::flush();
 }
@@ -655,4 +664,29 @@ void DebugDrawModule::RenderLines(const std::vector<LineSegment> &lines, const f
     {
         dd::line(line.a, line.b, color);
     }
+}
+
+void DebugDrawModule::DrawLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color)
+{
+    float3 dir = direction * distance;
+    dd::line(origin, dir + origin, color);
+}
+
+void DebugDrawModule::DrawCircle(const float3 &center, const float3 &upVector, const float3 &color, const float radius) 
+{ 
+    dd::circle(center, upVector, color, radius, 40);
+}
+
+void DebugDrawModule::DrawSphere(const float3& center, const float3 &color, const float radius) 
+{ 
+    dd::sphere(center, color, radius);
+}
+
+void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height)
+{
+    implementation->width     = width;
+    implementation->height    = height;
+    implementation->mvpMatrix = proj * view;
+
+    dd::flush();
 }

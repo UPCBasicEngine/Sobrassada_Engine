@@ -5,12 +5,19 @@
 
 #include "Geometry/AABB.h"
 #include "Geometry/Frustum.h"
+#include "Math/Quat.h"
 #include "Math/float4x4.h"
 
 constexpr float DEGTORAD             = PI / 180.f;
 constexpr float cameraRotationAngle  = 135.f * DEGTORAD;
 constexpr float maximumPositivePitch = 89.f * DEGTORAD;
 constexpr float maximumNegativePitch = -89.f * DEGTORAD;
+
+struct CameraMatrices
+{
+	float4x4 projectionMatrix;
+	float4x4 viewMatrix;
+};
 
 class CameraModule : public Module
 {
@@ -28,6 +35,9 @@ class CameraModule : public Module
     const float4x4& GetFrustumViewMatrix() { return viewMatrix; }
     const float4x4& GetFrustumProjectionMatrix() { return projectionMatrix; }
     const FrustumPlanes& GetFrustrumPlanes() const { return frustumPlanes; }
+
+    const unsigned int GetUbo() { return ubo; }
+    void UpdateUBO();
 
     bool IsCameraDetached() const { return isCameraDetached; }
 
@@ -58,4 +68,8 @@ class CameraModule : public Module
     float currentPitchAngle   = 0.f;
 
     bool isCameraDetached     = false;
+
+    CameraMatrices matrices;
+
+    unsigned int ubo;
 };

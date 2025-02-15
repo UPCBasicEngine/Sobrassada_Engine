@@ -1,29 +1,37 @@
 ﻿#pragma once
+
 #include "Globals.h"
+#include "ResourceManagement/Resources/ResourceMaterial.h"
+#include "ResourceManagement/Resources/ResourceMesh.h"
 #include "Scene/Components/Component.h"
 
 #include <cstdint>
+#include <Libs/rapidjson/document.h>
 
 class MeshComponent : public Component
 {
 public:
-    MeshComponent(uint32_t uuid, uint32_t uuidParent, uint32_t uuidRoot, const char* name, const Transform& parentGlobalTransform);
+    MeshComponent(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform);
+    
+    MeshComponent(const rapidjson::Value &initialState);
+    
+    virtual void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const;
     
     void RenderEditorInspector() override;
-    void RenderEditorComponentTree(const uint32_t selectedComponentUUID) override;
     void Update() override;
     void Render() override;
 
-    void LoadMesh(const std::string& meshName, uint32_t meshUUID); 
+private:
     
+    void AddMesh(UID resource, bool reloadAABB = true);
+    void AddMaterial(UID resource);
+
 private:
 
-    // TODO Add model code, add mesh components when loading
-
     std::string currentMeshName = "Not selected";
-    uint32_t currentMeshUUID = CONSTANT_NO_MESH_UUID;
+    ResourceMesh* currentMesh = nullptr;
 
     std::string currentTextureName = "Not selected";
-    uint32_t currentTexureUUID = CONSTANT_NO_TEXTURE_UUID;
+    ResourceMaterial* currentMaterial = nullptr;
     
 };

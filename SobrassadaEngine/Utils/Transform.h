@@ -7,11 +7,19 @@ enum TransformType
     GLOBAL = 1
 };
 
+enum PivotType
+{
+    OBJECT = 0,
+    ROOT = 1
+};
+
 struct Transform 
 {
     Transform() : position(0, 0, 0), rotation(0, 0, 0), scale(1, 1, 1) {}
 
     Transform(const float3& position, const float3& rotation, const float3& scale): position(position), rotation(rotation), scale(scale) {}
+
+    Transform(const Transform& other) = default;
 
 public:
 

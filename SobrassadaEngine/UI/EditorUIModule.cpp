@@ -1,8 +1,11 @@
 #include "EditorUIModule.h"
 
 #include "Application.h"
+#include "LibraryModule.h"
 #include "EditorViewport.h"
+#include "FileSystem.h"
 #include "OpenGLModule.h"
+#include "SceneImporter.h"
 #include "WindowModule.h"
 #include "QuadtreeViewer.h"
 #include "SceneModule.h"
@@ -14,7 +17,22 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
 
-EditorUIModule::EditorUIModule() {}
+#include <cstring>
+#include <filesystem>
+
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_NO_STB_IMAGE
+#define TINYGLTF_NO_EXTERNAL_IMAGE
+#define TINYGLTF_IMPLEMENTATION /* Only in one of the includes */
+#include <tiny_gltf.h>
+
+#include "InputModule.h"
+
+EditorUIModule::EditorUIModule()
+    : width(0), height(0), closeApplication(false), consoleMenu(false), import(false), load(false), save(false),
+      editorSettingsMenu(false)
+{
+}
 
 EditorUIModule::~EditorUIModule() {}
 
@@ -32,6 +50,16 @@ bool EditorUIModule::Init()
     editorViewport = new EditorViewport();
     quadtreeViewer = new QuadtreeViewer();
 
+    width          = App->GetWindowModule()->GetWidth();
+    height         = App->GetWindowModule()->GetHeight(); 
+
+    startPath      = std::filesystem::current_path().string();
+    libraryPath    = startPath + DELIMITER + SCENES_PATH;
+    
+    App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_W, [&]{ mCurrentGizmoOperation = ImGuizmo::TRANSLATE; });
+    App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_E, [&]{ mCurrentGizmoOperation = ImGuizmo::ROTATE; });
+    App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_R, [&]{ mCurrentGizmoOperation = ImGuizmo::SCALE; });
+
     return true;
 }
 
@@ -40,6 +68,8 @@ update_status EditorUIModule::PreUpdate(float deltaTime)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::SetOrthographic(false);   // TODO Implement orthographic camera
+    ImGuizmo::BeginFrame();
     ImGui::DockSpaceOverViewport();
 
     return UPDATE_CONTINUE;
@@ -114,8 +144,15 @@ void EditorUIModule::Draw()
 {
     
     MainMenu();
+    // ImGui::ShowDemoWindow();
 
     if (consoleMenu) Console(consoleMenu);
+
+    if (import) ImportDialog(import);
+
+    if (load) LoadDialog(load);
+
+    if (save) SaveDialog(save);
 
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
@@ -123,6 +160,27 @@ void EditorUIModule::Draw()
 void EditorUIModule::MainMenu()
 {
     ImGui::BeginMainMenuBar();
+
+    if (ImGui::BeginMenu("File"))
+    {
+        if (ImGui::MenuItem("Import", "", import)) import = !import;
+
+        if (ImGui::MenuItem("Load", "", load)) load = !load;
+
+        if (ImGui::MenuItem("Save"))
+        {
+            if (!App->GetLibraryModule()->SaveScene(libraryPath.c_str(), SaveMode::Save))
+            {
+                save = !save;
+            }
+        }
+
+        if (ImGui::MenuItem("Save as")) save = !save;
+
+        if (ImGui::MenuItem("Quit")) closeApplication = true;
+
+        ImGui::EndMenu();
+    }
 
     // General menu
     if (ImGui::BeginMenu("General"))
@@ -153,7 +211,7 @@ void EditorUIModule::MainMenu()
     // Settings menu
     if (ImGui::BeginMenu("Settings"))
     {
-        if (ImGui::MenuItem("Editor settings")) editorSettingsMenu = !editorSettingsMenu;
+        if (ImGui::MenuItem("Editor settings", "", editorSettingsMenu)) editorSettingsMenu = !editorSettingsMenu;
 
         ImGui::EndMenu();
     }
@@ -161,9 +219,355 @@ void EditorUIModule::MainMenu()
     ImGui::EndMainMenuBar();
 }
 
+void EditorUIModule::LoadDialog(bool &load)
+{
+    ImGui::SetNextWindowSize(ImVec2(width * 0.25f, height * 0.4f), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("Load Scene", &load, ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::End();
+        return;
+    }
+
+    static std::string inputFile = "";
+    static std::vector<std::string> files;
+
+    ImGui::BeginChild("scrollFiles", ImVec2(0, -30), ImGuiChildFlags_Borders);
+
+    if (FileSystem::Exists(libraryPath.c_str()))
+    {
+        // Only scenes for now
+        if (ImGui::TreeNode("Scenes/"))
+        {
+            GetFilesSorted(libraryPath, files);
+
+            static int selected = -1;
+
+            for (int i = 0; i < files.size(); i++)
+            {
+                const std::string &file = files[i];
+                if (ImGui::Selectable(file.c_str(), selected == i))
+                {
+                    selected  = i;
+                    inputFile = file;
+                }
+            }
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::EndChild();
+
+    ImGui::InputText("##filename", &inputFile[0], inputFile.size(), ImGuiInputTextFlags_ReadOnly);
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Ok", ImVec2(0, 0)))
+    {
+        if (!inputFile.empty())
+        {
+            std::string loadPath = SCENES_PATH + inputFile;
+            App->GetLibraryModule()->LoadScene(loadPath.c_str());
+
+        }
+        inputFile = "";
+        load      = false;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Cancel", ImVec2(0, 0)))
+    {
+        inputFile = "";
+        load      = false;
+    }
+
+    ImGui::End();
+}
+
+void EditorUIModule::SaveDialog(bool &save)
+{
+    ImGui::SetNextWindowSize(ImVec2(width * 0.25f, height * 0.4f), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("Save Scene", &save, ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::End();
+        return;
+    }
+
+    static std::vector<std::string> files;
+    static char inputFile[32];
+
+    ImGui::BeginChild("scrollFiles", ImVec2(0, -30), ImGuiChildFlags_Borders);
+
+    if (FileSystem::Exists(libraryPath.c_str()))
+    {
+        if (ImGui::TreeNode("Scenes/"))
+        {
+            GetFilesSorted(libraryPath, files);
+
+            for (int i = 0; i < files.size(); i++)
+            {
+                const std::string &file = files[i];
+                if (ImGui::Selectable(file.c_str()))
+                {
+                }
+            }
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::EndChild();
+
+    ImGui::InputText("##filename", inputFile, IM_ARRAYSIZE(inputFile));
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Ok", ImVec2(0, 0)))
+    {
+        if (strlen(inputFile) > 0)
+        {
+            std::string savePath = libraryPath + inputFile + SCENE_EXTENSION;
+            App->GetLibraryModule()->SaveScene(savePath.c_str(), SaveMode::SaveAs);
+        }
+        inputFile[0] = '\0';
+        save         = false;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Cancel", ImVec2(0, 0)))
+    {
+        inputFile[0] = '\0';
+        save         = false;
+    }
+
+    ImGui::End();
+}
+
+void EditorUIModule::ImportDialog(bool &import)
+{
+    ImGui::SetNextWindowSize(ImVec2(width * 0.4f, height * 0.4f), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("Import Asset", &import, ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::End();
+        return;
+    }
+
+    static std::string currentPath = startPath;
+    static std::vector<std::string> accPaths;
+    static bool loadButtons = true;
+
+    static std::vector<std::string> files;
+    static bool loadFiles = false;
+    static std::vector<std::string> filteredFiles;
+    static bool loadFilteredFiles = false;
+
+    static char searchQuery[32];
+    static char lastQuery[32] = "default";
+    static bool showDrives    = false;
+
+    if (ImGui::Button("Drives"))
+    {
+        FileSystem::GetDrives(files);
+        showDrives = true;
+    }
+
+    ImGui::SameLine();
+    ImGui::Text("|");
+
+    if (!showDrives)
+    {
+        ImGui::SameLine();
+
+        if (loadButtons)
+        {
+            FileSystem::SplitAccumulatedPath(currentPath, accPaths);
+            loadButtons = false;
+        }
+
+        for (size_t i = 0; i < accPaths.size(); i++)
+        {
+            const std::string &accPath = accPaths[i];
+
+            std::string buttonLabel    = (i == 0) ? accPath : FileSystem::GetFileNameWithExtension(accPath);
+
+            if (ImGui::Button(buttonLabel.c_str()))
+            {
+                currentPath = accPath;
+                showDrives  = false;
+                loadFiles   = true;
+                loadButtons = true;
+                searchQuery[0] = '\0';
+            }
+
+            if (i < accPaths.size() - 1) ImGui::SameLine();
+        }
+    }
+
+    ImGui::Separator();
+
+    ImGui::Text("Search:");
+    ImGui::SameLine();
+    ImGui::InputText("##search", searchQuery, IM_ARRAYSIZE(searchQuery));
+
+    static std::string inputFile = "";
+
+    ImGui::BeginChild("scrollFiles", ImVec2(0, -70), ImGuiChildFlags_Borders);
+
+    if (showDrives)
+    {
+        for (const std::string &drive : files)
+        {
+            if (ImGui::Selectable(drive.c_str()))
+            {
+                currentPath = drive;
+                showDrives  = false;
+                loadFiles   = true;
+                loadButtons = true;
+            }
+        }
+    }
+    else
+    {
+        // root directory add delimiter
+        if (currentPath.back() == ':') currentPath += DELIMITER;
+
+        if (files.empty() || loadFiles)
+        {
+            GetFilesSorted(currentPath, files);
+
+            files.insert(files.begin(), "..");
+
+            loadFiles         = false;
+            loadFilteredFiles = true;
+        }
+
+        if (strcmp(lastQuery, searchQuery) != 0 || loadFilteredFiles) // if the search query has changed
+        {
+            strcpy_s(lastQuery, searchQuery);
+
+            filteredFiles.clear();
+
+            for (const std::string &file : files)
+            {
+                if (file.find(searchQuery) != std::string::npos)
+                {
+                    filteredFiles.push_back(file);
+                }
+            }
+
+            loadFilteredFiles = false;
+        }
+
+        static int selected = -1;
+
+        for (int i = 0; i < filteredFiles.size(); i++)
+        {
+            const std::string &file = filteredFiles[i];
+            std::string filePath    = currentPath + DELIMITER + file;
+            bool isDirectory        = FileSystem::IsDirectory(filePath.c_str());
+
+            std::string tag         = isDirectory ? "[Dir] " : "[File] ";
+            std::string fileWithTag = tag + file;
+
+            if (ImGui::Selectable(fileWithTag.c_str(), selected == i))
+            {
+                selected = i;
+
+                if (file == "..")
+                {
+                    currentPath = FileSystem::GetParentPath(currentPath);
+                    inputFile   = "";
+                    selected    = -1;
+                    GetFilesSorted(currentPath, files);
+                    searchQuery[0] = '\0';
+                    loadFiles      = true;
+                    loadButtons    = true;
+                }
+                else if (isDirectory)
+                {
+                    currentPath = filePath;
+                    inputFile   = "";
+                    selected    = -1;
+                    GetFilesSorted(currentPath, files);
+                    searchQuery[0] = '\0';
+                    loadFiles      = true;
+                    loadButtons    = true;
+                }
+                else
+                {
+                    inputFile = FileSystem::GetFileNameWithExtension(file);
+                }
+            }
+        }
+    }
+
+    ImGui::EndChild();
+
+    ImGui::Dummy(ImVec2(0, 10));
+    ImGui::Text("File Name:");
+    ImGui::SameLine();
+    ImGui::InputText("##filename", &inputFile[0], inputFile.size(), ImGuiInputTextFlags_ReadOnly);
+
+    if (ImGui::Button("Cancel", ImVec2(0, 0)))
+    {
+        inputFile      = "";
+        currentPath    = startPath;
+        import         = false;
+        showDrives     = false;
+        searchQuery[0] = '\0';
+        loadFiles      = true;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Ok", ImVec2(0, 0)))
+    {
+        if (!inputFile.empty())
+        {
+            std::string importPath = currentPath + DELIMITER + inputFile;
+            SceneImporter::Import(importPath.c_str());
+        }
+        inputFile      = "";
+        currentPath    = startPath;
+        import         = false;
+        showDrives     = false;
+        searchQuery[0] = '\0';
+        loadFiles      = true;
+    }
+
+    ImGui::End();
+}
+
+void EditorUIModule::GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files)
+{
+    // files & dir in the current directory
+    FileSystem::GetAllInDirectory(currentPath, files);
+
+    std::sort(
+        files.begin(), files.end(),
+        [&](const std::string &a, const std::string &b)
+        {
+            bool isDirA = FileSystem::IsDirectory((currentPath + DELIMITER + a).c_str());
+            bool isDirB = FileSystem::IsDirectory((currentPath + DELIMITER + b).c_str());
+
+            if (isDirA != isDirB) return isDirA > isDirB;
+            return a < b;
+        }
+    );
+}
+
 void EditorUIModule::Console(bool &consoleMenu)
 {
-    ImGui::Begin("Console", &consoleMenu);
+    if (!ImGui::Begin("Console", &consoleMenu))
+    {
+        ImGui::End();
+        return;
+    }
 
     for (const char *log : *Logs)
     {
@@ -179,42 +583,131 @@ void EditorUIModule::Console(bool &consoleMenu)
     ImGui::End();
 }
 
-bool EditorUIModule::RenderTransformModifier(Transform &localTransform, Transform &globalTransform, uint32_t uuidParent)
+bool EditorUIModule::RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform& parentTransform)
 {
+    bool positionValueChanged = false;
+    bool rotationValueChanged = false;
+    bool scaleValueChanged = false;
+    static bool lockScaleAxis = false;
+    static int transformType = LOCAL;
+    static int pivotType = OBJECT;
+    float3 originalScale;
+    
     ImGui::SeparatorText("Transform");
-    ImGui::RadioButton("Local", &transformType, LOCAL);
-    ImGui::SameLine();
-    ImGui::RadioButton("Global", &transformType, GLOBAL);
-
-    Transform& transformToEdit = transformType == LOCAL ? localTransform : globalTransform;
+    ImGui::RadioButton("Use object pivot", &pivotType, OBJECT);
+    // TODO Add later if necessary
+    //ImGui::SameLine();
+    //ImGui::RadioButton("Use root pivot", &pivotType, ROOT);
     
-    bool valueChanged = false;
-    
-    valueChanged |= ImGui::InputFloat3( "Position", &transformToEdit.position[0] );
-    valueChanged |= ImGui::InputFloat3( "Rotation", &transformToEdit.rotation[0] ); // TODO Add option to switch between degrees and radians, rotate around mesh center / game object center
-    valueChanged |= ImGui::InputFloat3( "Scale", &transformToEdit.scale[0] ); // Add option to lock scale over all axis
-
-    if (valueChanged)
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+    if (ImGui::BeginTabBar("TransformType##", tab_bar_flags))
     {
-        Component* parentComponent = App->GetSceneModule()->gameComponents[uuidParent];
+        if (ImGui::BeginTabItem("Local transform"))
+        {
+            transformType = LOCAL;
+            originalScale = float3(localTransform.scale);
+            RenderBasicTransformModifiers(localTransform, lockScaleAxis, positionValueChanged, rotationValueChanged, scaleValueChanged);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Global transform"))
+        {
+            transformType = GLOBAL;
+            originalScale = float3(globalTransform.scale);
+            RenderBasicTransformModifiers(globalTransform, lockScaleAxis, positionValueChanged, rotationValueChanged, scaleValueChanged);
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+
+    Transform& outputTransform = transformType == LOCAL ? localTransform : globalTransform;
+    
+    if (positionValueChanged || rotationValueChanged || scaleValueChanged)
+    {
+        if (scaleValueChanged && lockScaleAxis)
+        {
+            float scaleFactor = 1;
+            if (outputTransform.scale.x != originalScale.x)
+            {
+                scaleFactor = originalScale.x == 0 ? 1 : outputTransform.scale.x / originalScale.x;
+                
+            } else if (outputTransform.scale.y != originalScale.y)
+            {
+                scaleFactor = originalScale.y == 0 ? 1 : outputTransform.scale.y / originalScale.y;
+            } else if (outputTransform.scale.z != originalScale.z)
+            {
+                scaleFactor = originalScale.z == 0 ? 1 : outputTransform.scale.z / originalScale.z;
+            }
+            originalScale *= scaleFactor;
+            outputTransform.scale = originalScale;
+        }
+        
         if (transformType == GLOBAL)
         {
-            if (parentComponent != nullptr)
-            {
-                localTransform.Set(globalTransform - parentComponent->GetGlobalTransform());
-            } else
-            {
-                localTransform.Set(globalTransform);
-            }
+            localTransform.Set(globalTransform - parentTransform);
         }
     }
 
-    return valueChanged;
+    return positionValueChanged || rotationValueChanged || scaleValueChanged;
+}
+
+void EditorUIModule::RenderBasicTransformModifiers(Transform &outputTransform, bool& lockScaleAxis, bool& positionValueChanged, bool& rotationValueChanged, bool& scaleValueChanged)
+{
+    static bool bUseRad = true;
+    if (!bUseRad)
+    {
+        outputTransform.rotation *= RAD_DEGREE_CONV;
+    }
+    
+    positionValueChanged |= ImGui::InputFloat3( "Position", &outputTransform.position[0] );
+    rotationValueChanged |= ImGui::InputFloat3( "Rotation", &outputTransform.rotation[0] );
+    if (!bUseRad)
+    {
+        outputTransform.rotation /= RAD_DEGREE_CONV;
+    }
+    ImGui::SameLine();
+    ImGui::Checkbox("Radians", &bUseRad);
+    scaleValueChanged |= ImGui::InputFloat3( "Scale", &outputTransform.scale[0] );
+    ImGui::SameLine();
+    ImGui::Checkbox("Lock axis", &lockScaleAxis);
+}
+
+UID EditorUIModule::RenderResourceSelectDialog(const char* id, const std::unordered_map<std::string, UID> &availableResources)
+{
+    UID result = CONSTANT_EMPTY_UID;
+    if (ImGui::BeginPopup(id))
+    {
+        static char searchText[255] = "";
+        ImGui::InputText("Search", searchText, 255);
+        
+        ImGui::Separator();
+        if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+        {
+            for ( const auto &valuePair: availableResources ) {
+                {
+                    if (valuePair.first.find(searchText) != std::string::npos)
+                    {
+                        if (ImGui::Selectable(valuePair.first.c_str(), false))
+                        {
+                            result = valuePair.second;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                }
+            }
+            ImGui::EndListBox();
+        }
+        ImGui::EndPopup();
+    }
+    return result;
 }
 
 void EditorUIModule::EditorSettings(bool &editorSettingsMenu)
 {
-    ImGui::Begin("Editor settings", &editorSettingsMenu);
+    if (!ImGui::Begin("Editor settings", &editorSettingsMenu))
+    {
+        ImGui::End();
+        return;
+    }
 
     ImGui::SeparatorText("Ms and Fps Graph");
     FramePlots();
@@ -349,4 +842,53 @@ void EditorUIModule::OpenGLConfig()
     {
         openGLModule->SetFrontFaceMode(frontFaceMode);
     }
+}
+
+void EditorUIModule::DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
+    if (ImGuizmo::IsUsing())
+    {
+        ImGui::Text("Using gizmo");
+    } else
+    {
+        ImGui::Text("Trying to use gizmo ... Failed");
+        ImGui::Text(ImGuizmo::IsOver()?"Over gizmo":"");
+        ImGui::SameLine();
+        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::TRANSLATE) ? "Over translate gizmo" : "");
+        ImGui::SameLine();
+        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::ROTATE) ? "Over rotate gizmo" : "");
+        ImGui::SameLine();
+        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::SCALE) ? "Over scale gizmo" : "");
+    }
+    ImGui::Separator();
+
+    static float4x4 matrix = float4x4::identity;
+    
+    if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+        mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
+        mCurrentGizmoOperation = ImGuizmo::ROTATE;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
+        mCurrentGizmoOperation = ImGuizmo::SCALE;
+    float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+    ImGuizmo::DecomposeMatrixToComponents(matrix.ptr(), matrixTranslation, matrixRotation, matrixScale);
+    ImGui::InputFloat3("Tr", matrixTranslation);
+    ImGui::InputFloat3("Rt", matrixRotation);
+    ImGui::InputFloat3("Sc", matrixScale);
+    ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix.ptr());
+
+    ImGui::Begin("Gizmo", 0, 0);
+    ImGuizmo::SetDrawlist();
+    
+    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+
+    ImGuizmo::PushID(420);
+    ImGuizmo::Manipulate(view.ptr(), proj.ptr(), mCurrentGizmoOperation, mCurrentGizmoMode, matrix.ptr());
+    ImGuizmo::PopID();
+
+    ImGui::End();
 }

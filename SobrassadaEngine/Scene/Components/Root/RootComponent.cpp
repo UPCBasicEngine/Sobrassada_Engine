@@ -9,31 +9,46 @@
 
 #include <Algorithm/Random/LCG.h>
 
-RootComponent::RootComponent(const uint32_t uuid, const uint32_t uuidParent, const char* name, const Transform& parentGlobalTransform)
-        : Component(uuid, uuidParent, uuid, name, parentGlobalTransform)
+RootComponent::RootComponent(const UID uid, const UID uidParent, const Transform& parentGlobalTransform)
+        : Component(uid, uidParent, uid, "Root component", COMPONENT_ROOT, parentGlobalTransform)
 {
-    selectedUUID = uuid;    // TODO Other components don´t have the correct selectedUUID
+    selectedUID = uid;  
 }
+
+RootComponent::RootComponent(const rapidjson::Value &initialState) : Component(initialState)
+{
+    selectedUID = uid;
+    mobilitySettings = initialState["Mobility"].GetInt();
+}
+
 
 RootComponent::~RootComponent(){
     Component::~Component();
 }
 
-bool RootComponent::AddChildComponent(const uint32_t componentUUID)
+void RootComponent::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
 {
-    // TODO Load component from storage
-    // TODO Make sure passed componentUUID encodes a standalone component
-    return Component::AddChildComponent(componentUUID);
+    Component::Save(targetState, allocator);
+    targetState.AddMember("Type", COMPONENT_ROOT, allocator);
+    targetState.AddMember("Mobility", mobilitySettings, allocator);
 }
 
-bool RootComponent::DeleteChildComponent(const uint32_t componentUUID)
+AABB & RootComponent::TransformUpdated(const Transform &parentGlobalTransform)
 {
-    return Component::DeleteChildComponent(componentUUID);
+    AABB& result = Component::TransformUpdated(parentGlobalTransform);
+
+    AABBUpdatable* parentObject = GetParent();
+    if (parentObject != nullptr)
+    {
+        parentObject->ComponentGlobalTransformUpdated();
+    }
+
+    return result;
 }
 
 void RootComponent::RenderComponentEditor()
 {
-    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUUID];
+    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUID];
     
     ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu);    
 
@@ -71,25 +86,25 @@ void RootComponent::RenderComponentEditor()
         ImGui::EndPopup();
     }
 
-    if (selectedUUID != uuid)
+    if (selectedUID != uid)
     {
         ImGui::SameLine();
         if (ImGui::Button("Remove Component")) 
         {
             if (selectedComponent != nullptr)
             {
-                Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUUIDParent()];
+                Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUIDParent()];
                 if (selectedParentComponent != nullptr)
                 {
-                    selectedParentComponent->DeleteChildComponent(selectedUUID);
-                    selectedUUID = uuid;
+                    selectedParentComponent->DeleteChildComponent(selectedUID);
+                    selectedUID = uid;
                     selectedComponent = nullptr;
                 }
             }
         }
     }
     
-    RenderEditorComponentTree(selectedUUID);
+    RenderEditorComponentTree(selectedUID);
     
     ImGui::Spacing();
 
@@ -106,14 +121,14 @@ void RootComponent::RenderComponentEditor()
     ImGui::End();
 }
 
-void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUUID)
+void RootComponent::RenderEditorComponentTree(const UID selectedComponentUID)
 {
     ImGui::SeparatorText("Component hierarchy");
    
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
     ImGui::BeginChild("ComponentHierarchyWrapper", ImVec2(0, 200), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY);
     ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (selectedComponentUUID == uuid)
+    if (selectedComponentUID == uid)
     {
         base_flags |= ImGuiTreeNodeFlags_Selected;
     }
@@ -121,19 +136,18 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     {
         base_flags |= ImGuiTreeNodeFlags_Leaf;
     }
-    const bool isExpanded = ImGui::TreeNodeEx((void*) uuid, base_flags, name);
+
+    const bool isExpanded = ImGui::TreeNodeEx((void*) uid, base_flags, name);
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-        SetSelectedComponent(uuid);
+        SetSelectedComponent(uid);
 
     HandleDragNDrop();
     
     if (isExpanded) 
     {
-        for (uint32_t child : children)
+        for (Component* childComponent : GetChildComponents())
         {
-            Component* childComponent = App->GetSceneModule()->gameComponents[child];
-
-            if (childComponent != nullptr)  childComponent->RenderEditorComponentTree(selectedUUID);
+            childComponent->RenderEditorComponentTree(selectedUID);
         }
         ImGui::TreePop();
     }
@@ -141,26 +155,39 @@ void RootComponent::RenderEditorComponentTree(const uint32_t selectedComponentUU
     ImGui::PopStyleVar();
 }
 
+void RootComponent::RenderEditorInspector()
+{
+    Component::RenderEditorInspector();
+    if (enabled)
+    {
+        // Casting to use ImGui to set values and at the same type keep the enum type for the variable
+        ImGui::SeparatorText("Mobility");
+        ImGui::RadioButton("Static", &mobilitySettings, STATIC);
+        ImGui::SameLine();
+        ImGui::RadioButton("Dynamic", &mobilitySettings, DYNAMIC);
+    }
+}
+
 void RootComponent::Update()
 {
 }
 
-void RootComponent::SetSelectedComponent(const uint32_t componentUUID)
+void RootComponent::SetSelectedComponent(const UID componentUID)
 {
-    selectedUUID = componentUUID;
+    selectedUID = componentUID;
 }
 
 bool RootComponent::CreateComponent(const ComponentType componentType)
 {
     // TODO Call library to create the component with an id instead
-    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUUID];
+    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUID];
     if (selectedComponent != nullptr) {
-        Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), selectedUUID, uuid, selectedComponent->GetGlobalTransform());
+        Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), selectedUID, uid, selectedComponent->GetGlobalTransform());
         if (createdComponent != nullptr)
         {
-            App->GetSceneModule()->gameComponents[createdComponent->GetUUID()] = createdComponent;
+            App->GetSceneModule()->gameComponents[createdComponent->GetUID()] = createdComponent;
         
-            selectedComponent->AddChildComponent(createdComponent->GetUUID());
+            selectedComponent->AddChildComponent(createdComponent->GetUID());
             return true;
         }
     }

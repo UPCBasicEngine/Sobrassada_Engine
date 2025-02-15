@@ -93,6 +93,7 @@ bool FrustumPlanes::Intersects(const OBB& boundingBox) const
 
 bool FrustumPlanes::CheckInsideFrustum(const float3 (&corners)[8]) const
 {
+    bool allOutside = true;
 
     for (int plane = 0; plane < 6; ++plane)
     {
