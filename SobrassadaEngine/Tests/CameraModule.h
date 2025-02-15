@@ -62,9 +62,9 @@ class CameraModule : public Module
     FrustumPlanes frustumPlanes;
 
     float movementScaleFactor = DEFAULT_CAMERA_MOVEMENT_SCALE_FACTOR;
-    float cameraMoveSpeed     = DEFAULT_CAMERA_MOVMENT_SPEED;
+    float cameraMoveSpeed     = DEFAULT_CAMERA_MOVEMENT_SPEED;
     float mouseSensitivity    = DEFAULT_CAMERA_MOUSE_SENSITIVITY;
-    float zoomSensitivity     = DEFAUL_CAMERA_ZOOM_SENSITIVITY;
+    float zoomSensitivity     = DEFAULT_CAMERA_ZOOM_SENSITIVITY;
     float currentPitchAngle   = 0.f;
 
     bool isCameraDetached     = false;
