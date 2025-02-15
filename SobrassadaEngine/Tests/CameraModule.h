@@ -22,24 +22,37 @@ class CameraModule : public Module
     update_status Update(float deltaTime) override;
     bool ShutDown() override;
 
-    const float4x4 &GetProjectionMatrix() { return projectionMatrix; }
-    const float4x4 &GetViewMatrix() { return viewMatrix; }
-    const FrustumPlanes &GetFrustrumPlanes() const { return frustumPlanes; }
+    const float4x4& GetProjectionMatrix() { return isCameraDetached ? detachedProjectionMatrix : projectionMatrix; }
+    const float4x4& GetViewMatrix() { return isCameraDetached ? detachedViewMatrix : viewMatrix; }
+
+    const float4x4& GetFrustumViewMatrix() { return viewMatrix; }
+    const float4x4& GetFrustumProjectionMatrix() { return projectionMatrix; }
+    const FrustumPlanes& GetFrustrumPlanes() const { return frustumPlanes; }
+
+    bool IsCameraDetached() const { return isCameraDetached; }
 
     void SetAspectRatio(float newAspectRatio);
 
   private:
     void EventTriggered();
+    void ToggleDetachedCamera();
     void MoveCamera();
 
   private:
     Frustum camera;
+    Frustum detachedCamera;
+
     AABB frustumAABB;
 
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
+
+    float4x4 detachedViewMatrix;
+    float4x4 detachedProjectionMatrix;
+
     FrustumPlanes frustumPlanes;
 
-    float speedBase     = 0.01f;
-    float movementSpeed = 0.01f;
+    float speedBase       = 0.01f;
+    float movementSpeed   = 0.01f;
+    bool isCameraDetached = false;
 };

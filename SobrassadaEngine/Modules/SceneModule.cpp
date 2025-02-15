@@ -82,7 +82,7 @@ bool SceneModule::Init()
     MOCKUP_libraryTextures["Baker house texture"] = bakerHouseTextureID;
 
     // SPATIAL_PARTITIONING TESTING
-    CreateHouseGameObject(1000);
+    CreateHouseGameObject(2000);
     CreateSpatialDataStruct();
 
     return true;
@@ -109,8 +109,8 @@ update_status SceneModule::Render(float deltaTime)
         gameObject->Render();
     }
 
-    RenderBoundingBoxes();
-    // RenderOctree();
+    //RenderBoundingBoxes();
+    //RenderOctree();
 
     return UPDATE_CONTINUE;
 }
@@ -182,8 +182,6 @@ void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameOb
 
         if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
     }
-
-    int i = 0;
 }
 
 void SceneModule::RenderHierarchyUI(bool& hierarchyMenu)

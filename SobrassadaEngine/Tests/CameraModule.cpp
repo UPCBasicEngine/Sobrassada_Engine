@@ -40,8 +40,23 @@ bool CameraModule::Init()
     projectionMatrix         = camera.ProjectionMatrix();
 
     std::function<void(void)> fPressed = std::bind(&CameraModule::EventTriggered, this);
+    std::function<void(void)> oPressed = std::bind(&CameraModule::ToggleDetachedCamera, this);
 
     App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_F, fPressed);
+    App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_O, oPressed);
+
+    detachedCamera.type              = FrustumType::PerspectiveFrustum;
+
+    detachedCamera.pos               = float3(0, 1, 5);
+    detachedCamera.front             = -float3::unitZ;
+    detachedCamera.up                = float3::unitY;
+    detachedCamera.nearPlaneDistance = 0.1f;
+    detachedCamera.farPlaneDistance  = 100.f;
+    detachedCamera.horizontalFov     = (float)HFOV * DEGTORAD;
+    camera.verticalFov               = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
+
+    detachedViewMatrix               = detachedCamera.ViewMatrix();
+    detachedProjectionMatrix         = detachedCamera.ProjectionMatrix();
 
     return true;
 }
@@ -61,8 +76,11 @@ bool CameraModule::ShutDown()
 
 void CameraModule::SetAspectRatio(float newAspectRatio)
 {
-    camera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);
-    projectionMatrix   = camera.ProjectionMatrix();
+    camera.verticalFov         = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);
+    detachedCamera.verticalFov = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);
+
+    projectionMatrix           = camera.ProjectionMatrix();
+    detachedProjectionMatrix   = detachedCamera.ProjectionMatrix();
 
     frustumPlanes.UpdateFrustumPlanes(viewMatrix, projectionMatrix);
 }
@@ -72,6 +90,17 @@ void CameraModule::EventTriggered()
     GLOG("Event Trigered!!!!")
 }
 
+void CameraModule::ToggleDetachedCamera()
+{
+    isCameraDetached = !isCameraDetached;
+
+    if (isCameraDetached)
+    {
+        detachedCamera.pos   = camera.pos;
+        detachedCamera.front = camera.front;
+        detachedCamera.up    = camera.up;
+    }
+}
 
 void CameraModule::MoveCamera()
 {
@@ -87,29 +116,35 @@ void CameraModule::MoveCamera()
         // TRANSLATION
         if (App->GetInputModule()->GetKey(SDL_SCANCODE_W))
         {
-            camera.pos += camera.front * movementSpeed;
+            if (isCameraDetached) detachedCamera.pos += detachedCamera.front * movementSpeed;
+            else camera.pos += camera.front * movementSpeed;
         }
         if (App->GetInputModule()->GetKey(SDL_SCANCODE_S))
         {
-            camera.pos -= camera.front * movementSpeed;
+            if (isCameraDetached) detachedCamera.pos -= detachedCamera.front * movementSpeed;
+            else camera.pos -= camera.front * movementSpeed;
         }
 
         if (App->GetInputModule()->GetKey(SDL_SCANCODE_A))
         {
-            camera.pos -= camera.WorldRight() * movementSpeed;
+            if (isCameraDetached) detachedCamera.pos -= detachedCamera.WorldRight() * movementSpeed;
+            else camera.pos -= camera.WorldRight() * movementSpeed;
         }
         if (App->GetInputModule()->GetKey(SDL_SCANCODE_D))
         {
-            camera.pos += camera.WorldRight() * movementSpeed;
+            if (isCameraDetached) detachedCamera.pos += detachedCamera.WorldRight() * movementSpeed;
+            else camera.pos += camera.WorldRight() * movementSpeed;
         }
 
         if (App->GetInputModule()->GetKey(SDL_SCANCODE_E))
         {
-            camera.pos += camera.up * movementSpeed;
+            if (isCameraDetached) detachedCamera.pos += detachedCamera.up * movementSpeed;
+            else camera.pos += camera.up * movementSpeed;
         }
         if (App->GetInputModule()->GetKey(SDL_SCANCODE_Q))
         {
-            camera.pos -= camera.up * movementSpeed;
+            if (isCameraDetached) detachedCamera.pos -= detachedCamera.up * movementSpeed;
+            else camera.pos -= camera.up * movementSpeed;
         }
     }
 
@@ -122,7 +157,8 @@ void CameraModule::MoveCamera()
 
             if (mouseY != 0)
             {
-                camera.pos += camera.front * mouseY * movementSpeed;
+                if (isCameraDetached) detachedCamera.pos += detachedCamera.front * mouseY * movementSpeed;
+                else camera.pos += camera.front * mouseY * movementSpeed;
             }
         }
         else
@@ -134,21 +170,44 @@ void CameraModule::MoveCamera()
             if (mouseX != 0)
             {
                 Quat yawRotation = Quat::RotateY(-mouseX * movementSpeed);
-                camera.front     = yawRotation.Mul(camera.front).Normalized();
-                camera.up        = yawRotation.Mul(camera.up).Normalized();
+
+                if (isCameraDetached)
+                {
+                    detachedCamera.front = yawRotation.Mul(detachedCamera.front).Normalized();
+                    detachedCamera.up    = yawRotation.Mul(detachedCamera.up).Normalized();
+                }
+                else
+                {
+                    camera.front = yawRotation.Mul(camera.front).Normalized();
+                    camera.up    = yawRotation.Mul(camera.up).Normalized();
+                }
             }
 
             if (mouseY != 0)
             {
-                if (camera.front.y < 0.9f || camera.front.y > -0.9f)
+
+                if (isCameraDetached)
                 {
-                    Quat pitchRotation = Quat::RotateAxisAngle(camera.WorldRight(), -mouseY * movementSpeed);
-                    camera.front       = pitchRotation.Mul(camera.front).Normalized();
-                    camera.up          = pitchRotation.Mul(camera.up).Normalized();
+                    Quat pitchRotation = Quat::RotateAxisAngle(detachedCamera.WorldRight(), -mouseY * movementSpeed);
+                    if (detachedCamera.front.y < 0.9f || detachedCamera.front.y > -0.9f)
+                    {
+                        detachedCamera.front = pitchRotation.Mul(detachedCamera.front).Normalized();
+                        detachedCamera.up    = pitchRotation.Mul(detachedCamera.up).Normalized();
+                    }
+                }
+                else
+                {
+                    if (camera.front.y < 0.9f || camera.front.y > -0.9f)
+                    {
+                        Quat pitchRotation = Quat::RotateAxisAngle(camera.WorldRight(), -mouseY * movementSpeed);
+                        camera.front       = pitchRotation.Mul(camera.front).Normalized();
+                        camera.up          = pitchRotation.Mul(camera.up).Normalized();
+                    }
                 }
             }
         }
     }
 
-    viewMatrix = camera.ViewMatrix();
+    viewMatrix         = camera.ViewMatrix();
+    detachedViewMatrix = detachedCamera.ViewMatrix();
 }

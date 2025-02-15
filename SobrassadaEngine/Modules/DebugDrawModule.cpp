@@ -615,6 +615,16 @@ update_status DebugDrawModule::Render(float deltaTime)
     int width  = 0;
     int height = 0;
 
+    if (App->GetCameraModule()->IsCameraDetached())
+    {
+        float4x4 frustumProj       = App->GetCameraModule()->GetFrustumProjectionMatrix();
+        float4x4 frustumView       = App->GetCameraModule()->GetFrustumViewMatrix();
+        float4x4 inverseClipMatrix = frustumProj * frustumView;
+        inverseClipMatrix.Inverse();
+
+        dd::frustum(inverseClipMatrix, float3(1.f, 1.f, 1.f));
+    }
+
     SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
 
     Draw(view, proj, width, height);
