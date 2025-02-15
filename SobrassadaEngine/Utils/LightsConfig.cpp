@@ -184,11 +184,11 @@ void LightsConfig::SetPointLightsShaderData() const
     std::vector<Lights::PointLightShaderData> points;
     for (int i = 0; i < pointLights.size(); ++i)
     {
-        // Fill struct data
-        points.emplace_back(Lights::PointLightShaderData(
-            float4(pointLights[i].GetGlobalTransform().position, pointLights[i].GetRange()),
-            float4(pointLights[i].GetColor(), pointLights[i].GetIntensity())
-        ));
+        if (pointLights[i] != nullptr)
+        {
+            // Fill struct data
+            points.emplace_back(Lights::PointLightShaderData(float4(pointLights[i]->GetGlobalTransform().position, pointLights[i]->GetRange()), float4(pointLights[i]->GetColor(), pointLights[i]->GetIntensity())));
+        }
     }
 
     // This only works whith a constant number of lights. If a new light is added, the buffer must be resized
@@ -212,9 +212,9 @@ void LightsConfig::SetSpotLightsShaderData() const
     {
         // Fill struct data
         spots.emplace_back(Lights::SpotLightShaderData(
-            float4(spotLights[i].GetGlobalTransform().position, spotLights[i].GetRange()),
-            float4(spotLights[i].GetColor(), spotLights[i].GetIntensity()), float3(spotLights[i].GetDirection()),
-            spotLights[i].GetInnerAngle(), spotLights[i].GetOuterAngle()
+            float4(spotLights[i]->GetGlobalTransform().position, spotLights[i]->GetRange()),
+            float4(spotLights[i]->GetColor(), spotLights[i]->GetIntensity()), float3(spotLights[i]->GetDirection()),
+            spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle()
         ));
     }
 
@@ -243,6 +243,11 @@ void LightsConfig::AddPointLight(PointLight* newPoint)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
     int bufferSize = sizeof(Lights::PointLightShaderData) * pointLights.size() + 16;
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+
+    GLOG(
+        "Add point light with uid: %d. Point lights count: %d. Buffer size: %d", newPoint->GetUID(), pointLights.size(),
+        bufferSize
+    );
 }
 void LightsConfig::AddSpotLight(SpotLight* newSpot)
 {
@@ -252,6 +257,11 @@ void LightsConfig::AddSpotLight(SpotLight* newSpot)
     int bufferSize =
         (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16; // 12 bytes offset between spotlights
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+
+    GLOG(
+        "Add spot light with uid: %d. Spot lights count: %d. Buffer size: %d", newSpot->GetUID(), spotLights.size(),
+        bufferSize
+    );
 }
 
 void LightsConfig::RemoveDirectionalLight()
@@ -261,25 +271,46 @@ void LightsConfig::RemoveDirectionalLight()
 
 void LightsConfig::RemovePointLight(UID pointUid)
 {
+    GLOG("Remove point light with UID: %d", pointUid);
     for (int i = 0; i < pointLights.size(); ++i)
     {
+        //NO HO TROBA MAI PERQUE ES NULLPTR
         if (pointLights[i]->GetUID() == pointUid)
         {
             // Not optimal to remove an element which is not last from a vector, but this will not happen often
-            delete pointLights[i];
+            GLOG("Remove point light in index: %d", i);
             pointLights.erase(pointLights.begin() + i);
+            // No need to delete the pointer, because this function is triggered by the destructor and will be deleted afterwards
         }
     }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
+    int bufferSize = sizeof(Lights::PointLightShaderData) * pointLights.size() + 16;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+
+    GLOG("Point lights size: %d. Buffer size: %d", pointLights.size(), bufferSize);
+
 }
 void LightsConfig::RemoveSpotLight(UID spotUid)
 {
+    GLOG("Remove spot light with UID: %d", spotUid);
     for (int i = 0; i < spotLights.size(); ++i)
     {
-        if (pointLights[i]->GetUID() == spotUid)
+        if (spotLights[i]->GetUID() == spotUid)
         {
             // Not optimal to remove an element which is not last from a vector, but this will not happen often
-            delete spotLights[i];
+            GLOG("Remove spot light in index: %d", i);
             spotLights.erase(spotLights.begin() + i);
+            // No need to delete the pointer, because this function is triggered by the destructor and will be deleted afterwards
+
         }
     }
+
+    // Resize lights buffer
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
+    int bufferSize =
+        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16; // 12 bytes offset between spotlights
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+
+    GLOG("Spot lights size: %d. Buffer size: %d", spotLights.size(), bufferSize);
 }

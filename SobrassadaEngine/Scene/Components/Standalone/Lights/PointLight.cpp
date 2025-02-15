@@ -13,7 +13,7 @@ PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform &par
 {
     range      = 1;
     gizmosMode = 0;
-    App->GetSceneModule()->GetLightsConfig()->AddPointLight(this)
+    App->GetSceneModule()->GetLightsConfig()->AddPointLight(this);
 }
 
 // PointLight::PointLight(const float3 &position, const float range) : LightComponent()
@@ -23,7 +23,9 @@ PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform &par
 //     gizmosMode     = 0;
 // }
 
-PointLight::~PointLight() {}
+PointLight::~PointLight() {
+    App->GetSceneModule()->GetLightsConfig()->RemovePointLight(uid);
+}
 
 void PointLight::RenderEditorInspector()
 {

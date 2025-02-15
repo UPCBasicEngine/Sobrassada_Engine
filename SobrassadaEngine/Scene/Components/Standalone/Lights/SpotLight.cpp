@@ -27,7 +27,10 @@ SpotLight::SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &paren
 //     outerAngle      = 20;
 // }
 
-SpotLight::~SpotLight() {}
+SpotLight::~SpotLight()
+{
+    App->GetSceneModule()->GetLightsConfig()->RemoveSpotLight(uid);
+}
 
 void SpotLight::RenderEditorInspector()
 {

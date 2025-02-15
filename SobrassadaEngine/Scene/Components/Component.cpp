@@ -259,7 +259,7 @@ RootComponent * Component::GetRootComponent()
         rootComponent = dynamic_cast<RootComponent* >(App->GetSceneModule()->gameComponents[uidRoot]);
         if (rootComponent == nullptr)
         {
-            GLOG("Could not load parent with UID: %s - Object does not exist", uidRoot)
+            //GLOG("Could not load parent with UID: %s - Object does not exist", uidRoot)
         }
     }
     return rootComponent;
@@ -272,7 +272,7 @@ AABBUpdatable * Component::GetParent()
         parent = App->GetSceneModule()->GetTargetForAABBUpdate(uidParent);
         if (parent == nullptr)
         {
-            GLOG("Could not load parent with UID: %s - Object does not exist", uidParent)
+           // GLOG("Could not load parent with UID: %s - Object does not exist", uidParent)
         }
     }
     return parent;
@@ -291,7 +291,7 @@ std::vector<Component *> & Component::GetChildComponents()
                 childComponents.push_back(childComponent);
             } else
             {
-                GLOG("Could not load component with UID: %s - Component does not exist", child)
+               // GLOG("Could not load component with UID: %s - Component does not exist", child)
             }
         }
     }
