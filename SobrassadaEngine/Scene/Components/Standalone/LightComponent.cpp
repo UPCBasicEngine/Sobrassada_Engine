@@ -1,4 +1,7 @@
 #include "LightComponent.h"
+
+#include "LightsConfig.h"
+
 #include "ImGui.h"
 
 LightComponent::LightComponent(

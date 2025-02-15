@@ -1,12 +1,15 @@
 #include "DirectionalLight.h"
+#include "Application.h"
 #include "DebugDrawModule.h"
 #include "Math/Quat.h"
+#include "SceneModule.h"
 #include "imgui.h"
 
 DirectionalLight::DirectionalLight(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform)
     : LightComponent(uid, uidParent, uidRoot, "Directional Light", COMPONENT_DIRECTIONAL_LIGHT, parentGlobalTransform)
 {
     direction = -float3::unitY;
+    App->GetSceneModule()->GetLightsConfig()->AddDirectionalLight(this);
 }
 
 DirectionalLight::~DirectionalLight()

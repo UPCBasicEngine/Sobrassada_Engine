@@ -1,6 +1,8 @@
 #include "SpotLight.h"
 
 #include "DebugDrawModule.h"
+#include "Application.h"
+#include "SceneModule.h"
 
 #include "ImGui.h"
 #include "Math/Quat.h"
@@ -12,6 +14,8 @@ SpotLight::SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &paren
     range      = 3;
     innerAngle = 10;
     outerAngle = 20;
+    
+    App->GetSceneModule()->GetLightsConfig()->AddSpotLight(this);
 }
 
 // SpotLight::SpotLight(const float3 &position, const float3 &direction) : LightComponent()
@@ -57,6 +61,7 @@ void SpotLight::Render()
     const float innerRads      = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
     const float outerRads      = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
 
+    // Would be more optimal to only update the direction when rotation is modified
     float4x4 rot = float4x4::FromQuat(
         Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z)
     );

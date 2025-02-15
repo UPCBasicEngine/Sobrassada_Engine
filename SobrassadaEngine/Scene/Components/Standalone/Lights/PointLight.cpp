@@ -1,5 +1,8 @@
 #include "PointLight.h"
 
+#include "Application.h"
+#include "SceneModule.h"
+
 #include "DebugDrawModule.h"
 #include "ImGui.h"
 
@@ -10,6 +13,7 @@ PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform &par
 {
     range      = 1;
     gizmosMode = 0;
+    App->GetSceneModule()->GetLightsConfig()->AddPointLight(this)
 }
 
 // PointLight::PointLight(const float3 &position, const float range) : LightComponent()

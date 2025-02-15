@@ -5,6 +5,8 @@
 #include "Math/float3.h"
 #include "Math/float4.h"
 
+#include <memory>
+
 namespace Math
 {
 class float4x4;
@@ -69,12 +71,14 @@ class LightsConfig
 
     void InitLightBuffers();
     void SetLightsShaderData() const;
-    void AddDirectionalLight();
+
+    void AddDirectionalLight(DirectionalLight* newDirectional);
+    void AddPointLight(PointLight* newPoint);
+    void AddSpotLight(SpotLight* newSpot);
+
     void RemoveDirectionalLight();
-    void AddPointLight();
-    void RemovePointLight();
-    void AddSpotLight();
-    void RemoveSpotLight();
+    void RemovePointLight(UID pointUid);
+    void RemoveSpotLight(UID spotUid);
 
   private:
     unsigned int LoadSkyboxTexture(const char *filename) const;
@@ -95,6 +99,6 @@ class LightsConfig
     unsigned int spotBufferId;
 
     DirectionalLight *directionalLight = nullptr;
-    std::vector<PointLight> pointLights;
-    std::vector<SpotLight> spotLights;
+    std::vector<PointLight*> pointLights;
+    std::vector<SpotLight*> spotLights;
 };
