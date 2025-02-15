@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <Libs/rapidjson/document.h>
 #include <Geometry/AABB.h>
 
 class RootComponent;
@@ -25,6 +26,8 @@ public:
     bool CreateRootComponent();
 
     void OnEditor();
+
+    void Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator)const;
 
     void SaveToLibrary();
 

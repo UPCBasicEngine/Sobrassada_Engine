@@ -140,7 +140,7 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
             UID parentUID = GetGameObjectByUUID(selectedGameObjectUUID)->GetParent();
             GameObject *parentGameObject = GetGameObjectByUUID(parentUID);
             RemoveGameObjectHierarchy(selectedGameObjectUUID);
-            parentGameObject->PassAABBUpdateToParent(); // TODO: check if it works
+            //parentGameObject->PassAABBUpdateToParent(); // TODO: check if it works
         }
             
     }

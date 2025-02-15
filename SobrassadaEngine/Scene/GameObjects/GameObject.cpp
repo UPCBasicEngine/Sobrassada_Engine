@@ -70,6 +70,23 @@ bool GameObject::RemoveGameObject(UID gameObjectUUID)
 
 void GameObject::OnEditor() {}
 
+void GameObject::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
+{
+    targetState.AddMember("UID", uuid, allocator);
+    targetState.AddMember("ParentUID", parentUUID, allocator);
+    targetState.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
+    
+    rapidjson::Value valChildren(rapidjson::kArrayType);
+
+    for (const UID child : children)
+    {
+        valChildren.PushBack(child, allocator);
+    }
+
+    targetState.AddMember("Children", valChildren, allocator);
+    targetState.AddMember("RootComponentUID", rootComponent->GetUID(), allocator);
+}
+
 void GameObject::SaveToLibrary() {}
 
 void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID) 
@@ -163,7 +180,7 @@ void GameObject::RenderContextMenu()
         if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Delete"))
         {
             App->GetSceneModule()->RemoveGameObjectHierarchy(uuid);
-            PassAABBUpdateToParent(); //TODO: check if it works
+            //PassAABBUpdateToParent(); //TODO: check if it works
         }
 
         ImGui::EndPopup();
