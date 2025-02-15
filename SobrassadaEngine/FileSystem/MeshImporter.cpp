@@ -164,7 +164,7 @@ namespace MeshImporter
         // false = append
         std::string fileName       = FileSystem::GetFileNameWithoutExtension(filePath);
         std::string savePath       = MESHES_PATH + name + MESH_EXTENSION;
-        unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
+        unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, true);
 
         delete[] fileBuffer;
 
