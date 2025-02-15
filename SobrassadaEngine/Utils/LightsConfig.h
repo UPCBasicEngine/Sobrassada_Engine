@@ -90,6 +90,12 @@ class LightsConfig
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;
 
+    void GetAllSceneLights();
+
+    void GetAllPointLights();
+    void GetAllSpotLights();
+    void GetDirectionalLight();
+
 
   private:
     unsigned int skyboxVao;

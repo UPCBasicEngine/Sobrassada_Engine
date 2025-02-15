@@ -4,6 +4,7 @@
 #include "CameraModule.h"
 #include "OpenGLModule.h"
 #include "ShaderModule.h"
+#include "SceneModule.h"
 #include "TextureModuleTest.h"
 #include "EditorUIModule.h"
 #include "LibraryModule.h"
@@ -145,6 +146,8 @@ void LightsConfig::EditorParams()
 
 void LightsConfig::InitLightBuffers()
 {
+    GetAllSceneLights();
+
     glGenBuffers(1, &ambientBufferId);
 
     // Buffer for the Directional Light
@@ -331,4 +334,61 @@ void LightsConfig::RemoveSpotLight(UID spotUid)
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 
     GLOG("Spot lights size: %d. Buffer size: %d", spotLights.size(), bufferSize);
+}
+
+void LightsConfig::GetAllSceneLights()
+{
+    GetDirectionalLight();
+    GetAllPointLights();
+    GetAllSpotLights();
+}
+
+void LightsConfig::GetAllPointLights()
+{
+    SceneModule* scene = App->GetSceneModule();
+
+    // Iterate through all the components and get the point lights
+    for (auto& component : scene->gameComponents)
+    {
+        if (component.second->GetType() == COMPONENT_POINT_LIGHT)
+        {
+            GLOG("Add point light");
+            pointLights.push_back(static_cast<PointLight*>(component.second));
+        }
+    }
+
+    GLOG("Point lights count: %d", pointLights.size());
+}
+
+void LightsConfig::GetAllSpotLights()
+{
+    SceneModule* scene = App->GetSceneModule();
+
+    // Iterate through all the components and get the spot lights
+    for (auto& component : scene->gameComponents)
+    {
+        if (component.second->GetType() == COMPONENT_SPOT_LIGHT)
+        {
+            GLOG("Add spotlight")
+            spotLights.push_back(static_cast<SpotLight*>(component.second));
+        }
+    }
+
+    GLOG("Spot lights count: %d", spotLights.size());
+}
+
+void LightsConfig::GetDirectionalLight()
+{
+    SceneModule* scene = App->GetSceneModule();
+
+     // Iterate through all the components and get the spot lights
+    for (auto& component : scene->gameComponents)
+    {
+        if (component.second->GetType() == COMPONENT_DIRECTIONAL_LIGHT)
+        {
+            GLOG("Add directional light");
+            directionalLight = static_cast<DirectionalLight*>(component.second);
+            break;
+        }
+    }
 }
