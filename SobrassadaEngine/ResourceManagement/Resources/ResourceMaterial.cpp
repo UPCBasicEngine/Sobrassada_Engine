@@ -1,9 +1,9 @@
 ﻿#include "ResourceMaterial.h"
 
 #include "Application.h"
+#include "DirectXTex/DirectXTex.h"
 #include "TextureModuleTest.h"
 #include "imgui.h"
-#include "DirectXTex/DirectXTex.h"
 
 #include <glew.h>
 #include <unordered_set>
@@ -13,15 +13,18 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include <tiny_gltf.h>
 
-ResourceMaterial::ResourceMaterial(UID uid, const std::string & name): Resource(uid, name, ResourceType::Material){}
-
-ResourceMaterial::~ResourceMaterial(){
-     FreeMaterials();
+ResourceMaterial::ResourceMaterial(UID uid, const std::string& name) : Resource(uid, name, ResourceType::Material)
+{
 }
 
-void ResourceMaterial::OnEditorUpdate() 
-{ 
-     bool updated = false; 
+ResourceMaterial::~ResourceMaterial()
+{
+    FreeMaterials();
+}
+
+void ResourceMaterial::OnEditorUpdate()
+{
+    bool updated = false;
 
     if (hasDiffuseTexture)
     {
@@ -34,7 +37,6 @@ void ResourceMaterial::OnEditorUpdate()
     }
 
     updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
-       
 
     if (hasSpecularTexture)
     {
@@ -53,135 +55,133 @@ void ResourceMaterial::OnEditorUpdate()
     if (updated) UpdateUBO();
 }
 
-TextureInfo ResourceMaterial::GetTexture(const tinygltf::Model sourceModel, int textureIndex, const char* modelPath) {
-	const tinygltf::Texture &texture = sourceModel.textures[textureIndex];
-    const tinygltf::Image &image     = sourceModel.images[texture.source];
+TextureInfo ResourceMaterial::GetTexture(const tinygltf::Model sourceModel, int textureIndex, const char* modelPath)
+{
+    const tinygltf::Texture& texture = sourceModel.textures[textureIndex];
+    const tinygltf::Image& image     = sourceModel.images[texture.source];
     std::unordered_set<int> loadedIndices;
     TextureInfo info;
-                    
+
     if (loadedIndices.find(texture.source) == loadedIndices.end())
     {
         std::string filePath     = std::string(modelPath);
         char usedSeparator       = '\\';
 
-        int fileLocationPosition = (int)filePath.find_last_of(usedSeparator);
+        int fileLocationPosition = static_cast<int>(filePath.find_last_of(usedSeparator));
         if (fileLocationPosition == -1)
         {
             usedSeparator        = '/';
-            fileLocationPosition = filePath.find_last_of(usedSeparator);
+            fileLocationPosition = static_cast<int>(filePath.find_last_of(usedSeparator));
         }
-                        
+
         if (fileLocationPosition == -1) return info;
 
         std::string fileLocation      = filePath.substr(0, fileLocationPosition) + usedSeparator;
         std::string texturePathString = fileLocation.append(image.uri);
 
-        std::wstring wideUri       = std::wstring(texturePathString.begin(), texturePathString.end());
-        const wchar_t *texturePath = wideUri.c_str();
+        std::wstring wideUri          = std::wstring(texturePathString.begin(), texturePathString.end());
+        const wchar_t* texturePath    = wideUri.c_str();
 
         DirectX::TexMetadata textureMetadata;
         unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
         if (textureId)
-        {   
+        {
             info.textureID = textureId;
-            info.width = textureMetadata.width;
-            info.height = textureMetadata.height;
+            info.width     = static_cast<int>(textureMetadata.width);
+            info.height    = static_cast<int>(textureMetadata.height);
             loadedIndices.insert(texture.source);
 
-			return info;
+            return info;
         }
     }
 }
 
-void ResourceMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, const tinygltf::Model &sourceModel, const char *modelPath)
+void ResourceMaterial::LoadMaterial(
+    const tinygltf::Material& srcMaterial, const tinygltf::Model& sourceModel, const char* modelPath
+)
 {
-    name = srcMaterial.name;
+    name                   = srcMaterial.name;
     unsigned int textureId = 0;
-        
-	auto it = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
+
+    auto it                = srcMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
     if (it != srcMaterial.extensions.end())
     {
-        const tinygltf::Value &ext = it->second;
+        const tinygltf::Value& ext = it->second;
 
         if (ext.Has("diffuseFactor"))
         {
-            const tinygltf::Value &diffuseValue = ext.Get("diffuseFactor");
+            const tinygltf::Value& diffuseValue = ext.Get("diffuseFactor");
             if (diffuseValue.IsArray() && diffuseValue.ArrayLen() == 4)
             {
-                material.diffColor =
-                {
-                        static_cast<float>(diffuseValue.Get(0).Get<double>()),
-                        static_cast<float>(diffuseValue.Get(1).Get<double>()),
-                        static_cast<float>(diffuseValue.Get(2).Get<double>()),
-                        static_cast<float>(diffuseValue.Get(3).Get<double>())
+                material.diffColor = {
+                    static_cast<float>(diffuseValue.Get(0).Get<double>()),
+                    static_cast<float>(diffuseValue.Get(1).Get<double>()),
+                    static_cast<float>(diffuseValue.Get(2).Get<double>()),
+                    static_cast<float>(diffuseValue.Get(3).Get<double>())
                 };
             }
         }
 
         if (ext.Has("specularFactor"))
         {
-            const tinygltf::Value &specularValue = ext.Get("specularFactor");
+            const tinygltf::Value& specularValue = ext.Get("specularFactor");
             if (specularValue.IsArray() && specularValue.ArrayLen() == 3)
             {
-                material.specColor =
-                {
+                material.specColor = {
                     static_cast<float>(specularValue.Get(0).Get<double>()),
                     static_cast<float>(specularValue.Get(1).Get<double>()),
-                    static_cast<float>(specularValue.Get(2).Get<double>()),
-                    1.0f
+                    static_cast<float>(specularValue.Get(2).Get<double>()), 1.0f
                 };
             }
         }
 
         if (ext.Has("glossinessFactor"))
         {
-            material.shininess = ext.Get("glossinessFactor").Get<double>();
+            material.shininess = static_cast<float>(ext.Get("glossinessFactor").Get<double>());
         }
 
         if (ext.Has("specularGlossinessTexture"))
         {
             int textureIndex = ext.Get("specularGlossinessTexture").Get("index").Get<int>();
-                
+
             if (textureIndex >= 0)
             {
-                hasSpecularTexture = true;
+                hasSpecularTexture        = true;
 
-                specularTexture = GetTexture(sourceModel, textureIndex, modelPath);
+                specularTexture           = GetTexture(sourceModel, textureIndex, modelPath);
                 material.shininessInAlpha = true;
             }
         }
 
-		if (ext.Has("diffuseTexture"))
+        if (ext.Has("diffuseTexture"))
         {
             int textureIndex = ext.Get("diffuseTexture").Get("index").Get<int>();
-                
+
             if (textureIndex >= 0)
             {
-				hasDiffuseTexture = true;
+                hasDiffuseTexture = true;
 
-                diffuseTexture = GetTexture(sourceModel, textureIndex, modelPath);
+                diffuseTexture    = GetTexture(sourceModel, textureIndex, modelPath);
             }
         }
     }
 
     else
-    {  
-        int textureIndex       = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
+    {
+        int textureIndex = srcMaterial.pbrMetallicRoughness.baseColorTexture.index;
         if (textureIndex < 0)
         {
-            material.diffColor= 
-            {
+            material.diffColor = {
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[0]),
                 static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[1]),
-                static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[2]),
-                1.0f
+                static_cast<float>(srcMaterial.pbrMetallicRoughness.baseColorFactor[2]), 1.0f
             };
         }
         else
         {
-			hasDiffuseTexture = true;
+            hasDiffuseTexture = true;
 
-            diffuseTexture = GetTexture(sourceModel, textureIndex, modelPath);
+            diffuseTexture    = GetTexture(sourceModel, textureIndex, modelPath);
         }
     }
 
@@ -191,11 +191,10 @@ void ResourceMaterial::LoadMaterial(const tinygltf::Material &srcMaterial, const
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-
-void ResourceMaterial::RenderMaterial(int program) 
-{    
+void ResourceMaterial::RenderMaterial(int program)
+{
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
- 
+
     if (hasDiffuseTexture)
     {
         glActiveTexture(GL_TEXTURE0);
@@ -213,14 +212,14 @@ void ResourceMaterial::RenderMaterial(int program)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void ResourceMaterial::FreeMaterials() 
+void ResourceMaterial::FreeMaterials()
 {
     glDeleteTextures(1, &diffuseTexture.textureID);
-	glDeleteTextures(1, &specularTexture.textureID);
-	glDeleteBuffers(1, &ubo);
+    glDeleteTextures(1, &specularTexture.textureID);
+    glDeleteBuffers(1, &ubo);
 }
 
-void ResourceMaterial::UpdateUBO() 
+void ResourceMaterial::UpdateUBO()
 {
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &material);

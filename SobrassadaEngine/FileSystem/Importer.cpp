@@ -4,9 +4,11 @@
 #include "LibraryModule.h"
 #include "MeshImporter.h"
 
+//change to enum
 ResourceMesh* Importer::Load(UID uid)
 {
-    const std::string path = App->GetLibraryModule()->GetResourcePath(uid);
+    //this cannot happen before it's loaded into the resources
+    
     const ResourceType type = Resource::GetResourceTypeForUID(uid);
 
     switch (type) {
@@ -17,10 +19,12 @@ ResourceMesh* Importer::Load(UID uid)
         case ResourceType::Material:
             break;  // TODO Material loadMaterial()
         case ResourceType::Mesh:
-            return MeshImporter::LoadMesh(path);
+            return MeshImporter::LoadMesh(uid);
+            
         default:
             GLOG("Unknown resource type: %d", type)
             return nullptr;
     }
+
     return nullptr;
 }

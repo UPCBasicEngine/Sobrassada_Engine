@@ -11,6 +11,7 @@
 #include "../Scene/Components/Standalone/Lights/PointLight.h"
 #include "../Scene/Components/Standalone/Lights/SpotLight.h"
 #include "glew.h"
+#include <cstddef>
 
 LightsConfig::LightsConfig()
 {
@@ -154,7 +155,7 @@ void LightsConfig::InitLightBuffers()
 
     glGenBuffers(1, &pointBufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
-    int bufferSize = sizeof(Lights::PointLightShaderData) * pointLights.size() + 16;
+    size_t bufferSize = sizeof(Lights::PointLightShaderData) * pointLights.size() + 16;
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 
     glGenBuffers(1, &spotBufferId);
@@ -207,7 +208,7 @@ void LightsConfig::SetPointLightsShaderData() const
     }
 
     // This only works whith a constant number of lights. If a new light is added, the buffer must be resized
-    int count = points.size();
+    int count = static_cast<int>(points.size());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
     int offset = 16; // Byte start offset for the point light array in the SSBO
@@ -234,7 +235,7 @@ void LightsConfig::SetSpotLightsShaderData() const
     }
 
     // This only works whith a constant number of lights. If a new light is added, the buffer must be resized
-    int count = spots.size();
+    int count = static_cast<int>(spots.size());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
     int offset = 16; // Byte start offset for the point light array in the SSBO

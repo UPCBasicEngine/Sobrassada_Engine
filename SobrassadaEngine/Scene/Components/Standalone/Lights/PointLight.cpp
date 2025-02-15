@@ -5,7 +5,7 @@
 
 #include <vector>
 
-PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform)
+PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform)
     : LightComponent(uid, uidParent, uidRoot, "Point Light", COMPONENT_POINT_LIGHT, parentGlobalTransform)
 {
     range      = 1;
@@ -19,7 +19,9 @@ PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform &par
 //     gizmosMode     = 0;
 // }
 
-PointLight::~PointLight() {}
+PointLight::~PointLight()
+{
+}
 
 void PointLight::RenderEditorInspector()
 {
@@ -39,10 +41,12 @@ void PointLight::RenderEditorInspector()
 
         ImGui::Text("Gizmos mode");
         if (ImGui::RadioButton("Lines", &gizmosMode, 0))
-            ;
+        {
+        }
         ImGui::SameLine();
         if (ImGui::RadioButton("Sphere", &gizmosMode, 1))
-            ;
+        {
+        }
     }
 }
 
@@ -61,10 +65,12 @@ void PointLight::EditorParams(int index)
 
     ImGui::Text("Gizmos mode");
     if (ImGui::RadioButton("Lines", &gizmosMode, 0))
-        ;
+    {
+    }
     ImGui::SameLine();
     if (ImGui::RadioButton("Sphere", &gizmosMode, 1))
-        ;
+    {
+    }
 
     ImGui::End();
 }
@@ -105,7 +111,7 @@ void PointLight::Render()
     directions.push_back(float3(1, 1, -1).Normalized());
     directions.push_back(float3(1, -1, -1).Normalized());
 
-    DebugDrawModule *debug = App->GetDebugDrawModule();
+    DebugDrawModule* debug = App->GetDebugDrawModule();
 
     if (gizmosMode == 0)
     {
@@ -156,7 +162,7 @@ void PointLight::DrawGizmos() const
     directions.push_back(float3(1, 1, -1).Normalized());
     directions.push_back(float3(1, -1, -1).Normalized());
 
-    DebugDrawModule *debug = App->GetDebugDrawModule();
+    DebugDrawModule* debug = App->GetDebugDrawModule();
 
     if (gizmosMode == 0)
     {

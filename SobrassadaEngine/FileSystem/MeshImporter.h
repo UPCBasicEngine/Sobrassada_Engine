@@ -19,7 +19,5 @@ namespace MeshImporter
         const tinygltf::Model &model, const tinygltf::Mesh &mesh, const tinygltf::Primitive &primitive,
         const std::string &name, const char * filePath
     );
-    ResourceMesh* LoadMesh(const std::string& path);
-}; // namespace MeshImporter
-
-//save two first digits of uid to identify material or mesh 00 01
+    ResourceMesh* LoadMesh(UID meshUID);
+}; 

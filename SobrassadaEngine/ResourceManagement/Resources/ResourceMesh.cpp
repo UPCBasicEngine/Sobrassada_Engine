@@ -14,6 +14,7 @@
 #include "CameraModule.h"
 #include "ResourceMaterial.h"
 
+
 ResourceMesh::ResourceMesh(UID uid, const std::string & name): Resource(uid, name, ResourceType::Mesh)
 {
     aabb.SetNegativeInfinity();
@@ -26,12 +27,38 @@ ResourceMesh::~ResourceMesh()
 	glDeleteBuffers(1, &vao);
 }
 
-void ResourceMesh::LoadData(unsigned int mode, UID defaultMaterial, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
+void ResourceMesh::LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 {
     this->mode = mode;
-    this->defaultMaterial = defaultMaterial;
+	
+	unsigned int bufferSize = sizeof(vertices);
 
-    // TODO Create vbo, ebo and vao
+	glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * bufferSize, vertices.data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0); // Position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+
+    glEnableVertexAttribArray(1); // Tangent
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+
+    glEnableVertexAttribArray(2); // Normal
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+    glEnableVertexAttribArray(3); // Texture Coordinates
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+
+    // Unbind VAO
+    glBindVertexArray(0);
 }
 
 void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive)
@@ -268,7 +295,7 @@ if (tangentCoordCount > 0)
 
 void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int cameraUBO, ResourceMaterial* material)
 {
-	/*glUseProgram(program);
+	glUseProgram(program);
 	
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
     unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
@@ -307,6 +334,6 @@ void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int camer
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 
-	glBindVertexArray(0);*/
+	glBindVertexArray(0);
 }
 

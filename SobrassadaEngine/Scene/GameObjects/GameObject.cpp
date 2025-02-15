@@ -121,7 +121,7 @@ void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID)
         flags |= ImGuiTreeNodeFlags_Selected;
     }
 
-    ImGui::PushID(uuid);
+    ImGui::PushID(static_cast<int>(uuid));
     bool nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
 
     HandleNodeClick(selectedGameObjectUUID);

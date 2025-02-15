@@ -17,7 +17,7 @@ class WindowModule : public Module
 
     int GetWidth() const { return windowWidth; }
     int GetHeight() const { return windowHeight; }
-    SDL_DisplayMode &GetDesktopDisplayMode() const;
+    SDL_DisplayMode& GetDesktopDisplayMode();
     float GetBrightness() const;
 
     void SetBrightness(const float brightness) const;
@@ -29,10 +29,11 @@ class WindowModule : public Module
     bool SetFullDesktop(bool fullDesktop) const;
 
   public:
-    SDL_Window *window         = nullptr;
-    SDL_Surface *screenSurface = nullptr;
+    SDL_Window* window         = nullptr;
+    SDL_Surface* screenSurface = nullptr;
 
   private:
+    SDL_DisplayMode displayMode;
     int windowWidth  = SCREEN_WIDTH;
     int windowHeight = SCREEN_HEIGHT;
 };
