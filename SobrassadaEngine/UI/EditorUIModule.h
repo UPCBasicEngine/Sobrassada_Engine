@@ -31,10 +31,9 @@ class EditorUIModule : public Module
     bool ShutDown() override;
 
     bool RenderTransformWidget(Transform &localTransform, Transform &globalTransform, const Transform &parentTransform);
+    bool RenderImGuizmo(Transform& gameObjectTransform);
 
     UID RenderResourceSelectDialog(const char *id, const std::unordered_map<std::string, UID> &availableResources);
-
-    void DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model);
 
   public:
     bool hierarchyMenu = true;

@@ -62,6 +62,8 @@ public:
     void ComponentGlobalTransformUpdated() override;
     const Transform& GetGlobalTransform() const override;
 
+    const Transform& GetParentGlobalTransform() override;
+
 private:
 
 	UID parentUUID;

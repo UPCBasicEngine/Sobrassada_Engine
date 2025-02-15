@@ -141,19 +141,10 @@ void Component::RenderEditorInspector()
     {
         ImGui::Separator();
 
-        const Transform& parentTransform = GetParent() == nullptr ? Transform() : GetParent()->GetGlobalTransform();
+        const Transform& parentTransform = GetParentGlobalTransform();
         if (App->GetEditorUIModule()->RenderTransformWidget(localTransform, globalTransform, parentTransform))
         {
             OnTransformUpdate(parentTransform);
-        }
-        float4x4 model         = float4x4::FromTRS(
-            globalTransform.position,
-            Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
-            globalTransform.scale
-        );
-        if (GetRootComponent()->IsSelectedComponent(uid))
-        {
-            App->GetEditorUIModule()->DrawGizmos(App->GetCameraModule()->GetViewMatrix(), App->GetCameraModule()->GetProjectionMatrix(), model);
         }
     }
 }
@@ -190,6 +181,16 @@ void Component::RenderEditorComponentTree(const UID selectedComponentUID)
         }
         ImGui::TreePop();
     }
+}
+
+const Transform& Component::GetParentGlobalTransform()
+{
+    AABBUpdatable* parentObject = GetParent();
+    if (parentObject != nullptr)
+    {
+        return parentObject->GetGlobalTransform();
+    }
+    return Transform::identity;
 }
 
 void Component::HandleDragNDrop(){

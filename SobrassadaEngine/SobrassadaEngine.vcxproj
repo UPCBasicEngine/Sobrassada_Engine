@@ -512,6 +512,7 @@
     <ClCompile Include="Modules\ShaderModule.cpp" />
     <ClCompile Include="Tests\TextureModuleTest.cpp" />
     <ClCompile Include="Utils\Scene.cpp" />
+    <ClCompile Include="Utils\Transform.cpp" />
     <ClCompile Include="Utils\UPCTimer.cpp" />
     <ClCompile Include="Modules\WindowModule.cpp" />
   </ItemGroup>

@@ -168,6 +168,14 @@ void RootComponent::RenderEditorInspector()
     }
 }
 
+void RootComponent::RenderGuizmo()
+{
+    if (App->GetEditorUIModule()->RenderImGuizmo(localTransform))
+    {
+        OnTransformUpdate(GetParentGlobalTransform());
+    }
+}
+
 void RootComponent::Update()
 {
 }

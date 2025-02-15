@@ -25,6 +25,7 @@ public:
     void RenderComponentEditor();
     void RenderEditorComponentTree(UID selectedComponentUID) override;
     void RenderEditorInspector() override;
+    void RenderGuizmo();
 
     void Update() override;
 
