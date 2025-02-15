@@ -127,17 +127,23 @@ void SceneModule::RenderHierarchyUI(bool &hierarchyMenu)
 
         // TODO: change when filesystem defined
         gameObjectsContainer.insert({newUUID, newGameObject});
+
+        GetGameObjectByUUID(newGameObject->GetParent())->ComponentGlobalTransformUpdated();
     }
 
     if (selectedGameObjectUUID != gameObjectRootUUID)
     {
         ImGui::SameLine();
         
-        if (ImGui::Button("Delete GameObject")) 
+        if (ImGui::Button("Delete GameObject"))
+        {
+            UID parentUID = GetGameObjectByUUID(selectedGameObjectUUID)->GetParent();
+            GameObject *parentGameObject = GetGameObjectByUUID(parentUID);
             RemoveGameObjectHierarchy(selectedGameObjectUUID);
+            parentGameObject->PassAABBUpdateToParent(); // TODO: check if it works
+        }
+            
     }
-
-    //RenderGameObjectHierarchy(gameObjectRootUUID);
 
     GameObject *rootGameObject = GetGameObjectByUUID(gameObjectRootUUID);
     if (rootGameObject)

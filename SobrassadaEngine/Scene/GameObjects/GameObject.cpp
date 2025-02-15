@@ -138,7 +138,8 @@ void GameObject::HandleNodeClick(UID &selectedGameObjectUUID)
             {
                 if (UpdateGameObjectHierarchy(draggedUUID, uuid))
                 {
-                    //TODO: update the transform and AABB from all children
+                    ComponentGlobalTransformUpdated();
+                    PassAABBUpdateToParent();//TODO: check if it works
                 }
             }
         }
@@ -153,15 +154,16 @@ void GameObject::RenderContextMenu()
     {
         if (ImGui::MenuItem("New GameObject"))
         {
-            UID newUUID               = LCG().IntFast();
             GameObject *newGameObject = new GameObject(uuid, "new Game Object");
-            App->GetSceneModule()->GetGameObjectByUUID(uuid)->AddGameObject(newUUID);
-            App->GetSceneModule()->AddGameObject(newUUID, newGameObject);
+            App->GetSceneModule()->GetGameObjectByUUID(uuid)->AddGameObject(newGameObject->GetUID());
+            App->GetSceneModule()->AddGameObject(newGameObject->GetUID(), newGameObject);
+            ComponentGlobalTransformUpdated();
         }
 
         if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Delete"))
         {
             App->GetSceneModule()->RemoveGameObjectHierarchy(uuid);
+            PassAABBUpdateToParent(); //TODO: check if it works
         }
 
         ImGui::EndPopup();
