@@ -1,19 +1,18 @@
 #pragma once
 
-#include "ImGuizmo.h"
+#include "imgui_internal.h"
+#include "./Libs/ImGuizmo/ImGuizmo.h"
 #include "Module.h"
-
 #include "ResourceManagement/Resources/Resource.h"
-#include "Scene/AABBUpdatable.h"
 #include "Transform.h"
 
 #include <deque>
-#include <map>
 #include <string>
 #include <unordered_map>
 
-//namespace ImGuizmo {
-//struct matrix_t;}
+namespace ImGuizmo {
+    struct matrix_t;
+}
 
 class EditorViewport;
 class QuadtreeViewer;
@@ -87,7 +86,7 @@ class EditorUIModule : public Module
 
     std::string startPath;
     std::string libraryPath;
-
-    //static ImGuizmo::OPERATION mCurrentGizmoOperation;
-    //ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::LOCAL;
+    
+    ImGuizmo::OPERATION mCurrentGizmoOperation;
+    ImGuizmo::MODE mCurrentGizmoMode;
 };

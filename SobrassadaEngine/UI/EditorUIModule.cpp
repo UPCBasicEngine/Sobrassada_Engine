@@ -11,14 +11,12 @@
 #include "SceneModule.h"
 
 #include "Component.h"
-#include "SceneModule.h"
-
-#include "GameObject.h"
 
 #include "glew.h"
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
+
 #include <cstring>
 #include <filesystem>
 
@@ -28,10 +26,7 @@
 #define TINYGLTF_IMPLEMENTATION /* Only in one of the includes */
 #include <tiny_gltf.h>
 
-//#include "ImGuizmo.h"
 #include "InputModule.h"
-
-
 
 EditorUIModule::EditorUIModule()
     : width(0), height(0), closeApplication(false), consoleMenu(false), import(false), load(false), save(false),
@@ -56,14 +51,14 @@ bool EditorUIModule::Init()
     quadtreeViewer = new QuadtreeViewer();
 
     width          = App->GetWindowModule()->GetWidth();
-    height         = App->GetWindowModule()->GetHeight();
+    height         = App->GetWindowModule()->GetHeight(); 
 
     startPath      = std::filesystem::current_path().string();
     libraryPath    = startPath + DELIMITER + SCENES_PATH;
-
-    //App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_W, []{ mCurrentGizmoOperation = ImGuizmo::TRANSLATE; });
-    //App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_E, []{ mCurrentGizmoOperation = ImGuizmo::ROTATE; });
-    //App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_R, []{ mCurrentGizmoOperation = ImGuizmo::SCALE; });
+    
+    App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_W, [&]{ mCurrentGizmoOperation = ImGuizmo::TRANSLATE; });
+    App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_E, [&]{ mCurrentGizmoOperation = ImGuizmo::ROTATE; });
+    App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_R, [&]{ mCurrentGizmoOperation = ImGuizmo::SCALE; });
 
     return true;
 }
@@ -73,6 +68,8 @@ update_status EditorUIModule::PreUpdate(float deltaTime)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::SetOrthographic(false);   // TODO Implement orthographic camera
+    ImGuizmo::BeginFrame();
     ImGui::DockSpaceOverViewport();
 
     return UPDATE_CONTINUE;
@@ -847,8 +844,28 @@ void EditorUIModule::OpenGLConfig()
     }
 }
 
-/*void EditorUIModule::DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model)
+void EditorUIModule::DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model)
 {
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
+    if (ImGuizmo::IsUsing())
+    {
+        ImGui::Text("Using gizmo");
+    } else
+    {
+        ImGui::Text("Trying to use gizmo ... Failed");
+        ImGui::Text(ImGuizmo::IsOver()?"Over gizmo":"");
+        ImGui::SameLine();
+        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::TRANSLATE) ? "Over translate gizmo" : "");
+        ImGui::SameLine();
+        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::ROTATE) ? "Over rotate gizmo" : "");
+        ImGui::SameLine();
+        ImGui::Text(ImGuizmo::IsOver(ImGuizmo::SCALE) ? "Over scale gizmo" : "");
+    }
+    ImGui::Separator();
+
+    static float4x4 matrix = float4x4::identity;
+    
     if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
         mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
     ImGui::SameLine();
@@ -858,20 +875,20 @@ void EditorUIModule::OpenGLConfig()
     if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
         mCurrentGizmoOperation = ImGuizmo::SCALE;
     float matrixTranslation[3], matrixRotation[3], matrixScale[3];
-    //ImGuizmo::DecomposeMatrixToComponents(matrix.m16, matrixTranslation, matrixRotation, matrixScale);
-    //ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix.m16);
+    ImGuizmo::DecomposeMatrixToComponents(matrix.ptr(), matrixTranslation, matrixRotation, matrixScale);
+    ImGui::InputFloat3("Tr", matrixTranslation);
+    ImGui::InputFloat3("Rt", matrixRotation);
+    ImGui::InputFloat3("Sc", matrixScale);
+    ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix.ptr());
 
-    if (mCurrentGizmoOperation != ImGuizmo::SCALE)
-    {
-        if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
-            mCurrentGizmoMode = ImGuizmo::LOCAL;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
-            mCurrentGizmoMode = ImGuizmo::WORLD;
-    }
+    ImGui::Begin("Gizmo", 0, 0);
+    ImGuizmo::SetDrawlist();
     
-    
-    ImGuiIO& io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-    //ImGuizmo::Manipulate(view, proj, mCurrentGizmoOperation, mCurrentGizmoMode, matrix.m16);
-}*/
+
+    ImGuizmo::PushID(420);
+    ImGuizmo::Manipulate(view.ptr(), proj.ptr(), mCurrentGizmoOperation, mCurrentGizmoMode, matrix.ptr());
+    ImGuizmo::PopID();
+
+    ImGui::End();
+}
