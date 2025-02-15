@@ -6,7 +6,7 @@ class GameTimer : public EngineTimer
 {
   public:
     GameTimer();
-    ~GameTimer();
+    ~GameTimer() override;
 
     void Start() override;
     float Tick() override;
