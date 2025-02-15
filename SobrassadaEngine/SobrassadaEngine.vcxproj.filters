@@ -186,7 +186,6 @@
     <ClCompile Include="FileSystem\MaterialImporter.cpp">
       <Filter>FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\LightsConfig.cpp" />
     <ClCompile Include="Scene\Components\ComponentUtils.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
@@ -216,6 +215,21 @@
     </ClCompile>
     <ClCompile Include="Utils\Scene.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\Lights\PointLight.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\Lights\SpotLight.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\LightComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\Lights\DirectionalLight.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\LightsConfig.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -339,7 +353,6 @@
     <ClInclude Include="UI\EditorViewport.h">
       <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Component.h" />
     <ClInclude Include="FileSystem\FileSystem.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
@@ -380,7 +393,6 @@
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Scene\AABBUpdatable.h" />
-    <ClInclude Include="Utils\LightsConfig.h" />
     <ClInclude Include="Scene\Components\Root\RootComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
@@ -410,6 +422,24 @@
     </ClInclude>
     <ClInclude Include="Utils\Scene.h">
       <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\Lights\SpotLight.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\Lights\PointLight.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\LightComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\Lights\DirectionalLight.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Component.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\LightsConfig.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

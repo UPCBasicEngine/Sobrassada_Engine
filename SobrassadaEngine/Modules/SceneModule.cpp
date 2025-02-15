@@ -59,19 +59,17 @@ update_status SceneModule::Update(float deltaTime) { return UPDATE_CONTINUE; }
 
 update_status SceneModule::Render(float deltaTime)
 {
+    // Render skybox and lights
     lightsConfig->RenderSkybox();
     lightsConfig->SetLightsShaderData();
-    lightsConfig->EditorParams();
 
     for (auto &gameObject : gameObjectsContainer)
     {
         gameObject.second->Render();
     }
 
-    //TEMP
-    auto projection = App->GetCameraModule()->GetProjectionMatrix();
-    auto view       = App->GetCameraModule()->GetViewMatrix();
-    App->GetDebugDreawModule()->Draw(view, projection, SCREEN_WIDTH, SCREEN_HEIGHT);
+    //Probably should go somewhere else, but must go after skybox and meshes
+    App->GetDebugDreawModule()->Draw();
 
     return UPDATE_CONTINUE;
 }

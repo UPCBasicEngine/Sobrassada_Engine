@@ -297,10 +297,10 @@
     <ClCompile Include="Modules\LibraryModule.cpp" />
     <ClCompile Include="FileSystem\MaterialImporter.cpp" />
     <ClCompile Include="Scene\Components\Component.cpp" />
-    <ClCompile Include="Scene\Components\LightComponent.cpp" />
-    <ClCompile Include="Scene\Components\PointLight.cpp" />
-    <ClCompile Include="Scene\Components\SpotLight.cpp" />
-    <ClCompile Include="Scene\Components\DirectionalLight.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\LightComponent.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\Lights\PointLight.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\Lights\SpotLight.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\Lights\DirectionalLight.cpp" />
     <ClCompile Include="FileSystem\TextureImporter.cpp" />
     <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
@@ -528,10 +528,10 @@
     <ClInclude Include="FileSystem\MeshImporter.h" />
     <ClInclude Include="FileSystem\SceneImporter.h" />
     <ClInclude Include="Scene\Components\Component.h" />
-    <ClInclude Include="Scene\Components\LightComponent.h" />
-    <ClInclude Include="Scene\Components\PointLight.h" />
-    <ClInclude Include="Scene\Components\SpotLight.h" />
-    <ClInclude Include="Scene\Components\DirectionalLight.h" />
+    <ClInclude Include="Scene\Components\Standalone\LightComponent.h" />
+    <ClInclude Include="Scene\Components\Standalone\Lights\PointLight.h" />
+    <ClInclude Include="Scene\Components\Standalone\Lights\SpotLight.h" />
+    <ClInclude Include="Scene\Components\Standalone\Lights\DirectionalLight.h" />
     <ClInclude Include="FileSystem\TextureImporter.h" />
     <ClInclude Include="Scene\Components\Root\RootComponent.h" />
     <ClInclude Include="Scene\Components\Standalone\MeshComponent.h" />

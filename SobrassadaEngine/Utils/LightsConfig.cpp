@@ -7,9 +7,9 @@
 #include "TextureModuleTest.h"
 #include "imgui.h"
 
-#include "../Scene/Components/DirectionalLight.h"
-#include "../Scene/Components/PointLight.h"
-#include "../Scene/Components/SpotLight.h"
+#include "../Scene/Components/Standalone/Lights/DirectionalLight.h"
+#include "../Scene/Components/Standalone/Lights/PointLight.h"
+#include "../Scene/Components/Standalone/Lights/SpotLight.h"
 #include "glew.h"
 
 LightsConfig::LightsConfig()
@@ -20,15 +20,15 @@ LightsConfig::LightsConfig()
     ambientColor     = float3(1.0f, 1.0f, 1.0f);
     ambientIntensity = 0.2f;
 
-    pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
-    pointLights.push_back(PointLight(float3(2, 0, 0), 1));
-    pointLights.push_back(PointLight(float3(0, 1, -2), 1));
+   //pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
+   //pointLights.push_back(PointLight(float3(2, 0, 0), 1));
+   //pointLights.push_back(PointLight(float3(0, 1, -2), 1));
+   //
+   //spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
+   //spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
+   //spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
 
-    spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
-    spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
-    spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
-
-     directionalLight = new DirectionalLight();
+     //directionalLight = new DirectionalLight();
 }
 
 LightsConfig::~LightsConfig()
@@ -87,7 +87,6 @@ void LightsConfig::RenderSkybox() const
 
     auto projection = App->GetCameraModule()->GetProjectionMatrix();
     auto view       = App->GetCameraModule()->GetViewMatrix();
-
 
     glUseProgram(skyboxProgram);
     glUniformMatrix4fv(0, 1, GL_TRUE, &projection[0][0]);
@@ -202,7 +201,7 @@ void LightsConfig::SetPointLightsShaderData() const
     {
         // Fill struct data
         points.emplace_back(Lights::PointLightShaderData(
-            float4(pointLights[i].GetPosition(), pointLights[i].GetRange()),
+            float4(pointLights[i].GetGlobalTransform().position, pointLights[i].GetRange()),
             float4(pointLights[i].GetColor(), pointLights[i].GetIntensity())
         ));
     }
@@ -228,7 +227,7 @@ void LightsConfig::SetSpotLightsShaderData() const
     {
         // Fill struct data
         spots.emplace_back(Lights::SpotLightShaderData(
-            float4(spotLights[i].GetPosition(), spotLights[i].GetRange()),
+            float4(spotLights[i].GetGlobalTransform().position, spotLights[i].GetRange()),
             float4(spotLights[i].GetColor(), spotLights[i].GetIntensity()), float3(spotLights[i].GetDirection()),
             spotLights[i].GetInnerAngle(), spotLights[i].GetOuterAngle()
         ));
