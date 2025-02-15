@@ -12,9 +12,6 @@ class SpotLight : public LightComponent
     void RenderEditorInspector() override;
     void Render() override;
 
-    void EditorParams(const int index);
-    void DrawGizmos() const;
-
     float3 GetDirection() const { return direction; }
     float GetRange() const { return range; }
     float GetInnerAngle() const { return innerAngle; }

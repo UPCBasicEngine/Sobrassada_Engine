@@ -12,9 +12,6 @@ class PointLight : public LightComponent
     void RenderEditorInspector() override;
     void Render() override;
 
-    void EditorParams(int index);
-    void DrawGizmos() const;
-
     float GetRange() const { return range; }
 
   private:

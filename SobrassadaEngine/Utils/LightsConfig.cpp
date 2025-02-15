@@ -115,30 +115,14 @@ void LightsConfig::EditorParams()
 {
     ImGui::Begin("Lights Config");
 
+    // TODO Skybox texture
+    ImGui::Text("Skybo xtexture");
+
     ImGui::SeparatorText("Ambient light");
     ImGui::SliderFloat3("Ambient color", &ambientColor[0], 0, 1);
     ImGui::SliderFloat("Ambient intensity", &ambientIntensity, 0, 1);
 
     ImGui::End();
-
-    int index = 0;
-    if (directionalLight)
-    {
-        directionalLight->EditorParams(0);
-    }
-    for (SpotLight &spot : spotLights)
-    {
-        spot.EditorParams(index);
-        spot.DrawGizmos();
-        ++index;
-    }
-    index = 0;
-    for (PointLight &point : pointLights)
-    {
-        point.EditorParams(index);
-        point.DrawGizmos();
-        ++index;
-    }
 }
 
 void LightsConfig::InitLightBuffers()

@@ -21,13 +21,3 @@ void DirectionalLight::RenderEditorInspector()
     }
 }
 
-void DirectionalLight::EditorParams(const int index) { 
-	
-	std::string title = "Directional light" + std::to_string(index);
-    
-	ImGui::Begin(title.c_str());
-	ImGui::Text("Directional light parameters");
-	ImGui::SliderFloat3("Direction ", &direction[0], -1.0, 1.0);
-    ImGui::End();
-}
-

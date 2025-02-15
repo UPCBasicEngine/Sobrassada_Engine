@@ -11,7 +11,6 @@ class DirectionalLight : public LightComponent
 
     void RenderEditorInspector() override;
 
-    void EditorParams(const int index);
     float3 GetDirection() const { return direction; }
 
   private:
