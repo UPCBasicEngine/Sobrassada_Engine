@@ -59,7 +59,11 @@ void ResourcesModule::ReleaseResource(const Resource *resource)
         if(it != resources.end())
         {
             it->second->RemoveReference();
-            // TODO Discard resource if reference count is zero
+            if (it->second->GetReferenceCount() <= 0)
+            {
+                delete it->second;
+                resources.erase(it);
+            }
         }
     }
 }
