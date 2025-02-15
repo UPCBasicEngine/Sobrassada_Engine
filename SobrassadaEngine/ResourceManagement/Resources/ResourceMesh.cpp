@@ -14,7 +14,7 @@
 #include "CameraModule.h"
 #include "ResourceMaterial.h"
 
-ResourceMesh::ResourceMesh(UID uid): Resource(uid, ResourceType::Mesh)
+ResourceMesh::ResourceMesh(UID uid, const std::string & name): Resource(uid, name, ResourceType::Mesh)
 {
     aabb.SetNegativeInfinity();
 }
@@ -24,6 +24,14 @@ ResourceMesh::~ResourceMesh()
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ebo);
 	glDeleteBuffers(1, &vao);
+}
+
+void ResourceMesh::LoadData(unsigned int mode, UID defaultMaterial, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
+{
+    this->mode = mode;
+    this->defaultMaterial = defaultMaterial;
+
+    // TODO Create vbo, ebo and vao
 }
 
 void ResourceMesh::LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive)

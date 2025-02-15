@@ -7,6 +7,7 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "tiny_gltf.h"
+#include "ResourceManagement/Resources/ResourceMesh.h"
 
 namespace MeshImporter
 {
@@ -178,12 +179,13 @@ namespace MeshImporter
         return meshUID;
     }
 
-    std::shared_ptr<Mesh> LoadMesh(const char *path)
+    ResourceMesh* LoadMesh(const std::string& path)
     {
+        
         char *buffer = nullptr;
         char *cursor = buffer;
 
-        unsigned int fileSize = FileSystem::Load(path, &buffer);
+        unsigned int fileSize = FileSystem::Load(path.c_str(), &buffer);
 
         if (fileSize == 0 || buffer == nullptr)
         {
@@ -203,18 +205,19 @@ namespace MeshImporter
 
         // Create Mesh
 
-        auto mesh                   = std::make_unique<Mesh>();
-        mesh->SetMaterialIndex(materialIndex);
-        mesh->SetMode(mode);
-
         std::vector<Vertex> tmpVertices;
         tmpVertices.reserve(vertexCount);
+
+        ResourceMesh* mesh = new ResourceMesh(0, "TODO");
+        mesh->LoadData(mode, materialIndex);
 
         std::move(
             reinterpret_cast<Vertex *>(cursor), reinterpret_cast<Vertex *>(cursor) + vertexCount, tmpVertices.begin()
         );
 
-        mesh->SetVertices(std::move(tmpVertices));
+        
+
+        //mesh->SetVertices(std::move(tmpVertices));
         cursor += vertexCount * sizeof(Vertex);
 
         std::vector<unsigned int> tmpIndices;

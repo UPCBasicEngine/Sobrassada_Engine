@@ -1,8 +1,11 @@
 #include "ResourcesModule.h"
 
 #include "Application.h"
+#include "LibraryModule.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
+#include "FileSystem/Importer.h"
+#include "FileSystem/MeshImporter.h"
 #include "ResourceManagement/Resources/ResourceMaterial.h"
 #include "ResourceManagement/Resources/ResourceMesh.h"
 
@@ -19,7 +22,6 @@ ResourcesModule::~ResourcesModule()
 
 bool ResourcesModule::Init()
 {
-    CreateNewResource("", ResourceType::Mesh);
     program = App->GetShaderModule()->GetProgram("./Test/VertexShader.glsl", "./Test/BRDFPhongFragmentShader.glsl");
     
     return true;
@@ -45,11 +47,10 @@ Resource * ResourcesModule::RequestResource(UID uid)
     
 //Find the library file (if exists) and load the custom file format
 
-    // TODO Connect with file system return TryToLoadResource(uid);
-    return nullptr;
+    return CreateNewResource(uid);
 }
 
-void ResourcesModule::ReleaseResource(Resource *resource)
+void ResourcesModule::ReleaseResource(const Resource *resource)
 {
     if (resource != nullptr)
     {
@@ -58,24 +59,18 @@ void ResourcesModule::ReleaseResource(Resource *resource)
         if(it != resources.end())
         {
             it->second->RemoveReference();
+            // TODO Discard resource if reference count is zero
         }
     }
 }
 
-Resource * ResourcesModule::CreateNewResource(const char *assetsFile, ResourceType type)
+Resource * ResourcesModule::CreateNewResource(UID uid)
 {
-    
-    EngineModel* MOCKUP_loadedModel = new EngineModel();
-    MOCKUP_loadedModel->Load("./Test/BakerHouse.gltf");
-
-    const uint32_t bakerHouseID = LCG().IntFast();
-    const uint32_t bakerHouseChimneyID = LCG().IntFast();
-    const uint32_t bakerHouseMaterial = LCG().IntFast();
-    
-    resources[bakerHouseID] = MOCKUP_loadedModel->GetMesh(1);
-    resources[bakerHouseChimneyID] = MOCKUP_loadedModel->GetMesh(0);
-    
-    resources[bakerHouseMaterial] = MOCKUP_loadedModel->GetMaterial(0);
-
+    Resource* loadedResource = Importer::Load(uid);
+    if (loadedResource != nullptr)
+    {
+        resources.insert(std::pair(uid, loadedResource));
+        return loadedResource;
+    }
     return nullptr;
 }

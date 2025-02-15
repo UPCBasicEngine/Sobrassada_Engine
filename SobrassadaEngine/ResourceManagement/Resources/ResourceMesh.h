@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Mesh.h"
 #include "Resource.h"
 
 #include <Geometry/AABB.h>
@@ -15,8 +16,10 @@ class ResourceMesh : public Resource
 {
 public:
 
-    ResourceMesh(UID uid);
+    ResourceMesh(UID uid, const std::string & name);
     ~ResourceMesh() override;
+
+    void LoadData(unsigned int mode, UID defaultMaterial, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 
     void LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
     void LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
@@ -33,10 +36,11 @@ private:
     unsigned int ebo = 0;
     unsigned int vao = 0;
 
-    int vertexCount = 0;
-    int textureCoordCount = 0;
-    int normalCoordCount = 0;
-    unsigned int indexCount = 0; // Return indexCount/3 -> numero de triangles per mesh
+    unsigned int mode = 0;
+    UID defaultMaterial = CONSTANT_EMPTY_UID;
+
+    unsigned int vertexCount = 0;
+    unsigned int indexCount = 0; 
 
     AABB aabb;
 };

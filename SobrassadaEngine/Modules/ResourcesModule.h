@@ -18,14 +18,14 @@ public:
     bool ShutDown() override;
 
     Resource* RequestResource(UID uid);
-    void ReleaseResource(Resource* resource);
+    void ReleaseResource(const Resource* resource);
 
     int GetProgram() const { return program; }
 
 private:
     int program = -1;
     
-    Resource* CreateNewResource(const char* assetsFile, ResourceType type);
+    Resource* CreateNewResource(UID uid);
 
     std::map<UID, Resource*> resources;
     

@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="FileSystem\Importer.cpp" />
     <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp" />
     <ClCompile Include="Modules\ResourcesModule.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
@@ -513,6 +514,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="FileSystem\Importer.h" />
     <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="Modules\ResourcesModule.h" />
     <ClInclude Include="Modules\SceneModule.h" />

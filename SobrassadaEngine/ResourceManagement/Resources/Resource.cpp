@@ -1,19 +1,10 @@
 ﻿#include "Resource.h"
 
 
-Resource::Resource(UID uid, ResourceType type)
+Resource::Resource(UID uid, const std::string& name, ResourceType type): uid(uid), name(name), type(type)
 {
 }
 
 Resource::~Resource()
 {
-}
-
-const char * Resource::GetAssetsFile() const{
-    return "";
-}
-
-const char * Resource::GetLibraryFile() const
-{
-    return "";
 }

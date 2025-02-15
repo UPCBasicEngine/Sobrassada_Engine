@@ -86,10 +86,8 @@ constexpr float RAD_DEGREE_CONV = 180.f / PI;
 inline UID GenerateUID()
 {
     LCG rng;
-    rng.IntFast();
-
-    uint64_t uid = static_cast<uint64_t>(rng.IntFast()) << 32 | rng.IntFast(); // Combine two 32-bit values
-
-
+    
+    UID uid = static_cast<UID>(rng.IntFast()) << 32 | rng.IntFast(); // Combine two 32-bit values
+    
     return uid;
 }
