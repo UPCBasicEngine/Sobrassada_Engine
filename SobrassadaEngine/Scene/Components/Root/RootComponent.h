@@ -29,6 +29,7 @@ public:
     void Update() override;
 
     void SetSelectedComponent(UID componentUID);
+    bool IsSelectedComponent(UID componentUID) const { return selectedUID == componentUID; }
 
     int GetMobilitySettings() const { return mobilitySettings; }
 

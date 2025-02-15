@@ -24,7 +24,7 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #define TINYGLTF_IMPLEMENTATION /* Only in one of the includes */
-#include <tiny_gltf.h>
+#include <tiny_gltf.h>  // TODO Remove
 
 #include "InputModule.h"
 
@@ -85,7 +85,7 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 {
     Draw();
 
-    editorViewport->Render();
+    //editorViewport->Render();
 
     if (quadtreeViewerViewport) quadtreeViewer->Render(quadtreeViewerViewport);
 
@@ -846,7 +846,24 @@ void EditorUIModule::OpenGLConfig()
 
 void EditorUIModule::DrawGizmos(const float4x4 &view, const float4x4 &proj, const float4x4 &model)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    
+    float4x4 inverseView = float4x4(view);
+    inverseView.Transpose();
+
+    float4x4 inverseProj = float4x4(proj);
+    inverseProj.Transpose();
+
+    float4x4 inverseModel = float4x4(model);
+    inverseModel.Transpose();
+
+
+    static float4x4 m = float4x4::identity;
+    
+    Manipulate(inverseView.ptr(), inverseProj.ptr(), mCurrentGizmoOperation, ImGuizmo::MODE::LOCAL, m.ptr());
+
+    //ImGuizmo::DrawCubes(inverseView.ptr(), inverseProj.ptr(), model.ptr(), 1);
+    
+    /*ImGuiIO& io = ImGui::GetIO();
     ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
     if (ImGuizmo::IsUsing())
     {
@@ -890,5 +907,5 @@ void EditorUIModule::DrawGizmos(const float4x4 &view, const float4x4 &proj, cons
     ImGuizmo::Manipulate(view.ptr(), proj.ptr(), mCurrentGizmoOperation, mCurrentGizmoMode, matrix.ptr());
     ImGuizmo::PopID();
 
-    ImGui::End();
+    ImGui::End();*/
 }

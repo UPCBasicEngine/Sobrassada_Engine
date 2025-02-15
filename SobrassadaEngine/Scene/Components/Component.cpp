@@ -151,7 +151,10 @@ void Component::RenderEditorInspector()
             Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
             globalTransform.scale
         );
-        //App->GetEditorUIModule()->DrawGizmos(App->GetCameraModule()->GetViewMatrix(), App->GetCameraModule()->GetProjectionMatrix(), model);
+        if (GetRootComponent()->IsSelectedComponent(uid))
+        {
+            App->GetEditorUIModule()->DrawGizmos(App->GetCameraModule()->GetViewMatrix(), App->GetCameraModule()->GetProjectionMatrix(), model);
+        }
     }
 }
 

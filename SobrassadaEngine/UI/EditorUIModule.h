@@ -40,6 +40,8 @@ class EditorUIModule : public Module
     bool hierarchyMenu = true;
     bool inspectorMenu = true;
 
+    EditorViewport *editorViewport = nullptr;
+
   private:
     void RenderBasicTransformModifiers(
         Transform &transform, bool &lockScaleAxis, bool &positionValueChanged, bool &rotationValueChanged,
@@ -79,7 +81,7 @@ class EditorUIModule : public Module
 
     int transformType = LOCAL;
 
-    EditorViewport *editorViewport = nullptr;
+    
     QuadtreeViewer *quadtreeViewer = nullptr;
 
     int width, height;

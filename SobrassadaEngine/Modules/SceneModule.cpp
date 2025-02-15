@@ -17,6 +17,10 @@
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
+#include "EditorUIModule.h"
+#include "EditorViewport.h"
+
+
 #include <tiny_gltf.h>
 #include <Algorithm/Random/LCG.h>
 
@@ -79,6 +83,7 @@ update_status SceneModule::Render(float deltaTime)
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
+    App->GetEditorUIModule()->editorViewport->Render();
     GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
     if (selectedGameObject != nullptr)
     {
