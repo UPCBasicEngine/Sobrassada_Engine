@@ -115,14 +115,21 @@ void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID)
     bool hasChildren         = !children.empty();
     
     if (!hasChildren) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    if (selectedGameObjectUUID == uuid)
-    {
-
-        flags |= ImGuiTreeNodeFlags_Selected;
-    }
+    if (selectedGameObjectUUID == uuid) flags |= ImGuiTreeNodeFlags_Selected;
 
     ImGui::PushID(uuid);
-    bool nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
+
+    bool nodeOpen = false;
+    
+    if (!isRenaming)
+    {
+        nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
+    }
+    else
+    {
+        nodeOpen = ImGui::TreeNodeEx("##RenamingNode", flags, "");
+        RenameGameObjectHierarchy();
+    }
 
     HandleNodeClick(selectedGameObjectUUID);
     RenderContextMenu();
@@ -132,7 +139,7 @@ void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID)
         for (UID childUUID : children)
         {
             GameObject *childGameObject = App->GetSceneModule()->GetGameObjectByUUID(childUUID);
-            if (childUUID != uuid)
+            if (childGameObject && childUUID != uuid)
             {
                 childGameObject->RenderHierarchyNode(selectedGameObjectUUID);
             }
@@ -196,6 +203,12 @@ void GameObject::RenderContextMenu()
             ComponentGlobalTransformUpdated();
         }
 
+        if (ImGui::MenuItem("Rename"))
+        {
+            isRenaming = true;
+            strncpy_s(renameBuffer, sizeof(renameBuffer), name.c_str(),_TRUNCATE);
+        }
+
         if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Delete"))
         {
             App->GetSceneModule()->RemoveGameObjectHierarchy(uuid);
@@ -203,6 +216,19 @@ void GameObject::RenderContextMenu()
         }
 
         ImGui::EndPopup();
+    }
+}
+
+void GameObject::RenameGameObjectHierarchy()
+{
+    ImGui::SameLine();
+
+    if (ImGui::InputText(
+            "##RenameInput", renameBuffer, IM_ARRAYSIZE(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue
+        ))
+    {
+        name       = renameBuffer;
+        isRenaming = false;
     }
 }
 

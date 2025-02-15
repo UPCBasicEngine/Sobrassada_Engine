@@ -37,6 +37,8 @@ public:
     void HandleNodeClick(UID &selectedGameObjectUUID);
     void RenderContextMenu();
 
+    void RenameGameObjectHierarchy();
+
     bool UpdateGameObjectHierarchy(UID sourceUID, UID targetUID);
 
 	inline std::string GetName() const { return name; }
@@ -73,5 +75,8 @@ private:
     RootComponent *rootComponent;
 
     AABB globalAABB;
+
+    bool isRenaming = false;
+    char renameBuffer[128];
 
 };
