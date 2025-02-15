@@ -1,7 +1,7 @@
 #include "Octree.h"
 
 #include "FrustumPlanes.h"
-#include "GameObject.h"
+#include "MockGameObject.h"
 
 #include <set>
 #include <stack>
@@ -79,7 +79,7 @@ Octree::~Octree()
     delete rootNode;
 }
 
-bool Octree::InsertElement(GameObject* gameObject)
+bool Octree::InsertElement(MockGameObject* gameObject)
 {
     if (gameObject == nullptr) return false;
 
@@ -87,7 +87,7 @@ bool Octree::InsertElement(GameObject* gameObject)
     std::stack<OctreeNode*> nodesToVisit;
     nodesToVisit.push(rootNode);
 
-    const AABB objectBoundingBox = gameObject->GetGlobalBoundingBox();
+    const AABB objectBoundingBox = gameObject->GetWorldBoundingBox();
     OctreeElement octreeElement  = OctreeElement(objectBoundingBox, gameObject, totalElements);
 
     while (!nodesToVisit.empty())
@@ -134,7 +134,7 @@ bool Octree::InsertElement(GameObject* gameObject)
     return false;
 }
 
-void Octree::QueryElements(const AABB& area, std::vector<GameObject*>& foundElements) const
+void Octree::QueryElements(const AABB& area, std::vector<MockGameObject*>& foundElements) const
 {
     std::vector<bool> insertedElements = std::vector<bool>(totalElements, false);
 
@@ -174,7 +174,7 @@ void Octree::QueryElements(const AABB& area, std::vector<GameObject*>& foundElem
     }
 }
 
-void Octree::QueryElements(const FrustumPlanes& cameraPlanes, std::vector<GameObject*>& foundElements) const
+void Octree::QueryElements(const FrustumPlanes& cameraPlanes, std::vector<MockGameObject*>& foundElements) const
 {
     std::vector<bool> insertedElements = std::vector<bool>(totalElements, false);
 

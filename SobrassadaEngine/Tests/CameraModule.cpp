@@ -228,7 +228,8 @@ void CameraModule::RotateCamera(float yaw, float pitch)
 
 void CameraModule::FocusCamera()
 {
-    AABB focusedObjectAABB = App->GetSceneModule()->GetSeletedGameObject()->GetGlobalBoundingBox();
+    //AABB focusedObjectAABB = App->GetSceneModule()->GetSeletedGameObject()->GetGlobalBoundingBox();
+    AABB focusedObjectAABB = AABB(float3(-1, -1, -1), float3(1, 1, 1));
     float3 center          = focusedObjectAABB.CenterPoint();
 
     // IN CASE THE SELECTED OBJECT HAS NO AABB, CLAMP VERY SMALL VALUES TO 0 (errors in float operations)

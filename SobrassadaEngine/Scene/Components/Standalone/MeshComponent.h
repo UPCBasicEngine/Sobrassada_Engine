@@ -16,9 +16,6 @@ public:
 
     void LoadMesh(const std::string& meshName, uint32_t meshUUID); 
     
-    // SPATIAL_PARTITIONING TESTING
-    void SetTexture(const std::string &textureName, uint32_t textureUUID);
-    
 private:
 
     // TODO Add model code, add mesh components when loading
