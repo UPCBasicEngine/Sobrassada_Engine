@@ -2,7 +2,14 @@
 
 #include "Module.h"
 
+#include "SDL.h"
 #include <deque>
+
+struct CPUFeature
+{
+    SDL_bool (*check)();
+    const char *name;
+};
 
 class EditorViewport;
 
@@ -20,7 +27,7 @@ class EditorUIModule : public Module
     bool ShutDown() override;
 
   private:
-    void LimitFPS(float deltaTime);
+    void LimitFPS(float deltaTime) const;
     void AddFramePlotData(float deltaTime);
     void Draw();
 
@@ -28,15 +35,19 @@ class EditorUIModule : public Module
     void EditorSettings(bool &editorSettingsMenu);
 
     void FramePlots(bool &vsync);
-    void WindowConfig(bool &vsync);
-    void CameraConfig();
-    void OpenGLConfig();
+    void WindowConfig(bool &vsync) const;
+    void CameraConfig() const;
+    void OpenGLConfig() const;
     void GameTimerConfig() const;
+    void HardwareConfig() const;
+    void ShowCaps() const;
 
     void Console(bool &consoleMenu) const;
+    void About(bool &aboutMenu) const;
 
   private:
     bool consoleMenu        = false;
+    bool aboutMenu          = false;
     bool editorSettingsMenu = false;
     bool closeApplication   = false;
 

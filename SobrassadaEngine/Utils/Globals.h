@@ -28,18 +28,19 @@ enum update_status
     }
 
 // Configuration -----------
-#define SCREEN_WIDTH      1280
-#define SCREEN_HEIGHT     720
+#define SCREEN_WIDTH  1280
+#define SCREEN_HEIGHT 720
 
-#define BORDERLESS        false
-#define FULL_DESKTOP      false
-#define RESIZABLE         true
-#define FULLSCREEN        false
-#define VSYNC             true
+#define BORDERLESS   false
+#define FULL_DESKTOP false
+#define RESIZABLE    true
+#define FULLSCREEN   false
+#define VSYNC        true
 
 #define TITLE             "Sobrassada Engine"
 #define ENGINE_NAME       "Sobrassada"
 #define ORGANIZATION_NAME "Hound of Ulster"
+#define ENGINE_VERSION    "0.1.0"
 #define HFOV              90
 
 #define DEFAULT_GL_CLEAR_COLOR_RED   0.5f
