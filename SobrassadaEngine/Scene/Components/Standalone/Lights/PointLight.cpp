@@ -13,11 +13,14 @@ PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform &par
 {
     range      = 1;
     gizmosMode = 0;
-    App->GetSceneModule()->GetLightsConfig()->AddPointLight(this);
+
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddPointLight(this);
 }
 
 PointLight::PointLight(const rapidjson::Value& initialState) : LightComponent(initialState)
 {
+
     if (initialState.HasMember("Range"))
     {
         range = initialState["Range"].GetFloat();
@@ -26,7 +29,8 @@ PointLight::PointLight(const rapidjson::Value& initialState) : LightComponent(in
     {
         gizmosMode = initialState["GizmosMode"].GetInt();
     }
-    App->GetSceneModule()->GetLightsConfig()->AddPointLight(this);
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddPointLight(this);
 }
 
 

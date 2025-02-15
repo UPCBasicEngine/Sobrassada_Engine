@@ -1,0 +1,100 @@
+{
+    "Scene": {
+        "UID": 8780489006536813954,
+        "Name": "Huge Point",
+        "RootGameObject": 1348484519,
+        "GameObjects": [
+            {
+                "UID": 1348484519,
+                "ParentUID": 0,
+                "Name": "SceneModule GameObject",
+                "Children": [
+                    1355585861
+                ],
+                "RootComponentUID": 1334769182
+            },
+            {
+                "UID": 1355585861,
+                "ParentUID": 1348484519,
+                "Name": "SceneModule GameObject child",
+                "Children": [],
+                "RootComponentUID": 1353706094
+            }
+        ],
+        "Components": [
+            {
+                "UID": 555515639,
+                "ParentUID": 1334769182,
+                "RootUID": 1334769182,
+                "Type": 4,
+                "LocalTransform": [
+                    0.0,
+                    2.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Point Light",
+                "Intensity": 8.907999992370605,
+                "ColorRed": 1.0,
+                "ColorGreen": 0.5149999856948853,
+                "ColorBlue": 1.0,
+                "DrawGizmos": true,
+                "Range": 3.131999969482422,
+                "GizmosMode": 0
+            },
+            {
+                "UID": 1334769182,
+                "ParentUID": 0,
+                "RootUID": 1334769182,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [
+                    555515639
+                ],
+                "Enabled": true,
+                "Name": "BOO",
+                "Type": 1,
+                "Mobility": 1
+            },
+            {
+                "UID": 1353706094,
+                "ParentUID": 1348484519,
+                "RootUID": 1353706094,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
+            }
+        ]
+    }
+}
