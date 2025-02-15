@@ -349,7 +349,7 @@ const std::string &LibraryModule::GetResourcePath(UID resourceID) const
     if (it != resourcePathsMap.end())
     {
         GLOG("requested uid: %llu", resourceID);
-        GLOG("obtained path: %s", it->second);
+        GLOG("obtained path: %s", it->second.c_str());
         return it->second;
     }
     static const std::string emptyString = "";
