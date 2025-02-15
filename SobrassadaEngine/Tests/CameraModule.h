@@ -7,8 +7,8 @@
 #include "Geometry/Frustum.h"
 #include "Math/float4x4.h"
 
-constexpr float DEGTORAD            = PI / 180.f;
-constexpr float cameraRotationAngle = 135.f * DEGTORAD;
+constexpr float DEGTORAD             = PI / 180.f;
+constexpr float cameraRotationAngle  = 135.f * DEGTORAD;
 constexpr float maximumPositivePitch = 89.f * DEGTORAD;
 constexpr float maximumNegativePitch = -89.f * DEGTORAD;
 
@@ -36,9 +36,8 @@ class CameraModule : public Module
   private:
     void TriggerFocusCamera();
     void ToggleDetachedCamera();
-    void MoveCamera(float deltaTime);
+    void RotateCamera(float yaw, float pitch);
     void FocusCamera();
-    const float4x4& LookAt(const float3& cameraPosition, const float3& targetPosition, const float3& upVector) const;
 
   private:
     Frustum camera;
