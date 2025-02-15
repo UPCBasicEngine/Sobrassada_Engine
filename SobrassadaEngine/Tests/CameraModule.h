@@ -8,8 +8,6 @@
 #include "Math/float4x4.h"
 
 constexpr float DEGTORAD             = PI / 180.f;
-constexpr float maximumPositivePitch = 89.f * DEGTORAD;
-constexpr float maximumNegativePitch = -89.f * DEGTORAD;
 constexpr float cameraRotationAngle  = 135.f * DEGTORAD;
 
 class CameraModule : public Module
@@ -36,13 +34,11 @@ class CameraModule : public Module
   private:
     void EventTriggered();
     void ToggleDetachedCamera();
-    void MoveCamera();
+    void MoveCamera(float deltaTime);
 
   private:
     Frustum camera;
     Frustum detachedCamera;
-
-    AABB frustumAABB;
 
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
@@ -52,7 +48,10 @@ class CameraModule : public Module
 
     FrustumPlanes frustumPlanes;
 
-    float speedBase       = 0.01f;
-    float movementSpeed   = 0.01f;
+    float movementScaleFactor = DEFAULT_CAMERA_MOVEMENT_SCALE_FACTOR;
+    float cameraMoveSpeed  = DEFAULT_CAMERA_MOVMENT_SPEED;
+    float mouseSensitivity = DEFAULT_CAMERA_MOUSE_SENSITIVITY;
+    float zoomSensitivity  = DEFAUL_CAMERA_ZOOM_SENSITIVITY;
+
     bool isCameraDetached = false;
 };
