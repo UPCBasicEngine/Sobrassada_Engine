@@ -51,8 +51,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             {
               return 0;
             }
-
-            material.SetDiffuseTexture(diffuseUID);
+            material.SetDiffuseTexture(FileSystem::GetFileNameWithoutExtension(path + model.images[model.textures[texIndex].source].uri));
         }
 
         if (specGloss.Has("glossinessFactor"))
@@ -86,7 +85,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
                 return 0;
             }
 
-            material.SetSpecularGlossinessTexture(specularGlossinessUID);
+            material.SetSpecularGlossinessTexture(FileSystem::GetFileNameWithoutExtension(path + model.images[model.textures[texIndex].source].uri));
         }
     }
 
@@ -102,7 +101,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             return 0;
         }
 
-        material.SetNormalTexture(normalUID);
+        material.SetNormalTexture(FileSystem::GetFileNameWithoutExtension(path + model.images[model.textures[texIndex].source].uri));
     }
 
 
@@ -119,14 +118,15 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             return 0;
         }
 
-        material.SetOcclusionTexture(occlusionUID);
+        material.SetOcclusionTexture(FileSystem::GetFileNameWithoutExtension(path + model.images[model.textures[texIndex].source].uri));
     }
 
-    unsigned int size = sizeof(MaterialStruct);
+    unsigned int size = sizeof(Material);
     char *fileBuffer = new char[size];
+    memcpy(fileBuffer, &material, sizeof(Material));
     UID materialUID           = GenerateUID();
-    std::string savePath      = MATERIALS_PATH + std::to_string(materialUID) + MATERIAL_EXTENSION;
-    unsigned int bytesWritten = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, false);
+    std::string savePath      = MATERIALS_PATH + materialName + MATERIAL_EXTENSION;
+    unsigned int bytesWritten = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, true);
 
     delete[] fileBuffer;
 
@@ -136,7 +136,42 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
         return 0;
     }
 
+    UID finalMaterialUID = App->GetLibraryModule()->AssignFiletypeUID(materialUID, savePath);
+
+    App->GetLibraryModule()->AddMaterial(finalMaterialUID, materialName);
+    App->GetLibraryModule()->AddResource(savePath, finalMaterialUID);
+
     GLOG("%s saved as material", materialName.c_str());
 
-    return true;
+    return finalMaterialUID;
 }
+
+ResourceMaterial* MaterialImporter::LoadMaterial(UID materialUID)
+    {
+        char* buffer          = nullptr;
+
+        std::string path      = App->GetLibraryModule()->GetResourcePath(materialUID);
+
+        unsigned int fileSize = FileSystem::Load(path.c_str(), &buffer);
+
+        if (fileSize == 0 || buffer == nullptr)
+        {
+            GLOG("Failed to load the .mat file: ");
+            return nullptr;
+        }
+
+        char* cursor = buffer;
+
+        // Create Mesh
+        Material mat               = *reinterpret_cast<Material*>(cursor);   
+
+        ResourceMaterial* material = new ResourceMaterial(materialUID, FileSystem::GetFileNameWithoutExtension(path));
+
+        material->LoadMaterialData(mat);
+
+        delete[] buffer;
+
+        //App->GetLibraryModule()->AddResource(savePath, finalMeshUID);
+
+        return material;
+    }
