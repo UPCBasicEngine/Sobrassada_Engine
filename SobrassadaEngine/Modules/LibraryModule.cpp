@@ -221,32 +221,38 @@ bool LibraryModule::LoadLibraryMaps()
         {
             std::string filePath = entry.path().string();
 
+            std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
+
             // Generate UID using the function from globals.h
-            UID originalUID      = GenerateUID();
-
-            // Modify the UID based on file extension
-            UID finalUID         = LibraryModule::AssignFiletypeUID(originalUID, filePath);
-
-            UID prefix           = finalUID / 100000000000000;
-
-            switch (prefix)
+            try
             {
-            case 13:
-                AddMesh(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
-                AddResource(filePath, finalUID);
-                break;
-            case 12:
-                AddMaterial(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
-                AddResource(filePath, finalUID);
-                break;
-            case 11:
-                AddTexture(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
-                AddResource(filePath, finalUID);
-                break;
-            default:
-                GLOG("Category: Unknown File Type (10)");
-                break;
+                UID originalUID      = std::stoull(fileName);
+
+                UID prefix           = originalUID / 100000000000000;
+
+                switch (prefix)
+                {
+                case 13:
+                    AddMesh(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
+                    AddResource(filePath, originalUID);
+                    break;
+                case 12:
+                    AddMaterial(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
+                    AddResource(filePath, originalUID);
+                    break;
+                case 11:
+                    AddTexture(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
+                    AddResource(filePath, originalUID);
+                    break;
+                default:
+                    GLOG("Category: Unknown File Type (10)");
+                    break;
+                }
+            } catch (std::invalid_argument& e)
+            {
+                GLOG("File %s is not an asset file", fileName);
             }
+            
         }
     }
 

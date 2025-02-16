@@ -71,7 +71,7 @@ void LightsConfig::InitSkybox()
     glBindVertexArray(0);
 
     // skyboxTexture = LoadSkyboxTexture("Test/cubemap.dds");
-    skyboxTexture = LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap"));
+    skyboxTexture = LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("1170799310640544"));
 
     // Load the skybox shaders
     skyboxProgram = App->GetShaderModule()->GetProgram("Test/skyboxVertex.glsl", "Test/skyboxFragment.glsl");

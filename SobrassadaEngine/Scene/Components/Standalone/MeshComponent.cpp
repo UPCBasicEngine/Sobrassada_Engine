@@ -21,15 +21,13 @@ MeshComponent::MeshComponent(
 
 MeshComponent::MeshComponent(const rapidjson::Value& initialState) : Component(initialState)
 {
-    if (initialState.HasMember("Mesh"))
-    {
-        UID meshUID = App->GetLibraryModule()->GetMeshUID(initialState["Mesh"].GetString());
-        AddMesh(meshUID, false); // Do not update aabb, will be done once at the end
-    }
     if (initialState.HasMember("Material"))
     {
-        UID materialUID = App->GetLibraryModule()->GetMeshUID(initialState["Material"].GetString());
-        AddMaterial(materialUID);
+        AddMaterial(initialState["Material"].GetUint64());
+    }
+    if (initialState.HasMember("Mesh"))
+    {
+        AddMesh(initialState["Mesh"].GetUint64(), false); // Do not update aabb, will be done once at the end
     }
 }
 
@@ -37,11 +35,8 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
 {
     Component::Save(targetState, allocator);
 
-    std::string meshName = (currentMesh == nullptr) ? "" : currentMesh->GetName();
-    targetState.AddMember("Mesh", rapidjson::Value(meshName.c_str(), allocator), allocator);
-
-    std::string materialName = (currentMaterial == nullptr) ? "" : currentMaterial->GetName();
-    targetState.AddMember("Material", rapidjson::Value(materialName.c_str(), allocator), allocator);
+    targetState.AddMember("Mesh", currentMesh != nullptr ? currentMesh->GetUID() : CONSTANT_EMPTY_UID, allocator);
+    targetState.AddMember("Material", currentMaterial != nullptr ? currentMaterial->GetUID() : CONSTANT_EMPTY_UID, allocator);
 }
 
 void MeshComponent::RenderEditorInspector()
@@ -112,6 +107,7 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
     if (newMesh != nullptr)
     {
         App->GetResourcesModule()->ReleaseResource(currentMesh);
+        newMesh->SetMaterial(currentMaterial != nullptr ? currentMaterial->GetUID() : CONSTANT_EMPTY_UID);
         currentMeshName = newMesh->GetName();
         currentMesh     = newMesh;
 

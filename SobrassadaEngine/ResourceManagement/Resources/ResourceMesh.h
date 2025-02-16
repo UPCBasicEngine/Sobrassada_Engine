@@ -18,6 +18,8 @@ class ResourceMesh : public Resource
     ResourceMesh(UID uid, const std::string& name, const float3& maxPos, const float3& minPos);
     ~ResourceMesh() override;
 
+    void SetMaterial(UID materialUID) { this->material = materialUID; }
+
     void LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 
     void LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
@@ -36,7 +38,7 @@ class ResourceMesh : public Resource
     unsigned int vao         = 0;
 
     unsigned int mode        = 0;
-    UID defaultMaterial      = CONSTANT_EMPTY_UID;
+    UID material      = CONSTANT_EMPTY_UID;
 
     unsigned int vertexCount = 0;
     unsigned int indexCount  = 0;

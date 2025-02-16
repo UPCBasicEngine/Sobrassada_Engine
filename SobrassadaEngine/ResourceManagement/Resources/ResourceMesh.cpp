@@ -32,7 +32,8 @@ void ResourceMesh::LoadData(
     unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices
 )
 {
-    this->mode              = mode;
+    this->mode = mode;
+    this->material = material;
     this->vertexCount       = vertices.size();
     this->indexCount        = indices.size();
     unsigned int bufferSize = sizeof(Vertex);
