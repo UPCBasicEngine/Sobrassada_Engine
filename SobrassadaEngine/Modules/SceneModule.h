@@ -66,6 +66,9 @@ class SceneModule : public Module
     void AddGameObject(UID uid, GameObject *newGameObject)const { loadedScene != nullptr ? loadedScene->AddGameObject(uid, newGameObject) : void(); }
     void AddComponent(UID uid, Component *newComponent)const { loadedScene != nullptr ? loadedScene->AddComponent(uid, newComponent) : void(); }
 
+    bool IsInPlayMode() const { return bInPlayMode; }
+    void SwitchState(bool wantedStatePlayMode);
+
   private:
     void CreateSpatialDataStruct();
     void UpdateSpatialDataStruct();
@@ -76,4 +79,6 @@ class SceneModule : public Module
     Scene* loadedScene = nullptr;
 
     Octree *sceneOctree = nullptr;
+
+    bool bInPlayMode = false;
 };

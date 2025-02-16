@@ -61,3 +61,4 @@ private:
     
     LightsConfig *lightsConfig = nullptr;
 };
+

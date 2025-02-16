@@ -150,3 +150,18 @@ void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameOb
     //    if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
     //}
 }
+
+void SceneModule::SwitchState(bool wantedStatePlayMode)
+{
+    if (wantedStatePlayMode == bInPlayMode) return;
+    
+    if (bInPlayMode)
+    {
+        // TODO Load scene 
+        bInPlayMode = false;
+    } else
+    {
+        // TODO Filesystem save scene
+        bInPlayMode = true;
+    }
+}
