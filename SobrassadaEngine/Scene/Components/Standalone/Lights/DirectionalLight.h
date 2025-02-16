@@ -2,16 +2,21 @@
 
 #include "../LightComponent.h"
 
+#include <Libs/rapidjson/document.h>
+
 class DirectionalLight : public LightComponent
 {
 
   public:
     DirectionalLight(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform);
+    DirectionalLight(const rapidjson::Value& initialState);
     ~DirectionalLight();
 
-    void RenderEditorInspector() override;
+    virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
-    void EditorParams(const int index);
+    void RenderEditorInspector() override;
+    void Render() override;
+
     float3 GetDirection() const { return direction; }
 
   private:

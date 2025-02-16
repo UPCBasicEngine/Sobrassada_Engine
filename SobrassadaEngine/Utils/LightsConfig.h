@@ -2,8 +2,12 @@
 
 #include "Globals.h"
 
+#include "../ResourceManagement/Resources/ResourceTexture.h"
+
 #include "Math/float3.h"
 #include "Math/float4.h"
+
+#include <memory>
 
 namespace Math
 {
@@ -24,14 +28,15 @@ namespace Lights
         AmbientLightShaderData(const float4 &color) : color(color) {}
     };
 
-struct DirectionalLightShaderData
-{
-    float3 direction;
-    float4 color;
+    struct DirectionalLightShaderData
+    {
+        float4 direction;
+        float4 color;
 
-    DirectionalLightShaderData(const float3 &dir, const float4 &color) : direction(dir) ,color(color) {}
+        DirectionalLightShaderData(const float4 &dir, const float4 &color) : direction(dir) ,color(color) {}
 
-};
+    };
+
     struct PointLightShaderData
     {
         float4 position;
@@ -67,14 +72,18 @@ class LightsConfig
     void InitSkybox();
     void RenderSkybox() const;
 
+    void AddSkyboxTexture(UID resource);
+
     void InitLightBuffers();
     void SetLightsShaderData() const;
-    void AddDirectionalLight();
+
+    void AddDirectionalLight(DirectionalLight* newDirectional);
+    void AddPointLight(PointLight* newPoint);
+    void AddSpotLight(SpotLight* newSpot);
+
     void RemoveDirectionalLight();
-    void AddPointLight();
-    void RemovePointLight();
-    void AddSpotLight();
-    void RemoveSpotLight();
+    void RemovePointLight(UID pointUid);
+    void RemoveSpotLight(UID spotUid);
 
   private:
     unsigned int LoadSkyboxTexture(UID cubemapUID) const;
@@ -82,6 +91,11 @@ class LightsConfig
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;
 
+    void GetAllSceneLights();
+
+    void GetAllPointLights();
+    void GetAllSpotLights();
+    void GetDirectionalLight();
 
   private:
     unsigned int skyboxVao;
@@ -95,6 +109,9 @@ class LightsConfig
     unsigned int spotBufferId;
 
     DirectionalLight *directionalLight = nullptr;
-    std::vector<PointLight> pointLights;
-    std::vector<SpotLight> spotLights;
+    std::vector<PointLight*> pointLights;
+    std::vector<SpotLight*> spotLights;
+
+    ResourceTexture* currentTexture;
+    std::string currentTextureName;
 };
