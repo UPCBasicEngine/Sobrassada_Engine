@@ -2,7 +2,6 @@
 
 #include "Application.h"
 #include "DirectXTex/DirectXTex.h"
-#include "ResourceManagement/Resources/ResourceTexture.h"
 #include "FileSystem.h"
 #include "LibraryModule.h"
 #include "glew.h"
