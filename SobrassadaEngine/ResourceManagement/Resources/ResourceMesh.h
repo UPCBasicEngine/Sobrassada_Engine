@@ -15,7 +15,7 @@ namespace tinygltf
 class ResourceMesh : public Resource
 {
   public:
-    ResourceMesh(UID uid, const std::string& name);
+    ResourceMesh(UID uid, const std::string& name, const float3& maxPos, const float3& minPos);
     ~ResourceMesh() override;
 
     void LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
