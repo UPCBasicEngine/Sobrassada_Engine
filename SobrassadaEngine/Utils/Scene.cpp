@@ -39,13 +39,18 @@ Scene::~Scene()
     GLOG("%s scene closed", sceneName)
 }
 
-void Scene::Load(const std::map<UID, Component*>& loadedGameComponents, const std::unordered_map<UID, GameObject*>& loadedGameObjects)
+void Scene::LoadComponents(const std::map<UID, Component*>& loadedGameComponents)
 {
     gameComponents.clear();
     gameObjectsContainer.clear();
     gameComponents.insert(loadedGameComponents.begin(), loadedGameComponents.end());
+}
+
+void Scene::LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects)
+{
+    gameObjectsContainer.clear();
     gameObjectsContainer.insert(loadedGameObjects.begin(), loadedGameObjects.end());
-    
+
     GameObject* root = GetGameObjectByUUID(gameObjectRootUUID);
     if (root != nullptr)
     {

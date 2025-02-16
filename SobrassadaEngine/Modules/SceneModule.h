@@ -37,8 +37,8 @@ class SceneModule : public Module
 
     void CreateScene();
     void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject,
-    const std::map<UID, Component*> &loadedGameComponents,
-    const std::unordered_map<UID, GameObject*>& loadedGameObjects);
+    const std::map<UID, Component*> &loadedGameComponents);
+    void LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects);
     void CloseScene();
 
     void CheckObjectsToRender();
