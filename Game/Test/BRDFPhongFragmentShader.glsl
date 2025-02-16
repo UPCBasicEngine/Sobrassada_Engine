@@ -8,23 +8,34 @@ out vec4 outColor;
 layout(binding=0) uniform sampler2D diffuseTexture;
 layout(binding=1) uniform sampler2D specularTexture;
 
-uniform vec3 lightColor;
-uniform vec3 lightDir;
 uniform vec3 cameraPos;
 
-/**
- * Lights Data
-**/ 
+
+// Lights data structures
+struct DirectionalLight
+{
+    vec3 direction;
+    vec4 color;             // rbg = color & alpha = intensity
+};
+
+
+// Lights SSBOs
 layout(std140, binding = 4) uniform Ambient
 {
 	vec4 ambient_color;		// rbg = color & alpha = intensity
 };
 
+layout(std140, binding = 7) uniform Directional
+{
+    vec4 directional_dir;
+    vec4 directional_color;
+};
 
 
+// Material UBO
 layout(std140, binding = 1) uniform Material
 {
-    vec4 diffColor;
+    //vec4 diffColor;
     vec4 specColor;
     float shininess;   
     bool shininessInAlpha;  
@@ -39,14 +50,17 @@ void main()
     //TEMP: Texture colors to see lights effect
     texColor = vec3(0.5f, 0.5f, 0.5f);
     specTexColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
+    vec4 diffColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
     alpha = specTexColor.a;
 
     // Ambient light
     vec3 ambient = ambient_color.rgb * ambient_color.a;
     vec3 hdr = ambient * texColor;
 
+    vec3 lightColor = directional_color.rgb * directional_color.a;
+
     vec3 N = normalize(normal);
-    vec3 L = normalize(lightDir);
+    vec3 L = normalize(directional_dir.xyz);
 
     float NL = dot(N, -L);
     if (NL > 0)
@@ -69,6 +83,7 @@ void main()
         hdr = ambient + diffuse + specular;
     }
 
-    hdr = pow(hdr, vec3(1/2.2));
+    vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
+    ldr = pow(hdr, vec3(1/2.2));
     outColor = vec4(hdr, alpha);
 }

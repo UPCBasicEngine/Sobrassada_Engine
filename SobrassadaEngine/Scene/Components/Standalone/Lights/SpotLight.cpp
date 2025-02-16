@@ -61,9 +61,6 @@ void SpotLight::RenderEditorInspector()
     {
         ImGui::Text("Spot light parameters");
 
-        ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
-
-        ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
         ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
         if (ImGui::SliderFloat("Inner angle", &innerAngle, 0.0f, 90.0f))
         {
@@ -85,19 +82,26 @@ void SpotLight::Render()
     const float innerRads      = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
     const float outerRads      = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
 
+    std::vector<float3> innerDirections;
+    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(-float3::unitY)));
+    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(-float3::unitY)));
+
+    std::vector<float3> outerDirections;
+    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(-float3::unitY)));
+    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(-float3::unitY)));
+
     // Would be more optimal to only update the direction when rotation is modified
     float4x4 rot = float4x4::FromQuat(
         Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z)
     );
-    direction = (-float3::unitY * rot.RotatePart()).Normalized();    
+    direction = (rot.RotatePart() * -float3::unitY).Normalized(); 
+    innerDirections[0]     = (rot.RotatePart() * innerDirections[0]); 
+    innerDirections[1]     = (rot.RotatePart() * innerDirections[1]); 
 
-    std::vector<float3> innerDirections;
-    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(direction)));
-    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(direction)));
+    outerDirections[0]     = (rot.RotatePart() * outerDirections[0]); 
+    outerDirections[1]     = (rot.RotatePart() * outerDirections[1]); 
 
-    std::vector<float3> outerDirections;
-    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(direction)));
-    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(direction)));
+    
 
     DebugDrawModule *debug = App->GetDebugDrawModule();
     debug->DrawLine(globalTransform.position, direction, range, float3(1, 1, 1));

@@ -28,14 +28,15 @@ namespace Lights
         AmbientLightShaderData(const float4 &color) : color(color) {}
     };
 
-struct DirectionalLightShaderData
-{
-    float3 direction;
-    float4 color;
+    struct DirectionalLightShaderData
+    {
+        float4 direction;
+        float4 color;
 
-    DirectionalLightShaderData(const float3 &dir, const float4 &color) : direction(dir) ,color(color) {}
+        DirectionalLightShaderData(const float4 &dir, const float4 &color) : direction(dir) ,color(color) {}
 
-};
+    };
+
     struct PointLightShaderData
     {
         float4 position;

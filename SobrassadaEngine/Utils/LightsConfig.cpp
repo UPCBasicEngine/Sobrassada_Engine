@@ -121,9 +121,8 @@ void LightsConfig::EditorParams()
 {
     ImGui::Begin("Lights Config");
 
-    // TODO Skybox texture
     ImGui::SeparatorText("Skybox texture");
-    ImGui::Text("TODO Current texture name");
+    ImGui::Text(currentTextureName.c_str());
     ImGui::SameLine();
     if (ImGui::Button("Select texture"))
     {
@@ -154,9 +153,7 @@ void LightsConfig::InitLightBuffers()
     // Buffer for the Directional Light
     glGenBuffers(1, &directionalBufferId);
     glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(Lights::DirectionalLightShaderData), nullptr, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 7, directionalBufferId);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(Lights::DirectionalLightShaderData), nullptr, GL_STATIC_DRAW);
 
     // Point lights buffer
     glGenBuffers(1, &pointBufferId);
@@ -191,13 +188,13 @@ void LightsConfig::SetDirectionalLightShaderData() const
     if (directionalLight)
     {
         Lights::DirectionalLightShaderData dirLightData(
-            float3(directionalLight->GetDirection()),
+            float4(directionalLight->GetDirection(), 0.0f),
             float4(directionalLight->GetColor(), directionalLight->GetIntensity())
         );
 
         glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Lights::DirectionalLightShaderData), &dirLightData);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 7, directionalBufferId);
     }
 }
 

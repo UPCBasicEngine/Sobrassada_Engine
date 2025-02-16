@@ -38,7 +38,7 @@ void DirectionalLight::Render()
     float4x4 rot = float4x4::FromQuat(
         Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z)
     );
-    direction              = (-float3::unitY * rot.RotatePart()).Normalized();
+    direction              = (rot.RotatePart() * -float3::unitY).Normalized();
 
     DebugDrawModule* debug = App->GetDebugDrawModule();
     debug->DrawLine(globalTransform.position, direction, 2, float3(1, 1, 1));

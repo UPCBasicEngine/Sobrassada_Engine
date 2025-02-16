@@ -53,10 +53,6 @@ void PointLight::RenderEditorInspector()
     if (enabled)
     {
         ImGui::Text("Point light parameters");
-
-        ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
-
-        ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
         ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
 
         ImGui::SeparatorText("Gizmos");
