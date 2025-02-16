@@ -753,7 +753,7 @@ void EditorUIModule::About(bool &aboutMenu) const
     ImGui::SameLine();
     ImGui::TextLinkOpenURL("Readme", "https://github.com/UPCBasicEngine/Sobrassada_Engine/blob/main/README.md");
     ImGui::SameLine();
-    ImGui::TextLinkOpenURL("License", "https://github.com/UPCBasicEngine/Sobrassada_Engine/blob/main/README.md");
+    ImGui::TextLinkOpenURL("License", "https://github.com/UPCBasicEngine/Sobrassada_Engine/blob/main/LICENSE.md");
     ImGui::SameLine();
     ImGui::TextLinkOpenURL("Releases", "https://github.com/UPCBasicEngine/Sobrassada_Engine/releases");
 
