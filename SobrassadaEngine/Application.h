@@ -17,7 +17,6 @@ class SceneModule;
 // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 class CameraModule;
 class DebugDrawModule;
-class TextureModuleTest;
 
 class Application
 {
@@ -41,7 +40,6 @@ class Application
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *GetCameraModule() { return cameraModule; }
     DebugDrawModule *GetDebugDrawModule() { return debugDraw; }
-    TextureModuleTest *GetTextureModuleTest() { return textureModuleTest; }
 
   private:
     std::list<Module *> modules;
@@ -58,7 +56,6 @@ class Application
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *cameraModule           = nullptr;
     DebugDrawModule *debugDraw           = nullptr;
-    TextureModuleTest *textureModuleTest = nullptr;
 
     uint32_t previousElapsedTime         = 0;
 };

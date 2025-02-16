@@ -148,12 +148,6 @@ update_status InputModule::PreUpdate(float deltaTime)
             break;
             case SDL_DROPFILE:
                 SceneImporter::Import(sdlEvent.drop.file);
-            //	int fileExtensionPosition = (int)filePath.find_last_of('.');
-
-            //std::string fileExtension = filePath.substr(fileExtensionPosition + 1);
-            //if (fileExtension == ".ppm" || fileExtension == ".png" || fileExtension == ".jpg")
-            // App->GetModelViewerModule()->LoadTexture(filePath.c_str());
-            //else if (fileExtension == ".gltf") App->GetModelViewerModule()->LoadModel(filePath.c_str());
         }
     }
 

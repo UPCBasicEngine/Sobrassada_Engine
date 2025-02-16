@@ -3,19 +3,17 @@
 #include "Application.h"
 #include "LibraryModule.h"
 #include "MeshImporter.h"
+#include "TextureImporter.h"
 
-//change to enum
-ResourceMesh* Importer::Load(UID uid)
+Resource* Importer::Load(UID uid)
 {
-    //this cannot happen before it's loaded into the resources
-    
     const ResourceType type = Resource::GetResourceTypeForUID(uid);
 
     switch (type) {
         case ResourceType::Unknown:
             return nullptr;
         case ResourceType::Texture:
-            break;  // TODO Material loadTexture()
+            return TextureImporter::LoadTexture(uid);
         case ResourceType::Material:
             break;  // TODO Material loadMaterial()
         case ResourceType::Mesh:

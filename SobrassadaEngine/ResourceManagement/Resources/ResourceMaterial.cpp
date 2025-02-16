@@ -2,7 +2,7 @@
 
 #include "Application.h"
 #include "DirectXTex/DirectXTex.h"
-#include "TextureModuleTest.h"
+#include "TextureImporter.h"
 #include "imgui.h"
 
 #include <glew.h>
@@ -83,16 +83,19 @@ TextureInfo ResourceMaterial::GetTexture(const tinygltf::Model sourceModel, int 
         const wchar_t* texturePath    = wideUri.c_str();
 
         DirectX::TexMetadata textureMetadata;
-        unsigned int textureId = App->GetTextureModuleTest()->LoadTexture(texturePath, textureMetadata);
-        if (textureId)
+        unsigned int textureId = 0; // TextureImporter::LoadTexture(texturePath, textureMetadata);
+        /*
+        if (textureid)
         {
-            info.textureID = textureId;
-            info.width     = static_cast<int>(textureMetadata.width);
-            info.height    = static_cast<int>(textureMetadata.height);
-            loadedIndices.insert(texture.source);
+            info.textureid = textureid;
+            info.width     = static_cast<int>(texturemetadata.width);
+            info.height    = static_cast<int>(texturemetadata.height);
+            loadedindices.insert(texture.source);
 
             return info;
         }
+        */
+        return info; //this is wrong
     }
 }
 

@@ -1,7 +1,9 @@
 ﻿#include "ResourceTexture.h"
 
 #include <glew.h>
- ResourceTexture::ResourceTexture(uint64_t uid, const std::string& name) : Resource(uid, name, ResourceType::Texture){
+
+ResourceTexture::ResourceTexture(uint64_t uid, const std::string& name) : Resource(uid, name, ResourceType::Texture)
+{
 }
 
 ResourceTexture::~ResourceTexture()
@@ -10,12 +12,12 @@ ResourceTexture::~ResourceTexture()
 
 void ResourceTexture::LoadData(const DirectX::TexMetadata& metadata, const DirectX::ScratchImage& scratchImage)
 {
-    //this->metadata = metadata;
+    this->metadata = metadata;
     //this->scratchImage = scratchImage;
-    //ConvertMetadata(this->metadata, openGLMetadata);
+    ConvertMetadata(this->metadata, openGLMetadata);
 }
 
-void ResourceTexture::ConvertMetadata(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata)
+void ResourceTexture::ConvertMetadata(const DirectX::TexMetadata& metadata, OpenGLMetadata& outMetadata)
 {
     switch (metadata.format)
     {

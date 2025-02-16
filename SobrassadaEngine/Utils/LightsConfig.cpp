@@ -4,7 +4,7 @@
 #include "CameraModule.h"
 #include "OpenGLModule.h"
 #include "ShaderModule.h"
-#include "TextureModuleTest.h"
+#include "TextureImporter.h"
 #include "imgui.h"
 
 #include "../Scene/Components/Standalone/Lights/DirectionalLight.h"
@@ -107,11 +107,11 @@ void LightsConfig::RenderSkybox() const
 unsigned int LightsConfig::LoadSkyboxTexture(const char *filename) const
 {
     std::string stringPath         = std::string(filename);
-    std::wstring widePath          = std::wstring(stringPath.begin(), stringPath.end());
-    const wchar_t *wideTexturePath = widePath.c_str();
-    return App->GetTextureModuleTest()->LoadCubemap(wideTexturePath);
-    delete[] wideTexturePath;
+    UID skyboxUID          = TextureImporter::Import(stringPath.c_str());
+    //TextureImporter::LoadTexture(skyboxUID);
+    return 0;
 }
+
 void LightsConfig::EditorParams()
 {
     ImGui::Begin("Lights Config");
