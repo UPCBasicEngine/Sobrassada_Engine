@@ -185,7 +185,10 @@ bool LibraryModule::LoadScene(const char* path, bool reload)
 
             Component* newComponent           = ComponentUtils::CreateExistingComponent(component);
 
-            loadedGameComponents.insert({newComponent->GetUID(), newComponent});
+            if (newComponent != nullptr)
+            {
+                loadedGameComponents.insert({newComponent->GetUID(), newComponent});
+            }
         }
     }
 
