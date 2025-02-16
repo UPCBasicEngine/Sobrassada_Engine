@@ -11,7 +11,16 @@ layout(binding=1) uniform sampler2D specularTexture;
 uniform vec3 lightColor;
 uniform vec3 lightDir;
 uniform vec3 cameraPos;
-uniform vec3 ambientIntensity;
+
+/**
+ * Lights Data
+**/ 
+layout(std140, binding = 4) uniform Ambient
+{
+	vec4 ambient_color;		// rbg = color & alpha = intensity
+};
+
+
 
 layout(std140, binding = 1) uniform Material
 {
@@ -27,8 +36,14 @@ void main()
     vec4 specTexColor = texture(specularTexture, uv0);
     float alpha = specTexColor.a;
 
-    vec3 ambient = ambientIntensity * texColor;
-    vec3 result = ambient;
+    //TEMP: Texture colors to see lights effect
+    texColor = vec3(0.5f, 0.5f, 0.5f);
+    specTexColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
+    alpha = specTexColor.a;
+
+    // Ambient light
+    vec3 ambient = ambient_color.rgb * ambient_color.a;
+    vec3 hdr = ambient * texColor;
 
     vec3 N = normalize(normal);
     vec3 L = normalize(lightDir);
@@ -51,9 +66,9 @@ void main()
 
         vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffColor.rgb * texColor * lightColor * NL;
         vec3 specular = normalization * specColor.rgb * specTexColor.rgb * VR * lightColor * fresnel;
-        result = ambient + diffuse + specular;
+        hdr = ambient + diffuse + specular;
     }
 
-    result = pow(result, vec3(1/2.2));
-    outColor = vec4(result, alpha);
+    hdr = pow(hdr, vec3(1/2.2));
+    outColor = vec4(hdr, alpha);
 }
