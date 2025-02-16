@@ -9,6 +9,8 @@
 #include "LibraryModule.h"
 #include "OpenGLModule.h"
 #include "SceneModule.h"
+#include "Octree.h"
+
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "./Libs/ImGuizmo/ImGuizmo.h"
@@ -35,6 +37,7 @@ Scene::~Scene()
     gameComponents.clear();
 
     delete lightsConfig;
+    delete sceneOctree;
     lightsConfig = nullptr;
 
     GLOG("%s scene closed", sceneName)
@@ -70,6 +73,8 @@ void Scene::LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGa
         GLOG("Init transform and AABB calculation")
         root->ComponentGlobalTransformUpdated();
     }
+
+    CreateSpatialDataStruct();
 }
 
 update_status Scene::Render(float deltaTime)
@@ -78,11 +83,14 @@ update_status Scene::Render(float deltaTime)
     lightsConfig->RenderSkybox();
     lightsConfig->SetLightsShaderData();
 
-    for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); ++it)
+    std::vector<GameObject*> objectsToRender;
+    CheckObjectsToRender(objectsToRender);
+
+    for (auto gameObject : objectsToRender)
     {
-        if (it->second != nullptr)
+        if (gameObject != nullptr)
         {
-            it->second->Render();
+            gameObject->Render();
         }
         else
         {
@@ -267,6 +275,46 @@ AABBUpdatable* Scene::GetTargetForAABBUpdate(UID uuid)
     }
 
     return nullptr;
+}
+
+void Scene::CreateSpatialDataStruct()
+{
+    // PARAMETRIZED IN FUTURE
+    float3 octreeCenter          = float3::zero;
+    float octreeLength           = 200;
+    int nodeCapacity             = 5;
+    sceneOctree                  = new Octree(octreeCenter, octreeLength, nodeCapacity);
+
+    for (const auto& objectIterator : gameObjectsContainer)
+    {
+        AABB objectBB = objectIterator.second->GetAABB();
+
+        if (objectBB.Size().x == 0 && objectBB.Size().y == 0 && objectBB.Size().z == 0) continue;
+
+        sceneOctree->InsertElement(objectIterator.second);
+    }
+}
+
+void Scene::UpdateSpatialDataStruct()
+{
+    delete sceneOctree;
+
+    CreateSpatialDataStruct();
+}
+
+void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects) const
+{
+    std::vector<GameObject*> queriedObjects;
+    const FrustumPlanes& frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+
+    sceneOctree->QueryElements(frustumPlanes, queriedObjects);
+
+    for (auto gameObject : queriedObjects)
+    {
+        AABB objectOBB = gameObject->GetAABB();
+
+        if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
+    }
 }
 
 GameObject* Scene::GetGameObjectByUUID(UID gameObjectUUID)

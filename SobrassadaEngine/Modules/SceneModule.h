@@ -19,7 +19,6 @@
 class GameObject;
 class Component;
 class RootComponent;
-class Octree;
 
 class SceneModule : public Module
 {
@@ -71,16 +70,11 @@ class SceneModule : public Module
 
     LightsConfig* GetLightsConfig() { return loadedScene != nullptr ? loadedScene->GetLightsConfig() : nullptr; }
 
-  private:
-    void CreateSpatialDataStruct();
-    void UpdateSpatialDataStruct();
-    void CheckObjectsToRender(std::vector<GameObject *> &outRenderGameObjects) const;
+    void RegenerateTree() { loadedScene->UpdateSpatialDataStruct(); };
 
   private:
 
     Scene* loadedScene = nullptr;
-
-    Octree *sceneOctree = nullptr;
 
     bool bInPlayMode = false;
 };

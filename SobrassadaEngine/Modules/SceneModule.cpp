@@ -73,8 +73,6 @@ update_status SceneModule::PostUpdate(float deltaTime)
 
 bool SceneModule::ShutDown()
 {
-    delete sceneOctree;
-
     GLOG("Destroying octree")
     return true;
 }
@@ -118,58 +116,21 @@ void SceneModule::CloseScene()
     loadedScene = nullptr;
 }
 
-void SceneModule::CreateSpatialDataStruct()
-{
-    // float3 octreeCenter = float3::zero;
-    // float octreeLength  = 100;
-    // int nodeCapacity    = 5;
-    // sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
-
-    // for (auto& objectIterator : gameObjectsContainer)
-    //{
-    //     AABB objectBB = objectIterator.second->GetGlobalBoundingBox();
-
-    //    if (objectBB.Size().x == 0 && objectBB.Size().y == 0 && objectBB.Size().z == 0) continue;
-
-    //    sceneOctree->InsertElement(objectIterator.second);
-    //}
-}
-
-void SceneModule::UpdateSpatialDataStruct()
-{
-    delete sceneOctree;
-
-    CreateSpatialDataStruct();
-}
-
-void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects) const
-{
-    // std::vector<GameObject*> queriedObjects;
-    // const FrustumPlanes& frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-
-    // sceneOctree->QueryElements(frustumPlanes, queriedObjects);
-
-    // for (auto gameObject : queriedObjects)
-    //{
-    //     OBB objectOBB = gameObject->GetGlobalOrientedBoundingBox();
-
-    //    if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
-    //}
-}
-
 void SceneModule::SwitchPlayModeStateTo(bool wantedStatePlayMode)
 {
     if (wantedStatePlayMode == bInPlayMode) return;
-    
+
     if (bInPlayMode)
     {
         if (loadedScene != nullptr)
         {
-            App->GetLibraryModule()->LoadScene(std::string(SCENES_PATH + std::string(loadedScene->GetSceneName()) + SCENE_EXTENSION).c_str(), true);
+            App->GetLibraryModule()->LoadScene(
+                std::string(SCENES_PATH + std::string(loadedScene->GetSceneName()) + SCENE_EXTENSION).c_str(), true
+            );
             bInPlayMode = false;
         }
-        
-    } else
+    }
+    else
     {
         if (loadedScene != nullptr)
         {

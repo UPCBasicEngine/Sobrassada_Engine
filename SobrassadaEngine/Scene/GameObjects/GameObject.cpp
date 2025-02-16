@@ -326,6 +326,14 @@ void GameObject::PassAABBUpdateToParent()
         {
             parentGameObject->PassAABBUpdateToParent();
         }
+        else
+        {
+            App->GetSceneModule()->RegenerateTree();
+        }
+    }
+    else
+    {
+        App->GetSceneModule()->RegenerateTree();
     }
 }
 
