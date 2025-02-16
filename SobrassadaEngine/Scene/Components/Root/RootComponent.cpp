@@ -170,12 +170,15 @@ void RootComponent::RenderEditorInspector()
 
 void RootComponent::RenderGuizmo()
 {
-    if (App->GetEditorUIModule()->RenderImGuizmo(localTransform))
+    if (selectedUID == uid)
     {
-        AABBUpdatable* parentGameObject = GetParent();
-        if (parentGameObject != nullptr)
+        if (App->GetEditorUIModule()->RenderImGuizmo(localTransform))
         {
-            OnTransformUpdate(parentGameObject->GetParentGlobalTransform()); // Step up two parents to get the correct transform
+            AABBUpdatable* parentGameObject = GetParent();
+            if (parentGameObject != nullptr)
+            {
+                OnTransformUpdate(parentGameObject->GetParentGlobalTransform()); // Step up two parents to get the correct transform
+            }
         }
     }
 }
