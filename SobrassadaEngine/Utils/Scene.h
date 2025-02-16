@@ -46,14 +46,14 @@ public:
     AABBUpdatable* GetTargetForAABBUpdate(UID uuid);
 
     UID GetSceneUID() const { return sceneUID; }
-    const char* GetSceneName() const { return sceneName; }
+    const char* GetSceneName() const { return sceneName.c_str(); }
 
     void AddGameObject(UID uid, GameObject *newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
     void AddComponent(UID uid, Component *newComponent) { gameComponents.insert({uid, newComponent}); }
 
 private:
     
-    const char* sceneName;
+    std::string sceneName;
     UID sceneUID;
     UID gameObjectRootUUID;
     
