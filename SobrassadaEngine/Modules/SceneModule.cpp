@@ -18,6 +18,7 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "EditorUIModule.h"
+#include "LibraryModule.h"
 
 #include <Algorithm/Random/LCG.h>
 #include <tiny_gltf.h>
@@ -162,11 +163,18 @@ void SceneModule::SwitchState(bool wantedStatePlayMode)
     
     if (bInPlayMode)
     {
-        // TODO Load scene 
-        bInPlayMode = false;
+        if (loadedScene != nullptr)
+        {
+            App->GetLibraryModule()->LoadScene(std::string(SCENES_PATH + std::string(loadedScene->GetSceneName()) + SCENE_EXTENSION).c_str());
+            bInPlayMode = false;
+        }
+        
     } else
     {
-        // TODO Filesystem save scene
-        bInPlayMode = true;
+        if (loadedScene != nullptr)
+        {
+            loadedScene->Save();
+            bInPlayMode = true;
+        }
     }
 }

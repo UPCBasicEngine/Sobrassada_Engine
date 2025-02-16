@@ -6,6 +6,7 @@
 #include "Framebuffer.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "LibraryModule.h"
 #include "OpenGLModule.h"
 #include "SceneModule.h"
 #include "imgui.h"
@@ -39,6 +40,14 @@ Scene::~Scene()
     lightsConfig = nullptr;
 
     GLOG("%s scene closed", sceneName)
+}
+
+void Scene::Save() const
+{
+    if (!App->GetLibraryModule()->SaveScene(SCENES_PATH, SaveMode::Save))
+    {
+        GLOG("%s scene saving failed", sceneName)
+    }
 }
 
 void Scene::LoadComponents(const std::map<UID, Component*>& loadedGameComponents)
