@@ -115,14 +115,21 @@ void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID)
     bool hasChildren         = !children.empty();
     
     if (!hasChildren) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    if (selectedGameObjectUUID == uuid)
+    if (selectedGameObjectUUID == uuid) flags |= ImGuiTreeNodeFlags_Selected;
+
+    ImGui::PushID(uuid);
+
+    bool nodeOpen = false;
+    
+    if (isRenaming && currentRenamingUID == uuid)
     {
-
-        flags |= ImGuiTreeNodeFlags_Selected;
+        nodeOpen = ImGui::TreeNodeEx("##RenamingNode", flags, "");
+        RenameGameObjectHierarchy();
     }
-
-    ImGui::PushID(static_cast<int>(uuid));
-    bool nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
+    else
+    {
+        nodeOpen = ImGui::TreeNodeEx(name.c_str(), flags);
+    }
 
     HandleNodeClick(selectedGameObjectUUID);
     RenderContextMenu();
@@ -132,7 +139,7 @@ void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID)
         for (UID childUUID : children)
         {
             GameObject *childGameObject = App->GetSceneModule()->GetGameObjectByUUID(childUUID);
-            if (childUUID != uuid)
+            if (childGameObject && childUUID != uuid)
             {
                 childGameObject->RenderHierarchyNode(selectedGameObjectUUID);
             }
@@ -154,7 +161,7 @@ void GameObject::HandleNodeClick(UID &selectedGameObjectUUID)
     if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
     {
         selectedGameObjectUUID = uuid;
-        ImGui::OpenPopup(("Game Object Context Menu##" + std::to_string(uuid)).c_str());
+        ImGui::OpenPopup(("##GameObjectContextMenu" + std::to_string(uuid)).c_str());
     }
 
     // Drag and Drop
@@ -186,7 +193,7 @@ void GameObject::HandleNodeClick(UID &selectedGameObjectUUID)
 
 void GameObject::RenderContextMenu() 
 {
-    if (ImGui::BeginPopup(("Game Object Context Menu##" + std::to_string(uuid)).c_str()))
+    if (ImGui::BeginPopup(("##GameObjectContextMenu" + std::to_string(uuid)).c_str()))
     {
         if (ImGui::MenuItem("New GameObject"))
         {
@@ -196,6 +203,25 @@ void GameObject::RenderContextMenu()
             ComponentGlobalTransformUpdated();
         }
 
+        if (ImGui::MenuItem("Rename"))
+        {
+            if (currentRenamingUID != INVALID_UUID && currentRenamingUID != uuid)
+            {
+                GameObject* oldGameObject = App->GetSceneModule()->GetGameObjectByUUID(currentRenamingUID);
+
+                if (oldGameObject)
+                {
+                    oldGameObject->name       = oldGameObject->renameBuffer;
+                    oldGameObject->isRenaming = false;
+                }
+            }
+            
+            isRenaming = true;
+            strncpy_s(renameBuffer, sizeof(renameBuffer), name.c_str(),_TRUNCATE);
+
+            currentRenamingUID = uuid;
+        }
+
         if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::MenuItem("Delete"))
         {
             App->GetSceneModule()->RemoveGameObjectHierarchy(uuid);
@@ -203,6 +229,32 @@ void GameObject::RenderContextMenu()
         }
 
         ImGui::EndPopup();
+    }
+}
+
+void GameObject::RenameGameObjectHierarchy()
+{
+    ImGui::SameLine();
+
+    if (ImGui::InputText(
+            "##RenameInput", renameBuffer, IM_ARRAYSIZE(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue
+        ))
+    {
+        name       = renameBuffer;
+        isRenaming = false;
+        currentRenamingUID = INVALID_UUID;
+    }
+
+    bool isClickedOutside = 
+        !ImGui::IsItemFocused() 
+        && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) 
+        && !ImGui::IsAnyItemHovered();
+
+    if (isClickedOutside)
+    {
+        name               = renameBuffer;
+        isRenaming         = false;
+        currentRenamingUID = INVALID_UUID;
     }
 }
 
