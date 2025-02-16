@@ -144,13 +144,7 @@
     <ClCompile Include="Modules\DebugDrawModule.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\TextureModuleTest.cpp">
-      <Filter>Tests</Filter>
-    </ClCompile>
     <ClCompile Include="Tests\CameraModule.cpp">
-      <Filter>Tests</Filter>
-    </ClCompile>
-    <ClCompile Include="Tests\EngineModel.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
     <ClCompile Include="Utils\Framebuffer.cpp">
@@ -213,9 +207,6 @@
     <ClCompile Include="ResourceManagement\Resources\ResourceMesh.cpp">
       <Filter>Resources</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\ResourcesModule.cpp">
-      <Filter>Resources</Filter>
-    </ClCompile>
     <ClCompile Include="ResourceManagement\Resources\ResourceTexture.cpp">
       <Filter>Resources</Filter>
     </ClCompile>
@@ -244,47 +235,54 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="UI\QuadtreeViewer.cpp">
-          <Filter>UI</Filter>
-        </ClCompile>
-        <ClCompile Include="Utils\Quadtree.cpp">
-          <Filter>Utils</Filter>
-        </ClCompile>
-        <ClCompile Include="Tests\MockGameObject.cpp">
-          <Filter>Tests</Filter>
-        </ClCompile>
-        <ClCompile Include="Utils\Octree.cpp">
-          <Filter>Utils</Filter>
-        </ClCompile>
-        <ClCompile Include="Scene\Components\Component.cpp">
-          <Filter>Scene\Components</Filter>
-        </ClCompile>
-        <ClCompile Include="Scene\GameObjects\GameObject.cpp">
-          <Filter>Scene\GameObjects</Filter>
-        </ClCompile>
-        <ClCompile Include="Modules\SceneModule.cpp">
-          <Filter>Modules</Filter>
-        </ClCompile>
-        <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp">
-          <Filter>ImGuizmo</Filter>
-        </ClCompile>
-        <ClCompile Include="Scene\Components\Standalone\MeshComponent.cpp">
-          <Filter>Scene\Components</Filter>
-        </ClCompile>
-        <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
-          <Filter>Scene\Components</Filter>
-        </ClCompile>
-        <ClCompile Include="Scene\Components\Component.cpp">
-          <Filter>Scene\Components</Filter>
-        </ClCompile>
-        <ClCompile Include="Scene\Components\ComponentUtils.cpp">
-          <Filter>Scene\Components</Filter>
-        </ClCompile>
-        <ClCompile Include="Utils\Scene.cpp">
-          <Filter>Scene</Filter>
-        </ClCompile>
-        <ClCompile Include="Utils\FrustumPlanes.cpp">
-          <Filter>Utils</Filter>
-        </ClCompile>
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Quadtree.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\MockGameObject.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Octree.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Component.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\GameObjects\GameObject.cpp">
+      <Filter>Scene\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\SceneModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGuizmo\ImGuizmo.cpp">
+      <Filter>ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\MeshComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Root\RootComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Component.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\ComponentUtils.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Scene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\FrustumPlanes.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Transform.cpp" />
+    <ClCompile Include="Modules\ResourcesModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystem\Importer.cpp">
+      <Filter>FileSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -392,13 +390,7 @@
     <ClInclude Include="Modules\DebugDrawModule.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="Tests\TextureModuleTest.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
     <ClInclude Include="Tests\CameraModule.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\EngineModel.h">
       <Filter>Tests</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Framebuffer.h">
@@ -462,9 +454,6 @@
     <ClInclude Include="ResourceManagement\Resources\ResourceMesh.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="Modules\ResourcesModule.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="ResourceManagement\Resources\ResourceTexture.h">
       <Filter>Resources</Filter>
     </ClInclude>
@@ -496,20 +485,26 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="UI\QuadtreeViewer.h">
-          <Filter>UI</Filter>
-        </ClInclude>
-        <ClInclude Include="Utils\Quadtree.h">
-          <Filter>Utils</Filter>
-        </ClInclude>
-        <ClInclude Include="Tests\MockGameObject.h">
-          <Filter>Tests</Filter>
-        </ClInclude>
-        <ClInclude Include="Utils\Octree.h">
-          <Filter>Utils</Filter>
-        </ClInclude>
-        <ClInclude Include="Utils\FrustumPlanes.h">
-              <Filter>Utils</Filter>
-            </ClInclude>
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Quadtree.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\MockGameObject.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Octree.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\FrustumPlanes.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\Importer.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ResourcesModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

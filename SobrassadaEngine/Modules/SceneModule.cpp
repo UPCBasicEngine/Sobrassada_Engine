@@ -17,12 +17,19 @@
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
-#include <tiny_gltf.h>
+#include "EditorUIModule.h"
+#include "EditorViewport.h"
+
 #include <Algorithm/Random/LCG.h>
+#include <tiny_gltf.h>
 
-SceneModule::SceneModule() {}
+SceneModule::SceneModule()
+{
+}
 
-SceneModule::~SceneModule() {}
+SceneModule::~SceneModule()
+{
+}
 
 bool SceneModule::Init()
 {
@@ -30,10 +37,10 @@ bool SceneModule::Init()
 
     sceneUID                    = 0;
     sceneName                   = "Default Scene";
-    
+
     GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
-    
-    gameObjectRootUUID = sceneGameObject->GetUID();
+
+    gameObjectRootUUID          = sceneGameObject->GetUID();
     selectedGameObjectUUID      = gameObjectRootUUID;
     sceneGameObject->SetUUID(gameObjectRootUUID);
 
@@ -41,7 +48,7 @@ bool SceneModule::Init()
     gameObjectsContainer.insert({gameObjectRootUUID, sceneGameObject});
 
     // DEMO
-    GameObject *sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
+    GameObject* sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
     UID gameObjectChildRootUUID      = sceneGameChildObject->GetUID();
     sceneGameChildObject->SetUUID(gameObjectChildRootUUID);
     sceneGameObject->AddGameObject(gameObjectChildRootUUID);
@@ -56,9 +63,15 @@ bool SceneModule::Init()
     return true;
 }
 
-update_status SceneModule::PreUpdate(float deltaTime) { return UPDATE_CONTINUE; }
+update_status SceneModule::PreUpdate(float deltaTime)
+{
+    return UPDATE_CONTINUE;
+}
 
-update_status SceneModule::Update(float deltaTime) { return UPDATE_CONTINUE; }
+update_status SceneModule::Update(float deltaTime)
+{
+    return UPDATE_CONTINUE;
+}
 
 update_status SceneModule::Render(float deltaTime)
 {
@@ -66,12 +79,19 @@ update_status SceneModule::Render(float deltaTime)
     lightsConfig->RenderSkybox();
     lightsConfig->SetLightsShaderData();
 
-    for (auto &gameObject : gameObjectsContainer)
+    for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); it++)
     {
-        gameObject.second->Render();
+        if (it->second != nullptr)
+        {
+            it->second->Render();
+        }
+        else
+        {
+            GLOG("Empty gameObject in scene detected")
+        }
     }
 
-    //Probably should go somewhere else, but must go after skybox and meshes
+    // Probably should go somewhere else, but must go after skybox and meshes
     App->GetDebugDrawModule()->Draw();
 
     return UPDATE_CONTINUE;
@@ -79,6 +99,7 @@ update_status SceneModule::Render(float deltaTime)
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
+    App->GetEditorUIModule()->editorViewport->Render();
     GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
     if (selectedGameObject != nullptr)
     {
@@ -87,7 +108,10 @@ update_status SceneModule::RenderEditor(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
-update_status SceneModule::PostUpdate(float deltaTime) { return UPDATE_CONTINUE; }
+update_status SceneModule::PostUpdate(float deltaTime)
+{
+    return UPDATE_CONTINUE;
+}
 
 bool SceneModule::ShutDown()
 {
@@ -97,23 +121,27 @@ bool SceneModule::ShutDown()
     return true;
 }
 
-void SceneModule::LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject)
+void SceneModule::LoadScene(UID sceneUID, const char* sceneName, UID rootGameObject)
 {
     this->sceneUID         = sceneUID;
     gameObjectRootUUID     = rootGameObject;
     selectedGameObjectUUID = gameObjectRootUUID;
     this->sceneName        = sceneName;
+
+    lightsConfig           = new LightsConfig();
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
 }
 
 void SceneModule::CloseScene()
 {
-    for (const auto &[uid, gameObject] : gameObjectsContainer)
+    for (const auto& [uid, gameObject] : gameObjectsContainer)
     {
         delete gameObject;
     }
     gameObjectsContainer.clear();
 
-    for (const auto &[uid, component] : gameComponents)
+    for (const auto& [uid, component] : gameComponents)
     {
         delete component;
     }
@@ -122,21 +150,22 @@ void SceneModule::CloseScene()
     gameObjectRootUUID     = 0;
     selectedGameObjectUUID = 0;
 
-    lightsConfig           = nullptr;
+    delete lightsConfig;
+    lightsConfig = nullptr;
 
     GLOG("%s scene closed", sceneName.c_str());
 }
 
 void SceneModule::CreateSpatialDataStruct()
 {
-    //float3 octreeCenter = float3::zero;
-    //float octreeLength  = 100;
-    //int nodeCapacity    = 5;
-    //sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
+    // float3 octreeCenter = float3::zero;
+    // float octreeLength  = 100;
+    // int nodeCapacity    = 5;
+    // sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
 
-    //for (auto& objectIterator : gameObjectsContainer)
+    // for (auto& objectIterator : gameObjectsContainer)
     //{
-    //    AABB objectBB = objectIterator.second->GetGlobalBoundingBox();
+    //     AABB objectBB = objectIterator.second->GetGlobalBoundingBox();
 
     //    if (objectBB.Size().x == 0 && objectBB.Size().y == 0 && objectBB.Size().z == 0) continue;
 
@@ -153,20 +182,18 @@ void SceneModule::UpdateSpatialDataStruct()
 
 void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects) const
 {
-    //std::vector<GameObject*> queriedObjects;
-    //const FrustumPlanes& frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+    // std::vector<GameObject*> queriedObjects;
+    // const FrustumPlanes& frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
 
-    //sceneOctree->QueryElements(frustumPlanes, queriedObjects);
+    // sceneOctree->QueryElements(frustumPlanes, queriedObjects);
 
-    //for (auto gameObject : queriedObjects)
+    // for (auto gameObject : queriedObjects)
     //{
-    //    OBB objectOBB = gameObject->GetGlobalOrientedBoundingBox();
+    //     OBB objectOBB = gameObject->GetGlobalOrientedBoundingBox();
 
     //    if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
     //}
 }
-
-
 
 void SceneModule::RenderHierarchyUI(bool& hierarchyMenu)
 {
@@ -174,9 +201,9 @@ void SceneModule::RenderHierarchyUI(bool& hierarchyMenu)
 
     if (ImGui::Button("Add GameObject"))
     {
-        GameObject *newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
+        GameObject* newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
         UID newUUID               = newGameObject->GetUID();
-        
+
         GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
 
         // TODO: change when filesystem defined
@@ -188,18 +215,17 @@ void SceneModule::RenderHierarchyUI(bool& hierarchyMenu)
     if (selectedGameObjectUUID != gameObjectRootUUID)
     {
         ImGui::SameLine();
-        
+
         if (ImGui::Button("Delete GameObject"))
         {
-            UID parentUID = GetGameObjectByUUID(selectedGameObjectUUID)->GetParent();
-            GameObject *parentGameObject = GetGameObjectByUUID(parentUID);
+            UID parentUID                = GetGameObjectByUUID(selectedGameObjectUUID)->GetParent();
+            GameObject* parentGameObject = GetGameObjectByUUID(parentUID);
             RemoveGameObjectHierarchy(selectedGameObjectUUID);
-            //parentGameObject->PassAABBUpdateToParent(); // TODO: check if it works
+            // parentGameObject->PassAABBUpdateToParent(); // TODO: check if it works
         }
-            
     }
 
-    GameObject *rootGameObject = GetGameObjectByUUID(gameObjectRootUUID);
+    GameObject* rootGameObject = GetGameObjectByUUID(gameObjectRootUUID);
     if (rootGameObject)
     {
         rootGameObject->RenderHierarchyNode(selectedGameObjectUUID);
@@ -236,7 +262,7 @@ void SceneModule::RemoveGameObjectHierarchy(UID gameObjectUUID)
     delete gameObject;
 }
 
-AABBUpdatable * SceneModule::GetTargetForAABBUpdate(UID uuid)
+AABBUpdatable* SceneModule::GetTargetForAABBUpdate(UID uuid)
 {
     if (gameObjectsContainer.count(uuid))
     {
@@ -248,5 +274,14 @@ AABBUpdatable * SceneModule::GetTargetForAABBUpdate(UID uuid)
         return gameComponents[uuid];
     }
 
+    return nullptr;
+}
+
+GameObject* SceneModule::GetGameObjectByUUID(UID gameObjectUUID)
+{
+    if (gameObjectsContainer.count(gameObjectUUID))
+    {
+        return gameObjectsContainer[gameObjectUUID];
+    }
     return nullptr;
 }

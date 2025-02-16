@@ -8,6 +8,7 @@
 #include "FileSystem/MeshImporter.h"
 #include "ResourceManagement/Resources/ResourceMaterial.h"
 #include "ResourceManagement/Resources/ResourceMesh.h"
+#include "ResourceManagement/Resources/ResourceTexture.h"
 
 #include <Algorithm/Random/LCG.h>
 

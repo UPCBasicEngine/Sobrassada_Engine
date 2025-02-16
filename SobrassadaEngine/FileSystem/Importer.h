@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "ResourceManagement/Resources/ResourceMesh.h"
+#include "ResourceManagement/Resources/Resource.h"
 
 namespace Importer
 {
-    ResourceMesh* Load(UID uid);
+    Resource* Load(UID uid);
 };

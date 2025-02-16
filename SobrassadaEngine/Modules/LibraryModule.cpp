@@ -122,13 +122,13 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
 
     if (saveMode == SaveMode::Save)
     {
-        sceneFilePath = std::string(path) + std::to_string(sceneUID) + SCENE_EXTENSION;
+        sceneFilePath = std::string(path) + sceneName + SCENE_EXTENSION;
         fileName      = sceneName;
     }
     else
     {
-        sceneFilePath = FileSystem::GetFilePath(path) + std::to_string(sceneUID) + SCENE_EXTENSION;
         fileName      = FileSystem::GetFileNameWithoutExtension(path);
+        sceneFilePath = FileSystem::GetFilePath(path) + fileName + SCENE_EXTENSION;
     }
 
     unsigned int bytesWritten =
@@ -248,17 +248,20 @@ bool LibraryModule::LoadLibraryMaps()
 
             switch (prefix)
             {
-            case 1:
+            case 13:
                 AddMesh(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
+                AddResource(filePath, finalUID);
                 break;
-            case 2:
+            case 12:
                 AddMaterial(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
+                AddResource(filePath, finalUID);
                 break;
-            case 3:
+            case 11:
                 AddTexture(finalUID, FileSystem::GetFileNameWithoutExtension(filePath));
+                AddResource(filePath, finalUID);
                 break;
             default:
-                GLOG("Category: Unknown File Type (99)");
+                GLOG("Category: Unknown File Type (10)");
                 break;
             }
         }
@@ -270,18 +273,18 @@ bool LibraryModule::LoadLibraryMaps()
 UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string &filePath)
 {
 
-    uint64_t prefix = 99; // Default prefix "99" for unknown files
+    uint64_t prefix = 10; // Default prefix "99" for unknown files
     if (FileSystem::GetFileExtension(filePath) == MESH_EXTENSION)
     {
-        prefix = 01;
+        prefix = 13;
     }
     if (FileSystem::GetFileExtension(filePath) == MATERIAL_EXTENSION)
     {
-        prefix = 02;
+        prefix = 12;
     }
     if (FileSystem::GetFileExtension(filePath) == TEXTURE_EXTENSION)
     {
-        prefix = 03;
+        prefix = 11;
     }
     // GLOG("%llu", prefix)
     uint64_t final = (prefix * 100000000000000) + (originalUID % 100000000000000);
@@ -345,8 +348,15 @@ const std::string &LibraryModule::GetResourcePath(UID resourceID) const
     auto it = resourcePathsMap.find(resourceID);
     if (it != resourcePathsMap.end())
     {
+        GLOG("requested uid: %llu", resourceID);
+        GLOG("obtained path: %s", it->second.c_str());
         return it->second;
     }
     static const std::string emptyString = "";
     return emptyString;
+}
+
+void LibraryModule::AddResource(const std::string& resourcePath, UID resourceUID)
+{
+    resourcePathsMap[resourceUID] = resourcePath;
 }

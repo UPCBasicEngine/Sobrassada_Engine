@@ -77,7 +77,7 @@ class LightsConfig
     void RemoveSpotLight();
 
   private:
-    unsigned int LoadSkyboxTexture(const char *filename) const;
+    unsigned int LoadSkyboxTexture(UID cubemapUID) const;
     void SetDirectionalLightShaderData() const;
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;

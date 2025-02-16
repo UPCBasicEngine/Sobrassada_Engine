@@ -168,6 +168,18 @@ void RootComponent::RenderEditorInspector()
     }
 }
 
+void RootComponent::RenderGuizmo()
+{
+    if (App->GetEditorUIModule()->RenderImGuizmo(localTransform))
+    {
+        AABBUpdatable* parentGameObject = GetParent();
+        if (parentGameObject != nullptr)
+        {
+            OnTransformUpdate(parentGameObject->GetParentGlobalTransform()); // Step up two parents to get the correct transform
+        }
+    }
+}
+
 void RootComponent::Update()
 {
 }

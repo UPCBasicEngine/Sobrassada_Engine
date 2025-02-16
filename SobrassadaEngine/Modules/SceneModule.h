@@ -25,7 +25,7 @@ class SceneModule : public Module
 {
   public:
     SceneModule();
-    ~SceneModule();
+    ~SceneModule() override;
 
     bool Init() override;
     update_status PreUpdate(float deltaTime) override;
@@ -45,7 +45,7 @@ class SceneModule : public Module
     void RemoveGameObjectHierarchy(UID gameObjectUUID);
 
     //TODO: Change when filesystem defined
-    GameObject *GetGameObjectByUUID(UID gameObjectUUID) { return gameObjectsContainer[gameObjectUUID]; }
+    GameObject *GetGameObjectByUUID(UID gameObjectUUID);
 
     GameObject *GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
 

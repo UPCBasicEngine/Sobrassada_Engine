@@ -1,0 +1,71 @@
+{
+    "Scene": {
+        "UID": 8778715426877000998,
+        "Name": "empty",
+        "RootGameObject": 2248208983,
+        "GameObjects": [
+            {
+                "UID": 2248208983,
+                "ParentUID": 0,
+                "Name": "SceneModule GameObject",
+                "Children": [
+                    2297779135
+                ],
+                "RootComponentUID": 2254962220
+            },
+            {
+                "UID": 2297779135,
+                "ParentUID": 2248208983,
+                "Name": "SceneModule GameObject child",
+                "Children": [],
+                "RootComponentUID": 2297918377
+            }
+        ],
+        "Components": [
+            {
+                "UID": 2254962220,
+                "ParentUID": 2248208983,
+                "RootUID": 2254962220,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
+            },
+            {
+                "UID": 2297918377,
+                "ParentUID": 2297779135,
+                "RootUID": 2297918377,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
+            }
+        ]
+    }
+}

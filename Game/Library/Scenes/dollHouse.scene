@@ -1,0 +1,95 @@
+{
+    "Scene": {
+        "UID": 5174057984067483258,
+        "Name": "dollHouse",
+        "RootGameObject": 1404049769,
+        "GameObjects": [
+            {
+                "UID": 1404049769,
+                "ParentUID": 0,
+                "Name": "SceneModule GameObject",
+                "Children": [
+                    1451392049
+                ],
+                "RootComponentUID": 1409967554
+            },
+            {
+                "UID": 1451392049,
+                "ParentUID": 1404049769,
+                "Name": "SceneModule GameObject child",
+                "Children": [],
+                "RootComponentUID": 1451531291
+            }
+        ],
+        "Components": [
+            {
+                "UID": 76346637,
+                "ParentUID": 1409967554,
+                "RootUID": 1409967554,
+                "Type": 2,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.10000000149011612,
+                    0.10000000149011612,
+                    0.10000000149011612
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Mesh component",
+                "MeshUID": 0,
+                "MaterialUID": 0
+            },
+            {
+                "UID": 1409967554,
+                "ParentUID": 1404049769,
+                "RootUID": 1409967554,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [
+                    76346637
+                ],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
+            },
+            {
+                "UID": 1451531291,
+                "ParentUID": 1451392049,
+                "RootUID": 1451531291,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
+            }
+        ]
+    }
+}
