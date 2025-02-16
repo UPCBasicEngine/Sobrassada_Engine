@@ -2,6 +2,7 @@
 #include "Resource.h"
 
 #include <Math/float4.h>
+#include <Material.h>
 
 namespace tinygltf
 {
@@ -15,13 +16,14 @@ struct TextureInfo
     int height             = 0;
 };
 
-struct Material
+struct MaterialGPU
 {
     float4 diffColor      = {1.0f, 0.0f, 0.0f, 1.0f};
-    float4 specColor      = {1.0f, 0.0f, 0.0f, 1.0f};
+    float3 specColor      = {1.0f, 0.0f, 0.0f};
+    int padding1 = 1;
     bool shininessInAlpha = false;
     float shininess       = 500.0f;
-    int padding[2]        = {0, 0};
+    int padding2[2]        = {0, 0};
 };
 
 class ResourceMaterial : public Resource
@@ -33,7 +35,7 @@ class ResourceMaterial : public Resource
 
     void OnEditorUpdate();
 
-    void LoadMaterial(const tinygltf::Material& srcMaterial, const tinygltf::Model& sourceModel, const char* modelPath);
+    void LoadMaterialData(Material mat);
     void RenderMaterial(int program);
     void FreeMaterials();
     void UpdateUBO();
@@ -45,8 +47,7 @@ class ResourceMaterial : public Resource
     TextureInfo specularTexture;
     bool hasSpecularTexture = false;
 
-    Material material;
+    MaterialGPU material;
 
-    TextureInfo GetTexture(const tinygltf::Model sourceModel, int textureIndex, const char* modelPath);
     unsigned int ubo = 0;
 };

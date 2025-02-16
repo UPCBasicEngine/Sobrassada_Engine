@@ -53,7 +53,7 @@ namespace TextureImporter
 
         UID textureUID       = GenerateUID();
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath = TEXTURES_PATH + std::to_string(textureUID) + TEXTURE_EXTENSION;
+        std::string savePath = TEXTURES_PATH + fileName + TEXTURE_EXTENSION;
 
         unsigned int size =
             FileSystem::Save(savePath.c_str(), blob.GetBufferPointer(), (unsigned int)blob.GetBufferSize());
@@ -64,14 +64,14 @@ namespace TextureImporter
             return 0;
         }
 
-        UID finalTextureUID     = App->GetLibraryModule()->AssignFiletypeUID(textureUID, savePath);
+        UID finalTextureUID = App->GetLibraryModule()->AssignFiletypeUID(textureUID, savePath);
         // added texture to textures map
         App->GetLibraryModule()->AddTexture(finalTextureUID, fileName);
         App->GetLibraryModule()->AddResource(savePath, finalTextureUID);
 
         GLOG("%s saved as dds", fileName.c_str());
 
-        return textureUID;
+        return finalTextureUID;
     }
 
     ResourceTexture* LoadTexture(UID textureUID)
@@ -104,7 +104,64 @@ namespace TextureImporter
         ResourceTexture* texture = new ResourceTexture(textureUID, FileSystem::GetFileNameWithoutExtension(path));
 
         texture->LoadData(outMetadata, outImage);
+        unsigned int textureID;
+        glGenTextures(1, &textureID);
 
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, outMetadata.mipLevels - 1);
+
+        unsigned int internalFormat;
+        unsigned int format;
+        unsigned int type;
+        switch (outMetadata.format)
+        {
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+        case DXGI_FORMAT_R8G8B8A8_UNORM:
+            internalFormat = GL_RGBA8;
+            format         = GL_RGBA;
+            type           = GL_UNSIGNED_BYTE;
+            //formatName     = "DXGI_FORMAT_R8G8B8A8_UNORM";
+            break;
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+        case DXGI_FORMAT_B8G8R8A8_UNORM:
+            internalFormat = GL_RGBA8;
+            format         = GL_BGRA;
+            type           = GL_UNSIGNED_BYTE;
+            //formatName     = "DXGI_FORMAT_B8G8R8A8_UNORM";
+            break;
+        case DXGI_FORMAT_B5G6R5_UNORM:
+            internalFormat = GL_RGB8;
+            format         = GL_BGR;
+            type           = GL_UNSIGNED_BYTE;
+            //formatName     = "DXGI_FORMAT_B5G6R5_UNORM";
+            break;
+        default:
+            assert(false && "Unsupported format");
+        }
+
+        int maxMipmapLevel = outMetadata.mipLevels - 1;
+        if (outMetadata.mipLevels > 1)
+        {
+            for (size_t i = 0; i < outMetadata.mipLevels; ++i)
+            {
+                const DirectX::Image* mip = outImage.GetImage(i, 0, 0);
+                glTexImage2D(GL_TEXTURE_2D, i, internalFormat, mip->width, mip->height, 0, format, type, mip->pixels);
+		    }
+        }
+        else
+        {
+            const DirectX::Image* baseImage = outImage.GetImage(0, 0, 0);
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, outMetadata.width, outMetadata.height, 0, format, type, baseImage->pixels);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+
+        texture->SetTextureID(textureID);
         return texture;
     }
 
