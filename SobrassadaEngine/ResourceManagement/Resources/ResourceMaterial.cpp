@@ -63,11 +63,12 @@ void ResourceMaterial::LoadMaterialData(Material mat)
     material.shininessInAlpha = false;
     material.shininess    = mat.GetGlossinessFactor();
 
-    ResourceTexture* diffTexture = TextureImporter::LoadTexture(App->GetLibraryModule()->GetTextureUID(mat.GetDiffuseTexture()));
+    ResourceTexture* diffTexture = TextureImporter::LoadTexture(App->GetLibraryModule()->GetTextureUID((mat.GetDiffuseTexture())));
     diffuseTexture.textureID     = diffTexture->GetTextureID();
     hasDiffuseTexture            = true;
-
-    ResourceTexture* specTexture = TextureImporter::LoadTexture(App->GetLibraryModule()->GetTextureUID(mat.GetSpecularGlossinessTexture()));
+    //(std::to_string(mat.GetDiffuseTexture()))); remember for normals
+    ResourceTexture* specTexture =
+        TextureImporter::LoadTexture(App->GetLibraryModule()->GetTextureUID((mat.GetSpecularGlossinessTexture())));
     specularTexture.textureID     = specTexture->GetTextureID();
     hasSpecularTexture            = true;
 

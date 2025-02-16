@@ -32,5 +32,5 @@ private:
     DirectX::TexMetadata metadata;
     OpenGLMetadata openGLMetadata;
     DirectX::ScratchImage scratchImage;
-    unsigned int textureID;
+    unsigned int textureID = 0;
 };
