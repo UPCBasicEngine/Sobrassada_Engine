@@ -122,13 +122,13 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
 
     if (saveMode == SaveMode::Save)
     {
-        sceneFilePath = std::string(path) + std::to_string(sceneUID) + SCENE_EXTENSION;
+        sceneFilePath = std::string(path) + sceneName + SCENE_EXTENSION;
         fileName      = sceneName;
     }
     else
     {
-        sceneFilePath = FileSystem::GetFilePath(path) + std::to_string(sceneUID) + SCENE_EXTENSION;
         fileName      = FileSystem::GetFileNameWithoutExtension(path);
+        sceneFilePath = FileSystem::GetFilePath(path) + fileName + SCENE_EXTENSION;
     }
 
     unsigned int bytesWritten =

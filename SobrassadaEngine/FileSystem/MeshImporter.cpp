@@ -312,6 +312,8 @@ namespace MeshImporter
 
         delete[] buffer;
 
+        //App->GetLibraryModule()->AddResource(savePath, finalMeshUID);
+
         return mesh;
     }
 }; // namespace MeshImporter
