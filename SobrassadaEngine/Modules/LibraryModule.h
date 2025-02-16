@@ -21,7 +21,7 @@ class LibraryModule : public Module
     bool Init() override;
 
     bool SaveScene(const char *path, SaveMode saveMode) const;
-    bool LoadScene(const char *path); // const?
+    bool LoadScene(const char *path, bool reload = false); // const?
 
     bool LoadLibraryMaps();
     UID AssignFiletypeUID(UID originalUID, const std::string &filePath);
