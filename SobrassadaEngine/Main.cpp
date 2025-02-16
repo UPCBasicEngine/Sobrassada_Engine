@@ -1,10 +1,13 @@
 #include "Application.h"
 #include "Globals.h"
-#include "UPCTimer.h"
 
 #include "SDL.h"
 #pragma comment(lib, "Libs/SDL/lib/SDL2.lib")
 #pragma comment(lib, "Libs/SDL/lib/SDL2main.lib")
+
+#ifdef _DEBUG
+#include "optick.h"
+#endif
 
 #include <memory>
 
@@ -17,20 +20,21 @@ enum MainState
     MAIN_EXIT
 };
 
-Application *App          = NULL;
-std::vector<char *> *Logs = NULL;
+Application* App         = NULL;
+std::vector<char*>* Logs = NULL;
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    UPCTimer *timer     = new UPCTimer();
-
     int mainReturn      = EXIT_SUCCESS;
     MainState mainState = MAIN_CREATION;
 
-    Logs                = new std::vector<char *>();
+    Logs                = new std::vector<char*>();
 
     while (mainState != MAIN_EXIT)
     {
+#ifdef _DEBUG
+        OPTICK_FRAME("Main application update");
+#endif
         switch (mainState)
         {
         case MAIN_CREATION:
@@ -58,8 +62,7 @@ int main(int argc, char **argv)
 
         case MAIN_UPDATE:
         {
-            float deltaTime   = timer->Tick();
-            int update_return = App->Update(deltaTime);
+            int update_return = App->Update();
 
             if (update_return == UPDATE_ERROR)
             {
@@ -87,7 +90,6 @@ int main(int argc, char **argv)
     }
 
     delete App;
-    delete timer;
 
     // Free memory from log*
     for (auto log : *Logs)

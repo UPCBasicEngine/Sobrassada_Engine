@@ -23,8 +23,10 @@ SpaceBeforeInheritanceColon: true
 AllowShortEnumsOnASingleLine: false
 SortIncludes: CaseSensitive
 CompactNamespaces: false
-NamespaceIndentation: Inner
+NamespaceIndentation: All
 IndentWidth: 4
 Language: Cpp
 BreakBeforeBraces: Allman
 SpaceBeforeCtorInitializerColon: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+PointerAlignment: Left

@@ -63,17 +63,12 @@ void WindowModule::WindowResized(const unsigned int width, const unsigned int he
     windowHeight = height;
 }
 
-SDL_DisplayMode &WindowModule::GetDesktopDisplayMode() const
+SDL_DisplayMode &WindowModule::GetDesktopDisplayMode()
 {
-    SDL_DisplayMode displayMode;
     SDL_GetDesktopDisplayMode(0, &displayMode);
 
     return displayMode;
 }
-
-float WindowModule::GetBrightness() const { return SDL_GetWindowBrightness(window); }
-
-void WindowModule::SetBrightness(const float brightness) const { SDL_SetWindowBrightness(window, brightness); }
 
 void WindowModule::SetWidth(const unsigned int width)
 {
@@ -85,21 +80,4 @@ void WindowModule::SetHeight(const unsigned int height)
 {
     windowHeight = height;
     SDL_SetWindowSize(window, windowWidth, windowHeight);
-}
-
-bool WindowModule::SetFullscreen(bool fullscreen) const { return SDL_SetWindowFullscreen(window, fullscreen); }
-
-void WindowModule::SetResizable(bool resizable) const
-{
-    SDL_SetWindowResizable(window, resizable ? SDL_TRUE : SDL_FALSE);
-}
-
-void WindowModule::SetBorderless(bool borderless) const
-{
-    SDL_SetWindowBordered(window, borderless ? SDL_FALSE : SDL_TRUE);
-}
-
-bool WindowModule::SetFullDesktop(bool fullDesktop) const
-{
-    return SDL_SetWindowFullscreen(window, fullDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 }

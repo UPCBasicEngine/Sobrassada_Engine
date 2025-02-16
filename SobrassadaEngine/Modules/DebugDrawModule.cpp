@@ -3,6 +3,7 @@
 #include "CameraModule.h"
 #include "Globals.h"
 #include "MathGeoLib.h"
+#include "QaudtreeViewer.h"
 #include "SDL_video.h"
 #include "WindowModule.h"
 
@@ -10,6 +11,7 @@
 #include "DebugDraw.h" // Debug Draw API. Notice that we need the DEBUG_DRAW_IMPLEMENTATION macro here!
 
 #include "glew.h"
+#include "imgui.h"
 
 class DDRenderInterfaceCoreGL final : public dd::RenderInterface
 {
@@ -578,9 +580,13 @@ const char *DDRenderInterfaceCoreGL::textFragShaderSrc =
 
 DDRenderInterfaceCoreGL *DebugDrawModule::implementation = 0;
 
-DebugDrawModule::DebugDrawModule() {}
+DebugDrawModule::DebugDrawModule()
+{
+}
 
-DebugDrawModule::~DebugDrawModule() {}
+DebugDrawModule::~DebugDrawModule()
+{
+}
 
 bool DebugDrawModule::Init()
 {
@@ -601,20 +607,70 @@ bool DebugDrawModule::ShutDown()
 
 update_status DebugDrawModule::Render(float deltaTime)
 {
-    float4x4 proj = App->GetCameraModule()->GetProjectionMatrix();
-    float4x4 view = App->GetCameraModule()->GetViewMatrix();
-
-    dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
+    //dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
     dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
 
-    int width  = 0;
-    int height = 0;
-
-    SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
-
-    Draw(view, proj, width, height);
+    // Probably should go somewhere else, but must go after skybox and meshes
+    App->GetDebugDrawModule()->Draw();
 
     return UPDATE_CONTINUE;
+}
+
+void DebugDrawModule::Draw()
+{
+    auto projection = App->GetCameraModule()->GetProjectionMatrix();
+    auto view       = App->GetCameraModule()->GetViewMatrix();
+    int width       = 0;
+    int height      = 0;
+
+    if (App->GetCameraModule()->IsCameraDetached())
+    {
+        float4x4 frustumProj       = App->GetCameraModule()->GetFrustumProjectionMatrix();
+        float4x4 frustumView       = App->GetCameraModule()->GetFrustumViewMatrix();
+        float4x4 inverseClipMatrix = frustumProj * frustumView;
+        inverseClipMatrix.Inverse();
+
+        dd::frustum(inverseClipMatrix, float3(1.f, 1.f, 1.f));
+    }
+
+    SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
+    implementation->width     = width;
+    implementation->height    = height;
+    implementation->mvpMatrix = projection * view;
+
+    dd::flush();
+}
+
+void DebugDrawModule::Render2DLines(const std::vector<float4> &lines, const float3 &color, float depth)
+{
+    for (auto &line : lines)
+    {
+        dd::line(ddVec3(line.x, line.y, depth), ddVec3(line.z, line.w, depth), ddVec3(color.x, color.y, color.z));
+    }
+}
+
+void DebugDrawModule::RenderLines(const std::vector<LineSegment> &lines, const float3 &color)
+{
+    for (auto &line : lines)
+    {
+        dd::line(line.a, line.b, color);
+    }
+}
+
+void DebugDrawModule::DrawLine(const float3 &origin, const float3 &direction, const float distance, const float3 &color)
+{
+    float3 dir = direction * distance;
+    dd::line(origin, dir + origin, color);
+}
+
+void DebugDrawModule::DrawCircle(const float3 &center, const float3 &upVector, const float3 &color, const float radius) 
+{ 
+    dd::circle(center, upVector, color, radius, 40);
+}
+
+void DebugDrawModule::DrawSphere(const float3& center, const float3 &color, const float radius) 
+{ 
+    dd::sphere(center, color, radius);
 }
 
 void DebugDrawModule::Draw(const float4x4 &view, const float4x4 &proj, unsigned width, unsigned height)

@@ -82,6 +82,8 @@ struct AABB2D
 		return maxPoint.x < minPoint.x || maxPoint.y < minPoint.y;
 	}
 
+	float2 CenterPoint() const { return (minPoint + maxPoint) / 2.f; }
+
 	bool IsFinite() const
 	{
 		return minPoint.IsFinite() && maxPoint.IsFinite() && minPoint.MinElement() > -1e5f && maxPoint.MaxElement() < 1e5f;
@@ -101,6 +103,13 @@ struct AABB2D
 		a.minPoint = minPoint - pt;
 		a.maxPoint = maxPoint - pt;
 		return a;
+	}
+
+	bool operator==(const AABB2D &otherBB) const 
+	{ 
+		float2 mySize = float2(Width(), Height());
+        float2 otherSize = float2(otherBB.Width(), otherBB.Height());
+        return CenterPoint().Equals(otherBB.CenterPoint()) && mySize.Equals(otherSize);
 	}
 
 #ifdef MATH_ENABLE_STL_SUPPORT

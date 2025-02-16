@@ -5,8 +5,7 @@
 #include "Math/float2.h"
 #include "SDL_scancode.h"
 #include <functional>
-#include <list>
-#include <unordered_map>
+#include <vector>
 
 typedef unsigned __int8 Uint8;
 #define NUM_MOUSE_BUTTONS 5
@@ -29,10 +28,12 @@ class InputModule : public Module
     update_status PreUpdate(float deltaTime) override;
     bool ShutDown();
 
-    void SubscribeToEvent(int keyEvent, std::function<void(void)> &functionCallback);
+    void SubscribeToEvent(int keyEvent, const std::function<void(void)> &functionCallback);
 
+    const KeyState *GetKeyboard() const { return keyboard; }
     KeyState GetKey(int id) const { return keyboard[id]; }
 
+    const KeyState *GetMouseButtons() const { return mouseButtons; }
     KeyState GetMouseButtonDown(int id) const { return mouseButtons[id - 1]; }
 
     const float2 &GetMouseMotion() const { return mouseMotion; };
@@ -46,5 +47,5 @@ class InputModule : public Module
     float2 mouse;
     int mouseWheel = 0;
 
-    std::unordered_map<int, std::list<std::function<void(void)>>> subscribedCallbacks;
+    std::vector<std::vector<std::function<void(void)>>> subscribedCallbacks;
 };
