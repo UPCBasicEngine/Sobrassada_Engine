@@ -81,29 +81,34 @@ bool SceneModule::ShutDown()
 void SceneModule::CreateScene()
 {
     CloseScene();
-    
+
     GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
-    
-    loadedScene = new Scene(GenerateUID(), "New Scene", sceneGameObject->GetUID());
+
+    loadedScene                 = new Scene(GenerateUID(), "New Scene", sceneGameObject->GetUID());
 
     std::unordered_map<UID, GameObject*> loadedGameObjects;
     loadedGameObjects.insert({sceneGameObject->GetUID(), sceneGameObject});
-    
-    loadedScene->Load(std::map<UID, Component*>(), loadedGameObjects);
-    
+
+    loadedScene->LoadComponents(std::map<UID, Component*>());
+    loadedScene->LoadGameObjects(loadedGameObjects);
+
     sceneGameObject->CreateRootComponent();
 
     // TODO Filesystem: Save this new created level immediatelly
-    
 }
 
-void SceneModule::LoadScene(UID sceneUID, const char* sceneName, UID rootGameObject,
-    const std::map<UID, Component*> &loadedGameComponents,
-    const std::unordered_map<UID, GameObject*>& loadedGameObjects)
+void SceneModule::LoadScene(
+    UID sceneUID, const char* sceneName, UID rootGameObject, const std::map<UID, Component*>& loadedGameComponents
+)
 {
     CloseScene();
     loadedScene = new Scene(sceneUID, sceneName, rootGameObject);
-    loadedScene->Load(loadedGameComponents,loadedGameObjects);
+    loadedScene->LoadComponents(loadedGameComponents);
+}
+
+void SceneModule::LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects)
+{
+    loadedScene->LoadGameObjects(loadedGameObjects);
 }
 
 void SceneModule::CloseScene()
