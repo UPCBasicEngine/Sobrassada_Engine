@@ -139,7 +139,7 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
     return true;
 }
 
-bool LibraryModule::LoadScene(const char* path)
+bool LibraryModule::LoadScene(const char* path, bool reload)
 {
     rapidjson::Document doc;
     bool loaded = FileSystem::LoadJSON(path, doc);
@@ -163,7 +163,7 @@ bool LibraryModule::LoadScene(const char* path)
     std::string name        = scene["Name"].GetString();
     UID rootGameObject      = scene["RootGameObject"].GetUint64();
 
-    if (sceneUID == App->GetSceneModule()->GetSceneUID())
+    if (sceneUID == App->GetSceneModule()->GetSceneUID() && !reload)
     {
         GLOG("Scene already loaded: %s", name.c_str());
         return false;

@@ -157,7 +157,7 @@ void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameOb
     //}
 }
 
-void SceneModule::SwitchState(bool wantedStatePlayMode)
+void SceneModule::SwitchPlayModeStateTo(bool wantedStatePlayMode)
 {
     if (wantedStatePlayMode == bInPlayMode) return;
     
