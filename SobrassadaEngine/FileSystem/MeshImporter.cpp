@@ -17,10 +17,12 @@ namespace MeshImporter
         const std::string& name, const char* filePath
     )
     {
+        enum DataType dataType = UNSIGNED_CHAR;
         std::vector<Vertex> vertexBuffer;
-        std::vector<unsigned int> indexBuffer;
         unsigned int indexMode = -1;
-
+        std::vector<unsigned char> indexBufferChar;
+        std::vector<unsigned short> indexBufferShort;
+        std::vector<unsigned int> indexBufferInt;
         size_t posStride = 0, tanStride = 0, texStride = 0, normStride = 0;
 
         const auto& itPos = primitive.attributes.find("POSITION");
@@ -94,35 +96,39 @@ namespace MeshImporter
             const unsigned char* bufferIndices = &(indexBufferData.data[indexAcc.byteOffset + indexView.byteOffset]);
             size_t stride                      = (indexView.byteStride > 0) ? indexView.byteStride : 0;
 
-            indexBuffer.reserve(indexAcc.count);
-
             if (indexAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
             {
-                stride = (stride > 0) ? stride : sizeof(unsigned char);
+                indexBufferChar.reserve(indexAcc.count);
+                stride   = (stride > 0) ? stride : sizeof(unsigned char);
+                dataType = UNSIGNED_CHAR;
                 for (size_t i = 0; i < indexAcc.count; ++i)
                 {
                     indexMode = 0;
-                    indexBuffer.push_back(bufferIndices[i]);
+                    indexBufferChar.push_back(bufferIndices[i]);
                 }
             }
             else if (indexAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
             {
-                stride = (stride > 0) ? stride : sizeof(unsigned short);
+                indexBufferShort.reserve(indexAcc.count);
+                stride   = (stride > 0) ? stride : sizeof(unsigned short);
+                dataType = UNSIGNED_SHORT;
                 for (size_t i = 0; i < indexAcc.count; ++i)
                 {
                     indexMode            = 1;
                     unsigned short index = *reinterpret_cast<const unsigned short*>(bufferIndices + i * stride);
-                    indexBuffer.push_back(index);
+                    indexBufferShort.push_back(index);
                 }
             }
             else if (indexAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
             {
-                stride = (stride > 0) ? stride : sizeof(unsigned int);
+                indexBufferInt.reserve(indexAcc.count);
+                stride   = (stride > 0) ? stride : sizeof(unsigned int);
+                dataType = UNSIGNED_INT;
                 for (size_t i = 0; i < indexAcc.count; ++i)
                 {
                     indexMode          = 2;
                     unsigned int index = *reinterpret_cast<const unsigned int*>(bufferIndices + i * stride);
-                    indexBuffer.push_back(index);
+                    indexBufferInt.push_back(index);
                 }
             }
         }
@@ -135,14 +141,40 @@ namespace MeshImporter
 
         // save to binary file.
         // 1 - NUMBER OF INDICES,  2 - NUMBER OF VERTICES  3 - MATERIAL  4 - DRAWING MODE
-        unsigned int header[4] = {
-            static_cast<unsigned int>(indexBuffer.size()), static_cast<unsigned int>(vertexBuffer.size()),
-            static_cast<unsigned int>(mode), static_cast<unsigned int>(indexMode)
-        };
+        unsigned int header[4] = {0, 0, 0, 0};
 
-        unsigned int size = static_cast<unsigned int>(
-            sizeof(header) + (sizeof(Vertex) * vertexBuffer.size()) + (sizeof(unsigned int) * indexBuffer.size())
-        );
+        int indexBufferSize    = 0;
+
+        if (dataType == DataType::UNSIGNED_CHAR)
+        {
+            indexBufferSize = sizeof(unsigned char) * indexBufferChar.size();
+
+            header[0]       = (unsigned int)(indexBufferChar.size());
+            header[1]       = (unsigned int)(vertexBuffer.size());
+            header[2]       = (unsigned int)(mode);
+            header[3]       = (unsigned int)(indexMode);
+        }
+        if (dataType == DataType::UNSIGNED_SHORT)
+        {
+            indexBufferSize = sizeof(unsigned short) * indexBufferShort.size();
+
+            header[0]       = (unsigned int)(indexBufferShort.size());
+            header[1]       = (unsigned int)(vertexBuffer.size());
+            header[2]       = (unsigned int)(mode);
+            header[3]       = (unsigned int)(indexMode);
+        }
+        if (dataType == DataType::UNSIGNED_INT)
+        {
+            indexBufferSize = sizeof(unsigned int) * indexBufferInt.size();
+
+            header[0]       = (unsigned int)(indexBufferInt.size());
+            header[1]       = (unsigned int)(vertexBuffer.size());
+            header[2]       = (unsigned int)(mode);
+            header[3]       = (unsigned int)(indexMode);
+        }
+
+        unsigned int size =
+            static_cast<unsigned int>(sizeof(header) + (sizeof(Vertex) * vertexBuffer.size()) + indexBufferSize);
 
         char* fileBuffer = new char[size];
         char* cursor     = fileBuffer;
@@ -156,14 +188,25 @@ namespace MeshImporter
         cursor += sizeof(Vertex) * vertexBuffer.size();
 
         // index data
-        memcpy(cursor, indexBuffer.data(), sizeof(unsigned int) * indexBuffer.size());
-        cursor                    += sizeof(unsigned int) * indexBuffer.size();
+        if (dataType == DataType::UNSIGNED_CHAR)
+        {
+            memcpy(cursor, indexBufferChar.data(), indexBufferSize);
+        }
+        if (dataType == DataType::UNSIGNED_SHORT)
+        {
+            memcpy(cursor, indexBufferShort.data(), indexBufferSize);
+        }
+        if (dataType == DataType::UNSIGNED_INT)
+        {
+            memcpy(cursor, indexBufferInt.data(), indexBufferSize);
+        }
+        cursor                    += indexBufferSize;
 
         UID meshUID                = GenerateUID();
 
         // false = append
         std::string fileName       = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath       = MESHES_PATH + name + MESH_EXTENSION;
+        std::string savePath       = MESHES_PATH + fileName + MESH_EXTENSION;
         unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, true);
 
         delete[] fileBuffer;
@@ -241,16 +284,18 @@ namespace MeshImporter
         else if (indexMode == 1) // unsigned short
         {
             const unsigned short* bufferInd = reinterpret_cast<const unsigned short*>(cursor);
-            for (unsigned int i = 0; i < indexCount; ++i)
+
+            for (unsigned short i = 0; i < indexCount; ++i)
             {
-                tmpIndices.push_back(bufferInd[i]);
+                unsigned short index = *reinterpret_cast<unsigned short*>(cursor);
+                tmpIndices.push_back(index);
+                cursor += sizeof(unsigned short);
             }
-            cursor += sizeof(unsigned short) * indexCount;
         }
         else if (indexMode == 0) // unsigned byte
         {
             const unsigned char* bufferInd = reinterpret_cast<const unsigned char*>(cursor);
-            for (unsigned int i = 0; i < indexCount; ++i)
+            for (unsigned char i = 0; i < indexCount; ++i)
             {
                 tmpIndices.push_back(bufferInd[i]);
             }

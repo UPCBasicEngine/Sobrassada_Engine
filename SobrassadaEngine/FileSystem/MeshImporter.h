@@ -11,6 +11,13 @@
 #include "tiny_gltf.h"
 #include "ResourceManagement/Resources/ResourceMesh.h"
 
+enum DataType
+{
+    UNSIGNED_CHAR,
+    UNSIGNED_SHORT,
+    UNSIGNED_INT
+}; 
+
 namespace MeshImporter
 {
 

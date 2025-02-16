@@ -30,13 +30,13 @@ ResourceMesh::~ResourceMesh()
 void ResourceMesh::LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 {
     this->mode = mode;
-	
-	unsigned int bufferSize = sizeof(vertices);
+    this->vertexCount       = vertices.size();
+    this->indexCount        = indices.size();
+	unsigned int bufferSize = sizeof(Vertex);
 
 	glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-
-
+        
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * bufferSize, vertices.data(), GL_STATIC_DRAW);
