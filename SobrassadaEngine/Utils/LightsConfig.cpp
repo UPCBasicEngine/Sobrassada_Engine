@@ -176,7 +176,7 @@ void LightsConfig::SetLightsShaderData() const
 
     glBindBuffer(GL_UNIFORM_BUFFER, ambientBufferId);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(ambient), &ambient, GL_STATIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 4, ambientBufferId);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, ambientBufferId);
 
     SetDirectionalLightShaderData();
     SetPointLightsShaderData();
@@ -194,7 +194,7 @@ void LightsConfig::SetDirectionalLightShaderData() const
 
         glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Lights::DirectionalLightShaderData), &dirLightData);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 7, directionalBufferId);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 3, directionalBufferId);
     }
 }
 
@@ -223,7 +223,7 @@ void LightsConfig::SetPointLightsShaderData() const
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::PointLightShaderData), &light);
         offset += sizeof(Lights::PointLightShaderData);
     }
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, pointBufferId);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, pointBufferId);
 }
 
 void LightsConfig::SetSpotLightsShaderData() const
@@ -250,7 +250,7 @@ void LightsConfig::SetSpotLightsShaderData() const
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::SpotLightShaderData), &light);
         offset += sizeof(Lights::SpotLightShaderData) + 12;
     }
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, spotBufferId);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, spotBufferId);
 }
 
 void LightsConfig::AddDirectionalLight(DirectionalLight* newDirectional)

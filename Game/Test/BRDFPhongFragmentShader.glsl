@@ -18,17 +18,29 @@ struct DirectionalLight
     vec4 color;             // rbg = color & alpha = intensity
 };
 
+struct PointLight
+{
+	vec4 position;		// xyz = position & w = range
+	vec4 color;			// rgb = color & alpha = intensity 
+};
+
 
 // Lights SSBOs
-layout(std140, binding = 4) uniform Ambient
+layout(std140, binding = 2) uniform Ambient
 {
 	vec4 ambient_color;		// rbg = color & alpha = intensity
 };
 
-layout(std140, binding = 7) uniform Directional
+layout(std140, binding = 3) uniform Directional
 {
     vec4 directional_dir;
     vec4 directional_color;
+};
+
+readonly layout(std430, binding = 4) buffer PointLights
+{
+	int pointLightsCount;
+	PointLight pointLights[];
 };
 
 
@@ -36,10 +48,49 @@ layout(std140, binding = 7) uniform Directional
 layout(std140, binding = 1) uniform Material
 {
     //vec4 diffColor;
-    vec4 specColor;
+    //vec4 specColor;
     float shininess;   
     bool shininessInAlpha;  
 };
+
+
+
+float pointLightAttenuation(const int index) 
+{
+	float distance = length(pos - pointLights[index].position.xyz);
+	return pow(max(1 - pow((distance / pointLights[index].position.w), 4), 0), 2) / (pow(distance, 2) + 1);
+}
+
+vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, float NL, vec4 diffColor, vec4 specColor, float alpha)
+ {
+    float shininessValue;
+	if(shininessInAlpha) shininessValue = exp2(alpha * 7 + 1);
+	else shininessValue = shininess;
+
+    float normalization = (shininessValue + 2.0) / (2.0 * 3.1415926535);
+    vec3 V = normalize(cameraPos - pos);
+    vec3 R = reflect(L, N);
+    float VR = pow(max(dot(V, R), 0.0f), shininessValue);
+    
+    vec3 RF0 = specTexColor.rgb;
+    float cosTheta = max(dot(N, V), 0.0);
+    vec3 fresnel = RF0 + (1 - RF0) * pow(1 - cosTheta, 5);
+
+    vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffColor.rgb * texColor * Li * NL;
+    vec3 specular = normalization * specColor.rgb * specTexColor.rgb * VR * Li * fresnel;
+    return diffuse + specular;
+}
+
+vec3 RenderPointLight(const int index, const vec3 N, vec4 specTexColor, const vec3 texColor, const float alpha, vec4 diffColor, vec4 specColor)
+{
+	float attenuation = pointLightAttenuation(index);
+	vec3 L = normalize(pos - pointLights[index].position.xyz);
+	vec3 Li = pointLights[index].color.rgb * pointLights[index].color.a * attenuation;
+	float NdotL = dot(N, -L);
+
+	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, specTexColor, texColor, Li, NdotL, diffColor, specColor, alpha);
+	else return vec3(0);	
+}
 
 void main()
 {
@@ -51,6 +102,7 @@ void main()
     texColor = vec3(0.5f, 0.5f, 0.5f);
     specTexColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
     vec4 diffColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
+    vec4 specColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
     alpha = specTexColor.a;
 
     // Ambient light
@@ -62,25 +114,31 @@ void main()
     vec3 N = normalize(normal);
     vec3 L = normalize(directional_dir.xyz);
 
+    for (int i = 0; i < pointLightsCount; ++i)
+	{
+		hdr += RenderPointLight(i, N, specTexColor, texColor, alpha, diffColor, specColor);
+	}
+
     float NL = dot(N, -L);
     if (NL > 0)
     {
-		float shininessValue;
-		if(shininessInAlpha) shininessValue = exp2(alpha * 7 + 1);
-		else shininessValue = shininess;
-
-        float normalization = (shininessValue + 2.0) / (2.0 * 3.1415926535);
-        vec3 V = normalize(cameraPos - pos);
-        vec3 R = reflect(L, N);
-        float VR = pow(max(dot(V, R), 0.0f), shininessValue);
-        
-        vec3 RF0 = specTexColor.rgb;
-        float cosTheta = max(dot(N, V), 0.0);
-        vec3 fresnel = RF0 + (1 - RF0) * pow(1 - cosTheta, 5);
-
-        vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffColor.rgb * texColor * lightColor * NL;
-        vec3 specular = normalization * specColor.rgb * specTexColor.rgb * VR * lightColor * fresnel;
-        hdr = ambient + diffuse + specular;
+		hdr += RenderLight(L, N, specTexColor, texColor, lightColor, NL, diffColor, specColor, alpha);
+        //float shininessValue;
+        //if(shininessInAlpha) shininessValue = exp2(alpha * 7 + 1);
+        //else shininessValue = shininess;
+//
+        //float normalization = (shininessValue + 2.0) / (2.0 * 3.1415926535);
+        //vec3 V = normalize(cameraPos - pos);
+        //vec3 R = reflect(L, N);
+        //float VR = pow(max(dot(V, R), 0.0f), shininessValue);
+        //
+        //vec3 RF0 = specTexColor.rgb;
+        //float cosTheta = max(dot(N, V), 0.0);
+        //vec3 fresnel = RF0 + (1 - RF0) * pow(1 - cosTheta, 5);
+//
+        //vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffColor.rgb * texColor * lightColor * NL;
+        //vec3 specular = normalization * specColor.rgb * specTexColor.rgb * VR * lightColor * fresnel;
+        //hdr = ambient + diffuse + specular;
     }
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
