@@ -18,8 +18,6 @@ Scene::Scene(UID sceneUID, const char *sceneName, UID rootGameObject) : sceneUID
     selectedGameObjectUUID = gameObjectRootUUID;
     
     lightsConfig           = new LightsConfig();
-    lightsConfig->InitSkybox();
-    lightsConfig->InitLightBuffers();
 }
 
 Scene::~Scene()
@@ -55,6 +53,10 @@ void Scene::LoadComponents(const std::map<UID, Component*>& loadedGameComponents
     gameComponents.clear();
     gameObjectsContainer.clear();
     gameComponents.insert(loadedGameComponents.begin(), loadedGameComponents.end());
+
+    // LigthsConfig init here, so scene already exists and can get the existing lights
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
 }
 
 void Scene::LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects)
@@ -178,6 +180,9 @@ update_status Scene::RenderEditor(float deltaTime)
     {
         selectedGameObject->RenderEditor();
     }
+
+    lightsConfig->EditorParams();
+
     return UPDATE_CONTINUE;
 }
 

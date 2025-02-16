@@ -97,7 +97,6 @@ class LightsConfig
     void GetAllSpotLights();
     void GetDirectionalLight();
 
-
   private:
     unsigned int skyboxVao;
     unsigned int skyboxTexture;

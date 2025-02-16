@@ -3,10 +3,13 @@
 in vec3 pos;
 in vec2 uv0;
 in vec3 normal;
+in vec4 tangent;
+
 out vec4 outColor;
 
 layout(binding=0) uniform sampler2D diffuseTexture;
 layout(binding=1) uniform sampler2D specularTexture;
+layout(binding = 2) uniform sampler2D normal_map;
 
 uniform vec3 cameraPos;
 
@@ -62,8 +65,8 @@ readonly layout(std430, binding = 5) buffer SpotLights
 // Material UBO
 layout(std140, binding = 1) uniform Material
 {
-    //vec4 diffColor;
-    //vec4 specColor;
+    vec4 diffColor;
+    vec4 specColor;
     float shininess;   
     bool shininessInAlpha;  
 };
@@ -93,7 +96,7 @@ float SpotLightAttenuation(const int index)
 	return Fatt * Catt;
 }
 
-vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, float NdotL, vec4 diffColor, vec4 specColor, float alpha)
+vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, float NdotL, float alpha)
  {
     float shininessValue;
 	if(shininessInAlpha) shininessValue = exp2(alpha * 7 + 1);
@@ -113,26 +116,33 @@ vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, floa
     return diffuse + specular;
 }
 
-vec3 RenderPointLight(const int index, const vec3 N, vec4 specTexColor, const vec3 texColor, const float alpha, vec4 diffColor, vec4 specColor)
+vec3 RenderPointLight(const int index, const vec3 N, vec4 specTexColor, const vec3 texColor, const float alpha)
 {
 	float attenuation = PointLightAttenuation(index);
 	vec3 L = normalize(pos - pointLights[index].position.xyz);
 	vec3 Li = pointLights[index].color.rgb * pointLights[index].color.a * attenuation;
 	float NdotL = dot(N, -L);
 
-	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, specTexColor, texColor, Li, NdotL, diffColor, specColor, alpha);
+	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, specTexColor, texColor, Li, NdotL, alpha);
 	else return vec3(0);	
 }
 
-vec3 RenderSpotLight(const int index, const vec3 N, vec4 specTexColor, const vec3 texColor, const float alpha, vec4 diffColor, vec4 specColor)
+vec3 RenderSpotLight(const int index, const vec3 N, vec4 specTexColor, const vec3 texColor, const float alpha)
 {
 	float attenuation = SpotLightAttenuation(index);
 	vec3 L = normalize(pos - spotLights[index].position.xyz);
 	vec3 Li = spotLights[index].color.rgb * spotLights[index].color.a * attenuation;
 	float NdotL = dot(N, -L);
 
-	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, specTexColor, texColor, Li, NdotL, diffColor, specColor, alpha);
+	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, specTexColor, texColor, Li, NdotL, alpha);
 	else return vec3(0);
+}
+
+mat3 CreateTBN(const vec3 N, const vec4 T)
+{
+    vec3 Tn = normalize(vec3(T));
+    vec3 B = T.w * normalize(cross(N, Tn));
+    return mat3(Tn, B, normalize(N));
 }
 
 void main()
@@ -141,28 +151,32 @@ void main()
     vec4 specTexColor = texture(specularTexture, uv0);
     float alpha = specTexColor.a;
 
-    //TEMP: Texture colors to see lights effect
-    texColor = vec3(0.5f, 0.5f, 0.5f);
-    specTexColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
-    vec4 diffColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
-    vec4 specColor = vec4(0.5f, 0.5f, 0.5f, 0.5f);
     alpha = specTexColor.a;
 
     // Ambient light
     vec3 ambient = ambient_color.rgb * ambient_color.a;
     vec3 hdr = ambient * texColor;
 
+
+    // Retrive normal for normal map
+    //vec3 texNormal = texture(normal_map, uv0).xyz;
+    //texNormal = normalize(texNormal * 2.0 - 1.0);
+//
+    //// Transform normal to world space
+    //mat3 tbn = CreateTBN(normal, tangent);
+    //vec3 finalNormal = normalize(tbn * texNormal);
+
     vec3 N = normalize(normal);
     // Point Lights
     for (int i = 0; i < pointLightsCount; ++i)
 	{
-		hdr += RenderPointLight(i, N, specTexColor, texColor, alpha, diffColor, specColor);
+		hdr += RenderPointLight(i, N, specTexColor, texColor, alpha);
 	}
 
     //Spot Lights
     for (int i = 0; i < spotLightsCount; ++i)
 	{
-		hdr += RenderSpotLight(i, N, specTexColor, texColor, alpha, diffColor, specColor);
+		hdr += RenderSpotLight(i, N, specTexColor, texColor, alpha);
 	}
 
     // Directional light
@@ -171,10 +185,10 @@ void main()
     float NdotL = dot(N, -L);
     if (NdotL > 0)
     {
-		hdr += RenderLight(L, N, specTexColor, texColor, lightColor, NdotL, diffColor, specColor, alpha);
+		hdr += RenderLight(L, N, specTexColor, texColor, lightColor, NdotL, alpha);
     }
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1/2.2));
-    outColor = vec4(hdr, alpha);
+    outColor = vec4(ldr, alpha);
 }
