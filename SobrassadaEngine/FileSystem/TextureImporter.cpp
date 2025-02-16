@@ -105,20 +105,23 @@ namespace TextureImporter
 
         return texture;
     }
-    /*
-    unsigned int LoadCubemap(const wchar_t* texturePath)
+
+    unsigned int LoadCubemap(const char* texturePath)
     {
         unsigned int textureId = 0;
+        std::string textureString(texturePath);
+        std::wstring wPath     = std::wstring(textureString.begin(),textureString.end());
 
         DirectX::ScratchImage scratchImage;
         DirectX::TexMetadata texMetadata;
         OpenGLMetadata openGlMeta;
 
-        bool succeded = LoadTextureFile(texturePath, texMetadata, scratchImage);
+        bool succeded = LoadTextureFile(wPath.c_str(), texMetadata, scratchImage);
         if (succeded)
         {
-            ConvertMetadataOld(texMetadata, openGlMeta);
+            ResourceTexture::ConvertMetadata(texMetadata, openGlMeta);
 
+            
             glGenTextures(1, &textureId);
             glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
@@ -139,5 +142,24 @@ namespace TextureImporter
         }
         return textureId;
     }
-    */
+
+    bool LoadTextureFile(
+        const wchar_t* texturePath, DirectX::TexMetadata& outMetadata, DirectX::ScratchImage& outImage
+    ) 
+    {
+        HRESULT hr = LoadFromDDSFile(texturePath, DirectX::DDS_FLAGS_NONE, &outMetadata, outImage);
+
+        if (SUCCEEDED(hr)) return true;
+
+        hr = LoadFromTGAFile(texturePath, DirectX::TGA_FLAGS_NONE, &outMetadata, outImage);
+
+        if (SUCCEEDED(hr)) return true;
+
+        hr = DirectX::LoadFromWICFile(texturePath, DirectX::WIC_FLAGS_NONE, &outMetadata, outImage);
+
+        if (SUCCEEDED(hr)) return true;
+
+        return false;
+    }
+
 }; // namespace TextureImporter

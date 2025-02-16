@@ -238,7 +238,7 @@ namespace MeshImporter
 
         if (fileSize == 0 || buffer == nullptr)
         {
-            GLOG("Failed to load the .sobrassada file: %s", path.c_str());
+            GLOG("Failed to load the .sobrassada file: ");
             return nullptr;
         }
 

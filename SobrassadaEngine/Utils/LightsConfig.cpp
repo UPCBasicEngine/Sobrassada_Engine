@@ -5,6 +5,7 @@
 #include "OpenGLModule.h"
 #include "ShaderModule.h"
 #include "TextureImporter.h"
+#include "LibraryModule.h"
 #include "imgui.h"
 
 #include "../Scene/Components/Standalone/Lights/DirectionalLight.h"
@@ -76,7 +77,9 @@ void LightsConfig::InitSkybox()
 
     glBindVertexArray(0);
 
-    skyboxTexture = LoadSkyboxTexture("Test/cubemap.dds");
+
+    //skyboxTexture = LoadSkyboxTexture("Test/cubemap.dds");
+    skyboxTexture = LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap"));
 
     // Load the skybox shaders
     skyboxProgram = App->GetShaderModule()->GetProgram("Test/skyboxVertex.glsl", "Test/skyboxFragment.glsl");
@@ -104,12 +107,13 @@ void LightsConfig::RenderSkybox() const
     App->GetOpenGLModule()->SetDepthFunc(true);
 }
 
-unsigned int LightsConfig::LoadSkyboxTexture(const char* filename) const
+unsigned int LightsConfig::LoadSkyboxTexture(UID cubemapUid) const
 {
-    std::string stringPath = std::string(filename);
-    UID skyboxUID          = TextureImporter::Import(stringPath.c_str());
-    // TextureImporter::LoadTexture(skyboxUID);
-    return 0;
+
+
+    std::string stringPath = App->GetLibraryModule()->GetResourcePath(cubemapUid);
+    
+    return TextureImporter::LoadCubemap(stringPath.c_str());
 }
 
 void LightsConfig::EditorParams()
