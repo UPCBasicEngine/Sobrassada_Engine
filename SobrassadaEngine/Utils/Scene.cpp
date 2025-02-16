@@ -86,17 +86,25 @@ update_status Scene::Render(float deltaTime)
     std::vector<GameObject*> objectsToRender;
     CheckObjectsToRender(objectsToRender);
 
-    for (auto gameObject : objectsToRender)
+    for (auto& gameObject : gameObjectsContainer)
     {
-        if (gameObject != nullptr)
+        if (gameObject.second != nullptr)
         {
-            gameObject->Render();
-        }
-        else
-        {
-            GLOG("Empty gameObject in scene detected")
+            gameObject.second->Render();
         }
     }
+
+    //for (auto gameObject : objectsToRender)
+    //{
+    //    if (gameObject != nullptr)
+    //    {
+    //        gameObject->Render();
+    //    }
+    //    else
+    //    {
+    //        GLOG("Empty gameObject in scene detected")
+    //    }
+    //}
     return UPDATE_CONTINUE;
 }
 
