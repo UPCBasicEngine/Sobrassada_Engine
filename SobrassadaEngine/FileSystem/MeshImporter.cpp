@@ -24,6 +24,8 @@ namespace MeshImporter
         std::vector<unsigned short> indexBufferShort;
         std::vector<unsigned int> indexBufferInt;
         size_t posStride = 0, tanStride = 0, texStride = 0, normStride = 0;
+        float3 minPos     = {0.0f, 0.0f, 0.0f};
+        float3 maxPos     = {0.0f, 0.0f, 0.0f};
 
         const auto& itPos = primitive.attributes.find("POSITION");
         if (itPos != primitive.attributes.end())
@@ -34,8 +36,14 @@ namespace MeshImporter
             const unsigned char* bufferPos      = &(posBuffer.data[posAcc.byteOffset + posView.byteOffset]);
             posStride                           = posView.byteStride ? posView.byteStride : sizeof(float3);
 
-            const auto& itNormal                = primitive.attributes.find("NORMAL");
-            const unsigned char* bufferNormal   = nullptr;
+            if (posAcc.minValues.size() == 3 && posAcc.maxValues.size() == 3)
+            {
+                minPos = float3(posAcc.minValues[0], posAcc.minValues[1], posAcc.minValues[2]);
+                maxPos = float3(posAcc.maxValues[0], posAcc.maxValues[1], posAcc.maxValues[2]);
+            }
+
+            const auto& itNormal              = primitive.attributes.find("NORMAL");
+            const unsigned char* bufferNormal = nullptr;
             if (itNormal != primitive.attributes.end())
             {
                 const tinygltf::Accessor& normAcc    = model.accessors[itNormal->second];
@@ -173,8 +181,9 @@ namespace MeshImporter
             header[3]       = (unsigned int)(indexMode);
         }
 
-        unsigned int size =
-            static_cast<unsigned int>(sizeof(header) + (sizeof(Vertex) * vertexBuffer.size()) + indexBufferSize);
+        unsigned int size = static_cast<unsigned int>(
+            sizeof(header) + (sizeof(Vertex) * vertexBuffer.size()) + indexBufferSize + (sizeof(float3) * 2)
+        );
 
         char* fileBuffer = new char[size];
         char* cursor     = fileBuffer;
@@ -200,7 +209,12 @@ namespace MeshImporter
         {
             memcpy(cursor, indexBufferInt.data(), indexBufferSize);
         }
-        cursor                    += indexBufferSize;
+        cursor += indexBufferSize;
+
+        memcpy(cursor, &minPos, sizeof(float3));
+        cursor += sizeof(float3);
+        memcpy(cursor, &maxPos, sizeof(float3));
+        cursor                    += sizeof(float3);
 
         UID meshUID                = GenerateUID();
         
@@ -288,10 +302,9 @@ namespace MeshImporter
 
             for (unsigned short i = 0; i < indexCount; ++i)
             {
-                unsigned short index = *reinterpret_cast<unsigned short*>(cursor);
-                tmpIndices.push_back(index);
-                cursor += sizeof(unsigned short);
+                tmpIndices.push_back(bufferInd[i]);
             }
+            cursor += sizeof(unsigned short) * indexCount;
         }
         else if (indexMode == 0) // unsigned byte
         {
@@ -307,13 +320,18 @@ namespace MeshImporter
             GLOG("No indices");
         }
 
-        ResourceMesh* mesh = new ResourceMesh(meshUID, FileSystem::GetFileNameWithoutExtension(path));
+        float3 minPos       = *reinterpret_cast<float3*>(cursor);
+        cursor             += sizeof(float3);
+        float3 maxPos       = *reinterpret_cast<float3*>(cursor);
+        cursor             += sizeof(float3);
+
+        ResourceMesh* mesh  = new ResourceMesh(meshUID, FileSystem::GetFileNameWithoutExtension(path), maxPos, minPos);
 
         mesh->LoadData(mode, tmpVertices, tmpIndices);
 
         delete[] buffer;
 
-        //App->GetLibraryModule()->AddResource(savePath, finalMeshUID);
+        // App->GetLibraryModule()->AddResource(savePath, finalMeshUID);
 
         return mesh;
     }
