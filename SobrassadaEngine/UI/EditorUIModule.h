@@ -10,10 +10,6 @@
 #include <string>
 #include <unordered_map>
 
-namespace ImGuizmo {
-    struct matrix_t;
-}
-
 class EditorViewport;
 class QuadtreeViewer;
 
@@ -21,7 +17,7 @@ class EditorUIModule : public Module
 {
   public:
     EditorUIModule();
-    ~EditorUIModule();
+    ~EditorUIModule() override;
 
     bool Init() override;
     update_status PreUpdate(float deltaTime) override;
@@ -38,8 +34,6 @@ class EditorUIModule : public Module
   public:
     bool hierarchyMenu = true;
     bool inspectorMenu = true;
-
-    EditorViewport *editorViewport = nullptr;
 
   private:
     void RenderBasicTransformModifiers(
@@ -89,5 +83,4 @@ class EditorUIModule : public Module
     std::string libraryPath;
     
     ImGuizmo::OPERATION mCurrentGizmoOperation;
-    ImGuizmo::MODE mCurrentGizmoMode;
 };

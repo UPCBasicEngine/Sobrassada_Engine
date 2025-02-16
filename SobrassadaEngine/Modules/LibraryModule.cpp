@@ -45,8 +45,8 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
 
     UID gameObjectRootUID   = sceneModule->GetGameObjectRootUID();
 
-    const auto &gameObjects = sceneModule->GetAllGameObjects();
-    const auto &components  = sceneModule->GetAllComponents();
+    const auto *gameObjects = sceneModule->GetAllGameObjects();
+    const auto *components  = sceneModule->GetAllComponents();
 
     // Create doc JSON
     rapidjson::Document doc;
@@ -68,26 +68,27 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
     // Serialize GameObjects
     rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
 
-    for (const auto &[uid, gameObject] : gameObjects)
+    for (auto it = gameObjects->begin(); it != gameObjects->end(); ++it)
     {
-        if (!gameObject) continue;
-
-        rapidjson::Value goJSON(rapidjson::kObjectType);
-
-        goJSON.AddMember("UID", uid, allocator);
-        goJSON.AddMember("ParentUID", gameObject->GetParent(), allocator);
-        goJSON.AddMember("Name", rapidjson::Value(gameObject->GetName().c_str(), allocator), allocator);
-
-        // Child UUIDs
-        rapidjson::Value childUIDs(rapidjson::kArrayType);
-        for (UID childUID : gameObject->GetChildren())
+        if (it->second != nullptr)
         {
-            childUIDs.PushBack(childUID, allocator);
-        }
-        goJSON.AddMember("Children", childUIDs, allocator);
-        goJSON.AddMember("RootComponentUID", gameObject->GetRootComponent()->GetUID(), allocator);
+            rapidjson::Value goJSON(rapidjson::kObjectType);
 
-        gameObjectsJSON.PushBack(goJSON, allocator);
+            goJSON.AddMember("UID", uid, allocator);
+            goJSON.AddMember("ParentUID", it->second->GetParent(), allocator);
+            goJSON.AddMember("Name", rapidjson::Value(it->second->GetName().c_str(), allocator), allocator);
+
+            // Child UUIDs
+            rapidjson::Value childUIDs(rapidjson::kArrayType);
+            for (UID childUID : it->second->GetChildren())
+            {
+                childUIDs.PushBack(childUID, allocator);
+            }
+            goJSON.AddMember("Children", childUIDs, allocator);
+            goJSON.AddMember("RootComponentUID", it->second->GetRootComponent()->GetUID(), allocator);
+
+            gameObjectsJSON.PushBack(goJSON, allocator);
+        }
     }
 
     // Add gameObjects to scene
@@ -96,15 +97,16 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
     // Serialize Components
     rapidjson::Value componentsJSON(rapidjson::kArrayType);
 
-    for (const auto &[uid, component] : components)
+    for (auto it = components->begin(); it != components->end(); ++it)
     {
-        if (!component) continue;
+        if (it->second != nullptr)
+        {
+            rapidjson::Value componentJSON(rapidjson::kObjectType);
 
-        rapidjson::Value componentJSON(rapidjson::kObjectType);
+            it->second->Save(componentJSON, allocator);
 
-        component->Save(componentJSON, allocator);
-
-        componentsJSON.PushBack(componentJSON, allocator);
+            componentsJSON.PushBack(componentJSON, allocator);
+        }
     }
 
     // Add components to scene
@@ -222,7 +224,12 @@ bool LibraryModule::LoadScene(const char *path)
         }
     }
 
-    App->GetSceneModule()->LoadScene(sceneUID, name.c_str(), rootGameObject);
+    std::map<UID, Component*> loadedGameComponents;
+    std::unordered_map<UID, GameObject*> loadedGameObjects;
+
+    // TODO Fill with the code above instead of adding the objects directly to the sceneModule
+
+    App->GetSceneModule()->LoadScene(sceneUID, name.c_str(), rootGameObject, loadedGameComponents, loadedGameObjects);
 
     GLOG("%s scene loaded", name.c_str());
     return true;

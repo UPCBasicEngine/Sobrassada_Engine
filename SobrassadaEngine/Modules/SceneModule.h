@@ -9,13 +9,13 @@
 #include "Application.h"
 #include "DebugDrawModule.h"
 #include "CameraModule.h"
+#include "Scene.h"
 
 
 #include <map>
 #include <string>
 #include <unordered_map>
 
-class EngineMesh;
 class GameObject;
 class Component;
 class RootComponent;
@@ -35,35 +35,35 @@ class SceneModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject);
+    void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject,
+    const std::map<UID, Component*> &loadedGameComponents,
+    const std::unordered_map<UID, GameObject*>& loadedGameObjects);
     void CloseScene();
 
     void CheckObjectsToRender();
 	
-    void RenderHierarchyUI(bool &hierarchyMenu);
+    void RenderHierarchyUI(bool &hierarchyMenu)const { loadedScene != nullptr ? loadedScene->RenderHierarchyUI(hierarchyMenu) : void(); }
 
-    void RemoveGameObjectHierarchy(UID gameObjectUUID);
+    void RemoveGameObjectHierarchy(UID gameObjectUUID)const { loadedScene != nullptr ? loadedScene->RemoveGameObjectHierarchy(gameObjectUUID) : void(); }
 
-    //TODO: Change when filesystem defined
-    GameObject *GetGameObjectByUUID(UID gameObjectUUID);
+    GameObject *GetGameObjectByUUID(UID gameObjectUUID) const { return loadedScene != nullptr ? loadedScene->GetGameObjectByUUID(gameObjectUUID) : nullptr; }
+    Component *GetComponentByUID(UID componentUID) const { return loadedScene != nullptr ? loadedScene->GetComponentByUID(componentUID) : nullptr; }
 
-    GameObject *GetSeletedGameObject() { return GetGameObjectByUUID(selectedGameObjectUUID); }
+    GameObject *GetSeletedGameObject() const { return loadedScene != nullptr ? loadedScene->GetSeletedGameObject() : nullptr; }
 
-    const std::unordered_map<UID, GameObject *> &GetAllGameObjects() const { return gameObjectsContainer; }
-    const std::map<UID, Component *> &GetAllComponents() const { return gameComponents; }
-    UID GetGameObjectRootUID() const { return gameObjectRootUUID; }
+    const std::unordered_map<UID, GameObject *> *GetAllGameObjects() const { return loadedScene != nullptr ? &loadedScene->GetAllGameObjects() : nullptr; }
+    const std::map<UID, Component *> *GetAllComponents() const { return loadedScene != nullptr ? &loadedScene->GetAllComponents() : nullptr; }
+    UID GetGameObjectRootUID() const { return loadedScene != nullptr ? loadedScene->GetGameObjectRootUID() : CONSTANT_EMPTY_UID; }
 
-    std::map<UID, Component*> gameComponents;
-
-    AABBUpdatable* GetTargetForAABBUpdate(UID uuid);
-
-    UID GetSceneUID() const { return sceneUID; }
-    const std::string &GetSceneName() const { return sceneName; }
-
-    void AddGameObject(UID uid, GameObject *newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
-    void AddComponent(UID uid, Component *newComponent) { gameComponents.insert({uid, newComponent}); }
-
+    void RemoveComponent(UID componentUID) const { loadedScene != nullptr ? loadedScene->RemoveComponent(componentUID) : void(); }
     
+    AABBUpdatable* GetTargetForAABBUpdate(UID uuid)const { return loadedScene != nullptr ? loadedScene->GetTargetForAABBUpdate(uuid) : nullptr; }
+
+    UID GetSceneUID() const { return loadedScene != nullptr ? loadedScene->GetSceneUID() : CONSTANT_EMPTY_UID; }
+    const char* GetSceneName() const { return loadedScene != nullptr ? loadedScene->GetSceneName() : "Not loaded"; }
+
+    void AddGameObject(UID uid, GameObject *newGameObject)const { loadedScene != nullptr ? loadedScene->AddGameObject(uid, newGameObject) : void(); }
+    void AddComponent(UID uid, Component *newComponent)const { loadedScene != nullptr ? loadedScene->AddComponent(uid, newComponent) : void(); }
 
   private:
     void CreateSpatialDataStruct();
@@ -71,23 +71,8 @@ class SceneModule : public Module
     void CheckObjectsToRender(std::vector<GameObject *> &outRenderGameObjects) const;
 
   private:
-    UID sceneUID;
-    UID gameObjectRootUUID;
-    std::string sceneName;
-    
-    UID selectedGameObjectUUID;
 
-    std::unordered_map<UID, GameObject*> gameObjectsContainer; //For testing purposes until FileSystem available
+    Scene* loadedScene = nullptr;
 
     Octree *sceneOctree = nullptr;
-
-    // Scene* loadedScene = nullptr;
-
-    // pawnClassType;
-    // updatedGameObjects;
-    // sceneSpatialDataStruct;
-    // inputClassType;
-    // gameConfigClassType;
-
-    LightsConfig *lightsConfig;
 };

@@ -56,11 +56,20 @@ type(initialState["Type"].GetInt())
 }
 
 Component::~Component(){
-    for (const Component* child : GetChildComponents())
+    for (Component* childComponent : GetChildComponents())
     {
-        App->GetSceneModule()->gameComponents.erase(child->GetUID());
-        delete child;
+        globalComponentAABB.Enclose(childComponent->GetGlobalAABB());
     }
+    for (Component* childComponent : GetChildComponents())
+    {
+        App->GetSceneModule()->RemoveComponent(childComponent->GetUID());
+        delete App->GetSceneModule()->GetComponentByUID(childComponent->GetUID());
+    }
+    
+    childComponents.clear();
+    children.clear();
+    rootComponent = nullptr;
+    parent = nullptr;
 }
 
 void Component::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
@@ -123,8 +132,8 @@ bool Component::DeleteChildComponent(const UID componentUID)
     if (const auto it = std::find(children.begin(), children.end(), componentUID); it != children.end())
     {
         children.erase(it);
-        delete App->GetSceneModule()->gameComponents[componentUID]; // More efficient than finding the child pointer in childComponents
-        App->GetSceneModule()->gameComponents.erase(componentUID);
+        delete App->GetSceneModule()->GetComponentByUID(componentUID); // More efficient than finding the child pointer in childComponents
+        App->GetSceneModule()->RemoveComponent(componentUID);
         
         return true;
     }
@@ -211,10 +220,10 @@ void Component::HandleDragNDrop(){
             GLOG("Receiving component drag n drop for uuid : %d", draggedUID)
             if (draggedUID != uid)
             {
-                Component* draggedComponent = App->GetSceneModule()->gameComponents[draggedUID];
+                Component* draggedComponent = App->GetSceneModule()->GetComponentByUID(draggedUID);
                 if (draggedComponent != nullptr)
                 {
-                    Component* parentDraggedComponent = App->GetSceneModule()->gameComponents[draggedComponent->GetUIDParent()];
+                    Component* parentDraggedComponent = App->GetSceneModule()->GetComponentByUID(draggedComponent->GetUIDParent());
                     if (parentDraggedComponent != nullptr)
                     {
                         parentDraggedComponent->RemoveChildComponent(draggedUID);
@@ -266,7 +275,7 @@ RootComponent * Component::GetRootComponent()
 {
     if (rootComponent == nullptr)
     {
-        rootComponent = dynamic_cast<RootComponent* >(App->GetSceneModule()->gameComponents[uidRoot]);
+        rootComponent = dynamic_cast<RootComponent* >(App->GetSceneModule()->GetComponentByUID(uidRoot));
         if (rootComponent == nullptr)
         {
             GLOG("Could not load parent with UID: %s - Object does not exist", uidRoot)
@@ -295,7 +304,7 @@ std::vector<Component *> & Component::GetChildComponents()
         childComponents.clear();
         for (UID child : children)
         {
-            Component* childComponent = App->GetSceneModule()->gameComponents[child];
+            Component* childComponent = App->GetSceneModule()->GetComponentByUID(child);
             if (childComponent != nullptr)
             {
                 childComponents.push_back(childComponent);

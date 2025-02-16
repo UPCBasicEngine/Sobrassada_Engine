@@ -48,7 +48,7 @@ AABB & RootComponent::TransformUpdated(const Transform &parentGlobalTransform)
 
 void RootComponent::RenderComponentEditor()
 {
-    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUID];
+    Component* selectedComponent = App->GetSceneModule()->GetComponentByUID(selectedUID);
     
     ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu);    
 
@@ -93,7 +93,7 @@ void RootComponent::RenderComponentEditor()
         {
             if (selectedComponent != nullptr)
             {
-                Component* selectedParentComponent = App->GetSceneModule()->gameComponents[selectedComponent->GetUIDParent()];
+                Component* selectedParentComponent = App->GetSceneModule()->GetComponentByUID(selectedComponent->GetUIDParent());
                 if (selectedParentComponent != nullptr)
                 {
                     selectedParentComponent->DeleteChildComponent(selectedUID);
@@ -192,12 +192,12 @@ void RootComponent::SetSelectedComponent(const UID componentUID)
 bool RootComponent::CreateComponent(const ComponentType componentType)
 {
     // TODO Call library to create the component with an id instead
-    Component* selectedComponent = App->GetSceneModule()->gameComponents[selectedUID];
+    Component* selectedComponent = App->GetSceneModule()->GetComponentByUID(selectedUID);
     if (selectedComponent != nullptr) {
         Component* createdComponent = ComponentUtils::CreateEmptyComponent(componentType, LCG().IntFast(), selectedUID, uid, selectedComponent->GetGlobalTransform());
         if (createdComponent != nullptr)
         {
-            App->GetSceneModule()->gameComponents[createdComponent->GetUID()] = createdComponent;
+            App->GetSceneModule()->AddComponent(createdComponent->GetUID(), createdComponent);
         
             selectedComponent->AddChildComponent(createdComponent->GetUID());
             return true;

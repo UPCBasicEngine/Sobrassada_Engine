@@ -33,33 +33,6 @@ SceneModule::~SceneModule()
 
 bool SceneModule::Init()
 {
-    GLOG("Creating SceneModule renderer context");
-
-    sceneUID                    = 0;
-    sceneName                   = "Default Scene";
-
-    GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
-
-    gameObjectRootUUID          = sceneGameObject->GetUID();
-    selectedGameObjectUUID      = gameObjectRootUUID;
-    sceneGameObject->SetUUID(gameObjectRootUUID);
-
-    // TODO: Change when filesystem defined
-    gameObjectsContainer.insert({gameObjectRootUUID, sceneGameObject});
-
-    // DEMO
-    GameObject* sceneGameChildObject = new GameObject(gameObjectRootUUID, "SceneModule GameObject child");
-    UID gameObjectChildRootUUID      = sceneGameChildObject->GetUID();
-    sceneGameChildObject->SetUUID(gameObjectChildRootUUID);
-    sceneGameObject->AddGameObject(gameObjectChildRootUUID);
-
-    // TODO: Change when filesystem defined
-    gameObjectsContainer.insert({gameObjectChildRootUUID, sceneGameChildObject});
-
-    lightsConfig = new LightsConfig();
-    lightsConfig->InitSkybox();
-    lightsConfig->InitLightBuffers();
-
     return true;
 }
 
@@ -75,35 +48,19 @@ update_status SceneModule::Update(float deltaTime)
 
 update_status SceneModule::Render(float deltaTime)
 {
-    // Render skybox and lights
-    lightsConfig->RenderSkybox();
-    lightsConfig->SetLightsShaderData();
-
-    for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); it++)
+    if (loadedScene != nullptr)
     {
-        if (it->second != nullptr)
-        {
-            it->second->Render();
-        }
-        else
-        {
-            GLOG("Empty gameObject in scene detected")
-        }
+        return loadedScene->Render(deltaTime);
     }
-
-    // Probably should go somewhere else, but must go after skybox and meshes
-    App->GetDebugDrawModule()->Draw();
 
     return UPDATE_CONTINUE;
 }
 
 update_status SceneModule::RenderEditor(float deltaTime)
 {
-    App->GetEditorUIModule()->editorViewport->Render();
-    GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
-    if (selectedGameObject != nullptr)
+    if (loadedScene != nullptr)
     {
-        selectedGameObject->RenderEditor();
+        return loadedScene->RenderEditor(deltaTime);
     }
     return UPDATE_CONTINUE;
 }
@@ -117,43 +74,22 @@ bool SceneModule::ShutDown()
 {
     delete sceneOctree;
 
-    GLOG("Destroying octree");
+    GLOG("Destroying octree")
     return true;
 }
 
-void SceneModule::LoadScene(UID sceneUID, const char* sceneName, UID rootGameObject)
+void SceneModule::LoadScene(UID sceneUID, const char* sceneName, UID rootGameObject,
+    const std::map<UID, Component*> &loadedGameComponents,
+    const std::unordered_map<UID, GameObject*>& loadedGameObjects)
 {
-    this->sceneUID         = sceneUID;
-    gameObjectRootUUID     = rootGameObject;
-    selectedGameObjectUUID = gameObjectRootUUID;
-    this->sceneName        = sceneName;
-
-    lightsConfig           = new LightsConfig();
-    lightsConfig->InitSkybox();
-    lightsConfig->InitLightBuffers();
+    delete loadedScene;
+    loadedScene = new Scene(sceneUID, sceneName, rootGameObject);
+    loadedScene->Load(loadedGameComponents,loadedGameObjects);
 }
 
 void SceneModule::CloseScene()
 {
-    for (const auto& [uid, gameObject] : gameObjectsContainer)
-    {
-        delete gameObject;
-    }
-    gameObjectsContainer.clear();
-
-    for (const auto& [uid, component] : gameComponents)
-    {
-        delete component;
-    }
-    gameComponents.clear();
-
-    gameObjectRootUUID     = 0;
-    selectedGameObjectUUID = 0;
-
-    delete lightsConfig;
-    lightsConfig = nullptr;
-
-    GLOG("%s scene closed", sceneName.c_str());
+    delete loadedScene;
 }
 
 void SceneModule::CreateSpatialDataStruct()
@@ -193,95 +129,4 @@ void SceneModule::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameOb
 
     //    if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
     //}
-}
-
-void SceneModule::RenderHierarchyUI(bool& hierarchyMenu)
-{
-    ImGui::Begin("Hierarchy", &hierarchyMenu);
-
-    if (ImGui::Button("Add GameObject"))
-    {
-        GameObject* newGameObject = new GameObject(selectedGameObjectUUID, "new Game Object");
-        UID newUUID               = newGameObject->GetUID();
-
-        GetGameObjectByUUID(selectedGameObjectUUID)->AddGameObject(newUUID);
-
-        // TODO: change when filesystem defined
-        gameObjectsContainer.insert({newUUID, newGameObject});
-
-        GetGameObjectByUUID(newGameObject->GetParent())->ComponentGlobalTransformUpdated();
-    }
-
-    if (selectedGameObjectUUID != gameObjectRootUUID)
-    {
-        ImGui::SameLine();
-
-        if (ImGui::Button("Delete GameObject"))
-        {
-            UID parentUID                = GetGameObjectByUUID(selectedGameObjectUUID)->GetParent();
-            GameObject* parentGameObject = GetGameObjectByUUID(parentUID);
-            RemoveGameObjectHierarchy(selectedGameObjectUUID);
-            // parentGameObject->PassAABBUpdateToParent(); // TODO: check if it works
-        }
-    }
-
-    GameObject* rootGameObject = GetGameObjectByUUID(gameObjectRootUUID);
-    if (rootGameObject)
-    {
-        rootGameObject->RenderHierarchyNode(selectedGameObjectUUID);
-    }
-
-    ImGui::End();
-}
-
-void SceneModule::RemoveGameObjectHierarchy(UID gameObjectUUID)
-{
-    // TODO: Change when filesystem defined
-    if (!gameObjectsContainer.count(gameObjectUUID) || gameObjectUUID == gameObjectRootUUID) return;
-
-    GameObject* gameObject = GetGameObjectByUUID(gameObjectUUID);
-
-    for (UID childUUID : gameObject->GetChildren())
-    {
-        RemoveGameObjectHierarchy(childUUID);
-    }
-
-    UID parentUUID = gameObject->GetParent();
-
-    // TODO: change when filesystem defined
-    if (gameObjectsContainer.count(parentUUID))
-    {
-        GameObject* parentGameObject = GetGameObjectByUUID(parentUUID);
-        parentGameObject->RemoveGameObject(gameObjectUUID);
-        selectedGameObjectUUID = parentUUID;
-    }
-
-    // TODO: change when filesystem defined
-    gameObjectsContainer.erase(gameObjectUUID);
-
-    delete gameObject;
-}
-
-AABBUpdatable* SceneModule::GetTargetForAABBUpdate(UID uuid)
-{
-    if (gameObjectsContainer.count(uuid))
-    {
-        return gameObjectsContainer[uuid];
-    }
-
-    if (gameComponents.count(uuid))
-    {
-        return gameComponents[uuid];
-    }
-
-    return nullptr;
-}
-
-GameObject* SceneModule::GetGameObjectByUUID(UID gameObjectUUID)
-{
-    if (gameObjectsContainer.count(gameObjectUUID))
-    {
-        return gameObjectsContainer[gameObjectUUID];
-    }
-    return nullptr;
 }

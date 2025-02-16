@@ -47,7 +47,6 @@ bool EditorUIModule::Init()
     ImGui_ImplSDL2_InitForOpenGL(App->GetWindowModule()->window, App->GetOpenGLModule()->GetContext());
     ImGui_ImplOpenGL3_Init("#version 460");
 
-    editorViewport = new EditorViewport();
     quadtreeViewer = new QuadtreeViewer();
 
     width          = App->GetWindowModule()->GetWidth();
@@ -85,8 +84,6 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 {
     Draw();
 
-    //editorViewport->Render();
-
     if (quadtreeViewerViewport) quadtreeViewer->Render(quadtreeViewerViewport);
 
     ImGui::Render();
@@ -112,7 +109,6 @@ bool EditorUIModule::ShutDown()
     framerate.clear();
     frametime.clear();
 
-    delete editorViewport;
     delete quadtreeViewer;
 
     return true;

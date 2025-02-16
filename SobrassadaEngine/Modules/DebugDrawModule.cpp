@@ -607,20 +607,11 @@ bool DebugDrawModule::ShutDown()
 
 update_status DebugDrawModule::Render(float deltaTime)
 {
-    dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
+    //dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
     dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
 
-    //TODO: Maybe the above code can go in Update() and the Draw in Render(), as long as it is later in order than the SceneModule
-
-    //  Don't draw the grid here because the skybox must be drawn first
-   //auto projection = App->GetCameraModule()->GetProjectionMatrix();
-   //auto view       = App->GetCameraModule()->GetViewMatrix();
-   //
-   //int width       = 0;
-   //int height      = 0;
-   //
-   //SDL_GetWindowSize(App->GetWindowModule()->window, &width, &height);
-   //Draw(projection, view, width, height);
+    // Probably should go somewhere else, but must go after skybox and meshes
+    App->GetDebugDrawModule()->Draw();
 
     return UPDATE_CONTINUE;
 }
