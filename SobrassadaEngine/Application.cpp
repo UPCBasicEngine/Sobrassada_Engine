@@ -2,12 +2,12 @@
 
 #include "EditorUIModule.h"
 #include "InputModule.h"
-#include "OpenGLModule.h"
-#include "ShaderModule.h"
 #include "LibraryModule.h"
-#include "WindowModule.h"
-#include "SceneModule.h"
+#include "OpenGLModule.h"
 #include "ResourcesModule.h"
+#include "SceneModule.h"
+#include "ShaderModule.h"
+#include "WindowModule.h"
 
 // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
 #include "CameraModule.h"
@@ -18,7 +18,9 @@
 #include "EngineTimer.h"
 #include "GameTimer.h"
 
+#ifdef _DEBUG
 #include "optick.h"
+#endif
 
 Application::Application()
 {
@@ -39,12 +41,12 @@ Application::Application()
     // Init timers
     engineTimer = new EngineTimer();
     engineTimer->Start();
-    gameTimer   = new GameTimer();
+    gameTimer = new GameTimer();
 }
 
 Application::~Application()
 {
-    for (std::list<Module *>::iterator it = modules.begin(); it != modules.end(); ++it)
+    for (std::list<Module*>::iterator it = modules.begin(); it != modules.end(); ++it)
     {
         delete *it;
     }
@@ -54,7 +56,7 @@ bool Application::Init()
 {
     bool returnStatus = true;
 
-    for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus; ++it)
+    for (std::list<Module*>::iterator it = modules.begin(); it != modules.end() && returnStatus; ++it)
         returnStatus = (*it)->Init();
 
     return returnStatus;
@@ -63,39 +65,42 @@ bool Application::Init()
 update_status Application::Update()
 {
     const float deltaTime = engineTimer->Tick() / 1000.0f;
-    gameTimer->Tick();  // I guess this should go in a gameManager class or something, but for now it's here
+    gameTimer->Tick(); // I guess this should go in a gameManager class or something, but for now it's here
 
     update_status returnStatus = UPDATE_CONTINUE;
-
+#ifdef _DEBUG
     OPTICK_CATEGORY("Application::PreUpdate", Optick::Category::GameLogic)
-    for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
+#endif
+    for (std::list<Module*>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->PreUpdate(deltaTime);
-
+#ifdef _DEBUG
     OPTICK_CATEGORY("Application::Update", Optick::Category::GameLogic)
-    for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
+#endif
+    for (std::list<Module*>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->Update(deltaTime);
-    
+#ifdef _DEBUG
     OPTICK_CATEGORY("Application::Render", Optick::Category::Rendering)
-    for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
+#endif
+    for (std::list<Module*>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->Render(deltaTime);
-    
+#ifdef _DEBUG
     OPTICK_CATEGORY("Application::RenderEditor", Optick::Category::Rendering)
-
+#endif
     // Unbinding frame buffer so ui gets rendered
     App->GetOpenGLModule()->GetFramebuffer()->Unbind();
-    
-    for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
+
+    for (std::list<Module*>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->RenderEditor(deltaTime);
-    
+#ifdef _DEBUG
     OPTICK_CATEGORY("Application::PostUpdate", Optick::Category::GameLogic)
-    for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
+#endif
+    for (std::list<Module*>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->PostUpdate(deltaTime);
-
 
     return returnStatus;
 }
@@ -104,7 +109,7 @@ bool Application::ShutDown()
 {
     bool returnStatus = true;
 
-    for (std::list<Module *>::reverse_iterator it = modules.rbegin(); it != modules.rend() && returnStatus; ++it)
+    for (std::list<Module*>::reverse_iterator it = modules.rbegin(); it != modules.rend() && returnStatus; ++it)
         returnStatus = (*it)->ShutDown();
 
     delete engineTimer;
