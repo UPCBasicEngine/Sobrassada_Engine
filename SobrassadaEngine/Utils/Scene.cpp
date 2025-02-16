@@ -12,7 +12,7 @@
 #include "imgui_internal.h"
 #include "./Libs/ImGuizmo/ImGuizmo.h"
 
-Scene::Scene(UID sceneUID, const char *sceneName, UID rootGameObject) : sceneUID(sceneUID), sceneName(sceneName), gameObjectRootUUID(rootGameObject)
+Scene::Scene(UID sceneUID, const char *sceneName, UID rootGameObject) : sceneUID(sceneUID), sceneName(std::string(sceneName)), gameObjectRootUUID(rootGameObject)
 {
     selectedGameObjectUUID = gameObjectRootUUID;
     
@@ -83,7 +83,7 @@ update_status Scene::Render(float deltaTime)
 
 update_status Scene::RenderEditor(float deltaTime)
 {
-    if (ImGui::Begin(sceneName))
+    if (ImGui::Begin(sceneName.c_str()))
     {
         GameTimer *gameTimer = App->GetGameTimer();
         if (ImGui::Begin("Scene controls"))
@@ -127,7 +127,7 @@ update_status Scene::RenderEditor(float deltaTime)
             ImGui::End();
         }
         
-        if (ImGui::Begin(sceneName))
+        if (ImGui::Begin(sceneName.c_str()))
         {
             if (ImGui::BeginChild("##SceneChild", ImVec2(0.f, 0.f), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar))
             {
