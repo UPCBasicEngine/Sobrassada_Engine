@@ -43,6 +43,12 @@ Component *ComponentUtils::CreateExistingComponent(const rapidjson::Value &initi
             return new RootComponent(initialState);
         case COMPONENT_MESH:
             return new MeshComponent(initialState);
+        case COMPONENT_POINT_LIGHT:
+            return new PointLight(initialState);
+        case COMPONENT_SPOT_LIGHT:
+            return new SpotLight(initialState);
+        case COMPONENT_DIRECTIONAL_LIGHT:
+            return new DirectionalLight(initialState);
         default:
             return nullptr;
         }

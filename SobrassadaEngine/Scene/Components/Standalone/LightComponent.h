@@ -12,6 +12,9 @@ class LightComponent: public Component
         UID uid, UID uidParent, UID uidRoot, const char *uiName, const ComponentType lightType,
         const Transform &parentGlobalTransform
     );
+    LightComponent(const rapidjson::Value& initialState);
+
+    virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
     virtual void RenderEditorInspector() override;
     void Update() override;
@@ -26,6 +29,5 @@ class LightComponent: public Component
   protected:
     float intensity;
     float3 color;
-
     bool drawGizmos;
 };

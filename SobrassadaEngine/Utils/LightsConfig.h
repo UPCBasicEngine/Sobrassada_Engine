@@ -2,8 +2,12 @@
 
 #include "Globals.h"
 
+#include "../ResourceManagement/Resources/ResourceTexture.h"
+
 #include "Math/float3.h"
 #include "Math/float4.h"
+
+#include <memory>
 
 namespace Math
 {
@@ -67,20 +71,30 @@ class LightsConfig
     void InitSkybox();
     void RenderSkybox() const;
 
+    void AddSkyboxTexture(UID resource);
+
     void InitLightBuffers();
     void SetLightsShaderData() const;
-    void AddDirectionalLight();
+
+    void AddDirectionalLight(DirectionalLight* newDirectional);
+    void AddPointLight(PointLight* newPoint);
+    void AddSpotLight(SpotLight* newSpot);
+
     void RemoveDirectionalLight();
-    void AddPointLight();
-    void RemovePointLight();
-    void AddSpotLight();
-    void RemoveSpotLight();
+    void RemovePointLight(UID pointUid);
+    void RemoveSpotLight(UID spotUid);
 
   private:
     unsigned int LoadSkyboxTexture(UID cubemapUID) const;
     void SetDirectionalLightShaderData() const;
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;
+
+    void GetAllSceneLights();
+
+    void GetAllPointLights();
+    void GetAllSpotLights();
+    void GetDirectionalLight();
 
 
   private:
@@ -95,6 +109,9 @@ class LightsConfig
     unsigned int spotBufferId;
 
     DirectionalLight *directionalLight = nullptr;
-    std::vector<PointLight> pointLights;
-    std::vector<SpotLight> spotLights;
+    std::vector<PointLight*> pointLights;
+    std::vector<SpotLight*> spotLights;
+
+    ResourceTexture* currentTexture;
+    std::string currentTextureName;
 };

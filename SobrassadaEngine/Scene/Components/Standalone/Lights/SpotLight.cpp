@@ -1,6 +1,8 @@
 #include "SpotLight.h"
 
 #include "DebugDrawModule.h"
+#include "Application.h"
+#include "SceneModule.h"
 
 #include "ImGui.h"
 #include "Math/Quat.h"
@@ -12,18 +14,44 @@ SpotLight::SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &paren
     range      = 3;
     innerAngle = 10;
     outerAngle = 20;
+    
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddSpotLight(this);
 }
 
-// SpotLight::SpotLight(const float3 &position, const float3 &direction) : LightComponent()
-//{
-//     this->position  = position;
-//     this->direction = direction;
-//     range           = 3;
-//     innerAngle      = 10;
-//     outerAngle      = 20;
-// }
+SpotLight::SpotLight(const rapidjson::Value& initialState) : LightComponent(initialState)
+{
+    direction = -float3::unitY;
+    if (initialState.HasMember("Range"))
+    {
+        range = initialState["Range"].GetFloat();
+    }
+    if (initialState.HasMember("InnerAngle"))
+    {
+        innerAngle = initialState["InnerAngle"].GetFloat();
+    }
+    if (initialState.HasMember("OuterAngle"))
+    {
+        outerAngle = initialState["OuterAngle"].GetFloat();
+    }
 
-SpotLight::~SpotLight() {}
+    LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
+    if (lightsConfig != nullptr) lightsConfig->AddSpotLight(this);
+}
+
+SpotLight::~SpotLight()
+{
+    App->GetSceneModule()->GetLightsConfig()->RemoveSpotLight(uid);
+}
+
+void SpotLight::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+{
+    LightComponent::Save(targetState, allocator);
+
+    targetState.AddMember("Range", range, allocator);
+    targetState.AddMember("InnerAngle", innerAngle, allocator);
+    targetState.AddMember("OuterAngle", outerAngle, allocator);
+}
 
 void SpotLight::RenderEditorInspector()
 {
@@ -33,7 +61,6 @@ void SpotLight::RenderEditorInspector()
     {
         ImGui::Text("Spot light parameters");
 
-        ImGui::SliderFloat3("Direction ", &direction[0], -1.0, 1.0f);
         ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
 
         ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
@@ -51,50 +78,29 @@ void SpotLight::RenderEditorInspector()
     }
 }
 
-void SpotLight::EditorParams(const int index)
-{
-    std::string title = "Spot light " + std::to_string(index);
-    ImGui::Begin(title.c_str());
-
-    ImGui::Text("Spot light parameters");
-
-    ImGui::SliderFloat3("Direction ", &direction[0], -1.0, 1.0f);
-    ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
-
-    ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
-    ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
-    if (ImGui::SliderFloat("Inner angle", &innerAngle, 0.0f, 90.0f))
-    {
-        if (innerAngle > outerAngle) outerAngle = innerAngle;
-    }
-    if (ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 90.0f))
-    {
-        if (outerAngle < innerAngle) innerAngle = outerAngle;
-    }
-
-    ImGui::Checkbox("Draw gizmos", &drawGizmos);
-
-    ImGui::End();
-}
-
 void SpotLight::Render()
 {
-    if (!drawGizmos) return;
+    if (!enabled || !drawGizmos) return;
 
     const float innerRads      = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
     const float outerRads      = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
-    const float3 directionNorm = direction.Normalized();
+
+    // Would be more optimal to only update the direction when rotation is modified
+    float4x4 rot = float4x4::FromQuat(
+        Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z)
+    );
+    direction = (-float3::unitY * rot.RotatePart()).Normalized();    
 
     std::vector<float3> innerDirections;
-    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(directionNorm)));
-    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(directionNorm)));
+    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(direction)));
+    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(direction)));
 
     std::vector<float3> outerDirections;
-    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(directionNorm)));
-    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(directionNorm)));
+    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(direction)));
+    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(direction)));
 
     DebugDrawModule *debug = App->GetDebugDrawModule();
-    debug->DrawLine(globalTransform.position, directionNorm, range, float3(1, 1, 1));
+    debug->DrawLine(globalTransform.position, direction, range, float3(1, 1, 1));
 
     for (const float3 &dir : innerDirections)
     {
@@ -106,45 +112,9 @@ void SpotLight::Render()
         debug->DrawLine(globalTransform.position, dir, range / cos(outerRads), float3(1, 1, 1));
     }
 
-    float3 center       = globalTransform.position + (directionNorm * range);
+    float3 center       = globalTransform.position + (direction * range);
     float innerCathetus = range * tan(innerRads);
     float outerCathetus = range * tan(outerRads);
-    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), innerCathetus);
-    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), outerCathetus);
-}
-
-void SpotLight::DrawGizmos() const
-{
-    if (!drawGizmos) return;
-
-    const float innerRads      = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
-    const float outerRads      = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
-    const float3 directionNorm = direction.Normalized();
-
-    std::vector<float3> innerDirections;
-    innerDirections.push_back(float3(Quat::RotateX(innerRads).Transform(directionNorm)));
-    innerDirections.push_back(float3(Quat::RotateX(-innerRads).Transform(directionNorm)));
-
-    std::vector<float3> outerDirections;
-    outerDirections.push_back(float3(Quat::RotateZ(outerRads).Transform(directionNorm)));
-    outerDirections.push_back(float3(Quat::RotateZ(-outerRads).Transform(directionNorm)));
-
-    DebugDrawModule *debug = App->GetDebugDrawModule();
-    debug->DrawLine(globalTransform.position, directionNorm, range, float3(1, 1, 1));
-
-    for (const float3 &dir : innerDirections)
-    {
-        debug->DrawLine(globalTransform.position, dir, range / cos(innerRads), float3(1, 1, 1));
-    }
-
-    for (const float3 &dir : outerDirections)
-    {
-        debug->DrawLine(globalTransform.position, dir, range / cos(outerRads), float3(1, 1, 1));
-    }
-
-    float3 center       = globalTransform.position + (directionNorm * range);
-    float innerCathetus = range * tan(innerRads);
-    float outerCathetus = range * tan(outerRads);
-    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), innerCathetus);
-    debug->DrawCircle(center, -directionNorm, float3(1, 1, 1), outerCathetus);
+    debug->DrawCircle(center, -direction, float3(1, 1, 1), innerCathetus);
+    debug->DrawCircle(center, -direction, float3(1, 1, 1), outerCathetus);
 }

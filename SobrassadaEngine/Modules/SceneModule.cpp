@@ -79,6 +79,9 @@ update_status SceneModule::Render(float deltaTime)
     lightsConfig->RenderSkybox();
     lightsConfig->SetLightsShaderData();
 
+    //TODO: Integrate with editor UI
+    lightsConfig->EditorParams();
+    
     for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); it++)
     {
         if (it->second != nullptr)
