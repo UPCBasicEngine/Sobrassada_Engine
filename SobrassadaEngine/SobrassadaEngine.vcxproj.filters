@@ -144,9 +144,6 @@
     <ClCompile Include="Modules\DebugDrawModule.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Tests\TextureModuleTest.cpp">
-      <Filter>Tests</Filter>
-    </ClCompile>
     <ClCompile Include="Tests\CameraModule.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
@@ -380,9 +377,6 @@
     </ClInclude>
     <ClInclude Include="Modules\DebugDrawModule.h">
       <Filter>Debug</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\TextureModuleTest.h">
-      <Filter>Tests</Filter>
     </ClInclude>
     <ClInclude Include="Tests\CameraModule.h">
       <Filter>Tests</Filter>

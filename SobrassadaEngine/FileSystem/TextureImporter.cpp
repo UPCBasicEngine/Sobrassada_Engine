@@ -63,9 +63,11 @@ namespace TextureImporter
             GLOG("Failed to save DDS file: %s", savePath.c_str());
             return 0;
         }
-        std::string libraryPath = FileSystem::GetFileNameWithExtension(savePath);
 
-        App->GetLibraryModule()->AddTexture(textureUID, libraryPath);
+        UID finalTextureUID     = App->GetLibraryModule()->AssignFiletypeUID(textureUID, savePath);
+        // added texture to textures map
+        App->GetLibraryModule()->AddTexture(finalTextureUID, fileName);
+        App->GetLibraryModule()->AddResource(savePath, finalTextureUID);
 
         GLOG("%s saved as dds", fileName.c_str());
 
@@ -110,7 +112,7 @@ namespace TextureImporter
     {
         unsigned int textureId = 0;
         std::string textureString(texturePath);
-        std::wstring wPath     = std::wstring(textureString.begin(),textureString.end());
+        std::wstring wPath = std::wstring(textureString.begin(), textureString.end());
 
         DirectX::ScratchImage scratchImage;
         DirectX::TexMetadata texMetadata;
@@ -121,7 +123,6 @@ namespace TextureImporter
         {
             ResourceTexture::ConvertMetadata(texMetadata, openGlMeta);
 
-            
             glGenTextures(1, &textureId);
             glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
@@ -143,9 +144,7 @@ namespace TextureImporter
         return textureId;
     }
 
-    bool LoadTextureFile(
-        const wchar_t* texturePath, DirectX::TexMetadata& outMetadata, DirectX::ScratchImage& outImage
-    ) 
+    bool LoadTextureFile(const wchar_t* texturePath, DirectX::TexMetadata& outMetadata, DirectX::ScratchImage& outImage)
     {
         HRESULT hr = LoadFromDDSFile(texturePath, DirectX::DDS_FLAGS_NONE, &outMetadata, outImage);
 
