@@ -308,7 +308,7 @@ void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int camer
 	float3 lightDir = float3(-1.0f, -0.3f, 2.0f);
     float3 lightColor = float3(1.0f, 1.0f, 1.0f);
     float3 ambientIntensity = float3(1.0f, 1.0f, 1.0f);
-	float3 cameraPos = App->GetCameraModule()->getPosition();
+	float3 cameraPos = App->GetCameraModule()->GetCameraPosition();
 	glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
 
 	glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);

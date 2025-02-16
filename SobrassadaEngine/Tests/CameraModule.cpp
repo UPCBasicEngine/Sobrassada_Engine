@@ -60,8 +60,6 @@ bool CameraModule::Init()
     detachedViewMatrix               = detachedCamera.ViewMatrix();
     detachedProjectionMatrix         = detachedCamera.ProjectionMatrix();
 
-    return true;
-
 	glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
@@ -75,6 +73,7 @@ void CameraModule::UpdateUBO()
 
     matrices.projectionMatrix = GetProjectionMatrix();
     matrices.viewMatrix       = GetViewMatrix();
+
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -85,12 +84,7 @@ update_status CameraModule::Update(float deltaTime)
     InputModule* inputModule = App->GetInputModule();
 
     float finalCameraSpeed   = cameraMoveSpeed * deltaTime;
-
-bool CameraModule::ShutDown()
-{
-    glDeleteBuffers(1,&ubo);
-    return true;
-}
+    
     if (inputModule->GetKey(SDL_SCANCODE_LSHIFT))
     {
         finalCameraSpeed *= 2;
@@ -174,14 +168,15 @@ bool CameraModule::ShutDown()
 
     frustumPlanes.UpdateFrustumPlanes(viewMatrix, projectionMatrix);
     UpdateUBO();
+
     return UPDATE_CONTINUE;
 }
-
 bool CameraModule::ShutDown()
 {
+    glDeleteBuffers(1,&ubo);
     return true;
 }
-
+    
 void CameraModule::SetAspectRatio(float newAspectRatio)
 {
     camera.verticalFov         = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * newAspectRatio);

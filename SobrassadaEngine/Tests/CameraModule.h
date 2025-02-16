@@ -35,8 +35,9 @@ class CameraModule : public Module
     const float4x4& GetFrustumViewMatrix() { return viewMatrix; }
     const float4x4& GetFrustumProjectionMatrix() { return projectionMatrix; }
     const FrustumPlanes& GetFrustrumPlanes() const { return frustumPlanes; }
+    const float3& GetCameraPosition() const { return isCameraDetached ? detachedCamera.pos : camera.pos; }
 
-    const unsigned int GetUbo() { return ubo; }
+    unsigned int GetUbo() const { return ubo; }
     void UpdateUBO();
 
     bool IsCameraDetached() const { return isCameraDetached; }
