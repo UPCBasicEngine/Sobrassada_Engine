@@ -4,12 +4,13 @@
 #include "GameObject.h"
 #include "InputModule.h"
 #include "WindowModule.h"
-#include "glew.h"
+#include "SceneModule.h"
 
 #include "DebugDraw/debugdraw.h"
 #include "Math/Quat.h"
 #include "MathGeoLib.h"
 #include "SDL_scancode.h"
+#include "glew.h"
 #include <functional>
 
 CameraModule::CameraModule()
@@ -244,13 +245,19 @@ void CameraModule::RotateCamera(float yaw, float pitch)
 
 void CameraModule::FocusCamera()
 {
-    //AABB focusedObjectAABB = App->GetSceneModule()->GetSeletedGameObject()->GetGlobalBoundingBox();
-    AABB focusedObjectAABB = AABB(float3(-1, -1, -1), float3(1, 1, 1));
+    AABB focusedObjectAABB = App->GetSceneModule()->GetSeletedGameObject()->GetAABB();
     float3 center          = focusedObjectAABB.CenterPoint();
+    
+    if (IsNan(center.x))
+    {
+        GLOG("Center of bounding box is NaN")
+        return;
+    }
 
-    // IN CASE THE SELECTED OBJECT HAS NO AABB, CLAMP VERY SMALL VALUES TO 0 (errors in float operations)
+    // IN CASE THE SELECTED OBJECT SET TO IN OR CLAMP VERY SMALL VALUES TO 0 (errors in float operations)
     int distance           = (int)(focusedObjectAABB.maxPoint - focusedObjectAABB.minPoint).Length();
-    if (distance == 0) distance = 1;
+    
+    if (distance == 0 || distance == FLOAT_INF || distance == -FLOAT_INF) distance = 1;
 
     float3 direction   = camera.front.Normalized();
     float3 newPosition = center - direction * (float)distance;
