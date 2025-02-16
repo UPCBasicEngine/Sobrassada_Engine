@@ -37,8 +37,8 @@ class SceneModule : public Module
 
     void CreateScene();
     void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject,
-    const std::map<UID, Component*> &loadedGameComponents,
-    const std::unordered_map<UID, GameObject*>& loadedGameObjects);
+    const std::map<UID, Component*> &loadedGameComponents);
+    void LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects);
     void CloseScene();
 
     void CheckObjectsToRender();
@@ -66,6 +66,9 @@ class SceneModule : public Module
     void AddGameObject(UID uid, GameObject *newGameObject)const { loadedScene != nullptr ? loadedScene->AddGameObject(uid, newGameObject) : void(); }
     void AddComponent(UID uid, Component *newComponent)const { loadedScene != nullptr ? loadedScene->AddComponent(uid, newComponent) : void(); }
 
+    bool IsInPlayMode() const { return bInPlayMode; }
+    void SwitchState(bool wantedStatePlayMode);
+
   private:
     void CreateSpatialDataStruct();
     void UpdateSpatialDataStruct();
@@ -76,4 +79,6 @@ class SceneModule : public Module
     Scene* loadedScene = nullptr;
 
     Octree *sceneOctree = nullptr;
+
+    bool bInPlayMode = false;
 };

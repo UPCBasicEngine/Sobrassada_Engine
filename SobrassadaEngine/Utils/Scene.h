@@ -19,7 +19,10 @@ public:
 
     ~Scene();
 
-    void Load(const std::map<UID, Component*>& loadedGameComponents, const std::unordered_map<UID, GameObject*>& loadedGameObjects);
+    void Save() const;
+
+    void LoadComponents(const std::map<UID, Component*>& loadedGameComponents);
+    void LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects);
 
     update_status Render(float deltaTime);
     update_status RenderEditor(float deltaTime);
@@ -61,3 +64,4 @@ private:
     
     LightsConfig *lightsConfig = nullptr;
 };
+

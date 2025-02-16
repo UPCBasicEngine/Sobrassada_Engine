@@ -25,9 +25,12 @@ public:
 
     void LoadData(const DirectX::TexMetadata& metadata, const DirectX::ScratchImage& scratchImage);
     static void ConvertMetadata(const DirectX::TexMetadata &metadata, OpenGLMetadata &outMetadata);
+    void SetTextureID(unsigned int id) { textureID = id; }
+    unsigned int GetTextureID() { return textureID; }
 
 private:
     DirectX::TexMetadata metadata;
     OpenGLMetadata openGLMetadata;
     DirectX::ScratchImage scratchImage;
+    unsigned int textureID;
 };

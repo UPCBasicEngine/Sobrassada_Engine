@@ -225,7 +225,7 @@ namespace MeshImporter
 
         GLOG("%s saved as binary", fileName.c_str());
 
-        return meshUID;
+        return finalMeshUID;
     }
 
     ResourceMesh* LoadMesh(UID meshUID)

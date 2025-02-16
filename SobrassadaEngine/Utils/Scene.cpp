@@ -5,7 +5,10 @@
 #include "Component.h"
 #include "Framebuffer.h"
 #include "GameObject.h"
+#include "GameTimer.h"
+#include "LibraryModule.h"
 #include "OpenGLModule.h"
+#include "SceneModule.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "./Libs/ImGuizmo/ImGuizmo.h"
@@ -39,13 +42,26 @@ Scene::~Scene()
     GLOG("%s scene closed", sceneName)
 }
 
-void Scene::Load(const std::map<UID, Component*>& loadedGameComponents, const std::unordered_map<UID, GameObject*>& loadedGameObjects)
+void Scene::Save() const
+{
+    if (!App->GetLibraryModule()->SaveScene(SCENES_PATH, SaveMode::Save))
+    {
+        GLOG("%s scene saving failed", sceneName)
+    }
+}
+
+void Scene::LoadComponents(const std::map<UID, Component*>& loadedGameComponents)
 {
     gameComponents.clear();
     gameObjectsContainer.clear();
     gameComponents.insert(loadedGameComponents.begin(), loadedGameComponents.end());
+}
+
+void Scene::LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects)
+{
+    gameObjectsContainer.clear();
     gameObjectsContainer.insert(loadedGameObjects.begin(), loadedGameObjects.end());
-    
+
     GameObject* root = GetGameObjectByUUID(gameObjectRootUUID);
     if (root != nullptr)
     {
@@ -78,36 +94,81 @@ update_status Scene::RenderEditor(float deltaTime)
 {
     if (ImGui::Begin(sceneName))
     {
-	    
-        if (ImGui::BeginChild("##SceneChild", ImVec2(0.f, 0.f), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar))
+        GameTimer *gameTimer = App->GetGameTimer();
+        if (ImGui::Begin("Scene controls"))
         {
-            const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
+            float timeScale      = gameTimer->GetTimeScale();
 
-            ImGui::SetCursorPos(ImVec2(0.f, 0.f));
-
-            ImGui::Image(
-                    (ImTextureID)framebuffer->GetTextureID(),
-                    ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()),
-                    ImVec2(0.f, 1.f),
-                    ImVec2(1.f, 0.f)
-            );
-
-            ImGuizmo::SetOrthographic(false);
-            ImGuizmo::SetDrawlist(); // ImGui::GetWindowDrawList()
-
-            float width = ImGui::GetWindowWidth();
-            float height = ImGui::GetWindowHeight();
-            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
-		    
-            ImGui::EndChild();
-
-            ImVec2 windowSize = ImGui::GetWindowSize();
-            if (framebuffer->GetTextureWidth() != windowSize.x || framebuffer->GetTextureHeight() != windowSize.y)
+            if (ImGui::Button("Play"))
             {
-                float aspectRatio = windowSize.y / windowSize.x;
-                App->GetCameraModule()->SetAspectRatio(aspectRatio);
-                framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
+                App->GetSceneModule()->SwitchState(true);
+                gameTimer->Start();
             }
+            ImGui::SameLine();
+            if (ImGui::Button("Pause"))
+            {
+                gameTimer->TogglePause();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Step"))
+            {
+                gameTimer->Step();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Stop"))
+            {
+                App->GetSceneModule()->SwitchState(false);
+                gameTimer->Reset();
+            }
+            ImGui::SameLine();
+            if (ImGui::SliderFloat("Time scale", &timeScale, 0, 4)) gameTimer->SetTimeScale(timeScale);
+
+            if (App->GetSceneModule()->IsInPlayMode())
+            {
+                ImGui::SeparatorText("Playing");
+                ImGui::Text("Frame count: %d", gameTimer->GetFrameCount());
+                ImGui::SameLine();
+                ImGui::Text("Game time: %.3f", gameTimer->GetTime() / 1000.0f);
+                ImGui::SameLine();
+                ImGui::Text("Delta time: %.3f", gameTimer->GetDeltaTime() / 1000.0f);
+            }
+            
+            ImGui::End();
+        }
+        
+        if (ImGui::Begin(sceneName))
+        {
+            if (ImGui::BeginChild("##SceneChild", ImVec2(0.f, 0.f), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar))
+            {
+                const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
+
+                ImGui::SetCursorPos(ImVec2(0.f, 0.f));
+
+                ImGui::Image(
+                        (ImTextureID)framebuffer->GetTextureID(),
+                        ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()),
+                        ImVec2(0.f, 1.f),
+                        ImVec2(1.f, 0.f)
+                );
+
+                ImGuizmo::SetOrthographic(false);
+                ImGuizmo::SetDrawlist(); // ImGui::GetWindowDrawList()
+
+                float width = ImGui::GetWindowWidth();
+                float height = ImGui::GetWindowHeight();
+                ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
+		    
+                ImGui::EndChild();
+
+                ImVec2 windowSize = ImGui::GetWindowSize();
+                if (framebuffer->GetTextureWidth() != windowSize.x || framebuffer->GetTextureHeight() != windowSize.y)
+                {
+                    float aspectRatio = windowSize.y / windowSize.x;
+                    App->GetCameraModule()->SetAspectRatio(aspectRatio);
+                    framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
+                }
+            }
+            ImGui::End();
         }
         ImGui::End();
     }
@@ -223,3 +284,4 @@ Component* Scene::GetComponentByUID(uint64_t componentUID)
     }
     return nullptr;
 }
+

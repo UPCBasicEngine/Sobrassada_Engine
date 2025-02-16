@@ -14,9 +14,13 @@
 
 #include <filesystem>
 
-LibraryModule::LibraryModule() {}
+LibraryModule::LibraryModule()
+{
+}
 
-LibraryModule::~LibraryModule() {}
+LibraryModule::~LibraryModule()
+{
+}
 
 bool LibraryModule::Init()
 {
@@ -28,9 +32,9 @@ bool LibraryModule::Init()
 
 // Save = library/scenes/
 // SaveAs = all path + name.scene
-bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
+bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
 {
-    SceneModule *sceneModule = App->GetSceneModule();
+    SceneModule* sceneModule = App->GetSceneModule();
     if (sceneModule == nullptr)
     {
         GLOG("Scene module not found");
@@ -38,26 +42,26 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
     }
 
     UID sceneUID = (saveMode == SaveMode::Save) ? sceneModule->GetSceneUID() : GenerateUID();
-    const std::string &sceneName =
+    const std::string& sceneName =
         (saveMode == SaveMode::Save) ? sceneModule->GetSceneName() : FileSystem::GetFileNameWithoutExtension(path);
 
     if (sceneUID == 0 && saveMode == SaveMode::Save) return false;
 
     UID gameObjectRootUID   = sceneModule->GetGameObjectRootUID();
 
-    const auto *gameObjects = sceneModule->GetAllGameObjects();
-    const auto *components  = sceneModule->GetAllComponents();
+    const auto* gameObjects = sceneModule->GetAllGameObjects();
+    const auto* components  = sceneModule->GetAllComponents();
 
     // Create doc JSON
     rapidjson::Document doc;
     doc.SetObject();
-    rapidjson::Document::AllocatorType &allocator = doc.GetAllocator();
+    rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
 
     rapidjson::Value scene(rapidjson::kObjectType);
 
     // Scene values
     UID uid                 = sceneUID;
-    const std::string &name = sceneName;
+    const std::string& name = sceneName;
     UID rootGameObject      = gameObjectRootUID;
 
     // Create structure
@@ -74,18 +78,7 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
         {
             rapidjson::Value goJSON(rapidjson::kObjectType);
 
-            goJSON.AddMember("UID", uid, allocator);
-            goJSON.AddMember("ParentUID", it->second->GetParent(), allocator);
-            goJSON.AddMember("Name", rapidjson::Value(it->second->GetName().c_str(), allocator), allocator);
-
-            // Child UUIDs
-            rapidjson::Value childUIDs(rapidjson::kArrayType);
-            for (UID childUID : it->second->GetChildren())
-            {
-                childUIDs.PushBack(childUID, allocator);
-            }
-            goJSON.AddMember("Children", childUIDs, allocator);
-            goJSON.AddMember("RootComponentUID", it->second->GetRootComponent()->GetUID(), allocator);
+            it->second->Save(goJSON, allocator);
 
             gameObjectsJSON.PushBack(goJSON, allocator);
         }
@@ -133,8 +126,8 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
         sceneFilePath = FileSystem::GetFilePath(path) + fileName + SCENE_EXTENSION;
     }
 
-    unsigned int bytesWritten =
-        (unsigned int)FileSystem::Save(sceneFilePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
+    unsigned int bytesWritten = (unsigned int
+    )FileSystem::Save(sceneFilePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
     if (bytesWritten == 0)
     {
         GLOG("Failed to save scene file: %s", path);
@@ -146,7 +139,7 @@ bool LibraryModule::SaveScene(const char *path, SaveMode saveMode) const
     return true;
 }
 
-bool LibraryModule::LoadScene(const char *path)
+bool LibraryModule::LoadScene(const char* path)
 {
     rapidjson::Document doc;
     bool loaded = FileSystem::LoadJSON(path, doc);
@@ -163,7 +156,7 @@ bool LibraryModule::LoadScene(const char *path)
         return false;
     }
 
-    rapidjson::Value &scene = doc["Scene"];
+    rapidjson::Value& scene = doc["Scene"];
 
     // Scene values
     UID sceneUID            = scene["UID"].GetUint64();
@@ -178,58 +171,41 @@ bool LibraryModule::LoadScene(const char *path)
 
     App->GetSceneModule()->CloseScene();
 
+    std::map<UID, Component*> loadedGameComponents;
+    std::unordered_map<UID, GameObject*> loadedGameObjects;
+
     // Deserialize Components
     if (scene.HasMember("Components") && scene["Components"].IsArray())
     {
-        const rapidjson::Value &components = scene["Components"];
+        const rapidjson::Value& components = scene["Components"];
 
         for (rapidjson::SizeType i = 0; i < components.Size(); i++)
         {
-            const rapidjson::Value &component = components[i];
+            const rapidjson::Value& component = components[i];
 
-            Component *newComponent           = ComponentUtils::CreateExistingComponent(component);
+            Component* newComponent           = ComponentUtils::CreateExistingComponent(component);
 
-            UID componentUID                  = component["UID"].GetUint64();
-            if (newComponent != nullptr) App->GetSceneModule()->AddComponent(componentUID, newComponent);
+            loadedGameComponents.insert({newComponent->GetUID(), newComponent});
         }
     }
+
+    App->GetSceneModule()->LoadScene(sceneUID, name.c_str(), rootGameObject, loadedGameComponents);
 
     // Deserialize GameObjects
     if (scene.HasMember("GameObjects") && scene["GameObjects"].IsArray())
     {
-        const rapidjson::Value &gameObjects = scene["GameObjects"];
+        const rapidjson::Value& gameObjects = scene["GameObjects"];
         for (rapidjson::SizeType i = 0; i < gameObjects.Size(); i++)
         {
-            const rapidjson::Value &gameObject = gameObjects[i];
+            const rapidjson::Value& gameObject = gameObjects[i];
 
-            UID goUID                          = gameObject["UID"].GetUint64();
-            UID parentUID                      = gameObject["ParentUID"].GetUint64();
-            std::string goName                 = gameObject["Name"].GetString();
-            UID rootComponentUUID              = gameObject["RootComponentUID"].GetUint64();
+            GameObject* newGameObject          = new GameObject(gameObject);
 
-            GameObject *newGameObject          = new GameObject(parentUID, goName, rootComponentUUID);
-            newGameObject->SetUUID(goUID);
-
-            if (gameObject.HasMember("Children") && gameObject["Children"].IsArray())
-            {
-                const rapidjson::Value &childUIDs = gameObject["Children"];
-                for (rapidjson::SizeType j = 0; j < childUIDs.Size(); j++)
-                {
-                    UID childUID = childUIDs[j].GetUint64();
-                    newGameObject->AddChildren(childUID);
-                }
-            }
-
-            if (newGameObject != nullptr) App->GetSceneModule()->AddGameObject(goUID, newGameObject);
+            loadedGameObjects.insert({newGameObject->GetUID(), newGameObject});
         }
     }
 
-    std::map<UID, Component*> loadedGameComponents;
-    std::unordered_map<UID, GameObject*> loadedGameObjects;
-
-    // TODO Fill with the code above instead of adding the objects directly to the sceneModule
-
-    App->GetSceneModule()->LoadScene(sceneUID, name.c_str(), rootGameObject, loadedGameComponents, loadedGameObjects);
+    App->GetSceneModule()->LoadGameObjects(loadedGameObjects);
 
     GLOG("%s scene loaded", name.c_str());
     return true;
@@ -238,7 +214,7 @@ bool LibraryModule::LoadScene(const char *path)
 bool LibraryModule::LoadLibraryMaps()
 {
 
-    for (const auto &entry : std::filesystem::recursive_directory_iterator(LIBRARY_PATH))
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(LIBRARY_PATH))
     {
 
         if (entry.is_regular_file())
@@ -277,7 +253,7 @@ bool LibraryModule::LoadLibraryMaps()
     return true;
 }
 
-UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string &filePath)
+UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string& filePath)
 {
 
     uint64_t prefix = 10; // Default prefix "99" for unknown files
@@ -299,22 +275,22 @@ UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string &filePat
     return final;
 }
 
-void LibraryModule::AddTexture(UID textureUID, const std::string &ddsPath)
+void LibraryModule::AddTexture(UID textureUID, const std::string& ddsPath)
 {
     textureMap[ddsPath] = textureUID; // Map the texture UID to its DDS path
 }
 
-void LibraryModule::AddMesh(UID meshUID, const std::string &sobPath)
+void LibraryModule::AddMesh(UID meshUID, const std::string& sobPath)
 {
     meshMap[sobPath] = meshUID; // Map the texture UID to its DDS path
 }
 
-void LibraryModule::AddMaterial(UID materialUID, const std::string &matPath)
+void LibraryModule::AddMaterial(UID materialUID, const std::string& matPath)
 {
     materialMap[matPath] = materialUID; // Map the texture UID to its DDS path
 }
 
-UID LibraryModule::GetTextureUID(const std::string &texturePath) const
+UID LibraryModule::GetTextureUID(const std::string& texturePath) const
 {
 
     auto it = textureMap.find(texturePath);
@@ -326,7 +302,7 @@ UID LibraryModule::GetTextureUID(const std::string &texturePath) const
     return 0;
 }
 
-UID LibraryModule::GetMeshUID(const std::string &meshPath) const
+UID LibraryModule::GetMeshUID(const std::string& meshPath) const
 {
 
     auto it = meshMap.find(meshPath);
@@ -338,7 +314,7 @@ UID LibraryModule::GetMeshUID(const std::string &meshPath) const
     return 0;
 }
 
-UID LibraryModule::GetMaterialUID(const std::string &materialPath) const
+UID LibraryModule::GetMaterialUID(const std::string& materialPath) const
 {
 
     auto it = materialMap.find(materialPath);
@@ -350,7 +326,7 @@ UID LibraryModule::GetMaterialUID(const std::string &materialPath) const
     return 0;
 }
 
-const std::string &LibraryModule::GetResourcePath(UID resourceID) const
+const std::string& LibraryModule::GetResourcePath(UID resourceID) const
 {
     auto it = resourcePathsMap.find(resourceID);
     if (it != resourcePathsMap.end())
