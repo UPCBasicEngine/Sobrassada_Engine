@@ -147,7 +147,7 @@ namespace MeshImporter
 
         if (dataType == DataType::UNSIGNED_CHAR)
         {
-            indexBufferSize = sizeof(unsigned char) * indexBufferChar.size();
+            indexBufferSize = sizeof(unsigned char) * (int)indexBufferChar.size();
 
             header[0]       = (unsigned int)(indexBufferChar.size());
             header[1]       = (unsigned int)(vertexBuffer.size());
@@ -156,7 +156,7 @@ namespace MeshImporter
         }
         if (dataType == DataType::UNSIGNED_SHORT)
         {
-            indexBufferSize = sizeof(unsigned short) * indexBufferShort.size();
+            indexBufferSize = sizeof(unsigned short) * (int)indexBufferShort.size();
 
             header[0]       = (unsigned int)(indexBufferShort.size());
             header[1]       = (unsigned int)(vertexBuffer.size());
@@ -165,7 +165,7 @@ namespace MeshImporter
         }
         if (dataType == DataType::UNSIGNED_INT)
         {
-            indexBufferSize = sizeof(unsigned int) * indexBufferInt.size();
+            indexBufferSize = sizeof(unsigned int) * (int)indexBufferInt.size();
 
             header[0]       = (unsigned int)(indexBufferInt.size());
             header[1]       = (unsigned int)(vertexBuffer.size());
