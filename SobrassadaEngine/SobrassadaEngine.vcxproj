@@ -461,7 +461,6 @@
     <ClCompile Include="Scene\Components\ComponentUtils.cpp" />
     <ClCompile Include="Scene\GameObjects\GameObject.cpp" />
     <ClCompile Include="Utils\Framebuffer.cpp" />
-    <ClCompile Include="UI\EditorViewport.cpp" />
     <ClCompile Include="Tests\CameraModule.cpp" />
     <ClCompile Include="Modules\DebugDrawModule.cpp" />
     <ClCompile Include="UI\EditorUIModule.cpp" />
@@ -550,7 +549,6 @@
     <ClInclude Include="Scene\GameObjects\GameObject.h" />
     <ClInclude Include="Utils\BoundingBox.h" />
     <ClInclude Include="Utils\Framebuffer.h" />
-    <ClInclude Include="UI\EditorViewport.h" />
     <ClInclude Include="Tests\CameraModule.h" />
     <ClInclude Include="DebugDraw\debugdraw.h" />
     <ClInclude Include="Modules\DebugDrawModule.h" />
