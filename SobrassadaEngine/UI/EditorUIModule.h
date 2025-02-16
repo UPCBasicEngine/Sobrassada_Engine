@@ -63,7 +63,6 @@ class EditorUIModule : public Module
     void HardwareConfig() const;
     void ShowCaps() const;
 
-    void Console(bool &consoleMenu);
     void ImportDialog(bool &import);
     void GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files);
     void LoadDialog(bool &load);

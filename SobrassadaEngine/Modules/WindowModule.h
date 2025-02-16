@@ -17,7 +17,7 @@ class WindowModule : public Module
 
     int GetWidth() const { return windowWidth; }
     int GetHeight() const { return windowHeight; }
-    SDL_DisplayMode &GetDesktopDisplayMode() const;
+    SDL_DisplayMode &GetDesktopDisplayMode();
     float GetBrightness() const { return SDL_GetWindowBrightness(window); }
 
     void SetWidth(const unsigned int width);

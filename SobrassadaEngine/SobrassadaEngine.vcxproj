@@ -512,7 +512,6 @@
     <ClCompile Include="Modules\ShaderModule.cpp" />
     <ClCompile Include="Utils\Scene.cpp" />
     <ClCompile Include="Utils\Transform.cpp" />
-    <ClCompile Include="Utils\UPCTimer.cpp" />
     <ClCompile Include="Utils\GameTimer.cpp" />
     <ClCompile Include="Modules\WindowModule.cpp" />
   </ItemGroup>
@@ -574,7 +573,6 @@
     <ClInclude Include="Utils\Scene.h" />
     <ClInclude Include="Utils\Transform.h" />
     <ClInclude Include="Utils\LightsConfig.h" />
-    <ClInclude Include="Utils\UPCTimer.h" />
     <ClInclude Include="Utils\GameTimer.h" />
     <ClInclude Include="Modules\WindowModule.h" />
   </ItemGroup>

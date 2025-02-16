@@ -1296,3 +1296,4 @@ void EditorUIModule::ShowCaps() const
         }
     }
 }
+
