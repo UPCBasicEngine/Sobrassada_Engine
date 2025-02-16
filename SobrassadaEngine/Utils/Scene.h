@@ -19,6 +19,8 @@ public:
 
     ~Scene();
 
+    void Save() const;
+
     void LoadComponents(const std::map<UID, Component*>& loadedGameComponents);
     void LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects);
 
