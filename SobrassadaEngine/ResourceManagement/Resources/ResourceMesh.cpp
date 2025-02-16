@@ -313,8 +313,6 @@ void ResourceMesh::Render(int program, float4x4 &modelMatrix, unsigned int camer
 
 	glUniform3fv(glGetUniformLocation(program, "lightDir"), 1, &lightDir[0]);
     glUniform3fv(glGetUniformLocation(program, "lightColor"), 1, &lightColor[0]);
-	glUniform3fv(glGetUniformLocation(program, "ambientIntensity"), 1, &ambientIntensity[0]);
-
 
     if (material != nullptr)
     {

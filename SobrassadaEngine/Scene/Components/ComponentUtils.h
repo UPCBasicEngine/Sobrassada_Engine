@@ -21,7 +21,7 @@ enum ComponentType
     COMPONENT_MESH = 2,
     COMPONENT_POINT_LIGHT = 4,
     COMPONENT_SPOT_LIGHT = 5,
-    COMPONENT_DIRECTIONAL_LIGHT
+    COMPONENT_DIRECTIONAL_LIGHT = 6
 };
 
 static const std::map<std::string, ComponentType> standaloneComponents = {

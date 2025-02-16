@@ -51,6 +51,8 @@ public:
     void AddGameObject(UID uid, GameObject *newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
     void AddComponent(UID uid, Component *newComponent) { gameComponents.insert({uid, newComponent}); }
 
+    LightsConfig* GetLightsConfig() { return lightsConfig; }
+
 private:
     
     std::string sceneName;
