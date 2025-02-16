@@ -15,6 +15,11 @@
 #include "Framebuffer.h"
 #include "Root/RootComponent.h"
 
+#include "EngineTimer.h"
+#include "GameTimer.h"
+
+#include "optick.h"
+
 Application::Application()
 {
     modules.push_back(windowModule = new WindowModule());
@@ -30,6 +35,11 @@ Application::Application()
     modules.push_back(debugDraw = new DebugDrawModule());
 
     modules.push_back(editorUIModule = new EditorUIModule());
+
+    // Init timers
+    engineTimer = new EngineTimer();
+    engineTimer->Start();
+    gameTimer   = new GameTimer();
 }
 
 Application::~Application()
@@ -50,21 +60,29 @@ bool Application::Init()
     return returnStatus;
 }
 
-update_status Application::Update(float deltaTime)
+update_status Application::Update()
 {
+    const float deltaTime = engineTimer->Tick() / 1000.0f;
+    gameTimer->Tick();  // I guess this should go in a gameManager class or something, but for now it's here
+
     update_status returnStatus = UPDATE_CONTINUE;
 
+    OPTICK_CATEGORY("Application::PreUpdate", Optick::Category::GameLogic)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->PreUpdate(deltaTime);
 
+    OPTICK_CATEGORY("Application::Update", Optick::Category::GameLogic)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->Update(deltaTime);
-
+    
+    OPTICK_CATEGORY("Application::Render", Optick::Category::Rendering)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->Render(deltaTime);
+    
+    OPTICK_CATEGORY("Application::RenderEditor", Optick::Category::Rendering)
 
     // Unbinding frame buffer so ui gets rendered
     App->GetOpenGLModule()->GetFramebuffer()->Unbind();
@@ -72,7 +90,8 @@ update_status Application::Update(float deltaTime)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->RenderEditor(deltaTime);
-
+    
+    OPTICK_CATEGORY("Application::PostUpdate", Optick::Category::GameLogic)
     for (std::list<Module *>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
          ++it)
         returnStatus = (*it)->PostUpdate(deltaTime);
@@ -87,6 +106,9 @@ bool Application::ShutDown()
 
     for (std::list<Module *>::reverse_iterator it = modules.rbegin(); it != modules.rend() && returnStatus; ++it)
         returnStatus = (*it)->ShutDown();
+
+    delete engineTimer;
+    delete gameTimer;
 
     return returnStatus;
 }

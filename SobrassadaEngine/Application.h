@@ -18,6 +18,9 @@ class SceneModule;
 class CameraModule;
 class DebugDrawModule;
 
+class EngineTimer;
+class GameTimer;
+
 class Application
 {
   public:
@@ -25,7 +28,7 @@ class Application
     ~Application();
 
     bool Init();
-    update_status Update(float deltaTime);
+    update_status Update();
     bool ShutDown();
 
     WindowModule *GetWindowModule() { return windowModule; }
@@ -40,6 +43,8 @@ class Application
     // TMP: TEMPORAL JUST FOR HAVING A CAMERA TO RENDER
     CameraModule *GetCameraModule() { return cameraModule; }
     DebugDrawModule *GetDebugDrawModule() { return debugDraw; }
+
+    GameTimer *GetGameTimer() { return gameTimer; }
 
   private:
     std::list<Module *> modules;
@@ -57,7 +62,8 @@ class Application
     CameraModule *cameraModule           = nullptr;
     DebugDrawModule *debugDraw           = nullptr;
 
-    uint32_t previousElapsedTime         = 0;
+    EngineTimer *engineTimer             = nullptr;
+    GameTimer *gameTimer                 = nullptr;
 };
 
 extern Application *App;
