@@ -139,6 +139,30 @@
                 "RootUID": 1271759019,
                 "Type": 1,
                 "LocalTransform": [
+                    6.279861927032471,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [
+                    2218676039
+                ],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
+            },
+            {
+                "UID": 2218676039,
+                "ParentUID": 1271759019,
+                "RootUID": 1271759019,
+                "Type": 2,
+                "LocalTransform": [
                     0.0,
                     0.0,
                     0.0,
@@ -151,9 +175,9 @@
                 ],
                 "Children": [],
                 "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
+                "Name": "Mesh component",
+                "MeshUID": 1390477146419960,
+                "MaterialUID": 0
             },
             {
                 "UID": 2414375857,

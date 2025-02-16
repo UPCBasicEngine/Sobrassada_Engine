@@ -2,13 +2,13 @@
 
 #include "Application.h"
 #include "CameraModule.h"
-#include "OpenGLModule.h"
-#include "ShaderModule.h"
-#include "SceneModule.h"
-#include "TextureImporter.h"
 #include "EditorUIModule.h"
 #include "LibraryModule.h"
+#include "OpenGLModule.h"
 #include "ResourcesModule.h"
+#include "SceneModule.h"
+#include "ShaderModule.h"
+#include "TextureImporter.h"
 #include "imgui.h"
 
 #include "../Scene/Components/Standalone/Lights/DirectionalLight.h"
@@ -70,8 +70,7 @@ void LightsConfig::InitSkybox()
 
     glBindVertexArray(0);
 
-
-    //skyboxTexture = LoadSkyboxTexture("Test/cubemap.dds");
+    // skyboxTexture = LoadSkyboxTexture("Test/cubemap.dds");
     skyboxTexture = LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap"));
 
     // Load the skybox shaders
@@ -102,13 +101,10 @@ void LightsConfig::RenderSkybox() const
 
 unsigned int LightsConfig::LoadSkyboxTexture(UID cubemapUid) const
 {
-
-
     std::string stringPath = App->GetLibraryModule()->GetResourcePath(cubemapUid);
-    
+
     return TextureImporter::LoadCubemap(stringPath.c_str());
 }
-
 
 void LightsConfig::AddSkyboxTexture(UID resource)
 {
@@ -136,9 +132,10 @@ void LightsConfig::EditorParams()
 
     if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
     {
-        App->GetEditorUIModule()->RenderResourceSelectDialog(
+        const UID uid = LoadSkyboxTexture(App->GetEditorUIModule()->RenderResourceSelectDialog(
             CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap()
-        );
+        ));
+        if (uid != INVALID_UUID) skyboxTexture = uid;
     }
 
     ImGui::SeparatorText("Ambient light");
@@ -212,7 +209,10 @@ void LightsConfig::SetPointLightsShaderData() const
         if (pointLights[i] != nullptr)
         {
             // Fill struct data
-            points.emplace_back(Lights::PointLightShaderData(float4(pointLights[i]->GetGlobalTransform().position, pointLights[i]->GetRange()), float4(pointLights[i]->GetColor(), pointLights[i]->GetIntensity())));
+            points.emplace_back(Lights::PointLightShaderData(
+                float4(pointLights[i]->GetGlobalTransform().position, pointLights[i]->GetRange()),
+                float4(pointLights[i]->GetColor(), pointLights[i]->GetIntensity())
+            ));
         }
     }
 
@@ -299,13 +299,14 @@ void LightsConfig::RemovePointLight(UID pointUid)
     GLOG("Remove point light with UID: %d", pointUid);
     for (int i = 0; i < pointLights.size(); ++i)
     {
-        //NO HO TROBA MAI PERQUE ES NULLPTR
+        // NO HO TROBA MAI PERQUE ES NULLPTR
         if (pointLights[i]->GetUID() == pointUid)
         {
             // Not optimal to remove an element which is not last from a vector, but this will not happen often
             GLOG("Remove point light in index: %d", i);
             pointLights.erase(pointLights.begin() + i);
-            // No need to delete the pointer, because this function is triggered by the destructor and will be deleted afterwards
+            // No need to delete the pointer, because this function is triggered by the destructor and will be deleted
+            // afterwards
         }
     }
 
@@ -314,7 +315,6 @@ void LightsConfig::RemovePointLight(UID pointUid)
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 
     GLOG("Point lights size: %d. Buffer size: %d", pointLights.size(), bufferSize);
-
 }
 void LightsConfig::RemoveSpotLight(UID spotUid)
 {
@@ -326,8 +326,8 @@ void LightsConfig::RemoveSpotLight(UID spotUid)
             // Not optimal to remove an element which is not last from a vector, but this will not happen often
             GLOG("Remove spot light in index: %d", i);
             spotLights.erase(spotLights.begin() + i);
-            // No need to delete the pointer, because this function is triggered by the destructor and will be deleted afterwards
-
+            // No need to delete the pointer, because this function is triggered by the destructor and will be deleted
+            // afterwards
         }
     }
 
@@ -385,7 +385,7 @@ void LightsConfig::GetDirectionalLight()
 {
     SceneModule* scene = App->GetSceneModule();
 
-     // Iterate through all the components and get the spot lights
+    // Iterate through all the components and get the spot lights
     for (auto& component : scene->gameComponents)
     {
         if (component.second->GetType() == COMPONENT_DIRECTIONAL_LIGHT)
