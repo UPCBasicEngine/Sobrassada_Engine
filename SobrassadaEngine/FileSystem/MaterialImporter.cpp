@@ -51,7 +51,6 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             {
                 material.SetDiffuseTexture(diffuseUID);
             }
-            material.SetDiffuseTexture(FileSystem::GetFileNameWithoutExtension(path + model.images[model.textures[texIndex].source].uri));
         }
 
         if (specGloss.Has("glossinessFactor"))
