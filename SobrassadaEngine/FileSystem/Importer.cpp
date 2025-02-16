@@ -4,6 +4,7 @@
 #include "LibraryModule.h"
 #include "MeshImporter.h"
 #include "TextureImporter.h"
+#include "ResourceManagement/Resources/ResourceTexture.h"
 
 Resource* Importer::Load(UID uid)
 {

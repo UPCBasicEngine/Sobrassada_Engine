@@ -70,9 +70,15 @@ update_status SceneModule::Render(float deltaTime)
     lightsConfig->RenderSkybox();
     lightsConfig->SetLightsShaderData();
 
-    for (auto &gameObject : gameObjectsContainer)
+    for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); it++)
     {
-        gameObject.second->Render();
+        if (it->second != nullptr)
+        {
+            it->second->Render();
+        } else
+        {
+            GLOG("Empty gameObject in scene detected")
+        }
     }
 
     //Probably should go somewhere else, but must go after skybox and meshes
@@ -253,5 +259,14 @@ AABBUpdatable * SceneModule::GetTargetForAABBUpdate(UID uuid)
         return gameComponents[uuid];
     }
 
+    return nullptr;
+}
+
+GameObject* SceneModule::GetGameObjectByUUID(UID gameObjectUUID)
+{
+    if (gameObjectsContainer.count(gameObjectUUID))
+    {
+        return gameObjectsContainer[gameObjectUUID];
+    }
     return nullptr;
 }
