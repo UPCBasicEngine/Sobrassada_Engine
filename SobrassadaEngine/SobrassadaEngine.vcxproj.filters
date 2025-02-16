@@ -150,9 +150,6 @@
     <ClCompile Include="Utils\Framebuffer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="UI\EditorViewport.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="UI\QuadtreeViewer.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -395,9 +392,6 @@
     </ClInclude>
     <ClInclude Include="Utils\Framebuffer.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="UI\EditorViewport.h">
-      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="FileSystem\FileSystem.h">
       <Filter>FileSystem</Filter>
