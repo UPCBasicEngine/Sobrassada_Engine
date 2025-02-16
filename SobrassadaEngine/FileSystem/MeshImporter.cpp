@@ -203,10 +203,13 @@ namespace MeshImporter
         cursor                    += indexBufferSize;
 
         UID meshUID                = GenerateUID();
+        
+        std::string savePath = MESHES_PATH + std::string("Mesh") + MESH_EXTENSION;
+        UID finalMeshUID = App->GetLibraryModule()->AssignFiletypeUID(meshUID, savePath);
+        std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
 
-        // false = append
-        std::string fileName       = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath       = MESHES_PATH + fileName + MESH_EXTENSION;
+        savePath = MESHES_PATH + std::to_string(finalMeshUID) + MESH_EXTENSION;
+        
         unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, true);
 
         delete[] fileBuffer;
@@ -216,8 +219,6 @@ namespace MeshImporter
             GLOG("Failed to save mesh file: %s", savePath.c_str());
             return 0;
         }
-
-        UID finalMeshUID = App->GetLibraryModule()->AssignFiletypeUID(meshUID, savePath);
 
         // added mesh to meshes map
         App->GetLibraryModule()->AddMesh(finalMeshUID, name);

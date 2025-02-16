@@ -52,8 +52,11 @@ namespace TextureImporter
         }
 
         UID textureUID       = GenerateUID();
+        std::string savePath = TEXTURES_PATH + std::string("Texture") + TEXTURE_EXTENSION;
+        UID finalTextureUID = App->GetLibraryModule()->AssignFiletypeUID(textureUID, savePath);
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
-        std::string savePath = TEXTURES_PATH + fileName + TEXTURE_EXTENSION;
+        
+        savePath = TEXTURES_PATH + std::to_string(finalTextureUID) + TEXTURE_EXTENSION;
 
         unsigned int size =
             FileSystem::Save(savePath.c_str(), blob.GetBufferPointer(), (unsigned int)blob.GetBufferSize());
@@ -64,7 +67,7 @@ namespace TextureImporter
             return 0;
         }
 
-        UID finalTextureUID = App->GetLibraryModule()->AssignFiletypeUID(textureUID, savePath);
+        
         // added texture to textures map
         App->GetLibraryModule()->AddTexture(finalTextureUID, fileName);
         App->GetLibraryModule()->AddResource(savePath, finalTextureUID);
@@ -77,6 +80,9 @@ namespace TextureImporter
     ResourceTexture* LoadTexture(UID textureUID)
     {
         std::string path   = App->GetLibraryModule()->GetResourcePath(textureUID);
+
+        std::string fileName = FileSystem::GetFileNameWithoutExtension(path);
+        //const UID loadedTextureUID = std::stoull(fileName);
 
         std::wstring wPath = std::wstring(path.begin(), path.end());
 

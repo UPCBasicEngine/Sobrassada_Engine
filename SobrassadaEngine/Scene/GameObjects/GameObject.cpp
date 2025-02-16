@@ -326,6 +326,9 @@ void GameObject::PassAABBUpdateToParent()
         {
             parentGameObject->PassAABBUpdateToParent();
         }
+    } else
+    {
+        // TODO Quadtree regenerate
     }
 }
 

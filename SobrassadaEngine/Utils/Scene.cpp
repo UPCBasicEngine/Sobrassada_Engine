@@ -169,10 +169,10 @@ update_status Scene::RenderEditor(float deltaTime)
 
             ImGui::EndChild();
         }
-        ImGui::EndChild();
+        ImGui::End();
     }
 
-    GameObject* selectedGameObject = gameObjectsContainer[selectedGameObjectUUID];
+    GameObject* selectedGameObject = GetSeletedGameObject();
     if (selectedGameObject != nullptr)
     {
         selectedGameObject->RenderEditor();
