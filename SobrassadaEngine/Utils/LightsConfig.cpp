@@ -5,7 +5,7 @@
 #include "OpenGLModule.h"
 #include "ShaderModule.h"
 #include "SceneModule.h"
-#include "TextureModuleTest.h"
+#include "TextureImporter.h"
 #include "EditorUIModule.h"
 #include "LibraryModule.h"
 #include "ResourcesModule.h"
