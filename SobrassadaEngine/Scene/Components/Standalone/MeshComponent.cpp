@@ -117,6 +117,7 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
 
         if (reloadAABB)
         {
+            globalComponentAABB   = AABB(currentMesh->GetAABB());
             localComponentAABB    = AABB(currentMesh->GetAABB());
             AABBUpdatable* parent = GetParent();
             if (parent != nullptr)
