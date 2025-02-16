@@ -18,7 +18,6 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "EditorUIModule.h"
-#include "EditorViewport.h"
 
 #include <Algorithm/Random/LCG.h>
 #include <tiny_gltf.h>

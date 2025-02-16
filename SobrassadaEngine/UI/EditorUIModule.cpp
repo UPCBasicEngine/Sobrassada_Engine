@@ -2,7 +2,6 @@
 
 #include "Application.h"
 #include "LibraryModule.h"
-#include "EditorViewport.h"
 #include "FileSystem.h"
 #include "OpenGLModule.h"
 #include "SceneImporter.h"
