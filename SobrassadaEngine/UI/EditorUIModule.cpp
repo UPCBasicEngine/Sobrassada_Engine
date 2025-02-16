@@ -158,6 +158,8 @@ void EditorUIModule::MainMenu()
 
     if (ImGui::BeginMenu("File"))
     {
+        if (ImGui::MenuItem("Create", "")) App->GetSceneModule()->CreateScene();
+        
         if (ImGui::MenuItem("Import", "", import)) import = !import;
 
         if (ImGui::MenuItem("Load", "", load)) load = !load;

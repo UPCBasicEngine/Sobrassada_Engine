@@ -35,6 +35,7 @@ class SceneModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
+    void CreateScene();
     void LoadScene(UID sceneUID, const char *sceneName, UID rootGameObject,
     const std::map<UID, Component*> &loadedGameComponents,
     const std::unordered_map<UID, GameObject*>& loadedGameObjects);

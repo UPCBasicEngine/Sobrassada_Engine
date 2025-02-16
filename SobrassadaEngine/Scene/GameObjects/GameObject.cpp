@@ -11,15 +11,14 @@
 
 GameObject::GameObject(std::string name) : name(name)
 {
-    uuid       = LCG().IntFast();
+    uuid       = GenerateUID();
     parentUUID = INVALID_UUID;
     globalAABB.SetNegativeInfinity();
-    CreateRootComponent();
 }
 
 GameObject::GameObject(UID parentUUID, std::string name) : parentUUID(parentUUID), name(name)
 {
-    uuid = LCG().IntFast();
+    uuid = GenerateUID();
     globalAABB.SetNegativeInfinity();
     CreateRootComponent();
 }

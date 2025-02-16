@@ -28,6 +28,7 @@ SceneModule::SceneModule()
 
 SceneModule::~SceneModule()
 {
+    CloseScene();
 }
 
 bool SceneModule::Init()
@@ -77,11 +78,30 @@ bool SceneModule::ShutDown()
     return true;
 }
 
+void SceneModule::CreateScene()
+{
+    CloseScene();
+    
+    GameObject* sceneGameObject = new GameObject("SceneModule GameObject");
+    
+    loadedScene = new Scene(GenerateUID(), "New Scene", sceneGameObject->GetUID());
+
+    std::unordered_map<UID, GameObject*> loadedGameObjects;
+    loadedGameObjects.insert({sceneGameObject->GetUID(), sceneGameObject});
+    
+    loadedScene->Load(std::map<UID, Component*>(), loadedGameObjects);
+    
+    sceneGameObject->CreateRootComponent();
+
+    // TODO Filesystem: Save this new created level immediatelly
+    
+}
+
 void SceneModule::LoadScene(UID sceneUID, const char* sceneName, UID rootGameObject,
     const std::map<UID, Component*> &loadedGameComponents,
     const std::unordered_map<UID, GameObject*>& loadedGameObjects)
 {
-    delete loadedScene;
+    CloseScene();
     loadedScene = new Scene(sceneUID, sceneName, rootGameObject);
     loadedScene->Load(loadedGameComponents,loadedGameObjects);
 }
@@ -89,6 +109,7 @@ void SceneModule::LoadScene(UID sceneUID, const char* sceneName, UID rootGameObj
 void SceneModule::CloseScene()
 {
     delete loadedScene;
+    loadedScene = nullptr;
 }
 
 void SceneModule::CreateSpatialDataStruct()
