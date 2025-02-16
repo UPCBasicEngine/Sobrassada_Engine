@@ -159,14 +159,15 @@ void main()
 
 
     // Retrive normal for normal map
-    //vec3 texNormal = texture(normal_map, uv0).xyz;
-    //texNormal = normalize(texNormal * 2.0 - 1.0);
-//
-    //// Transform normal to world space
+    vec3 texNormal = texture(normal_map, uv0).xyz;
+    texNormal = normalize(texNormal * 2.0 - 1.0);
+
+    // Transform normal to world space
     //mat3 tbn = CreateTBN(normal, tangent);
-    //vec3 finalNormal = normalize(tbn * texNormal);
+    //vec3 N = -normalize(tbn * texNormal);
 
     vec3 N = normalize(normal);
+
     // Point Lights
     for (int i = 0; i < pointLightsCount; ++i)
 	{
