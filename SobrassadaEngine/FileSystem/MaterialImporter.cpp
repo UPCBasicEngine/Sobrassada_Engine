@@ -12,7 +12,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
     std::string path = FileSystem::GetFilePath(filePath);
     const tinygltf::Material &gltfMaterial = model.materials[materialIndex];
     const std::string materialName = gltfMaterial.name;
-
+    int sizeofStrings                      = 0;
     auto it                                = gltfMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
     //ADD OLD LOADING
 
@@ -51,6 +51,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
             {
                 material.SetDiffuseTexture(diffuseUID);
             }
+            material.SetDiffuseTexture(FileSystem::GetFileNameWithoutExtension(path + model.images[model.textures[texIndex].source].uri));
         }
 
         if (specGloss.Has("glossinessFactor"))
@@ -90,6 +91,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
     }
 
     // Normal Map
+
     if (gltfMaterial.normalTexture.index >= 0)
     {
         int texIndex = gltfMaterial.normalTexture.index;
@@ -102,7 +104,7 @@ UID MaterialImporter::ImportMaterial(const tinygltf::Model &model, int materialI
         }
     }
 
-
+    //TODO: SOLVE OCCLUSION NOT LOADING
     if (gltfMaterial.occlusionTexture.index >= 0)
     {
         int texIndex = gltfMaterial.occlusionTexture.index;
