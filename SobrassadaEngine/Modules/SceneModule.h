@@ -67,7 +67,7 @@ class SceneModule : public Module
     void AddComponent(UID uid, Component *newComponent)const { loadedScene != nullptr ? loadedScene->AddComponent(uid, newComponent) : void(); }
 
     bool IsInPlayMode() const { return bInPlayMode; }
-    void SwitchState(bool wantedStatePlayMode);
+    void SwitchPlayModeStateTo(bool wantedStatePlayMode);
 
   private:
     void CreateSpatialDataStruct();
