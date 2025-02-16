@@ -18,7 +18,11 @@ ResourcesModule::ResourcesModule()
 
 ResourcesModule::~ResourcesModule()
 {
-    
+    for (auto resource : resources)
+    {
+        delete resource.second;
+    }
+    resources.clear();
 }
 
 bool ResourcesModule::Init()

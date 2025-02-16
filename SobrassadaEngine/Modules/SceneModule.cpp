@@ -165,7 +165,7 @@ void SceneModule::SwitchPlayModeStateTo(bool wantedStatePlayMode)
     {
         if (loadedScene != nullptr)
         {
-            App->GetLibraryModule()->LoadScene(std::string(SCENES_PATH + std::string(loadedScene->GetSceneName()) + SCENE_EXTENSION).c_str());
+            App->GetLibraryModule()->LoadScene(std::string(SCENES_PATH + std::string(loadedScene->GetSceneName()) + SCENE_EXTENSION).c_str(), true);
             bInPlayMode = false;
         }
         
