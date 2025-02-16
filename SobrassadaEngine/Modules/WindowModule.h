@@ -17,16 +17,21 @@ class WindowModule : public Module
 
     int GetWidth() const { return windowWidth; }
     int GetHeight() const { return windowHeight; }
-    SDL_DisplayMode& GetDesktopDisplayMode();
-    float GetBrightness() const;
+    SDL_DisplayMode &GetDesktopDisplayMode();
+    float GetBrightness() const { return SDL_GetWindowBrightness(window); }
 
-    void SetBrightness(const float brightness) const;
     void SetWidth(const unsigned int width);
     void SetHeight(const unsigned int height);
-    bool SetFullscreen(bool fullscreen) const;
-    void SetResizable(bool resizable) const;
-    void SetBorderless(bool borderless) const;
-    bool SetFullDesktop(bool fullDesktop) const;
+
+    void SetBrightness(const float brightness) const { SDL_SetWindowBrightness(window, brightness); }
+    bool SetFullscreen(bool fullscreen) const { return SDL_SetWindowFullscreen(window, fullscreen); }
+    void SetResizable(bool resizable) const { SDL_SetWindowResizable(window, resizable ? SDL_TRUE : SDL_FALSE); }
+    void SetBorderless(bool borderless) const { SDL_SetWindowBordered(window, borderless ? SDL_FALSE : SDL_TRUE); }
+    bool SetFullDesktop(bool fullDesktop) const
+    {
+        return SDL_SetWindowFullscreen(window, fullDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+    }
+    void SetVsync(bool vsync) const { SDL_GL_SetSwapInterval(vsync ? 1 : 0); }
 
   public:
     SDL_Window* window         = nullptr;

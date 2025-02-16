@@ -6,13 +6,16 @@
 #include "ResourceManagement/Resources/Resource.h"
 #include "Transform.h"
 
+#include "SDL.h"
 #include <deque>
 #include <string>
 #include <unordered_map>
 
-namespace ImGuizmo {
-    struct matrix_t;
-}
+struct CPUFeature
+{
+    SDL_bool (*check)();
+    const char *name;
+};
 
 class EditorViewport;
 class QuadtreeViewer;
@@ -21,7 +24,7 @@ class EditorUIModule : public Module
 {
   public:
     EditorUIModule();
-    ~EditorUIModule();
+    ~EditorUIModule() override;
 
     bool Init() override;
     update_status PreUpdate(float deltaTime) override;
@@ -39,30 +42,33 @@ class EditorUIModule : public Module
     bool hierarchyMenu = true;
     bool inspectorMenu = true;
 
-    EditorViewport *editorViewport = nullptr;
-
   private:
     void RenderBasicTransformModifiers(
         Transform &transform, bool &lockScaleAxis, bool &positionValueChanged, bool &rotationValueChanged,
         bool &scaleValueChanged
     );
 
+    void LimitFPS(float deltaTime) const;
     void AddFramePlotData(float deltaTime);
     void Draw();
 
     void MainMenu();
     void EditorSettings(bool &editorSettingsMenu);
 
-    void FramePlots();
-    void WindowConfig();
-    void CameraConfig();
-    void OpenGLConfig();
+    void FramePlots(bool &vsync);
+    void WindowConfig(bool &vsync) const;
+    void CameraConfig() const;
+    void OpenGLConfig() const;
+    void GameTimerConfig() const;
+    void HardwareConfig() const;
+    void ShowCaps() const;
 
-    void Console(bool &consoleMenu);
     void ImportDialog(bool &import);
     void GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files);
     void LoadDialog(bool &load);
     void SaveDialog(bool &save);
+    void Console(bool &consoleMenu) const;
+    void About(bool &aboutMenu) const;
 
   private:
     bool consoleMenu            = true;
@@ -70,11 +76,13 @@ class EditorUIModule : public Module
     bool load               = false;
     bool save               = false;
     bool loadScene          = false;
+    bool aboutMenu          = false;
     bool editorSettingsMenu = false;
     bool quadtreeViewerViewport = false;
     bool closeApplication   = false;
 
-    int maximumPlotData         = 50;
+    int maxFPS              = 60;
+    int maximumPlotData     = 50;
     std::deque<float> framerate;
     std::deque<float> frametime;
 
@@ -89,5 +97,4 @@ class EditorUIModule : public Module
     std::string libraryPath;
     
     ImGuizmo::OPERATION mCurrentGizmoOperation;
-    ImGuizmo::MODE mCurrentGizmoMode;
 };

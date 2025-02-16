@@ -1,31 +1,31 @@
 {
     "Scene": {
-        "UID": 3090894764725754749,
+        "UID": 15692401873432152075,
         "Name": "doll",
-        "RootGameObject": 2248208983,
+        "RootGameObject": 2329551555555637563,
         "GameObjects": [
             {
-                "UID": 2248208983,
+                "UID": 2329551555555637563,
                 "ParentUID": 0,
                 "Name": "SceneModule GameObject",
                 "Children": [
-                    2297779135
+                    32477342570007128
                 ],
-                "RootComponentUID": 2254962220
+                "RootComponentUID": 2871540664
             },
             {
-                "UID": 2297779135,
-                "ParentUID": 2248208983,
-                "Name": "SceneModule GameObject child",
+                "UID": 32477342570007128,
+                "ParentUID": 2329551555555637563,
+                "Name": "new Game Object",
                 "Children": [],
-                "RootComponentUID": 2297918377
+                "RootComponentUID": 8327551
             }
         ],
         "Components": [
             {
-                "UID": 2254962220,
-                "ParentUID": 2248208983,
-                "RootUID": 2254962220,
+                "UID": 8327551,
+                "ParentUID": 32477342570007128,
+                "RootUID": 8327551,
                 "Type": 1,
                 "LocalTransform": [
                     0.0,
@@ -39,7 +39,7 @@
                     1.0
                 ],
                 "Children": [
-                    3714775484
+                    1646901232
                 ],
                 "Enabled": true,
                 "Name": "Root component",
@@ -47,31 +47,9 @@
                 "Mobility": 1
             },
             {
-                "UID": 2297918377,
-                "ParentUID": 2297779135,
-                "RootUID": 2297918377,
-                "Type": 1,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 3714775484,
-                "ParentUID": 2254962220,
-                "RootUID": 2254962220,
+                "UID": 1646901232,
+                "ParentUID": 8327551,
+                "RootUID": 8327551,
                 "Type": 2,
                 "LocalTransform": [
                     0.0,
@@ -87,8 +65,30 @@
                 "Children": [],
                 "Enabled": true,
                 "Name": "Mesh component",
-                "MeshUID": 1333415050203408,
-                "MaterialUID": 0
+                "Mesh": "Dollhouse",
+                "Material": ""
+            },
+            {
+                "UID": 2871540664,
+                "ParentUID": 2329551555555637563,
+                "RootUID": 2871540664,
+                "Type": 1,
+                "LocalTransform": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "Children": [],
+                "Enabled": true,
+                "Name": "Root component",
+                "Type": 1,
+                "Mobility": 1
             }
         ]
     }

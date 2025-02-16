@@ -2,42 +2,46 @@
 
 #include "../Root/RootComponent.h"
 #include "Application.h"
-#include "ResourcesModule.h"
 #include "CameraModule.h"
 #include "EditorUIModule.h"
 #include "FileSystem/MeshImporter.h"
 #include "LibraryModule.h"
+#include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "imgui.h"
 
 #include <Math/Quat.h>
 
 MeshComponent::MeshComponent(
-    const UID uid, const UID uidParent, const UID uidRoot, const Transform &parentGlobalTransform
+    const UID uid, const UID uidParent, const UID uidRoot, const Transform& parentGlobalTransform
 )
     : Component(uid, uidParent, uidRoot, "Mesh component", COMPONENT_MESH, parentGlobalTransform)
 {
 }
 
-MeshComponent::MeshComponent(const rapidjson::Value &initialState) : Component(initialState)
+MeshComponent::MeshComponent(const rapidjson::Value& initialState) : Component(initialState)
 {
-    if (initialState.HasMember("MeshUID"))
+    if (initialState.HasMember("Mesh"))
     {
-        AddMesh(initialState["MeshUID"].GetUint64(), false); // Do not update aabb, will be done once at the end
+        UID meshUID = App->GetLibraryModule()->GetMeshUID(initialState["Mesh"].GetString());
+        AddMesh(meshUID, false); // Do not update aabb, will be done once at the end
     }
-    if (initialState.HasMember("MaterialUID"))
+    if (initialState.HasMember("Material"))
     {
-        AddMaterial(initialState["MaterialUID"].GetUint64());
+        UID materialUID = App->GetLibraryModule()->GetMeshUID(initialState["Material"].GetString());
+        AddMaterial(materialUID);
     }
 }
 
-void MeshComponent::Save(rapidjson::Value &targetState, rapidjson::Document::AllocatorType &allocator) const
+void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
-    targetState.AddMember("MeshUID", currentMesh == nullptr ? CONSTANT_EMPTY_UID : currentMesh->GetUID(), allocator);
-    targetState.AddMember(
-        "MaterialUID", currentMaterial == nullptr ? CONSTANT_EMPTY_UID : currentMaterial->GetUID(), allocator
-    );
+
+    std::string meshName = (currentMesh == nullptr) ? "" : currentMesh->GetName();
+    targetState.AddMember("Mesh", rapidjson::Value(meshName.c_str(), allocator), allocator);
+
+    std::string materialName = (currentMaterial == nullptr) ? "" : currentMaterial->GetName();
+    targetState.AddMember("Material", rapidjson::Value(materialName.c_str(), allocator), allocator);
 }
 
 void MeshComponent::RenderEditorInspector()
@@ -80,7 +84,9 @@ void MeshComponent::RenderEditorInspector()
     }
 }
 
-void MeshComponent::Update() {}
+void MeshComponent::Update()
+{
+}
 
 void MeshComponent::Render()
 {
@@ -102,7 +108,7 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
 {
     if (resource == CONSTANT_EMPTY_UID) return;
 
-    ResourceMesh *newMesh = dynamic_cast<ResourceMesh *>(App->GetResourcesModule()->RequestResource(resource));
+    ResourceMesh* newMesh = dynamic_cast<ResourceMesh*>(App->GetResourcesModule()->RequestResource(resource));
     if (newMesh != nullptr)
     {
         App->GetResourcesModule()->ReleaseResource(currentMesh);
@@ -112,7 +118,7 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
         if (reloadAABB)
         {
             localComponentAABB    = AABB(currentMesh->GetAABB());
-            AABBUpdatable *parent = GetParent();
+            AABBUpdatable* parent = GetParent();
             if (parent != nullptr)
             {
                 parent->PassAABBUpdateToParent();
@@ -123,8 +129,8 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
 
 void MeshComponent::AddMaterial(UID resource)
 {
-    ResourceMaterial *newMaterial =
-        dynamic_cast<ResourceMaterial *>(App->GetResourcesModule()->RequestResource(resource));
+    ResourceMaterial* newMaterial =
+        dynamic_cast<ResourceMaterial*>(App->GetResourcesModule()->RequestResource(resource));
     if (newMaterial != nullptr)
     {
         App->GetResourcesModule()->ReleaseResource(currentMaterial);

@@ -11,22 +11,21 @@
 
 GameObject::GameObject(std::string name) : name(name)
 {
-    uuid       = LCG().IntFast();
+    uuid       = GenerateUID();
     parentUUID = INVALID_UUID;
     globalAABB.SetNegativeInfinity();
-    CreateRootComponent();
 }
 
 GameObject::GameObject(UID parentUUID, std::string name) : parentUUID(parentUUID), name(name)
 {
-    uuid = LCG().IntFast();
+    uuid = GenerateUID();
     globalAABB.SetNegativeInfinity();
     CreateRootComponent();
 }
 
 GameObject::GameObject(UID parentUUID, std::string name, UID rootComponentUID) : parentUUID(parentUUID), name(name)
 {
-    rootComponent = dynamic_cast<RootComponent *>(App->GetSceneModule()->gameComponents[rootComponentUID]);
+    rootComponent = dynamic_cast<RootComponent *>(App->GetSceneModule()->GetComponentByUID(rootComponentUID));
 }
 
 GameObject::GameObject(const rapidjson::Value& initialState)
@@ -45,12 +44,12 @@ GameObject::GameObject(const rapidjson::Value& initialState)
         }
     }
     rootComponent =
-        dynamic_cast<RootComponent *>(App->GetSceneModule()->gameComponents[initialState["RootComponentUID"].GetUint64()]);
+        dynamic_cast<RootComponent *>(App->GetSceneModule()->GetComponentByUID(initialState["RootComponentUID"].GetUint64()));
 }
 
 GameObject::~GameObject()
 {
-    App->GetSceneModule()->gameComponents.erase(rootComponent->GetUID());
+    App->GetSceneModule()->RemoveComponent(rootComponent->GetUID());
     delete rootComponent;
     rootComponent = nullptr;
 }
@@ -63,7 +62,7 @@ bool GameObject::CreateRootComponent()
     ); // TODO Add the gameObject UUID as parent?
 
     // TODO Replace parentUUID above with the UUID of this gameObject
-    App->GetSceneModule()->gameComponents[rootComponent->GetUID()] = rootComponent;
+    App->GetSceneModule()->AddComponent(rootComponent->GetUID(), rootComponent);
     return true;
 }
 
