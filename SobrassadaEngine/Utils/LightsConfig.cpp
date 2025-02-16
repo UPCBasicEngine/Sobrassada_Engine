@@ -346,10 +346,10 @@ void LightsConfig::GetAllSceneLights()
 
 void LightsConfig::GetAllPointLights()
 {
-    SceneModule* scene = App->GetSceneModule();
+    const std::map<UID, Component*> *components = App->GetSceneModule()->GetAllComponents();
 
     // Iterate through all the components and get the point lights
-    for (auto& component : scene->gameComponents)
+    for (auto& component : *components)
     {
         if (component.second->GetType() == COMPONENT_POINT_LIGHT)
         {
@@ -363,10 +363,10 @@ void LightsConfig::GetAllPointLights()
 
 void LightsConfig::GetAllSpotLights()
 {
-    SceneModule* scene = App->GetSceneModule();
+    const std::map<UID, Component*>* components = App->GetSceneModule()->GetAllComponents();
 
     // Iterate through all the components and get the spot lights
-    for (auto& component : scene->gameComponents)
+    for (auto& component : *components)
     {
         if (component.second->GetType() == COMPONENT_SPOT_LIGHT)
         {
@@ -380,10 +380,10 @@ void LightsConfig::GetAllSpotLights()
 
 void LightsConfig::GetDirectionalLight()
 {
-    SceneModule* scene = App->GetSceneModule();
+    const std::map<UID, Component*>* components = App->GetSceneModule()->GetAllComponents();
 
     // Iterate through all the components and get the spot lights
-    for (auto& component : scene->gameComponents)
+    for (auto& component : *components)
     {
         if (component.second->GetType() == COMPONENT_DIRECTIONAL_LIGHT)
         {

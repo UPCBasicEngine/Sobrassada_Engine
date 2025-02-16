@@ -69,6 +69,8 @@ class SceneModule : public Module
     bool IsInPlayMode() const { return bInPlayMode; }
     void SwitchState(bool wantedStatePlayMode);
 
+    LightsConfig* GetLightsConfig() { return loadedScene != nullptr ? loadedScene->GetLightsConfig() : nullptr; }
+
   private:
     void CreateSpatialDataStruct();
     void UpdateSpatialDataStruct();
