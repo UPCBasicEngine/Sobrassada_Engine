@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Globals.h"
+#include "ResourceManagement/Resources/ResourceTexture.h"
 
 class ResourceTexture;
 

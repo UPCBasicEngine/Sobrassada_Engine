@@ -21,15 +21,15 @@ LightsConfig::LightsConfig()
     ambientColor     = float3(1.0f, 1.0f, 1.0f);
     ambientIntensity = 0.2f;
 
-   //pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
-   //pointLights.push_back(PointLight(float3(2, 0, 0), 1));
-   //pointLights.push_back(PointLight(float3(0, 1, -2), 1));
-   //
-   //spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
-   //spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
-   //spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
+    // pointLights.push_back(PointLight(float3(-2, 0, 0), 1));
+    // pointLights.push_back(PointLight(float3(2, 0, 0), 1));
+    // pointLights.push_back(PointLight(float3(0, 1, -2), 1));
+    //
+    // spotLights.push_back(SpotLight(float3(0, 3, 0), -float3::unitY));
+    // spotLights.push_back(SpotLight(float3(-4, 1, 0), float3::unitX));
+    // spotLights.push_back(SpotLight(float3(0, 1, 4), -float3::unitZ));
 
-     //directionalLight = new DirectionalLight();
+    // directionalLight = new DirectionalLight();
 }
 
 LightsConfig::~LightsConfig()
@@ -72,7 +72,7 @@ void LightsConfig::InitSkybox()
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glBindVertexArray(0);
 
@@ -104,11 +104,11 @@ void LightsConfig::RenderSkybox() const
     App->GetOpenGLModule()->SetDepthFunc(true);
 }
 
-unsigned int LightsConfig::LoadSkyboxTexture(const char *filename) const
+unsigned int LightsConfig::LoadSkyboxTexture(const char* filename) const
 {
-    std::string stringPath         = std::string(filename);
+    std::string stringPath = std::string(filename);
     UID skyboxUID          = TextureImporter::Import(stringPath.c_str());
-    //TextureImporter::LoadTexture(skyboxUID);
+    // TextureImporter::LoadTexture(skyboxUID);
     return 0;
 }
 
@@ -127,14 +127,14 @@ void LightsConfig::EditorParams()
     {
         directionalLight->EditorParams(0);
     }
-    for (SpotLight &spot : spotLights)
+    for (SpotLight& spot : spotLights)
     {
         spot.EditorParams(index);
         spot.DrawGizmos();
         ++index;
     }
     index = 0;
-    for (PointLight &point : pointLights)
+    for (PointLight& point : pointLights)
     {
         point.EditorParams(index);
         point.DrawGizmos();
@@ -188,10 +188,9 @@ void LightsConfig::SetDirectionalLightShaderData() const
             float4(directionalLight->GetColor(), directionalLight->GetIntensity())
         );
 
-       glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
-       glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Lights::DirectionalLightShaderData), &dirLightData);
-       glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
+        glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Lights::DirectionalLightShaderData), &dirLightData);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 }
 
@@ -212,7 +211,7 @@ void LightsConfig::SetPointLightsShaderData() const
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
     int offset = 16; // Byte start offset for the point light array in the SSBO
-    for (const Lights::PointLightShaderData &light : points)
+    for (const Lights::PointLightShaderData& light : points)
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::PointLightShaderData), &light);
         offset += sizeof(Lights::PointLightShaderData);
@@ -239,7 +238,7 @@ void LightsConfig::SetSpotLightsShaderData() const
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
     int offset = 16; // Byte start offset for the point light array in the SSBO
-    for (const Lights::SpotLightShaderData &light : spots)
+    for (const Lights::SpotLightShaderData& light : spots)
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::SpotLightShaderData), &light);
         offset += sizeof(Lights::SpotLightShaderData) + 12;
@@ -253,7 +252,15 @@ void LightsConfig::AddDirectionalLight()
 void LightsConfig::RemoveDirectionalLight()
 {
 }
-void LightsConfig::AddPointLight() {}
-void LightsConfig::AddSpotLight() {}
-void LightsConfig::RemovePointLight() {}
-void LightsConfig::RemoveSpotLight() {}
+void LightsConfig::AddPointLight()
+{
+}
+void LightsConfig::AddSpotLight()
+{
+}
+void LightsConfig::RemovePointLight()
+{
+}
+void LightsConfig::RemoveSpotLight()
+{
+}

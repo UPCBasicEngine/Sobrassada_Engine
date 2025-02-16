@@ -2,8 +2,8 @@
 
 #include "Application.h"
 #include "InputModule.h"
-#include "glew.h"
 #include "WindowModule.h"
+#include "glew.h"
 
 #include "DebugDraw/debugdraw.h"
 #include "Math/Quat.h"
@@ -44,33 +44,36 @@ bool CameraModule::Init()
 
     App->GetInputModule()->SubscribeToEvent(SDL_SCANCODE_F, fPressed);
 
-
-	glGenBuffers(1, &ubo);
+    glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-
-	return true;
+    return true;
 }
 
-void CameraModule::UpdateUBO() 
+void CameraModule::UpdateUBO()
 {
-	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+
+    matrices.projectionMatrix = GetProjectionMatrix();
+    matrices.viewMatrix       = GetViewMatrix();
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 update_status CameraModule::Update(float deltaTime)
 {
+
     MoveCamera();
     frustumPlanes.UpdateFrustumPlanes(viewMatrix, projectionMatrix);
-
+    UpdateUBO();
     return UPDATE_CONTINUE;
 }
 
 bool CameraModule::ShutDown()
 {
+    glDeleteBuffers(1,&ubo);
     return true;
 }
 
@@ -86,7 +89,6 @@ void CameraModule::EventTriggered()
 {
     GLOG("Event Trigered!!!!")
 }
-
 
 void CameraModule::MoveCamera()
 {
