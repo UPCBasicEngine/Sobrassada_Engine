@@ -24,6 +24,15 @@ struct PointLight
 	vec4 color;			// rgb = color & alpha = intensity 
 };
 
+struct SpotLight
+{
+	vec4 position;		// xyz = position & w = range
+	vec4 color;			// rgb = color & alpha = intensity
+	vec3 direction;	
+	float innerAngle;
+	float outerAngle;
+};
+
 
 // Lights SSBOs
 layout(std140, binding = 2) uniform Ambient
@@ -43,6 +52,12 @@ readonly layout(std430, binding = 4) buffer PointLights
 	PointLight pointLights[];
 };
 
+readonly layout(std430, binding = 5) buffer SpotLights
+{
+	int spotLightsCount;
+	SpotLight spotLights[];
+};
+
 
 // Material UBO
 layout(std140, binding = 1) uniform Material
@@ -54,11 +69,28 @@ layout(std140, binding = 1) uniform Material
 };
 
 
-
-float pointLightAttenuation(const int index) 
+float PointLightAttenuation(const int index) 
 {
 	float distance = length(pos - pointLights[index].position.xyz);
 	return pow(max(1 - pow((distance / pointLights[index].position.w), 4), 0), 2) / (pow(distance, 2) + 1);
+}
+
+float SpotLightAttenuation(const int index)
+{
+	vec3 dirLight = normalize(spotLights[index].direction);
+	float distance = dot(pos - spotLights[index].position.xyz, dirLight);
+	float Fatt = pow(max(1 - pow((distance / spotLights[index].position.w), 4), 0), 2) / (pow(distance, 2) + 1);
+
+	vec3 D = normalize(pos - spotLights[index].position.xyz);
+	float C = dot(D, dirLight);
+
+	float cosInner = cos(radians(spotLights[index].innerAngle));
+	float cosOuter = cos(radians(spotLights[index].outerAngle));
+	float Catt = 0;
+	if (C > cosInner) Catt = 1;
+	else if (C < cosInner && C > cosOuter) Catt = (C - cosOuter) / (cosInner - cosOuter);
+
+	return Fatt * Catt;
 }
 
 vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, float NL, vec4 diffColor, vec4 specColor, float alpha)
@@ -83,13 +115,24 @@ vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, floa
 
 vec3 RenderPointLight(const int index, const vec3 N, vec4 specTexColor, const vec3 texColor, const float alpha, vec4 diffColor, vec4 specColor)
 {
-	float attenuation = pointLightAttenuation(index);
+	float attenuation = PointLightAttenuation(index);
 	vec3 L = normalize(pos - pointLights[index].position.xyz);
 	vec3 Li = pointLights[index].color.rgb * pointLights[index].color.a * attenuation;
 	float NdotL = dot(N, -L);
 
 	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, specTexColor, texColor, Li, NdotL, diffColor, specColor, alpha);
 	else return vec3(0);	
+}
+
+vec3 RenderSpotLight(const int index, const vec3 N, vec4 specTexColor, const vec3 texColor, const float alpha, vec4 diffColor, vec4 specColor)
+{
+	float attenuation = SpotLightAttenuation(index);
+	vec3 L = normalize(pos - spotLights[index].position.xyz);
+	vec3 Li = spotLights[index].color.rgb * spotLights[index].color.a * attenuation;
+	float NdotL = dot(N, -L);
+
+	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, specTexColor, texColor, Li, NdotL, diffColor, specColor, alpha);
+	else return vec3(0);
 }
 
 void main()
@@ -112,13 +155,21 @@ void main()
     vec3 lightColor = directional_color.rgb * directional_color.a;
 
     vec3 N = normalize(normal);
-    vec3 L = normalize(directional_dir.xyz);
 
+    // Point Lights
     for (int i = 0; i < pointLightsCount; ++i)
 	{
 		hdr += RenderPointLight(i, N, specTexColor, texColor, alpha, diffColor, specColor);
 	}
 
+    //Spot Lights
+    for (int i = 0; i < spotLightsCount; ++i)
+	{
+		hdr += RenderSpotLight(i, N, specTexColor, texColor, alpha, diffColor, specColor);
+	}
+
+    // Directional light
+    vec3 L = normalize(directional_dir.xyz);
     float NL = dot(N, -L);
     if (NL > 0)
     {
