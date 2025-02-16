@@ -93,7 +93,7 @@ float SpotLightAttenuation(const int index)
 	return Fatt * Catt;
 }
 
-vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, float NL, vec4 diffColor, vec4 specColor, float alpha)
+vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, float NdotL, vec4 diffColor, vec4 specColor, float alpha)
  {
     float shininessValue;
 	if(shininessInAlpha) shininessValue = exp2(alpha * 7 + 1);
@@ -108,7 +108,7 @@ vec3 RenderLight(vec3 L, vec3 N, vec4 specTexColor, vec3 texColor, vec3 Li, floa
     float cosTheta = max(dot(N, V), 0.0);
     vec3 fresnel = RF0 + (1 - RF0) * pow(1 - cosTheta, 5);
 
-    vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffColor.rgb * texColor * Li * NL;
+    vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffColor.rgb * texColor * Li * NdotL;
     vec3 specular = normalization * specColor.rgb * specTexColor.rgb * VR * Li * fresnel;
     return diffuse + specular;
 }
@@ -152,10 +152,7 @@ void main()
     vec3 ambient = ambient_color.rgb * ambient_color.a;
     vec3 hdr = ambient * texColor;
 
-    vec3 lightColor = directional_color.rgb * directional_color.a;
-
     vec3 N = normalize(normal);
-
     // Point Lights
     for (int i = 0; i < pointLightsCount; ++i)
 	{
@@ -169,27 +166,12 @@ void main()
 	}
 
     // Directional light
+    vec3 lightColor = directional_color.rgb * directional_color.a;
     vec3 L = normalize(directional_dir.xyz);
-    float NL = dot(N, -L);
-    if (NL > 0)
+    float NdotL = dot(N, -L);
+    if (NdotL > 0)
     {
-		hdr += RenderLight(L, N, specTexColor, texColor, lightColor, NL, diffColor, specColor, alpha);
-        //float shininessValue;
-        //if(shininessInAlpha) shininessValue = exp2(alpha * 7 + 1);
-        //else shininessValue = shininess;
-//
-        //float normalization = (shininessValue + 2.0) / (2.0 * 3.1415926535);
-        //vec3 V = normalize(cameraPos - pos);
-        //vec3 R = reflect(L, N);
-        //float VR = pow(max(dot(V, R), 0.0f), shininessValue);
-        //
-        //vec3 RF0 = specTexColor.rgb;
-        //float cosTheta = max(dot(N, V), 0.0);
-        //vec3 fresnel = RF0 + (1 - RF0) * pow(1 - cosTheta, 5);
-//
-        //vec3 diffuse = (1.0 - RF0) / 3.1415926535 * diffColor.rgb * texColor * lightColor * NL;
-        //vec3 specular = normalization * specColor.rgb * specTexColor.rgb * VR * lightColor * fresnel;
-        //hdr = ambient + diffuse + specular;
+		hdr += RenderLight(L, N, specTexColor, texColor, lightColor, NdotL, diffColor, specColor, alpha);
     }
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
