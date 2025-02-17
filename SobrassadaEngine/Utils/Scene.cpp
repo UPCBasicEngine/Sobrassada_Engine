@@ -74,7 +74,7 @@ void Scene::LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGa
         root->ComponentGlobalTransformUpdated();
     }
 
-    CreateSpatialDataStruct();
+    UpdateSpatialDataStruct();
 }
 
 update_status Scene::Render(float deltaTime)
@@ -86,25 +86,14 @@ update_status Scene::Render(float deltaTime)
     std::vector<GameObject*> objectsToRender;
     CheckObjectsToRender(objectsToRender);
 
-    for (auto& gameObject : gameObjectsContainer)
+    for (auto& gameObject : objectsToRender)
     {
-        if (gameObject.second != nullptr)
+        if (gameObject != nullptr)
         {
-            gameObject.second->Render();
+            gameObject->Render();
         }
     }
 
-    //for (auto gameObject : objectsToRender)
-    //{
-    //    if (gameObject != nullptr)
-    //    {
-    //        gameObject->Render();
-    //    }
-    //    else
-    //    {
-    //        GLOG("Empty gameObject in scene detected")
-    //    }
-    //}
     return UPDATE_CONTINUE;
 }
 
