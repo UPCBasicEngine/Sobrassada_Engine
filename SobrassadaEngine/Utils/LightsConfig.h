@@ -75,7 +75,7 @@ class LightsConfig
     void AddSkyboxTexture(UID resource);
 
     void InitLightBuffers();
-    void SetLightsShaderData() const;
+    void RenderLights() const;
 
     void AddDirectionalLight(DirectionalLight* newDirectional);
     void AddPointLight(PointLight* newPoint);

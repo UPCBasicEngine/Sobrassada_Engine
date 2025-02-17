@@ -169,7 +169,7 @@ void LightsConfig::InitLightBuffers()
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 }
 
-void LightsConfig::SetLightsShaderData() const
+void LightsConfig::RenderLights() const
 {
     // Ambient light
     Lights::AmbientLightShaderData ambient = Lights::AmbientLightShaderData(float4(ambientColor, ambientIntensity));
@@ -181,6 +181,11 @@ void LightsConfig::SetLightsShaderData() const
     SetDirectionalLightShaderData();
     SetPointLightsShaderData();
     SetSpotLightsShaderData();
+
+    // Draw lights gizmos
+    directionalLight->Render();
+    for (auto& light : pointLights) light->Render();
+    for (auto& light : spotLights) light->Render();
 }
 
 void LightsConfig::SetDirectionalLightShaderData() const
