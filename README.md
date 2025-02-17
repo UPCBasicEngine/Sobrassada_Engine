@@ -24,6 +24,7 @@ The following list has all the inputs required in order to move the camera throu
 - `Hold RIGHT mouse button` : Enables free-look (rotate the camera view).
 - `Hold RIGHT mouse button + ALT key + UP/DOWN mouse movement` : Zoom the camera in or out.
 - `Hold SHIFT key` : Doubles camera's movement speed.
+- `O`: Detaches the rendering editor camera and allows to see the frustum culling.
 
 ### Editing the Scene
 - **Add/Remove GameObjects**: Use the Add/Delete GameObject button from hierarchy panel or context menu (right click on gameObject from hierarchy) to create/delete a gameObject.

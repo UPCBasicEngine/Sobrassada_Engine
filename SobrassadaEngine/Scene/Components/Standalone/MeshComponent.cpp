@@ -36,7 +36,9 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
     Component::Save(targetState, allocator);
 
     targetState.AddMember("Mesh", currentMesh != nullptr ? currentMesh->GetUID() : CONSTANT_EMPTY_UID, allocator);
-    targetState.AddMember("Material", currentMaterial != nullptr ? currentMaterial->GetUID() : CONSTANT_EMPTY_UID, allocator);
+    targetState.AddMember(
+        "Material", currentMaterial != nullptr ? currentMaterial->GetUID() : CONSTANT_EMPTY_UID, allocator
+    );
 }
 
 void MeshComponent::RenderEditorInspector()
@@ -108,13 +110,13 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
     {
         App->GetResourcesModule()->ReleaseResource(currentMesh);
         newMesh->SetMaterial(currentMaterial != nullptr ? currentMaterial->GetUID() : CONSTANT_EMPTY_UID);
-        currentMeshName = newMesh->GetName();
-        currentMesh     = newMesh;
+        currentMeshName    = newMesh->GetName();
+        currentMesh        = newMesh;
+        localComponentAABB = AABB(currentMesh->GetAABB());
 
         if (reloadAABB)
         {
             globalComponentAABB   = AABB(currentMesh->GetAABB());
-            localComponentAABB    = AABB(currentMesh->GetAABB());
             AABBUpdatable* parent = GetParent();
             if (parent != nullptr)
             {
