@@ -2,9 +2,9 @@
 
 #include "Application.h"
 #include "DirectXTex/DirectXTex.h"
+#include "LibraryModule.h"
 #include "TextureImporter.h"
 #include "imgui.h"
-#include "LibraryModule.h"
 
 #include <glew.h>
 #include <unordered_set>
@@ -51,6 +51,16 @@ void ResourceMaterial::OnEditorUpdate()
 
     updated |= ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
 
+    if (hasNormalTexture)
+    {
+        ImGui::Text("Normal Texture");
+        ImGui::Image((ImTextureID)(intptr_t)normalTexture.textureID, ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", normalTexture.width, normalTexture.height);
+        }
+    }
+
     if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
 
     if (updated) UpdateUBO();
@@ -58,25 +68,34 @@ void ResourceMaterial::OnEditorUpdate()
 
 void ResourceMaterial::LoadMaterialData(Material mat)
 {
-    material.diffColor    = mat.GetDiffuseFactor();
-    material.specColor    = mat.GetSpecularFactor();
-    material.shininessInAlpha = false;
-    material.shininess    = mat.GetGlossinessFactor();
+    material.diffColor           = mat.GetDiffuseFactor();
+    material.specColor           = mat.GetSpecularFactor();
+    material.shininess           = mat.GetGlossinessFactor();
+    material.shininessInAlpha    = 1;
+    material.hasNormal           = 0;
 
     ResourceTexture* diffTexture = TextureImporter::LoadTexture(mat.GetDiffuseTexture());
     if (diffTexture != nullptr)
     {
-        diffuseTexture.textureID     = diffTexture->GetTextureID();
-        hasDiffuseTexture            = true;
+        diffuseTexture.textureID = diffTexture->GetTextureID();
+        hasDiffuseTexture        = true;
     }
 
     ResourceTexture* specTexture = TextureImporter::LoadTexture(mat.GetSpecularGlossinessTexture());
     if (specTexture != nullptr)
     {
-        specularTexture.textureID     = specTexture->GetTextureID();
-        hasSpecularTexture            = true;
+        specularTexture.textureID = specTexture->GetTextureID();
+        hasSpecularTexture        = true;
     }
-    
+
+    ResourceTexture* normTexture = TextureImporter::LoadTexture(mat.GetNormalTexture());
+    if (normTexture != nullptr)
+    {
+        GLOG("%s has normal", normTexture->GetName());
+        normalTexture.textureID = normTexture->GetTextureID();
+        hasNormalTexture        = true;
+        material.hasNormal      = 1;
+    }
 
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
@@ -84,7 +103,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void ResourceMaterial::RenderMaterial(int program)
+void ResourceMaterial::RenderMaterial(int program) const
 {
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
 
@@ -98,6 +117,11 @@ void ResourceMaterial::RenderMaterial(int program)
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularTexture.textureID);
     }
+    if (hasNormalTexture)
+    {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, normalTexture.textureID);
+    }
 
     unsigned int blockIdx = glGetUniformBlockIndex(program, "Material");
     glUniformBlockBinding(program, blockIdx, 1);
@@ -105,14 +129,15 @@ void ResourceMaterial::RenderMaterial(int program)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void ResourceMaterial::FreeMaterials()
+void ResourceMaterial::FreeMaterials() const
 {
     glDeleteTextures(1, &diffuseTexture.textureID);
     glDeleteTextures(1, &specularTexture.textureID);
+    glDeleteTextures(1, &normalTexture.textureID);
     glDeleteBuffers(1, &ubo);
 }
 
-void ResourceMaterial::UpdateUBO()
+void ResourceMaterial::UpdateUBO() const
 {
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(MaterialGPU), &material);

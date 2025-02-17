@@ -20,9 +20,9 @@ struct MaterialGPU
 {
     float4 diffColor      = {1.0f, 0.0f, 0.0f, 1.0f};
     float3 specColor      = {1.0f, 0.0f, 0.0f};
-    int padding1 = 1;
-    bool shininessInAlpha = false;
     float shininess       = 500.0f;
+    int shininessInAlpha  = 0;
+    int hasNormal         = 0;
     int padding2[2]        = {0, 0};
 };
 
@@ -36,9 +36,9 @@ class ResourceMaterial : public Resource
     void OnEditorUpdate();
 
     void LoadMaterialData(Material mat);
-    void RenderMaterial(int program);
-    void FreeMaterials();
-    void UpdateUBO();
+    void RenderMaterial(int program) const;
+    void FreeMaterials() const;
+    void UpdateUBO() const;
 
   private:
     TextureInfo diffuseTexture;
@@ -46,6 +46,9 @@ class ResourceMaterial : public Resource
 
     TextureInfo specularTexture;
     bool hasSpecularTexture = false;
+
+    TextureInfo normalTexture;
+    bool hasNormalTexture = false;
 
     MaterialGPU material;
 

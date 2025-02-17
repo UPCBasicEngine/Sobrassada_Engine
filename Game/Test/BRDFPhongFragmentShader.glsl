@@ -66,9 +66,10 @@ readonly layout(std430, binding = 5) buffer SpotLights
 layout(std140, binding = 1) uniform Material
 {
     vec4 diffColor;
-    vec4 specColor;
+    vec3 specColor;
     float shininess;   
     bool shininessInAlpha;  
+    bool hasNormal;
 };
 
 
@@ -138,12 +139,13 @@ vec3 RenderSpotLight(const int index, const vec3 N, vec4 specTexColor, const vec
 	else return vec3(0);
 }
 
-mat3 CreateTBN(const vec3 N, const vec4 T)
-{
-    vec3 Tn = normalize(vec3(T));
-    vec3 B = T.w * normalize(cross(N, Tn));
-    return mat3(Tn, B, normalize(N));
-}
+ mat3 CreateTBN()
+ {
+    vec3 T = normalize(vec3(tangent));
+    vec3 N = normalize(normal);
+    vec3 B = tangent.w * cross(N, T);
+    return mat3(T, B, N);
+ }
 
 void main()
 {
@@ -157,16 +159,14 @@ void main()
     vec3 ambient = ambient_color.rgb * ambient_color.a;
     vec3 hdr = ambient * texColor;
 
-
-    // Retrive normal for normal map
-    vec3 texNormal = texture(normal_map, uv0).xyz;
-    texNormal = normalize(texNormal * 2.0 - 1.0);
-
-    // Transform normal to world space
-    //mat3 tbn = CreateTBN(normal, tangent);
-    //vec3 N = -normalize(tbn * texNormal);
-
     vec3 N = normalize(normal);
+    // Retrive normal for normal map
+    if (hasNormal) {
+        mat3 space = CreateTBN();
+        vec3 texNormal = (texture(normal_map, uv0).xyz*2.0-1.0);
+        vec3 final_normal = space * texNormal;
+        N = normalize(final_normal);
+    }
 
     // Point Lights
     for (int i = 0; i < pointLightsCount; ++i)
