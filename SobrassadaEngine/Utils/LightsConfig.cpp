@@ -119,7 +119,11 @@ void LightsConfig::AddSkyboxTexture(UID resource)
 
 void LightsConfig::EditorParams()
 {
-    ImGui::Begin("Lights Config");
+    if (!ImGui::Begin("Lights Config"))
+    {
+        ImGui::End();
+        return;
+    }
 
     ImGui::SeparatorText("Skybox texture");
     ImGui::Text(currentTextureName.c_str());
