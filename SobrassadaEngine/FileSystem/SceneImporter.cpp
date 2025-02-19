@@ -5,11 +5,11 @@
 #include "MeshImporter.h"
 #include "MaterialImporter.h"
 #include "TextureImporter.h"
+#include "ModelImporter.h"
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
-#include "tiny_gltf.h"
 
 namespace SceneImporter
 {
@@ -109,6 +109,11 @@ namespace SceneImporter
                 n++;
             }
         }
+
+
+        // Import Model
+        ModelImporter::ImportModel(model.nodes);
+
     }
 
     void CreateLibraryDirectories()
