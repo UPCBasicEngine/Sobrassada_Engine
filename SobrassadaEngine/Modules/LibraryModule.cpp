@@ -251,7 +251,7 @@ bool LibraryModule::LoadLibraryMaps()
                     GLOG("Category: Unknown File Type (10)");
                     break;
                 }
-            } catch (std::invalid_argument& e)
+            } catch (std::invalid_argument&)
             {
                 GLOG("File %s is not an asset file", fileName);
             }

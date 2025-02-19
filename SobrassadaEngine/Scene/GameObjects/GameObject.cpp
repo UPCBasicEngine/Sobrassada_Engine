@@ -116,7 +116,7 @@ void GameObject::RenderHierarchyNode(UID &selectedGameObjectUUID)
     if (!hasChildren) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
     if (selectedGameObjectUUID == uuid) flags |= ImGuiTreeNodeFlags_Selected;
 
-    ImGui::PushID(uuid);
+    ImGui::PushID(static_cast<int>(uuid));
 
     bool nodeOpen = false;
     
