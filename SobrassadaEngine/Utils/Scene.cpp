@@ -81,7 +81,7 @@ update_status Scene::Render(float deltaTime)
 {
     // Render skybox and lights
     lightsConfig->RenderSkybox();
-    lightsConfig->SetLightsShaderData();
+    lightsConfig->RenderLights();
 
     std::vector<GameObject*> objectsToRender;
     CheckObjectsToRender(objectsToRender);
