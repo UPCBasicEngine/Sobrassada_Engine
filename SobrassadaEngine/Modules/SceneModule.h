@@ -72,6 +72,8 @@ class SceneModule : public Module
 
     void RegenerateTree() { loadedScene->UpdateSpatialDataStruct(); };
 
+    bool GetDoInputs() const { return loadedScene != nullptr ? loadedScene->GetDoInputs() : false; }
+
   private:
 
     Scene* loadedScene = nullptr;

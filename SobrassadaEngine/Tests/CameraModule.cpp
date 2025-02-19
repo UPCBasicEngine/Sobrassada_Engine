@@ -82,10 +82,29 @@ void CameraModule::UpdateUBO()
 
 update_status CameraModule::Update(float deltaTime)
 {
+    if (App->GetSceneModule()->GetDoInputs()) Controls(deltaTime);
+
+    viewMatrix         = camera.ViewMatrix();
+    detachedViewMatrix = detachedCamera.ViewMatrix();
+
+    frustumPlanes.UpdateFrustumPlanes(viewMatrix, projectionMatrix);
+    UpdateUBO();
+
+    return UPDATE_CONTINUE;
+}
+
+bool CameraModule::ShutDown()
+{
+    glDeleteBuffers(1,&ubo);
+    return true;
+}
+
+void CameraModule::Controls(float deltaTime)
+{
     InputModule* inputModule = App->GetInputModule();
 
     float finalCameraSpeed   = cameraMoveSpeed * deltaTime;
-    
+
     if (inputModule->GetKey(SDL_SCANCODE_LSHIFT))
     {
         finalCameraSpeed *= 2;
@@ -163,19 +182,6 @@ update_status CameraModule::Update(float deltaTime)
 
         FocusCamera();
     }
-
-    viewMatrix         = camera.ViewMatrix();
-    detachedViewMatrix = detachedCamera.ViewMatrix();
-
-    frustumPlanes.UpdateFrustumPlanes(viewMatrix, projectionMatrix);
-    UpdateUBO();
-
-    return UPDATE_CONTINUE;
-}
-bool CameraModule::ShutDown()
-{
-    glDeleteBuffers(1,&ubo);
-    return true;
 }
     
 void CameraModule::SetAspectRatio(float newAspectRatio)

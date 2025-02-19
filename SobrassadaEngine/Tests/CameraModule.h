@@ -45,6 +45,7 @@ class CameraModule : public Module
     void SetAspectRatio(float newAspectRatio);
 
   private:
+    void Controls(float deltaTime);
     void TriggerFocusCamera();
     void ToggleDetachedCamera();
     void RotateCamera(float yaw, float pitch);

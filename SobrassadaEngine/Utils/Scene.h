@@ -55,6 +55,8 @@ class Scene
     
     void UpdateSpatialDataStruct();
 
+    bool GetDoInputs() const { return doInputs; }
+
   private:
     void CreateSpatialDataStruct();
     void CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects) const;
@@ -71,4 +73,6 @@ class Scene
 
     LightsConfig* lightsConfig = nullptr;
     Octree* sceneOctree        = nullptr;
+
+    bool doInputs                   = false;
 };

@@ -7,18 +7,20 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "LibraryModule.h"
+#include "Octree.h"
 #include "OpenGLModule.h"
 #include "SceneModule.h"
-#include "Octree.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"
+
 #include "./Libs/ImGuizmo/ImGuizmo.h"
 
-Scene::Scene(UID sceneUID, const char *sceneName, UID rootGameObject) : sceneUID(sceneUID), sceneName(std::string(sceneName)), gameObjectRootUUID(rootGameObject)
+Scene::Scene(UID sceneUID, const char* sceneName, UID rootGameObject)
+    : sceneUID(sceneUID), sceneName(std::string(sceneName)), gameObjectRootUUID(rootGameObject)
 {
     selectedGameObjectUUID = gameObjectRootUUID;
-    
+
     lightsConfig           = new LightsConfig();
 }
 
@@ -54,7 +56,6 @@ void Scene::Save() const
 void Scene::LoadComponents(const std::map<UID, Component*>& loadedGameComponents)
 {
     gameComponents.clear();
-    gameObjectsContainer.clear();
     gameComponents.insert(loadedGameComponents.begin(), loadedGameComponents.end());
 
     // LigthsConfig init here, so scene already exists and can get the existing lights
@@ -104,7 +105,7 @@ update_status Scene::RenderEditor(float deltaTime)
     {
         if (ImGui::BeginChild("##SceneChildToolBar", ImVec2(0, 70)))
         {
-            GameTimer *gameTimer = App->GetGameTimer();
+            GameTimer* gameTimer = App->GetGameTimer();
 
             float timeScale      = gameTimer->GetTimeScale();
 
@@ -141,26 +142,39 @@ update_status Scene::RenderEditor(float deltaTime)
                 ImGui::SameLine();
                 ImGui::Text("Delta time: %.3f", gameTimer->GetDeltaTime() / 1000.0f);
             }
-            
+
             ImGui::EndChild();
         }
-        if (ImGui::BeginChild("##SceneChild", ImVec2(0.f, 0.f), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar))
+        if (ImGui::BeginChild(
+                "##SceneChild", ImVec2(0.f, 0.f), NULL,
+                ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar
+            ))
         {
+
+            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+                ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows))
+            {
+                doInputs = true;
+            }
+            else
+            {
+                doInputs = false;
+            }
+
             const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
 
             ImGui::SetCursorPos(ImVec2(0.f, 0.f));
 
             ImGui::Image(
-                    (ImTextureID)framebuffer->GetTextureID(),
-                    ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()),
-                    ImVec2(0.f, 1.f),
-                    ImVec2(1.f, 0.f)
+                (ImTextureID)framebuffer->GetTextureID(),
+                ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()), ImVec2(0.f, 1.f),
+                ImVec2(1.f, 0.f)
             );
 
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist(); // ImGui::GetWindowDrawList()
 
-            float width = ImGui::GetWindowWidth();
+            float width  = ImGui::GetWindowWidth();
             float height = ImGui::GetWindowHeight();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
 
@@ -255,7 +269,8 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUUID)
     delete gameObject;
 }
 
-void Scene::RemoveComponent(uint64_t componentUID){
+void Scene::RemoveComponent(uint64_t componentUID)
+{
     gameComponents.erase(componentUID);
 }
 
@@ -277,10 +292,10 @@ AABBUpdatable* Scene::GetTargetForAABBUpdate(UID uuid)
 void Scene::CreateSpatialDataStruct()
 {
     // PARAMETRIZED IN FUTURE
-    float3 octreeCenter          = float3::zero;
-    float octreeLength           = 200;
-    int nodeCapacity             = 5;
-    sceneOctree                  = new Octree(octreeCenter, octreeLength, nodeCapacity);
+    float3 octreeCenter = float3::zero;
+    float octreeLength  = 200;
+    int nodeCapacity    = 5;
+    sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {
@@ -331,4 +346,3 @@ Component* Scene::GetComponentByUID(uint64_t componentUID)
     }
     return nullptr;
 }
-
