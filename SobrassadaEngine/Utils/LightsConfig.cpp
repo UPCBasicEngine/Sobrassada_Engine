@@ -183,9 +183,11 @@ void LightsConfig::RenderLights() const
     SetSpotLightsShaderData();
 
     // Draw lights gizmos
-    directionalLight->Render();
-    for (auto& light : pointLights) light->Render();
-    for (auto& light : spotLights) light->Render();
+    if (directionalLight != nullptr) directionalLight->Render();
+    for (auto& light : pointLights)
+        light->Render();
+    for (auto& light : spotLights)
+        light->Render();
 }
 
 void LightsConfig::SetDirectionalLightShaderData() const
@@ -351,7 +353,7 @@ void LightsConfig::GetAllSceneLights()
 
 void LightsConfig::GetAllPointLights()
 {
-    const std::map<UID, Component*> *components = App->GetSceneModule()->GetAllComponents();
+    const std::map<UID, Component*>* components = App->GetSceneModule()->GetAllComponents();
 
     if (components != nullptr)
     {
