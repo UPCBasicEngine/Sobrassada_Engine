@@ -34,8 +34,8 @@ void ResourceMesh::LoadData(
 {
     this->mode = mode;
     this->material = material;
-    this->vertexCount       = vertices.size();
-    this->indexCount        = indices.size();
+    this->vertexCount       = static_cast<unsigned int>(vertices.size());
+    this->indexCount        = static_cast<unsigned int>(indices.size());
     unsigned int bufferSize = sizeof(Vertex);
 
     glGenVertexArrays(1, &vao);

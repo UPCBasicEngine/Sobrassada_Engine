@@ -75,7 +75,6 @@ class EditorUIModule : public Module
     bool import             = false;
     bool load               = false;
     bool save               = false;
-    bool loadScene          = false;
     bool aboutMenu          = false;
     bool editorSettingsMenu = false;
     bool quadtreeViewerViewport = false;
