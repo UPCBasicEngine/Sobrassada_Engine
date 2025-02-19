@@ -279,9 +279,12 @@
     </ClCompile>
     <ClCompile Include="FileSystem\Importer.cpp">
       <Filter>FileSystem</Filter>
-      </ClCompile>
-          <ClCompile Include="Utils\EngineTimer.cpp">
-            <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\EngineTimer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManagement\Resources\ResourceAnimation.cpp">
+      <Filter>Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -503,8 +506,11 @@
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Utils\EngineTimer.h">
-          <Filter>Utils</Filter>
-        </ClInclude>
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManagement\Resources\ResourceAnimation.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
