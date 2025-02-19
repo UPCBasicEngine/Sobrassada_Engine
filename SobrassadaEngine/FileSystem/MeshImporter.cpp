@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "FileSystem.h"
 #include "LibraryModule.h"
+#include "Math/float4x4.h"
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
@@ -14,7 +15,7 @@ namespace MeshImporter
 
     UID ImportMesh(
         const tinygltf::Model& model, const tinygltf::Mesh& mesh, const tinygltf::Primitive& primitive,
-        const std::string& name, const char* filePath
+        const std::string& name, const char* filePath, float4x4 transform
     )
     {
         enum DataType dataType = UNSIGNED_CHAR;
@@ -188,7 +189,7 @@ namespace MeshImporter
         }
 
         unsigned int size = static_cast<unsigned int>(
-            sizeof(header) + (sizeof(Vertex) * vertexBuffer.size()) + indexBufferSize + (sizeof(float3) * 2)
+            sizeof(header) + (sizeof(Vertex) * vertexBuffer.size()) + indexBufferSize + (sizeof(float3) * 2) + sizeof(float4x4)
         );
 
         char* fileBuffer = new char[size];
@@ -220,7 +221,10 @@ namespace MeshImporter
         memcpy(cursor, &minPos, sizeof(float3));
         cursor += sizeof(float3);
         memcpy(cursor, &maxPos, sizeof(float3));
-        cursor                    += sizeof(float3);
+        cursor += sizeof(float3);
+        memcpy(cursor, &transform, sizeof(float4x4));
+        cursor                     += sizeof(float4x4);
+
 
         UID meshUID                = GenerateUID();
 
@@ -330,10 +334,11 @@ namespace MeshImporter
         cursor             += sizeof(float3);
         float3 maxPos       = *reinterpret_cast<float3*>(cursor);
         cursor             += sizeof(float3);
+        float4x4 transform       = *reinterpret_cast<float4x4*>(cursor);
 
         ResourceMesh* mesh  = new ResourceMesh(meshUID, FileSystem::GetFileNameWithoutExtension(path), maxPos, minPos);
 
-        mesh->LoadData(mode, tmpVertices, tmpIndices);
+        mesh->LoadData(mode, tmpVertices, tmpIndices, transform);
 
         delete[] buffer;
 

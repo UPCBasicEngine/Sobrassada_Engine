@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Mesh.h"
 #include "Resource.h"
+#include "Math/float4x4.h"
 
 #include <Geometry/AABB.h>
 
@@ -20,7 +21,7 @@ class ResourceMesh : public Resource
 
     void SetMaterial(UID materialUID) { this->material = materialUID; }
 
-    void LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
+    void LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, float4x4& transform);
 
     void LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
     void LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
@@ -42,6 +43,8 @@ class ResourceMesh : public Resource
 
     unsigned int vertexCount = 0;
     unsigned int indexCount  = 0;
+
+    float4x4 transform       = float4x4::identity;
 
     AABB aabb;
 };

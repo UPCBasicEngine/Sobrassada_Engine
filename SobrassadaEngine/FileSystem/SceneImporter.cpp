@@ -2,18 +2,16 @@
 
 #include "FileSystem.h"
 #include "Globals.h"
-#include "MeshImporter.h"
 #include "MaterialImporter.h"
+#include "MeshImporter.h"
 #include "TextureImporter.h"
 
-#define TINYGLTF_NO_STB_IMAGE_WRITE
-#define TINYGLTF_NO_STB_IMAGE
-#define TINYGLTF_NO_EXTERNAL_IMAGE
-#include "tiny_gltf.h"
+
+#include "Math/Quat.h"
 
 namespace SceneImporter
 {
-    void Import(const char *filePath)
+    void Import(const char* filePath)
     {
         CreateLibraryDirectories();
 
@@ -23,7 +21,7 @@ namespace SceneImporter
         else TextureImporter::Import(filePath);
     }
 
-    void ImportGLTF(const char *filePath)
+    void ImportGLTF(const char* filePath)
     {
         // Copy gltf to Assets folder
         {
@@ -60,53 +58,57 @@ namespace SceneImporter
         }
 
         std::string path = FileSystem::GetFilePath(filePath);
+        std::vector<float4x4> nodeTransforms(model.nodes.size(), float4x4::identity);
+
+        for (size_t i = 0; i < model.nodes.size(); ++i)
+        {
+            const tinygltf::Node& node = model.nodes[i];
+
+            float4x4 localTransform    = float4x4::identity;
+
+            localTransform          = GetNodeTransform(node);
+
+            nodeTransforms[i]          = nodeTransforms[i] * localTransform;
+            //multiply parent by all children
+            if (node.children.size() > 0)
+            {
+                for (size_t j = 0; j < node.children.size(); ++j)
+                {
+                    nodeTransforms[node.children[j]] = nodeTransforms[i] * nodeTransforms[node.children[j]];
+                }
+            }
+
+            if (node.mesh >= 0)
+            {
+
+                int meshnode               = node.mesh;
+                const tinygltf::Mesh& mesh = model.meshes[node.mesh];
+                int n                      = 0;
+                int matIndex               = 0;
+
+                for (const auto& primitive : mesh.primitives)
+                {
+                    matIndex             = primitive.material;
+                    std::string meshName = mesh.name + std::to_string(n);
+                    MeshImporter::ImportMesh(model, mesh, primitive, meshName, filePath, nodeTransforms[i]);
+                    MaterialImporter::ImportMaterial(model, matIndex, filePath);
+                    n++;
+                }
+            }
+        }
+
+        // Compute world transform
+        // float4x4 worldTransform    = ComputeWorldTransform(model, i, parentTransform);
+        // nodeTransforms[i]          = worldTransform;
 
         // Copy bin to Assets folder
-        for (const auto &srcBuffers : model.buffers)
+        for (const auto& srcBuffers : model.buffers)
         {
             std::string binPath  = path + srcBuffers.uri;
             std::string copyPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(binPath);
             if (!FileSystem::Exists(copyPath.c_str()))
             {
                 FileSystem::Copy(binPath.c_str(), copyPath.c_str());
-            }
-        }
-
-        // for (const auto &srcImages : model.images)
-        //{
-        //     std::string fullPath = path + srcImages.uri;
-
-        //    UID ddsPath  = TextureImporter::Import(fullPath.c_str());
-        //    //mapping dds path to texture name(png)
-        //    if (!ddsPath.empty())
-        //    {
-        //        App->GetLibraryModule()->AddTexture(srcImages.uri, ddsPath);
-        //    }
-        //}
-
-        // int matIndex = 0;
-        // for (const auto &srcMaterials : model.materials)
-        //{
-        //     std::string materialName = srcMaterials.name;
-        //     std::string materialPath = MATERIALS_PATH + materialName + MATERIAL_EXTENSION;
-
-        //    MaterialImporter::ImportMaterial(model, matIndex);
-        //}
-
-        for (const auto &srcMesh : model.meshes)
-        {
-            name         = srcMesh.name;
-            n            = 0;
-            int matIndex = 0;
-            for (const auto &primitive : srcMesh.primitives)
-            {
-                name += std::to_string(n);
-
-                MeshImporter::ImportMesh(model, srcMesh, primitive, name, filePath);
-                matIndex = primitive.material;
-
-                MaterialImporter::ImportMaterial(model, matIndex, filePath);
-                n++;
             }
         }
     }
@@ -171,4 +173,35 @@ namespace SceneImporter
         }
     }
 
+
+    float4x4 GetNodeTransform(const tinygltf::Node& node)
+    {
+
+        if (!node.matrix.empty())
+        {
+            // glTF stores matrices in COLUMN-MAJOR order, same as MathGeoLib
+            return float4x4(
+                node.matrix[0], node.matrix[1], node.matrix[2], node.matrix[3], node.matrix[4], node.matrix[5],
+                node.matrix[6], node.matrix[7], node.matrix[8], node.matrix[9], node.matrix[10], node.matrix[11],
+                node.matrix[12], node.matrix[13], node.matrix[14], node.matrix[15]
+            );
+        }
+
+        // Default values
+        float3 translation = float3::zero;
+        Quat rotation      = Quat::identity;
+        float3 scale       = float3::one;
+
+        if (!node.translation.empty())
+            translation = float3(node.translation[0], node.translation[1], node.translation[2]);
+
+        if (!node.rotation.empty())
+            rotation = Quat(
+                node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]
+            ); // glTF stores as [x, y, z, w]
+
+        if (!node.scale.empty()) scale = float3(node.scale[0], node.scale[1], node.scale[2]);
+
+        return float4x4::FromTRS(translation, rotation, scale);
+    }
 }; // namespace SceneImporter

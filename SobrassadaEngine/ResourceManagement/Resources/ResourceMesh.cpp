@@ -29,13 +29,16 @@ ResourceMesh::~ResourceMesh()
 }
 
 void ResourceMesh::LoadData(
-    unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices
+    unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices,
+    float4x4& transform
 )
 {
-    this->mode = mode;
-    this->material = material;
-    this->vertexCount       = static_cast<unsigned int>(vertices.size());
-    this->indexCount        = static_cast<unsigned int>(indices.size());
+
+    this->mode              = mode;
+    this->material          = material;
+    this->vertexCount       = vertices.size();
+    this->indexCount        = indices.size();
+    this->transform         = transform;
     unsigned int bufferSize = sizeof(Vertex);
 
     glGenVertexArrays(1, &vao);
@@ -323,7 +326,7 @@ void ResourceMesh::Render(int program, float4x4& modelMatrix, unsigned int camer
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glUniformMatrix4fv(2, 1, GL_TRUE, &modelMatrix[0][0]);
+    glUniformMatrix4fv(2, 1, GL_TRUE, &transform[0][0]);
 
     float3 lightDir         = float3(-1.0f, -0.3f, 2.0f);
     float3 lightColor       = float3(1.0f, 1.0f, 1.0f);
