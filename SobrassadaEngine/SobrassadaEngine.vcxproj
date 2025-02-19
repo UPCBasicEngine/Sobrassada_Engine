@@ -552,6 +552,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="FileSystem\Importer.h" />
+    <ClInclude Include="FileSystem\Model.h" />
     <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="Modules\ResourcesModule.h" />
     <ClInclude Include="Modules\SceneModule.h" />

@@ -1,15 +1,8 @@
 #pragma once
 
 #include "Resource.h"
-#include "../Utils/Transform.h"
-
-struct Node
-{
-    std::string name;
-    Transform transform;
-    int parentIndex;
-    std::vector<std::pair<UID, UID>> meshes;
-};
+#include "FileSystem/Model.h"
+#include "Utils/Transform.h"
 
 class ResourceModel : Resource
 {
@@ -19,8 +12,6 @@ class ResourceModel : Resource
 
     void LoadData(const std::string &name, const Transform &transform, const int parentIndex, const std::vector<std::pair<UID, UID>> &meshes);
 
-    bool HasMesh() const { return nodes.meshes.size() > 0; }
-
    private:
-    Node nodes;
+    Model modelData;
 };

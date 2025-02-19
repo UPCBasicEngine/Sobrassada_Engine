@@ -517,6 +517,9 @@
     <ClInclude Include="FileSystem\ModelImporter.h">
       <Filter>FileSystem</Filter>
     </ClInclude>
+    <ClInclude Include="FileSystem\Model.h">
+      <Filter>FileSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
