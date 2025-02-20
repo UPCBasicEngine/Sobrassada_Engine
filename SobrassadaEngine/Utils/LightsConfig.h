@@ -85,6 +85,11 @@ class LightsConfig
     void RemovePointLight(UID pointUid);
     void RemoveSpotLight(UID spotUid);
 
+    float3 GetAmbientColor() { return ambientColor; };
+    float GetAmbientIntensity() { return ambientIntensity; };
+    void SetAmbientColor(float3 ambientColor) { this->ambientColor = ambientColor; };
+    void SetAmbientIntensity(float ambientIntensity) { this->ambientIntensity = ambientIntensity; };
+
   private:
     unsigned int LoadSkyboxTexture(UID cubemapUID) const;
     void SetDirectionalLightShaderData() const;

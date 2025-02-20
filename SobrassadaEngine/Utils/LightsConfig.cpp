@@ -183,7 +183,7 @@ void LightsConfig::RenderLights() const
     SetSpotLightsShaderData();
 
     // Draw lights gizmos
-    directionalLight->Render();
+    if(directionalLight != nullptr) directionalLight->Render();
     for (auto& light : pointLights) light->Render();
     for (auto& light : spotLights) light->Render();
 }

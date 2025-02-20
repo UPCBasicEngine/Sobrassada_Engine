@@ -107,6 +107,22 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
 
     doc.AddMember("Scene", scene, allocator);
 
+    LightsConfig* lightConfig = App->GetSceneModule()->GetLightsConfig();
+    float3 ambientColor       = lightConfig->GetAmbientColor();
+    float ambientIntensity    = lightConfig->GetAmbientIntensity();
+
+    rapidjson::Value lights(rapidjson::kObjectType);
+
+    rapidjson::Value ambientColorArray(rapidjson::kArrayType);
+    ambientColorArray.PushBack(ambientColor.x, allocator)
+        .PushBack(ambientColor.y, allocator)
+        .PushBack(ambientColor.z, allocator);
+
+    lights.AddMember("Ambient Color", ambientColorArray, allocator);
+    lights.AddMember("Ambient Intensity", ambientIntensity, allocator);
+
+    doc.AddMember("Lights Config", lights, allocator);
+
     // Save file like JSON
     rapidjson::StringBuffer buffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
@@ -210,6 +226,15 @@ bool LibraryModule::LoadScene(const char* path, bool reload)
 
     App->GetSceneModule()->LoadGameObjects(loadedGameObjects);
 
+    //TODO: Check that hasMemberLights and cubemap texture
+    LightsConfig* lightConfig = App->GetSceneModule()->GetLightsConfig();
+    rapidjson::Value& lights            = doc["Lights Config"];
+    rapidjson::Value& ambientColorArray = lights["Ambient Color"];
+    lightConfig->SetAmbientColor(
+        {ambientColorArray[0].GetFloat(), ambientColorArray[1].GetFloat(), ambientColorArray[2].GetFloat()}
+    );
+    lightConfig->SetAmbientIntensity(lights["Ambient Intensity"].GetFloat());
+
     GLOG("%s scene loaded", name.c_str());
     return true;
 }
@@ -229,9 +254,9 @@ bool LibraryModule::LoadLibraryMaps()
             // Generate UID using the function from globals.h
             try
             {
-                UID originalUID      = std::stoull(fileName);
+                UID originalUID = std::stoull(fileName);
 
-                UID prefix           = originalUID / 100000000000000;
+                UID prefix      = originalUID / 100000000000000;
 
                 switch (prefix)
                 {
@@ -251,11 +276,11 @@ bool LibraryModule::LoadLibraryMaps()
                     GLOG("Category: Unknown File Type (10)");
                     break;
                 }
-            } catch (std::invalid_argument& e)
+            }
+            catch (std::invalid_argument& e)
             {
                 GLOG("File %s is not an asset file", fileName);
             }
-            
         }
     }
 
