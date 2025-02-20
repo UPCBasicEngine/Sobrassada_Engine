@@ -14,7 +14,7 @@
 #include "CameraModule.h"
 #include "ResourceMaterial.h"
 
-ResourceMesh::ResourceMesh(UID uid, const std::string& name, const float3& maxPos, const float3& minPos)
+ResourceMesh::ResourceMesh(UID uid, const std::string& name, const float3& maxPos, const float3& minPos, const float4x4& transform)
     : Resource(uid, name, ResourceType::Mesh)
 {
     aabb.maxPoint = maxPos;
@@ -38,7 +38,7 @@ void ResourceMesh::LoadData(
     this->material          = material;
     this->vertexCount       = vertices.size();
     this->indexCount        = indices.size();
-    this->transform         = transform;
+    this->currentMeshTransform         = transform;
     unsigned int bufferSize = sizeof(Vertex);
 
     glGenVertexArrays(1, &vao);
@@ -326,7 +326,7 @@ void ResourceMesh::Render(int program, float4x4& modelMatrix, unsigned int camer
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glUniformMatrix4fv(2, 1, GL_TRUE, &transform[0][0]);
+    glUniformMatrix4fv(2, 1, GL_TRUE, &modelMatrix[0][0]);
 
     float3 lightDir         = float3(-1.0f, -0.3f, 2.0f);
     float3 lightColor       = float3(1.0f, 1.0f, 1.0f);

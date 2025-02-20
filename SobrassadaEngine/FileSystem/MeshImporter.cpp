@@ -336,7 +336,7 @@ namespace MeshImporter
         cursor             += sizeof(float3);
         float4x4 transform       = *reinterpret_cast<float4x4*>(cursor);
 
-        ResourceMesh* mesh  = new ResourceMesh(meshUID, FileSystem::GetFileNameWithoutExtension(path), maxPos, minPos);
+        ResourceMesh* mesh  = new ResourceMesh(meshUID, FileSystem::GetFileNameWithoutExtension(path), maxPos, minPos, transform);
 
         mesh->LoadData(mode, tmpVertices, tmpIndices, transform);
 

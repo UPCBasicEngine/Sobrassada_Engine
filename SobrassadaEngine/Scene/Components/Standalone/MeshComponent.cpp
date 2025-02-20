@@ -111,9 +111,10 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
         App->GetResourcesModule()->ReleaseResource(currentMesh);
         newMesh->SetMaterial(currentMaterial != nullptr ? currentMaterial->GetUID() : CONSTANT_EMPTY_UID);
         currentMeshName    = newMesh->GetName();
+        currentMeshTransform = newMesh->GetTransform();
         currentMesh        = newMesh;
         localComponentAABB = AABB(currentMesh->GetAABB());
-
+        OnTransformUpdate(Transform(currentMeshTransform.Col3(0),currentMeshTransform.Col3(1), currentMeshTransform.Col3(2)));
         if (reloadAABB)
         {
             globalComponentAABB   = AABB(currentMesh->GetAABB());

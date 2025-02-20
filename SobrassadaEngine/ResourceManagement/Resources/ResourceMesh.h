@@ -16,7 +16,7 @@ namespace tinygltf
 class ResourceMesh : public Resource
 {
   public:
-    ResourceMesh(UID uid, const std::string& name, const float3& maxPos, const float3& minPos);
+    ResourceMesh(UID uid, const std::string& name, const float3& maxPos, const float3& minPos, const float4x4& transform);
     ~ResourceMesh() override;
 
     void SetMaterial(UID materialUID) { this->material = materialUID; }
@@ -32,7 +32,7 @@ class ResourceMesh : public Resource
     void Render(int program, float4x4& modelMatrix, unsigned int cameraUBO, ResourceMaterial* material);
 
     const AABB& GetAABB() const { return aabb; }
-
+    const float4x4& GetTransform() const { return currentMeshTransform; }
   private:
     unsigned int vbo         = 0;
     unsigned int ebo         = 0;
@@ -44,7 +44,7 @@ class ResourceMesh : public Resource
     unsigned int vertexCount = 0;
     unsigned int indexCount  = 0;
 
-    float4x4 transform       = float4x4::identity;
+    float4x4 currentMeshTransform       = float4x4::identity;
 
     AABB aabb;
 };
