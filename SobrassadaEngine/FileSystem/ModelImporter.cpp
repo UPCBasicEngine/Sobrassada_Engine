@@ -47,18 +47,16 @@ namespace ModelImporter
 
         delete[] fileBuffer;
 
-        
         if (bytesWritten == 0)
         {
             GLOG("Failed to save model: %s", savePath.c_str());
             return 0;
         }
 
-        //App->GetLibraryModule()->AddMaterial(finalMaterialUID, materialName);
-        //App->GetLibraryModule()->AddResource(savePath, finalMaterialUID);
+        // App->GetLibraryModule()->AddMaterial(finalMaterialUID, materialName);
+        App->GetLibraryModule()->AddResource(savePath, finalModelUID);
 
         GLOG("%s saved as model", savePath.c_str());
-
 
         // Testing
         LoadModel(finalModelUID);
@@ -68,8 +66,8 @@ namespace ModelImporter
 
     ResourceModel* LoadModel(UID modelUID)
     {
-        char* buffer          = nullptr;
-        std::string path      = App->GetLibraryModule()->GetResourcePath(modelUID);
+        char* buffer     = nullptr;
+        std::string path = App->GetLibraryModule()->GetResourcePath(modelUID);
         GLOG("Model path: %s", path.c_str());
 
         unsigned int fileSize = FileSystem::Load(path.c_str(), &buffer);
@@ -80,9 +78,31 @@ namespace ModelImporter
             return nullptr;
         }
 
-        char* cursor = buffer;
+        char* cursor                 = buffer;
 
-        return nullptr;
+        // Create Mesh
+        Model model                  = *reinterpret_cast<Model*>(cursor);
+
+        ResourceModel* resourceModel = new ResourceModel(modelUID, FileSystem::GetFileNameWithoutExtension(path));
+
+        // material->LoadMaterialData(mat);
+
+        delete[] buffer;
+
+        GLOG("Loaded model with %d nodes:", model.GetNodesCount());
+
+        const std::vector<NodeData>& nodes = model.GetNodes();
+        for (int i = 0; i < model.GetNodesCount(); ++i)
+        {
+            GLOG(
+                "Node %d. Name: %s. Parent id: %d. Meshes count: %d", i, nodes[i].name.c_str(), nodes[i].parentId,
+                nodes[i].meshes.size()
+            )
+        }
+
+        // App->GetLibraryModule()->AddResource(savePath, finalMeshUID);
+
+        return resourceModel;
     }
 
     void FillNodes(

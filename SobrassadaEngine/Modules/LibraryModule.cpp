@@ -236,6 +236,9 @@ bool LibraryModule::LoadLibraryMaps()
                 switch (prefix)
                 {
                 // TODO: Add models
+                case 14:
+                    AddResource(filePath, originalUID);
+                    break;
                 case 13:
                     AddMesh(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
                     AddResource(filePath, originalUID);

@@ -5,7 +5,6 @@
 
 #include <vector>
 
-
 struct NodeData
 {
     std::string name;
@@ -19,10 +18,11 @@ class Model
   public:
     Model() = default;
 
+    const std::vector<NodeData>& GetNodes() const { return nodes; }
+    size_t GetNodesCount() const { return nodes.size(); }
+
     void SetUID(const UID uid) { this->uid = uid; }
-    void SetNodes(const std::vector<NodeData> &nodes) { this->nodes = nodes; }
-
-
+    void SetNodes(const std::vector<NodeData>& nodes) { this->nodes = nodes; }
 
   private:
     UID uid;
