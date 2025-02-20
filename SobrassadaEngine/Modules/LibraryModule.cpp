@@ -236,7 +236,7 @@ bool LibraryModule::LoadScene(const char* path, bool reload)
             {ambientColorArray[0].GetFloat(), ambientColorArray[1].GetFloat(), ambientColorArray[2].GetFloat()}
         );
         lightConfig->SetAmbientIntensity(lights["Ambient Intensity"].GetFloat());
-        lightConfig->LoadSkyboxTexture(lights["Skybox UID"].GetUint64());
+        lightConfig->LoadData(lights["Skybox UID"].GetUint64());
     }
 
     GLOG("%s scene loaded", name.c_str());

@@ -106,6 +106,11 @@ unsigned int LightsConfig::LoadSkyboxTexture(UID cubemapUid)
     return TextureImporter::LoadCubemap(stringPath.c_str());
 }
 
+void LightsConfig::LoadData(UID cubemapUid)
+{
+    skyboxTexture = LoadSkyboxTexture(cubemapUid);
+}
+
 void LightsConfig::AddSkyboxTexture(UID resource)
 {
     ResourceTexture* newTexture = dynamic_cast<ResourceTexture*>(App->GetResourcesModule()->RequestResource(resource));

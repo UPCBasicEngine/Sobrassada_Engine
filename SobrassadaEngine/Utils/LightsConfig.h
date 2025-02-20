@@ -11,7 +11,7 @@
 
 namespace Math
 {
-class float4x4;
+    class float4x4;
 }
 
 class DirectionalLight;
@@ -25,7 +25,7 @@ namespace Lights
     {
         float4 color;
 
-        AmbientLightShaderData(const float4 &color) : color(color) {}
+        AmbientLightShaderData(const float4& color) : color(color) {}
     };
 
     struct DirectionalLightShaderData
@@ -33,8 +33,7 @@ namespace Lights
         float4 direction;
         float4 color;
 
-        DirectionalLightShaderData(const float4 &dir, const float4 &color) : direction(dir) ,color(color) {}
-
+        DirectionalLightShaderData(const float4& dir, const float4& color) : direction(dir), color(color) {}
     };
 
     struct PointLightShaderData
@@ -42,7 +41,7 @@ namespace Lights
         float4 position;
         float4 color;
 
-        PointLightShaderData(const float4 &pos, const float4 &color) : position(pos), color(color) {}
+        PointLightShaderData(const float4& pos, const float4& color) : position(pos), color(color) {}
     };
 
     struct SpotLightShaderData
@@ -53,7 +52,9 @@ namespace Lights
         float innerAngle;
         float outerAngle;
 
-        SpotLightShaderData(const float4 &pos, const float4 &color, const float3 &dir, const float inner, const float outer)
+        SpotLightShaderData(
+            const float4& pos, const float4& color, const float3& dir, const float inner, const float outer
+        )
             : position(pos), color(color), direction(dir), innerAngle(inner), outerAngle(outer)
         {
         }
@@ -90,9 +91,10 @@ class LightsConfig
     void SetAmbientColor(float3 ambientColor) { this->ambientColor = ambientColor; };
     void SetAmbientIntensity(float ambientIntensity) { this->ambientIntensity = ambientIntensity; };
     UID getSkyboxUID() { return skyboxUID; };
-    unsigned int LoadSkyboxTexture(UID cubemapUID);
+    void LoadData(UID cubemapUID);
 
   private:
+    unsigned int LoadSkyboxTexture(UID cubemapUID);
     void SetDirectionalLightShaderData() const;
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;
@@ -115,7 +117,7 @@ class LightsConfig
     unsigned int pointBufferId;
     unsigned int spotBufferId;
 
-    DirectionalLight *directionalLight = nullptr;
+    DirectionalLight* directionalLight = nullptr;
     std::vector<PointLight*> pointLights;
     std::vector<SpotLight*> spotLights;
 
