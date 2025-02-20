@@ -65,7 +65,7 @@ void MeshComponent::RenderEditorInspector()
         ImGui::SeparatorText("Material");
         ImGui::Text(currentTextureName.c_str());
         ImGui::SameLine();
-        if (ImGui::Button("Select texture"))
+        if (ImGui::Button("Select material"))
         {
             ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
         }

@@ -12,6 +12,8 @@
 #include "WindowModule.h"
 
 #include "Component.h"
+#include "GameObject.h"
+#include "Root/RootComponent.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -219,6 +221,28 @@ void EditorUIModule::MainMenu()
 
         if (ImGui::MenuItem("About", "", aboutMenu)) aboutMenu = !aboutMenu;
 
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Assets"))
+    {
+        if (ImGui::MenuItem("Cube Mesh"))
+        {
+            GameObject* selectedGameObject = App->GetSceneModule()->GetSeletedGameObject();
+            if (selectedGameObject != nullptr)
+            {
+                GameObject* newGameObject = new GameObject(selectedGameObject->GetUID(), "Cube Mesh GameObject");
+
+                selectedGameObject->AddChildren(newGameObject->GetUID());
+
+                App->GetSceneModule()->AddGameObject(newGameObject->GetUID(), newGameObject);
+                newGameObject->ComponentGlobalTransformUpdated();
+                selectedGameObject->ComponentGlobalTransformUpdated();
+
+                RootComponent* root = newGameObject->GetRootComponent();
+                root->CreateComponent(COMPONENT_CUBE_MESH);
+            }
+        }
         ImGui::EndMenu();
     }
 

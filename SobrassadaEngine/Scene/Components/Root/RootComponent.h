@@ -31,6 +31,7 @@ public:
 
     void SetSelectedComponent(UID componentUID);
     bool IsSelectedComponent(UID componentUID) const { return selectedUID == componentUID; }
+    UID GetUID() { return selectedUID; }
 
     int GetMobilitySettings() const { return mobilitySettings; }
 
