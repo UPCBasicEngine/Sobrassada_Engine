@@ -32,4 +32,6 @@ class MeshComponent : public Component
 
     std::string currentTextureName    = "Not selected";
     ResourceMaterial* currentMaterial = nullptr;
+
+    float4x4 modelMatrix = float4x4::identity;
 };

@@ -91,12 +91,7 @@ void MeshComponent::Render()
     {
         unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
 
-        float4x4 model         = float4x4::FromTRS(
-            globalTransform.position,
-            Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
-            globalTransform.scale
-        );
-        currentMesh->Render(App->GetResourcesModule()->GetProgram(), model, cameraUBO, currentMaterial);
+        currentMesh->Render(App->GetResourcesModule()->GetProgram(), modelMatrix, cameraUBO, currentMaterial);
     }
     Component::Render();
 }
@@ -111,13 +106,21 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
         App->GetResourcesModule()->ReleaseResource(currentMesh);
         newMesh->SetMaterial(currentMaterial != nullptr ? currentMaterial->GetUID() : CONSTANT_EMPTY_UID);
         currentMeshName    = newMesh->GetName();
-        currentMeshTransform = newMesh->GetTransform();
         currentMesh        = newMesh;
+        //check if aabb has transform applied
         localComponentAABB = AABB(currentMesh->GetAABB());
-        OnTransformUpdate(Transform(currentMeshTransform.Col3(0),currentMeshTransform.Col3(1), currentMeshTransform.Col3(2)));
+
+        modelMatrix = float4x4::FromTRS(
+            globalTransform.position,
+            Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
+            globalTransform.scale
+        );
+
+        modelMatrix = modelMatrix * currentMesh->GetTransform();
+
         if (reloadAABB)
         {
-            globalComponentAABB   = AABB(currentMesh->GetAABB());
+            globalComponentAABB = AABB(currentMesh->GetAABB());
             AABBUpdatable* parent = GetParent();
             if (parent != nullptr)
             {
