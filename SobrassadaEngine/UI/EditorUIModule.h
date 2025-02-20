@@ -17,9 +17,6 @@ struct CPUFeature
     const char *name;
 };
 
-class EditorViewport;
-class QuadtreeViewer;
-
 class EditorUIModule : public Module
 {
   public:
@@ -77,7 +74,6 @@ class EditorUIModule : public Module
     bool save               = false;
     bool aboutMenu          = false;
     bool editorSettingsMenu = false;
-    bool quadtreeViewerViewport = false;
     bool closeApplication   = false;
 
     int maxFPS              = 60;
@@ -86,9 +82,6 @@ class EditorUIModule : public Module
     std::deque<float> frametime;
 
     int transformType = LOCAL;
-
-    
-    QuadtreeViewer *quadtreeViewer = nullptr;
 
     int width, height;
 

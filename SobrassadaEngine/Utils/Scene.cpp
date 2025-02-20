@@ -324,7 +324,7 @@ void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects)
     std::vector<GameObject*> queriedObjects;
     const FrustumPlanes& frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
 
-    sceneOctree->QueryElements(frustumPlanes, queriedObjects);
+    sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
     for (auto gameObject : queriedObjects)
     {

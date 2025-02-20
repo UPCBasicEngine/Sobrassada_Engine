@@ -18,7 +18,7 @@ QuadtreeViewer::QuadtreeViewer()
 {
     int quadtreeSize          = 20;
     framebuffer               = new Framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT, true);
-    quadtree                  = new Quadtree(float2(0, 0), (float)quadtreeSize, 2);
+    quadtree                  = new Quadtree(float3::zero, (float)quadtreeSize, 2);
 
     // TODO: USE CAMERA COMPONENT / CLASS TO CREATE A ORTHOGONAL CAMERA FRON RENDERING THE QUADTREE
     camera.type               = FrustumType::OrthographicFrustum;

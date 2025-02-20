@@ -5,6 +5,7 @@
 #include "Math/float3.h"
 #include "Math/float4.h"
 
+#include <stack>
 #include <vector>
 
 class GameObject;
@@ -61,9 +62,10 @@ class Octree
     ~Octree();
 
     bool InsertElement(GameObject* gameObject);
-    void QueryElements(const AABB& area, std::vector<GameObject*>& foundElements) const;
-    void QueryElements(const FrustumPlanes& cameraPlanes, std::vector<GameObject*>& foundElements) const;
     void GetDrawLines(std::vector<LineSegment>& drawLines, std::vector<LineSegment>& elementLines) const;
+
+    template <typename AreaType>
+    void QueryElements(const AreaType& cameraPlanes, std::vector<GameObject*>& foundElements) const;
 
   private:
     OctreeNode* rootNode;
@@ -71,3 +73,44 @@ class Octree
     int totalLeaf     = 0;
     int totalElements = 0;
 };
+
+template <typename AreaType>
+inline void Octree::QueryElements(const AreaType& queryObject, std::vector<GameObject*>& foundElements) const
+{
+    std::vector<bool> insertedElements = std::vector<bool>(totalElements, false);
+
+    std::stack<OctreeNode*> nodesToVisit;
+    nodesToVisit.push(rootNode);
+
+    while (!nodesToVisit.empty())
+    {
+        const OctreeNode* currentNode = nodesToVisit.top();
+        nodesToVisit.pop();
+
+        if (queryObject.Intersects(currentNode->currentArea))
+        {
+            if (currentNode->IsLeaf())
+            {
+                for (const auto& element : currentNode->elements)
+                {
+                    if (!insertedElements[element.id])
+                    {
+                        insertedElements[element.id] = true;
+                        foundElements.push_back(element.gameObject);
+                    }
+                }
+            }
+            else
+            {
+                nodesToVisit.push(currentNode->topLeftFront);
+                nodesToVisit.push(currentNode->topRightFront);
+                nodesToVisit.push(currentNode->bottomLeftFront);
+                nodesToVisit.push(currentNode->bottomRightFront);
+                nodesToVisit.push(currentNode->topLeftBack);
+                nodesToVisit.push(currentNode->topRightBack);
+                nodesToVisit.push(currentNode->bottomLeftBack);
+                nodesToVisit.push(currentNode->bottomRightBack);
+            }
+        }
+    }
+}

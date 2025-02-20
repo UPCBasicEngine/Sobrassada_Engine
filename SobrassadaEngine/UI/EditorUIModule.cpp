@@ -6,7 +6,6 @@
 #include "InputModule.h"
 #include "LibraryModule.h"
 #include "OpenGLModule.h"
-#include "QuadtreeViewer.h"
 #include "SceneImporter.h"
 #include "SceneModule.h"
 #include "WindowModule.h"
@@ -28,8 +27,6 @@
 #define TINYGLTF_IMPLEMENTATION /* Only in one of the includes */
 #include <tiny_gltf.h>          // TODO Remove
 
-#include "InputModule.h"
-
 EditorUIModule::EditorUIModule()
     : width(0), height(0), closeApplication(false), consoleMenu(false), import(false), load(false), save(false),
       editorSettingsMenu(false)
@@ -50,8 +47,6 @@ bool EditorUIModule::Init()
 
     ImGui_ImplSDL2_InitForOpenGL(App->GetWindowModule()->window, App->GetOpenGLModule()->GetContext());
     ImGui_ImplOpenGL3_Init("#version 460");
-
-    quadtreeViewer = new QuadtreeViewer();
 
     width          = App->GetWindowModule()->GetWidth();
     height         = App->GetWindowModule()->GetHeight();
@@ -89,8 +84,6 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 {
     Draw();
 
-    if (quadtreeViewerViewport) quadtreeViewer->Render(quadtreeViewerViewport);
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -113,8 +106,6 @@ bool EditorUIModule::ShutDown()
 
     framerate.clear();
     frametime.clear();
-
-    delete quadtreeViewer;
 
     return true;
 }
@@ -212,8 +203,6 @@ void EditorUIModule::MainMenu()
 
             ImGui::EndMenu();
         }
-
-        if (ImGui::MenuItem("Quadtree", "", quadtreeViewerViewport)) quadtreeViewerViewport = !quadtreeViewerViewport;
 
         if (ImGui::MenuItem("Editor settings", "", editorSettingsMenu)) editorSettingsMenu = !editorSettingsMenu;
 

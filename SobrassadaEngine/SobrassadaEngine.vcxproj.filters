@@ -150,14 +150,8 @@
     <ClCompile Include="Utils\Framebuffer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="UI\QuadtreeViewer.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="Utils\Quadtree.cpp">
       <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Tests\MockGameObject.cpp">
-      <Filter>Tests</Filter>
     </ClCompile>
     <ClCompile Include="Utils\Octree.cpp">
       <Filter>Utils</Filter>
@@ -279,9 +273,9 @@
     </ClCompile>
     <ClCompile Include="FileSystem\Importer.cpp">
       <Filter>FileSystem</Filter>
-      </ClCompile>
-          <ClCompile Include="Utils\EngineTimer.cpp">
-            <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\EngineTimer.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -481,14 +475,8 @@
     <ClInclude Include="Utils\LightsConfig.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="UI\QuadtreeViewer.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\Quadtree.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Tests\MockGameObject.h">
-      <Filter>Tests</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Octree.h">
       <Filter>Utils</Filter>
@@ -503,8 +491,8 @@
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Utils\EngineTimer.h">
-          <Filter>Utils</Filter>
-        </ClInclude>
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
