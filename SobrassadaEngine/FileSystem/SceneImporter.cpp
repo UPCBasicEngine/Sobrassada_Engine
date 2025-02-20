@@ -93,26 +93,39 @@ namespace SceneImporter
         //    MaterialImporter::ImportMaterial(model, matIndex);
         //}
 
+        // Store all primitives and materials of each mesh to later be used by the ImportModel
+
+        std::vector<std::vector<std::pair<UID, UID>>> gltfMeshes;
+
+        int meshIndex = 0;
         for (const auto &srcMesh : model.meshes)
         {
             name         = srcMesh.name;
             n            = 0;
             int matIndex = 0;
+            std::vector<std::pair<UID, UID>> primitives;
+
             for (const auto &primitive : srcMesh.primitives)
             {
                 name += std::to_string(n);
 
-                MeshImporter::ImportMesh(model, srcMesh, primitive, name, filePath);
+                UID modelUID = MeshImporter::ImportMesh(model, srcMesh, primitive, name, filePath);
                 matIndex = primitive.material;
 
-                MaterialImporter::ImportMaterial(model, matIndex, filePath);
+                UID matUID = MaterialImporter::ImportMaterial(model, matIndex, filePath);
                 n++;
+
+                primitives.emplace_back(modelUID, matUID);
+                GLOG("New primitive with mesh UID: %d and Material UID: %d", modelUID, matUID);
             }
+
+            gltfMeshes.emplace_back(primitives);
         }
 
+        GLOG("Total .gltf meshes: %d", gltfMeshes.size());
 
         // Import Model
-        ModelImporter::ImportModel(model.nodes);
+        ModelImporter::ImportModel(model.nodes, gltfMeshes);
 
     }
 

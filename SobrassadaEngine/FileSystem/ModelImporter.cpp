@@ -4,16 +4,26 @@
 
 namespace ModelImporter
 {
-    UID ImportModel(const std::vector<tinygltf::Node>& nodes)
+    UID ImportModel(
+        const std::vector<tinygltf::Node>& nodes, const std::vector<std::vector<std::pair<UID, UID>>>& meshesUIDs
+    )
     {
         // Get Nodes data
         Model newModel;
         std::vector<NodeData> orderedNodes;
 
-        FillNodes(nodes[0], -1, orderedNodes); // -1 parentId for root
-      
+        GLOG("Start filling nodes")
+        FillNodes(nodes, 0, -1, meshesUIDs, orderedNodes); // -1 parentId for root
+        GLOG("Nodes filled");
 
-
+        for (int i = 0; i < orderedNodes.size(); ++i)
+        {
+            GLOG(
+                "Node %d. Name: %s. Parent id: %d. Meshes count: %d", i, orderedNodes[i].name.c_str(),
+                orderedNodes[i].parentId,
+                orderedNodes[i].meshes.size()
+            )
+        }
 
         // Save
         /*
@@ -47,28 +57,38 @@ namespace ModelImporter
         return finalMaterialUID;
         */
         return 0;
-
     }
 
-    ResourceModel* LoadModel()
+    ResourceModel* LoadModel(UID modelUID)
     {
         return nullptr;
     }
 
-    void FillNodes(tinygltf::Node& nodeData, int parentId, std::vector<NodeData>& outNodes)
+    void FillNodes(
+        const std::vector<tinygltf::Node>& nodesList, int nodeId, int parentId,
+        const std::vector<std::vector<std::pair<UID, UID>>>& meshesUIDs, std::vector<NodeData>& outNodes
+    )
     {
         // Fill node data
+        const tinygltf::Node& nodeData = nodesList[nodeId];
         NodeData newNode;
-        newNode.name = nodeData.name;
-        //newNode.transform = getTransformSomehow
-        newNode.parentId = parentId;
-        //newNode.meshes = getMeshesSomehow
+        newNode.name     = nodeData.name;
 
+        // newNode.transform = getTransformSomehow
+        newNode.parentId = parentId;
+
+        // Get reference to Mesh and Material UIDs
+        if (nodeData.mesh > -1)
+        {
+            newNode.meshes = meshesUIDs[nodeData.mesh];
+        }
+
+        outNodes.push_back(newNode);
 
         // Call this function for every node child and give them their id, which their children will need
-        for (const auto& nodeId : nodeData.children)
+        for (const auto& id : nodeData.children)
         {
-            //FillNodes();
+            FillNodes(nodesList, id, nodeId, meshesUIDs, outNodes);
         }
     }
-}
+} // namespace ModelImporter
