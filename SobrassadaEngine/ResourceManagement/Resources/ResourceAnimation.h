@@ -21,5 +21,6 @@ class ResourceAnimation : public Resource
 
 
   private:
-
+    std::unordered_map<std::string, Channel> channels;
+    float duration = 0.0f;
 };

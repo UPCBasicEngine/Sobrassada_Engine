@@ -137,6 +137,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="FileSystem\AnimationImporter.cpp" />
     <ClCompile Include="ResourceManagement\Resources\ResourceAnimation.cpp" />
     <ClCompile Include="Utils\EngineTimer.cpp" />
     <ClCompile Include="FileSystem\Importer.cpp" />
@@ -550,6 +551,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="FileSystem\AnimationImporter.h" />
     <ClInclude Include="FileSystem\Importer.h" />
     <ClInclude Include="Libs\ImGuizmo\ImGuizmo.h" />
     <ClInclude Include="Modules\ResourcesModule.h" />

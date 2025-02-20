@@ -5,6 +5,7 @@
 #include "MeshImporter.h"
 #include "MaterialImporter.h"
 #include "TextureImporter.h"
+#include "AnimationImporter.h"
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define TINYGLTF_NO_STB_IMAGE
@@ -37,7 +38,7 @@ namespace SceneImporter
 
         tinygltf::TinyGLTF gltfContext;
         tinygltf::Model model;
-        std::string err, warn, name;
+        std::string err, warn, name, animationName;
         int n    = 0;
 
         bool ret = gltfContext.LoadASCIIFromFile(&model, &err, &warn, std::string(filePath));
@@ -108,6 +109,12 @@ namespace SceneImporter
                 MaterialImporter::ImportMaterial(model, matIndex, filePath);
                 n++;
             }
+        }
+
+        for (const auto& srcAnim : model.animations)
+        {
+            animationName = srcAnim.name;
+            AnimationImporter::ImportAnimation(model, srcAnim, animationName, filePath);
         }
     }
 

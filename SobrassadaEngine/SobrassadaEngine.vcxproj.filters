@@ -286,6 +286,9 @@
     <ClCompile Include="ResourceManagement\Resources\ResourceAnimation.cpp">
       <Filter>Resources</Filter>
     </ClCompile>
+    <ClCompile Include="FileSystem\AnimationImporter.cpp">
+      <Filter>FileSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -510,6 +513,9 @@
     </ClInclude>
     <ClInclude Include="ResourceManagement\Resources\ResourceAnimation.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystem\AnimationImporter.h">
+      <Filter>FileSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
