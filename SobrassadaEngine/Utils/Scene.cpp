@@ -150,6 +150,10 @@ update_status Scene::RenderEditor(float deltaTime)
                 ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar
             ))
         {
+            if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+            {
+                ImGui::SetWindowFocus();
+            }
 
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
                 ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows))
