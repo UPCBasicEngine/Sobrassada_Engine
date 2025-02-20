@@ -19,10 +19,12 @@ class Model
   public:
     Model() = default;
 
-    void AddNode(const NodeData&& newNode) { nodes.emplace_back(newNode); }
+    void SetUID(const UID uid) { this->uid = uid; }
+    void SetNodes(const std::vector<NodeData> &nodes) { this->nodes = nodes; }
 
 
 
   private:
+    UID uid;
     std::vector<NodeData> nodes;
 };

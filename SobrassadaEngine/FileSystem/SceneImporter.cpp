@@ -125,7 +125,7 @@ namespace SceneImporter
         GLOG("Total .gltf meshes: %d", gltfMeshes.size());
 
         // Import Model
-        ModelImporter::ImportModel(model.nodes, gltfMeshes);
+        ModelImporter::ImportModel(model.nodes, gltfMeshes, filePath);
 
     }
 
@@ -152,11 +152,11 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", AUDIO_PATH);
             }
         }
-        if (!FileSystem::IsDirectory(BONES_PATH))
+        if (!FileSystem::IsDirectory(MODELS_PATH))
         {
-            if (!FileSystem::CreateDirectories(BONES_PATH))
+            if (!FileSystem::CreateDirectories(MODELS_PATH))
             {
-                GLOG("Failed to create directory: %s", BONES_PATH);
+                GLOG("Failed to create directory: %s", MODELS_PATH);
             }
         }
         if (!FileSystem::IsDirectory(MESHES_PATH))

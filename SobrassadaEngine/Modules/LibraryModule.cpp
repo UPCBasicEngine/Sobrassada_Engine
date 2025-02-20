@@ -235,6 +235,7 @@ bool LibraryModule::LoadLibraryMaps()
 
                 switch (prefix)
                 {
+                // TODO: Add models
                 case 13:
                     AddMesh(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
                     AddResource(filePath, originalUID);
@@ -266,6 +267,10 @@ UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string& filePat
 {
 
     uint64_t prefix = 10; // Default prefix "99" for unknown files
+    if (FileSystem::GetFileExtension(filePath) == MODEL_EXTENSION)
+    {
+        prefix = 14;
+    }
     if (FileSystem::GetFileExtension(filePath) == MESH_EXTENSION)
     {
         prefix = 13;

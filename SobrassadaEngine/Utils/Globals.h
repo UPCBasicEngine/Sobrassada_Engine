@@ -63,7 +63,7 @@ enum update_status
 #define LIBRARY_PATH    "Library/"
 #define ANIMATIONS_PATH "Library/Animations/"
 #define AUDIO_PATH      "Library/Audio/"
-#define BONES_PATH      "Library/Bones/"
+#define MODELS_PATH      "Library/Models/"
 #define MESHES_PATH     "Library/Meshes/"
 #define TEXTURES_PATH   "Library/Textures/"
 #define MATERIALS_PATH  "Library/Materials/"
@@ -74,6 +74,7 @@ enum update_status
 #define TEXTURE_EXTENSION  ".dds"
 #define MATERIAL_EXTENSION ".mat"
 #define SCENE_EXTENSION    ".scene"
+#define MODEL_EXTENSION    ".model"
 
 #define MAX_COMPONENT_NAME_LENGTH 64;
 

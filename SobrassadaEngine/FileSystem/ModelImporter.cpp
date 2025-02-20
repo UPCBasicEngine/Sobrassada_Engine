@@ -1,11 +1,15 @@
 #include "ModelImporter.h"
 
+#include "Application.h"
+#include "LibraryModule.h"
+
 #include "ResourceManagement/Resources/ResourceModel.h"
 
 namespace ModelImporter
 {
     UID ImportModel(
-        const std::vector<tinygltf::Node>& nodes, const std::vector<std::vector<std::pair<UID, UID>>>& meshesUIDs
+        const std::vector<tinygltf::Node>& nodes, const std::vector<std::vector<std::pair<UID, UID>>>& meshesUIDs,
+        const char* filePath
     )
     {
         // Get Nodes data
@@ -20,47 +24,64 @@ namespace ModelImporter
         {
             GLOG(
                 "Node %d. Name: %s. Parent id: %d. Meshes count: %d", i, orderedNodes[i].name.c_str(),
-                orderedNodes[i].parentId,
-                orderedNodes[i].meshes.size()
+                orderedNodes[i].parentId, orderedNodes[i].meshes.size()
             )
         }
 
+        newModel.SetNodes(orderedNodes);
+
         // Save
-        /*
-        UID materialUID      = GenerateUID();
 
-        std::string savePath = MATERIALS_PATH + std::string("Material") + MATERIAL_EXTENSION;
-        UID finalMaterialUID = App->GetLibraryModule()->AssignFiletypeUID(materialUID, savePath);
+        UID modelUID         = GenerateUID();
+
+        std::string savePath = MODELS_PATH + std::string("Material") + MODEL_EXTENSION;
+        UID finalModelUID    = App->GetLibraryModule()->AssignFiletypeUID(modelUID, savePath);
         std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
+        savePath             = MODELS_PATH + std::to_string(finalModelUID) + MODEL_EXTENSION;
 
-        savePath             = MATERIALS_PATH + std::to_string(finalMaterialUID) + MATERIAL_EXTENSION;
-
-        material.SetMaterialUID(finalMaterialUID);
-        unsigned int size = sizeof(Material);
+        newModel.SetUID(finalModelUID);
+        unsigned int size = sizeof(Model);
         char* fileBuffer  = new char[size];
-        memcpy(fileBuffer, &material, sizeof(Material));
+        memcpy(fileBuffer, &newModel, size);
         unsigned int bytesWritten = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, true);
 
         delete[] fileBuffer;
 
+        
         if (bytesWritten == 0)
         {
-            GLOG("Failed to save material: %s", savePath.c_str());
+            GLOG("Failed to save model: %s", savePath.c_str());
             return 0;
         }
 
-        App->GetLibraryModule()->AddMaterial(finalMaterialUID, materialName);
-        App->GetLibraryModule()->AddResource(savePath, finalMaterialUID);
+        //App->GetLibraryModule()->AddMaterial(finalMaterialUID, materialName);
+        //App->GetLibraryModule()->AddResource(savePath, finalMaterialUID);
 
-        GLOG("%s saved as material", materialName.c_str());
+        GLOG("%s saved as model", savePath.c_str());
 
-        return finalMaterialUID;
-        */
-        return 0;
+
+        // Testing
+        LoadModel(finalModelUID);
+
+        return finalModelUID;
     }
 
     ResourceModel* LoadModel(UID modelUID)
     {
+        char* buffer          = nullptr;
+        std::string path      = App->GetLibraryModule()->GetResourcePath(modelUID);
+        GLOG("Model path: %s", path.c_str());
+
+        unsigned int fileSize = FileSystem::Load(path.c_str(), &buffer);
+
+        if (fileSize == 0 || buffer == nullptr)
+        {
+            GLOG("Failed to load the .model file: ");
+            return nullptr;
+        }
+
+        char* cursor = buffer;
+
         return nullptr;
     }
 
