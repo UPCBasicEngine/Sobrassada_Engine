@@ -107,6 +107,7 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
 
     doc.AddMember("Scene", scene, allocator);
 
+    // Serialize Lights Config
     LightsConfig* lightConfig = App->GetSceneModule()->GetLightsConfig();
     float3 ambientColor       = lightConfig->GetAmbientColor();
 
@@ -117,6 +118,7 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
         .PushBack(ambientColor.y, allocator)
         .PushBack(ambientColor.z, allocator);
 
+    // Add to Light
     lights.AddMember("Ambient Color", ambientColorArray, allocator);
     lights.AddMember("Ambient Intensity", lightConfig->GetAmbientIntensity(), allocator);
     lights.AddMember("Skybox UID", lightConfig->getSkyboxUID(), allocator);
@@ -226,7 +228,7 @@ bool LibraryModule::LoadScene(const char* path, bool reload)
 
     App->GetSceneModule()->LoadGameObjects(loadedGameObjects);
 
-    // TODO: Cubemap texture
+    // Deserialize Lights Config
     if (doc.HasMember("Lights Config") && doc["Lights Config"].IsObject())
     {
         LightsConfig* lightConfig           = App->GetSceneModule()->GetLightsConfig();
