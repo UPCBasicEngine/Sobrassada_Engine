@@ -226,14 +226,17 @@ bool LibraryModule::LoadScene(const char* path, bool reload)
 
     App->GetSceneModule()->LoadGameObjects(loadedGameObjects);
 
-    //TODO: Check that hasMemberLights and cubemap texture
-    LightsConfig* lightConfig = App->GetSceneModule()->GetLightsConfig();
-    rapidjson::Value& lights            = doc["Lights Config"];
-    rapidjson::Value& ambientColorArray = lights["Ambient Color"];
-    lightConfig->SetAmbientColor(
-        {ambientColorArray[0].GetFloat(), ambientColorArray[1].GetFloat(), ambientColorArray[2].GetFloat()}
-    );
-    lightConfig->SetAmbientIntensity(lights["Ambient Intensity"].GetFloat());
+    // TODO: Cubemap texture
+    if (doc.HasMember("Lights Config") && doc["Lights Config"].IsObject())
+    {
+        LightsConfig* lightConfig           = App->GetSceneModule()->GetLightsConfig();
+        rapidjson::Value& lights            = doc["Lights Config"];
+        rapidjson::Value& ambientColorArray = lights["Ambient Color"];
+        lightConfig->SetAmbientColor(
+            {ambientColorArray[0].GetFloat(), ambientColorArray[1].GetFloat(), ambientColorArray[2].GetFloat()}
+        );
+        lightConfig->SetAmbientIntensity(lights["Ambient Intensity"].GetFloat());
+    }
 
     GLOG("%s scene loaded", name.c_str());
     return true;
