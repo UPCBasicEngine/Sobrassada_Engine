@@ -109,7 +109,6 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
 
     LightsConfig* lightConfig = App->GetSceneModule()->GetLightsConfig();
     float3 ambientColor       = lightConfig->GetAmbientColor();
-    float ambientIntensity    = lightConfig->GetAmbientIntensity();
 
     rapidjson::Value lights(rapidjson::kObjectType);
 
@@ -119,7 +118,8 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
         .PushBack(ambientColor.z, allocator);
 
     lights.AddMember("Ambient Color", ambientColorArray, allocator);
-    lights.AddMember("Ambient Intensity", ambientIntensity, allocator);
+    lights.AddMember("Ambient Intensity", lightConfig->GetAmbientIntensity(), allocator);
+    lights.AddMember("Skybox UID", lightConfig->getSkyboxUID(), allocator);
 
     doc.AddMember("Lights Config", lights, allocator);
 
@@ -236,6 +236,7 @@ bool LibraryModule::LoadScene(const char* path, bool reload)
             {ambientColorArray[0].GetFloat(), ambientColorArray[1].GetFloat(), ambientColorArray[2].GetFloat()}
         );
         lightConfig->SetAmbientIntensity(lights["Ambient Intensity"].GetFloat());
+        lightConfig->LoadSkyboxTexture(lights["Skybox UID"].GetUint64());
     }
 
     GLOG("%s scene loaded", name.c_str());

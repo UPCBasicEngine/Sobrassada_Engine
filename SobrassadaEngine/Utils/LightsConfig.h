@@ -89,9 +89,10 @@ class LightsConfig
     float GetAmbientIntensity() { return ambientIntensity; };
     void SetAmbientColor(float3 ambientColor) { this->ambientColor = ambientColor; };
     void SetAmbientIntensity(float ambientIntensity) { this->ambientIntensity = ambientIntensity; };
+    UID getSkyboxUID() { return skyboxUID; };
+    unsigned int LoadSkyboxTexture(UID cubemapUID);
 
   private:
-    unsigned int LoadSkyboxTexture(UID cubemapUID) const;
     void SetDirectionalLightShaderData() const;
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;
@@ -103,6 +104,7 @@ class LightsConfig
     void GetDirectionalLight();
 
   private:
+    UID skyboxUID;
     unsigned int skyboxVao;
     unsigned int skyboxTexture;
     unsigned int skyboxProgram;

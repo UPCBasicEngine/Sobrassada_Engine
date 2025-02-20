@@ -99,10 +99,10 @@ void LightsConfig::RenderSkybox() const
     App->GetOpenGLModule()->SetDepthFunc(true);
 }
 
-unsigned int LightsConfig::LoadSkyboxTexture(UID cubemapUid) const
+unsigned int LightsConfig::LoadSkyboxTexture(UID cubemapUid)
 {
     std::string stringPath = App->GetLibraryModule()->GetResourcePath(cubemapUid);
-
+    skyboxUID              = cubemapUid;
     return TextureImporter::LoadCubemap(stringPath.c_str());
 }
 
