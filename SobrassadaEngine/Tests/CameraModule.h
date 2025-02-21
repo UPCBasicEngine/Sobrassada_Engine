@@ -15,8 +15,8 @@ constexpr float maximumNegativePitch = -89.f * DEGTORAD;
 
 struct CameraMatrices
 {
-	float4x4 projectionMatrix;
-	float4x4 viewMatrix;
+    float4x4 projectionMatrix;
+    float4x4 viewMatrix;
 };
 
 class CameraModule : public Module
@@ -36,6 +36,11 @@ class CameraModule : public Module
     const float4x4& GetFrustumProjectionMatrix() { return projectionMatrix; }
     const FrustumPlanes& GetFrustrumPlanes() const { return frustumPlanes; }
     const float3& GetCameraPosition() const { return isCameraDetached ? detachedCamera.pos : camera.pos; }
+
+    float GetFarPlaneDistance() const
+    {
+        return isCameraDetached ? detachedCamera.farPlaneDistance : camera.farPlaneDistance;
+    }
 
     unsigned int GetUbo() const { return ubo; }
     void UpdateUBO();

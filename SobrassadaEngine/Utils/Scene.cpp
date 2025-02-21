@@ -147,54 +147,56 @@ void Scene::RenderScene()
         ImGui::SameLine();
         if (ImGui::SliderFloat("Time scale", &timeScale, 0, 4)) gameTimer->SetTimeScale(timeScale);
 
-            if (App->GetSceneModule()->IsInPlayMode())
-            {
-                ImGui::SeparatorText("Playing");
-                ImGui::Text("Frame count: %d", gameTimer->GetFrameCount());
-                ImGui::SameLine();
-                ImGui::Text("Game time: %.3f", gameTimer->GetTime() / 1000.0f);
-                ImGui::SameLine();
-                ImGui::Text("Delta time: %.3f", gameTimer->GetDeltaTime() / 1000.0f);
-            }
-
-            ImGui::EndChild();
-        }
-        if (ImGui::BeginChild(
-                "##SceneChild", ImVec2(0.f, 0.f), NULL,
-                ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar
-            ))
+        if (App->GetSceneModule()->IsInPlayMode())
         {
-            if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-            {
-                ImGui::SetWindowFocus();
-            }
+            ImGui::SeparatorText("Playing");
+            ImGui::Text("Frame count: %d", gameTimer->GetFrameCount());
+            ImGui::SameLine();
+            ImGui::Text("Game time: %.3f", gameTimer->GetTime() / 1000.0f);
+            ImGui::SameLine();
+            ImGui::Text("Delta time: %.3f", gameTimer->GetDeltaTime() / 1000.0f);
+        }
 
-            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
-                ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows))
-            {
-                doInputs = true;
-            }
-            else
-            {
-                doInputs = false;
-            }
+        ImGui::EndChild();
+    }
 
-            const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
+    if (ImGui::BeginChild(
+            "##SceneChild", ImVec2(0.f, 0.f), NULL, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar
+        ))
+    {
+        // right click focus window
+        if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        {
+            ImGui::SetWindowFocus();
+        }
+
+        // do inputs only if window is focused
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+            ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows))
+        {
+            doInputs = true;
+        }
+        else
+        {
+            doInputs = false;
+        }
+
+        const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
 
         ImGui::SetCursorPos(ImVec2(0.f, 0.f));
 
-            ImGui::Image(
-                (ImTextureID)framebuffer->GetTextureID(),
-                ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()), ImVec2(0.f, 1.f),
-                ImVec2(1.f, 0.f)
-            );
+        ImGui::Image(
+            (ImTextureID)framebuffer->GetTextureID(),
+            ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()), ImVec2(0.f, 1.f),
+            ImVec2(1.f, 0.f)
+        );
 
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist(); // ImGui::GetWindowDrawList()
 
-            float width  = ImGui::GetWindowWidth();
-            float height = ImGui::GetWindowHeight();
-            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
+        ImGuizmo::SetRect(
+            ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight()
+        );
 
         ImVec2 windowSize = ImGui::GetWindowSize();
         if (framebuffer->GetTextureWidth() != windowSize.x || framebuffer->GetTextureHeight() != windowSize.y)
