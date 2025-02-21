@@ -109,21 +109,16 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
 
     // Serialize Lights Config
     LightsConfig* lightConfig = App->GetSceneModule()->GetLightsConfig();
-    float3 ambientColor       = lightConfig->GetAmbientColor();
 
-    rapidjson::Value lights(rapidjson::kObjectType);
+     if (lightConfig != nullptr)
+     {
+        rapidjson::Value lights(rapidjson::kObjectType);
 
-    rapidjson::Value ambientColorArray(rapidjson::kArrayType);
-    ambientColorArray.PushBack(ambientColor.x, allocator)
-        .PushBack(ambientColor.y, allocator)
-        .PushBack(ambientColor.z, allocator);
+        lightConfig->SaveData(lights, allocator);
 
-    // Add to Light
-    lights.AddMember("Ambient Color", ambientColorArray, allocator);
-    lights.AddMember("Ambient Intensity", lightConfig->GetAmbientIntensity(), allocator);
-    lights.AddMember("Skybox UID", lightConfig->getSkyboxUID(), allocator);
+        doc.AddMember("Lights Config", lights, allocator);
 
-    doc.AddMember("Lights Config", lights, allocator);
+     } else GLOG("Light Config not found");
 
     // Save file like JSON
     rapidjson::StringBuffer buffer;
@@ -232,13 +227,7 @@ bool LibraryModule::LoadScene(const char* path, bool reload)
     if (doc.HasMember("Lights Config") && doc["Lights Config"].IsObject())
     {
         LightsConfig* lightConfig           = App->GetSceneModule()->GetLightsConfig();
-        rapidjson::Value& lights            = doc["Lights Config"];
-        rapidjson::Value& ambientColorArray = lights["Ambient Color"];
-        lightConfig->SetAmbientColor(
-            {ambientColorArray[0].GetFloat(), ambientColorArray[1].GetFloat(), ambientColorArray[2].GetFloat()}
-        );
-        lightConfig->SetAmbientIntensity(lights["Ambient Intensity"].GetFloat());
-        lightConfig->LoadData(lights["Skybox UID"].GetUint64());
+        lightConfig->LoadData(doc["Lights Config"]);
     }
 
     GLOG("%s scene loaded", name.c_str());

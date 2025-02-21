@@ -8,6 +8,7 @@
 #include "Math/float4.h"
 
 #include <memory>
+#include <Libs/rapidjson/document.h>
 
 namespace Math
 {
@@ -86,12 +87,11 @@ class LightsConfig
     void RemovePointLight(UID pointUid);
     void RemoveSpotLight(UID spotUid);
 
-    void LoadData(UID cubemapUID);
+    void SaveData(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
+    void LoadData(rapidjson::Value& lights);
 
     float3 GetAmbientColor() { return ambientColor; };
     float GetAmbientIntensity() { return ambientIntensity; };
-    void SetAmbientColor(float3 ambientColor) { this->ambientColor = ambientColor; };
-    void SetAmbientIntensity(float ambientIntensity) { this->ambientIntensity = ambientIntensity; };
     UID getSkyboxUID() { return skyboxUID; };
 
   private:
