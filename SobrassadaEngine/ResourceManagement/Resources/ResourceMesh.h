@@ -6,12 +6,6 @@
 #include <Geometry/AABB.h>
 
 class ResourceMaterial;
-namespace tinygltf
-{
-    class Model;
-    struct Mesh;
-    struct Primitive;
-} // namespace tinygltf
 
 class ResourceMesh : public Resource
 {
@@ -23,9 +17,6 @@ class ResourceMesh : public Resource
 
     void LoadData(unsigned int mode, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, float4x4& transform);
 
-    void LoadVBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
-    void LoadEBO(const tinygltf::Model& inModel, const tinygltf::Mesh& inMesh, const tinygltf::Primitive& inPrimitive);
-    void CreateVAO();
 
     int GetIndexCount() const { return indexCount; }
 

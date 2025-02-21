@@ -110,13 +110,7 @@ void MeshComponent::AddMesh(UID resource, bool reloadAABB)
         //check if aabb has transform applied
         localComponentAABB = AABB(currentMesh->GetAABB());
 
-        modelMatrix = float4x4::FromTRS(
-            globalTransform.position,
-            Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z),
-            globalTransform.scale
-        );
-
-        modelMatrix = modelMatrix * currentMesh->GetTransform();
+        modelMatrix = currentMesh->GetTransform();
 
         if (reloadAABB)
         {
