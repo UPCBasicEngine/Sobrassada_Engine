@@ -38,8 +38,14 @@ namespace MeshImporter
 
             if (posAcc.minValues.size() == 3 && posAcc.maxValues.size() == 3)
             {
-                minPos = float3(posAcc.minValues[0], posAcc.minValues[1], posAcc.minValues[2]);
-                maxPos = float3(posAcc.maxValues[0], posAcc.maxValues[1], posAcc.maxValues[2]);
+                minPos = float3(
+                    static_cast<float>(posAcc.minValues[0]), static_cast<float>(posAcc.minValues[1]),
+                    static_cast<float>(posAcc.minValues[2])
+                );
+                maxPos = float3(
+                    static_cast<float>(posAcc.maxValues[0]), static_cast<float>(posAcc.maxValues[1]),
+                    static_cast<float>(posAcc.maxValues[2])
+                );
             }
 
             const auto& itNormal              = primitive.attributes.find("NORMAL");
@@ -217,13 +223,13 @@ namespace MeshImporter
         cursor                    += sizeof(float3);
 
         UID meshUID                = GenerateUID();
-        
-        std::string savePath = MESHES_PATH + std::string("Mesh") + MESH_EXTENSION;
-        UID finalMeshUID = App->GetLibraryModule()->AssignFiletypeUID(meshUID, savePath);
-        std::string fileName = FileSystem::GetFileNameWithoutExtension(filePath);
 
-        savePath = MESHES_PATH + std::to_string(finalMeshUID) + MESH_EXTENSION;
-        
+        std::string savePath       = MESHES_PATH + std::string("Mesh") + MESH_EXTENSION;
+        UID finalMeshUID           = App->GetLibraryModule()->AssignFiletypeUID(meshUID, savePath);
+        std::string fileName       = FileSystem::GetFileNameWithoutExtension(filePath);
+
+        savePath                   = MESHES_PATH + std::to_string(finalMeshUID) + MESH_EXTENSION;
+
         unsigned int bytesWritten  = (unsigned int)FileSystem::Save(savePath.c_str(), fileBuffer, size, true);
 
         delete[] fileBuffer;

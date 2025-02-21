@@ -26,6 +26,9 @@ class Scene
 
     update_status Render(float deltaTime);
     update_status RenderEditor(float deltaTime);
+    void RenderScene();
+    void RenderSelectedGameObjectUI();
+
 
     void RenderHierarchyUI(bool& hierarchyMenu);
 

@@ -50,7 +50,11 @@ void RootComponent::RenderComponentEditor()
 {
     Component* selectedComponent = App->GetSceneModule()->GetComponentByUID(selectedUID);
     
-    ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu);    
+    if (!ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu))
+    {
+        ImGui::End();
+        return;
+    }
 
     //ImGui::InputText(name, test, 10, ImGuiInputTextFlags_None);
     ImGui::Text(name);

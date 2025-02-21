@@ -100,38 +100,52 @@ update_status Scene::Render(float deltaTime)
 
 update_status Scene::RenderEditor(float deltaTime)
 {
+    RenderScene();
 
-    if (ImGui::Begin(sceneName.c_str()))
+    RenderSelectedGameObjectUI();
+
+    lightsConfig->EditorParams();
+
+    return UPDATE_CONTINUE;
+}
+
+void Scene::RenderScene()
+{
+    if (!ImGui::Begin(sceneName.c_str()))
     {
-        if (ImGui::BeginChild("##SceneChildToolBar", ImVec2(0, 70)))
+        ImGui::End();
+        return;
+    }
+
+    if (ImGui::BeginChild("##SceneChildToolBar", ImVec2(0, 70)))
+    {
+        GameTimer* gameTimer = App->GetGameTimer();
+
+        float timeScale      = gameTimer->GetTimeScale();
+
+        if (ImGui::Button("Play"))
         {
-            GameTimer* gameTimer = App->GetGameTimer();
-
-            float timeScale      = gameTimer->GetTimeScale();
-
-            if (ImGui::Button("Play"))
-            {
-                App->GetSceneModule()->SwitchPlayModeStateTo(true);
-                gameTimer->Start();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Pause"))
-            {
-                gameTimer->TogglePause();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Step"))
-            {
-                gameTimer->Step();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Stop"))
-            {
-                App->GetSceneModule()->SwitchPlayModeStateTo(false);
-                gameTimer->Reset();
-            }
-            ImGui::SameLine();
-            if (ImGui::SliderFloat("Time scale", &timeScale, 0, 4)) gameTimer->SetTimeScale(timeScale);
+            App->GetSceneModule()->SwitchPlayModeStateTo(true);
+            gameTimer->Start();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Pause"))
+        {
+            gameTimer->TogglePause();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Step"))
+        {
+            gameTimer->Step();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Stop"))
+        {
+            App->GetSceneModule()->SwitchPlayModeStateTo(false);
+            gameTimer->Reset();
+        }
+        ImGui::SameLine();
+        if (ImGui::SliderFloat("Time scale", &timeScale, 0, 4)) gameTimer->SetTimeScale(timeScale);
 
             if (App->GetSceneModule()->IsInPlayMode())
             {
@@ -167,7 +181,7 @@ update_status Scene::RenderEditor(float deltaTime)
 
             const auto& framebuffer = App->GetOpenGLModule()->GetFramebuffer();
 
-            ImGui::SetCursorPos(ImVec2(0.f, 0.f));
+        ImGui::SetCursorPos(ImVec2(0.f, 0.f));
 
             ImGui::Image(
                 (ImTextureID)framebuffer->GetTextureID(),
@@ -175,40 +189,42 @@ update_status Scene::RenderEditor(float deltaTime)
                 ImVec2(1.f, 0.f)
             );
 
-            ImGuizmo::SetOrthographic(false);
-            ImGuizmo::SetDrawlist(); // ImGui::GetWindowDrawList()
+        ImGuizmo::SetOrthographic(false);
+        ImGuizmo::SetDrawlist(); // ImGui::GetWindowDrawList()
 
             float width  = ImGui::GetWindowWidth();
             float height = ImGui::GetWindowHeight();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
 
-            ImVec2 windowSize = ImGui::GetWindowSize();
-            if (framebuffer->GetTextureWidth() != windowSize.x || framebuffer->GetTextureHeight() != windowSize.y)
-            {
-                float aspectRatio = windowSize.y / windowSize.x;
-                App->GetCameraModule()->SetAspectRatio(aspectRatio);
-                framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
-            }
-
-            ImGui::EndChild();
+        ImVec2 windowSize = ImGui::GetWindowSize();
+        if (framebuffer->GetTextureWidth() != windowSize.x || framebuffer->GetTextureHeight() != windowSize.y)
+        {
+            float aspectRatio = windowSize.y / windowSize.x;
+            App->GetCameraModule()->SetAspectRatio(aspectRatio);
+            framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
         }
-        ImGui::End();
-    }
 
+        ImGui::EndChild();
+    }
+    ImGui::End();
+}
+
+void Scene::RenderSelectedGameObjectUI()
+{
     GameObject* selectedGameObject = GetSeletedGameObject();
     if (selectedGameObject != nullptr)
     {
         selectedGameObject->RenderEditor();
     }
-
-    lightsConfig->EditorParams();
-
-    return UPDATE_CONTINUE;
 }
 
 void Scene::RenderHierarchyUI(bool& hierarchyMenu)
 {
-    ImGui::Begin("Hierarchy", &hierarchyMenu);
+    if (!ImGui::Begin("Hierarchy", &hierarchyMenu))
+    {
+        ImGui::End();
+        return;
+    }
 
     if (ImGui::Button("Add GameObject"))
     {

@@ -120,7 +120,7 @@ namespace TextureImporter
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, outMetadata.mipLevels - 1);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, static_cast<GLint>(outMetadata.mipLevels - 1));
 
         unsigned int internalFormat;
         unsigned int format;
@@ -151,19 +151,19 @@ namespace TextureImporter
             assert(false && "Unsupported format");
         }
 
-        int maxMipmapLevel = outMetadata.mipLevels - 1;
+        int maxMipmapLevel = static_cast<int>(outMetadata.mipLevels - 1);
         if (outMetadata.mipLevels > 1)
         {
             for (size_t i = 0; i < outMetadata.mipLevels; ++i)
             {
                 const DirectX::Image* mip = outImage.GetImage(i, 0, 0);
-                glTexImage2D(GL_TEXTURE_2D, i, internalFormat, mip->width, mip->height, 0, format, type, mip->pixels);
+                glTexImage2D(GL_TEXTURE_2D, static_cast<GLint>(i), internalFormat, static_cast<GLsizei>(mip->width), static_cast<GLsizei>(mip->height), 0, format, type, mip->pixels);
 		    }
         }
         else
         {
             const DirectX::Image* baseImage = outImage.GetImage(0, 0, 0);
-            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, outMetadata.width, outMetadata.height, 0, format, type, baseImage->pixels);
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, static_cast<GLsizei>(outMetadata.width), static_cast<GLsizei>(outMetadata.height), 0, format, type, baseImage->pixels);
             glGenerateMipmap(GL_TEXTURE_2D);
         }
 
