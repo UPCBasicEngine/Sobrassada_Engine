@@ -90,10 +90,6 @@ class LightsConfig
     void SaveData(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
     void LoadData(rapidjson::Value& lights);
 
-    float3 GetAmbientColor() { return ambientColor; };
-    float GetAmbientIntensity() { return ambientIntensity; };
-    UID getSkyboxUID() { return skyboxUID; };
-
   private:
     unsigned int LoadSkyboxTexture(UID cubemapUID);
     void SetDirectionalLightShaderData() const;
