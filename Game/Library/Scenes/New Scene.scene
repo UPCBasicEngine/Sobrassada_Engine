@@ -1,190 +1,38 @@
 {
     "Scene": {
-        "UID": 10988169598221711783,
+        "UID": 5485676368828368515,
         "Name": "New Scene",
-        "RootGameObject": 10987272541105985597,
+        "RootGameObject": 5463249872215737103,
         "GameObjects": [
             {
-                "UID": 11607489165223026472,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 2702648794
-            },
-            {
-                "UID": 16264487729719599217,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 3786871146
-            },
-            {
-                "UID": 10987272541105985597,
+                "UID": 5463249872215737103,
                 "ParentUID": 0,
                 "Name": "SceneModule GameObject",
                 "Children": [
-                    16264487729719599217,
-                    2857799073844196289,
-                    10283815253906147756,
-                    11718480963791623212,
-                    16722136785571894554,
-                    909146227245745041,
-                    6724342114879805246,
-                    10431577138413221502,
-                    3969724851848167192,
-                    56700410175137816,
-                    16403395743517970248,
-                    11028163903949062387,
-                    6180720155454742891,
-                    11607489165223026472
+                    17826196018773634275
                 ],
-                "RootComponentUID": 1769820811
+                "RootComponentUID": 787021939
             },
             {
-                "UID": 2857799073844196289,
-                "ParentUID": 10987272541105985597,
+                "UID": 17826196018773634275,
+                "ParentUID": 5463249872215737103,
                 "Name": "new Game Object",
                 "Children": [],
-                "RootComponentUID": 665452818
-            },
-            {
-                "UID": 909146227245745041,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 211746722
-            },
-            {
-                "UID": 16722136785571894554,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 3893495492
-            },
-            {
-                "UID": 11718480963791623212,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 2728421465
-            },
-            {
-                "UID": 10283815253906147756,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 2394387324
-            },
-            {
-                "UID": 6724342114879805246,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 1565702523
-            },
-            {
-                "UID": 10431577138413221502,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 2428790819
-            },
-            {
-                "UID": 56700410175137816,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 13271213
-            },
-            {
-                "UID": 3969724851848167192,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 924273592
-            },
-            {
-                "UID": 16403395743517970248,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 3819213189
-            },
-            {
-                "UID": 11028163903949062387,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 2567694500
-            },
-            {
-                "UID": 6180720155454742891,
-                "ParentUID": 10987272541105985597,
-                "Name": "new Game Object",
-                "Children": [],
-                "RootComponentUID": 1439061052
+                "RootComponentUID": 4151459386
             }
         ],
         "Components": [
             {
-                "UID": 13271213,
-                "ParentUID": 56700410175137816,
-                "RootUID": 13271213,
+                "UID": 787021939,
+                "ParentUID": 5463249872215737103,
+                "RootUID": 787021939,
                 "Type": 1,
                 "LocalTransform": [
-                    -24.256696701049805,
                     0.0,
-                    25.440534591674805,
+                    0.0,
+                    0.0,
                     0.0,
                     -0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [
-                    2035996057
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 211746722,
-                "ParentUID": 909146227245745041,
-                "RootUID": 211746722,
-                "Type": 1,
-                "LocalTransform": [
-                    -14.757408142089844,
-                    0.0,
-                    -1.9349963665008545,
-                    7.160824679885991e-7,
-                    0.10184551775455475,
-                    7.446593119908584e-9,
-                    0.9999998807907104,
-                    1.0,
-                    0.9999998807907104
-                ],
-                "Children": [
-                    3709194546
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 486991295,
-                "ParentUID": 924273592,
-                "RootUID": 924273592,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
                     0.0,
                     1.0,
                     1.0,
@@ -192,84 +40,14 @@
                 ],
                 "Children": [],
                 "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1335093085485705,
-                "Material": 1221007632720064
-            },
-            {
-                "UID": 665452818,
-                "ParentUID": 2857799073844196289,
-                "RootUID": 665452818,
-                "Type": 1,
-                "LocalTransform": [
-                    -24.358274459838867,
-                    0.0,
-                    25.904104232788086,
-                    0.0,
-                    -0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [
-                    2683950158
-                ],
-                "Enabled": true,
                 "Name": "Root component",
                 "Type": 1,
                 "Mobility": 1
             },
             {
-                "UID": 814792998,
-                "ParentUID": 3893495492,
-                "RootUID": 3893495492,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1399670722069357,
-                "Material": 1206999662538408
-            },
-            {
-                "UID": 924273592,
-                "ParentUID": 3969724851848167192,
-                "RootUID": 924273592,
-                "Type": 1,
-                "LocalTransform": [
-                    -3.6629085540771484,
-                    0.0,
-                    18.89681625366211,
-                    0.0,
-                    -0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [
-                    486991295
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 1026825149,
-                "ParentUID": 2394387324,
-                "RootUID": 2394387324,
+                "UID": 2808859415,
+                "ParentUID": 4151459386,
+                "RootUID": 4151459386,
                 "Type": 2,
                 "LocalTransform": [
                     0.0,
@@ -289,55 +67,9 @@
                 "Material": 1291457995082890
             },
             {
-                "UID": 1439061052,
-                "ParentUID": 6180720155454742891,
-                "RootUID": 1439061052,
-                "Type": 1,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 1565702523,
-                "ParentUID": 6724342114879805246,
-                "RootUID": 1565702523,
-                "Type": 1,
-                "LocalTransform": [
-                    -12.305632591247559,
-                    1.258137822151184,
-                    -9.416438102722168,
-                    -0.6658169031143188,
-                    -1.0289976596832275,
-                    5.020751814299729e-9,
-                    1.0,
-                    1.0,
-                    1.0000001192092896
-                ],
-                "Children": [
-                    3457617144
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 1769820811,
-                "ParentUID": 10987272541105985597,
-                "RootUID": 1769820811,
+                "UID": 4151459386,
+                "ParentUID": 17826196018773634275,
+                "RootUID": 4151459386,
                 "Type": 1,
                 "LocalTransform": [
                     0.0,
@@ -350,370 +82,8 @@
                     1.0,
                     1.0
                 ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 1951364160,
-                "ParentUID": 2428790819,
-                "RootUID": 2428790819,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1352358048786012,
-                "Material": 1289788650159993
-            },
-            {
-                "UID": 2035996057,
-                "ParentUID": 13271213,
-                "RootUID": 13271213,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1341344751864117,
-                "Material": 1223585337969737
-            },
-            {
-                "UID": 2394387324,
-                "ParentUID": 10283815253906147756,
-                "RootUID": 2394387324,
-                "Type": 1,
-                "LocalTransform": [
-                    -18.147335052490234,
-                    0.0,
-                    22.167552947998047,
-                    0.0,
-                    -0.7683218717575073,
-                    0.0,
-                    0.9999998807907104,
-                    1.0,
-                    0.9999998807907104
-                ],
                 "Children": [
-                    1026825149
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 2428790819,
-                "ParentUID": 10431577138413221502,
-                "RootUID": 2428790819,
-                "Type": 1,
-                "LocalTransform": [
-                    0.0643928050994873,
-                    4.5932769775390625,
-                    -16.7961368560791,
-                    1.1463972330093384,
-                    -0.0,
-                    0.0,
-                    2.113858938217163,
-                    1.0,
-                    1.6167584657669067
-                ],
-                "Children": [
-                    1951364160
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 2567694500,
-                "ParentUID": 11028163903949062387,
-                "RootUID": 2567694500,
-                "Type": 1,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 2683950158,
-                "ParentUID": 665452818,
-                "RootUID": 665452818,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1320758647645443,
-                "Material": 1219145535970458
-            },
-            {
-                "UID": 2702648794,
-                "ParentUID": 11607489165223026472,
-                "RootUID": 2702648794,
-                "Type": 1,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 2728421465,
-                "ParentUID": 11718480963791623212,
-                "RootUID": 2728421465,
-                "Type": 1,
-                "LocalTransform": [
-                    12.345685958862305,
-                    0.000005404724106483627,
-                    13.824897766113281,
-                    0.0,
-                    -0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [
-                    3288601372
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 3288601372,
-                "ParentUID": 2728421465,
-                "RootUID": 2728421465,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1314547413484204,
-                "Material": 1240367201223857
-            },
-            {
-                "UID": 3322004012,
-                "ParentUID": 3786871146,
-                "RootUID": 3786871146,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1352093639739824,
-                "Material": 1288801174897226
-            },
-            {
-                "UID": 3457617144,
-                "ParentUID": 1565702523,
-                "RootUID": 1565702523,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1314899750358006,
-                "Material": 1206439936493840
-            },
-            {
-                "UID": 3524170338,
-                "ParentUID": 3819213189,
-                "RootUID": 3819213189,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1326677881411665,
-                "Material": 1252985570790255
-            },
-            {
-                "UID": 3709194546,
-                "ParentUID": 211746722,
-                "RootUID": 211746722,
-                "Type": 2,
-                "LocalTransform": [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [],
-                "Enabled": true,
-                "Name": "Mesh component",
-                "Mesh": 1386293462739533,
-                "Material": 1242687132651381
-            },
-            {
-                "UID": 3786871146,
-                "ParentUID": 16264487729719599217,
-                "RootUID": 3786871146,
-                "Type": 1,
-                "LocalTransform": [
-                    -2.565138816833496,
-                    -0.000003814697265625,
-                    -0.8381857872009277,
-                    0.0,
-                    -0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [
-                    3322004012
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 3819213189,
-                "ParentUID": 16403395743517970248,
-                "RootUID": 3819213189,
-                "Type": 1,
-                "LocalTransform": [
-                    -0.8161455392837524,
-                    0.0,
-                    12.520891189575195,
-                    -3.141592502593994,
-                    0.05050719156861305,
-                    -3.1415927410125732,
-                    0.9999804496765137,
-                    1.0,
-                    0.9999804496765137
-                ],
-                "Children": [
-                    3524170338
-                ],
-                "Enabled": true,
-                "Name": "Root component",
-                "Type": 1,
-                "Mobility": 1
-            },
-            {
-                "UID": 3893495492,
-                "ParentUID": 16722136785571894554,
-                "RootUID": 3893495492,
-                "Type": 1,
-                "LocalTransform": [
-                    -7.776184558868408,
-                    7.985498428344727,
-                    28.510787963867188,
-                    0.0,
-                    -0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
-                "Children": [
-                    814792998
+                    2808859415
                 ],
                 "Enabled": true,
                 "Name": "Root component",
@@ -721,5 +91,14 @@
                 "Mobility": 1
             }
         ]
+    },
+    "Lights Config": {
+        "Ambient Color": [
+            0.5619999766349792,
+            0.6460000276565552,
+            0.0
+        ],
+        "Ambient Intensity": 0.4620000123977661,
+        "Skybox UID": 1170799310640544
     }
 }
