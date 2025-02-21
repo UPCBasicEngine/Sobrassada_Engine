@@ -19,6 +19,8 @@ MeshComponent::MeshComponent(
 {
 }
 
+
+
 MeshComponent::MeshComponent(const rapidjson::Value& initialState) : Component(initialState)
 {
     if (initialState.HasMember("Material"))
@@ -90,8 +92,10 @@ void MeshComponent::Render()
     if (enabled && currentMesh != nullptr)
     {
         unsigned int cameraUBO = App->GetCameraModule()->GetUbo();
-
-        currentMesh->Render(App->GetResourcesModule()->GetProgram(), modelMatrix, cameraUBO, currentMaterial);
+        float4x4 localTransform2 = float4x4::identity;
+        localTransform2 = float4x4::FromTRS(localTransform.position, Quat::FromEulerXYZ(localTransform.rotation.x, localTransform.rotation.y, localTransform.rotation.z), localTransform.scale);
+        float4x4 modelMatrix2 = modelMatrix + localTransform2;
+        currentMesh->Render(App->GetResourcesModule()->GetProgram(), modelMatrix2, cameraUBO, currentMaterial);
     }
     Component::Render();
 }
