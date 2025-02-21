@@ -9,7 +9,7 @@ EngineTimer::~EngineTimer() {}
 
 void EngineTimer::Start()
 {
-    startTime = SDL_GetTicks();
+    startTime = static_cast<float>(SDL_GetTicks());
     isEnabled = true;
 }
 
