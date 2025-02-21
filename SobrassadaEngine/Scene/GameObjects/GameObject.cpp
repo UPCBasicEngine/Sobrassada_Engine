@@ -164,30 +164,32 @@ void GameObject::HandleNodeClick(UID &selectedGameObjectUUID)
     }
 
     // Drag and Drop
-    if (ImGui::BeginDragDropSource())
+
+    if (uuid != App->GetSceneModule()->GetGameObjectRootUID() && ImGui::BeginDragDropSource())
     {
         ImGui::SetDragDropPayload("DRAG_DROP_GAMEOBJECT", &uuid, sizeof(UID));
         ImGui::Text("Dragging %s", name.c_str());
         ImGui::EndDragDropSource();
     }
-
+    
     if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DRAG_DROP_GAMEOBJECT"))
         {
-            UID draggedUUID = *reinterpret_cast<const UID *>(payload->Data);
+            UID draggedUUID = *reinterpret_cast<const UID*>(payload->Data);
             if (draggedUUID != uuid)
             {
                 if (UpdateGameObjectHierarchy(draggedUUID, uuid))
                 {
                     ComponentGlobalTransformUpdated();
-                    PassAABBUpdateToParent();//TODO: check if it works
+                    PassAABBUpdateToParent(); // TODO: check if it works
                 }
             }
         }
-        
+
         ImGui::EndDragDropTarget();
     }
+    
 }
 
 void GameObject::RenderContextMenu() 
