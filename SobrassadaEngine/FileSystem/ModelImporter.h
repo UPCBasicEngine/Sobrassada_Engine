@@ -4,7 +4,7 @@
 #include "Model.h"
 #include "ResourceManagement/Resources/ResourceModel.h"
 
-
+#include "Math/float4x4.h"
 #include "tiny_gltf.h"
 
 class ResourceModel;
@@ -20,4 +20,5 @@ namespace ModelImporter
         const std::vector<tinygltf::Node>& nodesList, int nodeId, int parentId,
         const std::vector<std::vector<std::pair<UID, UID>>>& meshesUIDs, std::vector<NodeData>& outNodes
     );
+    const float4x4& GetNodeTransform(const tinygltf::Node& node);
 }; // namespace ModelImporter

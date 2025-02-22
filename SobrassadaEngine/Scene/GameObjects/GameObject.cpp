@@ -5,6 +5,8 @@
 #include "Root/RootComponent.h"
 #include "SceneModule.h"
 
+#include "DebugDrawModule.h"
+
 #include "imgui.h"
 
 #include <Algorithm/Random/LCG.h>
@@ -227,6 +229,8 @@ void GameObject::RenderContextMenu()
             //PassAABBUpdateToParent(); //TODO: check if it works
         }
 
+        if (ImGui::Checkbox("Draw nodes", &drawNodes)) OnDrawConnectionsToggle();
+
         ImGui::EndPopup();
     }
 }
@@ -303,6 +307,11 @@ void GameObject::RenderEditor()
     }
 }
 
+void GameObject::DrawGizmos()
+{
+    if (drawNodes) DrawNodes();
+}
+
 void GameObject::PassAABBUpdateToParent()
 {
     // TODO Update AABBs further up the gameObject tree
@@ -359,4 +368,26 @@ const Transform& GameObject::GetParentGlobalTransform()
         return parent->GetGlobalTransform();
     }
     return Transform::identity;
+}
+
+void GameObject::DrawNodes()
+{
+    DebugDrawModule* debug = App->GetDebugDrawModule();           
+
+    debug->DrawLine(
+        GetGlobalTransform().position, GetParentGlobalTransform().position - GetGlobalTransform().position,
+        GetGlobalTransform().position.Distance(GetParentGlobalTransform().position), float3(1, 1, 1), false
+    );
+
+    debug->DrawAxisTriad(float4x4::FromTRS(GetGlobalTransform().position, float4x4::FromEulerXYZ(GetGlobalTransform().rotation.x,GetGlobalTransform().rotation.y, GetGlobalTransform().rotation.z), float3::one), false);
+}
+
+void GameObject::OnDrawConnectionsToggle()
+{
+    for (const UID childUID : children)
+    {
+        GameObject* childObject = App->GetSceneModule()->GetGameObjectByUUID(childUID);
+        childObject->drawNodes = drawNodes;
+        childObject->OnDrawConnectionsToggle();
+    }    
 }

@@ -3,6 +3,8 @@
 #include "Application.h"
 #include "LibraryModule.h"
 
+#include "Math/Quat.h"
+#include "Math/float4x4.h"
 #include "ResourceManagement/Resources/ResourceModel.h"
 
 #include "prettywriter.h"
@@ -145,7 +147,7 @@ namespace ModelImporter
         rapidjson::Value& modelJSON = doc["Model"];
 
         // Scene values
-        UID uid                = modelJSON["UID"].GetUint64();
+        UID uid                     = modelJSON["UID"].GetUint64();
 
         std::vector<NodeData> loadedNodes;
 
@@ -166,7 +168,7 @@ namespace ModelImporter
                 {
                     const rapidjson::Value& initLocalTransform = nodeJSON["Transform"];
 
-                    newNode.transform = Transform(
+                    newNode.transform                          = Transform(
                         float3(
                             initLocalTransform[0].GetFloat(), initLocalTransform[1].GetFloat(),
                             initLocalTransform[2].GetFloat()
@@ -201,7 +203,6 @@ namespace ModelImporter
         ResourceModel* resourceModel = new ResourceModel(uid, FileSystem::GetFileNameWithoutExtension(filePath));
         resourceModel->SetModelData(Model(uid, loadedNodes));
 
-
         return resourceModel;
     }
 
@@ -213,10 +214,12 @@ namespace ModelImporter
         // Fill node data
         const tinygltf::Node& nodeData = nodesList[nodeId];
         NodeData newNode;
-        newNode.name        = nodeData.name;
+        newNode.name               = nodeData.name;
 
-        // newNode.transform = getTransformSomehow
-        newNode.parentIndex = parentId;
+        float4x4 rawTransform      = GetNodeTransform(nodeData);
+        newNode.transform.position = rawTransform.TranslatePart();
+        newNode.transform.rotation = rawTransform.RotatePart().ToEulerXYZ();
+        newNode.parentIndex        = parentId;
 
         // Get reference to Mesh and Material UIDs
         if (nodeData.mesh > -1)
@@ -231,5 +234,36 @@ namespace ModelImporter
         {
             FillNodes(nodesList, id, nodeId, meshesUIDs, outNodes);
         }
+    }
+
+    const float4x4& GetNodeTransform(const tinygltf::Node& node)
+    {
+
+        if (!node.matrix.empty())
+        {
+            // glTF stores matrices in COLUMN-MAJOR order, same as MathGeoLib
+            return float4x4(
+                node.matrix[0], node.matrix[1], node.matrix[2], node.matrix[3], node.matrix[4], node.matrix[5],
+                node.matrix[6], node.matrix[7], node.matrix[8], node.matrix[9], node.matrix[10], node.matrix[11],
+                node.matrix[12], node.matrix[13], node.matrix[14], node.matrix[15]
+            );
+        }
+
+        // Default values
+        float3 translation = float3::zero;
+        Quat rotation      = Quat::identity;
+        float3 scale       = float3::one;
+
+        if (!node.translation.empty())
+            translation = float3(node.translation[0], node.translation[1], node.translation[2]);
+
+        if (!node.rotation.empty())
+            rotation = Quat(
+                node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]
+            ); // glTF stores as [x, y, z, w]
+
+        if (!node.scale.empty()) scale = float3(node.scale[0], node.scale[1], node.scale[2]);
+
+        return float4x4::FromTRS(translation, rotation, scale);
     }
 } // namespace ModelImporter

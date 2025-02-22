@@ -59,6 +59,7 @@ public:
     
     void Render();
     void RenderEditor();
+    void DrawGizmos();
 
     void PassAABBUpdateToParent() override;
     void ComponentGlobalTransformUpdated() override;
@@ -67,6 +68,10 @@ public:
     const Transform& GetParentGlobalTransform() override;
 
     inline static UID currentRenamingUID = INVALID_UUID;
+
+private:
+    void DrawNodes();
+    void OnDrawConnectionsToggle();
 
 private:
 
@@ -82,5 +87,7 @@ private:
 
     bool isRenaming = false;
     char renameBuffer[128];
+
+    bool drawNodes = false;
 
 };

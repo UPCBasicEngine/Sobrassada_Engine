@@ -101,6 +101,11 @@ update_status Scene::Render(float deltaTime)
         }
     }
 
+    for (const auto& gameObject : gameObjectsContainer)
+    {
+        gameObject.second->DrawGizmos();
+    }
+
     return UPDATE_CONTINUE;
 }
 
@@ -349,13 +354,11 @@ void Scene::LoadModel(const UID modelUID)
         const Model& model = newModel->GetModelData();
         const std::vector<NodeData>& nodes = model.GetNodes();
 
-        GameObject* object = new GameObject(nodes[0].name);
-        object->CreateRootComponent();
+        GameObject* object = new GameObject(GetGameObjectRootUID() , nodes[0].name);
         object->GetRootComponent()->SetLocalTransform(nodes[0].transform);
 
         // Add the gameObject to 
-        GameObject* rootObject = GetGameObjectByUUID(GetGameObjectRootUID());
-        rootObject->AddGameObject(object->GetUID());
+        GetGameObjectByUUID(GetGameObjectRootUID())->AddGameObject(object->GetUID());
         AddGameObject(object->GetUID(), object);
 
         std::vector<GameObject*> gameObjectsArray;
@@ -391,18 +394,6 @@ void Scene::LoadModel(const UID modelUID)
             AddGameObject(gameObject->GetUID(), gameObject);
             gameObject->PassAABBUpdateToParent();
         }
-
-        std::unordered_map<UID, GameObject*> loadedGameObjects;
-
-        for (const auto& gameObjectPtr : gameObjectsArray)
-        {
-            loadedGameObjects.insert({gameObjectPtr->GetUID(), gameObjectPtr});
-        }
-
-
-        // Pillar resource Model i model de dins
-
-        // Per cada node carregar gameObject -> Si té mesh assignarli la mesh i material corresponents
     }
 }
 
