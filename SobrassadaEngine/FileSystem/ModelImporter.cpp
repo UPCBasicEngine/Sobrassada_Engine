@@ -105,8 +105,6 @@ namespace ModelImporter
             return 0;
         }
 
-        GLOG("%s saved as model", name.c_str());
-
         App->GetLibraryModule()->AddModel(finalModelUID, name);
         App->GetLibraryModule()->AddResource(savePath, finalModelUID);
 

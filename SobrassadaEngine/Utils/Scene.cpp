@@ -355,7 +355,7 @@ void Scene::LoadModel(const UID modelUID)
 
         // Add the gameObject to 
         GameObject* rootObject = GetGameObjectByUUID(GetGameObjectRootUID());
-        rootObject->AddChildren(object->GetUID());
+        rootObject->AddGameObject(object->GetUID());
         AddGameObject(object->GetUID(), object);
 
         std::vector<GameObject*> gameObjectsArray;
@@ -378,17 +378,18 @@ void Scene::LoadModel(const UID modelUID)
                             gameObject->GetRootComponent()->GetUID(),
                             gameObject->GetRootComponent()->GetGlobalTransform()
                         ));
-                    meshComponent->AddMesh(mesh.first);
-                    meshComponent->AddMaterial(mesh.second);
-
                     AddComponent(meshComponent->GetUID(), meshComponent);
                     gameObject->GetRootComponent()->AddChildComponent(meshComponent->GetUID());
+
+                    meshComponent->AddMesh(mesh.first, true);
+                    meshComponent->AddMaterial(mesh.second);
+
                 }
             }
             gameObjectsArray.emplace_back(gameObject); 
-            GetGameObjectByUUID(gameObjectsArray[nodes[i].parentIndex]->GetUID())->AddChildren(gameObject->GetUID());
+            GetGameObjectByUUID(gameObjectsArray[nodes[i].parentIndex]->GetUID())->AddGameObject(gameObject->GetUID());
             AddGameObject(gameObject->GetUID(), gameObject);
-
+            gameObject->PassAABBUpdateToParent();
         }
 
         std::unordered_map<UID, GameObject*> loadedGameObjects;
