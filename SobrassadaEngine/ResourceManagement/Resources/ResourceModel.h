@@ -4,13 +4,15 @@
 #include "FileSystem/Model.h"
 #include "Utils/Transform.h"
 
-class ResourceModel : Resource
+class ResourceModel : public Resource
 {
   public:
     ResourceModel(UID uid, const std::string& name);
     ~ResourceModel() override;
 
-    void LoadData(const std::string &name, const Transform &transform, const int parentIndex, const std::vector<std::pair<UID, UID>> &meshes);
+    const Model& GetModelData() const { return modelData; }
+
+    void SetModelData(const Model&& model) { modelData = model; }
 
    private:
     Model modelData;

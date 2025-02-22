@@ -29,16 +29,19 @@ class LibraryModule : public Module
     void AddTexture(UID textureUID, const std::string &ddsPath);
     void AddMesh(UID meshUID, const std::string &matPath);
     void AddMaterial(UID materialUID, const std::string &sobPath);
+    void AddModel(UID modelUID, const std::string &modelPath);
 
     UID GetTextureUID(const std::string &texturePath) const;
     UID GetMeshUID(const std::string &meshPath) const;
     UID GetMaterialUID(const std::string &materialPath) const;
+    UID GetModelUID(const std::string &modelPath) const;
 
     const std::string &GetResourcePath(UID resourceID) const;
 
     const std::unordered_map<std::string, UID> &GetTextureMap() const { return textureMap; }
     const std::unordered_map<std::string, UID> &GetMaterialMap() const { return materialMap; }
     const std::unordered_map<std::string, UID> &GetMeshMap() const { return meshMap; }
+    const std::unordered_map<std::string, UID> &GetModelMap() const { return modelMap; }
 
     void AddResource(const std::string& resourcePath, UID resourceUID);
 
@@ -47,6 +50,7 @@ class LibraryModule : public Module
     std::unordered_map<std::string, UID> textureMap;  // UID -> name.dds
     std::unordered_map<std::string, UID> materialMap; // UID-> name.mat
     std::unordered_map<std::string, UID> meshMap;     // UID-> name.sob
+    std::unordered_map<std::string, UID> modelMap;    // UID-> name.model
 
     // filled on load and import
     std::unordered_map<UID, std::string> resourcePathsMap; // UID -> all resources path

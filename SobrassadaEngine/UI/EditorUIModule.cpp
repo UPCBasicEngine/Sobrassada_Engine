@@ -165,6 +165,8 @@ void EditorUIModule::Draw()
 
     if (load) LoadDialog(load);
 
+    if (loadModel) LoadModelDialog(loadModel);
+
     if (save) SaveDialog(save);
 
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
@@ -181,6 +183,8 @@ void EditorUIModule::MainMenu()
         if (ImGui::MenuItem("Import", "", import)) import = !import;
 
         if (ImGui::MenuItem("Load", "", load)) load = !load;
+
+        if (ImGui::MenuItem("Load Model", "", loadModel)) loadModel = !loadModel;
 
         if (ImGui::MenuItem("Save"))
         {
@@ -298,6 +302,29 @@ void EditorUIModule::LoadDialog(bool &load)
     {
         inputFile = "";
         load      = false;
+    }
+
+    ImGui::End();
+}
+
+void EditorUIModule::LoadModelDialog(bool& loadModel)
+{
+    //ImGui::SetNextWindowSize(ImVec2(width * 0.25f, height * 0.4f), ImGuiCond_FirstUseEver);
+
+    if (!ImGui::Begin("Load Model", &loadModel, ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::End();
+        return;
+    }
+
+    if (ImGui::Button("Select Model"))
+    {
+        ImGui::OpenPopup("model-select");
+    }
+
+    if (ImGui::IsPopupOpen("model-select"))
+    {
+        App->GetSceneModule()->LoadModel(RenderResourceSelectDialog("model-select", App->GetLibraryModule()->GetModelMap()));
     }
 
     ImGui::End();

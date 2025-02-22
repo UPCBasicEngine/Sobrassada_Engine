@@ -5,6 +5,7 @@
 #include "FrustumPlanes.h"
 #include "GameObject.h"
 #include "Octree.h"
+#include "Model.h"
 
 #include "glew.h"
 #include "imgui.h"

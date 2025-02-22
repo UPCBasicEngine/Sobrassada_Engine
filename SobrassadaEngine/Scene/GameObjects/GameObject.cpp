@@ -50,7 +50,7 @@ GameObject::GameObject(const rapidjson::Value& initialState)
 GameObject::~GameObject()
 {
     App->GetSceneModule()->RemoveComponent(rootComponent->GetUID());
-    delete rootComponent;
+    if (rootComponent != nullptr) delete rootComponent;
     rootComponent = nullptr;
 }
 

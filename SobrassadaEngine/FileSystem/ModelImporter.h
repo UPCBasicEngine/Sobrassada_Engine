@@ -2,6 +2,8 @@
 
 #include "FileSystem.h"
 #include "Model.h"
+#include "ResourceManagement/Resources/ResourceModel.h"
+
 
 #include "tiny_gltf.h"
 

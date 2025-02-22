@@ -57,6 +57,8 @@ class Component : public AABBUpdatable
 
     int GetType() const { return type; }
 
+    void SetLocalTransform(const Transform& newTransform);
+
   protected:
 
     RootComponent* GetRootComponent();

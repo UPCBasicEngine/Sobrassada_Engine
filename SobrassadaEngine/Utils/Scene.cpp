@@ -11,6 +11,13 @@
 #include "SceneModule.h"
 #include "Octree.h"
 
+#include "ResourcesModule.h"
+#include "ResourceManagement/Resources/ResourceModel.h"
+#include "ResourceManagement/Resources/Resource.h"
+#include "Scene/Components/Root/RootComponent.h"
+#include "Scene/Components/ComponentUtils.h"
+#include "Scene/Components/Standalone/MeshComponent.h"
+
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "./Libs/ImGuizmo/ImGuizmo.h"
@@ -330,5 +337,71 @@ Component* Scene::GetComponentByUID(uint64_t componentUID)
         return gameComponents[componentUID];
     }
     return nullptr;
+}
+
+void Scene::LoadModel(const UID modelUID)
+{
+    if (modelUID != CONSTANT_EMPTY_UID)
+    {
+        GLOG("Load model %d", modelUID);
+
+        ResourceModel* newModel            = (ResourceModel*)App->GetResourcesModule()->RequestResource(modelUID);
+        const Model& model = newModel->GetModelData();
+        const std::vector<NodeData>& nodes = model.GetNodes();
+
+        GameObject* object = new GameObject(nodes[0].name);
+        object->CreateRootComponent();
+        object->GetRootComponent()->SetLocalTransform(nodes[0].transform);
+
+        // Add the gameObject to 
+        GameObject* rootObject = GetGameObjectByUUID(GetGameObjectRootUID());
+        rootObject->AddChildren(object->GetUID());
+        AddGameObject(object->GetUID(), object);
+
+        std::vector<GameObject*> gameObjectsArray;
+        gameObjectsArray.push_back(object);
+
+        for (int i = 1; i < nodes.size(); ++i)
+        {
+            GameObject* gameObject = new GameObject(gameObjectsArray[nodes[i].parentIndex]->GetUID(), nodes[i].name);
+            gameObject->GetRootComponent()->SetLocalTransform(nodes[i].transform);
+
+            if (nodes[i].meshes.size() > 0)
+            {
+                GLOG("Node %s has %d meshes", nodes[i].name.c_str(), nodes[i].meshes.size());
+
+                for (const auto& mesh : nodes[i].meshes)
+                {
+                    MeshComponent* meshComponent =
+                        reinterpret_cast<MeshComponent*>(ComponentUtils::CreateEmptyComponent(
+                            COMPONENT_MESH, LCG().IntFast(), gameObject->GetRootComponent()->GetUID(),
+                            gameObject->GetRootComponent()->GetUID(),
+                            gameObject->GetRootComponent()->GetGlobalTransform()
+                        ));
+                    meshComponent->AddMesh(mesh.first);
+                    meshComponent->AddMaterial(mesh.second);
+
+                    AddComponent(meshComponent->GetUID(), meshComponent);
+                    gameObject->GetRootComponent()->AddChildComponent(meshComponent->GetUID());
+                }
+            }
+            gameObjectsArray.emplace_back(gameObject); 
+            GetGameObjectByUUID(gameObjectsArray[nodes[i].parentIndex]->GetUID())->AddChildren(gameObject->GetUID());
+            AddGameObject(gameObject->GetUID(), gameObject);
+
+        }
+
+        std::unordered_map<UID, GameObject*> loadedGameObjects;
+
+        for (const auto& gameObjectPtr : gameObjectsArray)
+        {
+            loadedGameObjects.insert({gameObjectPtr->GetUID(), gameObjectPtr});
+        }
+
+
+        // Pillar resource Model i model de dins
+
+        // Per cada node carregar gameObject -> Si té mesh assignarli la mesh i material corresponents
+    }
 }
 

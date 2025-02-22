@@ -66,6 +66,7 @@ class EditorUIModule : public Module
     void ImportDialog(bool &import);
     void GetFilesSorted(const std::string &currentPath, std::vector<std::string> &files);
     void LoadDialog(bool &load);
+    void LoadModelDialog(bool &loadModel);
     void SaveDialog(bool &save);
     void Console(bool &consoleMenu) const;
     void About(bool &aboutMenu) const;
@@ -74,6 +75,7 @@ class EditorUIModule : public Module
     bool consoleMenu            = true;
     bool import             = false;
     bool load               = false;
+    bool loadModel              = false;
     bool save               = false;
     bool loadScene          = false;
     bool aboutMenu          = false;

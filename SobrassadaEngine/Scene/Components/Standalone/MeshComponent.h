@@ -21,10 +21,12 @@ public:
     void Update() override;
     void Render() override;
 
-private:
-    
     void AddMesh(UID resource, bool reloadAABB = true);
     void AddMaterial(UID resource);
+
+private:
+    
+    
 
 private:
 

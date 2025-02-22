@@ -237,6 +237,7 @@ bool LibraryModule::LoadLibraryMaps()
                 {
                 // TODO: Add models
                 case 14:
+                    AddModel(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
                     AddResource(filePath, originalUID);
                     break;
                 case 13:
@@ -307,6 +308,11 @@ void LibraryModule::AddMaterial(UID materialUID, const std::string& matPath)
     materialMap[matPath] = materialUID; // Map the texture UID to its DDS path
 }
 
+void LibraryModule::AddModel(UID modelUID, const std::string& modelPath)
+{
+    modelMap[modelPath] = modelUID;
+}
+
 UID LibraryModule::GetTextureUID(const std::string& texturePath) const
 {
 
@@ -335,6 +341,17 @@ UID LibraryModule::GetMaterialUID(const std::string& materialPath) const
 {
 
     auto it = materialMap.find(materialPath);
+    if (it != materialMap.end())
+    {
+        return it->second;
+    }
+
+    return 0;
+}
+
+UID LibraryModule::GetModelUID(const std::string& modelPath) const
+{
+    auto it = materialMap.find(modelPath);
     if (it != materialMap.end())
     {
         return it->second;

@@ -55,6 +55,8 @@ class Scene
     
     void UpdateSpatialDataStruct();
 
+    void LoadModel(const UID modelUID);
+
   private:
     void CreateSpatialDataStruct();
     void CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects) const;

@@ -9,7 +9,7 @@ struct NodeData
 {
     std::string name;
     Transform transform;
-    int parentId;
+    int parentIndex;
     std::vector<std::pair<UID, UID>> meshes;
 };
 
@@ -17,6 +17,7 @@ class Model
 {
   public:
     Model() = default;
+    Model(const UID id, const std::vector<NodeData>& nodes) : uid(id), nodes(nodes) {};
 
     const std::vector<NodeData>& GetNodes() const { return nodes; }
     size_t GetNodesCount() const { return nodes.size(); }

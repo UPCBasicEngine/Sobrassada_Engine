@@ -40,6 +40,8 @@ class SceneModule : public Module
     void LoadGameObjects(const std::unordered_map<UID, GameObject*>& loadedGameObjects);
     void CloseScene();
 
+    void LoadModel(const UID modelUID) { loadedScene != nullptr ? loadedScene->LoadModel(modelUID) : void(); }
+
     void CheckObjectsToRender();
 	
     void RenderHierarchyUI(bool &hierarchyMenu)const { loadedScene != nullptr ? loadedScene->RenderHierarchyUI(hierarchyMenu) : void(); }
