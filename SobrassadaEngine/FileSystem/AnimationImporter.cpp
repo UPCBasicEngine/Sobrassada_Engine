@@ -18,7 +18,6 @@ namespace AnimationImporter
 
         std::vector<char> buffer;
 
-        // Guarda número de canales
         uint32_t channelCount = static_cast<uint32_t>(animation.channels.size());
         buffer.insert(
             buffer.end(), reinterpret_cast<char*>(&channelCount),
@@ -47,7 +46,7 @@ namespace AnimationImporter
 
             std::string nodeName = model.nodes[channel.target_node].name;
             uint32_t nameSize    = static_cast<uint32_t>(nodeName.size());
-            //GLOG("Writing node name: %s, size = %u", nodeName.c_str(), nameSize);
+            GLOG("Writing node name: %s, size = %u", nodeName.c_str(), nameSize);
             buffer.insert(
                 buffer.end(), reinterpret_cast<char*>(&nameSize), reinterpret_cast<char*>(&nameSize) + sizeof(uint32_t)
             );
@@ -133,7 +132,6 @@ namespace AnimationImporter
 
         for (uint32_t i = 0; i < channelCount; ++i)
         {
-            Channel animChannel;
             uint32_t nameSize;
             memcpy(&nameSize, cursor, sizeof(uint32_t));
             cursor += sizeof(uint32_t);
@@ -151,42 +149,100 @@ namespace AnimationImporter
             memcpy(&keyframeCount, cursor, sizeof(uint32_t));
             cursor                    += sizeof(uint32_t);
 
+            Channel& animChannel        = animation->channels[nodeName];
 
-            animChannel.numPositions   = keyframeCount;
-            animChannel.posTimeStamps  = std::make_unique<float[]>(keyframeCount);
-            memcpy(animChannel.posTimeStamps.get(), cursor, keyframeCount * sizeof(float));
-            cursor                += keyframeCount * sizeof(float);
-
-
-            if(animType == 0) // Translation (float3)
+            if (animType == 0)// Translation (float)
             {
-                animChannel.positions = std::make_unique<float3[]>(keyframeCount);
+                animChannel.numPositions  = keyframeCount;
+                animChannel.posTimeStamps = std::make_unique<float[]>(keyframeCount);
+                memcpy(animChannel.posTimeStamps.get(), cursor, keyframeCount * sizeof(float));
+                cursor += keyframeCount * sizeof(float);
+                
+                animChannel.positions  = std::make_unique<float3[]>(keyframeCount);
                 memcpy(animChannel.positions.get(), cursor, keyframeCount * sizeof(float3));
                 cursor += keyframeCount * sizeof(float3);
-                if (animChannel.numPositions > 0)
-                {
-                    for (uint32_t i = 0; i < animChannel.numPositions; ++i)
-                    {
-                        //GLOG("Keyframe %u: Time = %f, Position = (%f, %f, %f)", i, animChannel.posTimeStamps[i], animChannel.positions[i].x, animChannel.positions[i].y, animChannel.positions[i].z);
-                    }
-                }
-                else
-                {
-                    GLOG("No keyframes for this animation channel: %s", nodeName.c_str());
-                }
             }
             else if (animType == 1) // Rotation (Quat)
             {
+                animChannel.numRotations  = keyframeCount;
+                animChannel.rotTimeStamps = std::make_unique<float[]>(keyframeCount);
+                memcpy(animChannel.rotTimeStamps.get(), cursor, keyframeCount * sizeof(float));
+                cursor                += keyframeCount * sizeof(float);
+
                 animChannel.rotations = std::make_unique<Quat[]>(keyframeCount);
                 memcpy(animChannel.rotations.get(), cursor, keyframeCount * sizeof(Quat));
                 cursor += keyframeCount * sizeof(Quat);
             }
 
-            animation->channels[nodeName]  = std::move(animChannel);
         }
 
         delete[] buffer;
 
+        animation->SetDuration();
+
+        GLOG("Animation duration: %f", animation->GetDuration());
+        for (const auto& channelPair : animation->channels)
+        {
+            const std::string& nodeName = channelPair.first;
+            const Channel& animChannel  = channelPair.second;
+
+            uint32_t posIndex           = 0;
+            uint32_t rotIndex           = 0;
+
+            // Log de nombre de nodo y cantidad de posiciones y rotaciones
+            GLOG(
+                "Node: %s, Total Positions: %u, Total Rotations: %u", nodeName.c_str(), animChannel.numPositions,
+                animChannel.numRotations
+            );
+
+            // Recorrer todos los keyframes, considerando las posiciones y las rotaciones
+            while (posIndex < animChannel.numPositions || rotIndex < animChannel.numRotations)
+            {
+                // Si tenemos posiciones y la posición tiene un timestamp menor o igual al de la rotación
+                if (posIndex < animChannel.numPositions &&
+                    (rotIndex >= animChannel.numRotations ||
+                     animChannel.posTimeStamps[posIndex] <= animChannel.rotTimeStamps[rotIndex]))
+                {
+                    const float timestamp  = animChannel.posTimeStamps[posIndex];
+                    const float3& position = animChannel.positions[posIndex];
+
+                    std::string logMessage =
+                        "Keyframe " + std::to_string(posIndex) + ": Time: " + std::to_string(timestamp);
+                    logMessage += ", Translation: (" + std::to_string(position.x) + ", " + std::to_string(position.y) +
+                                  ", " + std::to_string(position.z) + ")";
+
+                    // Si las posiciones y rotaciones tienen el mismo timestamp, lo mostramos en la misma línea
+                    if (rotIndex < animChannel.numRotations &&
+                        animChannel.posTimeStamps[posIndex] == animChannel.rotTimeStamps[rotIndex])
+                    {
+                        const Quat& rotation = animChannel.rotations[rotIndex];
+                        logMessage += ", Rotation: (" + std::to_string(rotation.x) + ", " + std::to_string(rotation.y) +
+                                      ", " + std::to_string(rotation.z) + ", " + std::to_string(rotation.w) + ")";
+                        rotIndex++; // Avanzamos el índice de rotaciones
+                    }
+
+                    // Log de la posición (y posible rotación si coincide el timestamp)
+                    GLOG("%s", logMessage.c_str());
+
+                    posIndex++; // Avanzamos el índice de posiciones
+                }
+                else if (rotIndex < animChannel.numRotations)
+                {
+                    const float timestamp = animChannel.rotTimeStamps[rotIndex];
+                    const Quat& rotation  = animChannel.rotations[rotIndex];
+
+                    std::string logMessage =
+                        "Keyframe " + std::to_string(rotIndex) + ": Time: " + std::to_string(timestamp);
+                    logMessage += ", Rotation: (" + std::to_string(rotation.x) + ", " + std::to_string(rotation.y) +
+                                  ", " + std::to_string(rotation.z) + ", " + std::to_string(rotation.w) + ")";
+
+                    // Log de la rotación
+                    GLOG("%s", logMessage.c_str());
+
+                    rotIndex++; // Avanzamos el índice de rotaciones
+                }
+            }
+        }
         return animation;
     }
 }

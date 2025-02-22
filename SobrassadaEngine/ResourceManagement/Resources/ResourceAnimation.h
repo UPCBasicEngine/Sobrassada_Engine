@@ -18,11 +18,16 @@ struct Channel
 class ResourceAnimation : public Resource
 {
   public:
+    std::unordered_map<std::string, Channel> channels;
+
     ResourceAnimation(UID uid, const std::string& name);
     ~ResourceAnimation() override;
 
-    std::unordered_map<std::string, Channel> channels;
+    void SetDuration();
+    float GetDuration() { return duration; }
+    
   private:
     
     float duration = 0.0f;
+
 };
