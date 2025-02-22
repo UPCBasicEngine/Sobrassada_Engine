@@ -2,6 +2,8 @@
 #include "Resource.h"
 #include "Math/float3.h"
 #include "Math/Quat.h"
+#include <memory>
+#include <unordered_map>
 
 struct Channel
 {
@@ -19,8 +21,8 @@ class ResourceAnimation : public Resource
     ResourceAnimation(UID uid, const std::string& name);
     ~ResourceAnimation() override;
 
-
-  private:
     std::unordered_map<std::string, Channel> channels;
+  private:
+    
     float duration = 0.0f;
 };

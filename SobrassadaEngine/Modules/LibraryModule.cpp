@@ -235,6 +235,9 @@ bool LibraryModule::LoadLibraryMaps()
 
                 switch (prefix)
                 {
+                case 15:
+                    AddAnimation(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
+                    AddResource(filePath, originalUID);
                 case 13:
                     AddMesh(originalUID, FileSystem::GetFileNameWithoutExtension(filePath));
                     AddResource(filePath, originalUID);
@@ -266,6 +269,10 @@ UID LibraryModule::AssignFiletypeUID(UID originalUID, const std::string& filePat
 {
 
     uint64_t prefix = 10; // Default prefix "99" for unknown files
+    if (FileSystem::GetFileExtension(filePath) == ANIMATION_EXTENSION)
+    {
+        prefix = 15;
+    }
     if (FileSystem::GetFileExtension(filePath) == MESH_EXTENSION)
     {
         prefix = 13;
@@ -294,6 +301,12 @@ void LibraryModule::AddMesh(UID meshUID, const std::string& sobPath)
     meshMap[sobPath] = meshUID; // Map the texture UID to its DDS path
 }
 
+void LibraryModule::AddAnimation(UID animUID, const std::string& animPath)
+{
+    animMap[animPath] = animUID; // Map the texture UID to its DDS path
+}
+
+
 void LibraryModule::AddMaterial(UID materialUID, const std::string& matPath)
 {
     materialMap[matPath] = materialUID; // Map the texture UID to its DDS path
@@ -316,6 +329,18 @@ UID LibraryModule::GetMeshUID(const std::string& meshPath) const
 
     auto it = meshMap.find(meshPath);
     if (it != meshMap.end())
+    {
+        return it->second;
+    }
+
+    return 0;
+}
+
+UID LibraryModule::GetAnimationUID(const std::string& animationPath) const
+{
+
+    auto it = animMap.find(animationPath);
+    if (it != animMap.end())
     {
         return it->second;
     }

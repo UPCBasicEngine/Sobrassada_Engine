@@ -71,6 +71,7 @@ enum update_status
 
 #define ASSET_EXTENSION    ".gltf"
 #define MESH_EXTENSION     ".sobrassada"
+#define ANIMATION_EXTENSION ".anim"
 #define TEXTURE_EXTENSION  ".dds"
 #define MATERIAL_EXTENSION ".mat"
 #define SCENE_EXTENSION    ".scene"

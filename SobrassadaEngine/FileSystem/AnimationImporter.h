@@ -20,4 +20,5 @@ namespace AnimationImporter
         const char* filePath
     );
     ResourceAnimation* LoadAnimation(UID animationUID);
+
 }; 
