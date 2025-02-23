@@ -351,6 +351,27 @@ void Component::CalculateLocalAABB()
 
 void Component::SetLocalTransform(const Transform& newTransform)
 {
+    const Transform& parentTrans = GetParentGlobalTransform();
+    float4x4 t1                  = float4x4::FromTRS(
+        parentTrans.position,
+        float4x4::FromEulerXYZ(parentTrans.rotation.x, parentTrans.rotation.y, parentTrans.rotation.z),
+        parentTrans.scale
+    );
     localTransform = newTransform;
+    const Transform& myTrans = localTransform;
+    float4x4 t2 = float4x4::FromTRS(
+        myTrans.position, float4x4::FromEulerXYZ(myTrans.rotation.x, myTrans.rotation.y, myTrans.rotation.z),
+        myTrans.scale
+    );
+
+    float4x4 newTrans = t2.Mul(t1);
+    Transform ahoraSi = Transform::identity;
+
+    ahoraSi.position  = newTrans.TranslatePart();
+    ahoraSi.rotation  = newTrans.RotatePart().ToEulerXYZ();
+    ahoraSi.scale     = newTransform.scale;
+
+    localTransform    = ahoraSi;
+
     OnTransformUpdate(GetParentGlobalTransform());
 }

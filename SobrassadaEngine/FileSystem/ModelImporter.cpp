@@ -217,8 +217,10 @@ namespace ModelImporter
         newNode.name               = nodeData.name;
 
         float4x4 rawTransform      = GetNodeTransform(nodeData);
-        newNode.transform.position = rawTransform.TranslatePart();
-        newNode.transform.rotation = rawTransform.RotatePart().ToEulerXYZ();
+        Transform parentTransform  = Transform::identity;
+        if (parentId != -1) parentTransform = outNodes[parentId].transform;
+        newNode.transform.position = parentTransform.position + rawTransform.TranslatePart();
+        newNode.transform.rotation = parentTransform.rotation + rawTransform.RotatePart().ToEulerXYZ();
         newNode.parentIndex        = parentId;
 
         // Get reference to Mesh and Material UIDs

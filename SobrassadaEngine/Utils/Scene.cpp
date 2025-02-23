@@ -367,7 +367,6 @@ void Scene::LoadModel(const UID modelUID)
         for (int i = 1; i < nodes.size(); ++i)
         {
             GameObject* gameObject = new GameObject(gameObjectsArray[nodes[i].parentIndex]->GetUID(), nodes[i].name);
-            gameObject->GetRootComponent()->SetLocalTransform(nodes[i].transform);
 
             if (nodes[i].meshes.size() > 0)
             {
@@ -392,6 +391,8 @@ void Scene::LoadModel(const UID modelUID)
             gameObjectsArray.emplace_back(gameObject); 
             GetGameObjectByUUID(gameObjectsArray[nodes[i].parentIndex]->GetUID())->AddGameObject(gameObject->GetUID());
             AddGameObject(gameObject->GetUID(), gameObject);
+
+            gameObject->GetRootComponent()->SetLocalTransform(nodes[i].transform);
             gameObject->PassAABBUpdateToParent();
         }
     }
