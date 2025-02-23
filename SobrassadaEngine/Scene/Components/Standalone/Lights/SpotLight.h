@@ -16,13 +16,12 @@ class SpotLight : public LightComponent
     void RenderEditorInspector() override;
     void Render() override;
 
-    float3 GetDirection() const { return direction; }
+    const float3& GetDirection() const;
     float GetRange() const { return range; }
     float GetInnerAngle() const { return innerAngle; }
     float GetOuterAngle() const { return outerAngle; }
 
   private:
-    float3 direction;
     float range;
     float innerAngle;
     float outerAngle;

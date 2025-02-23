@@ -8,14 +8,12 @@
 DirectionalLight::DirectionalLight(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform)
     : LightComponent(uid, uidParent, uidRoot, "Directional Light", COMPONENT_DIRECTIONAL_LIGHT, parentGlobalTransform)
 {
-    direction = -float3::unitY;
     LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
     if (lightsConfig != nullptr) lightsConfig->AddDirectionalLight(this);
 }
 
 DirectionalLight::DirectionalLight(const rapidjson::Value& initialState) : LightComponent(initialState)
 {
-    direction = -float3::unitY;
     LightsConfig* lightsConfig = App->GetSceneModule()->GetLightsConfig();
     if (lightsConfig != nullptr) lightsConfig->AddDirectionalLight(this);
 }
@@ -38,19 +36,16 @@ void DirectionalLight::Render()
     float4x4 rot = float4x4::FromQuat(
         Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z)
     );
-    direction              = (rot.RotatePart() * -float3::unitY).Normalized();
-
     DebugDrawModule* debug = App->GetDebugDrawModule();
-    debug->DrawLine(globalTransform.position, direction, 2, float3(1, 1, 1));
+    debug->DrawLine(globalTransform.position, (rot.RotatePart() * -float3::unitY).Normalized(), 2, float3(1, 1, 1));
 }
 
-void DirectionalLight::RenderEditorInspector()
+const float3& DirectionalLight::GetDirection() const
 {
-    LightComponent::RenderEditorInspector();
-
-    if (enabled)
-    {
-        ImGui::Text("Directional light parameters");
-        ImGui::SliderFloat3("Direction ", &direction[0], -1.0, 1.0);
-    }
+    return (float4x4::FromQuat(
+                Quat::FromEulerXYZ(globalTransform.rotation.x, globalTransform.rotation.y, globalTransform.rotation.z)
+            )
+                .RotatePart() *
+            -float3::unitY)
+        .Normalized();
 }

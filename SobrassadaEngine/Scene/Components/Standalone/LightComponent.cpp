@@ -59,6 +59,8 @@ void LightComponent::RenderEditorInspector()
         ImGui::SeparatorText("Light");
         ImGui::SliderFloat3("Color", &color[0], 0.0f, 1.0f);
         ImGui::SliderFloat("Intensity", &intensity, 0.0f, 100.0f);
+        ImGui::Checkbox("Draw gizmos", &drawGizmos);
+        ImGui::Spacing();
     }
 }
 
@@ -69,3 +71,4 @@ void LightComponent::Update()
 void LightComponent::Render()
 {
 }
+
