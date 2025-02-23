@@ -55,9 +55,6 @@ void PointLight::RenderEditorInspector()
         ImGui::Text("Point light parameters");
         ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
 
-        ImGui::SeparatorText("Gizmos");
-        ImGui::Checkbox("Draw gizmos", &drawGizmos);
-
         ImGui::Text("Gizmos mode");
         if (ImGui::RadioButton("Lines", &gizmosMode, 0))
         {

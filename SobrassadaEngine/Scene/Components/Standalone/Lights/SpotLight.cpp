@@ -68,8 +68,6 @@ void SpotLight::RenderEditorInspector()
         {
             if (outerAngle < innerAngle) innerAngle = outerAngle;
         }
-
-        ImGui::Checkbox("Draw gizmos", &drawGizmos);
     }
 }
 

@@ -6,19 +6,15 @@
 
 class DirectionalLight : public LightComponent
 {
-
   public:
-    DirectionalLight(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform);
+    DirectionalLight(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform);
     DirectionalLight(const rapidjson::Value& initialState);
     ~DirectionalLight();
 
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
-    void RenderEditorInspector() override;
     void Render() override;
 
-    const float3& GetDirection() const { return direction; }
+    const float3& GetDirection() const;
 
-  private:
-    float3 direction;
 };
