@@ -1,4 +1,4 @@
-#include "PointLight.h"
+#include "PointLightComponent.h"
 
 #include "Application.h"
 #include "SceneModule.h"
@@ -8,7 +8,7 @@
 
 #include <vector>
 
-PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform)
+PointLightComponent::PointLightComponent(UID uid, UID uidParent, UID uidRoot, const Transform& parentGlobalTransform)
     : LightComponent(uid, uidParent, uidRoot, "Point Light", COMPONENT_POINT_LIGHT, parentGlobalTransform)
 {
     range      = 1;
@@ -18,7 +18,7 @@ PointLight::PointLight(UID uid, UID uidParent, UID uidRoot, const Transform& par
     if (lightsConfig != nullptr) lightsConfig->AddPointLight(this);
 }
 
-PointLight::PointLight(const rapidjson::Value& initialState) : LightComponent(initialState)
+PointLightComponent::PointLightComponent(const rapidjson::Value& initialState) : LightComponent(initialState)
 {
 
     if (initialState.HasMember("Range"))
@@ -34,11 +34,11 @@ PointLight::PointLight(const rapidjson::Value& initialState) : LightComponent(in
 }
 
 
-PointLight::~PointLight() {
+PointLightComponent::~PointLightComponent() {
     App->GetSceneModule()->GetLightsConfig()->RemovePointLight(uid);
 }
 
-void PointLight::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+void PointLightComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     LightComponent::Save(targetState, allocator);
 
@@ -46,7 +46,7 @@ void PointLight::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("GizmosMode", gizmosMode, allocator);
 }
 
-void PointLight::RenderEditorInspector()
+void PointLightComponent::RenderEditorInspector()
 {
     LightComponent::RenderEditorInspector();
 
@@ -69,7 +69,7 @@ void PointLight::RenderEditorInspector()
     }
 }
 
-void PointLight::Render()
+void PointLightComponent::Render()
 {
     if (!enabled || !drawGizmos) return;
 

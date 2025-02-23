@@ -216,16 +216,16 @@
     <ClCompile Include="Utils\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Components\Standalone\Lights\PointLight.cpp">
+    <ClCompile Include="Scene\Components\Standalone\Lights\PointLightComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Components\Standalone\Lights\SpotLight.cpp">
+    <ClCompile Include="Scene\Components\Standalone\Lights\SpotLightComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Standalone\LightComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Components\Standalone\Lights\DirectionalLight.cpp">
+    <ClCompile Include="Scene\Components\Standalone\Lights\DirectionalLightComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
     <ClCompile Include="Utils\LightsConfig.cpp">
@@ -279,9 +279,9 @@
     </ClCompile>
     <ClCompile Include="FileSystem\Importer.cpp">
       <Filter>FileSystem</Filter>
-      </ClCompile>
-          <ClCompile Include="Utils\EngineTimer.cpp">
-            <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\EngineTimer.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -463,16 +463,16 @@
     <ClInclude Include="Utils\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Standalone\Lights\SpotLight.h">
+    <ClInclude Include="Scene\Components\Standalone\Lights\SpotLightComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Standalone\Lights\PointLight.h">
+    <ClInclude Include="Scene\Components\Standalone\Lights\PointLightComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\LightComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Components\Standalone\Lights\DirectionalLight.h">
+    <ClInclude Include="Scene\Components\Standalone\Lights\DirectionalLightComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Component.h">
@@ -503,8 +503,8 @@
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Utils\EngineTimer.h">
-          <Filter>Utils</Filter>
-        </ClInclude>
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

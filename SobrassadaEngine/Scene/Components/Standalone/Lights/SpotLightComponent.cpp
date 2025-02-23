@@ -1,4 +1,4 @@
-#include "SpotLight.h"
+#include "SpotLightComponent.h"
 
 #include "DebugDrawModule.h"
 #include "Application.h"
@@ -7,7 +7,7 @@
 #include "ImGui.h"
 #include "Math/Quat.h"
 
-SpotLight::SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform)
+SpotLightComponent::SpotLightComponent(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform)
     : LightComponent(uid, uidParent, uidRoot, "Spot Light", COMPONENT_SPOT_LIGHT, parentGlobalTransform)
 {
     direction  = -float3::unitY;
@@ -19,7 +19,7 @@ SpotLight::SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &paren
     if (lightsConfig != nullptr) lightsConfig->AddSpotLight(this);
 }
 
-SpotLight::SpotLight(const rapidjson::Value& initialState) : LightComponent(initialState)
+SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState) : LightComponent(initialState)
 {
     direction = -float3::unitY;
     if (initialState.HasMember("Range"))
@@ -39,12 +39,12 @@ SpotLight::SpotLight(const rapidjson::Value& initialState) : LightComponent(init
     if (lightsConfig != nullptr) lightsConfig->AddSpotLight(this);
 }
 
-SpotLight::~SpotLight()
+SpotLightComponent::~SpotLightComponent()
 {
     App->GetSceneModule()->GetLightsConfig()->RemoveSpotLight(uid);
 }
 
-void SpotLight::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+void SpotLightComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     LightComponent::Save(targetState, allocator);
 
@@ -53,7 +53,7 @@ void SpotLight::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     targetState.AddMember("OuterAngle", outerAngle, allocator);
 }
 
-void SpotLight::RenderEditorInspector()
+void SpotLightComponent::RenderEditorInspector()
 {
     LightComponent::RenderEditorInspector();
 
@@ -75,7 +75,7 @@ void SpotLight::RenderEditorInspector()
     }
 }
 
-void SpotLight::Render()
+void SpotLightComponent::Render()
 {
     if (!enabled || !drawGizmos) return;
 

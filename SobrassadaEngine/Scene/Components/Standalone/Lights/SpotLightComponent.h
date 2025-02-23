@@ -4,12 +4,12 @@
 
 #include <Libs/rapidjson/document.h>
 
-class SpotLight : public LightComponent
+class SpotLightComponent : public LightComponent
 {
   public:
-    SpotLight(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform);
-    SpotLight(const rapidjson::Value& initialState);
-    ~SpotLight();
+    SpotLightComponent(UID uid, UID uidParent, UID uidRoot, const Transform &parentGlobalTransform);
+    SpotLightComponent(const rapidjson::Value& initialState);
+    ~SpotLightComponent();
 
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
