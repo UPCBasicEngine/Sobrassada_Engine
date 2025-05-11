@@ -122,7 +122,7 @@ namespace StateMachineManager
             GLOG("Failed to save state machine file: %s", savePath.c_str());
             return INVALID_UID;
         }
-        GLOG("Saved in %s", savePath.c_str());
+        //GLOG("Saved in %s", savePath.c_str());
         App->GetLibraryModule()->AddStateMachine(stateMachineUID, stateName);
         App->GetLibraryModule()->AddName(stateName, stateMachineUID);
         App->GetLibraryModule()->AddResource(savePath, stateMachineUID);
@@ -229,7 +229,7 @@ namespace StateMachineManager
         }
 
         stateMachine->SetDefaultState(0);
-        GLOG("StateMachine %llu loaded successfully from: %s", stateMachineUID, path.c_str());
+        //GLOG("StateMachine %llu loaded successfully from: %s", stateMachineUID, path.c_str());
 
         return stateMachine;
     }
