@@ -444,16 +444,19 @@ void CharacterControllerComponent::DashThroughNavMesh(float deltaTime)
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
 
+
     float extents[3] = {0.5f, 1.0f, 0.5f}; // Tamaño de la caja de búsqueda
-    float nearestPoint[3];
+    float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
     dtPolyRef targetRef = 0;
 
     dtStatus status     = navMeshQuery->findNearestPoly(dashTarget.ptr(), extents, &filter, &targetRef, nearestPoint);
 
     if (dtStatusFailed(status) || targetRef == 0)
     {
+        GLOG("Nearest points: (%f, %f, %f)", nearestPoint[0], nearestPoint[1], nearestPoint[2]);
         GLOG("No navmesh found at dash target position. Dash canceled.");
-        return; 
+        //dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]); 
+        return;
     }
 
     dashSpeed         = dashDistance / dashDuration;
