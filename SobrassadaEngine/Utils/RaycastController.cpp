@@ -25,7 +25,8 @@ namespace RaycastController
         float farDistance   = 0;
         for (const auto& gameObject : queriedGameObjects)
         {
-            if (ray.Intersects(gameObject->GetGlobalAABB(), closeDistance, farDistance))
+            if (gameObject->IsGloballyEnabled() &&
+                ray.Intersects(gameObject->GetGlobalAABB(), closeDistance, farDistance))
             {
                 aabbIntersectedObjects.push_back(gameObject);
             }
