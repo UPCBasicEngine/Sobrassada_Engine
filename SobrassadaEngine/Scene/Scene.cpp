@@ -295,7 +295,13 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #endif
     glEnable(GL_STENCIL_TEST);
 
-    GeometryPassRender(objectsToRender, camera, gbuffer);
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    {
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        GeometryPassRender(objectsToRender, camera, gbuffer);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+    else GeometryPassRender(objectsToRender, camera, gbuffer);
 
     LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
 
@@ -450,9 +456,7 @@ void Scene::RenderEditorControl(bool& editorControlMenu)
                 if (ImGui::Checkbox(DebugStrings[i], &currentBitValue))
                 {
                     App->GetDebugDrawModule()->FlipDebugOptionValue(i);
-                    if (i == (int)DebugOptions::RENDER_WIREFRAME)
-                        App->GetOpenGLModule()->SetRenderWireframe(currentBitValue);
-                    else if (i == (int)DebugOptions::RENDER_PHYSICS_WORLD)
+                    if (i == (int)DebugOptions::RENDER_PHYSICS_WORLD)
                         App->GetPhysicsModule()->SetDebugOption(currentBitValue);
                 }
             }
