@@ -545,8 +545,7 @@ void LightsConfig::AddPointLight(PointLightComponent* newPoint)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
     int bufferSize = static_cast<int>(sizeof(Lights::PointLightShaderData) * pointLights.size() + 16);
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
-    /*
-    GLOG(
+    /*GLOG(
         "Add point light with uid: %d. Point lights count: %d. Buffer size: %d", newPoint->GetUID(), pointLights.size(),
         bufferSize
     );*/
@@ -567,8 +566,7 @@ void LightsConfig::AddSpotLight(SpotLightComponent* newSpot)
         (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16
     ); // 12 bytes offset between spotlights
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
-    /*
-    GLOG(
+    /*GLOG(
         "Add spot light with uid: %d. Spot lights count: %d. Buffer size: %d", newSpot->GetUID(), spotLights.size(),
         bufferSize
     );*/

@@ -152,7 +152,7 @@ update_status SceneModule::PostUpdate(float deltaTime)
 bool SceneModule::ShutDown()
 {
     CloseScene();
-    GLOG("Destroying scene")
+    //GLOG("Destroying scene")
     return true;
 }
 

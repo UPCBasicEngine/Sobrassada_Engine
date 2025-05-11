@@ -187,7 +187,7 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
 
 void ButtonComponent::OnClick()
 {
-    GLOG("Clicked button!");
+    //GLOG("Clicked button!");
     onClickDispatcher.Call();
     if (image) image->SetColor(clickedColor);
 }

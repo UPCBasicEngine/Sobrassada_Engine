@@ -177,7 +177,7 @@ update_status OpenGLModule::PostUpdate(float deltaTime)
 
 bool OpenGLModule::ShutDown()
 {
-    GLOG("Destroying renderer");
+    //GLOG("Destroying renderer");
 
     SDL_GL_DeleteContext(App->GetWindowModule()->window);
     delete framebuffer;

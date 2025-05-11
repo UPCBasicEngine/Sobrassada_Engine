@@ -70,7 +70,7 @@ void AudioSourceComponent::Update(float deltaTime)
 {
     if (App->GetInputModule()->GetKeyboard()[SDL_SCANCODE_0] == KEY_DOWN)
     {
-        GLOG("Play audio");
+        //GLOG("Play audio");
         EmitEvent(defaultEvent);
     }
 }

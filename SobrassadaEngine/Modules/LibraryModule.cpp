@@ -90,7 +90,7 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
             return false;
         }
 
-        GLOG("%s saved as scene", sceneName.c_str());
+        //GLOG("%s saved as scene", sceneName.c_str());
         return true;
     }
 
@@ -307,7 +307,7 @@ UID LibraryModule::AssignFiletypeUID(UID originalUID, FileType fileType)
 
     // GLOG("%llu", prefix)
     UID final = (prefix * UID_PREFIX_DIVISOR) + (originalUID % UID_PREFIX_DIVISOR);
-    GLOG("%llu", final);
+    //GLOG("%llu", final);
     return final;
 }
 

@@ -179,7 +179,7 @@ AIStates Character::CheckDistanceWithPlayer() const
 
 void Character::Die()
 {
-    GLOG("%s dead", parent->GetName().c_str());
+    //GLOG("%s dead", parent->GetName().c_str());
     isDead = true;
     OnDeath();
 
