@@ -226,6 +226,7 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     prefabUID        = refObject->prefabUID;
     navMeshValid     = refObject->navMeshValid;
     enabled          = refObject->enabled;
+    wasEnabled       = refObject->wasEnabled;
 
     // Must make a copy of each manually
     for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
@@ -258,6 +259,7 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     mobilitySettings       = initialState["Mobility"].GetInt();
 
     if (initialState.HasMember("Enabled")) enabled = initialState["Enabled"].GetBool();
+    if (initialState.HasMember("WasEnabled")) wasEnabled = initialState["WasEnabled"].GetBool();
 
     if (initialState.HasMember("SelectParent")) selectParent = initialState["SelectParent"].GetBool();
 
@@ -370,6 +372,7 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Mobility", mobilitySettings, allocator);
     targetState.AddMember("SelectParent", selectParent, allocator);
     targetState.AddMember("Enabled", enabled, allocator);
+    targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
