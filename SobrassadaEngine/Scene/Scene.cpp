@@ -115,6 +115,7 @@ Scene::~Scene()
 
     selectedGameObjects.clear();
 
+    App->GetPathfinderModule()->ClearNavMesh();
     delete lightsConfig;
     delete sceneOctree;
     delete dynamicTree;

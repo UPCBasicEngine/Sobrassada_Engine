@@ -229,7 +229,7 @@ namespace StateMachineManager
         }
 
         stateMachine->SetDefaultState(0);
-        GLOG("StateMachine %llu loaded successfully from: %s", stateMachineUID, path.c_str());
+        //GLOG("StateMachine %llu loaded successfully from: %s", stateMachineUID, path.c_str());
 
         return stateMachine;
     }
