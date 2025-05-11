@@ -297,10 +297,10 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 
     if (fabs(angle) < 0.0001f) return;
 
-    float4x4 rotY      = float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
-    float4x4 newGlobal = parent->GetGlobalTransform() * rotY;
+    const float4x4 rotY      = float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+    const float4x4 newGlobal = parent->GetGlobalTransform() * rotY;
 
-    float4x4 newlocal  = parent->GetParentGlobalTransform().Transposed() * newGlobal;
+    const float4x4 newlocal  = parent->GetParentGlobalTransform().Transposed() * newGlobal;
 
     parent->SetLocalTransform(newlocal);
     parent->UpdateTransformForGOBranch();
