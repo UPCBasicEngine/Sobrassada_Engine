@@ -1285,6 +1285,9 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
 
         const ResourcePrefab* resourcePrefab =
             prefab == nullptr ? (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID) : prefab;
+
+        if (resourcePrefab == nullptr) return; // If the prefab file is corrupted or not available, loading is cancelled
+        
         const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsVector();
         const std::vector<int>& parentIndices            = resourcePrefab->GetParentIndices();
 
