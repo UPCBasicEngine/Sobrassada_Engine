@@ -2,6 +2,8 @@
 
 #include "Application.h"
 #include "DebugDrawModule.h"
+#include "EditorUIModule.h"
+#include "GameTimer.h"
 #include "InputModule.h"
 #include "OpenGLModule.h"
 #include "PhysicsModule.h"
@@ -12,6 +14,13 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_internal.h"
+
+// TESTING
+#include "CameraComponent.h"
+#include "Framebuffer.h"
+#include "Geometry/LineSegment.h"
+#include "SceneModule.h"
+#include "btVector3.h"
 
 GameDebugUIModule::GameDebugUIModule()
 {
@@ -41,14 +50,21 @@ update_status GameDebugUIModule::PreUpdate(float deltaTime)
 
 update_status GameDebugUIModule::Update(float deltaTime)
 {
+#ifdef GAME
+    if (App->GetInputModule()->GetKeyboard()[SDL_SCANCODE_F1] == KeyState::KEY_DOWN)
+    {
+        gameDebugMenu = !gameDebugMenu;
+    }
+
+#endif
     return UPDATE_CONTINUE;
 }
 
 update_status GameDebugUIModule::RenderEditor(float deltaTime)
 {
+
 #ifdef GAME
     Draw();
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -58,6 +74,10 @@ update_status GameDebugUIModule::RenderEditor(float deltaTime)
 
 update_status GameDebugUIModule::PostUpdate(float deltaTime)
 {
+#ifdef GAME
+    if (closeApplication) return UPDATE_STOP;
+#endif
+
     return UPDATE_CONTINUE;
 }
 
@@ -68,12 +88,43 @@ bool GameDebugUIModule::ShutDown()
 
 void GameDebugUIModule::Draw()
 {
+    if (gameDebugMenu) GameDebugMenu();
     RenderOptions();
+}
+
+void GameDebugUIModule::GameDebugMenu()
+{
+    if (!ImGui::Begin("GameDebug", &gameDebugMenu))
+    {
+        ImGui::End();
+        return;
+    }
+
+    // Delta time comes in ms instead of s
+    const float deltaTime = App->GetGameTimer()->GetDeltaTime();
+    const float fps       = deltaTime ? 1000.f / deltaTime : 0;
+
+    ImGui::Text("FPS:");
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(fps).c_str());
+
+    ImGui::Checkbox("Console", &openConsole);
+
+    if (openConsole) App->GetEditorUIModule()->Console(openConsole);
+
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    if (ImGui::Button("Close Game")) closeApplication = true;
+
+    ImGui::End();
 }
 
 void GameDebugUIModule::RenderOptions()
 {
-    if (App->GetInputModule()->GetKeyboard()[SDL_SCANCODE_F9])
+    if (App->GetInputModule()->GetKeyboard()[SDL_SCANCODE_F2])
     {
         ImGui::OpenPopup("RenderOptions");
     }

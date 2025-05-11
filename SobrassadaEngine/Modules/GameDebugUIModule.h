@@ -18,5 +18,13 @@ class GameDebugUIModule : public Module
   private:
     void Draw();
 
+    void GameDebugMenu();
     void RenderOptions();
+
+  private:
+    bool gameDebugMenu    = false;
+    bool closeApplication = false;
+
+    bool drawFPS = false;
+    bool openConsole = false;
 };
