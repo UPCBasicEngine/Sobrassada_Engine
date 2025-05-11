@@ -180,7 +180,7 @@ void PathfinderModule::SaveNavMesh(const std::string& name)
     const UID uid = NavmeshImporter::SaveNavmesh(name.c_str(), navmesh, navconf);
     App->GetSceneModule()->GetScene()->SetNavmeshUID(uid);
 
-    GLOG("NavMesh saved with UID: %u", uid);
+    //GLOG("NavMesh saved with UID: %u", uid);
 }
 
 void PathfinderModule::LoadNavMesh(const std::string& name)
@@ -205,7 +205,7 @@ void PathfinderModule::LoadNavMesh(const std::string& name)
 
     InitQuerySystem();
 
-    GLOG("Navmesh '%s' successfully loaded and set.", name.c_str());
+    //GLOG("Navmesh '%s' successfully loaded and set.", name.c_str());
 }
 
 void PathfinderModule::AddAIAgentComponent(int agentId, AIAgentComponent* comp)

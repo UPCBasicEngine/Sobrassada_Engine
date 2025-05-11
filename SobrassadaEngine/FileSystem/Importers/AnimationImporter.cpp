@@ -65,10 +65,11 @@ namespace AnimationImporter
             const std::string& nodeName = model.nodes[channel.target_node].name;
             const uint32_t nameSize     = static_cast<uint32_t>(nodeName.size());
 
+            /*
             GLOG(
                 "Channel: Node='%s', Path='%s', Keyframes=%zu", nodeName.c_str(), channel.target_path.c_str(),
                 keyframeCount
-            );
+            );*/
 
             buffer.insert(
                 buffer.end(), reinterpret_cast<const char*>(&nameSize),
@@ -108,7 +109,7 @@ namespace AnimationImporter
             // Insert timestamps
             if (keyframeCount > 0)
             {
-                GLOG("  Timestamps range: %.3f to %.3f", timeStamps[0], timeStamps[keyframeCount - 1]);
+                //GLOG("  Timestamps range: %.3f to %.3f", timeStamps[0], timeStamps[keyframeCount - 1]);
 
                 buffer.insert(
                     buffer.end(), reinterpret_cast<const char*>(timeStamps.data()),
@@ -229,7 +230,7 @@ namespace AnimationImporter
         const std::string saveFilePath = App->GetProjectModule()->GetLoadedProjectPath() + ANIMATIONS_PATH +
                                          std::to_string(finalAnimUID) + ANIMATION_EXTENSION;
 
-        GLOG("Saving animation to: %s", saveFilePath.c_str());
+        //GLOG("Saving animation to: %s", saveFilePath.c_str());
 
         const size_t bytesWritten =
             FileSystem::Save(saveFilePath.c_str(), buffer.data(), static_cast<unsigned int>(buffer.size()), true);
@@ -244,7 +245,7 @@ namespace AnimationImporter
         App->GetLibraryModule()->AddName(fileName, finalAnimUID);
         App->GetLibraryModule()->AddResource(saveFilePath, finalAnimUID);
 
-        GLOG("%s saved as binary (%zu bytes written)", fileName.c_str(), bytesWritten);
+        //GLOG("%s saved as binary (%zu bytes written)", fileName.c_str(), bytesWritten);
 
         return finalAnimUID;
     }
@@ -252,12 +253,12 @@ namespace AnimationImporter
     ResourceAnimation* LoadAnimation(UID animationUID)
     {
         const std::string path = App->GetLibraryModule()->GetResourcePath(animationUID);
-        GLOG("Attempting to load animation from: %s", path.c_str());
+        //GLOG("Attempting to load animation from: %s", path.c_str());
 
         char* buffer                = nullptr;
         const unsigned int fileSize = FileSystem::Load(path.c_str(), &buffer);
 
-        GLOG("Load result: fileSize=%u, buffer=%p", fileSize, buffer);
+        //GLOG("Load result: fileSize=%u, buffer=%p", fileSize, buffer);
 
         if (fileSize == 0 || buffer == nullptr)
         {
@@ -280,7 +281,7 @@ namespace AnimationImporter
         memcpy(&channelCount, cursor, sizeof(uint32_t));
         cursor += sizeof(uint32_t);
 
-        GLOG("Loading animation with %d channels from %s", channelCount, path.c_str());
+        //GLOG("Loading animation with %d channels from %s", channelCount, path.c_str());
 
         const auto& map = App->GetLibraryModule()->GetAnimMap();
         const std::string& animName    = App->GetLibraryModule()->GetResourceName(animationUID);
@@ -444,7 +445,7 @@ namespace AnimationImporter
 
         animation->SetDuration();
 
-        GLOG("Animation duration: %f", animation->GetDuration());
+        //GLOG("Animation duration: %f", animation->GetDuration());
 
         return animation;
     }

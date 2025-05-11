@@ -549,7 +549,7 @@ void StateMachineEditor::BuildGraph()
         }
     }
 
-    GLOG("Total links in graph after adding them: %d", graph->getLinks().size());
+    //GLOG("Total links in graph after adding them: %d", graph->getLinks().size());
     resource->SetDefaultState(0);
 }
 
@@ -574,7 +574,7 @@ void StateMachineEditor::DetectNewTransitions()
 
                 if (!resource->GetTransition(fromState, toState))
                 {
-                    GLOG("Creating transition from %s to %s", fromState.c_str(), toState.c_str());
+                    //GLOG("Creating transition from %s to %s", fromState.c_str(), toState.c_str());
                     resource->AddTransition(fromState, toState, "Trigger", 200);
                     // availableTriggers.push_back("Trigger");
                 }

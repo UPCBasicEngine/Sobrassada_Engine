@@ -213,7 +213,7 @@ UID MaterialImporter::ImportMaterial(
     App->GetLibraryModule()->AddName(materialName, finalMaterialUID);
     App->GetLibraryModule()->AddResource(saveFilePath, finalMaterialUID);
 
-    GLOG("%s saved as material", materialName.c_str());
+    //GLOG("%s saved as material", materialName.c_str());
 
     return finalMaterialUID;
 }
