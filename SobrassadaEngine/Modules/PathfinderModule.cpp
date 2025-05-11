@@ -39,11 +39,7 @@ PathfinderModule::~PathfinderModule()
         dtFreeNavMeshQuery(navQuery);
         navQuery = nullptr;
     }
-    if (tmpNavmesh)
-    {
-        delete tmpNavmesh;
-        tmpNavmesh = nullptr;
-    }
+    ClearNavMesh();
 }
 
 update_status PathfinderModule::Update(float deltaTime)
@@ -81,7 +77,6 @@ int PathfinderModule::CreateAgent(const float3& position, const float radius, co
 
 void PathfinderModule::RemoveAgent(int agentId)
 {
-
     if (agentId < 0 || agentId >= crowd->getAgentCount()) return;
 
     const dtCrowdAgent* agent = crowd->getAgent(agentId);
@@ -93,7 +88,7 @@ void PathfinderModule::RemoveAgent(int agentId)
 
 void PathfinderModule::InitQuerySystem()
 {
-    if (!tmpNavmesh)
+    if (!navmesh)
     {
         GLOG("[Error] No navmesh assigned for query system");
         return;
@@ -108,9 +103,9 @@ void PathfinderModule::InitQuerySystem()
 
     // Allocate and initialize new query
     navQuery = dtAllocNavMeshQuery();
-    if (navQuery && tmpNavmesh->GetDetourNavMesh())
+    if (navQuery && navmesh->GetDetourNavMesh())
     {
-        navQuery->init(tmpNavmesh->GetDetourNavMesh(), maxNodes);
+        navQuery->init(navmesh->GetDetourNavMesh(), maxNodes);
     }
     else
     {
@@ -124,9 +119,9 @@ void PathfinderModule::InitQuerySystem()
     }
 
     crowd = dtAllocCrowd();
-    if (crowd && tmpNavmesh->GetDetourNavMesh())
+    if (crowd && navmesh->GetDetourNavMesh())
     {
-        crowd->init(maxAgents, maxAgentRadius, tmpNavmesh->GetDetourNavMesh());
+        crowd->init(maxAgents, maxAgentRadius, navmesh->GetDetourNavMesh());
     }
     else
     {
@@ -136,7 +131,7 @@ void PathfinderModule::InitQuerySystem()
 
 void PathfinderModule::ResetNavmesh()
 {
-    tmpNavmesh = new ResourceNavMesh(GenerateUID(), DEFAULT_NAVMESH_NAME);
+    navmesh = new ResourceNavMesh(GenerateUID(), DEFAULT_NAVMESH_NAME);
 }
 
 // Currently called by clicking in the game, but any float3 will move the agents there. ONLY WORKS IN PLAY MODE
@@ -191,20 +186,22 @@ void PathfinderModule::RenderCrowdEditor()
 
 void PathfinderModule::SaveNavMesh(const std::string& name)
 {
-    if (!tmpNavmesh) // todo check if it's built maybe?
+    if (!navmesh) // todo check if it's built maybe?
     {
         GLOG("Cannot save: NavMesh not built.");
         return;
     }
 
-    const UID uid = NavmeshImporter::SaveNavmesh(name.c_str(), tmpNavmesh, navconf);
+    const UID uid = NavmeshImporter::SaveNavmesh(name.c_str(), navmesh, navconf);
     App->GetSceneModule()->GetScene()->SetNavmeshUID(uid);
 
-    GLOG("NavMesh saved with UID: %u", uid);
+    //GLOG("NavMesh saved with UID: %u", uid);
 }
 
 void PathfinderModule::LoadNavMesh(const std::string& name)
 {
+    ClearNavMesh();
+
     const UID navmeshUID = App->GetLibraryModule()->GetNavmeshUID(name);
     if (navmeshUID == 0)
     {
@@ -219,13 +216,11 @@ void PathfinderModule::LoadNavMesh(const std::string& name)
         return;
     }
 
-    if (tmpNavmesh) delete tmpNavmesh;
-
-    tmpNavmesh = loadedNavmesh;
+    navmesh = loadedNavmesh;
 
     InitQuerySystem();
 
-    GLOG("Navmesh '%s' successfully loaded and set.", name.c_str());
+    //GLOG("Navmesh '%s' successfully loaded and set.", name.c_str());
 }
 
 void PathfinderModule::AddAIAgentComponent(int agentId, AIAgentComponent* comp)
@@ -245,17 +240,11 @@ AIAgentComponent* PathfinderModule::GetComponentFromAgentId(int agentId)
 
 void PathfinderModule::CreateNavMesh()
 {
-    // Cleanup old navmesh
-    if (tmpNavmesh != nullptr)
-    {
-
-        delete tmpNavmesh;
-        tmpNavmesh = nullptr;
-    }
+    ClearNavMesh();
 
     UID navUID = GenerateUID();
 
-    tmpNavmesh = new ResourceNavMesh(navUID, "RuntimeNavMesh");
+    navmesh    = new ResourceNavMesh(navUID, "RuntimeNavMesh");
 
     std::vector<std::pair<const ResourceMesh*, const float4x4&>> meshes;
     float minPos[3]                                         = {FLT_MAX, FLT_MAX, FLT_MAX};
@@ -299,7 +288,16 @@ void PathfinderModule::CreateNavMesh()
         GLOG("[WARNING] Trying to create NavMesh but no meshes are found in the scene");
         return;
     }
-    tmpNavmesh->BuildNavMesh(meshes, minPos, maxPos, navconf);
+    navmesh->BuildNavMesh(meshes, minPos, maxPos, navconf);
 
     InitQuerySystem();
+}
+
+void PathfinderModule::ClearNavMesh()
+{
+    if (navmesh)
+    {
+        delete navmesh;
+        navmesh = nullptr;
+    }
 }

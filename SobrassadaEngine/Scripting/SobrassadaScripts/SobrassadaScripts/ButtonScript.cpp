@@ -15,7 +15,7 @@
 
 bool ButtonScript::Init()
 {
-    GLOG("Initiating ButtonScript");
+    //GLOG("Initiating ButtonScript");
 
     if (!parent)
     {

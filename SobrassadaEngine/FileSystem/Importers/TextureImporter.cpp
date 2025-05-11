@@ -98,7 +98,7 @@ namespace TextureImporter
         App->GetLibraryModule()->AddName(fileName, finalTextureUID);
         App->GetLibraryModule()->AddResource(saveFilePath, finalTextureUID);
 
-        GLOG("%s saved as dds", fileName.c_str());
+        //GLOG("%s saved as dds", fileName.c_str());
 
         return finalTextureUID;
     }

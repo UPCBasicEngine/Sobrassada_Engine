@@ -197,7 +197,7 @@ bool Character::CheckDistanceWithPoint(const float3& point) const
 
 void Character::Die()
 {
-    GLOG("%s dead", parent->GetName().c_str());
+    //GLOG("%s dead", parent->GetName().c_str());
     isDead = true;
     OnDeath();
 

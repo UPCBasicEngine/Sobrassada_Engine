@@ -111,7 +111,7 @@ void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat
         Channel* animChannel = currentAnimation->GetChannel(nodeName);
         if (animChannel == nullptr)
         {
-            GLOG("No channel for node %s", nodeName.c_str());
+            //GLOG("No channel for node %s", nodeName.c_str());
             return; // IMPORTANT: Don't modify pos/rot if no channel exists
         }
 
@@ -137,7 +137,7 @@ void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat
 
         if (animChannel == nullptr && targetAnimChannel == nullptr)
         {
-            GLOG("No channel for node %s in either animation", nodeName.c_str());
+            //GLOG("No channel for node %s in either animation", nodeName.c_str());
             return; // Don't modify pos/rot if no channel exists in either animation
         }
 

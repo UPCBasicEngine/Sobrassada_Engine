@@ -319,7 +319,7 @@ void AnimationComponent::OnInspector()
         {
             if (ImGui::Button(triggerName.c_str()))
             {
-                GLOG("Trigger selected: %s", triggerName.c_str());
+                //GLOG("Trigger selected: %s", triggerName.c_str());
                 bool triggerAvailable = false;
                 if (IsPlaying())
                 {
@@ -500,7 +500,7 @@ void AnimationComponent::SetAnimationResource(UID animResource)
 {
     resource = animResource;
     AddAnimation(resource);
-    GLOG("Setting animation resource: %llu", resource);
+    //GLOG("Setting animation resource: %llu", resource);
 }
 
 void AnimationComponent::UpdateBoneHierarchy(GameObject* bone)
@@ -511,7 +511,7 @@ void AnimationComponent::UpdateBoneHierarchy(GameObject* bone)
     bone->OnTransformUpdated();
 
     // Debug output to see what's happening
-    GLOG("Updated bone %s global transform", bone->GetName().c_str());
+    //GLOG("Updated bone %s global transform", bone->GetName().c_str());
 
     for (const UID childUID : bone->GetChildren())
     {
@@ -546,7 +546,7 @@ void AnimationComponent::SetBoneMapping()
     };
     mapBones(parent);
 
-    // GLOG("Bone mapping completed: %zu bones mapped", boneMapping.size());
+    //GLOG("Bone mapping completed: %zu bones mapped", boneMapping.size());
 }
 
 bool AnimationComponent::IsFinished() const

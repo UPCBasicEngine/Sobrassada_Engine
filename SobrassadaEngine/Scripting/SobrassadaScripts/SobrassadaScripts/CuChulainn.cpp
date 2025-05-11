@@ -33,7 +33,7 @@ CuChulainn::CuChulainn(GameObject* parent)
 
 bool CuChulainn::Init()
 {
-    GLOG("Initiating CuChulainn");
+    //GLOG("Initiating CuChulainn");
 
     Character::Init();
 
@@ -198,7 +198,7 @@ void CuChulainn::LookAtMouse()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableMouseOffset(false);
-    GLOG("THROW SPEAR");
+    //GLOG("THROW SPEAR");
     throwTimer = throwCooldown;
     if (weapon)
     {
@@ -234,7 +234,7 @@ void CuChulainn::Attack(float time)
 {
     // TODO: play basicAttack sound
 
-    GLOG("ATTACK");
+    //GLOG("ATTACK");
 
     if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
     desiredAttack = false;

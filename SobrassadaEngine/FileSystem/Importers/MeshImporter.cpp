@@ -135,12 +135,13 @@ namespace MeshImporter
                 tanStride                           = tanView.byteStride ? tanView.byteStride : sizeof(float4);
                 generateTangents                    = true;
             }
+            else GLOG("Model without tangents");
 
             const auto& itJoints              = primitive.attributes.find("JOINTS_0");
             const unsigned char* bufferJoints = nullptr;
             if (itJoints != primitive.attributes.end())
             {
-                GLOG("GET JOINTS");
+                //GLOG("GET JOINTS");
                 const tinygltf::Accessor& jointAcc    = model.accessors[itJoints->second];
                 const tinygltf::BufferView& jointView = model.bufferViews[jointAcc.bufferView];
                 const tinygltf::Buffer& jointBuffer   = model.buffers[jointView.buffer];
@@ -163,7 +164,7 @@ namespace MeshImporter
             const unsigned char* bufferWeights = nullptr;
             if (itWeights != primitive.attributes.end())
             {
-                GLOG("GET WEIGHTS");
+                //GLOG("GET WEIGHTS");
                 const tinygltf::Accessor& weightsAcc    = model.accessors[itWeights->second];
                 const tinygltf::BufferView& weightsView = model.bufferViews[weightsAcc.bufferView];
                 const tinygltf::Buffer& weightsBuffer   = model.buffers[weightsView.buffer];
@@ -353,7 +354,7 @@ namespace MeshImporter
         App->GetLibraryModule()->AddName(name, finalMeshUID);
         App->GetLibraryModule()->AddResource(saveFilePath, finalMeshUID);
 
-        GLOG("%s saved as binary", name.c_str());
+        //GLOG("%s saved as binary", name.c_str());
 
         return finalMeshUID;
     }
