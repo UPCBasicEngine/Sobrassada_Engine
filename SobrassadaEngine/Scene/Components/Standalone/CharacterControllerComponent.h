@@ -70,6 +70,9 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     float dashTimeRemaining      = 0.0f;         
     float3 dashDirection         = float3::zero; 
-    float dashSpeed              = 20.0f;        
+    float dashSpeed              = 20.0f;   
+    float3 dashTarget;
+    float3 dashStartPosition;
+    float3 dashEndPosition;
 
 };

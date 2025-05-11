@@ -12,6 +12,7 @@
 #include "ResourceNavMesh.h"
 #include "ResourcesModule.h"
 #include "SceneModule.h"
+#include "Utils/RaycastController.h"
 
 #include "Geometry/LineSegment.h"
 #include "Geometry/Plane.h"
@@ -114,18 +115,38 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (dashTimeRemaining > 0.0f)
     {
-        float3 currentPos = parent->GetGlobalTransform().TranslatePart();
-        float3 dashOffset = dashDirection * dashSpeed * deltaTime;
-        parent->SetLocalPosition(currentPos + dashOffset - parent->GetParentGlobalTransform().TranslatePart());
+        float3 currentPos        = parent->GetGlobalTransform().TranslatePart();
+        float3 directionToTarget = dashTarget - currentPos;
+        float distanceToTarget   = directionToTarget.Length();
 
-        dashTimeRemaining -= deltaTime;
+        if (distanceToTarget > 0.5f)
+        {
+            directionToTarget.Normalize();
+            float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
+
+            if (dashOffset.Length() >= distanceToTarget)
+            {
+                parent->SetLocalPosition(dashTarget - parent->GetParentGlobalTransform().TranslatePart());
+                dashTimeRemaining = 0.0f;
+            }
+            else
+            {
+                parent->SetLocalPosition(currentPos + dashOffset - parent->GetParentGlobalTransform().TranslatePart());
+                dashTimeRemaining -= deltaTime;
+            }
+        }
+        else
+        {
+            dashTimeRemaining = 0.0f;
+        }
+
         if (dashTimeRemaining <= 0.0f)
         {
             float3 adjustedPos = parent->GetGlobalTransform().TranslatePart();
-            AdjustHeightToNavMesh(adjustedPos);
+            //AdjustHeightToNavMesh(adjustedPos);
             parent->SetLocalPosition(adjustedPos - parent->GetParentGlobalTransform().TranslatePart());
         }
-        return;
+
     }
 
     dtNavMesh* dtNav =
@@ -435,28 +456,53 @@ void CharacterControllerComponent::DashThroughNavMesh(float deltaTime)
     if (dashDirection.LengthSq() < 0.0001f) return;
     dashDirection.Normalize();
 
+    // NOT FALLING LOGIC
+    // const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+    // float3 dashTarget       = currentPos + dashDirection * dashDistance;
+
+    // if (!navMeshQuery) return;
+
+    // dtQueryFilter filter;
+    // filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+    // filter.setExcludeFlags(0);
+
+    // float extents[3] = {0.5f, 1.0f, 0.5f}; // Tamaño de la caja de búsqueda
+    // float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
+    // dtPolyRef targetRef = 0;
+
+    // dtStatus status     = navMeshQuery->findNearestPoly(dashTarget.ptr(), extents, &filter, &targetRef,
+    // nearestPoint);
+
+    // if (dtStatusFailed(status) || targetRef == 0)
+    //{
+    //     GLOG("Nearest points: (%f, %f, %f)", nearestPoint[0], nearestPoint[1], nearestPoint[2]);
+    //     GLOG("No navmesh found at dash target position. Dash canceled.");
+    //     //dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]);
+    //     return;
+    // }
+
+    // WALL COLLISION LOGIC
     const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
-    float3 dashTarget       = currentPos + dashDirection * dashDistance;
+    GLOG("Current position: (%f, %f, %f)", currentPos.x, currentPos.y, currentPos.z);
+    dashTarget = currentPos + dashDirection * dashDistance;
 
-    if (!navMeshQuery) return; 
+    LineSegment ray(currentPos, dashTarget);
+    GameObject* hitObject = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+        ray, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
+    );
 
-    dtQueryFilter filter;
-    filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
-    filter.setExcludeFlags(0);
-
-
-    float extents[3] = {0.5f, 1.0f, 0.5f}; // Tamaño de la caja de búsqueda
-    float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
-    dtPolyRef targetRef = 0;
-
-    dtStatus status     = navMeshQuery->findNearestPoly(dashTarget.ptr(), extents, &filter, &targetRef, nearestPoint);
-
-    if (dtStatusFailed(status) || targetRef == 0)
+    if (hitObject != nullptr)
     {
-        GLOG("Nearest points: (%f, %f, %f)", nearestPoint[0], nearestPoint[1], nearestPoint[2]);
-        GLOG("No navmesh found at dash target position. Dash canceled.");
-        //dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]); 
-        return;
+        const AABB& box = hitObject->GetGlobalAABB();
+
+        float tNear, tFar;
+        if (box.Intersects(ray, tNear, tFar))
+        {
+            float3 impactPoint     = ray.GetPoint(tNear);
+            const float wallOffset = 0.5f;
+            dashTarget             = impactPoint - dashDirection * wallOffset;
+            GLOG("Dash impact point adjusted: (%f, %f, %f)", +dashTarget.x, dashTarget.y, dashTarget.z);
+        }
     }
 
     dashSpeed         = dashDistance / dashDuration;
