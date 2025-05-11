@@ -279,7 +279,7 @@ void AIAgentComponent::RecreateAgent()
 
 void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 {
-    float3 selfPos = parent->GetGlobalTransform().TranslatePart();
+    const float3 selfPos = parent->GetGlobalTransform().TranslatePart();
     float3 desired = targetPos - selfPos;
     desired.y      = 0.0f;
 
