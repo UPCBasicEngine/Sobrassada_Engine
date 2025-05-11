@@ -25,8 +25,7 @@ ScriptComponent::ScriptComponent(const rapidjson::Value& initialState, GameObjec
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                CreateScript(name);
-                scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
             }
         }
     }
@@ -41,8 +40,7 @@ void ScriptComponent::Load(const rapidjson::Value& initialState)
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                CreateScript(name);
-                scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
             }
         }
     }
@@ -172,14 +170,16 @@ void ScriptComponent::OnCollision(GameObject* otherObject, const float3& collisi
     }
 }
 
-void ScriptComponent::CreateScript(const std::string& scriptType)
+bool ScriptComponent::CreateScript(const std::string& scriptType)
 {
     Script* instance = App->GetScriptModule()->CreateScript(scriptType, parent);
-    if (instance == nullptr) return;
+    if (instance == nullptr) return false;
 
     scriptInstances.push_back(instance);
     scriptNames.push_back(scriptType);
     scriptTypes.push_back(static_cast<ScriptType>(SearchIdxForString(scriptType)));
+
+    return true;
 }
 
 void ScriptComponent::DeleteScript(const int index)

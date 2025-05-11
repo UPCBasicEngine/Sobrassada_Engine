@@ -19,14 +19,15 @@
 
 CharacterControllerComponent* character = nullptr;
 
-CuChulainn::CuChulainn(GameObject* parent) : Character(parent, 5, 1, 0.5f, 2.0f, 1.0f, 1.0f, 0.0f, 0.0f)
+CuChulainn::CuChulainn(GameObject* parent)
+    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, patrolPoint)
 {
     currentHealth = 3; // mainChar starts low hp
+    type          = CharacterType::CuChulainn;
 
     // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
-    fields.push_back({"Weapon Name", InspectorField::FieldType::InputText, &weaponName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
 }
 
@@ -38,10 +39,9 @@ bool CuChulainn::Init()
 
     character = parent->GetComponent<CharacterControllerComponent*>();
     if (!character)
-    {
-        GLOG("CharacterController component not found for CuChulainn");
-        return false;
-    }
+        GLOG("CharacterController component not found for CuChulainn")
+    else speed = character->GetSpeed();
+    
 
     const GameObject* cameraObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
     if (cameraObj && cameraObj->GetComponent<ScriptComponent*>())
@@ -55,13 +55,6 @@ bool CuChulainn::Init()
     {
         spear = spearObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
-    }
-
-    weapon = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(weaponName);
-    if (!weapon)
-    {
-        GLOG("[WARNING] No weapon found by the name %s", weaponName.c_str());
-        return false;
     }
 
     return true;

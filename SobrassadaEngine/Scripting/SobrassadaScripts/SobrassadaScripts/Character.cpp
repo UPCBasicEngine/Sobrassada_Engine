@@ -16,53 +16,59 @@
 #include <string>
 
 Character::Character(
-    GameObject* parent, int maxHealth, int damage, float attackDuration, float speed, float cooldown, float range,
-    float rangeAIAttack, float rangeAIChase
+    GameObject* parent, int newMaxHealth, int newDamage, float newAttackDuration, float newAttackCooldown,
+    float newRange, float newRangeAIAttack, float newRangeAIChase, const float3& newPatrolPoint
 )
-    : Script(parent), maxHealth(maxHealth), damage(damage), attackDuration(attackDuration), speed(speed),
-      attackCooldown(cooldown), range(range), rangeAIAttack(rangeAIAttack), rangeAIChase(rangeAIChase)
+    : Script(parent), maxHealth(newMaxHealth), damage(newDamage), attackDuration(newAttackDuration),
+      attackCooldown(newAttackCooldown), range(newRange), rangeAIAttack(newRangeAIAttack),
+      rangeAIChase(newRangeAIChase), patrolPoint(newPatrolPoint)
 {
     currentHealth = maxHealth;
 
-    fields.push_back({"Max Health", InspectorField::FieldType::Int, &this->maxHealth, 0, 10});
+    fields.push_back({"Max Health", InspectorField::FieldType::Int, &maxHealth, 0, 10});
     fields.push_back({"Current Health", InspectorField::FieldType::Int, &currentHealth, 0, 10});
     fields.push_back({"Invulnerable", InspectorField::FieldType::Bool, &isInvulnerable, true, false});
     fields.push_back({"Dead", InspectorField::FieldType::Bool, &isDead, true, false});
-    fields.push_back({"Damage", InspectorField::FieldType::Int, &this->damage, 0, 3});
-    fields.push_back({"Attack Duration", InspectorField::FieldType::Float, &this->attackDuration, 0.0f, 1.0f});
+    fields.push_back({"Damage", InspectorField::FieldType::Int, &damage, 0, 3});
+    fields.push_back({"Attack Duration", InspectorField::FieldType::Float, &attackDuration, 0.0f, 1.0f});
     fields.push_back({"Attack Cooldown", InspectorField::FieldType::Float, &attackCooldown, 0.0f, 2.0f});
-    fields.push_back({"Attack Range", InspectorField::FieldType::Float, &this->range, 0.0f, 3.0f});
+    fields.push_back({"Attack Range", InspectorField::FieldType::Float, &range, 0.0f, 3.0f});
+    fields.push_back({"Weapon Name", InspectorField::FieldType::InputText, &weaponName});
+
+    if (type != CharacterType::CuChulainn)
+    {
+        fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
+        fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 5.0f});
+        fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint});
+    }
 }
 
 bool Character::Init()
 {
     animComponent = parent->GetComponent<AnimationComponent*>();
-    if (!animComponent)
-    {
-        GLOG("Animation component not found for %s", parent->GetName().c_str());
-    }
-    else
-    {
-        animComponent->OnPlay(false);
-    }
+    if (!animComponent) GLOG("Animation component not found for %s", parent->GetName().c_str())
+    else animComponent->OnPlay(false);
 
     characterCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (!characterCollider)
-    {
-        GLOG("Character capsule collider component not found for %s", parent->GetName().c_str());
-        return false;
-    }
+        GLOG("Character capsule collider component not found for %s", parent->GetName().c_str())
 
-    weaponCollider = parent->GetComponentChild<CubeColliderComponent*>(AppEngine);
-    if (!weaponCollider)
+    weapon = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(weaponName);
+    if (!weapon)
     {
-        GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str());
-        return false;
+        GLOG("[WARNING] No weapon found by the name %s", weaponName.c_str());
     }
-    weaponCollider->SetEnabled(false);
-
+    else
+    {
+        weaponCollider = weapon->GetComponent<CubeColliderComponent*>();
+        if (!weaponCollider)
+            GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str())
+        else weaponCollider->SetEnabled(false);
+    }
     lastAttackTime = -1.0f;
     lastTimeHit    = -1.0f;
+
+    startPos       = parent->GetPosition();
 
     return true;
 }
@@ -70,6 +76,8 @@ bool Character::Init()
 void Character::Update(float deltaTime)
 {
     if (isDead) return;
+
+    if (!characterCollider || !weaponCollider || !weapon) return;
 
     float gameTime = AppEngine->GetGameTimer()->GetTime() / 1000.0f;
     if (isAttacking && gameTime - lastAttackTime >= attackDuration)
@@ -175,6 +183,16 @@ AIStates Character::CheckDistanceWithPlayer() const
         else if (distance <= rangeAIChase) return MEDIUM;
     }
     return FAR_AWAY;
+}
+
+bool Character::CheckDistanceWithPoint(const float3& point) const
+{
+    float3 parentPoint = parent->GetPosition();
+    parentPoint.y      = point.y;
+
+    float distance     = parentPoint.Distance(point);
+    if (distance <= 0.5f) return true;
+    return false;
 }
 
 void Character::Die()

@@ -34,9 +34,9 @@ class Script;
 class GameObject;
 
 constexpr const char* scripts[] = {
-    "RotateGameObject",          // SCRIPT_ROTATE_GAME_OBJECT
+    "RotateGameObjectScript",          // SCRIPT_ROTATE_GAME_OBJECT
     "ButtonScript",              // SCRIPT_BUTTON
-    "GodMode",                   // SCRIPT_GOD_MODE
+    "GodModeScript",                   // SCRIPT_GOD_MODE
     "CuChulainnScript",          // SCRIPT_CU_CHULAINN
     "SoldierScript",             // SCRIPT_SOLDIER
     "ExitGameScript",            // SCRIPT_EXIT_GAME
@@ -64,7 +64,6 @@ class ScriptComponent : public Component
     ~ScriptComponent() override;
 
     void Load(const rapidjson::Value& initialState);
-    void LoadScripts();
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override;
@@ -76,7 +75,7 @@ class ScriptComponent : public Component
 
     void InitScriptInstances();
     void OnCollision(GameObject* otherObject, const float3& collisionNormal);
-    void CreateScript(const std::string& scriptType);
+    bool CreateScript(const std::string& scriptType);
     void DeleteScript(const int index);
     void DeleteAllScripts();
 

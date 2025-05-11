@@ -109,6 +109,13 @@ update_status SceneModule::PostUpdate(float deltaTime)
                 App->GetPathfinderModule()->HandleClickNavigation();
             }
         }
+        else if (GetDoMouseInputsScene())
+        {
+            if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN)
+            {
+                App->GetPathfinderModule()->GetClickNavigation();
+            }
+        }
 
         // CTRL+D -> Duplicate selected game object
         if (keyboard[SDL_SCANCODE_LCTRL] && keyboard[SDL_SCANCODE_D] == KeyState::KEY_DOWN &&

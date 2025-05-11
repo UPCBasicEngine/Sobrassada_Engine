@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Script.h"
+
 #include <vector>
 
 class GameObject;
@@ -16,12 +17,19 @@ enum AIStates
     FAR_AWAY
 };
 
+enum class CharacterType
+{
+    None,
+    CuChulainn,
+    Soldier,
+};
+
 class Character : public Script
 {
   public:
     Character(
-        GameObject* parent, int maxHealth, int damage, float attackDuration, float speed, float cooldown, float range,
-        float rangeAIAttack, float rangeAIChase
+        GameObject* parent, int maxHealth, int damage, float attackDuration, float cooldown, float range,
+        float rangeAIAttack, float rangeAIChase, const float3& patrolPoint
     );
     virtual ~Character() noexcept override { parent = nullptr; };
 
@@ -36,6 +44,7 @@ class Character : public Script
     void Heal(int amount);
     virtual bool CanAttack(float deltaTime);
     AIStates CheckDistanceWithPlayer() const;
+    bool CheckDistanceWithPoint(const float3& point) const;
 
   private:
     virtual void HandleState(float deltaTime) {};
@@ -58,6 +67,8 @@ class Character : public Script
     float range                                 = 0.0f;
     AnimationComponent* animComponent           = nullptr;
     CapsuleColliderComponent* characterCollider = nullptr;
+    std::string weaponName                      = "";
+    GameObject* weapon                          = nullptr;
     CubeColliderComponent* weaponCollider       = nullptr;
 
     float lastAttackTime                        = -1.0f;
@@ -65,7 +76,12 @@ class Character : public Script
     const float invulnerableDuration            = 0.7f;
     bool isAttacking                            = false;
 
+    CharacterType type                          = CharacterType::None;
+
     // AI
-    float rangeAIAttack                         = 0.0f;
     float rangeAIChase                          = 0.0f;
+    float rangeAIAttack                         = 0.0f;
+    float3 patrolPoint                          = float3::zero;
+    bool reachedPatrolPoint                     = false;
+    float3 startPos                             = float3::zero;
 };

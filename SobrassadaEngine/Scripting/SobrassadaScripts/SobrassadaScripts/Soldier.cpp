@@ -1,8 +1,10 @@
 #include "pch.h"
 
+#include "Application.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "Globals.h"
 #include "ResourceStateMachine.h"
 #include "Soldier.h"
@@ -10,8 +12,9 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 
-Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 1.0f, 2.0f, 10.0f)
+Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, patrolPoint)
 {
+    type = CharacterType::Soldier;
 }
 
 bool Soldier::Init()
@@ -23,23 +26,29 @@ bool Soldier::Init()
     Character::Init();
 
     agentAI = parent->GetComponent<AIAgentComponent*>();
-    if (!agentAI)
+    if (agentAI == nullptr) GLOG("AIAgent component not found for Soldier")
+    else
     {
-        GLOG("AIAgent component not found for Soldier");
-        return false;
+        agentAI->RecreateAgent();
+        speed = agentAI->GetSpeed();
     }
-
-    agentAI->SetSpeed(speed);
 
     return true;
 }
 
 void Soldier::Update(float deltaTime)
 {
-    if (character != nullptr && currentState != SoldierStates::PATROL)
-        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-
     Character::Update(deltaTime);
+
+    if (agentAI == nullptr) return;
+
+    float gameTime = AppEngine->GetGameTimer()->GetTime() / 1000.0f;
+
+    if (!CanAttack(gameTime) && !agentAI->IsPaused()) agentAI->PauseMovement();
+    else if (CanAttack(gameTime) && agentAI->IsPaused()) agentAI->ResumeMovement();
+
+    if (character != nullptr && currentState != SoldierStates::PATROL && !agentAI->IsPaused())
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 }
 
 void Soldier::OnDeath()
@@ -64,23 +73,23 @@ void Soldier::PerformAttack()
 
 void Soldier::HandleState(float gameTime)
 {
-    if (!animComponent) return;
+    // if (!animComponent) return;
 
     switch (currentState)
     {
     case SoldierStates::PATROL:
         // GLOG("Soldier Patrolling");
-        animComponent->UseTrigger("idle");
+        // animComponent->UseTrigger("idle");
         PatrolAI();
         break;
     case SoldierStates::CHASE:
         // GLOG("Soldier Chasing");
-        animComponent->UseTrigger("Run");
+        //  animComponent->UseTrigger("Run");
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
         // GLOG("Soldier Basic Attack");
-        animComponent->UseTrigger("attack");
+        //  animComponent->UseTrigger("attack");
         Attack(gameTime);
         if (CheckDistanceWithPlayer() != CLOSE) currentState = SoldierStates::CHASE;
         break;
@@ -93,8 +102,26 @@ void Soldier::HandleState(float gameTime)
 
 void Soldier::PatrolAI()
 {
+    float deltaTime = AppEngine->GetGameTimer()->GetDeltaTime();
+
     if (CheckDistanceWithPlayer() == MEDIUM) currentState = SoldierStates::CHASE;
     else if (CheckDistanceWithPlayer() == CLOSE) currentState = SoldierStates::BASIC_ATTACK;
+
+    bool valid = false;
+    if (reachedPatrolPoint)
+    {
+        if (CheckDistanceWithPoint(startPos)) reachedPatrolPoint = false;
+        else valid = agentAI->SetPathNavigation(startPos);
+
+        agentAI->LookAtMovement(startPos, deltaTime);
+    }
+    else
+    {
+        if (CheckDistanceWithPoint(patrolPoint)) reachedPatrolPoint = true;
+        else valid = agentAI->SetPathNavigation(patrolPoint);
+
+        agentAI->LookAtMovement(patrolPoint, deltaTime);
+    }
 }
 
 void Soldier::ChaseAI()
