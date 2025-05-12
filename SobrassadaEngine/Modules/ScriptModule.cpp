@@ -112,7 +112,7 @@ void ScriptModule::SaveScriptsToFile(const std::string& filename, const rapidjso
     outFile << buffer.GetString();
     outFile.close();
 
-    GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
+    //GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
 }
 
 void ScriptModule::DeleteAllScripts(bool saveJson)

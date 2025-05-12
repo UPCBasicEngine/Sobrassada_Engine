@@ -27,7 +27,7 @@ void PressAnyKeyScript::Update(float deltaTime)
 
     if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
     {
-        GLOG("Valid key pressed - Hiding '{}', showing '{}'", parent->GetName(), nextGameObjectName);
+        //GLOG("Valid key pressed - Hiding '{}', showing '{}'", parent->GetName(), nextGameObjectName);
 
         parent->SetEnabled(false);
 
@@ -37,7 +37,7 @@ void PressAnyKeyScript::Update(float deltaTime)
             if (go && go->GetName() == nextGameObjectName)
             {
                 go->SetEnabled(true);
-                GLOG("Enabled GameObject '{}'", nextGameObjectName);
+                //GLOG("Enabled GameObject '{}'", nextGameObjectName);
                 break;
             }
         }

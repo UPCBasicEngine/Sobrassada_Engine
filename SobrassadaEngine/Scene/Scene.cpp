@@ -100,7 +100,7 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         lightsConfig->LoadData(initialState["Lights Config"]);
     }
 
-    GLOG("%s scene loaded", sceneName.c_str());
+    //GLOG("%s scene loaded", sceneName.c_str());
 }
 
 Scene::~Scene()
@@ -115,6 +115,7 @@ Scene::~Scene()
 
     selectedGameObjects.clear();
 
+    App->GetPathfinderModule()->ClearNavMesh();
     delete lightsConfig;
     delete sceneOctree;
     delete dynamicTree;
@@ -123,7 +124,7 @@ Scene::~Scene()
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
 
-    GLOG("%s scene closed", sceneName.c_str());
+    //GLOG("%s scene closed", sceneName.c_str());
 }
 
 void Scene::Init()
@@ -295,7 +296,13 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #endif
     glEnable(GL_STENCIL_TEST);
 
-    GeometryPassRender(objectsToRender, camera, gbuffer);
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    {
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        GeometryPassRender(objectsToRender, camera, gbuffer);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+    else GeometryPassRender(objectsToRender, camera, gbuffer);
 
     LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
 
@@ -450,9 +457,7 @@ void Scene::RenderEditorControl(bool& editorControlMenu)
                 if (ImGui::Checkbox(DebugStrings[i], &currentBitValue))
                 {
                     App->GetDebugDrawModule()->FlipDebugOptionValue(i);
-                    if (i == (int)DebugOptions::RENDER_WIREFRAME)
-                        App->GetOpenGLModule()->SetRenderWireframe(currentBitValue);
-                    else if (i == (int)DebugOptions::RENDER_PHYSICS_WORLD)
+                    if (i == (int)DebugOptions::RENDER_PHYSICS_WORLD)
                         App->GetPhysicsModule()->SetDebugOption(currentBitValue);
                 }
             }
@@ -1049,7 +1054,7 @@ void Scene::LoadModel(const UID modelUID)
 {
     if (modelUID != INVALID_UID)
     {
-        GLOG("Load model %llu", modelUID);
+        //GLOG("Load model %llu", modelUID);
 
         ResourceModel* newModel               = (ResourceModel*)App->GetResourcesModule()->RequestResource(modelUID);
         const Model& model                    = newModel->GetModelData();
@@ -1061,15 +1066,17 @@ void Scene::LoadModel(const UID modelUID)
         std::vector<UID> gameObjectsUID;
         std::vector<GameObject*> rootGameObjects;
 
-        GLOG("Model Animation UID: %llu", newModel->GetAnimationUID());
+        //GLOG("Model Animation UID: %llu", newModel->GetAnimationUID());
 
         const auto& animUIDs = newModel->GetAllAnimationUIDs();
-        GLOG("Total Animation UIDs %zu ", animUIDs.size());
+        //GLOG("Total Animation UIDs %zu ", animUIDs.size());
 
+        /*
         for (UID uid : animUIDs)
         {
             GLOG("Animation UID in list: %llu ", uid);
         }
+        */
         for (unsigned int i = 0; i < allNodes.size(); ++i)
         {
             gameObjectsUID.push_back(GenerateUID());
@@ -1144,7 +1151,7 @@ void Scene::LoadModel(const UID modelUID)
                 if (currentNodeData.meshes.size() > 0)
                 {
                     GameObject* currentGameObject = gameObjectsArray[currentNodeIndex];
-                    GLOG("Node %s has %d meshes", currentNodeData.name.c_str(), currentNodeData.meshes.size());
+                    //GLOG("Node %s has %d meshes", currentNodeData.name.c_str(), currentNodeData.meshes.size());
 
                     unsigned meshNum = 1;
 
@@ -1182,10 +1189,10 @@ void Scene::LoadModel(const UID modelUID)
                             // Add skin to meshComponent
                             if (currentNodeData.skinIndex != -1)
                             {
-                                GLOG(
+                                /*GLOG(
                                     "Node %s has skin index: %d", currentNodeData.name.c_str(),
                                     currentNodeData.skinIndex
-                                );
+                                );*/
                                 Skin skin = model.GetSkin(currentNodeData.skinIndex);
 
                                 std::vector<GameObject*> bones;
@@ -1216,13 +1223,13 @@ void Scene::LoadModel(const UID modelUID)
                 rootGameObject->CreateComponent(COMPONENT_ANIMATION);
                 AnimationComponent* animComponent = rootGameObject->GetComponent<AnimationComponent*>();
 
-                GLOG("Model has %zu animations", animUIDs.size());
+                //GLOG("Model has %zu animations", animUIDs.size());
                 for (UID uid : animUIDs)
                 {
-                    GLOG("Setting aimation resource with UID %llu ", uid);
+                    //GLOG("Setting aimation resource with UID %llu ", uid);
                     animComponent->SetAnimationResource(uid);
 
-                    GLOG("Animation UID: %llu", uid);
+                    //GLOG("Animation UID: %llu", uid);
                 }
             }
             else
@@ -1278,6 +1285,9 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
 
         const ResourcePrefab* resourcePrefab =
             prefab == nullptr ? (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID) : prefab;
+
+        if (resourcePrefab == nullptr) return; // If the prefab file is corrupted or not available, loading is cancelled
+        
         const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsVector();
         const std::vector<int>& parentIndices            = resourcePrefab->GetParentIndices();
 

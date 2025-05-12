@@ -110,7 +110,8 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
-    dtNavMesh* dtNav         = App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh(); // crash here means no navmesh loaded
+    dtNavMesh* dtNav =
+        App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh(); // crash here means no navmesh loaded
 
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
 
@@ -323,7 +324,8 @@ void CharacterControllerComponent::LookAtMovement(const float3& moveDir, float d
     float angle   = atan2(forward.Cross(desiredDir).y, forward.Dot(desiredDir));
 
     float maxStep = maxAngularSpeed * deltaTime;
-    angle         = std::clamp(angle, -maxStep, maxStep);
+    if (isRadians) maxStep *= RAD_DEGREE_CONV;
+    angle = std::clamp(angle, -maxStep, maxStep);
 
     if (fabs(angle) < 0.0001f)
     {

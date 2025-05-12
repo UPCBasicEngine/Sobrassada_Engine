@@ -8,6 +8,7 @@
 #include "InputModule.h"
 #include "OpenGLModule.h"
 #include "SceneModule.h"
+#include "WindowModule.h"
 
 #include "ImGui.h"
 #include "Math/MathFunc.h"
@@ -423,6 +424,17 @@ void SOBRASADA_API_ENGINE CameraComponent::Rotate(float yaw, float pitch)
 
 const LineSegment CameraComponent::CastCameraRay()
 {
+#ifdef GAME
+    // In game, just get the mouse position because it covers all the window
+    const float2 mousePosition    = App->GetInputModule()->GetMousePosition();
+
+    const float percentageX       = mousePosition.x / App->GetWindowModule()->GetWidth();
+    const float percentageY       = mousePosition.y / App->GetWindowModule()->GetHeight();
+
+    const float normalizedX       = Clamp(Lerp(-1.0f, 1.0f, percentageX), -1.0f, 1.0f);
+    const float normalizedY       = Clamp(Lerp(1.0f, -1.0f, percentageY), -1.0f, 1.0f);
+#else
+    // Get the mouse position depending on the scene buffer size and position
     const auto& windowPosition = App->GetSceneModule()->GetScene()->GetWindowPosition();
     const auto& windowSize     = App->GetSceneModule()->GetScene()->GetWindowSize();
     const auto& mousePos       = App->GetSceneModule()->GetScene()->GetMousePosition();
@@ -438,7 +450,7 @@ const LineSegment CameraComponent::CastCameraRay()
 
     const float normalizedX    = Clamp(Lerp(-1.0f, 1.0f, percentageX), -1.0f, 1.0f);
     const float normalizedY    = Clamp(Lerp(1.0f, -1.0f, percentageY), -1.0f, 1.0f);
-
+#endif
     return camera.UnProjectLineSegment(normalizedX, normalizedY);
 }
 
