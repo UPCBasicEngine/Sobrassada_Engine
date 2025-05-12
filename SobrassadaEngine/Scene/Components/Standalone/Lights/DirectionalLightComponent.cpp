@@ -36,6 +36,7 @@ void DirectionalLightComponent::Clone(const Component* other)
     {
         const DirectionalLightComponent* otherLight = static_cast<const DirectionalLightComponent*>(other);
         enabled                                     = otherLight->enabled;
+        wasEnabled                                  = otherLight->wasEnabled;
 
         intensity                                   = otherLight->intensity;
         color                                       = otherLight->color;
@@ -55,7 +56,7 @@ void DirectionalLightComponent::Render(float deltaTime)
 void DirectionalLightComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;
-    if (!enabled || !drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
+    if (!drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
 
     DebugDrawModule* debug = App->GetDebugDrawModule();
     debug->DrawLine(

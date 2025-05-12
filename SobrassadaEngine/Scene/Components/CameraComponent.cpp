@@ -201,6 +201,7 @@ void CameraComponent::Clone(const Component* other)
     {
         const CameraComponent* otherCamera = static_cast<const CameraComponent*>(other);
         enabled                            = otherCamera->enabled;
+        wasEnabled                         = otherCamera->wasEnabled;
 
         camera                             = otherCamera->camera;
         matrices                           = otherCamera->matrices;
@@ -237,65 +238,62 @@ void CameraComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
+    ImGui::SeparatorText("Camera Component");
+
+    if (App->GetSceneModule()->GetScene()->GetMainCamera() != nullptr)
+        isMainCamera = (App->GetSceneModule()->GetScene()->GetMainCamera()->GetUbo() == ubo);
+    if (ImGui::Checkbox("Main Camera", &isMainCamera))
     {
-        ImGui::SeparatorText("Camera Component");
-
-        if (App->GetSceneModule()->GetScene()->GetMainCamera() != nullptr)
-            isMainCamera = (App->GetSceneModule()->GetScene()->GetMainCamera()->GetUbo() == ubo);
-        if (ImGui::Checkbox("Main Camera", &isMainCamera))
+        if (isMainCamera)
         {
-            if (isMainCamera)
-            {
-                App->GetSceneModule()->GetScene()->SetMainCamera(this);
-            }
+            App->GetSceneModule()->GetScene()->SetMainCamera(this);
         }
-        ImGui::Checkbox("Draw gizmos", &drawGizmos);
-        ImGui::Checkbox("See Preview", &seePreview);
+    }
+    ImGui::Checkbox("Draw gizmos", &drawGizmos);
+    ImGui::Checkbox("See Preview", &seePreview);
 
-        if (ImGui::DragFloat("Near Plane", &camera.nearPlaneDistance, 0.01f, 0.01f, camera.farPlaneDistance, "%.2f"))
-        {
-            float cameraNear         = std::max(0.01f, camera.nearPlaneDistance);
-            cameraNear               = std::min(cameraNear, camera.farPlaneDistance - 0.1f);
-            camera.nearPlaneDistance = cameraNear;
-        }
-        if (ImGui::DragFloat("Far Plane", &camera.farPlaneDistance, 0.1f, camera.nearPlaneDistance, 1000.f, "%.2f"))
-        {
-            float cameraFar         = std::min(1000.0f, camera.farPlaneDistance);
-            cameraFar               = std::max(cameraFar, camera.nearPlaneDistance + 0.1f);
-            camera.farPlaneDistance = cameraFar;
-        }
+    if (ImGui::DragFloat("Near Plane", &camera.nearPlaneDistance, 0.01f, 0.01f, camera.farPlaneDistance, "%.2f"))
+    {
+        float cameraNear         = std::max(0.01f, camera.nearPlaneDistance);
+        cameraNear               = std::min(cameraNear, camera.farPlaneDistance - 0.1f);
+        camera.nearPlaneDistance = cameraNear;
+    }
+    if (ImGui::DragFloat("Far Plane", &camera.farPlaneDistance, 0.1f, camera.nearPlaneDistance, 1000.f, "%.2f"))
+    {
+        float cameraFar         = std::min(1000.0f, camera.farPlaneDistance);
+        cameraFar               = std::max(cameraFar, camera.nearPlaneDistance + 0.1f);
+        camera.farPlaneDistance = cameraFar;
+    }
 
-        static const char* projectionTypes[] = {"Perspective", "Orthographic"};
-        int currentProjection                = (camera.type == OrthographicFrustum) ? 1 : 0;
+    static const char* projectionTypes[] = {"Perspective", "Orthographic"};
+    int currentProjection                = (camera.type == OrthographicFrustum) ? 1 : 0;
 
-        if (ImGui::Combo("Projection Type", &currentProjection, projectionTypes, IM_ARRAYSIZE(projectionTypes)))
-        {
-            if (currentProjection == 1) ChangeToOrtographic();
-            else ChangeToPerspective();
-        }
+    if (ImGui::Combo("Projection Type", &currentProjection, projectionTypes, IM_ARRAYSIZE(projectionTypes)))
+    {
+        if (currentProjection == 1) ChangeToOrtographic();
+        else ChangeToPerspective();
+    }
 
-        if (camera.type == PerspectiveFrustum)
+    if (camera.type == PerspectiveFrustum)
+    {
+        float hfov = camera.horizontalFov * RAD_DEGREE_CONV;
+        if (ImGui::DragFloat("FoV", &hfov, 0.1f, 1.0f, 179.0f, "%.2f"))
         {
-            float hfov = camera.horizontalFov * RAD_DEGREE_CONV;
-            if (ImGui::DragFloat("FoV", &hfov, 0.1f, 1.0f, 179.0f, "%.2f"))
-            {
-                camera.horizontalFov = hfov * DEGREE_RAD_CONV;
-                auto framebuffer     = App->GetOpenGLModule()->GetFramebuffer();
-                int width            = framebuffer->GetTextureWidth();
-                int height           = framebuffer->GetTextureHeight();
-                camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
-            }
+            camera.horizontalFov = hfov * DEGREE_RAD_CONV;
+            auto framebuffer     = App->GetOpenGLModule()->GetFramebuffer();
+            int width            = framebuffer->GetTextureWidth();
+            int height           = framebuffer->GetTextureHeight();
+            camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
         }
-        else if (camera.type == OrthographicFrustum)
+    }
+    else if (camera.type == OrthographicFrustum)
+    {
+        if (ImGui::DragFloat("Width", &camera.orthographicWidth, 0.1f, 0.1f, 200.f, "%.2f"))
         {
-            if (ImGui::DragFloat("Width", &camera.orthographicWidth, 0.1f, 0.1f, 200.f, "%.2f"))
-            {
-                auto framebuffer          = App->GetOpenGLModule()->GetFramebuffer();
-                int width                 = framebuffer->GetTextureWidth();
-                int height                = framebuffer->GetTextureHeight();
-                camera.orthographicHeight = camera.orthographicWidth * ((float)height / (float)width);
-            }
+            auto framebuffer          = App->GetOpenGLModule()->GetFramebuffer();
+            int width                 = framebuffer->GetTextureWidth();
+            int height                = framebuffer->GetTextureHeight();
+            camera.orthographicHeight = camera.orthographicWidth * ((float)height / (float)width);
         }
     }
 }
@@ -471,7 +469,7 @@ void CameraComponent::Render(float deltaTime)
 void CameraComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;
-    if (!enabled || !drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
+    if (!drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
     DebugDrawModule* debug = App->GetDebugDrawModule();
     debug->DrawFrustrum(camera.ProjectionMatrix(), camera.ViewMatrix());
     if (previewEnabled) RenderCameraPreview(deltaTime);

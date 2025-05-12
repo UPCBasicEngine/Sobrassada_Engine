@@ -33,7 +33,6 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     void OnStop();
     void OnPause();
     void OnResume();
-    void OnInspector();
     void AddAnimation(UID resource);
     bool UseTrigger(const std::string& triggerName);
 
