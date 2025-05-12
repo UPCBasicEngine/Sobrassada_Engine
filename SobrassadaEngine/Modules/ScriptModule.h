@@ -28,7 +28,12 @@ class ScriptModule : public Module
     bool close();
     bool ShutDown() override;
 
-    Script* CreateScript(const std::string& name, GameObject* parent) const { return createScriptFunc(name, parent); }
+    Script* CreateScript(const std::string& name, GameObject* parent) const
+    {
+        if (createScriptFunc != nullptr) return createScriptFunc(name, parent);
+        else return nullptr;
+    }
+
     void DestroyScript(Script* script) const { destroyScriptFunc(script); }
 
   private:

@@ -25,10 +25,6 @@ void ExitGameScript::Update(float deltaTime)
 {
 }
 
-void ExitGameScript::Inspector()
-{
-}
-
 void ExitGameScript::OnClick()
 {
     //GLOG("Exiting game...");

@@ -104,6 +104,8 @@ void CubeColliderComponent::Clone(const Component* other)
     {
         const CubeColliderComponent* cube = static_cast<const CubeColliderComponent*>(other);
 
+        enabled                           = cube->enabled;
+        wasEnabled                        = cube->wasEnabled;
         generateCallback                  = cube->generateCallback;
         fitToSize                         = cube->fitToSize;
         mass                              = cube->mass;
@@ -122,34 +124,32 @@ void CubeColliderComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
+    ImGui::SeparatorText("Capsule Collider Component");
+    if (ImGui::BeginCombo("Collider type", ColliderTypeStrings[(int)colliderType]))
     {
-        ImGui::SeparatorText("Capsule Collider Component");
-        if (ImGui::BeginCombo("Collider type", ColliderTypeStrings[(int)colliderType]))
+        const int colliderStringSize = sizeof(ColliderTypeStrings) / sizeof(char*);
+        for (int i = 0; i < colliderStringSize; ++i)
         {
-            const int colliderStringSize = sizeof(ColliderTypeStrings) / sizeof(char*);
-            for (int i = 0; i < colliderStringSize; ++i)
+            if (ImGui::Selectable(ColliderTypeStrings[i]))
             {
-                if (ImGui::Selectable(ColliderTypeStrings[i]))
+                colliderType = ColliderType(i);
+                if (colliderType == ColliderType::STATIC)
                 {
-                    colliderType = ColliderType(i);
-                    if (colliderType == ColliderType::STATIC)
-                    {
-                        parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
-                        mass = 0.f;
-                    }
-
-                    else
-                    {
-                        parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
-                        mass = 1.f;
-                    }
-
-                    App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+                    parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
+                    mass = 0.f;
                 }
+
+                else
+                {
+                    parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
+                    mass = 1.f;
+                }
+
+                App->GetPhysicsModule()->UpdateCubeRigidBody(this);
             }
-            ImGui::EndCombo();
         }
+        ImGui::EndCombo();
+    }
 
         ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
         if (ImGui::DragFloat("Mass", &mass, 0.05f, -10.f, 10.f))
@@ -166,37 +166,44 @@ void CubeColliderComponent::RenderEditorInspector()
         if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
             App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 
-        // COLLIDER LAYER SETTINGS
-        if (ImGui::BeginCombo("Layer options", ColliderLayerStrings[(int)layer]))
+    // COLLIDER LAYER SETTINGS
+    if (ImGui::BeginCombo("Layer options", ColliderLayerStrings[(int)layer]))
+    {
+        const int colliderStringSize = sizeof(ColliderLayerStrings) / sizeof(char*);
+        for (int i = 0; i < colliderStringSize; ++i)
         {
-            const int colliderStringSize = sizeof(ColliderLayerStrings) / sizeof(char*);
-            for (int i = 0; i < colliderStringSize; ++i)
+            if (ImGui::Selectable(ColliderLayerStrings[i]))
             {
-                if (ImGui::Selectable(ColliderLayerStrings[i]))
-                {
-                    layer = ColliderLayer(i);
-                    App->GetPhysicsModule()->UpdateCubeRigidBody(this);
-                }
+                layer = ColliderLayer(i);
+                App->GetPhysicsModule()->UpdateCubeRigidBody(this);
             }
-            ImGui::EndCombo();
         }
+        ImGui::EndCombo();
+    }
 
-        if (ImGui::Checkbox("Fit to size", &fitToSize))
-        {
-            CalculateCollider();
-            App->GetPhysicsModule()->UpdateCubeRigidBody(this);
-        }
+    if (ImGui::Checkbox("Fit to size", &fitToSize))
+    {
+        CalculateCollider();
+        App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+    }
 
-        if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
-        {
-            userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-        }
+    if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
+    {
+        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
     }
 }
 
 void CubeColliderComponent::Update(float deltaTime)
 {
-    if (!IsEffectivelyEnabled()) return;
+    if (!IsEffectivelyEnabled())
+    {
+        if (rigidBody) App->GetPhysicsModule()->DeleteCubeRigidBody(this);
+        return;
+    }
+    else
+    {
+        if (rigidBody == nullptr) App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    }
 }
 
 void CubeColliderComponent::Render(float deltaTime)
