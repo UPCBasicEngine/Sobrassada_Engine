@@ -534,6 +534,9 @@
     <ClCompile Include="Utils\NavMeshConfig.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Modules\GameDebugUIModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1042,6 +1045,9 @@
     </ClInclude>
     <ClInclude Include="Utils\HashString.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\GameDebugUIModule.h">
+      <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

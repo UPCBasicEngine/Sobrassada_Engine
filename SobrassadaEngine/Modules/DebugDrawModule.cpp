@@ -764,10 +764,13 @@ void DebugDrawModule::DrawCone(const float3& center, const float3& dir, const fl
 
 void DebugDrawModule::Draw3DText(const btVector3& location, const char* textString)
 {
-    CameraModule* cameraModule = App->GetCameraModule();
+    bool playMode              = App->GetSceneModule()->GetInPlayMode();
 
-    const float4x4& projection = cameraModule->GetProjectionMatrix();
-    const float4x4& view       = cameraModule->GetViewMatrix();
+    CameraModule* cameraModule = App->GetCameraModule();
+    CameraComponent* camera    = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+    const float4x4& projection = playMode ? camera->GetProjectionMatrix() : cameraModule->GetProjectionMatrix();
+    const float4x4& view       = playMode ? camera->GetViewMatrix() : cameraModule->GetViewMatrix();
     const float3 pos           = float3(location);
 
     auto framebuffer           = App->GetOpenGLModule()->GetFramebuffer();
@@ -775,6 +778,11 @@ void DebugDrawModule::Draw3DText(const btVector3& location, const char* textStri
     int height                 = framebuffer->GetTextureHeight();
 
     dd::projectedText(textString, pos, float3::zero, view * projection, 0, 0, width, height);
+}
+
+void DebugDrawModule::Draw2DText(const char* textString, const float3& location)
+{
+    dd::screenText(textString, location, float3::zero);
 }
 
 void DebugDrawModule::DrawContactPoint(
