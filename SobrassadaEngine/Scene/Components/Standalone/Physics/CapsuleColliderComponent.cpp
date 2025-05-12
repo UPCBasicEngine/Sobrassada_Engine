@@ -148,7 +148,7 @@ void CapsuleColliderComponent::RenderEditorInspector()
     }
 
         ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
-        if (ImGui::DragFloat("Mass", &mass, 0.05f, -10.f, 10.f))
+        if (ImGui::DragFloat("Mass", &mass, 1.f, 0.f, 100.f))
         {
             App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
         }
@@ -157,9 +157,9 @@ void CapsuleColliderComponent::RenderEditorInspector()
         if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
             App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
 
-        if (ImGui::DragFloat("Radius", &radius, 0.05f, -10.f, 10.f))
+        if (ImGui::DragFloat("Radius", &radius, 0.05f, 0.f, 20.f))
             App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
-        if (ImGui::DragFloat("Length", &length, 0.05f, -10.f, 10.f))
+        if (ImGui::DragFloat("Length", &length, 0.05f, 0.f, 20.f))
             App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
 
         if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))

@@ -152,7 +152,7 @@ void CubeColliderComponent::RenderEditorInspector()
     }
 
         ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
-        if (ImGui::DragFloat("Mass", &mass, 0.05f, -10.f, 10.f))
+        if (ImGui::DragFloat("Mass", &mass, 0.05f, 0.f, 20.f))
         {
             App->GetPhysicsModule()->UpdateCubeRigidBody(this);
         }
@@ -161,7 +161,7 @@ void CubeColliderComponent::RenderEditorInspector()
         if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
             App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 
-        if (ImGui::DragFloat3("Size", &size[0], 0.05f, -10.f, 10.f)) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+        if (ImGui::DragFloat3("Size", &size[0], 0.05f, 0.f, 20.f)) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 
         if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
             App->GetPhysicsModule()->UpdateCubeRigidBody(this);
