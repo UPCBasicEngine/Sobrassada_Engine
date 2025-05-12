@@ -39,35 +39,52 @@ bool TileFloatScript::Init()
     }
     initialY = parent->GetLocalTransform().TranslatePart().y;
 
-    float4x4 transform = parent->GetLocalTransform();
-    float3 pos         = transform.TranslatePart();
-    pos.y              = 3.0f;
-    transform.SetTranslatePart(pos);
-    parent->SetLocalTransform(transform);
-    parent->UpdateTransformForGOBranch();
-
-
     GLOG("Initiating TileFloatScript");
     return true;
 }
-
 void TileFloatScript::Update(float deltaTime)
 {
     if (!character) return;
 
     const float distance = character->GetLastPosition().Distance(parent->GetPosition());
-    if (distance > 10.0f) return;
 
-    float3 currentPos   = parent->GetLocalTransform().TranslatePart();
+    if (!isActive && distance <= 6.0f)
+    {
+        isActive = true;
+    }
 
-    if (currentPos.y >= initialY) return;
+    if (!isActive) return;
 
-    float riseStep         = speed * deltaTime * 5;
-    float clampedRise      = min(riseStep, currentPos.y);
+    float3 currentPos     = parent->GetLocalTransform().TranslatePart();
+    float4x4 newTransform = parent->GetLocalTransform();
 
-    currentPos.y          += clampedRise;
+    float targetY;
 
-    float4x4 newTransform  = parent->GetLocalTransform();
+    if (distance <= 5.0f)
+    {
+        targetY = initialY;
+        if (currentPos.y < initialY)
+        {
+            float riseStep = speed * deltaTime * 5;
+            currentPos.y   = min(currentPos.y + riseStep, initialY);
+        }
+    }
+    else
+    {
+
+        targetY = -3.0f;
+        if (currentPos.y > targetY)
+        {
+            float lowerStep = speed * deltaTime * 5;
+            currentPos.y    = max(currentPos.y - lowerStep, targetY);
+        }
+
+        if (fabs(currentPos.y - targetY) < 0.01f && distance > 10.0f)
+        {
+            isActive = false;
+        }
+    }
+
     newTransform.SetTranslatePart(currentPos);
     parent->SetLocalTransform(newTransform);
     parent->UpdateTransformForGOBranch();

@@ -15,4 +15,5 @@ class TileFloatScript : public Script
   private:
     float speed           = 50.0f;
     float initialY        = 0.0f;
+    bool isActive         = false;
 };
