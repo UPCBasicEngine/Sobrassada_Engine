@@ -128,6 +128,7 @@ void ButtonComponent::Clone(const Component* other)
     {
         const ButtonComponent* otherButton = static_cast<const ButtonComponent*>(other);
         enabled                            = otherButton->enabled;
+        wasEnabled                         = otherButton->wasEnabled;
         isInteractable                     = otherButton->isInteractable;
 
         defaultColor                       = otherButton->defaultColor;
@@ -186,7 +187,7 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
 
 void ButtonComponent::OnClick()
 {
-    GLOG("Clicked button!");
+    //GLOG("Clicked button!");
     onClickDispatcher.Call();
     if (image) image->SetColor(clickedColor);
 }
@@ -215,12 +216,10 @@ std::list<Delegate<void>>::iterator ButtonComponent::AddOnClickCallback(Delegate
     return onClickDispatcher.SubscribeCallback(std::move(newDelegate));
 }
 
-
 void ButtonComponent::RemoveOnClickCallback(std::list<Delegate<void>>::iterator delegate)
 {
     onClickDispatcher.SafeRemoveCallback(delegate);
 }
-
 
 void ButtonComponent::OnInteractionChange() const
 {

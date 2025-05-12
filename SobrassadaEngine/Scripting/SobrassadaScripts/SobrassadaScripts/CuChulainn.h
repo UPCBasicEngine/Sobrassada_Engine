@@ -57,15 +57,12 @@ class CuChulainn : public Character
     std::string spearName       = "";
     Projectile* spear           = nullptr;
 
-    std::string weaponName      = "";
-    GameObject* weapon          = nullptr;
-
-    bool isDashing              = false;
-    float dashCooldown          = 2.0f;
-    float dashTimer             = 0.0f;
-    bool desiredDash            = false;
-    float dashBufferTimer       = 0.0f;
-    float dashBuffer            = 0.5f;
+    bool isDashing          = false;
+    float dashCooldown      = 2.0f;
+    float dashTimer         = 0.0f;
+    bool desiredDash        = false;
+    float dashBufferTimer   = 0.0f;
+    float dashBuffer        = 0.5f;
 
     bool desiredAttack          = false;
     float attackTimer           = 0.0f;

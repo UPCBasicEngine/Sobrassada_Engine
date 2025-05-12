@@ -549,7 +549,7 @@ void StateMachineEditor::BuildGraph()
         }
     }
 
-    GLOG("Total links in graph after adding them: %d", graph->getLinks().size());
+    //GLOG("Total links in graph after adding them: %d", graph->getLinks().size());
     resource->SetDefaultState(0);
 }
 
@@ -574,7 +574,7 @@ void StateMachineEditor::DetectNewTransitions()
 
                 if (!resource->GetTransition(fromState, toState))
                 {
-                    GLOG("Creating transition from %s to %s", fromState.c_str(), toState.c_str());
+                    //GLOG("Creating transition from %s to %s", fromState.c_str(), toState.c_str());
                     resource->AddTransition(fromState, toState, "Trigger", 200);
                     // availableTriggers.push_back("Trigger");
                 }
@@ -704,13 +704,13 @@ void StateMachineEditor::ShowLoadPopup()
 
             if (selectedUID != 0)
             {
-                GLOG("Loading State Machine: %s", selectedName.c_str());
+                //GLOG("Loading State Machine: %s", selectedName.c_str());
 
                 ResourceStateMachine* stateMachine =
                     (ResourceStateMachine*)App->GetResourcesModule()->RequestResource(selectedUID);
                 if (stateMachine)
                 {
-                    GLOG("Successfully loaded State Machine: %s", selectedName.c_str());
+                    //GLOG("Successfully loaded State Machine: %s", selectedName.c_str());
                     resource = stateMachine;
                     BuildGraph();
                     ImGui::CloseCurrentPopup();

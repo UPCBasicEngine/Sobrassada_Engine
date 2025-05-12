@@ -58,6 +58,7 @@ void SpotLightComponent::Clone(const Component* other)
     {
         const SpotLightComponent* otherLight = static_cast<const SpotLightComponent*>(other);
         enabled                              = otherLight->enabled;
+        wasEnabled                           = otherLight->wasEnabled;
 
         intensity                            = otherLight->intensity;
         color                                = otherLight->color;
@@ -77,19 +78,16 @@ void SpotLightComponent::RenderEditorInspector()
 {
     LightComponent::RenderEditorInspector();
 
-    if (enabled)
-    {
-        ImGui::Text("Spot light parameters");
+    ImGui::Text("Spot light parameters");
 
-        ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
-        if (ImGui::SliderFloat("Inner angle", &innerAngle, 0.0f, 90.0f))
-        {
-            if (innerAngle > outerAngle) outerAngle = innerAngle;
-        }
-        if (ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 90.0f))
-        {
-            if (outerAngle < innerAngle) innerAngle = outerAngle;
-        }
+    ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
+    if (ImGui::SliderFloat("Inner angle", &innerAngle, 0.0f, 90.0f))
+    {
+        if (innerAngle > outerAngle) outerAngle = innerAngle;
+    }
+    if (ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 90.0f))
+    {
+        if (outerAngle < innerAngle) innerAngle = outerAngle;
     }
 }
 
@@ -101,7 +99,7 @@ void SpotLightComponent::Render(float deltaTime)
 void SpotLightComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;
-    if (!enabled || !drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
+    if (!drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
 
     const float innerRads = innerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : innerAngle * (PI / 180.0f);
     const float outerRads = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);

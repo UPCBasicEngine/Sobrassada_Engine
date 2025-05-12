@@ -81,7 +81,7 @@ UID NavmeshImporter::SaveNavmesh(const char* name, const ResourceNavMesh* resour
     App->GetLibraryModule()->AddResource(navPath, finalNavmeshUID);
     App->GetLibraryModule()->AddName(name, finalNavmeshUID);
 
-    GLOG("%s saved navmesh binary.", name);
+    //GLOG("%s saved navmesh binary.", name);
 
     return finalNavmeshUID;
 }

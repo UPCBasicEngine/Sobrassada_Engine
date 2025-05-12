@@ -30,9 +30,11 @@ class ScriptComponent : public Component
 
     void InitScriptInstances();
     void OnCollision(GameObject* otherObject, const float3& collisionNormal);
-    void CreateScript(const std::string& scriptType);
+    bool CreateScript(const std::string& scriptType);
     void DeleteScript(const int index);
     void DeleteAllScripts();
+
+    void ResetInitializationFlags();
 
     const std::vector<Script*>& GetScriptInstances() const { return scriptInstances; }
     const std::vector<std::string>& GetAllScriptNames() const { return scriptNames; }
@@ -53,5 +55,9 @@ class ScriptComponent : public Component
 
     std::vector<std::string> scriptNames;
     std::vector<Script*> scriptInstances;
+    std::vector<bool> scriptEnabled;
+    std::vector<bool> scriptInitialized;
+    std::vector<bool> scriptWasEnabledLastFrame;
     std::vector<int> scriptTypes;
+    //std::vector<ScriptType> scriptTypes;
 };
