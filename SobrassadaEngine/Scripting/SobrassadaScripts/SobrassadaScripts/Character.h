@@ -42,14 +42,14 @@ class Character : public Script
     void TakeDamage(int amount);
 
   protected:
-    virtual void Attack(float deltaTime);
+    virtual void Attack();
+    virtual void UpdateTimers(float deltaTime);
     void Heal(int amount);
-    virtual bool CanAttack(float deltaTime);
     AIStates CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
 
   private:
-    virtual void HandleState(float deltaTime) {};
+    virtual void HandleState() {};
     virtual void OnDeath() {};
     virtual void OnDamageTaken(int amount) {}; // depending of amout damage taken do some sound or another for example
     virtual void OnHealed(int amount) {};
@@ -58,23 +58,25 @@ class Character : public Script
     void Die();
 
   protected:
-    int maxHealth                               = 0;
-    int currentHealth                           = 0;
-    bool isInvulnerable                         = false;
-    bool isDead                                 = false;
-    int damage                                  = 0;
-    float attackDuration                        = 0.0f;
-    float speed                                 = 0.0f;
-    float attackCooldown                        = 0.0f;
-    float range                                 = 0.0f;
     AnimationComponent* animComponent           = nullptr;
     CapsuleColliderComponent* characterCollider = nullptr;
     std::string weaponName                      = "";
     GameObject* weapon                          = nullptr;
     CubeColliderComponent* weaponCollider       = nullptr;
 
-    float lastAttackTime                        = -1.0f;
-    float lastTimeHit                           = -1.0f;
+    int maxHealth                               = 0;
+    int currentHealth                           = 0;
+    bool isInvulnerable                         = false;
+    bool isDead                                 = false;
+    float speed                                 = 0.0f;
+
+    int attackDamage                            = 0;
+    float attackDuration                        = 0.0f;
+    float attackCooldown                        = 0.0f;
+    float range                                 = 0.0f;
+
+    float attackTimer                           = 0.0f;
+    float invulnerabilityTimer                  = -1.0f;
     const float invulnerableDuration            = 0.7f;
     bool isAttacking                            = false;
 

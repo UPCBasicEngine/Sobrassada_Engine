@@ -3,6 +3,8 @@
 #include "Banshee.h"
 
 #include "GameObject.h"
+#include "Standalone/AIAgentComponent.h"
+#include "Standalone/AnimationComponent.h"
 
 Banshee::Banshee(GameObject* parent)
     : Character(
@@ -21,11 +23,22 @@ Banshee::Banshee(GameObject* parent)
 
 bool Banshee::Init()
 {
+    Character::Init();
+
+    agentAI = parent->GetComponent<AIAgentComponent*>();
+    if (agentAI == nullptr) GLOG("AIAgent component not found for Soldier")
+    else
+    {
+        agentAI->RecreateAgent();
+        speed = agentAI->GetSpeed();
+    }
+
     return true;
 }
 
 void Banshee::Update(float deltaTime)
 {
+    Character::Update(deltaTime);
 }
 
 void Banshee::OnDeath()
@@ -40,8 +53,25 @@ void Banshee::PerformAttack()
 {
 }
 
-void Banshee::HandleState(float deltaTime)
+void Banshee::HandleState()
 {
+    switch (currentState)
+    {
+    case BansheeStates::Idle:
+        break;
+
+    case BansheeStates::Chase:
+        ChasePlayer();
+        break;
+
+    case BansheeStates::Flee:
+        Flee();
+        break;
+
+    case BansheeStates::Scream:
+        Attack();
+        break;
+    }
 }
 
 void Banshee::ChasePlayer()
@@ -50,4 +80,19 @@ void Banshee::ChasePlayer()
 
 void Banshee::Flee()
 {
+}
+
+void Banshee::Attack()
+{
+    if (!isAttacking)
+    {
+        GLOG("Banshee attack");
+        animComponent->UseTrigger("Tal");
+        isAttacking = true;
+        agentAI->PauseMovement();
+    }
+    else
+    {
+        // Enable hitbox when animation
+    }
 }

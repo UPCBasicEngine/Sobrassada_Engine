@@ -33,17 +33,17 @@ class CuChulainn : public Character
     void OnDamageTaken(int amount) override;
     void OnHealed(int amount) override;
     void PerformAttack() override;
-    void HandleState(float deltaTime) override;
+    void HandleState() override;
 
     bool CanDash();
-    bool CanAttack(float deltaTime) override;
+    bool CanAttack();
     bool CanAim() const;
     void GetInputs();
     void UpdateTimers(float deltaTime);
     void LookAtMouse();
 
     void ThrowSpear();
-    void Attack(float time) override;
+    void Attack() override;
     void Dash();
     void Aim();
     void Move();
@@ -64,7 +64,6 @@ class CuChulainn : public Character
     float dashBuffer        = 0.5f;
 
     bool desiredAttack      = false;
-    float attackTimer       = 0.0f;
     float attackBufferTimer = 0.0f;
     float attackBuffer      = 0.5f;
 

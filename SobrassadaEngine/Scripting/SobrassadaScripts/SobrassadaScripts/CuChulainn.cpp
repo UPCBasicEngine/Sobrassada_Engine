@@ -32,15 +32,13 @@ CuChulainn::CuChulainn(GameObject* parent)
 
 bool CuChulainn::Init()
 {
-    //GLOG("Initiating CuChulainn");
+    // GLOG("Initiating CuChulainn");
 
     Character::Init();
 
     character = parent->GetComponent<CharacterControllerComponent*>();
-    if (!character)
-        GLOG("CharacterController component not found for CuChulainn")
+    if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
-    
 
     const GameObject* cameraObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
     if (cameraObj && cameraObj->GetComponent<ScriptComponent*>())
@@ -66,7 +64,6 @@ void CuChulainn::Update(float deltaTime)
     GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
-    UpdateTimers(deltaTime);
 }
 
 void CuChulainn::OnDeath()
@@ -86,10 +83,10 @@ void CuChulainn::OnHealed(int amount)
     // TODO: play particle system effects
 }
 
-void CuChulainn::HandleState(float time)
+void CuChulainn::HandleState()
 {
     if (desiredDash && CanDash()) Dash();
-    else if (desiredAttack && CanAttack(time)) Attack(time);
+    else if (desiredAttack && CanAttack()) Attack();
     else if (desiredAim && CanAim()) Aim();
     else if (!isAttacking && !isDashing) Move();
 
@@ -140,9 +137,9 @@ bool CuChulainn::CanDash()
     return dashTimer <= 0;
 }
 
-bool CuChulainn::CanAttack(float time)
+bool CuChulainn::CanAttack()
 {
-    return (state != CharacterStates::DASH && !isAttacking && time - lastAttackTime >= attackCooldown);
+    return (state != CharacterStates::DASH && !isAttacking && attackTimer <= 0);
 }
 
 bool CuChulainn::CanAim() const
@@ -152,6 +149,8 @@ bool CuChulainn::CanAim() const
 
 void CuChulainn::UpdateTimers(float deltaTime)
 {
+    Character::UpdateTimers(deltaTime);
+
     // Dash timers
     dashTimer -= deltaTime;
     if (dashTimer < 0) dashTimer = 0;
@@ -197,7 +196,7 @@ void CuChulainn::LookAtMouse()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableMouseOffset(false);
-    //GLOG("THROW SPEAR");
+    // GLOG("THROW SPEAR");
     throwTimer = throwCooldown;
     if (weapon)
     {
@@ -226,10 +225,11 @@ void CuChulainn::PerformAttack()
 
     if (!isAttacking) return;
 
+    if (attackTimer <= 0) isAttacking = false;
     // TODO: When timer matches animation, enable weapon collider. Disable it afterwards
 }
 
-void CuChulainn::Attack(float time)
+void CuChulainn::Attack()
 {
     // TODO: play basicAttack sound
 
@@ -240,7 +240,7 @@ void CuChulainn::Attack(float time)
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
 
-    Character::Attack(time);
+    Character::Attack();
     LookAtMouse();
     if (animComponent) animComponent->UseTrigger("attack");
 }

@@ -26,7 +26,8 @@ class Soldier : public Character
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
-    void HandleState(float deltaTime) override;
+    void HandleState() override;
+    void Attack() override;
 
     void PatrolAI();
     void ChaseAI();

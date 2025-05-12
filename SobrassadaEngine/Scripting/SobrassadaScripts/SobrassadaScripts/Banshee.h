@@ -5,6 +5,14 @@
 class GameObject;
 class AIAgentComponent;
 
+enum class BansheeStates
+{
+    Idle,
+    Chase,
+    Flee,
+    Scream
+};
+
 class Banshee : public Character
 {
   public:
@@ -18,11 +26,13 @@ class Banshee : public Character
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
-    void HandleState(float deltaTime) override;
+    void HandleState() override;
 
     void ChasePlayer();
     void Flee();
+    void Attack() override;
 
   private:
-    AIAgentComponent* agentAI = nullptr;
+    AIAgentComponent* agentAI  = nullptr;
+    BansheeStates currentState = BansheeStates::Idle;
 };
