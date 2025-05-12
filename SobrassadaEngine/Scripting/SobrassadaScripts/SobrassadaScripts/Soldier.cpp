@@ -97,8 +97,8 @@ void Soldier::PatrolAI()
 {
     float deltaTime = AppEngine->GetGameTimer()->GetDeltaTime();
 
-    if (CheckDistanceWithPlayer() == MEDIUM) currentState = SoldierStates::CHASE;
-    else if (CheckDistanceWithPlayer() == CLOSE) currentState = SoldierStates::BASIC_ATTACK;
+    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
+    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
 
     bool valid = false;
     if (reachedPatrolPoint)
@@ -121,7 +121,7 @@ void Soldier::ChaseAI()
 {
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == CLOSE) currentState = SoldierStates::BASIC_ATTACK;
+        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
         else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = SoldierStates::PATROL;
     }
     else currentState = SoldierStates::PATROL;
@@ -144,6 +144,6 @@ void Soldier::Attack()
     {
         isAttacking = false;
         agentAI->ResumeMovement();
-        if (CheckDistanceWithPlayer() != CLOSE) currentState = SoldierStates::CHASE;
+        if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
     }
 }

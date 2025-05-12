@@ -171,15 +171,15 @@ void Character::Heal(int amount)
     OnHealed(amount);
 }
 
-AIStates Character::CheckDistanceWithPlayer() const
+PlayerDistances Character::CheckDistanceWithPlayer() const
 {
     if (character != nullptr)
     {
         float distance = character->GetLastPosition().Distance(parent->GetPosition());
-        if (distance <= rangeAIAttack) return CLOSE;
-        else if (distance <= rangeAIChase) return MEDIUM;
+        if (distance <= rangeAIAttack) return PlayerDistances::Close;
+        else if (distance <= rangeAIChase) return PlayerDistances::Medium;
     }
-    return FAR_AWAY;
+    return PlayerDistances::Far;
 }
 
 bool Character::CheckDistanceWithPoint(const float3& point) const

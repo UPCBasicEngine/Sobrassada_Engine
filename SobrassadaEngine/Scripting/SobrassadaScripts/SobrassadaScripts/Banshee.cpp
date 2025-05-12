@@ -2,9 +2,11 @@
 
 #include "Banshee.h"
 
+#include "CuChulainn.h"
 #include "GameObject.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/CharacterControllerComponent.h"
 
 Banshee::Banshee(GameObject* parent)
     : Character(
@@ -58,6 +60,8 @@ void Banshee::HandleState()
     switch (currentState)
     {
     case BansheeStates::Idle:
+        if (animComponent) animComponent->UseTrigger("Idle");
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = BansheeStates::Chase;
         break;
 
     case BansheeStates::Chase:
@@ -76,6 +80,10 @@ void Banshee::HandleState()
 
 void Banshee::ChasePlayer()
 {
+    if (!character) return;
+
+    if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = BansheeStates::Scream;
+    else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
 }
 
 void Banshee::Flee()
@@ -87,12 +95,21 @@ void Banshee::Attack()
     if (!isAttacking)
     {
         GLOG("Banshee attack");
-        animComponent->UseTrigger("Tal");
+        animComponent->UseTrigger("Attack");
         isAttacking = true;
         agentAI->PauseMovement();
     }
     else
     {
         // Enable hitbox when animation
+
+        // If player is really close, flee
+
+        if (attackTimer <= 0)
+        {
+            isAttacking = false;
+            agentAI->ResumeMovement();
+            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = BansheeStates::Chase;
+        }
     }
 }

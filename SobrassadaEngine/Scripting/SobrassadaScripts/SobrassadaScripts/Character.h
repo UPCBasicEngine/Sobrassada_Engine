@@ -10,11 +10,11 @@ class AnimationComponent;
 class CubeColliderComponent;
 class CapsuleColliderComponent;
 
-enum AIStates
+enum class PlayerDistances
 {
-    CLOSE = 0,
-    MEDIUM,
-    FAR_AWAY
+    Close,
+    Medium,
+    Far
 };
 
 enum class CharacterType
@@ -45,7 +45,7 @@ class Character : public Script
     virtual void Attack();
     virtual void UpdateTimers(float deltaTime);
     void Heal(int amount);
-    AIStates CheckDistanceWithPlayer() const;
+    PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
 
   private:
