@@ -82,6 +82,9 @@
     <ClInclude Include="SpawnPoint.h">
       <Filter>Characters</Filter>
     </ClInclude>
+    <ClInclude Include="Wwise_IDs.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">

@@ -42,8 +42,9 @@ void ScriptComponent::Load(const rapidjson::Value& initialState)
                 const char* name = scriptData["Script Name"].GetString();
                 if (CreateScript(name))
                 {
-                    if(scriptData.HasMember("Enabled"))  scriptEnabled.back() = scriptData["Enabled"].GetBool();
-                    if(scriptData.HasMember("WasEnabled")) scriptWasEnabledLastFrame.back() = scriptData["WasEnabled"].GetBool();
+                    if (scriptData.HasMember("Enabled")) scriptEnabled.back() = scriptData["Enabled"].GetBool();
+                    if (scriptData.HasMember("WasEnabled"))
+                        scriptWasEnabledLastFrame.back() = scriptData["WasEnabled"].GetBool();
                     scriptInstances.back()->Load(scriptData);
                 }
             }
@@ -141,17 +142,20 @@ void ScriptComponent::RenderEditorInspector()
     {
         ImGui::OpenPopup("Select Script");
     }
+
     if (ImGui::BeginPopup("Select Script"))
     {
-        for (int i = 0; i < SCRIPT_TYPE_COUNT; ++i)
+        for (int i = 0; i < App->GetScriptModule()->GetScriptCount(); ++i)
         {
-            if (ImGui::Selectable(scripts[i]))
+            const char* name = App->GetScriptModule()->GetScriptName(i);
+            if (name && ImGui::Selectable(name))
             {
-                CreateScript(scripts[i]);
+                CreateScript(name);
             }
         }
         ImGui::EndPopup();
     }
+
     for (int i = 0; i < scriptInstances.size(); ++i)
     {
         ImGui::Separator();
@@ -215,12 +219,18 @@ void ScriptComponent::OnCollision(GameObject* otherObject, const float3& collisi
 
 bool ScriptComponent::CreateScript(const std::string& scriptType)
 {
+    for (const std::string& name : scriptNames)
+    {
+        if (name == scriptType) return false;
+    }
+
     Script* instance = App->GetScriptModule()->CreateScript(scriptType, parent);
     if (instance == nullptr) return false;
 
     scriptInstances.push_back(instance);
     scriptNames.push_back(scriptType);
-    scriptTypes.push_back(static_cast<ScriptType>(SearchIdxForString(scriptType)));
+    scriptTypes.push_back(App->GetScriptModule()->GetScriptIdx(scriptType));
+    // scriptTypes.push_back(static_cast<ScriptType>(SearchIdxForString(scriptType)));
     scriptEnabled.push_back(true);
     scriptInitialized.push_back(false);
     scriptWasEnabledLastFrame.push_back(true);
@@ -257,18 +267,4 @@ void ScriptComponent::DeleteAllScripts()
     scriptEnabled.clear();
     scriptInitialized.clear();
     scriptWasEnabledLastFrame.clear();
-}
-
-int ScriptComponent::SearchIdxForString(const std::string& scriptString) const
-{
-    int idx = 0;
-    for (int i = 0; i < SCRIPT_TYPE_COUNT; ++i)
-    {
-        if (scriptString == scripts[i])
-        {
-            idx = i;
-            break;
-        }
-    }
-    return idx;
 }

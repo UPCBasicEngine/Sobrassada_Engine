@@ -736,7 +736,6 @@
     <ClInclude Include="Utils\Script.h" />
     <ClInclude Include="Utils\Trees\Octree.h" />
     <ClInclude Include="Utils\Trees\Quadtree.h" />
-    <ClInclude Include="Utils\Wwise_IDs.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

@@ -35,6 +35,9 @@ class ScriptModule : public Module
     }
 
     void DestroyScript(Script* script) const { destroyScriptFunc(script); }
+    const int GetScriptCount() const { return getScriptCountFunc(); }
+    const char* GetScriptName(const int i) const { return getScriptNameFunc(i); }
+    const int GetScriptIdx(const std::string& scriptString) const { return searchIdxNameFunc(scriptString); }
 
   private:
     void LoadDLL();
@@ -55,10 +58,20 @@ class ScriptModule : public Module
     typedef void (*StartSobrassadaScripts)(Application* App);
     typedef void (*FreeSobrassadaScripts)();
 
+    typedef const char* (*GetScriptNameDLL)(const int index);
+    typedef const int (*GetScriptCountDLL)();
+    typedef const int (*SearchIdxName)(const std::string& scriptString);
+
     StartSobrassadaScripts startScriptFunc = nullptr;
     CreateScriptFunc createScriptFunc      = nullptr;
     DestroyScriptFunc destroyScriptFunc    = nullptr;
     FreeSobrassadaScripts freeScriptFunc   = nullptr;
+
+    GetScriptNameDLL getScriptNameFunc        = nullptr;
+    GetScriptCountDLL getScriptCountFunc      = nullptr;
+    SearchIdxName searchIdxNameFunc        = nullptr;
+
+    int scriptCount                        = 0;
 
     fs::file_time_type lastWriteTime;
     std::atomic<bool> running = true;

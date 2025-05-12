@@ -51,6 +51,11 @@ Transform2DComponent::Transform2DComponent(const rapidjson::Value& initialState,
         anchorsY.x                          = initAnchors[2].GetFloat();
         anchorsY.y                          = initAnchors[3].GetFloat();
     }
+
+    if (initialState.HasMember("RenderAnchors"))
+    {
+        renderAnchors = initialState["RenderAnchors"].GetBool();
+    }
 }
 
 Transform2DComponent::~Transform2DComponent()
@@ -118,6 +123,8 @@ void Transform2DComponent::Save(rapidjson::Value& targetState, rapidjson::Docume
     valAnchors.PushBack(anchorsY.x, allocator);
     valAnchors.PushBack(anchorsY.y, allocator);
     targetState.AddMember("Anchors", valAnchors, allocator);
+
+    targetState.AddMember("RenderAnchors", renderAnchors, allocator);
 }
 
 void Transform2DComponent::Clone(const Component* other)
@@ -135,6 +142,7 @@ void Transform2DComponent::Clone(const Component* other)
         anchorsY                                   = otherTransform->anchorsY;
         margins                                    = otherTransform->margins;
         previousMargins                            = otherTransform->previousMargins;
+        renderAnchors                              = otherTransform->renderAnchors;
     }
     else
     {
@@ -246,7 +254,7 @@ void Transform2DComponent::RenderWidgets() const
     );
 
     // Draw anchor points when selected
-    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject()->GetUID() == parent->GetUID())
+    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject()->GetUID() == parent->GetUID() && renderAnchors)
     {
         // Top-left
         const float3 x1 = float3(GetAnchorXPos(anchorsX.x), GetAnchorYPos(anchorsY.y), 0);

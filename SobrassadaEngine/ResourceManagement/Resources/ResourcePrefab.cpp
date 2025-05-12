@@ -9,7 +9,6 @@ ResourcePrefab::~ResourcePrefab()
 {
     for (auto& object : gameObjects)
     {
-        // Why this doesn't call the gameObject destructor????
         delete object;
     }
     gameObjects.clear();

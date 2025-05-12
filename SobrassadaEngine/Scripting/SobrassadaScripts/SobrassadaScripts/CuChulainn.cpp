@@ -13,14 +13,15 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 
 #include "SDL.h"
+#include "Wwise_IDs.h"
 
 CharacterControllerComponent* character = nullptr;
 
-CuChulainn::CuChulainn(GameObject* parent)
-    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, patrolPoint)
+CuChulainn::CuChulainn(GameObject* parent) : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, patrolPoint)
 {
     currentHealth = 3; // mainChar starts low hp
     type          = CharacterType::CuChulainn;
@@ -33,15 +34,13 @@ CuChulainn::CuChulainn(GameObject* parent)
 
 bool CuChulainn::Init()
 {
-    //GLOG("Initiating CuChulainn");
+    // GLOG("Initiating CuChulainn");
 
     Character::Init();
 
     character = parent->GetComponent<CharacterControllerComponent*>();
-    if (!character)
-        GLOG("CharacterController component not found for CuChulainn")
+    if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
-    
 
     const GameObject* cameraObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
     if (cameraObj && cameraObj->GetComponent<ScriptComponent*>())
@@ -198,7 +197,7 @@ void CuChulainn::LookAtMouse()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableMouseOffset(false);
-    //GLOG("THROW SPEAR");
+    // GLOG("THROW SPEAR");
     throwTimer = throwCooldown;
     if (weapon)
     {
@@ -234,7 +233,7 @@ void CuChulainn::Attack(float time)
 {
     // TODO: play basicAttack sound
 
-    //GLOG("ATTACK");
+    // GLOG("ATTACK");
 
     if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
     desiredAttack = false;
