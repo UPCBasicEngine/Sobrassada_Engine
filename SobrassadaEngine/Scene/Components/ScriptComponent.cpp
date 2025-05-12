@@ -40,7 +40,12 @@ void ScriptComponent::Load(const rapidjson::Value& initialState)
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name))
+                {
+                    if(scriptData.HasMember("Enabled"))  scriptEnabled.back() = scriptData["Enabled"].GetBool();
+                    if(scriptData.HasMember("WasEnabled")) scriptWasEnabledLastFrame.back() = scriptData["WasEnabled"].GetBool();
+                    scriptInstances.back()->Load(scriptData);
+                }
             }
         }
     }
@@ -60,6 +65,8 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
     {
         rapidjson::Value scriptData(rapidjson::kObjectType);
         scriptData.AddMember("Script Name", rapidjson::Value(scriptNames[i].c_str(), allocator), allocator);
+        scriptData.AddMember("Enabled", scriptEnabled[i], allocator);
+        scriptData.AddMember("WasEnabled", scriptWasEnabledLastFrame[i], allocator);
         scriptInstances[i]->Save(scriptData, allocator);
         scriptsArray.PushBack(scriptData, allocator);
     }
@@ -165,7 +172,7 @@ void ScriptComponent::RenderEditorInspector()
             if (parent->IsGloballyEnabled() && enabled)
             {
                 bool isEnabled = scriptEnabled[i];
-                
+
                 if (ImGui::Checkbox("Enabled", &isEnabled))
                 {
                     scriptWasEnabledLastFrame[i] = isEnabled;
@@ -216,7 +223,7 @@ bool ScriptComponent::CreateScript(const std::string& scriptType)
     scriptTypes.push_back(static_cast<ScriptType>(SearchIdxForString(scriptType)));
     scriptEnabled.push_back(true);
     scriptInitialized.push_back(false);
-    scriptWasEnabledLastFrame.push_back(false);
+    scriptWasEnabledLastFrame.push_back(true);
 
     return true;
 }
