@@ -322,7 +322,8 @@ void CharacterControllerComponent::LookAtMovement(const float3& moveDir, float d
     float angle   = atan2(forward.Cross(desiredDir).y, forward.Dot(desiredDir));
 
     float maxStep = maxAngularSpeed * deltaTime;
-    angle         = std::clamp(angle, -maxStep, maxStep);
+    if (isRadians) maxStep *= RAD_DEGREE_CONV;
+    angle = std::clamp(angle, -maxStep, maxStep);
 
     if (fabs(angle) < 0.0001f)
     {

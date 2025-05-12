@@ -146,7 +146,7 @@ namespace PrefabManager
                 GameObject* newObject              = new GameObject(gameObject);
                 newObject->LoadData(gameObject);
 
-                int index                          = 0;
+                int index = 0;
                 for (const GameObject* obj : loadedGameObjects)
                 {
                     if (obj->GetUID() == newObject->GetParent()) break;

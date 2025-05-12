@@ -26,6 +26,7 @@ class PathfinderModule : public Module
     void RemoveAgent(int agentId);
     void InitQuerySystem();
     void HandleClickNavigation(); // Perform raycast and set destination
+    void GetClickNavigation();
     bool RaycastToGround(const LineSegment& ray, float3& outHitPoint);
     void RenderCrowdEditor();
     ResourceNavMesh* GetNavMesh() { return navmesh; }

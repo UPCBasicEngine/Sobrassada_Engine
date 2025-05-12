@@ -221,7 +221,7 @@ UID MaterialImporter::ImportMaterial(
 UID MaterialImporter::HandleTextureImport(const std::string& filePath, const std::string& targetFilePath)
 {
     UID textureUID = App->GetLibraryModule()->GetTextureUID(FileSystem::GetFileNameWithoutExtension(filePath));
-    if (textureUID == INVALID_UID) textureUID = TextureImporter::Import(filePath.c_str(), targetFilePath);
+    textureUID = TextureImporter::Import(filePath.c_str(), targetFilePath, textureUID, true);
     return textureUID;
 }
 
