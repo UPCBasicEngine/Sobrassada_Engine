@@ -22,6 +22,8 @@ enum class CharacterType
     None,
     CuChulainn,
     Soldier,
+    Archer,
+    Banshee
 };
 
 class Character : public Script
@@ -29,7 +31,7 @@ class Character : public Script
   public:
     Character(
         GameObject* parent, int maxHealth, int damage, float attackDuration, float cooldown, float range,
-        float rangeAIAttack, float rangeAIChase, const float3& patrolPoint
+        float rangeAIAttack, float rangeAIChase, CharacterType type
     );
     virtual ~Character() noexcept override { parent = nullptr; };
 
@@ -81,7 +83,6 @@ class Character : public Script
     // AI
     float rangeAIChase                          = 0.0f;
     float rangeAIAttack                         = 0.0f;
-    float3 patrolPoint                          = float3::zero;
     bool reachedPatrolPoint                     = false;
     float3 startPos                             = float3::zero;
 };

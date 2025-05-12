@@ -32,6 +32,8 @@ class Soldier : public Character
     void ChaseAI();
 
   private:
-    AIAgentComponent* agentAI         = nullptr;
-    SoldierStates currentState        = SoldierStates::NONE;
+    AIAgentComponent* agentAI  = nullptr;
+    SoldierStates currentState = SoldierStates::NONE;
+
+    float3 patrolPoint         = float3::zero;
 };

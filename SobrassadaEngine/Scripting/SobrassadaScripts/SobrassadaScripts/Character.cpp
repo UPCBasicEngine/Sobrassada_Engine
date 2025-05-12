@@ -17,11 +17,11 @@
 
 Character::Character(
     GameObject* parent, int newMaxHealth, int newDamage, float newAttackDuration, float newAttackCooldown,
-    float newRange, float newRangeAIAttack, float newRangeAIChase, const float3& newPatrolPoint
+    float newRange, float newRangeAIAttack, float newRangeAIChase, CharacterType newType
 )
     : Script(parent), maxHealth(newMaxHealth), damage(newDamage), attackDuration(newAttackDuration),
       attackCooldown(newAttackCooldown), range(newRange), rangeAIAttack(newRangeAIAttack),
-      rangeAIChase(newRangeAIChase), patrolPoint(newPatrolPoint)
+      rangeAIChase(newRangeAIChase), type(newType)
 {
     currentHealth = maxHealth;
 
@@ -39,7 +39,6 @@ Character::Character(
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 5.0f});
-        fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint});
     }
 }
 
@@ -50,8 +49,7 @@ bool Character::Init()
     else animComponent->OnPlay(false);
 
     characterCollider = parent->GetComponent<CapsuleColliderComponent*>();
-    if (!characterCollider)
-        GLOG("Character capsule collider component not found for %s", parent->GetName().c_str())
+    if (!characterCollider) GLOG("Character capsule collider component not found for %s", parent->GetName().c_str())
 
     weapon = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(weaponName);
     if (!weapon)
@@ -61,8 +59,7 @@ bool Character::Init()
     else
     {
         weaponCollider = weapon->GetComponent<CubeColliderComponent*>();
-        if (!weaponCollider)
-            GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str())
+        if (!weaponCollider) GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str())
         else weaponCollider->SetEnabled(false);
     }
     lastAttackTime = -1.0f;
@@ -197,7 +194,7 @@ bool Character::CheckDistanceWithPoint(const float3& point) const
 
 void Character::Die()
 {
-    //GLOG("%s dead", parent->GetName().c_str());
+    // GLOG("%s dead", parent->GetName().c_str());
     isDead = true;
     OnDeath();
 

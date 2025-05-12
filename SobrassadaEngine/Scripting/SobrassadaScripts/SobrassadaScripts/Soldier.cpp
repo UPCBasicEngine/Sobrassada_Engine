@@ -12,14 +12,14 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 
-Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, patrolPoint)
+Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Soldier)
 {
-    type = CharacterType::Soldier;
+    fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint});
 }
 
 bool Soldier::Init()
 {
-    //GLOG("Initiating Soldier");
+    // GLOG("Initiating Soldier");
 
     currentState = SoldierStates::PATROL;
 

@@ -16,6 +16,9 @@
     <Filter Include="Characters">
       <UniqueIdentifier>{5b6dfe3e-5b52-4bec-9eca-0933a138341c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Characters\Enemies">
+      <UniqueIdentifier>{7c5918da-d273-43d8-987f-06ca46cebfbc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
@@ -66,9 +69,6 @@
     <ClInclude Include="CuChulainn.h">
       <Filter>Characters</Filter>
     </ClInclude>
-    <ClInclude Include="Soldier.h">
-      <Filter>Characters</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="CameraMovement.h">
       <Filter>Characters</Filter>
@@ -81,6 +81,12 @@
     </ClInclude>
     <ClInclude Include="SpawnPoint.h">
       <Filter>Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="Soldier.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="Banshee.h">
+      <Filter>Characters\Enemies</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -702,9 +708,6 @@
     <ClCompile Include="CuChulainn.cpp">
       <Filter>Characters</Filter>
     </ClCompile>
-    <ClCompile Include="Soldier.cpp">
-      <Filter>Characters</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptExport.cpp">
       <Filter>Scripting Config</Filter>
     </ClCompile>
@@ -719,6 +722,12 @@
     </ClCompile>
     <ClCompile Include="SpawnPoint.cpp">
       <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="Soldier.cpp">
+      <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="Banshee.cpp">
+      <Filter>Characters\Enemies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
