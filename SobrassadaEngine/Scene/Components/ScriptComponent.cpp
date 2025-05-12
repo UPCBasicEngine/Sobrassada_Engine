@@ -142,6 +142,7 @@ void ScriptComponent::RenderEditorInspector()
     {
         ImGui::OpenPopup("Select Script");
     }
+
     if (ImGui::BeginPopup("Select Script"))
     {
         for (int i = 0; i < App->GetScriptModule()->GetScriptCount(); ++i)
@@ -154,6 +155,7 @@ void ScriptComponent::RenderEditorInspector()
         }
         ImGui::EndPopup();
     }
+
     for (int i = 0; i < scriptInstances.size(); ++i)
     {
         ImGui::Separator();
@@ -217,6 +219,11 @@ void ScriptComponent::OnCollision(GameObject* otherObject, const float3& collisi
 
 bool ScriptComponent::CreateScript(const std::string& scriptType)
 {
+    for (const std::string& name : scriptNames)
+    {
+        if (name == scriptType) return false;
+    }
+
     Script* instance = App->GetScriptModule()->CreateScript(scriptType, parent);
     if (instance == nullptr) return false;
 
