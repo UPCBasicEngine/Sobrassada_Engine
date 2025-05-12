@@ -28,7 +28,6 @@ SphereColliderComponent::SphereColliderComponent(UID uid, GameObject* parent)
 SphereColliderComponent::SphereColliderComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    if (initialState.HasMember("FreezeRotation")) freezeRotation = initialState["FreezeRotation"].GetBool();
     if (initialState.HasMember("Mass")) mass = initialState["Mass"].GetFloat();
     if (initialState.HasMember("ColliderType")) colliderType = ColliderType(initialState["ColliderType"].GetInt());
     if (initialState.HasMember("ColliderLayer")) layer = ColliderLayer(initialState["ColliderLayer"].GetInt());
@@ -70,7 +69,6 @@ void SphereColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Doc
 {
     Component::Save(targetState, allocator);
 
-    targetState.AddMember("FreezeRotation", freezeRotation, allocator);
     targetState.AddMember("Mass", mass, allocator);
     targetState.AddMember("ColliderType", (int)colliderType, allocator);
     targetState.AddMember("ColliderLayer", (int)layer, allocator);
@@ -100,7 +98,6 @@ void SphereColliderComponent::Clone(const Component* other)
         const SphereColliderComponent* sphere = static_cast<const SphereColliderComponent*>(other);
 
         generateCallback                      = sphere->generateCallback;
-        freezeRotation                        = sphere->freezeRotation;
         mass                                  = sphere->mass;
         centerOffset                          = sphere->centerOffset;
         centerRotation                        = sphere->centerRotation;
@@ -149,19 +146,19 @@ void SphereColliderComponent::RenderEditorInspector()
         }
 
         ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
-        if (ImGui::InputFloat("Mass", &mass))
+        if (ImGui::DragFloat("Mass", &mass, 0.05f, -10.f, 10.f))
         {
             App->GetPhysicsModule()->UpdateSphereRigidBody(this);
         }
         ImGui::EndDisabled();
 
-        if (ImGui::InputFloat3("Center offset", &centerOffset[0])) App->GetPhysicsModule()->UpdateSphereRigidBody(this);
+        if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
+            App->GetPhysicsModule()->UpdateSphereRigidBody(this);
 
-        if (ImGui::InputFloat("Radius", &radius)) App->GetPhysicsModule()->UpdateSphereRigidBody(this);
+        if (ImGui::DragFloat("Radius", &radius, 0.05f, -10.f, 10.f))
+            App->GetPhysicsModule()->UpdateSphereRigidBody(this);
 
-        if (ImGui::Checkbox("Freeze rotation", &freezeRotation)) App->GetPhysicsModule()->UpdateSphereRigidBody(this);
-
-        if (ImGui::InputFloat3("Center rotation", &centerRotation[0]))
+        if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
             App->GetPhysicsModule()->UpdateSphereRigidBody(this);
 
         // COLLIDER LAYER SETTINGS
