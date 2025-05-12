@@ -51,6 +51,7 @@ float GameTimer::Tick()
         }
         else
         {
+            deltaTime      = 0.0f;
             referenceTime += unstoppableDeltaTime;
         }
     }
@@ -60,7 +61,11 @@ float GameTimer::Tick()
 
 void GameTimer::TogglePause()
 {
-    if (isEnabled) isPaused = !isPaused;
+    if (isEnabled)
+    {
+        isPaused = !isPaused;
+        if (isPaused) deltaTime = 0.0f;
+    }
 }
 
 void GameTimer::Reset()

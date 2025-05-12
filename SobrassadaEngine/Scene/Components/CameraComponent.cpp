@@ -6,11 +6,13 @@
 #include "GBuffer.h"
 #include "GameObject.h"
 #include "InputModule.h"
-#include "Math/Quat.h"
 #include "OpenGLModule.h"
 #include "SceneModule.h"
+#include "WindowModule.h"
 
 #include "ImGui.h"
+#include "Math/MathFunc.h"
+#include "Math/Quat.h"
 #include "glew.h"
 #include <vector>
 
@@ -418,6 +420,47 @@ void SOBRASADA_API_ENGINE CameraComponent::Rotate(float yaw, float pitch)
         camera.front              = pitchRotation.Mul(camera.front).Normalized();
         camera.up                 = pitchRotation.Mul(camera.up).Normalized();
     }
+}
+
+const LineSegment CameraComponent::CastCameraRay()
+{
+#ifdef GAME
+    // In game, just get the mouse position because it covers all the window
+    const float2 mousePosition    = App->GetInputModule()->GetMousePosition();
+
+    const float percentageX       = mousePosition.x / App->GetWindowModule()->GetWidth();
+    const float percentageY       = mousePosition.y / App->GetWindowModule()->GetHeight();
+
+    const float normalizedX       = Clamp(Lerp(-1.0f, 1.0f, percentageX), -1.0f, 1.0f);
+    const float normalizedY       = Clamp(Lerp(1.0f, -1.0f, percentageY), -1.0f, 1.0f);
+#else
+    // Get the mouse position depending on the scene buffer size and position
+    const auto& windowPosition = App->GetSceneModule()->GetScene()->GetWindowPosition();
+    const auto& windowSize     = App->GetSceneModule()->GetScene()->GetWindowSize();
+    const auto& mousePos       = App->GetSceneModule()->GetScene()->GetMousePosition();
+
+    const float windowMinX     = std::get<0>(windowPosition);
+    const float windowMaxX     = std::get<0>(windowPosition) + std::get<0>(windowSize);
+
+    const float windowMinY     = std::get<1>(windowPosition);
+    const float windowMaxY     = std::get<1>(windowPosition) + std::get<1>(windowSize);
+
+    const float percentageX    = (std::get<0>(mousePos) - windowMinX) / (windowMaxX - windowMinX);
+    const float percentageY    = (std::get<1>(mousePos) - windowMinY) / (windowMaxY - windowMinY);
+
+    const float normalizedX    = Clamp(Lerp(-1.0f, 1.0f, percentageX), -1.0f, 1.0f);
+    const float normalizedY    = Clamp(Lerp(1.0f, -1.0f, percentageY), -1.0f, 1.0f);
+#endif
+    return camera.UnProjectLineSegment(normalizedX, normalizedY);
+}
+
+const float3 CameraComponent::ScreenPointToXZ(const float y)
+{
+    // Converts the mouse position to a world position in the XZ plane, to the given height
+    const Ray ray         = CastCameraRay().ToRay();
+    const float t         = (y - ray.pos.y) / ray.dir.y;
+    const float3 worldPos = ray.pos + ray.dir * t;
+    return worldPos;
 }
 
 void CameraComponent::Render(float deltaTime)

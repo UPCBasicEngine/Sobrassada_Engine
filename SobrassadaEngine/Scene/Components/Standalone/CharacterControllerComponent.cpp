@@ -1,30 +1,33 @@
 #include "CharacterControllerComponent.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
+#include "CameraModule.h"
 #include "DetourNavMeshQuery.h"
 #include "EditorUIModule.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "InputModule.h"
-#include "SceneModule.h"
-#include "DetourNavMeshQuery.h"
 #include "PathfinderModule.h"
 #include "ResourceNavMesh.h"
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 
+#include "Geometry/LineSegment.h"
+#include "Geometry/Plane.h"
+#include "Math/Mathfunc.h"
 #include "Math/float3.h"
 #include "Math/float4x4.h"
+#include <SDL_mouse.h>
 #include <algorithm>
 #include <cmath>
 
 CharacterControllerComponent::CharacterControllerComponent(UID uid, GameObject* parent)
     : Component(uid, parent, "Character Controller", COMPONENT_CHARACTER_CONTROLLER)
 {
-    speed           = 1;
-    maxLinearSpeed  = 10;
     maxAngularSpeed = 90 / RAD_DEGREE_CONV;
     isRadians       = true;
-    targetDirection.Set(0.0f, 0.0f, 1.0f);
+    targetDirection.Set(0.0f, 0.0f, 0.0f);
 }
 
 CharacterControllerComponent::CharacterControllerComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -44,11 +47,11 @@ CharacterControllerComponent::CharacterControllerComponent(const rapidjson::Valu
     }
     if (initialState.HasMember("Speed"))
     {
-        speed = initialState["Speed"].GetFloat();
+        maxSpeed = initialState["Speed"].GetFloat();
     }
-    if (initialState.HasMember("MaxLinearSpeed"))
+    if (initialState.HasMember("Acceleration"))
     {
-        maxLinearSpeed = initialState["MaxLinearSpeed"].GetFloat();
+        acceleration = initialState["Acceleration"].GetFloat();
     }
     if (initialState.HasMember("MaxAngularSpeed"))
     {
@@ -72,8 +75,8 @@ void CharacterControllerComponent::Save(rapidjson::Value& targetState, rapidjson
     targetState.AddMember("TargetDirectionX", targetDirection.x, allocator);
     targetState.AddMember("TargetDirectionY", targetDirection.y, allocator);
     targetState.AddMember("TargetDirectionZ", targetDirection.z, allocator);
-    targetState.AddMember("Speed", speed, allocator);
-    targetState.AddMember("MaxLinearSpeed", maxLinearSpeed, allocator);
+    targetState.AddMember("Speed", maxSpeed, allocator);
+    targetState.AddMember("Acceleration", acceleration, allocator);
     targetState.AddMember("MaxAngularSpeed", maxAngularSpeed, allocator);
     targetState.AddMember("isRadians", isRadians, allocator);
 }
@@ -85,8 +88,8 @@ void CharacterControllerComponent::Clone(const Component* other)
         const CharacterControllerComponent* otherCharacter = static_cast<const CharacterControllerComponent*>(other);
         enabled                                            = otherCharacter->enabled;
 
-        speed                                              = otherCharacter->speed;
-        maxLinearSpeed                                     = otherCharacter->maxLinearSpeed;
+        maxSpeed                                           = otherCharacter->maxSpeed;
+        acceleration                                       = otherCharacter->acceleration;
         maxAngularSpeed                                    = otherCharacter->maxAngularSpeed;
 
         isRadians                                          = otherCharacter->isRadians;
@@ -97,20 +100,20 @@ void CharacterControllerComponent::Clone(const Component* other)
     }
 }
 
-void CharacterControllerComponent::Update(float deltaTime) //SO many navmesh getters!!!! Memo to rethink this
+void CharacterControllerComponent::Update(float time) // SO many navmesh getters!!!! Memo to rethink this
 {
     if (!IsEffectivelyEnabled()) return;
 
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
-    if (deltaTime <= 0.0f) return;
+    float deltaTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
 
-    dtNavMesh* dtNav         = App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh();
+    if (deltaTime == 0.0f) return;
+
+    dtNavMesh* dtNav =
+        App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh(); // crash here means no navmesh loaded
 
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
-
-    if (!dtNav) return;
-
 
     if (!tmpQuery || !dtNav) return;
 
@@ -144,25 +147,30 @@ void CharacterControllerComponent::Update(float deltaTime) //SO many navmesh get
 
     if (!navMeshQuery || currentPolyRef == 0) return;
 
-    verticalSpeed     += gravity * deltaTime;
-    verticalSpeed      = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
+    if (deltaTime < 0.1f) // TODO: deltaTime spikes, need to know why
+    {
+        verticalSpeed     += gravity * deltaTime;
+        verticalSpeed      = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
 
-    float4x4 globalTr  = parent->GetGlobalTransform();
-    float3 currentPos  = globalTr.TranslatePart();
+        float3 currentPos  = parent->GetGlobalTransform().TranslatePart();
+        currentPos.y      += (verticalSpeed * deltaTime);
 
-    currentPos.y      += (verticalSpeed * deltaTime);
+        AdjustHeightToNavMesh(currentPos);
 
-    AdjustHeightToNavMesh(currentPos);
+        lastPosition = currentPos;
+        parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
+    }
 
-    lastPosition = currentPos;
+    if (isRotating)
+    {
+        LookAtMovement(rotateDirection, deltaTime);
+    }
 
-    globalTr.SetTranslatePart(currentPos);
-    float4x4 finalLocal = parent->GetParentGlobalTransform().Transposed() * globalTr;
-
-    parent->SetLocalTransform(finalLocal);
-    parent->UpdateTransformForGOBranch();
-
-    if(inputDown) HandleInput(deltaTime);
+    if (inputDown)
+    {
+        HandleInput(deltaTime);
+        Move(deltaTime);
+    }
 }
 
 void CharacterControllerComponent::Render(float deltaTime)
@@ -172,7 +180,6 @@ void CharacterControllerComponent::Render(float deltaTime)
 
 void CharacterControllerComponent::RenderDebug(float deltaTime)
 {
-
 }
 
 void CharacterControllerComponent::RenderEditorInspector()
@@ -188,10 +195,8 @@ void CharacterControllerComponent::RenderEditorInspector()
         ImGui::Separator();
         ImGui::Text("Character Controller");
 
-        ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, maxLinearSpeed, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::DragFloat("Max Linear Speed", &maxLinearSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-
-        if (speed > maxLinearSpeed) speed = maxLinearSpeed;
+        ImGui::DragFloat("Max Speed", &maxSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::DragFloat("Acceleration", &acceleration, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
 
         float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
         float minVal   = 0.0f;
@@ -259,28 +264,22 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
     }
 }
 
-void CharacterControllerComponent::Move(const float3& direction, float deltaTime)
+void CharacterControllerComponent::Move(float deltaTime)
 {
+    if (!movementEnabled)
+    {
+        currentSpeed = 0;
+        return;
+    }
+
     if (!navMeshQuery || currentPolyRef == 0) return;
-    if (direction.LengthSq() < 0.0001f) return;
 
-    float4x4 globalTr  = parent->GetGlobalTransform();
-    float3 currentPos  = globalTr.TranslatePart();
+    const float3& currentPos = parent->GetGlobalTransform().TranslatePart();
+    currentSpeed          = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
+                                                                : Lerp(currentSpeed, 0, 100 * deltaTime);
 
-    float finalSpeed   = std::min(speed, maxLinearSpeed);
-
-    float3 forward      = globalTr.WorldZ().Normalized();
-    float3 right      = globalTr.WorldX().Normalized();
-
-    float3 moveDir        = right * direction.x + forward * (-direction.z);
-    if (moveDir.LengthSq() < 1e-6f) return;
-    moveDir.Normalize();
-
-    float3 offsetXZ    = direction * finalSpeed * deltaTime;
-    float3 desiredPos = currentPos + offsetXZ;
-
-    //desiredPos.x      += offsetXZ.x;
-    //desiredPos.z      += offsetXZ.z;
+    const float3 offsetXZ = rotateDirection * currentSpeed * deltaTime;
+    float3 desiredPos     = currentPos + offsetXZ;
 
     dtQueryFilter filter;
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
@@ -306,38 +305,36 @@ void CharacterControllerComponent::Move(const float3& direction, float deltaTime
     desiredPos.x   = nearest[0];
     desiredPos.z   = nearest[2];
 
-    globalTr.SetTranslatePart(desiredPos);
-    float4x4 finalLocal = parent->GetParentGlobalTransform().Transposed() * globalTr;
-
-    parent->SetLocalTransform(finalLocal);
-    parent->UpdateTransformForGOBranch();
+    parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
 }
 
 void CharacterControllerComponent::LookAtMovement(const float3& moveDir, float deltaTime)
 {
     if (moveDir.LengthSq() < 0.0001f) return;
 
-    float3 desired = moveDir;
-    desired.y      = 0.0f;
-    desired.Normalize();
+    float3 desiredDir = moveDir;
+    desiredDir.y      = 0.0f;
+    desiredDir.Normalize();
 
-    float4x4 global = parent->GetGlobalTransform();
-    float3 forward  = global.WorldZ();
-    forward.y       = 0.0f;
+    const float4x4& localTransform = parent->GetLocalTransform();
+    float3 forward                 = localTransform.WorldZ();
+    forward.y                      = 0.0f;
     forward.Normalize();
 
-    float angle = atan2(forward.Cross(desired).y, forward.Dot(desired));
+    float angle   = atan2(forward.Cross(desiredDir).y, forward.Dot(desiredDir));
 
     float maxStep = maxAngularSpeed * deltaTime;
-    angle         = std::clamp(angle, -maxStep, maxStep);
+    if (isRadians) maxStep *= RAD_DEGREE_CONV;
+    angle = std::clamp(angle, -maxStep, maxStep);
 
-    if (fabs(angle) < 0.0001f) return;
+    if (fabs(angle) < 0.0001f)
+    {
+        isRotating = false;
+        return;
+    }
 
-    float4x4 rotY = float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
-    float4x4 local = parent->GetGlobalTransform() * rotY;
-
-    parent->SetLocalTransform(local);
-    parent->UpdateTransformForGOBranch();
+    const float4x4 rotated = localTransform * float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+    parent->SetLocalTransform(rotated);
 }
 
 void CharacterControllerComponent::Rotate(float rotationDirection, float deltaTime)
@@ -365,7 +362,10 @@ void CharacterControllerComponent::Rotate(float rotationDirection, float deltaTi
 
 void CharacterControllerComponent::HandleInput(float deltaTime)
 {
-    const KeyState* keyboard = App->GetInputModule()->GetKeyboard();
+    if (!movementEnabled) return;
+
+    const KeyState* keyboard     = App->GetInputModule()->GetKeyboard();
+    const KeyState* mouseButtons = App->GetInputModule()->GetMouseButtons();
 
     float3 direction(0.0f, 0.0f, 0.0f);
 
@@ -379,21 +379,27 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
     if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
     if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
 
-    if (direction.LengthSq() > 0.0001f)
+    targetDirection = direction;
+    if (direction.LengthSq() > 0.001f)
     {
         direction.Normalize();
         targetDirection = direction;
 
-        Move(direction, deltaTime);
-        LookAtMovement(direction, deltaTime);
+        if (direction.LengthSq() > 0.0001f)
+        {
+            rotateDirection = direction;
+            isRotating      = true;
+        }
     }
 
     if (fabs(rotationDir) > 0.0001f)
     {
         Rotate(rotationDir, deltaTime);
     }
-    // else
-    //{
-    //     //TODO: StateMachine IDLE
-    // }
+}
+
+void CharacterControllerComponent::LookAt(const float3& direction)
+{
+    isRotating      = true;
+    rotateDirection = direction;
 }

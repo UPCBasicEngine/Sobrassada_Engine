@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "ConfigFile.h"
-
+#include "HashString.h"
 #include <string>
 #include <unordered_set>
 
@@ -17,7 +17,7 @@ class EngineConfig : public ConfigFile
     void ClearPreviouslyLoadedProjectPaths();
 
     const std::string& GetStartupProjectPath() const { return startupProjectPath; }
-    const std::unordered_set<std::string>& GetProjectPaths() const { return previouslyLoadedProjectPaths; }
+    const std::unordered_set<HashString>& GetProjectPaths() const { return previouslyLoadedProjectPaths; }
 
     bool ShouldStartGameOnStartup() const { return startGameOnStartup; }
 
@@ -25,6 +25,6 @@ class EngineConfig : public ConfigFile
 
   private:
     std::string startupProjectPath = "";
-    std::unordered_set<std::string> previouslyLoadedProjectPaths;
+    std::unordered_set<HashString> previouslyLoadedProjectPaths;
     bool startGameOnStartup;
 };

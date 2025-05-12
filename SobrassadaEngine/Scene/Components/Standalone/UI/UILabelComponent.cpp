@@ -13,6 +13,7 @@
 #include "TextManager.h"
 #include "Transform2DComponent.h"
 #include "WindowModule.h"
+#include "HashString.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -24,7 +25,7 @@ UILabelComponent::UILabelComponent(UID uid, GameObject* parent)
 
     // Set the default font resource
     fontType = static_cast<ResourceFont*>(
-        App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetFontMap().at("Roboto-Regular"))
+        App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetFontMap().at(HashString("Roboto-Regular")))
     );
 }
 
@@ -47,7 +48,7 @@ UILabelComponent::UILabelComponent(const rapidjson::Value& initialState, GameObj
         // To prevent crashes in older saved scenes, load the default one if there is no font saved
         GLOG("[Warning] No font type found for the component %s in the saved scene", name);
         fontType = static_cast<ResourceFont*>(
-            App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetFontMap().at("Roboto-Regular"))
+            App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetFontMap().at(HashString("Roboto-Regular")))
         );
     }
 

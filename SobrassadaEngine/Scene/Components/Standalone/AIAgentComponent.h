@@ -27,11 +27,12 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void AddToCrowd();
     void RecreateAgent();
     void LookAtMovement(const float3& moveDir, float deltaTime);
-    bool SetPathNavigation(const math::float3& destination);
+    bool SetPathNavigation(const math::float3& destination, bool move = true);
     void PauseMovement();
     void ResumeMovement();
 
     float GetSpeed() const { return speed; }
+    bool IsPaused() const { return isPaused; }
 
   private:
     float speed           = 0.f;
@@ -40,10 +41,12 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     int agentId           = -1; // Assigned by dtCrowd
 
     bool isPaused         = false;
+    float3 frozenPosition   = float3::zero;
     float restoredSpeed   = 0.f;
     float restoredAccel     = 0.f;
 
     float maxAngularSpeed = 0.0f;
     bool isRadians        = false;
+    float restoreAngular    = 0.f;
 
 };

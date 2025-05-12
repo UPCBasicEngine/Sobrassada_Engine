@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Globals.h"
+
 #include "Math/Quat.h"
 
-class Interpolation
+class SOBRASADA_API_ENGINE Interpolation
 {
   public:
     template <typename T> static T Lerp(const T& a, const T& b, const float t) { return a + t * (b - a); }

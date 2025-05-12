@@ -9,6 +9,7 @@ ResourceTexture::ResourceTexture(uint64_t uid, const std::string& name) : Resour
 
 ResourceTexture::~ResourceTexture()
 {
+    glDeleteTextures(6, m_CubemapFaceIDs);
 }
 
 void ResourceTexture::LoadData(const DirectX::TexMetadata& metadata, const DirectX::ScratchImage& scratchImage)

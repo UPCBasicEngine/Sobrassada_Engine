@@ -23,7 +23,8 @@ namespace SceneImporter
         const std::string& filePath, const std::string& targetFilePath, const std::string& name, UID sourceUID
     );
     void ImportAnimationFromMetadata(
-        const std::string& filePath, const std::string& targetFilePath, const std::string& name, UID sourceUID
+        const std::string& filePath, const std::string& targetFilePath, const std::string& name, UID sourceUID,
+        const rapidjson::Value& importOptions
     );
     void
     CopyPrefab(const std::string& filePath, const std::string& targetFilePath, const std::string& name, UID sourceUID);

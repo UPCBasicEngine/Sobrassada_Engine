@@ -64,6 +64,7 @@ class DebugDrawModule : public Module
     void DrawPoint(const float3& center, const float size);
     void DrawCone(const float3& center, const float3& dir, const float baseRadius, const float apexRadius);
     void Draw3DText(const btVector3& location, const char* textString);
+    void Draw2DText(const char* textString, const float3& location);
     void DrawContactPoint(
         const btVector3& PointOnB, const btVector3& normalOnB, float distance, int lifeTime, const btVector3& color
     );

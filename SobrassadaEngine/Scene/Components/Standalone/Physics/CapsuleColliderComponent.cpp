@@ -231,7 +231,7 @@ void CapsuleColliderComponent::ParentUpdated()
 
 void CapsuleColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal)
 {
-    if (!enabled) return;
+    if (!enabled || !otherObject->IsEnabled()) return;
 
     auto script = parent->GetComponent<ScriptComponent*>();
     if (script) script->OnCollision(otherObject, collisionNormal);

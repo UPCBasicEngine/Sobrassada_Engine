@@ -52,7 +52,6 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
   private:
     UID resource                               = INVALID_UID;
     std::string currentAnimName                = "None";
-    AnimationComponent* currentAnimComp        = nullptr;
 
     AnimController* animController             = nullptr;
     ResourceAnimation* currentAnimResource     = nullptr;

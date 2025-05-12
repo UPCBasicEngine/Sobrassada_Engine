@@ -234,7 +234,7 @@ void CubeColliderComponent::ParentUpdated()
 
 void CubeColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal)
 {
-    if (!enabled) return;
+    if (!enabled || !otherObject->IsEnabled()) return;
 
     auto script = parent->GetComponent<ScriptComponent*>();
     

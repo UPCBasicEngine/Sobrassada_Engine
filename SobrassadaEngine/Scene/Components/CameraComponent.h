@@ -31,6 +31,8 @@ class CameraComponent : public Component
 
     void SOBRASADA_API_ENGINE Translate(const float3& direction);
     void SOBRASADA_API_ENGINE Rotate(float yaw, float pitch);
+    const LineSegment CastCameraRay();
+    const SOBRASADA_API_ENGINE float3 ScreenPointToXZ(const float y);
 
     const FrustumPlanes& GetFrustrumPlanes() const { return frustumPlanes; }
     const float3& GetCameraPosition() const { return camera.pos; }

@@ -7,6 +7,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "HashString.h"
+
 enum class SaveMode
 {
     Save,
@@ -72,33 +74,33 @@ class LibraryModule : public Module
     const std::string& GetResourceName(UID resourceID) const;
     const std::string& GetResourcePath(UID resourceID) const;
 
-    const std::unordered_map<std::string, UID>& GetTextureMap() const { return textureMap; }
-    const std::unordered_map<std::string, UID>& GetMaterialMap() const { return materialMap; }
-    const std::unordered_map<std::string, UID>& GetMeshMap() const { return meshMap; }
-    const std::unordered_map<std::string, UID>& GetModelMap() const { return modelMap; }
-    const std::unordered_map<std::string, UID>& GetAnimMap() const { return animMap; }
-    const std::unordered_map<std::string, UID>& GetPrefabMap() const { return prefabMap; }
-    const std::unordered_map<std::string, UID>& GetStateMachineMap() const { return stateMachineMap; }
-    const std::unordered_map<std::string, UID>& GetFontMap() const { return fontMap; }
-    const std::unordered_map<std::string, UID>& GetNavmeshMap() const { return navmeshMap; }
+    const std::unordered_map<HashString, UID>& GetTextureMap() const { return textureMap; }
+    const std::unordered_map<HashString, UID>& GetMaterialMap() const { return materialMap; }
+    const std::unordered_map<HashString, UID>& GetMeshMap() const { return meshMap; }
+    const std::unordered_map<HashString, UID>& GetModelMap() const { return modelMap; }
+    const std::unordered_map<HashString, UID>& GetAnimMap() const { return animMap; }
+    const std::unordered_map<HashString, UID>& GetPrefabMap() const { return prefabMap; }
+    const std::unordered_map<HashString, UID>& GetStateMachineMap() const { return stateMachineMap; }
+    const std::unordered_map<HashString, UID>& GetFontMap() const { return fontMap; }
+    const std::unordered_map<HashString, UID>& GetNavmeshMap() const { return navmeshMap; }
 
   private:
     // maps for user visuals | name -> UID
-    std::unordered_map<std::string, UID> textureMap;
-    std::unordered_map<std::string, UID> materialMap;
-    std::unordered_map<std::string, UID> meshMap;
-    std::unordered_map<std::string, UID> prefabMap;
-    std::unordered_map<std::string, UID> modelMap;
-    std::unordered_map<std::string, UID> stateMachineMap;
-    std::unordered_map<std::string, UID> animMap;
-    std::unordered_map<std::string, UID> fontMap;
-    std::unordered_map<std::string, UID> navmeshMap;
+    std::unordered_map<HashString, UID> textureMap;
+    std::unordered_map<HashString, UID> materialMap;
+    std::unordered_map<HashString, UID> meshMap;
+    std::unordered_map<HashString, UID> prefabMap;
+    std::unordered_map<HashString, UID> modelMap;
+    std::unordered_map<HashString, UID> stateMachineMap;
+    std::unordered_map<HashString, UID> animMap;
+    std::unordered_map<HashString, UID> fontMap;
+    std::unordered_map<HashString, UID> navmeshMap;
 
     // inversed map          | UID -> name
-    std::unordered_map<UID, std::string> namesMap;
+    std::unordered_map<UID, HashString> namesMap;
 
     // filled on load and import
-    std::unordered_map<UID, std::string> resourcePathsMap; // UID -> library path
+    std::unordered_map<UID, HashString> resourcePathsMap; // UID -> library path
 
     const std::string emptyString = "";
 };

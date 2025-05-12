@@ -24,7 +24,7 @@ namespace AnimationImporter
 {
     UID ImportAnimation(
         const tinygltf::Model& model, const tinygltf::Animation& animation, const std::string& name,
-        const char* sourceFilePath, const std::string& targetFilePath, UID sourceUID
+        const char* sourceFilePath, const std::string& targetFilePath, UID sourceUID, int animationIndex
     );
     ResourceAnimation* LoadAnimation(UID animationUID);
    

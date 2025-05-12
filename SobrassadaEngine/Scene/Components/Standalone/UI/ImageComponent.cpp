@@ -18,7 +18,7 @@ ImageComponent::ImageComponent(UID uid, GameObject* parent)
 {
     // Set default texture
     texture = static_cast<ResourceTexture*>(
-        App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetTextureMap().at("DefaultTexture"))
+        App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetTextureMap().at(HashString("DefaultTexture")))
     );
 }
 
@@ -36,7 +36,7 @@ ImageComponent::ImageComponent(const rapidjson::Value& initialState, GameObject*
         // To prevent crashes, load the default one if there is no texture saved
         GLOG("[WARNING] No texture UID found for the UI image %s in the saved scene", name);
         texture = static_cast<ResourceTexture*>(
-            App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetTextureMap().at("DefaultTexture"))
+            App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetTextureMap().at(HashString("DefaultTexture")))
         );
     }
 

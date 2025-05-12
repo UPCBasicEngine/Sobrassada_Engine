@@ -4,6 +4,7 @@
 #include "FileSystem.h"
 #include "LibraryModule.h"
 #include "MetaFont.h"
+#include "ProjectModule.h"
 #include "ResourceFont.h"
 
 namespace FontImporter
@@ -22,15 +23,22 @@ namespace FontImporter
 
         UID fontUID           = GenerateUID();
         fontUID               = App->GetLibraryModule()->AssignFiletypeUID(fontUID, FileType::Font);
-
+        
+        UID prefix                 = fontUID / UID_PREFIX_DIVISOR;
+     
+        const std::string savePath = App->GetProjectModule()->GetLoadedProjectPath() + METADATA_PATH +
+                                     std::to_string(prefix) + FILENAME_SEPARATOR + name + META_EXTENSION;
+        UID finalFontUID = App->GetLibraryModule()->GetUIDFromMetaFile(savePath);
+        if (finalFontUID == INVALID_UID) finalFontUID = fontUID;
+        
         const std::string assetPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(filePath);
 
-        MetaFont meta(fontUID, assetPath);
+        MetaFont meta(finalFontUID, assetPath);
         meta.Save(name, assetPath);
 
-        CopyFont(filePath, targetFilePath, name, fontUID);
+        CopyFont(filePath, targetFilePath, name, finalFontUID);
 
-        return fontUID;
+        return finalFontUID;
     }
 
     void CopyFont(

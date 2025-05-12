@@ -61,6 +61,12 @@ void Script::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorT
             targetState.AddMember(name, arr, allocator);
             break;
         }
+        case InspectorField::FieldType::InputText:
+        {
+            std::string* str = static_cast<std::string*>(field.data);
+            targetState.AddMember(name, rapidjson::Value(str->c_str(), allocator), allocator);
+            break;
+        }
         case InspectorField::FieldType::GameObject:
         {
             GameObject* go = *(GameObject**)field.data;
@@ -124,6 +130,14 @@ void Script::Load(const rapidjson::Value& initialState)
                 vec->w      = value[3].GetFloat();
             }
             break;
+        case InspectorField::FieldType::InputText:
+        {
+            if (value.IsString())
+            {
+                *(std::string*)field.data = value.GetString();
+            }
+            break;
+        }
         case InspectorField::FieldType::GameObject:
             if (value.IsUint64())
             {
@@ -132,6 +146,52 @@ void Script::Load(const rapidjson::Value& initialState)
                 GameObject* go            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(uid);
                 *(GameObject**)field.data = go;
             }
+            break;
+        }
+    }
+}
+
+void Script::CloneFields(const std::vector<InspectorField>& otherFields)
+{
+    for (size_t i = 0; i < fields.size(); ++i)
+    {
+        switch (fields[i].type)
+        {
+        case InspectorField::FieldType::Float:
+            *(float*)fields[i].data = *(float*)otherFields[i].data;
+            break;
+
+        case InspectorField::FieldType::Int:
+            *(int*)fields[i].data = *(int*)otherFields[i].data;
+            break;
+
+        case InspectorField::FieldType::Bool:
+            *(bool*)fields[i].data = *(bool*)otherFields[i].data;
+            break;
+
+        case InspectorField::FieldType::Vec2:
+            *(float2*)fields[i].data = *(float2*)otherFields[i].data;
+            break;
+
+        case InspectorField::FieldType::Vec3:
+        case InspectorField::FieldType::Color:
+            *(float3*)fields[i].data = *(float3*)otherFields[i].data;
+            break;
+
+        case InspectorField::FieldType::Vec4:
+            *(float4*)fields[i].data = *(float4*)otherFields[i].data;
+            break;
+        case InspectorField::FieldType::InputText:
+        {
+            *(std::string*)fields[i].data = *(std::string*)otherFields[i].data;
+            break;
+        }
+        case InspectorField::FieldType::GameObject:
+            // It just works
+            GameObject* uid = *(GameObject**)otherFields[i].data;
+            if (uid == 0) return;
+            GameObject* go                = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(uid->GetUID());
+            *(GameObject**)fields[i].data = go;
             break;
         }
     }

@@ -4,6 +4,7 @@
 #include "BulletDebugDraw.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "SceneModule.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
@@ -36,8 +37,10 @@ bool PhysicsModule::Init()
     return true;
 }
 
-update_status PhysicsModule::PreUpdate(float deltaTime)
+update_status PhysicsModule::PreUpdate(float time)
 {
+    float deltaTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
+
     // REMOVE RIGID BODIES
     for (btRigidBody* rigidBody : bodiesToRemove)
     {
@@ -49,6 +52,10 @@ update_status PhysicsModule::PreUpdate(float deltaTime)
     bodiesToRemove.clear();
 
     if (!App->GetSceneModule()->GetInPlayMode()) return UPDATE_CONTINUE;
+
+    if (deltaTime == 0.0f) return UPDATE_CONTINUE;
+
+    if (deltaTime > 0.1f) return UPDATE_CONTINUE; // TODO: deltaTime spikes, need to know why
 
     dynamicsWorld->stepSimulation(deltaTime, 10);
 
@@ -312,9 +319,17 @@ void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
         colliderLayerConfig[2] |= config;
 
         // PLAYER
-        config =
-            1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WORLD_OBJECTS | 1 << (int)ColliderLayer::TRIGGERS;
+        config = 1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WORLD_OBJECTS |
+                 1 << (int)ColliderLayer::TRIGGERS | 1 << (int)ColliderLayer::ENEMY_PROJECTILE;
         colliderLayerConfig[3] |= config;
+
+        // PLAYER PROJECTILE
+        config                  = 1 << (int)ColliderLayer::ENEMY;
+        colliderLayerConfig[4] |= config;
+
+        // ENEMY PROJECTILE
+        config                  = 1 << (int)ColliderLayer::PLAYER;
+        colliderLayerConfig[5] |= config;
     }
     else
     {
@@ -349,6 +364,20 @@ void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
 
             colliderLayerConfig[3] |= currentMask;
         }
+
+        if (initialStateRef.HasMember("PlayerProjectileMask"))
+        {
+            currentMask             = initialStateRef["PlayerProjectileMask"].GetInt();
+
+            colliderLayerConfig[4] |= currentMask;
+        }
+
+        if (initialStateRef.HasMember("EnemyProjectileMask"))
+        {
+            currentMask             = initialStateRef["EnemyProjectileMask"].GetInt();
+
+            colliderLayerConfig[5] |= currentMask;
+        }
     }
 }
 
@@ -372,6 +401,8 @@ void PhysicsModule::SaveLayerData(rapidjson::Value& targetState, rapidjson::Docu
     targetState.AddMember("TriggerMask", masks[1], allocator);
     targetState.AddMember("EnemyMask", masks[2], allocator);
     targetState.AddMember("PlayerMask", masks[3], allocator);
+    targetState.AddMember("PlayerProjectileMask", masks[4], allocator);
+    targetState.AddMember("EnemyProjectileMask", masks[5], allocator);
 }
 
 void PhysicsModule::EmptyWorld()
@@ -386,13 +417,6 @@ void PhysicsModule::EmptyWorld()
     }
 
     bodiesToRemove.clear();
-
-   /* for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
-    {
-        btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
-        dynamicsWorld->removeCollisionObject(obj);
-        delete obj;
-    }*/
 }
 
 void PhysicsModule::RebuildWorld()

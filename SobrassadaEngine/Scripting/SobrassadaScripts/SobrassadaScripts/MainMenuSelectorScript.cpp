@@ -48,7 +48,7 @@ void MainMenuSelectorScript::Update(float deltaTime)
     }
     else if (keys[SDL_SCANCODE_UP] == KEY_DOWN)
     {
-        selectedIndex = (selectedIndex - 1 + menuItems.size()) % menuItems.size();
+        selectedIndex = (selectedIndex - 1 + menuItems.size()) % static_cast<int>(menuItems.size());
         UpdateSelection();
     }
 

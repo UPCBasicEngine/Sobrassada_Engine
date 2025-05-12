@@ -70,11 +70,25 @@ void GeometryBatch::CleanUp()
 {
     for (int i = 0; i < 2; i++)
     {
-        if (gSync[i]) glDeleteSync(gSync[i]);
+        if (gSync[i])
+        {
+            glDeleteSync(gSync[i]);
+            gSync[i] = nullptr;
+        }
 
-        if (ptrModels[i]) glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+        if (ptrModels[i])
+        {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
+            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+            ptrModels[i] = nullptr;
+        }
 
-        if (ptrBones[i]) glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+        if (hasBones && ptrBones[i])
+        {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, bones[i]);
+            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+            ptrBones[i] = nullptr;
+        }
     }
 }
 

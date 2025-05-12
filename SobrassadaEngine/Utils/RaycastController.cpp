@@ -25,7 +25,8 @@ namespace RaycastController
         float farDistance   = 0;
         for (const auto& gameObject : queriedGameObjects)
         {
-            if (ray.Intersects(gameObject->GetGlobalAABB(), closeDistance, farDistance))
+            if (gameObject->IsGloballyEnabled() &&
+                ray.Intersects(gameObject->GetGlobalAABB(), closeDistance, farDistance))
             {
                 aabbIntersectedObjects.push_back(gameObject);
             }
@@ -38,9 +39,8 @@ namespace RaycastController
         {
             LineSegment localRay(ray.a, ray.b);
 
-            //const MeshComponent* meshComponent = gameObject->GetMeshComponent();
             const MeshComponent* meshComponent = gameObject->GetComponent<MeshComponent*>();
-            if (meshComponent == nullptr) continue; // TODO REMOVE WHEN EMPTY GAMEOBJECT DON'T CONTAIN AN AABB
+            if (meshComponent == nullptr) continue;
 
             const ResourceMesh* resourceMesh = meshComponent->GetResourceMesh();
 
@@ -73,7 +73,7 @@ namespace RaycastController
             }
         }
 
-        if (selectedGameObject && !selectedGameObject->IsTopParent())
+        if (selectedGameObject && selectedGameObject->HasSelectParent())
         {
             SceneModule* sceneModule     = App->GetSceneModule();
 
@@ -83,16 +83,19 @@ namespace RaycastController
             if (parentGameobject)
             {
                 while (parentGameobject && parentGameobject->GetUID() != rootGameObject &&
-                       !parentGameobject->IsTopParent() &&
+                       parentGameobject->HasSelectParent() &&
                        parentGameobject->GetUID() != sceneModule->GetScene()->GetMultiselectUID())
                 {
                     selectedGameObject = parentGameobject;
                     parentGameobject   = sceneModule->GetScene()->GetGameObjectByUID(selectedGameObject->GetParent());
                 }
 
-                if (parentGameobject && parentGameobject->IsTopParent()) selectedGameObject = parentGameobject;
+                if (parentGameobject && !parentGameobject->HasSelectParent()) selectedGameObject = parentGameobject;
             }
         }
+
+        if (selectedGameObject && !App->GetSceneModule()->GetScene()->IsMultiselecting())
+            selectedGameObject->UpdateOpenNodeHierarchy(true);
 
         return selectedGameObject;
     }

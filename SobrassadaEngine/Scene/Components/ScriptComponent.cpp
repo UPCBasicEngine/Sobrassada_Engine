@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "EditorUIModule.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "SceneModule.h"
 #include "Script.h"
 #include "ScriptModule.h"
@@ -24,8 +25,7 @@ ScriptComponent::ScriptComponent(const rapidjson::Value& initialState, GameObjec
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                CreateScript(name);
-                scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
             }
         }
     }
@@ -40,8 +40,7 @@ void ScriptComponent::Load(const rapidjson::Value& initialState)
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                CreateScript(name);
-                scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
             }
         }
     }
@@ -78,6 +77,8 @@ void ScriptComponent::Clone(const Component* other)
         for (size_t i = 0; i < otherScript->scriptNames.size(); ++i)
         {
             CreateScript(otherScript->scriptNames[i]);
+            const auto& a = otherScript->scriptInstances[i]->GetFields();
+            scriptInstances.back()->CloneFields(a);
         }
     }
     else
@@ -92,9 +93,10 @@ void ScriptComponent::Update(float deltaTime)
 
     if (App->GetSceneModule()->GetInPlayMode())
     {
+        float gameTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f; // seconds
         for (auto& script : scriptInstances)
         {
-            script->Update(deltaTime);
+            script->Update(gameTime);
         }
     }
 }
@@ -168,14 +170,16 @@ void ScriptComponent::OnCollision(GameObject* otherObject, const float3& collisi
     }
 }
 
-void ScriptComponent::CreateScript(const std::string& scriptType)
+bool ScriptComponent::CreateScript(const std::string& scriptType)
 {
     Script* instance = App->GetScriptModule()->CreateScript(scriptType, parent);
-    if (instance == nullptr) return;
+    if (instance == nullptr) return false;
 
     scriptInstances.push_back(instance);
     scriptNames.push_back(scriptType);
     scriptTypes.push_back(static_cast<ScriptType>(SearchIdxForString(scriptType)));
+
+    return true;
 }
 
 void ScriptComponent::DeleteScript(const int index)

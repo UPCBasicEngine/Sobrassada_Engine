@@ -33,7 +33,7 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
         if (currentGO) currentGO->SetEnabled(false);
 
         // Update index
-        if (keys[SDL_SCANCODE_Q] == KEY_DOWN) currentIndex = (currentIndex - 1 + panelNames.size()) % panelNames.size();
+        if (keys[SDL_SCANCODE_Q] == KEY_DOWN) currentIndex = (currentIndex - 1 + panelNames.size()) % static_cast<int>(panelNames.size());
         else if (keys[SDL_SCANCODE_E] == KEY_DOWN) currentIndex = (currentIndex + 1) % panelNames.size();
 
         // Activate new

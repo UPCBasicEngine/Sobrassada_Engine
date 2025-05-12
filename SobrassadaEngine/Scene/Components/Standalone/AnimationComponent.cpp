@@ -15,6 +15,7 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
+#include "HashString.h"
 
 #include "Math/Quat.h"
 #include "imgui.h"
@@ -89,7 +90,9 @@ void AnimationComponent::OnPlay(bool isTransition)
                         if (clip.clipName == currentState->clipName)
                         {
                             if (isTransition)
-                                animController->SetTargetAnimationResource(clip.animationResourceUID, transitionTime, clip.loop);
+                                animController->SetTargetAnimationResource(
+                                    clip.animationResourceUID, transitionTime, clip.loop
+                                );
                             else animController->Play(clip.animationResourceUID, clip.loop);
                             resource = clip.animationResourceUID;
                         }
@@ -184,142 +187,99 @@ void AnimationComponent::OnInspector()
 
     if (ImGui::CollapsingHeader("Object Selection", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        GameObject* selectedObj = App->GetSceneModule()->GetScene()->GetSelectedGameObject();
-        if (selectedObj && selectedObj == parent) currentAnimComp = this;
 
-        if (selectedObj)
+        ImGui::Text("Selected Object: %s", parent->GetName().c_str());
+
+        if (currentAnimResource)
         {
-            ImGui::Text("Selected Object: %s", selectedObj->GetName().c_str());
+            ImGui::Text("Current Animation: %s", currentAnimResource->GetName().c_str());
+            animationDuration = currentAnimResource->GetDuration();
 
-            currentAnimComp = selectedObj->GetComponent<AnimationComponent*>();
+            // Display animation controls
+            ImGui::Separator();
+            ImGui::Text("Animation Controls");
 
-            if (currentAnimComp)
+            if (ImGui::Button("Play")) OnPlay(false);
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Pause")) OnPause();
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Stop")) OnStop();
+
+            if (ImGui::Button("Resume")) OnResume();
+
+            if (ImGui::SliderFloat("Timeline", &currentTime, 0.0f, animationDuration, "%.2f sec"))
             {
-                ImGui::Text("Animation Component Found");
-
-                // Get the current animation
-                ResourceAnimation* anim = currentAnimComp->GetCurrentAnimation();
-                if (anim)
+                // When user manually changes the time, update the animation controller
+                if (GetAnimationController())
                 {
-                    ImGui::Text("Current Animation: %s", anim->GetName().c_str());
-                    animationDuration = anim->GetDuration();
+                    GetAnimationController()->SetTime(currentTime);
+                }
+            }
 
-                    // Display animation controls
-                    ImGui::Separator();
-                    ImGui::Text("Animation Controls");
+            // Bone visualization
+            if (ImGui::TreeNode("Bone Mapping"))
+            {
 
-                    if (ImGui::Button("Play"))
-                    {
-                        currentAnimComp->OnPlay(false);
-                    }
+                const auto& boneMap = GetBoneMapping();
 
-                    ImGui::SameLine();
-
-                    if (ImGui::Button("Pause"))
-                    {
-                        currentAnimComp->OnPause();
-                    }
-
-                    ImGui::SameLine();
-
-                    if (ImGui::Button("Stop"))
-                    {
-                        currentAnimComp->OnStop();
-                    }
-
-                    if (ImGui::Button("Resume"))
-                    {
-                        currentAnimComp->OnResume();
-                    }
-
-                    if (ImGui::SliderFloat("Timeline", &currentTime, 0.0f, animationDuration, "%.2f sec"))
-                    {
-                        // When user manually changes the time, update the animation controller
-                        if (currentAnimComp->GetAnimationController())
-                        {
-                            currentAnimComp->GetAnimationController()->SetTime(currentTime);
-                        }
-                    }
-
-                    // Bone visualization
-                    if (ImGui::TreeNode("Bone Mapping"))
-                    {
-                        if (currentAnimComp)
-                        {
-                            const auto& boneMap = currentAnimComp->GetBoneMapping();
-
-                            if (boneMap.empty())
-                            {
-                                ImGui::Text("No bones mapped. Animation might not apply correctly.");
-                            }
-                            else
-                            {
-                                ImGui::Text("%d bones mapped:", boneMap.size());
-                                for (const auto& pair : boneMap)
-                                {
-                                    bool foundInAnimation = false;
-
-                                    if (currentAnimComp->GetCurrentAnimation())
-                                    {
-                                        foundInAnimation =
-                                            currentAnimComp->GetCurrentAnimation()->channels.find(pair.first) !=
-                                            currentAnimComp->GetCurrentAnimation()->channels.end();
-                                    }
-
-                                    ImGui::TextColored(
-                                        foundInAnimation ? ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1), "%s -> %s",
-                                        pair.first.c_str(), pair.second ? pair.second->GetName().c_str() : "NULL"
-                                    );
-                                }
-                            }
-                        }
-                        ImGui::TreePop();
-                    }
+                if (boneMap.empty())
+                {
+                    ImGui::Text("No bones mapped. Animation might not apply correctly.");
                 }
                 else
                 {
-                    ImGui::Text("No animation assigned to component");
+                    ImGui::Text("%d bones mapped:", boneMap.size());
+                    for (const auto& pair : boneMap)
+                    {
+                        bool foundInAnimation = false;
+
+                        if (GetCurrentAnimation())
+                        {
+                            foundInAnimation = GetCurrentAnimation()->channels.find(pair.first) !=
+                                               GetCurrentAnimation()->channels.end();
+                        }
+
+                        ImGui::TextColored(
+                            foundInAnimation ? ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1), "%s -> %s", pair.first.c_str(),
+                            pair.second ? pair.second->GetName().c_str() : "NULL"
+                        );
+                    }
                 }
+
+                ImGui::TreePop();
             }
-            else
-            {
-                ImGui::Text("No animation component found on selected object");
-            }
-        }
-        else
-        {
-            ImGui::Text("No object selected");
         }
     }
 
     if (ImGui::CollapsingHeader("Animation Library"))
     {
-        std::string selectedZombunnyAnim = "";
 
         ImGui::Text("Available Animations:");
-        const std::unordered_map<std::string, UID>& animationMap = App->GetLibraryModule()->GetAnimMap();
+        const std::unordered_map<HashString, UID>& animationMap = App->GetLibraryModule()->GetAnimMap();
 
         for (const auto& pair : animationMap)
         {
-            const std::string& animationName = pair.first;
+            const std::string& animationName = pair.first.GetString();
 
             if (animationName.rfind(originAnimation, 0) == 0)
             {
-                const bool isSelected = (selectedZombunnyAnim == animationName);
+                const bool isSelected = (currentAnimName == animationName);
 
                 if (ImGui::Selectable(animationName.c_str(), isSelected))
                 {
-                    selectedZombunnyAnim = animationName;
-                    resource             = pair.second;
+                    currentAnimName = pair.first.GetString();
+                    resource        = pair.second;
 
-                    if (currentAnimComp->playing)
+                    if (playing)
                     {
                         playing     = false;
                         currentTime = 0.0f;
-                        currentAnimComp->OnStop();
+                        OnStop();
                     }
-
-                    GLOG("Selected animation: %s (UID: %llu)", animationName.c_str(), resource);
                 }
             }
         }
@@ -328,7 +288,7 @@ void AnimationComponent::OnInspector()
     ImGui::Separator();
     ImGui::Text("Associated State Machine");
 
-    const std::unordered_map<std::string, UID>& stateMap = App->GetLibraryModule()->GetStateMachineMap();
+    const std::unordered_map<HashString, UID>& stateMap = App->GetLibraryModule()->GetStateMachineMap();
 
     std::string currentName                              = "None";
     if (resourceStateMachine) currentName = resourceStateMachine->GetName();
@@ -350,7 +310,6 @@ void AnimationComponent::OnInspector()
         ImGui::EndCombo();
     }
 
-
     if (resourceStateMachine)
     {
         ImGui::Separator();
@@ -360,11 +319,11 @@ void AnimationComponent::OnInspector()
         {
             if (ImGui::Button(triggerName.c_str()))
             {
-                GLOG("Trigger selected: %s", triggerName.c_str());
+                //GLOG("Trigger selected: %s", triggerName.c_str());
                 bool triggerAvailable = false;
                 if (IsPlaying())
                 {
-                    //triggerAvailable = resourceStateMachine->UseTrigger(triggerName);
+                    // triggerAvailable = resourceStateMachine->UseTrigger(triggerName);
                     triggerAvailable = resourceStateMachine->UseTrigger(triggerName, currentState);
                     if (triggerAvailable)
                     {
@@ -375,9 +334,9 @@ void AnimationComponent::OnInspector()
         }
     }
 
-    if (playing && currentAnimComp && currentAnimComp->GetAnimationController())
+    if (playing && GetAnimationController())
     {
-        currentTime = currentAnimComp->GetAnimationController()->GetTime();
+        currentTime = GetAnimationController()->GetTime();
 
         if (currentTime >= animationDuration)
         {
@@ -541,7 +500,7 @@ void AnimationComponent::SetAnimationResource(UID animResource)
 {
     resource = animResource;
     AddAnimation(resource);
-    GLOG("Setting animation resource: %llu", resource);
+    //GLOG("Setting animation resource: %llu", resource);
 }
 
 void AnimationComponent::UpdateBoneHierarchy(GameObject* bone)
@@ -552,7 +511,7 @@ void AnimationComponent::UpdateBoneHierarchy(GameObject* bone)
     bone->OnTransformUpdated();
 
     // Debug output to see what's happening
-    GLOG("Updated bone %s global transform", bone->GetName().c_str());
+    //GLOG("Updated bone %s global transform", bone->GetName().c_str());
 
     for (const UID childUID : bone->GetChildren())
     {
@@ -587,7 +546,7 @@ void AnimationComponent::SetBoneMapping()
     };
     mapBones(parent);
 
-    // GLOG("Bone mapping completed: %zu bones mapped", boneMapping.size());
+    //GLOG("Bone mapping completed: %zu bones mapped", boneMapping.size());
 }
 
 bool AnimationComponent::IsFinished() const
@@ -600,7 +559,7 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
     bool triggerDone = false;
     if (resourceStateMachine)
     {
-        //triggerDone = resourceStateMachine->UseTrigger(triggerName);
+        // triggerDone = resourceStateMachine->UseTrigger(triggerName);
         triggerDone = resourceStateMachine->UseTrigger(triggerName, currentState);
         if (triggerDone)
         {

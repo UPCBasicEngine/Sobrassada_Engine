@@ -12,7 +12,6 @@
 #include <queue>
 #include <string>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
 
 class MeshComponent;
@@ -61,7 +60,7 @@ class SOBRASADA_API_ENGINE GameObject
     const float4x4& GetParentGlobalTransform() const;
 
     bool IsStatic() const { return mobilitySettings == MobilitySettings::STATIC; };
-    bool IsTopParent() const { return isTopParent; };
+    bool HasSelectParent() const { return selectParent; };
     bool IsNavMeshValid() const { return navMeshValid; };
     bool IsComponentCreated(int i) const { return createdComponents[i]; };
 
@@ -113,6 +112,7 @@ class SOBRASADA_API_ENGINE GameObject
     void UpdateTransformForGOBranch();
     void UpdateMobilityHierarchy(MobilitySettings type);
     void UpdateLocalTransform(const float4x4& parentGlobalTransform);
+    void UpdateOpenNodeHierarchy(bool openValue);
 
     bool WillUpdate() const { return willUpdate; };
 
@@ -128,6 +128,7 @@ class SOBRASADA_API_ENGINE GameObject
     const bool HasScriptsToLoad() const { return hasScriptsToLoad; }
 
     void SetLocalTransform(const float4x4& newTransform);
+    void SetLocalPosition(const float3& newPos);
     void DrawGizmos() const;
 
     void CreatePrefab();
@@ -142,6 +143,8 @@ class SOBRASADA_API_ENGINE GameObject
     void SetEnabled(bool state) { enabled = state; }
     void SetComponentCreated(int position) { createdComponents[position] = true; }
     void SetComponentRemoved(int position) { createdComponents[position] = false; }
+    void SetSelectParent(bool newSelectParent) { selectParent = newSelectParent; }
+    void SetOpenHierarchyNode(bool newOpen) { openHierarchyNode = newOpen; }
 
   private:
     void DrawNodes() const;
@@ -157,7 +160,7 @@ class SOBRASADA_API_ENGINE GameObject
     UID uid;
     std::vector<UID> children;
 
-    std::string name;
+    std::string name = "";
 
     AABB localAABB;
     AABB globalAABB;
@@ -178,10 +181,11 @@ class SOBRASADA_API_ENGINE GameObject
 
     ComponentType selectedComponentIndex = COMPONENT_NONE;
     int mobilitySettings                 = STATIC;
-    bool isTopParent                     = false;
+    bool selectParent                    = false;
     bool willUpdate                      = false;
     bool enabled                         = true;
     bool navMeshValid                    = false;
+    bool openHierarchyNode               = false;
 
     std::tuple<COMPONENTS> compTuple     = std::make_tuple(COMPONENTS_NULLPTR);
     std::bitset<std::tuple_size<decltype(compTuple)>::value> createdComponents;

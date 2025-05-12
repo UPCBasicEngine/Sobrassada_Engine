@@ -5,7 +5,6 @@
 #include "TextureImporter.h"
 
 #include <glew.h>
-#include <unordered_set>
 
 #include "imgui.h"
 #include "DirectXTex/DirectXTex.h"

@@ -4,6 +4,7 @@
 #include "LibraryModule.h"
 #include "ResourceTexture.h"
 #include "ResourcesModule.h"
+#include "HashString.h"
 
 #include "imgui.h"
 

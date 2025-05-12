@@ -69,7 +69,7 @@ void AudioSourceComponent::Update(float deltaTime)
 {
     if (App->GetInputModule()->GetKeyboard()[SDL_SCANCODE_0] == KEY_DOWN)
     {
-        GLOG("Play audio");
+        //GLOG("Play audio");
         EmitEvent(defaultEvent);
     }
 }
@@ -169,6 +169,6 @@ void AudioSourceComponent::UpdateEventsNames()
 {
     for (const auto& event : App->GetAudioModule()->GetEventsMap())
     {
-        if (event.second == defaultEvent) defaultEventName = event.first;
+        if (event.second == defaultEvent) defaultEventName = event.first.GetString();
     }
 }

@@ -1,11 +1,17 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
+#include "CameraMovement.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "GameObject.h"
-#include "Modules/InputModule.h"
+#include "InputModule.h"
+#include "Projectile.h"
 #include "ResourceStateMachine.h"
+#include "Scene.h"
+#include "SceneModule.h"
+#include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 
@@ -18,24 +24,50 @@ CuChulainn::CuChulainn(GameObject* parent)
 {
     currentHealth = 3; // mainChar starts low hp
     type          = CharacterType::CuChulainn;
+
+    // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
+    fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
+    fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
+    fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
 }
 
 bool CuChulainn::Init()
 {
-    GLOG("Initiating CuChulainn");
+    //GLOG("Initiating CuChulainn");
 
     Character::Init();
 
     character = parent->GetComponent<CharacterControllerComponent*>();
-    if (character == nullptr) GLOG("CharacterController component not found for CuChulainn")
+    if (!character)
+        GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
+    
+
+    const GameObject* cameraObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
+    if (cameraObj && cameraObj->GetComponent<ScriptComponent*>())
+    {
+        camera = cameraObj->GetComponent<ScriptComponent*>()->GetScriptByType<CameraMovement>();
+        if (!camera) GLOG("[WARNING] No camera found by the name %s", cameraName.c_str());
+    }
+
+    const GameObject* spearObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearName);
+    if (spearObj && spearObj->GetComponent<ScriptComponent*>())
+    {
+        spear = spearObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
+        if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
+    }
 
     return true;
 }
 
 void CuChulainn::Update(float deltaTime)
 {
+    if (isDead || !character) return;
+
+    GetInputs();
     Character::Update(deltaTime);
+    PerformAttack();
+    UpdateTimers(deltaTime);
 }
 
 void CuChulainn::OnDeath()
@@ -55,54 +87,198 @@ void CuChulainn::OnHealed(int amount)
     // TODO: play particle system effects
 }
 
-void CuChulainn::PerformAttack()
+void CuChulainn::HandleState(float time)
 {
-    // TODO: play basicAttack sound
-    // TODO: make interaction with hitboxes with the enemy ones
-    // TODO: activate and disable the box collider located on one on the gameobjects bones
+    if (desiredDash && CanDash()) Dash();
+    else if (desiredAttack && CanAttack(time)) Attack(time);
+    else if (desiredAim && CanAim()) Aim();
+    else if (!isAttacking && !isDashing) Move();
+
+    // When finished animation, go back to idle state
+    if (animComponent && animComponent->IsFinished())
+    {
+        state = CharacterStates::IDLE;
+        animComponent->UseTrigger("idle");
+    }
 }
 
-void CuChulainn::HandleState(float gameTime)
+void CuChulainn::GetInputs()
 {
-    if (!animComponent) return;
-
     const KeyState* keyboard = AppEngine->GetInputModule()->GetKeyboard();
     const KeyState* mouse    = AppEngine->GetInputModule()->GetMouseButtons();
-    const bool move =
-        keyboard[SDL_SCANCODE_W] || keyboard[SDL_SCANCODE_D] || keyboard[SDL_SCANCODE_A] || keyboard[SDL_SCANCODE_S];
 
-    if (mouse[SDL_BUTTON_LEFT - 1] && CanAttack(gameTime))
+    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN)
     {
-        animComponent->UseTrigger("attack");
-        Attack(gameTime);
+        desiredDash     = true;
+        dashBufferTimer = dashBuffer;
     }
-    else if (move && !runActive)
+    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN)
     {
-        animComponent->UseTrigger("run");
-        runActive = true;
+        desiredAttack     = true;
+        attackBufferTimer = attackBuffer;
     }
-    else if (runActive && !move)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT)
     {
-        animComponent->UseTrigger("idle");
-        runActive = false;
+        desiredAim = true;
+    }
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP)
+    {
+        if (state == CharacterStates::AIM) ThrowSpear();
+    }
+    if (keyboard[SDL_SCANCODE_F5])
+    {
+        Respawn();
+    }
+    if (keyboard[SDL_SCANCODE_F6])
+    {
+        spawnPos = parent->GetPosition();
+    }
+}
+
+bool CuChulainn::CanDash()
+{
+    // TODO: Add more condifions if there are (Maybe dashing doesn't cancel attack animations, etc.)
+    return dashTimer <= 0;
+}
+
+bool CuChulainn::CanAttack(float time)
+{
+    return (state != CharacterStates::DASH && !isAttacking && time - lastAttackTime >= attackCooldown);
+}
+
+bool CuChulainn::CanAim() const
+{
+    return (state != CharacterStates::DASH && !isAttacking && throwTimer <= 0);
+}
+
+void CuChulainn::UpdateTimers(float deltaTime)
+{
+    // Dash timers
+    dashTimer -= deltaTime;
+    if (dashTimer < 0) dashTimer = 0;
+    if (desiredDash)
+    {
+        dashBufferTimer -= deltaTime;
+        if (dashBufferTimer < 0) desiredDash = false;
     }
 
-    if (animComponent->IsFinished())
+    // Melee attack timers
+
+    if (desiredAttack)
     {
-        if (runActive)
+        attackBufferTimer -= deltaTime;
+        if (attackBufferTimer < 0) desiredAttack = false;
+    }
+
+    // Ranged attack timers
+    desiredAim  = false;
+    throwTimer -= deltaTime;
+    if (throwTimer < 0)
+    {
+        if (resetWeapon)
         {
-            animComponent->UseTrigger("run");
+            weapon->SetEnabled(true);
+            resetWeapon = false;
         }
-        else
-        {
-            animComponent->UseTrigger("idle");
-        }
+        throwTimer = 0;
     }
-    // If(Input de dash){
-    // stateMachine->UseTrigger("Dash");
-    ////}else Deja de dashear{
-    // stateMachine->UseTrigger("Idle");
+}
 
-    // if (keyboard[SDL_SCANCODE_R] == KEY_REPEAT) stateMachine->UseTrigger("Basic_Attack");
-    // else stateMachine->UseTrigger("Idle");
+void CuChulainn::LookAtMouse()
+{
+    const float3 mouseWorldPos = AppEngine->GetSceneModule()->GetScene()->GetMainCamera()->ScreenPointToXZ(
+        parent->GetGlobalTransform().TranslatePart().y
+    );
+    float3 direction = mouseWorldPos - parent->GetGlobalTransform().TranslatePart();
+    direction.y      = 0;
+    direction.Normalize();
+    character->LookAt(direction);
+}
+
+void CuChulainn::ThrowSpear()
+{
+    if (camera) camera->EnableMouseOffset(false);
+    //GLOG("THROW SPEAR");
+    throwTimer = throwCooldown;
+    if (weapon)
+    {
+        weapon->SetEnabled(false);
+        resetWeapon = true;
+    }
+
+    spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
+}
+
+void CuChulainn::Dash()
+{
+    if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
+    desiredDash = false;
+    state       = CharacterStates::DASH;
+
+    // TODO: Dash
+    // character->Dash(direction)
+    if (animComponent) animComponent->UseTrigger("dash");
+}
+
+void CuChulainn::PerformAttack()
+{
+    // TODO: make interaction with hitboxes with the enemy ones
+    // TODO: activate and disable the box collider located on one on the gameobjects bones
+
+    if (!isAttacking) return;
+
+    // TODO: When timer matches animation, enable weapon collider. Disable it afterwards
+}
+
+void CuChulainn::Attack(float time)
+{
+    // TODO: play basicAttack sound
+
+    //GLOG("ATTACK");
+
+    if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
+    desiredAttack = false;
+    state         = CharacterStates::BASIC_ATTACK;
+    character->EnableMovement(false);
+
+    Character::Attack(time);
+    LookAtMouse();
+    if (animComponent) animComponent->UseTrigger("attack");
+}
+
+void CuChulainn::Aim()
+{
+    if (!spear) return;
+
+    if (state != CharacterStates::AIM)
+    {
+        if (camera) camera->EnableMouseOffset(true);
+        state = CharacterStates::AIM;
+        character->EnableMovement(false);
+    }
+    desiredAim = false;
+
+    LookAtMouse();
+    if (animComponent) animComponent->UseTrigger("aim");
+}
+
+void CuChulainn::Move()
+{
+    character->EnableMovement(true);
+    if (character->GetSpeed() > 0.5f)
+    {
+        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("run");
+        state = CharacterStates::RUN;
+    }
+    else
+    {
+        if (state != CharacterStates::IDLE && animComponent) animComponent->UseTrigger("idle");
+        state = CharacterStates::IDLE;
+    }
+}
+
+void CuChulainn::Respawn()
+{
+    parent->SetLocalPosition(spawnPos);
+    if (camera) camera->SetPosition(spawnPos);
 }

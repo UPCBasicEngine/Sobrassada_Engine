@@ -6,6 +6,7 @@
 #include "FileSystem.h"
 #include "FileSystem/StateMachineManager.h"
 #include "GameObject.h"
+#include "NavmeshImporter.h"
 #include "ProjectModule.h"
 #include "Resource.h"
 #include "SceneImporter.h"
@@ -89,7 +90,7 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
             return false;
         }
 
-        GLOG("%s saved as scene", sceneName.c_str());
+        //GLOG("%s saved as scene", sceneName.c_str());
         return true;
     }
 
@@ -181,7 +182,7 @@ bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
                 AddName(assetName, assetUID);
                 libraryPath = projectPath + ANIMATIONS_PATH + std::to_string(assetUID) + ANIMATION_EXTENSION;
                 if (FileSystem::Exists(libraryPath.c_str())) AddResource(libraryPath, assetUID);
-                else SceneImporter::CopyModel(assetPath, projectPath, assetName, assetUID);
+                else SceneImporter::ImportAnimationFromMetadata(assetPath, projectPath, assetName, assetUID, importOptions);
                 break;
             case 16:
                 AddPrefab(assetUID, assetName);
@@ -209,9 +210,8 @@ bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
                 AddName(assetName, assetUID);
                 libraryPath = projectPath + NAVMESHES_PATH + assetName + NAVMESH_EXTENSION;
 
-                if (FileSystem::Exists(libraryPath.c_str()))
-                    AddResource(libraryPath, assetUID); // Register for loading later
-                else GLOG("Navmesh binary missing for UID %llu (%s)", assetUID, assetName.c_str()); // Optional warning
+                if (FileSystem::Exists(libraryPath.c_str())) AddResource(libraryPath, assetUID);
+                else NavmeshImporter::CopyNavmesh(assetPath, projectPath, libraryPath, assetUID);
                 break;
             default:
                 GLOG("Unknown UID prefix (%s) for: %s", std::to_string(prefix).c_str(), assetName.c_str());
@@ -307,21 +307,21 @@ UID LibraryModule::AssignFiletypeUID(UID originalUID, FileType fileType)
 
     // GLOG("%llu", prefix)
     UID final = (prefix * UID_PREFIX_DIVISOR) + (originalUID % UID_PREFIX_DIVISOR);
-    GLOG("%llu", final);
+    //GLOG("%llu", final);
     return final;
 }
 
 void LibraryModule::DeletePrefabFiles(UID prefabUID)
 {
     const std::string metaPath = App->GetProjectModule()->GetLoadedProjectPath() + METADATA_PATH +
-                           std::to_string((int)ResourceType::Prefab) + FILENAME_SEPARATOR + GetResourceName(prefabUID) +
-                           META_EXTENSION;
-    
+                                 std::to_string((int)ResourceType::Prefab) + FILENAME_SEPARATOR +
+                                 GetResourceName(prefabUID) + META_EXTENSION;
+
     FileSystem::Delete(metaPath.c_str());
 
     const std::string assetPath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_ASSETS_PATH +
-                            GetResourceName(prefabUID) + PREFAB_EXTENSION;
-    
+                                  GetResourceName(prefabUID) + PREFAB_EXTENSION;
+
     FileSystem::Delete(assetPath.c_str());
 
     const std::string& resourcePath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_LIB_PATH +
@@ -469,7 +469,7 @@ const std::string& LibraryModule::GetResourcePath(UID resourceID) const
     {
         // GLOG("requested uid: %llu", resourceID);
         // GLOG("obtained path: %s", it->second.c_str());
-        return it->second;
+        return it->second.GetString();
     }
 
     return emptyString;
@@ -482,7 +482,7 @@ const std::string& LibraryModule::GetResourceName(UID resourceID) const
     {
         // GLOG("requested uid: %llu", resourceID);
         // GLOG("obtained name: %s", it->second.c_str());
-        return it->second;
+        return it->second.GetString();
     }
 
     return emptyString;

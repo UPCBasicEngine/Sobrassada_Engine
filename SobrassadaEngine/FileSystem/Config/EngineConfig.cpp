@@ -1,7 +1,6 @@
 ﻿#include "EngineConfig.h"
 
 #include "FileSystem.h"
-
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -19,7 +18,7 @@ void EngineConfig::SetStartupProjectPath(const std::string& newStartupProjectPat
     startupProjectPath = newStartupProjectPath;
     if (!newStartupProjectPath.empty())
     {
-        previouslyLoadedProjectPaths.insert(startupProjectPath);
+        previouslyLoadedProjectPaths.insert(HashString(startupProjectPath));
     }
     Save();
 }
@@ -46,7 +45,7 @@ void EngineConfig::Load()
 
         for (rapidjson::SizeType i = 0; i < previouslyLoaded.Size(); i++)
         {
-            previouslyLoadedProjectPaths.insert(previouslyLoaded[i].GetString());
+            previouslyLoadedProjectPaths.insert(HashString(previouslyLoaded[i].GetString()));
         }
     }
 }
@@ -61,7 +60,7 @@ void EngineConfig::Save() const
     doc.AddMember("StartGameOnStartup", startGameOnStartup, allocator);
     rapidjson::Value valChildren(rapidjson::kArrayType);
 
-    for (const std::string& projectPath : previouslyLoadedProjectPaths)
+    for (const HashString& projectPath : previouslyLoadedProjectPaths)
     {
         valChildren.PushBack(rapidjson::Value(projectPath.c_str(), allocator), allocator);
     }
