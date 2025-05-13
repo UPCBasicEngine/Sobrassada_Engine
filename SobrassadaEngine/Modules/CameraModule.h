@@ -38,6 +38,7 @@ class CameraModule : public Module
     const float4x4& GetFrustumProjectionMatrix() { return projectionMatrix; }
     const FrustumPlanes& GetFrustrumPlanes() const { return frustumPlanes; }
     const float3& GetCameraPosition() const { return isCameraDetached ? detachedCamera.pos : camera.pos; }
+    const Frustum& GetCamera() const { return camera; }
 
     float GetFarPlaneDistance() const
     {

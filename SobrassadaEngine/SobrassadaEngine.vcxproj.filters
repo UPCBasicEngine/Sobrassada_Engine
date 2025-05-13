@@ -537,6 +537,9 @@
     <ClCompile Include="Modules\GameDebugUIModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1045,6 +1048,9 @@
     </ClInclude>
     <ClInclude Include="Modules\GameDebugUIModule.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h">
+      <Filter>Scene\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
