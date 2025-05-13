@@ -30,7 +30,7 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
         UID materialUID = initialState["Material"].GetUint64();
         if (materialUID != INVALID_UID) AddMaterial(materialUID);
     }
-    if (initialState.HasMember("RenderMode")) renderMode = static_cast<RenderMode>(initialState["RenderMode"].GetInt());
+    if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
     if (initialState.HasMember("Mesh"))
     {
         AddMesh(initialState["Mesh"].GetUint64(), false);
@@ -175,7 +175,7 @@ void MeshComponent::RenderEditorInspector()
 
         if (ImGui::Combo("Render Mode", &currentRenderMode, renderModes, IM_ARRAYSIZE(renderModes)))
         {
-            renderMode = static_cast<RenderMode>(currentRenderMode);
+            renderMode = currentRenderMode;
         }
 
         currentMaterial->OnEditorUpdate();

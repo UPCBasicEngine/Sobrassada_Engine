@@ -130,8 +130,8 @@ class SOBRASADA_API_ENGINE Scene
         CameraComponent* camera
     ) const;
     void GeometryPassRender(
-        const std::vector<GameObject*>& opaqueObjectsToRender,
-        const std::vector<GameObject*>& transparentObjectsToRender, CameraComponent* camera, GBuffer* gbuffer
+        const std::vector<GameObject*>& objectsToRender,
+        CameraComponent* camera, GBuffer* gbuffer
     ) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
 

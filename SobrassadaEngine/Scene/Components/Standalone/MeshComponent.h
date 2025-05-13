@@ -11,12 +11,6 @@ class ResourceMesh;
 class ResourceMaterial;
 class GeometryBatch;
 
-enum RenderMode
-{
-    Opaque,
-    Transparent
-};
-
 class MeshComponent : public Component
 {
   public:
@@ -53,7 +47,7 @@ class MeshComponent : public Component
     const std::vector<float4x4>& GetBindMatrices() const { return bindMatrices; }
     const float4x4& GetCombinedMatrix() const { return combinedMatrix; }
     GeometryBatch* GetBatch() const { return batch; }
-    RenderMode GetRenderMode() const { return renderMode; }
+    int GetRenderMode() const { return renderMode; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
     {
@@ -89,5 +83,5 @@ class MeshComponent : public Component
     GeometryBatch* batch    = nullptr;
     bool uniqueBatch        = false;
 
-    RenderMode renderMode   = RenderMode::Opaque;
+    int renderMode   = 0;
 };

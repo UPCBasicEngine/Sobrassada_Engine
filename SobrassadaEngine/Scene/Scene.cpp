@@ -301,13 +301,16 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #endif
     glEnable(GL_STENCIL_TEST);
 
+    glDisable(GL_BLEND);
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        GeometryPassRender(opaqueObjectsToRender, transparentObjectsToRender, camera, gbuffer);
+        GeometryPassRender(opaqueObjectsToRender, camera, gbuffer);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
-    else GeometryPassRender(opaqueObjectsToRender, transparentObjectsToRender, camera, gbuffer);
+    else GeometryPassRender(opaqueObjectsToRender, camera, gbuffer);
+
+    glEnable(GL_BLEND);
 
     LightingPassRender(camera, gbuffer, framebuffer);
 
@@ -352,6 +355,33 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         for (int i = 0; i < 12; ++i)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
+
+    std::sort(
+        transparentObjectsToRender.begin(), transparentObjectsToRender.end(),
+        [camera](GameObject* a, GameObject* b)
+        {
+            if (camera != nullptr)
+            {
+                float distanceA = (a->GetPosition() - camera->GetCameraPosition()).LengthSq();
+                float distanceB = (b->GetPosition() - camera->GetCameraPosition()).LengthSq();
+
+                return distanceA < distanceB;
+            }
+            else
+            {
+                float distanceA = (a->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
+                float distanceB = (b->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
+
+                return distanceA < distanceB;
+            }
+        }
+    );
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    GeometryPassRender(transparentObjectsToRender, camera, gbuffer);
+
+    glDepthMask(GL_TRUE);
 }
 
 update_status Scene::RenderEditor(float deltaTime)
@@ -905,15 +935,14 @@ void Scene::CheckObjectsToRender(
         if (frustumPlanes.Intersects(objectOBB))
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh->GetRenderMode() == RenderMode::Opaque) outOpaqueRenderGameObjects.push_back(gameObject);
-            if (mesh->GetRenderMode() == RenderMode::Transparent) outTransparentRenderGameObjects.push_back(gameObject);
+            if (mesh->GetRenderMode() == 0) outOpaqueRenderGameObjects.push_back(gameObject);      // Opaque
+            if (mesh->GetRenderMode() == 1) outTransparentRenderGameObjects.push_back(gameObject); // Transparent
         }
     }
 }
 
 void Scene::GeometryPassRender(
-    const std::vector<GameObject*>& opaqueObjectsToRender, const std::vector<GameObject*>& transparentObjectsToRender,
-    CameraComponent* camera, GBuffer* gbuffer
+    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
 ) const
 {
     gbuffer->Bind();
@@ -922,36 +951,20 @@ void Scene::GeometryPassRender(
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
 
-    glDisable(GL_BLEND);
-
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
-    std::vector<MeshComponent*> opaqueMeshesToRender;
+    std::vector<MeshComponent*> meshesToRender;
 
-    for (const auto& gameObject : opaqueObjectsToRender)
+    for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr) opaqueMeshesToRender.push_back(mesh);
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr) meshesToRender.push_back(mesh);
     }
 
-    batchManager->Render(opaqueMeshesToRender, camera);
+    batchManager->Render(meshesToRender, camera);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
-    glEnable(GL_DEPTH_TEST);
-    std::vector<MeshComponent*> transparentMeshesToRender;
-
-    for (const auto& gameObject : transparentObjectsToRender)
-    {
-        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
-            transparentMeshesToRender.push_back(mesh);
-    }
-
-    batchManager->Render(transparentMeshesToRender, camera);
+    // glEnable(GL_DEPTH_TEST);
 
     gbuffer->Unbind();
-    glDepthMask(GL_TRUE);
 }
 
 void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
