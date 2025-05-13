@@ -42,6 +42,11 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void SetMaxSpeed(float newSpeed) { maxSpeed = newSpeed; }
     void SetInputDown(bool input) { inputDown = input; }
     void EnableMovement(bool enable) { movementEnabled = enable; }
+    void StartDash();
+    void EndDash() { isDashing = false; }
+
+  private:
+    void Dash(float deltaTime);
 
   private:
     float3 targetDirection       = float3::zero;
@@ -68,13 +73,10 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     float3 rotateDirection       = float3::zero;
     bool movementEnabled         = true;
 
-    float dashTimeRemaining      = 0.0f;         
-    float3 dashDirection         = float3::zero; 
-    float dashSpeed              = 20.0f;   
+    bool isDashing               = false;
+    float dashTimeRemaining      = 0.0f;
+    float dashSpeed              = 20.0f;
     float3 dashTarget;
-    float3 dashStartPosition;
-    float3 dashEndPosition;
     float dashDistance = 3.0f;
     float dashDuration = 0.2f;
-
 };

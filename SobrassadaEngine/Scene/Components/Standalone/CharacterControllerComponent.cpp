@@ -101,7 +101,6 @@ void CharacterControllerComponent::Clone(const Component* other)
 
         maxSpeed                                           = otherCharacter->maxSpeed;
         acceleration                                       = otherCharacter->acceleration;
-        dashDirection                                      = otherCharacter->dashDirection;
         dashDuration                                       = otherCharacter->dashDuration;
         maxAngularSpeed                                    = otherCharacter->maxAngularSpeed;
 
@@ -123,43 +122,10 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
-    DashThroughNavMesh(deltaTime);
-
-    if (dashTimeRemaining > 0.0f)
+    if (isDashing)
     {
-        float3 currentPos        = parent->GetGlobalTransform().TranslatePart();
-        float3 directionToTarget = dashTarget - currentPos;
-        float distanceToTarget   = directionToTarget.Length();
-
-        if (distanceToTarget > 0.5f)
-        {
-            directionToTarget.Normalize();
-            float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
-
-            if (dashOffset.Length() >= distanceToTarget)
-            {
-                parent->SetLocalPosition(dashTarget - parent->GetParentGlobalTransform().TranslatePart());
-                dashTimeRemaining = 0.0f;
-            }
-            else
-            {
-                parent->SetLocalPosition(currentPos + dashOffset - parent->GetParentGlobalTransform().TranslatePart());
-                dashTimeRemaining -= deltaTime;
-            }
-        }
-        else
-        {
-            dashTimeRemaining = 0.0f;
-        }
-
-        if (dashTimeRemaining <= 0.0f)
-        {
-            float3 adjustedPos = parent->GetGlobalTransform().TranslatePart();
-            //AdjustHeightToNavMesh(adjustedPos);
-            parent->SetLocalPosition(adjustedPos - parent->GetParentGlobalTransform().TranslatePart());
-        }
+        Dash(deltaTime);
         return;
-
     }
 
     dtNavMesh* dtNav =
@@ -459,46 +425,14 @@ void CharacterControllerComponent::LookAt(const float3& direction)
     rotateDirection = direction;
 }
 
-void CharacterControllerComponent::DashThroughNavMesh(float deltaTime)
+void CharacterControllerComponent::StartDash()
 {
-    const KeyState* keyboard = App->GetInputModule()->GetKeyboard();
-    if (keyboard[SDL_SCANCODE_LSHIFT] != KEY_DOWN) return;
-
-    if (dashTimeRemaining > 0.0f) return;
-
-    dashDirection            = rotateDirection;
-    if (dashDirection.LengthSq() < 0.0001f) return;
-    dashDirection.Normalize();
-
-    // NOT FALLING LOGIC
-    // const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
-    // float3 dashTarget       = currentPos + dashDirection * dashDistance;
-
-    // if (!navMeshQuery) return;
-
-    // dtQueryFilter filter;
-    // filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
-    // filter.setExcludeFlags(0);
-
-    // float extents[3] = {0.5f, 1.0f, 0.5f}; // Tamaño de la caja de búsqueda
-    // float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
-    // dtPolyRef targetRef = 0;
-
-    // dtStatus status     = navMeshQuery->findNearestPoly(dashTarget.ptr(), extents, &filter, &targetRef,
-    // nearestPoint);
-
-    // if (dtStatusFailed(status) || targetRef == 0)
-    //{
-    //     GLOG("Nearest points: (%f, %f, %f)", nearestPoint[0], nearestPoint[1], nearestPoint[2]);
-    //     GLOG("No navmesh found at dash target position. Dash canceled.");
-    //     //dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]);
-    //     return;
-    // }
+    isDashing               = true;
 
     // WALL COLLISION LOGIC
     const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
     GLOG("Current position: (%f, %f, %f)", currentPos.x, currentPos.y, currentPos.z);
-    dashTarget = currentPos + dashDirection * dashDistance;
+    dashTarget = currentPos + rotateDirection * (dashDistance + 1.0f);
 
     LineSegment ray(currentPos, dashTarget);
     GameObject* hitObject = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
@@ -513,12 +447,50 @@ void CharacterControllerComponent::DashThroughNavMesh(float deltaTime)
         if (box.Intersects(ray, tNear, tFar))
         {
             float3 impactPoint     = ray.GetPoint(tNear);
-            const float wallOffset = 0.5f;
-            dashTarget             = impactPoint - dashDirection * wallOffset;
+            const float wallOffset = 1.0f;
+            dashTarget             = impactPoint - rotateDirection * wallOffset;
             GLOG("Dash impact point adjusted: (%f, %f, %f)", +dashTarget.x, dashTarget.y, dashTarget.z);
         }
     }
 
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
+}
+
+void CharacterControllerComponent::Dash(float deltaTime)
+{
+    if (dashTimeRemaining < 0.0f)
+    {
+        GLOG("STOP DASH");
+        isDashing = false;
+    }
+
+    float3 currentPos        = parent->GetGlobalTransform().TranslatePart();
+    float3 directionToTarget = dashTarget - currentPos;
+    float distanceToTarget   = directionToTarget.Length();
+
+    if (distanceToTarget > 0.2f)
+    {
+        directionToTarget.Normalize();
+        float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
+
+        if (dashOffset.Length() >= distanceToTarget)
+        {
+            parent->SetLocalPosition(dashTarget - parent->GetParentGlobalTransform().TranslatePart());
+            dashTimeRemaining = 0.0f;
+            GLOG("STOP DASH");
+            isDashing = false;
+        }
+        else
+        {
+            parent->SetLocalPosition(currentPos + dashOffset - parent->GetParentGlobalTransform().TranslatePart());
+            dashTimeRemaining -= deltaTime;
+        }
+    }
+    else
+    {
+        GLOG("STOP DASH");
+        isDashing         = false;
+        dashTimeRemaining = 0.0f;
+    }
 }
