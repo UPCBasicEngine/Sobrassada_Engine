@@ -74,5 +74,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     float3 dashTarget;
     float3 dashStartPosition;
     float3 dashEndPosition;
+    float dashDistance = 3.0f;
+    float dashDuration = 0.2f;
 
 };

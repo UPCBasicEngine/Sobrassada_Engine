@@ -54,6 +54,14 @@ CharacterControllerComponent::CharacterControllerComponent(const rapidjson::Valu
     {
         acceleration = initialState["Acceleration"].GetFloat();
     }
+    if (initialState.HasMember("DashDistance"))
+    {
+        acceleration = initialState["DashDistance"].GetFloat();
+    }
+    if (initialState.HasMember("DashDuration"))
+    {
+        acceleration = initialState["DashDuration"].GetFloat();
+    }
     if (initialState.HasMember("MaxAngularSpeed"))
     {
         maxAngularSpeed = initialState["MaxAngularSpeed"].GetFloat();
@@ -78,6 +86,8 @@ void CharacterControllerComponent::Save(rapidjson::Value& targetState, rapidjson
     targetState.AddMember("TargetDirectionZ", targetDirection.z, allocator);
     targetState.AddMember("Speed", maxSpeed, allocator);
     targetState.AddMember("Acceleration", acceleration, allocator);
+    targetState.AddMember("DashDistance", dashDistance, allocator);
+    targetState.AddMember("DashDuration", dashDuration, allocator);
     targetState.AddMember("MaxAngularSpeed", maxAngularSpeed, allocator);
     targetState.AddMember("isRadians", isRadians, allocator);
 }
@@ -91,6 +101,8 @@ void CharacterControllerComponent::Clone(const Component* other)
 
         maxSpeed                                           = otherCharacter->maxSpeed;
         acceleration                                       = otherCharacter->acceleration;
+        dashDirection                                      = otherCharacter->dashDirection;
+        dashDuration                                       = otherCharacter->dashDuration;
         maxAngularSpeed                                    = otherCharacter->maxAngularSpeed;
 
         isRadians                                          = otherCharacter->isRadians;
@@ -146,6 +158,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
             //AdjustHeightToNavMesh(adjustedPos);
             parent->SetLocalPosition(adjustedPos - parent->GetParentGlobalTransform().TranslatePart());
         }
+        return;
 
     }
 
@@ -179,6 +192,8 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
                 GLOG("Failed to find valid target poly for movement.");
                 return;
             }
+
+            if (dashTimeRemaining > 0.0f) GLOG("A");
 
             currentPolyRef = targetRef;
         }
@@ -236,6 +251,8 @@ void CharacterControllerComponent::RenderEditorInspector()
 
         ImGui::DragFloat("Max Speed", &maxSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
         ImGui::DragFloat("Acceleration", &acceleration, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::DragFloat("Dash Distance", &dashDistance, 3.0f, 0.0f, 10.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::DragFloat("Dash Duration", &dashDuration, 0.2f, 0.0f, 1.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
 
         float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
         float minVal   = 0.0f;
@@ -448,9 +465,6 @@ void CharacterControllerComponent::DashThroughNavMesh(float deltaTime)
     if (keyboard[SDL_SCANCODE_LSHIFT] != KEY_DOWN) return;
 
     if (dashTimeRemaining > 0.0f) return;
-
-    const float dashDistance = 3.0f;
-    const float dashDuration = 0.2f;
 
     dashDirection            = rotateDirection;
     if (dashDirection.LengthSq() < 0.0001f) return;
