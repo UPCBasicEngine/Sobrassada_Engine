@@ -27,9 +27,9 @@
 #endif
 
 constexpr const char* scripts[] = {
-    "RotateGameObjectScript",          // SCRIPT_ROTATE_GAME_OBJECT
+    "RotateGameObjectScript",    // SCRIPT_ROTATE_GAME_OBJECT
     "ButtonScript",              // SCRIPT_BUTTON
-    "GodModeScript",                   // SCRIPT_GOD_MODE
+    "GodModeScript",             // SCRIPT_GOD_MODE
     "CuChulainnScript",          // SCRIPT_CU_CHULAINN
     "SoldierScript",             // SCRIPT_SOLDIER
     "ExitGameScript",            // SCRIPT_EXIT_GAME

@@ -67,6 +67,8 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
     selectedGameObjectUID = gameObjectRootUID;
     if (initialState.HasMember("NavmeshUID")) navmeshUID = initialState["NavmeshUID"].GetUint64();
 
+    App->GetCameraModule()->LoadCameraPosition(&initialState);
+
     App->GetPhysicsModule()->LoadLayerData(&initialState);
 
     // Load navmesh from scene.
@@ -200,6 +202,8 @@ void Scene::Save(
     targetState.AddMember("RootGameObject", gameObjectRootUID, allocator);
     targetState.AddMember("NavmeshUID", navmeshUID, allocator);
 
+    App->GetCameraModule()->SaveCameraPosition(targetState, allocator);
+
     App->GetPhysicsModule()->SaveLayerData(targetState, allocator);
 
     // Serialize GameObjects
@@ -288,8 +292,9 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
-    std::vector<GameObject*> objectsToRender;
-    CheckObjectsToRender(objectsToRender, camera);
+    std::vector<GameObject*> opaqueObjectsToRender;
+    std::vector<GameObject*> transparentObjectsToRender;
+    CheckObjectsToRender(opaqueObjectsToRender, transparentObjectsToRender, camera);
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
@@ -299,18 +304,25 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        GeometryPassRender(objectsToRender, camera, gbuffer);
+        GeometryPassRender(opaqueObjectsToRender, transparentObjectsToRender, camera, gbuffer);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
-    else GeometryPassRender(objectsToRender, camera, gbuffer);
+    else GeometryPassRender(opaqueObjectsToRender, transparentObjectsToRender, camera, gbuffer);
 
-    LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
+    LightingPassRender(camera, gbuffer, framebuffer);
 
     {
 #ifdef OPTICK
         OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
 #endif
-        for (const auto& gameObject : objectsToRender)
+        for (const auto& gameObject : opaqueObjectsToRender)
+        {
+            if (gameObject != nullptr)
+            {
+                gameObject->Render(deltaTime);
+            }
+        }
+        for (const auto& gameObject : transparentObjectsToRender)
         {
             if (gameObject != nullptr)
             {
@@ -868,7 +880,10 @@ void Scene::UpdateDynamicSpatialStructure()
     CreateDynamicSpatialDataStruct();
 }
 
-void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, CameraComponent* camera) const
+void Scene::CheckObjectsToRender(
+    std::vector<GameObject*>& outOpaqueRenderGameObjects, std::vector<GameObject*>& outTransparentRenderGameObjects,
+    CameraComponent* camera
+) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsToRender", Optick::Category::GameLogic)
@@ -887,12 +902,18 @@ void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects,
     {
         OBB objectOBB = gameObject->GetGlobalOBB();
 
-        if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
+        if (frustumPlanes.Intersects(objectOBB))
+        {
+            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+            if (mesh->GetRenderMode() == RenderMode::Opaque) outOpaqueRenderGameObjects.push_back(gameObject);
+            if (mesh->GetRenderMode() == RenderMode::Transparent) outTransparentRenderGameObjects.push_back(gameObject);
+        }
     }
 }
 
 void Scene::GeometryPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
+    const std::vector<GameObject*>& opaqueObjectsToRender, const std::vector<GameObject*>& transparentObjectsToRender,
+    CameraComponent* camera, GBuffer* gbuffer
 ) const
 {
     gbuffer->Bind();
@@ -904,24 +925,36 @@ void Scene::GeometryPassRender(
     glDisable(GL_BLEND);
 
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
-    std::vector<MeshComponent*> meshesToRender;
+    std::vector<MeshComponent*> opaqueMeshesToRender;
 
-    for (const auto& gameObject : objectsToRender)
+    for (const auto& gameObject : opaqueObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr) meshesToRender.push_back(mesh);
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr) opaqueMeshesToRender.push_back(mesh);
     }
 
-    batchManager->Render(meshesToRender, camera);
-    gbuffer->Unbind();
+    batchManager->Render(opaqueMeshesToRender, camera);
 
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    glEnable(GL_DEPTH_TEST);
+    std::vector<MeshComponent*> transparentMeshesToRender;
+
+    for (const auto& gameObject : transparentObjectsToRender)
+    {
+        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
+            transparentMeshesToRender.push_back(mesh);
+    }
+
+    batchManager->Render(transparentMeshesToRender, camera);
+
+    gbuffer->Unbind();
+    glDepthMask(GL_TRUE);
 }
 
-void Scene::LightingPassRender(
-    const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
-    Framebuffer* framebuffer
-) const
+void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
 {
     // LIGHTING PASS
 #ifndef GAME
@@ -1296,7 +1329,7 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
             prefab == nullptr ? (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID) : prefab;
 
         if (resourcePrefab == nullptr) return; // If the prefab file is corrupted or not available, loading is cancelled
-        
+
         const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsVector();
         const std::vector<int>& parentIndices            = resourcePrefab->GetParentIndices();
 

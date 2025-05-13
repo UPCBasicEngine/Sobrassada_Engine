@@ -30,6 +30,7 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
         UID materialUID = initialState["Material"].GetUint64();
         if (materialUID != INVALID_UID) AddMaterial(materialUID);
     }
+    if (initialState.HasMember("RenderMode")) renderMode = static_cast<RenderMode>(initialState["RenderMode"].GetInt());
     if (initialState.HasMember("Mesh"))
     {
         AddMesh(initialState["Mesh"].GetUint64(), false);
@@ -84,6 +85,7 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
         "Material", currentMaterial != nullptr && !bUsesMeshDefaultMaterial ? currentMaterial->GetUID() : INVALID_UID,
         allocator
     );
+    targetState.AddMember("RenderMode", renderMode, allocator);
 
     if (bones.size() > 0) // Store the skin of the mesh as the UID of each bone
     {
@@ -166,7 +168,18 @@ void MeshComponent::RenderEditorInspector()
         if (chosenMatUID != INVALID_UID) AddMaterial(chosenMatUID);
     }
 
-    if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
+    if (currentMaterial != nullptr)
+    {
+        const char* renderModes[] = {"Opaque", "Transparent"};
+        int currentRenderMode     = static_cast<int>(renderMode);
+
+        if (ImGui::Combo("Render Mode", &currentRenderMode, renderModes, IM_ARRAYSIZE(renderModes)))
+        {
+            renderMode = static_cast<RenderMode>(currentRenderMode);
+        }
+
+        currentMaterial->OnEditorUpdate();
+    }
 }
 
 void MeshComponent::Update(float deltaTime)
