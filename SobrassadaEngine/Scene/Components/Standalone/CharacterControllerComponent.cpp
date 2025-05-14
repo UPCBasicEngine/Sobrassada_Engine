@@ -431,27 +431,80 @@ void CharacterControllerComponent::StartDash()
 
     // WALL COLLISION LOGIC
     const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
-    GLOG("Current position: (%f, %f, %f)", currentPos.x, currentPos.y, currentPos.z);
-    dashTarget = currentPos + rotateDirection * (dashDistance + 1.0f);
 
-    LineSegment ray(currentPos, dashTarget);
-    GameObject* hitObject = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
-        ray, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
+    dashTarget = currentPos + rotateDirection * (dashDistance + 0.5f);
+
+    float3 lateralDirection = rotateDirection.Cross(float3::unitY).Normalized();
+
+    float3 rightRayOrigin   = currentPos + lateralDirection * 0.5f; 
+    float3 leftRayOrigin    = currentPos - lateralDirection * 0.5f; 
+
+    // Crear los rayos
+    LineSegment centralRay(currentPos, dashTarget);
+    LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * dashDistance);
+    LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * dashDistance);
+
+    // Realizar el raycast para cada rayo
+    GameObject* centralHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+        centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
+    );
+    GameObject* rightHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+        rightRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
+    );
+    GameObject* leftHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+        leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
 
-    if (hitObject != nullptr)
-    {
-        const AABB& box = hitObject->GetGlobalAABB();
+    // Ajustar dashTarget si hay colisiones
+    const float wallOffset = 0.5f; // Distancia de separación de la pared
+    float tNear, tFar;
 
-        float tNear, tFar;
-        if (box.Intersects(ray, tNear, tFar))
+    if (centralHit != nullptr)
+    {
+        const AABB& box = centralHit->GetGlobalAABB();
+        if (box.Intersects(centralRay, tNear, tFar))
         {
-            float3 impactPoint     = ray.GetPoint(tNear);
-            const float wallOffset = 1.0f;
-            dashTarget             = impactPoint - rotateDirection * wallOffset;
-            GLOG("Dash impact point adjusted: (%f, %f, %f)", +dashTarget.x, dashTarget.y, dashTarget.z);
+            dashTarget = centralRay.GetPoint(tNear) - rotateDirection * wallOffset;
+            GLOG("COLLISIONED IN CENTER");
         }
     }
+    else if (rightHit != nullptr)
+    {
+        const AABB& box = rightHit->GetGlobalAABB();
+        if (box.Intersects(rightRay, tNear, tFar))
+        {
+            dashTarget = (rightRay.GetPoint(tNear) - rotateDirection * wallOffset) - lateralDirection * 0.5f;
+            GLOG("COLLISIONED IN RIGHT");
+        }
+    }
+    else if (leftHit != nullptr)
+    {
+        const AABB& box = leftHit->GetGlobalAABB();
+        if (box.Intersects(leftRay, tNear, tFar))
+        {
+            dashTarget = (leftRay.GetPoint(tNear) - rotateDirection * wallOffset) + lateralDirection * 0.5f;
+            GLOG("COLLISIONED IN LEFT");
+        }
+    }
+
+    //// NOT FALLING LOGIC
+
+    //dtQueryFilter filter;
+    //filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+    //filter.setExcludeFlags(0);
+
+    //float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaño de la caja de búsqueda
+    //float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
+    //dtPolyRef targetRef   = 0;
+
+    //dtStatus status       = navMeshQuery->findNearestPoly(dashTarget.ptr(), extents, &filter, &targetRef, nearestPoint);
+
+    //if (dtStatusFailed(status) || targetRef == 0)
+    //{
+    //    GLOG("Nearest points: (%f, %f, %f)", nearestPoint[0], nearestPoint[1], nearestPoint[2]);
+    //    GLOG("No navmesh found at dash target position. Dash canceled.");
+    //    dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]);
+    //}
 
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
