@@ -6,6 +6,7 @@ class GameObject;
 class CharacterControllerComponent;
 class CameraMovement;
 class Projectile;
+class AudioSourceComponent;
 
 enum class CharacterStates
 {
@@ -50,14 +51,11 @@ class CuChulainn : public Character
     void Respawn();
 
   private:
-    std::string cameraName  = "";
-    CameraMovement* camera  = nullptr;
+    std::string cameraName      = "";
+    CameraMovement* camera      = nullptr;
 
-    std::string spearName   = "";
-    Projectile* spear       = nullptr;
-
-    std::string weaponName  = "";
-    GameObject* weapon      = nullptr;
+    std::string spearName       = "";
+    Projectile* spear           = nullptr;
 
     bool isDashing          = false;
     float dashCooldown      = 2.0f;
@@ -66,18 +64,19 @@ class CuChulainn : public Character
     float dashBufferTimer   = 0.0f;
     float dashBuffer        = 0.5f;
 
-    bool desiredAttack      = false;
-    float attackTimer       = 0.0f;
-    float attackBufferTimer = 0.0f;
-    float attackBuffer      = 0.5f;
+    bool desiredAttack          = false;
+    float attackTimer           = 0.0f;
+    float attackBufferTimer     = 0.0f;
+    float attackBuffer          = 0.5f;
 
-    bool desiredAim         = false;
-    float throwTimer        = 0.0f;
-    float throwCooldown     = 1.0f;
-    bool resetWeapon        = false;
+    bool desiredAim             = false;
+    float throwTimer            = 0.0f;
+    float throwCooldown         = 1.0f;
+    bool resetWeapon            = false;
 
-    CharacterStates state   = CharacterStates::IDLE;
-    float3 spawnPos         = float3::zero;
+    CharacterStates state       = CharacterStates::IDLE;
+    float3 spawnPos             = float3::zero;
+    AudioSourceComponent* audio = nullptr;
 };
 
 extern CharacterControllerComponent* character;

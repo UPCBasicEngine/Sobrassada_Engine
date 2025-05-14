@@ -64,9 +64,9 @@ namespace ModelImporter
                     const float4x4 matrix  = *reinterpret_cast<const float4x4*>(bufferMatrices);
                     bufferMatrices        += stride;
                     inverseBindMatrices.push_back(matrix.Transposed());
-                    GLOG("I: %d. %f, %f, %f, %f", i, matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3]);
+                    //GLOG("I: %d. %f, %f, %f, %f", i, matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3]);
                 }
-                GLOG("Bind matrices length: %d", inverseBindMatrices.size());
+                //GLOG("Bind matrices length: %d", inverseBindMatrices.size());
 
                 newSkin.inverseBindMatrices = inverseBindMatrices;
             }
@@ -107,25 +107,25 @@ namespace ModelImporter
         if (model.animations.size() > 0)
         {
 
-            GLOG("Number of animations in model: %zu", model.animations.size());
+            //GLOG("Number of animations in model: %zu", model.animations.size());
 
             for (int i = 0; i < model.animations.size(); ++i)
             {
                 const auto& anim = model.animations[i];
 
-                GLOG("Importing animation %d", i);
-                GLOG("Animation channels: %zu", anim.channels.size());
+                //GLOG("Importing animation %d", i);
+                //GLOG("Animation channels: %zu", anim.channels.size());
 
                 UID animUID =
                     AnimationImporter::ImportAnimation(model, anim, anim.name, filePath, targetFilePath, sourceUID, i);
 
-                GLOG("Imported animation UID: %llu", animUID);
+                //GLOG("Imported animation UID: %llu", animUID);
 
                 if (animUID != INVALID_UID)
                 {
                     animationUIDs.push_back(animUID);
 
-                    GLOG("Final animation UID: %llu", animUID);
+                    //GLOG("Final animation UID: %llu", animUID);
                 }
 
                 else
@@ -139,8 +139,8 @@ namespace ModelImporter
                 newModel.SetAnimationUID(animationUIDs[0]);
                 newModel.SetAllAnimationUIDs(animationUIDs);
 
-                GLOG("Set first animation UID: %llu", animationUIDs[0]);
-                GLOG("Total animation UIDs: %zu", animationUIDs.size());
+                //GLOG("Set first animation UID: %llu", animationUIDs[0]);
+                //GLOG("Total animation UIDs: %zu", animationUIDs.size());
             }
             else
             {
@@ -279,7 +279,7 @@ namespace ModelImporter
         App->GetLibraryModule()->AddName(modelName, finalModelUID);
         App->GetLibraryModule()->AddResource(saveFilePath, finalModelUID);
 
-        GLOG("%s saved as model", modelName.c_str());
+        //GLOG("%s saved as model", modelName.c_str());
 
         return finalModelUID;
     }
@@ -445,10 +445,10 @@ namespace ModelImporter
                 }
 
                 loadedSkins.push_back(newSkin);
-                GLOG(
+                /*GLOG(
                     "Skin bones count: %d. Matrices count: %d", newSkin.bonesIndices.size(),
                     newSkin.inverseBindMatrices.size()
-                );
+                );*/
             }
         }
 

@@ -98,6 +98,7 @@ void CharacterControllerComponent::Clone(const Component* other)
     {
         const CharacterControllerComponent* otherCharacter = static_cast<const CharacterControllerComponent*>(other);
         enabled                                            = otherCharacter->enabled;
+        wasEnabled                                         = otherCharacter->wasEnabled;
 
         maxSpeed                                           = otherCharacter->maxSpeed;
         acceleration                                       = otherCharacter->acceleration;
@@ -206,46 +207,43 @@ void CharacterControllerComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
-    {
-        ImGui::SeparatorText("Character Controller Component");
+    ImGui::SeparatorText("Character Controller Component");
 
-        float availableWidth = ImGui::GetContentRegionAvail().x;
+    float availableWidth = ImGui::GetContentRegionAvail().x;
 
-        ImGui::Separator();
-        ImGui::Text("Character Controller");
+    ImGui::Separator();
+    ImGui::Text("Character Controller");
 
         ImGui::DragFloat("Max Speed", &maxSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
         ImGui::DragFloat("Acceleration", &acceleration, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
         ImGui::DragFloat("Dash Distance", &dashDistance, 3.0f, 0.0f, 10.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
         ImGui::DragFloat("Dash Duration", &dashDuration, 0.2f, 0.0f, 1.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
 
-        float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
-        float minVal   = 0.0f;
-        float maxVal   = isRadians ? 360.0f / RAD_DEGREE_CONV : 360.0f;
+    float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
+    float minVal   = 0.0f;
+    float maxVal   = isRadians ? 360.0f / RAD_DEGREE_CONV : 360.0f;
 
-        ImGui::DragFloat(
-            "Max Angular Speed##maxAngSpeed", &maxAngularSpeed, dragStep, minVal, maxVal, "%.3f",
-            ImGuiSliderFlags_AlwaysClamp
-        );
+    ImGui::DragFloat(
+        "Max Angular Speed##maxAngSpeed", &maxAngularSpeed, dragStep, minVal, maxVal, "%.3f",
+        ImGuiSliderFlags_AlwaysClamp
+    );
 
-        if (maxAngularSpeed > maxVal) maxAngularSpeed = maxVal;
+    if (maxAngularSpeed > maxVal) maxAngularSpeed = maxVal;
 
-        bool prevUseRad = isRadians;
+    bool prevUseRad = isRadians;
 
-        ImGui::SameLine();
-        ImGui::Checkbox("Radians##maxAngCheck", &isRadians);
+    ImGui::SameLine();
+    ImGui::Checkbox("Radians##maxAngCheck", &isRadians);
 
-        if (isRadians != prevUseRad)
+    if (isRadians != prevUseRad)
+    {
+        if (isRadians)
         {
-            if (isRadians)
-            {
-                maxAngularSpeed /= RAD_DEGREE_CONV;
-            }
-            else
-            {
-                maxAngularSpeed *= RAD_DEGREE_CONV;
-            }
+            maxAngularSpeed /= RAD_DEGREE_CONV;
+        }
+        else
+        {
+            maxAngularSpeed *= RAD_DEGREE_CONV;
         }
     }
 }
@@ -346,7 +344,8 @@ void CharacterControllerComponent::LookAtMovement(const float3& moveDir, float d
     float angle   = atan2(forward.Cross(desiredDir).y, forward.Dot(desiredDir));
 
     float maxStep = maxAngularSpeed * deltaTime;
-    angle         = std::clamp(angle, -maxStep, maxStep);
+    if (isRadians) maxStep *= RAD_DEGREE_CONV;
+    angle = std::clamp(angle, -maxStep, maxStep);
 
     if (fabs(angle) < 0.0001f)
     {

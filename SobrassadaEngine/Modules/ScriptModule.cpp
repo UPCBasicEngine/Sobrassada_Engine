@@ -48,20 +48,26 @@ void ScriptModule::LoadDLL()
         GLOG("Failed to load DLL\n");
         return;
     }
-    lastWriteTime     = fs::last_write_time("SobrassadaScripts.dll");
+    lastWriteTime      = fs::last_write_time("SobrassadaScripts.dll");
 
-    startScriptFunc   = (StartSobrassadaScripts)GetProcAddress(dllHandle, "InitSobrassadaScripts");
-    createScriptFunc  = (CreateScriptFunc)GetProcAddress(dllHandle, "CreateScript");
-    destroyScriptFunc = (DestroyScriptFunc)GetProcAddress(dllHandle, "DestroyScript");
-    freeScriptFunc    = (FreeSobrassadaScripts)GetProcAddress(dllHandle, "FreeSobrassadaScripts");
+    startScriptFunc    = (StartSobrassadaScripts)GetProcAddress(dllHandle, "InitSobrassadaScripts");
+    createScriptFunc   = (CreateScriptFunc)GetProcAddress(dllHandle, "CreateScript");
+    destroyScriptFunc  = (DestroyScriptFunc)GetProcAddress(dllHandle, "DestroyScript");
+    freeScriptFunc     = (FreeSobrassadaScripts)GetProcAddress(dllHandle, "FreeSobrassadaScripts");
 
-    if (!startScriptFunc || !createScriptFunc || !destroyScriptFunc)
+    getScriptNameFunc  = (GetScriptNameDLL)GetProcAddress(dllHandle, "GetScriptName");
+    getScriptCountFunc = (GetScriptCountDLL)GetProcAddress(dllHandle, "GetScriptCount");
+    searchIdxNameFunc  = (SearchIdxName)GetProcAddress(dllHandle, "GetScriptIndexByName");
+
+    if (!startScriptFunc || !createScriptFunc || !destroyScriptFunc || !freeScriptFunc || !getScriptNameFunc ||
+        !getScriptCountFunc || !searchIdxNameFunc)
     {
         GLOG("Failed to load required functions from DLL\n Trying Again.");
         return;
     }
 
     startScriptFunc(App);
+    scriptCount = getScriptCountFunc();
 }
 
 update_status ScriptModule::Update(float deltaTime)
@@ -73,10 +79,14 @@ void ScriptModule::UnloadDLL()
 {
     if (dllHandle)
     {
-        createScriptFunc  = nullptr;
-        destroyScriptFunc = nullptr;
-        startScriptFunc   = nullptr;
-        freeScriptFunc    = nullptr;
+        createScriptFunc   = nullptr;
+        destroyScriptFunc  = nullptr;
+        startScriptFunc    = nullptr;
+        freeScriptFunc     = nullptr;
+
+        getScriptNameFunc  = nullptr;
+        getScriptCountFunc = nullptr;
+        searchIdxNameFunc  = nullptr;
 
         FreeLibrary(dllHandle);
         dllHandle = nullptr;
@@ -112,7 +122,7 @@ void ScriptModule::SaveScriptsToFile(const std::string& filename, const rapidjso
     outFile << buffer.GetString();
     outFile.close();
 
-    GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
+    //GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
 }
 
 void ScriptModule::DeleteAllScripts(bool saveJson)

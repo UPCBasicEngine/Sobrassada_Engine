@@ -11,7 +11,6 @@ class ExitGameScript : public Script
     void OnDestroy() override;
     bool Init() override;
     void Update(float deltaTime) override;
-    void Inspector() override;
 
     void OnClick();
 

@@ -25,8 +25,7 @@ ScriptComponent::ScriptComponent(const rapidjson::Value& initialState, GameObjec
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                CreateScript(name);
-                scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
             }
         }
     }
@@ -41,8 +40,13 @@ void ScriptComponent::Load(const rapidjson::Value& initialState)
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                CreateScript(name);
-                scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name))
+                {
+                    if (scriptData.HasMember("Enabled")) scriptEnabled.back() = scriptData["Enabled"].GetBool();
+                    if (scriptData.HasMember("WasEnabled"))
+                        scriptWasEnabledLastFrame.back() = scriptData["WasEnabled"].GetBool();
+                    scriptInstances.back()->Load(scriptData);
+                }
             }
         }
     }
@@ -62,6 +66,8 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
     {
         rapidjson::Value scriptData(rapidjson::kObjectType);
         scriptData.AddMember("Script Name", rapidjson::Value(scriptNames[i].c_str(), allocator), allocator);
+        scriptData.AddMember("Enabled", scriptEnabled[i], allocator);
+        scriptData.AddMember("WasEnabled", scriptWasEnabledLastFrame[i], allocator);
         scriptInstances[i]->Save(scriptData, allocator);
         scriptsArray.PushBack(scriptData, allocator);
     }
@@ -75,6 +81,7 @@ void ScriptComponent::Clone(const Component* other)
     {
         const ScriptComponent* otherScript = static_cast<const ScriptComponent*>(other);
         enabled                            = otherScript->enabled;
+        wasEnabled                         = otherScript->wasEnabled;
 
         for (size_t i = 0; i < otherScript->scriptNames.size(); ++i)
         {
@@ -96,11 +103,26 @@ void ScriptComponent::Update(float deltaTime)
     if (App->GetSceneModule()->GetInPlayMode())
     {
         float gameTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f; // seconds
-        for (auto& script : scriptInstances)
+        for (size_t i = 0; i < scriptInstances.size(); ++i)
         {
-            script->Update(gameTime);
+            if (scriptEnabled[i])
+            {
+                if (!scriptInitialized[i])
+                {
+                    scriptInstances[i]->Init();
+                    scriptInitialized[i] = true;
+                }
+
+                scriptInstances[i]->Update(gameTime);
+            }
         }
     }
+}
+
+void ScriptComponent::ResetInitializationFlags()
+{
+    std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
+    std::fill(scriptWasEnabledLastFrame.begin(), scriptWasEnabledLastFrame.end(), false);
 }
 
 void ScriptComponent::Render(float deltaTime)
@@ -114,53 +136,76 @@ void ScriptComponent::RenderDebug(float deltaTime)
 void ScriptComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
-    if (enabled)
+
+    ImGui::SeparatorText("Script Component");
+    if (ImGui::Button("Select script"))
     {
-        ImGui::SeparatorText("Script Component");
-        if (ImGui::Button("Select script"))
+        ImGui::OpenPopup("Select Script");
+    }
+
+    if (ImGui::BeginPopup("Select Script"))
+    {
+        for (int i = 0; i < App->GetScriptModule()->GetScriptCount(); ++i)
         {
-            ImGui::OpenPopup("Select Script");
+            const char* name = App->GetScriptModule()->GetScriptName(i);
+            if (name && ImGui::Selectable(name))
+            {
+                CreateScript(name);
+            }
         }
-        if (ImGui::BeginPopup("Select Script"))
+        ImGui::EndPopup();
+    }
+
+    for (int i = 0; i < scriptInstances.size(); ++i)
+    {
+        ImGui::Separator();
+        ImGui::PushID(static_cast<int>(i));
+
+        ImGui::Text(scriptNames[i].c_str());
+        ImGui::SameLine();
+        if (ImGui::Button("Delete"))
         {
-            for (int i = 0; i < SCRIPT_TYPE_COUNT; ++i)
-            {
-                if (ImGui::Selectable(scripts[i]))
-                {
-                    CreateScript(scripts[i]);
-                }
-            }
-            ImGui::EndPopup();
-        }
-        for (int i = 0; i < scriptInstances.size(); ++i)
-        {
-            ImGui::Separator();
-            ImGui::PushID(static_cast<int>(i));
-
-            ImGui::Text(scriptNames[i].c_str());
-            ImGui::SameLine();
-            if (ImGui::Button("Delete"))
-            {
-                DeleteScript(i);
-                ImGui::PopID();
-                break;
-            }
-
-            if (scriptInstances[i])
-            {
-                scriptInstances[i]->Inspector();
-            }
-
+            DeleteScript(i);
             ImGui::PopID();
+            break;
         }
+
+        if (scriptInstances[i])
+        {
+            ImGui::SameLine();
+            if (parent->IsGloballyEnabled() && enabled)
+            {
+                bool isEnabled = scriptEnabled[i];
+
+                if (ImGui::Checkbox("Enabled", &isEnabled))
+                {
+                    scriptWasEnabledLastFrame[i] = isEnabled;
+                }
+                scriptEnabled[i] = scriptWasEnabledLastFrame[i];
+            }
+            else
+            {
+                bool isEnabled = scriptEnabled[i];
+                ImGui::Checkbox("Enabled", &isEnabled);
+                scriptEnabled[i] = false;
+            }
+
+            scriptInstances[i]->Inspector();
+        }
+
+        ImGui::PopID();
     }
 }
 
 void ScriptComponent::InitScriptInstances()
 {
-    for (auto& script : scriptInstances)
+    for (size_t i = 0; i < scriptInstances.size(); ++i)
     {
-        script->Init();
+        if (scriptEnabled[i])
+        {
+            scriptInstances[i]->Init();
+            scriptInitialized[i] = true;
+        }
     }
 }
 
@@ -172,14 +217,25 @@ void ScriptComponent::OnCollision(GameObject* otherObject, const float3& collisi
     }
 }
 
-void ScriptComponent::CreateScript(const std::string& scriptType)
+bool ScriptComponent::CreateScript(const std::string& scriptType)
 {
+    for (const std::string& name : scriptNames)
+    {
+        if (name == scriptType) return false;
+    }
+
     Script* instance = App->GetScriptModule()->CreateScript(scriptType, parent);
-    if (instance == nullptr) return;
+    if (instance == nullptr) return false;
 
     scriptInstances.push_back(instance);
     scriptNames.push_back(scriptType);
-    scriptTypes.push_back(static_cast<ScriptType>(SearchIdxForString(scriptType)));
+    scriptTypes.push_back(App->GetScriptModule()->GetScriptIdx(scriptType));
+    // scriptTypes.push_back(static_cast<ScriptType>(SearchIdxForString(scriptType)));
+    scriptEnabled.push_back(true);
+    scriptInitialized.push_back(false);
+    scriptWasEnabledLastFrame.push_back(true);
+
+    return true;
 }
 
 void ScriptComponent::DeleteScript(const int index)
@@ -191,6 +247,10 @@ void ScriptComponent::DeleteScript(const int index)
     scriptInstances.erase(scriptInstances.begin() + index);
     scriptNames.erase(scriptNames.begin() + index);
     scriptTypes.erase(scriptTypes.begin() + index);
+
+    scriptEnabled.erase(scriptEnabled.begin() + index);
+    scriptInitialized.erase(scriptInitialized.begin() + index);
+    scriptWasEnabledLastFrame.erase(scriptWasEnabledLastFrame.begin() + index);
 }
 
 void ScriptComponent::DeleteAllScripts()
@@ -203,18 +263,8 @@ void ScriptComponent::DeleteAllScripts()
     scriptInstances.clear();
     scriptNames.clear();
     scriptTypes.clear();
-}
 
-int ScriptComponent::SearchIdxForString(const std::string& scriptString) const
-{
-    int idx = 0;
-    for (int i = 0; i < SCRIPT_TYPE_COUNT; ++i)
-    {
-        if (scriptString == scripts[i])
-        {
-            idx = i;
-            break;
-        }
-    }
-    return idx;
+    scriptEnabled.clear();
+    scriptInitialized.clear();
+    scriptWasEnabledLastFrame.clear();
 }

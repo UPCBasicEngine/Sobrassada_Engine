@@ -225,6 +225,8 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     scale            = refObject->scale;
     prefabUID        = refObject->prefabUID;
     navMeshValid     = refObject->navMeshValid;
+    enabled          = refObject->enabled;
+    wasEnabled       = refObject->wasEnabled;
 
     // Must make a copy of each manually
     for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
@@ -257,6 +259,7 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     mobilitySettings       = initialState["Mobility"].GetInt();
 
     if (initialState.HasMember("Enabled")) enabled = initialState["Enabled"].GetBool();
+    if (initialState.HasMember("WasEnabled")) wasEnabled = initialState["WasEnabled"].GetBool();
 
     if (initialState.HasMember("SelectParent")) selectParent = initialState["SelectParent"].GetBool();
 
@@ -369,6 +372,7 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Mobility", mobilitySettings, allocator);
     targetState.AddMember("SelectParent", selectParent, allocator);
     targetState.AddMember("Enabled", enabled, allocator);
+    targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
@@ -410,6 +414,20 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Children", valChildren, allocator);
 }
 
+void GameObject::UpdateEnabledStateRecursive()
+{
+    for (UID childUID : children)
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child)
+        {
+            child->UpdateEnabledStateRecursive();
+        }
+    }
+
+    enabled = wasEnabled;
+}
+
 void GameObject::RenderEditorInspector()
 {
     if (!ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu))
@@ -421,7 +439,19 @@ void GameObject::RenderEditorInspector()
     ImGui::Text(name.c_str());
 
     ImGui::SameLine();
-    ImGui::Checkbox("Enabled", &enabled);
+
+    if (IsGloballyEnabled())
+    {
+        if (ImGui::Checkbox("Enabled", &enabled)) wasEnabled = enabled;
+    }
+    else
+    {
+        if (ImGui::Checkbox("Enabled", &enabled))
+        {
+            wasEnabled = enabled;
+            UpdateEnabledStateRecursive();
+        }
+    }
 
     if (uid != App->GetSceneModule()->GetScene()->GetGameObjectRootUID())
     {
@@ -703,6 +733,7 @@ void GameObject::RenderHierarchyNode(UID& selectedGameObjectUUID)
             GameObject* childGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
             if (childGameObject && childUID != uid)
             {
+                if (!enabled) childGameObject->enabled = false;
                 childGameObject->RenderHierarchyNode(selectedGameObjectUUID);
             }
         }
