@@ -11,9 +11,9 @@
 Banshee::Banshee(GameObject* parent)
     : Character(
           parent,
-          1, // Max Health
+          2, // Max Health
           2, // Damage
-          3, // Attack Duration
+          2, // Attack Duration
           4, // Attack Cooldown
           5, // Attack Range
           5, // AI Aggro Range
@@ -97,7 +97,7 @@ void Banshee::Flee()
     GLOG("FLEE");
 
     // TODO: Could be interesting to increase its speed when flee
-    // The commented lines must be uncommented, bu there is a crash when adding new engine functions to the scripts (and
+    // The commented lines must be uncommented, bu there is a crash when calling new engine functions from the scripts (and
     // are declared in the .cpp, in .h work)
 
     if (!isFleeing)
@@ -133,7 +133,7 @@ void Banshee::Attack()
     }
     else
     {
-        // Enable hitbox when animation
+        // TODO: Enable hitbox when animation (done in V2)
 
         if (attackTimer <= 0)
         {
