@@ -4,6 +4,7 @@
 #include "EditorUIModule.h"
 #include "EngineTimer.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "PathfinderModule.h"
 #include "ResourceNavmesh.h"
 #include "SceneModule.h"
@@ -219,12 +220,20 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
     if (!move) return true;
 
     // Request move to destination
+
+    if (lookForward)
+    {
+        const float3 nextPos = parent->GetPosition() + (parent->GetPosition() - previousPos).Normalized();
+        LookAtMovement(nextPos, App->GetGameTimer()->GetDeltaTime() / 1000.0f);
+    }
     bool result = pathfinder->GetCrowd()->requestMoveTarget(agentId, targetRef, destination.ptr());
     if (!result)
     {
         GLOG("Crowd agent failed to request movement.");
         return false;
     }
+
+    previousPos = parent->GetPosition();
     return true;
 }
 

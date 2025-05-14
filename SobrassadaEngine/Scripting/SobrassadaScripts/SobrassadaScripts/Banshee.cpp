@@ -34,6 +34,7 @@ bool Banshee::Init()
     else
     {
         agentAI->RecreateAgent();
+        agentAI->SetLookForward(true);
         speed = agentAI->GetSpeed();
     }
 
@@ -94,21 +95,27 @@ void Banshee::Flee()
     GLOG("FLEE");
 
     // TODO: Could be interesting to increase its speed when flee
+    // The commented lines must be uncommented, bu there is a crash when adding new engine functions to the scripts (and
+    // are declared in the .cpp, in .h work
+
     if (!isFleeing)
     {
         isFleeing = true;
-        agentAI->SetSpeed(fleeSpeed);
+        // agentAI->SetSpeed(fleeSpeed);
     }
 
-    float3 direction =
-        (parent->GetGlobalTransform().TranslatePart() - character->GetGlobalTransform().TranslatePart()).Normalized();
-    agentAI->SetPathNavigation(parent->GetGlobalTransform().TranslatePart() + direction);
+    const float3 newPos =
+        (parent->GetGlobalTransform().TranslatePart() - character->GetGlobalTransform().TranslatePart()).Normalized() +
+        parent->GetGlobalTransform().TranslatePart();
+
+    agentAI->SetPathNavigation(newPos);
+    // agentAI->LookAtMovement(newPos, deltaTime);
 
     const float distance = character->GetLastPosition().Distance(parent->GetPosition());
     if (distance > fleeDistance)
     {
-        isFleeing = false;
-        agentAI->ResetSpeed();
+        isFleeing    = false;
+        // agentAI->ResetSpeed();
         currentState = BansheeStates::Scream;
     }
 }

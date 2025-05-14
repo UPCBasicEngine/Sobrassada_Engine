@@ -34,6 +34,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     float GetSpeed() const { return currentSpeed; }
     bool IsPaused() const { return isPaused; }
 
+    void SetLookForward(bool look) { lookForward = look; }
     void SetSpeed(const float newSpeed);
     void ResetSpeed();
 
@@ -54,4 +55,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     float maxAngularSpeed     = 0.0f;
     bool isRadians            = false;
     float restoreAngular      = 0.0f;
+
+    bool lookForward          = false;
+    float3 previousPos        = float3::zero;
 };
