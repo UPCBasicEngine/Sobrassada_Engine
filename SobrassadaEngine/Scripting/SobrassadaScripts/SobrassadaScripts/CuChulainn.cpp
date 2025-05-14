@@ -13,9 +13,11 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 
 #include "SDL.h"
+#include "Wwise_IDs.h"
 
 CharacterControllerComponent* character = nullptr;
 
@@ -233,7 +235,7 @@ void CuChulainn::Attack()
 {
     // TODO: play basicAttack sound
 
-    //GLOG("ATTACK");
+    // GLOG("ATTACK");
 
     if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
     desiredAttack = false;

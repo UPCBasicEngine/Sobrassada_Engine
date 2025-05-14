@@ -100,7 +100,7 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         lightsConfig->LoadData(initialState["Lights Config"]);
     }
 
-    //GLOG("%s scene loaded", sceneName.c_str());
+    // GLOG("%s scene loaded", sceneName.c_str());
 }
 
 Scene::~Scene()
@@ -124,7 +124,7 @@ Scene::~Scene()
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
 
-    //GLOG("%s scene closed", sceneName.c_str());
+    // GLOG("%s scene closed", sceneName.c_str());
 }
 
 void Scene::Init()
@@ -270,7 +270,7 @@ update_status Scene::Render(float deltaTime)
     CameraComponent* mainCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
     if (App->GetSceneModule()->GetInPlayMode() && mainCamera != nullptr)
     {
-        if (mainCamera->GetEnabled() && mainCamera->IsEffectivelyEnabled()) RenderScene(deltaTime, mainCamera);
+        if (mainCamera->IsEffectivelyEnabled()) RenderScene(deltaTime, mainCamera);
         else RenderScene(deltaTime, nullptr);
     }
     else RenderScene(deltaTime, nullptr);
@@ -1050,11 +1050,20 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
     return nullptr;
 }
 
+CameraComponent* Scene::GetMainCamera() const
+{
+    if (mainCamera != nullptr)
+    {
+        if (mainCamera->IsEffectivelyEnabled()) return mainCamera;
+    }
+    return nullptr;
+}
+
 void Scene::LoadModel(const UID modelUID)
 {
     if (modelUID != INVALID_UID)
     {
-        //GLOG("Load model %llu", modelUID);
+        // GLOG("Load model %llu", modelUID);
 
         ResourceModel* newModel               = (ResourceModel*)App->GetResourcesModule()->RequestResource(modelUID);
         const Model& model                    = newModel->GetModelData();
@@ -1066,10 +1075,10 @@ void Scene::LoadModel(const UID modelUID)
         std::vector<UID> gameObjectsUID;
         std::vector<GameObject*> rootGameObjects;
 
-        //GLOG("Model Animation UID: %llu", newModel->GetAnimationUID());
+        // GLOG("Model Animation UID: %llu", newModel->GetAnimationUID());
 
         const auto& animUIDs = newModel->GetAllAnimationUIDs();
-        //GLOG("Total Animation UIDs %zu ", animUIDs.size());
+        // GLOG("Total Animation UIDs %zu ", animUIDs.size());
 
         /*
         for (UID uid : animUIDs)
@@ -1151,9 +1160,9 @@ void Scene::LoadModel(const UID modelUID)
                 if (currentNodeData.meshes.size() > 0)
                 {
                     GameObject* currentGameObject = gameObjectsArray[currentNodeIndex];
-                    //GLOG("Node %s has %d meshes", currentNodeData.name.c_str(), currentNodeData.meshes.size());
+                    // GLOG("Node %s has %d meshes", currentNodeData.name.c_str(), currentNodeData.meshes.size());
 
-                    unsigned meshNum = 1;
+                    unsigned meshNum              = 1;
 
                     for (const auto& mesh : currentNodeData.meshes)
                     {
@@ -1223,13 +1232,13 @@ void Scene::LoadModel(const UID modelUID)
                 rootGameObject->CreateComponent(COMPONENT_ANIMATION);
                 AnimationComponent* animComponent = rootGameObject->GetComponent<AnimationComponent*>();
 
-                //GLOG("Model has %zu animations", animUIDs.size());
+                // GLOG("Model has %zu animations", animUIDs.size());
                 for (UID uid : animUIDs)
                 {
-                    //GLOG("Setting aimation resource with UID %llu ", uid);
+                    // GLOG("Setting aimation resource with UID %llu ", uid);
                     animComponent->SetAnimationResource(uid);
 
-                    //GLOG("Animation UID: %llu", uid);
+                    // GLOG("Animation UID: %llu", uid);
                 }
             }
             else

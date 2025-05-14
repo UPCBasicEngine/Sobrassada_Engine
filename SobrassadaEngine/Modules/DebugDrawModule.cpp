@@ -733,6 +733,7 @@ void DebugDrawModule::DrawFrustrum(float4x4 frustumProj, float4x4 frustumView)
 
 void DebugDrawModule::Draw(const float4x4& view, const float4x4& proj, unsigned width, unsigned height)
 {
+
     if (App->GetSceneModule()->IsSceneLoaded()) HandleDebugRenderOptions();
 
     implementation->width     = width;
@@ -844,6 +845,7 @@ void DebugDrawModule::HandleDebugRenderOptions()
         }
     }
 }
+
 static unsigned int DetourTransCol(unsigned int c, unsigned int a)
 {
     return (a << 24) | (c & 0x00ffffff);

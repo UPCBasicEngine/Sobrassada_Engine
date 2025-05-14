@@ -3,17 +3,17 @@
 #include "Application.h"
 #include "CameraModule.h"
 #include "CanvasComponent.h"
+#include "GameObject.h"
+#include "HashString.h"
 #include "LibraryModule.h"
 #include "ResourceFont.h"
 #include "ResourcesModule.h"
-#include "GameObject.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
 #include "TextManager.h"
 #include "Transform2DComponent.h"
 #include "WindowModule.h"
-#include "HashString.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -24,9 +24,9 @@ UILabelComponent::UILabelComponent(UID uid, GameObject* parent)
     fontData = new TextManager::FontData();
 
     // Set the default font resource
-    fontType = static_cast<ResourceFont*>(
-        App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetFontMap().at(HashString("Roboto-Regular")))
-    );
+    fontType = static_cast<ResourceFont*>(App->GetResourcesModule()->RequestResource(
+        App->GetLibraryModule()->GetFontMap().at(HashString("Roboto-Regular"))
+    ));
 }
 
 UILabelComponent::UILabelComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -47,9 +47,9 @@ UILabelComponent::UILabelComponent(const rapidjson::Value& initialState, GameObj
     {
         // To prevent crashes in older saved scenes, load the default one if there is no font saved
         GLOG("[Warning] No font type found for the component %s in the saved scene", name);
-        fontType = static_cast<ResourceFont*>(
-            App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetFontMap().at(HashString("Roboto-Regular")))
-        );
+        fontType = static_cast<ResourceFont*>(App->GetResourcesModule()->RequestResource(
+            App->GetLibraryModule()->GetFontMap().at(HashString("Roboto-Regular"))
+        ));
     }
 
     if (initialState.HasMember("FontColor") && initialState["FontColor"].IsArray())
@@ -74,7 +74,7 @@ UILabelComponent::~UILabelComponent()
 
 void UILabelComponent::Init()
 {
-    transform2D  = parent->GetComponent<Transform2DComponent*>();
+    transform2D = parent->GetComponent<Transform2DComponent*>();
     if (transform2D == nullptr)
     {
         parent->CreateComponent(COMPONENT_TRANSFORM_2D);
@@ -121,6 +121,7 @@ void UILabelComponent::Clone(const Component* other)
     {
         const UILabelComponent* otherLabel = static_cast<const UILabelComponent*>(other);
         enabled                            = otherLabel->enabled;
+        wasEnabled                         = otherLabel->wasEnabled;
 
         strcpy_s(text, sizeof(text), otherLabel->text);
         fontSize  = otherLabel->fontSize;
@@ -140,7 +141,6 @@ void UILabelComponent::Clone(const Component* other)
 
 void UILabelComponent::RenderDebug(float deltaTime)
 {
-
 }
 
 void UILabelComponent::RenderUI(const float4x4& view, const float4x4 proj) const
@@ -152,7 +152,7 @@ void UILabelComponent::RenderUI(const float4x4& view, const float4x4 proj) const
     if (transform2D)
     {
         startPos = float3(transform2D->GetRenderingPosition(), 0) - parent->GetGlobalTransform().TranslatePart();
-        width = transform2D->size.x;
+        width    = transform2D->size.x;
     }
     glUniformMatrix4fv(0, 1, GL_TRUE, parent->GetGlobalTransform().ptr());
     glUniformMatrix4fv(1, 1, GL_TRUE, view.ptr());
@@ -169,42 +169,39 @@ void UILabelComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
+    ImGui::Text("Label");
+    ImGui::InputTextMultiline("Label Text", &text[0], sizeof(text));
+
+    if (ImGui::InputInt("Font Size", &fontSize))
     {
-        ImGui::Text("Label");
-        ImGui::InputTextMultiline("Label Text", &text[0], sizeof(text));
-
-        if (ImGui::InputInt("Font Size", &fontSize))
-        {
-            if (fontSize < 1) fontSize = 1;
-            OnFontChange();
-        }
-
-        const char* preview = "Arial";
-        if (ImGui::BeginCombo("Font Type", fontData->fontName.c_str()))
-        {
-            int selectedItemIndex = -1;
-            unsigned int i        = 0;
-            for (const auto& font : App->GetLibraryModule()->GetFontMap())
-            {
-                const bool is_selected = (selectedItemIndex == i);
-                if (ImGui::Selectable(font.first.c_str(), is_selected))
-                {
-                    selectedItemIndex = i;
-
-                    fontType = static_cast<ResourceFont*>(App->GetResourcesModule()->RequestResource(font.second));
-                    fontData->Clean();
-                    fontData->Init(fontType->GetFilepath().c_str(), fontSize);
-                }
-
-                if (is_selected) ImGui::SetItemDefaultFocus();
-                ++i;
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::ColorEdit3("Font color", fontColor.ptr());
+        if (fontSize < 1) fontSize = 1;
+        OnFontChange();
     }
+
+    const char* preview = "Arial";
+    if (ImGui::BeginCombo("Font Type", fontData->fontName.c_str()))
+    {
+        int selectedItemIndex = -1;
+        unsigned int i        = 0;
+        for (const auto& font : App->GetLibraryModule()->GetFontMap())
+        {
+            const bool is_selected = (selectedItemIndex == i);
+            if (ImGui::Selectable(font.first.c_str(), is_selected))
+            {
+                selectedItemIndex = i;
+
+                fontType          = static_cast<ResourceFont*>(App->GetResourcesModule()->RequestResource(font.second));
+                fontData->Clean();
+                fontData->Init(fontType->GetFilepath().c_str(), fontSize);
+            }
+
+            if (is_selected) ImGui::SetItemDefaultFocus();
+            ++i;
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::ColorEdit3("Font color", fontColor.ptr());
 }
 
 void UILabelComponent::InitBuffers()

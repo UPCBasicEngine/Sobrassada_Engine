@@ -30,10 +30,6 @@ void FullscreenToggleScript::Update(float deltaTime)
 {
 }
 
-void FullscreenToggleScript::Inspector()
-{
-}
-
 void FullscreenToggleScript::OnClick()
 {
     AppEngine->GetEditorUIModule()->ToggleFullscreen();

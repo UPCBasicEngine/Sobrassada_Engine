@@ -3,29 +3,6 @@
 #include "Component.h"
 #include "Globals.h"
 
-enum ScriptType
-{
-    SCRIPT_ROTATE_GAME_OBJECT = 0,
-    SCRIPT_BUTTON,
-    SCRIPT_GOD_MODE,
-    SCRIPT_CU_CHULAINN,
-    SCRIPT_SOLDIER,
-    SCRIPT_EXIT_GAME,
-    SCRIPT_FULLSCREEN_TOGGLE,
-    SCRIPT_VSYNC_TOGGLE,
-    SCRIPT_PAUSE_MENU,
-    SCRIPT_OPTIONS_MENU_SWITCHER,
-    SCRIPT_MAIN_MENU_SELECTOR,
-    SCRIPT_PRESS_ANY_KEY,
-    SCRIPT_CAMERA_MOVEMENT,
-    SCRIPT_PROJECTILE,
-    SCRIPT_FREE_CAMERA,
-    SCRIPT_SPAWN_POINT,
-    SCRIPT_BANSHEE,
-
-    SCRIPT_TYPE_COUNT // Add at the end
-};
-
 namespace math
 {
     class float3;
@@ -33,30 +10,6 @@ namespace math
 
 class Script;
 class GameObject;
-
-constexpr const char* scripts[] = {
-    "RotateGameObjectScript",    // SCRIPT_ROTATE_GAME_OBJECT
-    "ButtonScript",              // SCRIPT_BUTTON
-    "GodModeScript",             // SCRIPT_GOD_MODE
-    "CuChulainnScript",          // SCRIPT_CU_CHULAINN
-    "SoldierScript",             // SCRIPT_SOLDIER
-    "ExitGameScript",            // SCRIPT_EXIT_GAME
-    "FullscreenToggleScript",    // SCRIPT_FULLSCREEN_TOGGLE
-    "VSyncToggleScript",         // SCRIPT_VSYNC_TOGGLE
-    "PauseMenuScript",           // SCRIPT_PAUSE_MENU
-    "OptionsMenuSwitcherScript", // SCRIPT_OPTIONS_MENU_SWITCHER
-    "MainMenuSelectorScript",    // SCRIPT_MAIN_MENU_SELECTOR
-    "PressAnyKeyScript",         // SCRIPT_PRESS_ANY_KEY
-    "CameraMovement",            // SCRIPT_CAMERA_MOVEMENT
-    "Projectile",                // SCRIPT_PROJECTILE
-    "FreeCamera",                // SCRIPT_FREE_CAMERA
-    "SpawnPoint",                // SCRIPT_SPAWN_POINT
-    "Banshee",                   // SCRIPT_BANSHEE
-};
-
-static_assert(
-    SCRIPT_TYPE_COUNT == sizeof(scripts) / sizeof(scripts[0]), "ScriptType enum and scripts[] size mismatch!"
-);
 
 class ScriptComponent : public Component
 {
@@ -81,6 +34,8 @@ class ScriptComponent : public Component
     void DeleteScript(const int index);
     void DeleteAllScripts();
 
+    void ResetInitializationFlags();
+
     const std::vector<Script*>& GetScriptInstances() const { return scriptInstances; }
     const std::vector<std::string>& GetAllScriptNames() const { return scriptNames; }
 
@@ -96,10 +51,13 @@ class ScriptComponent : public Component
     }
 
   private:
-    int SearchIdxForString(const std::string& name) const;
     bool startScript = false;
 
     std::vector<std::string> scriptNames;
     std::vector<Script*> scriptInstances;
-    std::vector<ScriptType> scriptTypes;
+    std::vector<bool> scriptEnabled;
+    std::vector<bool> scriptInitialized;
+    std::vector<bool> scriptWasEnabledLastFrame;
+    std::vector<int> scriptTypes;
+    //std::vector<ScriptType> scriptTypes;
 };
