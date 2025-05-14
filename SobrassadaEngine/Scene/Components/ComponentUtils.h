@@ -34,6 +34,7 @@ enum ComponentType : int
     COMPONENT_BUTTON,
     COMPONENT_AUDIO_SOURCE,
     COMPONENT_AUDIO_LISTENER,
+    COMPONENT_SPLINE
 };
 
 enum class ColliderType : uint8_t
@@ -77,8 +78,8 @@ class ComponentUtils
         CharacterControllerComponent*, Transform2DComponent*, CanvasComponent*,         \
         UILabelComponent*, CameraComponent*, ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*,       \
         CapsuleColliderComponent*, AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*,          \
-        AudioSourceComponent*, AudioListenerComponent*
+        AudioSourceComponent*, AudioListenerComponent*, SplineComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr

@@ -21,6 +21,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/SplineComponent.h"
 
 #include <cstdint>
 
@@ -165,6 +166,13 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         generatedComponent                                = audioListener;
         break;
     }
+    case COMPONENT_SPLINE:
+    {
+        SplineComponent* spline                           = new SplineComponent(uid, parent);
+        std::get<SplineComponent*>(componentTuple) = spline;
+        generatedComponent                                = spline;
+        break;
+    }
     default:
         return;
     }
@@ -293,6 +301,12 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
         {
             AudioListenerComponent* audioListener             = new AudioListenerComponent(initialState, parent);
             std::get<AudioListenerComponent*>(componentTuple) = audioListener;
+            break;
+        }
+        case COMPONENT_SPLINE:
+        {
+            SplineComponent* spline                    = new SplineComponent(initialState, parent);
+            std::get<SplineComponent*>(componentTuple) = spline;
             break;
         }
         default:

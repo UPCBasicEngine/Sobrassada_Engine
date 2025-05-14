@@ -26,6 +26,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/SplineComponent.h"
 
 #include "imgui.h"
 #include <queue>
