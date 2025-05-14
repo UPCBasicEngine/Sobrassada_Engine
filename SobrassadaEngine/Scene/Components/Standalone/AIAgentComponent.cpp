@@ -285,7 +285,9 @@ void AIAgentComponent::AddToCrowd()
         return;
     }
 
-    agentId = App->GetPathfinderModule()->CreateAgent(parent->GetPosition(), radius, height, currentSpeed);
+    currentSpeed        = defaultSpeed;
+    currentAcceleration = defaultAcceleration;
+    agentId             = App->GetPathfinderModule()->CreateAgent(parent->GetPosition(), radius, height, currentSpeed, currentAcceleration);
 
     if (agentId != -1)
     {

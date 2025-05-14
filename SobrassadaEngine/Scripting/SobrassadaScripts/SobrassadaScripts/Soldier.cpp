@@ -30,6 +30,7 @@ bool Soldier::Init()
     else
     {
         agentAI->RecreateAgent();
+        agentAI->SetLookForward(true);
         speed = agentAI->GetSpeed();
     }
 
@@ -39,10 +40,7 @@ bool Soldier::Init()
 void Soldier::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
-
     Character::Update(deltaTime);
-    if (character != nullptr && currentState != SoldierStates::PATROL && !agentAI->IsPaused())
-        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 }
 
 void Soldier::OnDeath()
@@ -65,7 +63,7 @@ void Soldier::PerformAttack()
     // TODO: trails, particles and animation
 }
 
-void Soldier::HandleState()
+void Soldier::HandleState(float deltaTime)
 {
     // if (!animComponent) return;
 
@@ -74,7 +72,7 @@ void Soldier::HandleState()
     case SoldierStates::PATROL:
         // GLOG("Soldier Patrolling");
         // animComponent->UseTrigger("idle");
-        PatrolAI();
+        PatrolAI(deltaTime);
         break;
     case SoldierStates::CHASE:
         // GLOG("Soldier Chasing");
@@ -93,10 +91,8 @@ void Soldier::HandleState()
     }
 }
 
-void Soldier::PatrolAI()
+void Soldier::PatrolAI(float deltaTime)
 {
-    float deltaTime = AppEngine->GetGameTimer()->GetDeltaTime();
-
     if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
     else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
 
@@ -105,15 +101,11 @@ void Soldier::PatrolAI()
     {
         if (CheckDistanceWithPoint(startPos)) reachedPatrolPoint = false;
         else valid = agentAI->SetPathNavigation(startPos);
-
-        agentAI->LookAtMovement(startPos, deltaTime);
     }
     else
     {
         if (CheckDistanceWithPoint(patrolPoint)) reachedPatrolPoint = true;
         else valid = agentAI->SetPathNavigation(patrolPoint);
-
-        agentAI->LookAtMovement(patrolPoint, deltaTime);
     }
 }
 

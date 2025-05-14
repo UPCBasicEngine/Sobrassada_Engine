@@ -49,7 +49,7 @@ class Character : public Script
     bool CheckDistanceWithPoint(const float3& point) const;
 
   private:
-    virtual void HandleState() {};
+    virtual void HandleState(float deltaTime) {};
     virtual void OnDeath() {};
     virtual void OnDamageTaken(int amount) {}; // depending of amout damage taken do some sound or another for example
     virtual void OnHealed(int amount) {};

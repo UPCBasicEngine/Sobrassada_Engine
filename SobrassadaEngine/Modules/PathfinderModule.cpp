@@ -57,7 +57,7 @@ update_status PathfinderModule::Update(float deltaTime)
 }
 
 // All ai agent components will call this to add themselves to crowd
-int PathfinderModule::CreateAgent(const float3& position, const float radius, const float height, const float speed)
+int PathfinderModule::CreateAgent(const float3& position, const float radius, const float height, const float speed, const float acceleration)
 {
 
     dtCrowdAgentParams params;
@@ -65,7 +65,7 @@ int PathfinderModule::CreateAgent(const float3& position, const float radius, co
     params.radius                = radius;
     params.height                = height;
     params.maxSpeed              = speed;
-    params.maxAcceleration       = 8.0f;
+    params.maxAcceleration       = acceleration;
     params.collisionQueryRange   = radius * 12.0f;
     params.pathOptimizationRange = radius * 30.0f;
     params.updateFlags           = DT_CROWD_ANTICIPATE_TURNS | DT_CROWD_OBSTACLE_AVOIDANCE | DT_CROWD_SEPARATION;

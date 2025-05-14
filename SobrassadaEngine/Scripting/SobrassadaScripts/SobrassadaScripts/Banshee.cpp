@@ -43,6 +43,8 @@ bool Banshee::Init()
 
 void Banshee::Update(float deltaTime)
 {
+    if (agentAI == nullptr) return;
+
     Character::Update(deltaTime);
 }
 
@@ -58,7 +60,7 @@ void Banshee::PerformAttack()
 {
 }
 
-void Banshee::HandleState()
+void Banshee::HandleState(float deltaTime)
 {
     switch (currentState)
     {
@@ -96,7 +98,7 @@ void Banshee::Flee()
 
     // TODO: Could be interesting to increase its speed when flee
     // The commented lines must be uncommented, bu there is a crash when adding new engine functions to the scripts (and
-    // are declared in the .cpp, in .h work
+    // are declared in the .cpp, in .h work)
 
     if (!isFleeing)
     {
@@ -109,7 +111,6 @@ void Banshee::Flee()
         parent->GetGlobalTransform().TranslatePart();
 
     agentAI->SetPathNavigation(newPos);
-    // agentAI->LookAtMovement(newPos, deltaTime);
 
     const float distance = character->GetLastPosition().Distance(parent->GetPosition());
     if (distance > fleeDistance)

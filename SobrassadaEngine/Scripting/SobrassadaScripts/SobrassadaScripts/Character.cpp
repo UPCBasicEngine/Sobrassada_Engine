@@ -81,7 +81,7 @@ void Character::Update(float deltaTime)
 
     if (!characterCollider || !weaponCollider || !weapon) return;
 
-    HandleState();
+    HandleState(deltaTime);
     UpdateTimers(deltaTime);
 }
 

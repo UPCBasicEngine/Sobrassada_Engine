@@ -88,7 +88,7 @@ void CuChulainn::OnHealed(int amount)
     // TODO: play particle system effects
 }
 
-void CuChulainn::HandleState()
+void CuChulainn::HandleState(float deltaTime)
 {
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack();
@@ -202,7 +202,7 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableMouseOffset(false);
 
-    //if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
+    // if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
 
     throwTimer = throwCooldown;
     if (weapon)

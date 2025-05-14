@@ -26,7 +26,7 @@ class Banshee : public Character
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
-    void HandleState() override;
+    void HandleState(float deltaTime) override;
 
     void ChasePlayer();
     void Flee();
