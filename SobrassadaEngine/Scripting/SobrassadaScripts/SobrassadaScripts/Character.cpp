@@ -70,7 +70,7 @@ bool Character::Init()
         else weaponCollider->SetEnabled(false);
     }
 
-    startPos = parent->GetPosition();
+    startPos = parent->GetGlobalTransform().TranslatePart();
 
     return true;
 }
@@ -187,11 +187,11 @@ PlayerDistances Character::CheckDistanceWithPlayer() const
 
 bool Character::CheckDistanceWithPoint(const float3& point) const
 {
-    float3 parentPoint = parent->GetPosition();
+    float3 parentPoint = parent->GetGlobalTransform().TranslatePart();
     parentPoint.y      = point.y;
 
     float distance     = parentPoint.Distance(point);
-    if (distance <= 0.5f) return true;
+    if (distance <= 0.75f) return true;
     return false;
 }
 
