@@ -26,8 +26,9 @@ class BillboardComponent : public Component
   private:
     unsigned int vbo                  = 0;
 
-    unsigned int width                = 2;
-    unsigned int height               = 2;
+    float width                = 2.f;
+    float height               = 2.f;
+    bool lockPitch                    = false;
 
     std::string currentMaterialName   = "No material";
     ResourceMaterial* currentMaterial = nullptr;
