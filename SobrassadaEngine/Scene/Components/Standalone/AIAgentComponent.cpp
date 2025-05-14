@@ -287,7 +287,9 @@ void AIAgentComponent::AddToCrowd()
 
     currentSpeed        = defaultSpeed;
     currentAcceleration = defaultAcceleration;
-    agentId             = App->GetPathfinderModule()->CreateAgent(parent->GetPosition(), radius, height, currentSpeed, currentAcceleration);
+    agentId             = App->GetPathfinderModule()->CreateAgent(
+        parent->GetPosition(), radius, height, currentSpeed, currentAcceleration
+    );
 
     if (agentId != -1)
     {
@@ -335,12 +337,12 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
     parent->UpdateTransformForGOBranch();
 }
 
-void AIAgentComponent::SetSpeed(const float newSpeed)
+void AIAgentComponent::SetSpeed(const float newSpeed, const float newAcceleration)
 {
     dtCrowdAgent* agent           = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
     currentSpeed                  = newSpeed;
     agent->params.maxSpeed        = newSpeed;
-    agent->params.maxAcceleration = 100.0f;
+    agent->params.maxAcceleration = newAcceleration;
 }
 
 void AIAgentComponent::ResetSpeed()

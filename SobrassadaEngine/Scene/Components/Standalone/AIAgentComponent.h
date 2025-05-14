@@ -35,7 +35,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     bool IsPaused() const { return isPaused; }
 
     void SetLookForward(bool look) { lookForward = look; }
-    void SetSpeed(const float newSpeed);
+    void SetSpeed(const float newSpeed, const float acceleration);
     void ResetSpeed();
 
   private:
