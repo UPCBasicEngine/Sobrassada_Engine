@@ -22,6 +22,7 @@ Banshee::Banshee(GameObject* parent)
       )
 {
     fields.push_back({"Fleeing distance", InspectorField::FieldType::Float, &fleeDistance, 0.0f, 10.0f});
+    fields.push_back({"Fleeing speed", InspectorField::FieldType::Float, &fleeSpeed, 0.0f, 10.0f});
 }
 
 bool Banshee::Init()
@@ -91,7 +92,26 @@ void Banshee::ChasePlayer()
 void Banshee::Flee()
 {
     GLOG("FLEE");
-    ChangeState();
+
+    // TODO: Could be interesting to increase its speed when flee
+    if (!isFleeing)
+    {
+        isFleeing = true;
+        //agentAI->SetSpeed(fleeSpeed);
+        agentAI->SetSpeed(90);
+    }
+
+    float3 direction =
+        (parent->GetGlobalTransform().TranslatePart() - character->GetGlobalTransform().TranslatePart()).Normalized();
+    agentAI->SetPathNavigation(parent->GetGlobalTransform().TranslatePart() + direction);
+
+    const float distance = character->GetLastPosition().Distance(parent->GetPosition());
+    if (distance > fleeDistance)
+    {
+        isFleeing = false;
+        //agentAI->ResetSpeed();
+        currentState = BansheeStates::Scream;
+    }
 }
 
 void Banshee::Attack()

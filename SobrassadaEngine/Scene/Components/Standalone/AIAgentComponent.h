@@ -31,22 +31,25 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void PauseMovement();
     void ResumeMovement();
 
-    float GetSpeed() const { return speed; }
+    float GetSpeed() const { return currentSpeed; }
     bool IsPaused() const { return isPaused; }
 
+    void SetSpeed(const float newSpeed);
+    void ResetSpeed();
+
   private:
-    float speed           = 0.f;
-    float radius          = 0.f;
-    float height          = 0.f;
+    float defaultSpeed    = 0.0f;
+    float currentSpeed    = 0.0f;
+    float radius          = 0.0f;
+    float height          = 0.0f;
     int agentId           = -1; // Assigned by dtCrowd
 
     bool isPaused         = false;
-    float3 frozenPosition   = float3::zero;
-    float restoredSpeed   = 0.f;
-    float restoredAccel     = 0.f;
+    float3 frozenPosition = float3::zero;
+    float restoredSpeed   = 0.0f;
+    float restoredAccel   = 0.0f;
 
     float maxAngularSpeed = 0.0f;
     bool isRadians        = false;
-    float restoreAngular    = 0.f;
-
+    float restoreAngular  = 0.0f;
 };

@@ -30,15 +30,15 @@ Character::Character(
     fields.push_back({"Invulnerable", InspectorField::FieldType::Bool, &isInvulnerable, true, false});
     fields.push_back({"Dead", InspectorField::FieldType::Bool, &isDead, true, false});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &attackDamage, 0, 3});
-    fields.push_back({"Attack Duration", InspectorField::FieldType::Float, &attackDuration, 0.0f, 1.0f});
-    fields.push_back({"Attack Cooldown", InspectorField::FieldType::Float, &attackCooldown, 0.0f, 2.0f});
-    fields.push_back({"Attack Range", InspectorField::FieldType::Float, &range, 0.0f, 3.0f});
+    fields.push_back({"Attack Duration", InspectorField::FieldType::Float, &attackDuration, 0.0f, 5.0f});
+    fields.push_back({"Attack Cooldown", InspectorField::FieldType::Float, &attackCooldown, 0.0f, 5.0f});
+    fields.push_back({"Attack Range", InspectorField::FieldType::Float, &range, 0.0f, 5.0f});
     fields.push_back({"Weapon Name", InspectorField::FieldType::InputText, &weaponName});
 
     if (type != CharacterType::CuChulainn)
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
-        fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 5.0f});
+        fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
     }
 }
 

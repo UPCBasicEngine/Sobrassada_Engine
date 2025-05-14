@@ -13,7 +13,8 @@
 
 AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid, parent, "AI Agent", COMPONENT_AIAGENT)
 {
-    speed           = 3.5f;
+    defaultSpeed    = 3.5f;
+    currentSpeed    = defaultSpeed;
     radius          = 0.6f;
     height          = 2.0f;
     maxAngularSpeed = 90 / RAD_DEGREE_CONV;
@@ -25,7 +26,7 @@ AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid,
 AIAgentComponent::AIAgentComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    if (initialState.HasMember("Speed")) speed = initialState["Speed"].GetFloat();
+    if (initialState.HasMember("Speed")) defaultSpeed = initialState["Speed"].GetFloat();
     if (initialState.HasMember("Radius")) radius = initialState["Radius"].GetFloat();
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("MaxAngularSpeed"))
@@ -120,7 +121,7 @@ void AIAgentComponent::RenderEditorInspector()
 
     ImGui::SeparatorText("AIAgent Component");
 
-    if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+    if (ImGui::DragFloat("Speed", &defaultSpeed, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
     if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
     if (ImGui::DragFloat("Height", &height, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
 
@@ -161,7 +162,7 @@ void AIAgentComponent::Clone(const Component* other)
         enabled                              = otherAIAgent->enabled;
         wasEnabled                           = otherAIAgent->wasEnabled;
 
-        speed                                = otherAIAgent->speed;
+        defaultSpeed                         = otherAIAgent->defaultSpeed;
         radius                               = otherAIAgent->radius;
         height                               = otherAIAgent->height;
         agentId                              = -1;
@@ -180,7 +181,7 @@ void AIAgentComponent::Save(rapidjson::Value& targetState, rapidjson::Document::
 {
     Component::Save(targetState, allocator);
 
-    targetState.AddMember("Speed", speed, allocator);
+    targetState.AddMember("Speed", defaultSpeed, allocator);
     targetState.AddMember("Radius", radius, allocator);
     targetState.AddMember("Height", height, allocator);
     targetState.AddMember("MaxAngularSpeed", maxAngularSpeed, allocator);
@@ -221,7 +222,6 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
     return true;
 }
 
-
 void AIAgentComponent::PauseMovement()
 {
     if (isPaused || agentId == -1) return;
@@ -237,7 +237,7 @@ void AIAgentComponent::PauseMovement()
 
     ag->params.maxSpeed        = 0.0f;
     ag->params.maxAcceleration = 0.0f;
-    speed                      = 0.0f;
+    currentSpeed               = 0.0f;
     maxAngularSpeed            = 0.0f;
 
     crowd->resetMoveTarget(agentId);
@@ -256,7 +256,7 @@ void AIAgentComponent::ResumeMovement()
 
     ag->params.maxSpeed        = restoredSpeed;
     ag->params.maxAcceleration = restoredAccel;
-    speed                      = restoredSpeed;
+    currentSpeed               = restoredSpeed;
     maxAngularSpeed            = restoreAngular;
 
     isPaused                   = false;
@@ -270,7 +270,7 @@ void AIAgentComponent::AddToCrowd()
         return;
     }
 
-    agentId = App->GetPathfinderModule()->CreateAgent(parent->GetPosition(), radius, height, speed);
+    agentId = App->GetPathfinderModule()->CreateAgent(parent->GetPosition(), radius, height, currentSpeed);
 
     if (agentId != -1)
     {
@@ -292,8 +292,8 @@ void AIAgentComponent::RecreateAgent()
 void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 {
     const float3 selfPos = parent->GetGlobalTransform().TranslatePart();
-    float3 desired = targetPos - selfPos;
-    desired.y      = 0.0f;
+    float3 desired       = targetPos - selfPos;
+    desired.y            = 0.0f;
 
     if (desired.LengthSq() < 0.0001f) return;
     desired.Normalize();
@@ -316,4 +316,18 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 
     parent->SetLocalTransform(newlocal);
     parent->UpdateTransformForGOBranch();
+}
+
+void AIAgentComponent::SetSpeed(const float newSpeed)
+{
+    dtCrowdAgent* agent    = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    currentSpeed           = newSpeed;
+    agent->params.maxSpeed = newSpeed;
+}
+
+void AIAgentComponent::ResetSpeed()
+{
+    dtCrowdAgent* agent    = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    currentSpeed           = defaultSpeed;
+    agent->params.maxSpeed = defaultSpeed;
 }
