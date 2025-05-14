@@ -87,15 +87,12 @@ void Banshee::ChasePlayer()
 {
     if (!character) return;
 
-    GLOG("CHASE");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Scream;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
 }
 
 void Banshee::Flee()
 {
-    GLOG("FLEE");
-
     // TODO: Could be interesting to increase its speed when flee
     // The commented lines must be uncommented, bu there is a crash when calling new engine functions from the scripts (and
     // are declared in the .cpp, in .h work)
