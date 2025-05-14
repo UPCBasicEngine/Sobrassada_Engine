@@ -21,6 +21,7 @@ Banshee::Banshee(GameObject* parent)
           CharacterType::Banshee
       )
 {
+    fields.push_back({"Fleeing distance", InspectorField::FieldType::Float, &fleeDistance, 0.0f, 10.0f});
 }
 
 bool Banshee::Init()
@@ -28,7 +29,7 @@ bool Banshee::Init()
     Character::Init();
 
     agentAI = parent->GetComponent<AIAgentComponent*>();
-    if (agentAI == nullptr) GLOG("AIAgent component not found for Soldier")
+    if (agentAI == nullptr) GLOG("AIAgent component not found for Banshee")
     else
     {
         agentAI->RecreateAgent();
@@ -61,7 +62,7 @@ void Banshee::HandleState()
     {
     case BansheeStates::Idle:
         if (animComponent) animComponent->UseTrigger("Idle");
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = BansheeStates::Chase;
+        ChangeState();
         break;
 
     case BansheeStates::Chase:
@@ -73,7 +74,8 @@ void Banshee::HandleState()
         break;
 
     case BansheeStates::Scream:
-        Attack();
+        if (attackCooldown <= 0) Attack();
+        else currentState = BansheeStates::Idle;
         break;
     }
 }
@@ -82,12 +84,15 @@ void Banshee::ChasePlayer()
 {
     if (!character) return;
 
+    GLOG("CHASE");
     if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = BansheeStates::Scream;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
 }
 
 void Banshee::Flee()
 {
+    GLOG("FLEE");
+    ChangeState();
 }
 
 void Banshee::Attack()
@@ -101,15 +106,23 @@ void Banshee::Attack()
     }
     else
     {
-        // Enable hitbox when animation
+        GLOG("Banshee attacking in process");
 
-        // If player is really close, flee
+        // Enable hitbox when animation
 
         if (attackTimer <= 0)
         {
             isAttacking = false;
             agentAI->ResumeMovement();
-            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = BansheeStates::Chase;
+            ChangeState();
         }
     }
+}
+
+void Banshee::ChangeState()
+{
+    const float distance = character->GetLastPosition().Distance(parent->GetPosition());
+    if (distance <= fleeDistance) currentState = BansheeStates::Flee;
+    else if (distance <= rangeAIAttack) currentState = BansheeStates::Scream;
+    else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
 }

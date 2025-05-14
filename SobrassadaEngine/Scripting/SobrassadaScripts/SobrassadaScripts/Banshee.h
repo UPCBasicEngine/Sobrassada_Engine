@@ -31,8 +31,11 @@ class Banshee : public Character
     void ChasePlayer();
     void Flee();
     void Attack() override;
+    void ChangeState();
 
   private:
     AIAgentComponent* agentAI  = nullptr;
     BansheeStates currentState = BansheeStates::Idle;
+
+    float fleeDistance         = 0.0f;
 };
