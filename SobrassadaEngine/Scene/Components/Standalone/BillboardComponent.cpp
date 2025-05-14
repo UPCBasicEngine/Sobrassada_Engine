@@ -5,6 +5,13 @@
 #include "CameraModule.h"
 #include "GameObject.h"
 #include "SceneModule.h"
+#include "ResourceMaterial.h"
+#include "EditorUIModule.h"
+#include "LibraryModule.h"
+#include "ResourcesModule.h"
+
+#include "glew.h"
+#include "imgui.h"
 
 BillboardComponent::BillboardComponent(UID uid, GameObject* parent)
     : Component(uid, parent, "Billboard", COMPONENT_BILLBOARD)
@@ -18,6 +25,7 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
 
 BillboardComponent::~BillboardComponent()
 {
+    glDeleteBuffers(1, &vbo);
 }
 
 void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -62,4 +70,82 @@ void BillboardComponent::Render(float deltaTime)
 
 void BillboardComponent::RenderDebug(float deltaTime)
 {
+}
+
+void BillboardComponent::RenderEditorInspector()
+{
+    ImGui::SeparatorText("Material");
+    ImGui::Text(currentMaterialName.c_str());
+    ImGui::SameLine();
+    if (ImGui::Button("Select material"))
+    {
+        ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
+    }
+
+    if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
+    {
+
+        const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
+        );
+
+        if (chosenMatUID != INVALID_UID) AddMaterial(chosenMatUID);
+    }
+
+    if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
+}
+
+void BillboardComponent::CreateVertexBufferObject()
+{
+    unsigned int numVertices = 6;
+
+    // vertices -> texture coords -> normals
+    float vertexData[]       = {
+        -1.f, 1.f,  0.f, //
+        -1.f, -1.f, 0.f, //
+        1.f,  -1.f, 0.f, //
+
+        -1.f, 1.f,  0.f, //
+        1.f,  -1.f, 0.f, //
+        1.f,  1.f,  0.f, //
+
+        0.f,  1.f, //
+        0.f,  0.f, //
+        1.f,  0.f, //
+
+        0.f,  1.f, //
+        1.f,  0.f, //
+        1.f,  1.f, //
+
+        0.f,  0.f,  1.f, //
+        0.f,  0.f,  1.f, //
+        0.f,  0.f,  1.f, //
+
+        0.f,  0.f,  1.f, //
+        0.f,  0.f,  1.f, //
+        0.f,  0.f,  1.f, //
+    };
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+}
+
+void BillboardComponent::AddMaterial(UID resourceUID)
+{
+    if (resourceUID == INVALID_UID || App->GetResourcesModule()->RequestResource(resourceUID) == nullptr)
+    {
+        resourceUID = DEFAULT_MATERIAL_UID;
+    }
+
+    if (currentMaterial != nullptr && currentMaterial->GetUID() == resourceUID) return;
+
+    ResourceMaterial* newMaterial =
+        dynamic_cast<ResourceMaterial*>(App->GetResourcesModule()->RequestResource(resourceUID));
+    if (newMaterial != nullptr)
+    {
+        App->GetResourcesModule()->ReleaseResource(currentMaterial);
+        currentMaterial          = newMaterial;
+        currentMaterialName      = currentMaterial->GetName();
+    }
 }

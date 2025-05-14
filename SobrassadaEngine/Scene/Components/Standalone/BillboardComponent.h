@@ -2,6 +2,8 @@
 
 #include "Component.h"
 
+class ResourceMaterial;
+
 class BillboardComponent : public Component
 {
   public:
@@ -15,4 +17,18 @@ class BillboardComponent : public Component
     void Update(float deltaTime) override;
     void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
+    void RenderEditorInspector() override;
+
+  private:
+    void CreateVertexBufferObject();
+    void AddMaterial(UID resourceUID);
+
+  private:
+    unsigned int vbo                  = 0;
+
+    unsigned int width                = 2;
+    unsigned int height               = 2;
+
+    std::string currentMaterialName   = "No material";
+    ResourceMaterial* currentMaterial = nullptr;
 };
