@@ -439,12 +439,12 @@ void CharacterControllerComponent::StartDash()
     float3 rightRayOrigin   = currentPos + lateralDirection * 0.5f; 
     float3 leftRayOrigin    = currentPos - lateralDirection * 0.5f; 
 
-    // Crear los rayos
+
     LineSegment centralRay(currentPos, dashTarget);
     LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * dashDistance);
     LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * dashDistance);
 
-    // Realizar el raycast para cada rayo
+
     GameObject* centralHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
         centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
@@ -455,8 +455,8 @@ void CharacterControllerComponent::StartDash()
         leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
 
-    // Ajustar dashTarget si hay colisiones
-    const float wallOffset = 0.5f; // Distancia de separación de la pared
+
+    const float wallOffset = 0.5f;
     float tNear, tFar;
 
     if (centralHit != nullptr)
