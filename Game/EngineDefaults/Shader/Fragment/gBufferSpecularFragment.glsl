@@ -45,7 +45,7 @@ void main()
 {
     const Material mat = materials[instance_index];
 
-    gDiffuse = vec4(pow(texture(sampler2D(mat.diffuseTex), uv0).rgb, vec3(2.2f)), 1);
+    gDiffuse = vec4(1, 0, 0, 1);
     gSpecular = vec4(pow(texture(sampler2D(mat.specularTex), uv0), vec4(2.2)));
     gPosition = vec4(pos,0);
     

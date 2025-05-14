@@ -15,6 +15,7 @@
 
 #include "Math/float3.h"
 #include "glew.h"
+#include <algorithm>
 #include <chrono>
 #ifdef OPTICK
 #include "optick.h"
@@ -81,8 +82,80 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
 
         if (batchMeshes.empty()) continue;
 
-        const unsigned int program = it->GetIsMetallic() ? App->GetShaderModule()->GetMetallicGeometryPassProgram()
-                                                         : App->GetShaderModule()->GetSpecularGeometryPassProgram();
+        const unsigned int program = it->GetIsSpecular() ? App->GetShaderModule()->GetSpecularGeometryPassProgram() 
+                                                         : App->GetShaderModule()->GetMetallicGeometryPassProgram();
+
+        const auto start           = std::chrono::high_resolution_clock::now();
+
+        glUseProgram(program);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+        unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+        glUniformBlockBinding(program, blockIdx, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        it->ResetUpdatedOnce();
+        it->Render(batchMeshes);
+
+        const auto end                             = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<float> elapsed = end - start;
+
+        const unsigned int vertexCount             = it->GetVertexCount();
+        const int meshTriangles                    = vertexCount / 3;
+        App->GetOpenGLModule()->AddTrianglesPerSecond(meshTriangles / elapsed.count());
+        App->GetOpenGLModule()->AddVerticesCount(vertexCount);
+        App->GetOpenGLModule()->AddDrawCallsCount();
+    }
+}
+
+void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera)
+{
+#ifdef OPTICK
+    OPTICK_CATEGORY("BatchManager::Render", Optick::Category::Rendering)
+#endif
+
+    unsigned int cameraUBO;
+    if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
+    else cameraUBO = camera->GetUbo();
+
+    for (GeometryBatch* it : batches)
+    {
+        std::vector<MeshComponent*> batchMeshes;
+        for (MeshComponent* mesh : meshesToRender)
+        {
+            GameObject* owner = mesh->GetParent();
+            if (!owner || !owner->IsGloballyEnabled()) continue;
+
+            if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
+        }
+
+        if (batchMeshes.empty()) continue;
+
+        std::sort(
+            batchMeshes.begin(), batchMeshes.end(),
+            [camera](MeshComponent* a, MeshComponent* b)
+            {
+                if (camera != nullptr)
+                {
+                    float distanceA = (a->GetParent()->GetPosition() - camera->GetCameraPosition()).LengthSq();
+                    float distanceB = (b->GetParent()->GetPosition() - camera->GetCameraPosition()).LengthSq();
+
+                    return distanceA < distanceB;
+                }
+                else
+                {
+                    float distanceA =
+                        (a->GetParent()->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
+                    float distanceB =
+                        (b->GetParent()->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
+
+                    return distanceA < distanceB;
+                }
+            }
+        );
+
+        const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
 
         const auto start           = std::chrono::high_resolution_clock::now();
 

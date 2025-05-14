@@ -31,6 +31,7 @@ class GeometryBatch
 
     const unsigned int GetMode() const { return mode; }
     const bool GetIsMetallic() const { return isMetallic; }
+    const bool GetIsSpecular() const { return isSpecular; }
     const bool GetHasBones() const { return hasBones; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
@@ -78,5 +79,6 @@ class GeometryBatch
 
     unsigned int mode             = 0;
     bool isMetallic               = false;
+    bool isSpecular               = false;
     bool hasBones                 = false;
 };

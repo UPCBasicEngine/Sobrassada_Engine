@@ -19,6 +19,7 @@ class ShaderModule : public Module
     int GetMetallicGeometryPassProgram() const;
     int GetSpecularGeometryPassProgram() const;
     int GetLightingPassProgram() const;
+    int GetTransparentPassProgram() const { return transparentPassProgram; };
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
 
   private:
@@ -38,4 +39,6 @@ class ShaderModule : public Module
     int lightingPassProgram            = -1;
 
     int uiWidgetProgram                = -1;
+
+    int transparentPassProgram         = -1;
 };

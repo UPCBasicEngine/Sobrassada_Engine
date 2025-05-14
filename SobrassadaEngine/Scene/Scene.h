@@ -125,15 +125,14 @@ class SOBRASADA_API_ENGINE Scene
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
-    void CheckObjectsToRender(
-        std::vector<GameObject*>& outOpaqueRenderGameObjects, std::vector<GameObject*>& outTransparentRenderGameObjects,
-        CameraComponent* camera
-    ) const;
-    void GeometryPassRender(
-        const std::vector<GameObject*>& objectsToRender,
-        CameraComponent* camera, GBuffer* gbuffer
-    ) const;
+    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, CameraComponent* camera) const;
+    void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
+        const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void TransparentPassRender(
+        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer,
+        Framebuffer* framebuffer
+    ) const;
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;

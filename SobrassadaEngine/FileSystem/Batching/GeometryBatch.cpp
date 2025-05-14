@@ -25,6 +25,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     : totalVertexCount(0), totalIndexCount(0), currentBufferIndex(0)
 {
     mode       = component->GetResourceMesh()->GetMode();
+    isSpecular = component->GetResourceMaterial()->GetIsSpecular();
     isMetallic = component->GetResourceMaterial()->GetIsMetallicRoughness();
     hasBones   = component->GetHasBones();
     glGenVertexArrays(1, &vao);

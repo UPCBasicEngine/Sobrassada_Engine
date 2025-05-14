@@ -42,6 +42,7 @@ class ResourceMaterial : public Resource
     UID ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU);
     void ChangeFallBackTexture();
 
+    const bool GetIsSpecular() const { return specularTexture.textureID != 0 ? true : false; }
     const bool GetIsMetallicRoughness() const { return metallicTexture.textureID != 0 ? true : false; }
     const MaterialGPU GetMaterial() const { return material; }
 

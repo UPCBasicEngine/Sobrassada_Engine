@@ -65,13 +65,51 @@ void ResourceMaterial::OnEditorUpdate()
 
     updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
 
-    if (metallicTexture.textureID != 0)
+    if (specularTexture.textureID != 0)
     {
-        ImGui::Text("Metallic Roughness Texture");
-        ImGui::Image((ImTextureID)(intptr_t)metallicTexture.textureID, ImVec2(256, 256));
+        ImGui::Text("Specular Texture");
+        ImGui::Image((ImTextureID)(intptr_t)specularTexture.textureID, ImVec2(256, 256));
         if (ImGui::IsItemHovered())
         {
-            ImGui::SetTooltip("Texture Dimensions: %d, %d", metallicTexture.width, metallicTexture.height);
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", specularTexture.width, specularTexture.height);
+        }
+
+        // TODO: commented all select buttons until save data to meta is implemented
+        /*if (ImGui::Button("Select Specular Texture"))
+        {
+            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+        }
+
+        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+        {
+            UID handle = ChangeTexture(
+                App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                    CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+                ),
+                specularTexture, material.specularTex
+            );
+
+            if (handle != NULL)
+            {
+                material.specularTex = handle;
+                updated              = true;
+            }
+        }*/
+
+        updated |= ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
+        if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
+    }
+
+    else
+    {
+        if (metallicTexture.textureID != 0)
+        {
+            ImGui::Text("Metallic Roughness Texture");
+            ImGui::Image((ImTextureID)(intptr_t)metallicTexture.textureID, ImVec2(256, 256));
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Texture Dimensions: %d, %d", metallicTexture.width, metallicTexture.height);
+            }
         }
 
         // TODO: commented all select buttons until save data to meta is implemented
@@ -99,45 +137,6 @@ void ResourceMaterial::OnEditorUpdate()
 
         updated |= ImGui::SliderFloat("Metallic Factor", &material.metallicFactor, 0.0f, 1.0f);
         updated |= ImGui::SliderFloat("Roughness Factor", &material.roughnessFactor, 0.0f, 1.0f);
-    }
-
-    else
-    {
-        if (specularTexture.textureID != 0)
-        {
-            ImGui::Text("Specular Texture");
-            ImGui::Image((ImTextureID)(intptr_t)specularTexture.textureID, ImVec2(256, 256));
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("Texture Dimensions: %d, %d", specularTexture.width, specularTexture.height);
-            }
-            // ImGui::SameLine();
-        }
-
-        // TODO: commented all select buttons until save data to meta is implemented
-        /*if (ImGui::Button("Select Specular Texture"))
-        {
-            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
-        }
-
-        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
-        {
-            UID handle = ChangeTexture(
-                App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-                    CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
-                ),
-                specularTexture, material.specularTex
-            );
-
-            if (handle != NULL)
-            {
-                material.specularTex = handle;
-                updated              = true;
-            }
-        }*/
-
-        updated |= ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
-        if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
     }
 
     if (normalTexture.textureID != 0)

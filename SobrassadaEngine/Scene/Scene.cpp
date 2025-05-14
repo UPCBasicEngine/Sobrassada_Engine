@@ -292,25 +292,21 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
-    std::vector<GameObject*> opaqueObjectsToRender;
-    std::vector<GameObject*> transparentObjectsToRender;
-    CheckObjectsToRender(opaqueObjectsToRender, transparentObjectsToRender, camera);
+    std::vector<GameObject*> objectsToRender;
+    CheckObjectsToRender(objectsToRender, camera);
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
     glEnable(GL_STENCIL_TEST);
 
-    glDisable(GL_BLEND);
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        GeometryPassRender(opaqueObjectsToRender, camera, gbuffer);
+        GeometryPassRender(objectsToRender, camera, gbuffer);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
-    else GeometryPassRender(opaqueObjectsToRender, camera, gbuffer);
-
-    glEnable(GL_BLEND);
+    else GeometryPassRender(objectsToRender, camera, gbuffer);
 
     LightingPassRender(camera, gbuffer, framebuffer);
 
@@ -318,14 +314,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #ifdef OPTICK
         OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
 #endif
-        for (const auto& gameObject : opaqueObjectsToRender)
-        {
-            if (gameObject != nullptr)
-            {
-                gameObject->Render(deltaTime);
-            }
-        }
-        for (const auto& gameObject : transparentObjectsToRender)
+        for (const auto& gameObject : objectsToRender)
         {
             if (gameObject != nullptr)
             {
@@ -356,32 +345,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
 
-    std::sort(
-        transparentObjectsToRender.begin(), transparentObjectsToRender.end(),
-        [camera](GameObject* a, GameObject* b)
-        {
-            if (camera != nullptr)
-            {
-                float distanceA = (a->GetPosition() - camera->GetCameraPosition()).LengthSq();
-                float distanceB = (b->GetPosition() - camera->GetCameraPosition()).LengthSq();
-
-                return distanceA < distanceB;
-            }
-            else
-            {
-                float distanceA = (a->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
-                float distanceB = (b->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
-
-                return distanceA < distanceB;
-            }
-        }
-    );
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
-    GeometryPassRender(transparentObjectsToRender, camera, gbuffer);
-
-    glDepthMask(GL_TRUE);
+    TransparentPassRender(objectsToRender, camera, gbuffer, framebuffer);
 }
 
 update_status Scene::RenderEditor(float deltaTime)
@@ -910,10 +874,7 @@ void Scene::UpdateDynamicSpatialStructure()
     CreateDynamicSpatialDataStruct();
 }
 
-void Scene::CheckObjectsToRender(
-    std::vector<GameObject*>& outOpaqueRenderGameObjects, std::vector<GameObject*>& outTransparentRenderGameObjects,
-    CameraComponent* camera
-) const
+void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, CameraComponent* camera) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsToRender", Optick::Category::GameLogic)
@@ -935,8 +896,7 @@ void Scene::CheckObjectsToRender(
         if (frustumPlanes.Intersects(objectOBB))
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh->GetRenderMode() == 0) outOpaqueRenderGameObjects.push_back(gameObject);      // Opaque
-            if (mesh->GetRenderMode() == 1) outTransparentRenderGameObjects.push_back(gameObject); // Transparent
+            outRenderGameObjects.push_back(gameObject);
         }
     }
 }
@@ -951,18 +911,21 @@ void Scene::GeometryPassRender(
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
 
+    glDisable(GL_BLEND);
+
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr) meshesToRender.push_back(mesh);
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 0)
+            meshesToRender.push_back(mesh);
     }
 
     batchManager->Render(meshesToRender, camera);
 
-    // glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
 
     gbuffer->Unbind();
 }
@@ -1079,6 +1042,37 @@ GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)
         return gameObjectsContainer[gameObjectUUID];
     }
     return nullptr;
+}
+
+void Scene::TransparentPassRender(
+    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer
+) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+    // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glViewport(0, 0, width, height);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    glEnable(GL_DEPTH_TEST);
+
+    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+    std::vector<MeshComponent*> meshesToRender;
+
+    for (const auto& gameObject : objectsToRender)
+    {
+        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            meshesToRender.push_back(mesh);
+    }
+
+    batchManager->RenderTransparent(meshesToRender, camera);
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 GameObject* Scene::GetGameObjectByName(const std::string& name)

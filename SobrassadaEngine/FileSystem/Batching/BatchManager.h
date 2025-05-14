@@ -17,6 +17,7 @@ class BatchManager
 
     void LoadData();
     void Render(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera);
+    void RenderTransparent(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera);
 
     GeometryBatch* RequestBatch(const MeshComponent* mesh);
 
