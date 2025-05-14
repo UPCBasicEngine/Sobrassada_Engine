@@ -38,13 +38,21 @@ void BillboardComponent::Clone(const Component* other)
 void BillboardComponent::Update(float deltaTime)
 {
     CameraComponent* activeCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
-    if (activeCamera)
+    if (activeCamera && App->GetSceneModule()->GetInPlayMode())
     {
     }
     else
     {
         const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
-        int x                       = 0;
+
+        float3 frontVector          = editorCamera.pos - parent->GetPosition();
+        frontVector.Normalize();
+
+        float3x3 rotationMatrix    = float3x3(editorCamera.WorldRight(), editorCamera.up, frontVector);
+
+        float4x4 newLocalTransform = float4x4::FromTRS(parent->GetPosition(), rotationMatrix, parent->GetScale());
+
+        parent->SetLocalTransform(newLocalTransform);
     }
 }
 
