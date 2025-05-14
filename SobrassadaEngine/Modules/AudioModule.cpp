@@ -7,7 +7,6 @@
 #include "Globals.h"
 #include "ProjectModule.h"
 
-
 #include "AK/IBytes.h"
 #include "AK/MusicEngine/Common/AkMusicEngine.h"
 #include "AK/SoundEngine/Common/AkMemoryMgr.h"       // Memory Manager interface
@@ -179,8 +178,10 @@ update_status AudioModule::Update(float deltaTime)
     }
 
     // Set the sources position
-    for (const auto source : sources)
+    for (const AudioSourceComponent* source : sources)
     {
+        if (!source) continue;
+
         // Set the source position
         AkSoundPosition sourcePos;
         const float3& position   = source->GetGlobalTransform().TranslatePart();
@@ -222,7 +223,10 @@ bool AudioModule::ShutDown()
 
 void AudioModule::AddAudioSource(AudioSourceComponent* newSource)
 {
-    sources.push_back(newSource);
+    const auto& it = std::find(sources.begin(), sources.end(), newSource);
+    if (it == sources.end()) sources.push_back(newSource);
+    else GLOG("DUPLICATED AUDIO");
+
     if (AK::SoundEngine::RegisterGameObj((AkGameObjectID)newSource->GetParentUID()) != AK_Success)
         GLOG("[ERROR] Audio source could not be registered");
 }

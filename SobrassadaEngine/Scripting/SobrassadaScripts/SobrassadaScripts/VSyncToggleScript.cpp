@@ -25,10 +25,6 @@ void VSyncToggleScript::Update(float deltaTime)
 {
 }
 
-void VSyncToggleScript::Inspector()
-{
-}
-
 void VSyncToggleScript::OnClick()
 {
     AppEngine->GetEditorUIModule()->ToggleVSync();

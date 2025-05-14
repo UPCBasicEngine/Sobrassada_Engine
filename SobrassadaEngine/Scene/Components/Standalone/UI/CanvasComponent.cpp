@@ -71,6 +71,9 @@ void CanvasComponent::Clone(const Component* other)
         width                              = otherCanvas->width;
         height                             = otherCanvas->height;
 
+        enabled                            = otherCanvas->enabled;
+        wasEnabled                         = otherCanvas->wasEnabled;
+
         isInWorldSpaceEditor               = otherCanvas->isInWorldSpaceEditor;
         isInWorldSpaceGame                 = otherCanvas->isInWorldSpaceGame;
     }
@@ -168,12 +171,8 @@ void CanvasComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
-    {
-        ImGui::Text("Canvas");
-
-        ImGui::Checkbox("Show in world space", &isInWorldSpaceEditor);
-    }
+    ImGui::Text("Canvas");
+    ImGui::Checkbox("Show in world space", &isInWorldSpaceEditor);
 }
 
 void CanvasComponent::OnWindowResize(const float width, const float height)

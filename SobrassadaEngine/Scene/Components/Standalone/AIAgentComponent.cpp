@@ -51,20 +51,58 @@ AIAgentComponent::~AIAgentComponent()
 // Updates agent position evey frame
 void AIAgentComponent::Update(float deltaTime)
 {
-    if (!IsEffectivelyEnabled()) return;
+    if (!IsEffectivelyEnabled())
+    {
+        if (agentId != -1)
+        {
+            App->GetPathfinderModule()->RemoveAgent(agentId);
+            agentId = -1;
+        }
+        return;
+    }
+    else
+    {
+        if (agentId == -1) RecreateAgent();
+    }
 
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
+    dtCrowd* crowd = App->GetPathfinderModule()->GetCrowd();
+
+    if (!crowd) return;
+
+    if (agentId == -1 || agentId >= crowd->getAgentCount() || crowd->getAgent(agentId) == nullptr) RecreateAgent();
+
     if (agentId == -1) return;
 
-    const dtCrowdAgent* ag = App->GetPathfinderModule()->GetCrowd()->getAgent(agentId);
-    if (ag && ag->active)
+    const dtCrowdAgent* ag = crowd->getAgent(agentId);
+
+    if (!ag || !ag->active) return;
+
+    float3 newPos;
+
+    if (isPaused)
     {
-        float3 newPos(ag->npos[0], ag->npos[1], ag->npos[2]);
-        float4x4 transform = parent->GetLocalTransform();
-        transform.SetTranslatePart(newPos);
-        parent->SetLocalTransform(transform); // Change parent position
+        newPos               = frozenPosition;
+
+        dtCrowdAgent* editAg = crowd->getEditableAgent(agentId);
+
+        if (editAg)
+        {
+            editAg->npos[0] = frozenPosition.x;
+            editAg->npos[1] = frozenPosition.y;
+            editAg->npos[2] = frozenPosition.z;
+
+            editAg->vel[0] = editAg->vel[1] = editAg->vel[2] = 0.f;
+            editAg->nvel[0] = editAg->nvel[1] = editAg->nvel[2] = 0.f;
+            editAg->dvel[0] = editAg->dvel[1] = editAg->dvel[2] = 0.f;
+        }
     }
+    else newPos = float3(ag->npos[0], ag->npos[1], ag->npos[2]);
+
+    float4x4 transform = parent->GetLocalTransform();
+    transform.SetTranslatePart(newPos);
+    parent->SetLocalTransform(transform); // Change parent position
 }
 
 void AIAgentComponent::Render(float deltaTime)
@@ -80,50 +118,49 @@ void AIAgentComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
+    ImGui::SeparatorText("AIAgent Component");
+
+    if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+    if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+    if (ImGui::DragFloat("Height", &height, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+
+    float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
+    float minVal   = 0.0f;
+    float maxVal   = isRadians ? 360.0f / RAD_DEGREE_CONV : 360.0f;
+
+    ImGui::DragFloat(
+        "Max Angular Speed##maxAngSpeed", &maxAngularSpeed, dragStep, minVal, maxVal, "%.3f",
+        ImGuiSliderFlags_AlwaysClamp
+    );
+
+    if (maxAngularSpeed > maxVal) maxAngularSpeed = maxVal;
+
+    bool prevUseRad = isRadians;
+
+    ImGui::SameLine();
+    ImGui::Checkbox("Radians##maxAngCheck", &isRadians);
+
+    if (isRadians != prevUseRad)
     {
-        ImGui::SeparatorText("AIAgent Component");
-
-        if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
-        if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
-        if (ImGui::DragFloat("Height", &height, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
-
-        float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
-        float minVal   = 0.0f;
-        float maxVal   = isRadians ? 360.0f / RAD_DEGREE_CONV : 360.0f;
-
-        ImGui::DragFloat(
-            "Max Angular Speed##maxAngSpeed", &maxAngularSpeed, dragStep, minVal, maxVal, "%.3f",
-            ImGuiSliderFlags_AlwaysClamp
-        );
-
-        if (maxAngularSpeed > maxVal) maxAngularSpeed = maxVal;
-
-        bool prevUseRad = isRadians;
-
-        ImGui::SameLine();
-        ImGui::Checkbox("Radians##maxAngCheck", &isRadians);
-
-        if (isRadians != prevUseRad)
+        if (isRadians)
         {
-            if (isRadians)
-            {
-                maxAngularSpeed /= RAD_DEGREE_CONV;
-            }
-            else
-            {
-                maxAngularSpeed *= RAD_DEGREE_CONV;
-            }
+            maxAngularSpeed /= RAD_DEGREE_CONV;
+        }
+        else
+        {
+            maxAngularSpeed *= RAD_DEGREE_CONV;
         }
     }
 }
 
 void AIAgentComponent::Clone(const Component* other)
 {
-
     if (other->GetType() == ComponentType::COMPONENT_AIAGENT)
     {
         const AIAgentComponent* otherAIAgent = static_cast<const AIAgentComponent*>(other);
+        enabled                              = otherAIAgent->enabled;
+        wasEnabled                           = otherAIAgent->wasEnabled;
+
         speed                                = otherAIAgent->speed;
         radius                               = otherAIAgent->radius;
         height                               = otherAIAgent->height;
@@ -151,7 +188,7 @@ void AIAgentComponent::Save(rapidjson::Value& targetState, rapidjson::Document::
 }
 
 // finds closest navmesh walkable triangle.
-bool AIAgentComponent::SetPathNavigation(const math::float3& destination)
+bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool move)
 {
     if (agentId == -1) return false;
 
@@ -172,6 +209,8 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination)
         return false;
     }
 
+    if (!move) return true;
+
     // Request move to destination
     bool result = pathfinder->GetCrowd()->requestMoveTarget(agentId, targetRef, destination.ptr());
     if (!result)
@@ -180,6 +219,47 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination)
         return false;
     }
     return true;
+}
+
+
+void AIAgentComponent::PauseMovement()
+{
+    if (isPaused || agentId == -1) return;
+
+    dtCrowd* crowd   = App->GetPathfinderModule()->GetCrowd();
+    dtCrowdAgent* ag = crowd ? crowd->getEditableAgent(agentId) : nullptr;
+
+    if (!ag) return;
+
+    restoredSpeed              = ag->params.maxSpeed;
+    restoredAccel              = ag->params.maxAcceleration;
+    restoreAngular             = maxAngularSpeed;
+
+    ag->params.maxSpeed        = 0.0f;
+    ag->params.maxAcceleration = 0.0f;
+    speed                      = 0.0f;
+    maxAngularSpeed            = 0.0f;
+
+    crowd->resetMoveTarget(agentId);
+
+    frozenPosition = parent->GetGlobalTransform().TranslatePart();
+
+    isPaused       = true;
+}
+
+void AIAgentComponent::ResumeMovement()
+{
+    if (!isPaused || agentId == -1) return;
+
+    dtCrowdAgent* ag = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    if (!ag) return;
+
+    ag->params.maxSpeed        = restoredSpeed;
+    ag->params.maxAcceleration = restoredAccel;
+    speed                      = restoredSpeed;
+    maxAngularSpeed            = restoreAngular;
+
+    isPaused                   = false;
 }
 
 void AIAgentComponent::AddToCrowd()
@@ -209,17 +289,17 @@ void AIAgentComponent::RecreateAgent()
     AddToCrowd();
 }
 
-void AIAgentComponent::LookAtMovement(const float3& moveDir, float deltaTime)
+void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 {
-    if (moveDir.LengthSq() < 0.0001f) return;
-
-    float3 desired = moveDir;
+    const float3 selfPos = parent->GetGlobalTransform().TranslatePart();
+    float3 desired = targetPos - selfPos;
     desired.y      = 0.0f;
+
+    if (desired.LengthSq() < 0.0001f) return;
     desired.Normalize();
 
-    float4x4 global = parent->GetGlobalTransform();
-    float3 forward  = global.WorldZ();
-    forward.y       = 0.0f;
+    float3 forward = parent->GetGlobalTransform().WorldZ();
+    forward.y      = 0.0f;
     forward.Normalize();
 
     float angle   = atan2(forward.Cross(desired).y, forward.Dot(desired));
@@ -229,9 +309,11 @@ void AIAgentComponent::LookAtMovement(const float3& moveDir, float deltaTime)
 
     if (fabs(angle) < 0.0001f) return;
 
-    float4x4 rotY  = float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
-    float4x4 local = parent->GetGlobalTransform() * rotY;
+    const float4x4 rotY      = float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+    const float4x4 newGlobal = parent->GetGlobalTransform() * rotY;
 
-    parent->SetLocalTransform(local);
+    const float4x4 newlocal  = parent->GetParentGlobalTransform().Transposed() * newGlobal;
+
+    parent->SetLocalTransform(newlocal);
     parent->UpdateTransformForGOBranch();
 }

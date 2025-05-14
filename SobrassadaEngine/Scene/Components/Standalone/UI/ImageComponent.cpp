@@ -17,9 +17,9 @@ ImageComponent::ImageComponent(UID uid, GameObject* parent)
     : color(float3(1.0f, 1.0f, 1.0f)), Component(uid, parent, "Image", COMPONENT_IMAGE)
 {
     // Set default texture
-    texture = static_cast<ResourceTexture*>(
-        App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetTextureMap().at(HashString("DefaultTexture")))
-    );
+    texture = static_cast<ResourceTexture*>(App->GetResourcesModule()->RequestResource(
+        App->GetLibraryModule()->GetTextureMap().at(HashString("DefaultTexture"))
+    ));
 }
 
 ImageComponent::ImageComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -35,9 +35,9 @@ ImageComponent::ImageComponent(const rapidjson::Value& initialState, GameObject*
     {
         // To prevent crashes, load the default one if there is no texture saved
         GLOG("[WARNING] No texture UID found for the UI image %s in the saved scene", name);
-        texture = static_cast<ResourceTexture*>(
-            App->GetResourcesModule()->RequestResource(App->GetLibraryModule()->GetTextureMap().at(HashString("DefaultTexture")))
-        );
+        texture = static_cast<ResourceTexture*>(App->GetResourcesModule()->RequestResource(
+            App->GetLibraryModule()->GetTextureMap().at(HashString("DefaultTexture"))
+        ));
     }
 
     if (initialState.HasMember("Color") && initialState["Color"].IsArray())
@@ -99,6 +99,7 @@ void ImageComponent::Clone(const Component* other)
     {
         const ImageComponent* otherImage = static_cast<const ImageComponent*>(other);
         enabled                          = otherImage->enabled;
+        wasEnabled                       = otherImage->wasEnabled;
 
         color                            = otherImage->color;
         texture                          = otherImage->texture;
