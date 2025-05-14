@@ -56,6 +56,9 @@ bool CuChulainn::Init()
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
 
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
+
     return true;
 }
 
@@ -198,7 +201,9 @@ void CuChulainn::LookAtMouse()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableMouseOffset(false);
-    // GLOG("THROW SPEAR");
+
+    //if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
+
     throwTimer = throwCooldown;
     if (weapon)
     {

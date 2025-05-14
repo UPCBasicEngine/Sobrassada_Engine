@@ -74,8 +74,7 @@ void Banshee::HandleState()
         break;
 
     case BansheeStates::Scream:
-        if (attackCooldown <= 0) Attack();
-        else currentState = BansheeStates::Idle;
+        Attack();
         break;
     }
 }
@@ -85,7 +84,7 @@ void Banshee::ChasePlayer()
     if (!character) return;
 
     GLOG("CHASE");
-    if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = BansheeStates::Scream;
+    if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Scream;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
 }
 
@@ -100,14 +99,13 @@ void Banshee::Attack()
     if (!isAttacking)
     {
         GLOG("Banshee attack");
-        animComponent->UseTrigger("Attack");
-        isAttacking = true;
+        if (animComponent) animComponent->UseTrigger("Attack");
+
+        Character::Attack();
         agentAI->PauseMovement();
     }
     else
     {
-        GLOG("Banshee attacking in process");
-
         // Enable hitbox when animation
 
         if (attackTimer <= 0)
@@ -125,4 +123,5 @@ void Banshee::ChangeState()
     if (distance <= fleeDistance) currentState = BansheeStates::Flee;
     else if (distance <= rangeAIAttack) currentState = BansheeStates::Scream;
     else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
+    else currentState = BansheeStates::Idle;
 }
