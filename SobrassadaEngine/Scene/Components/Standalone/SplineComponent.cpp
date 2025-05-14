@@ -9,6 +9,13 @@ SplineComponent::SplineComponent(UID uid, GameObject* parent) : Component(uid, p
 SplineComponent::SplineComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
+    if (initialState.HasMember("Tension")) tension = initialState["Tension"].GetFloat();
+    if (initialState.HasMember("Points"))
+    {
+        const auto& arrayPoints = initialState["Points"].GetArray();
+        for (auto& p : arrayPoints)
+            points.emplace_back(p[0].GetFloat(), p[1].GetFloat(), p[2].GetFloat());
+    }
 }
 
 
