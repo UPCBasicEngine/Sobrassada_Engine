@@ -38,6 +38,6 @@ class Banshee : public Character
     BansheeStates currentState = BansheeStates::Idle;
 
     float fleeDistance         = 0.0f;
-    float fleeSpeed            = 0.0f;
+    float fleeSpeed            = 10.0f;
     bool isFleeing             = false;
 };

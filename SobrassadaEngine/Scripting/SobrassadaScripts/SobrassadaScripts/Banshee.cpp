@@ -97,8 +97,7 @@ void Banshee::Flee()
     if (!isFleeing)
     {
         isFleeing = true;
-        //agentAI->SetSpeed(fleeSpeed);
-        agentAI->SetSpeed(90);
+        agentAI->SetSpeed(fleeSpeed);
     }
 
     float3 direction =
@@ -109,7 +108,7 @@ void Banshee::Flee()
     if (distance > fleeDistance)
     {
         isFleeing = false;
-        //agentAI->ResetSpeed();
+        agentAI->ResetSpeed();
         currentState = BansheeStates::Scream;
     }
 }

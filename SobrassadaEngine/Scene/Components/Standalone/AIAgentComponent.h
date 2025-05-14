@@ -38,18 +38,20 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void ResetSpeed();
 
   private:
-    float defaultSpeed    = 0.0f;
-    float currentSpeed    = 0.0f;
-    float radius          = 0.0f;
-    float height          = 0.0f;
-    int agentId           = -1; // Assigned by dtCrowd
+    float defaultSpeed        = 0.0f;
+    float defaultAcceleration = 0.0f;
+    float currentSpeed        = 0.0f;
+    float currentAcceleration = 0.0f;
+    float radius              = 0.0f;
+    float height              = 0.0f;
+    int agentId               = -1; // Assigned by dtCrowd
 
-    bool isPaused         = false;
-    float3 frozenPosition = float3::zero;
-    float restoredSpeed   = 0.0f;
-    float restoredAccel   = 0.0f;
+    bool isPaused             = false;
+    float3 frozenPosition     = float3::zero;
+    float restoredSpeed       = 0.0f;
+    float restoredAccel       = 0.0f;
 
-    float maxAngularSpeed = 0.0f;
-    bool isRadians        = false;
-    float restoreAngular  = 0.0f;
+    float maxAngularSpeed     = 0.0f;
+    bool isRadians            = false;
+    float restoreAngular      = 0.0f;
 };
