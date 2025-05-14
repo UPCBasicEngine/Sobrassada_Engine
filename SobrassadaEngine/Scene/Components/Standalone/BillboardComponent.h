@@ -19,6 +19,9 @@ class BillboardComponent : public Component
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
+    float GetWidth() const { return width; }
+    float GetHeight() const { return height; }
+
   private:
     void CreateVertexBufferObject();
     void AddMaterial(UID resourceUID);
@@ -26,8 +29,8 @@ class BillboardComponent : public Component
   private:
     unsigned int vbo                  = 0;
 
-    float width                = 2.f;
-    float height               = 2.f;
+    float width                       = 2.f;
+    float height                      = 2.f;
     bool lockPitch                    = false;
 
     std::string currentMaterialName   = "No material";

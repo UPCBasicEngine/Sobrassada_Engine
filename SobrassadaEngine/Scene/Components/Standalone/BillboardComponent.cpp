@@ -149,7 +149,7 @@ void BillboardComponent::RenderEditorInspector()
 
 void BillboardComponent::CreateVertexBufferObject()
 {
-    // vertices -> texture coords -> normals
+    // vertices -> texture coords
 
     float vertexData[] = {
         -width / 2.f, height / 2.f,  0.f, //
@@ -167,14 +167,6 @@ void BillboardComponent::CreateVertexBufferObject()
         0.f,          1.f, //
         1.f,          0.f, //
         1.f,          1.f, //
-
-        // 0.f,  0.f,  1.f, //
-        // 0.f,  0.f,  1.f, //
-        // 0.f,  0.f,  1.f, //
-
-        // 0.f,  0.f,  1.f, //
-        // 0.f,  0.f,  1.f, //
-        // 0.f,  0.f,  1.f, //
     };
 
     if (vbo == 0) glGenBuffers(1, &vbo);

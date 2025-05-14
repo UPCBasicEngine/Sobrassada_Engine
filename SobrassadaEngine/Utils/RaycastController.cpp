@@ -5,6 +5,7 @@
 #include "GameObject.h"
 #include "SceneModule.h"
 #include "Standalone/MeshComponent.h"
+#include "Standalone/BillboardComponent.h"
 #include "ResourceMesh.h"
 
 #include "Geometry/Triangle.h"
@@ -39,35 +40,72 @@ namespace RaycastController
         {
             LineSegment localRay(ray.a, ray.b);
 
+            // CHECK FOR GAME OBJECTS WITH MESHES
             const MeshComponent* meshComponent = gameObject->GetComponent<MeshComponent*>();
-            if (meshComponent == nullptr) continue;
-
-            const ResourceMesh* resourceMesh = meshComponent->GetResourceMesh();
-
-            float4x4 globalTransform         = meshComponent->GetCombinedMatrix();
-            globalTransform.Inverse();
-            localRay.Transform(globalTransform);
-
-            const std::vector<Vertex>& vertices      = resourceMesh->GetLocalVertices();
-            const std::vector<unsigned int>& indices = resourceMesh->GetIndices();
-
-            for (int vertexIndex = 2; vertexIndex < indices.size(); vertexIndex += 3)
+            if (meshComponent != nullptr)
             {
-                float3 firstVertex  = vertices[indices[vertexIndex - 2]].position;
-                float3 secondVertex = vertices[indices[vertexIndex - 1]].position;
-                float3 thirdVertex  = vertices[indices[vertexIndex]].position;
+                const ResourceMesh* resourceMesh = meshComponent->GetResourceMesh();
 
-                Triangle currentTriangle(firstVertex, secondVertex, thirdVertex);
+                float4x4 globalTransform         = meshComponent->GetCombinedMatrix();
+                globalTransform.Inverse();
+                localRay.Transform(globalTransform);
 
-                float distance = std::numeric_limits<float>::infinity();
-                float3 hitPoint;
+                const std::vector<unsigned int>& indices = resourceMesh->GetIndices();
+                const std::vector<Vertex>& vertices      = resourceMesh->GetLocalVertices();
 
-                if (localRay.Intersects(currentTriangle, &distance, &hitPoint))
+                for (int vertexIndex = 2; vertexIndex < indices.size(); vertexIndex += 3)
                 {
-                    if (distance < closestDistance)
+                    float3 firstVertex  = vertices[indices[vertexIndex - 2]].position;
+                    float3 secondVertex = vertices[indices[vertexIndex - 1]].position;
+                    float3 thirdVertex  = vertices[indices[vertexIndex]].position;
+
+                    Triangle currentTriangle(firstVertex, secondVertex, thirdVertex);
+
+                    float distance = std::numeric_limits<float>::infinity();
+                    float3 hitPoint;
+
+                    if (localRay.Intersects(currentTriangle, &distance, &hitPoint))
                     {
-                        closestDistance    = distance;
-                        selectedGameObject = gameObject;
+                        if (distance < closestDistance)
+                        {
+                            closestDistance    = distance;
+                            selectedGameObject = gameObject;
+                        }
+                    }
+                }
+            }
+
+            // CHECK IN CASE GAME OBJECT IS A BILLBOARD
+            const BillboardComponent* billboardComponent = gameObject->GetComponent<BillboardComponent*>();
+            if (billboardComponent != nullptr)
+            {
+                float width = billboardComponent->GetWidth();
+                float height = billboardComponent->GetHeight();
+
+                Triangle billboardTriangles[2];
+
+                billboardTriangles[0] = Triangle(
+                    float3(-width / 2.f, height / 2.f, 0.f), float3(-width / 2.f, -height / 2.f, 0.f),
+                    float3(width / 2.f, -height / 2.f, 0.f)
+                );
+                billboardTriangles[1] = Triangle(
+                    float3(-width / 2.f, height / 2.f, 0.f), float3(width / 2.f, -height / 2.f, 0.f),
+                    float3(width / 2.f, height / 2.f, 0.f)
+                );
+
+                // Billboards are just 2 triangles
+                for (int i = 0; i < 2; ++i)
+                {
+                    float distance = std::numeric_limits<float>::infinity();
+                    float3 hitPoint;
+
+                    if (localRay.Intersects(billboardTriangles[i], &distance, &hitPoint))
+                    {
+                        if (distance < closestDistance)
+                        {
+                            closestDistance    = distance;
+                            selectedGameObject = gameObject;
+                        }
                     }
                 }
             }
