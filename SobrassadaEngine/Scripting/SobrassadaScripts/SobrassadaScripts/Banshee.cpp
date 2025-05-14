@@ -60,7 +60,7 @@ void Banshee::PerformAttack()
 {
 }
 
-void Banshee::HandleState(float deltaTime)
+void Banshee::HandleState()
 {
     switch (currentState)
     {
@@ -78,7 +78,7 @@ void Banshee::HandleState(float deltaTime)
         break;
 
     case BansheeStates::Scream:
-        Attack();
+        if (attackCdTimer <= 0) Attack();
         break;
     }
 }
@@ -94,8 +94,8 @@ void Banshee::ChasePlayer()
 void Banshee::Flee()
 {
     // TODO: Could be interesting to increase its speed when flee
-    // The commented lines must be uncommented, bu there is a crash when calling new engine functions from the scripts (and
-    // are declared in the .cpp, in .h work)
+    // The commented lines must be uncommented, bu there is a crash when calling new engine functions from the scripts
+    // (and are declared in the .cpp, in .h work)
 
     if (!isFleeing)
     {
@@ -134,7 +134,8 @@ void Banshee::Attack()
 
         if (attackTimer <= 0)
         {
-            isAttacking = false;
+            isAttacking   = false;
+            attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
             ChangeState();
         }

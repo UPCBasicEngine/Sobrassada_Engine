@@ -34,7 +34,7 @@ class CuChulainn : public Character
     void OnDamageTaken(int amount) override;
     void OnHealed(int amount) override;
     void PerformAttack() override;
-    void HandleState(float deltaTime) override;
+    void HandleState() override;
 
     bool CanDash();
     bool CanAttack();

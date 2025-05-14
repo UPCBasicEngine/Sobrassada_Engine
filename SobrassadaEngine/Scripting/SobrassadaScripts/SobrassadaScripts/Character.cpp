@@ -81,7 +81,7 @@ void Character::Update(float deltaTime)
 
     if (!characterCollider || !weaponCollider || !weapon) return;
 
-    HandleState(deltaTime);
+    HandleState();
     UpdateTimers(deltaTime);
 }
 
@@ -143,6 +143,9 @@ void Character::UpdateTimers(float deltaTime)
             if (weaponCollider && weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
         }
     }
+
+    attackCdTimer -= deltaTime;
+    if (attackCdTimer < 0) attackCdTimer = 0;
 
     if (isInvulnerable)
     {

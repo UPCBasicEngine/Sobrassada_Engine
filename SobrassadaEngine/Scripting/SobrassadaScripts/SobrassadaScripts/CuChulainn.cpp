@@ -88,7 +88,7 @@ void CuChulainn::OnHealed(int amount)
     // TODO: play particle system effects
 }
 
-void CuChulainn::HandleState(float deltaTime)
+void CuChulainn::HandleState()
 {
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack();

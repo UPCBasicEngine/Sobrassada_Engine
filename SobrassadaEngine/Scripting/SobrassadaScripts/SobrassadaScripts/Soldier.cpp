@@ -63,7 +63,7 @@ void Soldier::PerformAttack()
     // TODO: trails, particles and animation
 }
 
-void Soldier::HandleState(float deltaTime)
+void Soldier::HandleState()
 {
     // if (!animComponent) return;
 
@@ -72,7 +72,7 @@ void Soldier::HandleState(float deltaTime)
     case SoldierStates::PATROL:
         // GLOG("Soldier Patrolling");
         // animComponent->UseTrigger("idle");
-        PatrolAI(deltaTime);
+        PatrolAI();
         break;
     case SoldierStates::CHASE:
         // GLOG("Soldier Chasing");
@@ -82,7 +82,7 @@ void Soldier::HandleState(float deltaTime)
     case SoldierStates::BASIC_ATTACK:
         // GLOG("Soldier Basic Attack");
         //  animComponent->UseTrigger("attack");
-        Attack();
+        if (attackCdTimer <= 0) Attack();
         break;
     default:
         GLOG("No state provided to Soldier");
@@ -91,7 +91,7 @@ void Soldier::HandleState(float deltaTime)
     }
 }
 
-void Soldier::PatrolAI(float deltaTime)
+void Soldier::PatrolAI()
 {
     if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
     else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
@@ -134,7 +134,8 @@ void Soldier::Attack()
     // Reset attack state
     if (isAttacking && attackTimer <= 0)
     {
-        isAttacking = false;
+        isAttacking   = false;
+        attackCdTimer = attackCooldown;
         agentAI->ResumeMovement();
         if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
     }
