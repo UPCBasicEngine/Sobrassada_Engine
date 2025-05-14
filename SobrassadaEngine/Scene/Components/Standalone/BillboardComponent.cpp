@@ -3,12 +3,12 @@
 #include "Application.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
-#include "GameObject.h"
-#include "SceneModule.h"
-#include "ResourceMaterial.h"
 #include "EditorUIModule.h"
+#include "GameObject.h"
 #include "LibraryModule.h"
+#include "ResourceMaterial.h"
 #include "ResourcesModule.h"
+#include "SceneModule.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -56,9 +56,11 @@ void BillboardComponent::Update(float deltaTime)
         float3 frontVector          = editorCamera.pos - parent->GetPosition();
         frontVector.Normalize();
 
-        float3x3 rotationMatrix    = float3x3(editorCamera.WorldRight(), editorCamera.up, frontVector);
+        float3x3 rotationMatrix           = float3x3(editorCamera.WorldRight(), editorCamera.up, frontVector);
 
-        float4x4 newLocalTransform = float4x4::FromTRS(parent->GetPosition(), rotationMatrix, parent->GetScale());
+        const float4x4& originalTransform = parent->GetLocalTransform();
+        float4x4 newLocalTransform =
+            float4x4::FromTRS(originalTransform.TranslatePart(), rotationMatrix, originalTransform.GetScale());
 
         parent->SetLocalTransform(newLocalTransform);
     }
@@ -145,7 +147,7 @@ void BillboardComponent::AddMaterial(UID resourceUID)
     if (newMaterial != nullptr)
     {
         App->GetResourcesModule()->ReleaseResource(currentMaterial);
-        currentMaterial          = newMaterial;
-        currentMaterialName      = currentMaterial->GetName();
+        currentMaterial     = newMaterial;
+        currentMaterialName = currentMaterial->GetName();
     }
 }
