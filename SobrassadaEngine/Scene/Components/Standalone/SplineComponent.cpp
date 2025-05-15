@@ -39,7 +39,6 @@ void SplineComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-
     if (ImGui::TreeNodeEx("Points", ImGuiTreeNodeFlags_DefaultOpen))
     {
         for (size_t i = 0; i < points.size(); ++i)
@@ -57,7 +56,7 @@ void SplineComponent::RenderEditorInspector()
         }
         ImGui::TreePop();
     }
-    
+
     ImGui::SeparatorText("Modify Point");
 
     if (selectedIdx >= 0 && selectedIdx < (int)points.size())
@@ -78,10 +77,9 @@ void SplineComponent::RenderEditorInspector()
     if (ImGui::Button("Add Point"))
     {
         if (selectedIdx >= 0 && selectedIdx < (int)points.size())
-            points.insert(points.begin() + selectedIdx + 1, pendingPoint); 
+            points.insert(points.begin() + selectedIdx + 1, pendingPoint);
         else points.push_back(pendingPoint);
     }
-
 }
 
 void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
