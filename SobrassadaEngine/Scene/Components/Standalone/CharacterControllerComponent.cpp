@@ -372,6 +372,10 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
     if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
     if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
 
+    float2 gamepadMove  = App->GetInputModule()->GetLeftStick();
+    direction.x        += gamepadMove.x;
+    direction.z        += gamepadMove.y;
+
     float rotationDir = 0.0f;
 
     if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;

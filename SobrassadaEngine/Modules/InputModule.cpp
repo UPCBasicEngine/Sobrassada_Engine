@@ -35,6 +35,19 @@ bool InputModule::Init()
         returnStatus = false;
     }
 
+    int numJoysticks = SDL_NumJoysticks();
+    for (int i = 0; i < numJoysticks && i < MAX_CONTROLLERS; ++i)
+    {
+        if (SDL_IsGameController(i))
+        {
+            controllers[i] = SDL_GameControllerOpen(i);
+            if (controllers[i] == nullptr)
+            {
+                GLOG("Could not open gamecontroller %d: %s", i, SDL_GetError());
+            }
+        }
+    }
+
     return returnStatus;
 }
 
@@ -108,6 +121,33 @@ update_status InputModule::PreUpdate(float deltaTime)
         }
     }
 
+    for (int i = 0; i < MAX_CONTROLLERS; ++i)
+    {
+        if (controllers[i])
+        {
+            float deadzone         = 8000.0f;
+
+            Sint16 leftX           = SDL_GameControllerGetAxis(controllers[i], SDL_CONTROLLER_AXIS_LEFTX);
+            Sint16 leftY           = SDL_GameControllerGetAxis(controllers[i], SDL_CONTROLLER_AXIS_LEFTY);
+            Sint16 rightX          = SDL_GameControllerGetAxis(controllers[i], SDL_CONTROLLER_AXIS_RIGHTX);
+            Sint16 rightY          = SDL_GameControllerGetAxis(controllers[i], SDL_CONTROLLER_AXIS_RIGHTY);
+
+            controllerLeftStick.x  = fabs(leftX) > deadzone ? leftX / 32767.0f : 0.0f;
+            controllerLeftStick.y  = fabs(leftY) > deadzone ? leftY / 32767.0f : 0.0f;
+
+            controllerRightStick.x = fabs(rightX) > deadzone ? rightX / 32767.0f : 0.0f;
+            controllerRightStick.y = fabs(rightY) > deadzone ? rightY / 32767.0f : 0.0f;
+
+            if (fabs(controllerLeftStick.x) > 0.01f || fabs(controllerLeftStick.y) > 0.01f)
+            {
+                GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
+            }
+
+            break;
+        }
+    }
+
+
     return UPDATE_CONTINUE;
 }
 
@@ -115,5 +155,15 @@ bool InputModule::ShutDown()
 {
     //GLOG("Quitting SDL input event subsystem");
     SDL_QuitSubSystem(SDL_INIT_EVENTS);
+
+    for (int i = 0; i < MAX_CONTROLLERS; ++i)
+    {
+        if (controllers[i])
+        {
+            SDL_GameControllerClose(controllers[i]);
+            controllers[i] = nullptr;
+        }
+    }
+
     return true;
 }
