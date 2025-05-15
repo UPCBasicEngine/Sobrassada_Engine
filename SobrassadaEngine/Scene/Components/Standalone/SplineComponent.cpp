@@ -39,18 +39,49 @@ void SplineComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (ImGui::TreeNode("Spline"))
+
+    if (ImGui::TreeNodeEx("Points", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        ImGui::Text("Points: %zu", points.size());
-        ImGui::DragFloat("Tension", &tension, 0.01f, 0.0f, 1.0f);
+        for (size_t i = 0; i < points.size(); ++i)
+        {
+            ImGui::PushID(static_cast<int>(i));
 
-        static float3 pointSpline = (float3::zero);
-        ImGui::InputFloat3("##newPoint", &pointSpline[0]);
-        if (ImGui::Button("Add Point")) 
-            points.push_back(pointSpline);
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+            if (selectedIdx == (int)i) flags |= ImGuiTreeNodeFlags_Selected;
 
+            ImGui::TreeNodeEx("##point", flags, "Point %zu", i);
+
+            if (ImGui::IsItemClicked()) selectedIdx = (int)i;
+
+            ImGui::PopID();
+        }
         ImGui::TreePop();
     }
+    
+    ImGui::SeparatorText("Modify Point");
+
+    if (selectedIdx >= 0 && selectedIdx < (int)points.size())
+    {
+        float3& p = points[selectedIdx];
+        ImGui::InputFloat3("Selected Pos", &p[0]);
+    }
+
+    ImGui::SeparatorText("Properties");
+
+    ImGui::Text("Total Points: %zu", points.size());
+    ImGui::DragFloat("Tension", &tension, 0.01f, 0.0f, 1.0f);
+    ImGui::Checkbox("Loop", &loop);
+
+    ImGui::SeparatorText("Add Point");
+
+    ImGui::InputFloat3("##newPoint", &pendingPoint[0]);
+    if (ImGui::Button("Add Point"))
+    {
+        if (selectedIdx >= 0 && selectedIdx < (int)points.size())
+            points.insert(points.begin() + selectedIdx + 1, pendingPoint); 
+        else points.push_back(pendingPoint);
+    }
+
 }
 
 void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const

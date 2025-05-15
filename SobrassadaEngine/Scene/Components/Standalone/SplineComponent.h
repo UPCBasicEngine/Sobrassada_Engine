@@ -29,5 +29,11 @@ public:
 
   private:
     std::vector<float3> points;
-  float tension = 0.5f; 
+    float3 pendingPoint = float3::zero;
+
+    float tension = 0.5f;
+
+    bool loop     = false;
+
+    int selectedIdx = -1;
 };
