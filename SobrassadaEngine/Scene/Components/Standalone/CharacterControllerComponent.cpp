@@ -362,24 +362,32 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
 {
     if (!movementEnabled) return;
 
-    const KeyState* keyboard     = App->GetInputModule()->GetKeyboard();
-    const KeyState* mouseButtons = App->GetInputModule()->GetMouseButtons();
-    const float2 leftJoystick    = App->GetInputModule()->GetLeftStick();
+    const InputModule* input     = App->GetInputModule();
+    const KeyState* keyboard     = input->GetKeyboard();
+    const KeyState* mouseButtons = input->GetMouseButtons();
+    const float2 leftJoystick    = input->GetLeftStick();
 
     float3 direction(0.0f, 0.0f, 0.0f);
 
-    if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
-    if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
-    if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
-    if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
+    if (input->IsUsingKeyboard())
+    {
 
-    direction.x       = leftJoystick.x;
-    direction.z       = leftJoystick.y;
+        if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
+        if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
+        if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
+        if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
 
-    float rotationDir = 0.0f;
+    }
+    else
+    {
+        direction.x = leftJoystick.x;
+        direction.z = leftJoystick.y;
+    }
+   
+    //float rotationDir = 0.0f;
 
-    if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
-    if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
+    //if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
+    //if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
 
     targetDirection = direction;
     if (direction.LengthSq() > 0.001f)
@@ -394,10 +402,10 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
         }
     }
 
-    if (fabs(rotationDir) > 0.0001f)
-    {
-        Rotate(rotationDir, deltaTime);
-    }
+    //if (fabs(rotationDir) > 0.0001f)
+    //{
+    //    Rotate(rotationDir, deltaTime);
+    //}
 }
 
 void CharacterControllerComponent::LookAt(const float3& direction)

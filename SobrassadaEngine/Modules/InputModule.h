@@ -46,6 +46,8 @@ class InputModule : public Module
     SDL_GameController* GetActiveController() const { return controllers[0]; }
     const KeyState* GetControllerButtons() const { return controllerButtons; }
 
+    bool IsUsingKeyboard() const { return isUsingKeyboard; }
+
   private:
     KeyState* keyboard = NULL;
     KeyState mouseButtons[NUM_MOUSE_BUTTONS];
@@ -57,4 +59,6 @@ class InputModule : public Module
     float2 controllerLeftStick                       = float2::zero;
     float2 controllerRightStick                      = float2::zero;
     KeyState controllerButtons[SDL_CONTROLLER_BUTTON_MAX];
+
+    bool isUsingKeyboard = true;
 };

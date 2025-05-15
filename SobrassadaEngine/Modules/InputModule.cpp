@@ -63,13 +63,18 @@ bool InputModule::Init()
 
 update_status InputModule::PreUpdate(float deltaTime)
 {
+    /*** KEYBOARD AND MOUSE ***/
     const Uint8* keys = SDL_GetKeyboardState(NULL);
     mouseMotion       = float2::zero;
     mouseWheel        = 0;
 
     for (int i = 0; i < MAX_KEYS; ++i)
     {
-        if (keys[i]) keyboard[i] = (keyboard[i] == KEY_IDLE) ? KEY_DOWN : KEY_REPEAT;
+        if (keys[i])
+        {
+            keyboard[i]     = (keyboard[i] == KEY_IDLE) ? KEY_DOWN : KEY_REPEAT;
+            isUsingKeyboard = true;
+        }
         else keyboard[i] = (keyboard[i] == KEY_REPEAT || keyboard[i] == KEY_DOWN) ? KEY_UP : KEY_IDLE;
     }
 
@@ -94,9 +99,11 @@ update_status InputModule::PreUpdate(float deltaTime)
                 App->GetWindowModule()->WindowResized(sdlEvent.window.data1, sdlEvent.window.data2);
             break;
         case SDL_MOUSEBUTTONDOWN:
+            isUsingKeyboard                          = true;
             mouseButtons[sdlEvent.button.button - 1] = KEY_DOWN;
             break;
         case SDL_MOUSEBUTTONUP:
+            isUsingKeyboard                          = true;
             mouseButtons[sdlEvent.button.button - 1] = KEY_UP;
             break;
         case SDL_MOUSEMOTION:
@@ -115,8 +122,8 @@ update_status InputModule::PreUpdate(float deltaTime)
     }
 
     if (controllers[0] == nullptr) return UPDATE_CONTINUE;
-    
-    // Read analog stick axes
+
+    /*** CONTROLLER ***/
     const Sint16 leftX     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTX);
     const Sint16 leftY     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTY);
     const Sint16 rightX    = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTX);
@@ -130,11 +137,17 @@ update_status InputModule::PreUpdate(float deltaTime)
 
     // Log left stick movement if it�s significant
     if (fabs(controllerLeftStick.x) > 0.01f || fabs(controllerLeftStick.y) > 0.01f)
+    {
         GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
+        isUsingKeyboard = false;
+    }
 
     // Log right stick movement if it�s significant
     if (fabs(controllerRightStick.x) > 0.01f || fabs(controllerRightStick.y) > 0.01f)
+    {
         GLOG("Right Stick: x=%.2f, y=%.2f", controllerRightStick.x, controllerRightStick.y);
+        isUsingKeyboard = false;
+    }
 
     // Read analog trigger values (L2 and R2)
     const Sint16 triggerLeft  = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_TRIGGERLEFT);
@@ -144,17 +157,30 @@ update_status InputModule::PreUpdate(float deltaTime)
     const float normLT        = triggerLeft / 32767.0f;
     const float normRT        = triggerRight / 32767.0f;
 
-    if (normLT > 0.01f) GLOG("Left Trigger (LT): %.2f", normLT);
-    if (normRT > 0.01f) GLOG("Right Trigger (RT): %.2f", normRT);
+    if (normLT > 0.01f)
+    {
+        isUsingKeyboard = false;
+        GLOG("Left Trigger (LT): %.2f", normLT);
+    }
+    if (normRT > 0.01f)
+    {
+        isUsingKeyboard = false;
+        GLOG("Right Trigger (RT): %.2f", normRT);
+    }
 
     // Log all buttons currently pressed
     for (int i = SDL_CONTROLLER_BUTTON_A; i < SDL_CONTROLLER_BUTTON_MAX; ++i)
     {
         if (SDL_GameControllerGetButton(controllers[0], (SDL_GameControllerButton)i))
+        {
             controllerButtons[i] = (controllerButtons[i] == KEY_IDLE) ? KEY_DOWN : KEY_REPEAT;
+            isUsingKeyboard      = false;
+        }
         else
+        {
             controllerButtons[i] =
                 (controllerButtons[i] == KEY_REPEAT || controllerButtons[i] == KEY_DOWN) ? KEY_UP : KEY_IDLE;
+        }
 
         if (SDL_GameControllerGetButton(controllers[0], (SDL_GameControllerButton)i))
         {
