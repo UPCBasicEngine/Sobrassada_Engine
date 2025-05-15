@@ -17,7 +17,7 @@ public:
     void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
-    void Save(rapidjson::Value&, rapidjson::Document::AllocatorType&) const override;
+    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override;
 
     void AddPoint(const float3& p);
