@@ -26,6 +26,8 @@ bool ShaderModule::Init()
     specularGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH);
     transparentPassProgram      = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
     lightingPassProgram         = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
+
+    quadProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
     return true;
 }
 

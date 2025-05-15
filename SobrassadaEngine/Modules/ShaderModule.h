@@ -20,6 +20,7 @@ class ShaderModule : public Module
     int GetSpecularGeometryPassProgram() const;
     int GetLightingPassProgram() const;
     int GetTransparentPassProgram() const { return transparentPassProgram; };
+    int GetQuadProgram() const { return quadProgram; };
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
 
   private:
@@ -41,4 +42,5 @@ class ShaderModule : public Module
     int uiWidgetProgram                = -1;
 
     int transparentPassProgram         = -1;
+    int quadProgram                    = -1;
 };
