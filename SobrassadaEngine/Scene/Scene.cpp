@@ -1069,6 +1069,18 @@ void Scene::TransparentPassRender(
             meshesToRender.push_back(mesh);
     }
 
+    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
+
+    glUseProgram(program);
+
+    lightsConfig->SetLightsShaderData();
+
+    float3 cameraPos;
+    if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
+    else cameraPos = camera->GetCameraPosition();
+
+    glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
+
     batchManager->RenderTransparent(meshesToRender, camera);
 
     glDepthMask(GL_TRUE);
