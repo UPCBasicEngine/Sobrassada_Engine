@@ -56,7 +56,6 @@ bool InputModule::Init()
     else
     {
         GLOG("No valid GameController found at index 0");
-        returnStatus = false;
     }
 
     return returnStatus;
@@ -115,6 +114,8 @@ update_status InputModule::PreUpdate(float deltaTime)
         }
     }
 
+    if (controllers[0] == nullptr) return UPDATE_CONTINUE;
+    
     // Read analog stick axes
     const Sint16 leftX     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTX);
     const Sint16 leftY     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTY);
@@ -127,11 +128,11 @@ update_status InputModule::PreUpdate(float deltaTime)
     controllerRightStick.x = fabs(rightX) > GAMEPAD_DEADZONE ? rightX / 32767.0f : 0.0f;
     controllerRightStick.y = fabs(rightY) > GAMEPAD_DEADZONE ? rightY / 32767.0f : 0.0f;
 
-    // Log left stick movement if it’s significant
+    // Log left stick movement if itï¿½s significant
     if (fabs(controllerLeftStick.x) > 0.01f || fabs(controllerLeftStick.y) > 0.01f)
         GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
 
-    // Log right stick movement if it’s significant
+    // Log right stick movement if itï¿½s significant
     if (fabs(controllerRightStick.x) > 0.01f || fabs(controllerRightStick.y) > 0.01f)
         GLOG("Right Stick: x=%.2f, y=%.2f", controllerRightStick.x, controllerRightStick.y);
 
