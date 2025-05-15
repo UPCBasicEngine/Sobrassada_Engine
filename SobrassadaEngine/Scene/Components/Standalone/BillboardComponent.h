@@ -33,6 +33,10 @@ class BillboardComponent : public Component
     float height                      = 2.f;
     bool lockPitch                    = false;
 
+    int xTiles                        = 0;
+    int yTiles                        = 0;
+    float spriteSpeed                 = 0;
+
     std::string currentMaterialName   = "No material";
     ResourceMaterial* currentMaterial = nullptr;
 };

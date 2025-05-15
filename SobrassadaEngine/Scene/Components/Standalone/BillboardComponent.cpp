@@ -32,6 +32,10 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
 
+    if (initialState.HasMember("XTiles")) xTiles = initialState["XTiles"].GetInt();
+    if (initialState.HasMember("YTiles")) yTiles = initialState["YTiles"].GetInt();
+    if (initialState.HasMember("SpriteSpeed")) spriteSpeed = initialState["SpriteSpeed"].GetFloat();
+
     CreateVertexBufferObject();
 }
 
@@ -48,6 +52,10 @@ void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember("Material", currentMaterial != nullptr ? currentMaterial->GetUID() : INVALID_UID, allocator);
     targetState.AddMember("Height", height, allocator);
     targetState.AddMember("Width", width, allocator);
+
+    targetState.AddMember("XTiles", xTiles, allocator);
+    targetState.AddMember("YTiles", yTiles, allocator);
+    targetState.AddMember("SpriteSpeed", spriteSpeed, allocator);
 }
 
 void BillboardComponent::Clone(const Component* other)
@@ -125,7 +133,11 @@ void BillboardComponent::RenderEditorInspector()
 
     if (ImGui::InputFloat("Width", &width)) CreateVertexBufferObject();
     if (ImGui::InputFloat("Height", &height)) CreateVertexBufferObject();
-    
+
+    ImGui::InputInt("Texture X tiles", &xTiles);
+    ImGui::InputInt("Texture Y tiles", &yTiles);
+    ImGui::InputFloat("Animation speed", &spriteSpeed);
+
     ImGui::SeparatorText("Material");
     ImGui::Text(currentMaterialName.c_str());
     ImGui::SameLine();
