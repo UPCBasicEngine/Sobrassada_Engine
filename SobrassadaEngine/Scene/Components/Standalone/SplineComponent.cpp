@@ -44,7 +44,10 @@ void SplineComponent::RenderEditorInspector()
         ImGui::Text("Points: %zu", points.size());
         ImGui::DragFloat("Tension", &tension, 0.01f, 0.0f, 1.0f);
 
-        if (ImGui::Button("Add Point")) points.push_back(float3::zero);
+        static float3 pointSpline = (float3::zero);
+        ImGui::InputFloat3("##newPoint", &pointSpline[0]);
+        if (ImGui::Button("Add Point")) 
+            points.push_back(pointSpline);
 
         ImGui::TreePop();
     }
