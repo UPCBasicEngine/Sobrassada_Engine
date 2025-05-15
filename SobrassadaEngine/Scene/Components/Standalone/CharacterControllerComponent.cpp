@@ -364,6 +364,7 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
 
     const KeyState* keyboard     = App->GetInputModule()->GetKeyboard();
     const KeyState* mouseButtons = App->GetInputModule()->GetMouseButtons();
+    const float2 leftJoystick    = App->GetInputModule()->GetLeftStick();
 
     float3 direction(0.0f, 0.0f, 0.0f);
 
@@ -371,6 +372,9 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
     if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
     if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
     if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
+
+    direction.x       = leftJoystick.x;
+    direction.z       = leftJoystick.y;
 
     float rotationDir = 0.0f;
 

@@ -14,8 +14,10 @@
 InputModule::InputModule()
 {
     keyboard = new KeyState[MAX_KEYS];
+
     memset(keyboard, KEY_IDLE, sizeof(KeyState) * MAX_KEYS);
     memset(mouseButtons, KEY_IDLE, sizeof(KeyState) * NUM_MOUSE_BUTTONS);
+    memset(controllerButtons, KEY_IDLE, sizeof(KeyState) * SDL_CONTROLLER_BUTTON_MAX);
 }
 
 InputModule::~InputModule()
@@ -56,7 +58,6 @@ bool InputModule::Init()
         GLOG("No valid GameController found at index 0");
         returnStatus = false;
     }
-
 
     return returnStatus;
 }
@@ -113,12 +114,12 @@ update_status InputModule::PreUpdate(float deltaTime)
             break;
         }
     }
-    
+
     // Read analog stick axes
-    Sint16 leftX           = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTX);
-    Sint16 leftY           = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTY);
-    Sint16 rightX          = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTX);
-    Sint16 rightY          = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTY);
+    const Sint16 leftX     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTX);
+    const Sint16 leftY     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTY);
+    const Sint16 rightX    = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTX);
+    const Sint16 rightY    = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTY);
 
     // Normalize stick values to [-1.0, 1.0], only if outside the deadzone
     controllerLeftStick.x  = fabs(leftX) > GAMEPAD_DEADZONE ? leftX / 32767.0f : 0.0f;
@@ -135,22 +136,28 @@ update_status InputModule::PreUpdate(float deltaTime)
         GLOG("Right Stick: x=%.2f, y=%.2f", controllerRightStick.x, controllerRightStick.y);
 
     // Read analog trigger values (L2 and R2)
-    Sint16 triggerLeft  = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_TRIGGERLEFT);
-    Sint16 triggerRight = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+    const Sint16 triggerLeft  = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+    const Sint16 triggerRight = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
 
     // Normalize and log triggers if above noise threshold
-    float normLT        = triggerLeft / 32767.0f;
-    float normRT        = triggerRight / 32767.0f;
+    const float normLT        = triggerLeft / 32767.0f;
+    const float normRT        = triggerRight / 32767.0f;
 
     if (normLT > 0.01f) GLOG("Left Trigger (LT): %.2f", normLT);
     if (normRT > 0.01f) GLOG("Right Trigger (RT): %.2f", normRT);
 
     // Log all buttons currently pressed
-    for (int b = SDL_CONTROLLER_BUTTON_A; b < SDL_CONTROLLER_BUTTON_MAX; ++b)
+    for (int i = SDL_CONTROLLER_BUTTON_A; i < SDL_CONTROLLER_BUTTON_MAX; ++i)
     {
-        if (SDL_GameControllerGetButton(controllers[0], (SDL_GameControllerButton)b))
+        if (SDL_GameControllerGetButton(controllers[0], (SDL_GameControllerButton)i))
+            controllerButtons[i] = (controllerButtons[i] == KEY_IDLE) ? KEY_DOWN : KEY_REPEAT;
+        else
+            controllerButtons[i] =
+                (controllerButtons[i] == KEY_REPEAT || controllerButtons[i] == KEY_DOWN) ? KEY_UP : KEY_IDLE;
+
+        if (SDL_GameControllerGetButton(controllers[0], (SDL_GameControllerButton)i))
         {
-            const char* btnName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)b);
+            const char* btnName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)i);
             GLOG("Button pressed: %s", btnName ? btnName : "Unknown");
         }
     }

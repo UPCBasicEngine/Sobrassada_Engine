@@ -103,24 +103,25 @@ void CuChulainn::HandleState(float time)
 
 void CuChulainn::GetInputs()
 {
-    const KeyState* keyboard = AppEngine->GetInputModule()->GetKeyboard();
-    const KeyState* mouse    = AppEngine->GetInputModule()->GetMouseButtons();
+    const KeyState* keyboard   = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* mouse      = AppEngine->GetInputModule()->GetMouseButtons();
+    const KeyState* controller = AppEngine->GetInputModule()->GetControllerButtons();
 
-    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         desiredDash     = true;
         dashBufferTimer = dashBuffer;
     }
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN)
+    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
     {
         desiredAttack     = true;
         attackBufferTimer = attackBuffer;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
     {
         desiredAim = true;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
