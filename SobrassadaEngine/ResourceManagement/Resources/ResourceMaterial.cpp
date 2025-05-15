@@ -262,6 +262,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
 
         metallicTexture.width  = metallicRoughnessTexture->GetTextureWidth();
         metallicTexture.height = metallicRoughnessTexture->GetTextureHeight();
+        material.hasMetallic   = 1;
     }
 
     if (metallicTexture.textureID == 0)
@@ -278,6 +279,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
             specularTexture.height    = specTexture->GetTextureHeight();
 
             material.shininessInAlpha = true;
+            material.hasSpecular      = 1;
         }
 
         delete specTexture;

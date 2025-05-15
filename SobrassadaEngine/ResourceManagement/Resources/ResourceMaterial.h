@@ -27,6 +27,9 @@ struct MaterialGPU
     uint64_t specularTex  = 0;
     uint64_t metallicTex  = 0;
     uint64_t normalTex    = 0;
+    int hasSpecular       = 0;
+    int hasMetallic       = 0;
+    uint64_t emmisiveTex  = 0;
 };
 
 class ResourceMaterial : public Resource

@@ -300,6 +300,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #endif
     glEnable(GL_STENCIL_TEST);
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
@@ -307,6 +308,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
     else GeometryPassRender(objectsToRender, camera, gbuffer);
+    glPopDebugGroup();
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
     {
@@ -314,7 +316,9 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         return;
     }
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
+    glPopDebugGroup();
 
     {
 #ifdef OPTICK
@@ -351,7 +355,9 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera, gbuffer, framebuffer);
+    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)

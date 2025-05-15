@@ -27,6 +27,9 @@ struct Material
     uvec2 specularTex;
     uvec2 metallicTex;
     uvec2 normalTex;
+    int hasSpecular;
+    int hasMetallic;
+    uvec2 emmisiveTex;
 };
 
 readonly layout(std430, binding = 11) buffer Materials {
@@ -45,8 +48,9 @@ void main()
 {
     const Material mat = materials[instance_index];
 
-    gDiffuse = vec4(1, 0, 0, 1);
-    gSpecular = vec4(pow(texture(sampler2D(mat.specularTex), uv0), vec4(2.2)));
+    gDiffuse = vec4(pow(texture(sampler2D(mat.diffuseTex), uv0).rgb, vec3(2.2f)), 1);
+    if(mat.hasSpecular == 1) gSpecular = vec4(pow(texture(sampler2D(mat.specularTex), uv0), vec4(2.2)));
+    else gSpecular = vec4(1);
     gPosition = vec4(pos,0);
     
     vec3 N = normalize(normal);

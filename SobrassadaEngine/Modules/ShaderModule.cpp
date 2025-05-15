@@ -35,9 +35,18 @@ bool ShaderModule::ShutDown()
 {
     glDeleteProgram(specularGlossinessProgram);
     glDeleteProgram(specularGlossinessProgramUnlit);
+
     glDeleteProgram(metallicRoughnessProgram);
     glDeleteProgram(metallicRoughnessProgramUnlit);
+
     glDeleteProgram(uiWidgetProgram);
+
+    glDeleteProgram(metallicGeometryPassProgram);
+    glDeleteProgram(specularGeometryPassProgram);
+    glDeleteProgram(transparentPassProgram);
+    glDeleteProgram(lightingPassProgram);
+    glDeleteProgram(quadProgram);
+
     return true;
 }
 
