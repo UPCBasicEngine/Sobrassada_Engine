@@ -19,7 +19,6 @@ SplineComponent::SplineComponent(const rapidjson::Value& initialState, GameObjec
     }
 }
 
-
 SplineComponent::~SplineComponent()
 {
 }
@@ -40,11 +39,11 @@ void SplineComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if(ImGui::TreeNode("Spline"))
+    if (ImGui::TreeNode("Spline"))
     {
         ImGui::Text("Points: %zu", points.size());
         ImGui::DragFloat("Tension", &tension, 0.01f, 0.0f, 1.0f);
-        
+
         if (ImGui::Button("Add Point")) points.push_back(float3::zero);
 
         ImGui::TreePop();
@@ -90,7 +89,3 @@ void SplineComponent::RemovePoint(size_t i)
 {
     if (i < points.size()) points.erase(points.begin() + i);
 }
-
-
-
-
