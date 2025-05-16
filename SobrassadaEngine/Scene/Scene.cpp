@@ -30,11 +30,23 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
+#include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioListenerComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
 #include "Standalone/MeshComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/UI/ButtonComponent.h"
+#include "Standalone/UI/CanvasComponent.h"
+#include "Standalone/UI/ImageComponent.h"
+#include "Standalone/UI/Transform2DComponent.h"
+#include "Standalone/UI/UILabelComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -1386,7 +1398,10 @@ void Scene::LoadModel(const UID modelUID)
     }
 }
 
-void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform, bool isEnabled)
+void Scene::LoadPrefab(
+    const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform, bool isEnabled,
+    std::vector<bool> componentsEnabledStates
+)
 {
     if (prefabUID != INVALID_UID)
     {
@@ -1431,6 +1446,25 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
             AddGameObject(newObjects[i]->GetUID(), newObjects[i]);
             remappingTable.insert({referenceObjects[i]->GetUID(), newObjects[i]->GetUID()});
             newObjects[i]->SetEnabled(referenceObjects[i]->IsEnabled());
+        }
+
+        int componentStateIndex = 0;
+        for (int i = 0; i < newObjects.size(); ++i)
+        {
+            auto& tuple = newObjects[i]->GetComponentsTupleRef();
+            ForEachInTuple(
+                tuple,
+                [&](auto* component)
+                {
+                    if (component != nullptr && componentStateIndex < componentsEnabledStates.size())
+                    {
+                        bool state = componentsEnabledStates[componentStateIndex];
+                        component->SetWasEnabled(state);
+                        component->SetEnabled(state);
+                        ++componentStateIndex;
+                    }
+                }
+            );
         }
 
         // Then do a second loop to update all components UIDs reference (ex. skinning)
@@ -1490,6 +1524,8 @@ void Scene::OverridePrefabs(const UID prefabUID)
     std::vector<UID> updatedObjects;
     std::vector<float4x4> transforms;
     std::vector<bool> isEnabled;
+    std::vector<std::vector<bool>> componentsEnabledStates;
+
     for (const auto& gameObject : gameObjectsContainer)
     {
         if (gameObject.second != nullptr)
@@ -1499,7 +1535,22 @@ void Scene::OverridePrefabs(const UID prefabUID)
                 updatedObjects.push_back(gameObject.first);
                 transforms.emplace_back(gameObject.second->GetLocalTransform());
                 isEnabled.push_back(gameObject.second->IsEnabled());
-                //TODO: Do it in components also
+
+                std::vector<bool> componentStates;
+                auto& tuple = gameObject.second->GetComponentsTupleRef();
+
+                ForEachInTuple(
+                    tuple,
+                    [&](auto* component)
+                    {
+                        if (component != nullptr)
+                        {
+                            componentStates.push_back(component->GetWasEnabled());
+                        }
+                    }
+                );
+
+                componentsEnabledStates.push_back(componentStates);
             }
         }
     }
@@ -1511,7 +1562,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
 
     for (int i = 0; i < transforms.size(); ++i)
     {
-        LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i]);
+        LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i], componentsEnabledStates[i]);
     }
 
     App->GetResourcesModule()->ReleaseResource(prefab);

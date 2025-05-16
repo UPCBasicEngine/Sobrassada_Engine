@@ -40,7 +40,7 @@ class SOBRASADA_API_ENGINE Scene
     void LoadModel(const UID modelUID);
     void LoadPrefab(
         const UID prefabUid, const ResourcePrefab* prefab = nullptr, const float4x4& transform = float4x4::identity,
-        bool isEnabled = true
+        bool isEnabled = true, std::vector<bool> componentsEnabledStates = {}
     );
     void OverridePrefabs(UID prefabUID);
 
