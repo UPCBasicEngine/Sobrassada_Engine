@@ -8,6 +8,7 @@
 #include <fstream>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
+#include "FileSystem.h"
 
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -49,7 +50,7 @@ void ScriptModule::LoadDLL()
         return;
     }
 
-    if (!fs::exists("SobrassadaScripts.dll")) fs::copy(dllPath, copyPath, fs::copy_options::overwrite_existing);
+    if (!FileSystem::Exists("SobrassadaScripts.dll")) FileSystem::Copy(dllPath.string().c_str(), copyPath.string().c_str());
 
     lastWriteTime      = fs::last_write_time("SobrassadaScripts.dll");
 
