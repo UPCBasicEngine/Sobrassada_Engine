@@ -168,6 +168,7 @@ void Billboard::AddComponent(BillboardComponent* newBillboard)
 void Billboard::RemoveComponent(std::list<BillboardComponent*>::iterator billboardIterator)
 {
     instanceComponents.erase(billboardIterator);
+    reloadPositions = true;
 }
 
 void Billboard::CheckReloadPositions()

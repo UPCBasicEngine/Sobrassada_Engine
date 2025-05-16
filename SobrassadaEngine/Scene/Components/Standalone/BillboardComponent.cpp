@@ -59,6 +59,10 @@ void BillboardComponent::Clone(const Component* other)
         const BillboardComponent* otherBillboard = static_cast<const BillboardComponent*>(other);
         enabled                                  = otherBillboard->enabled;
         wasEnabled                               = otherBillboard->wasEnabled;
+
+        billboardTag                             = otherBillboard->billboardTag;
+
+        App->GetBillboardModule()->RequestTag(billboardTag, this);
     }
 }
 
