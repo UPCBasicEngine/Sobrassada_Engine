@@ -1386,7 +1386,7 @@ void Scene::LoadModel(const UID modelUID)
     }
 }
 
-void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform)
+void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform, bool isEnabled)
 {
     if (prefabUID != INVALID_UID)
     {
@@ -1407,6 +1407,7 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
         if (prefab != nullptr)
         {
             newObjects[0]->SetLocalTransform(transform);
+            newObjects[0]->SetEnabled(isEnabled);
         }
         else
         {
@@ -1488,6 +1489,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
     // stay in place. UIDs to delete the duplicates
     std::vector<UID> updatedObjects;
     std::vector<float4x4> transforms;
+    std::vector<bool> isEnabled;
     for (const auto& gameObject : gameObjectsContainer)
     {
         if (gameObject.second != nullptr)
@@ -1496,6 +1498,8 @@ void Scene::OverridePrefabs(const UID prefabUID)
             {
                 updatedObjects.push_back(gameObject.first);
                 transforms.emplace_back(gameObject.second->GetLocalTransform());
+                isEnabled.push_back(gameObject.second->IsEnabled());
+                //TODO: Do it in components also
             }
         }
     }
@@ -1505,9 +1509,9 @@ void Scene::OverridePrefabs(const UID prefabUID)
         RemoveGameObjectHierarchy(object);
     }
 
-    for (const float4x4& transform : transforms)
+    for (int i = 0; i < transforms.size(); ++i)
     {
-        LoadPrefab(prefabUID, prefab, transform);
+        LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i]);
     }
 
     App->GetResourcesModule()->ReleaseResource(prefab);

@@ -29,7 +29,7 @@ struct MaterialGPU
     uint64_t normalTex    = 0;
     int hasSpecular       = 0;
     int hasMetallic       = 0;
-    uint64_t emmisiveTex  = 0;
+    uint64_t emmisiveTex  = 0; //Right now works as padding TODO: put emmissive
 };
 
 class ResourceMaterial : public Resource
