@@ -160,7 +160,6 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
                 return;
             }
 
-            if (dashTimeRemaining > 0.0f) GLOG("A");
 
             currentPolyRef = targetRef;
         }
@@ -433,7 +432,7 @@ void CharacterControllerComponent::StartDash()
 
     dashTarget = currentPos + rotateDirection * (dashDistance + 0.5f);
 
-    float3 lateralDirection = rotateDirection.Cross(float3::unitY).Normalized();
+    const float3 lateralDirection = rotateDirection.Cross(float3::unitY).Normalized();
 
     float3 rightRayOrigin   = currentPos + lateralDirection * 0.5f; 
     float3 leftRayOrigin    = currentPos - lateralDirection * 0.5f; 
@@ -464,7 +463,6 @@ void CharacterControllerComponent::StartDash()
         if (box.Intersects(centralRay, tNear, tFar))
         {
             dashTarget = centralRay.GetPoint(tNear) - rotateDirection * wallOffset;
-            GLOG("COLLISIONED IN CENTER");
         }
     }
     else if (rightHit != nullptr)
@@ -473,7 +471,6 @@ void CharacterControllerComponent::StartDash()
         if (box.Intersects(rightRay, tNear, tFar))
         {
             dashTarget = (rightRay.GetPoint(tNear) - rotateDirection * wallOffset) - lateralDirection * 0.5f;
-            GLOG("COLLISIONED IN RIGHT");
         }
     }
     else if (leftHit != nullptr)
@@ -482,7 +479,6 @@ void CharacterControllerComponent::StartDash()
         if (box.Intersects(leftRay, tNear, tFar))
         {
             dashTarget = (leftRay.GetPoint(tNear) - rotateDirection * wallOffset) + lateralDirection * 0.5f;
-            GLOG("COLLISIONED IN LEFT");
         }
     }
 
@@ -513,7 +509,6 @@ void CharacterControllerComponent::Dash(float deltaTime)
 {
     if (dashTimeRemaining < 0.0f)
     {
-        GLOG("STOP DASH");
         isDashing = false;
     }
 
@@ -530,7 +525,6 @@ void CharacterControllerComponent::Dash(float deltaTime)
         {
             parent->SetLocalPosition(dashTarget - parent->GetParentGlobalTransform().TranslatePart());
             dashTimeRemaining = 0.0f;
-            GLOG("STOP DASH");
             isDashing = false;
         }
         else
@@ -541,7 +535,6 @@ void CharacterControllerComponent::Dash(float deltaTime)
     }
     else
     {
-        GLOG("STOP DASH");
         isDashing         = false;
         dashTimeRemaining = 0.0f;
     }
