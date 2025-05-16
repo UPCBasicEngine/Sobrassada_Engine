@@ -455,7 +455,7 @@ void CharacterControllerComponent::StartDash()
     );
 
 
-    const float wallOffset = 0.5f;
+    const float wallOffset = 0.7f;
     float tNear, tFar;
 
     if (centralHit != nullptr)
