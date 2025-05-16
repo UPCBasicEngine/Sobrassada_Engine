@@ -48,6 +48,9 @@ void ScriptModule::LoadDLL()
         GLOG("Failed to load DLL\n");
         return;
     }
+
+    if (!fs::exists("SobrassadaScripts.dll")) fs::copy(dllPath, copyPath, fs::copy_options::overwrite_existing);
+
     lastWriteTime      = fs::last_write_time("SobrassadaScripts.dll");
 
     startScriptFunc    = (StartSobrassadaScripts)GetProcAddress(dllHandle, "InitSobrassadaScripts");
@@ -122,7 +125,7 @@ void ScriptModule::SaveScriptsToFile(const std::string& filename, const rapidjso
     outFile << buffer.GetString();
     outFile.close();
 
-    //GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
+    // GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
 }
 
 void ScriptModule::DeleteAllScripts(bool saveJson)
