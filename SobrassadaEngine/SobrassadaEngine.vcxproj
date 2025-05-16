@@ -361,6 +361,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Utils\Particles\Billboard.cpp" />
+    <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
     <ClCompile Include="Modules\GameDebugUIModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\Audio\AudioListenerComponent.cpp" />
@@ -589,6 +591,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Utils\Particles\Billboard.h" />
+    <ClInclude Include="Modules\BillboardModule.h" />
     <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h" />
     <ClInclude Include="Modules\GameDebugUIModule.h" />
     <ClInclude Include="Scene\Components\Standalone\Audio\AudioListenerComponent.h" />

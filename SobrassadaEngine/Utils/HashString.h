@@ -1,6 +1,6 @@
 #pragma once
+#include <functional>
 #include <string>
-#include <functional> 
 
 struct HashString
 {
@@ -12,6 +12,12 @@ struct HashString
     {
         original = str;
         hash     = std::hash<std::string> {}(str);
+    }
+
+    HashString(std::string&& str)
+    {
+        original = std::move(str);
+        hash     = std::hash<std::string> {}(original);
     }
 
     bool operator==(const HashString& other) const { return hash == other.hash; }
@@ -30,4 +36,4 @@ namespace std
     {
         size_t operator()(const HashString& hs) const { return hash<string> {}(hs.original); }
     };
-}
+} // namespace std
