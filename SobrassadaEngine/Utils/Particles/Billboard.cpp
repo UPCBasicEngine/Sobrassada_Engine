@@ -1,7 +1,6 @@
 #include "Billboard.h"
 
 #include "Application.h"
-#include "Globals.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
 

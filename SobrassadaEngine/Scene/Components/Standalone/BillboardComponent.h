@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.h"
+#include "HashString.h"
 
 class ResourceMaterial;
 
@@ -23,19 +24,17 @@ class BillboardComponent : public Component
     float GetHeight() const { return height; }
 
   private:
-    void CreateVertexBufferObject();
-    void AddMaterial(UID resourceUID);
 
-  private:
-    unsigned int vbo                  = 0;
-
-    float width                       = 2.f;
-    float height                      = 2.f;
+    float width                       = 1.f;
+    float height                      = 1.f;
     bool lockPitch                    = false;
 
     int xTiles                        = 0;
     int yTiles                        = 0;
     float spriteSpeed                 = 0;
+
+    char newTagName[64]               = "";
+    HashString billboardTag           = HashString("");
 
     std::string currentMaterialName   = "No material";
     ResourceMaterial* currentMaterial = nullptr;

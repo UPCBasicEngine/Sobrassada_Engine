@@ -1,12 +1,12 @@
 #pragma once
 
+#include "Globals.h"
+
 #include "Math/float3.h"
 #include <list>
 
 class ResourceMaterial;
 class BillboardComponent;
-
-typename UID;
 
 class Billboard
 {

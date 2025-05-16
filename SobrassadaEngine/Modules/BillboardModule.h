@@ -20,7 +20,11 @@ class BillboardModule : public Module
     bool Init() override;
     bool ShutDown() override;
 
-    void RequestTag(const std::string& tag, BillboardComponent* component);
+    void CreateTag(const char* newTag);
+    void DeleteTag(const HashString& tag);
+    void RequestTag(const HashString& tag, BillboardComponent* component);
+
+    const std::vector<HashString>& GetTags() const { return billboardTags; };
 
   private:
     std::vector<HashString> billboardTags;
