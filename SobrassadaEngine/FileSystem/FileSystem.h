@@ -11,8 +11,7 @@ namespace FileSystem
     unsigned int Load(const char* filePath, char** buffer, bool asBinary = true);
     unsigned int LoadForDetour(const char* filePath, char** buffer);
     bool LoadJSON(const char* scenePath, rapidjson::Document& doc);
-    unsigned int
-    Save(const char* filePath, const void* buffer, unsigned int size, bool asBinary = true, bool append = false);
+    unsigned int Save(const char* filePath, const void* buffer, unsigned int size, bool asBinary = true, bool append = false);
     bool Copy(const char* sourceFilePath, const char* destinationFilePath);
 
     void GetDrives(std::vector<std::string>& drives);
