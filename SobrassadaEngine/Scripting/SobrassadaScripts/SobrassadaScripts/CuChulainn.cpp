@@ -122,6 +122,10 @@ void CuChulainn::GetInputs()
     {
         desiredAim = true;
     }
+    if (input->GetLeftTrigger().first == KEY_UP)
+    {
+        if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
+    }
     if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || input->GetRightTrigger().first == KEY_DOWN)
     {
         if (state == CharacterStates::AIM) ThrowSpear();
