@@ -23,6 +23,7 @@ struct HashString
     bool operator==(const HashString& other) const { return hash == other.hash; }
     bool operator!=(const HashString& other) const { return !(*this == other); }
     bool operator<(const HashString& other) const { return hash < other.hash; }
+    bool operator>(const HashString& other) const { return hash > other.hash; }
     const std::string& GetString() const { return original; }
     std::string& GetString() { return original; }
     const bool empty() const { return original.empty(); }

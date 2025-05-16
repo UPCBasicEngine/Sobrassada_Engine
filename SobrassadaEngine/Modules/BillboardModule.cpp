@@ -1,6 +1,7 @@
 #include "BillboardModule.h"
 
 #include "Billboard.h"
+#include "Standalone/BillboardComponent.h"
 
 BillboardModule::BillboardModule()
 {
@@ -23,6 +24,7 @@ bool BillboardModule::ShutDown()
 void BillboardModule::CreateTag(const char* newTag)
 {
     HashString tag = HashString(newTag);
+    if (tag == emptyString) return;
 
     if (billboardMap.find(tag) == billboardMap.end())
     {
@@ -52,4 +54,82 @@ void BillboardModule::DeleteTag(const HashString& tag)
 
 void BillboardModule::RequestTag(const HashString& tag, BillboardComponent* component)
 {
+    int position            = -1;
+    bool found              = FindTag(tag, position);
+    HashString componentTag = component->GetBillboardTag();
+
+    // If tag is not found it means it must be loaded for the first time
+    if (!found) billboardTags.insert(billboardTags.begin() + position, tag);
+
+    if (tag != componentTag && emptyString != componentTag) RemoveComponentFromTag(componentTag, component);
+
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator == billboardMap.end())
+    {
+        Billboard* newBillboard = new Billboard(component->GetWidth(), component->GetWidth());
+        newBillboard->UpdateMaterial(component->GetMaterialUID());
+        newBillboard->AddComponent(component);
+
+        billboardMap.insert({tag, std::pair<unsigned int, Billboard*>(1, newBillboard)});
+    }
+    else
+    {
+        billboardIterator->second.first++;
+        billboardIterator->second.second->AddComponent(component);
+    }
+}
+
+void BillboardModule::RemoveComponentFromTag(const HashString& tag, BillboardComponent* component)
+{
+    auto billboardIterator = billboardMap.find(tag);
+    if (billboardIterator != billboardMap.end())
+    {
+        billboardIterator->second.first--;
+        billboardIterator->second.second->RemoveComponent(component->GetBillboardIterator());
+
+        if (billboardIterator->second.first == 0) DeleteTag(tag);
+    }
+}
+
+void BillboardModule::UpdateTagWidth(const HashString& tag, float width)
+{
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateWidth(width);
+}
+
+void BillboardModule::UpdateTagHeight(const HashString& tag, float height)
+{
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateHeight(height);
+}
+
+void BillboardModule::UpdateTagMaterial(const HashString& tag, UID material)
+{
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateMaterial(material);
+}
+
+bool BillboardModule::FindTag(const HashString& tag, int& outPosition)
+{
+    if (billboardTags.empty())
+    {
+        outPosition = 0;
+        return false;
+    }
+
+    int left  = 0;
+    int right = billboardTags.size();
+    while (left < right)
+    {
+        outPosition = (right + left) / 2;
+        if (billboardTags[outPosition] == tag) return true;
+        if (billboardTags[outPosition] < tag) left = outPosition + 1;
+        else if (billboardTags[outPosition] > tag) right = outPosition + 1;
+    }
+
+    return false;
 }

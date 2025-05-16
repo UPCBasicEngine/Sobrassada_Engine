@@ -3,6 +3,8 @@
 #include "Component.h"
 #include "HashString.h"
 
+#include <list>
+
 class ResourceMaterial;
 
 class BillboardComponent : public Component
@@ -20,11 +22,20 @@ class BillboardComponent : public Component
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
+    void ClearBillboardData();
+
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
+    UID GetMaterialUID() const { return currentMaterialUID; }
+    const HashString& GetBillboardTag() const { return billboardTag; }
+    std::list<BillboardComponent*>::iterator GetBillboardIterator() const { return billboardIterator; }
+
+    void SetWidth(float newWidth) { width = newWidth; };
+    void SetHeight(float newHeight) { height = newHeight; };
+    void SetMaterial(ResourceMaterial* newMaterial);
+    void SetIterator(std::list<BillboardComponent*>::iterator iterator) { billboardIterator = iterator; };
 
   private:
-
     float width                       = 1.f;
     float height                      = 1.f;
     bool lockPitch                    = false;
@@ -37,5 +48,8 @@ class BillboardComponent : public Component
     HashString billboardTag           = HashString("");
 
     std::string currentMaterialName   = "No material";
+    UID currentMaterialUID            = DEFAULT_MATERIAL_UID;
     ResourceMaterial* currentMaterial = nullptr;
+
+    std::list<BillboardComponent*>::iterator billboardIterator;
 };

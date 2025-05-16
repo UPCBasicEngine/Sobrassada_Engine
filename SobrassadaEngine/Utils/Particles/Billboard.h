@@ -20,7 +20,7 @@ class Billboard
 
     void CreateVertexBufferObject();
 
-    std::list<BillboardComponent*>::iterator AddComponent(BillboardComponent* newBillboard);
+    void AddComponent(BillboardComponent* newBillboard);
     void RemoveComponent(std::list<BillboardComponent*>::iterator newBillboard);
 
   private:

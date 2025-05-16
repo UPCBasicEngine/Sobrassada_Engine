@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
+#include "Standalone/BillboardComponent.h"
 
 #include "glew.h"
 
@@ -13,6 +14,11 @@ Billboard::Billboard(float width, float height) : width(width), height(height)
 
 Billboard::~Billboard()
 {
+    for (auto billboardComponent : instanceComponents)
+    {
+        billboardComponent->ClearBillboardData();
+    }
+
     if (material) App->GetResourcesModule()->ReleaseResource(material);
     glDeleteBuffers(1, &vbo);
 }
@@ -21,12 +27,22 @@ void Billboard::UpdateWidth(float newWidth)
 {
     width = newWidth;
     CreateVertexBufferObject();
+
+    for (auto billboardComponent : instanceComponents)
+    {
+        billboardComponent->SetWidth(width);
+    }
 }
 
 void Billboard::UpdateHeight(float newHeight)
 {
     height = newHeight;
     CreateVertexBufferObject();
+
+    for (auto billboardComponent : instanceComponents)
+    {
+        billboardComponent->SetHeight(height);
+    }
 }
 
 void Billboard::UpdateMaterial(UID newMaterialUID)
@@ -45,6 +61,11 @@ void Billboard::UpdateMaterial(UID newMaterialUID)
     {
         App->GetResourcesModule()->ReleaseResource(material);
         material     = newMaterial;
+
+        for (auto billboardComponent : instanceComponents)
+        {
+            billboardComponent->SetMaterial(material);
+        }
     }
 }
 
@@ -75,9 +96,14 @@ void Billboard::CreateVertexBufferObject()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
 }
 
-std::list<BillboardComponent*>::iterator Billboard::AddComponent(BillboardComponent* newBillboard)
+void Billboard::AddComponent(BillboardComponent* newBillboard)
 {
-    return instanceComponents.insert(instanceComponents.end(), newBillboard);
+    auto iterator = instanceComponents.insert(instanceComponents.end(), newBillboard);
+
+    newBillboard->SetWidth(width);
+    newBillboard->SetHeight(height);
+    newBillboard->SetMaterial(material);
+    newBillboard->SetIterator(iterator);
 }
 
 void Billboard::RemoveComponent(std::list<BillboardComponent*>::iterator billboardIterator)
