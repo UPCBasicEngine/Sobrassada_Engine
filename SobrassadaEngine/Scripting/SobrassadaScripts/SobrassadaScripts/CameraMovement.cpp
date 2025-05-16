@@ -18,8 +18,8 @@ CameraMovement::CameraMovement(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Target", InspectorField::FieldType::InputText, &targetName});
     fields.push_back({"Smoothness Velocity", InspectorField::FieldType::Float, &smoothnessVelocity, 0.0f, 20.0f});
-    fields.push_back({"Enable Mouse Offset", InspectorField::FieldType::Bool, &mouseOffsetEnabled});
-    fields.push_back({"Mouse Offset Intensity", InspectorField::FieldType::Float, &mouseOffsetIntensity, 0.0f, 1.0f});
+    fields.push_back({"Enable Mouse Offset", InspectorField::FieldType::Bool, &aimOffsetEnabled});
+    fields.push_back({"Mouse Offset Intensity", InspectorField::FieldType::Float, &aimOffsetIntensity, 0.0f, 1.0f});
     fields.push_back({"Look Ahead Intensity", InspectorField::FieldType::Float, &lookAheadIntensity, 0.0f, 10.0f});
     fields.push_back({"Look Ahead Smoothness", InspectorField::FieldType::Float, &lookAheadSmoothness, 0.0f, 20.0f});
     fields.push_back(
@@ -51,13 +51,24 @@ void CameraMovement::FollowTarget(float deltaTime)
     float3 desiredPosition        = target->GetGlobalTransform().TranslatePart();
     const float3& currentPosition = parent->GetGlobalTransform().TranslatePart();
 
-    if (mouseOffsetEnabled)
+    if (aimOffsetEnabled)
     {
-        currentLookAhead = 0;
-        const float3 mouseWorldPos =
-            AppEngine->GetSceneModule()->GetScene()->GetMainCamera()->ScreenPointToXZ(currentPosition.y);
-        const float3 mouseOffset  = (desiredPosition + (mouseWorldPos)) * 0.5f - desiredPosition;
-        desiredPosition          += mouseOffset * mouseOffsetIntensity;
+        currentLookAhead   = 0;
+
+        float3 mouseOffset = float3::zero;
+        if (AppEngine->GetInputModule()->IsUsingKeyboard())
+        {
+            const float3 mouseWorldPos =
+                AppEngine->GetSceneModule()->GetScene()->GetMainCamera()->ScreenPointToXZ(currentPosition.y);
+            mouseOffset = (desiredPosition + (mouseWorldPos)) * 0.5f - desiredPosition;
+        }
+        else
+        {
+            const float2 stickDirection = AppEngine->GetInputModule()->GetLeftStick();
+            mouseOffset                 = float3(stickDirection.x, 0, stickDirection.y) * 5.0f;
+        }
+
+        desiredPosition += mouseOffset * aimOffsetIntensity;
     }
     else if (lookAheadIntensity > 0 && controller)
     {

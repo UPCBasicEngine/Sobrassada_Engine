@@ -325,7 +325,7 @@ void CharacterControllerComponent::LookAtMovement(const float3& moveDir, float d
     if (isRadians) maxStep *= RAD_DEGREE_CONV;
     angle = std::clamp(angle, -maxStep, maxStep);
 
-    if (fabs(angle) < 0.0001f)
+    if (fabs(angle) < 0.00001f)
     {
         isRotating = false;
         return;
@@ -376,36 +376,31 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
         if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
         if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
         if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
-
     }
     else
     {
         direction.x = leftJoystick.x;
         direction.z = leftJoystick.y;
     }
-   
-    //float rotationDir = 0.0f;
 
-    //if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
-    //if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
+    // float rotationDir = 0.0f;
+
+    // if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
+    // if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
 
     targetDirection = direction;
     if (direction.LengthSq() > 0.001f)
     {
         direction.Normalize();
         targetDirection = direction;
-
-        if (direction.LengthSq() > 0.0001f)
-        {
-            rotateDirection = direction;
-            isRotating      = true;
-        }
+        rotateDirection = direction;
+        isRotating      = true;
     }
 
-    //if (fabs(rotationDir) > 0.0001f)
+    // if (fabs(rotationDir) > 0.0001f)
     //{
-    //    Rotate(rotationDir, deltaTime);
-    //}
+    //     Rotate(rotationDir, deltaTime);
+    // }
 }
 
 void CharacterControllerComponent::LookAt(const float3& direction)

@@ -138,14 +138,14 @@ update_status InputModule::PreUpdate(float deltaTime)
     // Log left stick movement if it�s significant
     if (fabs(controllerLeftStick.x) > 0.01f || fabs(controllerLeftStick.y) > 0.01f)
     {
-        GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
+        // GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
         isUsingKeyboard = false;
     }
 
     // Log right stick movement if it�s significant
     if (fabs(controllerRightStick.x) > 0.01f || fabs(controllerRightStick.y) > 0.01f)
     {
-        GLOG("Right Stick: x=%.2f, y=%.2f", controllerRightStick.x, controllerRightStick.y);
+        // GLOG("Right Stick: x=%.2f, y=%.2f", controllerRightStick.x, controllerRightStick.y);
         isUsingKeyboard = false;
     }
 
@@ -159,13 +159,26 @@ update_status InputModule::PreUpdate(float deltaTime)
 
     if (normLT > 0.01f)
     {
-        isUsingKeyboard = false;
-        GLOG("Left Trigger (LT): %.2f", normLT);
+        isUsingKeyboard    = false;
+        leftTrigger.first  = (leftTrigger.first == KEY_IDLE) ? KEY_DOWN : KEY_REPEAT;
+        leftTrigger.second = normLT;
+        // GLOG("Left Trigger (LT): %.2f", normLT);
     }
+    else
+    {
+        leftTrigger.first = (leftTrigger.first == KEY_REPEAT || leftTrigger.first == KEY_DOWN) ? KEY_UP : KEY_IDLE;
+    }
+
     if (normRT > 0.01f)
     {
-        isUsingKeyboard = false;
-        GLOG("Right Trigger (RT): %.2f", normRT);
+        isUsingKeyboard     = false;
+        rightTrigger.first  = (rightTrigger.first == KEY_IDLE) ? KEY_DOWN : KEY_REPEAT;
+        rightTrigger.second = normRT;
+        // GLOG("Right Trigger (RT): %.2f", normRT);
+    }
+    else
+    {
+        rightTrigger.first = (rightTrigger.first == KEY_REPEAT || rightTrigger.first == KEY_DOWN) ? KEY_UP : KEY_IDLE;
     }
 
     // Log all buttons currently pressed
@@ -182,11 +195,11 @@ update_status InputModule::PreUpdate(float deltaTime)
                 (controllerButtons[i] == KEY_REPEAT || controllerButtons[i] == KEY_DOWN) ? KEY_UP : KEY_IDLE;
         }
 
-        if (SDL_GameControllerGetButton(controllers[0], (SDL_GameControllerButton)i))
-        {
-            const char* btnName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)i);
-            GLOG("Button pressed: %s", btnName ? btnName : "Unknown");
-        }
+        // if (SDL_GameControllerGetButton(controllers[0], (SDL_GameControllerButton)i))
+        //{
+        //     const char* btnName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)i);
+        //     GLOG("Button pressed: %s", btnName ? btnName : "Unknown");
+        // }
     }
 
     return UPDATE_CONTINUE;

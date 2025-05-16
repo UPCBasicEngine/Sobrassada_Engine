@@ -45,6 +45,8 @@ class InputModule : public Module
     float2 GetRightStick() const { return controllerRightStick; }
     SDL_GameController* GetActiveController() const { return controllers[0]; }
     const KeyState* GetControllerButtons() const { return controllerButtons; }
+    const std::pair<KeyState, float>& GetLeftTrigger() const { return leftTrigger; }
+    const std::pair<KeyState, float>& GetRightTrigger() const { return rightTrigger; }
 
     bool IsUsingKeyboard() const { return isUsingKeyboard; }
 
@@ -59,6 +61,8 @@ class InputModule : public Module
     float2 controllerLeftStick                       = float2::zero;
     float2 controllerRightStick                      = float2::zero;
     KeyState controllerButtons[SDL_CONTROLLER_BUTTON_MAX];
+    std::pair<KeyState, float> leftTrigger;
+    std::pair<KeyState, float> rightTrigger;
 
     bool isUsingKeyboard = true;
 };
