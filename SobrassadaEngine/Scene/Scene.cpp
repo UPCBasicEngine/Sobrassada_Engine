@@ -368,7 +368,13 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     }
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
-    TransparentPassRender(objectsToRender, camera, gbuffer, framebuffer);
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    {
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        TransparentPassRender(objectsToRender, camera, gbuffer, framebuffer);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+    else TransparentPassRender(objectsToRender, camera, gbuffer, framebuffer);
     glPopDebugGroup();
 }
 
@@ -937,6 +943,7 @@ void Scene::GeometryPassRender(
 
     glDisable(GL_BLEND);
 
+
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
@@ -1111,7 +1118,7 @@ void Scene::TransparentPassRender(
     unsigned int width  = framebuffer->GetTextureWidth();
     unsigned int height = framebuffer->GetTextureHeight();
     framebuffer->Bind();
-    // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    //glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glViewport(0, 0, width, height);
 
     glEnable(GL_BLEND);
