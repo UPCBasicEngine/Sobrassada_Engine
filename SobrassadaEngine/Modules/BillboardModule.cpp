@@ -122,13 +122,13 @@ bool BillboardModule::FindTag(const HashString& tag, int& outPosition)
     }
 
     int left  = 0;
-    int right = billboardTags.size();
-    while (left < right)
+    int right = billboardTags.size() - 1;
+    while (left <= right)
     {
         outPosition = (right + left) / 2;
         if (billboardTags[outPosition] == tag) return true;
         if (billboardTags[outPosition] < tag) left = outPosition + 1;
-        else if (billboardTags[outPosition] > tag) right = outPosition + 1;
+        else if (billboardTags[outPosition] > tag) right = outPosition - 1;
     }
 
     return false;

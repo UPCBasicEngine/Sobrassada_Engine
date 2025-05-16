@@ -3,6 +3,8 @@
 #include "Application.h"
 #include "BillboardModule.h"
 #include "ResourceMaterial.h"
+#include "EditorUIModule.h"
+#include "LibraryModule.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -118,6 +120,34 @@ void BillboardComponent::RenderEditorInspector()
     }
 
     if (ImGui::Button("Delete current tag")) App->GetBillboardModule()->DeleteTag(billboardTag);
+
+    ImGui::Separator();
+
+    ImGui::Checkbox("Lock Pitch", &lockPitch);
+
+    if (ImGui::InputFloat("Width", &width)) App->GetBillboardModule()->UpdateTagWidth(billboardTag, width);
+    if (ImGui::InputFloat("Height", &height)) App->GetBillboardModule()->UpdateTagHeight(billboardTag, height);
+
+    ImGui::InputInt("Texture X tiles", &xTiles);
+    ImGui::InputInt("Texture Y tiles", &yTiles);
+    ImGui::InputFloat("Animation speed", &spriteSpeed);
+
+    if (ImGui::Button("Select material"))
+    {
+        ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
+    }
+
+    if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
+    {
+
+        const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
+        );
+
+        if (chosenMatUID != INVALID_UID) App->GetBillboardModule()->UpdateTagMaterial(billboardTag, chosenMatUID);
+    }
+
+    if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
 }
 
 void BillboardComponent::ClearBillboardData()
