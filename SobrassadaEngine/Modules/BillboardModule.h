@@ -21,7 +21,7 @@ class BillboardModule : public Module
     bool ShutDown() override;
 
     void CreateTag(const char* newTag);
-    void DeleteTag(const HashString& tag);
+    void DeleteTag(const HashString tag);
     void RequestTag(const HashString& tag, BillboardComponent* component);
     void RemoveComponentFromTag(const HashString& tag, BillboardComponent* component);
 

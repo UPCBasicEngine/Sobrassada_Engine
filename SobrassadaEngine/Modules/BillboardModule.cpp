@@ -32,7 +32,7 @@ void BillboardModule::CreateTag(const char* newTag)
     }
 }
 
-void BillboardModule::DeleteTag(const HashString& tag)
+void BillboardModule::DeleteTag(const HashString tag)
 {
     auto billboardIterator = billboardMap.find(tag);
 

@@ -99,7 +99,7 @@ void BillboardComponent::RenderEditorInspector()
             ))
         {
 
-           for (int i = 0; i < billboardTags.size(); ++i)
+            for (int i = 0; i < billboardTags.size(); ++i)
             {
                 if (ImGui::Selectable(billboardTags[i].GetString().c_str()))
                 {
@@ -117,11 +117,7 @@ void BillboardComponent::RenderEditorInspector()
         ImGui::EndPopup();
     }
 
-    if (ImGui::Button("Delete current tag"))
-    {
-        App->GetBillboardModule()->DeleteTag(billboardTag);
-        billboardTag = HashString("");
-    }
+    if (ImGui::Button("Delete current tag")) App->GetBillboardModule()->DeleteTag(billboardTag);
 }
 
 void BillboardComponent::ClearBillboardData()
