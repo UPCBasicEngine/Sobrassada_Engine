@@ -207,10 +207,6 @@ update_status InputModule::PreUpdate(float deltaTime)
 
 bool InputModule::ShutDown()
 {
-    // GLOG("Quitting SDL input event subsystem");
-    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
-    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-
     for (int i = 0; i < MAX_CONTROLLERS; ++i)
     {
         if (controllers[i])
@@ -219,6 +215,9 @@ bool InputModule::ShutDown()
             controllers[i] = nullptr;
         }
     }
+
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 
     return true;
 }

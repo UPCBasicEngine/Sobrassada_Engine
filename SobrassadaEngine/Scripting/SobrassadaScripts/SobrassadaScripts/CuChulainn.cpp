@@ -198,9 +198,9 @@ void CuChulainn::LookAtMouse()
 
 void CuChulainn::LookAtJoystick()
 {
-    const float2 stick = AppEngine->GetInputModule()->GetLeftStick();
+    const float2 stick = AppEngine->GetInputModule()->GetRightStick();
     float3 direction   = float3(stick.x, 0, stick.y);
-    character->LookAt(direction);
+    if (direction.LengthSq() > 0.001f) character->LookAt(direction);
 }
 
 void CuChulainn::ThrowSpear()
@@ -214,6 +214,7 @@ void CuChulainn::ThrowSpear()
         resetWeapon = true;
     }
 
+    const auto a = character->GetFrontDirection();
     spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
 }
 

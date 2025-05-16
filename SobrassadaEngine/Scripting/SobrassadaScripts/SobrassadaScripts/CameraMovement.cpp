@@ -64,7 +64,7 @@ void CameraMovement::FollowTarget(float deltaTime)
         }
         else
         {
-            const float2 stickDirection = AppEngine->GetInputModule()->GetLeftStick();
+            const float2 stickDirection = AppEngine->GetInputModule()->GetRightStick();
             mouseOffset                 = float3(stickDirection.x, 0, stickDirection.y) * 5.0f;
         }
 
