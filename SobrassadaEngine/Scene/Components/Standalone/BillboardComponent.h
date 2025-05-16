@@ -21,6 +21,7 @@ class BillboardComponent : public Component
     void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
+    void ParentUpdated() override;
 
     void ClearBillboardData();
 

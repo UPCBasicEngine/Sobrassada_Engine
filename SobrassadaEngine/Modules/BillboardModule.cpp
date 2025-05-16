@@ -21,6 +21,17 @@ bool BillboardModule::ShutDown()
     return true;
 }
 
+update_status BillboardModule::PostUpdate(float deltaTime)
+{
+
+    for (auto& billboard : billboardMap)
+    {
+        billboard.second.second->CheckReloadPositions();
+    }
+
+    return UPDATE_CONTINUE;
+}
+
 void BillboardModule::CreateTag(const char* newTag)
 {
     HashString tag = HashString(newTag);
@@ -92,6 +103,14 @@ void BillboardModule::RemoveComponentFromTag(const HashString& tag, BillboardCom
     }
 }
 
+void BillboardModule::RenderBillboards()
+{
+    for (auto& billboard : billboardMap)
+    {
+        billboard.second.second->Render();
+    }
+}
+
 void BillboardModule::UpdateTagWidth(const HashString& tag, float width)
 {
     auto billboardIterator = billboardMap.find(tag);
@@ -111,6 +130,13 @@ void BillboardModule::UpdateTagMaterial(const HashString& tag, UID material)
     auto billboardIterator = billboardMap.find(tag);
 
     if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateMaterial(material);
+}
+
+void BillboardModule::UpdateTagPositions(const HashString& tag)
+{
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->SetReloadPositions();
 }
 
 bool BillboardModule::FindTag(const HashString& tag, int& outPosition)

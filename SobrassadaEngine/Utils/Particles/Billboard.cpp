@@ -1,8 +1,11 @@
 #include "Billboard.h"
 
 #include "Application.h"
+#include "CameraModule.h"
+#include "GameObject.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
+#include "ShaderModule.h"
 #include "Standalone/BillboardComponent.h"
 
 #include "glew.h"
@@ -26,7 +29,6 @@ Billboard::~Billboard()
 void Billboard::UpdateWidth(float newWidth)
 {
     width = newWidth;
-    CreateVertexBufferObject();
 
     for (auto billboardComponent : instanceComponents)
     {
@@ -37,7 +39,6 @@ void Billboard::UpdateWidth(float newWidth)
 void Billboard::UpdateHeight(float newHeight)
 {
     height = newHeight;
-    CreateVertexBufferObject();
 
     for (auto billboardComponent : instanceComponents)
     {
@@ -60,7 +61,7 @@ void Billboard::UpdateMaterial(UID newMaterialUID)
     if (newMaterial != nullptr)
     {
         App->GetResourcesModule()->ReleaseResource(material);
-        material     = newMaterial;
+        material = newMaterial;
 
         for (auto billboardComponent : instanceComponents)
         {
@@ -69,31 +70,86 @@ void Billboard::UpdateMaterial(UID newMaterialUID)
     }
 }
 
+void Billboard::Render()
+{
+    if (material && vbo && positionsVbo)
+    {
+        const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
+        const float4x4 viewMatrix   = App->GetCameraModule()->GetViewMatrix();
+
+        float4x4 VP           = App->GetCameraModule()->GetProjectionMatrix() * viewMatrix;
+
+        float3 cameraRight          = editorCamera.WorldRight();
+        float3 cameraUp             = editorCamera.up;
+        float2 billboardSize        = float2(width, height);
+
+        glUseProgram(App->GetShaderModule()->GetBillboardProgram());
+        glUniform3fv(0, 1, &cameraRight[0]);
+        glUniform3fv(1, 1, &cameraUp[0]);
+        glUniform2fv(2, 1, &billboardSize[0]);
+        glUniformMatrix4fv(3, 1, GL_TRUE, &VP[0][0]);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        // Sending vertex coords
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        // Sending texture coordiantes
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
+
+        // Sending center billboard positions
+        glBindBuffer(GL_ARRAY_BUFFER, positionsVbo);
+
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(2, 1);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, material->GetDiffuseColorID());
+
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceComponents.size());
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+}
+
 void Billboard::CreateVertexBufferObject()
 {
     // vertices -> texture coords
 
     float vertexData[] = {
-        -width / 2.f, height / 2.f,  0.f, //
-        -width / 2.f, -height / 2.f, 0.f, //
-        width / 2.f,  -height / 2.f, 0.f, //
+        -0.5, 0.5,  0.f, //
+        -0.5, -0.5, 0.f, //
+        0.5,  -0.5, 0.f, //
 
-        -width / 2.f, height / 2.f,  0.f, //
-        width / 2.f,  -height / 2.f, 0.f, //
-        width / 2.f,  height / 2.f,  0.f, //
+        -0.5, 0.5,  0.f, //
+        0.5,  -0.5,  0.f, //
+        0.5,  0.5,  0.f, //
 
-        0.f,          1.f, //
-        0.f,          0.f, //
-        1.f,          0.f, //
+        0.f,  1.f, //
+        0.f,  0.f, //
+        1.f,  0.f, //
 
-        0.f,          1.f, //
-        1.f,          0.f, //
-        1.f,          1.f, //
+        0.f,  1.f, //
+        1.f,  0.f, //
+        1.f,  1.f, //
     };
 
     if (vbo == 0) glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+
+    if (positionsVbo == 0) glGenBuffers(1, &positionsVbo);
+}
+
+void Billboard::UpdatePositionsVbo()
+{
+    glBindBuffer(GL_ARRAY_BUFFER, positionsVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * instancePositions.size(), &instancePositions[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Billboard::AddComponent(BillboardComponent* newBillboard)
@@ -104,9 +160,29 @@ void Billboard::AddComponent(BillboardComponent* newBillboard)
     newBillboard->SetHeight(height);
     newBillboard->SetMaterial(material);
     newBillboard->SetIterator(iterator);
+
+    instancePositions.push_back(newBillboard->GetParent()->GetGlobalTransform().TranslatePart());
+    UpdatePositionsVbo();
 }
 
 void Billboard::RemoveComponent(std::list<BillboardComponent*>::iterator billboardIterator)
 {
     instanceComponents.erase(billboardIterator);
+}
+
+void Billboard::CheckReloadPositions()
+{
+    if (reloadPositions)
+    {
+        reloadPositions = false;
+
+        instancePositions.clear();
+
+        for (auto component : instanceComponents)
+        {
+            instancePositions.push_back(component->GetParent()->GetGlobalTransform().TranslatePart());
+        }
+
+        UpdatePositionsVbo();
+    }
 }

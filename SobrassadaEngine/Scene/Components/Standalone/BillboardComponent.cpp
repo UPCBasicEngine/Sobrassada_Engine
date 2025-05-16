@@ -150,6 +150,11 @@ void BillboardComponent::RenderEditorInspector()
     if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
 }
 
+void BillboardComponent::ParentUpdated()
+{
+    App->GetBillboardModule()->UpdateTagPositions(billboardTag);
+}
+
 void BillboardComponent::ClearBillboardData()
 {
     currentMaterial     = nullptr;

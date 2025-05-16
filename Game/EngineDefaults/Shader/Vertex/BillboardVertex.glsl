@@ -2,16 +2,18 @@
 
 layout(location=0) in vec3 vertexPosition;
 layout(location=1) in vec2 vertexUV;
-// layout(location=3) in vec3 vertexNormal;
+layout(location=2) in vec3 billboardCenter;
 
-layout(location=0) uniform mat4 proj;
-layout(location=1) uniform mat4 view;
-layout(location=2) uniform mat4 model;
+layout(location=0) uniform vec3 cameraRightVector;
+layout(location=1) uniform vec3 cameraUpVector;
+layout(location=2) uniform vec2 billboardSize;
+layout(location=3) uniform mat4 VP;
 
 out vec2 uv;
 
 void main()
 {
     uv = vertexUV;
-    gl_Position = proj * view * model * vec4(vertexPosition, 1.0f);
+    gl_Position = VP * vec4(billboardCenter + cameraRightVector * vertexPosition.x * billboardSize.x
+    + cameraUpVector * vertexPosition.y * billboardSize.y, 1.f);
 }
