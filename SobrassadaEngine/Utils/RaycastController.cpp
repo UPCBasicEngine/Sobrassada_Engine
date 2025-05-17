@@ -3,10 +3,10 @@
 #include "Application.h"
 #include "FileSystem/Mesh.h"
 #include "GameObject.h"
-#include "SceneModule.h"
-#include "Standalone/MeshComponent.h"
-#include "Standalone/BillboardComponent.h"
 #include "ResourceMesh.h"
+#include "SceneModule.h"
+#include "Standalone/BillboardComponent.h"
+#include "Standalone/MeshComponent.h"
 
 #include "Geometry/Triangle.h"
 #include "Math/float4x4.h"
@@ -65,41 +65,6 @@ namespace RaycastController
                     float3 hitPoint;
 
                     if (localRay.Intersects(currentTriangle, &distance, &hitPoint))
-                    {
-                        if (distance < closestDistance)
-                        {
-                            closestDistance    = distance;
-                            selectedGameObject = gameObject;
-                        }
-                    }
-                }
-            }
-
-            // CHECK IN CASE GAME OBJECT IS A BILLBOARD
-            const BillboardComponent* billboardComponent = gameObject->GetComponent<BillboardComponent*>();
-            if (billboardComponent != nullptr)
-            {
-                float width = billboardComponent->GetWidth();
-                float height = billboardComponent->GetHeight();
-
-                Triangle billboardTriangles[2];
-
-                billboardTriangles[0] = Triangle(
-                    float3(-width / 2.f, height / 2.f, 0.f), float3(-width / 2.f, -height / 2.f, 0.f),
-                    float3(width / 2.f, -height / 2.f, 0.f)
-                );
-                billboardTriangles[1] = Triangle(
-                    float3(-width / 2.f, height / 2.f, 0.f), float3(width / 2.f, -height / 2.f, 0.f),
-                    float3(width / 2.f, height / 2.f, 0.f)
-                );
-
-                // Billboards are just 2 triangles
-                for (int i = 0; i < 2; ++i)
-                {
-                    float distance = std::numeric_limits<float>::infinity();
-                    float3 hitPoint;
-
-                    if (localRay.Intersects(billboardTriangles[i], &distance, &hitPoint))
                     {
                         if (distance < closestDistance)
                         {
