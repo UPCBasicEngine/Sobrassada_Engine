@@ -302,6 +302,8 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         GeometryPassRender(objectsToRender, camera, gbuffer);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
+        NavMeshPassRender(objectsToRender, camera, gbuffer);
     else GeometryPassRender(objectsToRender, camera, gbuffer);
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
@@ -309,7 +311,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         RenderGBufferDebug(gbuffer, framebuffer);
         return;
     }
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
     {
         RenderDepthDebug(gbuffer, camera, framebuffer);
         return;
@@ -929,6 +931,40 @@ void Scene::GeometryPassRender(
     glEnable(GL_BLEND);
 }
 
+void Scene::NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const
+{
+    gbuffer->Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+
+    glDisable(GL_BLEND);
+
+    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+    std::vector<MeshComponent*> navMeshesToRender;
+    std::vector<MeshComponent*> nonNavMeshesToRender;
+
+    for (const auto& gameObject : objectsToRender)
+    {
+        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
+        {
+            if (gameObject->IsNavMeshValid()) navMeshesToRender.push_back(mesh);
+            else nonNavMeshesToRender.push_back(mesh);
+        }
+    }
+
+    batchManager->Render(navMeshesToRender, camera);
+    App->GetOpenGLModule()->SetRenderWireframe(true);
+    batchManager->Render(nonNavMeshesToRender, camera);
+    App->GetOpenGLModule()->SetRenderWireframe(false);
+
+    gbuffer->Unbind();
+
+    glEnable(GL_BLEND);
+}
+
 void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
 {
     unsigned int width  = framebuffer->GetTextureWidth();
@@ -986,7 +1022,7 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
     if (camera == nullptr)
     {
         nearPlane = App->GetCameraModule()->GetNearPlaneDistance();
-        farPlane  = App->GetCameraModule()->GetFarPlaneDistance();
+        farPlane  = 100; // App->GetCameraModule()->GetFarPlaneDistance(); This is too much
     }
     else
     {
@@ -994,8 +1030,8 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
         farPlane  = camera->GetFarPlaneDistance();
     }
 
-    glUniform3fv(glGetUniformLocation(program, "nearPlane"), 1, &nearPlane);
-    glUniform3fv(glGetUniformLocation(program, "farPlane"), 1, &farPlane);
+    glUniform1f(glGetUniformLocation(program, "nearPlane"), nearPlane);
+    glUniform1f(glGetUniformLocation(program, "farPlane"), farPlane);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
