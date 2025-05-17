@@ -4,6 +4,7 @@
 
 class GameObject;
 class AIAgentComponent;
+class SphereColliderComponent;
 
 enum class BansheeStates
 {
@@ -34,10 +35,11 @@ class Banshee : public Character
     void ChangeState();
 
   private:
-    AIAgentComponent* agentAI  = nullptr;
-    BansheeStates currentState = BansheeStates::Idle;
+    AIAgentComponent* agentAI           = nullptr;
+    BansheeStates currentState          = BansheeStates::Idle;
+    SphereColliderComponent* damageArea = nullptr;
 
-    float fleeDistance         = 0.0f;
-    float fleeSpeed            = 10.0f;
-    bool isFleeing             = false;
+    float fleeDistance                  = 0.0f;
+    float fleeSpeed                     = 10.0f;
+    bool isFleeing                      = false;
 };

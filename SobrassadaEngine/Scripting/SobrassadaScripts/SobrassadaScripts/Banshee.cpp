@@ -7,6 +7,7 @@
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 
 Banshee::Banshee(GameObject* parent)
     : Character(
@@ -37,6 +38,10 @@ bool Banshee::Init()
         agentAI->SetLookForward(true);
         speed = agentAI->GetSpeed();
     }
+
+    damageArea = parent->GetComponent<SphereColliderComponent*>();
+    if (damageArea == nullptr) GLOG("Sphere collider not found for Banshee")
+    else damageArea->SetEnabled(false);
 
     return true;
 }
@@ -93,14 +98,10 @@ void Banshee::ChasePlayer()
 
 void Banshee::Flee()
 {
-    // TODO: Could be interesting to increase its speed when flee
-    // The commented lines must be uncommented, bu there is a crash when calling new engine functions from the scripts
-    // (and are declared in the .cpp, in .h work)
-
     if (!isFleeing)
     {
         isFleeing = true;
-        // agentAI->SetSpeed(fleeSpeed);
+        agentAI->SetSpeed(fleeSpeed, 100.0f);
     }
 
     const float3 newPos =
@@ -110,22 +111,25 @@ void Banshee::Flee()
     agentAI->SetPathNavigation(newPos);
 
     const float distance = character->GetLastPosition().Distance(parent->GetPosition());
-    if (distance > fleeDistance)
+    if (attackCdTimer <= 0 && distance > fleeDistance)
     {
-        isFleeing    = false;
-        // agentAI->ResetSpeed();
+        isFleeing = false;
+        agentAI->ResetSpeed();
         currentState = BansheeStates::Scream;
     }
 }
 
 void Banshee::Attack()
 {
+    if (!damageArea) return;
+
     if (!isAttacking)
     {
         GLOG("Banshee attack");
         if (animComponent) animComponent->UseTrigger("Attack");
 
         Character::Attack();
+        damageArea->SetEnabled(true);
         agentAI->PauseMovement();
     }
     else
@@ -134,7 +138,8 @@ void Banshee::Attack()
 
         if (attackTimer <= 0)
         {
-            isAttacking   = false;
+            isAttacking = false;
+            damageArea->SetEnabled(false);
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
             ChangeState();
