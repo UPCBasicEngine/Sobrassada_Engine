@@ -322,12 +322,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     else GeometryPassRender(objectsToRender, camera, gbuffer);
     glPopDebugGroup();
 
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
-    {
-        RenderGBufferDebug(gbuffer, framebuffer);
-        return;
-    }
-
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -371,10 +365,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        TransparentPassRender(objectsToRender, camera, gbuffer, framebuffer);
+        TransparentPassRender(objectsToRender, camera, framebuffer);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
-    else TransparentPassRender(objectsToRender, camera, gbuffer, framebuffer);
+    else TransparentPassRender(objectsToRender, camera, framebuffer);
     glPopDebugGroup();
 }
 
@@ -1066,53 +1060,8 @@ void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Frameb
 #endif
 }
 
-void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
-{
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-    framebuffer->Bind();
-
-    const unsigned int program = App->GetShaderModule()->GetQuadProgram();
-    glUseProgram(program);
-
-    GLint loc = glGetUniformLocation(program, "u_Texture");
-    glUniform1i(loc, 0);
-
-    // Top-left: Diffuse
-    glViewport(0, height / 2, width / 2, height / 2);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Top-right: Specular
-    glViewport(width / 2, height / 2, width / 2, height / 2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->specularTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Bottom-left: Position
-    glViewport(0, 0, width / 2, height / 2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Bottom-right: Normal
-    glViewport(width / 2, 0, width / 2, height / 2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    glViewport(0, 0, width, height);
-}
-
-GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)
-{
-    if (gameObjectsContainer.count(gameObjectUUID))
-    {
-        return gameObjectsContainer[gameObjectUUID];
-    }
-    return nullptr;
-}
-
 void Scene::TransparentPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer
+    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
 ) const
 {
     unsigned int width  = framebuffer->GetTextureWidth();
@@ -1152,6 +1101,15 @@ void Scene::TransparentPassRender(
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
+}
+
+GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)
+{
+    if (gameObjectsContainer.count(gameObjectUUID))
+    {
+        return gameObjectsContainer[gameObjectUUID];
+    }
+    return nullptr;
 }
 
 GameObject* Scene::GetGameObjectByName(const std::string& name)

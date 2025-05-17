@@ -131,10 +131,9 @@ class SOBRASADA_API_ENGINE Scene
         const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(
-        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer,
+        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera,
         Framebuffer* framebuffer
     ) const;
-    void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;
