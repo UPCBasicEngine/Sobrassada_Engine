@@ -56,11 +56,11 @@ CharacterControllerComponent::CharacterControllerComponent(const rapidjson::Valu
     }
     if (initialState.HasMember("DashDistance"))
     {
-        acceleration = initialState["DashDistance"].GetFloat();
+        dashDistance = initialState["DashDistance"].GetFloat();
     }
     if (initialState.HasMember("DashDuration"))
     {
-        acceleration = initialState["DashDuration"].GetFloat();
+        dashDuration = initialState["DashDuration"].GetFloat();
     }
     if (initialState.HasMember("MaxAngularSpeed"))
     {
@@ -103,6 +103,7 @@ void CharacterControllerComponent::Clone(const Component* other)
         maxSpeed                                           = otherCharacter->maxSpeed;
         acceleration                                       = otherCharacter->acceleration;
         dashDuration                                       = otherCharacter->dashDuration;
+        dashDistance                                       = otherCharacter->dashDistance;
         maxAngularSpeed                                    = otherCharacter->maxAngularSpeed;
 
         isRadians                                          = otherCharacter->isRadians;
