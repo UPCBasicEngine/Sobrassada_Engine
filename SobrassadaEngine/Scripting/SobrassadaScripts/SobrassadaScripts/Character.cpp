@@ -11,7 +11,6 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
-#include "Standalone/Physics/CubeColliderComponent.h"
 
 #include <string>
 
@@ -65,7 +64,7 @@ bool Character::Init()
     }
     else
     {
-        weaponCollider = weapon->GetComponent<CubeColliderComponent*>();
+        weaponCollider = weapon->GetComponent<CapsuleColliderComponent*>();
         if (!weaponCollider) GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str())
         else weaponCollider->SetEnabled(false);
     }
@@ -91,8 +90,8 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
     // Melee check
-    CubeColliderComponent* otherWeapon = otherObject->GetComponent<CubeColliderComponent*>();
-    ScriptComponent* otherScript       = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+    CapsuleColliderComponent* otherWeapon = otherObject->GetComponent<CapsuleColliderComponent*>();
+    ScriptComponent* otherScript          = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
 
     if (isInvulnerable) return;
 

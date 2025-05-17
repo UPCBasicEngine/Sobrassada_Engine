@@ -115,7 +115,7 @@ void Banshee::Flee()
     {
         isFleeing = false;
         agentAI->ResetSpeed();
-        currentState = BansheeStates::Scream;
+        ChangeState();
     }
 }
 

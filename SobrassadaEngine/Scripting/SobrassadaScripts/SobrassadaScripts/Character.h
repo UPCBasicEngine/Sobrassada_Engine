@@ -7,7 +7,6 @@
 class GameObject;
 class CharacterControllerComponent;
 class AnimationComponent;
-class CubeColliderComponent;
 class CapsuleColliderComponent;
 
 enum class PlayerDistances
@@ -62,7 +61,7 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     std::string weaponName                      = "";
     GameObject* weapon                          = nullptr;
-    CubeColliderComponent* weaponCollider       = nullptr;
+    CapsuleColliderComponent* weaponCollider    = nullptr;
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;
