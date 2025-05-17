@@ -75,14 +75,15 @@ bool TileFloatScript::Init()
 {
 
     // get final (correct) position, and move the tile to start (rotated, moved and scaled) position
-    float4x4 originalTransform = parent->GetLocalTransform();
-    finalPosition           = originalTransform.TranslatePart();
-    finalRotation           = Quat(originalTransform.RotatePart());
-    finalScale              = originalTransform.GetScale();
+    const float4x4 originalTransform = parent->GetLocalTransform();
+    finalPosition                    = originalTransform.TranslatePart();
+    finalRotation                    = Quat(originalTransform.RotatePart());
+    finalScale                       = originalTransform.GetScale();
 
-    startQuat          = Quat::FromEulerXYZ(startRotation.x, startRotation.y, startRotation.z);
+    startQuat                        = Quat::FromEulerXYZ(startRotation.x, startRotation.y, startRotation.z);
 
-    float4x4 startTransform = float4x4::FromTRS(startPosition, startQuat, startScale);
+    const float4x4 startTransform    = float4x4::FromTRS(startPosition, startQuat, startScale);
+    currentRotationQuat              = startQuat;
 
     parent->SetLocalTransform(startTransform);
     parent->UpdateTransformForGOBranch();
@@ -95,38 +96,54 @@ void TileFloatScript::Update(float deltaTime)
 {
     if (!character) return;
 
-    float distance = character->GetLastPosition().Distance(finalPosition);
+    const float distance = character->GetLastPosition().Distance(finalPosition);
 
     // Disable when far away (for performance)
-    isActive       = (distance <= minDistanceToPlayer * 2);
+    isActive             = (distance <= minDistanceToPlayer * 2);
     if (!isActive) return;
 
-    bool goingToFinal   = distance <= minDistanceToPlayer;
+    const bool goingToFinal = distance <= minDistanceToPlayer;
 
-    float factor        = max(distance, 0.1f);
-    float adjustedSpeed = speed * deltaTime *(1.0f / factor);
+    float factor            = max(distance, 0.1f);
+    float adjustedSpeed     = speed * deltaTime * (1.0f / factor);
+    adjustedSpeed           = std::clamp(adjustedSpeed, 0.0f, 1.0f);
 
-    float3 currentT     = parent->GetPosition();
-    float3 currentS     = parent->GetScale();
+    const float3 currentT   = parent->GetPosition();
+    const float3 currentS   = parent->GetScale();
 
-    Quat currentQuat(parent->GetLocalTransform().RotatePart());
+    const float3 targetT    = goingToFinal ? finalPosition : startPosition;
+    const float3 targetS    = goingToFinal ? finalScale : startScale;
+    Quat targetQuat         = goingToFinal ? finalRotation : startQuat;
 
-    float3 targetT = goingToFinal ? finalPosition : startPosition;
-    float3 targetS = goingToFinal ? finalScale : startScale;
-
-    Quat targetQuat       = goingToFinal ? finalRotation : startQuat;
-
-    float3 newT           = Lerp(currentT, targetT, adjustedSpeed);
-    float3 newS           = Lerp(currentS, targetS, adjustedSpeed);
-
-    if (QuaternionDot(currentQuat, targetQuat) < 0.0f)
+    // Ensure shortest path
+    if (QuaternionDot(currentRotationQuat, targetQuat) < 0.0f)
     {
-        targetQuat = Quat(-targetQuat.x, -targetQuat.y, -targetQuat.z, -targetQuat.w); 
+        targetQuat = Quat(-targetQuat.x, -targetQuat.y, -targetQuat.z, -targetQuat.w);
     }
 
-    Quat newQuat          = Quat::Slerp(currentQuat, targetQuat, adjustedSpeed);
+    float dot                = QuaternionDot(currentRotationQuat, targetQuat);
+    dot                      = std::clamp(dot, -1.0f, 1.0f);
+    const float angle        = acos(dot) * 2.0f;
 
-    float4x4 newTransform = float4x4::FromTRS(newT, newQuat, newS);
+    const bool positionClose = currentT.DistanceSq(targetT) < positionThreshold;
+    const bool scaleClose    = currentS.DistanceSq(targetS) < scaleThreshold;
+    const bool rotationClose = angle < rotationSnapThreshold;
+
+    // Snap to final transform if very close
+    if (positionClose && scaleClose && rotationClose)
+    {
+        currentRotationQuat       = targetQuat;
+        float4x4 snappedTransform = float4x4::FromTRS(targetT, currentRotationQuat, targetS);
+        parent->SetLocalTransform(snappedTransform);
+        parent->UpdateTransformForGOBranch();
+        return;
+    }
+
+    const float3 newT           = Lerp(currentT, targetT, adjustedSpeed);
+    const float3 newS           = Lerp(currentS, targetS, adjustedSpeed);
+    currentRotationQuat         = Quat::Slerp(currentRotationQuat, targetQuat, adjustedSpeed).Normalized();
+
+    const float4x4 newTransform = float4x4::FromTRS(newT, currentRotationQuat, newS);
     parent->SetLocalTransform(newTransform);
     parent->UpdateTransformForGOBranch();
 }
