@@ -4,6 +4,7 @@
 #include "CameraModule.h"
 #include "GameObject.h"
 #include "ResourceMaterial.h"
+#include "ResourceTexture.h"
 #include "ResourcesModule.h"
 #include "ShaderModule.h"
 #include "Standalone/BillboardComponent.h"
@@ -23,6 +24,7 @@ Billboard::~Billboard()
     }
 
     if (material) App->GetResourcesModule()->ReleaseResource(material);
+    if (texture) App->GetResourcesModule()->ReleaseResource(texture);
     glDeleteBuffers(1, &vbo);
 }
 
@@ -60,12 +62,40 @@ void Billboard::UpdateMaterial(UID newMaterialUID)
 
     if (newMaterial != nullptr)
     {
+        useTexture = false;
+
         App->GetResourcesModule()->ReleaseResource(material);
         material = newMaterial;
 
         for (auto billboardComponent : instanceComponents)
         {
             billboardComponent->SetMaterial(material);
+        }
+    }
+}
+
+void Billboard::UpdateTexture(UID newTextureUID)
+{
+    if (newTextureUID == INVALID_UID || App->GetResourcesModule()->RequestResource(newTextureUID) == nullptr)
+    {
+        newTextureUID = FALLBACK_TEXTURE_UID;
+    }
+
+    if (texture != nullptr && texture->GetUID() == newTextureUID) return;
+
+    ResourceTexture* newTexture =
+        dynamic_cast<ResourceTexture*>(App->GetResourcesModule()->RequestResource(newTextureUID));
+
+    if (newTexture != nullptr)
+    {
+        useTexture = true;
+
+        App->GetResourcesModule()->ReleaseResource(texture);
+        texture = newTexture;
+
+        for (auto billboardComponent : instanceComponents)
+        {
+            billboardComponent->SetTexture(texture);
         }
     }
 }
@@ -80,17 +110,27 @@ void Billboard::UpdateLockPitch(bool newLock)
     }
 }
 
+void Billboard::UpdateUseTexture(bool newTexture)
+{
+    useTexture = newTexture;
+
+    for (auto billboardComponent : instanceComponents)
+    {
+        billboardComponent->SetUseTexture(useTexture);
+    }
+}
+
 void Billboard::Render()
 {
-    if (material && vbo && positionsVbo)
+    if ((useTexture ? texture != nullptr : material != nullptr) && vbo && positionsVbo)
     {
         const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
         const float4x4 viewMatrix   = App->GetCameraModule()->GetViewMatrix();
 
-        float4x4 VP           = App->GetCameraModule()->GetProjectionMatrix() * viewMatrix;
+        float4x4 VP                 = App->GetCameraModule()->GetProjectionMatrix() * viewMatrix;
 
         float3 cameraRight          = editorCamera.WorldRight();
-        float3 cameraUp             = lockPitch ? float3(0,1,0) : editorCamera.up;
+        float3 cameraUp             = lockPitch ? float3(0, 1, 0) : editorCamera.up;
         float2 billboardSize        = float2(width, height);
 
         glUseProgram(App->GetShaderModule()->GetBillboardProgram());
@@ -118,9 +158,9 @@ void Billboard::Render()
         glVertexAttribDivisor(2, 1);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, material->GetDiffuseColorID());
+        glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instanceComponents.size());
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)instanceComponents.size());
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }
@@ -136,7 +176,7 @@ void Billboard::CreateVertexBufferObject()
         0.5,  -0.5, 0.f, //
 
         -0.5, 0.5,  0.f, //
-        0.5,  -0.5,  0.f, //
+        0.5,  -0.5, 0.f, //
         0.5,  0.5,  0.f, //
 
         0.f,  1.f, //

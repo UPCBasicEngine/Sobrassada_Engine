@@ -32,7 +32,9 @@ class BillboardModule : public Module
     void UpdateTagWidth(const HashString& tag, float width);
     void UpdateTagHeight(const HashString& tag, float height);
     void UpdateTagMaterial(const HashString& tag, UID material);
+    void UpdateTagTexture(const HashString& tag, UID texture);
     void UpdateTagLockPitch(const HashString& tag, bool lockAxis);
+    void UpdateTagUseTexture(const HashString& tag, bool useTexture);
     void UpdateTagPositions(const HashString& tag);
 
     const std::vector<HashString>& GetTags() const { return billboardTags; };

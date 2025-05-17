@@ -132,11 +132,25 @@ void BillboardModule::UpdateTagMaterial(const HashString& tag, UID material)
     if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateMaterial(material);
 }
 
+void BillboardModule::UpdateTagTexture(const HashString& tag, UID texture)
+{
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateTexture(texture);
+}
+
 void BillboardModule::UpdateTagLockPitch(const HashString& tag, bool lockAxis)
 {
     auto billboardIterator = billboardMap.find(tag);
 
     if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateLockPitch(lockAxis);
+}
+
+void BillboardModule::UpdateTagUseTexture(const HashString& tag, bool useTexture)
+{
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateUseTexture(useTexture);
 }
 
 void BillboardModule::UpdateTagPositions(const HashString& tag)
@@ -155,7 +169,7 @@ bool BillboardModule::FindTag(const HashString& tag, int& outPosition)
     }
 
     int left  = 0;
-    int right = billboardTags.size() - 1;
+    int right = (int)billboardTags.size() - 1;
     while (left <= right)
     {
         outPosition = (right + left) / 2;

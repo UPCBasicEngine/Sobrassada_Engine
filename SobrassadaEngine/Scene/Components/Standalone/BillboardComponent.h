@@ -5,7 +5,11 @@
 
 #include <list>
 
+constexpr const char* ResourceTypeStrings[] = {"Material", "Texture"};
+constexpr int ResourceTypeStringsSize       = sizeof(ResourceTypeStrings) / sizeof(char*);
+
 class ResourceMaterial;
+class ResourceTexture;
 
 class BillboardComponent : public Component
 {
@@ -25,17 +29,22 @@ class BillboardComponent : public Component
 
     void ClearBillboardData();
 
+    bool IsUsingTexture() const { return useTexture; }
+
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
     UID GetMaterialUID() const { return currentMaterialUID; }
+    UID GetTextureUID() const { return currentMaterialUID; }
     const HashString& GetBillboardTag() const { return billboardTag; }
     std::list<BillboardComponent*>::iterator GetBillboardIterator() const { return billboardIterator; }
 
     void SetWidth(float newWidth) { width = newWidth; };
     void SetHeight(float newHeight) { height = newHeight; };
     void SetMaterial(ResourceMaterial* newMaterial);
+    void SetTexture(ResourceTexture* newTexture);
     void SetIterator(std::list<BillboardComponent*>::iterator iterator) { billboardIterator = iterator; };
     void SetLockPitch(bool newPitch) { lockPitch = newPitch; };
+    void SetUseTexture(bool newUseTexture) { useTexture = newUseTexture; };
 
   private:
     float width                       = 1.f;
@@ -49,9 +58,14 @@ class BillboardComponent : public Component
     char newTagName[64]               = "";
     HashString billboardTag           = HashString("");
 
-    std::string currentMaterialName   = "No material";
+    bool useTexture                   = false;
+    std::string currentResourceName   = "No material";
+
     UID currentMaterialUID            = DEFAULT_MATERIAL_UID;
     ResourceMaterial* currentMaterial = nullptr;
+
+    UID currentTextureUID             = FALLBACK_TEXTURE_UID;
+    ResourceTexture* currentTexture   = nullptr;
 
     std::list<BillboardComponent*>::iterator billboardIterator;
 };

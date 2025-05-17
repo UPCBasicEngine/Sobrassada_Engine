@@ -7,6 +7,7 @@
 #include <vector>
 
 class ResourceMaterial;
+class ResourceTexture;
 class BillboardComponent;
 
 class Billboard
@@ -17,8 +18,10 @@ class Billboard
 
     void UpdateWidth(float newWidth);
     void UpdateHeight(float newHeight);
-    void UpdateMaterial(UID newMaterial);
+    void UpdateMaterial(UID newMaterialUID);
+    void UpdateTexture(UID newTextureUID);
     void UpdateLockPitch(bool newLock);
+    void UpdateUseTexture(bool newTexture);
 
     void Render();
 
@@ -40,7 +43,10 @@ class Billboard
     float height               = 1;
     bool lockPitch             = false;
 
+    bool useTexture            = false;
     ResourceMaterial* material = nullptr;
+    ResourceTexture* texture   = nullptr;
+
     std::list<BillboardComponent*> instanceComponents;
     std::vector<float3> instancePositions;
     bool reloadPositions = false;

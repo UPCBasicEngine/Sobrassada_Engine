@@ -2,9 +2,10 @@
 
 #include "Application.h"
 #include "BillboardModule.h"
-#include "ResourceMaterial.h"
 #include "EditorUIModule.h"
 #include "LibraryModule.h"
+#include "ResourceMaterial.h"
+#include "ResourceTexture.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -19,6 +20,7 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
 {
     if (initialState.HasMember("Tag")) billboardTag = HashString(initialState["Tag"].GetString());
     if (initialState.HasMember("Material")) currentMaterialUID = initialState["Material"].GetUint64();
+    if (initialState.HasMember("Texture")) currentTextureUID = initialState["Texture"].GetUint64();
 
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
@@ -42,6 +44,11 @@ void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember(
         "Material", currentMaterial != nullptr ? currentMaterial->GetUID() : DEFAULT_MATERIAL_UID, allocator
     );
+
+    targetState.AddMember(
+        "Texture", currentTexture != nullptr ? currentTexture->GetUID() : FALLBACK_TEXTURE_UID, allocator
+    );
+
     targetState.AddMember("Tag", rapidjson::Value(billboardTag.GetString().c_str(), allocator), allocator);
 
     targetState.AddMember("Height", height, allocator);
@@ -127,7 +134,8 @@ void BillboardComponent::RenderEditorInspector()
 
     ImGui::Separator();
 
-    if (ImGui::Checkbox("Lock Pitch", &lockPitch)) App->GetBillboardModule()->UpdateTagLockPitch(billboardTag, lockPitch);
+    if (ImGui::Checkbox("Lock Pitch", &lockPitch))
+        App->GetBillboardModule()->UpdateTagLockPitch(billboardTag, lockPitch);
 
     if (ImGui::InputFloat("Width", &width)) App->GetBillboardModule()->UpdateTagWidth(billboardTag, width);
     if (ImGui::InputFloat("Height", &height)) App->GetBillboardModule()->UpdateTagHeight(billboardTag, height);
@@ -136,22 +144,69 @@ void BillboardComponent::RenderEditorInspector()
     ImGui::InputInt("Texture Y tiles", &yTiles);
     ImGui::InputFloat("Animation speed", &spriteSpeed);
 
-    if (ImGui::Button("Select material"))
+    ImGui::Separator();
+
+    if (ImGui::BeginCombo("Resource type", ResourceTypeStrings[useTexture ? 1 : 0]))
     {
-        ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
+        for (int i = 0; i < ResourceTypeStringsSize; ++i)
+        {
+            if (ImGui::Selectable(ResourceTypeStrings[i]))
+            {
+                useTexture = i;
+                App->GetBillboardModule()->UpdateTagUseTexture(billboardTag, useTexture);
+            }
+        }
+        ImGui::EndCombo();
     }
 
-    if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
+    if (!useTexture)
     {
+        if (ImGui::Button("Select material"))
+        {
+            ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
+        }
 
-        const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-            CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
-        );
+        if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
+        {
 
-        if (chosenMatUID != INVALID_UID) App->GetBillboardModule()->UpdateTagMaterial(billboardTag, chosenMatUID);
+            const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
+            );
+
+            if (chosenMatUID != INVALID_UID) App->GetBillboardModule()->UpdateTagMaterial(billboardTag, chosenMatUID);
+        }
+
+        if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
     }
+    else
+    {
+        if (ImGui::Button("Select texture"))
+        {
+            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+        }
 
-    if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
+        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+        {
+
+            const UID chosenTexUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+            );
+
+            if (chosenTexUID != INVALID_UID) App->GetBillboardModule()->UpdateTagTexture(billboardTag, chosenTexUID);
+        }
+
+        if (currentTexture != nullptr)
+        {
+            ImGui::Text("Diffuse Texture");
+            ImGui::Image((ImTextureID)(intptr_t)currentTexture->GetTextureID(), ImVec2(256, 256));
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip(
+                    "Texture Dimensions: %d, %d", currentTexture->GetTextureWidth(), currentTexture->GetTextureWidth()
+                );
+            }
+        }
+    }
 }
 
 void BillboardComponent::ParentUpdated()
@@ -161,9 +216,14 @@ void BillboardComponent::ParentUpdated()
 
 void BillboardComponent::ClearBillboardData()
 {
+    currentResourceName = "No material";
+
     currentMaterial     = nullptr;
-    currentMaterialName = "No material";
     currentMaterialUID  = INVALID_UID;
+    
+    currentTexture      = nullptr;
+    currentTextureUID   = INVALID_UID;
+    
     billboardTag        = HashString("");
 
     width               = 1.f;
@@ -177,7 +237,16 @@ void BillboardComponent::ClearBillboardData()
 
 void BillboardComponent::SetMaterial(ResourceMaterial* newMaterial)
 {
+    useTexture          = false;
     currentMaterial     = newMaterial;
-    currentMaterialName = currentMaterial->GetName();
+    currentResourceName = currentMaterial->GetName();
     currentMaterialUID  = currentMaterial->GetUID();
+}
+
+void BillboardComponent::SetTexture(ResourceTexture* newTexture)
+{
+    useTexture          = true;
+    currentTexture      = newTexture;
+    currentResourceName = currentTexture->GetName();
+    currentMaterialUID  = currentTexture->GetUID();
 }
