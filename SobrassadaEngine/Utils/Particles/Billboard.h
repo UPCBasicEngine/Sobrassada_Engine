@@ -18,6 +18,7 @@ class Billboard
     void UpdateWidth(float newWidth);
     void UpdateHeight(float newHeight);
     void UpdateMaterial(UID newMaterial);
+    void UpdateLockPitch(bool newLock);
 
     void Render();
 

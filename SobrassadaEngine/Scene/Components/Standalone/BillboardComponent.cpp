@@ -127,7 +127,7 @@ void BillboardComponent::RenderEditorInspector()
 
     ImGui::Separator();
 
-    ImGui::Checkbox("Lock Pitch", &lockPitch);
+    if (ImGui::Checkbox("Lock Pitch", &lockPitch)) App->GetBillboardModule()->UpdateTagLockPitch(billboardTag, lockPitch);
 
     if (ImGui::InputFloat("Width", &width)) App->GetBillboardModule()->UpdateTagWidth(billboardTag, width);
     if (ImGui::InputFloat("Height", &height)) App->GetBillboardModule()->UpdateTagHeight(billboardTag, height);

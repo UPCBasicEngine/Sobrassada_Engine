@@ -132,6 +132,13 @@ void BillboardModule::UpdateTagMaterial(const HashString& tag, UID material)
     if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateMaterial(material);
 }
 
+void BillboardModule::UpdateTagLockPitch(const HashString& tag, bool lockAxis)
+{
+    auto billboardIterator = billboardMap.find(tag);
+
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateLockPitch(lockAxis);
+}
+
 void BillboardModule::UpdateTagPositions(const HashString& tag)
 {
     auto billboardIterator = billboardMap.find(tag);

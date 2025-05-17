@@ -35,6 +35,7 @@ class BillboardComponent : public Component
     void SetHeight(float newHeight) { height = newHeight; };
     void SetMaterial(ResourceMaterial* newMaterial);
     void SetIterator(std::list<BillboardComponent*>::iterator iterator) { billboardIterator = iterator; };
+    void SetLockPitch(bool newPitch) { lockPitch = newPitch; };
 
   private:
     float width                       = 1.f;

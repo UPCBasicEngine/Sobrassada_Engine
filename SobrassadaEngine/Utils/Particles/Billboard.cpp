@@ -70,6 +70,16 @@ void Billboard::UpdateMaterial(UID newMaterialUID)
     }
 }
 
+void Billboard::UpdateLockPitch(bool newLock)
+{
+    lockPitch = newLock;
+
+    for (auto billboardComponent : instanceComponents)
+    {
+        billboardComponent->SetLockPitch(lockPitch);
+    }
+}
+
 void Billboard::Render()
 {
     if (material && vbo && positionsVbo)
@@ -80,7 +90,7 @@ void Billboard::Render()
         float4x4 VP           = App->GetCameraModule()->GetProjectionMatrix() * viewMatrix;
 
         float3 cameraRight          = editorCamera.WorldRight();
-        float3 cameraUp             = editorCamera.up;
+        float3 cameraUp             = lockPitch ? float3(0,1,0) : editorCamera.up;
         float2 billboardSize        = float2(width, height);
 
         glUseProgram(App->GetShaderModule()->GetBillboardProgram());
