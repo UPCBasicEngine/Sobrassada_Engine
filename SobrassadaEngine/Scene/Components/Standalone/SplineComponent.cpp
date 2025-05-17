@@ -1,8 +1,8 @@
 #include "SplineComponent.h"
 
 #include "GameObject.h"
-#include "imgui.h"
 #include "Math/MathFunc.h"
+#include "imgui.h"
 
 SplineComponent::SplineComponent(UID uid, GameObject* parent) : Component(uid, parent, "Spline", COMPONENT_SPLINE)
 {
@@ -87,10 +87,10 @@ void SplineComponent::RenderEditorInspector()
 void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
-    
+
     targetState.AddMember("Alpha", alpha, allocator);
     targetState.AddMember("Loop", loop, allocator);
-    
+
     rapidjson::Value arr(rapidjson::kArrayType);
 
     for (const auto& p : points)
@@ -134,25 +134,58 @@ float SplineComponent::GetT(const float3& p0, const float3& p1, float tPrev) con
     return tPrev + powf(distance, alpha);
 }
 
-float3 SplineComponent::CatmullRom(
-    const float3& p0, const float3& p1, const float3& p2, const float3& p3, float localT
-) const
+float3
+SplineComponent::CatmullRom(const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT) const
 {
-    float t0 = 0.0f;
-    float t1 = GetT(p0,p1,t0);
-    float t2 = GetT(p1,p2,t1);
-    float t3 = GetT(p2,p3,t2);
+    float t0  = 0.0f;
+    float t1  = GetT(p0, p1, t0);
+    float t2  = GetT(p1, p2, t1);
+    float t3  = GetT(p2, p3, t2);
 
-    float t  = Lerp(t1, t2, localT);
+    float t   = Lerp(t1, t2, segmentT);
 
     float3 A1 = float3::Lerp(p0, p1, (t - t0) / (t1 - t0)); //( t1-t )/( t1-t0 )*p0 + ( t-t0 )/( t1-t0 )*p1
     float3 A2 = float3::Lerp(p1, p2, (t - t1) / (t2 - t1));
     float3 A3 = float3::Lerp(p2, p3, (t - t2) / (t3 - t2));
 
-    float3 B1 = float3::Lerp(A1, A2, (t-t0)/(t2-t0));
-    float3 B2 = float3::Lerp(A2, A3, (t-t1)/(t3-t1));
+    float3 B1 = float3::Lerp(A1, A2, (t - t0) / (t2 - t0));
+    float3 B2 = float3::Lerp(A2, A3, (t - t1) / (t3 - t1));
 
-    return float3::Lerp(B1, B2, (t-t1)/(t2-t1));
+    return float3::Lerp(B1, B2, (t - t1) / (t2 - t1));
 }
 
+size_t SplineComponent::Wrap(int i) const
+{
+    int n = (int)points.size();
+    return (size_t)((i % n + n) % n);
+}
 
+float3 SplineComponent::EvaluateSegment(size_t seg, float segmentT) const
+{
+    auto idx = [this](int k) 
+    { 
+        return loop ? Wrap(k) : (size_t)std::clamp(k, 0, (int)points.size() - 1); 
+    };
+    
+    return CatmullRom(
+        points[idx((int)seg - 1)], 
+        points[idx((int)seg)], 
+        points[idx((int)seg + 1)], 
+        points[idx((int)seg + 2)],
+        segmentT);
+
+}
+
+float3 SplineComponent::Evaluate(float t) const
+{
+    if (points.size() < 2) return float3::zero;
+
+    int maxSeg = loop ? (int)points.size() : (int)points.size() - 3;
+    int seg    = (int)floorf(t);
+    float u    = t - seg;
+
+    if (loop) seg = (int)Wrap(seg);
+    else seg = std::clamp(seg, 0, maxSeg - 1);
+
+    return EvaluateSegment((size_t)seg, u);
+}

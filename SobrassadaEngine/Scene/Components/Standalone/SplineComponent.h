@@ -25,9 +25,12 @@ public:
     void RemovePoint(size_t i);
     float GetT(const float3& p0, const float3& p1, float tPrev) const;
     float3 CatmullRom(
-        const float3& p0, const float3& p1, const float3& p2, const float3& p3, float localT
+        const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT
     ) const;
-    
+    size_t Wrap(int i) const;
+    float3 EvaluateSegment(size_t seg, float segmentT) const;
+    float3 Evaluate(float t) const;
+
     size_t GetNumPoints() const { return points.size(); }
     const float3 GetPoint(size_t i) const { return points[i]; }
 
