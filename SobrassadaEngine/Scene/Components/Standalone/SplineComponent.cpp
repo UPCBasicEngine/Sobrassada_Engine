@@ -11,6 +11,7 @@ SplineComponent::SplineComponent(const rapidjson::Value& initialState, GameObjec
     : Component(initialState, parent)
 {
     if (initialState.HasMember("Tension")) tension = initialState["Tension"].GetFloat();
+    if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
     if (initialState.HasMember("Points"))
     {
         const auto& arrayPoints = initialState["Points"].GetArray();
@@ -85,7 +86,9 @@ void SplineComponent::RenderEditorInspector()
 void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
+    
     targetState.AddMember("Tension", tension, allocator);
+    targetState.AddMember("Loop", loop, allocator);
     rapidjson::Value arr(rapidjson::kArrayType);
 
     for (const auto& p : points)
