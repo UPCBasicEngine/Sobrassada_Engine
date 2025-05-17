@@ -47,17 +47,14 @@ class CanvasComponent : public Component
     void OnMouseButtonReleased() const;
 
     bool IsInWorldSpace() const;
-    float GetScreenScale() const;
     void UpdateBoundingBox();
-    void SetRenderMode(CanvasRenderMode newMode);
+    void ChangeRenderMode(CanvasRenderMode newMode);
     float GetWidth() const;
     float GetHeight() const;
 
-  private:
-    // Reference resolution
-    float referenceWidth              = 1920.0f;
-    float referenceHeight             = 1080.0f;
+    float GetScreenScale() const;
 
+  private:
     CanvasRenderMode renderMode       = CanvasRenderMode::ScreenSpaceOverlay;
     Transform2DComponent* transform2D = nullptr;
 

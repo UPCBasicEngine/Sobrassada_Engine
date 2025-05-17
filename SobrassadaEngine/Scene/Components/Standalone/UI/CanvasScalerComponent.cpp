@@ -1,4 +1,5 @@
 #include "CanvasScalerComponent.h"
+
 #include "Application.h"
 #include "CanvasComponent.h"
 #include "GameObject.h"
@@ -22,7 +23,6 @@ CanvasScalerComponent::CanvasScalerComponent(const rapidjson::Value& initialStat
     }
 }
 
-
 void CanvasScalerComponent::Init()
 {
     canvas      = parent->GetComponent<CanvasComponent*>();
@@ -30,7 +30,7 @@ void CanvasScalerComponent::Init()
 
     if (!canvas || !transform2D)
     {
-        GLOG("[ERROR] CanvasScalerComponent requires a CanvasComponent and Transform2DComponent.");
+        GLOG("CanvasScalerComponent requires a CanvasComponent and Transform2DComponent.");
         return;
     }
 }
@@ -39,16 +39,9 @@ void CanvasScalerComponent::Update(float deltaTime)
 {
     if (!canvas || !transform2D) return;
 
-    float currentWidth  = (float)App->GetWindowModule()->GetWidth();
-    float currentHeight = (float)App->GetWindowModule()->GetHeight();
-
-    float scaleX        = currentWidth / referenceResolution.x;
-    float scaleY        = currentHeight / referenceResolution.y;
-    float scale         = std::min(scaleX, scaleY);
-
-    transform2D->size   = referenceResolution * scale;
+    float2 windowSize = float2(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight());
+    scale             = ComputeScale(windowSize);
 }
-
 
 void CanvasScalerComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
@@ -70,14 +63,16 @@ void CanvasScalerComponent::RenderEditorInspector()
     {
         if (canvas && transform2D)
         {
-            float currentWidth  = (float)App->GetWindowModule()->GetWidth();
-            float currentHeight = (float)App->GetWindowModule()->GetHeight();
-
-            float scaleX        = currentWidth / referenceResolution.x;
-            float scaleY        = currentHeight / referenceResolution.y;
-            float scale         = std::min(scaleX, scaleY);
-
-            transform2D->size   = referenceResolution * scale;
+            float2 windowSize = float2(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight());
+            scale             = ComputeScale(windowSize);
+            transform2D->size = referenceResolution * scale;
         }
     }
+}
+
+float CanvasScalerComponent::ComputeScale(float2 windowSize) const
+{
+    float scaleX = windowSize.x / referenceResolution.x;
+    float scaleY = windowSize.y / referenceResolution.y;
+    return std::min(scaleX, scaleY);
 }

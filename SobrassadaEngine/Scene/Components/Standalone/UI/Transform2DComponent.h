@@ -1,9 +1,9 @@
 #pragma once
 
+#include "CanvasComponent.h"
 #include "Component.h"
 #include "Math/float2.h"
 #include "Math/float4.h"
-#include "CanvasComponent.h"
 
 class CanvasComponent;
 
@@ -29,7 +29,7 @@ class Transform2DComponent : public Component
     void UpdateParent3DTransform();
     void OnTransform3DUpdated(const float4x4& transform3D);
     void OnParentChange();
-    void OnCanvasRenderModeChanged(CanvasComponent::CanvasRenderMode newMode);
+    void OnCanvasRenderModeChanged(CanvasComponent::CanvasRenderMode newMode, const float2& savedWorldPos);
     float2 GetAbsoluteWorldPosition() const;
     void GetCanvas();
     void AdaptToParentChanges();
@@ -41,6 +41,7 @@ class Transform2DComponent : public Component
     void RemoveChild(Transform2DComponent* child);
     void RemoveParent() { parentTransform = nullptr; }
     CanvasComponent* GetParentCanvas() const { return parentCanvas; }
+    float2 GetScaledSize() const;
 
   private:
     bool IsRootTransform2D() const;
@@ -66,8 +67,8 @@ class Transform2DComponent : public Component
     float2 anchorsY;
 
   private:
-    CanvasComponent* parentCanvas;
-    Transform2DComponent* parentTransform;
+    CanvasComponent* parentCanvas         = nullptr;
+    Transform2DComponent* parentTransform = nullptr;
     std::vector<Transform2DComponent*> childTransforms;
 
     bool transform2DUpdated;

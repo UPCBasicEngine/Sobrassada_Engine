@@ -1,8 +1,9 @@
-#include "CanvasComponent.h"
+﻿#include "CanvasComponent.h"
 
 #include "Application.h"
 #include "ButtonComponent.h"
 #include "CameraModule.h"
+#include "CanvasScalerComponent.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameUIModule.h"
@@ -24,7 +25,7 @@ CanvasComponent::CanvasComponent(UID uid, GameObject* parent) : Component(uid, p
 CanvasComponent::CanvasComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    renderMode    = static_cast<CanvasRenderMode>(initialState["RenderMode"].GetInt());
+    renderMode = static_cast<CanvasRenderMode>(initialState["RenderMode"].GetInt());
 }
 
 CanvasComponent::~CanvasComponent()
@@ -97,21 +98,15 @@ void CanvasComponent::RenderDebug(float deltaTime, const float3& color)
 {
     if (!IsEffectivelyEnabled()) return;
 
-    float x = parent->GetGlobalTransform().TranslatePart().x;
-    float y = parent->GetGlobalTransform().TranslatePart().y;
+    float x     = parent->GetGlobalTransform().TranslatePart().x;
+    float y     = parent->GetGlobalTransform().TranslatePart().y;
 
-    App->GetDebugDrawModule()->DrawLine(
-        float3(x - GetWidth() / 2, y + GetHeight() / 2, 0), float3::unitX, GetWidth(), color
-    );
-    App->GetDebugDrawModule()->DrawLine(
-        float3(x - GetWidth() / 2, y - GetHeight() / 2, 0), float3::unitX, GetWidth(), color
-    );
-    App->GetDebugDrawModule()->DrawLine(
-        float3(x - GetWidth() / 2, y + GetHeight() / 2, 0), -float3::unitY, GetHeight(), color
-    );
-    App->GetDebugDrawModule()->DrawLine(
-        float3(x + GetWidth() / 2, y + GetHeight() / 2, 0), -float3::unitY, GetHeight(), color
-    );
+    float2 size = transform2D ? transform2D->GetScaledSize() : float2::zero;
+
+    App->GetDebugDrawModule()->DrawLine(float3(x - size.x / 2, y + size.y / 2, 0), float3::unitX, size.x, color);
+    App->GetDebugDrawModule()->DrawLine(float3(x - size.x / 2, y - size.y / 2, 0), float3::unitX, size.x, color);
+    App->GetDebugDrawModule()->DrawLine(float3(x - size.x / 2, y + size.y / 2, 0), -float3::unitY, size.y, color);
+    App->GetDebugDrawModule()->DrawLine(float3(x + size.x / 2, y + size.y / 2, 0), -float3::unitY, size.y, color);
 }
 
 // Renders all UI elements under this canvas using appropriate view/projection based on render mode
@@ -160,10 +155,11 @@ void CanvasComponent::OnWindowResize(const float width, const float height)
 {
     if (renderMode != CanvasRenderMode::ScreenSpaceOverlay || !transform2D) return;
 
+    if (parent->GetComponent<CanvasScalerComponent*>()) return;
+
     transform2D->size = float2(width, height);
     UpdateBoundingBox();
 }
-
 
 void CanvasComponent::UpdateChildren()
 {
@@ -227,7 +223,7 @@ void CanvasComponent::RenderEditorInspector()
         int currentMode     = static_cast<int>(renderMode);
         if (ImGui::Combo("Render Mode", &currentMode, modes, IM_ARRAYSIZE(modes)))
         {
-            SetRenderMode(static_cast<CanvasRenderMode>(currentMode));
+            ChangeRenderMode(static_cast<CanvasRenderMode>(currentMode));
         }
     }
 }
@@ -247,16 +243,6 @@ bool CanvasComponent::IsInWorldSpace() const
     return renderMode == CanvasRenderMode::WorldSpace;
 }
 
-float CanvasComponent::GetScreenScale() const
-{
-    const float referenceWidth  = 1920.0f;
-    const float referenceHeight = 1080.0f;
-
-    float scaleX                = GetWidth() / referenceWidth;
-    float scaleY                = GetHeight() / referenceHeight;
-    return std::min(scaleX, scaleY);
-}
-
 void CanvasComponent::UpdateBoundingBox()
 {
     float2 center      = transform2D->GetGlobalPosition();
@@ -268,8 +254,6 @@ void CanvasComponent::UpdateBoundingBox()
     );
 }
 
-
-
 float CanvasComponent::GetWidth() const
 {
     return transform2D ? transform2D->size.x : 0.0f;
@@ -279,9 +263,12 @@ float CanvasComponent::GetHeight() const
     return transform2D ? transform2D->size.y : 0.0f;
 }
 
-void CanvasComponent::SetRenderMode(CanvasRenderMode newMode)
+void CanvasComponent::ChangeRenderMode(CanvasRenderMode newMode)
 {
     GLOG("Canvas switching to: %d", newMode);
+
+    // Store the world position of each child before switching
+    std::unordered_map<UID, float2> savedWorldPositions;
 
     for (UID childUID : parent->GetChildren())
     {
@@ -290,11 +277,28 @@ void CanvasComponent::SetRenderMode(CanvasRenderMode newMode)
 
         if (Transform2DComponent* transform = child->GetComponent<Transform2DComponent*>())
         {
-            transform->OnCanvasRenderModeChanged(newMode); 
+            savedWorldPositions[child->GetUID()] = transform->GetAbsoluteWorldPosition();
         }
     }
 
     renderMode = newMode;
-
     UpdateBoundingBox();
+
+    // Update each child's local position based on their previous world position
+    for (UID childUID : parent->GetChildren())
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (!child) continue;
+
+        if (Transform2DComponent* transform = child->GetComponent<Transform2DComponent*>())
+        {
+            transform->OnCanvasRenderModeChanged(newMode, savedWorldPositions[child->GetUID()]);
+        }
+    }
+}
+
+float CanvasComponent::GetScreenScale() const
+{
+    CanvasScalerComponent* scaler = parent->GetComponent<CanvasScalerComponent*>();
+    return scaler ? scaler->GetScale() : 1.0f;
 }

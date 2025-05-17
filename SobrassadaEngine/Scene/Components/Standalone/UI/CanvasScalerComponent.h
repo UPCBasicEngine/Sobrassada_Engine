@@ -13,22 +13,23 @@ class CanvasScalerComponent : public Component
 
     CanvasScalerComponent(UID uid, GameObject* parent);
     CanvasScalerComponent(const rapidjson::Value& initialState, GameObject* parent);
+
     void Init() override;
     void Update(float deltaTime) override;
-
     void Render(float deltaTime) override {};
     void RenderDebug(float deltaTime) override {};
     void Save(rapidjson::Value& state, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override {};
     void RenderEditorInspector() override;
 
-
-    void SetReferenceResolution(const float2& resolution);
-    float2 GetReferenceResolution() const;
+    float ComputeScale(float2 windowSize) const;
+    float GetScale() const { return scale; }
 
   private:
     float2 referenceResolution        = float2(1280.0f, 720.0f);
 
     CanvasComponent* canvas           = nullptr;
     Transform2DComponent* transform2D = nullptr;
+
+    float scale                       = 1.0f;
 };
