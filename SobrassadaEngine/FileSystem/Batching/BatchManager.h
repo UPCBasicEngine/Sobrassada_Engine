@@ -24,5 +24,6 @@ class BatchManager
     GeometryBatch* CreateNewBatch(const MeshComponent* mesh);
 
   private:
-    std::vector<GeometryBatch*> batches;
+    std::vector<GeometryBatch*> opaqueBatches;
+    std::vector<GeometryBatch*> transparentBatches;
 };

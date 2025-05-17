@@ -113,6 +113,7 @@ void GeometryBatch::LoadData()
             const std::vector<unsigned int>& indices = resource->GetIndices();
             totalVertices.insert(totalVertices.end(), vertices.begin(), vertices.end());
             totalIndices.insert(totalIndices.end(), indices.begin(), indices.end());
+
             uniqueMeshesMap[resource] = uniqueMeshesMap.size();
 
             AccMeshCount newMeshCount;

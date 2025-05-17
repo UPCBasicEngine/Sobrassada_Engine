@@ -32,30 +32,49 @@ BatchManager::~BatchManager()
 
 void BatchManager::UnloadAllBatches()
 {
-    for (GeometryBatch* it : batches)
+    for (GeometryBatch* it : opaqueBatches)
     {
         delete it;
     }
-    batches.clear();
-    batches.shrink_to_fit();
+    opaqueBatches.clear();
+    opaqueBatches.shrink_to_fit();
+
+    for (GeometryBatch* it : transparentBatches)
+    {
+        delete it;
+    }
+    transparentBatches.clear();
+    transparentBatches.shrink_to_fit();
 }
 
 void BatchManager::RemoveBatch(GeometryBatch* removeBatch)
 {
-    for (int i = 0; i < batches.size(); i++)
+    for (int i = 0; i < opaqueBatches.size(); i++)
     {
-        if (batches[i] == removeBatch)
+        if (opaqueBatches[i] == removeBatch)
         {
-            delete batches[i];
-            batches.erase(batches.begin() + i);
+            delete opaqueBatches[i];
+            opaqueBatches.erase(opaqueBatches.begin() + i);
             break;
+        }
+    }
+
+    for (int i = 0; i < transparentBatches.size(); ++i)
+    {
+        if (transparentBatches[i] == removeBatch)
+        {
+            delete transparentBatches[i];
+            transparentBatches.erase(transparentBatches.begin() + i);
+            return;
         }
     }
 }
 
 void BatchManager::LoadData()
 {
-    for (GeometryBatch* it : batches)
+    for (GeometryBatch* it : opaqueBatches)
+        it->LoadData();
+    for (GeometryBatch* it : transparentBatches)
         it->LoadData();
 }
 
@@ -69,7 +88,7 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    for (GeometryBatch* it : batches)
+    for (GeometryBatch* it : opaqueBatches)
     {
         std::vector<MeshComponent*> batchMeshes;
         for (MeshComponent* mesh : meshesToRender)
@@ -82,7 +101,7 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
 
         if (batchMeshes.empty()) continue;
 
-        const unsigned int program = it->GetIsSpecular() ? App->GetShaderModule()->GetSpecularGeometryPassProgram() 
+        const unsigned int program = it->GetIsSpecular() ? App->GetShaderModule()->GetSpecularGeometryPassProgram()
                                                          : App->GetShaderModule()->GetMetallicGeometryPassProgram();
 
         const auto start           = std::chrono::high_resolution_clock::now();
@@ -119,7 +138,7 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    for (GeometryBatch* it : batches)
+    for (GeometryBatch* it : transparentBatches)
     {
         std::vector<MeshComponent*> batchMeshes;
         for (MeshComponent* mesh : meshesToRender)
@@ -141,7 +160,7 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
                     float distanceA = (a->GetParent()->GetPosition() - camera->GetCameraPosition()).LengthSq();
                     float distanceB = (b->GetParent()->GetPosition() - camera->GetCameraPosition()).LengthSq();
 
-                    return distanceA < distanceB;
+                    return distanceA > distanceB;
                 }
                 else
                 {
@@ -150,7 +169,7 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
                     float distanceB =
                         (b->GetParent()->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
 
-                    return distanceA < distanceB;
+                    return distanceA > distanceB;
                 }
             }
         );
@@ -183,20 +202,36 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
 
 GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
 {
-    if (batches.empty())
+    const bool isTransparent = component->GetRenderMode() == 1;
+    if (isTransparent)
     {
-        return CreateNewBatch(component);
+        if (transparentBatches.empty()) return CreateNewBatch(component);
     }
+    else if (opaqueBatches.empty()) return CreateNewBatch(component);
 
     const ResourceMesh* mesh         = component->GetResourceMesh();
     const ResourceMaterial* material = component->GetResourceMaterial();
 
-    for (GeometryBatch* it : batches)
+    if (isTransparent)
     {
-        if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
-            it->GetHasBones() == component->GetHasBones())
+        for (GeometryBatch* it : transparentBatches)
         {
-            return it;
+            if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
+                it->GetHasBones() == component->GetHasBones())
+            {
+                return it;
+            }
+        }
+    }
+    else
+    {
+        for (GeometryBatch* it : opaqueBatches)
+        {
+            if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
+                it->GetHasBones() == component->GetHasBones())
+            {
+                return it;
+            }
         }
     }
 
@@ -205,7 +240,9 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
 
 GeometryBatch* BatchManager::CreateNewBatch(const MeshComponent* component)
 {
-    GeometryBatch* newBatch = new GeometryBatch(component);
-    batches.push_back(newBatch);
+    GeometryBatch* newBatch  = new GeometryBatch(component);
+    const bool isTransparent = component->GetRenderMode() == 1;
+    if (isTransparent) transparentBatches.push_back(newBatch);
+    else opaqueBatches.push_back(newBatch);
     return newBatch;
 }
