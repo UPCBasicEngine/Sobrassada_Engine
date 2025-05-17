@@ -4,6 +4,7 @@
 #include "Character.h"
 #include "CuChulainn.h"
 #include "EditorUIModule.h"
+#include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Projectile.h"
@@ -12,6 +13,7 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 
 #include <string>
 
@@ -50,8 +52,7 @@ bool Character::Init()
     else animComponent->OnPlay(false);
 
     characterCollider = parent->GetComponent<CapsuleColliderComponent*>();
-    if (!characterCollider)
-        GLOG("Character capsule collider component not found for %s", parent->GetName().c_str())
+    if (!characterCollider) GLOG("Character capsule collider component not found for %s", parent->GetName().c_str())
 
     weapon = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(weaponName);
     if (!weapon)
@@ -61,14 +62,11 @@ bool Character::Init()
     else
     {
         weaponCollider = weapon->GetComponent<CubeColliderComponent*>();
-        if (!weaponCollider)
-            GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str())
+        if (!weaponCollider) GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str())
         else weaponCollider->SetEnabled(false);
     }
-    lastAttackTime = -1.0f;
-    lastTimeHit    = -1.0f;
 
-    startPos       = parent->GetPosition();
+    startPos = parent->GetPosition();
 
     return true;
 }
@@ -100,33 +98,50 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
-    // Melee check
-    CubeColliderComponent* otherWeapon = otherObject->GetComponent<CubeColliderComponent*>();
-    ScriptComponent* otherScript       = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
-
+    // ---- Damage Collisions ----
     if (isInvulnerable) return;
+
+    // Melee check
+    CubeColliderComponent* otherWeapon = otherObject->GetComponent<CubeColliderComponent*>(); // TODO: capsuleColliders
+    ScriptComponent* otherScript       = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         if (enemyScript)
         {
-            if (!enemyScript->isAttacking) return;
+            if (!enemyScript->isAttacking) return; // needed?
             TakeDamage(enemyScript->damage);
+
+            return;
         }
     }
 
-    // Projectile check
     otherScript = otherObject->GetComponent<ScriptComponent*>();
-
     if (otherScript)
     {
+        // Projectile check
         Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
+
+            return;
+        }
+
+        // Trap check
+        FireballTrap* fireballScript = otherScript->GetScriptByType<FireballTrap>();
+        if (fireballScript)
+        {
+            SphereColliderComponent* damageCollider = otherObject->GetComponent<SphereColliderComponent*>();
+
+            if (damageCollider && damageCollider->GetEnabled())
+            {
+                TakeDamage(fireballScript->GetDamage());
+                damageCollider->SetEnabled(false);
+            }
         }
     }
 }
@@ -197,7 +212,7 @@ bool Character::CheckDistanceWithPoint(const float3& point) const
 
 void Character::Die()
 {
-    //GLOG("%s dead", parent->GetName().c_str());
+    // GLOG("%s dead", parent->GetName().c_str());
     isDead = true;
     OnDeath();
 
