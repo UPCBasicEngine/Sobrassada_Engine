@@ -20,7 +20,8 @@ class ShaderModule : public Module
     int GetSpecularGeometryPassProgram() const;
     int GetLightingPassProgram() const;
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
-        int GetQuadProgram() const { return quadProgram; };
+    int GetQuadProgram() const { return quadProgram; };
+    int GetDepthProgram() const { return depthProgram; };
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -41,4 +42,5 @@ class ShaderModule : public Module
     int uiWidgetProgram                = -1;
 
     int quadProgram                    = -1;
+    int depthProgram                   = -1;
 };

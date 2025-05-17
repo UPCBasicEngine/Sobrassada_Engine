@@ -133,6 +133,7 @@ class SOBRASADA_API_ENGINE Scene
         Framebuffer* framebuffer
     ) const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;

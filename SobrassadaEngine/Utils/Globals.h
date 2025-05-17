@@ -155,6 +155,7 @@ constexpr const char* GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH =
     "./EngineDefaults/Shader/Fragment/gBufferSpecularFragment.glsl";
 constexpr const char* LIGHTINGPASS_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/IBLLightingPass.glsl";
 constexpr const char* QUAD_FRAGMENT_SHADER_PATH        = "./EngineDefaults/Shader/Fragment/QuadFragment.glsl";
+constexpr const char* DEPTH_FRAGMENT_SHADER_PATH        = "./EngineDefaults/Shader/Fragment/DepthFragment.glsl";
 
 using UID                                                = uint64_t;
 

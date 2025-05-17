@@ -23,7 +23,9 @@ enum class DebugOptions : uint8_t
     RENDER_CAMERA_RAY,
     RENDER_NAVMESH,
     RENDER_PHYSICS_WORLD,
-    RENDER_GBUFFERS
+    RENDER_GBUFFERS,
+    RENDER_DEPTH,
+    RENDER_NAVMESH_MESHES
 };
 
 enum DrawNavMeshFlags
@@ -33,8 +35,9 @@ enum DrawNavMeshFlags
     DRAWNAVMESH_COLOR_TILES = 0x04
 };
 
-constexpr const char* DebugStrings[] = {"Render Lights", "Render Wireframe", "AABB",    "OBB",           "Octree",
-                                        "Dynamic Tree",  "Camera Ray",       "Navmesh", "Physics World", "GBuffers"};
+constexpr const char* DebugStrings[] = {"Render Lights", "Render Wireframe", "AABB",       "OBB",
+                                        "Octree",        "Dynamic Tree",     "Camera Ray", "Navmesh",
+                                        "Physics World", "GBuffers",         "Depth",      "Navmesh Meshes"};
 
 class DebugDrawModule : public Module
 {
@@ -56,7 +59,7 @@ class DebugDrawModule : public Module
         bool enableDepth = true
     );
     void DrawLine(const btVector3& from, const btVector3& to, const btVector3& color);
-   
+
     void DrawFrustrum(float4x4 frustumProj, float4x4 frustumView);
     void DrawCircle(const float3& center, const float3& upVector, const float3& color, const float radius);
     void DrawSphere(const float3& center, const float3& color, const float radius);

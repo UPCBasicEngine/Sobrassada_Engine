@@ -309,6 +309,11 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         RenderGBufferDebug(gbuffer, framebuffer);
         return;
     }
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
+    {
+        RenderDepthDebug(gbuffer, camera, framebuffer);
+        return;
+    }
 
     LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
 
@@ -958,6 +963,40 @@ void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glViewport(0, 0, width, height);
+}
+
+void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetDepthProgram();
+    glUseProgram(program);
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    glViewport(0, 0, width, height);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+
+    float nearPlane;
+    float farPlane;
+    if (camera == nullptr)
+    {
+        nearPlane = App->GetCameraModule()->GetNearPlaneDistance();
+        farPlane  = App->GetCameraModule()->GetFarPlaneDistance();
+    }
+    else
+    {
+        nearPlane = camera->GetNearPlaneDistance();
+        farPlane  = camera->GetFarPlaneDistance();
+    }
+
+    glUniform3fv(glGetUniformLocation(program, "nearPlane"), 1, &nearPlane);
+    glUniform3fv(glGetUniformLocation(program, "farPlane"), 1, &farPlane);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void Scene::LightingPassRender(
