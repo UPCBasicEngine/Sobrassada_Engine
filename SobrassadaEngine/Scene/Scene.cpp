@@ -304,6 +304,12 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     }
     else GeometryPassRender(objectsToRender, camera, gbuffer);
 
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
+    {
+        RenderGBufferDebug(gbuffer, framebuffer);
+        return;
+    }
+
     LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
 
     {
@@ -918,6 +924,42 @@ void Scene::GeometryPassRender(
     glEnable(GL_BLEND);
 }
 
+void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetQuadProgram();
+    glUseProgram(program);
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    // Top-left: Diffuse
+    glViewport(0, height / 2, width / 2, height / 2);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Top-right: Specular
+    glViewport(width / 2, height / 2, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->specularTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Bottom-left: Position
+    glViewport(0, 0, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Bottom-right: Normal
+    glViewport(width / 2, 0, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glViewport(0, 0, width, height);
+}
+
 void Scene::LightingPassRender(
     const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
     Framebuffer* framebuffer
@@ -1296,7 +1338,7 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
             prefab == nullptr ? (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID) : prefab;
 
         if (resourcePrefab == nullptr) return; // If the prefab file is corrupted or not available, loading is cancelled
-        
+
         const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsVector();
         const std::vector<int>& parentIndices            = resourcePrefab->GetParentIndices();
 
