@@ -38,7 +38,6 @@ class CubeColliderComponent : public Component
 
   public:
     bool generateCallback         = true;
-    bool freezeRotation           = false;
     bool fitToSize                = false;
     float mass                    = 1.f;
     float3 centerOffset           = float3::zero;
@@ -47,7 +46,7 @@ class CubeColliderComponent : public Component
     ColliderType colliderType     = ColliderType::DYNAMIC;
 
     btRigidBody* rigidBody        = nullptr;
-    BulletMotionState motionState = BulletMotionState(nullptr, float3::zero, float3::zero, false);
+    BulletMotionState motionState = BulletMotionState(nullptr, float3::zero, float3::zero);
     CollisionDelegate onCollissionCallback;
     BulletUserPointer userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
     ColliderLayer layer           = ColliderLayer::WORLD_OBJECTS;

@@ -39,6 +39,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string>
+#include <algorithm>
 
 EditorUIModule::EditorUIModule() : width(0), height(0)
 {
@@ -1166,6 +1167,13 @@ void EditorUIModule::RenderBasicTransformModifiers(
     ImGui::Checkbox("Lock axis", &lockScaleAxis);
 }
 
+std::string EditorUIModule::ToLower(const std::string& str)
+{
+    std::string lowered = str;
+    std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) { return std::tolower(c); });
+    return lowered;
+}
+
 template <typename T>
 T EditorUIModule::RenderResourceSelectDialog(
     const char* id, const std::unordered_map<HashString, T>& availableResources, const T& defaultResource
@@ -1176,20 +1184,21 @@ T EditorUIModule::RenderResourceSelectDialog(
     {
         ImGui::InputText("Search", searchTextResource, IM_ARRAYSIZE(searchTextResource));
 
+        const std::string searchLower = ToLower(searchTextResource);
+
         ImGui::Separator();
         if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
         {
             for (const auto& valuePair : availableResources)
             {
+                const std::string keyLower = ToLower(valuePair.first.GetString());
+                if (keyLower.find(searchLower) != std::string::npos)
                 {
-                    if (valuePair.first.GetString().find(searchTextResource) != std::string::npos)
+                    if (ImGui::Selectable(valuePair.first.c_str(), false))
                     {
-                        if (ImGui::Selectable(valuePair.first.c_str(), false))
-                        {
-                            result = valuePair.second;
-                            memset(searchTextResource, 0, sizeof searchTextResource);
-                            ImGui::CloseCurrentPopup();
-                        }
+                        result = valuePair.second;
+                        memset(searchTextResource, 0, sizeof searchTextResource);
+                        ImGui::CloseCurrentPopup();
                     }
                 }
             }

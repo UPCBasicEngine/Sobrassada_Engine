@@ -75,6 +75,7 @@ class EditorUIModule : public Module
         float3& scale
     ) const;
 
+    std::string ToLower(const std::string& str);
     template <typename T>
     T RenderResourceSelectDialog(
         const char* id, const std::unordered_map<HashString, T>& availableResources, const T& defaultResource

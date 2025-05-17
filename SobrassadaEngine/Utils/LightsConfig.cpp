@@ -87,13 +87,13 @@ void LightsConfig::InitSkybox()
     glBindVertexArray(0);
 
     // default skybox texture
-    if(skyboxID == 0) LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap"));
+    if (skyboxID == 0) LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap"));
 
     cubemapIrradiance = CubeMapToTexture(irradianceMapResolution, irradianceMapResolution);
     irradianceHandle  = glGetTextureHandleARB(cubemapIrradiance);
     glMakeTextureHandleResidentARB(irradianceHandle);
 
-    prefilteredEnvironmentMap       = PreFilteredEnvironmentMapGeneration(prefilteredMapResolution, prefilteredMapResolution);
+    prefilteredEnvironmentMap = PreFilteredEnvironmentMapGeneration(prefilteredMapResolution, prefilteredMapResolution);
     prefilteredEnvironmentMapHandle = glGetTextureHandleARB(prefilteredEnvironmentMap);
     glMakeTextureHandleResidentARB(prefilteredEnvironmentMapHandle);
 
@@ -442,7 +442,7 @@ void LightsConfig::SetLightsShaderData() const
 
 void LightsConfig::SetDirectionalLightShaderData() const
 {
-    if (directionalLight && directionalLight->IsEffectivelyEnabled())
+    if (directionalLight != nullptr && directionalLight->IsEffectivelyEnabled())
     {
         Lights::DirectionalLightShaderData dirLightData(
             float4(directionalLight->GetDirection(), 0.0f),
@@ -451,6 +451,14 @@ void LightsConfig::SetDirectionalLightShaderData() const
 
         glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Lights::DirectionalLightShaderData), &dirLightData);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 3, directionalBufferId);
+    }
+    else
+    {
+        Lights::DirectionalLightShaderData empty = {};
+
+        glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(empty), &empty);
         glBindBufferBase(GL_UNIFORM_BUFFER, 3, directionalBufferId);
     }
 }

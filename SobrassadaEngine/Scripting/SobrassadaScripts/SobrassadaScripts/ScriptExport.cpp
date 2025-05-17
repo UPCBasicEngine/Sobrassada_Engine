@@ -27,6 +27,25 @@
 #define SOBRASSADA_API __declspec(dllimport)
 #endif
 
+constexpr const char* scripts[] = {
+    "RotateGameObjectScript",          // SCRIPT_ROTATE_GAME_OBJECT
+    "ButtonScript",              // SCRIPT_BUTTON
+    "GodModeScript",                   // SCRIPT_GOD_MODE
+    "CuChulainnScript",          // SCRIPT_CU_CHULAINN
+    "SoldierScript",             // SCRIPT_SOLDIER
+    "ExitGameScript",            // SCRIPT_EXIT_GAME
+    "FullscreenToggleScript",    // SCRIPT_FULLSCREEN_TOGGLE
+    "VSyncToggleScript",         // SCRIPT_VSYNC_TOGGLE
+    "PauseMenuScript",           // SCRIPT_PAUSE_MENU
+    "OptionsMenuSwitcherScript", // SCRIPT_OPTIONS_MENU_SWITCHER
+    "MainMenuSelectorScript",    // SCRIPT_MAIN_MENU_SELECTOR
+    "PressAnyKeyScript",         // SCRIPT_PRESS_ANY_KEY
+    "CameraMovement",            // SCRIPT_CAMERA_MOVEMENT
+    "Projectile",                // SCRIPT_PROJECTILE
+    "FreeCamera",                // SCRIPT_FREE_CAMERA
+    "SpawnPoint"                 // SCRIPT_SPAWN_POINT
+};
+
 Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
@@ -57,8 +76,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
     /* Utils */
-    if (scriptType == "RotateGameObject") return new RotateGameObject(parent);
-    if (scriptType == "GodMode") return new GodMode(parent);
+    if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
+    if (scriptType == "GodModeScript") return new GodMode(parent);
     return nullptr;
 }
 
@@ -71,4 +90,27 @@ extern "C" SOBRASSADA_API void FreeSobrassadaScripts()
 {
     // GLOG("Sobrassada Scripts deleted");
     AppEngine = nullptr;
+}
+
+extern "C" SOBRASSADA_API const int GetScriptCount()
+{
+    return sizeof(scripts) / sizeof(scripts[0]);
+}
+
+extern "C" SOBRASSADA_API const char* GetScriptName(const int index)
+{
+    if (index < 0 || index >= GetScriptCount()) return nullptr;
+    return scripts[index];
+}
+
+extern "C" SOBRASSADA_API const int GetScriptIndexByName(const std::string& scriptString)
+{
+    for (int i = 0; i < GetScriptCount(); ++i)
+    {
+        if (scriptString == scripts[i])
+        {
+            return i;
+        }
+    }
+    return 0;
 }

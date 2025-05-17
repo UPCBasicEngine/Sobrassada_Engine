@@ -85,6 +85,9 @@
     <ClInclude Include="SpawnPoint.h">
       <Filter>Characters</Filter>
     </ClInclude>
+    <ClInclude Include="Wwise_IDs.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
     <ClInclude Include="TileFloatScript.h">
       <Filter>Environment</Filter>
     </ClInclude>

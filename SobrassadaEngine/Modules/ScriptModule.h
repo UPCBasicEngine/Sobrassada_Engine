@@ -28,8 +28,16 @@ class ScriptModule : public Module
     bool close();
     bool ShutDown() override;
 
-    Script* CreateScript(const std::string& name, GameObject* parent) const { return createScriptFunc(name, parent); }
+    Script* CreateScript(const std::string& name, GameObject* parent) const
+    {
+        if (createScriptFunc != nullptr) return createScriptFunc(name, parent);
+        else return nullptr;
+    }
+
     void DestroyScript(Script* script) const { destroyScriptFunc(script); }
+    const int GetScriptCount() const { return getScriptCountFunc(); }
+    const char* GetScriptName(const int i) const { return getScriptNameFunc(i); }
+    const int GetScriptIdx(const std::string& scriptString) const { return searchIdxNameFunc(scriptString); }
 
   private:
     void LoadDLL();
@@ -50,10 +58,20 @@ class ScriptModule : public Module
     typedef void (*StartSobrassadaScripts)(Application* App);
     typedef void (*FreeSobrassadaScripts)();
 
+    typedef const char* (*GetScriptNameDLL)(const int index);
+    typedef const int (*GetScriptCountDLL)();
+    typedef const int (*SearchIdxName)(const std::string& scriptString);
+
     StartSobrassadaScripts startScriptFunc = nullptr;
     CreateScriptFunc createScriptFunc      = nullptr;
     DestroyScriptFunc destroyScriptFunc    = nullptr;
     FreeSobrassadaScripts freeScriptFunc   = nullptr;
+
+    GetScriptNameDLL getScriptNameFunc        = nullptr;
+    GetScriptCountDLL getScriptCountFunc      = nullptr;
+    SearchIdxName searchIdxNameFunc        = nullptr;
+
+    int scriptCount                        = 0;
 
     fs::file_time_type lastWriteTime;
     std::atomic<bool> running = true;
