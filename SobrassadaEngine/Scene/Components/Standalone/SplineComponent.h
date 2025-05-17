@@ -23,6 +23,10 @@ public:
     void AddPoint(const float3& p);
     void InsertPoint(size_t i, const float3& p);
     void RemovePoint(size_t i);
+    float GetT(const float3& p0, const float3& p1, float tPrev) const;
+    float3 CatmullRom(
+        const float3& p0, const float3& p1, const float3& p2, const float3& p3, float localT
+    ) const;
     
     size_t GetNumPoints() const { return points.size(); }
     const float3 GetPoint(size_t i) const { return points[i]; }
@@ -31,8 +35,7 @@ public:
     std::vector<float3> points;
     float3 pendingPoint = float3::zero;
 
-    float tension = 0.5f;
-
+    float alpha = 0.5f;     //0 = uniform, 0.5 = centripetal , 1 = chordal
     bool loop     = false;
 
     int selectedIdx = -1;

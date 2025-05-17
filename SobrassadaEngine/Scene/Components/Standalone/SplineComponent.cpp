@@ -2,6 +2,7 @@
 
 #include "GameObject.h"
 #include "imgui.h"
+#include "Math/MathFunc.h"
 
 SplineComponent::SplineComponent(UID uid, GameObject* parent) : Component(uid, parent, "Spline", COMPONENT_SPLINE)
 {
@@ -10,7 +11,7 @@ SplineComponent::SplineComponent(UID uid, GameObject* parent) : Component(uid, p
 SplineComponent::SplineComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    if (initialState.HasMember("Tension")) tension = initialState["Tension"].GetFloat();
+    if (initialState.HasMember("Alpha")) alpha = initialState["Alpha"].GetFloat();
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
     if (initialState.HasMember("Points"))
     {
@@ -69,7 +70,7 @@ void SplineComponent::RenderEditorInspector()
     ImGui::SeparatorText("Properties");
 
     ImGui::Text("Total Points: %zu", points.size());
-    ImGui::DragFloat("Tension", &tension, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("Alpha", &alpha, 0.01f, 0.0f, 1.0f);
     ImGui::Checkbox("Loop", &loop);
 
     ImGui::SeparatorText("Add Point");
@@ -87,8 +88,9 @@ void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
 {
     Component::Save(targetState, allocator);
     
-    targetState.AddMember("Tension", tension, allocator);
+    targetState.AddMember("Alpha", alpha, allocator);
     targetState.AddMember("Loop", loop, allocator);
+    
     rapidjson::Value arr(rapidjson::kArrayType);
 
     for (const auto& p : points)
@@ -107,7 +109,8 @@ void SplineComponent::Clone(const Component* other)
 
     const SplineComponent* otherSpline = static_cast<const SplineComponent*>(other);
     points                             = otherSpline->points;
-    tension                            = otherSpline->tension;
+    alpha                              = otherSpline->alpha;
+    loop                               = otherSpline->loop;
 }
 
 void SplineComponent::AddPoint(const float3& p)
@@ -124,3 +127,32 @@ void SplineComponent::RemovePoint(size_t i)
 {
     if (i < points.size()) points.erase(points.begin() + i);
 }
+
+float SplineComponent::GetT(const float3& p0, const float3& p1, float tPrev) const
+{
+    float distance = (p1 - p0).Length();
+    return tPrev + powf(distance, alpha);
+}
+
+float3 SplineComponent::CatmullRom(
+    const float3& p0, const float3& p1, const float3& p2, const float3& p3, float localT
+) const
+{
+    float t0 = 0.0f;
+    float t1 = GetT(p0,p1,t0);
+    float t2 = GetT(p1,p2,t1);
+    float t3 = GetT(p2,p3,t2);
+
+    float t  = Lerp(t1, t2, localT);
+
+    float3 A1 = float3::Lerp(p0, p1, (t - t0) / (t1 - t0)); //( t1-t )/( t1-t0 )*p0 + ( t-t0 )/( t1-t0 )*p1
+    float3 A2 = float3::Lerp(p1, p2, (t - t1) / (t2 - t1));
+    float3 A3 = float3::Lerp(p2, p3, (t - t2) / (t3 - t2));
+
+    float3 B1 = float3::Lerp(A1, A2, (t-t0)/(t2-t0));
+    float3 B2 = float3::Lerp(A2, A3, (t-t1)/(t3-t1));
+
+    return float3::Lerp(B1, B2, (t-t1)/(t2-t1));
+}
+
+
