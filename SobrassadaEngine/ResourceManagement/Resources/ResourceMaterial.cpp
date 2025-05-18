@@ -211,6 +211,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
     material.metallicFactor      = mat.GetMetallicFactor();
     material.roughnessFactor     = mat.GetRoughnessFactor();
     material.shininessInAlpha    = false;
+    isTransparent                = mat.IsTransparent();
 
     ResourceTexture* diffTexture = TextureImporter::LoadTexture(mat.GetDiffuseTexture());
     if (diffTexture != nullptr)

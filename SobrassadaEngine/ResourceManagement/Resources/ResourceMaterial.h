@@ -45,9 +45,12 @@ class ResourceMaterial : public Resource
     UID ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU);
     void ChangeFallBackTexture();
 
+    void SetTransparent(const bool transparent) { isTransparent = transparent; }
+
     const bool GetIsSpecular() const { return specularTexture.textureID != 0 ? true : false; }
     const bool GetIsMetallicRoughness() const { return metallicTexture.textureID != 0 ? true : false; }
     const MaterialGPU GetMaterial() const { return material; }
+    const bool IsTransparent() const { return isTransparent; }
 
   private:
     TextureInfo diffuseTexture;
@@ -56,5 +59,6 @@ class ResourceMaterial : public Resource
     TextureInfo normalTexture;
 
     MaterialGPU material;
+    bool isTransparent    = false;
     UID defaultTextureUID = INVALID_UID;
 };

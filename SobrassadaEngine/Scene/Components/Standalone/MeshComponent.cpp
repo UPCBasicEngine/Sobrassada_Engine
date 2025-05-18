@@ -30,11 +30,11 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
         UID materialUID = initialState["Material"].GetUint64();
         if (materialUID != INVALID_UID) AddMaterial(materialUID);
     }
-    if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
     if (initialState.HasMember("Mesh"))
     {
         AddMesh(initialState["Mesh"].GetUint64(), false);
     }
+    if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
     if (initialState.HasMember("Bones"))
     {
         const rapidjson::Value& initBones = initialState["Bones"];
@@ -176,6 +176,8 @@ void MeshComponent::RenderEditorInspector()
         if (ImGui::Combo("Render Mode", &currentRenderMode, renderModes, IM_ARRAYSIZE(renderModes)))
         {
             renderMode = currentRenderMode;
+            renderMode == 1 ? currentMaterial->SetTransparent(true) : currentMaterial->SetTransparent(false);
+            if (batch) BatchEditorMode();
         }
 
         currentMaterial->OnEditorUpdate();
@@ -251,6 +253,7 @@ void MeshComponent::AddMaterial(UID resource, bool setDefaultMaterial)
         App->GetResourcesModule()->ReleaseResource(currentMaterial);
         currentMaterial          = newMaterial;
         currentMaterialName      = currentMaterial->GetName();
+        renderMode               = currentMaterial->IsTransparent() ? 1 : 0;
         bUsesMeshDefaultMaterial = setDefaultMaterial;
 
         if (batch) BatchEditorMode();

@@ -188,9 +188,12 @@ vec3 RenderSpotLight(const int index, const vec3 N, const vec3 Cd, float roughne
 void main()
 {
     const Material mat = materials[instance_index];
-    const vec3 texColor = pow(texture(sampler2D(mat.diffuseTex), uv0).rgb, vec3(2.2f));
-    const vec4 metallicRoughnessTexColor = pow(texture(sampler2D(mat.metallicTex), uv0), vec4(2.2));
-    //const float alpha = metallicRoughnessTexColor.a;
+
+    const vec4 texColor = pow(texture(sampler2D(mat.diffuseTex), uv0), vec4(2.2f));
+    vec4 metallicRoughnessTexColor;
+    if(mat.hasMetallic == 1) metallicRoughnessTexColor = pow(texture(sampler2D(mat.metallicTex), uv0), vec4(2.2));
+    else metallicRoughnessTexColor = vec4(1);
+    const float alpha = texColor.a;
 
     vec3 N = normalize(normal);
     // Retrive normal for normal map
@@ -210,7 +213,7 @@ void main()
     const float NdotV = max(dot(N, V), 0.0001);
 
     // Ambient light
-    const vec3 BaseColor = materials[instance_index].diffColor.rgb * texColor;
+    const vec3 BaseColor = materials[instance_index].diffColor.rgb * texColor.rgb;
     const vec3 Cd = BaseColor * (1 - metallic);
     const vec3 RF0 = mix(vec3(0.04), BaseColor, metallic);
 
@@ -241,5 +244,5 @@ void main()
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));
-    outColor = vec4(ldr, 0.75);
+    outColor = vec4(ldr, alpha);
 }
