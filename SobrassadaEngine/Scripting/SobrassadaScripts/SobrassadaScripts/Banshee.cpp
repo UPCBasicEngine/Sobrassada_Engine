@@ -26,7 +26,7 @@ Banshee::Banshee(GameObject* parent)
 {
     fields.push_back({"Fleeing Distance", InspectorField::FieldType::Float, &fleeDistance, 0.0f, 10.0f});
     fields.push_back({"Fleeing Speed", InspectorField::FieldType::Float, &fleeSpeed, 0.0f, 10.0f});
-    fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 1.0f});
+    fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 10.0f});
 }
 
 bool Banshee::Init()

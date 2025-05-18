@@ -20,7 +20,7 @@ AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid,
     currentAcceleration = defaultAcceleration;
     radius              = 0.6f;
     height              = 2.0f;
-    maxAngularSpeed     = 90 / RAD_DEGREE_CONV;
+    maxAngularSpeed     = 360 / RAD_DEGREE_CONV;
     currentAngularSpeed = maxAngularSpeed;
     isRadians           = true;
 
@@ -324,7 +324,7 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 
     float angle   = atan2(forward.Cross(desired).y, forward.Dot(desired));
 
-    float maxStep = currentAngularSpeed;
+    float maxStep = currentAngularSpeed * deltaTime;
     angle         = std::clamp(angle, -maxStep, maxStep);
 
     if (fabs(angle) < 0.0001f) return;
@@ -346,7 +346,7 @@ void AIAgentComponent::SetSpeed(const float newSpeed, const float newAcceleratio
     agent->params.maxSpeed        = newSpeed;
     agent->params.maxAcceleration = newAcceleration;
 
-    //App->GetPathfinderModule()->GetCrowd()->resetMoveTarget(agentId);
+    App->GetPathfinderModule()->GetCrowd()->resetMoveTarget(agentId);
 
     if (newSpeed == 0.0f)
     {
