@@ -59,6 +59,8 @@ namespace SceneImporter
             {
                 std::vector<std::pair<UID, UID>> primitives;
 
+                if (srcNode.mesh >= gltfMeshes.size())
+                    gltfMeshes.resize(srcNode.mesh + 1);
                 const tinygltf::Mesh& srcMesh    = model.meshes[srcNode.mesh];
                 const float4x4& defaultTransform = MeshImporter::GetNodeTransform(srcNode);
                 int primitiveCounter             = 0;
@@ -95,7 +97,7 @@ namespace SceneImporter
                     //GLOG("New primitive with mesh UID: %d and Material UID: %d", meshUID, matUID);
                 }
 
-                gltfMeshes.push_back(primitives);
+                gltfMeshes[srcNode.mesh] = primitives;
             }
         }
 
