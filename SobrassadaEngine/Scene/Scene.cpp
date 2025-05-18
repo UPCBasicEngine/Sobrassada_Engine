@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "BatchManager.h"
+#include "BillboardModule.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
 #include "Component.h"
@@ -305,6 +306,8 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     else GeometryPassRender(objectsToRender, camera, gbuffer);
 
     LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
+
+    App->GetBillboardModule()->RenderBillboards();
 
     {
 #ifdef OPTICK
@@ -1296,7 +1299,7 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
             prefab == nullptr ? (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID) : prefab;
 
         if (resourcePrefab == nullptr) return; // If the prefab file is corrupted or not available, loading is cancelled
-        
+
         const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsVector();
         const std::vector<int>& parentIndices            = resourcePrefab->GetParentIndices();
 
