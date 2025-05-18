@@ -89,10 +89,10 @@ void CuChulainn::OnHealed(int amount)
     // TODO: play particle system effects
 }
 
-void CuChulainn::HandleState()
+void CuChulainn::HandleState(float deltaTime)
 {
     if (desiredDash && CanDash()) Dash();
-    else if (desiredAttack && CanAttack()) Attack();
+    else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim();
     else if (!isAttacking && !isDashing) Move();
 
@@ -247,7 +247,7 @@ void CuChulainn::PerformAttack()
     }
 }
 
-void CuChulainn::Attack()
+void CuChulainn::Attack(float deltaTime)
 {
     // TODO: play basicAttack sound
 
@@ -258,7 +258,7 @@ void CuChulainn::Attack()
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
 
-    Character::Attack();
+    Character::Attack(deltaTime);
     LookAtMouse();
     if (animComponent) animComponent->UseTrigger("attack");
 }

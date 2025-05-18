@@ -27,11 +27,11 @@ class Banshee : public Character
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
-    void HandleState() override;
+    void HandleState(float deltaTime) override;
 
     void ChasePlayer();
     void Flee();
-    void Attack() override;
+    void Attack(float deltaTime) override;
     void ChangeState();
 
   private:
@@ -42,4 +42,6 @@ class Banshee : public Character
     float fleeDistance                  = 0.0f;
     float fleeSpeed                     = 10.0f;
     bool isFleeing                      = false;
+
+    float attackAngularSpeed            = 0.0f;
 };

@@ -64,7 +64,7 @@ void Soldier::PerformAttack()
     // TODO: trails, particles and animation
 }
 
-void Soldier::HandleState()
+void Soldier::HandleState(float deltaTime)
 {
     // if (!animComponent) return;
 
@@ -83,7 +83,7 @@ void Soldier::HandleState()
     case SoldierStates::BASIC_ATTACK:
         // GLOG("Soldier Basic Attack");
         //  animComponent->UseTrigger("attack");
-        if (attackCdTimer <= 0) Attack();
+        if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     default:
         GLOG("No state provided to Soldier");
@@ -120,7 +120,7 @@ void Soldier::ChaseAI()
     else currentState = SoldierStates::PATROL;
 }
 
-void Soldier::Attack()
+void Soldier::Attack(float deltaTime)
 {
     if (!weaponCollider) return;
 
@@ -128,7 +128,7 @@ void Soldier::Attack()
     {
         GLOG("ATTACK ENEMY");
         if (animComponent) animComponent->UseTrigger("Attack");
-        Character::Attack();
+        Character::Attack(deltaTime);
         agentAI->PauseMovement();
     }
     else

@@ -21,6 +21,7 @@ AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid,
     radius              = 0.6f;
     height              = 2.0f;
     maxAngularSpeed     = 90 / RAD_DEGREE_CONV;
+    currentAngularSpeed = maxAngularSpeed;
     isRadians           = true;
 
     RecreateAgent();
@@ -253,7 +254,7 @@ void AIAgentComponent::PauseMovement()
     ag->params.maxSpeed        = 0.0f;
     ag->params.maxAcceleration = 0.0f;
     currentSpeed               = 0.0f;
-    maxAngularSpeed            = 0.0f;
+    currentAngularSpeed        = 0.0f;
 
     crowd->resetMoveTarget(agentId);
 
@@ -272,7 +273,7 @@ void AIAgentComponent::ResumeMovement()
     ag->params.maxSpeed        = restoredSpeed;
     ag->params.maxAcceleration = restoredAccel;
     currentSpeed               = restoredSpeed;
-    maxAngularSpeed            = restoreAngular;
+    currentAngularSpeed        = restoreAngular;
 
     isPaused                   = false;
 }
@@ -323,7 +324,7 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 
     float angle   = atan2(forward.Cross(desired).y, forward.Dot(desired));
 
-    float maxStep = maxAngularSpeed * deltaTime;
+    float maxStep = currentAngularSpeed;
     angle         = std::clamp(angle, -maxStep, maxStep);
 
     if (fabs(angle) < 0.0001f) return;
@@ -341,14 +342,36 @@ void AIAgentComponent::SetSpeed(const float newSpeed, const float newAcceleratio
 {
     dtCrowdAgent* agent           = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
     currentSpeed                  = newSpeed;
+    currentAcceleration           = newAcceleration;
     agent->params.maxSpeed        = newSpeed;
     agent->params.maxAcceleration = newAcceleration;
+
+    //App->GetPathfinderModule()->GetCrowd()->resetMoveTarget(agentId);
+
+    if (newSpeed == 0.0f)
+    {
+        frozenPosition = parent->GetGlobalTransform().TranslatePart();
+        isPaused       = true;
+    }
+}
+
+void AIAgentComponent::SetAngularSpeed(const float newAngular)
+{
+    currentAngularSpeed = newAngular;
 }
 
 void AIAgentComponent::ResetSpeed()
 {
     dtCrowdAgent* agent           = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
     currentSpeed                  = defaultSpeed;
+    currentAcceleration           = defaultAcceleration;
     agent->params.maxSpeed        = defaultSpeed;
     agent->params.maxAcceleration = defaultAcceleration;
+
+    isPaused                      = false;
+}
+
+void AIAgentComponent::ResetAngularSpeed()
+{
+    currentAngularSpeed = maxAngularSpeed;
 }

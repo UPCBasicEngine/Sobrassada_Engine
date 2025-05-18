@@ -82,7 +82,7 @@ void Character::Update(float deltaTime)
 
     if (!characterCollider || !weaponCollider || !weapon) return;
 
-    HandleState();
+    HandleState(deltaTime);
     UpdateTimers(deltaTime);
 }
 
@@ -122,7 +122,7 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
     }
 }
 
-void Character::Attack()
+void Character::Attack(float deltaTime)
 {
     isAttacking = true;
     attackTimer = 0.0f;

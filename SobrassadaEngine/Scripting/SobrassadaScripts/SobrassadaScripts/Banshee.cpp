@@ -4,6 +4,7 @@
 
 #include "CuChulainn.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -23,8 +24,9 @@ Banshee::Banshee(GameObject* parent)
           CharacterType::Banshee
       )
 {
-    fields.push_back({"Fleeing distance", InspectorField::FieldType::Float, &fleeDistance, 0.0f, 10.0f});
-    fields.push_back({"Fleeing speed", InspectorField::FieldType::Float, &fleeSpeed, 0.0f, 10.0f});
+    fields.push_back({"Fleeing Distance", InspectorField::FieldType::Float, &fleeDistance, 0.0f, 10.0f});
+    fields.push_back({"Fleeing Speed", InspectorField::FieldType::Float, &fleeSpeed, 0.0f, 10.0f});
+    fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 1.0f});
 }
 
 bool Banshee::Init()
@@ -66,7 +68,7 @@ void Banshee::PerformAttack()
 {
 }
 
-void Banshee::HandleState()
+void Banshee::HandleState(float deltaTime)
 {
     switch (currentState)
     {
@@ -84,7 +86,7 @@ void Banshee::HandleState()
         break;
 
     case BansheeStates::Scream:
-        if (attackCdTimer <= 0) Attack();
+        if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     }
 }
@@ -120,20 +122,25 @@ void Banshee::Flee()
     }
 }
 
-void Banshee::Attack()
+void Banshee::Attack(float deltaTime)
 {
     if (!damageArea) return;
 
     if (!isAttacking)
     {
         GLOG("Banshee attack");
+        agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("Attack");
 
-        Character::Attack();
-        agentAI->PauseMovement();
+        Character::Attack(deltaTime);
+        agentAI->SetSpeed(0.0f, 0.0f);
+        agentAI->SetAngularSpeed(attackAngularSpeed);
     }
     else
     {
+        // Slowly rotate towards player while charging the attack
+        if (attackTimer < attackHitboxDelay) agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
         if (!damageArea->GetEnabled() && attackTimer >= attackHitboxDelay &&
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
@@ -152,7 +159,9 @@ void Banshee::Attack()
         {
             isAttacking   = false;
             attackCdTimer = attackCooldown;
-            agentAI->ResumeMovement();
+            agentAI->ResetSpeed();
+            agentAI->ResetAngularSpeed();
+            agentAI->SetLookForward(true);
             ChangeState();
         }
     }
