@@ -271,7 +271,7 @@ void CuChulainn::Attack(float deltaTime)
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
 
-    Character::Attack(time);
+    Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     if (animComponent) animComponent->UseTrigger("attack");
 }
