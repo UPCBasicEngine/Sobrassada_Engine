@@ -35,7 +35,7 @@ class BillboardComponent : public Component
     float GetHeight() const { return height; }
     bool GetLockPitch() const { return lockPitch; }
     UID GetMaterialUID() const { return currentMaterialUID; }
-    UID GetTextureUID() const { return currentMaterialUID; }
+    UID GetTextureUID() const { return currentTextureUID; }
     const HashString& GetBillboardTag() const { return billboardTag; }
     std::list<BillboardComponent*>::iterator GetBillboardIterator() const { return billboardIterator; }
 
@@ -54,10 +54,6 @@ class BillboardComponent : public Component
     float width                       = 1.f;
     float height                      = 1.f;
     bool lockPitch                    = false;
-
-    int xTiles                        = 0;
-    int yTiles                        = 0;
-    float spriteSpeed                 = 0;
 
     char newTagName[64]               = "";
     HashString billboardTag           = HashString("");

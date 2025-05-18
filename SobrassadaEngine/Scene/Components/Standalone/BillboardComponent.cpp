@@ -24,12 +24,10 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
     if (initialState.HasMember("Material")) currentMaterialUID = initialState["Material"].GetUint64();
     if (initialState.HasMember("Texture")) currentTextureUID = initialState["Texture"].GetUint64();
 
+    if (initialState.HasMember("UseTexture")) useTexture = initialState["UseTexture"].GetBool();
+
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
-
-    if (initialState.HasMember("XTiles")) xTiles = initialState["XTiles"].GetInt();
-    if (initialState.HasMember("YTiles")) yTiles = initialState["YTiles"].GetInt();
-    if (initialState.HasMember("SpriteSpeed")) spriteSpeed = initialState["SpriteSpeed"].GetFloat();
 
     if (billboardTag.GetString() != "")
     {
@@ -60,10 +58,7 @@ void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document
 
     targetState.AddMember("Height", height, allocator);
     targetState.AddMember("Width", width, allocator);
-
-    targetState.AddMember("XTiles", xTiles, allocator);
-    targetState.AddMember("YTiles", yTiles, allocator);
-    targetState.AddMember("SpriteSpeed", spriteSpeed, allocator);
+    targetState.AddMember("UseTexture", useTexture, allocator);
 }
 
 void BillboardComponent::Clone(const Component* other)
@@ -146,10 +141,6 @@ void BillboardComponent::RenderEditorInspector()
 
     if (ImGui::InputFloat("Width", &width)) App->GetBillboardModule()->UpdateTagWidth(billboardTag, width);
     if (ImGui::InputFloat("Height", &height)) App->GetBillboardModule()->UpdateTagHeight(billboardTag, height);
-
-    ImGui::InputInt("Texture X tiles", &xTiles);
-    ImGui::InputInt("Texture Y tiles", &yTiles);
-    ImGui::InputFloat("Animation speed", &spriteSpeed);
 
     ImGui::Separator();
 
@@ -237,10 +228,6 @@ void BillboardComponent::ClearBillboardData()
     width               = 1.f;
     height              = 1.f;
     lockPitch           = false;
-
-    xTiles              = 0;
-    yTiles              = 0;
-    spriteSpeed         = 0;
 }
 
 void BillboardComponent::SetWidth(float newWidth)
@@ -257,6 +244,7 @@ void BillboardComponent::SetHeight(float newHeight)
 
 void BillboardComponent::SetMaterial(ResourceMaterial* newMaterial)
 {
+    if (!newMaterial) return;
     useTexture          = false;
     currentMaterial     = newMaterial;
     currentResourceName = currentMaterial->GetName();
@@ -265,6 +253,7 @@ void BillboardComponent::SetMaterial(ResourceMaterial* newMaterial)
 
 void BillboardComponent::SetTexture(ResourceTexture* newTexture)
 {
+    if (!newTexture) return;
     useTexture          = true;
     currentTexture      = newTexture;
     currentResourceName = currentTexture->GetName();

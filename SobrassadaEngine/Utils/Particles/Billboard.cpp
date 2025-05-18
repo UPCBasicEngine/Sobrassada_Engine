@@ -221,7 +221,8 @@ void Billboard::AddComponent(BillboardComponent* newBillboard)
 
     newBillboard->SetWidth(width);
     newBillboard->SetHeight(height);
-    newBillboard->SetMaterial(material);
+    if (useTexture) newBillboard->SetTexture(texture);
+    else newBillboard->SetMaterial(material);
     newBillboard->SetIterator(iterator);
 
     instancePositions.push_back(newBillboard->GetParent()->GetGlobalTransform().TranslatePart());

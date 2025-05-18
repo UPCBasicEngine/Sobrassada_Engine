@@ -78,8 +78,9 @@ void BillboardModule::RequestTag(const HashString& tag, BillboardComponent* comp
 
     if (billboardIterator == billboardMap.end())
     {
-        Billboard* newBillboard = new Billboard(component->GetWidth(), component->GetWidth());
-        newBillboard->UpdateMaterial(component->GetMaterialUID());
+        Billboard* newBillboard = new Billboard(component->GetWidth(), component->GetHeight());
+        if (component->IsUsingTexture()) newBillboard->UpdateTexture(component->GetTextureUID());
+        else newBillboard->UpdateMaterial(component->GetMaterialUID());
         newBillboard->AddComponent(component);
 
         billboardMap.insert({tag, std::pair<unsigned int, Billboard*>(1, newBillboard)});
