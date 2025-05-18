@@ -25,6 +25,7 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
     if (initialState.HasMember("Texture")) currentTextureUID = initialState["Texture"].GetUint64();
 
     if (initialState.HasMember("UseTexture")) useTexture = initialState["UseTexture"].GetBool();
+    if (initialState.HasMember("LockPitch")) lockPitch = initialState["LockPitch"].GetBool();
 
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
@@ -59,6 +60,7 @@ void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember("Height", height, allocator);
     targetState.AddMember("Width", width, allocator);
     targetState.AddMember("UseTexture", useTexture, allocator);
+    targetState.AddMember("LockPitch", lockPitch, allocator);
 }
 
 void BillboardComponent::Clone(const Component* other)
