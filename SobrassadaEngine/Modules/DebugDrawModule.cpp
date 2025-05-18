@@ -16,6 +16,7 @@
 #include "ResourceNavmesh.h"
 #include "ResourcesModule.h"
 #include "SceneModule.h"
+#include "Standalone/SplineComponent.h"
 
 #include "SDL_video.h"
 #define DEBUG_DRAW_IMPLEMENTATION
@@ -835,7 +836,17 @@ void DebugDrawModule::HandleDebugRenderOptions()
             );
         }
     }
+
+    if (debugOptionValues[(int)DebugOptions::RENDER_SPLINES])
+    {
+        for (const auto& gameObject : gameObjects)
+        {
+            SplineComponent* spline = gameObject.second->GetComponent<SplineComponent*>();
+            if (spline) spline->RenderDebug(0.0f);
+        }
+    }
 }
+
 static unsigned int DetourTransCol(unsigned int c, unsigned int a)
 {
     return (a << 24) | (c & 0x00ffffff);

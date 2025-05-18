@@ -1,6 +1,9 @@
 #include "SplineComponent.h"
 
+#include "Application.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "Geometry/LineSegment.h"
 #include "Math/MathFunc.h"
 #include "imgui.h"
 
@@ -35,6 +38,29 @@ void SplineComponent::Render(float deltaTime)
 
 void SplineComponent::RenderDebug(float deltaTime)
 {
+    if (points.size() < 2) return;
+
+    const int steps = 16;
+    size_t endSeg   = loop ? points.size() : points.size() - 1;
+    const float3 curveColor(0, 1, 0);
+    const float3 pointColor(1, 0, 0);
+
+    for (size_t seg = 0; seg < endSeg; ++seg)
+    {
+        float3 prev = EvaluateSegment(seg, 0.0f);
+
+        for (int i = 1; i <= steps; ++i)
+        {
+            float u  = (float)i / steps;
+            float3 p = EvaluateSegment(seg, u);
+
+            App->GetDebugDrawModule()->DrawLineSegment(LineSegment(prev, p), curveColor);
+            prev = p;
+        }
+    }
+
+    for (const float3& p : points)
+        App->GetDebugDrawModule()->DrawSphere(p, pointColor, 0.08f);
 }
 
 void SplineComponent::RenderEditorInspector()
@@ -63,8 +89,11 @@ void SplineComponent::RenderEditorInspector()
 
     if (selectedIdx >= 0 && selectedIdx < (int)points.size())
     {
-        float3& p = points[selectedIdx];
-        ImGui::InputFloat3("Selected Pos", &p[0]);
+        float3 tempPoint = points[selectedIdx];
+        if (ImGui::InputFloat3("Selected Pos", &tempPoint[0]))
+        {
+            points[selectedIdx] = tempPoint;
+        }
     }
 
     ImGui::SeparatorText("Properties");
@@ -75,12 +104,24 @@ void SplineComponent::RenderEditorInspector()
 
     ImGui::SeparatorText("Add Point");
 
+    static bool pendingInsert = false;
+    static int insertAfter    = -1;
+
     ImGui::InputFloat3("##newPoint", &pendingPoint[0]);
     if (ImGui::Button("Add Point"))
     {
-        if (selectedIdx >= 0 && selectedIdx < (int)points.size())
-            points.insert(points.begin() + selectedIdx + 1, pendingPoint);
+        pendingInsert = true;
+        insertAfter   = selectedIdx;
+    }
+
+    if (pendingInsert)
+    {
+        if (insertAfter >= 0 && insertAfter < (int)points.size())
+            points.insert(points.begin() + insertAfter + 1, pendingPoint);
         else points.push_back(pendingPoint);
+
+        selectedIdx   = insertAfter + 1;
+        pendingInsert = false;
     }
 }
 
@@ -134,8 +175,9 @@ float SplineComponent::GetT(const float3& p0, const float3& p1, float tPrev) con
     return tPrev + powf(distance, alpha);
 }
 
-float3
-SplineComponent::CatmullRom(const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT) const
+float3 SplineComponent::CatmullRom(
+    const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT
+) const
 {
     float t0  = 0.0f;
     float t1  = GetT(p0, p1, t0);
@@ -162,18 +204,19 @@ size_t SplineComponent::Wrap(int i) const
 
 float3 SplineComponent::EvaluateSegment(size_t seg, float segmentT) const
 {
-    auto idx = [this](int k) 
-    { 
-        return loop ? Wrap(k) : (size_t)std::clamp(k, 0, (int)points.size() - 1); 
-    };
-    
-    return CatmullRom(
-        points[idx((int)seg - 1)], 
-        points[idx((int)seg)], 
-        points[idx((int)seg + 1)], 
-        points[idx((int)seg + 2)],
-        segmentT);
+    auto idx = [this](int k)
+    {
+        int n = (int)points.size();
+        if (loop) return Wrap(k);
 
+        if (k < 0) return (size_t)0;
+        else if (k >= n) return (size_t)(n - 1);
+        else return (size_t)k;
+    };
+
+    return CatmullRom(
+        points[idx((int)seg - 1)], points[idx((int)seg)], points[idx((int)seg + 1)], points[idx((int)seg + 2)], segmentT
+    );
 }
 
 float3 SplineComponent::Evaluate(float t) const
