@@ -40,7 +40,6 @@ void SplineComponent::RenderDebug(float deltaTime)
 {
     if (points.size() < 2) return;
 
-    const int steps = 16;  //standard steps
     size_t endSeg   = loop ? points.size() : points.size() - 1;
     const float3 curveColor(0, 1, 0); //Green
     const float3 pointColor(1, 0, 0); //Red
@@ -56,9 +55,9 @@ void SplineComponent::RenderDebug(float deltaTime)
         {
             float3 prev = EvaluateSegment(seg, 0.0f);
 
-            for (int i = 1; i <= steps; ++i)
+            for (int i = 1; i <= stepsDebug; ++i)
             {
-                float u  = (float)i / steps;
+                float u  = (float)i / stepsDebug;
                 float3 p = EvaluateSegment(seg, u);
                 drawLine(prev, p);
                 prev = p;

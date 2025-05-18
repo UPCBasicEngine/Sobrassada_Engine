@@ -32,7 +32,8 @@ public:
     float3 Evaluate(float t) const;
 
     size_t GetNumPoints() const { return points.size(); }
-    const float3 GetPoint(size_t i) const { return points[i]; }
+    const float3 GetPointLocal(size_t i) const { return points[i]; }
+    float3 GetPointWorld(size_t i) const { return parent->GetGlobalTransform().TransformPos(points[i]); }
 
   private:
     std::vector<float3> points;
@@ -42,4 +43,5 @@ public:
     bool loop     = false;
 
     int selectedIdx = -1;
+    const int stepsDebug      = 16;
 };
