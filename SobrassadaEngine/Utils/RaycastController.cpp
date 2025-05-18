@@ -1,6 +1,7 @@
 #include "RaycastController.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
 #include "CameraModule.h"
 #include "FileSystem/Mesh.h"
 #include "GameObject.h"
@@ -13,8 +14,6 @@
 #include "Math/float4x4.h"
 #include <algorithm>
 #include <vector>
-
-#include "DebugDrawModule.h"
 
 namespace RaycastController
 {
@@ -83,14 +82,37 @@ namespace RaycastController
             if (billboardComponent != nullptr)
             {
 
+                bool playMode               = App->GetSceneModule()->GetInPlayMode();
+
                 const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
-                float3 position             = billboardComponent->GetParent()->GetGlobalTransform().TranslatePart();
-                
-                float3 frontVector          = editorCamera.pos - position;
+                CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+                float3 cameraPosition;
+                float3 rightVector;
+                float3 upVector;
+
+                if (playMode)
+                {
+                    if (!gameCamera) continue;
+                    cameraPosition = gameCamera->GetCameraPosition();
+                    rightVector    = gameCamera->GetCameraRight();
+                    upVector       = gameCamera->GetCameraUp();
+                }
+                else
+                {
+                    cameraPosition = editorCamera.pos;
+                    rightVector    = editorCamera.WorldRight();
+                    upVector       = editorCamera.up;
+                }
+
+                float3 position    = billboardComponent->GetParent()->GetGlobalTransform().TranslatePart();
+
+                float3 frontVector = cameraPosition - position;
                 frontVector.Normalize();
 
-                float3x3 rotationMatrix =
-                    float3x3(editorCamera.WorldRight(), false ? float3(0, 1.f, 0) : editorCamera.up, frontVector);
+                float3x3 rotationMatrix = float3x3(
+                    rightVector, billboardComponent->GetLockPitch() ? float3(0, 1.f, 0) : upVector, frontVector
+                );
 
                 const float4x4& originalTransform = billboardComponent->GetParent()->GetLocalTransform();
                 float4x4 newLocalTransform = float4x4::FromTRS(position, rotationMatrix, originalTransform.GetScale());

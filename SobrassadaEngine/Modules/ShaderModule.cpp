@@ -26,8 +26,7 @@ bool ShaderModule::Init()
     specularGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH);
     lightingPassProgram         = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
 
-    billboardProgram            = CreateShaderProgram("./EngineDefaults/Shader/Vertex/BillboardVertex.glsl",
-                                                      "./EngineDefaults/Shader/Fragment/BillboardFragment.glsl");
+    billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
     return true;
 }
 

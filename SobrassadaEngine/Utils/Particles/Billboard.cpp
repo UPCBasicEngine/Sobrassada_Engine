@@ -8,8 +8,10 @@
 #include "ResourcesModule.h"
 #include "ShaderModule.h"
 #include "Standalone/BillboardComponent.h"
+#include "OpenGLModule.h"
 
 #include "glew.h"
+#include <chrono>
 
 Billboard::Billboard(float width, float height) : width(width), height(height)
 {
@@ -124,6 +126,8 @@ void Billboard::Render()
 {
     if ((useTexture ? texture != nullptr : material != nullptr) && vbo && positionsVbo)
     {
+        const auto start            = std::chrono::high_resolution_clock::now();
+
         const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
         const float4x4 viewMatrix   = App->GetCameraModule()->GetViewMatrix();
 
@@ -163,6 +167,15 @@ void Billboard::Render()
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)instanceComponents.size());
 
         glBindTexture(GL_TEXTURE_2D, 0);
+
+        const auto end                             = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<float> elapsed = end - start;
+
+        unsigned int totalTrangles                 = (unsigned int)instancePositions.size() * 2;
+
+        App->GetOpenGLModule()->AddTrianglesPerSecond(totalTrangles / elapsed.count());
+        App->GetOpenGLModule()->AddVerticesCount(totalTrangles * 3);
+        App->GetOpenGLModule()->AddDrawCallsCount();
     }
 }
 

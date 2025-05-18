@@ -33,6 +33,7 @@ class BillboardComponent : public Component
 
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
+    bool GetLockPitch() const { return lockPitch; }
     UID GetMaterialUID() const { return currentMaterialUID; }
     UID GetTextureUID() const { return currentMaterialUID; }
     const HashString& GetBillboardTag() const { return billboardTag; }
