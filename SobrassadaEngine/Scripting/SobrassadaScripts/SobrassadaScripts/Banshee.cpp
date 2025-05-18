@@ -42,9 +42,12 @@ bool Banshee::Init()
         speed = agentAI->GetSpeed();
     }
 
-    damageArea = parent->GetComponent<SphereColliderComponent*>();
-    if (damageArea == nullptr) GLOG("Sphere collider not found for Banshee")
-    else damageArea->SetEnabled(false);
+    if (weapon)
+    {
+        damageArea = weapon->GetComponent<SphereColliderComponent*>();
+        if (damageArea == nullptr) GLOG("Sphere collider not found for Banshee")
+        else damageArea->SetEnabled(false);
+    }
 
     return true;
 }
