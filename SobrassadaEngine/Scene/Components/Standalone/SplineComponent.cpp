@@ -74,24 +74,11 @@ void SplineComponent::RenderDebug(float deltaTime)
     for (const float3& p : points)
         dbg->DrawSphere(p + parent->GetGlobalTransform().TranslatePart(), pointColor, 0.08f);
 
-    /*if (App->GetSceneModule()->GetScene()->GetSelectedGameObject() != parent) return;
-    if (selectedIdx < 0 || selectedIdx >= (int)points.size()) return;
-
-    float3 worldPos  = parent->GetGlobalTransform().TransformPos(points[selectedIdx]);
-    float4x4 gMatrix = float4x4::FromTRS(worldPos, float4x4::identity, float3::one);
-
-    float3 rot = float3::zero, scale = float3::one;
-
-    if (App->GetEditorUIModule()->RenderImGuizmo(
-            gMatrix,            
-            gMatrix,            
-            float4x4::identity, 
-            worldPos, rot, scale
-        ))
+    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject() == parent && selectedIdx >= 0 &&
+        selectedIdx < (int)points.size())
     {
-        float3 localPos     = parent->GetGlobalTransform().Inverted().TransformPos(worldPos);
-        points[selectedIdx] = localPos;
-    }*/
+        PointGizmo((size_t)selectedIdx);
+    }
 }
 
 void SplineComponent::RenderEditorInspector()
@@ -271,20 +258,17 @@ bool SplineComponent::PointGizmo(size_t idx)
 {
     if (idx >= points.size()) return false;
 
-    float3 worldPos = GetPointWorld(idx);
-
-    float4x4 gizmoLocalMatrix = float4x4::FromTRS(worldPos, float4x4::identity, float3::one);
-    float4x4 gizmoGlobalMatrix = gizmoLocalMatrix;
-
+    float4x4 localMatrix  = float4x4::FromTRS(points[idx], float4x4::identity, float3::one);
+    float4x4 globalMatrix = parent->GetGlobalTransform() * localMatrix;
+    
     float3 newPos, _unusedRot, _unusedScale;
 
     bool moved = App->GetEditorUIModule()->RenderImGuizmo(
-        gizmoLocalMatrix, gizmoGlobalMatrix,
-        float4x4::identity,
+        localMatrix, globalMatrix, parent->GetGlobalTransform(),
         newPos, _unusedRot, _unusedScale
     );
 
-    if (moved) SetPointWorld(idx, newPos);
+    if (moved) points[idx] = localMatrix.TranslatePart();
     return moved;
 }
 
