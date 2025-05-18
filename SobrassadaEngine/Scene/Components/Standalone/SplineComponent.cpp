@@ -40,23 +40,32 @@ void SplineComponent::RenderDebug(float deltaTime)
 {
     if (points.size() < 2) return;
 
-    const int steps = 16;
+    const int steps = 16;  //standard steps
     size_t endSeg   = loop ? points.size() : points.size() - 1;
-    const float3 curveColor(0, 1, 0);
-    const float3 pointColor(1, 0, 0);
+    const float3 curveColor(0, 1, 0); //Green
+    const float3 pointColor(1, 0, 0); //Red
+
+    auto drawLine = [&](const float3& a, const float3& b)
+    {
+        App->GetDebugDrawModule()->DrawLineSegment(LineSegment(a, b), curveColor);
+    };
 
     for (size_t seg = 0; seg < endSeg; ++seg)
     {
-        float3 prev = EvaluateSegment(seg, 0.0f);
-
-        for (int i = 1; i <= steps; ++i)
+        if (loop || points.size() >= 3)
         {
-            float u  = (float)i / steps;
-            float3 p = EvaluateSegment(seg, u);
+            float3 prev = EvaluateSegment(seg, 0.0f);
 
-            App->GetDebugDrawModule()->DrawLineSegment(LineSegment(prev, p), curveColor);
-            prev = p;
+            for (int i = 1; i <= steps; ++i)
+            {
+                float u  = (float)i / steps;
+                float3 p = EvaluateSegment(seg, u);
+                drawLine(prev, p);
+                prev = p;
+            }
         }
+        else drawLine(points[seg], points[seg + 1]);
+        
     }
 
     for (const float3& p : points)
@@ -172,6 +181,9 @@ void SplineComponent::RemovePoint(size_t i)
 float SplineComponent::GetT(const float3& p0, const float3& p1, float tPrev) const
 {
     float distance = (p1 - p0).Length();
+
+    if (distance < 0.0001f) distance = 0.0001f; //in order to be able to use CatmullRom with 3 points
+
     return tPrev + powf(distance, alpha);
 }
 
