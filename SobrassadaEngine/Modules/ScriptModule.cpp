@@ -9,6 +9,7 @@
 #include <fstream>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
+#include "FileSystem.h"
 
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -49,6 +50,9 @@ void ScriptModule::LoadDLL()
         GLOG("Failed to load DLL\n");
         return;
     }
+
+    if (!FileSystem::Exists("SobrassadaScripts.dll")) FileSystem::Copy(dllPath.string().c_str(), copyPath.string().c_str());
+
     lastWriteTime      = fs::last_write_time("SobrassadaScripts.dll");
 
     startScriptFunc    = (StartSobrassadaScripts)GetProcAddress(dllHandle, "InitSobrassadaScripts");
@@ -123,7 +127,7 @@ void ScriptModule::SaveScriptsToFile(const std::string& filename, const rapidjso
     outFile << buffer.GetString();
     outFile.close();
 
-    //GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
+    // GLOG("Scripts saved successfully to '%s'.\n", filename.c_str());
 }
 
 void ScriptModule::DeleteAllScripts(bool saveJson)
