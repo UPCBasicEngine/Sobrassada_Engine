@@ -111,8 +111,12 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
-    dtNavMesh* dtNav =
-        App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh(); // crash here means no navmesh loaded
+    ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
+    dtNavMesh* dtNav = nullptr;
+    if (nav != nullptr)
+    {
+        dtNav = nav->GetDetourNavMesh();
+    }
 
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
 
