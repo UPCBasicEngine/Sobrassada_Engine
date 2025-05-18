@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "BillboardModule.h"
 #include "EditorUIModule.h"
+#include "GameObject.h"
 #include "LibraryModule.h"
 #include "ResourceMaterial.h"
 #include "ResourceTexture.h"
@@ -29,7 +30,12 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
     if (initialState.HasMember("YTiles")) yTiles = initialState["YTiles"].GetInt();
     if (initialState.HasMember("SpriteSpeed")) spriteSpeed = initialState["SpriteSpeed"].GetFloat();
 
-    if (billboardTag.GetString() != "") App->GetBillboardModule()->RequestTag(billboardTag, this);
+    if (billboardTag.GetString() != "")
+    {
+        App->GetBillboardModule()->RequestTag(billboardTag, this);
+
+        RecalculateAABB();
+    }
 }
 
 BillboardComponent::~BillboardComponent()
@@ -212,6 +218,7 @@ void BillboardComponent::RenderEditorInspector()
 void BillboardComponent::ParentUpdated()
 {
     App->GetBillboardModule()->UpdateTagPositions(billboardTag);
+    RecalculateAABB();
 }
 
 void BillboardComponent::ClearBillboardData()
@@ -220,10 +227,10 @@ void BillboardComponent::ClearBillboardData()
 
     currentMaterial     = nullptr;
     currentMaterialUID  = INVALID_UID;
-    
+
     currentTexture      = nullptr;
     currentTextureUID   = INVALID_UID;
-    
+
     billboardTag        = HashString("");
 
     width               = 1.f;
@@ -233,6 +240,18 @@ void BillboardComponent::ClearBillboardData()
     xTiles              = 0;
     yTiles              = 0;
     spriteSpeed         = 0;
+}
+
+void BillboardComponent::SetWidth(float newWidth)
+{
+    width = newWidth;
+    RecalculateAABB();
+}
+
+void BillboardComponent::SetHeight(float newHeight)
+{
+    height = newHeight;
+    RecalculateAABB();
 }
 
 void BillboardComponent::SetMaterial(ResourceMaterial* newMaterial)
@@ -249,4 +268,14 @@ void BillboardComponent::SetTexture(ResourceTexture* newTexture)
     currentTexture      = newTexture;
     currentResourceName = currentTexture->GetName();
     currentMaterialUID  = currentTexture->GetUID();
+}
+
+void BillboardComponent::RecalculateAABB()
+{
+    float3 localPosition = parent->GetGlobalTransform().TranslatePart();
+   
+    localComponentAABB   = AABB(
+        float3(localPosition.x - width/2.f, localPosition.y - height/2.f, 0),
+        float3(localPosition.x + width / 2.f, localPosition.y + height / 2.f, 0)
+    );
 }

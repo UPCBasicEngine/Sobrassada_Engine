@@ -38,13 +38,16 @@ class BillboardComponent : public Component
     const HashString& GetBillboardTag() const { return billboardTag; }
     std::list<BillboardComponent*>::iterator GetBillboardIterator() const { return billboardIterator; }
 
-    void SetWidth(float newWidth) { width = newWidth; };
-    void SetHeight(float newHeight) { height = newHeight; };
+    void SetWidth(float newWidth);
+    void SetHeight(float newHeight);
     void SetMaterial(ResourceMaterial* newMaterial);
     void SetTexture(ResourceTexture* newTexture);
     void SetIterator(std::list<BillboardComponent*>::iterator iterator) { billboardIterator = iterator; };
     void SetLockPitch(bool newPitch) { lockPitch = newPitch; };
     void SetUseTexture(bool newUseTexture) { useTexture = newUseTexture; };
+
+  private:
+    void RecalculateAABB();
 
   private:
     float width                       = 1.f;

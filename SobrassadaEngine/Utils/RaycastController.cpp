@@ -1,6 +1,7 @@
 #include "RaycastController.h"
 
 #include "Application.h"
+#include "CameraModule.h"
 #include "FileSystem/Mesh.h"
 #include "GameObject.h"
 #include "ResourceMesh.h"
@@ -65,6 +66,56 @@ namespace RaycastController
                     float3 hitPoint;
 
                     if (localRay.Intersects(currentTriangle, &distance, &hitPoint))
+                    {
+                        if (distance < closestDistance)
+                        {
+                            closestDistance    = distance;
+                            selectedGameObject = gameObject;
+                        }
+                    }
+                }
+            }
+
+            // CHECK IN CASE GAME OBJECT IS A BILLBOARD
+            const BillboardComponent* billboardComponent = gameObject->GetComponent<BillboardComponent*>();
+            if (billboardComponent != nullptr)
+            {
+
+                const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
+
+                float3 frontVector          = editorCamera.pos - billboardComponent->GetParent()->GetPosition();
+                frontVector.Normalize();
+
+                float3x3 rotationMatrix =
+                    float3x3(editorCamera.WorldRight(), false ? float3(0, 1.f, 0) : editorCamera.up, frontVector);
+
+                const float4x4& originalTransform = billboardComponent->GetParent()->GetLocalTransform();
+                float4x4 newLocalTransform =
+                    float4x4::FromTRS(originalTransform.TranslatePart(), rotationMatrix, originalTransform.GetScale());
+
+                localRay.Transform(newLocalTransform);
+
+                float width  = billboardComponent->GetWidth();
+                float height = billboardComponent->GetHeight();
+
+                Triangle billboardTriangles[2];
+
+                billboardTriangles[0] = Triangle(
+                    float3(-width / 2.f, height / 2.f, 0.f), float3(-width / 2.f, -height / 2.f, 0.f),
+                    float3(width / 2.f, -height / 2.f, 0.f)
+                );
+                billboardTriangles[1] = Triangle(
+                    float3(-width / 2.f, height / 2.f, 0.f), float3(width / 2.f, -height / 2.f, 0.f),
+                    float3(width / 2.f, height / 2.f, 0.f)
+                );
+
+                // Billboards are just 2 triangles
+                for (int i = 0; i < 2; ++i)
+                {
+                    float distance = std::numeric_limits<float>::infinity();
+                    float3 hitPoint;
+
+                    if (localRay.Intersects(billboardTriangles[i], &distance, &hitPoint))
                     {
                         if (distance < closestDistance)
                         {
