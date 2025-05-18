@@ -41,25 +41,28 @@ void SplineComponent::RenderDebug(float deltaTime)
 {
     if (points.size() < 2) return;
 
+    EditorUIModule* ui   = App->GetEditorUIModule();
+    DebugDrawModule* dbg = App->GetDebugDrawModule();
+
     size_t endSeg   = loop ? points.size() : points.size() - 1;
     const float3 curveColor(0, 1, 0); //Green
     const float3 pointColor(1, 0, 0); //Red
 
     auto drawLine = [&](const float3& a, const float3& b)
     {
-        App->GetDebugDrawModule()->DrawLineSegment(LineSegment(a, b), curveColor);
+        dbg->DrawLineSegment(LineSegment(a, b), curveColor);
     };
 
     for (size_t seg = 0; seg < endSeg; ++seg)
     {
         if (loop || points.size() >= 3)
         {
-            float3 prev = EvaluateSegment(seg, 0.0f);
+            float3 prev = EvaluateSegment(seg, 0.0f) + parent->GetGlobalTransform().TranslatePart();
 
             for (int i = 1; i <= stepsDebug; ++i)
             {
                 float u  = (float)i / stepsDebug;
-                float3 p = EvaluateSegment(seg, u);
+                float3 p = EvaluateSegment(seg, u) + parent->GetGlobalTransform().TranslatePart();
                 drawLine(prev, p);
                 prev = p;
             }
@@ -69,9 +72,26 @@ void SplineComponent::RenderDebug(float deltaTime)
     }
 
     for (const float3& p : points)
-        App->GetDebugDrawModule()->DrawSphere(p, pointColor, 0.08f);
+        dbg->DrawSphere(p + parent->GetGlobalTransform().TranslatePart(), pointColor, 0.08f);
 
-    if (selectedIdx >= 0 && selectedIdx < (int)points.size()) PointGizmo((size_t)selectedIdx);
+    /*if (App->GetSceneModule()->GetScene()->GetSelectedGameObject() != parent) return;
+    if (selectedIdx < 0 || selectedIdx >= (int)points.size()) return;
+
+    float3 worldPos  = parent->GetGlobalTransform().TransformPos(points[selectedIdx]);
+    float4x4 gMatrix = float4x4::FromTRS(worldPos, float4x4::identity, float3::one);
+
+    float3 rot = float3::zero, scale = float3::one;
+
+    if (App->GetEditorUIModule()->RenderImGuizmo(
+            gMatrix,            
+            gMatrix,            
+            float4x4::identity, 
+            worldPos, rot, scale
+        ))
+    {
+        float3 localPos     = parent->GetGlobalTransform().Inverted().TransformPos(worldPos);
+        points[selectedIdx] = localPos;
+    }*/
 }
 
 void SplineComponent::RenderEditorInspector()
@@ -271,16 +291,16 @@ bool SplineComponent::PointGizmo(size_t idx)
 float3 SplineComponent::GetPointWorld(size_t idx) const
 {
     if (idx >= points.size()) return float3::zero;
-    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
+    const float4x4& worldOffset = parent->GetGlobalTransform();
 
-    return worldOffset + points[idx];
+    return (worldOffset * float4(points[idx], 1.f)).xyz();
 }
 
 void SplineComponent::SetPointWorld(size_t idx, const float3& worldPos)
 {
     if (idx >= points.size()) return;
 
-    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
+    const float4x4 invParent = parent->GetGlobalTransform().Inverted();
 
-    points[idx]              = worldPos - worldOffset;
+    points[idx]                = (invParent * float4(worldPos, 1.f)).xyz();
 }
