@@ -194,7 +194,7 @@ UID MaterialImporter::ImportMaterial(
         if (materialName.empty()) materialName = "MaterialType_" + std::to_string(tmpName);
 
         std::string assetPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(sourceFilePath);
-        MetaMaterial meta(finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID);
+        MetaMaterial meta(finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID, isTransparent);
         meta.Save(materialName, assetPath);
     }
     else finalMaterialUID = sourceUID;
