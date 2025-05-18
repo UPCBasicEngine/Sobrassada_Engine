@@ -56,11 +56,11 @@ CharacterControllerComponent::CharacterControllerComponent(const rapidjson::Valu
     }
     if (initialState.HasMember("DashDistance"))
     {
-        acceleration = initialState["DashDistance"].GetFloat();
+        dashDistance = initialState["DashDistance"].GetFloat();
     }
     if (initialState.HasMember("DashDuration"))
     {
-        acceleration = initialState["DashDuration"].GetFloat();
+        dashDuration = initialState["DashDuration"].GetFloat();
     }
     if (initialState.HasMember("MaxAngularSpeed"))
     {
@@ -103,6 +103,7 @@ void CharacterControllerComponent::Clone(const Component* other)
         maxSpeed                                           = otherCharacter->maxSpeed;
         acceleration                                       = otherCharacter->acceleration;
         dashDuration                                       = otherCharacter->dashDuration;
+        dashDistance                                       = otherCharacter->dashDistance;
         maxAngularSpeed                                    = otherCharacter->maxAngularSpeed;
 
         isRadians                                          = otherCharacter->isRadians;
@@ -160,7 +161,6 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
                 return;
             }
 
-
             currentPolyRef = targetRef;
         }
     }
@@ -213,10 +213,10 @@ void CharacterControllerComponent::RenderEditorInspector()
     ImGui::Separator();
     ImGui::Text("Character Controller");
 
-        ImGui::DragFloat("Max Speed", &maxSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::DragFloat("Acceleration", &acceleration, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::DragFloat("Dash Distance", &dashDistance, 3.0f, 0.0f, 10.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::DragFloat("Dash Duration", &dashDuration, 0.2f, 0.0f, 1.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Max Speed", &maxSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Acceleration", &acceleration, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Dash Distance", &dashDistance, 3.0f, 0.0f, 10.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Dash Duration", &dashDuration, 0.2f, 0.0f, 1.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
 
     float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
     float minVal   = 0.0f;
@@ -425,23 +425,21 @@ void CharacterControllerComponent::LookAt(const float3& direction)
 
 void CharacterControllerComponent::StartDash()
 {
-    isDashing               = true;
+    isDashing                      = true;
 
     // WALL COLLISION LOGIC
-    const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+    float3 currentPos              = parent->GetGlobalTransform().TranslatePart();
+    dashTarget                     = currentPos + rotateDirection * (dashDistance + 0.5f);
 
-    dashTarget = currentPos + rotateDirection * (dashDistance + 0.5f);
+    const float3 lateralDirection  = rotateDirection.Cross(float3::unitY).Normalized();
 
-    const float3 lateralDirection = rotateDirection.Cross(float3::unitY).Normalized();
-
-    float3 rightRayOrigin   = currentPos + lateralDirection * 0.5f; 
-    float3 leftRayOrigin    = currentPos - lateralDirection * 0.5f; 
-
+    currentPos.y                  += 0.5f;
+    float3 rightRayOrigin          = currentPos + lateralDirection * 0.5f;
+    float3 leftRayOrigin           = currentPos - lateralDirection * 0.5f;
 
     LineSegment centralRay(currentPos, dashTarget);
-    LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * dashDistance);
-    LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * dashDistance);
-
+    LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * (dashDistance + 0.5f));
+    LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * (dashDistance + 0.5f));
 
     GameObject* centralHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
         centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
@@ -452,7 +450,6 @@ void CharacterControllerComponent::StartDash()
     GameObject* leftHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
         leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
-
 
     const float wallOffset = 0.7f;
     float tNear, tFar;
@@ -484,22 +481,23 @@ void CharacterControllerComponent::StartDash()
 
     //// NOT FALLING LOGIC
 
-    //dtQueryFilter filter;
-    //filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
-    //filter.setExcludeFlags(0);
+    // dtQueryFilter filter;
+    // filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+    // filter.setExcludeFlags(0);
 
-    //float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaño de la caja de búsqueda
-    //float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
-    //dtPolyRef targetRef   = 0;
+    // float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaño de la caja de búsqueda
+    // float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
+    // dtPolyRef targetRef   = 0;
 
-    //dtStatus status       = navMeshQuery->findNearestPoly(dashTarget.ptr(), extents, &filter, &targetRef, nearestPoint);
+    // dtStatus status       = navMeshQuery->findNearestPoly(dashTarget.ptr(), extents, &filter, &targetRef,
+    // nearestPoint);
 
-    //if (dtStatusFailed(status) || targetRef == 0)
+    // if (dtStatusFailed(status) || targetRef == 0)
     //{
-    //    GLOG("Nearest points: (%f, %f, %f)", nearestPoint[0], nearestPoint[1], nearestPoint[2]);
-    //    GLOG("No navmesh found at dash target position. Dash canceled.");
-    //    dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]);
-    //}
+    //     GLOG("Nearest points: (%f, %f, %f)", nearestPoint[0], nearestPoint[1], nearestPoint[2]);
+    //     GLOG("No navmesh found at dash target position. Dash canceled.");
+    //     dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]);
+    // }
 
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
@@ -525,7 +523,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
         {
             parent->SetLocalPosition(dashTarget - parent->GetParentGlobalTransform().TranslatePart());
             dashTimeRemaining = 0.0f;
-            isDashing = false;
+            isDashing         = false;
         }
         else
         {
