@@ -64,6 +64,6 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool isRotating              = false;
     float3 targetLookDirection   = float3::zero;
 
-    float3 rotateDirection       = float3::zero;
+    float3 rotateDirection       = float3::unitZ;
     bool movementEnabled         = true;
 };
