@@ -11,6 +11,7 @@
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 
 Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Soldier)
 {
@@ -121,6 +122,8 @@ void Soldier::ChaseAI()
 
 void Soldier::Attack()
 {
+    if (!weaponCollider) return;
+
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
@@ -128,15 +131,27 @@ void Soldier::Attack()
         Character::Attack();
         agentAI->PauseMovement();
     }
-
-    // Enable hitbox when animation hits
-
-    // Reset attack state
-    if (isAttacking && attackTimer <= 0)
+    else
     {
-        isAttacking   = false;
-        attackCdTimer = attackCooldown;
-        agentAI->ResumeMovement();
-        if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
+
+        // Enable hitbox when animation hits
+        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+            attackTimer <= attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(true);
+        }
+        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(false);
+        }
+
+        // Reset attack state
+        if (attackTimer >= attackDuration)
+        {
+            isAttacking   = false;
+            attackCdTimer = attackCooldown;
+            agentAI->ResumeMovement();
+            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
+        }
     }
 }

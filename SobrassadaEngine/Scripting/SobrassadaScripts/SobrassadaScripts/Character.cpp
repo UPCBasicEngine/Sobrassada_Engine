@@ -28,11 +28,13 @@ Character::Character(
     fields.push_back({"Current Health", InspectorField::FieldType::Int, &currentHealth, 0, 10});
     fields.push_back({"Invulnerable", InspectorField::FieldType::Bool, &isInvulnerable, true, false});
     fields.push_back({"Dead", InspectorField::FieldType::Bool, &isDead, true, false});
+    fields.push_back({"Weapon Name", InspectorField::FieldType::InputText, &weaponName});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &attackDamage, 0, 3});
+    fields.push_back({"Attack Range", InspectorField::FieldType::Float, &range, 0.0f, 5.0f});
     fields.push_back({"Attack Duration", InspectorField::FieldType::Float, &attackDuration, 0.0f, 5.0f});
     fields.push_back({"Attack Cooldown", InspectorField::FieldType::Float, &attackCooldown, 0.0f, 5.0f});
-    fields.push_back({"Attack Range", InspectorField::FieldType::Float, &range, 0.0f, 5.0f});
-    fields.push_back({"Weapon Name", InspectorField::FieldType::InputText, &weaponName});
+    fields.push_back({"Attack Hitbox Delay", InspectorField::FieldType::Float, &attackHitboxDelay, 0.0f, 5.0f});
+    fields.push_back({"Attack Hitbox Duration", InspectorField::FieldType::Float, &attackHitboxDuration, 0.0f, 5.0f});
 
     if (type != CharacterType::CuChulainn)
     {
@@ -122,21 +124,15 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
 
 void Character::Attack()
 {
-    // GLOG("ATTACK");
     isAttacking = true;
-    attackTimer = attackDuration;
-
-    // TODO: The enable and disable of the collider should be managed by each player and enemy,
-    // depending on the timings of their attack animations as we don't have Animation Events (I think)
-    if (weaponCollider) weaponCollider->SetEnabled(true);
-    PerformAttack();
+    attackTimer = 0.0f;
 }
 
 void Character::UpdateTimers(float deltaTime)
 {
     if (isAttacking)
     {
-        attackTimer -= deltaTime;
+        attackTimer += deltaTime;
         if (attackTimer <= 0)
         {
             if (weaponCollider && weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);

@@ -74,11 +74,13 @@ class Character : public Script
     float attackCooldown                        = 0.0f;
     float attackCdTimer                         = 0.0f;
     float range                                 = 0.0f;
-
     float attackTimer                           = 0.0f;
+    bool isAttacking                            = false;
+    float attackHitboxDelay                     = 0.0f;
+    float attackHitboxDuration                  = 0.0f;
+
     float invulnerabilityTimer                  = -1.0f;
     const float invulnerableDuration            = 0.7f;
-    bool isAttacking                            = false;
 
     CharacterType type                          = CharacterType::None;
 

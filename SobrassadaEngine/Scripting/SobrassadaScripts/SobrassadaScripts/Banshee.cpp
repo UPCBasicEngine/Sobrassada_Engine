@@ -7,6 +7,7 @@
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
 Banshee::Banshee(GameObject* parent)
@@ -129,17 +130,27 @@ void Banshee::Attack()
         if (animComponent) animComponent->UseTrigger("Attack");
 
         Character::Attack();
-        damageArea->SetEnabled(true);
         agentAI->PauseMovement();
     }
     else
     {
-        // TODO: Enable hitbox when animation (done in V2)
-
-        if (attackTimer <= 0)
+        if (!damageArea->GetEnabled() && attackTimer >= attackHitboxDelay &&
+            attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
-            isAttacking = false;
+            GLOG("Banshee enable hitbox");
+            damageArea->SetEnabled(true);
+            if (weaponCollider) weaponCollider->SetEnabled(true);
+        }
+        else if (damageArea->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        {
+            GLOG("Banshee disable hitbox");
             damageArea->SetEnabled(false);
+            if (weaponCollider) weaponCollider->SetEnabled(false);
+        }
+
+        if (attackTimer >= attackDuration)
+        {
+            isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
             ChangeState();

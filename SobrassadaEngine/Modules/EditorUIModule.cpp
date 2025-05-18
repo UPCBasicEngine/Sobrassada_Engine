@@ -36,10 +36,10 @@
 #include "imgui_internal.h"
 // imguizmo include after imgui
 #include "ImGuizmo.h"
+#include <algorithm>
 #include <cstring>
 #include <filesystem>
 #include <string>
-#include <algorithm>
 
 EditorUIModule::EditorUIModule() : width(0), height(0)
 {
@@ -897,7 +897,10 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             ImGui::Text(static_cast<const char*>(field.data));
             break;
         case InspectorField::FieldType::Float:
-            ImGui::SliderFloat(field.name, (float*)field.data, field.minValue, field.maxValue);
+            ImGui::DragFloat(
+                field.name, (float*)field.data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         case InspectorField::FieldType::Bool:
             ImGui::Checkbox(field.name, (bool*)field.data);
@@ -908,19 +911,25 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         case InspectorField::FieldType::Vec2:
         {
             float* vec2Data = reinterpret_cast<float*>(field.data);
-            ImGui::SliderFloat2(field.name, vec2Data, field.minValue, field.maxValue);
+            ImGui::DragFloat2(
+                field.name, vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         }
         case InspectorField::FieldType::Vec3:
         {
             float* vec3Data = reinterpret_cast<float*>(field.data);
-            ImGui::SliderFloat3(field.name, vec3Data, field.minValue, field.maxValue);
+            ImGui::DragFloat3(
+                field.name, vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         }
         case InspectorField::FieldType::Vec4:
         {
             float* vec4Data = reinterpret_cast<float*>(field.data);
-            ImGui::SliderFloat4(field.name, vec4Data, field.minValue, field.maxValue);
+            ImGui::DragFloat4(
+                field.name, vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         }
         case InspectorField::FieldType::Color:

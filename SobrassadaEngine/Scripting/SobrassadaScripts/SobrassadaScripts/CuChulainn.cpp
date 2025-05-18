@@ -15,6 +15,7 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include "SDL.h"
 #include "Wwise_IDs.h"
@@ -144,7 +145,7 @@ bool CuChulainn::CanDash()
 
 bool CuChulainn::CanAttack()
 {
-    return (state != CharacterStates::DASH && !isAttacking && attackTimer <= 0);
+    return (state != CharacterStates::DASH && !isAttacking);
 }
 
 bool CuChulainn::CanAim() const
@@ -232,8 +233,18 @@ void CuChulainn::PerformAttack()
 
     if (!isAttacking) return;
 
-    if (attackTimer <= 0) isAttacking = false;
+    if (attackTimer >= attackDuration) isAttacking = false;
+
     // TODO: When timer matches animation, enable weapon collider. Disable it afterwards
+    if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+        attackTimer < attackHitboxDelay + attackHitboxDuration)
+    {
+        weaponCollider->SetEnabled(true);
+    }
+    else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+    {
+        weaponCollider->SetEnabled(false);
+    }
 }
 
 void CuChulainn::Attack()
