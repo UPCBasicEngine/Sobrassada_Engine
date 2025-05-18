@@ -362,10 +362,11 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
 {
     if (!movementEnabled) return;
 
-    const InputModule* input     = App->GetInputModule();
-    const KeyState* keyboard     = input->GetKeyboard();
-    const KeyState* mouseButtons = input->GetMouseButtons();
-    const float2 leftJoystick    = input->GetLeftStick();
+    const InputModule* input       = App->GetInputModule();
+    const KeyState* keyboard       = input->GetKeyboard();
+    const KeyState* mouseButtons   = input->GetMouseButtons();
+    const float2 leftJoystick      = input->GetLeftStick();
+    const KeyState* gamepadButtons = input->GetControllerButtons();
 
     float3 direction(0.0f, 0.0f, 0.0f);
 
@@ -381,6 +382,11 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
     {
         direction.x = leftJoystick.x;
         direction.z = leftJoystick.y;
+
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
     }
 
     // float rotationDir = 0.0f;
