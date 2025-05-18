@@ -27,6 +27,7 @@ bool ShaderModule::Init()
     transparentPassProgram      = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
     lightingPassProgram         = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
 
+    billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
     return true;
 }
 

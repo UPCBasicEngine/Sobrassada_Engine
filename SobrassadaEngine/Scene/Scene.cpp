@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "BatchManager.h"
+#include "BillboardModule.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
 #include "Component.h"
@@ -325,6 +326,8 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
+
+    App->GetBillboardModule()->RenderBillboards();
 
     {
 #ifdef OPTICK

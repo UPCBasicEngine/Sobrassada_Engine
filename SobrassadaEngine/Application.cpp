@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include "AudioModule.h"
+#include "BillboardModule.h"
 #include "CameraModule.h"
 #include "ComponentUtils.h"
 #include "Config/EngineConfig.h"
@@ -48,6 +49,7 @@ Application::Application()
     modules.push_back(debugDraw = new DebugDrawModule());
     modules.push_back(editorUIModule = new EditorUIModule());
     modules.push_back(gameDebugUI = new GameDebugUIModule());
+    modules.push_back(billboardModule = new BillboardModule());
 
     engineTimer = new EngineTimer();
     engineTimer->Start();

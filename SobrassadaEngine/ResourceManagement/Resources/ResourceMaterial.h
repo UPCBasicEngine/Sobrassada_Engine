@@ -52,6 +52,8 @@ class ResourceMaterial : public Resource
     const MaterialGPU GetMaterial() const { return material; }
     const bool IsTransparent() const { return isTransparent; }
 
+    unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
+
   private:
     TextureInfo diffuseTexture;
     TextureInfo specularTexture;

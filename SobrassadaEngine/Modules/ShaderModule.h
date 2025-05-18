@@ -21,6 +21,7 @@ class ShaderModule : public Module
     int GetLightingPassProgram() const;
     int GetTransparentPassProgram() const { return transparentPassProgram; };
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
+    int GetBillboardProgram() const { return billboardProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -41,4 +42,5 @@ class ShaderModule : public Module
     int uiWidgetProgram                = -1;
 
     int transparentPassProgram         = -1;
+    int billboardProgram               = -1;
 };
