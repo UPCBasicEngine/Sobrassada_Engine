@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "DebugDrawModule.h"
+#include "EditorUIModule.h"
 #include "GameObject.h"
 #include "Geometry/LineSegment.h"
 #include "Math/MathFunc.h"
@@ -69,6 +70,8 @@ void SplineComponent::RenderDebug(float deltaTime)
 
     for (const float3& p : points)
         App->GetDebugDrawModule()->DrawSphere(p, pointColor, 0.08f);
+
+    if (selectedIdx >= 0 && selectedIdx < (int)points.size()) PointGizmo((size_t)selectedIdx);
 }
 
 void SplineComponent::RenderEditorInspector()
@@ -242,4 +245,42 @@ float3 SplineComponent::Evaluate(float t) const
     else seg = std::clamp(seg, 0, maxSeg - 1);
 
     return EvaluateSegment((size_t)seg, u);
+}
+
+bool SplineComponent::PointGizmo(size_t idx)
+{
+    if (idx >= points.size()) return false;
+
+    float3 worldPos = GetPointWorld(idx);
+
+    float4x4 gizmoLocalMatrix = float4x4::FromTRS(worldPos, float4x4::identity, float3::one);
+    float4x4 gizmoGlobalMatrix = gizmoLocalMatrix;
+
+    float3 newPos, _unusedRot, _unusedScale;
+
+    bool moved = App->GetEditorUIModule()->RenderImGuizmo(
+        gizmoLocalMatrix, gizmoGlobalMatrix,
+        float4x4::identity,
+        newPos, _unusedRot, _unusedScale
+    );
+
+    if (moved) SetPointWorld(idx, newPos);
+    return moved;
+}
+
+float3 SplineComponent::GetPointWorld(size_t idx) const
+{
+    if (idx >= points.size()) return float3::zero;
+    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
+
+    return worldOffset + points[idx];
+}
+
+void SplineComponent::SetPointWorld(size_t idx, const float3& worldPos)
+{
+    if (idx >= points.size()) return;
+
+    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
+
+    points[idx]              = worldPos - worldOffset;
 }

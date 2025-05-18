@@ -30,16 +30,19 @@ public:
     size_t Wrap(int i) const;
     float3 EvaluateSegment(size_t seg, float segmentT) const;
     float3 Evaluate(float t) const;
+    bool PointGizmo(size_t idx);
 
     size_t GetNumPoints() const { return points.size(); }
-    const float3 GetPointLocal(size_t i) const { return points[i]; }
-    float3 GetPointWorld(size_t i) const { return parent->GetGlobalTransform().TransformPos(points[i]); }
+    const float3 GetPointLocal(size_t idx) const { return points[idx]; }
+    float3 GetPointWorld(size_t idx) const;
+
+    void SetPointWorld(size_t idx, const float3& worldPos);
 
   private:
     std::vector<float3> points;
     float3 pendingPoint = float3::zero;
 
-    float alpha = 0.5f;     //0 = uniform, 0.5 = centripetal , 1 = chordal
+    float alpha = 0.5f;
     bool loop     = false;
 
     int selectedIdx = -1;
