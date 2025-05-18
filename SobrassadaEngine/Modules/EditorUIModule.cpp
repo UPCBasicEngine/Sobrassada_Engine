@@ -63,6 +63,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("UI Button"),            COMPONENT_BUTTON              },
         {HashString("Audio Source"),         COMPONENT_AUDIO_SOURCE        },
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
+        {HashString("Billboard"),            COMPONENT_BILLBOARD           },
     };
 
     fullscreen    = FULLSCREEN;

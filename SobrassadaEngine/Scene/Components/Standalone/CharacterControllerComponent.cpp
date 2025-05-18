@@ -325,7 +325,7 @@ void CharacterControllerComponent::LookAtMovement(const float3& moveDir, float d
     if (isRadians) maxStep *= RAD_DEGREE_CONV;
     angle = std::clamp(angle, -maxStep, maxStep);
 
-    if (fabs(angle) < 0.0001f)
+    if (fabs(angle) < 0.00001f)
     {
         isRotating = false;
         return;
@@ -362,38 +362,51 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
 {
     if (!movementEnabled) return;
 
-    const KeyState* keyboard     = App->GetInputModule()->GetKeyboard();
-    const KeyState* mouseButtons = App->GetInputModule()->GetMouseButtons();
+    const InputModule* input       = App->GetInputModule();
+    const KeyState* keyboard       = input->GetKeyboard();
+    const KeyState* mouseButtons   = input->GetMouseButtons();
+    const float2 leftJoystick      = input->GetLeftStick();
+    const KeyState* gamepadButtons = input->GetControllerButtons();
 
     float3 direction(0.0f, 0.0f, 0.0f);
 
-    if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
-    if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
-    if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
-    if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
+    if (input->IsUsingKeyboard())
+    {
 
-    float rotationDir = 0.0f;
+        if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
+        if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
+        if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
+        if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
+    }
+    else
+    {
+        direction.x = leftJoystick.x;
+        direction.z = leftJoystick.y;
 
-    if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
-    if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
+        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
+    }
+
+    // float rotationDir = 0.0f;
+
+    // if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
+    // if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
 
     targetDirection = direction;
     if (direction.LengthSq() > 0.001f)
     {
         direction.Normalize();
         targetDirection = direction;
-
-        if (direction.LengthSq() > 0.0001f)
-        {
-            rotateDirection = direction;
-            isRotating      = true;
-        }
+        rotateDirection = direction;
+        isRotating      = true;
     }
 
-    if (fabs(rotationDir) > 0.0001f)
-    {
-        Rotate(rotationDir, deltaTime);
-    }
+    // if (fabs(rotationDir) > 0.0001f)
+    //{
+    //     Rotate(rotationDir, deltaTime);
+    // }
 }
 
 void CharacterControllerComponent::LookAt(const float3& direction)
