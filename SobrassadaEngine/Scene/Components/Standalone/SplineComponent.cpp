@@ -105,7 +105,10 @@ void SplineComponent::RenderEditorInspector()
 
     ImGui::SeparatorText("Modify Point");
 
-    if (selectedIdx >= 0 && selectedIdx < (int)points.size())
+    const bool validSel = selectedIdx >= 0 && selectedIdx < (int)points.size();
+
+
+    if (validSel)
     {
         float3 tempPoint = points[selectedIdx];
         if (ImGui::InputFloat3("Selected Pos", &tempPoint[0]))
@@ -113,6 +116,16 @@ void SplineComponent::RenderEditorInspector()
             points[selectedIdx] = tempPoint;
         }
     }
+
+    ImGui::BeginDisabled(!validSel);
+    if (ImGui::Button("Delete Point") && validSel)
+    {
+        points.erase(points.begin() + selectedIdx);
+        if (points.empty()) selectedIdx = -1;
+        else if (selectedIdx >= (int)points.size()) selectedIdx = (int)points.size() - 1;
+    }
+    ImGui::EndDisabled();
+
 
     ImGui::SeparatorText("Properties");
 
