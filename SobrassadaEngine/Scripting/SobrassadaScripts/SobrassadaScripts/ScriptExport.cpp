@@ -43,6 +43,7 @@ constexpr const char* scripts[] = {
     "CameraMovement",            // SCRIPT_CAMERA_MOVEMENT
     "Projectile",                // SCRIPT_PROJECTILE
     "FreeCamera",                // SCRIPT_FREE_CAMERA
+    "TileFloatScript",           // SCRIPT_TILEFLOAT
     "SpawnPoint"                 // SCRIPT_SPAWN_POINT
 };
 
