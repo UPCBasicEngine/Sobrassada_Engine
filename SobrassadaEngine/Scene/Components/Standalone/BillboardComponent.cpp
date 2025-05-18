@@ -14,6 +14,7 @@
 BillboardComponent::BillboardComponent(UID uid, GameObject* parent)
     : Component(uid, parent, "Billboard", COMPONENT_BILLBOARD)
 {
+    RecalculateAABB();
 }
 
 BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -272,10 +273,10 @@ void BillboardComponent::SetTexture(ResourceTexture* newTexture)
 
 void BillboardComponent::RecalculateAABB()
 {
-    float3 localPosition = parent->GetGlobalTransform().TranslatePart();
-   
-    localComponentAABB   = AABB(
-        float3(localPosition.x - width/2.f, localPosition.y - height/2.f, 0),
-        float3(localPosition.x + width / 2.f, localPosition.y + height / 2.f, 0)
-    );
+    float3 localPosition = parent->GetLocalTransform().TranslatePart();
+    float maxValue       = width > height ? width : height;
+    maxValue /= 2.f;
+    localComponentAABB    = AABB(float3(-maxValue, -maxValue, -maxValue), float3(maxValue, maxValue, maxValue));
+
+    parent->OnAABBUpdated();
 }

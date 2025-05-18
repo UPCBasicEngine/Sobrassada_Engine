@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "DebugDrawModule.h"
+
 namespace RaycastController
 {
     GameObject* GetRayIntersectionObject(const LineSegment& ray, const std::vector<GameObject*>& queriedGameObjects)
@@ -82,17 +84,18 @@ namespace RaycastController
             {
 
                 const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
-
-                float3 frontVector          = editorCamera.pos - billboardComponent->GetParent()->GetPosition();
+                float3 position             = billboardComponent->GetParent()->GetGlobalTransform().TranslatePart();
+                
+                float3 frontVector          = editorCamera.pos - position;
                 frontVector.Normalize();
 
                 float3x3 rotationMatrix =
                     float3x3(editorCamera.WorldRight(), false ? float3(0, 1.f, 0) : editorCamera.up, frontVector);
 
                 const float4x4& originalTransform = billboardComponent->GetParent()->GetLocalTransform();
-                float4x4 newLocalTransform =
-                    float4x4::FromTRS(originalTransform.TranslatePart(), rotationMatrix, originalTransform.GetScale());
+                float4x4 newLocalTransform = float4x4::FromTRS(position, rotationMatrix, originalTransform.GetScale());
 
+                newLocalTransform.Inverse();
                 localRay.Transform(newLocalTransform);
 
                 float width  = billboardComponent->GetWidth();
