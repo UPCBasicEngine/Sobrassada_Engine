@@ -12,6 +12,7 @@ in vec4 tangent;
 flat in int instance_index;
 
 uniform vec3 cameraPos;
+uniform bool isWireframe;
 
 struct Material
 {
@@ -244,5 +245,12 @@ void main()
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));
-    outColor = vec4(ldr, alpha);
+    if (isWireframe)
+    {
+        outColor = vec4(ldr, 1.0);
+    }
+    else {
+        outColor = vec4(ldr, alpha);
+    }
+    
 }

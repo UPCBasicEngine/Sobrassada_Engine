@@ -362,13 +362,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     }
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
-    {
-        App->GetOpenGLModule()->SetRenderWireframe(true);
-        TransparentPassRender(objectsToRender, camera, framebuffer);
-        App->GetOpenGLModule()->SetRenderWireframe(false);
-    }
-    else TransparentPassRender(objectsToRender, camera, framebuffer);
+    TransparentPassRender(objectsToRender, camera, framebuffer);
     glPopDebugGroup();
 }
 
@@ -937,7 +931,6 @@ void Scene::GeometryPassRender(
 
     glDisable(GL_BLEND);
 
-
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
@@ -1067,7 +1060,7 @@ void Scene::TransparentPassRender(
     unsigned int width  = framebuffer->GetTextureWidth();
     unsigned int height = framebuffer->GetTextureHeight();
     framebuffer->Bind();
-    //glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glViewport(0, 0, width, height);
 
     glEnable(GL_BLEND);
@@ -1097,7 +1090,18 @@ void Scene::TransparentPassRender(
 
     glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
 
-    batchManager->RenderTransparent(meshesToRender, camera);
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    {
+        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        batchManager->RenderTransparent(meshesToRender, camera);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+    else
+    {
+        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        batchManager->RenderTransparent(meshesToRender, camera);
+    }
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
