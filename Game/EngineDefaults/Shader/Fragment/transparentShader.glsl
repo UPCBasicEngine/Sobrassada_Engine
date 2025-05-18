@@ -196,6 +196,12 @@ void main()
     else metallicRoughnessTexColor = vec4(1);
     const float alpha = texColor.a;
 
+    if (!isWireframe)
+    {
+        if(alpha < 0.1) discard;
+    }
+
+
     vec3 N = normalize(normal);
     // Retrive normal for normal map
     if (mat.normalTex.r != 0 || mat.normalTex.g != 0) {
@@ -251,6 +257,5 @@ void main()
     }
     else {
         outColor = vec4(ldr, alpha);
-    }
-    
+    } 
 }
