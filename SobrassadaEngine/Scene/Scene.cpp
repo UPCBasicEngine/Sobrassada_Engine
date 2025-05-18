@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "BatchManager.h"
+#include "BillboardModule.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
 #include "Component.h"
@@ -318,6 +319,8 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     }
 
     LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
+
+    App->GetBillboardModule()->RenderBillboards();
 
     {
 #ifdef OPTICK

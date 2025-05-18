@@ -22,6 +22,7 @@ class ShaderModule : public Module
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
     int GetQuadProgram() const { return quadProgram; };
     int GetDepthProgram() const { return depthProgram; };
+    int GetBillboardProgram() const { return billboardProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -43,4 +44,5 @@ class ShaderModule : public Module
 
     int quadProgram                    = -1;
     int depthProgram                   = -1;
+    int billboardProgram                = -1;
 };

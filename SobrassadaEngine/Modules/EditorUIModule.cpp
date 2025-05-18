@@ -36,10 +36,10 @@
 #include "imgui_internal.h"
 // imguizmo include after imgui
 #include "ImGuizmo.h"
+#include <algorithm>
 #include <cstring>
 #include <filesystem>
 #include <string>
-#include <algorithm>
 
 EditorUIModule::EditorUIModule() : width(0), height(0)
 {
@@ -63,6 +63,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("UI Button"),            COMPONENT_BUTTON              },
         {HashString("Audio Source"),         COMPONENT_AUDIO_SOURCE        },
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
+        {HashString("Billboard"),            COMPONENT_BILLBOARD           },
     };
 
     fullscreen    = FULLSCREEN;

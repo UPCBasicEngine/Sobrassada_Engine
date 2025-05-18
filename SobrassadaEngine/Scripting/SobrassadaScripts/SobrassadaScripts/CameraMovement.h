@@ -14,7 +14,7 @@ class CameraMovement : public Script
     bool Init() override;
     void Update(float deltaTime) override;
 
-    void EnableMouseOffset(bool enable) { mouseOffsetEnabled = enable; }
+    void EnableAimOffset(bool enable) { aimOffsetEnabled = enable; }
     void SetPosition(const float3& newPos);
 
   private:
@@ -28,8 +28,8 @@ class CameraMovement : public Script
     float3 finalPosition                           = float3::zero;
     float smoothnessVelocity                       = 10.0f;
 
-    bool mouseOffsetEnabled                        = false;
-    float mouseOffsetIntensity                     = 0.0f;
+    bool aimOffsetEnabled                          = false;
+    float aimOffsetIntensity                       = 0.0f;
 
     bool lookAheadEnabled                          = false;
     float lookAheadIntensity                       = 0.0f;
