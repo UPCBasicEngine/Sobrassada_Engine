@@ -33,6 +33,7 @@ class ImageComponent;
 class ButtonComponent;
 class AudioSourceComponent;
 class AudioListenerComponent;
+class BillboardComponent;
 
 enum MobilitySettings
 {
