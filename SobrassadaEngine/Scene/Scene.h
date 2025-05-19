@@ -84,7 +84,7 @@ class SOBRASADA_API_ENGINE Scene
     GameObject* GetGameObjectByName(const std::string& name);
 
     LightsConfig* GetLightsConfig() const { return lightsConfig; }
-    CameraComponent* GetMainCamera() const { return mainCamera; }
+    CameraComponent* GetMainCamera() const;
 
     template <typename T> std::vector<T> GetEnabledComponentsOfType() const;
 

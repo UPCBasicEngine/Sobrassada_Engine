@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Component.h"
-#include "Wwise_IDs.h"
+#include <AK/SoundEngine/Common/AkTypes.h>
 
 class AudioSourceComponent : public Component
 {
@@ -20,8 +20,8 @@ class AudioSourceComponent : public Component
     virtual void RenderDebug(float deltaTime) {};
 
     // More efficient to use the IDs, but both exist in case it is needed to use the string variant in some scenario
-    void EmitEvent(const AkUniqueID event) const;
-    void EmitEvent(const std::string& event) const;
+    SOBRASADA_API_ENGINE void EmitEvent(const AkUniqueID event) const;
+    SOBRASADA_API_ENGINE void EmitEvent(const std::string& event) const;
     void SetRTPCValue(const AkUniqueID parameterID, const float value);
     void SetRTPCValue(const std::string& parameterName, const float value);
     void SetSwitch(const AkUniqueID switchGroupID, const AkUniqueID activeSwitchID);
@@ -42,4 +42,6 @@ class AudioSourceComponent : public Component
     float volume         = 1;
     float pitch          = 0.5f;
     float spatialization = 0;
+
+    bool isInited        = false;
 };

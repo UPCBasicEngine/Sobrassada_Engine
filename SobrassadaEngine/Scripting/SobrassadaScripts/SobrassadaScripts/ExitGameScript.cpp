@@ -25,13 +25,9 @@ void ExitGameScript::Update(float deltaTime)
 {
 }
 
-void ExitGameScript::Inspector()
-{
-}
-
 void ExitGameScript::OnClick()
 {
-    GLOG("Exiting game...");
+    //GLOG("Exiting game...");
     AppEngine->GetEditorUIModule()->RequestExit();
 }
 
@@ -46,7 +42,7 @@ ExitGameScript::~ExitGameScript()
 
 void ExitGameScript::OnDestroy()
 {
-    GLOG("ExitGameScript::OnDestroy() called");
+    //GLOG("ExitGameScript::OnDestroy() called");
 
     hasRegisteredCallback = false;
     delegateID            = {};

@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include "AudioModule.h"
+#include "BillboardModule.h"
 #include "CameraModule.h"
 #include "ComponentUtils.h"
 #include "Config/EngineConfig.h"
@@ -7,6 +9,7 @@
 #include "EditorUIModule.h"
 #include "EngineTimer.h"
 #include "Framebuffer.h"
+#include "GameDebugUIModule.h"
 #include "GameTimer.h"
 #include "GameUIModule.h"
 #include "InputModule.h"
@@ -20,7 +23,6 @@
 #include "ScriptModule.h"
 #include "ShaderModule.h"
 #include "WindowModule.h"
-#include "AudioModule.h"
 
 #ifdef OPTICK
 #include "optick.h"
@@ -46,6 +48,8 @@ Application::Application()
     modules.push_back(cameraModule = new CameraModule());
     modules.push_back(debugDraw = new DebugDrawModule());
     modules.push_back(editorUIModule = new EditorUIModule());
+    modules.push_back(gameDebugUI = new GameDebugUIModule());
+    modules.push_back(billboardModule = new BillboardModule());
 
     engineTimer = new EngineTimer();
     engineTimer->Start();
@@ -113,6 +117,10 @@ update_status Application::Update()
         for (std::list<Module*>::iterator it = modules.begin(); it != modules.end() && returnStatus == UPDATE_CONTINUE;
              ++it)
             returnStatus = (*it)->RenderEditor(deltaTime);
+#endif
+#ifdef GAME
+        App->GetOpenGLModule()->GetFramebuffer()->Unbind();
+        GetGameDebugUIModule()->RenderEditor(deltaTime);
 #endif
     }
 

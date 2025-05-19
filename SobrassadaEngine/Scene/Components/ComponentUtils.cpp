@@ -8,6 +8,7 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
@@ -174,6 +175,13 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         generatedComponent                                = canvasScaler;
         break;
     }
+    case COMPONENT_BILLBOARD:
+    {
+        BillboardComponent* billboard                 = new BillboardComponent(uid, parent);
+        std::get<BillboardComponent*>(componentTuple) = billboard;
+        generatedComponent                            = billboard;
+        break;
+    }
     default:
         return;
     }
@@ -302,6 +310,12 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
         {
             AudioListenerComponent* audioListener             = new AudioListenerComponent(initialState, parent);
             std::get<AudioListenerComponent*>(componentTuple) = audioListener;
+            break;
+        }
+        case COMPONENT_BILLBOARD:
+        {
+            BillboardComponent* billboard                 = new BillboardComponent(initialState, parent);
+            std::get<BillboardComponent*>(componentTuple) = billboard;
             break;
         }
         default:

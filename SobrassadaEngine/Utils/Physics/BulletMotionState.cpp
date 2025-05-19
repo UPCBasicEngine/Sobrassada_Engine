@@ -11,10 +11,9 @@
 #include "Math/float4x4.h"
 
 BulletMotionState::BulletMotionState(
-    Component* newCollider, const math::float3& newCenterOffset, const math::float3& newCenterRotation,
-    bool newFreezeRotation
+    Component* newCollider, const math::float3& newCenterOffset, const math::float3& newCenterRotation
 )
-    : collider(newCollider), freezeRotation(newFreezeRotation)
+    : collider(newCollider)
 {
     btQuaternion rotationQuat =
         btQuaternion(btScalar(newCenterRotation.y), btScalar(newCenterRotation.x), btScalar(newCenterRotation.z));
@@ -66,14 +65,12 @@ void BulletMotionState::setWorldTransform(const btTransform& physicsWorldTransfo
     btTransform finalPhysicsTransform;
     finalPhysicsTransform.setIdentity();
 
-    if (!freezeRotation) finalPhysicsTransform.setBasis(physicsWorldTransform.getBasis());
     finalPhysicsTransform.setOrigin(physicsWorldTransform.getOrigin());
 
     // Render world physics collider transform
     btTransform finalOffsetTransform;
     finalOffsetTransform.setIdentity();
 
-    if (!freezeRotation) finalOffsetTransform.setBasis(centerOffset.getBasis());
     finalOffsetTransform.setOrigin(centerOffset.getOrigin());
 
     btTransform gameObjectTransform = finalPhysicsTransform * finalOffsetTransform;

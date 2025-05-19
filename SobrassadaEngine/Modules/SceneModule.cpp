@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "CameraModule.h"
+#include "ScriptComponent.h"
 #include "Config/EngineConfig.h"
 #include "Config/ProjectConfig.h"
 #include "EditorUIModule.h"
@@ -109,6 +110,13 @@ update_status SceneModule::PostUpdate(float deltaTime)
                 App->GetPathfinderModule()->HandleClickNavigation();
             }
         }
+        else if (GetDoMouseInputsScene())
+        {
+            if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN)
+            {
+                App->GetPathfinderModule()->GetClickNavigation();
+            }
+        }
 
         // CTRL+D -> Duplicate selected game object
         if (keyboard[SDL_SCANCODE_LCTRL] && keyboard[SDL_SCANCODE_D] == KeyState::KEY_DOWN &&
@@ -128,7 +136,15 @@ update_status SceneModule::PostUpdate(float deltaTime)
         // IF SCENE NOT FOCUSED AND WAS MULTISELECTING RELEASE
         if (loadedScene->IsMultiselecting() && !loadedScene->IsSceneFocused()) loadedScene->ClearObjectSelection();
 
-        if (loadedScene->GetStopPlaying()) SwitchPlayMode(false);
+        if (loadedScene->GetStopPlaying())
+        {
+            SwitchPlayMode(false);
+            for (auto& go : loadedScene->GetAllGameObjects())
+            {
+                if (ScriptComponent* scriptComp = go.second->GetComponent<ScriptComponent*>())
+                    scriptComp->ResetInitializationFlags();
+            }
+        }
         else if (loadedScene->GetStartPlaying()) SwitchPlayMode(true);
         else if (loadedScene->GetStepPlaying())
         {
@@ -143,7 +159,7 @@ update_status SceneModule::PostUpdate(float deltaTime)
 bool SceneModule::ShutDown()
 {
     CloseScene();
-    GLOG("Destroying scene")
+    //GLOG("Destroying scene")
     return true;
 }
 
@@ -213,6 +229,12 @@ void SceneModule::SwitchPlayMode(bool play)
             loadedScene->SetStartPlaying(false);
         }
     }
+}
+
+void SceneModule::AddGameObjectToUpdate(GameObject* gameObject)
+{
+    if (inPlayMode) return;
+    loadedScene->AddGameObjectToUpdate(gameObject);
 }
 
 void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard)

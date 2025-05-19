@@ -59,6 +59,8 @@ namespace SceneImporter
             {
                 std::vector<std::pair<UID, UID>> primitives;
 
+                if (srcNode.mesh >= gltfMeshes.size())
+                    gltfMeshes.resize(srcNode.mesh + 1);
                 const tinygltf::Mesh& srcMesh    = model.meshes[srcNode.mesh];
                 const float4x4& defaultTransform = MeshImporter::GetNodeTransform(srcNode);
                 int primitiveCounter             = 0;
@@ -72,7 +74,7 @@ namespace SceneImporter
                     matIndex   = primitive.material;
                     if (matIndex == -1)
                     {
-                        GLOG("Material index invalid for mesh: %s. Using default material.", name.c_str());
+                        //GLOG("Material index invalid for mesh: %s. Using default material.", name.c_str());
                         matUID = DEFAULT_MATERIAL_UID;
                     }
                     else if (matIndices.find(matIndex) == matIndices.end())
@@ -92,14 +94,14 @@ namespace SceneImporter
                     primitiveCounter++;
 
                     primitives.emplace_back(meshUID, matUID);
-                    GLOG("New primitive with mesh UID: %d and Material UID: %d", meshUID, matUID);
+                    //GLOG("New primitive with mesh UID: %d and Material UID: %d", meshUID, matUID);
                 }
 
-                gltfMeshes.push_back(primitives);
+                gltfMeshes[srcNode.mesh] = primitives;
             }
         }
 
-        GLOG("Total .gltf meshes: %d", gltfMeshes.size());
+        //GLOG("Total .gltf meshes: %d", gltfMeshes.size());
 
         // Import Model
         ModelImporter::ImportModel(model, gltfMeshes, filePath, targetFilePath);

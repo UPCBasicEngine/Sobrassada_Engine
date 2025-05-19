@@ -13,7 +13,6 @@ class VSyncToggleScript : public Script
 
     bool Init() override;
     void Update(float deltaTime) override;
-    void Inspector() override;
     void OnDestroy() override;
 
 

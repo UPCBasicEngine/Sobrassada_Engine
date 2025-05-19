@@ -51,6 +51,7 @@ void PointLightComponent::Clone(const Component* other)
     {
         const PointLightComponent* otherLight = static_cast<const PointLightComponent*>(other);
         enabled                               = otherLight->enabled;
+        wasEnabled                            = otherLight->wasEnabled;
 
         intensity                             = otherLight->intensity;
         color                                 = otherLight->color;
@@ -69,31 +70,23 @@ void PointLightComponent::RenderEditorInspector()
 {
     LightComponent::RenderEditorInspector();
 
-    if (enabled)
-    {
-        ImGui::Text("Point light parameters");
-        ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
+    ImGui::Text("Point light parameters");
+    ImGui::SliderFloat("Range", &range, 0.0f, 10.0f);
 
-        ImGui::Text("Gizmos mode");
-        if (ImGui::RadioButton("Lines", &gizmosMode, 0))
-        {
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Sphere", &gizmosMode, 1))
-        {
-        }
-    }
+    ImGui::Text("Gizmos mode");
+    ImGui::RadioButton("Lines", &gizmosMode, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("Sphere", &gizmosMode, 1);
 }
 
 void PointLightComponent::Render(float deltaTime)
 {
-    
 }
 
 void PointLightComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;
-    if (!enabled || !drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
+    if (!drawGizmos || App->GetSceneModule()->GetInPlayMode()) return;
 
     std::vector<float3> directions;
     directions.push_back(float3::unitX);

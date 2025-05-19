@@ -27,16 +27,39 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void AddToCrowd();
     void RecreateAgent();
     void LookAtMovement(const float3& moveDir, float deltaTime);
+    bool SetPathNavigation(const math::float3& destination, bool move = true);
+    void PauseMovement();
+    void ResumeMovement();
 
-    bool SetPathNavigation(const math::float3& destination);
-    void SetSpeed(float newSpeed) { speed = newSpeed; }
+    float GetSpeed() const { return currentSpeed; }
+    float GetAngularSpeed() const { return currentAngularSpeed; }
+    bool IsPaused() const { return isPaused; }
+
+    void SetLookForward(bool look) { lookForward = look; }
+    void SetSpeed(const float newSpeed, const float acceleration);
+    void SetAngularSpeed(const float newAngular);
+    void ResetSpeed();
+    void ResetAngularSpeed();
 
   private:
-    float speed           = 0.f;
-    float radius          = 0.f;
-    float height          = 0.f;
-    int agentId           = -1; // Assigned by dtCrowd
+    float defaultSpeed        = 0.0f;
+    float defaultAcceleration = 0.0f;
+    float currentSpeed        = 0.0f;
+    float currentAcceleration = 0.0f;
+    float radius              = 0.0f;
+    float height              = 0.0f;
+    int agentId               = -1; // Assigned by dtCrowd
 
-    float maxAngularSpeed = 0.0f;
-    bool isRadians        = false;
+    bool isPaused             = false;
+    float3 frozenPosition     = float3::zero;
+    float restoredSpeed       = 0.0f;
+    float restoredAccel       = 0.0f;
+
+    float maxAngularSpeed     = 0.0f;
+    float currentAngularSpeed = 0.0f;
+    bool isRadians            = false;
+    float restoreAngular      = 0.0f;
+
+    bool lookForward          = false;
+    float3 previousPos        = float3::zero;
 };

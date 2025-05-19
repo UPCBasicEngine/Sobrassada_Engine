@@ -52,6 +52,11 @@ Transform2DComponent::Transform2DComponent(const rapidjson::Value& initialState,
         anchorsY.x                          = initAnchors[2].GetFloat();
         anchorsY.y                          = initAnchors[3].GetFloat();
     }
+
+    if (initialState.HasMember("RenderAnchors"))
+    {
+        renderAnchors = initialState["RenderAnchors"].GetBool();
+    }
 }
 
 Transform2DComponent::~Transform2DComponent()
@@ -122,6 +127,8 @@ void Transform2DComponent::Save(rapidjson::Value& targetState, rapidjson::Docume
     valAnchors.PushBack(anchorsY.x, allocator);
     valAnchors.PushBack(anchorsY.y, allocator);
     targetState.AddMember("Anchors", valAnchors, allocator);
+
+    targetState.AddMember("RenderAnchors", renderAnchors, allocator);
 }
 
 void Transform2DComponent::Clone(const Component* other)
@@ -129,6 +136,9 @@ void Transform2DComponent::Clone(const Component* other)
     if (other->GetType() == ComponentType::COMPONENT_TRANSFORM_2D)
     {
         const Transform2DComponent* otherTransform = static_cast<const Transform2DComponent*>(other);
+        enabled                                    = otherTransform->enabled;
+        wasEnabled                                 = otherTransform->wasEnabled;
+
         position                                   = otherTransform->position;
         size                                       = otherTransform->size;
         pivot                                      = otherTransform->pivot;
@@ -136,6 +146,7 @@ void Transform2DComponent::Clone(const Component* other)
         anchorsY                                   = otherTransform->anchorsY;
         margins                                    = otherTransform->margins;
         previousMargins                            = otherTransform->previousMargins;
+        renderAnchors                              = otherTransform->renderAnchors;
     }
     else
     {
@@ -153,7 +164,11 @@ void Transform2DComponent::RenderEditorInspector()
         return;
     }
 
-    if (enabled)
+    ImGui::Text("Transform 2D");
+    ImGui::PushItemWidth(75);
+
+    // Position X / Left
+    if (anchorsX.x == anchorsX.y)
     {
         ImGui::Text("Transform 2D");
         ImGui::PushItemWidth(75);
@@ -217,6 +232,61 @@ void Transform2DComponent::RenderEditorInspector()
 
         ImGui::Separator();
     }
+    else
+    {
+        if (ImGui::DragFloat("Left", &margins.x, 0.1f)) OnLeftMarginChanged();
+    }
+
+    ImGui::SameLine();
+
+    // Position Y / Top
+    if (anchorsY.x == anchorsY.y)
+    {
+        if (ImGui::DragFloat("Pos Y", &position.y, 0.1f)) UpdateParent3DTransform();
+    }
+    else
+    {
+        if (ImGui::DragFloat("Top", &margins.z, 0.1f)) OnTopMarginChanged();
+    }
+
+    // Width / Right
+    if (anchorsX.x == anchorsX.y)
+    {
+        if (ImGui::DragFloat("Width", &size.x, 0.1f)) OnSizeChanged();
+    }
+    else
+    {
+        if (ImGui::DragFloat("Right", &margins.y, 0.1f)) OnRightMarginChanged();
+    }
+
+    ImGui::SameLine();
+
+    // Height / Bottom
+    if (anchorsY.x == anchorsY.y)
+    {
+        if (ImGui::DragFloat("Height", &size.y, 0.1f)) OnSizeChanged();
+    }
+    else
+    {
+        if (ImGui::DragFloat("Bottom", &margins.w, 0.1f)) OnBottomMarginChanged();
+    }
+
+    ImGui::PopItemWidth();
+
+    if (ImGui::DragFloat2("Pivot", &pivot[0], 0.01f, 0.0f, 1.0f))
+    {
+        OnAnchorsUpdated();
+        OnSizeChanged();
+    }
+    ImGui::Spacing();
+    ImGui::Text("Anchors");
+
+    if (ImGui::DragFloat2("X-axis bounds", &anchorsX.x, 0.001f, 0.0f, 1.0f)) OnAnchorsUpdated();
+    if (ImGui::DragFloat2("Y-axis bounds", &anchorsY.x, 0.001f, 0.0f, 1.0f)) OnAnchorsUpdated();
+
+    ImGui::Separator();
+    ImGui::InputFloat2("Debug pos", &position.x);
+    ImGui::InputFloat2("Debug size", &size.x);
 }
 
 void Transform2DComponent::RenderWidgets() const
@@ -247,7 +317,7 @@ void Transform2DComponent::RenderWidgets() const
     debugDraw->DrawLine(float3(renderPos.x - 1, renderPos.y + 1, 0), -float3::unitY, renderSize.y + 2, float3(1, 1, 1));
 
     // Draw anchor points when selected
-    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject()->GetUID() == parent->GetUID())
+    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject()->GetUID() == parent->GetUID() && renderAnchors)
     {
         const float scale = (parentCanvas && !parentCanvas->IsInWorldSpace()) ? parentCanvas->GetScreenScale() : 1.0f;
 

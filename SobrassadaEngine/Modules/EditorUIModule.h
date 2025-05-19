@@ -75,6 +75,7 @@ class EditorUIModule : public Module
         float3& scale
     ) const;
 
+    std::string ToLower(const std::string& str);
     template <typename T>
     T RenderResourceSelectDialog(
         const char* id, const std::unordered_map<HashString, T>& availableResources, const T& defaultResource
@@ -103,6 +104,7 @@ class EditorUIModule : public Module
     SOBRASADA_API_ENGINE void ToggleFullscreen();
     SOBRASADA_API_ENGINE void ToggleVSync();
 
+    void Console(bool& consoleMenu) const;
   private:
     void RenderBasicTransformModifiers(
         float3& outputPosition, float3& outputRotation, float3& outputScale, bool& lockScaleAxis,
@@ -132,7 +134,6 @@ class EditorUIModule : public Module
     void LoadModelDialog(bool& loadModel);
     void LoadPrefabDialog(bool& loadPrefab);
     void SaveDialog(bool& save);
-    void Console(bool& consoleMenu) const;
     void About(bool& aboutMenu);
     void Navmesh(bool& navmesh);
     void CrowdControl(bool& crowdControl);
