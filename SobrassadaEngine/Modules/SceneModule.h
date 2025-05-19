@@ -23,10 +23,10 @@ class SceneModule : public Module
     bool ShutDown() override;
 
     void CreateScene();
-    void LoadScene(const rapidjson::Value& initialState, bool forceReload = false);
-    void CloseScene();
+    void SOBRASADA_API_ENGINE LoadScene(const rapidjson::Value& initialState, bool forceReload = false);
+    void SOBRASADA_API_ENGINE CloseScene();
 
-    void SwitchPlayMode(bool play);
+    void SOBRASADA_API_ENGINE SwitchPlayMode(bool play);
 
     void ReenerateStaticTree() const { loadedScene->UpdateStaticSpatialStructure(); }
     void ReenerateDynamicTree() const { loadedScene->UpdateDynamicSpatialStructure(); }
@@ -43,7 +43,7 @@ class SceneModule : public Module
     bool GetOnlyOnceInPlayMode() const { return onlyOncePlayMode; }
     void ResetOnlyOnceInPlayMode() { onlyOncePlayMode = false; }
 
-    void AddGameObjectToUpdate(GameObject* gameObject) { loadedScene->AddGameObjectToUpdate(gameObject); };
+    void SOBRASADA_API_ENGINE AddGameObjectToUpdate(GameObject* gameObject) { loadedScene->AddGameObjectToUpdate(gameObject); };
 
   private:
     void HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard);

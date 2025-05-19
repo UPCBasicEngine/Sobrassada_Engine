@@ -1,5 +1,5 @@
 #include "SceneModule.h"
-
+#include "Globals.h"
 #include "Application.h"
 #include "CameraModule.h"
 #include "ScriptComponent.h"
@@ -30,6 +30,7 @@
 #ifdef OPTICK
 #include "optick.h"
 #endif
+
 
 SceneModule::SceneModule()
 {
@@ -152,7 +153,7 @@ update_status SceneModule::PostUpdate(float deltaTime)
             loadedScene->SetStepPlaying(false);
         }
     }
-
+    
     return UPDATE_CONTINUE;
 }
 
@@ -171,7 +172,7 @@ void SceneModule::CreateScene()
     loadedScene->Init();
 }
 
-void SceneModule::LoadScene(const rapidjson::Value& initialState, const bool forceReload)
+void SOBRASADA_API_ENGINE SceneModule::LoadScene(const rapidjson::Value& initialState, const bool forceReload)
 {
     const UID extractedSceneUID = initialState["UID"].GetUint64();
     if (!forceReload && loadedScene != nullptr && loadedScene->GetSceneUID() == extractedSceneUID)
@@ -186,7 +187,8 @@ void SceneModule::LoadScene(const rapidjson::Value& initialState, const bool for
     loadedScene->Init();
 }
 
-void SceneModule::CloseScene()
+
+void SOBRASADA_API_ENGINE SceneModule::CloseScene()
 {
     if (inPlayMode)
     {
@@ -202,7 +204,7 @@ void SceneModule::CloseScene()
     if (App->GetResourcesModule() != nullptr) App->GetResourcesModule()->ShutDown();
 }
 
-void SceneModule::SwitchPlayMode(bool play)
+void SOBRASADA_API_ENGINE SceneModule::SwitchPlayMode(bool play)
 {
     if (play == inPlayMode || loadedScene == nullptr) return;
 

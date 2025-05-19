@@ -85,6 +85,9 @@
     <ClInclude Include="Wwise_IDs.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="ChangeSceneScript.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -722,6 +725,9 @@
     </ClCompile>
     <ClCompile Include="SpawnPoint.cpp">
       <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="ChangeSceneScript.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -16,6 +16,7 @@
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
+#include "ChangeSceneScript.h"
 #include "VSyncToggleScript.h"
 
 #include <string>
@@ -42,7 +43,8 @@ constexpr const char* scripts[] = {
     "CameraMovement",            // SCRIPT_CAMERA_MOVEMENT
     "Projectile",                // SCRIPT_PROJECTILE
     "FreeCamera",                // SCRIPT_FREE_CAMERA
-    "SpawnPoint"                 // SCRIPT_SPAWN_POINT
+    "SpawnPoint",                 // SCRIPT_SPAWN_POINT
+    "ChangeSceneScript"         //SCRIPT_CHANGE_SCENE
 };
 
 Application* AppEngine = nullptr;
@@ -75,6 +77,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
     if (scriptType == "GodModeScript") return new GodMode(parent);
+    if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     return nullptr;
 }
 

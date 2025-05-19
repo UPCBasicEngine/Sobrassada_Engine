@@ -1,40 +1,37 @@
 #include "pch.h"
 
 #include "ChangeSceneScript.h"
-
 #include "CuChulainn.h"
 #include "GameObject.h"
+#include "Globals.h" 
 #include "Scene.h"
-#include "Application.h"
 #include "SceneModule.h"
+#include "FileSystem/FileSystem.h"
 #include "ProjectModule.h"
-#include "LibraryModule.h"
 #include "ScriptComponent.h"
-#include "FileSystem.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
-
 
 
 ChangeSceneScript::ChangeSceneScript(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
+    fields.push_back({"Target Scene Name", InspectorField::FieldType::InputText, &targetSceneName});
     fields.push_back({"Set only once", InspectorField::FieldType::Bool, &isOneUse});
-    fields.push_back({"Scene index", InspectorField::FieldType::Int, &indexScene});
 }
 
 bool ChangeSceneScript::Init()
 {
     player = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(playerName);
-    scenesPath = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+    scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+    fullScenePath = scenesPath + targetSceneName + SCENE_EXTENSION;
+    
     if (!player)
     {
-        GLOG("[WARNING] SceneChangePoint: No player found by the name '%s'", playerName.c_str());
+        GLOG("[WARNING] ChangeSceneScript: No player found by the name '%s'", playerName.c_str());
         return false;
     }
-
     return true;
 }
-
 
 void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3& collisionNormal)
 {
@@ -46,40 +43,30 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3& colli
         CuChulainn* playerScript = scriptComp->GetScriptByType<CuChulainn>();
         if (playerScript)
         {
-            //change scene 
-            //playerScript->SetSpawnPosition(parent->GetPosition());
-            if (FileSystem::Exists(scenesPath.c_str()))
+            GLOG("Processing scene change request to: %s", targetSceneName);
+
+            SceneModule* sceneModule = AppEngine->GetSceneModule();
+
+            rapidjson::Document doc;
+            if (FileSystem::LoadJSON(fullScenePath.c_str(), doc))
             {
-                    FileSystem::GetFilesSorted(scenesPath, filesLoad);
+                if (doc.HasMember("Scene") && doc["Scene"].IsObject())
+                {
 
-                    for (int i = 0; i < filesLoad.size(); i++)
-                    {
-                        const std::string& file = filesLoad[i];
-                        GLOG("SCENE NAME: %s ", file);
-                        if (indexScene == i)
-                        {
-                            selectedLoad = i;
-                            fileName     = file;
-                        }
-                       
+                    sceneModule->CloseScene();
+                    sceneModule->LoadScene(doc["Scene"], false);
+                    sceneModule->SwitchPlayMode(true);
+                    
+                    
 
-
-                    }
-                
+                    GLOG("Scene change successful!");
+                   
+                }
             }
-            if (selectedLoad != -1)
-            {
-                App->GetLibraryModule()->LoadScene(fileName.c_str());
-                App->GetSceneModule()->GetInPlayMode();
-                playerScript->SetSpawnPosition(parent->GetPosition());
-            }
+
+            GLOG("[ERROR] Failed to load scene: %s", targetSceneName);
+
             
-            if (isOneUse)
-            {
-                if (CubeColliderComponent* collider = parent->GetComponent<CubeColliderComponent*>())
-                    collider->SetEnabled(false);
-                parent->SetEnabled(false);
-            }
         }
     }
 }
