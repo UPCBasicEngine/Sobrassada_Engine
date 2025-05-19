@@ -16,16 +16,18 @@ TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Speed", InspectorField::FieldType::Int, &speed, 0, 100});
     fields.push_back({"MinDistanceToPlayer", InspectorField::FieldType::Float, &minDistanceToPlayer, 0.0f, 100.0f});
+    fields.push_back({"Starting Position", InspectorField::FieldType::Vec3, &startPosition, 0.0, 100.0f});
+    fields.push_back({"Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, 0.0, 100.0f});
+    fields.push_back({"Starting Scale", InspectorField::FieldType::Vec3, &startScale, 0.0, 100.0f});
     fields.push_back(
         {"Set Start Transform",
-         [](Script* self)
+         [this](Script* self)
          {
-             auto* tile                       = static_cast<TileFloatScript*>(self);
-             const float4x4& currentTransform = tile->parent->GetLocalTransform();
+             const float4x4& currentTransform = this->parent->GetLocalTransform();
 
-             tile->startPosition              = currentTransform.TranslatePart();
-             tile->startRotation              = currentTransform.RotatePart().ToEulerXYZ();
-             tile->startScale                 = currentTransform.GetScale();
+             this->startPosition              = currentTransform.TranslatePart();
+             this->startRotation              = currentTransform.RotatePart().ToEulerXYZ();
+             this->startScale                 = currentTransform.GetScale();
              Quat rotQuat                     = Quat(currentTransform.RotatePart());
          }}
     );
