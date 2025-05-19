@@ -40,6 +40,8 @@ bool FireballTrap::Init()
     if (fireball) fireball->SetEnabled(false);
     else GLOG("[WARNING] No fireball found by the name: %s", fireballName.c_str())
 
+    lastAttackTime += -attackCooldown;
+
     return true;
 }
 
@@ -49,7 +51,7 @@ void FireballTrap::Update(float deltaTime)
 
     const float gameTime = AppEngine->GetGameTimer()->GetTime() / 1000.0f;
 
-    maxFallSpeed   = -editableMaxFallSpeed;
+    maxFallSpeed         = -editableMaxFallSpeed;
 
     const float distance = character->GetLastPosition().Distance(parent->GetPosition());
     if (distance <= activationRange) activated = true;

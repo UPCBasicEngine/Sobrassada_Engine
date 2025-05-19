@@ -19,6 +19,12 @@
     <Filter Include="Characters\Enemies">
       <UniqueIdentifier>{7c5918da-d273-43d8-987f-06ca46cebfbc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Characters\Traps">
+      <UniqueIdentifier>{542608f8-4ab9-4512-8882-308a6eaeec76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Characters\Camera">
+      <UniqueIdentifier>{b8735c84-329e-48d9-9802-05cfa1b5f7ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
@@ -51,9 +57,6 @@
     <ClInclude Include="RotateGameObject.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="GodMode.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="Script.h">
       <Filter>Scripting Config</Filter>
     </ClInclude>
@@ -66,18 +69,9 @@
     <ClInclude Include="Character.h">
       <Filter>Characters</Filter>
     </ClInclude>
-    <ClInclude Include="CuChulainn.h">
-      <Filter>Characters</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="CameraMovement.h">
-      <Filter>Characters</Filter>
-    </ClInclude>
     <ClInclude Include="Projectile.h">
       <Filter>Characters</Filter>
-    </ClInclude>
-    <ClInclude Include="FreeCamera.h">
-      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="SpawnPoint.h">
       <Filter>Characters</Filter>
@@ -92,6 +86,18 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="FireballTrap.h">
+      <Filter>Characters\Traps</Filter>
+    </ClInclude>
+    <ClInclude Include="FreeCamera.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="GodMode.h">
+      <Filter>Characters\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraMovement.h">
+      <Filter>Characters\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="CuChulainn.h">
       <Filter>Characters</Filter>
     </ClInclude>
   </ItemGroup>
@@ -696,9 +702,6 @@
     <ClCompile Include="RotateGameObject.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="GodMode.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
     <ClCompile Include="Script.cpp">
       <Filter>Scripting Config</Filter>
     </ClCompile>
@@ -711,20 +714,11 @@
     <ClCompile Include="Character.cpp">
       <Filter>Characters</Filter>
     </ClCompile>
-    <ClCompile Include="CuChulainn.cpp">
-      <Filter>Characters</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptExport.cpp">
       <Filter>Scripting Config</Filter>
     </ClCompile>
-    <ClCompile Include="CameraMovement.cpp">
-      <Filter>Characters</Filter>
-    </ClCompile>
     <ClCompile Include="Projectile.cpp">
       <Filter>Characters</Filter>
-    </ClCompile>
-    <ClCompile Include="FreeCamera.cpp">
-      <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="SpawnPoint.cpp">
       <Filter>Characters</Filter>
@@ -736,7 +730,19 @@
       <Filter>Characters\Enemies</Filter>
     </ClCompile>
     <ClCompile Include="FireballTrap.cpp">
+      <Filter>Characters\Traps</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeCamera.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="GodMode.cpp">
+      <Filter>Characters\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraMovement.cpp">
+      <Filter>Characters\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="CuChulainn.cpp">
+      <Filter>Characters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
