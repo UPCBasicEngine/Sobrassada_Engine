@@ -658,14 +658,14 @@ void Transform2DComponent::OnCanvasRenderModeChanged(
         newLocalPos           = savedWorldPos - parentWorldPos;
     }
 
-    if (newMode == CanvasComponent::CanvasRenderMode::ScreenSpaceOverlay)
-    {
-        position = newLocalPos / scale;
-    }
-    else // World Space
-    {
-        position = newLocalPos * scale;
-    }
+   //if (newMode == CanvasComponent::CanvasRenderMode::ScreenSpaceOverlay)
+   //{
+   //    position = newLocalPos / scale;
+   //}
+   //else // World Space
+   //{
+   //    position = newLocalPos * scale;
+   //}
 
     transform2DUpdated = false;
     UpdateParent3DTransform();

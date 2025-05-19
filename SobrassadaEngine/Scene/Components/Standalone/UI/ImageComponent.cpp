@@ -112,12 +112,10 @@ void ImageComponent::Clone(const Component* other)
 
 void ImageComponent::RenderDebug(float deltaTime)
 {
-    CanvasComponent* canvas = parent->GetComponentParent<CanvasComponent*>(App);
-    if (canvas != nullptr)
-    {
-        float3 highlightColor = float3(0.0f, 0.0f, 0.0f);
-        canvas->RenderDebug(deltaTime, highlightColor);
-    }
+    if (parentCanvas) return;
+
+    float3 highlightColor = float3(0.0f, 0.0f, 0.0f);
+    parentCanvas->RenderDebug(deltaTime, highlightColor);
 }
 
 void ImageComponent::Update(float deltaTime)
