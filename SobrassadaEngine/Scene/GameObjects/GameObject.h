@@ -73,7 +73,7 @@ class SOBRASADA_API_ENGINE GameObject
     void RenderHierarchyNode(UID& selectedGameObjectUID);
     void HandleNodeClick(UID& selectedGameObjectUID);
     void RenderContextMenu();
-    void RenderEditorInspector();
+    void RenderEditorInspector(bool drawGizmo = true);
 
     void UpdateGameObjectHierarchy(UID sourceUID);
     void RenameGameObjectHierarchy();

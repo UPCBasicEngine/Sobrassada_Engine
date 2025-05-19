@@ -74,11 +74,18 @@ void SplineComponent::RenderDebug(float deltaTime)
     for (const float3& p : points)
         dbg->DrawSphere(p + parent->GetGlobalTransform().TranslatePart(), pointColor, 0.08f);
 
-    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject() == parent && selectedIdx >= 0 &&
-        selectedIdx < (int)points.size())
-    {
-        PointGizmo((size_t)selectedIdx);
-    }
+    
+}
+
+bool SplineComponent::RenderGizmo()
+{
+    //if (selectedIdx >= 0 &&
+    //    selectedIdx < (int)points.size())
+    //{
+    return PointGizmo((size_t)selectedIdx);
+    //}
+
+    //return Component::RenderGizmo();
 }
 
 void SplineComponent::RenderEditorInspector()
@@ -269,20 +276,21 @@ float3 SplineComponent::Evaluate(float t) const
 
 bool SplineComponent::PointGizmo(size_t idx)
 {
-    if (idx >= points.size()) return false;
+    if (selectedIdx >= 0 && selectedIdx < (int)points.size())
+    {
+        float4x4 localMatrix  = float4x4::FromTRS(points[idx], float4x4::identity, float3::one);
+        float4x4 globalMatrix = parent->GetGlobalTransform() * localMatrix;
 
-    float4x4 localMatrix  = float4x4::FromTRS(points[idx], float4x4::identity, float3::one);
-    float4x4 globalMatrix = parent->GetGlobalTransform() * localMatrix;
-    
-    float3 newPos, _unusedRot, _unusedScale;
+        float3 newPos, _unusedRot, _unusedScale;
 
-    bool moved = App->GetEditorUIModule()->RenderImGuizmo(
-        localMatrix, globalMatrix, parent->GetGlobalTransform(),
-        newPos, _unusedRot, _unusedScale
-    );
+        bool moved = App->GetEditorUIModule()->RenderImGuizmo(
+            localMatrix, globalMatrix, parent->GetGlobalTransform(), newPos, _unusedRot, _unusedScale
+        );
 
-    if (moved) points[idx] = localMatrix.TranslatePart();
-    return moved;
+        if (moved) points[idx] = localMatrix.TranslatePart();
+        return true;
+    }
+    return false;
 }
 
 float3 SplineComponent::GetPointWorld(size_t idx) const
