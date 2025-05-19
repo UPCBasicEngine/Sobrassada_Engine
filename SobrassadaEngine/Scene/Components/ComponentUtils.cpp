@@ -10,6 +10,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
@@ -173,6 +174,13 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         generatedComponent                            = billboard;
         break;
     }
+    case COMPONENT_DECAL:
+    {
+        DecalComponent* decal                     = new DecalComponent(uid, parent);
+        std::get<DecalComponent*>(componentTuple) = decal;
+        generatedComponent                        = decal;
+        break;
+    }
     default:
         return;
     }
@@ -307,6 +315,12 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
         {
             BillboardComponent* billboard                 = new BillboardComponent(initialState, parent);
             std::get<BillboardComponent*>(componentTuple) = billboard;
+            break;
+        }
+        case COMPONENT_DECAL:
+        {
+            DecalComponent* decal                     = new DecalComponent(initialState, parent);
+            std::get<DecalComponent*>(componentTuple) = decal;
             break;
         }
         default:
