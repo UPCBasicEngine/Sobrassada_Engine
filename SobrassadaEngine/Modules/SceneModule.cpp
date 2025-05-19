@@ -233,6 +233,12 @@ void SOBRASADA_API_ENGINE SceneModule::SwitchPlayMode(bool play)
     }
 }
 
+void SceneModule::AddGameObjectToUpdate(GameObject* gameObject)
+{
+    if (inPlayMode) return;
+    loadedScene->AddGameObjectToUpdate(gameObject);
+}
+
 void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard)
 {
     if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN && !keyboard[SDL_SCANCODE_LALT] &&
