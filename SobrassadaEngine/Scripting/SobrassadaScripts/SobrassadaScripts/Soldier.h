@@ -27,11 +27,14 @@ class Soldier : public Character
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
+    void Attack(float deltaTime) override;
 
     void PatrolAI();
     void ChaseAI();
 
   private:
-    AIAgentComponent* agentAI         = nullptr;
-    SoldierStates currentState        = SoldierStates::NONE;
+    AIAgentComponent* agentAI  = nullptr;
+    SoldierStates currentState = SoldierStates::NONE;
+
+    float3 patrolPoint         = float3::zero;
 };

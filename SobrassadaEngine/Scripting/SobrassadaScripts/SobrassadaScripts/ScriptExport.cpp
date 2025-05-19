@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "CuChulainn.h"
@@ -28,9 +29,9 @@
 #endif
 
 constexpr const char* scripts[] = {
-    "RotateGameObjectScript",          // SCRIPT_ROTATE_GAME_OBJECT
+    "RotateGameObjectScript",    // SCRIPT_ROTATE_GAME_OBJECT
     "ButtonScript",              // SCRIPT_BUTTON
-    "GodModeScript",                   // SCRIPT_GOD_MODE
+    "GodModeScript",             // SCRIPT_GOD_MODE
     "CuChulainnScript",          // SCRIPT_CU_CHULAINN
     "SoldierScript",             // SCRIPT_SOLDIER
     "ExitGameScript",            // SCRIPT_EXIT_GAME
@@ -73,9 +74,11 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "CameraMovement") return new CameraMovement(parent);
     if (scriptType == "Projectile") return new Projectile(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
+    if (scriptType == "Banshee") return new Banshee(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
+
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
     if (scriptType == "GodModeScript") return new GodMode(parent);

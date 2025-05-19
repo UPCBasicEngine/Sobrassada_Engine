@@ -15,16 +15,17 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include "SDL.h"
 #include "Wwise_IDs.h"
 
 CharacterControllerComponent* character = nullptr;
 
-CuChulainn::CuChulainn(GameObject* parent) : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, patrolPoint)
+CuChulainn::CuChulainn(GameObject* parent)
+    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
 {
     currentHealth = 3; // mainChar starts low hp
-    type          = CharacterType::CuChulainn;
 
     // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
@@ -56,6 +57,9 @@ bool CuChulainn::Init()
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
 
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
+
     return true;
 }
 
@@ -66,7 +70,6 @@ void CuChulainn::Update(float deltaTime)
     GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
-    UpdateTimers(deltaTime);
 }
 
 void CuChulainn::OnDeath()
@@ -86,12 +89,21 @@ void CuChulainn::OnHealed(int amount)
     // TODO: play particle system effects
 }
 
-void CuChulainn::HandleState(float time)
+void CuChulainn::HandleState(float deltaTime)
 {
     if (desiredDash && CanDash()) Dash();
-    else if (desiredAttack && CanAttack(time)) Attack(time);
+    else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim();
     else if (!isAttacking && !isDashing) Move();
+
+    if (state == CharacterStates::DASH)
+    {
+        if (dashTimer <= 0)
+        {
+            GLOG("STOP DASH SCRIPT");
+            character->EndDash();
+        }
+    }
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
@@ -146,9 +158,9 @@ bool CuChulainn::CanDash()
     return dashTimer <= 0;
 }
 
-bool CuChulainn::CanAttack(float time)
+bool CuChulainn::CanAttack()
 {
-    return (state != CharacterStates::DASH && !isAttacking && time - lastAttackTime >= attackCooldown);
+    return (state != CharacterStates::DASH && !isAttacking);
 }
 
 bool CuChulainn::CanAim() const
@@ -158,6 +170,8 @@ bool CuChulainn::CanAim() const
 
 void CuChulainn::UpdateTimers(float deltaTime)
 {
+    Character::UpdateTimers(deltaTime);
+
     // Dash timers
     dashTimer -= deltaTime;
     if (dashTimer < 0) dashTimer = 0;
@@ -210,6 +224,7 @@ void CuChulainn::LookAtJoystick()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
+    if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
     // GLOG("THROW SPEAR");
     throwTimer = throwCooldown;
     if (weapon)
@@ -228,8 +243,11 @@ void CuChulainn::Dash()
     desiredDash = false;
     state       = CharacterStates::DASH;
 
+    GLOG("DASH");
+
     // TODO: Dash
-    // character->Dash(direction)
+    dashTimer = dashCooldown;
+    character->StartDash();
     if (animComponent) animComponent->UseTrigger("dash");
 }
 
@@ -240,10 +258,21 @@ void CuChulainn::PerformAttack()
 
     if (!isAttacking) return;
 
+    if (attackTimer >= attackDuration) isAttacking = false;
+
     // TODO: When timer matches animation, enable weapon collider. Disable it afterwards
+    if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+        attackTimer < attackHitboxDelay + attackHitboxDuration)
+    {
+        weaponCollider->SetEnabled(true);
+    }
+    else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+    {
+        weaponCollider->SetEnabled(false);
+    }
 }
 
-void CuChulainn::Attack(float time)
+void CuChulainn::Attack(float deltaTime)
 {
     // TODO: play basicAttack sound
 
@@ -254,7 +283,7 @@ void CuChulainn::Attack(float time)
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
 
-    Character::Attack(time);
+    Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     if (animComponent) animComponent->UseTrigger("attack");
 }
