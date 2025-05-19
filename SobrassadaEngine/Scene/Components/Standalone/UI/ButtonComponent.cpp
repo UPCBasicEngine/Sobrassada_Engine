@@ -222,6 +222,8 @@ bool ButtonComponent::IsWithinBounds(const float2& pos) const
     const float3 localRotated =
         parent->GetGlobalTransform().RotatePart().Inverted() * float3(localPos.x, localPos.y, 0.0f);
 
+    GLOG("Converted mouse pos: %f %F", localRotated.x, localRotated.y);
+
     // Check if it is inside the button's AABB in local space
     return abs(localRotated.x) <= transform2D->size.x * 0.5f && abs(localRotated.y) <= transform2D->size.y * 0.5f;
 }

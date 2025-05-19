@@ -26,7 +26,7 @@ class CanvasScalerComponent : public Component
     float GetScale() const { return scale; }
 
   private:
-    float2 referenceResolution        = float2(1280.0f, 720.0f);
+    float2 referenceResolution        = float2(1920.0f, 1080.0f);
 
     CanvasComponent* canvas           = nullptr;
     Transform2DComponent* transform2D = nullptr;
