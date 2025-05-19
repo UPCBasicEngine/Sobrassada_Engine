@@ -36,6 +36,7 @@ class FireballTrap : public Script
     float verticalSpeed                 = 0.0f;
     float gravity                       = -9.81f;
     float maxFallSpeed                  = -20.0f;
+    bool impacted                       = false;
 
     float rotationSpeed                 = 1.0f;
     float fallingHeight                 = 20.0f;
