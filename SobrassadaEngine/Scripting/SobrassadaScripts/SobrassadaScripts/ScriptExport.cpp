@@ -16,6 +16,7 @@
 #include "Projectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
+#include "Archer.h"
 #include "SpawnPoint.h"
 #include "VSyncToggleScript.h"
 
@@ -44,7 +45,8 @@ constexpr const char* scripts[] = {
     "Projectile",                // SCRIPT_PROJECTILE
     "FreeCamera",                // SCRIPT_FREE_CAMERA
     "SpawnPoint",                // SCRIPT_SPAWN_POINT
-    "Banshee"                    // SCRIPT_BANSHEE
+    "Banshee",                    // SCRIPT_BANSHEE
+    "Archer"                    // SCRIPT_ARCHER
 };
 
 Application* AppEngine = nullptr;
@@ -74,6 +76,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Projectile") return new Projectile(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "Banshee") return new Banshee(parent);
+    if (scriptType == "Archer") return new Archer(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
