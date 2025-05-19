@@ -4,7 +4,7 @@
 
 #include "Math/float3.h"
 
-class CubeColliderComponent;
+class CapsuleColliderComponent;
 
 class Projectile : public Script
 {
@@ -24,7 +24,7 @@ class Projectile : public Script
     void Move(float deltaTime);
 
   private:
-    CubeColliderComponent* collider = nullptr;
+    CapsuleColliderComponent* collider = nullptr;
 
     float3 direction                = float3::zero;
     float speed                     = 10.0f;

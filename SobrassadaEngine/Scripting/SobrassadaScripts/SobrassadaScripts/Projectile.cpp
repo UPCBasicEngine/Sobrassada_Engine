@@ -5,7 +5,7 @@
 #include "Character.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
-#include "Standalone/Physics/CubeColliderComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include "Math/Quat.h"
 
@@ -18,7 +18,7 @@ Projectile::Projectile(GameObject* parent) : Script(parent)
 
 bool Projectile::Init()
 {
-    collider = parent->GetComponent<CubeColliderComponent*>();
+    collider = parent->GetComponent<CapsuleColliderComponent*>();
     if (!collider)
     {
         GLOG("[WARNING: Projectile Init()] Couldn't find the collider component");
@@ -34,7 +34,7 @@ void Projectile::Update(float deltaTime)
 
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
-    //GLOG("Shoot to dir: %f %f %f", direction.x, direction.y, direction.z);
+    // GLOG("Shoot to dir: %f %f %f", direction.x, direction.y, direction.z);
     startPos        = origin;
     this->direction = direction;
     frames          = 0;
@@ -49,7 +49,7 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
 
 void Projectile::OnCollision(GameObject* otherObject, const float3& collisionNormal)
 {
-    //GLOG("COLLISION IN PROJECTILE with: %s", otherObject->GetName().c_str());
+    // GLOG("COLLISION IN PROJECTILE with: %s", otherObject->GetName().c_str());
 
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();

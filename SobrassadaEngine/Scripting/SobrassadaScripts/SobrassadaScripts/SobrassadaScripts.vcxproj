@@ -388,6 +388,7 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Banshee.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="ExitGameScript.h" />
@@ -1749,6 +1750,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Game|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Character.cpp" />
