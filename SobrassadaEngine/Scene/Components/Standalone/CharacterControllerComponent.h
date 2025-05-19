@@ -30,6 +30,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void Rotate(float rotationDirection, float deltaTime);
     void HandleInput(float deltaTime);
     void LookAt(const float3& direction);
+    void DashThroughNavMesh(float deltaTime);
 
     const float3& GetTargetDirection() const { return targetDirection; }
     const float3& GetFrontDirection() const { return rotateDirection; }
@@ -41,6 +42,11 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void SetMaxSpeed(float newSpeed) { maxSpeed = newSpeed; }
     void SetInputDown(bool input) { inputDown = input; }
     void EnableMovement(bool enable) { movementEnabled = enable; }
+    void StartDash();
+    void EndDash() { isDashing = false; }
+
+  private:
+    void Dash(float deltaTime);
 
   private:
     float3 targetDirection       = float3::zero;
@@ -66,4 +72,11 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     float3 rotateDirection       = float3::unitZ;
     bool movementEnabled         = true;
+
+    bool isDashing               = false;
+    float dashTimeRemaining      = 0.0f;
+    float dashSpeed              = 20.0f;
+    float3 dashTarget;
+    float dashDistance = 3.0f;
+    float dashDuration = 0.2f;
 };
