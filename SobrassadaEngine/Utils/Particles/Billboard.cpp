@@ -1,7 +1,6 @@
 #include "Billboard.h"
 
 #include "Application.h"
-#include "CameraModule.h"
 #include "GameObject.h"
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
@@ -11,6 +10,7 @@
 #include "Standalone/BillboardComponent.h"
 
 #include "glew.h"
+#include "Math/float2.h"
 #include <chrono>
 
 Billboard::Billboard(float width, float height) : width(width), height(height)
