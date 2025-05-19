@@ -33,8 +33,11 @@ class FireballTrap : public Script
     // fireball
     std::string fireballName            = "";
     GameObject* fireball                = nullptr;
-    float rotationSpeed                 = 1.0f;
     float verticalSpeed                 = 0.0f;
     float gravity                       = -9.81f;
     float maxFallSpeed                  = -20.0f;
+
+    float rotationSpeed                 = 1.0f;
+    float fallingHeight                 = 20.0f;
+    float editableMaxFallSpeed          = 20.0f;
 };

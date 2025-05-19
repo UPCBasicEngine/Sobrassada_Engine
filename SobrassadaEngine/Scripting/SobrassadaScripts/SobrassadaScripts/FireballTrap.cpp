@@ -22,6 +22,8 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
     fields.push_back({"Damage Duration", InspectorField::FieldType::Float, &damageDuration, 0.0f, 4.0f});
     fields.push_back({"Fireball Name", InspectorField::FieldType::InputText, &fireballName});
     fields.push_back({"Rotation Speed", InspectorField::FieldType::Float, &rotationSpeed, 0.0f, 4.0f});
+    fields.push_back({"Falling Height", InspectorField::FieldType::Float, &fallingHeight, 0.0f, 50.0f});
+    fields.push_back({"Max Fall Speed", InspectorField::FieldType::Float, &editableMaxFallSpeed, 0.0f, 40.0f});
 }
 
 bool FireballTrap::Init()
@@ -35,8 +37,8 @@ bool FireballTrap::Init()
     else GLOG("[WARNING] FireTrap without cube collider component.");
 
     fireball = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(fireballName);
-    if (!fireball) GLOG("[WARNING] No fireball found by the name: %s", fireballName.c_str())
-    else fireball->SetEnabled(false);
+    if (fireball) fireball->SetEnabled(false);
+    else GLOG("[WARNING] No fireball found by the name: %s", fireballName.c_str())
 
     return true;
 }
@@ -45,21 +47,19 @@ void FireballTrap::Update(float deltaTime)
 {
     if (!character || !trapMesh || !damageArea || !fireball) return;
 
-    float gameTime = AppEngine->GetGameTimer()->GetTime() / 1000.0f;
+    const float gameTime = AppEngine->GetGameTimer()->GetTime() / 1000.0f;
 
-    float distance = character->GetLastPosition().Distance(parent->GetPosition());
-    if (distance <= activationRange)
-    {
-        activated = true;
-        trapMesh->SetEnabled(true);
-    }
+    maxFallSpeed   = -editableMaxFallSpeed;
+
+    const float distance = character->GetLastPosition().Distance(parent->GetPosition());
+    if (distance <= activationRange) activated = true;
     else activated = false;
 
     if (activated)
     {
         if (!attacking && gameTime - lastAttackTime >= attackCooldown)
         {
-            fireball->SetLocalPosition(parent->GetPosition() + float3(0.0f, 20.f, 0.0f));
+            fireball->SetLocalPosition(parent->GetPosition() + float3(0.0f, fallingHeight, 0.0f));
             fireball->SetEnabled(true);
             lastAttackTime = gameTime;
             verticalSpeed  = 0.0f;
@@ -85,10 +85,10 @@ void FireballTrap::Update(float deltaTime)
         newTransform.SetTranslatePart(currentPos);
 
         fireball->SetLocalTransform(newTransform);
-        fireball->UpdateTransformForGOBranch();
 
         if (currentPos.y <= parent->GetPosition().y) // impact
         {
+            trapMesh->SetEnabled(true);
             damageArea->SetEnabled(true);
             fireball->SetEnabled(false);
             attacking    = false;
@@ -99,6 +99,7 @@ void FireballTrap::Update(float deltaTime)
 
     if (damageActive && gameTime - lastHitTime >= damageDuration) // disable damage
     {
+        trapMesh->SetEnabled(false);
         damageArea->SetEnabled(false);
         damageActive = false;
     }
