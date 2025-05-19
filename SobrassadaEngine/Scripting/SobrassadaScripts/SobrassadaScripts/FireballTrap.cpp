@@ -92,17 +92,14 @@ void FireballTrap::StartAttack(float gameTime)
 
 void FireballTrap::HandleImpact(float gameTime)
 {
-
+    fireball->SetEnabled(false);
     groundMesh->SetEnabled(true);
     damageCollider->SetEnabled(true);
 
-    attacking             = false;
-    isDealingDamage       = true;
-    lastHitTime           = gameTime;
-    hasImpacted           = true;
-
-    const float3 startPos = parent->GetPosition() + float3(0.0f, 100.0f, 0.0f);
-    fireball->SetLocalPosition(startPos);
+    attacking       = false;
+    isDealingDamage = true;
+    lastHitTime     = gameTime;
+    hasImpacted     = true;
 }
 
 void FireballTrap::DisableDamage()
