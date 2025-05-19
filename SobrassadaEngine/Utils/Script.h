@@ -2,6 +2,8 @@
 #include "Math/float3.h"
 #include "rapidjson/document.h"
 
+#include <functional>
+
 class GameObject;
 
 struct InspectorField
@@ -17,7 +19,8 @@ struct InspectorField
         Vec4,
         Color,
         InputText,
-        GameObject
+        GameObject,
+        Button
     };
 
     const char* name;
@@ -25,6 +28,7 @@ struct InspectorField
     void* data;
     float minValue;
     float maxValue;
+    std::function<void(Script*)> callback;
 };
 
 // Here we only need to add the functions that are going to be used in the ScriptModule
