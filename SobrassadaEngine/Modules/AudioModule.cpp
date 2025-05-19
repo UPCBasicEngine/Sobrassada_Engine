@@ -263,6 +263,14 @@ void AudioModule::RemoveAudioListener(AudioListenerComponent* listenerToRemove)
     listener = nullptr;
 }
 
+void AudioModule::StopAllAudio()
+{
+    for (const AudioSourceComponent* source : sources)
+    {
+        source->StopAudio();
+    }
+}
+
 void AudioModule::ParseEvents()
 {
     const std::string metaPath = App->GetProjectModule()->GetLoadedProjectPath() + WINDOWS_BANKS_PATH + BANKMETA_MAIN;

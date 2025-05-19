@@ -30,9 +30,10 @@ class AudioModule : public Module
 
     void AddAudioSource(AudioSourceComponent* newSource);
     void RemoveAudioSource(AudioSourceComponent* newSource);
-
     bool AddAudioListener(AudioListenerComponent* newListener);
     void RemoveAudioListener(AudioListenerComponent* newListener);
+
+    void StopAllAudio();
 
     const std::unordered_map<HashString, uint32_t>& GetEventsMap() const { return eventsMap; }
 

@@ -101,14 +101,14 @@ void AudioSourceComponent::RenderEditorInspector()
         SetSpatialization(spatialization);
 }
 
-void AudioSourceComponent::EmitEvent(const AkUniqueID event) const
+void AudioSourceComponent::EmitEvent(const AkUniqueID event)
 {
-    if (enabled) AK::SoundEngine::PostEvent(event, (AkGameObjectID)parent->GetUID());
+    if (enabled) playingEvent = AK::SoundEngine::PostEvent(event, (AkGameObjectID)parent->GetUID());
 }
 
-void AudioSourceComponent::EmitEvent(const std::string& event) const
+void AudioSourceComponent::EmitEvent(const std::string& event)
 {
-    if (enabled) AK::SoundEngine::PostEvent(event.c_str(), (AkGameObjectID)parent->GetUID());
+    if (enabled) playingEvent = AK::SoundEngine::PostEvent(event.c_str(), (AkGameObjectID)parent->GetUID());
 }
 
 void AudioSourceComponent::SetVolume(const float newVolume)
@@ -170,4 +170,14 @@ void AudioSourceComponent::UpdateEventsNames()
     {
         if (event.second == defaultEvent) defaultEventName = event.first.GetString();
     }
+}
+
+void AudioSourceComponent::StopAudio() const
+{
+    AK::SoundEngine::StopPlayingID(playingEvent);
+}
+
+void AudioSourceComponent::StopAllAudio() const
+{
+    App->GetAudioModule()->StopAllAudio();
 }
