@@ -93,6 +93,15 @@ void CuChulainn::HandleState(float time)
     else if (desiredAim && CanAim()) Aim();
     else if (!isAttacking && !isDashing) Move();
 
+    if (state == CharacterStates::DASH)
+    {
+        if (dashTimer <= 0)
+        {
+            GLOG("STOP DASH SCRIPT");
+            character->EndDash();
+        }
+    }
+
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
@@ -228,8 +237,11 @@ void CuChulainn::Dash()
     desiredDash = false;
     state       = CharacterStates::DASH;
 
+    GLOG("DASH");
+
     // TODO: Dash
-    // character->Dash(direction)
+    dashTimer = dashCooldown;
+    character->StartDash();
     if (animComponent) animComponent->UseTrigger("dash");
 }
 
