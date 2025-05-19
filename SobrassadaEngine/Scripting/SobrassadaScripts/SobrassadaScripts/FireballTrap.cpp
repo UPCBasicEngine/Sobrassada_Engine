@@ -28,13 +28,13 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 
 bool FireballTrap::Init()
 {
-    trapMesh = parent->GetComponent<MeshComponent*>();
-    if (trapMesh) trapMesh->SetEnabled(false);
-    else GLOG("[WARNING] FireTrap without mesh component.");
+    groundMesh = parent->GetComponent<MeshComponent*>();
+    if (groundMesh) groundMesh->SetEnabled(false);
+    else GLOG("[WARNING] FireballTrap without mesh component.");
 
-    damageArea = parent->GetComponent<SphereColliderComponent*>();
-    if (damageArea) damageArea->SetEnabled(false);
-    else GLOG("[WARNING] FireTrap without cube collider component.");
+    damageCollider = parent->GetComponent<SphereColliderComponent*>();
+    if (damageCollider) damageCollider->SetEnabled(false);
+    else GLOG("[WARNING] FireballTrap without sphere collider component.");
 
     fireball = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(fireballName);
     if (fireball) fireball->SetEnabled(false);
@@ -47,7 +47,7 @@ bool FireballTrap::Init()
 
 void FireballTrap::Update(float deltaTime)
 {
-    if (!character || !trapMesh || !damageArea || !fireball) return;
+    if (!character || !groundMesh || !damageCollider || !fireball) return;
 
     const float gameTime = AppEngine->GetGameTimer()->GetTime() / 1000.0f;
     maxFallSpeed         = -editableMaxFallSpeed;
@@ -55,65 +55,79 @@ void FireballTrap::Update(float deltaTime)
     const float distance = character->GetLastPosition().Distance(parent->GetPosition());
     activated            = (distance <= activationRange);
 
-    if (!activated && !attacking && !damageActive) return;
+    if (!activated && !attacking && !isDealingDamage) return;
 
-    float3 actualPos = fireball->GetGlobalTransform().TranslatePart();
-    GLOG("Actual fireball position: %.2f", actualPos.y);
-
-    // attack again
-    if (activated && !attacking && !damageActive && gameTime - lastAttackTime >= attackCooldown)
+    if (activated && !attacking && gameTime - lastAttackTime >= attackCooldown)
     {
-        fireball->SetEnabled(true);
-        const float3 startPos = parent->GetPosition() + float3(0.0f, fallingHeight, 0.0f);
-        fireball->SetLocalPosition(startPos);
-
-        lastAttackTime = gameTime;
-        verticalSpeed  = 0.0f;
-        attacking      = true;
-        impacted       = false;
+        StartAttack(gameTime);
     }
 
-    // impact
-    else if (attacking && fireball->GetPosition().y <= parent->GetPosition().y)
+    if (!hasImpacted)
     {
-        trapMesh->SetEnabled(true);
-        damageArea->SetEnabled(true);
-
-        attacking             = false;
-        damageActive          = true;
-        lastHitTime           = gameTime;
-        impacted              = true;
-
-        const float3 startPos = parent->GetPosition() + float3(0.0f, 200.0f, 0.0f);
-        fireball->SetLocalPosition(startPos);
+        UpdateFireball(deltaTime);
     }
 
-    // disable damage
-    else if (damageActive && gameTime - lastHitTime >= damageDuration)
+    if (attacking && fireball->GetGlobalTransform().TranslatePart().y <= parent->GetGlobalTransform().TranslatePart().y)
     {
-        trapMesh->SetEnabled(false);
-        damageArea->SetEnabled(false);
-
-        damageActive = false;
+        HandleImpact(gameTime);
     }
 
-    // update fireball
-    else if (!impacted)
+    if (isDealingDamage && gameTime - lastHitTime >= damageDuration)
     {
-        float4x4 newTransform = fireball->GetGlobalTransform();
-        float3 currentPos     = newTransform.TranslatePart();
-
-        if (deltaTime < 0.1f)
-        {
-            verticalSpeed += gravity * deltaTime;
-            verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
-
-            currentPos.y  += (verticalSpeed * deltaTime);
-        }
-
-        newTransform = newTransform * float4x4::RotateX(rotationSpeed * deltaTime);
-        newTransform.SetTranslatePart(currentPos);
-
-        fireball->SetLocalTransform(newTransform);
+        DisableDamage();
     }
+}
+
+void FireballTrap::StartAttack(float gameTime)
+{
+    fireball->SetEnabled(true);
+    const float3 startPos = parent->GetPosition() + float3(0.0f, fallingHeight, 0.0f);
+    fireball->SetLocalPosition(startPos);
+
+    lastAttackTime = gameTime;
+    verticalSpeed  = 0.0f;
+    attacking      = true;
+    hasImpacted    = false;
+}
+
+void FireballTrap::HandleImpact(float gameTime)
+{
+
+    groundMesh->SetEnabled(true);
+    damageCollider->SetEnabled(true);
+
+    attacking             = false;
+    isDealingDamage       = true;
+    lastHitTime           = gameTime;
+    hasImpacted           = true;
+
+    const float3 startPos = parent->GetPosition() + float3(0.0f, 100.0f, 0.0f);
+    fireball->SetLocalPosition(startPos);
+}
+
+void FireballTrap::DisableDamage()
+{
+    groundMesh->SetEnabled(false);
+    damageCollider->SetEnabled(false);
+
+    isDealingDamage = false;
+}
+
+void FireballTrap::UpdateFireball(float deltaTime)
+{
+    float4x4 newTransform = fireball->GetGlobalTransform();
+    float3 currentPos     = newTransform.TranslatePart();
+
+    if (deltaTime < 0.1f)
+    {
+        verticalSpeed += gravity * deltaTime;
+        verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
+
+        currentPos.y  += (verticalSpeed * deltaTime);
+    }
+
+    newTransform = newTransform * float4x4::RotateX(rotationSpeed * deltaTime);
+    newTransform.SetTranslatePart(currentPos);
+
+    fireball->SetLocalTransform(newTransform);
 }
