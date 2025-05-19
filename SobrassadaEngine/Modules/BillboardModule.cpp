@@ -1,6 +1,9 @@
 #include "BillboardModule.h"
 
+#include "Application.h"
 #include "Billboard.h"
+#include "CameraComponent.h"
+#include "SceneModule.h"
 #include "Standalone/BillboardComponent.h"
 
 BillboardModule::BillboardModule()
@@ -107,9 +110,31 @@ void BillboardModule::RemoveComponentFromTag(const HashString& tag, BillboardCom
 
 void BillboardModule::RenderBillboards()
 {
+
+    bool playMode               = App->GetSceneModule()->GetInPlayMode();
+    const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
+    CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+    float4x4 VP;
+    float3 rightVector;
+    float3 upVector;
+
+    if (playMode && gameCamera)
+    {
+        VP             = gameCamera->GetProjectionMatrix() * gameCamera->GetViewMatrix();
+        rightVector    = gameCamera->GetCameraRight();
+        upVector       = gameCamera->GetCameraUp();
+    }
+    else
+    {
+        VP             = editorCamera.ProjectionMatrix() * editorCamera.ViewMatrix();
+        rightVector    = editorCamera.WorldRight();
+        upVector       = editorCamera.up;
+    }
+
     for (auto& billboard : billboardMap)
     {
-        billboard.second.second->Render();
+        billboard.second.second->Render(VP, rightVector, upVector);
     }
 }
 
