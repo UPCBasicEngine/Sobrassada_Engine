@@ -168,8 +168,17 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
 {
     if (!isInteractable || !IsEffectivelyEnabled()) return false;
 
+    GLOG(
+        "Button %s center pos: %f %f", parent->GetName().c_str(), transform2D->GetCenterPosition().x,
+        transform2D->GetCenterPosition().y
+    );
+    GLOG("Width: %f | Height: %f", transform2D->size.x, transform2D->size.y);
+
+    if (dismiss) GLOG("Dismissed");
+
     if (!dismiss && IsWithinBounds(mousePos))
     {
+        GLOG("Is within bounds");
         if (!isHovered)
         {
             // On mouse enter
@@ -221,12 +230,10 @@ std::list<Delegate<void>>::iterator ButtonComponent::AddOnClickCallback(Delegate
     return onClickDispatcher.SubscribeCallback(std::move(newDelegate));
 }
 
-
 void ButtonComponent::RemoveOnClickCallback(std::list<Delegate<void>>::iterator delegate)
 {
     onClickDispatcher.SafeRemoveCallback(delegate);
 }
-
 
 void ButtonComponent::OnInteractionChange() const
 {

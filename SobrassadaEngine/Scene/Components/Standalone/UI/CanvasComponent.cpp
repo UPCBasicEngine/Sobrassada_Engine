@@ -199,6 +199,8 @@ void CanvasComponent::UpdateMousePosition(const float2& mousePos)
     hoveredButton    = nullptr;
     bool buttonFound = false;
 
+    GLOG("\n Mouse position: %f %f", mousePos.x, mousePos.y)
+
     for (int i = (int)sortedChildren.size() - 1; i >= 0; --i)
     {
         // Update all buttons
