@@ -93,6 +93,15 @@ void CuChulainn::HandleState(float time)
     else if (desiredAim && CanAim()) Aim();
     else if (!isAttacking && !isDashing) Move();
 
+    if (state == CharacterStates::DASH)
+    {
+        if (dashTimer <= 0)
+        {
+            GLOG("STOP DASH SCRIPT");
+            character->EndDash();
+        }
+    }
+
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
@@ -103,24 +112,30 @@ void CuChulainn::HandleState(float time)
 
 void CuChulainn::GetInputs()
 {
-    const KeyState* keyboard = AppEngine->GetInputModule()->GetKeyboard();
-    const KeyState* mouse    = AppEngine->GetInputModule()->GetMouseButtons();
+    const InputModule* input   = AppEngine->GetInputModule();
+    const KeyState* keyboard   = input->GetKeyboard();
+    const KeyState* mouse      = input->GetMouseButtons();
+    const KeyState* controller = input->GetControllerButtons();
 
-    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         desiredDash     = true;
         dashBufferTimer = dashBuffer;
     }
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN)
+    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
     {
         desiredAttack     = true;
         attackBufferTimer = attackBuffer;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || input->GetLeftTrigger().first == KEY_REPEAT)
     {
         desiredAim = true;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP)
+    if (input->GetLeftTrigger().first == KEY_UP)
+    {
+        if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
+    }
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || input->GetRightTrigger().first == KEY_DOWN)
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
@@ -194,9 +209,16 @@ void CuChulainn::LookAtMouse()
     character->LookAt(direction);
 }
 
+void CuChulainn::LookAtJoystick()
+{
+    const float2 stick = AppEngine->GetInputModule()->GetRightStick();
+    float3 direction   = float3(stick.x, 0, stick.y);
+    if (direction.LengthSq() > 0.001f) character->LookAt(direction);
+}
+
 void CuChulainn::ThrowSpear()
 {
-    if (camera) camera->EnableMouseOffset(false);
+    if (camera) camera->EnableAimOffset(false);
     // GLOG("THROW SPEAR");
     throwTimer = throwCooldown;
     if (weapon)
@@ -205,17 +227,21 @@ void CuChulainn::ThrowSpear()
         resetWeapon = true;
     }
 
+    const auto a = character->GetFrontDirection();
     spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
 }
 
 void CuChulainn::Dash()
 {
-    if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     desiredDash = false;
     state       = CharacterStates::DASH;
 
+    GLOG("DASH");
+
     // TODO: Dash
-    // character->Dash(direction)
+    dashTimer = dashCooldown;
+    character->StartDash();
     if (animComponent) animComponent->UseTrigger("dash");
 }
 
@@ -235,13 +261,13 @@ void CuChulainn::Attack(float time)
 
     // GLOG("ATTACK");
 
-    if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
 
     Character::Attack(time);
-    LookAtMouse();
+    if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     if (animComponent) animComponent->UseTrigger("attack");
 }
 
@@ -251,13 +277,14 @@ void CuChulainn::Aim()
 
     if (state != CharacterStates::AIM)
     {
-        if (camera) camera->EnableMouseOffset(true);
+        if (camera) camera->EnableAimOffset(true);
         state = CharacterStates::AIM;
         character->EnableMovement(false);
     }
     desiredAim = false;
 
-    LookAtMouse();
+    if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
+    else LookAtJoystick();
     if (animComponent) animComponent->UseTrigger("aim");
 }
 

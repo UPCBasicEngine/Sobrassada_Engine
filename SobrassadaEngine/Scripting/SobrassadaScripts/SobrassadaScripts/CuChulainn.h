@@ -42,6 +42,7 @@ class CuChulainn : public Character
     void GetInputs();
     void UpdateTimers(float deltaTime);
     void LookAtMouse();
+    void LookAtJoystick();
 
     void ThrowSpear();
     void Attack(float time) override;

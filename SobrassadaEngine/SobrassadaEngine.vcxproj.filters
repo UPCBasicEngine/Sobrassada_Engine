@@ -537,6 +537,15 @@
     <ClCompile Include="Modules\GameDebugUIModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\Billboard.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\BillboardModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -625,6 +634,9 @@
     </Filter>
     <Filter Include="Scene\Components\Audio">
       <UniqueIdentifier>{cebf4c5a-89d4-4d73-af66-dee049d7cbf1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils\Particles">
+      <UniqueIdentifier>{b38e44f1-5545-41b1-abb3-0013c2ee5133}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1044,6 +1056,15 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Modules\GameDebugUIModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\Billboard.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\BillboardModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
