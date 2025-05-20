@@ -26,7 +26,7 @@ class ParticleSystemComponent : public Component
     UID GetTextureUID() const { return currentTextureUID; }
 
   private:
-    ParticleEmitter* emitter;
+    ParticleEmitter* emitter = nullptr;
 
     bool useTexture                   = false;
     std::string currentResourceName   = "No material";

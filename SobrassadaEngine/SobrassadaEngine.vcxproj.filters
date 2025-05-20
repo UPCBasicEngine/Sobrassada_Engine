@@ -564,7 +564,12 @@
     <ClCompile Include="Utils\Particles\ParticleEmitter.cpp">
       <Filter>Utils\Particles</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleSystemComponent.cpp" />
+    <ClCompile Include="ParticleSystemComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystemModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1110,7 +1115,12 @@
     <ClInclude Include="Utils\Particles\ParticleEmitter.h">
       <Filter>Utils\Particles</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleSystemComponent.h" />
+    <ClInclude Include="ParticleSystemComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystemModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

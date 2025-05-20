@@ -15,6 +15,7 @@
 #include "InputModule.h"
 #include "LibraryModule.h"
 #include "OpenGLModule.h"
+#include "ParticleSystemModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
@@ -50,6 +51,7 @@ Application::Application()
     modules.push_back(editorUIModule = new EditorUIModule());
     modules.push_back(gameDebugUI = new GameDebugUIModule());
     modules.push_back(billboardModule = new BillboardModule());
+    modules.push_back(particleModule = new ParticleSystemModule());
 
     engineTimer = new EngineTimer();
     engineTimer->Start();

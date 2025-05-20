@@ -32,10 +32,14 @@ class ParticleEmitter
     void AddAddon(ParticleAddonType type);
     void RemoveAddon(ParticleAddonType type);
 
+    UID GetUID() const { return uid; }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
 
     void SetAddonCreated(int position) { createdAddons[position] = true; };
     void SetAddonDeleted(int position) { createdAddons[position] = false; };
+
+    ParticleSystemComponent* GetOwner() { return owner; }
+    void SetOwner(ParticleSystemComponent* newOwner) { owner = newOwner; };
 
   public:
     std::vector<Particle> particles;

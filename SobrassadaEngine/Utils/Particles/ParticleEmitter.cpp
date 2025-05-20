@@ -40,11 +40,13 @@ template <std::size_t I = 0, typename... Tp>
 ParticleEmitter::ParticleEmitter(UID uid, const std::string& name, ParticleSystemComponent* owner)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
+    ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType::BASE, this);
 }
 
 ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleSystemComponent* owner)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
+    ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType::BASE, this);
 }
 
 ParticleEmitter::~ParticleEmitter()
