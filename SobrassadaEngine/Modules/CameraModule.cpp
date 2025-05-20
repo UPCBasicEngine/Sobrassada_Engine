@@ -26,7 +26,6 @@ CameraModule::~CameraModule()
 bool CameraModule::Init()
 {
     camera.type                      = FrustumType::PerspectiveFrustum;
-
     camera.pos                       = float3(0, 1, 5);
     camera.front                     = -float3::unitZ;
     camera.up                        = float3::unitY;
@@ -104,6 +103,49 @@ const LineSegment& CameraModule::CastCameraRay()
     lastCastedRay = ray;
 
     return lastCastedRay;
+}
+
+void CameraModule::SaveCameraPosition(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
+{
+    rapidjson::Value cameraPositionArray(rapidjson::kArrayType);
+    cameraPositionArray.PushBack(camera.pos.x, allocator)
+        .PushBack(camera.pos.y, allocator)
+        .PushBack(camera.pos.z, allocator);
+
+    targetState.AddMember("Camera Position", cameraPositionArray, allocator);
+
+    rapidjson::Value cameraFrontArray(rapidjson::kArrayType);
+    cameraFrontArray.PushBack(camera.front.x, allocator)
+        .PushBack(camera.front.y, allocator)
+        .PushBack(camera.front.z, allocator);
+
+    targetState.AddMember("Camera Front", cameraFrontArray, allocator);
+
+    // Store camera up as an array
+    rapidjson::Value cameraUpArray(rapidjson::kArrayType);
+    cameraUpArray.PushBack(camera.up.x, allocator).PushBack(camera.up.y, allocator).PushBack(camera.up.z, allocator);
+
+    targetState.AddMember("Camera Up", cameraUpArray, allocator);
+}
+
+void CameraModule::LoadCameraPosition(const rapidjson::Value* initialState)
+{
+    if (!initialState->HasMember("Camera Position")) return;
+
+    const rapidjson::Value& cameraPositionArray = (*initialState)["Camera Position"];
+    camera.pos                                  = {
+        cameraPositionArray[0].GetFloat(), cameraPositionArray[1].GetFloat(), cameraPositionArray[2].GetFloat()
+    };
+
+    const rapidjson::Value& cameraFrontArray = (*initialState)["Camera Front"];
+    camera.front = {cameraFrontArray[0].GetFloat(), cameraFrontArray[1].GetFloat(), cameraFrontArray[2].GetFloat()};
+
+    const rapidjson::Value& cameraUpArray = (*initialState)["Camera Up"];
+    camera.up        = {cameraUpArray[0].GetFloat(), cameraUpArray[1].GetFloat(), cameraUpArray[2].GetFloat()};
+
+    viewMatrix       = camera.ViewMatrix();
+    projectionMatrix = camera.ProjectionMatrix();
+    UpdateUBO();
 }
 
 update_status CameraModule::Update(float deltaTime)
@@ -332,8 +374,8 @@ void CameraModule::FocusCamera()
     const float3 direction   = camera.front.Normalized();
     const float3 newPosition = center - direction * (float)distance;
 
-    camera.pos         = newPosition;
-    camera.front       = (center - newPosition).Normalized();
+    camera.pos               = newPosition;
+    camera.front             = (center - newPosition).Normalized();
 
-    viewMatrix         = camera.ViewMatrix();
+    viewMatrix               = camera.ViewMatrix();
 }
