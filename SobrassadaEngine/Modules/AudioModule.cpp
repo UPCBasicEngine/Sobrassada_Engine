@@ -271,6 +271,14 @@ void AudioModule::StopAllAudio()
     }
 }
 
+void AudioModule::PlayOnStart()
+{
+    for (AudioSourceComponent* source : sources)
+    {
+        if (source->IsPlayOnStart()) source->EmitDefaultEvent();
+    }
+}
+
 void AudioModule::ParseEvents()
 {
     const std::string metaPath = App->GetProjectModule()->GetLoadedProjectPath() + WINDOWS_BANKS_PATH + BANKMETA_MAIN;

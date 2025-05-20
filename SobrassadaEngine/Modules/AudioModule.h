@@ -34,6 +34,7 @@ class AudioModule : public Module
     void RemoveAudioListener(AudioListenerComponent* newListener);
 
     void StopAllAudio();
+    void PlayOnStart();
 
     const std::unordered_map<HashString, uint32_t>& GetEventsMap() const { return eventsMap; }
 

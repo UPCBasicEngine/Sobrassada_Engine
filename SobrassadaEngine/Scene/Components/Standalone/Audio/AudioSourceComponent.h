@@ -20,6 +20,7 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     virtual void RenderDebug(float deltaTime) {};
 
     // More efficient to use the IDs, but both exist in case it is needed to use the string variant in some scenario
+    void EmitDefaultEvent();
     void EmitEvent(const AkUniqueID event);
     void EmitEvent(const std::string& event);
     void SetRTPCValue(const AkUniqueID parameterID, const float value);
@@ -32,6 +33,7 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     void SetPitch(const float newPitch);
     void SetSpatialization(const float newSpatialization);
 
+    bool IsPlayOnStart() const { return playOnStart; }
     void UpdateEventsNames();
     void StopAudio() const;
     void StopAllAudio() const;
@@ -48,4 +50,5 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     float spatialization = 0;
 
     bool isInited        = false;
+    bool playOnStart     = false;
 };

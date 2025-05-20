@@ -15,6 +15,7 @@
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
+#include "AudioModule.h"
 #include "RaycastController.h"
 #include "ResourcesModule.h"
 #include "Standalone/AnimationComponent.h"
@@ -209,6 +210,7 @@ void SceneModule::SwitchPlayMode(bool play)
     if (inPlayMode)
     {
         std::string tmpScene = std::to_string(loadedScene->GetSceneUID()) + SCENE_EXTENSION;
+        App->GetAudioModule()->StopAllAudio();
         if (App->GetLibraryModule()->LoadScene(tmpScene.c_str(), true))
         {
             GLOG("----- Stopped Playing -----");
@@ -223,6 +225,7 @@ void SceneModule::SwitchPlayMode(bool play)
         if (App->GetLibraryModule()->SaveScene("", SaveMode::SavePlayMode))
         {
             GLOG("----- Started Playing -----");
+            App->GetAudioModule()->PlayOnStart();
             App->GetGameTimer()->Start();
             inPlayMode       = true;
             onlyOncePlayMode = true;
