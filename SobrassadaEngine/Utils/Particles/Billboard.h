@@ -28,7 +28,7 @@ class Billboard
     void UpdateLockPitch(bool newLock);
     void UpdateUseTexture(bool newTexture);
 
-    void Render(const float4x4& VP, const float3 rightVector, const float3 upVector);
+    void Render(const float4x4& VP, const float3& rightVector, const float3& upVector);
 
     void AddComponent(BillboardComponent* newBillboard);
     void RemoveComponent(std::list<BillboardComponent*>::iterator newBillboard);

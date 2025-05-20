@@ -113,7 +113,7 @@ void BillboardModule::RenderBillboards()
 
     bool playMode               = App->GetSceneModule()->GetInPlayMode();
     const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
-    CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+    const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
 
     float4x4 VP;
     float3 rightVector;

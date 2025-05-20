@@ -40,9 +40,9 @@ class CameraComponent : public Component
     float3 GetCameraRight() const { return camera.WorldRight(); }
     const float3& GetCameraUp() const { return camera.up; }
     unsigned int GetUbo() const { return ubo; }
-    const float4x4 GetProjectionMatrix() { return camera.ProjectionMatrix(); }
-    const float4x4 GetViewMatrix() { return camera.ViewMatrix(); }
-    const int GetFrustumType() { return (camera.type == OrthographicFrustum) ? 1 : 0; }
+    const float4x4 GetProjectionMatrix() const { return camera.ProjectionMatrix(); }
+    const float4x4 GetViewMatrix() const { return camera.ViewMatrix(); }
+    const int GetFrustumType() const { return (camera.type == OrthographicFrustum) ? 1 : 0; }
     Framebuffer* GetFramebuffer() { return previewFramebuffer; }
 
     void SetAspectRatio(float newAspectRatio);

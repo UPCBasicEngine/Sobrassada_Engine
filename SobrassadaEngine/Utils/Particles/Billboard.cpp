@@ -122,7 +122,7 @@ void Billboard::UpdateUseTexture(bool newTexture)
     }
 }
 
-void Billboard::Render(const float4x4& VP, const float3 rightVector, const float3 upVector)
+void Billboard::Render(const float4x4& VP, const float3& rightVector, const float3& upVector)
 {
     if ((useTexture ? texture != nullptr : material != nullptr) && vbo && positionsVbo)
     {
