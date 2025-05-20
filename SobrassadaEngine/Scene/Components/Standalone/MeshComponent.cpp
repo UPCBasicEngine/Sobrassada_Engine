@@ -34,7 +34,10 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
     {
         AddMesh(initialState["Mesh"].GetUint64(), false);
     }
+
     if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
+    else renderMode = 0;
+
     if (initialState.HasMember("Bones"))
     {
         const rapidjson::Value& initBones = initialState["Bones"];

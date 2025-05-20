@@ -18,6 +18,10 @@ ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapid
         defaultTextureUID = importOptions["defaultTextureUID"].GetUint64();
 
     else defaultTextureUID = INVALID_UID;
+
+    if (importOptions.HasMember("isTransparent") && importOptions["isTransparent"].IsBool())
+        isTransparent = importOptions["isTransparent"].GetBool();
+    else isTransparent = false;
 }
 
 ResourceMaterial::~ResourceMaterial()
