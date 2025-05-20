@@ -32,6 +32,7 @@ class GeometryBatch
     const unsigned int GetMode() const { return mode; }
     const bool GetIsMetallic() const { return isMetallic; }
     const bool GetHasBones() const { return hasBones; }
+    const bool IsNavmeshValid() const { return isNavmeshValid; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
@@ -79,4 +80,5 @@ class GeometryBatch
     unsigned int mode             = 0;
     bool isMetallic               = false;
     bool hasBones                 = false;
+    bool isNavmeshValid           = false;
 };

@@ -12,6 +12,7 @@ class GBuffer
     void Unbind();
     void Resize(int width, int height);
     void CheckResize();
+    unsigned int GetDepthTexture() const { return depthTexture; }
 
   private:
     void InitializeGBuffer();

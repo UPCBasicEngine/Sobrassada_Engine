@@ -121,7 +121,7 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
     for (GeometryBatch* it : batches)
     {
         if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
-            it->GetHasBones() == component->GetHasBones())
+            it->GetHasBones() == component->GetHasBones() && it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid())
         {
             return it;
         }
