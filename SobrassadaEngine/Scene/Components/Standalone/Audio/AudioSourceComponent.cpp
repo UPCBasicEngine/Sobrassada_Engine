@@ -26,6 +26,7 @@ AudioSourceComponent::AudioSourceComponent(const rapidjson::Value& initialState,
 
 AudioSourceComponent::~AudioSourceComponent()
 {
+    StopAudio();
     App->GetAudioModule()->RemoveAudioSource(this);
 }
 
