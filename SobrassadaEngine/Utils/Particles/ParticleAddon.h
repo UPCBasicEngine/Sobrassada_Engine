@@ -4,8 +4,9 @@
 
 enum class ParticleAddonType : int
 {
-    BASE = 0,
-
+    NONE = 0,
+    BASE,
+    VELOCITY,
 };
 
 class ResourceEmitter;
@@ -13,13 +14,14 @@ class ResourceEmitter;
 class ParticleAddon
 {
   public:
-    ParticleAddon() = default;
+    ParticleAddon(ResourceEmitter* owner) : emitterOwner(owner) {};
+    ParticleAddon(const rapidjson::Value& initialState, ResourceEmitter* owner);
     virtual ~ParticleAddon() = default;
 
-    virtual void Save(const rapidjson::Value& initialState);
+    virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
-    virtual void Update(float deltaTime);
-    virtual void RenderEditor();
+    virtual void Update(float deltaTime) = 0;
+    virtual void RenderEditorInspector() = 0;
 
     bool IsEnabled() const { return IsEnabled; }
 
@@ -29,5 +31,5 @@ class ParticleAddon
   private:
     bool isEnabled = false;
     ResourceEmitter* emitterOwner = nullptr;
-    ParticleAddonType addonType   = ParticleAddonType::BASE;
+    ParticleAddonType addonType   = ParticleAddonType::NONE;
 };
