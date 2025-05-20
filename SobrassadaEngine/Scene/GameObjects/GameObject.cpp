@@ -13,6 +13,7 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
@@ -461,7 +462,13 @@ void GameObject::RenderEditorInspector()
         if (ImGui::Checkbox("Draw nodes", &drawNodes)) OnDrawConnectionsToggle();
         ImGui::Checkbox("Select parent", &selectParent);
         ImGui::SameLine();
-        ImGui::Checkbox("Navmesh valid", &navMeshValid);
+        if (ImGui::Checkbox("Navmesh valid", &navMeshValid))
+        {
+            if (MeshComponent* meshComp = this->GetComponent<MeshComponent*>())
+            {
+                meshComp->BatchEditorMode();
+            }
+        }
 
         if (ImGui::Button("Add Component"))
         {

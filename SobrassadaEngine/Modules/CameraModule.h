@@ -40,6 +40,11 @@ class CameraModule : public Module
     const float3& GetCameraPosition() const { return isCameraDetached ? detachedCamera.pos : camera.pos; }
     const Frustum& GetCamera() const { return camera; }
 
+    float GetNearPlaneDistance() const
+    {
+        return isCameraDetached ? detachedCamera.nearPlaneDistance : camera.nearPlaneDistance;
+    }
+
     float GetFarPlaneDistance() const
     {
         return isCameraDetached ? detachedCamera.farPlaneDistance : camera.farPlaneDistance;
