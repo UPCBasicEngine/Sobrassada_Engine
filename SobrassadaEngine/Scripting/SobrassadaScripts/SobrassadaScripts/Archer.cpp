@@ -8,6 +8,8 @@
 #include "Globals.h"
 #include "ResourceStateMachine.h"
 #include "Archer.h"
+#include "Projectile.h"
+#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -16,6 +18,7 @@
 Archer::Archer(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint});
+    fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
 }
 
 bool Archer::Init()
@@ -33,6 +36,13 @@ bool Archer::Init()
         agentAI->RecreateAgent();
         agentAI->SetLookForward(true);
         speed = agentAI->GetSpeed();
+    }
+
+    const GameObject* arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowName);
+    if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
+    {
+        arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
+        if (!arrow) GLOG("[WARNING] No projectile found by the name %s", arrowName.c_str());
     }
 
     return true;
@@ -114,7 +124,7 @@ void Archer::ChaseAI()
 {
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::BASIC_ATTACK;
         else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ArcherStates::PATROL;
     }
     else currentState = ArcherStates::PATROL;
@@ -139,6 +149,13 @@ void Archer::Attack(float deltaTime)
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
+            const auto direction = character->GetLastPosition();
+            /*ARREGLAR ESTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO*/
+            GLOG(
+                "Parent name: %s, and position:(%f,%f,%f)", parent->GetName().c_str(), parent->GetPosition().x,
+                parent->GetPosition().y, parent->GetPosition().z
+            )
+            arrow->Shoot(parent->GetPosition(), direction);
         }
         else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
         {
@@ -151,7 +168,7 @@ void Archer::Attack(float deltaTime)
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
-            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = ArcherStates::CHASE;
+           // if (CheckDistanceWithPlayer() != PlayerDistances::Medium) currentState = ArcherStates::CHASE;
         }
     }
 }

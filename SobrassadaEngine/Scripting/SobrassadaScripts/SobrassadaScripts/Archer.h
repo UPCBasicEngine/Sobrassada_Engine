@@ -4,6 +4,7 @@
 
 class GameObject;
 class AIAgentComponent;
+class Projectile;
 
 enum class ArcherStates
 {
@@ -35,6 +36,9 @@ class Archer : public Character
   private:
     AIAgentComponent* agentAI  = nullptr;
     ArcherStates currentState  = ArcherStates::NONE;
+
+    std::string arrowName      = "";
+    Projectile* arrow          = nullptr;
 
     float3 patrolPoint         = float3::zero;
 };
