@@ -1,7 +1,6 @@
 #pragma once
 #include "Math/float3.h"
 #include "rapidjson/document.h"
-
 #include <functional>
 
 class GameObject;

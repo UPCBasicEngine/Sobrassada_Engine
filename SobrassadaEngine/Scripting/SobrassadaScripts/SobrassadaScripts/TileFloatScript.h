@@ -8,8 +8,6 @@ class TileFloatScript : public Script
     TileFloatScript(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
-    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) override;
-    void Load(const rapidjson::Value& initialState) override;
     inline float QuaternionDot(const Quat& a, const Quat& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 
   private:

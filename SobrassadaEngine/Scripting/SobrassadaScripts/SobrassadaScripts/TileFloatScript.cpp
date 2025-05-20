@@ -9,8 +9,9 @@
 #include "GameObject.h"
 #include "ImGui.h"
 #include "LibraryModule.h"
-#include "Math/float4x4.h"
 #include "Standalone/CharacterControllerComponent.h"
+
+#include "Math/float4x4.h"
 
 TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
 {
@@ -33,61 +34,12 @@ TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
     );
 }
 
-void TileFloatScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
-{
-    targetState.AddMember("Speed", speed, allocator);
-    targetState.AddMember("MinDistanceToPlayer", minDistanceToPlayer, allocator);
-
-    rapidjson::Value startPos(rapidjson::kArrayType);
-    startPos.PushBack(startPosition.x, allocator);
-    startPos.PushBack(startPosition.y, allocator);
-    startPos.PushBack(startPosition.z, allocator);
-    targetState.AddMember("StartPosition", startPos, allocator);
-
-    rapidjson::Value startRot(rapidjson::kArrayType);
-    startRot.PushBack(startRotation.x, allocator);
-    startRot.PushBack(startRotation.y, allocator);
-    startRot.PushBack(startRotation.z, allocator);
-    targetState.AddMember("StartRotation", startRot, allocator);
-
-    rapidjson::Value startScaleVal(rapidjson::kArrayType);
-    startScaleVal.PushBack(startScale.x, allocator);
-    startScaleVal.PushBack(startScale.y, allocator);
-    startScaleVal.PushBack(startScale.z, allocator);
-    targetState.AddMember("StartScale", startScaleVal, allocator);
-}
-
-void TileFloatScript::Load(const rapidjson::Value& initialState)
-{
-    if (initialState.HasMember("Speed") && initialState["Speed"].IsInt()) speed = initialState["Speed"].GetInt();
-
-    if (initialState.HasMember("MinDistanceToPlayer") && initialState["MinDistanceToPlayer"].IsFloat())
-        minDistanceToPlayer = initialState["MinDistanceToPlayer"].GetFloat();
-
-    if (initialState.HasMember("StartPosition") && initialState["StartPosition"].IsArray())
-    {
-        const auto& arr = initialState["StartPosition"].GetArray();
-        if (arr.Size() == 3) startPosition = float3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
-    }
-
-    if (initialState.HasMember("StartRotation") && initialState["StartRotation"].IsArray())
-    {
-        const auto& arr = initialState["StartRotation"].GetArray();
-        if (arr.Size() == 3) startRotation = float3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
-    }
-
-    if (initialState.HasMember("StartScale") && initialState["StartScale"].IsArray())
-    {
-        const auto& arr = initialState["StartScale"].GetArray();
-        if (arr.Size() == 3) startScale = float3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
-    }
-}
 
 bool TileFloatScript::Init()
 {
 
     // get final (correct) position, and move the tile to start (rotated, moved and scaled) position
-    const float4x4 originalTransform = parent->GetLocalTransform();
+    const float4x4& originalTransform = parent->GetLocalTransform();
     finalPosition                    = originalTransform.TranslatePart();
     finalRotation                    = Quat(originalTransform.RotatePart());
     finalScale                       = originalTransform.GetScale();
@@ -98,9 +50,8 @@ bool TileFloatScript::Init()
     currentRotationQuat              = startQuat;
 
     parent->SetLocalTransform(startTransform);
-    parent->UpdateTransformForGOBranch();
 
-    GLOG("Initiating TileFloatScript");
+    //GLOG("Initiating TileFloatScript");
     return true;
 }
 
@@ -120,8 +71,8 @@ void TileFloatScript::Update(float deltaTime)
     float adjustedSpeed     = speed * deltaTime * (1.0f / factor);
     adjustedSpeed           = std::clamp(adjustedSpeed, 0.0f, 1.0f);
 
-    const float3 currentT   = parent->GetPosition();
-    const float3 currentS   = parent->GetScale();
+    const float3& currentT   = parent->GetPosition();
+    const float3& currentS   = parent->GetScale();
 
     const float3 targetT    = goingToFinal ? finalPosition : startPosition;
     const float3 targetS    = goingToFinal ? finalScale : startScale;
@@ -147,7 +98,6 @@ void TileFloatScript::Update(float deltaTime)
         currentRotationQuat       = targetQuat;
         float4x4 snappedTransform = float4x4::FromTRS(targetT, currentRotationQuat, targetS);
         parent->SetLocalTransform(snappedTransform);
-        parent->UpdateTransformForGOBranch();
         return;
     }
 
@@ -157,5 +107,4 @@ void TileFloatScript::Update(float deltaTime)
 
     const float4x4 newTransform = float4x4::FromTRS(newT, currentRotationQuat, newS);
     parent->SetLocalTransform(newTransform);
-    parent->UpdateTransformForGOBranch();
 }
