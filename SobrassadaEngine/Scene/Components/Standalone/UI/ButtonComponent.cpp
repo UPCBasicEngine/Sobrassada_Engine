@@ -167,12 +167,6 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
 {
     if (!isInteractable || !IsEffectivelyEnabled()) return false;
 
-    GLOG(
-        "Button %s center pos: %f %f", parent->GetName().c_str(), transform2D->GetCenterPosition().x,
-        transform2D->GetCenterPosition().y
-    );
-    GLOG("Width: %f | Height: %f", transform2D->size.x, transform2D->size.y);
-
     if (dismiss) GLOG("Dismissed");
 
     if (!dismiss && IsWithinBounds(mousePos))
@@ -220,7 +214,7 @@ bool ButtonComponent::IsWithinBounds(const float2& pos) const
     const float3 localRotated =
         parent->GetGlobalTransform().RotatePart().Inverted() * float3(localPos.x, localPos.y, 0.0f);
 
-    GLOG("Converted mouse pos: %f %F", localRotated.x, localRotated.y);
+    //GLOG("Converted mouse pos: %f %F", localRotated.x, localRotated.y);
 
     // Check if it is inside the button's AABB in local space
     return abs(localRotated.x) <= transform2D->size.x * 0.5f && abs(localRotated.y) <= transform2D->size.y * 0.5f;

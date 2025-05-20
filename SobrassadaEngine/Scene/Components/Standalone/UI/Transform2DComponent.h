@@ -67,13 +67,12 @@ class Transform2DComponent : public Component
     float2 anchorsY;
 
   private:
-    CanvasComponent* parentCanvas         = nullptr;
-    Transform2DComponent* parentTransform = nullptr;
-    std::vector<Transform2DComponent*> childTransforms;
-
-    bool transform2DUpdated;
-    bool renderAnchors = true;
-    float2 previousPosition;
-    float4 previousMargins;
-    float4 margins;
+    CanvasComponent* parentCanvas                      = nullptr;
+    Transform2DComponent* parentTransform              = nullptr;
+    std::vector<Transform2DComponent*> childTransforms = {};
+    bool transform2DUpdated                            = false;
+    bool renderAnchors                                 = true;
+    float2 previousPosition                            = float2::zero;
+    float4 previousMargins                             = float4::zero;
+    float4 margins                                     = float4::zero;
 };
