@@ -366,6 +366,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Utils\Particles\BaseAddon.cpp" />
     <ClCompile Include="Utils\Particles\ParticleAddon.cpp" />
     <ClCompile Include="ResourceManagement\Resources\ResourceEmitter.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
@@ -595,9 +596,12 @@
     <ClCompile Include="Utils\TextManager.cpp" />
     <ClCompile Include="Utils\Trees\Octree.cpp" />
     <ClCompile Include="Utils\Trees\Quadtree.cpp" />
+    <ClCompile Include="Utils\Particles\VelocityAddon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Utils\Particles\BaseAddon.h" />
+    <ClInclude Include="Utils\Particles\ParticleUtils.h" />
     <ClInclude Include="Utils\Particles\ParticleAddon.h" />
     <ClInclude Include="ResourceManagement\Resources\ResourceEmitter.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
@@ -751,6 +755,7 @@
     <ClInclude Include="Utils\Script.h" />
     <ClInclude Include="Utils\Trees\Octree.h" />
     <ClInclude Include="Utils\Trees\Quadtree.h" />
+    <ClInclude Include="Utils\Particles\VelocityAddon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

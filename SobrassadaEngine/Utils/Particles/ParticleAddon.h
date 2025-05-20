@@ -1,35 +1,31 @@
 #pragma once
 
-#include "rapidjson/document.h"
+#include "ParticleUtils.h"
 
-enum class ParticleAddonType : int
-{
-    NONE = 0,
-    BASE,
-    VELOCITY,
-};
+#include "rapidjson/document.h"
 
 class ResourceEmitter;
 
 class ParticleAddon
 {
   public:
-    ParticleAddon(ResourceEmitter* owner) : emitterOwner(owner) {};
+    ParticleAddon(ResourceEmitter* owner, ParticleAddonType type) : emitterOwner(owner), addonType(type) {};
     ParticleAddon(const rapidjson::Value& initialState, ResourceEmitter* owner);
     virtual ~ParticleAddon() = default;
 
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
-    virtual void Update(float deltaTime) = 0;
-    virtual void RenderEditorInspector() = 0;
+    virtual void Init() const {};
+    virtual void Update(float deltaTime) const = 0;
+    virtual void RenderEditorInspector()       = 0;
 
-    bool IsEnabled() const { return IsEnabled; }
+    bool IsEnabled() const { return isEnabled; }
 
     void Enable() { isEnabled = true; }
     void Disable() { isEnabled = false; }
 
   private:
-    bool isEnabled = false;
+    bool isEnabled                = false;
     ResourceEmitter* emitterOwner = nullptr;
     ParticleAddonType addonType   = ParticleAddonType::NONE;
 };
