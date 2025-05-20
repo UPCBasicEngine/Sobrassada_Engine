@@ -5,6 +5,7 @@
 #include "CameraMovement.h"
 #include "CuChulainn.h"
 #include "ExitGameScript.h"
+#include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
 #include "Globals.h"
@@ -29,24 +30,25 @@
 #endif
 
 constexpr const char* scripts[] = {
-    "RotateGameObjectScript",    // SCRIPT_ROTATE_GAME_OBJECT
-    "ButtonScript",              // SCRIPT_BUTTON
-    "GodModeScript",             // SCRIPT_GOD_MODE
-    "CuChulainnScript",          // SCRIPT_CU_CHULAINN
-    "SoldierScript",             // SCRIPT_SOLDIER
-    "ExitGameScript",            // SCRIPT_EXIT_GAME
-    "FullscreenToggleScript",    // SCRIPT_FULLSCREEN_TOGGLE
-    "VSyncToggleScript",         // SCRIPT_VSYNC_TOGGLE
-    "PauseMenuScript",           // SCRIPT_PAUSE_MENU
-    "OptionsMenuSwitcherScript", // SCRIPT_OPTIONS_MENU_SWITCHER
-    "MainMenuSelectorScript",    // SCRIPT_MAIN_MENU_SELECTOR
-    "PressAnyKeyScript",         // SCRIPT_PRESS_ANY_KEY
-    "CameraMovement",            // SCRIPT_CAMERA_MOVEMENT
-    "Projectile",                // SCRIPT_PROJECTILE
-    "FreeCamera",                // SCRIPT_FREE_CAMERA
-    "TileFloatScript",           // SCRIPT_TILEFLOAT
-    "Banshee",                   // SCRIPT_BANSHEE
-    "SpawnPoint"                 // SCRIPT_SPAWN_POINT
+    "RotateGameObjectScript",
+    "ButtonScript",
+    "GodModeScript",
+    "CuChulainnScript",
+    "SoldierScript",
+    "ExitGameScript",
+    "FullscreenToggleScript",
+    "VSyncToggleScript",
+    "PauseMenuScript",
+    "OptionsMenuSwitcherScript",
+    "MainMenuSelectorScript",
+    "PressAnyKeyScript",
+    "CameraMovement",
+    "Projectile",
+    "FreeCamera",
+    "SpawnPoint",
+    "Banshee",
+    "TileFloatScript",
+    "FireballTrap"
 };
 
 Application* AppEngine = nullptr;
@@ -67,7 +69,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "OptionsMenuSwitcherScript") return new OptionsMenuSwitcherScript(parent);
     if (scriptType == "MainMenuSelectorScript") return new MainMenuSelectorScript(parent);
     if (scriptType == "PressAnyKeyScript") return new PressAnyKeyScript(parent);
-    if (scriptType == "FreeCamera") return new FreeCamera(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
@@ -76,6 +77,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Projectile") return new Projectile(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "Banshee") return new Banshee(parent);
+    if (scriptType == "FireballTrap") return new FireballTrap(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
@@ -83,6 +85,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
     if (scriptType == "GodModeScript") return new GodMode(parent);
+    if (scriptType == "FreeCamera") return new FreeCamera(parent);
+
     return nullptr;
 }
 

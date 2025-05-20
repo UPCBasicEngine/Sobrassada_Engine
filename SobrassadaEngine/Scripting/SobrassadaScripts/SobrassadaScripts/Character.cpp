@@ -4,6 +4,7 @@
 #include "Character.h"
 #include "CuChulainn.h"
 #include "EditorUIModule.h"
+#include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Projectile.h"
@@ -11,6 +12,8 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 
 #include <string>
 
@@ -67,7 +70,7 @@ bool Character::Init()
     else
     {
         weaponCollider = weapon->GetComponent<CapsuleColliderComponent*>();
-        if (!weaponCollider) GLOG("Weapon cube collider component not found for %s", parent->GetName().c_str())
+        if (!weaponCollider) GLOG("Weapon capsule collider component not found for %s", parent->GetName().c_str())
         else weaponCollider->SetEnabled(false);
     }
 
@@ -91,11 +94,12 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
+    // ---- Damage Collisions ----
+    if (isInvulnerable) return;
+
     // Melee check
     CapsuleColliderComponent* otherWeapon = otherObject->GetComponent<CapsuleColliderComponent*>();
     ScriptComponent* otherScript          = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
-
-    if (isInvulnerable) return;
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
@@ -104,20 +108,36 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
         {
             if (!enemyScript->isAttacking) return;
             TakeDamage(enemyScript->attackDamage);
+
+            return;
         }
     }
 
-    // Projectile check
     otherScript = otherObject->GetComponent<ScriptComponent*>();
-
     if (otherScript)
     {
+        // Projectile check
         Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
+
+            return;
+        }
+
+        // Trap check
+        FireballTrap* fireballScript = otherScript->GetScriptByType<FireballTrap>();
+        if (fireballScript)
+        {
+            SphereColliderComponent* damageCollider = otherObject->GetComponent<SphereColliderComponent*>();
+
+            if (damageCollider && damageCollider->GetEnabled())
+            {
+                TakeDamage(fireballScript->GetDamage());
+                damageCollider->SetEnabled(false);
+            }
         }
     }
 }
