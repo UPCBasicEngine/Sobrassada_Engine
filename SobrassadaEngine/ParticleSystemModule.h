@@ -19,7 +19,7 @@ class ParticleSystemModule : public Module
 
     void RenderParticles();
 
-    ParticleEmitter* RequestParticleEmitter(ParticleSystemComponent* owner);
+    ParticleEmitter* RequestParticleEmitter(const std::string& name, ParticleSystemComponent* owner);
     ParticleEmitter* RequestParticleEmitter(const rapidjson::Value& initialState, ParticleSystemComponent* owner);
 
     void DeleteParticleEmitter(UID emiterUID);

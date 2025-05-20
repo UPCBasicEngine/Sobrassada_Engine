@@ -2,6 +2,8 @@
 
 #include "Component.h"
 
+#include <vector>
+
 class ResourceMaterial;
 class ResourceTexture;
 class ParticleEmitter;
@@ -26,7 +28,10 @@ class ParticleSystemComponent : public Component
     UID GetTextureUID() const { return currentTextureUID; }
 
   private:
-    ParticleEmitter* emitter = nullptr;
+    ParticleEmitter* currentEmitter = nullptr;
+    std::vector<ParticleEmitter*> emitters;
+
+    char newTagName[64]               = "";
 
     bool useTexture                   = false;
     std::string currentResourceName   = "No material";

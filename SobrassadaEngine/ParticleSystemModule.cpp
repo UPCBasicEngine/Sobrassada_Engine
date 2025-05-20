@@ -30,9 +30,9 @@ void ParticleSystemModule::RenderParticles()
 {
 }
 
-ParticleEmitter* ParticleSystemModule::RequestParticleEmitter(ParticleSystemComponent* owner)
+ParticleEmitter* ParticleSystemModule::RequestParticleEmitter(const std::string& name, ParticleSystemComponent* owner)
 {
-    ParticleEmitter* emitter = new ParticleEmitter(GenerateUID(), "xd", owner);
+    ParticleEmitter* emitter = new ParticleEmitter(GenerateUID(), name, owner);
     particleEmitters.insert({emitter->GetUID(), emitter});
     return emitter;
 }
