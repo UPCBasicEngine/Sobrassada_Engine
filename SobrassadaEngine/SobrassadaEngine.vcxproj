@@ -366,6 +366,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Utils\Particles\ParticleEmitter.cpp" />
     <ClCompile Include="Utils\Particles\BaseAddon.cpp" />
     <ClCompile Include="Utils\Particles\ParticleAddon.cpp" />
     <ClCompile Include="ResourceManagement\Resources\ResourceEmitter.cpp" />
@@ -404,6 +405,7 @@
     <ClCompile Include="Scene\Components\Standalone\Physics\SphereColliderComponent.cpp" />
     <ClCompile Include="Scene\Components\Standalone\UI\ButtonComponent.cpp" />
     <ClCompile Include="Scene\Components\Standalone\UI\ImageComponent.cpp" />
+    <ClCompile Include="Utils\Particles\ParticleUtils.cpp" />
     <ClCompile Include="Utils\Physics\BulletMotionState.cpp" />
     <ClCompile Include="Scene\Components\Standalone\Physics\CubeColliderComponent.cpp" />
     <ClCompile Include="DebugDraw\BulletDebugDraw.cpp" />
@@ -600,6 +602,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Utils\Particles\ParticleEmitter.h" />
+    <ClInclude Include="Utils\Particles\Particle.h" />
     <ClInclude Include="Utils\Particles\BaseAddon.h" />
     <ClInclude Include="Utils\Particles\ParticleUtils.h" />
     <ClInclude Include="Utils\Particles\ParticleAddon.h" />

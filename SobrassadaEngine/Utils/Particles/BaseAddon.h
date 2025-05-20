@@ -5,12 +5,13 @@
 class BaseAddon : ParticleAddon
 {
   public:
-    BaseAddon(ResourceEmitter* owner);
-    BaseAddon(const rapidjson::Value& initialState, ResourceEmitter* owner);
+    BaseAddon(ParticleEmitter* owner);
+    BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owner);
     ~BaseAddon() override;
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
 
+    void Init() const;
     void Update(float deltaTime) const override;
     void RenderEditorInspector() override;
 

@@ -558,6 +558,12 @@
     <ClCompile Include="Utils\Particles\VelocityAddon.cpp">
       <Filter>Utils\Particles\Addons</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Particles\ParticleUtils.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\ParticleEmitter.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1096,6 +1102,12 @@
     </ClInclude>
     <ClInclude Include="Utils\Particles\VelocityAddon.h">
       <Filter>Utils\Particles\Addons</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\Particle.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\ParticleEmitter.h">
+      <Filter>Utils\Particles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

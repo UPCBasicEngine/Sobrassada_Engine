@@ -1,10 +1,12 @@
 #include "BaseAddon.h"
 
-BaseAddon::BaseAddon(ResourceEmitter* owner) : ParticleAddon(owner, ParticleAddonType::BASE)
+#include "imgui.h"
+
+BaseAddon::BaseAddon(ParticleEmitter* owner) : ParticleAddon(owner, ParticleAddonType::BASE)
 {
 }
 
-BaseAddon::BaseAddon(const rapidjson::Value& initialState, ResourceEmitter* owner) : ParticleAddon(initialState, owner)
+BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : ParticleAddon(initialState, owner)
 {
     if (initialState.HasMember("Duration")) duration = initialState["Duration"].GetFloat();
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
@@ -24,6 +26,11 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     targetState.AddMember("MaxParticles", maxParticles, allocator);
 }
 
+void BaseAddon::Init() const
+{
+    // INITIALIZE EMITTER PARTICLES VECTOR WITH MAX_PARITCLES AND
+}
+
 void BaseAddon::Update(float deltaTime) const
 {
     if (!IsEnabled()) return;
@@ -34,6 +41,8 @@ void BaseAddon::Update(float deltaTime) const
 void BaseAddon::RenderEditorInspector()
 {
     if (!IsEnabled()) return;
+
+    ImGui::Text("BASE ADDON");
 
     // RENDER IMGUI TO CHANGE PARAMETERS
 }

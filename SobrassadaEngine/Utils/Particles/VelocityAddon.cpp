@@ -1,10 +1,12 @@
 #include "VelocityAddon.h"
 
-VelocityAddon::VelocityAddon(ResourceEmitter* owner) : ParticleAddon(owner, ParticleAddonType::VELOCITY)
+#include "imgui.h"
+
+VelocityAddon::VelocityAddon(ParticleEmitter* owner) : ParticleAddon(owner, ParticleAddonType::VELOCITY)
 {
 }
 
-VelocityAddon::VelocityAddon(const rapidjson::Value& initialState, ResourceEmitter* owner)
+VelocityAddon::VelocityAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
     : ParticleAddon(initialState, owner)
 {
     if (initialState.HasMember("StartSpeed")) startSpeed = initialState["StartSpeed"].GetFloat();
@@ -36,6 +38,6 @@ void VelocityAddon::Update(float deltaTime) const
 void VelocityAddon::RenderEditorInspector()
 {
     if (!IsEnabled()) return;
-
     // RENDER IMGUI TO CHANGE PARAMETERS
+    ImGui::Text("VELOCITY ADDON");
 }

@@ -1,0 +1,60 @@
+#include "ParticleUtils.h"
+
+#include "BaseAddon.h"
+#include "ParticleEmitter.h"
+#include "VelocityAddon.h"
+
+void ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType type, ParticleEmitter* emitter)
+{
+    auto& tuple = emitter->GetAddonsTuple();
+    switch (type)
+    {
+    case ParticleAddonType::NONE:
+        return;
+    case ParticleAddonType::BASE:
+    {
+        BaseAddon* addon            = new BaseAddon(emitter);
+        std::get<BaseAddon*>(tuple) = addon;
+        addon->Init();
+        break;
+    }
+    case ParticleAddonType::VELOCITY:
+    {
+        VelocityAddon* addon            = new VelocityAddon(emitter);
+        std::get<VelocityAddon*>(tuple) = addon;
+        addon->Init();
+        break;
+    }
+    default:
+        return;
+    }
+    emitter->SetAddonCreated((int)type - 1);
+}
+
+void ParticleUtils::CreateExistingComponent(const rapidjson::Value& initialState, ParticleEmitter* emitter)
+{
+    if (!initialState.HasMember("AddonType")) return;
+    ParticleAddonType type = ParticleAddonType(initialState["AddonType"].GetInt());
+
+    auto& tuple            = emitter->GetAddonsTuple();
+    switch (type)
+    {
+    case ParticleAddonType::NONE:
+        return;
+    case ParticleAddonType::BASE:
+    {
+        BaseAddon* addon            = new BaseAddon(initialState, emitter);
+        std::get<BaseAddon*>(tuple) = addon;
+        addon->Init();
+    }
+    case ParticleAddonType::VELOCITY:
+    {
+        VelocityAddon* addon            = new VelocityAddon(initialState, emitter);
+        std::get<VelocityAddon*>(tuple) = addon;
+        addon->Init();
+    }
+    default:
+        break;
+    }
+    emitter->SetAddonCreated((int)type - 1);
+}
