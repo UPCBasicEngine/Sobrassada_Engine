@@ -22,10 +22,12 @@ ParticleSystemComponent::ParticleSystemComponent(const rapidjson::Value& initial
         {
             const rapidjson::Value& newEmitterJSON = jsonEmitters[i];
 
-            emitters.push_back(App->GetParticleModule()->RequestParticleEmitter(newEmitterJSON, this));
+            ParticleEmitter* newEmitter = App->GetParticleModule()->RequestParticleEmitter(newEmitterJSON, this);
+
+            emitters.push_back({newEmitter->GetName(), newEmitter});
         }
 
-        if (emitters.size() > 0 && emitters[0] != nullptr) currentEmitter = emitters[0];
+        if (emitters.size() > 0 && emitters[0].second != nullptr) currentEmitter = emitters[0].second;
     }
 }
 
@@ -33,7 +35,7 @@ ParticleSystemComponent::~ParticleSystemComponent()
 {
     for (auto emitter : emitters)
     {
-        if (emitter) App->GetParticleModule()->DeleteParticleEmitter(emitter->GetUID());
+        if (emitter.second) App->GetParticleModule()->DeleteParticleEmitter(emitter.second->GetUID());
     }
 }
 
@@ -47,7 +49,7 @@ void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Doc
     for (auto emitter : emitters)
     {
         rapidjson::Value currentEmitterJSON(rapidjson::kObjectType);
-        if (emitter) emitter->Save(currentEmitterJSON, allocator);
+        if (emitter.second) emitter.second->Save(currentEmitterJSON, allocator);
         emittersArrayJSON.PushBack(currentEmitterJSON, allocator);
     }
 
@@ -77,13 +79,11 @@ void ParticleSystemComponent::RenderEditorInspector()
     if (ImGui::Button("Create emitter"))
     {
         currentEmitter = App->GetParticleModule()->RequestParticleEmitter(newTagName, this);
-        emitters.push_back(currentEmitter);
+        emitters.push_back({currentEmitter->GetName(), currentEmitter});
         memset(newTagName, 0, sizeof(newTagName));
     }
 
     ImGui::Separator();
-    ImGui::Spacing();
-    ImGui::Spacing();
     ImGui::Spacing();
 
     if (currentEmitter) currentEmitter->RenderEditor();

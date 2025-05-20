@@ -33,6 +33,7 @@ class ParticleEmitter
     void RemoveAddon(ParticleAddonType type);
 
     UID GetUID() const { return uid; }
+    const std::string& GetName() const { return name; }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
 
     void SetAddonCreated(int position) { createdAddons[position] = true; };
@@ -47,6 +48,7 @@ class ParticleEmitter
   private:
     UID uid                            = INVALID_UID;
     std::string name                   = "";
+    bool useTexture                    = false;
     ResourceTexture* texture           = nullptr;
     ResourceMaterial* material         = nullptr;
     ParticleSystemComponent* owner     = nullptr;

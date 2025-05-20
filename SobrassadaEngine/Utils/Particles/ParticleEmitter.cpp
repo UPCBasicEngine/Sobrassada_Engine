@@ -2,6 +2,7 @@
 
 #include "BaseAddon.h"
 #include "VelocityAddon.h"
+#include "ParticleSystemComponent.h"
 
 #include "imgui.h"
 
@@ -55,6 +56,7 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
 
     if (initialState.HasMember("UID")) uid = initialState["UID"].GetUint64();
     if (initialState.HasMember("Name")) name = initialState["Name"].GetString();
+    if (initialState.HasMember("UseTexture")) useTexture = initialState["UseTexture"].GetBool();
 
     if (initialState.HasMember("Addons") && initialState["Addons"].IsArray())
     {
@@ -80,6 +82,7 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
     targetState.AddMember("UID", uid, allocator);
     targetState.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
+    targetState.AddMember("UseTexture", useTexture, allocator);
 
     rapidjson::Value addonsJSON(rapidjson::kArrayType);
     SaveAddonsTuple(addonTuple, addonsJSON, allocator);
@@ -99,6 +102,19 @@ void ParticleEmitter::RenderEditor()
 {
     ImGui::Text("Selected emitter: %s", name.c_str());
     if (ImGui::Button("Create Velocity")) AddAddon(ParticleAddonType::VELOCITY);
+
+    if (ImGui::BeginCombo("Resource type", ResourceTypeStrings[useTexture ? 1 : 0]))
+    {
+        for (int i = 0; i < ResourceTypeStringsSize; ++i)
+        {
+            if (ImGui::Selectable(ResourceTypeStrings[i]))
+            {
+                useTexture = i;
+                // App->GetBillboardModule()->UpdateTagUseTexture(billboardTag, useTexture);
+            }
+        }
+        ImGui::EndCombo();
+    }
 
     std::apply([](auto&... pointer) { ((pointer ? pointer->RenderEditorInspector() : Nothing()), ...); }, addonTuple);
 }

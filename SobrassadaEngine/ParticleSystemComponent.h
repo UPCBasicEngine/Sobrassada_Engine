@@ -3,6 +3,7 @@
 #include "Component.h"
 
 #include <vector>
+#include <utility>
 
 class ResourceMaterial;
 class ResourceTexture;
@@ -29,7 +30,7 @@ class ParticleSystemComponent : public Component
 
   private:
     ParticleEmitter* currentEmitter = nullptr;
-    std::vector<ParticleEmitter*> emitters;
+    std::vector<std::pair<std::string, ParticleEmitter*>> emitters;
 
     char newTagName[64]               = "";
 
