@@ -25,8 +25,6 @@ MeshComponent::MeshComponent(const UID uid, GameObject* parent) : Component(uid,
 
 MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* parent) : Component(initialState, parent)
 {
-    if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
-    else renderMode = 0;
     if (initialState.HasMember("Material"))
     {
         UID materialUID = initialState["Material"].GetUint64();
@@ -36,6 +34,8 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
     {
         AddMesh(initialState["Mesh"].GetUint64(), false);
     }
+    if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
+    else renderMode = 0;
 
     if (initialState.HasMember("Bones"))
     {
@@ -256,7 +256,7 @@ void MeshComponent::AddMaterial(UID resource, bool setDefaultMaterial)
         App->GetResourcesModule()->ReleaseResource(currentMaterial);
         currentMaterial          = newMaterial;
         currentMaterialName      = currentMaterial->GetName();
-        // renderMode               = currentMaterial->IsTransparent() ? 1 : 0;
+        renderMode               = currentMaterial->IsTransparent() ? 1 : 0;
         bUsesMeshDefaultMaterial = setDefaultMaterial;
 
         if (batch) BatchEditorMode();
