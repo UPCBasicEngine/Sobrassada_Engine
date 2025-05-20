@@ -1,14 +1,14 @@
 #include "ParticleEmitter.h"
 
-#include "BaseAddon.h"
-#include "ParticleSystemComponent.h"
-#include "ResourcesModule.h"
-#include "VelocityAddon.h"
 #include "Application.h"
+#include "BaseAddon.h"
 #include "EditorUIModule.h"
 #include "LibraryModule.h"
+#include "ParticleSystemComponent.h"
 #include "ResourceMaterial.h"
 #include "ResourceTexture.h"
+#include "ResourcesModule.h"
+#include "VelocityAddon.h"
 
 #include "imgui.h"
 
@@ -44,6 +44,27 @@ template <std::size_t I = 0, typename... Tp>
     SaveAddonsTuple<I + 1, Tp...>(tuple, addonsJSON, allocator);
 }
 
+// REMOVE COMPONENT
+template <std::size_t I = 0, typename... Tp>
+inline typename std::enable_if<I == sizeof...(Tp), void>::type
+RemoveAddonTuple(std::tuple<Tp...>& tuple, ParticleAddonType selectedType, ParticleEmitter* parent)
+{
+}
+
+template <std::size_t I = 0, typename... Tp>
+    inline typename std::enable_if <
+    I<sizeof...(Tp), void>::type
+    RemoveAddonTuple(std::tuple<Tp...>& tuple, ParticleAddonType selectedType, ParticleEmitter* parent)
+{
+    if (std::get<I>(tuple) && std::get<I>(tuple)->GetType() == selectedType)
+    {
+        delete std::get<I>(tuple);
+        std::get<I>(tuple) = nullptr;
+        parent->SetAddonDeleted((int)selectedType - 1);
+        return;
+    }
+    RemoveAddonTuple<I + 1, Tp...>(tuple, selectedType, parent);
+}
 // ---------- END SECTION FOR TUPLE ITERATION ----------
 
 ParticleEmitter::ParticleEmitter(UID uid, const std::string& name, ParticleSystemComponent* owner)
@@ -102,73 +123,112 @@ void ParticleEmitter::Update(float deltaTime)
 
 void ParticleEmitter::Spawn()
 {
+    std::apply([](auto&... pointer) { ((pointer ? pointer->Init() : Nothing()), ...); }, addonTuple);
 }
 
 void ParticleEmitter::RenderEditor()
 {
-    ImGui::Text("Selected emitter: %s", name.c_str());
-    if (ImGui::Button("Create Velocity")) AddAddon(ParticleAddonType::VELOCITY);
 
-    if (ImGui::BeginCombo("Resource type", ResourceTypeStrings[useTexture ? 1 : 0]))
+    // CHANGE THIS TO ADD / REMOVE ADDONS, SAME AS RENDER OPTIONS
+
+    if (ImGui::Button("Manage Addons"))
     {
-        for (int i = 0; i < ResourceTypeStringsSize; ++i)
+        ImGui::OpenPopup("RenderAddonsManager");
+    }
+
+    if (ImGui::BeginPopup("RenderAddonsManager"))
+    {
+        float listBoxSize = (float)AddonTypeStringsSize + 0.5f;
+        if (ImGui::BeginListBox(
+                "##RenderAddonsManagerList",
+                ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeightWithSpacing() * listBoxSize)
+            ))
         {
-            if (ImGui::Selectable(ResourceTypeStrings[i]))
+            for (int i = 2; i < AddonTypeStringsSize; ++i)
             {
-                useTexture = i;
-                // App->GetBillboardModule()->UpdateTagUseTexture(billboardTag, useTexture);
+                bool currentBitValue = createdAddons[i - 1];
+                if (ImGui::Checkbox(AddonTypeStrings[i], &currentBitValue))
+                {
+                    if (currentBitValue) AddAddon(ParticleAddonType(i));
+                    else RemoveAddon(ParticleAddonType(i));
+                }
             }
+
+            ImGui::EndListBox();
         }
-        ImGui::EndCombo();
+
+        ImGui::EndPopup();
     }
 
-    if (!useTexture)
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // Material / Texture
+    if (ImGui::CollapsingHeader("Resource"))
     {
-        if (ImGui::Button("Select material"))
+        if (ImGui::BeginCombo("Resource type", ResourceTypeStrings[useTexture ? 1 : 0]))
         {
-            ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
-        }
-
-        if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
-        {
-
-            const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-                CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
-            );
-
-            if (chosenMatUID != INVALID_UID) UpdateMaterial(chosenMatUID);
-        }
-
-        if (material != nullptr) material->OnEditorUpdate();
-    }
-    else
-    {
-        if (ImGui::Button("Select texture"))
-        {
-            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
-        }
-
-        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
-        {
-
-            const UID chosenTexUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-                CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
-            );
-
-            if (chosenTexUID != INVALID_UID) UpdateTexture(chosenTexUID);
-        }
-
-        if (texture != nullptr)
-        {
-            ImGui::Text("Diffuse Texture");
-            ImGui::Image((ImTextureID)(intptr_t)texture->GetTextureID(), ImVec2(256, 256));
-            if (ImGui::IsItemHovered())
+            for (int i = 0; i < ResourceTypeStringsSize; ++i)
             {
-                ImGui::SetTooltip("Texture Dimensions: %d, %d", texture->GetTextureWidth(), texture->GetTextureWidth()
+                if (ImGui::Selectable(ResourceTypeStrings[i])) useTexture = i;
+            }
+            ImGui::EndCombo();
+        }
+
+        if (!useTexture)
+        {
+            if (ImGui::Button("Select material"))
+            {
+                ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
+            }
+
+            if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
+            {
+
+                const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                    CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
                 );
+
+                if (chosenMatUID != INVALID_UID) UpdateMaterial(chosenMatUID);
+            }
+
+            if (material != nullptr) material->OnEditorUpdate();
+        }
+        else
+        {
+            if (ImGui::Button("Select texture"))
+            {
+                ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+            }
+
+            if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+            {
+
+                const UID chosenTexUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                    CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+                );
+
+                if (chosenTexUID != INVALID_UID) UpdateTexture(chosenTexUID);
+            }
+
+            if (texture != nullptr)
+            {
+                ImGui::Text("Diffuse Texture");
+                ImGui::Image((ImTextureID)(intptr_t)texture->GetTextureID(), ImVec2(256, 256));
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip(
+                        "Texture Dimensions: %d, %d", texture->GetTextureWidth(), texture->GetTextureWidth()
+                    );
+                }
             }
         }
     }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
 
     std::apply([](auto&... pointer) { ((pointer ? pointer->RenderEditorInspector() : Nothing()), ...); }, addonTuple);
 }
@@ -180,6 +240,11 @@ void ParticleEmitter::AddAddon(ParticleAddonType type)
 
 void ParticleEmitter::RemoveAddon(ParticleAddonType type)
 {
+    if (createdAddons[(int)type - 1])
+    {
+        RemoveAddonTuple(addonTuple, type, this);
+        Spawn();
+    }
 }
 
 void ParticleEmitter::UpdateMaterial(UID newMaterialUID)

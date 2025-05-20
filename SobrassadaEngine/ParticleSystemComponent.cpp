@@ -81,8 +81,22 @@ void ParticleSystemComponent::RenderEditorInspector()
         currentEmitter = App->GetParticleModule()->RequestParticleEmitter(newTagName, this);
         emitters.push_back({currentEmitter->GetName(), currentEmitter});
         memset(newTagName, 0, sizeof(newTagName));
+    } 
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (ImGui::BeginCombo("Current emitter", currentEmitter ? currentEmitter->GetName().c_str() : "None"))
+    {
+        for (int i = 0; i < emitters.size(); ++i)
+        {
+            if (ImGui::Selectable(emitters[i].second->GetName().c_str())) currentEmitter = emitters[i].second;
+        }
+        ImGui::EndCombo();
     }
 
+    ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
 

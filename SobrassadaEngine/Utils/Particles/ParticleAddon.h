@@ -19,6 +19,7 @@ class ParticleAddon
     virtual void Update(float deltaTime) const = 0;
     virtual void RenderEditorInspector()       = 0;
 
+    ParticleAddonType GetType() const { return addonType; };
     bool IsEnabled() const { return isEnabled; }
 
     void Enable() { isEnabled = true; }

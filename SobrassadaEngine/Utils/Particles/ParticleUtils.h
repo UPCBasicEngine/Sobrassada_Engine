@@ -11,6 +11,9 @@ enum class ParticleAddonType : int
     VELOCITY,
 };
 
+constexpr const char* AddonTypeStrings[] = {"None", "Base", "Velocity"};
+constexpr const int AddonTypeStringsSize = sizeof(AddonTypeStrings) / sizeof(char*);
+
 class ParticleUtils
 {
   public:
