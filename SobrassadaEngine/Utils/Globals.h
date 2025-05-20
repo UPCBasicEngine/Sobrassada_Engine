@@ -15,7 +15,7 @@
 
 #pragma warning(disable : 4251)
 
-extern SOBRASADA_API_ENGINE std::vector<char*>* Logs;
+extern std::vector<char*>* Logs;
 extern LCG* rng;
 
 SOBRASADA_API_ENGINE void glog(const char file[], int line, const char* format, ...);

@@ -173,13 +173,13 @@ void MeshComponent::RenderEditorInspector()
 
     if (currentMaterial != nullptr)
     {
-        const char* renderModes[] = {"Opaque", "Transparent"};
+        const char* renderModes[] = {"Opaque", "Transparent", "Alpha"};
         int currentRenderMode     = static_cast<int>(renderMode);
 
         if (ImGui::Combo("Render Mode", &currentRenderMode, renderModes, IM_ARRAYSIZE(renderModes)))
         {
             renderMode = currentRenderMode;
-            renderMode == 1 ? currentMaterial->SetTransparent(true) : currentMaterial->SetTransparent(false);
+            renderMode != 0 ? currentMaterial->SetTransparent(true) : currentMaterial->SetTransparent(false);
             if (batch) BatchEditorMode();
         }
 

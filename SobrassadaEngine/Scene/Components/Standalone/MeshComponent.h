@@ -83,5 +83,5 @@ class MeshComponent : public Component
     GeometryBatch* batch    = nullptr;
     bool uniqueBatch        = false;
 
-    int renderMode   = 0;
+    int renderMode   = 0; //0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
 };

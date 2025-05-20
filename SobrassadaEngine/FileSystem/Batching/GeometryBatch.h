@@ -34,6 +34,7 @@ class GeometryBatch
     const bool GetIsSpecular() const { return isSpecular; }
     const bool GetHasBones() const { return hasBones; }
     const bool IsNavmeshValid() const { return isNavmeshValid; }
+    const bool IsTransparent() const { return isTransparent; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
@@ -83,4 +84,5 @@ class GeometryBatch
     bool isSpecular               = false;
     bool hasBones                 = false;
     bool isNavmeshValid           = false;
+    bool isTransparent            = false;
 };

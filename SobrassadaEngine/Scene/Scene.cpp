@@ -1186,18 +1186,13 @@ void Scene::TransparentPassRender(
     // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glViewport(0, 0, width, height);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
-    glEnable(GL_DEPTH_TEST);
-
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 0)
             meshesToRender.push_back(mesh);
     }
 

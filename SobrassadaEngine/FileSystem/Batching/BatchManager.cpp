@@ -138,72 +138,114 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    for (GeometryBatch* it : transparentBatches)
+    std::vector<MeshComponent*> batchMeshes;
+    for (MeshComponent* mesh : meshesToRender)
     {
-        std::vector<MeshComponent*> batchMeshes;
-        for (MeshComponent* mesh : meshesToRender)
+        GameObject* owner = mesh->GetParent();
+        if (!owner || !owner->IsGloballyEnabled()) continue;
+
+        batchMeshes.push_back(mesh);
+    }
+
+    if (batchMeshes.empty()) return;
+
+    std::sort(
+        batchMeshes.begin(), batchMeshes.end(),
+        [camera](MeshComponent* a, MeshComponent* b)
         {
-            GameObject* owner = mesh->GetParent();
-            if (!owner || !owner->IsGloballyEnabled()) continue;
-
-            if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
-        }
-
-        if (batchMeshes.empty()) continue;
-
-        std::sort(
-            batchMeshes.begin(), batchMeshes.end(),
-            [camera](MeshComponent* a, MeshComponent* b)
+            if (camera != nullptr)
             {
-                if (camera != nullptr)
-                {
-                    float distanceA = (a->GetParent()->GetPosition() - camera->GetCameraPosition()).LengthSq();
-                    float distanceB = (b->GetParent()->GetPosition() - camera->GetCameraPosition()).LengthSq();
+                float distanceA =
+                    (a->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition()).LengthSq();
+                float distanceB =
+                    (b->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition()).LengthSq();
 
-                    return distanceA > distanceB;
-                }
-                else
-                {
-                    float distanceA =
-                        (a->GetParent()->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
-                    float distanceB =
-                        (b->GetParent()->GetPosition() - App->GetCameraModule()->GetCameraPosition()).LengthSq();
-
-                    return distanceA > distanceB;
-                }
+                return distanceA > distanceB;
             }
-        );
+            else
+            {
+                float distanceA =
+                    (a->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
+                        .LengthSq();
+                float distanceB =
+                    (b->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
+                        .LengthSq();
 
-        const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
+                return distanceA > distanceB;
+            }
+        }
+    );
 
-        const auto start           = std::chrono::high_resolution_clock::now();
+    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
 
-        glUseProgram(program);
+    const auto start           = std::chrono::high_resolution_clock::now();
 
-        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-        unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-        glUniformBlockBinding(program, blockIdx, 0);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glUseProgram(program);
 
-        it->ResetUpdatedOnce();
-        it->Render(batchMeshes);
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        const auto end                             = std::chrono::high_resolution_clock::now();
-        const std::chrono::duration<float> elapsed = end - start;
+    GeometryBatch* currentBatch = batchMeshes[0]->GetBatch();
+    std::vector<MeshComponent*> currentBatchMeshes;
 
-        const unsigned int vertexCount             = it->GetVertexCount();
-        const int meshTriangles                    = vertexCount / 3;
-        App->GetOpenGLModule()->AddTrianglesPerSecond(meshTriangles / elapsed.count());
-        App->GetOpenGLModule()->AddVerticesCount(vertexCount);
-        App->GetOpenGLModule()->AddDrawCallsCount();
+    currentBatchMeshes.push_back(batchMeshes[0]);
+    if (batchMeshes[0]->GetRenderMode() == 1)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
+        glEnable(GL_DEPTH_TEST);
+    }
+    else
+    {
+        glDisable(GL_BLEND);
+    }
+
+    for (size_t i = 1; i < batchMeshes.size(); ++i)
+    {
+        MeshComponent* mesh  = batchMeshes[i];
+        GeometryBatch* batch = mesh->GetBatch();
+        if (batch == currentBatch)
+        {
+            currentBatchMeshes.push_back(mesh);
+        }
+        else
+        {
+            currentBatch->ResetUpdatedOnce();
+            currentBatch->Render(currentBatchMeshes);
+            currentBatchMeshes.clear();
+
+            if (mesh->GetRenderMode() == 1)
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glDepthMask(GL_FALSE);
+                glEnable(GL_DEPTH_TEST);
+            }
+            else
+            {
+                glDisable(GL_BLEND);
+            }
+            currentBatch = batch;
+            currentBatchMeshes.push_back(mesh);
+        }
+    }
+
+    if (!currentBatchMeshes.empty())
+    {
+        currentBatch->ResetUpdatedOnce();
+        currentBatch->Render(currentBatchMeshes);
+        currentBatchMeshes.clear();
     }
 }
 
-//We can change that now
+// We can change that now
 GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
 {
-    const bool isTransparent = component->GetRenderMode() == 1;
+    const bool isTransparent = component->GetRenderMode() != 0;
     if (isTransparent)
     {
         if (transparentBatches.empty()) return CreateNewBatch(component);
@@ -215,21 +257,15 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
 
     if (isTransparent)
     {
-        for (GeometryBatch* it : transparentBatches)
-        {
-            if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
-            it->GetHasBones() == component->GetHasBones() && it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid())
-            {
-                return it;
-            }
-        }
+        return CreateNewBatch(component);
     }
     else
     {
         for (GeometryBatch* it : opaqueBatches)
         {
             if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
-                it->GetHasBones() == component->GetHasBones() && it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid())
+                it->GetHasBones() == component->GetHasBones() &&
+                it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid())
             {
                 return it;
             }
