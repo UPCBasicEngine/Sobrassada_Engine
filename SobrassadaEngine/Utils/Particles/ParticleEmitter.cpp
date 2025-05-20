@@ -43,6 +43,7 @@ ParticleEmitter::ParticleEmitter(UID uid, const std::string& name, ParticleSyste
     : uid(uid), name(name), owner(owner)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
+    createdAddons.reset();
     ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType::BASE, this);
 }
 
@@ -50,6 +51,7 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
 
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
+    createdAddons.reset();
 
     if (initialState.HasMember("UID")) uid = initialState["UID"].GetUint64();
     if (initialState.HasMember("Name")) name = initialState["Name"].GetString();

@@ -10,7 +10,7 @@ BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
 {
     if (initialState.HasMember("Duration")) duration = initialState["Duration"].GetFloat();
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
-    if (initialState.HasMember("MaxParticles")) maxParticles = initialState["MaxParticles"].GetUint();
+    if (initialState.HasMember("MaxParticles")) maxParticles = initialState["MaxParticles"].GetInt();
 }
 
 BaseAddon::~BaseAddon()
@@ -44,5 +44,11 @@ void BaseAddon::RenderEditorInspector()
 
     ImGui::Text("BASE ADDON");
 
-    // RENDER IMGUI TO CHANGE PARAMETERS
+    ImGui::Checkbox("Loop", &loop);
+    ImGui::DragFloat("Duration", &duration, 0.05f, 0.f, 20.f);
+    ImGui::DragInt("Max Particles", &maxParticles, 1, 0, 500);
+
+    ImGui::Separator();
+
+
 }

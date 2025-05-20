@@ -18,5 +18,5 @@ class BaseAddon : public ParticleAddon
   private:
     float duration = 5.f;
     bool loop = false;
-    unsigned int maxParticles = 100;
+    int maxParticles = 100;
 };

@@ -40,4 +40,8 @@ void VelocityAddon::RenderEditorInspector()
     if (!IsEnabled()) return;
     // RENDER IMGUI TO CHANGE PARAMETERS
     ImGui::Text("VELOCITY ADDON");
+
+    ImGui::DragFloat("Y Start velocity", &startSpeed);
+
+    ImGui::Separator();
 }
