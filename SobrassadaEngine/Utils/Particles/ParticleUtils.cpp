@@ -46,12 +46,14 @@ void ParticleUtils::CreateExistingComponent(const rapidjson::Value& initialState
         BaseAddon* addon            = new BaseAddon(initialState, emitter);
         std::get<BaseAddon*>(tuple) = addon;
         addon->Init();
+        break;
     }
     case ParticleAddonType::VELOCITY:
     {
         VelocityAddon* addon            = new VelocityAddon(initialState, emitter);
         std::get<VelocityAddon*>(tuple) = addon;
         addon->Init();
+        break;
     }
     default:
         break;

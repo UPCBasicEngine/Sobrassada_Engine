@@ -264,9 +264,9 @@ void BillboardComponent::SetTexture(ResourceTexture* newTexture)
 
 void BillboardComponent::RecalculateAABB()
 {
-    float3 localPosition = parent->GetLocalTransform().TranslatePart();
-    float maxValue       = width > height ? width : height;
-    maxValue /= 2.f;
+    float3 localPosition  = parent->GetLocalTransform().TranslatePart();
+    float maxValue        = width > height ? width : height;
+    maxValue             /= 2.f;
     localComponentAABB    = AABB(float3(-maxValue, -maxValue, -maxValue), float3(maxValue, maxValue, maxValue));
 
     parent->OnAABBUpdated();

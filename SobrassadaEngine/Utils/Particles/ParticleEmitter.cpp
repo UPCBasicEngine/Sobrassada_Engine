@@ -85,6 +85,18 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
     if (initialState.HasMember("Name")) name = initialState["Name"].GetString();
     if (initialState.HasMember("UseTexture")) useTexture = initialState["UseTexture"].GetBool();
 
+    if (initialState.HasMember("Material"))
+    {
+        UID materialUID = initialState["Material"].GetUint64();
+        UpdateMaterial(materialUID);
+    }
+
+    if (initialState.HasMember("Texture"))
+    {
+        UID textureUID = initialState["Texture"].GetUint64();
+        UpdateTexture(textureUID);
+    }
+
     if (initialState.HasMember("Addons") && initialState["Addons"].IsArray())
     {
         const rapidjson::Value& jsonAddons = initialState["Addons"];
@@ -110,6 +122,9 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
     targetState.AddMember("UID", uid, allocator);
     targetState.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
     targetState.AddMember("UseTexture", useTexture, allocator);
+
+    targetState.AddMember("Material", material != nullptr ? material->GetUID() : DEFAULT_MATERIAL_UID, allocator);
+    targetState.AddMember("Texture", texture != nullptr ? texture->GetUID() : FALLBACK_TEXTURE_UID, allocator);
 
     rapidjson::Value addonsJSON(rapidjson::kArrayType);
     SaveAddonsTuple(addonTuple, addonsJSON, allocator);
@@ -261,8 +276,6 @@ void ParticleEmitter::UpdateMaterial(UID newMaterialUID)
 
     if (newMaterial != nullptr)
     {
-        useTexture = false;
-
         App->GetResourcesModule()->ReleaseResource(material);
         material = newMaterial;
     }
@@ -282,8 +295,6 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
 
     if (newTexture != nullptr)
     {
-        useTexture = true;
-
         App->GetResourcesModule()->ReleaseResource(texture);
         texture = newTexture;
     }
