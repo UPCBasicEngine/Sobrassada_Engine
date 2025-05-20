@@ -45,6 +45,8 @@ class ResourceMaterial : public Resource
     const bool GetIsMetallicRoughness() const { return metallicTexture.textureID != 0 ? true : false; }
     const MaterialGPU GetMaterial() const { return material; }
 
+    unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
+
   private:
     TextureInfo diffuseTexture;
     TextureInfo specularTexture;

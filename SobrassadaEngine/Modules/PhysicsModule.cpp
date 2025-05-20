@@ -136,8 +136,7 @@ void PhysicsModule::CreateCubeRigidBody(CubeColliderComponent* colliderComponent
 
     // MotionState for RENDER AND
     colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation,
-        colliderComponent->freezeRotation
+        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
     );
 
     // Creating final RigidBody
@@ -180,8 +179,7 @@ void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderCompo
 
     // MotionState for RENDER AND
     colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation,
-        colliderComponent->freezeRotation
+        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
     );
 
     // Creating final RigidBody
@@ -222,10 +220,9 @@ void PhysicsModule::CreateCapsuleRigidBody(CapsuleColliderComponent* colliderCom
     btVector3 localInertia(0.f, 0.f, 0.f);
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
-    // MotionState for RENDER AND
+    // MotionState
     colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation,
-        colliderComponent->freezeRotation
+        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
     );
 
     // Creating final RigidBody

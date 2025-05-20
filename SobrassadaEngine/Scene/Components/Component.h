@@ -46,7 +46,8 @@ class SOBRASADA_API_ENGINE Component
     GameObject* parent = nullptr;
 
     char name[64];
-    bool enabled;
+    bool enabled = true;
+    bool wasEnabled = true;
 
     AABB localComponentAABB;
 

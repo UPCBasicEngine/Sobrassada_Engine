@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "CameraModule.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "LibraryModule.h"
 #include "MetaNavmesh.h"
 #include "NavmeshImporter.h"
@@ -48,6 +49,7 @@ update_status PathfinderModule::Update(float deltaTime)
 
     if (crowd->getAgentCount() > 0)
     {
+        if (App->GetSceneModule()->GetInPlayMode()) deltaTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
         crowd->update(deltaTime, nullptr);
     }
 
@@ -55,7 +57,7 @@ update_status PathfinderModule::Update(float deltaTime)
 }
 
 // All ai agent components will call this to add themselves to crowd
-int PathfinderModule::CreateAgent(const float3& position, const float radius, const float height, const float speed)
+int PathfinderModule::CreateAgent(const float3& position, const float radius, const float height, const float speed, const float acceleration)
 {
 
     dtCrowdAgentParams params;
@@ -63,7 +65,7 @@ int PathfinderModule::CreateAgent(const float3& position, const float radius, co
     params.radius                = radius;
     params.height                = height;
     params.maxSpeed              = speed;
-    params.maxAcceleration       = 8.0f;
+    params.maxAcceleration       = acceleration;
     params.collisionQueryRange   = radius * 12.0f;
     params.pathOptimizationRange = radius * 30.0f;
     params.updateFlags           = DT_CROWD_ANTICIPATE_TURNS | DT_CROWD_OBSTACLE_AVOIDANCE | DT_CROWD_SEPARATION;
@@ -195,7 +197,7 @@ void PathfinderModule::SaveNavMesh(const std::string& name)
     const UID uid = NavmeshImporter::SaveNavmesh(name.c_str(), navmesh, navconf);
     App->GetSceneModule()->GetScene()->SetNavmeshUID(uid);
 
-    //GLOG("NavMesh saved with UID: %u", uid);
+    // GLOG("NavMesh saved with UID: %u", uid);
 }
 
 void PathfinderModule::LoadNavMesh(const std::string& name)
@@ -220,7 +222,7 @@ void PathfinderModule::LoadNavMesh(const std::string& name)
 
     InitQuerySystem();
 
-    //GLOG("Navmesh '%s' successfully loaded and set.", name.c_str());
+    // GLOG("Navmesh '%s' successfully loaded and set.", name.c_str());
 }
 
 void PathfinderModule::AddAIAgentComponent(int agentId, AIAgentComponent* comp)

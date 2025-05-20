@@ -1,9 +1,11 @@
 #include "pch.h"
 
+#include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "CuChulainn.h"
 #include "ExitGameScript.h"
+#include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
 #include "Globals.h"
@@ -26,6 +28,27 @@
 #define SOBRASSADA_API __declspec(dllimport)
 #endif
 
+constexpr const char* scripts[] = {
+    "RotateGameObjectScript",
+    "ButtonScript",
+    "GodModeScript",
+    "CuChulainnScript",
+    "SoldierScript",
+    "ExitGameScript",
+    "FullscreenToggleScript",
+    "VSyncToggleScript",
+    "PauseMenuScript",
+    "OptionsMenuSwitcherScript",
+    "MainMenuSelectorScript",
+    "PressAnyKeyScript",
+    "CameraMovement",
+    "Projectile",
+    "FreeCamera",
+    "SpawnPoint",
+    "Banshee",
+    "FireballTrap"
+};
+
 Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
@@ -44,7 +67,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "OptionsMenuSwitcherScript") return new OptionsMenuSwitcherScript(parent);
     if (scriptType == "MainMenuSelectorScript") return new MainMenuSelectorScript(parent);
     if (scriptType == "PressAnyKeyScript") return new PressAnyKeyScript(parent);
-    if (scriptType == "FreeCamera") return new FreeCamera(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
@@ -52,10 +74,14 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "CameraMovement") return new CameraMovement(parent);
     if (scriptType == "Projectile") return new Projectile(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
+    if (scriptType == "Banshee") return new Banshee(parent);
+    if (scriptType == "FireballTrap") return new FireballTrap(parent);
 
     /* Utils */
-    if (scriptType == "RotateGameObject") return new RotateGameObject(parent);
-    if (scriptType == "GodMode") return new GodMode(parent);
+    if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
+    if (scriptType == "GodModeScript") return new GodMode(parent);
+    if (scriptType == "FreeCamera") return new FreeCamera(parent);
+
     return nullptr;
 }
 
@@ -68,4 +94,27 @@ extern "C" SOBRASSADA_API void FreeSobrassadaScripts()
 {
     // GLOG("Sobrassada Scripts deleted");
     AppEngine = nullptr;
+}
+
+extern "C" SOBRASSADA_API const int GetScriptCount()
+{
+    return sizeof(scripts) / sizeof(scripts[0]);
+}
+
+extern "C" SOBRASSADA_API const char* GetScriptName(const int index)
+{
+    if (index < 0 || index >= GetScriptCount()) return nullptr;
+    return scripts[index];
+}
+
+extern "C" SOBRASSADA_API const int GetScriptIndexByName(const std::string& scriptString)
+{
+    for (int i = 0; i < GetScriptCount(); ++i)
+    {
+        if (scriptString == scripts[i])
+        {
+            return i;
+        }
+    }
+    return 0;
 }

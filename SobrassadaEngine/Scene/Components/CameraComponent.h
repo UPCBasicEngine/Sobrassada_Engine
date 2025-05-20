@@ -44,6 +44,8 @@ class CameraComponent : public Component
     const float4x4 GetViewMatrix() { return camera.ViewMatrix(); }
     const int GetFrustumType() { return (camera.type == OrthographicFrustum) ? 1 : 0; }
     Framebuffer* GetFramebuffer() { return previewFramebuffer; }
+    float GetNearPlaneDistance() const { return camera.nearPlaneDistance; }
+    float GetFarPlaneDistance() const { return camera.farPlaneDistance; }
 
     void SetAspectRatio(float newAspectRatio);
     void SetCameraPosition(const float3& position) { camera.pos = position; }
@@ -82,5 +84,5 @@ class CameraComponent : public Component
     bool autorendering              = false;
     bool firstFrame                 = false;
     bool freeCamera                 = false;
-    float currentPitchAngle   = 0.f;
+    float currentPitchAngle         = 0.f;
 };

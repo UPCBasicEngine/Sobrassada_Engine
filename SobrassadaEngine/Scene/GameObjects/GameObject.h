@@ -33,6 +33,7 @@ class ImageComponent;
 class ButtonComponent;
 class AudioSourceComponent;
 class AudioListenerComponent;
+class BillboardComponent;
 
 enum MobilitySettings
 {
@@ -69,6 +70,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
+    void UpdateEnabledStateRecursive();
     void RenderHierarchyNode(UID& selectedGameObjectUID);
     void HandleNodeClick(UID& selectedGameObjectUID);
     void RenderContextMenu();
@@ -184,6 +186,7 @@ class SOBRASADA_API_ENGINE GameObject
     bool selectParent                    = false;
     bool willUpdate                      = false;
     bool enabled                         = true;
+    bool wasEnabled                      = true;
     bool navMeshValid                    = false;
     bool openHierarchyNode               = false;
 

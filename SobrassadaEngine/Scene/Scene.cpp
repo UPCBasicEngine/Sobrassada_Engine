@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "BatchManager.h"
+#include "BillboardModule.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
 #include "Component.h"
@@ -100,7 +101,7 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         lightsConfig->LoadData(initialState["Lights Config"]);
     }
 
-    //GLOG("%s scene loaded", sceneName.c_str());
+    // GLOG("%s scene loaded", sceneName.c_str());
 }
 
 Scene::~Scene()
@@ -124,7 +125,7 @@ Scene::~Scene()
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
 
-    //GLOG("%s scene closed", sceneName.c_str());
+    // GLOG("%s scene closed", sceneName.c_str());
 }
 
 void Scene::Init()
@@ -148,6 +149,9 @@ void Scene::Init()
         if (it == prefabs.end()) prefabs.emplace_back(gameObject.second->GetPrefabUID());
     }
 
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
+
     for (const UID prefab : prefabs)
     {
         OverridePrefabs(prefab);
@@ -166,9 +170,6 @@ void Scene::Init()
         MeshComponent* mesh = gameObject.second->GetComponent<MeshComponent*>();
         if (mesh) mesh->InitSkin();
     }
-
-    lightsConfig->InitSkybox();
-    lightsConfig->InitLightBuffers();
 
     // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdate
     GetGameObjectByUID(gameObjectRootUID)->UpdateTransformForGOBranch();
@@ -270,7 +271,7 @@ update_status Scene::Render(float deltaTime)
     CameraComponent* mainCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
     if (App->GetSceneModule()->GetInPlayMode() && mainCamera != nullptr)
     {
-        if (mainCamera->GetEnabled() && mainCamera->IsEffectivelyEnabled()) RenderScene(deltaTime, mainCamera);
+        if (mainCamera->IsEffectivelyEnabled()) RenderScene(deltaTime, mainCamera);
         else RenderScene(deltaTime, nullptr);
     }
     else RenderScene(deltaTime, nullptr);
@@ -302,9 +303,24 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         GeometryPassRender(objectsToRender, camera, gbuffer);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
+        NavMeshPassRender(objectsToRender, camera, gbuffer);
     else GeometryPassRender(objectsToRender, camera, gbuffer);
 
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
+    {
+        RenderGBufferDebug(gbuffer, framebuffer);
+        return;
+    }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
+    {
+        RenderDepthDebug(gbuffer, camera, framebuffer);
+        return;
+    }
+
     LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
+
+    App->GetBillboardModule()->RenderBillboards();
 
     {
 #ifdef OPTICK
@@ -918,6 +934,112 @@ void Scene::GeometryPassRender(
     glEnable(GL_BLEND);
 }
 
+void Scene::NavMeshPassRender(
+    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
+) const
+{
+    gbuffer->Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+
+    glDisable(GL_BLEND);
+
+    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+    std::vector<MeshComponent*> navMeshesToRender;
+    std::vector<MeshComponent*> nonNavMeshesToRender;
+
+    for (const auto& gameObject : objectsToRender)
+    {
+        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
+        {
+            if (gameObject->IsNavMeshValid()) navMeshesToRender.push_back(mesh);
+            else nonNavMeshesToRender.push_back(mesh);
+        }
+    }
+
+    batchManager->Render(navMeshesToRender, camera);
+    App->GetOpenGLModule()->SetRenderWireframe(true);
+    batchManager->Render(nonNavMeshesToRender, camera);
+    App->GetOpenGLModule()->SetRenderWireframe(false);
+
+    gbuffer->Unbind();
+
+    glEnable(GL_BLEND);
+}
+
+void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetQuadProgram();
+    glUseProgram(program);
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    // Top-left: Diffuse
+    glViewport(0, height / 2, width / 2, height / 2);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Top-right: Specular
+    glViewport(width / 2, height / 2, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->specularTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Bottom-left: Position
+    glViewport(0, 0, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Bottom-right: Normal
+    glViewport(width / 2, 0, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glViewport(0, 0, width, height);
+}
+
+void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetDepthProgram();
+    glUseProgram(program);
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    glViewport(0, 0, width, height);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+
+    float nearPlane;
+    float farPlane;
+    if (camera == nullptr)
+    {
+        nearPlane = App->GetCameraModule()->GetNearPlaneDistance();
+        farPlane  = 100; // App->GetCameraModule()->GetFarPlaneDistance(); This is too much
+    }
+    else
+    {
+        nearPlane = camera->GetNearPlaneDistance();
+        farPlane  = camera->GetFarPlaneDistance();
+    }
+
+    glUniform1f(glGetUniformLocation(program, "nearPlane"), nearPlane);
+    glUniform1f(glGetUniformLocation(program, "farPlane"), farPlane);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
 void Scene::LightingPassRender(
     const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
     Framebuffer* framebuffer
@@ -1050,11 +1172,20 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
     return nullptr;
 }
 
+CameraComponent* Scene::GetMainCamera() const
+{
+    if (mainCamera != nullptr)
+    {
+        if (mainCamera->IsEffectivelyEnabled()) return mainCamera;
+    }
+    return nullptr;
+}
+
 void Scene::LoadModel(const UID modelUID)
 {
     if (modelUID != INVALID_UID)
     {
-        //GLOG("Load model %llu", modelUID);
+        // GLOG("Load model %llu", modelUID);
 
         ResourceModel* newModel               = (ResourceModel*)App->GetResourcesModule()->RequestResource(modelUID);
         const Model& model                    = newModel->GetModelData();
@@ -1066,10 +1197,10 @@ void Scene::LoadModel(const UID modelUID)
         std::vector<UID> gameObjectsUID;
         std::vector<GameObject*> rootGameObjects;
 
-        //GLOG("Model Animation UID: %llu", newModel->GetAnimationUID());
+        // GLOG("Model Animation UID: %llu", newModel->GetAnimationUID());
 
         const auto& animUIDs = newModel->GetAllAnimationUIDs();
-        //GLOG("Total Animation UIDs %zu ", animUIDs.size());
+        // GLOG("Total Animation UIDs %zu ", animUIDs.size());
 
         /*
         for (UID uid : animUIDs)
@@ -1151,9 +1282,9 @@ void Scene::LoadModel(const UID modelUID)
                 if (currentNodeData.meshes.size() > 0)
                 {
                     GameObject* currentGameObject = gameObjectsArray[currentNodeIndex];
-                    //GLOG("Node %s has %d meshes", currentNodeData.name.c_str(), currentNodeData.meshes.size());
+                    // GLOG("Node %s has %d meshes", currentNodeData.name.c_str(), currentNodeData.meshes.size());
 
-                    unsigned meshNum = 1;
+                    unsigned meshNum              = 1;
 
                     for (const auto& mesh : currentNodeData.meshes)
                     {
@@ -1223,13 +1354,13 @@ void Scene::LoadModel(const UID modelUID)
                 rootGameObject->CreateComponent(COMPONENT_ANIMATION);
                 AnimationComponent* animComponent = rootGameObject->GetComponent<AnimationComponent*>();
 
-                //GLOG("Model has %zu animations", animUIDs.size());
+                // GLOG("Model has %zu animations", animUIDs.size());
                 for (UID uid : animUIDs)
                 {
-                    //GLOG("Setting aimation resource with UID %llu ", uid);
+                    // GLOG("Setting aimation resource with UID %llu ", uid);
                     animComponent->SetAnimationResource(uid);
 
-                    //GLOG("Animation UID: %llu", uid);
+                    // GLOG("Animation UID: %llu", uid);
                 }
             }
             else
@@ -1287,7 +1418,7 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
             prefab == nullptr ? (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID) : prefab;
 
         if (resourcePrefab == nullptr) return; // If the prefab file is corrupted or not available, loading is cancelled
-        
+
         const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsVector();
         const std::vector<int>& parentIndices            = resourcePrefab->GetParentIndices();
 

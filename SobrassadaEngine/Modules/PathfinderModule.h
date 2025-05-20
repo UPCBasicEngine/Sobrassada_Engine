@@ -20,7 +20,9 @@ class PathfinderModule : public Module
     bool Init() override;
     void CreateNavMesh();
     void ClearNavMesh();
-    int CreateAgent(const float3& position, const float radius, const float height, const float speed);
+    int CreateAgent(
+        const float3& position, const float radius, const float height, const float speed, const float acceleration
+    );
     dtCrowd* GetCrowd() const { return crowd; }
     dtNavMeshQuery* GetNavQuery() const { return navQuery; }
     void RemoveAgent(int agentId);
@@ -42,9 +44,9 @@ class PathfinderModule : public Module
     AIAgentComponent* GetComponentFromAgentId(int agentId);
 
   private:
-    dtNavMeshQuery* navQuery = nullptr;
-    dtCrowd* crowd           = nullptr;
-    ResourceNavMesh* navmesh = nullptr;
+    dtNavMeshQuery* navQuery     = nullptr;
+    dtCrowd* crowd               = nullptr;
+    ResourceNavMesh* navmesh     = nullptr;
     const unsigned int maxAgents = 100;
     const float maxAgentRadius   = 0.5f;
     bool clickNavigationEnabled  = false;
