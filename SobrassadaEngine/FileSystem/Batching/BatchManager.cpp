@@ -191,18 +191,11 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
     GeometryBatch* currentBatch = batchMeshes[0]->GetBatch();
     std::vector<MeshComponent*> currentBatchMeshes;
 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     currentBatchMeshes.push_back(batchMeshes[0]);
-    if (batchMeshes[0]->GetRenderMode() == 1)
-    {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDepthMask(GL_FALSE);
-        glEnable(GL_DEPTH_TEST);
-    }
-    else
-    {
-        glDisable(GL_BLEND);
-    }
+    if (batchMeshes[0]->GetRenderMode() == 1) glEnable(GL_BLEND);
+    else glDisable(GL_BLEND);
 
     for (size_t i = 1; i < batchMeshes.size(); ++i)
     {
@@ -218,17 +211,8 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
             currentBatch->Render(currentBatchMeshes);
             currentBatchMeshes.clear();
 
-            if (mesh->GetRenderMode() == 1)
-            {
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glDepthMask(GL_FALSE);
-                glEnable(GL_DEPTH_TEST);
-            }
-            else
-            {
-                glDisable(GL_BLEND);
-            }
+            if (batchMeshes[0]->GetRenderMode() == 1) glEnable(GL_BLEND);
+            else glDisable(GL_BLEND);
             currentBatch = batch;
             currentBatchMeshes.push_back(mesh);
         }
