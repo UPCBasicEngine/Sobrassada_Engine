@@ -19,5 +19,5 @@ class ChangeSceneScript : public Script
     std::string scenesPath      = "";
     std::string fullScenePath   = "";
     GameObject* player    = nullptr;
-    bool isOneUse               = false;
+   
 };

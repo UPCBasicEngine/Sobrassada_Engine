@@ -172,7 +172,7 @@ void SceneModule::CreateScene()
     loadedScene->Init();
 }
 
-void SOBRASADA_API_ENGINE SceneModule::LoadScene(const rapidjson::Value& initialState, const bool forceReload)
+void  SceneModule::LoadScene(const rapidjson::Value& initialState, const bool forceReload)
 {
     const UID extractedSceneUID = initialState["UID"].GetUint64();
     if (!forceReload && loadedScene != nullptr && loadedScene->GetSceneUID() == extractedSceneUID)
@@ -188,7 +188,7 @@ void SOBRASADA_API_ENGINE SceneModule::LoadScene(const rapidjson::Value& initial
 }
 
 
-void SOBRASADA_API_ENGINE SceneModule::CloseScene()
+void  SceneModule::CloseScene()
 {
     if (inPlayMode)
     {
@@ -204,7 +204,7 @@ void SOBRASADA_API_ENGINE SceneModule::CloseScene()
     if (App->GetResourcesModule() != nullptr) App->GetResourcesModule()->ShutDown();
 }
 
-void SOBRASADA_API_ENGINE SceneModule::SwitchPlayMode(bool play)
+void  SceneModule::SwitchPlayMode(bool play)
 {
     if (play == inPlayMode || loadedScene == nullptr) return;
 

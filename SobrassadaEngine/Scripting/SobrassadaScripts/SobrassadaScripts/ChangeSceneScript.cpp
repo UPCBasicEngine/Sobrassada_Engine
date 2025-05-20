@@ -16,7 +16,7 @@ ChangeSceneScript::ChangeSceneScript(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Target Scene Name", InspectorField::FieldType::InputText, &targetSceneName});
-    fields.push_back({"Set only once", InspectorField::FieldType::Bool, &isOneUse});
+   
 }
 
 bool ChangeSceneScript::Init()

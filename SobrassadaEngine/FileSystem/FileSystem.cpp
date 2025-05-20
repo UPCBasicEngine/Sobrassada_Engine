@@ -82,7 +82,7 @@ namespace FileSystem
     }
 
 
-    bool SOBRASADA_API_ENGINE LoadJSON(const char* scenePath, rapidjson::Document& doc)
+    bool LoadJSON(const char* scenePath, rapidjson::Document& doc)
     {
         std::ifstream file(scenePath);
         if (!file.is_open())

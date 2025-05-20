@@ -8,7 +8,7 @@
 class GameObject;
 enum KeyState;
 
-class SceneModule : public Module
+class SOBRASADA_API_ENGINE SceneModule : public Module
 {
   public:
     SceneModule();
@@ -23,10 +23,10 @@ class SceneModule : public Module
     bool ShutDown() override;
 
     void CreateScene();
-    void SOBRASADA_API_ENGINE LoadScene(const rapidjson::Value& initialState, bool forceReload = false);
-    void SOBRASADA_API_ENGINE CloseScene();
+    void LoadScene(const rapidjson::Value& initialState, bool forceReload = false);
+    void CloseScene();
 
-    void SOBRASADA_API_ENGINE SwitchPlayMode(bool play);
+    void SwitchPlayMode(bool play);
 
     void ReenerateStaticTree() const { loadedScene->UpdateStaticSpatialStructure(); }
     void ReenerateDynamicTree() const { loadedScene->UpdateDynamicSpatialStructure(); }
