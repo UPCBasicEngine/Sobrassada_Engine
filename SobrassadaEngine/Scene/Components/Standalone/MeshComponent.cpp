@@ -227,6 +227,7 @@ void MeshComponent::AddMesh(UID resource, bool updateParent)
         if (currentMaterial == nullptr)
         {
             const UID defaultMat = newMesh->GetDefaultMaterialUID();
+
             AddMaterial(defaultMat, true);
         }
 

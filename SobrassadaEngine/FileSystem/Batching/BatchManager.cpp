@@ -200,6 +200,7 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
     }
 }
 
+//We can change that now
 GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
 {
     const bool isTransparent = component->GetRenderMode() == 1;
@@ -217,7 +218,7 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
         for (GeometryBatch* it : transparentBatches)
         {
             if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
-                it->GetHasBones() == component->GetHasBones())
+            it->GetHasBones() == component->GetHasBones() && it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid())
             {
                 return it;
             }
@@ -228,7 +229,7 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
         for (GeometryBatch* it : opaqueBatches)
         {
             if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
-                it->GetHasBones() == component->GetHasBones())
+                it->GetHasBones() == component->GetHasBones() && it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid())
             {
                 return it;
             }

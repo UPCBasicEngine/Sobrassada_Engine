@@ -28,6 +28,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isSpecular = component->GetResourceMaterial()->GetIsSpecular();
     isMetallic = component->GetResourceMaterial()->GetIsMetallicRoughness();
     hasBones   = component->GetHasBones();
+    isNavmeshValid = component->GetParent()->IsNavMeshValid();
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);

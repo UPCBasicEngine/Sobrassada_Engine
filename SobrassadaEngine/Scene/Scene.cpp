@@ -164,6 +164,9 @@ void Scene::Init()
         if (it == prefabs.end()) prefabs.emplace_back(gameObject.second->GetPrefabUID());
     }
 
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
+
     for (const UID prefab : prefabs)
     {
         OverridePrefabs(prefab);
@@ -182,9 +185,6 @@ void Scene::Init()
         MeshComponent* mesh = gameObject.second->GetComponent<MeshComponent*>();
         if (mesh) mesh->InitSkin();
     }
-
-    lightsConfig->InitSkybox();
-    lightsConfig->InitLightBuffers();
 
     // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdate
     GetGameObjectByUID(gameObjectRootUID)->UpdateTransformForGOBranch();
@@ -321,8 +321,21 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         GeometryPassRender(objectsToRender, camera, gbuffer);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
+        NavMeshPassRender(objectsToRender, camera, gbuffer);
     else GeometryPassRender(objectsToRender, camera, gbuffer);
     glPopDebugGroup();
+
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
+    {
+        RenderGBufferDebug(gbuffer, framebuffer);
+        return;
+    }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
+    {
+        RenderDepthDebug(gbuffer, camera, framebuffer);
+        return;
+    }
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
@@ -952,7 +965,116 @@ void Scene::GeometryPassRender(
     gbuffer->Unbind();
 }
 
-void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
+void Scene::NavMeshPassRender(
+    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
+) const
+{
+    gbuffer->Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+
+    glDisable(GL_BLEND);
+
+    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+    std::vector<MeshComponent*> navMeshesToRender;
+    std::vector<MeshComponent*> nonNavMeshesToRender;
+
+    for (const auto& gameObject : objectsToRender)
+    {
+        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
+        {
+            if (gameObject->IsNavMeshValid()) navMeshesToRender.push_back(mesh);
+            else nonNavMeshesToRender.push_back(mesh);
+        }
+    }
+
+    batchManager->Render(navMeshesToRender, camera);
+    App->GetOpenGLModule()->SetRenderWireframe(true);
+    batchManager->Render(nonNavMeshesToRender, camera);
+    App->GetOpenGLModule()->SetRenderWireframe(false);
+
+    gbuffer->Unbind();
+
+    glEnable(GL_BLEND);
+}
+
+void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetQuadProgram();
+    glUseProgram(program);
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    // Top-left: Diffuse
+    glViewport(0, height / 2, width / 2, height / 2);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Top-right: Specular
+    glViewport(width / 2, height / 2, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->specularTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Bottom-left: Position
+    glViewport(0, 0, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Bottom-right: Normal
+    glViewport(width / 2, 0, width / 2, height / 2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glViewport(0, 0, width, height);
+}
+
+void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetDepthProgram();
+    glUseProgram(program);
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    glViewport(0, 0, width, height);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+
+    float nearPlane;
+    float farPlane;
+    if (camera == nullptr)
+    {
+        nearPlane = App->GetCameraModule()->GetNearPlaneDistance();
+        farPlane  = 100; // App->GetCameraModule()->GetFarPlaneDistance(); This is too much
+    }
+    else
+    {
+        nearPlane = camera->GetNearPlaneDistance();
+        farPlane  = camera->GetFarPlaneDistance();
+    }
+
+    glUniform1f(glGetUniformLocation(program, "nearPlane"), nearPlane);
+    glUniform1f(glGetUniformLocation(program, "farPlane"), farPlane);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void Scene::LightingPassRender(
+    const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
+    Framebuffer* framebuffer
+) const
 {
     // LIGHTING PASS
 #ifndef GAME

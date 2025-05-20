@@ -21,6 +21,8 @@ class ShaderModule : public Module
     int GetLightingPassProgram() const;
     int GetTransparentPassProgram() const { return transparentPassProgram; };
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
+    int GetQuadProgram() const { return quadProgram; };
+    int GetDepthProgram() const { return depthProgram; };
     int GetBillboardProgram() const { return billboardProgram; }
 
   private:
@@ -41,6 +43,8 @@ class ShaderModule : public Module
 
     int uiWidgetProgram                = -1;
 
-    int transparentPassProgram         = -1;
-    int billboardProgram               = -1;
+    int transparentPassProgram      
+    int quadProgram                    = -1;
+    int depthProgram                   = -1;
+    int billboardProgram                = -1;
 };
