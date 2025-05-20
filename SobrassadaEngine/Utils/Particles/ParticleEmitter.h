@@ -42,13 +42,19 @@ class ParticleEmitter
     ParticleSystemComponent* GetOwner() { return owner; }
     void SetOwner(ParticleSystemComponent* newOwner) { owner = newOwner; };
 
+  private:
+    void UpdateMaterial(UID newMaterialUID);
+    void UpdateTexture(UID newTextureUID);
   public:
     std::vector<Particle> particles;
 
   private:
     UID uid                            = INVALID_UID;
     std::string name                   = "";
+
     bool useTexture                    = false;
+    std::string currentResourceName    = "No material";
+
     ResourceTexture* texture           = nullptr;
     ResourceMaterial* material         = nullptr;
     ParticleSystemComponent* owner     = nullptr;
