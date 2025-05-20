@@ -21,21 +21,10 @@
 
 MeshComponent::MeshComponent(const UID uid, GameObject* parent) : Component(uid, parent, "Mesh", COMPONENT_MESH)
 {
-    if (currentMesh != nullptr && currentMaterial != nullptr)
-    {
-        batch = App->GetResourcesModule()->GetBatchManager()->RequestBatch(this);
-        batch->AddComponent(this);
-    }
 }
 
 MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* parent) : Component(initialState, parent)
 {
-    if (currentMesh != nullptr && currentMaterial != nullptr)
-    {
-        batch = App->GetResourcesModule()->GetBatchManager()->RequestBatch(this);
-        batch->AddComponent(this);
-    }
-
     if (initialState.HasMember("Material"))
     {
         UID materialUID = initialState["Material"].GetUint64();
@@ -79,6 +68,11 @@ MeshComponent::~MeshComponent()
 
 void MeshComponent::Init()
 {
+    if (currentMesh != nullptr && currentMaterial != nullptr)
+    {
+        batch = App->GetResourcesModule()->GetBatchManager()->RequestBatch(this);
+        batch->AddComponent(this);
+    }
 }
 
 void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -218,6 +212,7 @@ void MeshComponent::AddMesh(UID resource, bool updateParent)
         if (currentMaterial == nullptr)
         {
             const UID defaultMat = newMesh->GetDefaultMaterialUID();
+
             AddMaterial(defaultMat, true);
         }
 

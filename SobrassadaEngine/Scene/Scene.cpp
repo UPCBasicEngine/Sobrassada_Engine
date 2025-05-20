@@ -149,6 +149,9 @@ void Scene::Init()
         if (it == prefabs.end()) prefabs.emplace_back(gameObject.second->GetPrefabUID());
     }
 
+    lightsConfig->InitSkybox();
+    lightsConfig->InitLightBuffers();
+
     for (const UID prefab : prefabs)
     {
         OverridePrefabs(prefab);
@@ -167,9 +170,6 @@ void Scene::Init()
         MeshComponent* mesh = gameObject.second->GetComponent<MeshComponent*>();
         if (mesh) mesh->InitSkin();
     }
-
-    lightsConfig->InitSkybox();
-    lightsConfig->InitLightBuffers();
 
     // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdate
     GetGameObjectByUID(gameObjectRootUID)->UpdateTransformForGOBranch();
@@ -934,7 +934,9 @@ void Scene::GeometryPassRender(
     glEnable(GL_BLEND);
 }
 
-void Scene::NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const
+void Scene::NavMeshPassRender(
+    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
+) const
 {
     gbuffer->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
