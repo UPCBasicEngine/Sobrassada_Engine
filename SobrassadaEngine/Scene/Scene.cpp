@@ -35,6 +35,7 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
@@ -48,7 +49,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/BillboardComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -1071,10 +1071,7 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void Scene::LightingPassRender(
-    const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
-    Framebuffer* framebuffer
-) const
+void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
 {
     // LIGHTING PASS
 #ifndef GAME

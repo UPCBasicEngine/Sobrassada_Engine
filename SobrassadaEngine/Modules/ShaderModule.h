@@ -43,8 +43,8 @@ class ShaderModule : public Module
 
     int uiWidgetProgram                = -1;
 
-    int transparentPassProgram      
+    int transparentPassProgram         = -1;
     int quadProgram                    = -1;
     int depthProgram                   = -1;
-    int billboardProgram                = -1;
+    int billboardProgram               = -1;
 };
