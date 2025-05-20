@@ -2,7 +2,7 @@
 
 #include "ParticleAddon.h"
 
-class VelocityAddon : ParticleAddon
+class VelocityAddon : public ParticleAddon
 {
   public:
     VelocityAddon(ParticleEmitter* owner);

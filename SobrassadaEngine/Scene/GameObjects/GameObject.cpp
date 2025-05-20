@@ -8,11 +8,13 @@
 #include "SceneModule.h"
 
 #include "CameraComponent.h"
+#include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
@@ -26,7 +28,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/BillboardComponent.h"
 
 #include "imgui.h"
 #include <queue>

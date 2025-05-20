@@ -34,6 +34,7 @@ class ButtonComponent;
 class AudioSourceComponent;
 class AudioListenerComponent;
 class BillboardComponent;
+class ParticleSystemComponent;
 
 enum MobilitySettings
 {

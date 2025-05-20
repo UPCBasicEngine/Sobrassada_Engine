@@ -2,7 +2,7 @@
 
 #include "ParticleAddon.h"
 
-class BaseAddon : ParticleAddon
+class BaseAddon : public ParticleAddon
 {
   public:
     BaseAddon(ParticleEmitter* owner);
