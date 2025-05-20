@@ -78,7 +78,7 @@ void BatchManager::LoadData()
         it->LoadData();
 }
 
-void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera)
+void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera, bool isWireframe)
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("BatchManager::Render", Optick::Category::Rendering)
@@ -113,6 +113,9 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         glUniformBlockBinding(program, blockIdx, 0);
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        if (isWireframe) glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        else glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
 
         it->ResetUpdatedOnce();
         it->Render(batchMeshes);
@@ -229,7 +232,7 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
 // We can change that now
 GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
 {
-    const bool isTransparent = component->GetRenderMode() != 0;
+    const bool isTransparent = component->GetRenderMode() == 1;
     if (isTransparent)
     {
         if (transparentBatches.empty()) return CreateNewBatch(component);

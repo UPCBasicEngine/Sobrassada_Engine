@@ -15,6 +15,8 @@ in vec3 normal;
 in vec4 tangent;
 flat in int instance_index;
 
+uniform bool isWireframe;
+
 struct Material
 {
     vec4 diffColor;
@@ -48,7 +50,16 @@ void main()
 {
     const Material mat = materials[instance_index];
 
-    gDiffuse = vec4(pow(texture(sampler2D(mat.diffuseTex), uv0).rgb, vec3(2.2f)), 1);
+    vec4 texColor = texture(sampler2D(mat.diffuseTex), uv0);
+    const float alpha = texColor.a;
+
+    if (!isWireframe)
+    {
+        if(alpha < 0.1) discard;
+    }
+
+    gDiffuse = vec4(pow(texColor.rgb, vec3(2.2f)), alpha);
+    
     if(mat.hasSpecular == 1) gSpecular = vec4(pow(texture(sampler2D(mat.specularTex), uv0), vec4(2.2)));
     else gSpecular = vec4(1);
     gPosition = vec4(pos,0);

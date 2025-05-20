@@ -315,13 +315,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     glEnable(GL_STENCIL_TEST);
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
-    {
-        App->GetOpenGLModule()->SetRenderWireframe(true);
-        GeometryPassRender(objectsToRender, camera, gbuffer);
-        App->GetOpenGLModule()->SetRenderWireframe(false);
-    }
-    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
         NavMeshPassRender(objectsToRender, camera, gbuffer);
     else GeometryPassRender(objectsToRender, camera, gbuffer);
     glPopDebugGroup();
@@ -954,11 +948,17 @@ void Scene::GeometryPassRender(
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 0)
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
             meshesToRender.push_back(mesh);
     }
 
-    batchManager->Render(meshesToRender, camera);
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    {
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        batchManager->Render(meshesToRender, camera, true);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+    else batchManager->Render(meshesToRender, camera, false);
 
     glEnable(GL_BLEND);
 
@@ -991,9 +991,9 @@ void Scene::NavMeshPassRender(
         }
     }
 
-    batchManager->Render(navMeshesToRender, camera);
+    batchManager->Render(navMeshesToRender, camera, false);
     App->GetOpenGLModule()->SetRenderWireframe(true);
-    batchManager->Render(nonNavMeshesToRender, camera);
+    batchManager->Render(nonNavMeshesToRender, camera, true);
     App->GetOpenGLModule()->SetRenderWireframe(false);
 
     gbuffer->Unbind();
@@ -1187,14 +1187,6 @@ void Scene::TransparentPassRender(
     glViewport(0, 0, width, height);
 
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
-    std::vector<MeshComponent*> meshesToRender;
-
-    for (const auto& gameObject : objectsToRender)
-    {
-        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 0)
-            meshesToRender.push_back(mesh);
-    }
 
     const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
 
@@ -1208,17 +1200,52 @@ void Scene::TransparentPassRender(
 
     glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
 
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
     {
+        std::vector<MeshComponent*> navmeshesToRender;
+        std::vector<MeshComponent*> nonnavmeshesToRender;
+
+        for (const auto& gameObject : objectsToRender)
+        {
+            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            {
+                if (gameObject->IsNavMeshValid()) navmeshesToRender.push_back(mesh);
+                else nonnavmeshesToRender.push_back(mesh);
+            }
+        }
+
+        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        batchManager->RenderTransparent(navmeshesToRender, camera);
         glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        batchManager->RenderTransparent(meshesToRender, camera);
+        batchManager->RenderTransparent(nonnavmeshesToRender, camera);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
+
     else
     {
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
-        batchManager->RenderTransparent(meshesToRender, camera);
+        std::vector<MeshComponent*> meshesToRender;
+
+        for (const auto& gameObject : objectsToRender)
+        {
+            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+                meshesToRender.push_back(mesh);
+        }
+
+        if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+        {
+            glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+            App->GetOpenGLModule()->SetRenderWireframe(true);
+            batchManager->RenderTransparent(meshesToRender, camera);
+            App->GetOpenGLModule()->SetRenderWireframe(false);
+        }
+        else
+        {
+            glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+            batchManager->RenderTransparent(meshesToRender, camera);
+        }
     }
 
     glDepthMask(GL_TRUE);

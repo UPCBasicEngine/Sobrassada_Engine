@@ -32,6 +32,8 @@ struct Material
     uvec2 emmisiveTex;
 };
 
+uniform bool isWireframe;
+
 readonly layout(std430, binding = 11) buffer Materials {
     Material materials[];
 };
@@ -47,12 +49,19 @@ mat3 CreateTBN()
 void main()
 {
     const Material mat = materials[instance_index];
+    vec4 texColor = texture(sampler2D(mat.diffuseTex), uv0);
+    const float alpha = texColor.a;
 
-    gDiffuse = vec4(pow(texture(sampler2D(mat.diffuseTex), uv0).rgb, vec3(2.2f)), 1);
+    if (!isWireframe)
+    {
+        if(alpha < 0.1) discard;
+    }
+
+    gDiffuse = vec4(pow(texColor.rgb, vec3(2.2f)), alpha);
     if(mat.hasMetallic == 1) gSpecular = vec4(pow(texture(sampler2D(mat.metallicTex), uv0), vec4(2.2)));
     else gSpecular = vec4(1);
-    gPosition = vec4(pos,0);
-    gNormal = vec4(normal,0);
+    gPosition = vec4(pos, 0);
+    gNormal = vec4(normal, 0);
 
     gSpecular.y = mat.roughnessFactor * gSpecular.y;
     gSpecular.z = mat.metallicFactor * gSpecular.z;
