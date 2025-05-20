@@ -395,6 +395,7 @@
     <ClInclude Include="ExitGameScript.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="CuChulainn.h" />
+    <ClInclude Include="FireballTrap.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
@@ -1759,6 +1760,7 @@
     <ClCompile Include="CuChulainn.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />
+    <ClCompile Include="FireballTrap.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
