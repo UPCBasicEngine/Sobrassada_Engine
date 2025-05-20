@@ -20,16 +20,19 @@ class FireballTrap : public Script
     void HandleImpact(float gameTime);
     void DisableDamage();
     void UpdateFireball(float deltaTime);
+    float GenerateRandomAttackTime(float min, float max);
 
   private:
     bool activated                          = false;
     float activationRange                   = 10.0f;
-    float attackCooldown                    = 5.0f;
+    float minAttackCooldown                 = 0.5f;
+    float maxAttackCooldown                 = 3.0f;
+    float randomAttackTime                  = -1.0f;
     int damage                              = 1;
     float damageDuration                    = 1.5f;
     bool attacking                          = false;
 
-    MeshComponent* groundMesh                 = nullptr;
+    MeshComponent* groundMesh               = nullptr;
     SphereColliderComponent* damageCollider = nullptr;
 
     float lastAttackTime                    = -1.0f;
@@ -40,11 +43,11 @@ class FireballTrap : public Script
     std::string fireballName                = "";
     GameObject* fireball                    = nullptr;
     float verticalSpeed                     = 0.0f;
-    float gravity                           = -9.81f;
-    float maxFallSpeed                      = -20.0f;
     bool hasImpacted                        = false;
-
     float rotationSpeed                     = 1.0f;
     float fallingHeight                     = 20.0f;
+    float maxFallSpeed                      = -20.0f;
     float editableMaxFallSpeed              = 20.0f;
+    float gravity                           = -9.81f;
+    float editableGravity                   = 9.81f;
 };
