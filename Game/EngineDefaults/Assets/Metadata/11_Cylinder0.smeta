@@ -23,7 +23,7 @@
             0.0,
             1.0
         ],
-		"defaultMaterialUID": 1300000000000000,
+	"defaultMaterialUID": 1300000000000000,
         "gltfMeshIndex": 0,
         "gltfPrimitiveIndex": 0
     }

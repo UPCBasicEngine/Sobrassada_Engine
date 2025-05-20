@@ -47,6 +47,7 @@ class MeshComponent : public Component
     const std::vector<float4x4>& GetBindMatrices() const { return bindMatrices; }
     const float4x4& GetCombinedMatrix() const { return combinedMatrix; }
     GeometryBatch* GetBatch() const { return batch; }
+    int GetRenderMode() const { return renderMode; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
     {
@@ -81,4 +82,6 @@ class MeshComponent : public Component
 
     GeometryBatch* batch    = nullptr;
     bool uniqueBatch        = false;
+
+    int renderMode   = 0; //0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
 };

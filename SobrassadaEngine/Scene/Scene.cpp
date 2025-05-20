@@ -31,11 +31,24 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
+#include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioListenerComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/BillboardComponent.h"
+#include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
 #include "Standalone/MeshComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/UI/ButtonComponent.h"
+#include "Standalone/UI/CanvasComponent.h"
+#include "Standalone/UI/ImageComponent.h"
+#include "Standalone/UI/Transform2DComponent.h"
+#include "Standalone/UI/UILabelComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -67,6 +80,8 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
     gameObjectRootUID     = initialState["RootGameObject"].GetUint64();
     selectedGameObjectUID = gameObjectRootUID;
     if (initialState.HasMember("NavmeshUID")) navmeshUID = initialState["NavmeshUID"].GetUint64();
+
+    App->GetCameraModule()->LoadCameraPosition(&initialState);
 
     App->GetPhysicsModule()->LoadLayerData(&initialState);
 
@@ -201,6 +216,8 @@ void Scene::Save(
     targetState.AddMember("RootGameObject", gameObjectRootUID, allocator);
     targetState.AddMember("NavmeshUID", navmeshUID, allocator);
 
+    App->GetCameraModule()->SaveCameraPosition(targetState, allocator);
+
     App->GetPhysicsModule()->SaveLayerData(targetState, allocator);
 
     // Serialize GameObjects
@@ -297,15 +314,11 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #endif
     glEnable(GL_STENCIL_TEST);
 
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
-    {
-        App->GetOpenGLModule()->SetRenderWireframe(true);
-        GeometryPassRender(objectsToRender, camera, gbuffer);
-        App->GetOpenGLModule()->SetRenderWireframe(false);
-    }
-    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
         NavMeshPassRender(objectsToRender, camera, gbuffer);
     else GeometryPassRender(objectsToRender, camera, gbuffer);
+    glPopDebugGroup();
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
     {
@@ -318,7 +331,9 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         return;
     }
 
-    LightingPassRender(objectsToRender, camera, gbuffer, framebuffer);
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
+    LightingPassRender(camera, gbuffer, framebuffer);
+    glPopDebugGroup();
 
     App->GetBillboardModule()->RenderBillboards();
 
@@ -356,6 +371,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         for (int i = 0; i < 12; ++i)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
+    TransparentPassRender(objectsToRender, camera, framebuffer);
+    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)
@@ -903,7 +922,11 @@ void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects,
     {
         OBB objectOBB = gameObject->GetGlobalOBB();
 
-        if (frustumPlanes.Intersects(objectOBB)) outRenderGameObjects.push_back(gameObject);
+        if (frustumPlanes.Intersects(objectOBB))
+        {
+            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+            outRenderGameObjects.push_back(gameObject);
+        }
     }
 }
 
@@ -925,13 +948,21 @@ void Scene::GeometryPassRender(
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr) meshesToRender.push_back(mesh);
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
+            meshesToRender.push_back(mesh);
     }
 
-    batchManager->Render(meshesToRender, camera);
-    gbuffer->Unbind();
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    {
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        batchManager->Render(meshesToRender, camera, true);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+    else batchManager->Render(meshesToRender, camera, false);
 
     glEnable(GL_BLEND);
+
+    gbuffer->Unbind();
 }
 
 void Scene::NavMeshPassRender(
@@ -960,9 +991,9 @@ void Scene::NavMeshPassRender(
         }
     }
 
-    batchManager->Render(navMeshesToRender, camera);
+    batchManager->Render(navMeshesToRender, camera, false);
     App->GetOpenGLModule()->SetRenderWireframe(true);
-    batchManager->Render(nonNavMeshesToRender, camera);
+    batchManager->Render(nonNavMeshesToRender, camera, true);
     App->GetOpenGLModule()->SetRenderWireframe(false);
 
     gbuffer->Unbind();
@@ -1040,10 +1071,7 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void Scene::LightingPassRender(
-    const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
-    Framebuffer* framebuffer
-) const
+void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
 {
     // LIGHTING PASS
 #ifndef GAME
@@ -1146,6 +1174,82 @@ void Scene::LightingPassRender(
 #else
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
+}
+
+void Scene::TransparentPassRender(
+    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
+) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+    // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glViewport(0, 0, width, height);
+
+    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+
+    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
+
+    glUseProgram(program);
+
+    lightsConfig->SetLightsShaderData();
+
+    float3 cameraPos;
+    if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
+    else cameraPos = camera->GetCameraPosition();
+
+    glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
+
+    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
+    {
+        std::vector<MeshComponent*> navmeshesToRender;
+        std::vector<MeshComponent*> nonnavmeshesToRender;
+
+        for (const auto& gameObject : objectsToRender)
+        {
+            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            {
+                if (gameObject->IsNavMeshValid()) navmeshesToRender.push_back(mesh);
+                else nonnavmeshesToRender.push_back(mesh);
+            }
+        }
+
+        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        batchManager->RenderTransparent(navmeshesToRender, camera);
+        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        batchManager->RenderTransparent(nonnavmeshesToRender, camera);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+
+    else
+    {
+        std::vector<MeshComponent*> meshesToRender;
+
+        for (const auto& gameObject : objectsToRender)
+        {
+            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+                meshesToRender.push_back(mesh);
+        }
+
+        if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+        {
+            glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+            App->GetOpenGLModule()->SetRenderWireframe(true);
+            batchManager->RenderTransparent(meshesToRender, camera);
+            App->GetOpenGLModule()->SetRenderWireframe(false);
+        }
+        else
+        {
+            glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+            batchManager->RenderTransparent(meshesToRender, camera);
+        }
+    }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)
@@ -1408,7 +1512,10 @@ void Scene::LoadModel(const UID modelUID)
     }
 }
 
-void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform)
+void Scene::LoadPrefab(
+    const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform, bool isEnabled,
+    std::vector<bool> componentsEnabledStates
+)
 {
     if (prefabUID != INVALID_UID)
     {
@@ -1429,6 +1536,7 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
         if (prefab != nullptr)
         {
             newObjects[0]->SetLocalTransform(transform);
+            newObjects[0]->SetEnabled(isEnabled);
         }
         else
         {
@@ -1452,6 +1560,25 @@ void Scene::LoadPrefab(const UID prefabUID, const ResourcePrefab* prefab, const 
             AddGameObject(newObjects[i]->GetUID(), newObjects[i]);
             remappingTable.insert({referenceObjects[i]->GetUID(), newObjects[i]->GetUID()});
             newObjects[i]->SetEnabled(referenceObjects[i]->IsEnabled());
+        }
+
+        int componentStateIndex = 0;
+        for (int i = 0; i < newObjects.size(); ++i)
+        {
+            auto& tuple = newObjects[i]->GetComponentsTupleRef();
+            ForEachInTuple(
+                tuple,
+                [&](auto* component)
+                {
+                    if (component != nullptr && componentStateIndex < componentsEnabledStates.size())
+                    {
+                        bool state = componentsEnabledStates[componentStateIndex];
+                        component->SetWasEnabled(state);
+                        component->SetEnabled(state);
+                        ++componentStateIndex;
+                    }
+                }
+            );
         }
 
         // Then do a second loop to update all components UIDs reference (ex. skinning)
@@ -1510,6 +1637,9 @@ void Scene::OverridePrefabs(const UID prefabUID)
     // stay in place. UIDs to delete the duplicates
     std::vector<UID> updatedObjects;
     std::vector<float4x4> transforms;
+    std::vector<bool> isEnabled;
+    std::vector<std::vector<bool>> componentsEnabledStates;
+
     for (const auto& gameObject : gameObjectsContainer)
     {
         if (gameObject.second != nullptr)
@@ -1518,6 +1648,23 @@ void Scene::OverridePrefabs(const UID prefabUID)
             {
                 updatedObjects.push_back(gameObject.first);
                 transforms.emplace_back(gameObject.second->GetLocalTransform());
+                isEnabled.push_back(gameObject.second->IsEnabled());
+
+                std::vector<bool> componentStates;
+                auto& tuple = gameObject.second->GetComponentsTupleRef();
+
+                ForEachInTuple(
+                    tuple,
+                    [&](auto* component)
+                    {
+                        if (component != nullptr)
+                        {
+                            componentStates.push_back(component->GetWasEnabled());
+                        }
+                    }
+                );
+
+                componentsEnabledStates.push_back(componentStates);
             }
         }
     }
@@ -1527,9 +1674,9 @@ void Scene::OverridePrefabs(const UID prefabUID)
         RemoveGameObjectHierarchy(object);
     }
 
-    for (const float4x4& transform : transforms)
+    for (int i = 0; i < transforms.size(); ++i)
     {
-        LoadPrefab(prefabUID, prefab, transform);
+        LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i], componentsEnabledStates[i]);
     }
 
     App->GetResourcesModule()->ReleaseResource(prefab);

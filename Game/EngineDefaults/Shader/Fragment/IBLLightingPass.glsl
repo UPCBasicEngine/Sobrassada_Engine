@@ -159,9 +159,9 @@ vec3 RenderSpotLight(const int index, const vec3 N, const vec3 Cd, float roughne
 
 void main()
 {
-    const vec3 texColor = texture(gDiffuse, uv0).rgb;
+    const vec4 texColor = texture(gDiffuse, uv0);
     const vec4 metallicRoughnessTexColor = texture(gSpecular, uv0);
-    const float alpha = metallicRoughnessTexColor.a;
+    const float alpha = texColor.a;
     const vec3 pos = texture(gPosition, uv0).rgb;
     const vec3 normal = texture(gNormal, uv0).rgb;
 
@@ -176,7 +176,7 @@ void main()
     const float NdotV = max(dot(N, V), 0.0001);
 
     // Ambient light
-    const vec3 BaseColor = texColor;
+    const vec3 BaseColor = texColor.rgb;
     const vec3 Cd = BaseColor * (1 - metallic);
     const vec3 RF0 = mix(vec3(0.04), BaseColor, metallic);
 
