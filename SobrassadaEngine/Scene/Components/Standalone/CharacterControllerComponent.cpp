@@ -125,7 +125,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     if (deltaTime == 0.0f) return;
 
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
-    dtNavMesh* dtNav = nullptr;
+    dtNavMesh* dtNav     = nullptr;
     if (nav != nullptr)
     {
         dtNav = nav->GetDetourNavMesh();
@@ -308,7 +308,7 @@ void CharacterControllerComponent::Move(float deltaTime)
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
 
-    float halfExt[3] = {0.5f, 1.0f, 0.5f};
+    float halfExt[3] = {1.0f, 1.0f, 1.5f};
     float nearest[3] = {};
     dtPolyRef newRef = 0;
 
@@ -321,12 +321,16 @@ void CharacterControllerComponent::Move(float deltaTime)
 
     status           = navMeshQuery->closestPointOnPoly(newRef, desiredPos.ptr(), closest, &posOverPoly);
 
-    if (!dtStatusSucceed(status) || !posOverPoly) return;
+    if (!dtStatusSucceed(status)) return;
 
     currentPolyRef = newRef;
 
-    desiredPos.x   = nearest[0];
-    desiredPos.z   = nearest[2];
+    desiredPos.x   = closest[0];
+    desiredPos.y   = closest[1];
+    desiredPos.z   = closest[2];
+
+    // Prevent huge changes in the y pos
+    if (fabs(desiredPos.y - currentPos.y) > 0.5f) return;
 
     parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
 }
