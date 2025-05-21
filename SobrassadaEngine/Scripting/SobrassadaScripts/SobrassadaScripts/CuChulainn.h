@@ -53,21 +53,22 @@ class CuChulainn : public Character
 
   private:
     std::string cameraName      = "";
+    GameObject* cameraObject    = nullptr;
     CameraMovement* camera      = nullptr;
 
     std::string spearName       = "";
     Projectile* spear           = nullptr;
 
-    bool isDashing          = false;
-    float dashCooldown      = 2.0f;
-    float dashTimer         = 0.0f;
-    bool desiredDash        = false;
-    float dashBufferTimer   = 0.0f;
-    float dashBuffer        = 0.5f;
+    bool isDashing              = false;
+    float dashCooldown          = 2.0f;
+    float dashTimer             = 0.0f;
+    bool desiredDash            = false;
+    float dashBufferTimer       = 0.0f;
+    float dashBuffer            = 0.5f;
 
-    bool desiredAttack      = false;
-    float attackBufferTimer = 0.0f;
-    float attackBuffer      = 0.5f;
+    bool desiredAttack          = false;
+    float attackBufferTimer     = 0.0f;
+    float attackBuffer          = 0.5f;
 
     bool desiredAim             = false;
     float throwTimer            = 0.0f;
@@ -77,6 +78,9 @@ class CuChulainn : public Character
     CharacterStates state       = CharacterStates::IDLE;
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
+
+    float3 camFront = float3::zero;
+    float3 camRight = float3::zero;
 };
 
 extern CharacterControllerComponent* character;

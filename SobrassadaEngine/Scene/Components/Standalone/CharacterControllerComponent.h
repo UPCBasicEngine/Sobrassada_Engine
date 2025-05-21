@@ -28,9 +28,8 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void Move(float deltaTime);
     void LookAtMovement(const float3& moveDir, float deltaTime);
     void Rotate(float rotationDirection, float deltaTime);
-    void HandleInput(float deltaTime);
+    void SetDirection(float3& direction);
     void LookAt(const float3& direction);
-    void DashThroughNavMesh(float deltaTime);
 
     const float3& GetTargetDirection() const { return targetDirection; }
     const float3& GetFrontDirection() const { return rotateDirection; }
