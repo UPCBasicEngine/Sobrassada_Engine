@@ -36,28 +36,6 @@ bool InputModule::Init()
         returnStatus = false;
     }
 
-    int numJoysticks = SDL_NumJoysticks();
-    GLOG("Detected %d joystick(s)", numJoysticks);
-
-    if (numJoysticks > 0 && SDL_IsGameController(0))
-    {
-        GLOG("Joystick 0 is a GameController");
-        controllers[0] = SDL_GameControllerOpen(0);
-        if (controllers[0] == nullptr)
-        {
-            GLOG("Could not open controller 0: %s", SDL_GetError());
-            returnStatus = false;
-        }
-        else
-        {
-            GLOG("Controller 0 opened successfully!");
-        }
-    }
-    else
-    {
-        GLOG("No valid GameController found at index 0");
-    }
-
     return returnStatus;
 }
 
@@ -118,6 +96,12 @@ update_status InputModule::PreUpdate(float deltaTime)
         case SDL_DROPFILE:
             SceneImporter::Import(sdlEvent.drop.file);
             break;
+        case SDL_CONTROLLERDEVICEADDED:
+            OnControllerConnected();
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            OnControllerDisconnected();
+            break;
         }
     }
 
@@ -135,7 +119,7 @@ update_status InputModule::PreUpdate(float deltaTime)
         controllerLeftStick.x = leftX / 32767.0f;
         controllerLeftStick.y = leftY / 32767.0f;
         isUsingKeyboard       = false;
-        //GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
+        // GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
     }
     else
     {
@@ -227,4 +211,39 @@ bool InputModule::ShutDown()
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 
     return true;
+}
+
+void InputModule::OnControllerConnected()
+{
+    int numJoysticks = SDL_NumJoysticks();
+    GLOG("Detected %d joystick(s)", numJoysticks);
+
+    if (numJoysticks > 0 && SDL_IsGameController(0))
+    {
+        GLOG("Joystick 0 is a GameController");
+        // Override always the controller at 0, we don't have coop
+        controllers[0] = SDL_GameControllerOpen(0);
+        if (controllers[0] == nullptr)
+        {
+            GLOG("Could not open controller 0: %s", SDL_GetError());
+        }
+        else
+        {
+            GLOG("Controller 0 opened successfully!");
+        }
+    }
+    else
+    {
+        GLOG("No valid GameController found at index 0");
+    }
+}
+
+void InputModule::OnControllerDisconnected()
+{
+    if (controllers[0])
+    {
+        GLOG("Disconnect controller")
+        SDL_GameControllerClose(controllers[0]);
+        controllers[0] = nullptr;
+    }
 }

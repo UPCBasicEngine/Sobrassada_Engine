@@ -5,7 +5,7 @@
 #include "Math/float2.h"
 #include "SDL_scancode.h"
 #include <SDL_gamecontroller.h>
-#define MAX_CONTROLLERS  4       // Controllers connected
+#define MAX_CONTROLLERS  4        // Controllers connected
 #define GAMEPAD_DEADZONE 10000.0f // Deadzone threshold to avoid detecting unintentional stick movement
 #include <functional>
 #include <vector>
@@ -49,6 +49,10 @@ class InputModule : public Module
     const std::pair<KeyState, float>& GetRightTrigger() const { return rightTrigger; }
 
     bool IsUsingKeyboard() const { return isUsingKeyboard; }
+
+  private:
+    void OnControllerConnected();
+    void OnControllerDisconnected();
 
   private:
     KeyState* keyboard = NULL;
