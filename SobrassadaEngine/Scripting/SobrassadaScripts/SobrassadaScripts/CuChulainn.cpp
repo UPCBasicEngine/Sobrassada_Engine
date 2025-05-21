@@ -75,6 +75,13 @@ bool CuChulainn::Init()
 
 void CuChulainn::Update(float deltaTime)
 {
+    // TODO: Maybe instead of this call it at the end of death animation (the current animations lasts forever)
+    if (state == CharacterStates::DEATH)
+    {
+        deathTimer += deltaTime;
+        if (deathTimer > 5.0f) parent->SetEnabled(false);
+    }
+
     if (isDead || !character) return;
 
     GetInputs();
@@ -86,6 +93,10 @@ void CuChulainn::Update(float deltaTime)
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
+
+    character->EnableMovement(false);
+    state = CharacterStates::DEATH;
+    if (animComponent) animComponent->UseTrigger("Death");
 }
 
 void CuChulainn::OnDamageTaken(int amount)
@@ -105,11 +116,19 @@ void CuChulainn::HandleState(float deltaTime)
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim();
-    else if (!isAttacking && !character->IsDashing()) Move();
+    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN) Move();
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
+        const HashString& stateName = animComponent->GetCurrentStateName();
+        GLOG("Animation name: %s", stateName.GetString().c_str());
+
+        if (stateName == HashString("Respawn"))
+        {
+            character->EnableMovement(true);
+        }
+
         state = CharacterStates::IDLE;
         animComponent->UseTrigger("Idle");
     }
@@ -170,7 +189,9 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_F5])
     {
-        SetPosition(spawnPos);
+        // TODO: This should be SetSpawnPos, Respawn is here to test
+        // SetPosition(spawnPos);
+        Respawn();
     }
     if (keyboard[SDL_SCANCODE_F6])
     {
@@ -226,7 +247,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
             resetWeapon = false;
         }
         throwTimer = 0;
-    }  
+    }
 }
 
 void CuChulainn::LookAtMouse()
@@ -358,4 +379,13 @@ void CuChulainn::SetPosition(const float3& position)
 {
     parent->SetLocalPosition(position);
     if (camera) camera->SetPosition(position);
+}
+
+void CuChulainn::Respawn()
+{
+    state = CharacterStates::RESPAWN;
+    SetPosition(spawnPos);
+    if (animComponent) animComponent->UseTrigger("Respawn");
+    character->EnableMovement(false);
+    // TODO: Reset hitboxes, timers, enable, etc. If scene is reloaded then probably not needed
 }
