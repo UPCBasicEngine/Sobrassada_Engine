@@ -21,6 +21,7 @@
 #include "Octree.h"
 #include "OpenGLModule.h"
 #include "ParticleSystemComponent.h"
+#include "ParticleSystemModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
@@ -337,7 +338,13 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
     App->GetBillboardModule()->RenderBillboards();
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
+    App->GetParticleModule()->RenderParticles();
+    glPopDebugGroup();
 
     {
 #ifdef OPTICK

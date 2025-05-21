@@ -10,6 +10,11 @@
 #include <tuple>
 #include <vector>
 
+namespace math
+{
+    class float4x4;
+}
+
 class BaseAddon;
 class VelocityAddon;
 class ResourceTexture;
@@ -29,7 +34,7 @@ class ParticleEmitter
     void Spawn();
     
     // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
-    void RenderParticles();
+    void RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector);
     
     void RenderEditor();
 
@@ -58,9 +63,10 @@ class ParticleEmitter
 
   private:
     unsigned int quadVBO               = 0;
-
     // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     unsigned int particlesVBO          = 0;
+
+    unsigned int aliveParticles        = 0;
 
     UID uid                            = INVALID_UID;
     std::string name                   = "";

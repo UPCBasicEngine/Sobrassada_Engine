@@ -1,7 +1,10 @@
 #include "ParticleSystemModule.h"
 
+#include "Application.h"
+#include "CameraComponent.h"
 #include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
+#include "SceneModule.h"
 
 #include "glew.h"
 
@@ -55,6 +58,31 @@ bool ParticleSystemModule::ShutDown()
 
 void ParticleSystemModule::RenderParticles()
 {
+    bool playMode                     = App->GetSceneModule()->GetInPlayMode();
+    const Frustum& editorCamera       = App->GetCameraModule()->GetCamera();
+    const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+    float4x4 VP;
+    float3 rightVector;
+    float3 upVector;
+
+    if (playMode && gameCamera)
+    {
+        VP          = gameCamera->GetProjectionMatrix() * gameCamera->GetViewMatrix();
+        rightVector = gameCamera->GetCameraRight();
+        upVector    = gameCamera->GetCameraUp();
+    }
+    else
+    {
+        VP          = editorCamera.ProjectionMatrix() * editorCamera.ViewMatrix();
+        rightVector = editorCamera.WorldRight();
+        upVector    = editorCamera.up;
+    }
+
+    for (auto& emitter : particleEmitters)
+    {
+        emitter.second->RenderParticles(VP, rightVector, upVector);
+    }
 }
 
 ParticleEmitter* ParticleSystemModule::RequestParticleEmitter(const std::string& name, ParticleSystemComponent* owner)

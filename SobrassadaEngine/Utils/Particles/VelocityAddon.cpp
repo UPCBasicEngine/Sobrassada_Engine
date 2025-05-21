@@ -33,7 +33,7 @@ void VelocityAddon::Init()
 
     for (auto& particle : emitterOwner->particles)
     {
-        particle.velocity = float3(rng->Float(-startSpeed, startSpeed), startSpeed, 0.f);
+        particle.velocity = float3(rng->Float(-startSpeed, startSpeed), rng->Float(-startSpeed, startSpeed), 0.f);
     }
 }
 

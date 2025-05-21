@@ -14,6 +14,7 @@
 
 #include "glew.h"
 #include "imgui.h"
+#include "Math/float2.h"
 #include <chrono>
 
 // ---------- SECTION FOR TUPLE ITERATION ----------
@@ -156,10 +157,59 @@ void ParticleEmitter::Spawn()
 }
 
 // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
-void ParticleEmitter::RenderParticles()
+void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector)
 {
     if (!isEmitting) return;
 
+    if ((useTexture ? texture != nullptr : material != nullptr) && quadVBO && particlesVBO)
+    {
+        const auto start        = std::chrono::high_resolution_clock::now();
+
+        float4x4 viewProjection = VP;
+        float3 cameraRight      = rightVector;
+        float3 cameraUp         = upVector;
+        float2 billboardSize    = float2(1, 1);
+
+        glUseProgram(App->GetShaderModule()->GetBillboardProgram());
+        glUniform3fv(0, 1, &cameraRight[0]);
+        glUniform3fv(1, 1, &cameraUp[0]);
+        glUniform2fv(2, 1, &billboardSize[0]);
+        glUniformMatrix4fv(3, 1, GL_TRUE, &viewProjection[0][0]);
+
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+
+        // Sending vertex coords
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+        // Sending texture coordiantes
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
+
+        // Sending center billboard positions
+        glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
+
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(2, 1);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
+
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)particles.size());
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        const auto end                             = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<float> elapsed = end - start;
+
+        unsigned int totalTrangles                 = (unsigned int)particles.size() * 2;
+
+        App->GetOpenGLModule()->AddTrianglesPerSecond(totalTrangles / elapsed.count());
+        App->GetOpenGLModule()->AddVerticesCount(totalTrangles * 3);
+        App->GetOpenGLModule()->AddDrawCallsCount();
+    }
 }
 
 void ParticleEmitter::RenderEditor()
@@ -326,8 +376,21 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
 
 void ParticleEmitter::UpdateParticlesVBO()
 {
+    // ONLY ADD CURRENT ALIVE PARTICLES
+    std::vector<float3> alivePositions;
+    alivePositions.reserve(particles.size());
+
+    for (int i = 0; i < particles.size(); ++i)
+    {
+        if (particles[i].alive) alivePositions.push_back(particles[i].position);
+    }
+    aliveParticles = alivePositions.size();
+
     if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * particles.size(), &particles[0], GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    if (aliveParticles > 0)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * alivePositions.size(), &alivePositions[0], GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 }
