@@ -224,7 +224,8 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
 
     if (lookForward)
     {
-        const float3 nextPos = parent->GetPosition() + (parent->GetPosition() - previousPos).Normalized();
+        const float3 nextPos = parent->GetGlobalTransform().TranslatePart() +
+                               (parent->GetGlobalTransform().TranslatePart() - previousPos).Normalized();
         LookAtMovement(nextPos, App->GetGameTimer()->GetDeltaTime() / 1000.0f);
     }
     bool result = pathfinder->GetCrowd()->requestMoveTarget(agentId, targetRef, destination.ptr());
@@ -234,7 +235,7 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
         return false;
     }
 
-    previousPos = parent->GetPosition();
+    previousPos = parent->GetGlobalTransform().TranslatePart();
     return true;
 }
 

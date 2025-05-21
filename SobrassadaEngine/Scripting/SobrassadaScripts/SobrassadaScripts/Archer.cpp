@@ -149,8 +149,9 @@ void Archer::Attack(float deltaTime)
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
-            const auto direction = character->GetLastPosition();
-            /*ARREGLAR ESTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO*/
+            float3 direction = character->GetLastPosition() - parent->GetPosition();
+            direction.Normalize();
+
             GLOG(
                 "Parent name: %s, and position:(%f,%f,%f)", parent->GetName().c_str(), parent->GetPosition().x,
                 parent->GetPosition().y, parent->GetPosition().z
