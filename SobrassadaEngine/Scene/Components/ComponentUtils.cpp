@@ -22,6 +22,8 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/UI/CanvasScalerComponent.h"
+
 
 #include <cstdint>
 
@@ -164,6 +166,13 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         AudioListenerComponent* audioListener             = new AudioListenerComponent(uid, parent);
         std::get<AudioListenerComponent*>(componentTuple) = audioListener;
         generatedComponent                                = audioListener;
+        break;
+    }
+    case COMPONENT_CANVAS_SCALER:
+    {
+        CanvasScalerComponent* canvasScaler               = new CanvasScalerComponent(uid, parent);
+        std::get<CanvasScalerComponent*>(componentTuple) = canvasScaler;
+        generatedComponent                                = canvasScaler;
         break;
     }
     case COMPONENT_BILLBOARD:

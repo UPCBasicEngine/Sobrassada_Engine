@@ -141,6 +141,12 @@ void UILabelComponent::Clone(const Component* other)
 
 void UILabelComponent::RenderDebug(float deltaTime)
 {
+    CanvasComponent* canvas = parent->GetComponentParent<CanvasComponent*>(App);
+    if (canvas != nullptr)
+    {
+        float3 highlightColor = float3(0.0f, 0.0f, 0.0f);
+        canvas->RenderDebug(deltaTime, highlightColor);
+    }
 }
 
 void UILabelComponent::RenderUI(const float4x4& view, const float4x4 proj) const
@@ -151,8 +157,12 @@ void UILabelComponent::RenderUI(const float4x4& view, const float4x4 proj) const
     float3 startPos;
     if (transform2D)
     {
-        startPos = float3(transform2D->GetRenderingPosition(), 0) - parent->GetGlobalTransform().TranslatePart();
-        width    = transform2D->size.x;
+        startPos = float3(transform2D->GetRenderingPosition(), 0);
+        if (parentCanvas->IsInWorldSpace())
+        {
+            startPos -= parent->GetGlobalTransform().TranslatePart();
+        }
+        width = transform2D->size.x;
     }
     glUniformMatrix4fv(0, 1, GL_TRUE, parent->GetGlobalTransform().ptr());
     glUniformMatrix4fv(1, 1, GL_TRUE, view.ptr());
