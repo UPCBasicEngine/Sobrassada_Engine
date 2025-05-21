@@ -3,7 +3,9 @@
 #include "Math/float3.h"
 #include "rapidjson/document.h"
 #include <vector>
+#include <functional>
 
+class Script;
 class GameObject;
 class Application;
 
@@ -20,7 +22,8 @@ struct InspectorField
         Vec4,
         Color,
         InputText,
-        GameObject
+        GameObject,
+        Button
     };
 
     const char* name;
@@ -28,6 +31,7 @@ struct InspectorField
     void* data;
     float minValue;
     float maxValue;
+    std::function<void(Script*)> callback;
 
     InspectorField(const char* name, FieldType type, void* data, float minValue, float maxValue)
         : name(name), type(type), data(data), minValue(minValue), maxValue(maxValue)
@@ -38,6 +42,10 @@ struct InspectorField
     {
     }
     InspectorField(FieldType type, void* data) : name("No name"), type(type), data(data), minValue(0.0f), maxValue(1.0f)
+    {
+    }
+    InspectorField(const char* name, std::function<void(Script*)> callback)
+        : name(name), type(FieldType::Button), data(nullptr), minValue(0.0f), maxValue(1.0f), callback(callback)
     {
     }
 };
