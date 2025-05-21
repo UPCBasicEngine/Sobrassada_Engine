@@ -57,6 +57,15 @@ void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Doc
 
 void ParticleSystemComponent::Clone(const Component* other)
 {
+    if (other->GetType() == ComponentType::COMPONENT_PARTICLE_SYSTEM)
+    {
+        const ParticleSystemComponent* otherParticles = static_cast<const ParticleSystemComponent*>(other);
+        // CREAR PARTICLE SYSTEM RESOURCE PRIMERA VEGADA QUE ES FA UN LOAD AMB UN TAG-> COPIA EMITTERS I SI FAIG REQUEST DE TAG RETORNA COPIA DE EMITTERS 
+        auto xd = App->GetParticleModule();
+        emitters                                      = otherParticles->emitters;
+        currentEmitter                                = otherParticles->currentEmitter;
+
+    }
 }
 
 void ParticleSystemComponent::Update(float deltaTime)
@@ -82,7 +91,7 @@ void ParticleSystemComponent::RenderEditorInspector()
         currentEmitter = App->GetParticleModule()->RequestParticleEmitter(newTagName, this);
         emitters.push_back({currentEmitter->GetName(), currentEmitter});
         memset(newTagName, 0, sizeof(newTagName));
-    } 
+    }
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -113,7 +122,7 @@ void ParticleSystemComponent::RenderEditorInspector()
         {
             App->GetParticleModule()->DeleteParticleEmitter(currentEmitter->GetUID());
             emitters.erase(emitters.begin() + positionToDelete);
-          
+
             currentEmitter = nullptr;
             if (emitters.size() > 0) currentEmitter = emitters[0].second;
         }

@@ -24,22 +24,9 @@ class ParticleSystemComponent : public Component
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
-    bool IsUsingTexture() const { return useTexture; }
-    UID GetMaterialUID() const { return currentMaterialUID; }
-    UID GetTextureUID() const { return currentTextureUID; }
-
   private:
     ParticleEmitter* currentEmitter = nullptr;
     std::vector<std::pair<std::string, ParticleEmitter*>> emitters;
 
     char newTagName[64]               = "";
-
-    bool useTexture                   = false;
-    std::string currentResourceName   = "No material";
-
-    UID currentMaterialUID            = DEFAULT_MATERIAL_UID;
-    ResourceMaterial* currentMaterial = nullptr;
-
-    UID currentTextureUID             = FALLBACK_TEXTURE_UID;
-    ResourceTexture* currentTexture   = nullptr;
 };
