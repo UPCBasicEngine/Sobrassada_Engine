@@ -105,22 +105,13 @@ void CuChulainn::HandleState(float deltaTime)
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim();
-    else if (!isAttacking && !isDashing) Move();
-
-    if (state == CharacterStates::DASH)
-    {
-        if (dashTimer <= 0)
-        {
-            GLOG("STOP DASH SCRIPT");
-            character->EndDash();
-        }
-    }
+    else if (!isAttacking && !character->IsDashing()) Move();
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
         state = CharacterStates::IDLE;
-        animComponent->UseTrigger("idle");
+        animComponent->UseTrigger("Idle");
     }
 }
 
@@ -235,7 +226,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
             resetWeapon = false;
         }
         throwTimer = 0;
-    }
+    }  
 }
 
 void CuChulainn::LookAtMouse()
@@ -291,7 +282,7 @@ void CuChulainn::Dash()
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     character->StartDash();
-    if (animComponent) animComponent->UseTrigger("dash");
+    if (animComponent) animComponent->UseTrigger("Dash");
 }
 
 void CuChulainn::PerformAttack()
@@ -328,7 +319,7 @@ void CuChulainn::Attack(float deltaTime)
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    if (animComponent) animComponent->UseTrigger("attack");
+    if (animComponent) animComponent->UseTrigger("Attack");
 }
 
 void CuChulainn::Aim()
@@ -353,12 +344,12 @@ void CuChulainn::Move()
     character->EnableMovement(true);
     if (character->GetSpeed() > 0.5f)
     {
-        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("run");
+        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("Walk");
         state = CharacterStates::RUN;
     }
     else
     {
-        if (state != CharacterStates::IDLE && animComponent) animComponent->UseTrigger("idle");
+        if (state != CharacterStates::IDLE && animComponent) animComponent->UseTrigger("Idle");
         state = CharacterStates::IDLE;
     }
 }
