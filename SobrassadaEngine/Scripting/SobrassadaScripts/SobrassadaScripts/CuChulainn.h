@@ -43,13 +43,14 @@ class CuChulainn : public Character
     void UpdateTimers(float deltaTime);
     void LookAtMouse();
     void LookAtJoystick();
+    void CheckIsFalling();
 
     void ThrowSpear();
     void Attack(float deltaTime) override;
     void Dash();
     void Aim();
     void Move();
-    void Respawn();
+    void SetPosition(const float3& position);
 
   private:
     std::string cameraName      = "";
@@ -59,6 +60,7 @@ class CuChulainn : public Character
     std::string spearName       = "";
     Projectile* spear           = nullptr;
 
+    float3 lastDashStartPos     = float3::zero;
     bool isDashing              = false;
     float dashCooldown          = 2.0f;
     float dashTimer             = 0.0f;
@@ -79,8 +81,8 @@ class CuChulainn : public Character
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
 
-    float3 camFront = float3::zero;
-    float3 camRight = float3::zero;
+    float3 camFront             = float3::zero;
+    float3 camRight             = float3::zero;
 };
 
 extern CharacterControllerComponent* character;

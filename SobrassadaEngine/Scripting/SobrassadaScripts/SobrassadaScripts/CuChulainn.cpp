@@ -80,6 +80,7 @@ void CuChulainn::Update(float deltaTime)
     GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
+    CheckIsFalling();
 }
 
 void CuChulainn::OnDeath()
@@ -178,7 +179,7 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_F5])
     {
-        Respawn();
+        SetPosition(spawnPos);
     }
     if (keyboard[SDL_SCANCODE_F6])
     {
@@ -255,6 +256,13 @@ void CuChulainn::LookAtJoystick()
     if (direction.LengthSq() > 0.001f) character->LookAt(direction);
 }
 
+void CuChulainn::CheckIsFalling()
+{
+    const float maxDepth = -50.0f;
+
+    if (parent->GetGlobalTransform().TranslatePart().y < maxDepth) SetPosition(lastDashStartPos);
+}
+
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
@@ -280,7 +288,8 @@ void CuChulainn::Dash()
     GLOG("DASH");
 
     // TODO: Dash
-    dashTimer = dashCooldown;
+    dashTimer        = dashCooldown;
+    lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     character->StartDash();
     if (animComponent) animComponent->UseTrigger("dash");
 }
@@ -354,8 +363,8 @@ void CuChulainn::Move()
     }
 }
 
-void CuChulainn::Respawn()
+void CuChulainn::SetPosition(const float3& position)
 {
-    parent->SetLocalPosition(spawnPos);
-    if (camera) camera->SetPosition(spawnPos);
+    parent->SetLocalPosition(position);
+    if (camera) camera->SetPosition(position);
 }
