@@ -7,6 +7,7 @@
 #include "Geometry/Frustum.h"
 #include "Geometry/LineSegment.h"
 #include "Math/float4x4.h"
+#include "rapidjson/document.h"
 
 constexpr float cameraRotationAngle  = 135.f / RAD_DEGREE_CONV;
 constexpr float maximumPositivePitch = 89.f / RAD_DEGREE_CONV;
@@ -31,6 +32,8 @@ class CameraModule : public Module
     bool IsCameraDetached() const { return isCameraDetached; }
     void UpdateUBO();
     const LineSegment& CastCameraRay();
+    void SaveCameraPosition(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator);
+    void LoadCameraPosition(const rapidjson::Value* initialState);
 
     const float4x4& GetProjectionMatrix() { return isCameraDetached ? detachedProjectionMatrix : projectionMatrix; }
     const float4x4& GetViewMatrix() { return isCameraDetached ? detachedViewMatrix : viewMatrix; }
@@ -39,6 +42,11 @@ class CameraModule : public Module
     const FrustumPlanes& GetFrustrumPlanes() const { return frustumPlanes; }
     const float3& GetCameraPosition() const { return isCameraDetached ? detachedCamera.pos : camera.pos; }
     const Frustum& GetCamera() const { return camera; }
+
+    float GetNearPlaneDistance() const
+    {
+        return isCameraDetached ? detachedCamera.nearPlaneDistance : camera.nearPlaneDistance;
+    }
 
     float GetFarPlaneDistance() const
     {

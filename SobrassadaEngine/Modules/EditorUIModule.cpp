@@ -63,6 +63,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("UI Button"),            COMPONENT_BUTTON              },
         {HashString("Audio Source"),         COMPONENT_AUDIO_SOURCE        },
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
+        {HashString("UI CanvasScaler"),      COMPONENT_CANVAS_SCALER       },
         {HashString("Billboard"),            COMPONENT_BILLBOARD           },
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
     };
@@ -888,7 +889,7 @@ std::string EditorUIModule::RenderFileDialog(bool& window, const char* windowTit
     return importPath;
 }
 
-void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fields)
+void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fields, Script* script)
 {
 
     for (auto& field : fields)
@@ -988,6 +989,15 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
 
             break;
         }
+        case InspectorField::FieldType::Button:
+        {
+            if (field.callback && ImGui::Button(field.name))
+            {
+                field.callback(script);
+            }
+            break;
+        }
+
         }
     }
 }

@@ -47,8 +47,6 @@ ImageComponent::ImageComponent(const rapidjson::Value& initialState, GameObject*
         color.y                           = initColor[1].GetFloat();
         color.z                           = initColor[2].GetFloat();
     }
-
-    if (initialState.HasMember("MatchParentSize")) matchParentSize = initialState["MatchParentSize"].GetBool();
 }
 
 ImageComponent::~ImageComponent()
@@ -84,7 +82,6 @@ void ImageComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
     Component::Save(targetState, allocator);
 
     targetState.AddMember("TextureUID", texture->GetUID(), allocator);
-    targetState.AddMember("MatchParentSize", matchParentSize, allocator);
 
     rapidjson::Value valColor(rapidjson::kArrayType);
     valColor.PushBack(color.x, allocator);
@@ -115,11 +112,14 @@ void ImageComponent::Clone(const Component* other)
 
 void ImageComponent::RenderDebug(float deltaTime)
 {
+    if (parentCanvas) return;
+
+    float3 highlightColor = float3(0.0f, 0.0f, 0.0f);
+    parentCanvas->RenderDebug(deltaTime, highlightColor);
 }
 
 void ImageComponent::Update(float deltaTime)
 {
-    if (matchParentSize) MatchParentSize();
 }
 
 void ImageComponent::RenderEditorInspector()
@@ -131,8 +131,6 @@ void ImageComponent::RenderEditorInspector()
     ImGui::Text("Source texture: ");
     ImGui::SameLine();
     ImGui::Text(texture->GetName().c_str());
-
-    ImGui::Checkbox("Match Parent Size", &matchParentSize);
 
     if (ImGui::Button("Select texture"))
     {
@@ -152,8 +150,12 @@ void ImageComponent::RenderUI(const float4x4& view, const float4x4& proj) const
 {
     if (parentCanvas == nullptr || transform2D == nullptr || !IsEffectivelyEnabled()) return;
 
-    const float3 startPos =
-        float3(transform2D->GetRenderingPosition(), 0) - parent->GetGlobalTransform().TranslatePart();
+    float3 startPos = float3(transform2D->GetRenderingPosition(), 0);
+    if (parentCanvas->IsInWorldSpace())
+    {
+        startPos -= parent->GetGlobalTransform().TranslatePart();
+    }
+
     glUniformMatrix4fv(0, 1, GL_TRUE, parent->GetGlobalTransform().ptr());
     glUniformMatrix4fv(1, 1, GL_TRUE, view.ptr());
     glUniformMatrix4fv(2, 1, GL_TRUE, proj.ptr());
@@ -252,29 +254,5 @@ void ImageComponent::ChangeTexture(const UID textureUID)
         texture     = static_cast<ResourceTexture*>(newTexture);
         bindlessUID = glGetTextureHandleARB(texture->GetTextureID());
         glMakeTextureHandleResidentARB(bindlessUID);
-    }
-}
-
-void ImageComponent::MatchParentSize()
-{
-    if (transform2D == nullptr) return;
-
-    const UID parentUID  = parent->GetParent();
-    GameObject* parentGO = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
-
-    // Check if parent has transform 2D
-    if (Transform2DComponent* parentT2D = parentGO->GetComponent<Transform2DComponent*>())
-    {
-        transform2D->size     = parentT2D->size;
-        transform2D->position = float2(0, 0);
-        return;
-    }
-
-    // Check if parent is a canvas
-    if (CanvasComponent* canvas = parentGO->GetComponent<CanvasComponent*>())
-    {
-        transform2D->size     = float2(canvas->GetWidth(), canvas->GetHeight());
-        transform2D->position = float2(0, 0);
-        return;
     }
 }

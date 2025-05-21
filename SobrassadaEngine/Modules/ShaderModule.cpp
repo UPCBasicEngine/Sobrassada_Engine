@@ -24,8 +24,11 @@ bool ShaderModule::Init()
 
     metallicGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_METALLIC_FRAGMENT_SHADER_PATH);
     specularGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH);
+    transparentPassProgram      = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
     lightingPassProgram         = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
 
+    quadProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
+    depthProgram                = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
     billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
     return true;
 }
@@ -34,9 +37,17 @@ bool ShaderModule::ShutDown()
 {
     glDeleteProgram(specularGlossinessProgram);
     glDeleteProgram(specularGlossinessProgramUnlit);
+
     glDeleteProgram(metallicRoughnessProgram);
     glDeleteProgram(metallicRoughnessProgramUnlit);
+
     glDeleteProgram(uiWidgetProgram);
+    glDeleteProgram(metallicGeometryPassProgram);
+    glDeleteProgram(specularGeometryPassProgram);
+    glDeleteProgram(lightingPassProgram);
+    glDeleteProgram(quadProgram);
+    glDeleteProgram(depthProgram);
+
     return true;
 }
 

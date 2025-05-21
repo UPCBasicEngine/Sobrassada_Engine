@@ -34,6 +34,9 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
     {
         AddMesh(initialState["Mesh"].GetUint64(), false);
     }
+    if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
+    else renderMode = 0;
+
     if (initialState.HasMember("Bones"))
     {
         const rapidjson::Value& initBones = initialState["Bones"];
@@ -84,6 +87,7 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
         "Material", currentMaterial != nullptr && !bUsesMeshDefaultMaterial ? currentMaterial->GetUID() : INVALID_UID,
         allocator
     );
+    targetState.AddMember("RenderMode", renderMode, allocator);
 
     if (bones.size() > 0) // Store the skin of the mesh as the UID of each bone
     {
@@ -166,7 +170,20 @@ void MeshComponent::RenderEditorInspector()
         if (chosenMatUID != INVALID_UID) AddMaterial(chosenMatUID);
     }
 
-    if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
+    if (currentMaterial != nullptr)
+    {
+        const char* renderModes[] = {"Opaque", "Transparent", "Alpha"};
+        int currentRenderMode     = static_cast<int>(renderMode);
+
+        if (ImGui::Combo("Render Mode", &currentRenderMode, renderModes, IM_ARRAYSIZE(renderModes)))
+        {
+            renderMode = currentRenderMode;
+            renderMode == 1 ? currentMaterial->SetTransparent(true) : currentMaterial->SetTransparent(false);
+            if (batch) BatchEditorMode();
+        }
+
+        currentMaterial->OnEditorUpdate();
+    }
 }
 
 void MeshComponent::Update(float deltaTime)
@@ -212,6 +229,7 @@ void MeshComponent::AddMesh(UID resource, bool updateParent)
         if (currentMaterial == nullptr)
         {
             const UID defaultMat = newMesh->GetDefaultMaterialUID();
+
             AddMaterial(defaultMat, true);
         }
 
@@ -238,6 +256,7 @@ void MeshComponent::AddMaterial(UID resource, bool setDefaultMaterial)
         App->GetResourcesModule()->ReleaseResource(currentMaterial);
         currentMaterial          = newMaterial;
         currentMaterialName      = currentMaterial->GetName();
+        renderMode               = currentMaterial->IsTransparent() ? 1 : 0;
         bUsesMeshDefaultMaterial = setDefaultMaterial;
 
         if (batch) BatchEditorMode();

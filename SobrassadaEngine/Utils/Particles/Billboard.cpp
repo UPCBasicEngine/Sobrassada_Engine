@@ -1,16 +1,16 @@
 #include "Billboard.h"
 
 #include "Application.h"
-#include "CameraModule.h"
 #include "GameObject.h"
+#include "OpenGLModule.h"
 #include "ResourceMaterial.h"
 #include "ResourceTexture.h"
 #include "ResourcesModule.h"
 #include "ShaderModule.h"
 #include "Standalone/BillboardComponent.h"
-#include "OpenGLModule.h"
 
 #include "glew.h"
+#include "Math/float2.h"
 #include <chrono>
 
 Billboard::Billboard(float width, float height) : width(width), height(height)
@@ -123,26 +123,22 @@ void Billboard::UpdateUseTexture(bool newTexture)
     }
 }
 
-void Billboard::Render()
+void Billboard::Render(const float4x4& VP, const float3& rightVector, const float3& upVector)
 {
     if ((useTexture ? texture != nullptr : material != nullptr) && vbo && positionsVbo)
     {
-        const auto start            = std::chrono::high_resolution_clock::now();
+        const auto start        = std::chrono::high_resolution_clock::now();
 
-        const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
-        const float4x4 viewMatrix   = App->GetCameraModule()->GetViewMatrix();
-
-        float4x4 VP                 = App->GetCameraModule()->GetProjectionMatrix() * viewMatrix;
-
-        float3 cameraRight          = editorCamera.WorldRight();
-        float3 cameraUp             = lockPitch ? float3(0, 1, 0) : editorCamera.up;
-        float2 billboardSize        = float2(width, height);
+        float4x4 viewProjection = VP;
+        float3 cameraRight      = rightVector;
+        float3 cameraUp         = lockPitch ? float3(0, 1, 0) : upVector;
+        float2 billboardSize    = float2(width, height);
 
         glUseProgram(App->GetShaderModule()->GetBillboardProgram());
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);
         glUniform2fv(2, 1, &billboardSize[0]);
-        glUniformMatrix4fv(3, 1, GL_TRUE, &VP[0][0]);
+        glUniformMatrix4fv(3, 1, GL_TRUE, &viewProjection[0][0]);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 

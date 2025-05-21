@@ -29,7 +29,6 @@ class ImageComponent : public Component
     void InitBuffers();
     void ClearBuffers() const;
     void ChangeTexture(const UID textureUID);
-    void MatchParentSize();
 
   private:
     Transform2DComponent* transform2D;
@@ -40,6 +39,5 @@ class ImageComponent : public Component
 
     unsigned int vbo     = 0;
     unsigned int vao     = 0;
-    bool matchParentSize = false;
     UID bindlessUID;
 };

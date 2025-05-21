@@ -28,6 +28,8 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/UI/CanvasScalerComponent.h"
+#include "Standalone/BillboardComponent.h"
 
 #include "imgui.h"
 #include <queue>
@@ -461,7 +463,13 @@ void GameObject::RenderEditorInspector()
         if (ImGui::Checkbox("Draw nodes", &drawNodes)) OnDrawConnectionsToggle();
         ImGui::Checkbox("Select parent", &selectParent);
         ImGui::SameLine();
-        ImGui::Checkbox("Navmesh valid", &navMeshValid);
+        if (ImGui::Checkbox("Navmesh valid", &navMeshValid))
+        {
+            if (MeshComponent* meshComp = this->GetComponent<MeshComponent*>())
+            {
+                meshComp->BatchEditorMode();
+            }
+        }
 
         if (ImGui::Button("Add Component"))
         {
