@@ -170,9 +170,9 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
     }
     case COMPONENT_CANVAS_SCALER:
     {
-        CanvasScalerComponent* canvasScaler               = new CanvasScalerComponent(uid, parent);
-        std::get<CanvasScalerComponent*>(componentTuple) = canvasScaler;
-        generatedComponent                                = canvasScaler;
+        CanvasScalerComponent* component                  = new CanvasScalerComponent(uid, parent);
+        std::get<CanvasScalerComponent*>(componentTuple) = component;
+        component->Init();
         break;
     }
     case COMPONENT_BILLBOARD:
