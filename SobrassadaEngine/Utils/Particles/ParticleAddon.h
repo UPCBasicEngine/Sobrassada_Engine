@@ -15,9 +15,9 @@ class ParticleAddon
 
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
-    virtual void Init() const {};
-    virtual void Update(float deltaTime) const = 0;
-    virtual void RenderEditorInspector()       = 0;
+    virtual void Init() {};
+    virtual void Update(float deltaTime) = 0;
+    virtual void RenderEditorInspector() = 0;
 
     ParticleAddonType GetType() const { return addonType; };
     bool IsEnabled() const { return isEnabled; }
@@ -25,7 +25,7 @@ class ParticleAddon
     void Enable() { isEnabled = true; }
     void Disable() { isEnabled = false; }
 
-  private:
+  protected:
     bool isEnabled                = true;
     ParticleEmitter* emitterOwner = nullptr;
     ParticleAddonType addonType   = ParticleAddonType::NONE;

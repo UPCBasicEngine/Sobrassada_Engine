@@ -11,12 +11,17 @@ class BaseAddon : public ParticleAddon
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
 
-    void Init() const;
-    void Update(float deltaTime) const override;
+    void Init();
+    void Update(float deltaTime) override;
     void RenderEditorInspector() override;
 
   private:
-    float duration = 5.f;
-    bool loop = false;
-    int maxParticles = 100;
+    float currentEmissionTime                      = 0.f;
+    float duration                                 = 5.f;
+    bool loop                                      = false;
+    int maxParticles                               = 100;
+
+    bool randomLifetime                            = false;
+    float minLifetime                              = 0.5f;
+    float maxLifetime                              = 3.f;
 };

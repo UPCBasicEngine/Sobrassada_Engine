@@ -1,5 +1,8 @@
 #include "VelocityAddon.h"
 
+#include "ParticleEmitter.h"
+#include "ParticleSystemComponent.h"
+
 #include "imgui.h"
 
 VelocityAddon::VelocityAddon(ParticleEmitter* owner) : ParticleAddon(owner, ParticleAddonType::VELOCITY)
@@ -20,19 +23,29 @@ void VelocityAddon::Save(rapidjson::Value& targetState, rapidjson::Document::All
 {
     ParticleAddon::Save(targetState, allocator);
 
+    rapidjson::Value centerOffsetSave(rapidjson::kArrayType);
     targetState.AddMember("StartSpeed", startSpeed, allocator);
 }
 
 void VelocityAddon::Init()
 {
     // ADD INITIAL Y VELOCITY TO PARTICLES
+
+    for (auto& particle : emitterOwner->particles)
+    {
+        particle.velocity = float3(rng->Float(-startSpeed, startSpeed), startSpeed, 0.f);
+    }
 }
 
-void VelocityAddon::Update(float deltaTime) const
+void VelocityAddon::Update(float deltaTime)
 {
     if (!IsEnabled()) return;
 
     // MODIFY PARTICLE POSITION DEPENDING ON VELOCITY
+    for (auto& particle : emitterOwner->particles)
+    {
+        particle.position = particle.position.Mul(particle.velocity*deltaTime);
+    }
 }
 
 void VelocityAddon::RenderEditorInspector()
@@ -41,7 +54,7 @@ void VelocityAddon::RenderEditorInspector()
     // RENDER IMGUI TO CHANGE PARAMETERS
     ImGui::Text("VELOCITY ADDON");
 
-    ImGui::DragFloat("Y Start velocity", &startSpeed);
+    ImGui::DragFloat("Start velocity", &startSpeed);
 
     ImGui::Separator();
 }

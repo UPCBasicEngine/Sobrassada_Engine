@@ -134,11 +134,21 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
 void ParticleEmitter::Update(float deltaTime)
 {
+    if (!spawning) return;
+
+    std::apply(
+        [deltaTime](auto&... pointer) { ((pointer ? pointer->Update(deltaTime) : Nothing()), ...); }, addonTuple
+    );
 }
 
 void ParticleEmitter::Spawn()
 {
     std::apply([](auto&... pointer) { ((pointer ? pointer->Init() : Nothing()), ...); }, addonTuple);
+}
+
+void ParticleEmitter::RenderParticles()
+{
+    if (!spawning) return;
 }
 
 void ParticleEmitter::RenderEditor()

@@ -3,6 +3,8 @@
 #include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
+#include "glew.h"
+
 ParticleSystemModule::ParticleSystemModule()
 {
 }
@@ -13,6 +15,29 @@ ParticleSystemModule::~ParticleSystemModule()
 
 bool ParticleSystemModule::Init()
 {
+    float vertexData[] = {
+        -0.5, 0.5,  0.f, //
+        -0.5, -0.5, 0.f, //
+        0.5,  -0.5, 0.f, //
+
+        -0.5, 0.5,  0.f, //
+        0.5,  -0.5, 0.f, //
+        0.5,  0.5,  0.f, //
+
+        0.f,  1.f, //
+        0.f,  0.f, //
+        1.f,  0.f, //
+
+        0.f,  1.f, //
+        1.f,  0.f, //
+        1.f,  1.f, //
+    };
+
+    glGenBuffers(1, &quadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     return true;
 }
 
@@ -22,6 +47,8 @@ bool ParticleSystemModule::ShutDown()
     {
         delete pair.second;
     }
+
+    glDeleteBuffers(1, &quadVBO);
 
     return true;
 }
@@ -34,6 +61,7 @@ ParticleEmitter* ParticleSystemModule::RequestParticleEmitter(const std::string&
 {
     ParticleEmitter* emitter = new ParticleEmitter(GenerateUID(), name, owner);
     particleEmitters.insert({emitter->GetUID(), emitter});
+    emitter->SetQuadVBO(quadVBO);
     return emitter;
 }
 
@@ -42,6 +70,7 @@ ParticleSystemModule::RequestParticleEmitter(const rapidjson::Value& initialStat
 {
     ParticleEmitter* emitter = new ParticleEmitter(initialState, owner);
     particleEmitters.insert({emitter->GetUID(), emitter});
+    emitter->SetQuadVBO(quadVBO);
     return emitter;
 }
 

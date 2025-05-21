@@ -4,6 +4,11 @@
 
 struct Particle
 {
-    float3 position;
-    float3 velocity;
+    Particle() = default;
+    Particle(float3 newPosition) : position(newPosition) {};
+
+    float3 position = float3::zero;
+    float3 velocity = float3::zero;
+    float lifeTime  = 3.f;
+    bool alive      = true;
 };

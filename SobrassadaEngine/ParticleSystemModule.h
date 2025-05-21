@@ -25,5 +25,6 @@ class ParticleSystemModule : public Module
     void DeleteParticleEmitter(UID emiterUID);
 
   private:
+    unsigned int quadVBO = 0;
     std::map<UID, ParticleEmitter*> particleEmitters;
 };

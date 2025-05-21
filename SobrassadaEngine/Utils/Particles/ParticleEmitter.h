@@ -27,6 +27,7 @@ class ParticleEmitter
 
     void Update(float deltaTime);
     void Spawn();
+    void RenderParticles();
     void RenderEditor();
 
     void AddAddon(ParticleAddonType type);
@@ -35,20 +36,24 @@ class ParticleEmitter
     UID GetUID() const { return uid; }
     const std::string& GetName() const { return name; }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
+    ParticleSystemComponent* GetOwner() { return owner; }
 
     void SetAddonCreated(int position) { createdAddons[position] = true; };
     void SetAddonDeleted(int position) { createdAddons[position] = false; };
-
-    ParticleSystemComponent* GetOwner() { return owner; }
-    void SetOwner(ParticleSystemComponent* newOwner) { owner = newOwner; };
+    void SetQuadVBO(unsigned int newVbo) { quadVBO = newVbo; };
 
   private:
     void UpdateMaterial(UID newMaterialUID);
     void UpdateTexture(UID newTextureUID);
+
   public:
+    bool spawning = false;
     std::vector<Particle> particles;
 
   private:
+    unsigned int quadVBO               = 0;
+    unsigned int particlesVBO          = 0;
+
     UID uid                            = INVALID_UID;
     std::string name                   = "";
 
