@@ -45,7 +45,6 @@ void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Doc
 
     rapidjson::Value emittersArrayJSON(rapidjson::kArrayType);
 
-    // THIS WILL GO IN A LOOP THROUGH A VECTOR
     for (auto emitter : emitters)
     {
         rapidjson::Value currentEmitterJSON(rapidjson::kObjectType);
@@ -94,6 +93,28 @@ void ParticleSystemComponent::RenderEditorInspector()
             if (ImGui::Selectable(emitters[i].second->GetName().c_str())) currentEmitter = emitters[i].second;
         }
         ImGui::EndCombo();
+    }
+
+    if (ImGui::Button("Delete current emmitter"))
+    {
+        int positionToDelete = -1;
+        for (int i = 0; i < emitters.size(); ++i)
+        {
+            if (currentEmitter == emitters[i].second)
+            {
+                positionToDelete = i;
+                break;
+            }
+        }
+
+        if (positionToDelete > -1 && currentEmitter)
+        {
+            App->GetParticleModule()->DeleteParticleEmitter(currentEmitter->GetUID());
+            emitters.erase(emitters.begin() + positionToDelete);
+          
+            currentEmitter = nullptr;
+            if (emitters.size() > 0) currentEmitter = emitters[0].second;
+        }
     }
 
     ImGui::Spacing();

@@ -2,8 +2,8 @@
 
 #include "Component.h"
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 class ResourceMaterial;
 class ResourceTexture;
