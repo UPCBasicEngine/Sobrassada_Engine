@@ -124,29 +124,36 @@ update_status InputModule::PreUpdate(float deltaTime)
     if (controllers[0] == nullptr) return UPDATE_CONTINUE;
 
     /*** CONTROLLER ***/
-    const Sint16 leftX     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTX);
-    const Sint16 leftY     = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTY);
-    const Sint16 rightX    = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTX);
-    const Sint16 rightY    = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTY);
+    const Sint16 leftX  = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTX);
+    const Sint16 leftY  = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_LEFTY);
+    const Sint16 rightX = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTX);
+    const Sint16 rightY = SDL_GameControllerGetAxis(controllers[0], SDL_CONTROLLER_AXIS_RIGHTY);
 
     // Normalize stick values to [-1.0, 1.0], only if outside the deadzone
-    controllerLeftStick.x  = fabs(leftX) > GAMEPAD_DEADZONE ? leftX / 32767.0f : 0.0f;
-    controllerLeftStick.y  = fabs(leftY) > GAMEPAD_DEADZONE ? leftY / 32767.0f : 0.0f;
-    controllerRightStick.x = fabs(rightX) > GAMEPAD_DEADZONE ? rightX / 32767.0f : 0.0f;
-    controllerRightStick.y = fabs(rightY) > GAMEPAD_DEADZONE ? rightY / 32767.0f : 0.0f;
-
-    // Log left stick movement if it�s significant
-    if (fabs(controllerLeftStick.x) > 0.01f || fabs(controllerLeftStick.y) > 0.01f)
+    if (fabs(leftX) + fabs(leftY) > GAMEPAD_DEADZONE)
     {
-        // GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
-        isUsingKeyboard = false;
+        controllerLeftStick.x = leftX / 32767.0f;
+        controllerLeftStick.y = leftY / 32767.0f;
+        isUsingKeyboard       = false;
+        //GLOG("Left Stick: x=%.2f, y=%.2f", controllerLeftStick.x, controllerLeftStick.y);
+    }
+    else
+    {
+        controllerLeftStick.x = 0.0f;
+        controllerLeftStick.y = 0.0f;
     }
 
-    // Log right stick movement if it�s significant
-    if (fabs(controllerRightStick.x) > 0.01f || fabs(controllerRightStick.y) > 0.01f)
+    if (fabs(rightX) + fabs(rightY) > GAMEPAD_DEADZONE)
     {
+        controllerRightStick.x = rightX / 32767.0f;
+        controllerRightStick.y = rightY / 32767.0f;
+        isUsingKeyboard        = false;
         // GLOG("Right Stick: x=%.2f, y=%.2f", controllerRightStick.x, controllerRightStick.y);
-        isUsingKeyboard = false;
+    }
+    else
+    {
+        controllerRightStick.x = 0.0f;
+        controllerRightStick.y = 0.0f;
     }
 
     // Read analog trigger values (L2 and R2)
