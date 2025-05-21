@@ -124,14 +124,18 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
+    ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
+    dtNavMesh* dtNav = nullptr;
+    if (nav != nullptr)
+    {
+        dtNav = nav->GetDetourNavMesh();
+    }
+
     if (isDashing)
     {
         Dash(deltaTime);
         return;
     }
-
-    dtNavMesh* dtNav =
-        App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh(); // crash here means no navmesh loaded
 
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
 
@@ -498,7 +502,7 @@ void CharacterControllerComponent::StartDash()
     // filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     // filter.setExcludeFlags(0);
 
-    // float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaño de la caja de búsqueda
+    // float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaï¿½o de la caja de bï¿½squeda
     // float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
     // dtPolyRef targetRef   = 0;
 

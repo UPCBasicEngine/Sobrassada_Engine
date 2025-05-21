@@ -25,6 +25,9 @@
     <Filter Include="Characters\Camera">
       <UniqueIdentifier>{b8735c84-329e-48d9-9802-05cfa1b5f7ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Environment">
+      <UniqueIdentifier>{9afcd9ac-fa5f-45af-ac0b-16d450c5873d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
@@ -99,6 +102,9 @@
     </ClInclude>
     <ClInclude Include="CuChulainn.h">
       <Filter>Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="TileFloatScript.h">
+      <Filter>Environment</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -743,6 +749,9 @@
     </ClCompile>
     <ClCompile Include="CuChulainn.cpp">
       <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="TileFloatScript.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

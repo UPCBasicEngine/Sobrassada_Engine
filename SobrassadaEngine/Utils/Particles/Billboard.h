@@ -10,6 +10,11 @@ class ResourceMaterial;
 class ResourceTexture;
 class BillboardComponent;
 
+namespace math
+{
+    class float4x4;
+}
+
 class Billboard
 {
   public:
@@ -23,7 +28,7 @@ class Billboard
     void UpdateLockPitch(bool newLock);
     void UpdateUseTexture(bool newTexture);
 
-    void Render();
+    void Render(const float4x4& VP, const float3& rightVector, const float3& upVector);
 
     void AddComponent(BillboardComponent* newBillboard);
     void RemoveComponent(std::list<BillboardComponent*>::iterator newBillboard);

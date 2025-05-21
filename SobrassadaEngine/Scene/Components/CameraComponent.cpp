@@ -405,7 +405,7 @@ void CameraComponent::Translate(const float3& direction)
     camera.pos += direction;
 }
 
-void SOBRASADA_API_ENGINE CameraComponent::Rotate(float yaw, float pitch)
+void CameraComponent::Rotate(float yaw, float pitch)
 {
     const Quat yawRotation = Quat::RotateY(yaw);
     camera.front           = yawRotation.Mul(camera.front).Normalized();
