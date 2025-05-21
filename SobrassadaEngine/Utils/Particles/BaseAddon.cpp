@@ -52,12 +52,12 @@ void BaseAddon::Init()
     }
 
     currentEmissionTime    = 0.f;
-    emitterOwner->spawning = true;
+    emitterOwner->isEmitting = true;
 }
 
 void BaseAddon::Update(float deltaTime)
 {
-    if (emitterOwner->spawning)
+    if (emitterOwner->isEmitting)
     {
         float3 emitterPosition = emitterOwner->GetOwner()->GetGlobalTransform().TranslatePart();
 
@@ -85,7 +85,7 @@ void BaseAddon::Update(float deltaTime)
     
     if (currentEmissionTime > duration)
     {
-        emitterOwner->spawning = false;
+        emitterOwner->isEmitting = false;
     }
 }
 
@@ -105,6 +105,8 @@ void BaseAddon::RenderEditorInspector()
         ImGui::SameLine();
     }
     ImGui::InputFloat("##MaxLifetime", &maxLifetime);
+    ImGui::SameLine();
+    ImGui::Text("Lifetime");
     ImGui::SameLine();
     ImGui::Checkbox("Randomize", &randomLifetime);
 

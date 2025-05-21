@@ -4,13 +4,17 @@
 #include "BaseAddon.h"
 #include "EditorUIModule.h"
 #include "LibraryModule.h"
+#include "OpenGLModule.h"
 #include "ParticleSystemComponent.h"
 #include "ResourceMaterial.h"
 #include "ResourceTexture.h"
 #include "ResourcesModule.h"
+#include "ShaderModule.h"
 #include "VelocityAddon.h"
 
+#include "glew.h"
 #include "imgui.h"
+#include <chrono>
 
 // ---------- SECTION FOR TUPLE ITERATION ----------
 
@@ -114,6 +118,9 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
 ParticleEmitter::~ParticleEmitter()
 {
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, addonTuple);
+
+    // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
+    glDeleteBuffers(1, &particlesVBO);
 }
 
 void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -134,11 +141,13 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
 void ParticleEmitter::Update(float deltaTime)
 {
-    if (!spawning) return;
+    if (!isEmitting) return;
 
     std::apply(
         [deltaTime](auto&... pointer) { ((pointer ? pointer->Update(deltaTime) : Nothing()), ...); }, addonTuple
     );
+
+    UpdateParticlesVBO();
 }
 
 void ParticleEmitter::Spawn()
@@ -146,9 +155,11 @@ void ParticleEmitter::Spawn()
     std::apply([](auto&... pointer) { ((pointer ? pointer->Init() : Nothing()), ...); }, addonTuple);
 }
 
+// TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
 void ParticleEmitter::RenderParticles()
 {
-    if (!spawning) return;
+    if (!isEmitting) return;
+
 }
 
 void ParticleEmitter::RenderEditor()
@@ -184,6 +195,9 @@ void ParticleEmitter::RenderEditor()
 
         ImGui::EndPopup();
     }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Spawn Particles")) Spawn();
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -308,4 +322,12 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
         App->GetResourcesModule()->ReleaseResource(texture);
         texture = newTexture;
     }
+}
+
+void ParticleEmitter::UpdateParticlesVBO()
+{
+    if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * particles.size(), &particles[0], GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

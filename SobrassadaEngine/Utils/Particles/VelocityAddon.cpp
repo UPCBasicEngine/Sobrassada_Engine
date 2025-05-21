@@ -41,20 +41,23 @@ void VelocityAddon::Update(float deltaTime)
 {
     if (!IsEnabled()) return;
 
-    // MODIFY PARTICLE POSITION DEPENDING ON VELOCITY
     for (auto& particle : emitterOwner->particles)
     {
-        particle.position = particle.position.Mul(particle.velocity*deltaTime);
+        particle.position = particle.position.Add(particle.velocity*deltaTime);
     }
 }
 
 void VelocityAddon::RenderEditorInspector()
 {
     if (!IsEnabled()) return;
-    // RENDER IMGUI TO CHANGE PARAMETERS
-    ImGui::Text("VELOCITY ADDON");
+
+    ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Velocity Addon");
+
+    ImGui::PushItemWidth(100);
 
     ImGui::DragFloat("Start velocity", &startSpeed);
 
+    ImGui::Spacing();
     ImGui::Separator();
+    ImGui::Spacing();
 }

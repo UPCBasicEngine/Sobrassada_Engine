@@ -27,7 +27,10 @@ class ParticleEmitter
 
     void Update(float deltaTime);
     void Spawn();
+    
+    // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     void RenderParticles();
+    
     void RenderEditor();
 
     void AddAddon(ParticleAddonType type);
@@ -46,12 +49,17 @@ class ParticleEmitter
     void UpdateMaterial(UID newMaterialUID);
     void UpdateTexture(UID newTextureUID);
 
+    // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
+    void UpdateParticlesVBO();
+
   public:
-    bool spawning = false;
+    bool isEmitting = false;
     std::vector<Particle> particles;
 
   private:
     unsigned int quadVBO               = 0;
+
+    // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     unsigned int particlesVBO          = 0;
 
     UID uid                            = INVALID_UID;
