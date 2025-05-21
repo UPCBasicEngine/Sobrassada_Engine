@@ -54,6 +54,8 @@ class ResourceMaterial : public Resource
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
 
+    unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
+
   private:
     TextureInfo diffuseTexture;
     TextureInfo specularTexture;
