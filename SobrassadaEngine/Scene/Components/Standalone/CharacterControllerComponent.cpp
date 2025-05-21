@@ -118,14 +118,14 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 {
     if (!IsEffectivelyEnabled()) return;
 
-    if (!App->GetSceneModule()->GetInPlayMode()) return;
+    if (!App->GetSceneModule()->GetInPlayMode() || !inputDown) return;
 
     float deltaTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
 
     if (deltaTime == 0.0f) return;
 
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
-    dtNavMesh* dtNav = nullptr;
+    dtNavMesh* dtNav     = nullptr;
     if (nav != nullptr)
     {
         dtNav = nav->GetDetourNavMesh();
@@ -190,11 +190,8 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
         LookAtMovement(rotateDirection, deltaTime);
     }
 
-    if (inputDown)
-    {
-        HandleInput(deltaTime);
-        Move(deltaTime);
-    }
+    HandleInput(deltaTime);
+    Move(deltaTime);
 }
 
 void CharacterControllerComponent::Render(float deltaTime)

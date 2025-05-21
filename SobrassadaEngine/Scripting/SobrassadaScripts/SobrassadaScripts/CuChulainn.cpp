@@ -67,7 +67,7 @@ void CuChulainn::Update(float deltaTime)
 {
     if (isDead || !character) return;
 
-    GetInputs();
+    if (character->GetInputDown()) GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
 }
