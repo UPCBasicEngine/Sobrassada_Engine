@@ -73,6 +73,8 @@ void AIAgentComponent::Update(float deltaTime)
 
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
+    GLOG("Angular speed: %f", currentAngularSpeed);
+
     dtCrowd* crowd = App->GetPathfinderModule()->GetCrowd();
 
     if (!crowd) return;
@@ -229,7 +231,7 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
         LookAtMovement(nextPos, App->GetGameTimer()->GetDeltaTime() / 1000.0f);
     }
     bool result = pathfinder->GetCrowd()->requestMoveTarget(agentId, targetRef, destination.ptr());
-    
+
     if (!result)
     {
         GLOG("Crowd agent failed to request movement.");
@@ -293,7 +295,7 @@ void AIAgentComponent::AddToCrowd()
     agentId             = App->GetPathfinderModule()->CreateAgent(
         parent->GetGlobalTransform().TranslatePart(), radius, height, currentSpeed, currentAcceleration
     );
-
+    currentAngularSpeed = maxAngularSpeed;
     if (agentId != -1)
     {
         App->GetPathfinderModule()->AddAIAgentComponent(agentId, this);
