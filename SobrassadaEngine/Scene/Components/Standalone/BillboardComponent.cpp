@@ -30,6 +30,11 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
 
+    if (initialState.HasMember("MinU")) minU = initialState["MinU"].GetFloat();
+    if (initialState.HasMember("MaxU")) maxU = initialState["MaxU"].GetFloat();
+    if (initialState.HasMember("MinV")) minV = initialState["MinV"].GetFloat();
+    if (initialState.HasMember("MaxV")) maxV = initialState["MaxV"].GetFloat();
+
     if (billboardTag.GetString() != "")
     {
         App->GetBillboardModule()->RequestTag(billboardTag, this);
@@ -61,6 +66,11 @@ void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember("Width", width, allocator);
     targetState.AddMember("UseTexture", useTexture, allocator);
     targetState.AddMember("LockPitch", lockPitch, allocator);
+
+    targetState.AddMember("MinU", minU, allocator);
+    targetState.AddMember("MaxU", maxU, allocator);
+    targetState.AddMember("MinV", minV, allocator);
+    targetState.AddMember("MaxV", maxV, allocator);
 }
 
 void BillboardComponent::Clone(const Component* other)
@@ -143,6 +153,22 @@ void BillboardComponent::RenderEditorInspector()
 
     if (ImGui::InputFloat("Width", &width)) App->GetBillboardModule()->UpdateTagWidth(billboardTag, width);
     if (ImGui::InputFloat("Height", &height)) App->GetBillboardModule()->UpdateTagHeight(billboardTag, height);
+
+    ImGui::PushItemWidth(100);
+
+    if (ImGui::DragFloat("##minU", &minU, 0.005f, 0.f, 1.f)) App->GetBillboardModule()->UpdateTagUCoords(billboardTag, minU, maxU);
+    ImGui::SameLine();
+    if (ImGui::DragFloat("##maxU", &maxU, 0.005f, 0.f, 1.f)) App->GetBillboardModule()->UpdateTagUCoords(billboardTag, minU, maxU);
+    ImGui::SameLine();
+    ImGui::Text("U Texture Range");
+
+    if (ImGui::DragFloat("##minV", &minV, 0.005f, 0.f, 1.f)) App->GetBillboardModule()->UpdateTagVCoords(billboardTag, minV, maxV);
+    ImGui::SameLine();
+    if (ImGui::DragFloat("##maxV", &maxV, 0.005f, 0.f, 1.f)) App->GetBillboardModule()->UpdateTagVCoords(billboardTag, minV, maxV);
+    ImGui::SameLine();
+    ImGui::Text("V Texture Range");
+
+    ImGui::PopItemWidth();
 
     ImGui::Separator();
 
@@ -264,9 +290,9 @@ void BillboardComponent::SetTexture(ResourceTexture* newTexture)
 
 void BillboardComponent::RecalculateAABB()
 {
-    float3 localPosition = parent->GetLocalTransform().TranslatePart();
-    float maxValue       = width > height ? width : height;
-    maxValue /= 2.f;
+    float3 localPosition  = parent->GetLocalTransform().TranslatePart();
+    float maxValue        = width > height ? width : height;
+    maxValue             /= 2.f;
     localComponentAABB    = AABB(float3(-maxValue, -maxValue, -maxValue), float3(maxValue, maxValue, maxValue));
 
     parent->OnAABBUpdated();

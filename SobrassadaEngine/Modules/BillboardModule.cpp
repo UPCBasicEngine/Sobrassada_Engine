@@ -102,6 +102,8 @@ void BillboardModule::RequestTag(const HashString& tag, BillboardComponent* comp
         if (component->IsUsingTexture()) newBillboard->UpdateTexture(component->GetTextureUID());
         else newBillboard->UpdateMaterial(component->GetMaterialUID());
         newBillboard->UpdateLockPitch(component->GetLockPitch());
+        newBillboard->UpdateUCoord(component->GetMinU(), component->GetMaxU());
+        newBillboard->UpdateVCoord(component->GetMinV(), component->GetMaxV());
         newBillboard->AddComponent(component);
 
         billboardMap.insert({tag, std::pair<unsigned int, Billboard*>(1, newBillboard)});
@@ -202,6 +204,18 @@ void BillboardModule::UpdateTagPositions(const HashString& tag)
     auto billboardIterator = billboardMap.find(tag);
 
     if (billboardIterator != billboardMap.end()) billboardIterator->second.second->SetReloadPositions();
+}
+
+void BillboardModule::UpdateTagUCoords(const HashString& tag, float minU, float maxU)
+{
+    auto billboardIterator = billboardMap.find(tag);
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateUCoord(minU, maxU);
+}
+
+void BillboardModule::UpdateTagVCoords(const HashString& tag, float minV, float maxV)
+{
+    auto billboardIterator = billboardMap.find(tag);
+    if (billboardIterator != billboardMap.end()) billboardIterator->second.second->UpdateVCoord(minV, maxV);
 }
 
 bool BillboardModule::FindTag(const HashString& tag, int& outPosition)

@@ -33,6 +33,10 @@ class BillboardComponent : public Component
 
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
+    float GetMinU() const { return minU; }
+    float GetMaxU() const { return maxU; }
+    float GetMinV() const { return minV; }
+    float GetMaxV() const { return maxV; }
     bool GetLockPitch() const { return lockPitch; }
     UID GetMaterialUID() const { return currentMaterialUID; }
     UID GetTextureUID() const { return currentTextureUID; }
@@ -47,6 +51,18 @@ class BillboardComponent : public Component
     void SetLockPitch(bool newPitch) { lockPitch = newPitch; };
     void SetUseTexture(bool newUseTexture) { useTexture = newUseTexture; };
 
+    void SetUCoords(float newMinU, float newMaxU)
+    {
+        minU = newMinU;
+        maxU = newMaxU;
+    };
+
+    void SetVCoords(float newMinV, float newMaxV)
+    {
+        minV = newMinV;
+        maxV = newMaxV;
+    };
+
   private:
     void RecalculateAABB();
 
@@ -54,6 +70,12 @@ class BillboardComponent : public Component
     float width                       = 1.f;
     float height                      = 1.f;
     bool lockPitch                    = false;
+
+    float minU                        = 0.f;
+    float maxU                        = 1.f;
+
+    float minV                        = 0.f;
+    float maxV                        = 1.f;
 
     char newTagName[64]               = "";
     HashString billboardTag           = HashString("");

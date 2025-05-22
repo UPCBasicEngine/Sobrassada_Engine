@@ -135,12 +135,14 @@ void Billboard::Render(const float4x4& VP, const float3& rightVector, const floa
         float3 cameraRight      = rightVector;
         float3 cameraUp         = lockPitch ? float3(0, 1, 0) : upVector;
         float2 billboardSize    = float2(width, height);
+        float4 uvRange          = float4(minTexU, maxTexU, minTexV, maxTexV);
 
         glUseProgram(App->GetShaderModule()->GetBillboardProgram());
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);
         glUniform2fv(2, 1, &billboardSize[0]);
         glUniformMatrix4fv(3, 1, GL_TRUE, &viewProjection[0][0]);
+        glUniform4fv(4, 1, &uvRange[0]);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
@@ -223,6 +225,28 @@ void Billboard::UpdatePositionsVbo(const float3& cameraPosition)
     glBindBuffer(GL_ARRAY_BUFFER, positionsVbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * instancePositions.size(), &instancePositions[0], GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Billboard::UpdateUCoord(float minU, float maxU)
+{
+    minTexU = minU;
+    maxTexU = maxU;
+
+    for (auto billboardComponent : instanceComponents)
+    {
+        billboardComponent->SetUCoords(minTexU, maxTexU);
+    }
+}
+
+void Billboard::UpdateVCoord(float minV, float maxV)
+{
+    minTexV = minV;
+    maxTexV = maxV;
+
+    for (auto billboardComponent : instanceComponents)
+    {
+        billboardComponent->SetVCoords(minTexV, maxTexV);
+    }
 }
 
 void Billboard::AddComponent(BillboardComponent* newBillboard)
