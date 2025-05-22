@@ -150,11 +150,6 @@ void Archer::Attack(float deltaTime)
         {
             float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
             direction.Normalize();
-
-            GLOG(
-                "Parent name: %s, and position:(%f,%f,%f)", parent->GetName().c_str(), parent->GetPosition().x,
-                parent->GetPosition().y, parent->GetPosition().z
-            )
             arrow->Shoot(parent->GetPosition(), direction);
         }
 
