@@ -106,6 +106,9 @@
     <ClInclude Include="TileFloatScript.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="SoundControlScript.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -751,6 +754,9 @@
       <Filter>Characters</Filter>
     </ClCompile>
     <ClCompile Include="TileFloatScript.cpp">
+      <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundControlScript.cpp">
       <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>

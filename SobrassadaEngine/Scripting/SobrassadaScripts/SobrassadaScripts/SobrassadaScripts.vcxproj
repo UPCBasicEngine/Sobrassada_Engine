@@ -408,6 +408,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="RotateGameObject.h" />
     <ClInclude Include="Script.h" />
+    <ClInclude Include="SoundControlScript.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
@@ -1783,6 +1784,7 @@
     <ClCompile Include="RotateGameObject.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
+    <ClCompile Include="SoundControlScript.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
