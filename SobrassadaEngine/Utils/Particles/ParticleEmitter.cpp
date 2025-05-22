@@ -142,6 +142,8 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
 void ParticleEmitter::Update(float deltaTime)
 {
+        // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
+
     if (!isEmitting) return;
 
     std::apply(

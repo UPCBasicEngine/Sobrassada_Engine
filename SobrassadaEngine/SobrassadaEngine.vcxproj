@@ -366,9 +366,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="ParticleSystem.cpp" />
-    <ClCompile Include="ParticleSystemComponent.cpp" />
-    <ClCompile Include="ParticleSystemModule.cpp" />
+    <ClCompile Include="Utils\Particles\EmitterInstance.cpp" />
+    <ClCompile Include="Utils\Particles\ParticleSystem.cpp" />
+    <ClCompile Include="Scene\Components\ParticleSystemComponent.cpp" />
+    <ClCompile Include="Modules\ParticleSystemModule.cpp" />
     <ClCompile Include="Utils\Particles\ParticleEmitter.cpp" />
     <ClCompile Include="Utils\Particles\BaseAddon.cpp" />
     <ClCompile Include="Utils\Particles\ParticleAddon.cpp" />
@@ -605,9 +606,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="ParticleSystem.h" />
-    <ClInclude Include="ParticleSystemComponent.h" />
-    <ClInclude Include="ParticleSystemModule.h" />
+    <ClInclude Include="Utils\Particles\EmitterInstance.h" />
+    <ClInclude Include="Utils\Particles\ParticleSystem.h" />
+    <ClInclude Include="Scene\Components\ParticleSystemComponent.h" />
+    <ClInclude Include="Modules\ParticleSystemModule.h" />
     <ClInclude Include="Utils\Particles\ParticleEmitter.h" />
     <ClInclude Include="Utils\Particles\Particle.h" />
     <ClInclude Include="Utils\Particles\BaseAddon.h" />

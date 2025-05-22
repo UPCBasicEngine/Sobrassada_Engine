@@ -564,13 +564,16 @@
     <ClCompile Include="Utils\Particles\ParticleEmitter.cpp">
       <Filter>Utils\Particles</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleSystemComponent.cpp">
+    <ClCompile Include="Scene\Components\ParticleSystemComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleSystemModule.cpp">
+    <ClCompile Include="Modules\ParticleSystemModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleSystem.cpp">
+    <ClCompile Include="Utils\Particles\ParticleSystem.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\EmitterInstance.cpp">
       <Filter>Utils\Particles</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1118,13 +1121,16 @@
     <ClInclude Include="Utils\Particles\ParticleEmitter.h">
       <Filter>Utils\Particles</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleSystemComponent.h">
+    <ClInclude Include="Scene\Components\ParticleSystemComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleSystemModule.h">
+    <ClInclude Include="Modules\ParticleSystemModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleSystem.h">
+    <ClInclude Include="Utils\Particles\ParticleSystem.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\EmitterInstance.h">
       <Filter>Utils\Particles</Filter>
     </ClInclude>
   </ItemGroup>
