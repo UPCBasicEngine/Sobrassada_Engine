@@ -220,7 +220,6 @@ void ResourceMaterial::LoadMaterialData(Material mat)
     material.roughnessFactor     = mat.GetRoughnessFactor();
     material.shininessInAlpha    = false;
     isTransparent                = mat.IsTransparent();
-    doubleSided                  = mat.IsDoubleSided();
 
     ResourceTexture* diffTexture = TextureImporter::LoadTexture(mat.GetDiffuseTexture());
     if (diffTexture != nullptr)

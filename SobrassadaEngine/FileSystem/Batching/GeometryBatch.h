@@ -36,6 +36,7 @@ class GeometryBatch
     const bool IsNavmeshValid() const { return isNavmeshValid; }
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlpha() const { return isAlpha; }
+    const bool IsDoubleSided() const { return isDoubleSided; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
@@ -87,4 +88,5 @@ class GeometryBatch
     bool isNavmeshValid           = false;
     bool isTransparent            = false;
     bool isAlpha                  = false;
+    bool isDoubleSided            = false;
 };

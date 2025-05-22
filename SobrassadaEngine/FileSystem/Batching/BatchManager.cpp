@@ -200,8 +200,9 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     currentBatchMeshes.push_back(batchMeshes[0]);
-    if (batchMeshes[0]->GetRenderMode() == 1) glEnable(GL_BLEND);
-    else glDisable(GL_BLEND);
+    glEnable(GL_BLEND);
+
+    if (batchMeshes[0]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
 
     for (size_t i = 1; i < batchMeshes.size(); ++i)
     {
@@ -217,8 +218,8 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
             currentBatch->Render(currentBatchMeshes);
             currentBatchMeshes.clear();
 
-            if (batchMeshes[0]->GetRenderMode() == 1) glEnable(GL_BLEND);
-            else glDisable(GL_BLEND);
+            if (batchMeshes[i]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
+            else glEnable(GL_CULL_FACE);
             currentBatch = batch;
             currentBatchMeshes.push_back(mesh);
         }
@@ -230,6 +231,9 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
         currentBatch->Render(currentBatchMeshes);
         currentBatchMeshes.clear();
     }
+
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
 }
 
 // We can change that now
@@ -255,7 +259,8 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
         {
             if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
                 it->GetHasBones() == component->GetHasBones() &&
-                it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid() && it->IsAlpha() == (component->GetRenderMode() == 2))
+                it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid() &&
+                it->IsAlpha() == (component->GetRenderMode() == 2) && material->IsDoubleSided() == it->IsDoubleSided())
             {
                 return it;
             }
