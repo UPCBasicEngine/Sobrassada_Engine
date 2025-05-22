@@ -44,14 +44,11 @@ void SplineComponent::RenderDebug(float deltaTime)
     EditorUIModule* ui   = App->GetEditorUIModule();
     DebugDrawModule* dbg = App->GetDebugDrawModule();
 
-    size_t endSeg   = loop ? points.size() : points.size() - 1;
-    const float3 curveColor(0, 1, 0); //Green
-    const float3 pointColor(1, 0, 0); //Red
+    size_t endSeg        = loop ? points.size() : points.size() - 1;
+    const float3 curveColor(0, 1, 0); // Green
+    const float3 pointColor(1, 0, 0); // Red
 
-    auto drawLine = [&](const float3& a, const float3& b)
-    {
-        dbg->DrawLineSegment(LineSegment(a, b), curveColor);
-    };
+    auto drawLine = [&](const float3& a, const float3& b) { dbg->DrawLineSegment(LineSegment(a, b), curveColor); };
 
     for (size_t seg = 0; seg < endSeg; ++seg)
     {
@@ -68,7 +65,6 @@ void SplineComponent::RenderDebug(float deltaTime)
             }
         }
         else drawLine(points[seg], points[seg + 1]);
-        
     }
 
     for (const float3& p : points)
@@ -77,19 +73,13 @@ void SplineComponent::RenderDebug(float deltaTime)
     if (showMarker && points.size() >= 2)
     {
         float3 wPos = GetWorldPositionInSpine(markerT);
-        dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f); // amarillo
+        dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f);
     }
 }
 
 bool SplineComponent::RenderGizmo()
 {
-    //if (selectedIdx >= 0 &&
-    //    selectedIdx < (int)points.size())
-    //{
     return PointGizmo((size_t)selectedIdx);
-    //}
-
-    //return Component::RenderGizmo();
 }
 
 void SplineComponent::RenderEditorInspector()
@@ -118,7 +108,6 @@ void SplineComponent::RenderEditorInspector()
 
     const bool validSel = selectedIdx >= 0 && selectedIdx < (int)points.size();
 
-
     if (validSel)
     {
         float3 tempPoint = points[selectedIdx];
@@ -136,7 +125,6 @@ void SplineComponent::RenderEditorInspector()
         else if (selectedIdx >= (int)points.size()) selectedIdx = (int)points.size() - 1;
     }
     ImGui::EndDisabled();
-
 
     ImGui::SeparatorText("Properties");
 
@@ -220,7 +208,7 @@ float SplineComponent::GetT(const float3& p0, const float3& p1, float tPrev) con
 {
     float distance = (p1 - p0).Length();
 
-    if (distance < 0.0001f) distance = 0.0001f; //in order to be able to use CatmullRom with 3 points
+    if (distance < 0.0001f) distance = 0.0001f; // in order to be able to use CatmullRom with 3 points
 
     return tPrev + powf(distance, alpha);
 }
@@ -260,8 +248,8 @@ float3 SplineComponent::EvaluateSegment(size_t seg, float segmentT) const
         if (loop) return Wrap(k);
 
         if (k < 0) return (size_t)0;
-        else if (k >= n) return (size_t)(n - 1);
-        else return (size_t)k;
+        if (k >= n) return (size_t)(n - 1);
+        return (size_t)k;
     };
 
     return CatmullRom(
@@ -273,27 +261,12 @@ float3 SplineComponent::Evaluate(float t) const
 {
     if (points.size() < 2) return float3::zero;
 
-    t          = std::clamp(t, 0.f, 1.f);
+    t = std::clamp(t, 0.f, 1.f);
 
-
-    if (!loop && points.size() < 4)
-    {
-        float segFloat  = t * (points.size() - 1);
-        int seg         = (int)floorf(segFloat);
-        float u         = segFloat - seg;
-
-        const float3& a = points[seg];
-        const float3& b = points[std::min(seg + 1, (int)points.size() - 1)];
-        float3 local    = float3::Lerp(a, b, u);
-        return parent->GetGlobalTransform().TransformPos(local);
-    }
-
-    const int numSeg = loop ? (int)points.size()
-                            : (int)points.size() - 1;
+    const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
 
     float segFloat   = t * numSeg;
-    if (segFloat >= numSeg)
-        return parent->GetGlobalTransform().TransformPos(loop ? points.front() : points.back());
+    if (segFloat >= numSeg) return parent->GetGlobalTransform().TransformPos(loop ? points.front() : points.back());
 
     int seg = (int)floorf(segFloat);
     float u = segFloat - seg;
@@ -344,5 +317,5 @@ void SplineComponent::SetPointWorld(size_t idx, const float3& worldPos)
 
     const float4x4 invParent = parent->GetGlobalTransform().Inverted();
 
-    points[idx]                = (invParent * float4(worldPos, 1.f)).xyz();
+    points[idx]              = (invParent * float4(worldPos, 1.f)).xyz();
 }
