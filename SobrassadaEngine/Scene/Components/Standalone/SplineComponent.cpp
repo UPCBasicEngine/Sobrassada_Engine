@@ -147,7 +147,7 @@ void SplineComponent::RenderEditorInspector()
     ImGui::SeparatorText("Path Probe");
 
     ImGui::Checkbox("Show marker", &showMarker);
-    if (showMarker) ImGui::DragFloat("t  (0-1)", &markerT, 0.01f, 0.f, 1.f, "%.2f");
+    if (showMarker) ImGui::DragFloat("t  (0-1)", &markerT, 0.001f, 0.f, 1.f, "%.3f");
 
     ImGui::SeparatorText("Add Point");
 
