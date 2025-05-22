@@ -549,9 +549,6 @@
     <ClCompile Include="Modules\BillboardModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceManagement\Resources\ResourceEmitter.cpp">
-      <Filter>Resources</Filter>
-    </ClCompile>
     <ClCompile Include="Utils\Particles\ParticleAddon.cpp">
       <Filter>Utils\Particles\Addons</Filter>
     </ClCompile>
@@ -572,6 +569,9 @@
     </ClCompile>
     <ClCompile Include="ParticleSystemModule.cpp">
       <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Utils\Particles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1100,9 +1100,6 @@
     <ClInclude Include="Modules\BillboardModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="ResourceManagement\Resources\ResourceEmitter.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\Particles\ParticleUtils.h">
       <Filter>Utils\Particles</Filter>
     </ClInclude>
@@ -1126,6 +1123,9 @@
     </ClInclude>
     <ClInclude Include="ParticleSystemModule.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>Utils\Particles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
