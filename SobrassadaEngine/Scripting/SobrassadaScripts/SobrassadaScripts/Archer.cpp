@@ -159,7 +159,7 @@ void Archer::Attack(float deltaTime)
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
-           // if (CheckDistanceWithPlayer() != PlayerDistances::Medium) currentState = ArcherStates::CHASE;
+            if (CheckDistanceWithPlayer() != PlayerDistances::Medium) currentState = ArcherStates::CHASE;
         }
     }
 }
