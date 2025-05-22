@@ -130,7 +130,7 @@ void CuChulainn::GetInputs()
     const KeyState* keyboard   = input->GetKeyboard();
     const KeyState* mouse      = input->GetMouseButtons();
     const KeyState* controller = input->GetControllerButtons();
-    const float2 leftJoystick  = input->GetLeftStick();
+    const float2& leftJoystick = input->GetLeftStick();
 
     float3 direction           = float3::zero;
     if (input->IsUsingKeyboard())
@@ -251,7 +251,7 @@ void CuChulainn::LookAtMouse()
 
 void CuChulainn::LookAtJoystick()
 {
-    const float2 stick     = AppEngine->GetInputModule()->GetRightStick();
+    const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
     const float3 direction = camFront * stick.y + camRight * stick.x;
     if (direction.LengthSq() > 0.001f) character->LookAt(direction);
 }
@@ -260,7 +260,11 @@ void CuChulainn::CheckIsFalling()
 {
     const float maxDepth = -50.0f;
 
-    if (parent->GetGlobalTransform().TranslatePart().y < maxDepth) SetPosition(lastDashStartPos);
+    if (parent->GetGlobalTransform().TranslatePart().y < maxDepth)
+    {
+        SetPosition(lastDashStartPos);
+        TakeDamage(1);
+    }
 }
 
 void CuChulainn::ThrowSpear()
