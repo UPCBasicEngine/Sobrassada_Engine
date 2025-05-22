@@ -116,7 +116,7 @@ void CharacterControllerComponent::Clone(const Component* other)
 
 void CharacterControllerComponent::Update(float time) // SO many navmesh getters!!!! Memo to rethink this
 {
-    if (!IsEffectivelyEnabled()) return;
+    if (!IsEffectivelyEnabled() || !inputDown) return;
 
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
@@ -124,14 +124,18 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
+    ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
+    dtNavMesh* dtNav     = nullptr;
+    if (nav != nullptr)
+    {
+        dtNav = nav->GetDetourNavMesh();
+    }
+
     if (isDashing)
     {
         Dash(deltaTime);
         return;
     }
-
-    dtNavMesh* dtNav =
-        App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh(); // crash here means no navmesh loaded
 
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
 
@@ -185,12 +189,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     {
         LookAtMovement(rotateDirection, deltaTime);
     }
-
-    if (inputDown)
-    {
-        HandleInput(deltaTime);
-        Move(deltaTime);
-    }
+    Move(deltaTime); 
 }
 
 void CharacterControllerComponent::Render(float deltaTime)
@@ -304,7 +303,7 @@ void CharacterControllerComponent::Move(float deltaTime)
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
 
-    float halfExt[3] = {0.5f, 1.0f, 0.5f};
+    float halfExt[3] = {1.0f, 1.0f, 1.5f};
     float nearest[3] = {};
     dtPolyRef newRef = 0;
 
@@ -317,12 +316,16 @@ void CharacterControllerComponent::Move(float deltaTime)
 
     status           = navMeshQuery->closestPointOnPoly(newRef, desiredPos.ptr(), closest, &posOverPoly);
 
-    if (!dtStatusSucceed(status) || !posOverPoly) return;
+    if (!dtStatusSucceed(status)) return;
 
     currentPolyRef = newRef;
 
-    desiredPos.x   = nearest[0];
-    desiredPos.z   = nearest[2];
+    desiredPos.x   = closest[0];
+    desiredPos.y   = closest[1];
+    desiredPos.z   = closest[2];
+
+    // Prevent huge changes in the y pos
+    if (fabs(desiredPos.y - currentPos.y) > 0.5f) return;
 
     parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
 }
@@ -379,41 +382,9 @@ void CharacterControllerComponent::Rotate(float rotationDirection, float deltaTi
     parent->UpdateTransformForGOBranch();
 }
 
-void CharacterControllerComponent::HandleInput(float deltaTime)
+void CharacterControllerComponent::SetDirection(float3& direction)
 {
     if (!movementEnabled) return;
-
-    const InputModule* input       = App->GetInputModule();
-    const KeyState* keyboard       = input->GetKeyboard();
-    const KeyState* mouseButtons   = input->GetMouseButtons();
-    const float2 leftJoystick      = input->GetLeftStick();
-    const KeyState* gamepadButtons = input->GetControllerButtons();
-
-    float3 direction(0.0f, 0.0f, 0.0f);
-
-    if (input->IsUsingKeyboard())
-    {
-
-        if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
-        if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
-        if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
-        if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
-    }
-    else
-    {
-        direction.x = leftJoystick.x;
-        direction.z = leftJoystick.y;
-
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
-    }
-
-    // float rotationDir = 0.0f;
-
-    // if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
-    // if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
 
     targetDirection = direction;
     if (direction.LengthSq() > 0.001f)
@@ -423,11 +394,6 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
         rotateDirection = direction;
         isRotating      = true;
     }
-
-    // if (fabs(rotationDir) > 0.0001f)
-    //{
-    //     Rotate(rotationDir, deltaTime);
-    // }
 }
 
 void CharacterControllerComponent::LookAt(const float3& direction)
@@ -498,7 +464,7 @@ void CharacterControllerComponent::StartDash()
     // filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     // filter.setExcludeFlags(0);
 
-    // float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaño de la caja de búsqueda
+    // float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaï¿½o de la caja de bï¿½squeda
     // float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
     // dtPolyRef targetRef   = 0;
 

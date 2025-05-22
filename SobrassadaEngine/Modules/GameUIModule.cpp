@@ -8,6 +8,7 @@
 #include "Scene.h"
 #include "Scene/Components/Standalone/UI/CanvasComponent.h"
 #include "SceneModule.h"
+#include "WindowModule.h"
 #include "TextManager.h"
 
 #include "MathGeoLib.h"
@@ -38,6 +39,7 @@ update_status GameUIModule::Update(float deltaTime)
         // In game, just get the mouse position
         // If there is a windowed game version, then it should probably be the same for all versions
         mousePosition = inputs->GetMousePosition();
+        mousePosition.y = App->GetWindowModule()->GetHeight() - mousePosition.y;
 #else
         // Get the mouse position depending on the scene buffer size and position
         auto& windowPosition = App->GetSceneModule()->GetScene()->GetWindowPosition();

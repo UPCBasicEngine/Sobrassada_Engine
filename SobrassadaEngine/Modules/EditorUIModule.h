@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-
+class Script;
 class EngineEditorBase;
 struct InspectorField;
 class StateMachineEditor;
@@ -87,7 +87,7 @@ class EditorUIModule : public Module
     GizmoTransform& GetTransformType() { return transformType; }
     float3& GetSnapValues() { return snapValues; }
     GizmoDragState GetImGuizmoDragState() const { return guizmoDragState; };
-    SOBRASADA_API_ENGINE void DrawScriptInspector(const std::vector<InspectorField>& fields);
+    SOBRASADA_API_ENGINE void DrawScriptInspector(const std::vector<InspectorField>& fields, Script* script = nullptr);
     SOBRASADA_API_ENGINE  void DrawScriptInspector(std::function<void()> callback);
 
     StateMachineEditor* GetStateMachine() { return stateMachineEditor; }

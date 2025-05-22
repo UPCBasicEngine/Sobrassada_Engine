@@ -5,8 +5,8 @@
 #include "Math/float2.h"
 #include "SDL_scancode.h"
 #include <SDL_gamecontroller.h>
-#define MAX_CONTROLLERS  4       // Controllers connected
-#define GAMEPAD_DEADZONE 8000.0f // Deadzone threshold to avoid detecting unintentional stick movement
+#define MAX_CONTROLLERS  4        // Controllers connected
+#define GAMEPAD_DEADZONE 10000.0f // Deadzone threshold to avoid detecting unintentional stick movement
 #include <functional>
 #include <vector>
 
@@ -41,14 +41,18 @@ class InputModule : public Module
     const float2& GetMousePosition() const { return mouse; };
     int GetMouseWheel() const { return mouseWheel; }
 
-    float2 GetLeftStick() const { return controllerLeftStick; }
-    float2 GetRightStick() const { return controllerRightStick; }
+    const float2& GetLeftStick() const { return controllerLeftStick; }
+    const float2& GetRightStick() const { return controllerRightStick; }
     SDL_GameController* GetActiveController() const { return controllers[0]; }
     const KeyState* GetControllerButtons() const { return controllerButtons; }
     const std::pair<KeyState, float>& GetLeftTrigger() const { return leftTrigger; }
     const std::pair<KeyState, float>& GetRightTrigger() const { return rightTrigger; }
 
     bool IsUsingKeyboard() const { return isUsingKeyboard; }
+
+  private:
+    void OnControllerConnected();
+    void OnControllerDisconnected();
 
   private:
     KeyState* keyboard = NULL;

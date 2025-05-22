@@ -6,6 +6,7 @@
     "importOptions": {
         "shader": "1932647236901744476",
         "useOcclusion": false,
-		"defaultTextureUID": 1290233345777347
+	"defaultTextureUID": 1290233345777347,
+	"isTransparent": false
     }
 }

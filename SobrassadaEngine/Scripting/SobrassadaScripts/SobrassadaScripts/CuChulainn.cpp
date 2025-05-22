@@ -43,11 +43,21 @@ bool CuChulainn::Init()
     if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
 
-    const GameObject* cameraObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
-    if (cameraObj && cameraObj->GetComponent<ScriptComponent*>())
+    cameraObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
+    if (cameraObject && cameraObject->GetComponent<ScriptComponent*>())
     {
-        camera = cameraObj->GetComponent<ScriptComponent*>()->GetScriptByType<CameraMovement>();
+        camera = cameraObject->GetComponent<ScriptComponent*>()->GetScriptByType<CameraMovement>();
         if (!camera) GLOG("[WARNING] No camera found by the name %s", cameraName.c_str());
+
+        // Important: This is in the Init() to avoid normalizing each frame. If the camera changes its angle at some
+        // point while you can control the character, this will have to be updated as well
+        camFront   = cameraObject->GetGlobalTransform().WorldZ();
+        camRight   = cameraObject->GetGlobalTransform().WorldX();
+
+        camFront.y = 0;
+        camRight.y = 0;
+        camFront.Normalize();
+        camRight.Normalize();
     }
 
     const GameObject* spearObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearName);
@@ -70,6 +80,7 @@ void CuChulainn::Update(float deltaTime)
     GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
+    CheckIsFalling();
 }
 
 void CuChulainn::OnDeath()
@@ -119,6 +130,30 @@ void CuChulainn::GetInputs()
     const KeyState* keyboard   = input->GetKeyboard();
     const KeyState* mouse      = input->GetMouseButtons();
     const KeyState* controller = input->GetControllerButtons();
+    const float2& leftJoystick = input->GetLeftStick();
+
+    float3 direction           = float3::zero;
+    if (input->IsUsingKeyboard())
+    {
+
+        if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
+        if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
+        if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
+        if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
+    }
+    else
+    {
+        direction.x = leftJoystick.x;
+        direction.z = leftJoystick.y;
+
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
+    }
+
+    direction = camFront * direction.z + camRight * direction.x;
+    character->SetDirection(direction);
 
     if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
@@ -144,7 +179,7 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_F5])
     {
-        Respawn();
+        SetPosition(spawnPos);
     }
     if (keyboard[SDL_SCANCODE_F6])
     {
@@ -216,9 +251,20 @@ void CuChulainn::LookAtMouse()
 
 void CuChulainn::LookAtJoystick()
 {
-    const float2 stick = AppEngine->GetInputModule()->GetRightStick();
-    float3 direction   = float3(stick.x, 0, stick.y);
+    const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
+    const float3 direction = camFront * stick.y + camRight * stick.x;
     if (direction.LengthSq() > 0.001f) character->LookAt(direction);
+}
+
+void CuChulainn::CheckIsFalling()
+{
+    const float maxDepth = -50.0f;
+
+    if (parent->GetGlobalTransform().TranslatePart().y < maxDepth)
+    {
+        SetPosition(lastDashStartPos);
+        TakeDamage(1);
+    }
 }
 
 void CuChulainn::ThrowSpear()
@@ -246,7 +292,8 @@ void CuChulainn::Dash()
     GLOG("DASH");
 
     // TODO: Dash
-    dashTimer = dashCooldown;
+    dashTimer        = dashCooldown;
+    lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     character->StartDash();
     if (animComponent) animComponent->UseTrigger("dash");
 }
@@ -320,8 +367,8 @@ void CuChulainn::Move()
     }
 }
 
-void CuChulainn::Respawn()
+void CuChulainn::SetPosition(const float3& position)
 {
-    parent->SetLocalPosition(spawnPos);
-    if (camera) camera->SetPosition(spawnPos);
+    parent->SetLocalPosition(position);
+    if (camera) camera->SetPosition(position);
 }
