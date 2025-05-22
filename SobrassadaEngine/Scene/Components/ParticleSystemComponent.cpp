@@ -71,7 +71,7 @@ void ParticleSystemComponent::Clone(const Component* other)
 void ParticleSystemComponent::Update(float deltaTime)
 {
     for (auto& emitter : emitters)
-        emitter.second->Update(deltaTime);
+        emitter.second->Update(deltaTime, nullptr);
 }
 
 void ParticleSystemComponent::Render(float deltaTime)

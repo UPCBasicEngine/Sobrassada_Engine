@@ -37,7 +37,7 @@ void VelocityAddon::Init()
     }
 }
 
-void VelocityAddon::Update(float deltaTime)
+void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     if (!IsEnabled()) return;
 

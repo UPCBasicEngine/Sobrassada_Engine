@@ -20,6 +20,7 @@ class VelocityAddon;
 class ResourceTexture;
 class ResourceMaterial;
 class ParticleSystemComponent;
+class EmitterInstance;
 
 class ParticleEmitter
 {
@@ -30,7 +31,7 @@ class ParticleEmitter
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
-    void Update(float deltaTime);
+    void Update(float deltaTime, EmitterInstance* emitterInstance);
     void Spawn();
     
     // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE

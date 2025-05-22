@@ -12,7 +12,7 @@ class BaseAddon : public ParticleAddon
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
 
     void Init();
-    void Update(float deltaTime) override;
+    void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
 
   private:

@@ -6,13 +6,13 @@ EmitterInstance::~EmitterInstance()
 {
 }
 
-
 void EmitterInstance::Update(float deltaTime)
 {
-    emitter->Update()
+    // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
+    emitter->Update(deltaTime, this);
 }
 
 void EmitterInstance::RenderEditor()
 {
-
+    emitter->RenderEditor();
 }

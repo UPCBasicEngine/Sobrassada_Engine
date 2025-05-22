@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "BaseAddon.h"
 #include "EditorUIModule.h"
+#include "EmitterInstance.h"
 #include "LibraryModule.h"
 #include "OpenGLModule.h"
 #include "ParticleSystemComponent.h"
@@ -12,9 +13,9 @@
 #include "ShaderModule.h"
 #include "VelocityAddon.h"
 
+#include "Math/float2.h"
 #include "glew.h"
 #include "imgui.h"
-#include "Math/float2.h"
 #include <chrono>
 
 // ---------- SECTION FOR TUPLE ITERATION ----------
@@ -140,14 +141,15 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
     targetState.AddMember("Addons", addonsJSON, allocator);
 }
 
-void ParticleEmitter::Update(float deltaTime)
+void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
-        // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
+    // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
 
     if (!isEmitting) return;
 
     std::apply(
-        [deltaTime](auto&... pointer) { ((pointer ? pointer->Update(deltaTime) : Nothing()), ...); }, addonTuple
+        [deltaTime, emitterInstance](auto&... pointer) { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); },
+        addonTuple
     );
 
     UpdateParticlesVBO();

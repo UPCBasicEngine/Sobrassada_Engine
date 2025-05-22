@@ -55,7 +55,7 @@ void BaseAddon::Init()
     emitterOwner->isEmitting = true;
 }
 
-void BaseAddon::Update(float deltaTime)
+void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     if (emitterOwner->isEmitting)
     {
