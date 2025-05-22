@@ -35,6 +35,7 @@ class GeometryBatch
     const bool GetHasBones() const { return hasBones; }
     const bool IsNavmeshValid() const { return isNavmeshValid; }
     const bool IsTransparent() const { return isTransparent; }
+    const bool IsAlpha() const { return isAlpha; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
@@ -85,4 +86,5 @@ class GeometryBatch
     bool hasBones                 = false;
     bool isNavmeshValid           = false;
     bool isTransparent            = false;
+    bool isAlpha                  = false;
 };

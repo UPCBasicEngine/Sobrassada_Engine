@@ -29,6 +29,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isMetallic = component->GetResourceMaterial()->GetIsMetallicRoughness();
     hasBones   = component->GetHasBones();
     isNavmeshValid = component->GetParent()->IsNavMeshValid();
+    isAlpha        = component->GetRenderMode() == 2;
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);

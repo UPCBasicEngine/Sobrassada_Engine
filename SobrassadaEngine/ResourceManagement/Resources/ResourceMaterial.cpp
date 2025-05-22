@@ -22,6 +22,10 @@ ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapid
     if (importOptions.HasMember("isTransparent") && importOptions["isTransparent"].IsBool())
         isTransparent = importOptions["isTransparent"].GetBool();
     else isTransparent = false;
+
+    if (importOptions.HasMember("isDoubleSided") && importOptions["isDoubleSided"].IsBool())
+        doubleSided = importOptions["isDoubleSided"].GetBool();
+    else doubleSided = false;
 }
 
 ResourceMaterial::~ResourceMaterial()
@@ -216,6 +220,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
     material.roughnessFactor     = mat.GetRoughnessFactor();
     material.shininessInAlpha    = false;
     isTransparent                = mat.IsTransparent();
+    doubleSided                  = mat.IsDoubleSided();
 
     ResourceTexture* diffTexture = TextureImporter::LoadTexture(mat.GetDiffuseTexture());
     if (diffTexture != nullptr)

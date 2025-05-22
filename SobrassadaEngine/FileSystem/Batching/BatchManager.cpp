@@ -117,6 +117,9 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         if (isWireframe) glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
         else glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
 
+        if (it->IsAlpha()) glUniform1i(glGetUniformLocation(program, "isAlpha"), 1);
+        else glUniform1i(glGetUniformLocation(program, "isAlpha"), 0);
+
         it->ResetUpdatedOnce();
         it->Render(batchMeshes);
 
@@ -252,7 +255,7 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
         {
             if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
                 it->GetHasBones() == component->GetHasBones() &&
-                it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid())
+                it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid() && it->IsAlpha() == (component->GetRenderMode() == 2))
             {
                 return it;
             }

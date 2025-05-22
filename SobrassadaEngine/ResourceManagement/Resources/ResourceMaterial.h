@@ -51,6 +51,7 @@ class ResourceMaterial : public Resource
     const bool GetIsMetallicRoughness() const { return metallicTexture.textureID != 0 ? true : false; }
     const MaterialGPU GetMaterial() const { return material; }
     const bool IsTransparent() const { return isTransparent; }
+    const bool IsDoubleSided() const { return doubleSided; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
 
@@ -62,5 +63,6 @@ class ResourceMaterial : public Resource
 
     MaterialGPU material;
     bool isTransparent    = false;
+    bool doubleSided      = false;
     UID defaultTextureUID = INVALID_UID;
 };

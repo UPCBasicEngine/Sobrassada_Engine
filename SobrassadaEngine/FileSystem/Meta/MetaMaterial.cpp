@@ -1,8 +1,8 @@
 #include "MetaMaterial.h"
 
-MetaMaterial::MetaMaterial(UID uid, const std::string& assetPath, const std::string& shader, bool useOcclusion, UID defaultTextureUID, bool isTransparent)
+MetaMaterial::MetaMaterial(UID uid, const std::string& assetPath, const std::string& shader, bool useOcclusion, UID defaultTextureUID, bool isTransparent, bool isDoubleSided)
     : MetaFile(uid, assetPath), shader(shader), useOcclusion(useOcclusion), defaultTextureUID(defaultTextureUID),
-      isTransparent(isTransparent)
+      isTransparent(isTransparent), isDoubleSided(isDoubleSided)
 {
 }
 
@@ -13,5 +13,6 @@ void MetaMaterial::AddImportOptions(rapidjson::Document& doc, rapidjson::Documen
     importOptions.AddMember("useOcclusion", useOcclusion, allocator);
     importOptions.AddMember("defaultTextureUID", defaultTextureUID, allocator);
     importOptions.AddMember("isTransparent", isTransparent, allocator);
+    importOptions.AddMember("isDoubleSided", isDoubleSided, allocator);
     doc.AddMember("importOptions", importOptions, allocator);
 }
