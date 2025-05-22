@@ -27,7 +27,7 @@ void VelocityAddon::Save(rapidjson::Value& targetState, rapidjson::Document::All
     targetState.AddMember("StartSpeed", startSpeed, allocator);
 }
 
-void VelocityAddon::Init()
+void VelocityAddon::Init(EmitterInstance* emitterInstance)
 {
     // ADD INITIAL Y VELOCITY TO PARTICLES
 

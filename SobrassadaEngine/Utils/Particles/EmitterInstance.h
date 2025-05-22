@@ -17,10 +17,10 @@ class EmitterInstance
     void Update(float deltaTime);
     void RenderEditor();
 
-  private:
     unsigned int aliveParticles = 0;
     std::vector<Particle> particles;
 
+  private:
     ParticleEmitter* emitter       = nullptr;
     ParticleSystemComponent* owner = nullptr;
 };

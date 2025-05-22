@@ -38,7 +38,7 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     targetState.AddMember("MaxLifetime", maxLifetime, allocator);
 }
 
-void BaseAddon::Init()
+void BaseAddon::Init(EmitterInstance* emitterInstance)
 {
     emitterOwner->particles.clear();
     emitterOwner->particles.reserve(maxParticles);

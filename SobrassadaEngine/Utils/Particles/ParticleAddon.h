@@ -16,7 +16,7 @@ class ParticleAddon
 
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
-    virtual void Init() {};
+    virtual void Init(EmitterInstance* emitterInstance) {};
     virtual void Update(float deltaTime, EmitterInstance* emitterInstance) = 0;
     virtual void RenderEditorInspector() = 0;
 

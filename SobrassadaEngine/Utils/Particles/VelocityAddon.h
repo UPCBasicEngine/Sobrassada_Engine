@@ -11,7 +11,7 @@ class VelocityAddon : public ParticleAddon
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
 
-    void Init();
+    void Init(EmitterInstance* emitterInstance);
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
 
