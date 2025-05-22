@@ -145,11 +145,10 @@ void Archer::Attack(float deltaTime)
     {
 
         // Enable hitbox when animation hits
-        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+        if (attackTimer >= attackHitboxDelay &&
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
-            weaponCollider->SetEnabled(true);
-            float3 direction = character->GetLastPosition() - parent->GetPosition();
+            float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
             direction.Normalize();
 
             GLOG(
@@ -157,10 +156,6 @@ void Archer::Attack(float deltaTime)
                 parent->GetPosition().y, parent->GetPosition().z
             )
             arrow->Shoot(parent->GetPosition(), direction);
-        }
-        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
-        {
-            weaponCollider->SetEnabled(false);
         }
 
         // Reset attack state
