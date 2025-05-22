@@ -4,6 +4,7 @@
 #include "EditorUIModule.h"
 #include "GameObject.h"
 #include "LibraryModule.h"
+#include "Modules/ResourcesModule.h"
 #include "ResourceMaterial.h"
 #include "ResourceTexture.h"
 
@@ -18,8 +19,6 @@ DecalComponent::DecalComponent(const rapidjson::Value& initialState, GameObject*
     : Component(initialState, parent)
 {
     if (initialState.HasMember("Material")) currentMaterialUID = initialState["Material"].GetUint64();
-    if (initialState.HasMember("Texture")) currentTextureUID = initialState["Texture"].GetUint64();
-    if (initialState.HasMember("UseTexture")) useTexture = initialState["UseTexture"].GetBool();
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
 
@@ -38,13 +37,8 @@ void DecalComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
         "Material", currentMaterial != nullptr ? currentMaterial->GetUID() : DEFAULT_MATERIAL_UID, allocator
     );
 
-    targetState.AddMember(
-        "Texture", currentTexture != nullptr ? currentTexture->GetUID() : FALLBACK_TEXTURE_UID, allocator
-    );
-
     targetState.AddMember("Height", height, allocator);
     targetState.AddMember("Width", width, allocator);
-    targetState.AddMember("UseTexture", useTexture, allocator);
 }
 
 void DecalComponent::Clone(const Component* other)
@@ -57,7 +51,6 @@ void DecalComponent::Clone(const Component* other)
 
         width                            = otherDecal->width;
         height                           = otherDecal->height;
-        useTexture                       = otherDecal->useTexture;
     }
 }
 
@@ -84,58 +77,39 @@ void DecalComponent::RenderEditorInspector()
     if (ImGui::InputFloat("Width", &width)) RecalculateAABB();
     if (ImGui::InputFloat("Height", &height)) RecalculateAABB();
 
-    if (ImGui::BeginCombo("Resource type", DecalResourceTypeStrings[useTexture ? 1 : 0]))
+    if (ImGui::Button("Select material"))
     {
-        for (int i = 0; i < DecalResourceTypeStringsSize; ++i)
-        {
-            if (ImGui::Selectable(DecalResourceTypeStrings[i])) useTexture = i;
-        }
-        ImGui::EndCombo();
+        ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
     }
 
-    if (!useTexture)
+    if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
     {
-        if (ImGui::Button("Select material"))
-        {
-            ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
-        }
+        const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
+        );
 
-        if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
-        {
-            const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-                CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
-            );
-        }
-
-        if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
+        if (chosenMatUID != INVALID_UID) AddMaterial(chosenMatUID);
     }
-    else
+
+    if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
+}
+
+void DecalComponent::AddMaterial(UID resource)
+{
+    if (resource == INVALID_UID || App->GetResourcesModule()->RequestResource(resource) == nullptr)
     {
-        if (ImGui::Button("Select texture"))
-        {
-            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
-        }
-
-        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
-        {
-
-            const UID chosenTexUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-                CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
-            );
-        }
-
-        if (currentTexture != nullptr)
-        {
-            ImGui::Text("Diffuse Texture");
-            ImGui::Image((ImTextureID)(intptr_t)currentTexture->GetTextureID(), ImVec2(256, 256));
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip(
-                    "Texture Dimensions: %d, %d", currentTexture->GetTextureWidth(), currentTexture->GetTextureWidth()
-                );
-            }
-        }
+        resource = DEFAULT_MATERIAL_UID;
     }
+
+    if (currentMaterial != nullptr && currentMaterial->GetUID() == resource) return;
+
+    ResourceMaterial* newMaterial =
+        dynamic_cast<ResourceMaterial*>(App->GetResourcesModule()->RequestResource(resource));
+
+    if (!newMaterial) return;
+    currentMaterial     = newMaterial;
+    currentResourceName = currentMaterial->GetName();
+    currentMaterialUID  = currentMaterial->GetUID();
 }
 
 void DecalComponent::ParentUpdated()

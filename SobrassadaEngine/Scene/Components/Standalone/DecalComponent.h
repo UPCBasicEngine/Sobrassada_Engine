@@ -2,9 +2,6 @@
 
 #include "Component.h"
 
-constexpr const char* DecalResourceTypeStrings[] = {"Material", "Texture"};
-constexpr int DecalResourceTypeStringsSize       = sizeof(DecalResourceTypeStrings) / sizeof(char*);
-
 class ResourceMaterial;
 class ResourceTexture;
 
@@ -22,20 +19,18 @@ class DecalComponent : public Component
     void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
+    void AddMaterial(UID resource);
     void ParentUpdated() override;
 
   private:
     void RecalculateAABB();
 
   private:
-    float width                         = 1;
-    float height                        = 1;
-    bool useTexture                   = false;
+    float width                       = 1;
+    float height                      = 1;
+
     std::string currentResourceName   = "No material";
 
     UID currentMaterialUID            = DEFAULT_MATERIAL_UID;
     ResourceMaterial* currentMaterial = nullptr;
-
-    UID currentTextureUID             = FALLBACK_TEXTURE_UID;
-    ResourceTexture* currentTexture   = nullptr;
 };
