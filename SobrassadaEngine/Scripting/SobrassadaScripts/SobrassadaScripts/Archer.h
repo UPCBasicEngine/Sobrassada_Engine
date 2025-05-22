@@ -34,11 +34,12 @@ class Archer : public Character
     void ChaseAI();
 
   private:
-    AIAgentComponent* agentAI  = nullptr;
-    ArcherStates currentState  = ArcherStates::NONE;
+    AIAgentComponent* agentAI = nullptr;
+    ArcherStates currentState = ArcherStates::NONE;
 
-    std::string arrowName      = "";
-    Projectile* arrow          = nullptr;
+    std::string arrowName     = "";
+    Projectile* arrow         = nullptr;
 
-    float3 patrolPoint         = float3::zero;
+    float3 patrolPoint        = float3::zero;
+    bool hasShot              = false;
 };

@@ -1,14 +1,14 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "Archer.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
-#include "ResourceStateMachine.h"
-#include "Archer.h"
 #include "Projectile.h"
+#include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -145,9 +145,9 @@ void Archer::Attack(float deltaTime)
     {
 
         // Enable hitbox when animation hits
-        if (attackTimer >= attackHitboxDelay &&
-            attackTimer <= attackHitboxDelay + attackHitboxDuration)
+        if (!hasShot && attackTimer >= attackHitboxDelay)
         {
+            hasShot          = true;
             float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
             direction.Normalize();
             arrow->Shoot(parent->GetPosition(), direction);
@@ -156,6 +156,7 @@ void Archer::Attack(float deltaTime)
         // Reset attack state
         if (attackTimer >= attackDuration)
         {
+            hasShot       = false;
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
