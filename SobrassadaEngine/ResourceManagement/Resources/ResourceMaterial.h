@@ -44,6 +44,7 @@ class ResourceMaterial : public Resource
 
     UID ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU);
     void ChangeFallBackTexture();
+    void SaveToMeta();
 
     void SetTransparent(const bool transparent) { isTransparent = transparent; }
 
