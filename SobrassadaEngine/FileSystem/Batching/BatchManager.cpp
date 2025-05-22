@@ -120,8 +120,12 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         if (it->IsAlpha()) glUniform1i(glGetUniformLocation(program, "isAlpha"), 1);
         else glUniform1i(glGetUniformLocation(program, "isAlpha"), 0);
 
+        if (it->IsDoubleSided()) glDisable(GL_CULL_FACE);
+
         it->ResetUpdatedOnce();
         it->Render(batchMeshes);
+
+        if (it->IsDoubleSided()) glEnable(GL_CULL_FACE);
 
         const auto end                             = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<float> elapsed = end - start;
