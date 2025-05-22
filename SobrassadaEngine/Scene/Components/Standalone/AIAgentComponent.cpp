@@ -73,8 +73,6 @@ void AIAgentComponent::Update(float deltaTime)
 
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
-    GLOG("Angular speed: %f", currentAngularSpeed);
-
     dtCrowd* crowd = App->GetPathfinderModule()->GetCrowd();
 
     if (!crowd) return;
@@ -107,7 +105,6 @@ void AIAgentComponent::Update(float deltaTime)
         }
     }
     else newPos = float3(ag->npos[0], ag->npos[1], ag->npos[2]);
-    GLOG("new pos: %f %f %f", newPos.x, newPos.y, newPos.z);
 
     // float4x4 transform = parent->GetLocalTransform();
     parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
