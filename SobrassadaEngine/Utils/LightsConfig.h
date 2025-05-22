@@ -40,6 +40,7 @@ namespace Lights
         float4 direction;
         float4 color;
 
+        DirectionalLightShaderData() = default;
         DirectionalLightShaderData(const float4& dir, const float4& color) : direction(dir), color(color) {}
     };
 

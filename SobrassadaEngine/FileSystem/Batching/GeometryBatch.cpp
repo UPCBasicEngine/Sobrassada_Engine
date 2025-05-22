@@ -25,8 +25,10 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     : totalVertexCount(0), totalIndexCount(0), currentBufferIndex(0)
 {
     mode       = component->GetResourceMesh()->GetMode();
+    isSpecular = component->GetResourceMaterial()->GetIsSpecular();
     isMetallic = component->GetResourceMaterial()->GetIsMetallicRoughness();
     hasBones   = component->GetHasBones();
+    isNavmeshValid = component->GetParent()->IsNavMeshValid();
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);
@@ -112,6 +114,7 @@ void GeometryBatch::LoadData()
             const std::vector<unsigned int>& indices = resource->GetIndices();
             totalVertices.insert(totalVertices.end(), vertices.begin(), vertices.end());
             totalIndices.insert(totalIndices.end(), indices.begin(), indices.end());
+
             uniqueMeshesMap[resource] = uniqueMeshesMap.size();
 
             AccMeshCount newMeshCount;

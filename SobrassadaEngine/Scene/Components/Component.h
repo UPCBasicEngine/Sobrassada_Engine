@@ -36,10 +36,12 @@ class SOBRASADA_API_ENGINE Component
     ComponentType GetType() const { return type; }
     const char* GetName() const { return name; }
     const bool GetEnabled() const { return enabled; }
+    const bool GetWasEnabled() const { return wasEnabled; }
 
     const float4x4& GetGlobalTransform() const;
     bool IsEffectivelyEnabled() const;
 
+    void SetWasEnabled(bool newEnabled) { wasEnabled = newEnabled; }
     void SetEnabled(bool newEnabled) { enabled = newEnabled; }
 
   protected:
@@ -47,7 +49,8 @@ class SOBRASADA_API_ENGINE Component
     GameObject* parent = nullptr;
 
     char name[64];
-    bool enabled;
+    bool enabled = true;
+    bool wasEnabled = true;
 
     AABB localComponentAABB;
 

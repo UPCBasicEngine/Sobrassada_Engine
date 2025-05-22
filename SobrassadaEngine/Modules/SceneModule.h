@@ -43,7 +43,7 @@ class SceneModule : public Module
     bool GetOnlyOnceInPlayMode() const { return onlyOncePlayMode; }
     void ResetOnlyOnceInPlayMode() { onlyOncePlayMode = false; }
 
-    void AddGameObjectToUpdate(GameObject* gameObject) { loadedScene->AddGameObjectToUpdate(gameObject); };
+    void AddGameObjectToUpdate(GameObject* gameObject);
 
   private:
     void HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard);

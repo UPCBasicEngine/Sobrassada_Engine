@@ -15,7 +15,7 @@
 
 #pragma warning(disable : 4251)
 
-extern SOBRASADA_API_ENGINE std::vector<char*>* Logs;
+extern std::vector<char*>* Logs;
 extern LCG* rng;
 
 SOBRASADA_API_ENGINE void glog(const char file[], int line, const char* format, ...);
@@ -137,6 +137,9 @@ constexpr const char* LIGHTS_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/
 constexpr const char* SKYBOX_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/Vertex/SkyboxVertex.glsl";
 constexpr const char* UIWIDGET_VERTEX_SHADER_PATH    = "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl";
 constexpr const char* QUAD_VERTEX_SHADER_PATH        = "./EngineDefaults/Shader/Vertex/QuadVertexShader.glsl";
+constexpr const char* BILLBOARD_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/BillboardVertex.glsl";
+
+
 constexpr const char* UNLIT_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UnlitFragmentShader.glsl";
 constexpr const char* SKYBOX_FRAGMENT_SHADER_PATH    = "./EngineDefaults/Shader/Fragment/SkyboxFragment.glsl";
 constexpr const char* SPECULAR_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/BRDFPhongFragmentShader.glsl";
@@ -154,6 +157,10 @@ constexpr const char* GBUFFER_METALLIC_FRAGMENT_SHADER_PATH =
 constexpr const char* GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH =
     "./EngineDefaults/Shader/Fragment/gBufferSpecularFragment.glsl";
 constexpr const char* LIGHTINGPASS_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/IBLLightingPass.glsl";
+constexpr const char* TRANSPARENT_FRAGMENT_SHADER_PATH   = "./EngineDefaults/Shader/Fragment/transparentShader.glsl";
+constexpr const char* QUAD_FRAGMENT_SHADER_PATH        = "./EngineDefaults/Shader/Fragment/QuadFragment.glsl";
+constexpr const char* DEPTH_FRAGMENT_SHADER_PATH        = "./EngineDefaults/Shader/Fragment/DepthFragment.glsl";
+constexpr const char* BILLBOARD_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/BillboardFragment.glsl";
 
 using UID                                                = uint64_t;
 

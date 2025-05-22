@@ -58,10 +58,6 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
     }
 }
 
-void OptionsMenuSwitcherScript::Inspector()
-{
-}
-
 void OptionsMenuSwitcherScript::ShowOnlyCurrentPanel()
 {
     for (int i = 0; i < panelNames.size(); ++i)

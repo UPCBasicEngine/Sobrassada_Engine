@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "Globals.h"
 #include "Delegate.h"
+#include "Globals.h"
 
 #include "Math/float4x4.h"
 #include "rapidjson/document.h"
@@ -34,7 +34,9 @@ enum ComponentType : int
     COMPONENT_BUTTON,
     COMPONENT_AUDIO_SOURCE,
     COMPONENT_AUDIO_LISTENER,
-    COMPONENT_SPLINE
+    COMPONENT_CANVAS_SCALER,
+    COMPONENT_BILLBOARD,
+	COMPONENT_SPLINE,
 };
 
 enum class ColliderType : uint8_t
@@ -43,7 +45,6 @@ enum class ColliderType : uint8_t
     DYNAMIC,
     KINEMATIC,
     TRIGGER
-
 };
 
 constexpr const char* ColliderTypeStrings[] = {"Static", "Dynamic", "Kinematic", "Trigger"};
@@ -78,8 +79,8 @@ class ComponentUtils
         CharacterControllerComponent*, Transform2DComponent*, CanvasComponent*,         \
         UILabelComponent*, CameraComponent*, ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*,       \
         CapsuleColliderComponent*, AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*,          \
-        AudioSourceComponent*, AudioListenerComponent*, SplineComponent*
+        AudioSourceComponent*, AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr

@@ -13,17 +13,19 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include "SDL.h"
+#include "Wwise_IDs.h"
 
 CharacterControllerComponent* character = nullptr;
 
 CuChulainn::CuChulainn(GameObject* parent)
-    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, patrolPoint)
+    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
 {
     currentHealth = 3; // mainChar starts low hp
-    type          = CharacterType::CuChulainn;
 
     // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
@@ -33,21 +35,29 @@ CuChulainn::CuChulainn(GameObject* parent)
 
 bool CuChulainn::Init()
 {
-    //GLOG("Initiating CuChulainn");
+    // GLOG("Initiating CuChulainn");
 
     Character::Init();
 
     character = parent->GetComponent<CharacterControllerComponent*>();
-    if (!character)
-        GLOG("CharacterController component not found for CuChulainn")
+    if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
-    
 
-    const GameObject* cameraObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
-    if (cameraObj && cameraObj->GetComponent<ScriptComponent*>())
+    cameraObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
+    if (cameraObject && cameraObject->GetComponent<ScriptComponent*>())
     {
-        camera = cameraObj->GetComponent<ScriptComponent*>()->GetScriptByType<CameraMovement>();
+        camera = cameraObject->GetComponent<ScriptComponent*>()->GetScriptByType<CameraMovement>();
         if (!camera) GLOG("[WARNING] No camera found by the name %s", cameraName.c_str());
+
+        // Important: This is in the Init() to avoid normalizing each frame. If the camera changes its angle at some
+        // point while you can control the character, this will have to be updated as well
+        camFront   = cameraObject->GetGlobalTransform().WorldZ();
+        camRight   = cameraObject->GetGlobalTransform().WorldX();
+
+        camFront.y = 0;
+        camRight.y = 0;
+        camFront.Normalize();
+        camRight.Normalize();
     }
 
     const GameObject* spearObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearName);
@@ -56,6 +66,9 @@ bool CuChulainn::Init()
         spear = spearObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
+
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
     return true;
 }
@@ -67,7 +80,7 @@ void CuChulainn::Update(float deltaTime)
     GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
-    UpdateTimers(deltaTime);
+    CheckIsFalling();
 }
 
 void CuChulainn::OnDeath()
@@ -87,12 +100,21 @@ void CuChulainn::OnHealed(int amount)
     // TODO: play particle system effects
 }
 
-void CuChulainn::HandleState(float time)
+void CuChulainn::HandleState(float deltaTime)
 {
     if (desiredDash && CanDash()) Dash();
-    else if (desiredAttack && CanAttack(time)) Attack(time);
+    else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim();
     else if (!isAttacking && !isDashing) Move();
+
+    if (state == CharacterStates::DASH)
+    {
+        if (dashTimer <= 0)
+        {
+            GLOG("STOP DASH SCRIPT");
+            character->EndDash();
+        }
+    }
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
@@ -104,30 +126,60 @@ void CuChulainn::HandleState(float time)
 
 void CuChulainn::GetInputs()
 {
-    const KeyState* keyboard = AppEngine->GetInputModule()->GetKeyboard();
-    const KeyState* mouse    = AppEngine->GetInputModule()->GetMouseButtons();
+    const InputModule* input   = AppEngine->GetInputModule();
+    const KeyState* keyboard   = input->GetKeyboard();
+    const KeyState* mouse      = input->GetMouseButtons();
+    const KeyState* controller = input->GetControllerButtons();
+    const float2& leftJoystick = input->GetLeftStick();
 
-    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN)
+    float3 direction           = float3::zero;
+    if (input->IsUsingKeyboard())
+    {
+
+        if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
+        if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
+        if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
+        if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
+    }
+    else
+    {
+        direction.x = leftJoystick.x;
+        direction.z = leftJoystick.y;
+
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
+        if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
+    }
+
+    direction = camFront * direction.z + camRight * direction.x;
+    character->SetDirection(direction);
+
+    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         desiredDash     = true;
         dashBufferTimer = dashBuffer;
     }
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN)
+    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
     {
         desiredAttack     = true;
         attackBufferTimer = attackBuffer;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || input->GetLeftTrigger().first == KEY_REPEAT)
     {
         desiredAim = true;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP)
+    if (input->GetLeftTrigger().first == KEY_UP)
+    {
+        if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
+    }
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || input->GetRightTrigger().first == KEY_DOWN)
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
     if (keyboard[SDL_SCANCODE_F5])
     {
-        Respawn();
+        SetPosition(spawnPos);
     }
     if (keyboard[SDL_SCANCODE_F6])
     {
@@ -141,9 +193,9 @@ bool CuChulainn::CanDash()
     return dashTimer <= 0;
 }
 
-bool CuChulainn::CanAttack(float time)
+bool CuChulainn::CanAttack()
 {
-    return (state != CharacterStates::DASH && !isAttacking && time - lastAttackTime >= attackCooldown);
+    return (state != CharacterStates::DASH && !isAttacking);
 }
 
 bool CuChulainn::CanAim() const
@@ -153,6 +205,8 @@ bool CuChulainn::CanAim() const
 
 void CuChulainn::UpdateTimers(float deltaTime)
 {
+    Character::UpdateTimers(deltaTime);
+
     // Dash timers
     dashTimer -= deltaTime;
     if (dashTimer < 0) dashTimer = 0;
@@ -195,10 +249,29 @@ void CuChulainn::LookAtMouse()
     character->LookAt(direction);
 }
 
+void CuChulainn::LookAtJoystick()
+{
+    const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
+    const float3 direction = camFront * stick.y + camRight * stick.x;
+    if (direction.LengthSq() > 0.001f) character->LookAt(direction);
+}
+
+void CuChulainn::CheckIsFalling()
+{
+    const float maxDepth = -50.0f;
+
+    if (parent->GetGlobalTransform().TranslatePart().y < maxDepth)
+    {
+        SetPosition(lastDashStartPos);
+        TakeDamage(1);
+    }
+}
+
 void CuChulainn::ThrowSpear()
 {
-    if (camera) camera->EnableMouseOffset(false);
-    //GLOG("THROW SPEAR");
+    if (camera) camera->EnableAimOffset(false);
+    if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
+    // GLOG("THROW SPEAR");
     throwTimer = throwCooldown;
     if (weapon)
     {
@@ -206,17 +279,22 @@ void CuChulainn::ThrowSpear()
         resetWeapon = true;
     }
 
+    const auto a = character->GetFrontDirection();
     spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
 }
 
 void CuChulainn::Dash()
 {
-    if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     desiredDash = false;
     state       = CharacterStates::DASH;
 
+    GLOG("DASH");
+
     // TODO: Dash
-    // character->Dash(direction)
+    dashTimer        = dashCooldown;
+    lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
+    character->StartDash();
     if (animComponent) animComponent->UseTrigger("dash");
 }
 
@@ -227,22 +305,33 @@ void CuChulainn::PerformAttack()
 
     if (!isAttacking) return;
 
+    if (attackTimer >= attackDuration) isAttacking = false;
+
     // TODO: When timer matches animation, enable weapon collider. Disable it afterwards
+    if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+        attackTimer < attackHitboxDelay + attackHitboxDuration)
+    {
+        weaponCollider->SetEnabled(true);
+    }
+    else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+    {
+        weaponCollider->SetEnabled(false);
+    }
 }
 
-void CuChulainn::Attack(float time)
+void CuChulainn::Attack(float deltaTime)
 {
     // TODO: play basicAttack sound
 
-    //GLOG("ATTACK");
+    // GLOG("ATTACK");
 
-    if (state == CharacterStates::AIM && camera) camera->EnableMouseOffset(false);
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
 
-    Character::Attack(time);
-    LookAtMouse();
+    Character::Attack(deltaTime);
+    if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     if (animComponent) animComponent->UseTrigger("attack");
 }
 
@@ -252,13 +341,14 @@ void CuChulainn::Aim()
 
     if (state != CharacterStates::AIM)
     {
-        if (camera) camera->EnableMouseOffset(true);
+        if (camera) camera->EnableAimOffset(true);
         state = CharacterStates::AIM;
         character->EnableMovement(false);
     }
     desiredAim = false;
 
-    LookAtMouse();
+    if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
+    else LookAtJoystick();
     if (animComponent) animComponent->UseTrigger("aim");
 }
 
@@ -277,8 +367,8 @@ void CuChulainn::Move()
     }
 }
 
-void CuChulainn::Respawn()
+void CuChulainn::SetPosition(const float3& position)
 {
-    parent->SetLocalPosition(spawnPos);
-    if (camera) camera->SetPosition(spawnPos);
+    parent->SetLocalPosition(position);
+    if (camera) camera->SetPosition(position);
 }

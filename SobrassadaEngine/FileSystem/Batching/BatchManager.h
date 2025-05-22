@@ -16,12 +16,14 @@ class BatchManager
     void RemoveBatch(GeometryBatch* batch);
 
     void LoadData();
-    void Render(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera);
+    void Render(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera, bool isWireframe);
+    void RenderTransparent(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera);
 
     GeometryBatch* RequestBatch(const MeshComponent* mesh);
 
     GeometryBatch* CreateNewBatch(const MeshComponent* mesh);
 
   private:
-    std::vector<GeometryBatch*> batches;
+    std::vector<GeometryBatch*> opaqueBatches;
+    std::vector<GeometryBatch*> transparentBatches;
 };

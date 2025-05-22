@@ -7,14 +7,13 @@
 class GameObject;
 class CharacterControllerComponent;
 class AnimationComponent;
-class CubeColliderComponent;
 class CapsuleColliderComponent;
 
-enum AIStates
+enum class PlayerDistances
 {
-    CLOSE = 0,
-    MEDIUM,
-    FAR_AWAY
+    Close,
+    Medium,
+    Far
 };
 
 enum class CharacterType
@@ -22,6 +21,8 @@ enum class CharacterType
     None,
     CuChulainn,
     Soldier,
+    Archer,
+    Banshee
 };
 
 class Character : public Script
@@ -29,7 +30,7 @@ class Character : public Script
   public:
     Character(
         GameObject* parent, int maxHealth, int damage, float attackDuration, float cooldown, float range,
-        float rangeAIAttack, float rangeAIChase, const float3& patrolPoint
+        float rangeAIAttack, float rangeAIChase, CharacterType type
     );
     virtual ~Character() noexcept override { parent = nullptr; };
 
@@ -41,9 +42,9 @@ class Character : public Script
 
   protected:
     virtual void Attack(float deltaTime);
+    virtual void UpdateTimers(float deltaTime);
     void Heal(int amount);
-    virtual bool CanAttack(float deltaTime);
-    AIStates CheckDistanceWithPlayer() const;
+    PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
 
   private:
@@ -56,32 +57,36 @@ class Character : public Script
     void Die();
 
   protected:
-    int maxHealth                               = 0;
-    int currentHealth                           = 0;
-    bool isInvulnerable                         = false;
-    bool isDead                                 = false;
-    int damage                                  = 0;
-    float attackDuration                        = 0.0f;
-    float speed                                 = 0.0f;
-    float attackCooldown                        = 0.0f;
-    float range                                 = 0.0f;
     AnimationComponent* animComponent           = nullptr;
     CapsuleColliderComponent* characterCollider = nullptr;
     std::string weaponName                      = "";
     GameObject* weapon                          = nullptr;
-    CubeColliderComponent* weaponCollider       = nullptr;
+    CapsuleColliderComponent* weaponCollider    = nullptr;
 
-    float lastAttackTime                        = -1.0f;
-    float lastTimeHit                           = -1.0f;
-    const float invulnerableDuration            = 0.7f;
+    int maxHealth                               = 0;
+    int currentHealth                           = 0;
+    bool isInvulnerable                         = false;
+    bool isDead                                 = false;
+    float speed                                 = 0.0f;
+
+    int attackDamage                            = 0;
+    float attackDuration                        = 0.0f;
+    float attackCooldown                        = 0.0f;
+    float attackCdTimer                         = 0.0f;
+    float range                                 = 0.0f;
+    float attackTimer                           = 0.0f;
     bool isAttacking                            = false;
+    float attackHitboxDelay                     = 0.0f;
+    float attackHitboxDuration                  = 0.0f;
+
+    float invulnerabilityTimer                  = -1.0f;
+    const float invulnerableDuration            = 0.7f;
 
     CharacterType type                          = CharacterType::None;
 
     // AI
     float rangeAIChase                          = 0.0f;
     float rangeAIAttack                         = 0.0f;
-    float3 patrolPoint                          = float3::zero;
     bool reachedPatrolPoint                     = false;
     float3 startPos                             = float3::zero;
 };

@@ -25,6 +25,8 @@ class Material
     const UID GetNormalTexture() const { return normalTexture; }
     const UID GetOcclusionTexture() const { return occlusionTexture; }
 
+    const bool IsTransparent() const { return isTransparent; }
+
     const UID GetMaterialUID() const { return materialUID; }
 
     // Setters (use move & pointers to avoid copies)
@@ -40,6 +42,8 @@ class Material
     void SetDiffuseTexture(UID texture) { diffuseTexture = texture; }
     void SetMetallicRoughnessTexture(UID texture) { metallicRoughnessTexture = texture; }
     void SetOcclusionTexture(UID texture) { occlusionTexture = texture; }
+
+    void SetTransparent(bool transparent) { isTransparent = transparent; }
 
     void SetMaterialUID(UID uid) { materialUID = uid; }
 
@@ -61,4 +65,6 @@ class Material
     float metallicFactor          = 0.0f;
     float roughnessFactor         = 1.0f;
     UID metallicRoughnessTexture  = INVALID_UID;
+
+    bool isTransparent            = false;
 };

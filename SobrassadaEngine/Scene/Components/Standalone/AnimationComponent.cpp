@@ -6,6 +6,7 @@
 #include "EditorUIModule.h"
 #include "FileSystem.h"
 #include "GameObject.h"
+#include "HashString.h"
 #include "LibraryModule.h"
 #include "ProjectModule.h"
 #include "Resource.h"
@@ -15,7 +16,6 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
-#include "HashString.h"
 
 #include "Math/Quat.h"
 #include "imgui.h"
@@ -133,8 +133,19 @@ void AnimationComponent::OnResume()
     }
 }
 
-void AnimationComponent::OnInspector()
+void AnimationComponent::Render(float deltaTime)
 {
+    if (!IsEffectivelyEnabled()) return;
+}
+
+void AnimationComponent::RenderDebug(float deltaTime)
+{
+}
+
+void AnimationComponent::RenderEditorInspector()
+{
+    Component::RenderEditorInspector();
+
     std::string originAnimation = "";
     if (resource != 0)
     {
@@ -290,7 +301,7 @@ void AnimationComponent::OnInspector()
 
     const std::unordered_map<HashString, UID>& stateMap = App->GetLibraryModule()->GetStateMachineMap();
 
-    std::string currentName                              = "None";
+    std::string currentName                             = "None";
     if (resourceStateMachine) currentName = resourceStateMachine->GetName();
 
     if (ImGui::BeginCombo("##StateMachineCombo", currentName.c_str()))
@@ -345,30 +356,13 @@ void AnimationComponent::OnInspector()
     }
 }
 
-void AnimationComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
-void AnimationComponent::RenderDebug(float deltaTime)
-{
-}
-
-void AnimationComponent::RenderEditorInspector()
-{
-    Component::RenderEditorInspector();
-    if (enabled)
-    {
-        OnInspector();
-    }
-}
-
 void AnimationComponent::Clone(const Component* other)
 {
     if (other->GetType() == ComponentType::COMPONENT_ANIMATION)
     {
         const AnimationComponent* otherAnimation = static_cast<const AnimationComponent*>(other);
         enabled                                  = otherAnimation->enabled;
+        wasEnabled                               = otherAnimation->wasEnabled;
 
         resource                                 = otherAnimation->resource;
         AddAnimation(resource);

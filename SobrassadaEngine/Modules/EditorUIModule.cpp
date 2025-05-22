@@ -36,6 +36,7 @@
 #include "imgui_internal.h"
 // imguizmo include after imgui
 #include "ImGuizmo.h"
+#include <algorithm>
 #include <cstring>
 #include <filesystem>
 #include <string>
@@ -62,7 +63,9 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("UI Button"),            COMPONENT_BUTTON              },
         {HashString("Audio Source"),         COMPONENT_AUDIO_SOURCE        },
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
-        {HashString("Spline"),               COMPONENT_SPLINE              },
+        {HashString("UI CanvasScaler"),      COMPONENT_CANVAS_SCALER       },
+        {HashString("Billboard"),            COMPONENT_BILLBOARD           },
+		{HashString("Spline"),               COMPONENT_SPLINE              },
     };
 
     fullscreen    = FULLSCREEN;
@@ -886,7 +889,7 @@ std::string EditorUIModule::RenderFileDialog(bool& window, const char* windowTit
     return importPath;
 }
 
-void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fields)
+void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fields, Script* script)
 {
 
     for (auto& field : fields)
@@ -897,7 +900,10 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             ImGui::Text(static_cast<const char*>(field.data));
             break;
         case InspectorField::FieldType::Float:
-            ImGui::SliderFloat(field.name, (float*)field.data, field.minValue, field.maxValue);
+            ImGui::DragFloat(
+                field.name, (float*)field.data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         case InspectorField::FieldType::Bool:
             ImGui::Checkbox(field.name, (bool*)field.data);
@@ -908,19 +914,25 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         case InspectorField::FieldType::Vec2:
         {
             float* vec2Data = reinterpret_cast<float*>(field.data);
-            ImGui::SliderFloat2(field.name, vec2Data, field.minValue, field.maxValue);
+            ImGui::DragFloat2(
+                field.name, vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         }
         case InspectorField::FieldType::Vec3:
         {
             float* vec3Data = reinterpret_cast<float*>(field.data);
-            ImGui::SliderFloat3(field.name, vec3Data, field.minValue, field.maxValue);
+            ImGui::DragFloat3(
+                field.name, vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         }
         case InspectorField::FieldType::Vec4:
         {
             float* vec4Data = reinterpret_cast<float*>(field.data);
-            ImGui::SliderFloat4(field.name, vec4Data, field.minValue, field.maxValue);
+            ImGui::DragFloat4(
+                field.name, vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+            );
             break;
         }
         case InspectorField::FieldType::Color:
@@ -977,6 +989,15 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
 
             break;
         }
+        case InspectorField::FieldType::Button:
+        {
+            if (field.callback && ImGui::Button(field.name))
+            {
+                field.callback(script);
+            }
+            break;
+        }
+
         }
     }
 }
@@ -1167,6 +1188,13 @@ void EditorUIModule::RenderBasicTransformModifiers(
     ImGui::Checkbox("Lock axis", &lockScaleAxis);
 }
 
+std::string EditorUIModule::ToLower(const std::string& str)
+{
+    std::string lowered = str;
+    std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) { return std::tolower(c); });
+    return lowered;
+}
+
 template <typename T>
 T EditorUIModule::RenderResourceSelectDialog(
     const char* id, const std::unordered_map<HashString, T>& availableResources, const T& defaultResource
@@ -1177,20 +1205,21 @@ T EditorUIModule::RenderResourceSelectDialog(
     {
         ImGui::InputText("Search", searchTextResource, IM_ARRAYSIZE(searchTextResource));
 
+        const std::string searchLower = ToLower(searchTextResource);
+
         ImGui::Separator();
         if (ImGui::BeginListBox("##ComponentList", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
         {
             for (const auto& valuePair : availableResources)
             {
+                const std::string keyLower = ToLower(valuePair.first.GetString());
+                if (keyLower.find(searchLower) != std::string::npos)
                 {
-                    if (valuePair.first.GetString().find(searchTextResource) != std::string::npos)
+                    if (ImGui::Selectable(valuePair.first.c_str(), false))
                     {
-                        if (ImGui::Selectable(valuePair.first.c_str(), false))
-                        {
-                            result = valuePair.second;
-                            memset(searchTextResource, 0, sizeof searchTextResource);
-                            ImGui::CloseCurrentPopup();
-                        }
+                        result = valuePair.second;
+                        memset(searchTextResource, 0, sizeof searchTextResource);
+                        ImGui::CloseCurrentPopup();
                     }
                 }
             }

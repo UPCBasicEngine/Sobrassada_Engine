@@ -33,6 +33,8 @@ class ImageComponent;
 class ButtonComponent;
 class AudioSourceComponent;
 class AudioListenerComponent;
+class CanvasScalerComponent;
+class BillboardComponent;
 class SplineComponent;
 
 enum MobilitySettings
@@ -70,6 +72,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
+    void UpdateEnabledStateRecursive();
     void RenderHierarchyNode(UID& selectedGameObjectUID);
     void HandleNodeClick(UID& selectedGameObjectUID);
     void RenderContextMenu();
@@ -185,6 +188,7 @@ class SOBRASADA_API_ENGINE GameObject
     bool selectParent                    = false;
     bool willUpdate                      = false;
     bool enabled                         = true;
+    bool wasEnabled                      = true;
     bool navMeshValid                    = false;
     bool openHierarchyNode               = false;
 
@@ -244,4 +248,16 @@ template <typename T> inline T GameObject::GetComponentParent(Application* app) 
     }
 
     return component;
+}
+
+template <typename Tuple, typename Func, std::size_t... I>
+void ForEachInTupleImpl(Tuple&& tuple, Func&& func, std::index_sequence<I...>)
+{
+    (..., func(std::get<I>(std::forward<Tuple>(tuple))));
+}
+
+template <typename Tuple, typename Func> void ForEachInTuple(Tuple&& tuple, Func&& func)
+{
+    constexpr auto size = std::tuple_size<std::decay_t<Tuple>>::value;
+    ForEachInTupleImpl(std::forward<Tuple>(tuple), std::forward<Func>(func), std::make_index_sequence<size> {});
 }

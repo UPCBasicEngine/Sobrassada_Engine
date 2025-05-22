@@ -36,6 +36,7 @@ void AudioListenerComponent::Clone(const Component* other)
     {
         const AudioListenerComponent* otherAudioListener = static_cast<const AudioListenerComponent*>(other);
         enabled                                          = otherAudioListener->enabled;
+        wasEnabled                                       = otherAudioListener->wasEnabled;
     }
     else
     {
@@ -47,13 +48,10 @@ void AudioListenerComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
+    if (!isActiveListener)
     {
-        if (!isActiveListener)
-        {
-            ImGui::Text("There is already an active Audio Listener in the scene.\n In order to use a new one, you must "
-                        "delete the existing one before!");
-            return;
-        }
+        ImGui::Text("There is already an active Audio Listener in the scene.\n In order to use a new one, you must "
+                    "delete the existing one before!");
+        return;
     }
 }

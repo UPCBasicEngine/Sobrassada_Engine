@@ -12,15 +12,12 @@
 
 namespace TextureImporter
 {
-    UID Import(const char* sourceFilePath, const std::string& targetFilePath, UID sourceUID)
+    UID Import(const char* sourceFilePath, const std::string& targetFilePath, UID sourceUID, bool overwriteMeta)
     {
         // Copy image to Assets folder
         const std::string relativePath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(sourceFilePath);
         std::string copyPath           = targetFilePath + relativePath;
-        if (!FileSystem::Exists(copyPath.c_str()))
-        {
-            FileSystem::Copy(sourceFilePath, copyPath.c_str());
-        }
+        FileSystem::Copy(sourceFilePath, copyPath.c_str());
 
         std::string textureStr = std::string(sourceFilePath);
         std::wstring wPath     = std::wstring(textureStr.begin(), textureStr.end());
@@ -66,22 +63,18 @@ namespace TextureImporter
             fileName += "_HDR";
         }
 
-        UID finalTextureUID;
-        if (sourceUID == INVALID_UID)
+        UID finalTextureUID = sourceUID;
+        if (sourceUID == INVALID_UID || overwriteMeta)
         {
-            UID textureUID  = GenerateUID();
-            textureUID = App->GetLibraryModule()->AssignFiletypeUID(textureUID, FileType::Texture);
-
-            UID prefix                 = textureUID / UID_PREFIX_DIVISOR;
-            const std::string savePath = App->GetProjectModule()->GetLoadedProjectPath() + METADATA_PATH +
-                                         std::to_string(prefix) + FILENAME_SEPARATOR + fileName + META_EXTENSION;
-            finalTextureUID = App->GetLibraryModule()->GetUIDFromMetaFile(savePath);
-            if (finalTextureUID == INVALID_UID) finalTextureUID = textureUID;
+            if (sourceUID == INVALID_UID)
+            {
+                finalTextureUID  = GenerateUID();
+                finalTextureUID = App->GetLibraryModule()->AssignFiletypeUID(finalTextureUID, FileType::Texture);
+            }
             
             MetaTexture meta(finalTextureUID, relativePath, (int)image.GetMetadata().mipLevels);
             meta.Save(fileName, relativePath);
         }
-        else finalTextureUID = sourceUID;
 
         std::string saveFilePath = targetFilePath + TEXTURES_PATH + std::to_string(finalTextureUID) + TEXTURE_EXTENSION;
         unsigned int bytesWritten =

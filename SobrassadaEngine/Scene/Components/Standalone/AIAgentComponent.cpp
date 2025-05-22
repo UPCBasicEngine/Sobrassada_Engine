@@ -4,6 +4,7 @@
 #include "EditorUIModule.h"
 #include "EngineTimer.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "PathfinderModule.h"
 #include "ResourceNavmesh.h"
 #include "SceneModule.h"
@@ -13,11 +14,15 @@
 
 AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid, parent, "AI Agent", COMPONENT_AIAGENT)
 {
-    speed           = 3.5f;
-    radius          = 0.6f;
-    height          = 2.0f;
-    maxAngularSpeed = 90 / RAD_DEGREE_CONV;
-    isRadians       = true;
+    defaultSpeed        = 3.5f;
+    currentSpeed        = defaultSpeed;
+    defaultAcceleration = 8.0f;
+    currentAcceleration = defaultAcceleration;
+    radius              = 0.6f;
+    height              = 2.0f;
+    maxAngularSpeed     = 360 / RAD_DEGREE_CONV;
+    currentAngularSpeed = maxAngularSpeed;
+    isRadians           = true;
 
     RecreateAgent();
 }
@@ -25,7 +30,8 @@ AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid,
 AIAgentComponent::AIAgentComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    if (initialState.HasMember("Speed")) speed = initialState["Speed"].GetFloat();
+    if (initialState.HasMember("Speed")) defaultSpeed = initialState["Speed"].GetFloat();
+    if (initialState.HasMember("Acceleration")) defaultAcceleration = initialState["Acceleration"].GetFloat();
     if (initialState.HasMember("Radius")) radius = initialState["Radius"].GetFloat();
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("MaxAngularSpeed"))
@@ -51,7 +57,20 @@ AIAgentComponent::~AIAgentComponent()
 // Updates agent position evey frame
 void AIAgentComponent::Update(float deltaTime)
 {
-    if (!IsEffectivelyEnabled()) return;
+    if (!IsEffectivelyEnabled())
+    {
+        if (agentId != -1)
+        {
+            App->GetPathfinderModule()->RemoveAgent(agentId);
+            agentId = -1;
+        }
+        return;
+    }
+    else
+    {
+        if (agentId == -1) RecreateAgent();
+    }
+
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
     dtCrowd* crowd = App->GetPathfinderModule()->GetCrowd();
@@ -105,51 +124,52 @@ void AIAgentComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
+    ImGui::SeparatorText("AIAgent Component");
+
+    if (ImGui::DragFloat("Speed", &defaultSpeed, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+    if (ImGui::DragFloat("Acceleration", &defaultAcceleration, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+    if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+    if (ImGui::DragFloat("Height", &height, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
+
+    float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
+    float minVal   = 0.0f;
+    float maxVal   = isRadians ? 360.0f / RAD_DEGREE_CONV : 360.0f;
+
+    ImGui::DragFloat(
+        "Max Angular Speed##maxAngSpeed", &maxAngularSpeed, dragStep, minVal, maxVal, "%.3f",
+        ImGuiSliderFlags_AlwaysClamp
+    );
+
+    if (maxAngularSpeed > maxVal) maxAngularSpeed = maxVal;
+
+    bool prevUseRad = isRadians;
+
+    ImGui::SameLine();
+    ImGui::Checkbox("Radians##maxAngCheck", &isRadians);
+
+    if (isRadians != prevUseRad)
     {
-        ImGui::SeparatorText("AIAgent Component");
-
-        if (ImGui::DragFloat("Speed", &speed, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
-        if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
-        if (ImGui::DragFloat("Height", &height, 0.1f, 0.1f, 200.f, "%.2f")) RecreateAgent();
-
-        float dragStep = isRadians ? 1.0f / RAD_DEGREE_CONV : 1.0f;
-        float minVal   = 0.0f;
-        float maxVal   = isRadians ? 360.0f / RAD_DEGREE_CONV : 360.0f;
-
-        ImGui::DragFloat(
-            "Max Angular Speed##maxAngSpeed", &maxAngularSpeed, dragStep, minVal, maxVal, "%.3f",
-            ImGuiSliderFlags_AlwaysClamp
-        );
-
-        if (maxAngularSpeed > maxVal) maxAngularSpeed = maxVal;
-
-        bool prevUseRad = isRadians;
-
-        ImGui::SameLine();
-        ImGui::Checkbox("Radians##maxAngCheck", &isRadians);
-
-        if (isRadians != prevUseRad)
+        if (isRadians)
         {
-            if (isRadians)
-            {
-                maxAngularSpeed /= RAD_DEGREE_CONV;
-            }
-            else
-            {
-                maxAngularSpeed *= RAD_DEGREE_CONV;
-            }
+            maxAngularSpeed /= RAD_DEGREE_CONV;
+        }
+        else
+        {
+            maxAngularSpeed *= RAD_DEGREE_CONV;
         }
     }
 }
 
 void AIAgentComponent::Clone(const Component* other)
 {
-
     if (other->GetType() == ComponentType::COMPONENT_AIAGENT)
     {
         const AIAgentComponent* otherAIAgent = static_cast<const AIAgentComponent*>(other);
-        speed                                = otherAIAgent->speed;
+        enabled                              = otherAIAgent->enabled;
+        wasEnabled                           = otherAIAgent->wasEnabled;
+
+        defaultSpeed                         = otherAIAgent->defaultSpeed;
+        defaultAcceleration                  = otherAIAgent->defaultAcceleration;
         radius                               = otherAIAgent->radius;
         height                               = otherAIAgent->height;
         agentId                              = -1;
@@ -168,7 +188,8 @@ void AIAgentComponent::Save(rapidjson::Value& targetState, rapidjson::Document::
 {
     Component::Save(targetState, allocator);
 
-    targetState.AddMember("Speed", speed, allocator);
+    targetState.AddMember("Speed", defaultSpeed, allocator);
+    targetState.AddMember("Acceleration", defaultAcceleration, allocator);
     targetState.AddMember("Radius", radius, allocator);
     targetState.AddMember("Height", height, allocator);
     targetState.AddMember("MaxAngularSpeed", maxAngularSpeed, allocator);
@@ -200,15 +221,22 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
     if (!move) return true;
 
     // Request move to destination
+
+    if (lookForward)
+    {
+        const float3 nextPos = parent->GetPosition() + (parent->GetPosition() - previousPos).Normalized();
+        LookAtMovement(nextPos, App->GetGameTimer()->GetDeltaTime() / 1000.0f);
+    }
     bool result = pathfinder->GetCrowd()->requestMoveTarget(agentId, targetRef, destination.ptr());
     if (!result)
     {
         GLOG("Crowd agent failed to request movement.");
         return false;
     }
+
+    previousPos = parent->GetPosition();
     return true;
 }
-
 
 void AIAgentComponent::PauseMovement()
 {
@@ -225,8 +253,8 @@ void AIAgentComponent::PauseMovement()
 
     ag->params.maxSpeed        = 0.0f;
     ag->params.maxAcceleration = 0.0f;
-    speed                      = 0.0f;
-    maxAngularSpeed            = 0.0f;
+    currentSpeed               = 0.0f;
+    currentAngularSpeed        = 0.0f;
 
     crowd->resetMoveTarget(agentId);
 
@@ -244,8 +272,8 @@ void AIAgentComponent::ResumeMovement()
 
     ag->params.maxSpeed        = restoredSpeed;
     ag->params.maxAcceleration = restoredAccel;
-    speed                      = restoredSpeed;
-    maxAngularSpeed            = restoreAngular;
+    currentSpeed               = restoredSpeed;
+    currentAngularSpeed        = restoreAngular;
 
     isPaused                   = false;
 }
@@ -258,7 +286,11 @@ void AIAgentComponent::AddToCrowd()
         return;
     }
 
-    agentId = App->GetPathfinderModule()->CreateAgent(parent->GetPosition(), radius, height, speed);
+    currentSpeed        = defaultSpeed;
+    currentAcceleration = defaultAcceleration;
+    agentId             = App->GetPathfinderModule()->CreateAgent(
+        parent->GetPosition(), radius, height, currentSpeed, currentAcceleration
+    );
 
     if (agentId != -1)
     {
@@ -280,8 +312,8 @@ void AIAgentComponent::RecreateAgent()
 void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 {
     const float3 selfPos = parent->GetGlobalTransform().TranslatePart();
-    float3 desired = targetPos - selfPos;
-    desired.y      = 0.0f;
+    float3 desired       = targetPos - selfPos;
+    desired.y            = 0.0f;
 
     if (desired.LengthSq() < 0.0001f) return;
     desired.Normalize();
@@ -292,7 +324,7 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 
     float angle   = atan2(forward.Cross(desired).y, forward.Dot(desired));
 
-    float maxStep = maxAngularSpeed * deltaTime;
+    float maxStep = currentAngularSpeed * deltaTime;
     angle         = std::clamp(angle, -maxStep, maxStep);
 
     if (fabs(angle) < 0.0001f) return;
@@ -304,4 +336,42 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 
     parent->SetLocalTransform(newlocal);
     parent->UpdateTransformForGOBranch();
+}
+
+void AIAgentComponent::SetSpeed(const float newSpeed, const float newAcceleration)
+{
+    dtCrowdAgent* agent           = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    currentSpeed                  = newSpeed;
+    currentAcceleration           = newAcceleration;
+    agent->params.maxSpeed        = newSpeed;
+    agent->params.maxAcceleration = newAcceleration;
+
+    App->GetPathfinderModule()->GetCrowd()->resetMoveTarget(agentId);
+
+    if (newSpeed == 0.0f)
+    {
+        frozenPosition = parent->GetGlobalTransform().TranslatePart();
+        isPaused       = true;
+    }
+}
+
+void AIAgentComponent::SetAngularSpeed(const float newAngular)
+{
+    currentAngularSpeed = newAngular;
+}
+
+void AIAgentComponent::ResetSpeed()
+{
+    dtCrowdAgent* agent           = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    currentSpeed                  = defaultSpeed;
+    currentAcceleration           = defaultAcceleration;
+    agent->params.maxSpeed        = defaultSpeed;
+    agent->params.maxAcceleration = defaultAcceleration;
+
+    isPaused                      = false;
+}
+
+void AIAgentComponent::ResetAngularSpeed()
+{
+    currentAngularSpeed = maxAngularSpeed;
 }

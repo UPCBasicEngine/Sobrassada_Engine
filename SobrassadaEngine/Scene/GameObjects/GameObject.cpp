@@ -13,6 +13,7 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
@@ -26,6 +27,8 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/UI/CanvasScalerComponent.h"
+#include "Standalone/BillboardComponent.h"
 #include "Standalone/SplineComponent.h"
 
 #include "imgui.h"
@@ -231,6 +234,8 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     scale            = refObject->scale;
     prefabUID        = refObject->prefabUID;
     navMeshValid     = refObject->navMeshValid;
+    enabled          = refObject->enabled;
+    wasEnabled       = refObject->wasEnabled;
 
     // Must make a copy of each manually
     for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
@@ -263,6 +268,7 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     mobilitySettings       = initialState["Mobility"].GetInt();
 
     if (initialState.HasMember("Enabled")) enabled = initialState["Enabled"].GetBool();
+    if (initialState.HasMember("WasEnabled")) wasEnabled = initialState["WasEnabled"].GetBool();
 
     if (initialState.HasMember("SelectParent")) selectParent = initialState["SelectParent"].GetBool();
 
@@ -375,6 +381,7 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Mobility", mobilitySettings, allocator);
     targetState.AddMember("SelectParent", selectParent, allocator);
     targetState.AddMember("Enabled", enabled, allocator);
+    targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
@@ -416,6 +423,20 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Children", valChildren, allocator);
 }
 
+void GameObject::UpdateEnabledStateRecursive()
+{
+    for (UID childUID : children)
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child)
+        {
+            child->UpdateEnabledStateRecursive();
+        }
+    }
+
+    enabled = wasEnabled;
+}
+
 void GameObject::RenderEditorInspector(bool drawGizmo)
 {
     if (!ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu))
@@ -427,7 +448,19 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
     ImGui::Text(name.c_str());
 
     ImGui::SameLine();
-    ImGui::Checkbox("Enabled", &enabled);
+
+    if (IsGloballyEnabled())
+    {
+        if (ImGui::Checkbox("Enabled", &enabled)) wasEnabled = enabled;
+    }
+    else
+    {
+        if (ImGui::Checkbox("Enabled", &enabled))
+        {
+            wasEnabled = enabled;
+            UpdateEnabledStateRecursive();
+        }
+    }
 
     if (uid != App->GetSceneModule()->GetScene()->GetGameObjectRootUID())
     {
@@ -435,7 +468,13 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
         if (ImGui::Checkbox("Draw nodes", &drawNodes)) OnDrawConnectionsToggle();
         ImGui::Checkbox("Select parent", &selectParent);
         ImGui::SameLine();
-        ImGui::Checkbox("Navmesh valid", &navMeshValid);
+        if (ImGui::Checkbox("Navmesh valid", &navMeshValid))
+        {
+            if (MeshComponent* meshComp = this->GetComponent<MeshComponent*>())
+            {
+                meshComp->BatchEditorMode();
+            }
+        }
 
         if (ImGui::Button("Add Component"))
         {
@@ -709,6 +748,7 @@ void GameObject::RenderHierarchyNode(UID& selectedGameObjectUUID)
             GameObject* childGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
             if (childGameObject && childUID != uid)
             {
+                if (!enabled) childGameObject->enabled = false;
                 childGameObject->RenderHierarchyNode(selectedGameObjectUUID);
             }
         }

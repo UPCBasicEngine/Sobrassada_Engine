@@ -128,6 +128,7 @@ void ButtonComponent::Clone(const Component* other)
     {
         const ButtonComponent* otherButton = static_cast<const ButtonComponent*>(other);
         enabled                            = otherButton->enabled;
+        wasEnabled                         = otherButton->wasEnabled;
         isInteractable                     = otherButton->isInteractable;
 
         defaultColor                       = otherButton->defaultColor;
@@ -143,6 +144,10 @@ void ButtonComponent::Clone(const Component* other)
 
 void ButtonComponent::RenderDebug(float deltaTime)
 {
+    if (!parentCanvas) return;
+
+    float3 highlightColor = float3(0.0f, 0.0f, 0.0f);
+    parentCanvas->RenderDebug(deltaTime, highlightColor);
 }
 
 void ButtonComponent::RenderEditorInspector()
@@ -162,8 +167,11 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
 {
     if (!isInteractable || !IsEffectivelyEnabled()) return false;
 
+    if (dismiss) GLOG("Dismissed");
+
     if (!dismiss && IsWithinBounds(mousePos))
     {
+        GLOG("Is within bounds");
         if (!isHovered)
         {
             // On mouse enter
@@ -186,7 +194,7 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
 
 void ButtonComponent::OnClick()
 {
-    //GLOG("Clicked button!");
+    // GLOG("Clicked button!");
     onClickDispatcher.Call();
     if (image) image->SetColor(clickedColor);
 }
@@ -206,6 +214,8 @@ bool ButtonComponent::IsWithinBounds(const float2& pos) const
     const float3 localRotated =
         parent->GetGlobalTransform().RotatePart().Inverted() * float3(localPos.x, localPos.y, 0.0f);
 
+    //GLOG("Converted mouse pos: %f %F", localRotated.x, localRotated.y);
+
     // Check if it is inside the button's AABB in local space
     return abs(localRotated.x) <= transform2D->size.x * 0.5f && abs(localRotated.y) <= transform2D->size.y * 0.5f;
 }
@@ -215,12 +225,10 @@ std::list<Delegate<void>>::iterator ButtonComponent::AddOnClickCallback(Delegate
     return onClickDispatcher.SubscribeCallback(std::move(newDelegate));
 }
 
-
 void ButtonComponent::RemoveOnClickCallback(std::list<Delegate<void>>::iterator delegate)
 {
     onClickDispatcher.SafeRemoveCallback(delegate);
 }
-
 
 void ButtonComponent::OnInteractionChange() const
 {

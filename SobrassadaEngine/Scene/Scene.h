@@ -39,7 +39,8 @@ class SOBRASADA_API_ENGINE Scene
 
     void LoadModel(const UID modelUID);
     void LoadPrefab(
-        const UID prefabUid, const ResourcePrefab* prefab = nullptr, const float4x4& transform = float4x4::identity
+        const UID prefabUid, const ResourcePrefab* prefab = nullptr, const float4x4& transform = float4x4::identity,
+        bool isEnabled = true, std::vector<bool> componentsEnabledStates = {}
     );
     void OverridePrefabs(UID prefabUID);
 
@@ -84,7 +85,7 @@ class SOBRASADA_API_ENGINE Scene
     GameObject* GetGameObjectByName(const std::string& name);
 
     LightsConfig* GetLightsConfig() const { return lightsConfig; }
-    CameraComponent* GetMainCamera() const { return mainCamera; }
+    CameraComponent* GetMainCamera() const;
 
     template <typename T> std::vector<T> GetEnabledComponentsOfType() const;
 
@@ -125,13 +126,18 @@ class SOBRASADA_API_ENGINE Scene
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
-    void CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, CameraComponent* camera) const;
+    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, CameraComponent* camera) const;
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
-    void LightingPassRender(
-        const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
+    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void TransparentPassRender(
+        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera,
         Framebuffer* framebuffer
     ) const;
+    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
+        const;
+    void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;

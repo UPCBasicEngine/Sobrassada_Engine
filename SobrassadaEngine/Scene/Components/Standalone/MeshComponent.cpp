@@ -34,6 +34,9 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
     {
         AddMesh(initialState["Mesh"].GetUint64(), false);
     }
+    if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
+    else renderMode = 0;
+
     if (initialState.HasMember("Bones"))
     {
         const rapidjson::Value& initBones = initialState["Bones"];
@@ -84,6 +87,7 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
         "Material", currentMaterial != nullptr && !bUsesMeshDefaultMaterial ? currentMaterial->GetUID() : INVALID_UID,
         allocator
     );
+    targetState.AddMember("RenderMode", renderMode, allocator);
 
     if (bones.size() > 0) // Store the skin of the mesh as the UID of each bone
     {
@@ -107,6 +111,7 @@ void MeshComponent::Clone(const Component* other)
     {
         const MeshComponent* otherMesh = static_cast<const MeshComponent*>(other);
         enabled                        = otherMesh->enabled;
+        wasEnabled                     = otherMesh->wasEnabled;
 
         UID otherMeshUID               = otherMesh->currentMesh ? otherMesh->currentMesh->GetUID() : INVALID_UID;
         UID otherMatUID = otherMesh->currentMaterial ? otherMesh->currentMaterial->GetUID() : INVALID_UID;
@@ -131,43 +136,53 @@ void MeshComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    if (enabled)
+    ImGui::SeparatorText("Mesh Component");
+
+    ImGui::Text(currentMeshName.c_str());
+    ImGui::SameLine();
+    if (ImGui::Button("Select mesh"))
     {
-        ImGui::SeparatorText("Mesh Component");
+        ImGui::OpenPopup(CONSTANT_MESH_SELECT_DIALOG_ID);
+    }
 
-        ImGui::Text(currentMeshName.c_str());
-        ImGui::SameLine();
-        if (ImGui::Button("Select mesh"))
+    if (ImGui::IsPopupOpen(CONSTANT_MESH_SELECT_DIALOG_ID))
+    {
+        AddMesh(App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_MESH_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMeshMap(), INVALID_UID
+        ));
+    }
+
+    ImGui::SeparatorText("Material");
+    ImGui::Text(currentMaterialName.c_str());
+    ImGui::SameLine();
+    if (ImGui::Button("Select material"))
+    {
+        ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
+    }
+
+    if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
+    {
+
+        const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
+        );
+
+        if (chosenMatUID != INVALID_UID) AddMaterial(chosenMatUID);
+    }
+
+    if (currentMaterial != nullptr)
+    {
+        const char* renderModes[] = {"Opaque", "Transparent", "Alpha"};
+        int currentRenderMode     = static_cast<int>(renderMode);
+
+        if (ImGui::Combo("Render Mode", &currentRenderMode, renderModes, IM_ARRAYSIZE(renderModes)))
         {
-            ImGui::OpenPopup(CONSTANT_MESH_SELECT_DIALOG_ID);
+            renderMode = currentRenderMode;
+            renderMode == 1 ? currentMaterial->SetTransparent(true) : currentMaterial->SetTransparent(false);
+            if (batch) BatchEditorMode();
         }
 
-        if (ImGui::IsPopupOpen(CONSTANT_MESH_SELECT_DIALOG_ID))
-        {
-            AddMesh(App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-                CONSTANT_MESH_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMeshMap(), INVALID_UID
-            ));
-        }
-
-        ImGui::SeparatorText("Material");
-        ImGui::Text(currentMaterialName.c_str());
-        ImGui::SameLine();
-        if (ImGui::Button("Select material"))
-        {
-            ImGui::OpenPopup(CONSTANT_MATERIAL_SELECT_DIALOG_ID);
-        }
-
-        if (ImGui::IsPopupOpen(CONSTANT_MATERIAL_SELECT_DIALOG_ID))
-        {
-
-            const UID chosenMatUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
-                CONSTANT_MATERIAL_SELECT_DIALOG_ID, App->GetLibraryModule()->GetMaterialMap(), INVALID_UID
-            );
-
-            if (chosenMatUID != INVALID_UID) AddMaterial(chosenMatUID);
-        }
-
-        if (currentMaterial != nullptr) currentMaterial->OnEditorUpdate();
+        currentMaterial->OnEditorUpdate();
     }
 }
 
@@ -214,6 +229,7 @@ void MeshComponent::AddMesh(UID resource, bool updateParent)
         if (currentMaterial == nullptr)
         {
             const UID defaultMat = newMesh->GetDefaultMaterialUID();
+
             AddMaterial(defaultMat, true);
         }
 
@@ -240,6 +256,7 @@ void MeshComponent::AddMaterial(UID resource, bool setDefaultMaterial)
         App->GetResourcesModule()->ReleaseResource(currentMaterial);
         currentMaterial          = newMaterial;
         currentMaterialName      = currentMaterial->GetName();
+        renderMode               = currentMaterial->IsTransparent() ? 1 : 0;
         bUsesMeshDefaultMaterial = setDefaultMaterial;
 
         if (batch) BatchEditorMode();
