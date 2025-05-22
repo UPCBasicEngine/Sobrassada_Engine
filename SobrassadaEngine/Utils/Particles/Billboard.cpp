@@ -1,6 +1,8 @@
 #include "Billboard.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
+#include "CameraModule.h"
 #include "GameObject.h"
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
@@ -9,8 +11,9 @@
 #include "ShaderModule.h"
 #include "Standalone/BillboardComponent.h"
 
-#include "glew.h"
 #include "Math/float2.h"
+#include "glew.h"
+#include <algorithm>
 #include <chrono>
 
 Billboard::Billboard(float width, float height) : width(width), height(height)
@@ -204,15 +207,33 @@ void Billboard::CreateVertexBufferObject()
     if (positionsVbo == 0) glGenBuffers(1, &positionsVbo);
 }
 
-void Billboard::UpdatePositionsVbo()
+void Billboard::UpdatePositionsVbo(const float3& cameraPosition)
 {
+    std::sort(
+        instancePositions.begin(), instancePositions.end(),
+        [cameraPosition](const float3& a, const float3& b)
+        {
+            float distanceA = (a - cameraPosition).LengthSq();
+            float distanceB = (b - cameraPosition).LengthSq();
+
+            return distanceA > distanceB;
+        }
+    );
+
     glBindBuffer(GL_ARRAY_BUFFER, positionsVbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * instancePositions.size(), &instancePositions[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * instancePositions.size(), &instancePositions[0], GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Billboard::AddComponent(BillboardComponent* newBillboard)
 {
+    bool playMode                     = App->GetSceneModule()->GetInPlayMode();
+    const Frustum& editorCamera       = App->GetCameraModule()->GetCamera();
+    const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+    float3 cameraPosition =
+        playMode ? gameCamera ? gameCamera->GetCameraPosition() : editorCamera.pos : editorCamera.pos;
+
     auto iterator = instanceComponents.insert(instanceComponents.end(), newBillboard);
 
     newBillboard->SetWidth(width);
@@ -222,7 +243,7 @@ void Billboard::AddComponent(BillboardComponent* newBillboard)
     newBillboard->SetIterator(iterator);
 
     instancePositions.push_back(newBillboard->GetParent()->GetGlobalTransform().TranslatePart());
-    UpdatePositionsVbo();
+    UpdatePositionsVbo(cameraPosition);
 }
 
 void Billboard::RemoveComponent(std::list<BillboardComponent*>::iterator billboardIterator)
@@ -244,6 +265,13 @@ void Billboard::CheckReloadPositions()
             instancePositions.push_back(component->GetParent()->GetGlobalTransform().TranslatePart());
         }
 
-        UpdatePositionsVbo();
+        bool playMode                     = App->GetSceneModule()->GetInPlayMode();
+        const Frustum& editorCamera       = App->GetCameraModule()->GetCamera();
+        const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+        float3 cameraPosition =
+            playMode ? gameCamera ? gameCamera->GetCameraPosition() : editorCamera.pos : editorCamera.pos;
+
+        UpdatePositionsVbo(cameraPosition);
     }
 }

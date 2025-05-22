@@ -35,6 +35,23 @@ update_status BillboardModule::PostUpdate(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
+update_status BillboardModule::Update(float deltaTime)
+{
+    bool playMode                     = App->GetSceneModule()->GetInPlayMode();
+    const Frustum& editorCamera       = App->GetCameraModule()->GetCamera();
+    const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+    float3 cameraPosition =
+        playMode ? gameCamera ? gameCamera->GetCameraPosition() : editorCamera.pos : editorCamera.pos;
+
+    for (auto& billboard : billboardMap)
+    {
+        billboard.second.second->UpdatePositionsVbo(cameraPosition);
+    }
+
+    return UPDATE_CONTINUE;
+}
+
 void BillboardModule::CreateTag(const char* newTag)
 {
     HashString tag = HashString(newTag);

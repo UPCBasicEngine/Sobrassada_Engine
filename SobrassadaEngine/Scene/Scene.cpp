@@ -336,8 +336,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
-    App->GetBillboardModule()->RenderBillboards();
-
     {
 #ifdef OPTICK
         OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
@@ -376,6 +374,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera, framebuffer);
     glPopDebugGroup();
+
+    glEnable(GL_BLEND);
+    App->GetBillboardModule()->RenderBillboards();
+    glDisable(GL_BLEND);
 }
 
 update_status Scene::RenderEditor(float deltaTime)

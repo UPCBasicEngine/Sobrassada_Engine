@@ -21,6 +21,7 @@ class BillboardModule : public Module
     bool ShutDown() override;
 
     update_status PostUpdate(float deltaTime) override;
+    update_status Update(float deltaTime) override;
 
     void CreateTag(const char* newTag);
     void DeleteTag(const HashString tag);
