@@ -74,7 +74,11 @@ void SplineComponent::RenderDebug(float deltaTime)
     for (const float3& p : points)
         dbg->DrawSphere(p + parent->GetGlobalTransform().TranslatePart(), pointColor, 0.08f);
 
-    
+    if (showMarker && points.size() >= 2)
+    {
+        float3 wPos = GetWorldPositionInSpine(markerT);
+        dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f); // amarillo
+    }
 }
 
 bool SplineComponent::RenderGizmo()
@@ -139,6 +143,11 @@ void SplineComponent::RenderEditorInspector()
     ImGui::Text("Total Points: %zu", points.size());
     ImGui::DragFloat("Alpha", &alpha, 0.01f, 0.0f, 1.0f);
     ImGui::Checkbox("Loop", &loop);
+
+    ImGui::SeparatorText("Path Probe");
+
+    ImGui::Checkbox("Show marker", &showMarker);
+    if (showMarker) ImGui::DragFloat("t  (0-1)", &markerT, 0.01f, 0.f, 1.f, "%.2f");
 
     ImGui::SeparatorText("Add Point");
 
@@ -264,14 +273,35 @@ float3 SplineComponent::Evaluate(float t) const
 {
     if (points.size() < 2) return float3::zero;
 
-    int maxSeg = loop ? (int)points.size() : (int)points.size() - 3;
-    int seg    = (int)floorf(t);
-    float u    = t - seg;
+    t          = std::clamp(t, 0.f, 1.f);
 
-    if (loop) seg = (int)Wrap(seg);
-    else seg = std::clamp(seg, 0, maxSeg - 1);
 
-    return EvaluateSegment((size_t)seg, u);
+    if (!loop && points.size() < 4)
+    {
+        float segFloat  = t * (points.size() - 1);
+        int seg         = (int)floorf(segFloat);
+        float u         = segFloat - seg;
+
+        const float3& a = points[seg];
+        const float3& b = points[std::min(seg + 1, (int)points.size() - 1)];
+        float3 local    = float3::Lerp(a, b, u);
+        return parent->GetGlobalTransform().TransformPos(local);
+    }
+
+    const int numSeg = loop ? (int)points.size()
+                            : (int)points.size() - 1;
+
+    float segFloat   = t * numSeg;
+    if (segFloat >= numSeg)
+        return parent->GetGlobalTransform().TransformPos(loop ? points.front() : points.back());
+
+    int seg = (int)floorf(segFloat);
+    float u = segFloat - seg;
+
+    if (loop) seg = seg % points.size();
+
+    float3 local = EvaluateSegment((size_t)seg, u);
+    return parent->GetGlobalTransform().TransformPos(local);
 }
 
 bool SplineComponent::PointGizmo(size_t idx)
@@ -299,6 +329,13 @@ float3 SplineComponent::GetPointWorld(size_t idx) const
     const float4x4& worldOffset = parent->GetGlobalTransform();
 
     return (worldOffset * float4(points[idx], 1.f)).xyz();
+}
+
+float3 SplineComponent::GetWorldPositionInSpine(float posT) const
+{
+    if (points.size() < 2) return parent->GetGlobalTransform().TranslatePart();
+
+    return Evaluate(posT);
 }
 
 void SplineComponent::SetPointWorld(size_t idx, const float3& worldPos)

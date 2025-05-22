@@ -36,6 +36,7 @@ public:
     size_t GetNumPoints() const { return points.size(); }
     const float3 GetPointLocal(size_t idx) const { return points[idx]; }
     float3 GetPointWorld(size_t idx) const;
+    float3 GetWorldPositionInSpine(float posT) const;
 
     void SetPointWorld(size_t idx, const float3& worldPos);
 
@@ -48,4 +49,8 @@ public:
 
     int selectedIdx = -1;
     const int stepsDebug      = 16;
+
+    // Debug travel marker
+    bool showMarker           = false;
+    float markerT             = 0.0f;
 };
