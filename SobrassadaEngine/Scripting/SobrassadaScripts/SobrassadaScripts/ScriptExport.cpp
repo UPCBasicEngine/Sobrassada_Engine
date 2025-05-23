@@ -20,7 +20,6 @@
 #include "SpawnPoint.h"
 #include "ChangeSceneScript.h"
 #include "VSyncToggleScript.h"
-#include "RespawnController.h"
 
 #include <string>
 
@@ -49,8 +48,7 @@ constexpr const char* scripts[] = {
     "SpawnPoint",                 
     "ChangeSceneScript",         
     "Banshee",                   
-    "FireballTrap",
-    "RespawnController"
+    "FireballTrap"
 
 };
 
@@ -87,7 +85,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "GodModeScript") return new GodMode(parent);
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
-    if (scriptType == "RespawnController") return new RespawnController(parent);
 
 
     return nullptr;
