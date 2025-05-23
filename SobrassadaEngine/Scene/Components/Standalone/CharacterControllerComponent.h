@@ -74,11 +74,11 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     float3 rotateDirection       = float3::unitZ;
     bool movementEnabled         = true;
-    bool isGrounded;
+    bool isGrounded              = false;
 
-    bool isDashing          = false;
-    float dashTimeRemaining = 0.0f;
-    float dashSpeed         = 20.0f;
+    bool isDashing               = false;
+    float dashTimeRemaining      = 0.0f;
+    float dashSpeed              = 20.0f;
     float3 dashTarget;
     float dashDistance = 3.0f;
     float dashDuration = 0.2f;

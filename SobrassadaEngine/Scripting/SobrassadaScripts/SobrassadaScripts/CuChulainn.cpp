@@ -113,9 +113,17 @@ void CuChulainn::OnHealed(int amount)
 
 void CuChulainn::HandleState(float deltaTime)
 {
+    if (state == CharacterStates::AIM && !desiredAim && !resetWeapon)
+    {
+        animComponent->OnResume();
+        animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+        aimTimer = 0.0f;
+    }
+
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
-    else if (desiredAim && CanAim()) Aim();
+    else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL)
         Move();
@@ -275,7 +283,7 @@ void CuChulainn::CheckIsFalling()
 {
     const float verticalSpeed = character->GetRealSpeed().y;
 
-    GLOG("Vertical speed %f", verticalSpeed);
+    // GLOG("Vertical speed %f", verticalSpeed);
     if (verticalSpeed <= -2.0f && !character->IsGrounded() && animComponent)
     {
         animComponent->UseTrigger("Fall");
@@ -307,7 +315,6 @@ void CuChulainn::ThrowSpear()
         resetWeapon = true;
     }
 
-    const auto a = character->GetFrontDirection();
     spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
 }
 
@@ -363,7 +370,7 @@ void CuChulainn::Attack(float deltaTime)
     if (animComponent) animComponent->UseTrigger("Attack");
 }
 
-void CuChulainn::Aim()
+void CuChulainn::Aim(float deltaTime)
 {
     if (!spear) return;
 
@@ -372,16 +379,15 @@ void CuChulainn::Aim()
         if (camera) camera->EnableAimOffset(true);
         state = CharacterStates::AIM;
         character->EnableMovement(false);
-        animComponent->UseTrigger("Ranged");
+        if (animComponent) animComponent->UseTrigger("Ranged");
     }
     desiredAim  = false;
 
-    aimTimer   += 0.012;
-    if (aimTimer > 0.2f) animComponent->OnPause();
+    aimTimer   += deltaTime;
+    if (aimTimer >= 0.1f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     else LookAtJoystick();
-    if (animComponent) animComponent->UseTrigger("aim");
 }
 
 void CuChulainn::Move()
