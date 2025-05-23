@@ -14,6 +14,7 @@
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
@@ -31,6 +32,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
+    fields.push_back({"Player Name ", InspectorField::FieldType::InputText, &playerName});
 }
 
 bool CuChulainn::Init()
@@ -60,20 +62,27 @@ bool CuChulainn::Init()
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
+    player = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(playerName);
+   
     return true;
 }
 
 void CuChulainn::Update(float deltaTime)
 {
-    if (isDead || !character) return;
+   
+    if (isDead || !character)
+    return;
 
     GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
+   
 }
 
 void CuChulainn::OnDeath()
 {
+   
+        //play dead animation
     // TODO: include death sound for the character
 }
 
@@ -168,6 +177,17 @@ bool CuChulainn::CanAim() const
     return (state != CharacterStates::DASH && !isAttacking && throwTimer <= 0);
 }
 
+bool CuChulainn::CanRespawn()
+{
+   
+    isDead = false;
+    player->SetEnabled(true);
+    currentHealth = 3;
+    Respawn();
+    respawnTimer = 0;
+    return isDead;
+}
+
 void CuChulainn::UpdateTimers(float deltaTime)
 {
     Character::UpdateTimers(deltaTime);
@@ -201,6 +221,15 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
         throwTimer = 0;
     }
+
+    // respawn Timers
+    if (isDead)
+    {
+        respawnTimer  = respawnCooldown;
+        respawnTimer -= deltaTime;
+       
+    }
+   
 }
 
 void CuChulainn::LookAtMouse()
@@ -324,4 +353,9 @@ void CuChulainn::Respawn()
 {
     parent->SetLocalPosition(spawnPos);
     if (camera) camera->SetPosition(spawnPos);
+}
+
+bool CuChulainn::IsDead()
+{
+    return isDead;
 }
