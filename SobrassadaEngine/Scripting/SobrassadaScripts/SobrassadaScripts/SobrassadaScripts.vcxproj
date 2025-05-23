@@ -388,6 +388,7 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Archer.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
@@ -413,6 +414,7 @@
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="Wwise_IDs.h" />
+    <ClInclude Include="TileFloatScript.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\bullet\include\BulletCollision\BroadphaseCollision\btAxisSweep3.cpp">
@@ -1752,6 +1754,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Game|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
@@ -1787,6 +1790,7 @@
     <ClCompile Include="SpawnPoint.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
+    <ClCompile Include="TileFloatScript.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SobrassadaScripts.rc" />

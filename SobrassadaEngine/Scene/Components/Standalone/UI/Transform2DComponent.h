@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CanvasComponent.h"
 #include "Component.h"
 #include "Math/float2.h"
 #include "Math/float4.h"
@@ -21,13 +22,15 @@ class Transform2DComponent : public Component
 
     void Update(float deltaTime) override {};
     void Render(float deltaTime) override {};
-    void RenderDebug(float deltaTime) override;
+    void RenderDebug(float deltaTime) override {};
     void RenderEditorInspector() override;
 
     void RenderWidgets() const;
     void UpdateParent3DTransform();
     void OnTransform3DUpdated(const float4x4& transform3D);
     void OnParentChange();
+    void OnCanvasRenderModeChanged(CanvasComponent::CanvasRenderMode newMode, const float2& savedWorldPos);
+    float2 GetAbsoluteWorldPosition() const;
     void GetCanvas();
     void AdaptToParentChanges();
 
@@ -38,6 +41,7 @@ class Transform2DComponent : public Component
     void RemoveChild(Transform2DComponent* child);
     void RemoveParent() { parentTransform = nullptr; }
     CanvasComponent* GetParentCanvas() const { return parentCanvas; }
+    float2 GetScaledSize() const;
 
   private:
     bool IsRootTransform2D() const;
@@ -63,13 +67,12 @@ class Transform2DComponent : public Component
     float2 anchorsY;
 
   private:
-    CanvasComponent* parentCanvas;
-    Transform2DComponent* parentTransform;
-    std::vector<Transform2DComponent*> childTransforms;
-
-    bool transform2DUpdated;
-    bool renderAnchors = true;
-    float2 previousPosition;
-    float4 previousMargins;
-    float4 margins;
+    CanvasComponent* parentCanvas                      = nullptr;
+    Transform2DComponent* parentTransform              = nullptr;
+    std::vector<Transform2DComponent*> childTransforms = {};
+    bool transform2DUpdated                            = false;
+    bool renderAnchors                                 = true;
+    float2 previousPosition                            = float2::zero;
+    float4 previousMargins                             = float4::zero;
+    float4 margins                                     = float4::zero;
 };
