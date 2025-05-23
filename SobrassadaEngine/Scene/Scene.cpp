@@ -324,6 +324,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     else GeometryPassRender(objectsToRender, camera, gbuffer);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
+    DecalsPassRender(camera, gbuffer, framebuffer);
+    glPopDebugGroup();
+
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
     {
         RenderGBufferDebug(gbuffer, framebuffer);
@@ -334,10 +338,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         RenderDepthDebug(gbuffer, camera, framebuffer);
         return;
     }
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
-    DecalsPassRender(camera, gbuffer, framebuffer);
-    glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
@@ -1225,7 +1225,7 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
 
     dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
-    DecalComponent* mesh = nullptr;
+    DecalComponent* decal = nullptr;
 
     for (auto gameObject : queriedObjects)
     {
@@ -1233,12 +1233,12 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
 
         if (frustumPlanes.Intersects(objectOBB))
         {
-            mesh = gameObject->GetComponent<DecalComponent*>();
-            if (mesh != nullptr) break;
+            decal = gameObject->GetComponent<DecalComponent*>();
+            if (decal != nullptr) break;
         }
     }
-    if (mesh == nullptr) return;
-    if (mesh->GetResourceMaterial() == nullptr) return;
+    if (decal == nullptr) return;
+    if (decal->GetResourceMaterial() == nullptr) return;
 
     const unsigned int program = App->GetShaderModule()->GetDecalProgram();
 
@@ -1248,12 +1248,15 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
     glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
 
-    uint64_t handle = mesh->GetResourceMaterial()->GetMaterial().diffuseTex;
-    glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), handle);
+    uint64_t dhandle = decal->GetResourceMaterial()->GetMaterial().diffuseTex;
+    glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
 
-    float4x4 model    = mesh->GetParent()->GetGlobalTransform();
+    uint64_t nhandle = decal->GetResourceMaterial()->GetMaterial().normalTex;
+    glUniformHandleui64ARB(glGetUniformLocation(program, "decalNormalTex"), nhandle);
+
+    float4x4 model    = decal->GetParent()->GetGlobalTransform();
     float4x4 invModel = model.Inverted();
-    glUniformMatrix4fv(glGetUniformLocation(program, "invModel"), 1, GL_TRUE,  &invModel[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(program, "invModel"), 1, GL_TRUE, &invModel[0][0]);
 
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
@@ -1294,6 +1297,10 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO);
 
     gbuffer->Unbind();
 }
