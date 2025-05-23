@@ -1,0 +1,70 @@
+{
+    "Scene": {
+        "UID": 270079974606123174,
+        "Name": "SecondScene",
+        "RootGameObject": 6936911304630192931,
+        "NavmeshUID": 0,
+        "Camera Position": [
+            -4.994337558746338,
+            24.982515335083008,
+            706.5408325195313
+        ],
+        "Camera Front": [
+            -0.007054149638861418,
+            -0.06357477605342865,
+            -0.9979522228240967
+        ],
+        "Camera Up": [
+            -0.0004488338890951127,
+            0.9979771971702576,
+            -0.0635722279548645
+        ],
+        "WorldObjectsMask": 13,
+        "TriggerMask": 8,
+        "EnemyMask": 9,
+        "PlayerMask": 7,
+        "PlayerProjectileMask": 0,
+        "EnemyProjectileMask": 0,
+        "GameObjects": [
+            {
+                "UID": 6936911304630192931,
+                "ParentUID": 0,
+                "Name": "SceneModule GameObject",
+                "Mobility": 1,
+                "SelectParent": false,
+                "Enabled": true,
+                "WasEnabled": true,
+                "NavmeshValid": false,
+                "LocalTransform": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
+                "Components": [],
+                "Children": []
+            }
+        ],
+        "Lights Config": {
+            "Ambient Color": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "Ambient Intensity": 0.20000000298023224,
+            "Skybox UID": 1281272330578818
+        }
+    }
+}

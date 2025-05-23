@@ -22,6 +22,7 @@
 #include "ChangeSceneScript.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "MenuChangeSceneScript.h"
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
@@ -51,7 +52,8 @@ constexpr const char* scripts[] = {
     "TileFloatScript",
     "FireballTrap",
     "Archer",             
-    "ChangeSceneScript"        
+    "ChangeSceneScript",
+    "MenuChangeSceneScript"
                       
     
 
@@ -75,6 +77,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "OptionsMenuSwitcherScript") return new OptionsMenuSwitcherScript(parent);
     if (scriptType == "MainMenuSelectorScript") return new MainMenuSelectorScript(parent);
     if (scriptType == "PressAnyKeyScript") return new PressAnyKeyScript(parent);
+    if (scriptType == "MenuChangeSceneScript") return new MenuChangeSceneScript(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);

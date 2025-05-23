@@ -401,6 +401,7 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
+    <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
     <ClInclude Include="GodMode.h" />
@@ -1767,6 +1768,7 @@
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
+    <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
     <ClCompile Include="GodMode.cpp" />
