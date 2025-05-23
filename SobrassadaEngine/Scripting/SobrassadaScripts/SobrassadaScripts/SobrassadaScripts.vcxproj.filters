@@ -109,6 +109,9 @@
     <ClInclude Include="Archer.h">
       <Filter>Characters\Enemies</Filter>
     </ClInclude>
+    <ClInclude Include="SpawnUI.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -758,6 +761,9 @@
     </ClCompile>
     <ClCompile Include="Archer.cpp">
       <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="SpawnUI.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
