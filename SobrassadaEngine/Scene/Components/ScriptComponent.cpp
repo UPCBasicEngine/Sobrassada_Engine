@@ -122,7 +122,6 @@ void ScriptComponent::Update(float deltaTime)
 void ScriptComponent::ResetInitializationFlags()
 {
     std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
-    std::fill(scriptWasEnabledLastFrame.begin(), scriptWasEnabledLastFrame.end(), false);
 }
 
 void ScriptComponent::Render(float deltaTime)
