@@ -25,7 +25,13 @@ ScriptComponent::ScriptComponent(const rapidjson::Value& initialState, GameObjec
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name))
+                {
+                    scriptInstances.back()->Load(scriptData);
+                    if (scriptData.HasMember("Enabled")) scriptEnabled.back() = scriptData["Enabled"].GetBool();
+                    if (scriptData.HasMember("WasEnabled"))
+                        scriptWasEnabledLastFrame.back() = scriptData["WasEnabled"].GetBool();
+                }
             }
         }
     }
