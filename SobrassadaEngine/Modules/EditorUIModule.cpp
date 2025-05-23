@@ -180,11 +180,8 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 
 update_status EditorUIModule::PostUpdate(float deltaTime)
 {
-#ifndef GAME
-
+    //TODO: Make this for EditorMode only and create new fuction in Application for Game profile
     if (closeApplication) return UPDATE_STOP;
-
-#endif
 
     return UPDATE_CONTINUE;
 }
