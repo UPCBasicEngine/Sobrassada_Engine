@@ -14,6 +14,7 @@ namespace AK
     namespace EVENTS
     {
         static const AkUniqueID BUCKET = 902301855U;
+        static const AkUniqueID FOOTSTEPS = 2385628198U;
         static const AkUniqueID ICE_BLAST = 3920196677U;
         static const AkUniqueID LOWDRUM = 2306510041U;
         static const AkUniqueID MUSIC = 3991942870U;
