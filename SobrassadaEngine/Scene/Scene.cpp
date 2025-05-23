@@ -1183,7 +1183,12 @@ void Scene::TransparentPassRender(
 {
     unsigned int width  = framebuffer->GetTextureWidth();
     unsigned int height = framebuffer->GetTextureHeight();
+
+#ifndef GAME
     framebuffer->Bind();
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
     // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glViewport(0, 0, width, height);
 
