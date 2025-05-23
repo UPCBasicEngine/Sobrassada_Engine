@@ -37,6 +37,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
@@ -46,12 +47,12 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
+#include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/BillboardComponent.h"
-#include "Standalone/DecalComponent.h"
-#include "Standalone/UI/CanvasScalerComponent.h"
+
+#include "ResourceMaterial.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -333,6 +334,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         RenderDepthDebug(gbuffer, camera, framebuffer);
         return;
     }
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
+    DecalsPassRender(camera, gbuffer, framebuffer);
+    glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
@@ -1177,6 +1182,115 @@ void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Frameb
 #else
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
+}
+
+void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
+{
+    float cubeVertices[] = {
+        // positions
+        -0.5f, -0.5f, 0.5f,  // 0
+        -0.5f, 0.5f,  0.5f,  // 1
+        0.5f,  0.5f,  0.5f,  // 2
+        0.5f,  -0.5f, 0.5f,  // 3
+        -0.5f, -0.5f, -0.5f, // 4
+        -0.5f, 0.5f,  -0.5f, // 5
+        0.5f,  0.5f,  -0.5f, // 6
+        0.5f,  -0.5f, -0.5f  // 7
+    };
+
+    // 12 triangles * 3 indices
+    unsigned int cubeIndices[] = {// Front face (+Z)
+                                  0, 1, 2, 2, 3, 0,
+                                  // Back face (-Z)
+                                  7, 6, 5, 5, 4, 7,
+                                  // Left face (-X)
+                                  4, 5, 1, 1, 0, 4,
+                                  // Right face (+X)
+                                  3, 2, 6, 6, 7, 3,
+                                  // Top face (+Y)
+                                  1, 5, 6, 6, 2, 1,
+                                  // Bottom face (-Y)
+                                  4, 0, 3, 3, 7, 4
+    };
+
+    std::vector<GameObject*> queriedObjects;
+
+    FrustumPlanes frustumPlanes;
+    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+    else frustumPlanes = camera->GetFrustrumPlanes();
+
+    sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+
+    dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+
+    DecalComponent* mesh = nullptr;
+
+    for (auto gameObject : queriedObjects)
+    {
+        OBB objectOBB = gameObject->GetGlobalOBB();
+
+        if (frustumPlanes.Intersects(objectOBB))
+        {
+            mesh = gameObject->GetComponent<DecalComponent*>();
+        }
+    }
+    if (mesh == nullptr) return;
+    if (mesh->GetResourceMaterial() == nullptr) return;
+
+    const unsigned int program = App->GetShaderModule()->GetDecalProgram();
+
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+    glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
+
+    uint64_t handle = mesh->GetResourceMaterial()->GetMaterial().diffuseTex;
+    glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), handle);
+
+    float4x4 model    = mesh->GetParent()->GetGlobalTransform();
+    float4x4 invModel = model.Inverted();
+    glUniformMatrix4fv(glGetUniformLocation(program, "invModel"), 1, GL_TRUE, invModel.ptr());
+
+    unsigned int cameraUBO;
+    if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
+    else cameraUBO = camera->GetUbo();
+
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    GLint modelLoc = glGetUniformLocation(program, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+
+    unsigned int VAO, VBO, EBO;
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    // Bind VAO first
+    glBindVertexArray(VAO);
+
+    // VBO for vertex data
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+
+    // IBO for indices
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
+
+    // Position attribute (location = 0)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    // Unbind VAO (optional safety)
+    glBindVertexArray(0);
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
 void Scene::TransparentPassRender(

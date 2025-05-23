@@ -127,15 +127,17 @@ class SOBRASADA_API_ENGINE Scene
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
     void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, CameraComponent* camera) const;
+
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
+    void DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(
-        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera,
-        Framebuffer* framebuffer
+        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
     ) const;
-    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
-        const;
+    
+    
+    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
 

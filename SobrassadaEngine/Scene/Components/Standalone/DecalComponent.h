@@ -22,6 +22,8 @@ class DecalComponent : public Component
     void AddMaterial(UID resource);
     void ParentUpdated() override;
 
+    const ResourceMaterial* GetResourceMaterial() const { return currentMaterial; }
+
   private:
     void RecalculateAABB();
 
