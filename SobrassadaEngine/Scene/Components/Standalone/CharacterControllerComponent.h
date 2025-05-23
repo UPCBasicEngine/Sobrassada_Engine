@@ -38,6 +38,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     const float& GetMaxSpeed() const { return maxSpeed; }
     bool IsDashing() const { return isDashing; }
     float2 GetRealSpeed() const;
+    bool IsGrounded() { return isGrounded; }
 
     void SetTargetDirection(float3 newTargetDirection) { targetDirection = newTargetDirection; }
     void SetMaxSpeed(float newSpeed) { maxSpeed = newSpeed; }
@@ -73,10 +74,11 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     float3 rotateDirection       = float3::unitZ;
     bool movementEnabled         = true;
+    bool isGrounded;
 
-    bool isDashing               = false;
-    float dashTimeRemaining      = 0.0f;
-    float dashSpeed              = 20.0f;
+    bool isDashing          = false;
+    float dashTimeRemaining = 0.0f;
+    float dashSpeed         = 20.0f;
     float3 dashTarget;
     float dashDistance = 3.0f;
     float dashDuration = 0.2f;

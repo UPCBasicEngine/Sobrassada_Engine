@@ -250,6 +250,8 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 {
     if (!navMeshQuery || currentPolyRef == 0) return;
 
+    isGrounded = false;
+
     dtQueryFilter filter;
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
@@ -272,6 +274,7 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
     dtStatus stH     = navMeshQuery->getPolyHeight(newRef, closest, &polyHeight);
     if (dtStatusSucceed(stH))
     {
+        isGrounded                = true;
         float distToFloor         = polyHeight - currentPos.y;
         const float maxStepHeight = 0.5f;
         if (distToFloor >= 0.0f && distToFloor <= maxStepHeight)
@@ -404,11 +407,11 @@ void CharacterControllerComponent::LookAt(const float3& direction)
 
 float2 CharacterControllerComponent::GetRealSpeed() const
 {
-    float deltaTime       = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
+    const float deltaTime       = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
 
-    float3 positionsDiff  = parent->GetGlobalTransform().TranslatePart() - lastPosition;
-    float horizontalSpeed = float2(positionsDiff.x / deltaTime, positionsDiff.z / deltaTime).Length();
-    float verticalSpeed   = positionsDiff.y / deltaTime;
+    const float3 positionsDiff  = parent->GetGlobalTransform().TranslatePart() - lastPosition;
+    const float horizontalSpeed = float2(positionsDiff.x / deltaTime, positionsDiff.z / deltaTime).Length();
+    const float verticalSpeed   = positionsDiff.y / deltaTime;
 
     return {horizontalSpeed, verticalSpeed};
 
