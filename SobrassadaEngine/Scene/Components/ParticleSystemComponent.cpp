@@ -1,7 +1,8 @@
 #include "ParticleSystemComponent.h"
 
 #include "Application.h"
-#include "ParticleEmitter.h"
+#include "EmitterInstance.h"
+#include "ParticleSystem.h"
 #include "ParticleSystemModule.h"
 
 #include "imgui.h"
@@ -14,45 +15,23 @@ ParticleSystemComponent::ParticleSystemComponent(UID uid, GameObject* parent)
 ParticleSystemComponent::ParticleSystemComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    if (initialState.HasMember("Emitters") && initialState["Emitters"].IsArray())
-    {
-        const rapidjson::Value& jsonEmitters = initialState["Emitters"];
 
-        for (rapidjson::SizeType i = 0; i < jsonEmitters.Size(); i++)
-        {
-            const rapidjson::Value& newEmitterJSON = jsonEmitters[i];
+    if (initialState.HasMember("ParticleSystemTag"))
+        particleSystemTag = HashString(initialState["ParticleSystemTag"].GetString());
 
-            ParticleEmitter* newEmitter = App->GetParticleModule()->RequestParticleEmitter(newEmitterJSON, this);
-
-            emitters.push_back({newEmitter->GetName(), newEmitter});
-        }
-
-        if (emitters.size() > 0 && emitters[0].second != nullptr) currentEmitter = emitters[0].second;
-    }
+    App->GetParticleModule()->ResquestParticleSystem(particleSystemTag, initialState, this);
 }
 
 ParticleSystemComponent::~ParticleSystemComponent()
 {
-    for (auto emitter : emitters)
-    {
-        if (emitter.second) App->GetParticleModule()->DeleteParticleEmitter(emitter.second->GetUID());
-    }
+    if (particleSystem) particleSystem->RemoveComponent(particleSystemIterator);
 }
 
 void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
 
-    rapidjson::Value emittersArrayJSON(rapidjson::kArrayType);
-
-    for (auto emitter : emitters)
-    {
-        rapidjson::Value currentEmitterJSON(rapidjson::kObjectType);
-        if (emitter.second) emitter.second->Save(currentEmitterJSON, allocator);
-        emittersArrayJSON.PushBack(currentEmitterJSON, allocator);
-    }
-
-    targetState.AddMember("Emitters", emittersArrayJSON, allocator);
+    if (particleSystem) particleSystem->Save(targetState, allocator);
 }
 
 void ParticleSystemComponent::Clone(const Component* other)
@@ -60,18 +39,16 @@ void ParticleSystemComponent::Clone(const Component* other)
     if (other->GetType() == ComponentType::COMPONENT_PARTICLE_SYSTEM)
     {
         const ParticleSystemComponent* otherParticles = static_cast<const ParticleSystemComponent*>(other);
-        // CREAR PARTICLE SYSTEM RESOURCE PRIMERA VEGADA QUE ES FA UN LOAD AMB UN TAG-> COPIA EMITTERS I SI FAIG REQUEST DE TAG RETORNA COPIA DE EMITTERS 
-        auto xd = App->GetParticleModule();
-        emitters                                      = otherParticles->emitters;
-        currentEmitter                                = otherParticles->currentEmitter;
 
+        if (otherParticles->particleSystem)
+            App->GetParticleModule()->ResquestParticleSystem(otherParticles->particleSystemTag, this);
     }
 }
 
 void ParticleSystemComponent::Update(float deltaTime)
 {
-    for (auto& emitter : emitters)
-        emitter.second->Update(deltaTime, nullptr);
+    for (auto& emitter : emitterInstances)
+        emitter.Update(deltaTime);
 }
 
 void ParticleSystemComponent::Render(float deltaTime)
@@ -84,13 +61,66 @@ void ParticleSystemComponent::RenderDebug(float deltaTime)
 
 void ParticleSystemComponent::RenderEditorInspector()
 {
-    ImGui::InputText("New Emitter name", newTagName, IM_ARRAYSIZE(newTagName));
+    ImGui::InputText("Particle System Name", newParticleTagName, IM_ARRAYSIZE(newParticleTagName));
+
+    if (ImGui::Button("Create Particle System"))
+    {
+        HashString requestedTag(newParticleTagName);
+        App->GetParticleModule()->ResquestParticleSystem(requestedTag, this);
+        memset(newParticleTagName, 0, sizeof(newParticleTagName));
+    }
+
+    ImGui::Text("Selected particle system:");
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(0.102f, 0.659f, 1.f, 1.f), particleSystemTag.GetString().c_str());
+
+    if (ImGui::Button("Change tag"))
+    {
+        ImGui::OpenPopup("ParticleSystemSelection");
+    }
+
+    if (ImGui::BeginPopup("ParticleSystemSelection"))
+    {
+        auto& particleTags = App->GetParticleModule()->GetTags();
+
+        if (ImGui::BeginListBox(
+                "##ParticleSystemSelectionList",
+                ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeightWithSpacing() * particleTags.size())
+            ))
+        {
+
+            for (int i = 0; i < particleTags.size(); ++i)
+            {
+                if (ImGui::Selectable(particleTags[i].GetString().c_str()))
+                {
+                    if (particleTags[i] != particleSystemTag)
+                    {
+                        HashString selectedTag = particleTags[i];
+                        App->GetParticleModule()->ResquestParticleSystem(selectedTag, this);
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+            }
+            ImGui::EndListBox();
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (!particleSystem) return;
+
+    ImGui::InputText("New Emitter name", newEmitterTagName, IM_ARRAYSIZE(newEmitterTagName));
 
     if (ImGui::Button("Create emitter"))
     {
-        currentEmitter = App->GetParticleModule()->RequestParticleEmitter(newTagName, this);
-        emitters.push_back({currentEmitter->GetName(), currentEmitter});
-        memset(newTagName, 0, sizeof(newTagName));
+        if (particleSystem)
+        {
+            particleSystem->AddEmitter(newEmitterTagName);
+        }
+        memset(newEmitterTagName, 0, sizeof(newEmitterTagName));
     }
 
     ImGui::Spacing();
@@ -99,33 +129,16 @@ void ParticleSystemComponent::RenderEditorInspector()
 
     if (ImGui::BeginCombo("Current emitter", currentEmitter ? currentEmitter->GetName().c_str() : "None"))
     {
-        for (int i = 0; i < emitters.size(); ++i)
+        for (int i = 0; i < emitterInstances.size(); ++i)
         {
-            if (ImGui::Selectable(emitters[i].second->GetName().c_str())) currentEmitter = emitters[i].second;
+            if (ImGui::Selectable(emitterInstances[i].GetName().c_str())) currentEmitter = &emitterInstances[i];
         }
         ImGui::EndCombo();
     }
 
     if (ImGui::Button("Delete current emmitter"))
     {
-        int positionToDelete = -1;
-        for (int i = 0; i < emitters.size(); ++i)
-        {
-            if (currentEmitter == emitters[i].second)
-            {
-                positionToDelete = i;
-                break;
-            }
-        }
-
-        if (positionToDelete > -1 && currentEmitter)
-        {
-            App->GetParticleModule()->DeleteParticleEmitter(currentEmitter->GetUID());
-            emitters.erase(emitters.begin() + positionToDelete);
-
-            currentEmitter = nullptr;
-            if (emitters.size() > 0) currentEmitter = emitters[0].second;
-        }
+        if (currentEmitter && particleSystem) particleSystem->RemoveEmitter(currentEmitter->GetTag());
     }
 
     ImGui::Spacing();
@@ -133,4 +146,25 @@ void ParticleSystemComponent::RenderEditorInspector()
     ImGui::Spacing();
 
     if (currentEmitter) currentEmitter->RenderEditor();
+}
+
+void ParticleSystemComponent::ReloadEmitterInstances(
+    const std::vector<std::pair<HashString, ParticleEmitter*>>& emitters
+)
+{
+    emitterInstances.clear();
+    emitterInstances.reserve(emitters.size());
+
+    for (auto& emitter : emitters)
+    {
+        emitterInstances.push_back(EmitterInstance(emitter.second, this));
+    }
+
+    if (emitterInstances.size() > 0) currentEmitter = &emitterInstances[0];
+}
+
+void ParticleSystemComponent::SetParticleSystem(ParticleSystem* newParticleSystem)
+{
+    particleSystem    = newParticleSystem;
+    particleSystemTag = newParticleSystem->GetTag();
 }

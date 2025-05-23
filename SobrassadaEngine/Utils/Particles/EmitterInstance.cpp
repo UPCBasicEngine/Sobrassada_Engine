@@ -6,6 +6,16 @@ EmitterInstance::~EmitterInstance()
 {
 }
 
+const std::string& EmitterInstance::GetName() const
+{
+    if (emitter) return emitter->GetName();
+}
+
+const HashString& EmitterInstance::GetTag() const
+{
+    if (emitter) return emitter->GetTag();
+}
+
 void EmitterInstance::Update(float deltaTime)
 {
     // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles

@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "CameraComponent.h"
 #include "ParticleEmitter.h"
+#include "ParticleSystem.h"
 #include "ParticleSystemComponent.h"
 #include "SceneModule.h"
 
@@ -46,7 +47,7 @@ bool ParticleSystemModule::Init()
 
 bool ParticleSystemModule::ShutDown()
 {
-    for (auto& pair : particleEmitters)
+    for (auto& pair : particleSystems)
     {
         delete pair.second;
     }
@@ -79,35 +80,46 @@ void ParticleSystemModule::RenderParticles()
         upVector    = editorCamera.up;
     }
 
-    for (auto& emitter : particleEmitters)
+    for (auto& emitter : particleSystems)
     {
-        emitter.second->RenderParticles(VP, rightVector, upVector);
+        emitter.second->RenderParticles();
     }
 }
 
-ParticleEmitter* ParticleSystemModule::RequestParticleEmitter(const std::string& name, ParticleSystemComponent* owner)
+void ParticleSystemModule::ResquestParticleSystem(
+    const HashString& requestedTag, const rapidjson::Value& initialState, ParticleSystemComponent* component
+)
 {
-    ParticleEmitter* emitter = new ParticleEmitter(GenerateUID(), name, owner);
-    particleEmitters.insert({emitter->GetUID(), emitter});
-    emitter->SetQuadVBO(quadVBO);
-    return emitter;
-}
+    if (emptyString == requestedTag) return;
 
-ParticleEmitter*
-ParticleSystemModule::RequestParticleEmitter(const rapidjson::Value& initialState, ParticleSystemComponent* owner)
-{
-    ParticleEmitter* emitter = new ParticleEmitter(initialState, owner);
-    particleEmitters.insert({emitter->GetUID(), emitter});
-    emitter->SetQuadVBO(quadVBO);
-    return emitter;
-}
+    auto particleSystemIterator = particleSystems.find(requestedTag);
 
-void ParticleSystemModule::DeleteParticleEmitter(UID emiterUID)
-{
-    auto iterator = particleEmitters.find(emiterUID);
-    if (iterator != particleEmitters.end())
+    if (particleSystemIterator == particleSystems.end())
     {
-        delete iterator->second;
-        particleEmitters.erase(iterator);
+        ParticleSystem* newPS = new ParticleSystem(initialState, component);
+        particleSystems.insert({requestedTag, newPS});
+        particleTags.push_back(requestedTag);
+    }
+    else
+    {
+        particleSystemIterator->second->AddComponent(component);
+    }
+}
+
+void ParticleSystemModule::ResquestParticleSystem(const HashString& requestedTag, ParticleSystemComponent* component)
+{
+    if (emptyString == requestedTag) return;
+
+    auto particleSystemIterator = particleSystems.find(requestedTag);
+
+    if (particleSystemIterator == particleSystems.end())
+    {
+        ParticleSystem* newPS = new ParticleSystem(requestedTag, component);
+        particleSystems.insert({requestedTag, newPS});
+        particleTags.push_back(requestedTag);
+    }
+    else
+    {
+        particleSystemIterator->second->AddComponent(component);
     }
 }

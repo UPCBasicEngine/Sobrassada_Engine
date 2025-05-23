@@ -73,22 +73,19 @@ template <std::size_t I = 0, typename... Tp>
 }
 // ---------- END SECTION FOR TUPLE ITERATION ----------
 
-ParticleEmitter::ParticleEmitter(UID uid, const std::string& name, ParticleSystemComponent* owner)
-    : uid(uid), name(name), owner(owner)
+ParticleEmitter::ParticleEmitter(const HashString& tag) : emitterTag(tag)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
     createdAddons.reset();
     ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType::BASE, this);
 }
 
-ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleSystemComponent* owner) : owner(owner)
-
+ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
     createdAddons.reset();
 
-    if (initialState.HasMember("UID")) uid = initialState["UID"].GetUint64();
-    if (initialState.HasMember("Name")) name = initialState["Name"].GetString();
+    if (initialState.HasMember("EmitterTag")) emitterTag = HashString(initialState["EmitterTag"].GetString());
     if (initialState.HasMember("UseTexture")) useTexture = initialState["UseTexture"].GetBool();
 
     if (initialState.HasMember("Material"))
@@ -128,8 +125,7 @@ ParticleEmitter::~ParticleEmitter()
 void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
 
-    targetState.AddMember("UID", uid, allocator);
-    targetState.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
+    targetState.AddMember("EmitterTag", rapidjson::Value(emitterTag.GetString().c_str(), allocator), allocator);
     targetState.AddMember("UseTexture", useTexture, allocator);
 
     targetState.AddMember("Material", material != nullptr ? material->GetUID() : DEFAULT_MATERIAL_UID, allocator);
@@ -148,8 +144,8 @@ void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
     if (!isEmitting) return;
 
     std::apply(
-        [deltaTime, emitterInstance](auto&... pointer) { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); },
-        addonTuple
+        [deltaTime, emitterInstance](auto&... pointer)
+        { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); }, addonTuple
     );
 
     UpdateParticlesVBO();
@@ -157,7 +153,7 @@ void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
 
 void ParticleEmitter::Spawn()
 {
-    std::apply([](auto&... pointer) { ((pointer ? pointer->Init() : Nothing()), ...); }, addonTuple);
+    std::apply([](auto&... pointer) { ((pointer ? pointer->Init(nullptr) : Nothing()), ...); }, addonTuple);
 }
 
 // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
@@ -388,7 +384,7 @@ void ParticleEmitter::UpdateParticlesVBO()
     {
         if (particles[i].alive) alivePositions.push_back(particles[i].position);
     }
-    aliveParticles = alivePositions.size();
+    aliveParticles = (unsigned int)alivePositions.size();
 
     if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
     if (aliveParticles > 0)

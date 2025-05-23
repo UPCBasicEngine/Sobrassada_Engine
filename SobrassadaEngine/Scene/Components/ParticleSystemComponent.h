@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Component.h"
+#include "HashString.h"
 
 #include <utility>
 #include <vector>
 
-class ResourceMaterial;
-class ResourceTexture;
 class ParticleEmitter;
+class EmitterInstance;
+class ParticleSystem;
 
 class ParticleSystemComponent : public Component
 {
@@ -24,9 +25,24 @@ class ParticleSystemComponent : public Component
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
-  private:
-    ParticleEmitter* currentEmitter = nullptr;
-    std::vector<std::pair<std::string, ParticleEmitter*>> emitters;
+    void ReloadEmitterInstances(const std::vector<std::pair<HashString, ParticleEmitter*>>& emitters);
 
-    char newTagName[64]               = "";
+    const HashString& GetParticleSystemTag() const { return particleSystemTag; };
+
+    void SetParticleSystem(ParticleSystem* newParticleSystem);
+    void SetParticleIterator(std::list<ParticleSystemComponent*>::iterator iterator)
+    {
+        particleSystemIterator = iterator;
+    }
+
+  private:
+    char newParticleTagName[64]     = "";
+    char newEmitterTagName[64]      = "";
+    HashString particleSystemTag    = HashString("");
+
+    ParticleSystem* particleSystem  = nullptr;
+    EmitterInstance* currentEmitter = nullptr;
+
+    std::vector<EmitterInstance> emitterInstances;
+    std::list<ParticleSystemComponent*>::iterator particleSystemIterator;
 };

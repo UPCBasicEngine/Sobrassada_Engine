@@ -1,11 +1,15 @@
 #pragma once
 
+#include "HashString.h"
 #include "Module.h"
 
 #include "rapidjson/document.h"
 #include <map>
+#include <utility>
+#include <vector>
 
 class ParticleEmitter;
+class ParticleSystem;
 class ParticleSystemComponent;
 
 class ParticleSystemModule : public Module
@@ -19,12 +23,18 @@ class ParticleSystemModule : public Module
 
     void RenderParticles();
 
-    ParticleEmitter* RequestParticleEmitter(const std::string& name, ParticleSystemComponent* owner);
-    ParticleEmitter* RequestParticleEmitter(const rapidjson::Value& initialState, ParticleSystemComponent* owner);
+    void ResquestParticleSystem(
+        const HashString& requestedTag, const rapidjson::Value& initialState, ParticleSystemComponent* component
+    );
+    void ResquestParticleSystem(const HashString& requestedTag, ParticleSystemComponent* component);
 
-    void DeleteParticleEmitter(UID emiterUID);
+     const std::vector<HashString>& GetTags() const { return particleTags; }
 
   private:
     unsigned int quadVBO = 0;
-    std::map<UID, ParticleEmitter*> particleEmitters;
+
+    std::vector<HashString> particleTags;
+    std::map<HashString, ParticleSystem*> particleSystems;
+
+    const HashString emptyString = HashString("");
 };

@@ -2,7 +2,10 @@
 
 #include "Particle.h"
 
+#include "HashString.h"
+
 #include <vector>
+#include <string>
 
 class ParticleSystemComponent;
 class ParticleEmitter;
@@ -13,6 +16,9 @@ class EmitterInstance
     EmitterInstance(ParticleEmitter* newEmitter, ParticleSystemComponent* newOwner)
         : emitter(newEmitter), owner(newOwner) {};
     ~EmitterInstance();
+
+    const std::string& GetName() const;
+    const HashString& GetTag() const;
 
     void Update(float deltaTime);
     void RenderEditor();
