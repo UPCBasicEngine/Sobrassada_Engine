@@ -13,12 +13,11 @@ namespace AK
 {
     namespace EVENTS
     {
-        static const AkUniqueID BUCKET = 902301855U;
-        static const AkUniqueID FOOTSTEPS = 2385628198U;
-        static const AkUniqueID ICE_BLAST = 3920196677U;
-        static const AkUniqueID LOWDRUM = 2306510041U;
+        static const AkUniqueID CAVE_01 = 4091541804U;
+        static const AkUniqueID CAVE_02 = 4091541807U;
         static const AkUniqueID MUSIC = 3991942870U;
-        static const AkUniqueID TELEPORT = 530129416U;
+        static const AkUniqueID TORCH = 1904864137U;
+        static const AkUniqueID WATER = 2654748154U;
     } // namespace EVENTS
 
     namespace GAME_PARAMETERS
