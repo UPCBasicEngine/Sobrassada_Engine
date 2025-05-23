@@ -41,8 +41,8 @@ class InputModule : public Module
     const float2& GetMousePosition() const { return mouse; };
     int GetMouseWheel() const { return mouseWheel; }
 
-    float2 GetLeftStick() const { return controllerLeftStick; }
-    float2 GetRightStick() const { return controllerRightStick; }
+    const float2& GetLeftStick() const { return controllerLeftStick; }
+    const float2& GetRightStick() const { return controllerRightStick; }
     SDL_GameController* GetActiveController() const { return controllers[0]; }
     const KeyState* GetControllerButtons() const { return controllerButtons; }
     const std::pair<KeyState, float>& GetLeftTrigger() const { return leftTrigger; }

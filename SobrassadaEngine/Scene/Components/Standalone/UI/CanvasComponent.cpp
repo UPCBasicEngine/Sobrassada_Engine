@@ -1,8 +1,9 @@
-#include "CanvasComponent.h"
+﻿#include "CanvasComponent.h"
 
 #include "Application.h"
 #include "ButtonComponent.h"
 #include "CameraModule.h"
+#include "CanvasScalerComponent.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameUIModule.h"
@@ -19,17 +20,12 @@
 
 CanvasComponent::CanvasComponent(UID uid, GameObject* parent) : Component(uid, parent, "Canvas", COMPONENT_CANVAS)
 {
-    width  = (float)App->GetWindowModule()->GetWidth();
-    height = (float)App->GetWindowModule()->GetHeight();
 }
 
 CanvasComponent::CanvasComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    width                = initialState["Width"].GetFloat();
-    height               = initialState["Height"].GetFloat();
-    isInWorldSpaceEditor = initialState["IsInWorldSpaceEditor"].GetBool();
-    isInWorldSpaceGame   = initialState["IsInWorldSpaceGame"].GetBool();
+    renderMode = static_cast<CanvasRenderMode>(initialState["RenderMode"].GetInt());
 }
 
 CanvasComponent::~CanvasComponent()
@@ -39,28 +35,28 @@ CanvasComponent::~CanvasComponent()
 
 void CanvasComponent::Init()
 {
-    App->GetGameUIModule()->AddCanvas(this);
+    transform2D = parent->GetComponent<Transform2DComponent*>();
+    if (transform2D == nullptr)
+    {
+        parent->CreateComponent(COMPONENT_TRANSFORM_2D);
+        transform2D = parent->GetComponent<Transform2DComponent*>();
+    }
 
-    localComponentAABB = AABB(
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x - (width / 4.0f),
-            parent->GetGlobalTransform().TranslatePart().y - (height / 4.0f), 0
-        ),
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x + (width / 4.0f),
-            parent->GetGlobalTransform().TranslatePart().y + (height / 4.0f), 0
-        )
-    );
+    if (parent->GetComponent<CanvasScalerComponent*>() == nullptr)
+    {
+        parent->CreateComponent(COMPONENT_CANVAS_SCALER);
+    }
+
+    App->GetGameUIModule()->AddCanvas(this);
+    UpdateBoundingBox();
 }
 
 void CanvasComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
 
-    targetState.AddMember("Width", width, allocator);
-    targetState.AddMember("Height", height, allocator);
-    targetState.AddMember("IsInWorldSpaceEditor", isInWorldSpaceEditor, allocator);
-    targetState.AddMember("IsInWorldSpaceGame", isInWorldSpaceGame, allocator);
+    // Render mode: 0 = Overlay, 1 = WorldSpace
+    targetState.AddMember("RenderMode", static_cast<int>(renderMode), allocator);
 }
 
 void CanvasComponent::Clone(const Component* other)
@@ -68,14 +64,7 @@ void CanvasComponent::Clone(const Component* other)
     if (other->GetType() == ComponentType::COMPONENT_CANVAS)
     {
         const CanvasComponent* otherCanvas = static_cast<const CanvasComponent*>(other);
-        width                              = otherCanvas->width;
-        height                             = otherCanvas->height;
-
-        enabled                            = otherCanvas->enabled;
-        wasEnabled                         = otherCanvas->wasEnabled;
-
-        isInWorldSpaceEditor               = otherCanvas->isInWorldSpaceEditor;
-        isInWorldSpaceGame                 = otherCanvas->isInWorldSpaceGame;
+        renderMode                         = otherCanvas->renderMode;
     }
     else
     {
@@ -86,55 +75,41 @@ void CanvasComponent::Clone(const Component* other)
 void CanvasComponent::Update(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;
+    if (renderMode != CanvasRenderMode::ScreenSpaceOverlay) return;
 
+    // Update canvas if window size changed (only in overlay space)
     const auto& size = App->GetSceneModule()->GetScene()->GetWindowSize();
-    if (width != std::get<0>(size) || height != std::get<1>(size))
+    float newWidth   = std::get<0>(size);
+    float newHeight  = std::get<1>(size);
+    if (GetWidth() != newWidth || GetHeight() != newHeight)
     {
-        OnWindowResize(std::get<0>(size), std::get<1>(size));
+        OnWindowResize(newWidth, newHeight);
     }
 }
 
-void CanvasComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
+// Draw the canvas area in WorldSpace
 void CanvasComponent::RenderDebug(float deltaTime)
 {
-    if (!IsEffectivelyEnabled()) return;
-
-    App->GetDebugDrawModule()->DrawLine(
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x - width / 2,
-            parent->GetGlobalTransform().TranslatePart().y + height / 2, 0
-        ),
-        float3::unitX, width, float3(1, 1, 1)
-    );
-    App->GetDebugDrawModule()->DrawLine(
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x - width / 2,
-            parent->GetGlobalTransform().TranslatePart().y - height / 2, 0
-        ),
-        float3::unitX, width, float3(1, 1, 1)
-    );
-
-    App->GetDebugDrawModule()->DrawLine(
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x - width / 2,
-            parent->GetGlobalTransform().TranslatePart().y + height / 2, 0
-        ),
-        -float3::unitY, height, float3(1, 1, 1)
-    );
-
-    App->GetDebugDrawModule()->DrawLine(
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x + width / 2,
-            parent->GetGlobalTransform().TranslatePart().y + height / 2, 0
-        ),
-        -float3::unitY, height, float3(1, 1, 1)
-    );
+    float3 defaultColor = float3(1, 1, 1);
+    RenderDebug(deltaTime, defaultColor);
 }
 
+void CanvasComponent::RenderDebug(float deltaTime, const float3& color)
+{
+    if (!IsEffectivelyEnabled()) return;
+
+    float x     = parent->GetGlobalTransform().TranslatePart().x;
+    float y     = parent->GetGlobalTransform().TranslatePart().y;
+
+    float2 size = transform2D ? transform2D->GetScaledSize() : float2::zero;
+
+    App->GetDebugDrawModule()->DrawLine(float3(x - size.x / 2, y + size.y / 2, 0), float3::unitX, size.x, color);
+    App->GetDebugDrawModule()->DrawLine(float3(x - size.x / 2, y - size.y / 2, 0), float3::unitX, size.x, color);
+    App->GetDebugDrawModule()->DrawLine(float3(x - size.x / 2, y + size.y / 2, 0), -float3::unitY, size.y, color);
+    App->GetDebugDrawModule()->DrawLine(float3(x + size.x / 2, y + size.y / 2, 0), -float3::unitY, size.y, color);
+}
+
+// Renders all UI elements under this canvas using appropriate view/projection based on render mode
 void CanvasComponent::RenderUI()
 {
     if (!IsEffectivelyEnabled()) return;
@@ -147,15 +122,23 @@ void CanvasComponent::RenderUI()
     }
     glUseProgram(uiProgram);
 
-    const float4x4& view = isInWorldSpaceEditor ? App->GetCameraModule()->GetViewMatrix() : float4x4::identity;
-    const float4x4& proj = isInWorldSpaceEditor ? App->GetCameraModule()->GetProjectionMatrix()
-                                                : float4x4::D3DOrthoProjLH(-1, 1, width, height);
+    float4x4 view = float4x4::identity;
+    float4x4 proj = float4x4::identity;
+
+    if (renderMode == CanvasRenderMode::WorldSpace)
+    {
+        view = App->GetCameraModule()->GetViewMatrix();
+        proj = App->GetCameraModule()->GetProjectionMatrix();
+    }
+    else // ScreenSpaceOverlay
+    {
+        proj = float4x4::D3DOrthoProjLH(-1, 1, GetWidth(), GetHeight());
+    }
 
     for (const GameObject* child : sortedChildren)
     {
         if (!child->IsGloballyEnabled()) continue;
 
-        // Only render UI components
         Transform2DComponent* transform = child->GetComponent<Transform2DComponent*>();
         if (transform) transform->RenderWidgets();
 
@@ -167,29 +150,15 @@ void CanvasComponent::RenderUI()
     }
 }
 
-void CanvasComponent::RenderEditorInspector()
-{
-    Component::RenderEditorInspector();
-
-    ImGui::Text("Canvas");
-    ImGui::Checkbox("Show in world space", &isInWorldSpaceEditor);
-}
-
+// Update canvas size and bounding box when in Screen Space Overlay mode
 void CanvasComponent::OnWindowResize(const float width, const float height)
 {
-    this->width        = width;
-    this->height       = height;
+    if (renderMode != CanvasRenderMode::ScreenSpaceOverlay || !transform2D) return;
 
-    localComponentAABB = AABB(
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x - (width / 4.0f),
-            parent->GetGlobalTransform().TranslatePart().y - (height / 4.0f), 0
-        ),
-        float3(
-            parent->GetGlobalTransform().TranslatePart().x + (width / 4.0f),
-            parent->GetGlobalTransform().TranslatePart().y + (height / 4.0f), 0
-        )
-    );
+    if (parent->GetComponent<CanvasScalerComponent*>()) return;
+
+    transform2D->size = float2(width, height);
+    UpdateBoundingBox();
 }
 
 void CanvasComponent::UpdateChildren()
@@ -225,10 +194,12 @@ void CanvasComponent::UpdateMousePosition(const float2& mousePos)
     if (!IsEffectivelyEnabled()) return;
 
     // Only interact with elements if canvas is in screen mode
-    if (isInWorldSpaceEditor) return;
+    if (renderMode == CanvasRenderMode::WorldSpace) return;
 
     hoveredButton    = nullptr;
     bool buttonFound = false;
+
+    GLOG("\n Mouse position: %f %f", mousePos.x, mousePos.y)
 
     for (int i = (int)sortedChildren.size() - 1; i >= 0; --i)
     {
@@ -242,6 +213,23 @@ void CanvasComponent::UpdateMousePosition(const float2& mousePos)
     }
 }
 
+void CanvasComponent::RenderEditorInspector()
+{
+    Component::RenderEditorInspector();
+
+    if (enabled)
+    {
+        ImGui::Text("Canvas");
+
+        const char* modes[] = {"Screen Space - Overlay", "World Space"};
+        int currentMode     = static_cast<int>(renderMode);
+        if (ImGui::Combo("Render Mode", &currentMode, modes, IM_ARRAYSIZE(modes)))
+        {
+            ChangeRenderMode(static_cast<CanvasRenderMode>(currentMode));
+        }
+    }
+}
+
 void CanvasComponent::OnMouseButtonPressed() const
 {
     if (hoveredButton) hoveredButton->OnClick();
@@ -250,4 +238,69 @@ void CanvasComponent::OnMouseButtonPressed() const
 void CanvasComponent::OnMouseButtonReleased() const
 {
     if (hoveredButton) hoveredButton->OnRelease();
+}
+
+bool CanvasComponent::IsInWorldSpace() const
+{
+    return renderMode == CanvasRenderMode::WorldSpace;
+}
+
+void CanvasComponent::UpdateBoundingBox()
+{
+    float2 center      = transform2D->GetGlobalPosition();
+
+    float maxHalfSize  = 250.0f;
+    localComponentAABB = AABB(
+        float3(center.x - maxHalfSize, center.y - maxHalfSize, -0.1f),
+        float3(center.x + maxHalfSize, center.y + maxHalfSize, 0.1f)
+    );
+}
+
+float CanvasComponent::GetWidth() const
+{
+    return transform2D ? transform2D->size.x : 0.0f;
+}
+float CanvasComponent::GetHeight() const
+{
+    return transform2D ? transform2D->size.y : 0.0f;
+}
+
+void CanvasComponent::ChangeRenderMode(CanvasRenderMode newMode)
+{
+    GLOG("Canvas switching to: %d", newMode);
+
+    // Store the world position of each child before switching
+    std::unordered_map<UID, float2> savedWorldPositions;
+
+    for (UID childUID : parent->GetChildren())
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (!child) continue;
+
+        if (Transform2DComponent* transform = child->GetComponent<Transform2DComponent*>())
+        {
+            savedWorldPositions[child->GetUID()] = transform->GetAbsoluteWorldPosition();
+        }
+    }
+
+    renderMode = newMode;
+    UpdateBoundingBox();
+
+    // Update each child's local position based on their previous world position
+    for (UID childUID : parent->GetChildren())
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (!child) continue;
+
+        if (Transform2DComponent* transform = child->GetComponent<Transform2DComponent*>())
+        {
+            transform->OnCanvasRenderModeChanged(newMode, savedWorldPositions[child->GetUID()]);
+        }
+    }
+}
+
+float CanvasComponent::GetScreenScale() const
+{
+    CanvasScalerComponent* scaler = parent->GetComponent<CanvasScalerComponent*>();
+    return scaler ? scaler->GetScale() : 1.0f;
 }

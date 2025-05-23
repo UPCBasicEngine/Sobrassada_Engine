@@ -116,7 +116,7 @@ void CharacterControllerComponent::Clone(const Component* other)
 
 void CharacterControllerComponent::Update(float time) // SO many navmesh getters!!!! Memo to rethink this
 {
-    if (!IsEffectivelyEnabled()) return;
+    if (!IsEffectivelyEnabled() || !inputDown) return;
 
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
