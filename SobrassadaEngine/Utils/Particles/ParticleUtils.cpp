@@ -13,13 +13,13 @@ void ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType type, ParticleEmi
         return;
     case ParticleAddonType::BASE:
     {
-        BaseAddon* addon            = new BaseAddon(emitter);
+        BaseAddon* addon            = new BaseAddon();
         std::get<BaseAddon*>(tuple) = addon;
         break;
     }
     case ParticleAddonType::VELOCITY:
     {
-        VelocityAddon* addon            = new VelocityAddon(emitter);
+        VelocityAddon* addon            = new VelocityAddon();
         std::get<VelocityAddon*>(tuple) = addon;
         break;
     }
@@ -41,13 +41,13 @@ void ParticleUtils::CreateExistingComponent(const rapidjson::Value& initialState
         return;
     case ParticleAddonType::BASE:
     {
-        BaseAddon* addon            = new BaseAddon(initialState, emitter);
+        BaseAddon* addon            = new BaseAddon(initialState);
         std::get<BaseAddon*>(tuple) = addon;
         break;
     }
     case ParticleAddonType::VELOCITY:
     {
-        VelocityAddon* addon            = new VelocityAddon(initialState, emitter);
+        VelocityAddon* addon            = new VelocityAddon(initialState);
         std::get<VelocityAddon*>(tuple) = addon;
         break;
     }

@@ -4,14 +4,13 @@
 
 #include "rapidjson/document.h"
 
-class ParticleEmitter;
 class EmitterInstance;
 
 class ParticleAddon
 {
   public:
-    ParticleAddon(ParticleEmitter* owner, ParticleAddonType type) : emitterOwner(owner), addonType(type) {};
-    ParticleAddon(const rapidjson::Value& initialState, ParticleEmitter* owner);
+    ParticleAddon(ParticleAddonType type) : addonType(type) {};
+    ParticleAddon(const rapidjson::Value& initialState);
     virtual ~ParticleAddon() = default;
 
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
@@ -28,6 +27,5 @@ class ParticleAddon
 
   protected:
     bool isEnabled                = true;
-    ParticleEmitter* emitterOwner = nullptr;
     ParticleAddonType addonType   = ParticleAddonType::NONE;
 };

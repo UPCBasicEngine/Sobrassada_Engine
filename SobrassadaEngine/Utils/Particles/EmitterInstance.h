@@ -23,8 +23,13 @@ class EmitterInstance
     void Update(float deltaTime);
     void RenderEditor();
 
+    ParticleSystemComponent* GetOwner() { return owner; }
+
     unsigned int aliveParticles = 0;
     std::vector<Particle> particles;
+
+    float currentEmissionTime = 0.f;
+    bool isEmitting           = false;
 
   private:
     ParticleEmitter* emitter       = nullptr;

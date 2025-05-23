@@ -1,16 +1,16 @@
 #include "BaseAddon.h"
 
+#include "EmitterInstance.h"
 #include "GameObject.h"
-#include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
 #include "imgui.h"
 
-BaseAddon::BaseAddon(ParticleEmitter* owner) : ParticleAddon(owner, ParticleAddonType::BASE)
+BaseAddon::BaseAddon() : ParticleAddon(ParticleAddonType::BASE)
 {
 }
 
-BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : ParticleAddon(initialState, owner)
+BaseAddon::BaseAddon(const rapidjson::Value& initialState) : ParticleAddon(initialState)
 {
     if (initialState.HasMember("Duration")) duration = initialState["Duration"].GetFloat();
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
@@ -40,28 +40,28 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
 
 void BaseAddon::Init(EmitterInstance* emitterInstance)
 {
-    emitterOwner->particles.clear();
-    emitterOwner->particles.reserve(maxParticles);
+    emitterInstance->particles.clear();
+    emitterInstance->particles.reserve(maxParticles);
 
-    const float3 startingPosition = emitterOwner->GetOwner()->GetGlobalTransform().TranslatePart();
-    emitterOwner->particles.assign(maxParticles, Particle(startingPosition));
+    const float3 startingPosition = emitterInstance->GetOwner()->GetGlobalTransform().TranslatePart();
+    emitterInstance->particles.assign(maxParticles, Particle(startingPosition));
 
-    for (auto& particle : emitterOwner->particles)
+    for (auto& particle : emitterInstance->particles)
     {
         particle.lifeTime = randomLifetime ? rng->Float(minLifetime, maxLifetime) : maxLifetime;
     }
 
-    currentEmissionTime    = 0.f;
-    emitterOwner->isEmitting = true;
+    emitterInstance->currentEmissionTime = 0.f;
+    emitterInstance->isEmitting          = true;
 }
 
 void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
-    if (emitterOwner->isEmitting)
+    if (emitterInstance->isEmitting)
     {
-        float3 emitterPosition = emitterOwner->GetOwner()->GetGlobalTransform().TranslatePart();
+        float3 emitterPosition = emitterInstance->GetOwner()->GetGlobalTransform().TranslatePart();
 
-        for (auto& particle : emitterOwner->particles)
+        for (auto& particle : emitterInstance->particles)
         {
             if (particle.alive)
             {
@@ -80,12 +80,12 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
             }
         }
 
-        currentEmissionTime += deltaTime;
+        emitterInstance->currentEmissionTime += deltaTime;
     }
-    
-    if (currentEmissionTime > duration)
+
+    if (emitterInstance->currentEmissionTime > duration)
     {
-        emitterOwner->isEmitting = false;
+        emitterInstance->isEmitting = false;
     }
 }
 

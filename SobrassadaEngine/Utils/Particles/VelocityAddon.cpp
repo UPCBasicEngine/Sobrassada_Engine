@@ -1,16 +1,16 @@
 #include "VelocityAddon.h"
 
-#include "ParticleEmitter.h"
+#include "EmitterInstance.h"
 #include "ParticleSystemComponent.h"
 
 #include "imgui.h"
 
-VelocityAddon::VelocityAddon(ParticleEmitter* owner) : ParticleAddon(owner, ParticleAddonType::VELOCITY)
+VelocityAddon::VelocityAddon() : ParticleAddon(ParticleAddonType::VELOCITY)
 {
 }
 
-VelocityAddon::VelocityAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
-    : ParticleAddon(initialState, owner)
+VelocityAddon::VelocityAddon(const rapidjson::Value& initialState)
+    : ParticleAddon(initialState)
 {
     if (initialState.HasMember("StartSpeed")) startSpeed = initialState["StartSpeed"].GetFloat();
 }
@@ -29,9 +29,7 @@ void VelocityAddon::Save(rapidjson::Value& targetState, rapidjson::Document::All
 
 void VelocityAddon::Init(EmitterInstance* emitterInstance)
 {
-    // ADD INITIAL Y VELOCITY TO PARTICLES
-
-    for (auto& particle : emitterOwner->particles)
+    for (auto& particle : emitterInstance->particles)
     {
         particle.velocity = float3(rng->Float(-startSpeed, startSpeed), rng->Float(-startSpeed, startSpeed), 0.f);
     }
@@ -41,7 +39,7 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     if (!IsEnabled()) return;
 
-    for (auto& particle : emitterOwner->particles)
+    for (auto& particle : emitterInstance->particles)
     {
         particle.position = particle.position.Add(particle.velocity*deltaTime);
     }
