@@ -106,6 +106,9 @@
     <ClInclude Include="TileFloatScript.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="Archer.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -752,6 +755,9 @@
     </ClCompile>
     <ClCompile Include="TileFloatScript.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Archer.cpp">
+      <Filter>Characters\Enemies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
