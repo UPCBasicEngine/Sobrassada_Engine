@@ -47,7 +47,7 @@ constexpr int SCREEN_HEIGHT = 720;
 constexpr bool FULLSCREEN   = false;
 
 #ifdef GAME
-constexpr bool FULL_DESKTOP = true;
+constexpr bool FULL_DESKTOP = false;
 #else
 constexpr bool FULL_DESKTOP = false;
 #endif

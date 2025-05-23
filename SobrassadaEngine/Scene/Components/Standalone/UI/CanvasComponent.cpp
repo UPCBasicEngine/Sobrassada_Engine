@@ -8,6 +8,7 @@
 #include "GameObject.h"
 #include "GameUIModule.h"
 #include "ImageComponent.h"
+#include "CameraComponent.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
 #include "Transform2DComponent.h"
@@ -127,8 +128,21 @@ void CanvasComponent::RenderUI()
 
     if (renderMode == CanvasRenderMode::WorldSpace)
     {
-        view = App->GetCameraModule()->GetViewMatrix();
-        proj = App->GetCameraModule()->GetProjectionMatrix();
+        bool playMode                     = App->GetSceneModule()->GetInPlayMode();
+        const Frustum& editorCamera       = App->GetCameraModule()->GetCamera();
+        const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+        if (playMode && gameCamera)
+        {
+            view = gameCamera->GetViewMatrix();
+            proj = gameCamera->GetProjectionMatrix();
+
+        }
+        else
+        {
+            view = editorCamera.ViewMatrix();
+            proj = editorCamera.ProjectionMatrix();
+        }
     }
     else // ScreenSpaceOverlay
     {
