@@ -20,6 +20,7 @@
 #include "Archer.h"
 #include "SpawnPoint.h"
 #include "ChangeSceneScript.h"
+#include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 #include <string>
 
