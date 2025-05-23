@@ -39,6 +39,20 @@ bool MainMenuSelectorScript::Init()
 
 void MainMenuSelectorScript::Update(float deltaTime)
 {
+    int arrowsEnabled = 0;
+    for (GameObject* arrow : arrowImages)
+    {
+        if (arrow && arrow->IsEnabled())
+        {
+            ++arrowsEnabled;
+        }
+    }
+
+    if (arrowsEnabled > 1)
+    {
+        UpdateSelection(); // Reinicia l’estat correcte
+    }
+
     const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
 
     if (keys[SDL_SCANCODE_DOWN] == KEY_DOWN)
@@ -55,11 +69,11 @@ void MainMenuSelectorScript::Update(float deltaTime)
     if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
     {
         GameObject* selectedItem = menuItems[selectedIndex];
-
         ButtonComponent* button  = selectedItem->GetComponent<ButtonComponent*>();
         if (button) button->OnClick();
     }
 }
+
 
 void MainMenuSelectorScript::UpdateSelection()
 {

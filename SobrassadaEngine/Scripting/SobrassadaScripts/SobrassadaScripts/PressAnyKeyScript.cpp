@@ -9,6 +9,12 @@
 #include "SceneModule.h"
 #include <imgui.h>
 
+
+PressAnyKeyScript::PressAnyKeyScript(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Next GameObject to Show", InspectorField::FieldType::InputText, &nextGameObjectName});
+}
+
 bool PressAnyKeyScript::Init()
 {
     if (!parent)
@@ -27,7 +33,7 @@ void PressAnyKeyScript::Update(float deltaTime)
 
     if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
     {
-        //GLOG("Valid key pressed - Hiding '{}', showing '{}'", parent->GetName(), nextGameObjectName);
+        // GLOG("Valid key pressed - Hiding '{}', showing '{}'", parent->GetName(), nextGameObjectName);
 
         parent->SetEnabled(false);
 
@@ -37,30 +43,11 @@ void PressAnyKeyScript::Update(float deltaTime)
             if (go && go->GetName() == nextGameObjectName)
             {
                 go->SetEnabledRecursive(true);
-                //GLOG("Enabled GameObject '{}'", nextGameObjectName);
+                // GLOG("Enabled GameObject '{}'", nextGameObjectName);
                 break;
             }
         }
     }
-}
-
-void PressAnyKeyScript::Inspector()
-{
-    ImGui::SetCurrentContext(AppEngine->GetEditorUIModule()->GetImGuiContext());
-
-    AppEngine->GetEditorUIModule()->DrawScriptInspector(
-        [this]()
-        {
-            char buffer[128];
-            strncpy_s(buffer, sizeof(buffer), nextGameObjectName.c_str(), _TRUNCATE);
-            buffer[sizeof(buffer) - 1] = '\0';
-
-            if (ImGui::InputText("Next GameObject to Show", buffer, sizeof(buffer)))
-            {
-                nextGameObjectName = buffer;
-            }
-        }
-    );
 }
 
 void PressAnyKeyScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)

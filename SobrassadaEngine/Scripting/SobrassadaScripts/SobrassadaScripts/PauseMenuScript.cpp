@@ -7,6 +7,7 @@
 #include "Scene.h"
 #include "SceneModule.h"
 
+
 bool PauseMenuScript::Init()
 {
     return true;
@@ -18,21 +19,24 @@ void PauseMenuScript::Update(float deltaTime)
 
     if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN)
     {
-        const std::unordered_map<UID, GameObject*>& allGameObjects =
-            AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
+        const auto& allGameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
 
-        for (const std::pair<const UID, GameObject*>& gameObjectPair : allGameObjects)
+        for (const auto& [uid, gameObject] : allGameObjects)
         {
-            GameObject* gameObject = gameObjectPair.second;
-
             if (gameObject->GetName() == panelToShowName)
             {
                 UID parentUID        = gameObject->GetParent();
                 GameObject* parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
 
-                if (parentGO != nullptr && parentGO->IsEnabled())
+                if (parentGO && parentGO->IsEnabled())
                 {
-                    gameObject->SetEnabled(!gameObject->IsEnabled());
+                    bool newState = !gameObject->IsEnabled();
+                    gameObject->SetEnabledRecursive(newState);
+
+                    if (newState && parent)
+                    {
+                        parent->SetEnabledRecursive(false);
+                    }
                 }
 
                 break;

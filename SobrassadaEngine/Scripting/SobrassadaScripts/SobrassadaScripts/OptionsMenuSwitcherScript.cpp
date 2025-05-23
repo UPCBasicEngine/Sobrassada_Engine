@@ -51,9 +51,9 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
 
         // Enable the MainMenuPanel
         GameObject* mainMenuPanel = FindPanelByName("MainMenuPanel");
-        if (mainMenuPanel) mainMenuPanel->SetEnabled(true);
+        if (mainMenuPanel) mainMenuPanel->SetEnabledRecursive(true);
 
-        parent->SetEnabled(false);
+        parent->SetEnabledRecursive(false);
         initialized = false;
     }
 }

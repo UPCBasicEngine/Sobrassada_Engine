@@ -11,12 +11,11 @@
 class ButtonScript : public Script
 {
   public:
-    ButtonScript(GameObject* parent) : Script(parent) {}
+    ButtonScript(GameObject* parent);
     ~ButtonScript() override;
 
     bool Init() override;
     void Update(float deltaTime) override;
-    void Inspector() override;
 
     void OnClick();
     std::string GetCurrentPanelName() const;

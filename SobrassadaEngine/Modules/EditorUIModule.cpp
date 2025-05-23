@@ -952,6 +952,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                     {
                         std::string* str = static_cast<std::string*>(data->UserData);
                         str->resize(data->BufTextLen);
+                        data->Buf = str->data(); 
                     }
                     return 0;
                 },

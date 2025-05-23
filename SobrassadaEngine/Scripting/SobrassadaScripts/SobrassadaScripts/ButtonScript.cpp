@@ -15,7 +15,7 @@
 
 bool ButtonScript::Init()
 {
-    //GLOG("Initiating ButtonScript");
+    // GLOG("Initiating ButtonScript");
 
     if (!parent)
     {
@@ -36,6 +36,11 @@ bool ButtonScript::Init()
     return true;
 }
 
+ButtonScript::ButtonScript(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Panel to Show", InspectorField::FieldType::InputText, &panelToShowName});
+}
+
 ButtonScript::~ButtonScript()
 {
     if (hasRegisteredCallback)
@@ -48,24 +53,6 @@ ButtonScript::~ButtonScript()
 
 void ButtonScript::Update(float deltaTime)
 {
-}
-
-void ButtonScript::Inspector()
-{
-    ImGui::SetCurrentContext(AppEngine->GetEditorUIModule()->GetImGuiContext());
-    AppEngine->GetEditorUIModule()->DrawScriptInspector(
-        [this]()
-        {
-            char buffer[128];
-            strncpy_s(buffer, sizeof(buffer), panelToShowName.c_str(), _TRUNCATE);
-            buffer[sizeof(buffer) - 1] = '\0';
-
-            if (ImGui::InputText("Panel to Show", buffer, sizeof(buffer)))
-            {
-                panelToShowName = buffer;
-            }
-        }
-    );
 }
 
 void ButtonScript::OnClick()
@@ -89,7 +76,7 @@ void ButtonScript::OnClick()
         if (go && go->GetName() == panelToShowName)
         {
 
-             go->SetEnabledRecursive(true);
+            go->SetEnabledRecursive(true);
         }
     }
 }
