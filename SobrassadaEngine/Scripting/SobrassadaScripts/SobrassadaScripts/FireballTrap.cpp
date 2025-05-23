@@ -58,7 +58,7 @@ void FireballTrap::Update(float deltaTime)
     maxFallSpeed         = -editableMaxFallSpeed;
     gravity              = -editableGravity;
 
-    const float distance = character->GetLastPosition().Distance(parent->GetPosition());
+    const float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
     activated            = (distance <= activationRange);
 
     if (!activated && !attacking && !isDealingDamage) return;
@@ -70,7 +70,7 @@ void FireballTrap::Update(float deltaTime)
         StartAttack(gameTime);
     }
 
-    if (!hasImpacted)
+    if (attacking && !hasImpacted)
     {
         UpdateFireball(deltaTime);
     }
@@ -89,7 +89,7 @@ void FireballTrap::Update(float deltaTime)
 void FireballTrap::StartAttack(float gameTime)
 {
     fireball->SetEnabled(true);
-    const float3 startPos = parent->GetPosition() + float3(0.0f, fallingHeight, 0.0f);
+    const float3 startPos = parent->GetGlobalTransform().TranslatePart() + float3(0.0f, fallingHeight, 0.0f);
     fireball->SetLocalPosition(startPos);
 
     lastAttackTime = gameTime;
@@ -97,7 +97,7 @@ void FireballTrap::StartAttack(float gameTime)
     attacking      = true;
     hasImpacted    = false;
 
-    //GLOG("Random time: %.2f", randomAttackTime);
+    // GLOG("Random time: %.2f", randomAttackTime);
 
     randomAttackTime = -1.0f;
 }
@@ -124,7 +124,7 @@ void FireballTrap::DisableDamage()
 
 void FireballTrap::UpdateFireball(float deltaTime)
 {
-    float4x4 newTransform = fireball->GetGlobalTransform();
+    float4x4 newTransform = fireball->GetLocalTransform();
     float3 currentPos     = newTransform.TranslatePart();
 
     if (deltaTime < 0.1f)

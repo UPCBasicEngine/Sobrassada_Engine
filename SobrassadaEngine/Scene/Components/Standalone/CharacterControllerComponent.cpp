@@ -118,7 +118,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 {
     if (!IsEffectivelyEnabled() || !inputDown) return;
 
-    if (!App->GetSceneModule()->GetInPlayMode()) return;
+    if (!App->GetSceneModule()->GetInPlayMode() || !inputDown) return;
 
     float deltaTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
 

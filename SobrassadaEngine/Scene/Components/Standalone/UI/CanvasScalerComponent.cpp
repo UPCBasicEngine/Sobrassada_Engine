@@ -69,7 +69,6 @@ void CanvasScalerComponent::RenderEditorInspector()
                 static_cast<float>(App->GetWindowModule()->GetWidth()),
                 static_cast<float>(App->GetWindowModule()->GetHeight())
             );
-
             scale             = ComputeScale(windowSize);
             transform2D->size = referenceResolution * scale;
         }
