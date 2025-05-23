@@ -72,6 +72,11 @@ void CuChulainn::Update(float deltaTime)
     PerformAttack();
 }
 
+bool CuChulainn::IsDead()
+{
+    return isDead;
+}
+
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character

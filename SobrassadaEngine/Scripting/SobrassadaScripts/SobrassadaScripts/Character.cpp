@@ -180,6 +180,26 @@ void Character::TakeDamage(int amount)
     else OnDamageTaken(amount);
 }
 
+void Character::Restart()
+{
+    if (characterCollider)
+    {
+        characterCollider->rigidBody;
+        characterCollider = parent->GetComponent<CapsuleColliderComponent*>();
+        characterCollider->SetEnabled(true);
+    }
+
+    if (weaponCollider)
+    {
+        weaponCollider->rigidBody;
+        weaponCollider = weapon->GetComponent<CapsuleColliderComponent*>();
+        weaponCollider->SetEnabled(true);
+    }
+
+    parent->SetEnabled(true);
+    
+}
+
 void Character::Heal(int amount)
 {
     currentHealth += amount;
@@ -224,6 +244,7 @@ void Character::Die()
 
     if (weaponCollider)
     {
+        
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }

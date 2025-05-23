@@ -28,6 +28,9 @@ class CuChulainn : public Character
     void Update(float deltaTime) override;
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
+    bool IsDead();
+    void SetDeath(bool death) { isDead = death; }
+    void SetHealth(int health) { currentHealth = health; }
 
   private:
     void OnDeath() override;
@@ -50,6 +53,7 @@ class CuChulainn : public Character
     void Aim();
     void Move();
     void Respawn();
+   
 
   private:
     std::string cameraName      = "";
