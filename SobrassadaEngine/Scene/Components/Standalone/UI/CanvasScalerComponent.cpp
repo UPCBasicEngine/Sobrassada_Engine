@@ -39,8 +39,10 @@ void CanvasScalerComponent::Update(float deltaTime)
 {
     if (!canvas || !transform2D) return;
 
-    float2 windowSize = float2(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight());
-    scale             = ComputeScale(windowSize);
+    float2 windowSize = float2(
+        static_cast<float>(App->GetWindowModule()->GetWidth()), static_cast<float>(App->GetWindowModule()->GetHeight())
+    );
+    scale = ComputeScale(windowSize);
 }
 
 void CanvasScalerComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -63,7 +65,11 @@ void CanvasScalerComponent::RenderEditorInspector()
     {
         if (canvas && transform2D)
         {
-            float2 windowSize = float2(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight());
+            float2 windowSize = float2(
+                static_cast<float>(App->GetWindowModule()->GetWidth()),
+                static_cast<float>(App->GetWindowModule()->GetHeight())
+            );
+
             scale             = ComputeScale(windowSize);
             transform2D->size = referenceResolution * scale;
         }

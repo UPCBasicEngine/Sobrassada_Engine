@@ -36,7 +36,7 @@ void PressAnyKeyScript::Update(float deltaTime)
         {
             if (go && go->GetName() == nextGameObjectName)
             {
-                go->SetEnabled(true);
+                go->SetEnabledRecursive(true);
                 //GLOG("Enabled GameObject '{}'", nextGameObjectName);
                 break;
             }

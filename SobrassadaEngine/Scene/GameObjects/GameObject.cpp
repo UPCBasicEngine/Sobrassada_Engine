@@ -1153,3 +1153,15 @@ bool GameObject::IsGloballyEnabled() const
     GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
     return parent ? parent->IsGloballyEnabled() : true;
 }
+
+void GameObject::SetEnabledRecursive(bool value)
+{
+    enabled    = value;
+    wasEnabled = value;
+
+    for (UID childUID : children)
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child) child->SetEnabledRecursive(value);
+    }
+}

@@ -136,6 +136,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void CreatePrefab();
     bool IsGloballyEnabled() const;
+    void SetEnabledRecursive(bool value);
     UID GetPrefabUID() const { return prefabUID; }
     void SetPrefabUID(const UID uid) { prefabUID = uid; }
     void ParentUpdatedComponents();
