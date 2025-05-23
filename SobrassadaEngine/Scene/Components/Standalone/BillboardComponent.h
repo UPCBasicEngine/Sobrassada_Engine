@@ -33,13 +33,17 @@ class BillboardComponent : public Component
 
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
-    float GetMinU() const { return minU; }
-    float GetMaxU() const { return maxU; }
-    float GetMinV() const { return minV; }
-    float GetMaxV() const { return maxV; }
     bool GetLockPitch() const { return lockPitch; }
+
+    float GetXmin() const { return xmin; }
+    float GetYmin() const { return ymin; }
+    float GetSelectionWidth() const { return selectionWidth; }
+    float GetSelectionHeight() const { return selectionHeight; }
+
+
     UID GetMaterialUID() const { return currentMaterialUID; }
     UID GetTextureUID() const { return currentTextureUID; }
+
     const HashString& GetBillboardTag() const { return billboardTag; }
     std::list<BillboardComponent*>::iterator GetBillboardIterator() const { return billboardIterator; }
 
@@ -50,6 +54,7 @@ class BillboardComponent : public Component
     void SetIterator(std::list<BillboardComponent*>::iterator iterator) { billboardIterator = iterator; };
     void SetLockPitch(bool newPitch) { lockPitch = newPitch; };
     void SetUseTexture(bool newUseTexture) { useTexture = newUseTexture; };
+
 
     void SetUVSelection(float newX, float newY, float newWidth, float newHeight)
     {

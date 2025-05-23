@@ -235,8 +235,8 @@ void Billboard::UpdateUVCoords(float xmin, float ymin, float selectionWidth, flo
     minTexU              = xmin / resourceWidth;
     maxTexU              = (xmin + selectionWidth) / resourceWidth;
 
-    minTexV              = 1.f - ymin / resourceHeight;
-    maxTexV              = 1.f - (ymin + selectionHeight) / resourceHeight;
+    minTexV              = 1.f - (ymin + selectionHeight) / resourceHeight;
+    maxTexV              = 1.f - ymin / resourceHeight;
 
     for (auto billboardComponent : instanceComponents)
     {

@@ -39,7 +39,8 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
         if (initialState.HasMember("SelectionWidth")) selectionWidth = initialState["SelectionWidth"].GetFloat();
         if (initialState.HasMember("SelectionHeight")) selectionHeight = initialState["SelectionHeight"].GetFloat();
 
-        RecalculateUVs();
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
+
         RecalculateAABB();
     }
 }
@@ -158,26 +159,18 @@ void BillboardComponent::RenderEditorInspector()
     ImGui::PushItemWidth(100);
 
     if (ImGui::InputFloat("##xmin", &xmin))
-    {
-        RecalculateUVs();
-    }
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
     ImGui::SameLine();
     if (ImGui::InputFloat("##ymin", &ymin))
-    {
-        RecalculateUVs();
-    }
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
     ImGui::SameLine();
     ImGui::Text("Starting x,y position");
 
     if (ImGui::InputFloat("##selectionWidth", &selectionWidth))
-    {
-        RecalculateUVs();
-    }
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
     ImGui::SameLine();
     if (ImGui::InputFloat("##selectionHeight", &selectionHeight))
-    {
-        RecalculateUVs();
-    }
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
     ImGui::SameLine();
     ImGui::Text("Width and Height");
 
