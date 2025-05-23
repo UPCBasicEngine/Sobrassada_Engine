@@ -19,14 +19,14 @@
     <Filter Include="Characters\Enemies">
       <UniqueIdentifier>{7c5918da-d273-43d8-987f-06ca46cebfbc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Characters\Traps">
-      <UniqueIdentifier>{542608f8-4ab9-4512-8882-308a6eaeec76}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Characters\Camera">
       <UniqueIdentifier>{b8735c84-329e-48d9-9802-05cfa1b5f7ef}</UniqueIdentifier>
     </Filter>
     <Filter Include="Environment">
       <UniqueIdentifier>{9afcd9ac-fa5f-45af-ac0b-16d450c5873d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Traps">
+      <UniqueIdentifier>{542608f8-4ab9-4512-8882-308a6eaeec76}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -89,7 +89,7 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="FireballTrap.h">
-      <Filter>Characters\Traps</Filter>
+      <Filter>Environment\Traps</Filter>
     </ClInclude>
     <ClInclude Include="FreeCamera.h">
       <Filter>Utils</Filter>
@@ -739,7 +739,7 @@
       <Filter>Characters\Enemies</Filter>
     </ClCompile>
     <ClCompile Include="FireballTrap.cpp">
-      <Filter>Characters\Traps</Filter>
+      <Filter>Environment\Traps</Filter>
     </ClCompile>
     <ClCompile Include="FreeCamera.cpp">
       <Filter>Utils</Filter>
