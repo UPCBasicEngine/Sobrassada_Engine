@@ -1186,6 +1186,8 @@ void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Frameb
 
 void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
 {
+    gbuffer->Bind();
+
     float cubeVertices[] = {
         // positions
         -0.5f, -0.5f, 0.5f,  // 0
@@ -1232,6 +1234,7 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
         if (frustumPlanes.Intersects(objectOBB))
         {
             mesh = gameObject->GetComponent<DecalComponent*>();
+            if (mesh != nullptr) break;
         }
     }
     if (mesh == nullptr) return;
@@ -1242,7 +1245,7 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     glUseProgram(program);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
     glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
 
     uint64_t handle = mesh->GetResourceMaterial()->GetMaterial().diffuseTex;
@@ -1250,7 +1253,7 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
 
     float4x4 model    = mesh->GetParent()->GetGlobalTransform();
     float4x4 invModel = model.Inverted();
-    glUniformMatrix4fv(glGetUniformLocation(program, "invModel"), 1, GL_TRUE, invModel.ptr());
+    glUniformMatrix4fv(glGetUniformLocation(program, "invModel"), 1, GL_TRUE,  &invModel[0][0]);
 
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
@@ -1291,6 +1294,8 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    gbuffer->Unbind();
 }
 
 void Scene::TransparentPassRender(

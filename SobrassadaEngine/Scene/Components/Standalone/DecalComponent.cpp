@@ -10,7 +10,7 @@
 
 #include "imgui.h"
 
-DecalComponent::DecalComponent(UID uid, GameObject* parent) : Component(uid, parent, "Decal", COMPONENT_BILLBOARD)
+DecalComponent::DecalComponent(UID uid, GameObject* parent) : Component(uid, parent, "Decal", COMPONENT_DECAL)
 {
     RecalculateAABB();
 }
@@ -18,7 +18,7 @@ DecalComponent::DecalComponent(UID uid, GameObject* parent) : Component(uid, par
 DecalComponent::DecalComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
-    if (initialState.HasMember("Material")) currentMaterialUID = initialState["Material"].GetUint64();
+    if (initialState.HasMember("Material")) AddMaterial(initialState["Material"].GetUint64());
     if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
 
@@ -34,7 +34,7 @@ void DecalComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
     Component::Save(targetState, allocator);
 
     targetState.AddMember(
-        "Material", currentMaterial != nullptr ? currentMaterial->GetUID() : DEFAULT_MATERIAL_UID, allocator
+        "Material", currentMaterial != nullptr ? currentMaterial->GetUID() : INVALID_UID, allocator
     );
 
     targetState.AddMember("Height", height, allocator);

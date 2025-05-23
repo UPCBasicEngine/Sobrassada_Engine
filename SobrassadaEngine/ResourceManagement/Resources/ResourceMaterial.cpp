@@ -42,10 +42,10 @@ void ResourceMaterial::OnEditorUpdate()
             ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
         }
 
-        // ImGui::SameLine();
+        ImGui::SameLine();
 
         // TODO: commented all select buttons until save data to meta is implemented
-        /*if (ImGui::Button("Select Diffuse Texture"))
+        if (ImGui::Button("Select Diffuse Texture"))
         {
             ImGui::OpenPopup(CONSTANT_DIFFUSE_TEXTURE_SELECT_DIALOG_ID);
         }
@@ -64,7 +64,7 @@ void ResourceMaterial::OnEditorUpdate()
                 material.diffuseTex = handle;
                 updated             = true;
             }
-        }*/
+        }
     }
 
     updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
