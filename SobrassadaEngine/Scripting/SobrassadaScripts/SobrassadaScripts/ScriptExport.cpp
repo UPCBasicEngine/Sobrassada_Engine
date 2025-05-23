@@ -19,9 +19,8 @@
 #include "Soldier.h"
 #include "Archer.h"
 #include "SpawnPoint.h"
-#include "TileFloatScript.h"
+#include "ChangeSceneScript.h"
 #include "VSyncToggleScript.h"
-
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
@@ -31,26 +30,30 @@
 #endif
 
 constexpr const char* scripts[] = {
-    "RotateGameObjectScript",
-    "ButtonScript",
-    "GodModeScript",
-    "CuChulainnScript",
-    "SoldierScript",
-    "ExitGameScript",
-    "FullscreenToggleScript",
-    "VSyncToggleScript",
-    "PauseMenuScript",
-    "OptionsMenuSwitcherScript",
-    "MainMenuSelectorScript",
-    "PressAnyKeyScript",
-    "CameraMovement",
-    "Projectile",
-    "FreeCamera",
+    "RotateGameObjectScript",   
+    "ButtonScript",              
+    "GodModeScript",             
+    "CuChulainnScript",         
+    "SoldierScript",             
+    "ExitGameScript",            
+    "FullscreenToggleScript",    
+    "VSyncToggleScript",         
+    "PauseMenuScript",          
+    "OptionsMenuSwitcherScript", 
+    "MainMenuSelectorScript",    
+    "PressAnyKeyScript",        
+    "CameraMovement",            
+    "Projectile",                
+    "FreeCamera",                
     "SpawnPoint",
     "Banshee",
     "TileFloatScript",
     "FireballTrap",
-    "Archer"
+    "Archer",             
+    "ChangeSceneScript"        
+                      
+    
+
 };
 
 Application* AppEngine = nullptr;
@@ -89,7 +92,9 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
     if (scriptType == "GodModeScript") return new GodMode(parent);
+    if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
+
 
     return nullptr;
 }

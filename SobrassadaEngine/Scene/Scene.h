@@ -62,7 +62,7 @@ class SOBRASADA_API_ENGINE Scene
     void UpdateStaticSpatialStructure();
     void UpdateDynamicSpatialStructure();
 
-    void AddGameObject(UID uid, GameObject* newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
+    void  AddGameObject(UID uid, GameObject* newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
     void RemoveGameObjectHierarchy(UID gameObjectUUID);
 
     void AddGameObjectToUpdate(GameObject* gameObject);
