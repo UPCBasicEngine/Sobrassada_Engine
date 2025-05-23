@@ -28,8 +28,7 @@ class Billboard
     void UpdateLockPitch(bool newLock);
     void UpdateUseTexture(bool newTexture);
     void UpdatePositionsVbo(const float3& cameraPosition);
-    void UpdateUCoord(float minU, float maxU);
-    void UpdateVCoord(float minV, float maxV);
+    void UpdateUVCoords(float xmin, float ymin, float selectionWidth, float selectionHeight);
 
     void Render(const float4x4& VP, const float3& rightVector, const float3& upVector);
 

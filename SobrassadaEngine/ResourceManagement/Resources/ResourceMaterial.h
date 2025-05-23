@@ -29,7 +29,7 @@ struct MaterialGPU
     uint64_t normalTex    = 0;
     int hasSpecular       = 0;
     int hasMetallic       = 0;
-    uint64_t emmisiveTex  = 0; //Right now works as padding TODO: put emmissive
+    uint64_t emmisiveTex  = 0; // Right now works as padding TODO: put emmissive
 };
 
 class ResourceMaterial : public Resource
@@ -53,6 +53,8 @@ class ResourceMaterial : public Resource
     const bool IsTransparent() const { return isTransparent; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
+    int GetDiffuseWidth() const { return diffuseTexture.width; }
+    int GetDiffuseHeight() const { return diffuseTexture.height; }
 
   private:
     TextureInfo diffuseTexture;

@@ -51,16 +51,12 @@ class BillboardComponent : public Component
     void SetLockPitch(bool newPitch) { lockPitch = newPitch; };
     void SetUseTexture(bool newUseTexture) { useTexture = newUseTexture; };
 
-    void SetUCoords(float newMinU, float newMaxU)
+    void SetUVSelection(float newX, float newY, float newWidth, float newHeight)
     {
-        minU = newMinU;
-        maxU = newMaxU;
-    };
-
-    void SetVCoords(float newMinV, float newMaxV)
-    {
-        minV = newMinV;
-        maxV = newMaxV;
+        xmin            = newX;
+        ymin            = newY;
+        selectionWidth  = newWidth;
+        selectionHeight = newHeight;
     };
 
   private:
@@ -71,11 +67,10 @@ class BillboardComponent : public Component
     float height                      = 1.f;
     bool lockPitch                    = false;
 
-    float minU                        = 0.f;
-    float maxU                        = 1.f;
-
-    float minV                        = 0.f;
-    float maxV                        = 1.f;
+    float xmin                        = 0.f;
+    float selectionWidth              = 0.f;
+    float ymin                        = 0.f;
+    float selectionHeight             = 0.f;
 
     char newTagName[64]               = "";
     HashString billboardTag           = HashString("");

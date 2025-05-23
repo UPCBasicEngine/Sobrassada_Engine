@@ -227,25 +227,20 @@ void Billboard::UpdatePositionsVbo(const float3& cameraPosition)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Billboard::UpdateUCoord(float minU, float maxU)
+void Billboard::UpdateUVCoords(float xmin, float ymin, float selectionWidth, float selectionHeight)
 {
-    minTexU = minU;
-    maxTexU = maxU;
+    float resourceWidth  = useTexture ? (float)texture->GetTextureWidth() : (float)material->GetDiffuseWidth();
+    float resourceHeight = useTexture ? (float)texture->GetTextureHeight() : (float)material->GetDiffuseHeight();
+
+    minTexU              = xmin / resourceWidth;
+    maxTexU              = (xmin + selectionWidth) / resourceWidth;
+
+    minTexV              = 1.f - ymin / resourceHeight;
+    maxTexV              = 1.f - (ymin + selectionHeight) / resourceHeight;
 
     for (auto billboardComponent : instanceComponents)
     {
-        billboardComponent->SetUCoords(minTexU, maxTexU);
-    }
-}
-
-void Billboard::UpdateVCoord(float minV, float maxV)
-{
-    minTexV = minV;
-    maxTexV = maxV;
-
-    for (auto billboardComponent : instanceComponents)
-    {
-        billboardComponent->SetVCoords(minTexV, maxTexV);
+        billboardComponent->SetUVSelection(xmin, ymin, selectionWidth, selectionHeight);
     }
 }
 
