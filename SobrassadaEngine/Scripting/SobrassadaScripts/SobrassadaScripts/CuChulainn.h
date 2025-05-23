@@ -17,7 +17,8 @@ enum class CharacterStates
     BASIC_ATTACK,
     AIM,
     RESPAWN,
-    DEATH
+    DEATH,
+    FALL
 };
 
 class CuChulainn : public Character
@@ -81,6 +82,7 @@ class CuChulainn : public Character
     bool resetWeapon            = false;
 
     float deathTimer            = 0.0f;
+    float aimTimer              = 0.0f;
 
     CharacterStates state       = CharacterStates::IDLE;
     float3 spawnPos             = float3::zero;

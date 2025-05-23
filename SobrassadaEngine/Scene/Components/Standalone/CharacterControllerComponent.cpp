@@ -124,6 +124,9 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
+    float3 currentPos    = parent->GetGlobalTransform().TranslatePart();
+    lastPosition         = currentPos;
+
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
     dtNavMesh* dtNav     = nullptr;
     if (nav != nullptr)
@@ -173,15 +176,12 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime < 0.1f) // TODO: deltaTime spikes, need to know why
     {
-        verticalSpeed     += gravity * deltaTime;
-        verticalSpeed      = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
+        verticalSpeed += gravity * deltaTime;
+        verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
 
-        float3 currentPos  = parent->GetGlobalTransform().TranslatePart();
-        currentPos.y      += (verticalSpeed * deltaTime);
+        currentPos.y  += (verticalSpeed * deltaTime);
 
         AdjustHeightToNavMesh(currentPos);
-
-        lastPosition = currentPos;
         parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
     }
 
@@ -189,7 +189,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     {
         LookAtMovement(rotateDirection, deltaTime);
     }
-    Move(deltaTime); 
+    Move(deltaTime);
 }
 
 void CharacterControllerComponent::Render(float deltaTime)
@@ -400,6 +400,19 @@ void CharacterControllerComponent::LookAt(const float3& direction)
 {
     isRotating      = true;
     rotateDirection = direction;
+}
+
+float2 CharacterControllerComponent::GetRealSpeed() const
+{
+    float deltaTime       = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
+
+    float3 positionsDiff  = parent->GetGlobalTransform().TranslatePart() - lastPosition;
+    float horizontalSpeed = float2(positionsDiff.x / deltaTime, positionsDiff.z / deltaTime).Length();
+    float verticalSpeed   = positionsDiff.y / deltaTime;
+
+    return {horizontalSpeed, verticalSpeed};
+
+    // horizontalSpeed.Length() / deltaTime;
 }
 
 void CharacterControllerComponent::StartDash()

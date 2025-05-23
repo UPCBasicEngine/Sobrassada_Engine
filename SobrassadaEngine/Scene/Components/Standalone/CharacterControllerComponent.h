@@ -37,6 +37,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     const float& GetSpeed() const { return currentSpeed; }
     const float& GetMaxSpeed() const { return maxSpeed; }
     bool IsDashing() const { return isDashing; }
+    float2 GetRealSpeed() const;
 
     void SetTargetDirection(float3 newTargetDirection) { targetDirection = newTargetDirection; }
     void SetMaxSpeed(float newSpeed) { maxSpeed = newSpeed; }

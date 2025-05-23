@@ -116,7 +116,9 @@ void CuChulainn::HandleState(float deltaTime)
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim();
-    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN) Move();
+    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL)
+        Move();
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
@@ -124,7 +126,7 @@ void CuChulainn::HandleState(float deltaTime)
         const HashString& stateName = animComponent->GetCurrentStateName();
         GLOG("Animation name: %s", stateName.GetString().c_str());
 
-        if (stateName == HashString("Respawn"))
+        if (stateName == HashString("Respawn") || stateName == HashString("Land"))
         {
             character->EnableMovement(true);
         }
@@ -202,17 +204,18 @@ void CuChulainn::GetInputs()
 bool CuChulainn::CanDash()
 {
     // TODO: Add more condifions if there are (Maybe dashing doesn't cancel attack animations, etc.)
-    return dashTimer <= 0;
+    return dashTimer <= 0 && state != CharacterStates::AIM && state != CharacterStates::BASIC_ATTACK &&
+           state != CharacterStates::FALL;
 }
 
 bool CuChulainn::CanAttack()
 {
-    return (state != CharacterStates::DASH && !isAttacking);
+    return (state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL);
 }
 
 bool CuChulainn::CanAim() const
 {
-    return (state != CharacterStates::DASH && !isAttacking && throwTimer <= 0);
+    return (state != CharacterStates::DASH && !isAttacking && throwTimer <= 0 && state != CharacterStates::FALL);
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
@@ -270,6 +273,21 @@ void CuChulainn::LookAtJoystick()
 
 void CuChulainn::CheckIsFalling()
 {
+    const float verticalSpeed = character->GetRealSpeed().y;
+
+    GLOG("Vertical speed %f", verticalSpeed);
+    if (verticalSpeed <= -5.0f && animComponent)
+    {
+        animComponent->UseTrigger("Fall");
+        state = CharacterStates::FALL;
+    }
+
+    if (state == CharacterStates::FALL && verticalSpeed >= -0.1)
+    {
+        animComponent->UseTrigger("Land");
+        character->EnableMovement(false);
+    }
+
     const float maxDepth = -50.0f;
 
     if (parent->GetGlobalTransform().TranslatePart().y < maxDepth) SetPosition(lastDashStartPos);
@@ -279,7 +297,9 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
     if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
-    // GLOG("THROW SPEAR");
+    animComponent->OnResume();
+    aimTimer   = 0.0f;
+
     throwTimer = throwCooldown;
     if (weapon)
     {
@@ -352,8 +372,12 @@ void CuChulainn::Aim()
         if (camera) camera->EnableAimOffset(true);
         state = CharacterStates::AIM;
         character->EnableMovement(false);
+        animComponent->UseTrigger("Ranged");
     }
-    desiredAim = false;
+    desiredAim  = false;
+
+    aimTimer   += 0.012;
+    if (aimTimer > 0.2f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     else LookAtJoystick();
