@@ -3,11 +3,14 @@
 
 class SoundControlScript : public Script
 {
-public:
+  public:
     SoundControlScript(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
-    void DynamicSoundModifier();
-private:
+
+  private:
     float minDistanceToPlayer = 10.0f;
+    float maxVolume           = 1.0f;
+    float3 finalPosition;
+    bool isActive = false;
 };
