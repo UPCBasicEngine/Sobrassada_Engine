@@ -16,10 +16,10 @@
 TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Speed", InspectorField::FieldType::Int, &speed, 0, 100});
-    fields.push_back({"MinDistanceToPlayer", InspectorField::FieldType::Float, &minDistanceToPlayer, 0.0f, 100.0f});
-    fields.push_back({"Starting Position", InspectorField::FieldType::Vec3, &startPosition, 0.0, 100.0f});
-    fields.push_back({"Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, 0.0, 100.0f});
-    fields.push_back({"Starting Scale", InspectorField::FieldType::Vec3, &startScale, 0.0, 100.0f});
+    fields.push_back({"MinDistanceToPlayer", InspectorField::FieldType::Float, &minDistanceToPlayer, -100.0f, 100.0f});
+    fields.push_back({"Starting Position", InspectorField::FieldType::Vec3, &startPosition, -100.0, 100.0f});
+    fields.push_back({"Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, -100.0, 100.0f});
+    fields.push_back({"Starting Scale", InspectorField::FieldType::Vec3, &startScale, -100.0, 100.0f});
     fields.push_back(
         {"Set Start Transform",
          [this](Script* self)
@@ -59,8 +59,7 @@ void TileFloatScript::Update(float deltaTime)
 {
     if (!character) return;
 
-    const float distance = character->GetLastPosition().Distance(finalPosition);
-
+    const float distance = character->GetLastPosition().Distance(finalPosition + parent->GetParentGlobalTransform().TranslatePart());
     // Disable when far away (for performance)
     isActive             = (distance <= minDistanceToPlayer * 2);
     if (!isActive) return;
