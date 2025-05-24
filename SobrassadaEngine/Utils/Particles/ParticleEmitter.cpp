@@ -11,6 +11,7 @@
 #include "ResourceTexture.h"
 #include "ResourcesModule.h"
 #include "ShaderModule.h"
+#include "SpritesheetAddon.h"
 #include "VelocityAddon.h"
 
 #include "CameraModule.h"

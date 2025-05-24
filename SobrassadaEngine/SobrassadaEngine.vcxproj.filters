@@ -576,6 +576,9 @@
     <ClCompile Include="Utils\Particles\EmitterInstance.cpp">
       <Filter>Utils\Particles</Filter>
     </ClCompile>
+    <ClCompile Include="SpritesheetAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1132,6 +1135,9 @@
     </ClInclude>
     <ClInclude Include="Utils\Particles\EmitterInstance.h">
       <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="SpritesheetAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

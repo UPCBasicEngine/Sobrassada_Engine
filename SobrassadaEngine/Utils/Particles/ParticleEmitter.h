@@ -18,6 +18,8 @@ namespace math
 
 class BaseAddon;
 class VelocityAddon;
+class SpritesheetAddon;
+
 class ResourceTexture;
 class ResourceMaterial;
 class ParticleSystemComponent;
