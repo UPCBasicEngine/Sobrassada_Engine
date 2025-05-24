@@ -106,9 +106,8 @@ void AIAgentComponent::Update(float deltaTime)
     }
     else newPos = float3(ag->npos[0], ag->npos[1], ag->npos[2]);
 
-    float4x4 transform = parent->GetLocalTransform();
-    transform.SetTranslatePart(newPos);
-    parent->SetLocalTransform(transform); // Change parent position
+    // float4x4 transform = parent->GetLocalTransform();
+    parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
 }
 
 void AIAgentComponent::Render(float deltaTime)
@@ -224,17 +223,19 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
 
     if (lookForward)
     {
-        const float3 nextPos = parent->GetPosition() + (parent->GetPosition() - previousPos).Normalized();
+        const float3 nextPos = parent->GetGlobalTransform().TranslatePart() +
+                               (parent->GetGlobalTransform().TranslatePart() - previousPos).Normalized();
         LookAtMovement(nextPos, App->GetGameTimer()->GetDeltaTime() / 1000.0f);
     }
     bool result = pathfinder->GetCrowd()->requestMoveTarget(agentId, targetRef, destination.ptr());
+
     if (!result)
     {
         GLOG("Crowd agent failed to request movement.");
         return false;
     }
 
-    previousPos = parent->GetPosition();
+    previousPos = parent->GetGlobalTransform().TranslatePart();
     return true;
 }
 
@@ -289,9 +290,9 @@ void AIAgentComponent::AddToCrowd()
     currentSpeed        = defaultSpeed;
     currentAcceleration = defaultAcceleration;
     agentId             = App->GetPathfinderModule()->CreateAgent(
-        parent->GetPosition(), radius, height, currentSpeed, currentAcceleration
+        parent->GetGlobalTransform().TranslatePart(), radius, height, currentSpeed, currentAcceleration
     );
-
+    currentAngularSpeed = maxAngularSpeed;
     if (agentId != -1)
     {
         App->GetPathfinderModule()->AddAIAgentComponent(agentId, this);
@@ -318,8 +319,9 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
     if (desired.LengthSq() < 0.0001f) return;
     desired.Normalize();
 
-    float3 forward = parent->GetGlobalTransform().WorldZ();
-    forward.y      = 0.0f;
+    const float4x4& localTransform = parent->GetLocalTransform();
+    float3 forward                 = parent->GetGlobalTransform().WorldZ();
+    forward.y                      = 0.0f;
     forward.Normalize();
 
     float angle   = atan2(forward.Cross(desired).y, forward.Dot(desired));
@@ -329,13 +331,16 @@ void AIAgentComponent::LookAtMovement(const float3& targetPos, float deltaTime)
 
     if (fabs(angle) < 0.0001f) return;
 
-    const float4x4 rotY      = float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
-    const float4x4 newGlobal = parent->GetGlobalTransform() * rotY;
+    const float4x4 rotated = localTransform * float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+    parent->SetLocalTransform(rotated);
 
-    const float4x4 newlocal  = parent->GetParentGlobalTransform().Transposed() * newGlobal;
-
-    parent->SetLocalTransform(newlocal);
-    parent->UpdateTransformForGOBranch();
+    // const float4x4 rotY      = float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+    // const float4x4 newGlobal = parent->GetGlobalTransform() * rotY;
+    //
+    // const float4x4 newlocal  = parent->GetParentGlobalTransform().Transposed() * newGlobal;
+    //
+    // parent->SetLocalTransform(newlocal);
+    // parent->UpdateTransformForGOBranch();
 }
 
 void AIAgentComponent::SetSpeed(const float newSpeed, const float newAcceleration)

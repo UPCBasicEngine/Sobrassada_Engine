@@ -6,28 +6,35 @@
 #include "GameObject.h"
 #include "GodMode.h"
 #include "InputModule.h"
+
 #include <SDL_mouse.h>
+
+GodMode::GodMode(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Camera Name", InspectorField::FieldType::InputText, &cameraName});
+}
 
 bool GodMode::Init()
 {
     characterController = parent->GetComponent<CharacterControllerComponent*>();
     if (!characterController)
-    {
-        GLOG("GodMode character controller component not found for %s", parent->GetName().c_str());
-        return false;
-    }
+        GLOG("[WARNING] GodMode character controller component not found for %s", parent->GetName().c_str());
 
-    godCamera = parent->GetComponentChild<CameraComponent*>(AppEngine);
-    if (!godCamera)
+    GameObject* cameraGameObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
+    if (cameraGameObject)
     {
-        GLOG("GodMode camera component not found for %s", parent->GetName().c_str());
-        return false;
+        godCamera = cameraGameObject->GetComponent<CameraComponent*>();
+        if (!godCamera) GLOG("[WARNING] GodMode camera component not found for %s", parent->GetName().c_str());
     }
+    else GLOG("[WARNING] No camera found by the name: %s", cameraName.c_str())
+
     return true;
 }
 
 void GodMode::Update(float deltaTime)
 {
+    if (!characterController || !godCamera) return;
+
     const KeyState* keyboard = AppEngine->GetInputModule()->GetKeyboard();
 
     if (freeCamera)
