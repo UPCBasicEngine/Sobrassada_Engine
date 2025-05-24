@@ -820,14 +820,14 @@ void DebugDrawModule::HandleDebugRenderOptions()
 
     if (debugOptionValues[(int)DebugOptions::RENDER_OCTREE])
     {
-        Octree* octree = sceneModule->GetScene()->GetOctree();
-        if (octree != nullptr) RenderLines(octree->GetDrawLines(), float3(1.f, 0.f, 0.f));
+        Octree* staticTree = sceneModule->GetScene()->GetOctree();
+        if (staticTree != nullptr) RenderLines(staticTree->GetDrawLines(), float3(1.f, 0.f, 0.f));
     }
 
     if (debugOptionValues[(int)DebugOptions::RENDER_DYNAMICTREE])
     {
-        Quadtree* quadtree = sceneModule->GetScene()->GetDynamicTree();
-        if (quadtree != nullptr) RenderLines(quadtree->GetDrawLines(), float3(0.467f, 0.647f, 0.91f));
+        Octree* dynamicTree = sceneModule->GetScene()->GetDynamicTree();
+        if (dynamicTree != nullptr) RenderLines(dynamicTree->GetDrawLines(), float3(0.467f, 0.647f, 0.91f));
     }
 
     if (debugOptionValues[(int)DebugOptions::RENDER_CAMERA_RAY])

@@ -420,13 +420,13 @@ void CharacterControllerComponent::StartDash()
     LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * (dashDistance + 0.5f));
     LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * (dashDistance + 0.5f));
 
-    GameObject* centralHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* centralHit = RaycastController::GetRayIntersectionTrees(
         centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
-    GameObject* rightHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* rightHit = RaycastController::GetRayIntersectionTrees(
         rightRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
-    GameObject* leftHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* leftHit = RaycastController::GetRayIntersectionTrees(
         leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
 
