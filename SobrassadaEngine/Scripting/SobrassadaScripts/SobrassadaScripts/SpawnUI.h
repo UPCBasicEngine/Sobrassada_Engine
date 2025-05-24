@@ -3,6 +3,7 @@
 #include "Script.h"
 
 class GameObject;
+class ImageComponent;
 class SphereColliderComponent;
 
 class SpawnUI : public Script
@@ -15,7 +16,7 @@ class SpawnUI : public Script
 
   private:
     SphereColliderComponent* trigger = nullptr;
-    GameObject* objectUI             = nullptr;
+    ImageComponent* imageUI             = nullptr;
     std::string objectUIName         = "";
     bool onCollision                 = false;
 };

@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "SpawnUI.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/UI/ImageComponent.h"
 
 SpawnUI::SpawnUI(GameObject* parent) : Script(parent)
 {
@@ -14,8 +15,13 @@ bool SpawnUI::Init()
     trigger = parent->GetComponent<SphereColliderComponent*>();
     if (!trigger) GLOG("[WARNING] SpawnUI without sphere collider component.");
 
-    objectUI = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(objectUIName);
-    if (objectUI) objectUI->SetEnabled(false);
+    GameObject* objectUI = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(objectUIName);
+    if (objectUI)
+    {
+        imageUI = objectUI->GetComponent<ImageComponent*>();
+        if (imageUI) imageUI->SetEnabled(false);
+        else GLOG("[WARNING] No Image component in game object: %s", objectUIName.c_str());
+    }
     else GLOG("[WARNING] No UI game object found by the name: %s", objectUIName.c_str());
 
     return true;
@@ -23,9 +29,9 @@ bool SpawnUI::Init()
 
 void SpawnUI::Update(float deltaTime)
 {
-    if (!trigger || !objectUI) return;
+    if (!trigger || !imageUI) return;
 
-    if (!onCollision) objectUI->SetEnabled(false);
+    if (!onCollision) imageUI->SetEnabled(false);
 
     onCollision = false;
 }
@@ -33,6 +39,6 @@ void SpawnUI::Update(float deltaTime)
 void SpawnUI::OnCollision(GameObject* otherObject, const float3& collisionNormal)
 {
     // triggers only collision with Player
-    objectUI->SetEnabled(true);
+    imageUI->SetEnabled(true);
     onCollision = true;
 }
