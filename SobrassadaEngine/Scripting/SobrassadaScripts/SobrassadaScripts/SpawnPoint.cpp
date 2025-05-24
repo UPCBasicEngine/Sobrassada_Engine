@@ -13,6 +13,7 @@ SpawnPoint::SpawnPoint(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Set only once", InspectorField::FieldType::Bool, &isOneUse});
+    
 }
 
 bool SpawnPoint::Init()

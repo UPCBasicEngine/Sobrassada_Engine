@@ -31,7 +31,7 @@ class CuChulainn : public Character
     bool IsDead();
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { currentHealth = health; }
-
+    void Respawn();
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -52,7 +52,7 @@ class CuChulainn : public Character
     void Dash();
     void Aim();
     void Move();
-    void Respawn();
+    
    
 
   private:

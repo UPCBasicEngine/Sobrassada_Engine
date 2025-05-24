@@ -147,14 +147,7 @@ void CuChulainn::GetInputs()
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
-    if (keyboard[SDL_SCANCODE_F5])
-    {
-        Respawn();
-    }
-    if (keyboard[SDL_SCANCODE_F6])
-    {
-        spawnPos = parent->GetPosition();
-    }
+    
 }
 
 bool CuChulainn::CanDash()

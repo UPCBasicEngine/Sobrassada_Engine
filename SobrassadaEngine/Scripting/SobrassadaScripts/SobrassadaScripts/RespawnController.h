@@ -11,7 +11,7 @@ class RespawnController : public Script
 
     bool Init() override;
     void Update(float deltaTime) override;
-    void Respawn();
+   
 
   private:
     std::string playerName = "";
@@ -19,5 +19,5 @@ class RespawnController : public Script
     bool isPlayerDead      = false;
     float respawnTimer     = 0.0f;
     float respawnInit      = 5.0f;
-    CuChulainn* cuState    = nullptr;
+    int healthToSet        = 0;
 };
