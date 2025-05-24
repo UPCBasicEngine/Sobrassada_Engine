@@ -1,0 +1,72 @@
+#include "pch.h"
+
+#include "ChangeSceneScript.h"
+#include "CuChulainn.h"
+#include "GameObject.h"
+#include "Globals.h" 
+#include "Scene.h"
+#include "SceneModule.h"
+#include "FileSystem/FileSystem.h"
+#include "ProjectModule.h"
+#include "ScriptComponent.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
+
+
+ChangeSceneScript::ChangeSceneScript(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
+    fields.push_back({"Target Scene Name", InspectorField::FieldType::InputText, &targetSceneName});
+   
+}
+
+bool ChangeSceneScript::Init()
+{
+    player = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(playerName);
+    scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+    fullScenePath = scenesPath + targetSceneName + SCENE_EXTENSION;
+    
+    if (!player)
+    {
+        GLOG("[WARNING] ChangeSceneScript: No player found by the name '%s'", playerName.c_str());
+        return false;
+    }
+    return true;
+}
+
+void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+{
+    if (otherObject != player) return;
+
+    ScriptComponent* scriptComp = player->GetComponent<ScriptComponent*>();
+    if (scriptComp)
+    {
+        CuChulainn* playerScript = scriptComp->GetScriptByType<CuChulainn>();
+        if (playerScript)
+        {
+            GLOG("Processing scene change request to: %s", targetSceneName);
+
+            SceneModule* sceneModule = AppEngine->GetSceneModule();
+
+            rapidjson::Document doc;
+            if (FileSystem::LoadJSON(fullScenePath.c_str(), doc))
+            {
+                if (doc.HasMember("Scene") && doc["Scene"].IsObject())
+                {
+
+                    sceneModule->CloseScene();
+                    sceneModule->LoadScene(doc["Scene"], false);
+                    sceneModule->SwitchPlayMode(true);
+                    
+                    
+
+                    GLOG("Scene change successful!");
+                   
+                }
+            }
+
+            GLOG("[ERROR] Failed to load scene: %s", targetSceneName);
+
+            
+        }
+    }
+}
