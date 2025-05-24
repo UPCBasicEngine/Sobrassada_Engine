@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <Math/MathConstants.h>
 
 FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 {
@@ -62,34 +63,32 @@ void FireballTrap::Update(float deltaTime)
     // TODO Make all movement depended on the deltaTime
     if (!character || !groundMesh || !damageCollider || !fireball) return;
 
-    if (activationState == SLEEPING)
+    float distance; 
+    switch (activationState)
     {
-        const float distance = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
-        if (distance <= activationRange * activationRange)
-        {
-            randomAttackTime = GenerateRandomAttackTime(minAttackCooldown, maxAttackCooldown);
-            activationState = IDLE;
-        }
-        return;
+        case SLEEPING:
+            distance = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
+            if (distance <= activationRange * activationRange)
+            {
+                randomAttackTime = GenerateRandomAttackTime(minAttackCooldown, maxAttackCooldown);
+                activatedTime = 0.0f;
+                activationState = IDLE;
+            }
+            break;
+        case IDLE:
+            activatedTime += deltaTime;
+            if (activatedTime >= randomAttackTime)
+                StartAttack();
+            break;
+        case DROPPING:
+            UpdateFireball(deltaTime);
+            break;
+        case DAMAGING:
+            activatedTime += deltaTime;
+            if (activatedTime - randomAttackTime >= damageDuration) // Not fully accurate, but probably ok
+                DisableDamage();
+            break;
     }
-
-    if (!attacking && activatedTime >= randomAttackTime)
-    {
-        StartAttack();
-    } else if (attacking && !hasImpacted)
-    {
-        UpdateFireball(deltaTime);
-    } else if (attacking && fireball->GetGlobalTransform().TranslatePart().y <= parent->GetGlobalTransform().TranslatePart().y)
-    {
-        HandleImpact();
-    } else if (isDealingDamage && activatedTime - randomAttackTime >= damageDuration)
-    {
-        DisableDamage();
-        randomAttackTime = GenerateRandomAttackTime(minAttackCooldown, maxAttackCooldown);
-        activatedTime = 0;
-    }
-
-    activatedTime += deltaTime;
 }
 
 void FireballTrap::StartAttack()
@@ -100,12 +99,7 @@ void FireballTrap::StartAttack()
     if (fireballShadow != nullptr)  fireballShadow->SetEnabled(true);
 
     verticalSpeed  = 0.0f;
-    attacking      = true;
-    hasImpacted    = false;
-
-    // GLOG("Random time: %.2f", randomAttackTime);
-
-    randomAttackTime = -1.0f;
+    activationState = DROPPING;
 }
 
 void FireballTrap::HandleImpact()
@@ -115,9 +109,7 @@ void FireballTrap::HandleImpact()
     groundMesh->SetEnabled(true);
     damageCollider->SetEnabled(true);
 
-    attacking       = false;
-    isDealingDamage = true;
-    hasImpacted     = true;
+    activationState = DAMAGING;
 }
 
 void FireballTrap::DisableDamage()
@@ -125,26 +117,29 @@ void FireballTrap::DisableDamage()
     groundMesh->SetEnabled(false);
     damageCollider->SetEnabled(false);
 
-    isDealingDamage = false;
+    activationState = SLEEPING;
 }
 
 void FireballTrap::UpdateFireball(float deltaTime)
 {
     float4x4 newTransform = fireball->GetLocalTransform();
     float3 currentPos     = newTransform.TranslatePart();
-
-    if (deltaTime < 0.1f)
+    if (deltaTime < 0.5f)
     {
-        verticalSpeed += -editableGravity * deltaTime;
-        verticalSpeed  = std::max(verticalSpeed, -editableMaxFallSpeed); // Clamp fall speed
-
-        currentPos.y  += (verticalSpeed * deltaTime);
+        verticalSpeed = std::min(verticalSpeed + editableGravity * deltaTime, editableMaxFallSpeed); // Clamp fall speed
+        currentPos.y  -= verticalSpeed;
     }
 
-    newTransform = newTransform * float4x4::RotateX(rotationSpeed * deltaTime);
-    newTransform.SetTranslatePart(currentPos);
+    if (currentPos.y <= groundMesh->GetGlobalTransform().TranslatePart().y)
+    {
+        HandleImpact();
+    } else
+    {
+        newTransform = newTransform * float4x4::RotateX(rotationSpeed * deltaTime);
+        newTransform.SetTranslatePart(currentPos);
 
-    fireball->SetLocalTransform(newTransform);
+        fireball->SetLocalTransform(newTransform);
+    }
 }
 
 float FireballTrap::GenerateRandomAttackTime(float min, float max)
