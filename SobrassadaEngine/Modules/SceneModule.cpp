@@ -247,7 +247,7 @@ void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* ke
     if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN && !keyboard[SDL_SCANCODE_LALT] &&
         keyboard[SDL_SCANCODE_LSHIFT])
     {
-        GameObject* selectedObject = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+        GameObject* selectedObject = RaycastController::GetRayIntersectionTrees(
             App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
         );
 
@@ -260,7 +260,7 @@ void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* ke
     }
     else if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN && !keyboard[SDL_SCANCODE_LALT])
     {
-        GameObject* selectedObject = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+        GameObject* selectedObject = RaycastController::GetRayIntersectionTrees(
             App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
         );
 

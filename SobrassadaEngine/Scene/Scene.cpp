@@ -871,8 +871,8 @@ void Scene::CreateDynamicSpatialDataStruct()
     // PARAMETRIZED IN FUTURE
     float3 center    = float3::zero;
     float length     = 2000;
-    int nodeCapacity = 5;
-    dynamicTree      = new Quadtree(center, length, nodeCapacity);
+    int nodeCapacity = 15;
+    dynamicTree      = new Octree(center, length, nodeCapacity);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {

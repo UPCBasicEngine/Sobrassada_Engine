@@ -124,6 +124,9 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
+    float3 currentPos    = parent->GetGlobalTransform().TranslatePart();
+    lastPosition         = currentPos;
+
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
     dtNavMesh* dtNav     = nullptr;
     if (nav != nullptr)
@@ -173,15 +176,12 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime < 0.1f) // TODO: deltaTime spikes, need to know why
     {
-        verticalSpeed     += gravity * deltaTime;
-        verticalSpeed      = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
+        verticalSpeed += gravity * deltaTime;
+        verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
 
-        float3 currentPos  = parent->GetGlobalTransform().TranslatePart();
-        currentPos.y      += (verticalSpeed * deltaTime);
+        currentPos.y  += (verticalSpeed * deltaTime);
 
         AdjustHeightToNavMesh(currentPos);
-
-        lastPosition = currentPos;
         parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
     }
 
@@ -189,7 +189,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     {
         LookAtMovement(rotateDirection, deltaTime);
     }
-    Move(deltaTime); 
+    Move(deltaTime);
 }
 
 void CharacterControllerComponent::Render(float deltaTime)
@@ -250,6 +250,8 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 {
     if (!navMeshQuery || currentPolyRef == 0) return;
 
+    isGrounded = false;
+
     dtQueryFilter filter;
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
@@ -272,8 +274,9 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
     dtStatus stH     = navMeshQuery->getPolyHeight(newRef, closest, &polyHeight);
     if (dtStatusSucceed(stH))
     {
+        isGrounded                = true;
         float distToFloor         = polyHeight - currentPos.y;
-        const float maxStepHeight = 0.5f;
+        const float maxStepHeight = 0.2f;
         if (distToFloor >= 0.0f && distToFloor <= maxStepHeight)
         {
             currentPos.y  = polyHeight;
@@ -284,17 +287,18 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 
 void CharacterControllerComponent::Move(float deltaTime)
 {
-    if (!movementEnabled)
-    {
-        currentSpeed = 0;
-        return;
-    }
-
     if (!navMeshQuery || currentPolyRef == 0) return;
 
     const float3& currentPos = parent->GetGlobalTransform().TranslatePart();
-    currentSpeed          = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
-                                                                : Lerp(currentSpeed, 0, 100 * deltaTime);
+    if (!movementEnabled)
+    {
+        currentSpeed = 0;
+    }
+    else
+    {
+        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
+                                                           : Lerp(currentSpeed, 0, 100 * deltaTime);
+    }
 
     const float3 offsetXZ = rotateDirection * currentSpeed * deltaTime;
     float3 desiredPos     = currentPos + offsetXZ;
@@ -402,6 +406,19 @@ void CharacterControllerComponent::LookAt(const float3& direction)
     rotateDirection = direction;
 }
 
+float2 CharacterControllerComponent::GetRealSpeed() const
+{
+    const float deltaTime       = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
+
+    const float3 positionsDiff  = parent->GetGlobalTransform().TranslatePart() - lastPosition;
+    const float horizontalSpeed = float2(positionsDiff.x / deltaTime, positionsDiff.z / deltaTime).Length();
+    const float verticalSpeed   = positionsDiff.y / deltaTime;
+
+    return {horizontalSpeed, verticalSpeed};
+
+    // horizontalSpeed.Length() / deltaTime;
+}
+
 void CharacterControllerComponent::StartDash()
 {
     isDashing                      = true;
@@ -420,13 +437,13 @@ void CharacterControllerComponent::StartDash()
     LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * (dashDistance + 0.5f));
     LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * (dashDistance + 0.5f));
 
-    GameObject* centralHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* centralHit = RaycastController::GetRayIntersectionTrees(
         centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
-    GameObject* rightHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* rightHit = RaycastController::GetRayIntersectionTrees(
         rightRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
-    GameObject* leftHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* leftHit = RaycastController::GetRayIntersectionTrees(
         leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
 

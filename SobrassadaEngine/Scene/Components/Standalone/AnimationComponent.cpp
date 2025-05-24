@@ -12,7 +12,6 @@
 #include "Resource.h"
 #include "ResourceAnimation.h"
 #include "ResourceModel.h"
-#include "ResourceStateMachine.h"
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
