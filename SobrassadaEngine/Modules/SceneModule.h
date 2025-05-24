@@ -8,7 +8,7 @@
 class GameObject;
 enum KeyState;
 
-class SceneModule : public Module
+class SOBRASADA_API_ENGINE SceneModule : public Module
 {
   public:
     SceneModule();

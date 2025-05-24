@@ -46,10 +46,10 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
+#include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/UI/CanvasScalerComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -456,17 +456,17 @@ void Scene::RenderEditorControl(bool& editorControlMenu)
     ImGui::SameLine();
     if (ImGui::Button("Pause"))
     {
-        gameTimer->TogglePause();
+        if (App->GetSceneModule()->GetInPlayMode()) gameTimer->TogglePause();
     }
     ImGui::SameLine();
     if (ImGui::Button("Step"))
     {
-        stepPlaying = true;
+        if (App->GetSceneModule()->GetInPlayMode()) stepPlaying = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("Stop"))
     {
-        stopPlaying = true;
+        if (App->GetSceneModule()->GetInPlayMode()) stopPlaying = true;
     }
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100.0f);
@@ -1183,7 +1183,12 @@ void Scene::TransparentPassRender(
 {
     unsigned int width  = framebuffer->GetTextureWidth();
     unsigned int height = framebuffer->GetTextureHeight();
+
+#ifndef GAME
     framebuffer->Bind();
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
     // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glViewport(0, 0, width, height);
 
