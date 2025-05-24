@@ -291,12 +291,17 @@ bool SplineComponent::PointGizmo(size_t idx)
     if (selectedIdx >= 0 && selectedIdx < (int)points.size())
     {
         float4x4 localMatrix  = float4x4::FromTRS(points[idx], float4x4::identity, float3::one);
-        float4x4 globalMatrix = parent->GetGlobalTransform() * localMatrix;
+        
+        //In order to ignore Rotation and Scale from parent and set it to 1
+        const float3 translate        = parent->GetGlobalTransform().TranslatePart();
+        float4x4 parentT              = float4x4::FromTRS(translate, float4x4::identity, float3::one);
+
+        float4x4 globalMatrix         = parentT * localMatrix;
 
         float3 newPos, _unusedRot, _unusedScale;
 
         bool moved = App->GetEditorUIModule()->RenderImGuizmo(
-            localMatrix, globalMatrix, parent->GetGlobalTransform(), newPos, _unusedRot, _unusedScale
+            localMatrix, globalMatrix, parentT, newPos, _unusedRot, _unusedScale
         );
 
         if (moved) points[idx] = localMatrix.TranslatePart();
@@ -308,9 +313,8 @@ bool SplineComponent::PointGizmo(size_t idx)
 float3 SplineComponent::GetPointWorld(size_t idx) const
 {
     if (idx >= points.size()) return float3::zero;
-    const float4x4& worldOffset = parent->GetGlobalTransform();
 
-    return (worldOffset * float4(points[idx], 1.f)).xyz();
+    return points[idx] + parent->GetGlobalTransform().TranslatePart();
 }
 
 float3 SplineComponent::GetWorldPositionInSpine(float posT) const
@@ -324,7 +328,5 @@ void SplineComponent::SetPointWorld(size_t idx, const float3& worldPos)
 {
     if (idx >= points.size()) return;
 
-    const float4x4 invParent = parent->GetGlobalTransform().Inverted();
-
-    points[idx]              = (invParent * float4(worldPos, 1.f)).xyz();
+    points[idx] = worldPos - parent->GetGlobalTransform().TranslatePart();
 }
