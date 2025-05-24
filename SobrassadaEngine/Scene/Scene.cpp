@@ -1280,7 +1280,7 @@ void Scene::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, Ca
         }
         else glUniform1i(glGetUniformLocation(program, "hasMetallic"), 0);
 
-        glUniform1i(glGetUniformLocation(program, "hasNormal"), decals[0]->GetResourceMaterial()->GetMaterial().normalTex != 0 ? 1 : 0);
+        glUniform1i(glGetUniformLocation(program, "hasNormal"), decals[0]->GetResourceMaterial()->HasNormal() ? 1 : 0);
 
         const uint64_t nhandle = decals[0]->GetResourceMaterial()->GetMaterial().normalTex;
         glUniformHandleui64ARB(glGetUniformLocation(program, "decalNormalTex"), nhandle);

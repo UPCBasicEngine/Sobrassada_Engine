@@ -362,6 +362,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
 
         normalTexture.width  = normTexture->GetTextureWidth();
         normalTexture.height = normTexture->GetTextureHeight();
+        hasNormal            = true;
     }
 
     delete diffTexture;
