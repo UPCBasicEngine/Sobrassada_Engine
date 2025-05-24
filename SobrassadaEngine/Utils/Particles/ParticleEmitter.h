@@ -58,23 +58,21 @@ class ParticleEmitter
     // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     void UpdateParticlesVBO(EmitterInstance* emitterInstance);
 
-  public:
-    bool isEmitting = false;
-    std::vector<Particle> particles;
-
   private:
-    unsigned int quadVBO               = 0;
-    unsigned int particlesVBO          = 0;
+    unsigned int quadVBO            = 0;
+    unsigned int particlesVBO       = 0;
 
-    unsigned int aliveParticles        = 0;
+    unsigned int aliveParticles     = 0;
 
-    HashString emitterTag              = HashString("");
+    HashString emitterTag           = HashString("");
 
-    bool useTexture                    = false;
-    std::string currentResourceName    = "No material";
+    bool useTexture                 = false;
+    std::string currentResourceName = "No material";
 
-    ResourceTexture* texture           = nullptr;
-    ResourceMaterial* material         = nullptr;
+    ResourceTexture* texture        = nullptr;
+    ResourceMaterial* material      = nullptr;
+
+    std::vector<float3> alivePositions;
 
     std::tuple<ADDON_TYPES> addonTuple = std::make_tuple(ADDON_NULLPTR);
     std::bitset<std::tuple_size<decltype(addonTuple)>::value> createdAddons;

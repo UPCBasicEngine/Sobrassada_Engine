@@ -139,8 +139,6 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
 void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
-    // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
-
     if (!emitterInstance->isEmitting) return;
 
     std::apply(
@@ -214,6 +212,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         App->GetOpenGLModule()->AddDrawCallsCount();
 
         aliveParticles = 0;
+        alivePositions.clear();
     }
 }
 
@@ -378,8 +377,7 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
 void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
 {
     // ONLY ADD CURRENT ALIVE PARTICLES
-    std::vector<float3> alivePositions;
-    alivePositions.reserve(emitterInstance->particles.size());
+    alivePositions.reserve(alivePositions.size() + emitterInstance->particles.size());
 
     for (int i = 0; i < emitterInstance->particles.size(); ++i)
     {
