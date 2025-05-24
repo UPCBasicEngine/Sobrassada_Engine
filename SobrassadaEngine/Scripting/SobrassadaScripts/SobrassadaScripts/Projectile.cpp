@@ -49,7 +49,7 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
 
 void Projectile::OnCollision(GameObject* otherObject, const float3& collisionNormal)
 {
-    GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
+    //GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
 
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
