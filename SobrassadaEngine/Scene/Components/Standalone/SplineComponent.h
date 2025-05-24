@@ -29,7 +29,7 @@ public:
         const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT
     ) const;
     size_t Wrap(int i) const;
-    float3 EvaluateSegment(size_t seg, float segmentT) const;
+    float3 EvaluateSegment(const size_t seg, float segmentT) const;
     float3 Evaluate(float t) const;
     bool PointGizmo(size_t idx);
 

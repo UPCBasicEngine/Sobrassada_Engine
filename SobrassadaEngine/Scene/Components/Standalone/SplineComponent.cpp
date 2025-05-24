@@ -247,11 +247,11 @@ size_t SplineComponent::Wrap(int i) const
     return (size_t)((i % n + n) % n);
 }
 
-float3 SplineComponent::EvaluateSegment(size_t seg, float segmentT) const
+float3 SplineComponent::EvaluateSegment(const size_t seg, float segmentT) const
 {
     auto idx = [this](int k)
     {
-        int n = (int)points.size();
+        const int n = (int)points.size();
         if (loop) return Wrap(k);
 
         if (k < 0) return (size_t)0;
@@ -274,15 +274,15 @@ float3 SplineComponent::Evaluate(float t) const
 
     const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
 
-    float segFloat   = t * numSeg;
+    const float segFloat   = t * numSeg;
     if (segFloat >= numSeg) return worldOffset + (loop ? points.front() : points.back());
 
     int seg = (int)floorf(segFloat);
-    float u = segFloat - seg;
+    const float segmentT = segFloat - seg;
 
     if (loop) seg = seg % points.size();
 
-    float3 local = EvaluateSegment((size_t)seg, u);
+    const float3 local = EvaluateSegment((size_t)seg, segmentT);
     return worldOffset + local;
 }
 
