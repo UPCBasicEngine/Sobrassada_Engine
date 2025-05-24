@@ -66,23 +66,22 @@ void Soldier::PerformAttack()
 
 void Soldier::HandleState(float deltaTime)
 {
-    // if (!animComponent) return;
+     if (!animComponent) return;
 
     switch (currentState)
     {
     case SoldierStates::PATROL:
         // GLOG("Soldier Patrolling");
-        // animComponent->UseTrigger("idle");
         PatrolAI();
+        animComponent->UseTrigger("run");
         break;
     case SoldierStates::CHASE:
         // GLOG("Soldier Chasing");
-        //  animComponent->UseTrigger("Run");
+        animComponent->UseTrigger("run");
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
         // GLOG("Soldier Basic Attack");
-        //  animComponent->UseTrigger("attack");
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     default:
@@ -90,6 +89,12 @@ void Soldier::HandleState(float deltaTime)
         currentState = SoldierStates::PATROL;
         break;
     }
+
+    if (animComponent && animComponent->IsFinished())
+    {
+        animComponent->UseTrigger("idle");
+    }
+
 }
 
 void Soldier::PatrolAI()
@@ -127,7 +132,7 @@ void Soldier::Attack(float deltaTime)
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
-        if (animComponent) animComponent->UseTrigger("Attack");
+        if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
     }
