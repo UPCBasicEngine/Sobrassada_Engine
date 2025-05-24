@@ -15,7 +15,6 @@ bool OptionsMenuSwitcherScript::Init()
 
 void OptionsMenuSwitcherScript::Update(float deltaTime)
 {
-
     if (!parent->IsEnabled()) return;
 
     if (!initialized)
@@ -24,23 +23,28 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
         initialized = true;
     }
 
-    const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons(); // Afegit per gamepad
 
-    if (keys[SDL_SCANCODE_Q] == KEY_DOWN || keys[SDL_SCANCODE_E] == KEY_DOWN)
+    if (keys[SDL_SCANCODE_Q] == KEY_DOWN || keys[SDL_SCANCODE_E] == KEY_DOWN ||
+        gamepadButtons[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN ||
+        gamepadButtons[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
     {
         // Deactivate current
         GameObject* currentGO = FindPanelByName(panelNames[currentIndex]);
         if (currentGO) currentGO->SetEnabled(false);
 
         // Update index
-        if (keys[SDL_SCANCODE_Q] == KEY_DOWN) currentIndex = (currentIndex - 1 + panelNames.size()) % static_cast<int>(panelNames.size());
-        else if (keys[SDL_SCANCODE_E] == KEY_DOWN) currentIndex = (currentIndex + 1) % panelNames.size();
+        if (keys[SDL_SCANCODE_Q] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
+            currentIndex = (currentIndex - 1 + panelNames.size()) % static_cast<int>(panelNames.size());
+        else if (keys[SDL_SCANCODE_E] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
+            currentIndex = (currentIndex + 1) % panelNames.size();
 
         // Activate new
         ShowOnlyCurrentPanel();
     }
 
-    if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN)
+    if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
     {
         // Disable all panels in the options menu
         for (const std::string& name : panelNames)

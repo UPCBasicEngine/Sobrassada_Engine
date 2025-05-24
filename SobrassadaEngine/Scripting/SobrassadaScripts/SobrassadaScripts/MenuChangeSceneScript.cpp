@@ -24,9 +24,11 @@ void MenuChangeSceneScript::Update(float deltaTime)
 {
     if (sceneLoaded) return;
 
-    const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
-    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
+    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
+        gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         sceneLoaded = true;
         AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);

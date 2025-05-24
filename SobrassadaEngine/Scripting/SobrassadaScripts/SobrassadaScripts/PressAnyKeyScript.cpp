@@ -29,12 +29,14 @@ void PressAnyKeyScript::Update(float deltaTime)
 {
     if (!parent || !parent->IsEnabled()) return;
 
-    const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
-    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
+    bool keyPressed                = keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
+                      gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN; 
+
+    if (keyPressed)
     {
-        // GLOG("Valid key pressed - Hiding '{}', showing '{}'", parent->GetName(), nextGameObjectName);
-
         parent->SetEnabled(false);
 
         const auto& gameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
@@ -43,12 +45,12 @@ void PressAnyKeyScript::Update(float deltaTime)
             if (go && go->GetName() == nextGameObjectName)
             {
                 go->SetEnabledRecursive(true);
-                // GLOG("Enabled GameObject '{}'", nextGameObjectName);
                 break;
             }
         }
     }
 }
+
 
 void PressAnyKeyScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
 {
