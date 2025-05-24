@@ -266,14 +266,16 @@ float3 SplineComponent::EvaluateSegment(size_t seg, float segmentT) const
 
 float3 SplineComponent::Evaluate(float t) const
 {
-    if (points.size() < 2) return float3::zero;
+    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
+
+    if (points.size() < 2) return worldOffset;
 
     t = std::clamp(t, 0.f, 1.f);
 
     const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
 
     float segFloat   = t * numSeg;
-    if (segFloat >= numSeg) return parent->GetGlobalTransform().TransformPos(loop ? points.front() : points.back());
+    if (segFloat >= numSeg) return worldOffset + (loop ? points.front() : points.back());
 
     int seg = (int)floorf(segFloat);
     float u = segFloat - seg;
@@ -281,7 +283,7 @@ float3 SplineComponent::Evaluate(float t) const
     if (loop) seg = seg % points.size();
 
     float3 local = EvaluateSegment((size_t)seg, u);
-    return parent->GetGlobalTransform().TransformPos(local);
+    return worldOffset + local;
 }
 
 bool SplineComponent::PointGizmo(size_t idx)
