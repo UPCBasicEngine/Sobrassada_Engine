@@ -25,7 +25,13 @@ ScriptComponent::ScriptComponent(const rapidjson::Value& initialState, GameObjec
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                if (CreateScript(name)) scriptInstances.back()->Load(scriptData);
+                if (CreateScript(name))
+                {
+                    scriptInstances.back()->Load(scriptData);
+                    if (scriptData.HasMember("Enabled")) scriptEnabled.back() = scriptData["Enabled"].GetBool();
+                    if (scriptData.HasMember("WasEnabled"))
+                        scriptWasEnabledLastFrame.back() = scriptData["WasEnabled"].GetBool();
+                }
             }
         }
     }
@@ -122,7 +128,6 @@ void ScriptComponent::Update(float deltaTime)
 void ScriptComponent::ResetInitializationFlags()
 {
     std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
-    std::fill(scriptWasEnabledLastFrame.begin(), scriptWasEnabledLastFrame.end(), false);
 }
 
 void ScriptComponent::Render(float deltaTime)
