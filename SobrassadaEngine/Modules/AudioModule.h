@@ -5,12 +5,11 @@
 #include "AkFilePackageLowLevelIODeferred.h"
 #include <vector>
 
-#include <unordered_map>
 #include "HashString.h"
+#include <unordered_map>
 
 class AudioSourceComponent;
 class AudioListenerComponent;
-
 
 class AudioModule : public Module
 {
@@ -45,7 +44,9 @@ class AudioModule : public Module
     int voice = 0;
     int g_envMAP[255];
 
-    bool loadedAudio = false;
+    bool loadedAudio         = false;
+    bool isPlaying           = false;
+    float maxAudibleDistance = 30.0f;
 
     std::vector<AudioSourceComponent*> sources;
     AudioListenerComponent* listener;

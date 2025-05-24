@@ -270,7 +270,7 @@ void CuChulainn::CheckIsFalling()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
-    if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
+    if (audio) audio->EmitEvent(AK::EVENTS::TORCH);
     // GLOG("THROW SPEAR");
     throwTimer = throwCooldown;
     if (weapon)

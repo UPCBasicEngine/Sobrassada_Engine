@@ -32,6 +32,9 @@ class AudioSourceComponent : public Component
     void SetPitch(const float newPitch);
     void SetSpatialization(const float newSpatialization);
 
+    bool IsPlaying() const { return isPlaying; }
+    void SetIsPlaying(bool playing) { isPlaying = playing; }
+
     void UpdateEventsNames();
 
   private:
@@ -42,6 +45,7 @@ class AudioSourceComponent : public Component
     float volume         = 1;
     float pitch          = 0.5f;
     float spatialization = 0;
+    bool isPlaying       = false;
 
     bool isInited        = false;
 };
