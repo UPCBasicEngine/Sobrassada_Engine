@@ -20,6 +20,7 @@ class EmitterInstance
     const std::string& GetName() const;
     const HashString& GetTag() const;
 
+    void Spawn();
     void Update(float deltaTime);
     void RenderEditor();
 

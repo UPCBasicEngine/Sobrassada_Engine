@@ -13,6 +13,8 @@
 #include "ShaderModule.h"
 #include "VelocityAddon.h"
 
+#include "CameraModule.h"
+
 #include "Math/float2.h"
 #include "glew.h"
 #include "imgui.h"
@@ -388,6 +390,19 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
     if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
     if (aliveParticles > 0)
     {
+        float3 cameraPosition = App->GetCameraModule()->GetCameraPosition();
+
+        std::sort(
+            alivePositions.begin(), alivePositions.end(),
+            [cameraPosition](const float3& a, const float3& b)
+            {
+                float distanceA = (a - cameraPosition).LengthSq();
+                float distanceB = (b - cameraPosition).LengthSq();
+
+                return distanceA > distanceB;
+            }
+        );
+
         glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * alivePositions.size(), &alivePositions[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);

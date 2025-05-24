@@ -18,6 +18,11 @@ const HashString& EmitterInstance::GetTag() const
     if (emitter) return emitter->GetTag();
 }
 
+void EmitterInstance::Spawn()
+{
+    emitter->Spawn(this);
+}
+
 void EmitterInstance::Update(float deltaTime)
 {
     // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles

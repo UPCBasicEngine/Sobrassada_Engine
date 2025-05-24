@@ -106,6 +106,12 @@ void ParticleSystemComponent::RenderEditorInspector()
         ImGui::EndPopup();
     }
 
+    if (ImGui::Button("Spawn all particles"))
+    {
+        for (auto& emitter : emitterInstances)
+            emitter.Spawn();
+    }
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();

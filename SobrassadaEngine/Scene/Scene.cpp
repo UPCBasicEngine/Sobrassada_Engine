@@ -338,13 +338,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
-    App->GetBillboardModule()->RenderBillboards();
-    glPopDebugGroup();
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
-    App->GetParticleModule()->RenderParticles();
-    glPopDebugGroup();
 
     {
 #ifdef OPTICK
@@ -383,6 +376,14 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera, framebuffer);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
+    App->GetBillboardModule()->RenderBillboards();
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
+    App->GetParticleModule()->RenderParticles();
     glPopDebugGroup();
 }
 
