@@ -15,9 +15,10 @@ bool PauseMenuScript::Init()
 
 void PauseMenuScript::Update(float deltaTime)
 {
-    const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
-    if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN)
+    if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
     {
         const auto& allGameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
 
@@ -44,6 +45,7 @@ void PauseMenuScript::Update(float deltaTime)
         }
     }
 }
+
 
 void PauseMenuScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
 {
