@@ -11,7 +11,7 @@
 class ButtonScript : public Script
 {
   public:
-    ButtonScript(GameObject* parent);
+    ButtonScript(GameObject* parent) : Script(parent) {}
     ~ButtonScript() override;
 
     bool Init() override;
@@ -22,11 +22,12 @@ class ButtonScript : public Script
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) override;
     void Load(const rapidjson::Value& initialState) override;
     void OnDestroy() override;
+    void Inspector() override;
 
 
   private:
     std::string panelToHideName = "MainMenuPanel";
-    std::string panelToShowName = "OptionsPanel";
+    std::string panelToShowName = "OptionsMenuManager";
 
     std::list<Delegate<void>>::iterator delegateID;
     bool hasRegisteredCallback = false;

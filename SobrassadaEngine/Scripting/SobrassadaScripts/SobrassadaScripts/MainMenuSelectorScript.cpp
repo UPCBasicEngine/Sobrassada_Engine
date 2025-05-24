@@ -50,7 +50,7 @@ void MainMenuSelectorScript::Update(float deltaTime)
 
     if (arrowsEnabled > 1)
     {
-        UpdateSelection(); // Reinicia l’estat correcte
+        UpdateSelection(); 
     }
 
     const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
