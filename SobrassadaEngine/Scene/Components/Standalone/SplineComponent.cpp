@@ -201,12 +201,12 @@ void SplineComponent::AddPoint(const float3& p)
     points.push_back(p);
 }
 
-void SplineComponent::InsertPoint(size_t i, const float3& p)
+void SplineComponent::InsertPoint(const size_t i, const float3& p)
 {
     points.insert(points.begin() + i, p);
 }
 
-void SplineComponent::RemovePoint(size_t i)
+void SplineComponent::RemovePoint(const size_t i)
 {
     if (i < points.size()) points.erase(points.begin() + i);
 }
