@@ -1,4 +1,4 @@
-﻿#include "CanvasComponent.h"
+#include "CanvasComponent.h"
 
 #include "Application.h"
 #include "ButtonComponent.h"
