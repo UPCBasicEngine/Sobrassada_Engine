@@ -2,6 +2,8 @@
 
 #include "ParticleEmitter.h"
 
+#include "imgui.h"
+
 EmitterInstance::~EmitterInstance()
 {
 }
@@ -24,5 +26,7 @@ void EmitterInstance::Update(float deltaTime)
 
 void EmitterInstance::RenderEditor()
 {
+    if (ImGui::Button("Spawn Particles")) emitter->Spawn(this);
+
     emitter->RenderEditor();
 }

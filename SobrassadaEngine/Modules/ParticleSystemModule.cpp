@@ -82,7 +82,7 @@ void ParticleSystemModule::RenderParticles()
 
     for (auto& emitter : particleSystems)
     {
-        emitter.second->RenderParticles();
+        emitter.second->RenderParticles(VP, rightVector, upVector);
     }
 }
 
@@ -96,7 +96,8 @@ void ParticleSystemModule::ResquestParticleSystem(
 
     if (particleSystemIterator == particleSystems.end())
     {
-        ParticleSystem* newPS = new ParticleSystem(initialState, component);
+        ParticleSystem* newPS = new ParticleSystem(initialState, component, quadVBO);
+
         particleSystems.insert({requestedTag, newPS});
         particleTags.push_back(requestedTag);
     }
@@ -114,7 +115,7 @@ void ParticleSystemModule::ResquestParticleSystem(const HashString& requestedTag
 
     if (particleSystemIterator == particleSystems.end())
     {
-        ParticleSystem* newPS = new ParticleSystem(requestedTag, component);
+        ParticleSystem* newPS = new ParticleSystem(requestedTag, component, quadVBO);
         particleSystems.insert({requestedTag, newPS});
         particleTags.push_back(requestedTag);
     }

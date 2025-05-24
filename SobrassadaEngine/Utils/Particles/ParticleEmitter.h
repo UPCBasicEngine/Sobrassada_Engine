@@ -33,7 +33,7 @@ class ParticleEmitter
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
     void Update(float deltaTime, EmitterInstance* emitterInstance);
-    void Spawn();
+    void Spawn(EmitterInstance* emitterInstance);
 
     // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     void RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector);
@@ -56,7 +56,7 @@ class ParticleEmitter
     void UpdateTexture(UID newTextureUID);
 
     // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
-    void UpdateParticlesVBO();
+    void UpdateParticlesVBO(EmitterInstance* emitterInstance);
 
   public:
     bool isEmitting = false;

@@ -141,25 +141,28 @@ void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
 
-    if (!isEmitting) return;
+    if (!emitterInstance->isEmitting) return;
 
     std::apply(
         [deltaTime, emitterInstance](auto&... pointer)
         { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); }, addonTuple
     );
 
-    UpdateParticlesVBO();
+    UpdateParticlesVBO(emitterInstance);
 }
 
-void ParticleEmitter::Spawn()
+void ParticleEmitter::Spawn(EmitterInstance* emitterInstance)
 {
-    std::apply([](auto&... pointer) { ((pointer ? pointer->Init(nullptr) : Nothing()), ...); }, addonTuple);
+    std::apply(
+        [emitterInstance](auto&... pointer) { ((pointer ? pointer->Init(emitterInstance) : Nothing()), ...); },
+        addonTuple
+    );
 }
 
 // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
 void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector)
 {
-    if (!isEmitting) return;
+    if (aliveParticles < 1) return;
 
     if ((useTexture ? texture != nullptr : material != nullptr) && quadVBO && particlesVBO)
     {
@@ -197,18 +200,20 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)particles.size());
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)aliveParticles);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
         const auto end                             = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<float> elapsed = end - start;
 
-        unsigned int totalTrangles                 = (unsigned int)particles.size() * 2;
+        unsigned int totalTrangles                 = (unsigned int)aliveParticles * 2;
 
         App->GetOpenGLModule()->AddTrianglesPerSecond(totalTrangles / elapsed.count());
         App->GetOpenGLModule()->AddVerticesCount(totalTrangles * 3);
         App->GetOpenGLModule()->AddDrawCallsCount();
+
+        aliveParticles = 0;
     }
 }
 
@@ -245,9 +250,6 @@ void ParticleEmitter::RenderEditor()
 
         ImGui::EndPopup();
     }
-
-    ImGui::SameLine();
-    if (ImGui::Button("Spawn Particles")) Spawn();
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -332,7 +334,6 @@ void ParticleEmitter::RemoveAddon(ParticleAddonType type)
     if (createdAddons[(int)type - 1])
     {
         RemoveAddonTuple(addonTuple, type, this);
-        Spawn();
     }
 }
 
@@ -374,15 +375,15 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
     }
 }
 
-void ParticleEmitter::UpdateParticlesVBO()
+void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
 {
     // ONLY ADD CURRENT ALIVE PARTICLES
     std::vector<float3> alivePositions;
-    alivePositions.reserve(particles.size());
+    alivePositions.reserve(emitterInstance->particles.size());
 
-    for (int i = 0; i < particles.size(); ++i)
+    for (int i = 0; i < emitterInstance->particles.size(); ++i)
     {
-        if (particles[i].alive) alivePositions.push_back(particles[i].position);
+        if (emitterInstance->particles[i].alive) alivePositions.push_back(emitterInstance->particles[i].position);
     }
     aliveParticles = (unsigned int)alivePositions.size();
 

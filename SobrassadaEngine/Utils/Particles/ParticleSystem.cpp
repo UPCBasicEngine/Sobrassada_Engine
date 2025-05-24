@@ -3,14 +3,21 @@
 #include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
-ParticleSystem::ParticleSystem(const HashString& newTag, ParticleSystemComponent* component) : particleSystemTag(newTag)
+#include "Math/float3.h"
+#include "Math/float4x4.h"
+
+ParticleSystem::ParticleSystem(const HashString& newTag, ParticleSystemComponent* component, unsigned int quadVBO)
+    : particleSystemTag(newTag), quadVBO(quadVBO)
 {
     auto componentIterator = linkedComponents.insert(linkedComponents.end(), component);
     component->SetParticleIterator(componentIterator);
     component->SetParticleSystem(this);
 }
 
-ParticleSystem::ParticleSystem(const rapidjson::Value& initialState, ParticleSystemComponent* component)
+ParticleSystem::ParticleSystem(
+    const rapidjson::Value& initialState, ParticleSystemComponent* component, unsigned int quadVBO
+)
+    : quadVBO(quadVBO)
 {
     if (initialState.HasMember("ParticleSystemTag"))
         particleSystemTag = HashString(initialState["ParticleSystemTag"].GetString());
@@ -24,7 +31,7 @@ ParticleSystem::ParticleSystem(const rapidjson::Value& initialState, ParticleSys
             const rapidjson::Value& newEmitterJSON = jsonEmitters[i];
 
             ParticleEmitter* newEmitter            = new ParticleEmitter(newEmitterJSON);
-
+            newEmitter->SetQuadVBO(quadVBO);
             emitters.push_back({newEmitter->GetName(), newEmitter});
         }
     }
@@ -57,8 +64,12 @@ void ParticleSystem::Save(rapidjson::Value& targetState, rapidjson::Document::Al
     targetState.AddMember("Emitters", emittersArrayJSON, allocator);
 }
 
-void ParticleSystem::RenderParticles()
+void ParticleSystem::RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector)
 {
+    for (auto& emitter : emitters)
+    {
+        emitter.second->RenderParticles(VP, rightVector, upVector);
+    }
 }
 
 void ParticleSystem::AddEmitter(const std::string& newEmitterName)
@@ -66,7 +77,7 @@ void ParticleSystem::AddEmitter(const std::string& newEmitterName)
     HashString newEmitterTag = HashString(newEmitterName);
     if (newEmitterTag == emptyString) return;
 
-    int position             = -1;
+    int position = -1;
     for (int i = 0; i < emitters.size(); ++i)
     {
         if (emitters[i].first == newEmitterTag)
@@ -79,6 +90,7 @@ void ParticleSystem::AddEmitter(const std::string& newEmitterName)
     if (position < 0)
     {
         ParticleEmitter* newEmitter = new ParticleEmitter(newEmitterTag);
+        newEmitter->SetQuadVBO(quadVBO);
         emitters.push_back({newEmitterTag, newEmitter});
     }
 
