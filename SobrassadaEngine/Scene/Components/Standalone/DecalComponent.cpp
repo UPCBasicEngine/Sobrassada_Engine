@@ -19,8 +19,6 @@ DecalComponent::DecalComponent(const rapidjson::Value& initialState, GameObject*
     : Component(initialState, parent)
 {
     if (initialState.HasMember("Material")) AddMaterial(initialState["Material"].GetUint64());
-    if (initialState.HasMember("Height")) height = initialState["Height"].GetFloat();
-    if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
 
     RecalculateAABB();
 }
@@ -36,9 +34,6 @@ void DecalComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
     targetState.AddMember(
         "Material", currentMaterial != nullptr ? currentMaterial->GetUID() : INVALID_UID, allocator
     );
-
-    targetState.AddMember("Height", height, allocator);
-    targetState.AddMember("Width", width, allocator);
 }
 
 void DecalComponent::Clone(const Component* other)
@@ -49,8 +44,9 @@ void DecalComponent::Clone(const Component* other)
         enabled                          = otherDecal->enabled;
         wasEnabled                       = otherDecal->wasEnabled;
 
-        width                            = otherDecal->width;
-        height                           = otherDecal->height;
+        UID otherMatUID = otherDecal->currentMaterial ? otherDecal->currentMaterial->GetUID() : INVALID_UID;
+
+        AddMaterial(otherMatUID);
     }
 }
 
@@ -73,9 +69,6 @@ void DecalComponent::RenderEditorInspector()
     ImGui::SeparatorText("Decal Component");
 
     ImGui::Separator();
-
-    if (ImGui::InputFloat("Width", &width)) RecalculateAABB();
-    if (ImGui::InputFloat("Height", &height)) RecalculateAABB();
 
     if (ImGui::Button("Select material"))
     {
@@ -120,8 +113,7 @@ void DecalComponent::ParentUpdated()
 void DecalComponent::RecalculateAABB()
 {
     float3 localPosition  = parent->GetLocalTransform().TranslatePart();
-    float maxValue        = width > height ? width : height;
-    maxValue             /= 2.f;
+    float maxValue        = 0.5f;
     localComponentAABB    = AABB(float3(-maxValue, -maxValue, -maxValue), float3(maxValue, maxValue, maxValue));
 
     parent->OnAABBUpdated();

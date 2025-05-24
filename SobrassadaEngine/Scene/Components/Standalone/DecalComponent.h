@@ -28,9 +28,6 @@ class DecalComponent : public Component
     void RecalculateAABB();
 
   private:
-    float width                       = 1;
-    float height                      = 1;
-
     std::string currentResourceName   = "No material";
 
     UID currentMaterialUID            = DEFAULT_MATERIAL_UID;

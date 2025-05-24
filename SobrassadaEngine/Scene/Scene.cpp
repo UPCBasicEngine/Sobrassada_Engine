@@ -1248,6 +1248,10 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
     glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+    glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
+
     uint64_t dhandle = decal->GetResourceMaterial()->GetMaterial().diffuseTex;
     glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
 
@@ -1262,6 +1266,14 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
+    float3 cameraPos;
+    if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
+    else cameraPos = camera->GetCameraPosition();
+    float3 localCameraPos = (invModel * float4(cameraPos, 1.0f)).xyz();
+
+    bool insideDecalBox =
+        abs(localCameraPos.x) <= 0.5f && abs(localCameraPos.y) <= 0.5f && abs(localCameraPos.z) <= 0.5f;
+
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
     unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
     glUniformBlockBinding(program, blockIdx, 0);
@@ -1269,7 +1281,7 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     GLint modelLoc = glGetUniformLocation(program, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
+    glUniformMatrix4fv(modelLoc, 1, GL_TRUE, &model[0][0]);
 
     unsigned int VAO, VBO, EBO;
 
@@ -1296,7 +1308,25 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     glBindVertexArray(0);
 
     glBindVertexArray(VAO);
+
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    glEnable(GL_DEPTH_TEST);
+
+    if (insideDecalBox)
+    {
+        glDisable(GL_DEPTH_TEST);
+        glFrontFace(GL_CW);
+    }
+
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    glEnable(GL_CULL_FACE);
+    glDepthMask(GL_TRUE);
+    glFrontFace(GL_CCW);
+    glEnable(GL_DEPTH_TEST);
 
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
