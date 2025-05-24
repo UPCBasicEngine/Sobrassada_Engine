@@ -31,22 +31,27 @@ SplineComponent::~SplineComponent()
 
 void SplineComponent::Update(float deltaTime)
 {
+    if (!IsEffectivelyEnabled()) return;
 }
 
 void SplineComponent::Render(float deltaTime)
 {
+    if (!IsEffectivelyEnabled()) return;
 }
 
 void SplineComponent::RenderDebug(float deltaTime)
 {
+    if (!IsEffectivelyEnabled()) return;
     if (points.size() < 2) return;
 
     EditorUIModule* ui   = App->GetEditorUIModule();
     DebugDrawModule* dbg = App->GetDebugDrawModule();
 
-    size_t endSeg        = loop ? points.size() : points.size() - 1;
+    const size_t endSeg        = loop ? points.size() : points.size() - 1;
     const float3 curveColor(0, 1, 0); // Green
     const float3 pointColor(1, 0, 0); // Red
+
+    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
 
     auto drawLine = [&](const float3& a, const float3& b) { dbg->DrawLineSegment(LineSegment(a, b), curveColor); };
 
@@ -54,12 +59,12 @@ void SplineComponent::RenderDebug(float deltaTime)
     {
         if (loop || points.size() >= 3)
         {
-            float3 prev = EvaluateSegment(seg, 0.0f) + parent->GetGlobalTransform().TranslatePart();
+            float3 prev = EvaluateSegment(seg, 0.0f) + worldOffset;
 
             for (int i = 1; i <= stepsDebug; ++i)
             {
-                float u  = (float)i / stepsDebug;
-                float3 p = EvaluateSegment(seg, u) + parent->GetGlobalTransform().TranslatePart();
+                const float u  = (float)i / stepsDebug;
+                const float3 p = EvaluateSegment(seg, u) + worldOffset;
                 drawLine(prev, p);
                 prev = p;
             }
@@ -68,11 +73,11 @@ void SplineComponent::RenderDebug(float deltaTime)
     }
 
     for (const float3& p : points)
-        dbg->DrawSphere(p + parent->GetGlobalTransform().TranslatePart(), pointColor, 0.08f);
+        dbg->DrawSphere(p + worldOffset, pointColor, 0.08f);
 
     if (showMarker && points.size() >= 2)
     {
-        float3 wPos = GetWorldPositionInSpine(markerT);
+        const float3 wPos = GetWorldPositionInSpine(markerT);
         dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f);
     }
 }
@@ -187,6 +192,8 @@ void SplineComponent::Clone(const Component* other)
     points                             = otherSpline->points;
     alpha                              = otherSpline->alpha;
     loop                               = otherSpline->loop;
+    enabled                            = otherSpline->enabled;
+    wasEnabled                         = otherSpline->wasEnabled;
 }
 
 void SplineComponent::AddPoint(const float3& p)
@@ -217,26 +224,26 @@ float3 SplineComponent::CatmullRom(
     const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT
 ) const
 {
-    float t0  = 0.0f;
-    float t1  = GetT(p0, p1, t0);
-    float t2  = GetT(p1, p2, t1);
-    float t3  = GetT(p2, p3, t2);
+    const float t0 = 0.0f;
+    const float t1 = GetT(p0, p1, t0);
+    const float t2 = GetT(p1, p2, t1);
+    const float t3 = GetT(p2, p3, t2);
 
-    float t   = Lerp(t1, t2, segmentT);
+    const float t  = Lerp(t1, t2, segmentT);
 
-    float3 A1 = float3::Lerp(p0, p1, (t - t0) / (t1 - t0)); //( t1-t )/( t1-t0 )*p0 + ( t-t0 )/( t1-t0 )*p1
-    float3 A2 = float3::Lerp(p1, p2, (t - t1) / (t2 - t1));
-    float3 A3 = float3::Lerp(p2, p3, (t - t2) / (t3 - t2));
+    const float3 A1 = float3::Lerp(p0, p1, (t - t0) / (t1 - t0)); //( t1-t )/( t1-t0 )*p0 + ( t-t0 )/( t1-t0 )*p1
+    const float3 A2 = float3::Lerp(p1, p2, (t - t1) / (t2 - t1));
+    const float3 A3 = float3::Lerp(p2, p3, (t - t2) / (t3 - t2));
 
-    float3 B1 = float3::Lerp(A1, A2, (t - t0) / (t2 - t0));
-    float3 B2 = float3::Lerp(A2, A3, (t - t1) / (t3 - t1));
+    const float3 B1 = float3::Lerp(A1, A2, (t - t0) / (t2 - t0));
+    const float3 B2 = float3::Lerp(A2, A3, (t - t1) / (t3 - t1));
 
     return float3::Lerp(B1, B2, (t - t1) / (t2 - t1));
 }
 
 size_t SplineComponent::Wrap(int i) const
 {
-    int n = (int)points.size();
+    const int n = (int)points.size();
     return (size_t)((i % n + n) % n);
 }
 
