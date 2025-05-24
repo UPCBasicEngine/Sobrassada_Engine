@@ -25,6 +25,8 @@ UID MaterialImporter::ImportMaterial(
     const tinygltf::Material& gltfMaterial = model.materials[materialIndex];
     std::string materialName               = gltfMaterial.name;
     const bool isTransparent               = gltfMaterial.alphaMode == "BLEND";
+    const bool isDoubleSided               = gltfMaterial.doubleSided;
+    
 
     int sizeofStrings                      = 0;
     auto it                                = gltfMaterial.extensions.find("KHR_materials_pbrSpecularGlossiness");
@@ -170,6 +172,7 @@ UID MaterialImporter::ImportMaterial(
     }
 
     material.SetTransparent(isTransparent);
+    material.SetDoubleSide(isDoubleSided);
 
     unsigned int size = sizeof(Material);
     char* fileBuffer  = new char[size];
@@ -194,7 +197,7 @@ UID MaterialImporter::ImportMaterial(
         if (materialName.empty()) materialName = "MaterialType_" + std::to_string(tmpName);
 
         std::string assetPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(sourceFilePath);
-        MetaMaterial meta(finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID, isTransparent);
+        MetaMaterial meta(finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID, isTransparent, isDoubleSided);
         meta.Save(materialName, assetPath);
     }
     else finalMaterialUID = sourceUID;

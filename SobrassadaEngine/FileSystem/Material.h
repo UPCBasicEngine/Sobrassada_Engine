@@ -26,6 +26,7 @@ class Material
     const UID GetOcclusionTexture() const { return occlusionTexture; }
 
     const bool IsTransparent() const { return isTransparent; }
+    const bool IsDoubleSided() const { return isDoubleSided; }
 
     const UID GetMaterialUID() const { return materialUID; }
 
@@ -44,6 +45,7 @@ class Material
     void SetOcclusionTexture(UID texture) { occlusionTexture = texture; }
 
     void SetTransparent(bool transparent) { isTransparent = transparent; }
+    void SetDoubleSide(bool isDoubleSided) { isDoubleSided = isDoubleSided; }
 
     void SetMaterialUID(UID uid) { materialUID = uid; }
 
@@ -67,4 +69,5 @@ class Material
     UID metallicRoughnessTexture  = INVALID_UID;
 
     bool isTransparent            = false;
+    bool isDoubleSided            = false;
 };
