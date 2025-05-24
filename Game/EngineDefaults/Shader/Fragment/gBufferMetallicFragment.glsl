@@ -33,6 +33,7 @@ struct Material
 };
 
 uniform bool isWireframe;
+uniform bool isAlpha;
 
 readonly layout(std430, binding = 11) buffer Materials {
     Material materials[];
@@ -52,7 +53,7 @@ void main()
     vec4 texColor = texture(sampler2D(mat.diffuseTex), uv0);
     const float alpha = texColor.a;
 
-    if (!isWireframe)
+    if (!isWireframe && isAlpha)
     {
         if(alpha < 0.1) discard;
     }
