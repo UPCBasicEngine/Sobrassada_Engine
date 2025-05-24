@@ -66,7 +66,7 @@ void Soldier::PerformAttack()
 
 void Soldier::HandleState(float deltaTime)
 {
-     if (!animComponent) return;
+    if (!animComponent) return;
 
     switch (currentState)
     {
@@ -94,7 +94,6 @@ void Soldier::HandleState(float deltaTime)
     {
         animComponent->UseTrigger("idle");
     }
-
 }
 
 void Soldier::PatrolAI()
