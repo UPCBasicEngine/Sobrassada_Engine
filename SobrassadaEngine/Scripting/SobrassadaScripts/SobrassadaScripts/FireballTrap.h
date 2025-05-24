@@ -41,6 +41,9 @@ class FireballTrap : public Script
 
     // fireball
     GameObject* fireball                    = nullptr;
+    // fireball
+    GameObject* fireballShadow              = nullptr;
+    
     float verticalSpeed                     = 0.0f;
     bool hasImpacted                        = false;
     float rotationSpeed                     = 1.0f;

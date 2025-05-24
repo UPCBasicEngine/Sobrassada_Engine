@@ -46,6 +46,13 @@ bool FireballTrap::Init()
         else GLOG("[WARNING] No fireball found as child of base")
     }
 
+    if (parent->GetChildren().size() > 1)
+    {
+        fireballShadow = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[1]);
+        if (fireballShadow) fireballShadow->SetEnabled(false);
+        else GLOG("[WARNING] No fireball shadow found as child of base")
+    }
+
     lastAttackTime += -maxAttackCooldown;
     srand(static_cast<unsigned>(time(0))); // random seed
 
@@ -93,6 +100,8 @@ void FireballTrap::StartAttack(float gameTime)
     fireball->SetEnabled(true);
     fireball->SetLocalPosition(float3(0.0f, fallingHeight, 0.0f));
 
+    if (fireballShadow != nullptr)  fireballShadow->SetEnabled(true);
+
     lastAttackTime = gameTime;
     verticalSpeed  = 0.0f;
     attacking      = true;
@@ -106,6 +115,7 @@ void FireballTrap::StartAttack(float gameTime)
 void FireballTrap::HandleImpact(float gameTime)
 {
     fireball->SetEnabled(false);
+    if (fireballShadow != nullptr)  fireballShadow->SetEnabled(false);
     groundMesh->SetEnabled(true);
     damageCollider->SetEnabled(true);
 
