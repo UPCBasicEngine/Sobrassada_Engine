@@ -33,10 +33,17 @@ void main()
 
     if (abs(objPos.x) > 0.5 || abs(objPos.y) > 0.5 || abs(objPos.z) > 0.5) discard;
 
-    vec3 tangent = dFdx(worldPos);
-    vec3 bitangent = dFdy(worldPos);
-    vec3 normal = normalize(cross(tangent, bitangent));
+    vec4 decalDiffuse = texture(decalAlbedoTex, objPos.xy + 0.5);
+    fragColor = vec4(pow(decalDiffuse.rgb, vec3(2.2f)), decalDiffuse.a);
+    
+    if (hasMetallic) {
+        specular = vec4(pow(texture(decalMetallicTex, objPos.xy + 0.5), vec4(2.2)));
+    }
 
-    fragColor = texture(decalAlbedoTex, objPos.xy + 0.5);
-    normalOut.xyz = (mat3(tangent, bitangent, normal) * (texture(decalNormalTex, objPos.xy + 0.5).xyz * 2.0 - 1.0));
+    if(hasNormal){
+        vec3 tangent = dFdx(worldPos);
+        vec3 bitangent = dFdy(worldPos);
+        vec3 normal = normalize(cross(tangent, bitangent));
+        normalOut.xyz = (mat3(tangent, bitangent, normal) * (texture(decalNormalTex, objPos.xy + 0.5).xyz * 2.0 - 1.0));
+    }
 }
