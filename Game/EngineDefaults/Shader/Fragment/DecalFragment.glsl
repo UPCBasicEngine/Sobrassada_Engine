@@ -4,10 +4,14 @@
 
 uniform sampler2D positionTex;
 uniform sampler2D normalTex;
-uniform mat4 invModel;
 uniform sampler2D decalAlbedoTex;
+uniform sampler2D decalMetallicTex;
+uniform bool hasMetallic;
 uniform sampler2D decalNormalTex;
+uniform bool hasNormal;
+
 in vec4 clipping;
+in mat4 vInvModel;
 
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 specular;
@@ -19,10 +23,10 @@ void main()
     vec2 uv = clipping.xy / clipping.w * 0.5 + 0.5;
 
     vec3 worldPos = texture(positionTex, uv).xyz;
-    vec3 objPos = (invModel * vec4(worldPos, 1.0)).xyz;
+    vec3 objPos = (vInvModel * vec4(worldPos, 1.0)).xyz;
 
     vec3 worldNormal = texture(normalTex, uv).xyz * 2.0 - 1.0;
-    vec3 localNormal = normalize((invModel * vec4(worldNormal, 0.0)).xyz);
+    vec3 localNormal = normalize((vInvModel * vec4(worldNormal, 0.0)).xyz);
 
     float alignment = dot(localNormal, vec3(0.0, 0.0, 1.0));
     if (alignment < cos(radians(60.0))) discard;

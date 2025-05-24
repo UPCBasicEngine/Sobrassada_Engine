@@ -1,9 +1,16 @@
 #pragma once
 
 #include "Component.h"
+#include "Math/float4x4.h"
 
 class ResourceMaterial;
 class ResourceTexture;
+
+struct DecalModels
+{
+    float4x4 model;
+    float4x4 invModel;
+};
 
 class DecalComponent : public Component
 {

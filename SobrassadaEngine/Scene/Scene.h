@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+struct DecalModels;
 class GameObject;
 class Component;
 class RootComponent;
@@ -130,7 +131,7 @@ class SOBRASADA_API_ENGINE Scene
 
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
-    void DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(
         const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
@@ -178,4 +179,6 @@ class SOBRASADA_API_ENGINE Scene
     std::map<UID, float4x4> selectedGameObjectsOgLocals;
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
+
+    unsigned int decalVAO, decalVBO, decalEBO;
 };

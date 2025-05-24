@@ -25,6 +25,7 @@
 #include "ProjectModule.h"
 #include "Quadtree.h"
 #include "Resource.h"
+#include "ResourceMaterial.h"
 #include "ResourceModel.h"
 #include "ResourcePrefab.h"
 #include "ResourcesModule.h"
@@ -51,8 +52,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-
-#include "ResourceMaterial.h"
+#include <unordered_map>
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -125,6 +125,10 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
 
 Scene::~Scene()
 {
+    glDeleteBuffers(1, &decalVBO);
+    glDeleteBuffers(1, &decalEBO);
+    glDeleteVertexArrays(1, &decalVAO);
+
     App->GetPhysicsModule()->EmptyWorld();
 
     for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); ++it)
@@ -198,6 +202,29 @@ void Scene::Init()
 
     multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
     gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
+
+    const float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
+                                        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
+
+    const unsigned int cubeIndices[] = {0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4,
+                                        3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
+
+    glGenVertexArrays(1, &decalVAO);
+    glGenBuffers(1, &decalVBO);
+    glGenBuffers(1, &decalEBO);
+
+    glBindVertexArray(decalVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, decalVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, decalEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    glBindVertexArray(0);
 }
 
 void Scene::Save(
@@ -325,7 +352,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
-    DecalsPassRender(camera, gbuffer, framebuffer);
+    DecalsPassRender(objectsToRender, camera, gbuffer);
     glPopDebugGroup();
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
@@ -932,7 +959,6 @@ void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects,
 
         if (frustumPlanes.Intersects(objectOBB))
         {
-            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
             outRenderGameObjects.push_back(gameObject);
         }
     }
@@ -1066,7 +1092,7 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
     if (camera == nullptr)
     {
         nearPlane = App->GetCameraModule()->GetNearPlaneDistance();
-        farPlane  = 100; // App->GetCameraModule()->GetFarPlaneDistance(); This is too much
+        farPlane  = 100; // Far plane is too much
     }
     else
     {
@@ -1184,61 +1210,26 @@ void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Frameb
 #endif
 }
 
-void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
+void Scene::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
+    const
 {
     gbuffer->Bind();
 
-    float cubeVertices[] = {
-        // positions
-        -0.5f, -0.5f, 0.5f,  // 0
-        -0.5f, 0.5f,  0.5f,  // 1
-        0.5f,  0.5f,  0.5f,  // 2
-        0.5f,  -0.5f, 0.5f,  // 3
-        -0.5f, -0.5f, -0.5f, // 4
-        -0.5f, 0.5f,  -0.5f, // 5
-        0.5f,  0.5f,  -0.5f, // 6
-        0.5f,  -0.5f, -0.5f  // 7
-    };
+    std::vector<DecalComponent*> decalsToRender;
+    std::unordered_map<UID, std::vector<DecalComponent*>> groupedDecals;
 
-    // 12 triangles * 3 indices
-    unsigned int cubeIndices[] = {// Front face (+Z)
-                                  0, 1, 2, 2, 3, 0,
-                                  // Back face (-Z)
-                                  7, 6, 5, 5, 4, 7,
-                                  // Left face (-X)
-                                  4, 5, 1, 1, 0, 4,
-                                  // Right face (+X)
-                                  3, 2, 6, 6, 7, 3,
-                                  // Top face (+Y)
-                                  1, 5, 6, 6, 2, 1,
-                                  // Bottom face (-Y)
-                                  4, 0, 3, 3, 7, 4
-    };
-
-    std::vector<GameObject*> queriedObjects;
-
-    FrustumPlanes frustumPlanes;
-    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    else frustumPlanes = camera->GetFrustrumPlanes();
-
-    sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
-
-    dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
-
-    DecalComponent* decal = nullptr;
-
-    for (auto gameObject : queriedObjects)
+    for (const auto& gameObject : objectsToRender)
     {
-        OBB objectOBB = gameObject->GetGlobalOBB();
+        DecalComponent* decal = gameObject->GetComponent<DecalComponent*>();
 
-        if (frustumPlanes.Intersects(objectOBB))
-        {
-            decal = gameObject->GetComponent<DecalComponent*>();
-            if (decal != nullptr) break;
-        }
+        if (decal == nullptr) continue;
+        if (decal->GetResourceMaterial() == nullptr) continue;
+
+        const UID uid = decal->GetResourceMaterial()->GetUID();
+        groupedDecals[uid].push_back(decal);
     }
-    if (decal == nullptr) return;
-    if (decal->GetResourceMaterial() == nullptr) return;
+
+    if (groupedDecals.empty()) return;
 
     const unsigned int program = App->GetShaderModule()->GetDecalProgram();
 
@@ -1248,31 +1239,13 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
     glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
 
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
-
-    uint64_t dhandle = decal->GetResourceMaterial()->GetMaterial().diffuseTex;
-    glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
-
-    uint64_t nhandle = decal->GetResourceMaterial()->GetMaterial().normalTex;
-    glUniformHandleui64ARB(glGetUniformLocation(program, "decalNormalTex"), nhandle);
-
-    float4x4 model    = decal->GetParent()->GetGlobalTransform();
-    float4x4 invModel = model.Inverted();
-    glUniformMatrix4fv(glGetUniformLocation(program, "invModel"), 1, GL_TRUE, &invModel[0][0]);
+    glUniform1i(glGetUniformLocation(program, "normalTex"), 2);
 
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
-
-    float3 cameraPos;
-    if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
-    else cameraPos = camera->GetCameraPosition();
-    float3 localCameraPos = (invModel * float4(cameraPos, 1.0f)).xyz();
-
-    bool insideDecalBox =
-        abs(localCameraPos.x) <= 0.5f && abs(localCameraPos.y) <= 0.5f && abs(localCameraPos.z) <= 0.5f;
 
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
     unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
@@ -1280,57 +1253,88 @@ void Scene::DecalsPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuf
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    GLint modelLoc = glGetUniformLocation(program, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_TRUE, &model[0][0]);
-
-    unsigned int VAO, VBO, EBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    // Bind VAO first
-    glBindVertexArray(VAO);
-
-    // VBO for vertex data
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-
-    // IBO for indices
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
-
-    // Position attribute (location = 0)
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    // Unbind VAO (optional safety)
-    glBindVertexArray(0);
-
-    glBindVertexArray(VAO);
-
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
     glEnable(GL_DEPTH_TEST);
 
-    if (insideDecalBox)
+    for (const auto& [uid, decals] : groupedDecals)
     {
-        glDisable(GL_DEPTH_TEST);
-        glFrontFace(GL_CW);
-    }
+        const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
+        glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
 
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        if (decals[0]->GetResourceMaterial()->GetMaterial().hasMetallic)
+        {
+            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
+
+            const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().metallicTex;
+            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
+        }
+        else if (decals[0]->GetResourceMaterial()->GetMaterial().hasSpecular)
+        {
+            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
+
+            const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().specularTex;
+            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
+        }
+        else glUniform1i(glGetUniformLocation(program, "hasMetallic"), 0);
+
+        glUniform1i(glGetUniformLocation(program, "hasNormal"), decals[0]->GetResourceMaterial()->GetMaterial().normalTex != 0 ? 1 : 0);
+
+        const uint64_t nhandle = decals[0]->GetResourceMaterial()->GetMaterial().normalTex;
+        glUniformHandleui64ARB(glGetUniformLocation(program, "decalNormalTex"), nhandle);
+
+        std::vector<DecalModels> models;
+        models.reserve(decals.size());
+
+        for (const auto& decal : decals)
+        {
+            float4x4 model    = decal->GetParent()->GetGlobalTransform();
+            float4x4 invModel = model.Inverted();
+
+            models.push_back({model, invModel});
+        }
+
+        GLuint decalSSBO;
+        glGenBuffers(1, &decalSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, decalSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DecalModels) * models.size(), models.data(), GL_STATIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, decalSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        /*
+        We cant check if we are inside of the decal with instancing (the camera is far away, so we should'nt have any
+        problem)
+
+        float3 cameraPos;
+        if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
+        else cameraPos = camera->GetCameraPosition();
+        float3 localCameraPos = (invModel * float4(cameraPos, 1.0f)).xyz();
+
+        bool insideDecalBox =
+            abs(localCameraPos.x) <= 0.5f && abs(localCameraPos.y) <= 0.5f && abs(localCameraPos.z) <= 0.5f;
+
+
+        if (insideDecalBox)
+        {
+            glDisable(GL_DEPTH_TEST);
+            glFrontFace(GL_CW);
+        }*/
+
+        glBindVertexArray(decalVAO);
+
+        glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, (GLsizei)models.size());
+
+        glBindVertexArray(0);
+
+        glDeleteBuffers(1, &decalSSBO);
+    }
 
     glEnable(GL_CULL_FACE);
     glDepthMask(GL_TRUE);
     glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
-
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    glDeleteVertexArrays(1, &VAO);
 
     gbuffer->Unbind();
 }
