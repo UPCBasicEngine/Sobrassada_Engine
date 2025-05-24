@@ -40,7 +40,6 @@ class FireballTrap : public Script
     bool isDealingDamage                    = false;
 
     // fireball
-    std::string fireballName                = "";
     GameObject* fireball                    = nullptr;
     float verticalSpeed                     = 0.0f;
     bool hasImpacted                        = false;

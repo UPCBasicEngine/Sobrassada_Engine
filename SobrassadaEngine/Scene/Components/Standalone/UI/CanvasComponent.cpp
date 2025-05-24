@@ -8,6 +8,7 @@
 #include "GameObject.h"
 #include "GameUIModule.h"
 #include "ImageComponent.h"
+#include "CameraComponent.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
 #include "Transform2DComponent.h"
@@ -127,8 +128,21 @@ void CanvasComponent::RenderUI()
 
     if (renderMode == CanvasRenderMode::WorldSpace)
     {
-        view = App->GetCameraModule()->GetViewMatrix();
-        proj = App->GetCameraModule()->GetProjectionMatrix();
+        bool playMode                     = App->GetSceneModule()->GetInPlayMode();
+        const Frustum& editorCamera       = App->GetCameraModule()->GetCamera();
+        const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+
+        if (playMode && gameCamera)
+        {
+            view = gameCamera->GetViewMatrix();
+            proj = gameCamera->GetProjectionMatrix();
+
+        }
+        else
+        {
+            view = editorCamera.ViewMatrix();
+            proj = editorCamera.ProjectionMatrix();
+        }
     }
     else // ScreenSpaceOverlay
     {
@@ -199,7 +213,7 @@ void CanvasComponent::UpdateMousePosition(const float2& mousePos)
     hoveredButton    = nullptr;
     bool buttonFound = false;
 
-    GLOG("\n Mouse position: %f %f", mousePos.x, mousePos.y)
+    // GLOG("\n Mouse position: %f %f", mousePos.x, mousePos.y)
 
     for (int i = (int)sortedChildren.size() - 1; i >= 0; --i)
     {
