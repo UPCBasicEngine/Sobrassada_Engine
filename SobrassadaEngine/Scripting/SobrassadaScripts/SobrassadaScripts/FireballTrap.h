@@ -6,6 +6,14 @@ class GameObject;
 class MeshComponent;
 class SphereColliderComponent;
 
+enum ACTIVATION_STATE
+{
+    SLEEPING,
+    IDLE,
+    DROPPING,
+    DAMAGING,
+};
+
 class FireballTrap : public Script
 {
   public:
@@ -16,8 +24,8 @@ class FireballTrap : public Script
     int GetDamage() const { return damage; }
 
   private:
-    void StartAttack(float gameTime);
-    void HandleImpact(float gameTime);
+    void StartAttack();
+    void HandleImpact();
     void DisableDamage();
     void UpdateFireball(float deltaTime);
     float GenerateRandomAttackTime(float min, float max);
@@ -35,8 +43,7 @@ class FireballTrap : public Script
     MeshComponent* groundMesh               = nullptr;
     SphereColliderComponent* damageCollider = nullptr;
 
-    float lastAttackTime                    = -1.0f;
-    float lastHitTime                       = -1.0f;
+    float activatedTime                     = 0.0f;
     bool isDealingDamage                    = false;
 
     // fireball
@@ -48,8 +55,8 @@ class FireballTrap : public Script
     bool hasImpacted                        = false;
     float rotationSpeed                     = 1.0f;
     float fallingHeight                     = 20.0f;
-    float maxFallSpeed                      = -20.0f;
     float editableMaxFallSpeed              = 20.0f;
-    float gravity                           = -9.81f;
     float editableGravity                   = 9.81f;
+
+    ACTIVATION_STATE activationState = SLEEPING;
 };

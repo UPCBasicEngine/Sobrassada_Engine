@@ -17,7 +17,6 @@
 
 FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Trap Activated", InspectorField::FieldType::Bool, &activated});
     fields.push_back({"Activation Range", InspectorField::FieldType::Float, &activationRange, 0.0f, 100.0f});
     fields.push_back({"Min Attack Cooldown", InspectorField::FieldType::Float, &minAttackCooldown, 0.0f, 10.0f});
     fields.push_back({"Max Attack Cooldown", InspectorField::FieldType::Float, &maxAttackCooldown, 0.0f, 30.0f});
@@ -52,8 +51,7 @@ bool FireballTrap::Init()
         if (fireballShadow) fireballShadow->SetEnabled(false);
         else GLOG("[WARNING] No fireball shadow found as child of base")
     }
-
-    lastAttackTime += -maxAttackCooldown;
+    
     srand(static_cast<unsigned>(time(0))); // random seed
 
     return true;
@@ -61,48 +59,46 @@ bool FireballTrap::Init()
 
 void FireballTrap::Update(float deltaTime)
 {
+    // TODO Make all movement depended on the deltaTime
     if (!character || !groundMesh || !damageCollider || !fireball) return;
 
-    const float gameTime = AppEngine->GetGameTimer()->GetTime() / 1000.0f;
-    maxFallSpeed         = -editableMaxFallSpeed;
-    gravity              = -editableGravity;
-
-    const float distance = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
-    activated            = (distance <= activationRange * activationRange);
-
-    if (!activated && !attacking && !isDealingDamage) return;
-
-    if (randomAttackTime < 0.0f) randomAttackTime = GenerateRandomAttackTime(minAttackCooldown, maxAttackCooldown);
-
-    if (activated && !attacking && gameTime - lastAttackTime >= randomAttackTime)
+    if (activationState == SLEEPING)
     {
-        StartAttack(gameTime);
+        const float distance = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
+        if (distance <= activationRange * activationRange)
+        {
+            randomAttackTime = GenerateRandomAttackTime(minAttackCooldown, maxAttackCooldown);
+            activationState = IDLE;
+        }
+        return;
     }
 
-    if (attacking && !hasImpacted)
+    if (!attacking && activatedTime >= randomAttackTime)
+    {
+        StartAttack();
+    } else if (attacking && !hasImpacted)
     {
         UpdateFireball(deltaTime);
-    }
-
-    if (attacking && fireball->GetGlobalTransform().TranslatePart().y <= parent->GetGlobalTransform().TranslatePart().y)
+    } else if (attacking && fireball->GetGlobalTransform().TranslatePart().y <= parent->GetGlobalTransform().TranslatePart().y)
     {
-        HandleImpact(gameTime);
-    }
-
-    if (isDealingDamage && gameTime - lastHitTime >= damageDuration)
+        HandleImpact();
+    } else if (isDealingDamage && activatedTime - randomAttackTime >= damageDuration)
     {
         DisableDamage();
+        randomAttackTime = GenerateRandomAttackTime(minAttackCooldown, maxAttackCooldown);
+        activatedTime = 0;
     }
+
+    activatedTime += deltaTime;
 }
 
-void FireballTrap::StartAttack(float gameTime)
+void FireballTrap::StartAttack()
 {
     fireball->SetEnabled(true);
     fireball->SetLocalPosition(float3(0.0f, fallingHeight, 0.0f));
 
     if (fireballShadow != nullptr)  fireballShadow->SetEnabled(true);
 
-    lastAttackTime = gameTime;
     verticalSpeed  = 0.0f;
     attacking      = true;
     hasImpacted    = false;
@@ -112,7 +108,7 @@ void FireballTrap::StartAttack(float gameTime)
     randomAttackTime = -1.0f;
 }
 
-void FireballTrap::HandleImpact(float gameTime)
+void FireballTrap::HandleImpact()
 {
     fireball->SetEnabled(false);
     if (fireballShadow != nullptr)  fireballShadow->SetEnabled(false);
@@ -121,7 +117,6 @@ void FireballTrap::HandleImpact(float gameTime)
 
     attacking       = false;
     isDealingDamage = true;
-    lastHitTime     = gameTime;
     hasImpacted     = true;
 }
 
@@ -140,8 +135,8 @@ void FireballTrap::UpdateFireball(float deltaTime)
 
     if (deltaTime < 0.1f)
     {
-        verticalSpeed += gravity * deltaTime;
-        verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
+        verticalSpeed += -editableGravity * deltaTime;
+        verticalSpeed  = std::max(verticalSpeed, -editableMaxFallSpeed); // Clamp fall speed
 
         currentPos.y  += (verticalSpeed * deltaTime);
     }
