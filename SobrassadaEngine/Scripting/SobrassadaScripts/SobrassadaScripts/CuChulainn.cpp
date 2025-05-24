@@ -117,7 +117,7 @@ void CuChulainn::HandleState(float deltaTime)
     {
         animComponent->OnResume();
         animComponent->UseTrigger("Idle");
-        state = CharacterStates::IDLE;
+        state    = CharacterStates::IDLE;
         aimTimer = 0.0f;
     }
 
@@ -205,7 +205,7 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_F6])
     {
-        spawnPos = parent->GetPosition();
+        spawnPos = parent->GetGlobalTransform().TranslatePart();
     }
 }
 
@@ -290,13 +290,13 @@ void CuChulainn::CheckIsFalling()
         state = CharacterStates::FALL;
     }
 
-    if (state == CharacterStates::FALL && verticalSpeed >= -0.1)
+    if (state == CharacterStates::FALL && verticalSpeed >= -1.0f)
     {
         animComponent->UseTrigger("Land");
         character->EnableMovement(false);
     }
 
-    const float maxDepth = -50.0f;
+    const float maxDepth = -60.0f;
 
     if (parent->GetGlobalTransform().TranslatePart().y < maxDepth)
     {
@@ -411,8 +411,8 @@ void CuChulainn::Move()
 
 void CuChulainn::SetPosition(const float3& position)
 {
-    parent->SetLocalPosition(position);
-    if (camera) camera->SetPosition(position);
+    parent->SetLocalPosition(position - parent->GetParentGlobalTransform().TranslatePart());
+    if (camera) camera->SetPosition(position - parent->GetParentGlobalTransform().TranslatePart());
 }
 
 void CuChulainn::Respawn()

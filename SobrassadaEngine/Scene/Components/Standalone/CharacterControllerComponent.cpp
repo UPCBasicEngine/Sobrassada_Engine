@@ -276,7 +276,7 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
     {
         isGrounded                = true;
         float distToFloor         = polyHeight - currentPos.y;
-        const float maxStepHeight = 0.5f;
+        const float maxStepHeight = 0.2f;
         if (distToFloor >= 0.0f && distToFloor <= maxStepHeight)
         {
             currentPos.y  = polyHeight;
@@ -287,17 +287,18 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 
 void CharacterControllerComponent::Move(float deltaTime)
 {
-    if (!movementEnabled && inputDown)
-    {
-        currentSpeed = 0;
-        return;
-    }
-
     if (!navMeshQuery || currentPolyRef == 0) return;
 
     const float3& currentPos = parent->GetGlobalTransform().TranslatePart();
-    currentSpeed          = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
-                                                                : Lerp(currentSpeed, 0, 100 * deltaTime);
+    if (!movementEnabled)
+    {
+        currentSpeed = 0;
+    }
+    else
+    {
+        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
+                                                           : Lerp(currentSpeed, 0, 100 * deltaTime);
+    }
 
     const float3 offsetXZ = rotateDirection * currentSpeed * deltaTime;
     float3 desiredPos     = currentPos + offsetXZ;
