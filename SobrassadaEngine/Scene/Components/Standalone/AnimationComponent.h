@@ -2,17 +2,15 @@
 
 #include "Component.h"
 #include "Globals.h"
+#include "ResourceStateMachine.h"
 
 #include "rapidjson/document.h"
 #include <map>
 #include <unordered_map>
 
 class ResourceAnimation;
-class ResourceStateMachine;
 class AnimController;
 class GameObject;
-
-struct State;
 
 class SOBRASADA_API_ENGINE AnimationComponent : public Component
 {
@@ -37,6 +35,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     bool UseTrigger(const std::string& triggerName);
 
     UID GetAnimationResource() const { return resource; }
+    const HashString& GetCurrentStateName() const { return currentState->name; }
     ResourceAnimation* GetCurrentAnimation() const { return currentAnimResource; }
     AnimController* GetAnimationController() { return animController; }
     ResourceStateMachine* GetResourceStateMachine() const { return resourceStateMachine; }
