@@ -1239,9 +1239,9 @@ void Scene::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, Ca
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
     glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
 
-    glActiveTexture(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "normalTex"), 2);
+    glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
 
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();

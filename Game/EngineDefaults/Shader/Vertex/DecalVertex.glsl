@@ -21,7 +21,7 @@ out mat4 vInvModel;
 out vec4 clipping;
 
 void main(){
-    const Models models = modelMatrices[gl_BaseInstance];
+    const Models models = modelMatrices[gl_InstanceID];
     vInvModel = models.invModel;
     clipping = projMatrix * viewMatrix * models.model * vec4(vertex_position, 1.0);
     gl_Position = clipping;

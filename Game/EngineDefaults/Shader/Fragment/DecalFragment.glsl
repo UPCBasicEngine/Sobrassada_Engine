@@ -4,6 +4,7 @@
 
 uniform sampler2D positionTex;
 uniform sampler2D normalTex;
+
 uniform sampler2D decalAlbedoTex;
 uniform sampler2D decalMetallicTex;
 uniform bool hasMetallic;

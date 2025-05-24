@@ -38,7 +38,7 @@ void DecalComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
 
 void DecalComponent::Clone(const Component* other)
 {
-    if (other->GetType() == ComponentType::COMPONENT_BILLBOARD)
+    if (other->GetType() == ComponentType::COMPONENT_DECAL)
     {
         const DecalComponent* otherDecal = static_cast<const DecalComponent*>(other);
         enabled                          = otherDecal->enabled;
