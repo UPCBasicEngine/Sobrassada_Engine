@@ -44,13 +44,13 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/SplineComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
 #include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/SplineComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -1289,6 +1289,13 @@ CameraComponent* Scene::GetMainCamera() const
     {
         if (mainCamera->IsEffectivelyEnabled()) return mainCamera;
     }
+    return nullptr;
+}
+
+CameraComponent* Scene::GetMainCameraEvenDisabled() const
+{
+    if (mainCamera != nullptr) return mainCamera;
+
     return nullptr;
 }
 

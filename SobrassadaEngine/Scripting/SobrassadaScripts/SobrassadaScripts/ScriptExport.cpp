@@ -4,6 +4,7 @@
 #include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
+#include "ChangeSceneScript.h"
 #include "CuChulainn.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
@@ -12,6 +13,7 @@
 #include "Globals.h"
 #include "GodMode.h"
 #include "MainMenuSelectorScript.h"
+#include "MenuChangeSceneScript.h"
 #include "OptionsMenuSwitcherScript.h"
 #include "PauseMenuScript.h"
 #include "PressAnyKeyScript.h"
@@ -19,7 +21,6 @@
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
-#include "ChangeSceneScript.h"
 #include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
@@ -34,26 +35,26 @@
 #endif
 
 constexpr const char* scripts[] = {
-    "RotateGameObjectScript",   
-    "ButtonScript",              
-    "GodModeScript",             
-    "CuChulainnScript",         
-    "SoldierScript",             
-    "ExitGameScript",            
-    "FullscreenToggleScript",    
-    "VSyncToggleScript",         
-    "PauseMenuScript",          
-    "OptionsMenuSwitcherScript", 
-    "MainMenuSelectorScript",    
-    "PressAnyKeyScript",        
-    "CameraMovement",            
-    "Projectile",                
-    "FreeCamera",                
+    "RotateGameObjectScript",
+    "ButtonScript",
+    "GodModeScript",
+    "CuChulainnScript",
+    "SoldierScript",
+    "ExitGameScript",
+    "FullscreenToggleScript",
+    "VSyncToggleScript",
+    "PauseMenuScript",
+    "OptionsMenuSwitcherScript",
+    "MainMenuSelectorScript",
+    "PressAnyKeyScript",
+    "CameraMovement",
+    "Projectile",
+    "FreeCamera",
     "SpawnPoint",
     "Banshee",
     "TileFloatScript",
     "FireballTrap",
-    "Archer",             
+    "Archer",
     "ChangeSceneScript",
     "SpawnUI",
     "MenuChangeSceneScript",
@@ -100,7 +101,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
-
 
     return nullptr;
 }
