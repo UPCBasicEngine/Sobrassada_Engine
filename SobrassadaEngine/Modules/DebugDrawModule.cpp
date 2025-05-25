@@ -16,6 +16,7 @@
 #include "ResourceNavmesh.h"
 #include "ResourcesModule.h"
 #include "SceneModule.h"
+#include "Standalone/SplineComponent.h"
 
 #include "SDL_video.h"
 #define DEBUG_DRAW_IMPLEMENTATION
@@ -842,6 +843,15 @@ void DebugDrawModule::HandleDebugRenderOptions()
                 navmesh->GetDetourNavMesh(), App->GetPathfinderModule()->GetDetourNavMeshQuery(),
                 DRAWNAVMESH_COLOR_TILES
             );
+        }
+    }
+
+    if (debugOptionValues[(int)DebugOptions::RENDER_SPLINES])
+    {
+        for (const auto& gameObject : gameObjects)
+        {
+            SplineComponent* spline = gameObject.second->GetComponent<SplineComponent*>();
+            if (spline) spline->RenderDebug(0.0f);
         }
     }
 }
