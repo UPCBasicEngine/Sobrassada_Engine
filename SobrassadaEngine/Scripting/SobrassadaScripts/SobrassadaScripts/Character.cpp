@@ -227,6 +227,4 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
-
-    parent->SetEnabled(false);
 }

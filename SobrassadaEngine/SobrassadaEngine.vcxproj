@@ -404,6 +404,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\SplineComponent.cpp" />
     <ClCompile Include="Scene\Components\Standalone\UI\CanvasScalerComponent.cpp" />
     <ClCompile Include="Utils\GBuffer.cpp" />
     <ClCompile Include="Utils\NavMeshConfig.cpp" />
@@ -640,6 +641,7 @@
     <ClInclude Include="FileSystem\Meta\MetaNavmesh.h" />
     <ClInclude Include="Modules\AudioModule.h" />
     <ClInclude Include="Scene\Components\Standalone\Audio\AudioSourceComponent.h" />
+    <ClInclude Include="Scene\Components\Standalone\SplineComponent.h" />
     <ClInclude Include="Scene\Components\Standalone\UI\CanvasScalerComponent.h" />
     <ClInclude Include="Utils\GBuffer.h" />
     <ClInclude Include="Utils\HashString.h" />

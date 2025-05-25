@@ -39,27 +39,61 @@ bool MainMenuSelectorScript::Init()
 
 void MainMenuSelectorScript::Update(float deltaTime)
 {
-    const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
+    int arrowsEnabled = 0;
+    for (GameObject* arrow : arrowImages)
+    {
+        if (arrow && arrow->IsEnabled())
+        {
+            ++arrowsEnabled;
+        }
+    }
 
-    if (keys[SDL_SCANCODE_DOWN] == KEY_DOWN)
+    if (arrowsEnabled > 1)
+    {
+        UpdateSelection();
+    }
+
+    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
+    const float2& leftStick        = AppEngine->GetInputModule()->GetLeftStick();
+
+    static bool stickMoved         = false;
+
+    bool moveDown                  = keys[SDL_SCANCODE_DOWN] == KEY_DOWN ||
+                    gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_DOWN || (leftStick.y > 0.5f && !stickMoved);
+
+    bool moveUp = keys[SDL_SCANCODE_UP] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_DOWN ||
+                  (leftStick.y < -0.5f && !stickMoved);
+
+    if (moveDown)
     {
         selectedIndex = (selectedIndex + 1) % menuItems.size();
         UpdateSelection();
+        stickMoved = true;
     }
-    else if (keys[SDL_SCANCODE_UP] == KEY_DOWN)
+    else if (moveUp)
     {
         selectedIndex = (selectedIndex - 1 + menuItems.size()) % static_cast<int>(menuItems.size());
         UpdateSelection();
+        stickMoved = true;
     }
 
-    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
+    if (fabs(leftStick.y) < 0.3f)
+    {
+        stickMoved = false;
+    }
+
+    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
+        gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         GameObject* selectedItem = menuItems[selectedIndex];
-
         ButtonComponent* button  = selectedItem->GetComponent<ButtonComponent*>();
         if (button) button->OnClick();
     }
 }
+
+
+
 
 void MainMenuSelectorScript::UpdateSelection()
 {

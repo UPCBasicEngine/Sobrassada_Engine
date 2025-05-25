@@ -534,6 +534,9 @@
     <ClCompile Include="Utils\NavMeshConfig.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\SplineComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
     <ClCompile Include="Scene\Components\Standalone\UI\CanvasScalerComponent.cpp">
       <Filter>Scene\Components\UI</Filter>
     </ClCompile>
@@ -1093,6 +1096,9 @@
     </ClInclude>
     <ClInclude Include="Utils\HashString.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\SplineComponent.h">
+      <Filter>Scene\Components</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\UI\CanvasScalerComponent.h">
       <Filter>Scene\Components\UI</Filter>

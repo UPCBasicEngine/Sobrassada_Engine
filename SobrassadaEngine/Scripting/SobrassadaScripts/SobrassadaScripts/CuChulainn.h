@@ -15,7 +15,10 @@ enum class CharacterStates
     RUN,
     DASH,
     BASIC_ATTACK,
-    AIM
+    AIM,
+    RESPAWN,
+    DEATH,
+    FALL
 };
 
 class CuChulainn : public Character
@@ -47,10 +50,12 @@ class CuChulainn : public Character
 
     void ThrowSpear();
     void Attack(float deltaTime) override;
+    void Die() override;
     void Dash();
-    void Aim();
+    void Aim(float deltaTime);
     void Move();
     void SetPosition(const float3& position);
+    void Respawn();
 
   private:
     std::string cameraName      = "";
@@ -76,6 +81,9 @@ class CuChulainn : public Character
     float throwTimer            = 0.0f;
     float throwCooldown         = 1.0f;
     bool resetWeapon            = false;
+
+    float deathTimer            = 0.0f;
+    float aimTimer              = 0.0f;
 
     CharacterStates state       = CharacterStates::IDLE;
     float3 spawnPos             = float3::zero;

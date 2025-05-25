@@ -46,6 +46,7 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/SplineComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
 #include "Standalone/UI/CanvasScalerComponent.h"
@@ -880,8 +881,8 @@ void Scene::CreateDynamicSpatialDataStruct()
     // PARAMETRIZED IN FUTURE
     float3 center    = float3::zero;
     float length     = 2000;
-    int nodeCapacity = 5;
-    dynamicTree      = new Quadtree(center, length, nodeCapacity);
+    int nodeCapacity = 15;
+    dynamicTree      = new Octree(center, length, nodeCapacity);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {
@@ -1297,6 +1298,13 @@ CameraComponent* Scene::GetMainCamera() const
     {
         if (mainCamera->IsEffectivelyEnabled()) return mainCamera;
     }
+    return nullptr;
+}
+
+CameraComponent* Scene::GetMainCameraEvenDisabled() const
+{
+    if (mainCamera != nullptr) return mainCamera;
+
     return nullptr;
 }
 

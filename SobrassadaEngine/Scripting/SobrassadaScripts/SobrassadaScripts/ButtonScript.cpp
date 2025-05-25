@@ -15,7 +15,7 @@
 
 bool ButtonScript::Init()
 {
-    //GLOG("Initiating ButtonScript");
+    // GLOG("Initiating ButtonScript");
 
     if (!parent)
     {
@@ -83,13 +83,13 @@ void ButtonScript::OnClick()
     {
         if (go && go->GetName() == panelToHideName)
         {
-            go->SetEnabled(false);
+            go->SetEnabledRecursive(false);
         }
 
         if (go && go->GetName() == panelToShowName)
         {
 
-            go->SetEnabled(true);
+            go->SetEnabledRecursive(true);
         }
     }
 }

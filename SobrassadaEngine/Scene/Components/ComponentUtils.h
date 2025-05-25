@@ -36,6 +36,7 @@ enum ComponentType : int
     COMPONENT_AUDIO_LISTENER,
     COMPONENT_CANVAS_SCALER,
     COMPONENT_BILLBOARD,
+	COMPONENT_SPLINE,
     COMPONENT_PARTICLE_SYSTEM,
 };
 
@@ -82,9 +83,8 @@ class ComponentUtils
         CharacterControllerComponent*, Transform2DComponent*, CanvasComponent*,         \
         UILabelComponent*, CameraComponent*, ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*,       \
         CapsuleColliderComponent*, AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*,          \
-        AudioSourceComponent*,              \
-        AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, ParticleSystemComponent*
+        AudioSourceComponent*, AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, ParticleSystemComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr

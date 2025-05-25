@@ -4,12 +4,16 @@
 #include "EditorUIModule.h"
 #include "FileSystem/Material.h"
 #include "LibraryModule.h"
-
+#include "ProjectModule.h"
+#include "FileSystem.h"
 #include "ResourceTexture.h"
 #include "TextureImporter.h"
 
 #include "glew.h"
 #include "imgui.h"
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/stringbuffer.h>
+
 
 ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapidjson::Value& importOptions)
     : Resource(uid, name, ResourceType::Material)
@@ -22,6 +26,10 @@ ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapid
     if (importOptions.HasMember("isTransparent") && importOptions["isTransparent"].IsBool())
         isTransparent = importOptions["isTransparent"].GetBool();
     else isTransparent = false;
+
+    if (importOptions.HasMember("isDoubleSided") && importOptions["isDoubleSided"].IsBool())
+        doubleSided = importOptions["isDoubleSided"].GetBool();
+    else doubleSided = false;
 }
 
 ResourceMaterial::~ResourceMaterial()
@@ -33,6 +41,7 @@ void ResourceMaterial::OnEditorUpdate()
 {
     bool updated = false;
 
+    updated |= ImGui::Checkbox("Double Sided", &doubleSided);
     if (diffuseTexture.textureID != 0)
     {
         ImGui::Text("Diffuse Texture");
@@ -42,7 +51,7 @@ void ResourceMaterial::OnEditorUpdate()
             ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
         }
 
-        // ImGui::SameLine();
+         ImGui::SameLine();
 
         // TODO: commented all select buttons until save data to meta is implemented
         /*if (ImGui::Button("Select Diffuse Texture"))
@@ -175,8 +184,59 @@ void ResourceMaterial::OnEditorUpdate()
         }*/
     }
 
-    // TODO: override metadata material
-    // if (updated)
+    if (updated) SaveToMeta();
+}
+
+void ResourceMaterial::SaveToMeta()
+{
+    std::string path               = App->GetLibraryModule()->GetResourcePath(uid);
+    const std::string& projectPath = App->GetProjectModule()->GetLoadedProjectPath();
+    rapidjson::Document doc;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(projectPath + METADATA_PATH))
+    {
+        if (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION)
+        {
+            std::string filePath = entry.path().string();
+            if (!FileSystem::LoadJSON(filePath.c_str(), doc)) continue;
+
+            UID assetUID = doc["UID"].GetUint64();
+
+            if (uid == assetUID)
+            {
+                rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
+
+                // Read
+                UID shaderUID                                 = 0;
+                bool useOcclusion                             = false;
+                if (doc.HasMember("importOptions") && doc["importOptions"].IsObject())
+                {
+                    const auto& opts = doc["importOptions"];
+                    if (opts.HasMember("shader") && opts["shader"].IsUint64()) shaderUID = opts["shader"].GetUint64();
+                    if (opts.HasMember("useOcclusion") && opts["useOcclusion"].IsBool())
+                        useOcclusion = opts["useOcclusion"].GetBool();
+                }
+
+                rapidjson::Value importOptions(rapidjson::kObjectType);
+                importOptions.AddMember("shader", rapidjson::Value().SetUint64(shaderUID), allocator);
+                importOptions.AddMember("useOcclusion", useOcclusion, allocator);
+                importOptions.AddMember(
+                    "defaultTextureUID", rapidjson::Value().SetUint64(defaultTextureUID), allocator
+                );
+                importOptions.AddMember("isTransparent", isTransparent, allocator);
+                importOptions.AddMember("isDoubleSided", doubleSided, allocator);
+
+                if (doc.HasMember("importOptions")) doc["importOptions"] = importOptions;
+                else doc.AddMember("importOptions", importOptions, allocator);
+
+                rapidjson::StringBuffer buffer;
+                rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+                doc.Accept(writer);
+
+                FileSystem::Save(filePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
+                return;
+            }
+        }
+    }
 }
 
 UID ResourceMaterial::ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU)
