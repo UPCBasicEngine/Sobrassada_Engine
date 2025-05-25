@@ -86,6 +86,7 @@ class SOBRASADA_API_ENGINE Scene
 
     LightsConfig* GetLightsConfig() const { return lightsConfig; }
     CameraComponent* GetMainCamera() const;
+    CameraComponent* GetMainCameraEvenDisabled() const;
 
     template <typename T> std::vector<T> GetEnabledComponentsOfType() const;
 

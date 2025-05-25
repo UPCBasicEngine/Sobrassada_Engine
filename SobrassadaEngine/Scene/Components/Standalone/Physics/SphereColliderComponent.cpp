@@ -65,6 +65,11 @@ SphereColliderComponent::~SphereColliderComponent()
     DeleteRigidBody();
 }
 
+void SphereColliderComponent::Init()
+{
+    if (rigidBody) App->GetPhysicsModule()->UpdateSphereRigidBody(this);
+}
+
 void SphereColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);

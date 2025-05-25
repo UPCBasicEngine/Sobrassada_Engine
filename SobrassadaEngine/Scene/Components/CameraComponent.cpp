@@ -148,7 +148,7 @@ CameraComponent::CameraComponent(const rapidjson::Value& initialState, GameObjec
 
 CameraComponent::~CameraComponent()
 {
-    if (App->GetSceneModule()->GetScene()->GetMainCamera() == this)
+    if (App->GetSceneModule()->GetScene()->GetMainCameraEvenDisabled() == this)
     {
         App->GetSceneModule()->GetScene()->SetMainCamera(nullptr);
     }
