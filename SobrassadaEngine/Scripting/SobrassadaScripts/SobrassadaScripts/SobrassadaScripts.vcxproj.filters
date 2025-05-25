@@ -112,7 +112,9 @@
     <ClInclude Include="Archer.h">
       <Filter>Characters\Enemies</Filter>
     </ClInclude>
-    <ClInclude Include="MoveGOInSpline.h" />
+    <ClInclude Include="MoveGOInSpline.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -766,7 +768,9 @@
     <ClCompile Include="Archer.cpp">
       <Filter>Characters\Enemies</Filter>
     </ClCompile>
-    <ClCompile Include="MoveGOInSpline.cpp" />
+    <ClCompile Include="MoveGOInSpline.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SobrassadaScripts.rc" />
