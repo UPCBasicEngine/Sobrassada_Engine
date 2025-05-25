@@ -1,6 +1,6 @@
 #include "ParticleAddon.h"
 
-ParticleAddon::ParticleAddon(const rapidjson::Value& initialState)
+ParticleAddon::ParticleAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : owner(owner)
 {
     if (initialState.HasMember("Enabled")) isEnabled = initialState["Enabled"].GetBool();
     if (initialState.HasMember("AddonType")) addonType = ParticleAddonType(initialState["AddonType"].GetInt());

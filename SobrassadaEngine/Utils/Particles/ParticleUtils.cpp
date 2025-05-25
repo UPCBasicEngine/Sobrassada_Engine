@@ -14,19 +14,19 @@ void ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType type, ParticleEmi
         return;
     case ParticleAddonType::BASE:
     {
-        BaseAddon* addon            = new BaseAddon();
+        BaseAddon* addon            = new BaseAddon(emitter);
         std::get<BaseAddon*>(tuple) = addon;
         break;
     }
     case ParticleAddonType::VELOCITY:
     {
-        VelocityAddon* addon            = new VelocityAddon();
+        VelocityAddon* addon            = new VelocityAddon(emitter);
         std::get<VelocityAddon*>(tuple) = addon;
         break;
     }
     case ParticleAddonType::SPRITESHEET:
     {
-        SpritesheetAddon* addon         = new SpritesheetAddon();
+        SpritesheetAddon* addon         = new SpritesheetAddon(emitter);
         std::get<SpritesheetAddon*>(tuple) = addon;
         break;
     }
@@ -48,19 +48,19 @@ void ParticleUtils::CreateExistingComponent(const rapidjson::Value& initialState
         return;
     case ParticleAddonType::BASE:
     {
-        BaseAddon* addon            = new BaseAddon(initialState);
+        BaseAddon* addon            = new BaseAddon(initialState, emitter);
         std::get<BaseAddon*>(tuple) = addon;
         break;
     }
     case ParticleAddonType::VELOCITY:
     {
-        VelocityAddon* addon            = new VelocityAddon(initialState);
+        VelocityAddon* addon            = new VelocityAddon(initialState, emitter);
         std::get<VelocityAddon*>(tuple) = addon;
         break;
     }
     case ParticleAddonType::SPRITESHEET:
     {
-        SpritesheetAddon* addon            = new SpritesheetAddon(initialState);
+        SpritesheetAddon* addon            = new SpritesheetAddon(initialState, emitter);
         std::get<SpritesheetAddon*>(tuple) = addon;
         break;
     }

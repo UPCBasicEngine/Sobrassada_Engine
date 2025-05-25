@@ -1,22 +1,28 @@
 #include "SpritesheetAddon.h"
 
 #include "EmitterInstance.h"
+#include "ParticleEmitter.h"
 
 #include "imgui.h"
 
-SpritesheetAddon::SpritesheetAddon() : ParticleAddon(ParticleAddonType::SPRITESHEET)
+SpritesheetAddon::SpritesheetAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::SPRITESHEET, owner)
 {
+    owner->SetUseSpritesheet(true);
 }
 
-SpritesheetAddon::SpritesheetAddon(const rapidjson::Value& initialState) : ParticleAddon(initialState)
+SpritesheetAddon::SpritesheetAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
+    : ParticleAddon(initialState, owner)
 {
     if (initialState.HasMember("Rows")) rows = initialState["Rows"].GetInt();
     if (initialState.HasMember("Columns")) columns = initialState["Columns"].GetInt();
     if (initialState.HasMember("AnimationSpeed")) animationSpeed = initialState["AnimationSpeed"].GetFloat();
+
+    owner->SetUseSpritesheet(true);
 }
 
 SpritesheetAddon::~SpritesheetAddon()
 {
+    owner->SetUseSpritesheet(false);
 }
 
 void SpritesheetAddon::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -30,10 +36,14 @@ void SpritesheetAddon::Save(rapidjson::Value& targetState, rapidjson::Document::
 
 void SpritesheetAddon::Init(EmitterInstance* emitterInstance)
 {
+    currentFrame = 0.f;
+    playTime = 0.f;
 }
 
 void SpritesheetAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
+    playTime     += deltaTime;
+    currentFrame = playTime / timePerFrame;
 }
 
 void SpritesheetAddon::RenderEditorInspector()
@@ -44,7 +54,12 @@ void SpritesheetAddon::RenderEditorInspector()
 
     ImGui::InputInt("Texture rows", &rows);
     ImGui::InputInt("Texture columns", &columns);
-    ImGui::InputFloat("Animation speed", &animationSpeed);
+    if (ImGui::InputFloat("Animation speed", &animationSpeed))
+    {
+        if (animationSpeed <= 0) animationSpeed = 1.f;
+    }
+
+    timePerFrame = (rows * columns) / animationSpeed;
 
     ImGui::PopItemWidth();
 

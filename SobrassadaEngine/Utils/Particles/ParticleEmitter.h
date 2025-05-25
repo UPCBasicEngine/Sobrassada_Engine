@@ -52,6 +52,7 @@ class ParticleEmitter
     void SetAddonCreated(int position) { createdAddons[position] = true; };
     void SetAddonDeleted(int position) { createdAddons[position] = false; };
     void SetQuadVBO(unsigned int newVbo) { quadVBO = newVbo; };
+    void SetUseSpritesheet(bool spritesheet) { useSpritesheet = spritesheet; };
 
   private:
     void UpdateMaterial(UID newMaterialUID);
@@ -65,6 +66,7 @@ class ParticleEmitter
     unsigned int particlesVBO       = 0;
 
     unsigned int aliveParticles     = 0;
+    bool useSpritesheet             = false;
 
     HashString emitterTag           = HashString("");
 

@@ -5,8 +5,8 @@
 class SpritesheetAddon : public ParticleAddon
 {
   public:
-    SpritesheetAddon();
-    SpritesheetAddon(const rapidjson::Value& initialState);
+    SpritesheetAddon(ParticleEmitter* owner);
+    SpritesheetAddon(const rapidjson::Value& initialState, ParticleEmitter* owner);
     ~SpritesheetAddon();
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
@@ -15,8 +15,13 @@ class SpritesheetAddon : public ParticleAddon
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
 
+  public:
+    float currentFrame = 0.f;
+    int rows           = 0;
+    int columns        = 0;
+
   private:
-    int rows = 0;
-    int columns = 0;
-    float animationSpeed = 0;
+    float animationSpeed = 1.f;
+    float timePerFrame   = 0.f;
+    float playTime       = 0.f;
 };

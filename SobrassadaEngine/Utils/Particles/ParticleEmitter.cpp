@@ -174,11 +174,25 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         float3 cameraUp         = upVector;
         float2 billboardSize    = float2(1, 1);
 
-        glUseProgram(App->GetShaderModule()->GetBillboardProgram());
+        glUseProgram(
+            useSpritesheet ? App->GetShaderModule()->GetSpritesheetProgram()
+                           : App->GetShaderModule()->GetBillboardProgram()
+        );
+
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);
         glUniform2fv(2, 1, &billboardSize[0]);
         glUniformMatrix4fv(3, 1, GL_TRUE, &viewProjection[0][0]);
+        if (useSpritesheet)
+        {
+            SpritesheetAddon* spritesheet = std::get<SpritesheetAddon*>(addonTuple);
+            float2 tileSize               = float2(spritesheet->rows, spritesheet->columns);
+            float2 tileOffset             = float2::zero;
+
+            glUniform2fv(4, 1, &tileSize[0]);
+            glUniform2fv(5, 1, &tileOffset[0]);
+            glUniform1f(6, spritesheet->currentFrame);
+        }
 
         glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 

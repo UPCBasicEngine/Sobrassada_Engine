@@ -6,11 +6,11 @@
 
 #include "imgui.h"
 
-BaseAddon::BaseAddon() : ParticleAddon(ParticleAddonType::BASE)
+BaseAddon::BaseAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::BASE, owner)
 {
 }
 
-BaseAddon::BaseAddon(const rapidjson::Value& initialState) : ParticleAddon(initialState)
+BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : ParticleAddon(initialState, owner)
 {
     if (initialState.HasMember("Duration")) duration = initialState["Duration"].GetFloat();
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();

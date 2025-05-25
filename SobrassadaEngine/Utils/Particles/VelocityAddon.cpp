@@ -5,12 +5,12 @@
 
 #include "imgui.h"
 
-VelocityAddon::VelocityAddon() : ParticleAddon(ParticleAddonType::VELOCITY)
+VelocityAddon::VelocityAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::VELOCITY, owner)
 {
 }
 
-VelocityAddon::VelocityAddon(const rapidjson::Value& initialState)
-    : ParticleAddon(initialState)
+VelocityAddon::VelocityAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
+    : ParticleAddon(initialState, owner)
 {
     if (initialState.HasMember("StartSpeed")) startSpeed = initialState["StartSpeed"].GetFloat();
 }
