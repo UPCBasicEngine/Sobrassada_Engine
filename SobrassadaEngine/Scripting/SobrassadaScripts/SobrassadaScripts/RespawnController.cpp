@@ -13,7 +13,7 @@ RespawnController::RespawnController(GameObject* parent) :  Script(parent)
 {
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Respawn Init", InspectorField::FieldType::Float, &respawnInit});
-    fields.push_back({"Health to set", InspectorField::FieldType::Int, &healthToSet});
+  
 }
 bool RespawnController::Init()
 {
@@ -40,9 +40,7 @@ void RespawnController::Update(float deltaTime)
                 {
                     respawnTimer = 0;
                     playerScript->SetDeath(false);
-                    playerScript->SetHealth(healthToSet);
                     playerScript->Restart();
-                    player->SetEnabled(true);
                    
                     for (auto& child : player->GetChildren())
                     {

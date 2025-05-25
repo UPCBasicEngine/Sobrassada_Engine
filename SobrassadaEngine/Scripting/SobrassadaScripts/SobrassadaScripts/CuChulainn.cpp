@@ -322,4 +322,5 @@ void CuChulainn::Respawn()
 {
     parent->SetLocalPosition(spawnPos);
     if (camera) camera->SetPosition(spawnPos);
+    currentHealth = reservedHealth;
 }

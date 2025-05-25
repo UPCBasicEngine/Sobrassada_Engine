@@ -19,5 +19,5 @@ class RespawnController : public Script
     bool isPlayerDead      = false;
     float respawnTimer     = 0.0f;
     float respawnInit      = 5.0f;
-    int healthToSet        = 0;
+   
 };

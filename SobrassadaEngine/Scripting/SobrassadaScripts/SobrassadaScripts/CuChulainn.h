@@ -30,7 +30,7 @@ class CuChulainn : public Character
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     bool IsDead();
     void SetDeath(bool death) { isDead = death; }
-    void SetHealth(int health) { currentHealth = health; }
+    void SetHealth(int health) { reservedHealth = health; }
     void Respawn();
   private:
     void OnDeath() override;
@@ -78,6 +78,7 @@ class CuChulainn : public Character
     float throwCooldown         = 1.0f;
     bool resetWeapon            = false;
 
+    int reservedHealth          = 0;
     CharacterStates state       = CharacterStates::IDLE;
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
