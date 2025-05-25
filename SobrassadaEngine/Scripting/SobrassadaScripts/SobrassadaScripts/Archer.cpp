@@ -17,7 +17,7 @@
 
 Archer::Archer(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
 {
-    fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint});
+    fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
 }
 
@@ -76,18 +76,16 @@ void Archer::PerformAttack()
 
 void Archer::HandleState(float deltaTime)
 {
-     if (!animComponent) return;
+    if (!animComponent) return;
 
     switch (currentState)
     {
     case ArcherStates::PATROL:
         // GLOG("Soldier Patrolling");
-        animComponent->UseTrigger("idle");
         PatrolAI();
         break;
     case ArcherStates::CHASE:
         // GLOG("Soldier Chasing");
-        animComponent->UseTrigger("run");
         ChaseAI();
         break;
     case ArcherStates::BASIC_ATTACK:
@@ -102,12 +100,15 @@ void Archer::HandleState(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
+        GLOG("FINISH ANIM");
         animComponent->UseTrigger("idle");
     }
 }
 
 void Archer::PatrolAI()
 {
+    animComponent->UseTrigger("run");
+
     if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::CHASE;
     else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
 
@@ -126,6 +127,8 @@ void Archer::PatrolAI()
 
 void Archer::ChaseAI()
 {
+    animComponent->UseTrigger("run");
+
     if (character != nullptr)
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::BASIC_ATTACK;
@@ -141,13 +144,14 @@ void Archer::Attack(float deltaTime)
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
+        agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
-        agentAI->PauseMovement();
+        agentAI->SetSpeed(0.0f, 0.0f);
     }
     else
     {
-
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         // Enable hitbox when animation hits
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
@@ -163,7 +167,9 @@ void Archer::Attack(float deltaTime)
             hasShot       = false;
             isAttacking   = false;
             attackCdTimer = attackCooldown;
-            agentAI->ResumeMovement();
+            agentAI->ResetSpeed();
+            agentAI->SetLookForward(true);
+
             if (CheckDistanceWithPlayer() != PlayerDistances::Medium) currentState = ArcherStates::CHASE;
         }
     }
