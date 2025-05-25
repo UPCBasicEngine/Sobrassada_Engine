@@ -18,10 +18,13 @@ private:
 
 private:
     UID splineGO = INVALID_UID;
-    float speed  = 0.2f;
+    float speed  = 0.1f;
     bool loop    = false;
     
     SplineComponent* spline = nullptr;
     float t                 = 0.0f;
+
+    bool pingPong           = true;
+    bool goingForward       = true;
 
 };
