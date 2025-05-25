@@ -19,6 +19,7 @@ namespace math
 class BaseAddon;
 class VelocityAddon;
 class SpritesheetAddon;
+class ColorAddon;
 
 class ResourceTexture;
 class ResourceMaterial;
@@ -62,22 +63,24 @@ class ParticleEmitter
     void UpdateParticlesVBO(EmitterInstance* emitterInstance);
 
   private:
-    unsigned int quadVBO            = 0;
-    unsigned int particlesVBO       = 0;
+    unsigned int quadVBO               = 0;
+    unsigned int particlesVBO          = 0;
     unsigned int particleTileOffsetVBO = 0;
+    unsigned int particleColorsVBO     = 0;
 
-    bool useSpritesheet             = false;
+    bool useSpritesheet                = false;
 
-    HashString emitterTag           = HashString("");
+    HashString emitterTag              = HashString("");
 
-    bool useTexture                 = false;
-    std::string currentResourceName = "No material";
+    bool useTexture                    = false;
+    std::string currentResourceName    = "No material";
 
-    ResourceTexture* texture        = nullptr;
-    ResourceMaterial* material      = nullptr;
+    ResourceTexture* texture           = nullptr;
+    ResourceMaterial* material         = nullptr;
 
     std::vector<float3> alivePositions;
     std::vector<std::pair<int, int>> tileOffsets;
+    std::vector<float4> particleColors;
 
     std::vector<Particle> batchedParticles;
 

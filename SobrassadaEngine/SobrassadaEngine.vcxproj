@@ -366,7 +366,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="SpritesheetAddon.cpp" />
+    <ClCompile Include="Utils\Particles\ColorAddon.cpp" />
+    <ClCompile Include="Utils\Particles\SpritesheetAddon.cpp" />
     <ClCompile Include="Utils\Particles\EmitterInstance.cpp" />
     <ClCompile Include="Utils\Particles\ParticleSystem.cpp" />
     <ClCompile Include="Scene\Components\ParticleSystemComponent.cpp" />
@@ -607,7 +608,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="SpritesheetAddon.h" />
+    <ClInclude Include="Utils\Particles\ColorAddon.h" />
+    <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />
     <ClInclude Include="Utils\Particles\EmitterInstance.h" />
     <ClInclude Include="Utils\Particles\ParticleSystem.h" />
     <ClInclude Include="Scene\Components\ParticleSystemComponent.h" />

@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "BaseAddon.h"
+#include "ColorAddon.h"
 #include "EditorUIModule.h"
 #include "EmitterInstance.h"
 #include "LibraryModule.h"
@@ -207,12 +208,21 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glVertexAttribDivisor(2, 1);
 
+        // Sending particle offset
         glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
 
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 2, GL_INT, GL_FALSE, 2 * sizeof(int), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glVertexAttribDivisor(3, 1);
+
+        // Sending particle colors
+        glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
+
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(4, 1);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
@@ -233,6 +243,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         alivePositions.clear();
         tileOffsets.clear();
         batchedParticles.clear();
+        particleColors.clear();
     }
 }
 
@@ -418,15 +429,18 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
     // ADD AND RESERVE SPACE FOR PARTICLE ARRAY INSTANCES
     alivePositions.reserve(batchedParticles.size());
     tileOffsets.reserve(batchedParticles.size());
+    particleColors.reserve(batchedParticles.size());
 
     for (int i = 0; i < batchedParticles.size(); ++i)
     {
         alivePositions.push_back(batchedParticles[i].position);
         tileOffsets.push_back(batchedParticles[i].tileOffset);
+        particleColors.push_back(batchedParticles[i].color);
     }
 
     if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
     if (particleTileOffsetVBO == 0) glGenBuffers(1, &particleTileOffsetVBO);
+    if (particleColorsVBO == 0) glGenBuffers(1, &particleColorsVBO);
     if (batchedParticles.size() > 0)
     {
         glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
@@ -435,6 +449,10 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
 
         glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 2 * tileOffsets.size(), &tileOffsets[0], GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * tileOffsets.size(), &particleColors[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }

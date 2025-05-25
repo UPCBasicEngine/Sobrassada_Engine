@@ -1,9 +1,10 @@
 #include "ParticleUtils.h"
 
 #include "BaseAddon.h"
+#include "ColorAddon.h"
 #include "ParticleEmitter.h"
-#include "VelocityAddon.h"
 #include "SpritesheetAddon.h"
+#include "VelocityAddon.h"
 
 void ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType type, ParticleEmitter* emitter)
 {
@@ -26,8 +27,14 @@ void ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType type, ParticleEmi
     }
     case ParticleAddonType::SPRITESHEET:
     {
-        SpritesheetAddon* addon         = new SpritesheetAddon(emitter);
+        SpritesheetAddon* addon            = new SpritesheetAddon(emitter);
         std::get<SpritesheetAddon*>(tuple) = addon;
+        break;
+    }
+    case ParticleAddonType::COLOR:
+    {
+        ColorAddon* addon            = new ColorAddon(emitter);
+        std::get<ColorAddon*>(tuple) = addon;
         break;
     }
     default:
@@ -62,6 +69,12 @@ void ParticleUtils::CreateExistingComponent(const rapidjson::Value& initialState
     {
         SpritesheetAddon* addon            = new SpritesheetAddon(initialState, emitter);
         std::get<SpritesheetAddon*>(tuple) = addon;
+        break;
+    }
+    case ParticleAddonType::COLOR:
+    {
+        ColorAddon* addon            = new ColorAddon(initialState, emitter);
+        std::get<ColorAddon*>(tuple) = addon;
         break;
     }
     default:

@@ -4,6 +4,7 @@ layout(location=0) in vec3 vertexPosition;
 layout(location=1) in vec2 vertexUV;
 layout(location=2) in vec3 billboardCenter;
 layout(location=3) in vec2 tileOffset;
+layout(location=4) in vec4 particleColor;
 
 layout(location=0) uniform vec3 cameraRightVector;
 layout(location=1) uniform vec3 cameraUpVector;
@@ -12,6 +13,7 @@ layout(location=3) uniform mat4 VP;
 layout(location=4) uniform vec2 tileSize;
 layout(location=5) uniform float currentFrame;
 
+flat out vec4 fragParticleColor;
 out vec2 uv;
 out vec2 uvNext;
 flat out float blendFactor;
@@ -37,6 +39,8 @@ void main()
 
     uv = vec2(U,V);
     uvNext = vec2(UN, VN);
+
+    fragParticleColor = particleColor;
 
     gl_Position = VP * vec4(billboardCenter + cameraRightVector * vertexPosition.x * billboardSize.x
     + cameraUpVector * vertexPosition.y * billboardSize.y, 1.f);

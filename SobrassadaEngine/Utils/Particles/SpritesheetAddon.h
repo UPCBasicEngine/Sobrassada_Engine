@@ -2,8 +2,6 @@
 
 #include "ParticleAddon.h"
 
-#include "Math/float2.h"
-
 class SpritesheetAddon : public ParticleAddon
 {
   public:
