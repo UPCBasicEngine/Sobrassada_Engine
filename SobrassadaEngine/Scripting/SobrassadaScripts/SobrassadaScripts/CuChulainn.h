@@ -35,6 +35,10 @@ class CuChulainn : public Character
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { reservedHealth = health; }
     void Respawn();
+    bool GetIsInvulnerable() { return isInvulnerable; }
+    void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
+    void EnableMovement(bool enable);
+    CharacterStates state = CharacterStates::IDLE;
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -58,7 +62,6 @@ class CuChulainn : public Character
     void Move();
     void SetPosition(const float3& position);
    
-
   private:
     std::string cameraName      = "";
     GameObject* cameraObject    = nullptr;
@@ -85,10 +88,10 @@ class CuChulainn : public Character
     bool resetWeapon            = false;
 
     int reservedHealth          = 0;
-    float deathTimer            = 0.0f;
+    float deathTimer            = 0.5f;
     float aimTimer              = 0.0f;
 
-    CharacterStates state       = CharacterStates::IDLE;
+    
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
 

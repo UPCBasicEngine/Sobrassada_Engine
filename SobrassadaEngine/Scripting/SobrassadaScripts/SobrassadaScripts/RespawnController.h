@@ -18,6 +18,7 @@ class RespawnController : public Script
     GameObject* player     = nullptr;
     bool isPlayerDead      = false;
     float respawnTimer     = 0.0f;
+    float deathTimer       = 0.5f;
     float respawnInit      = 5.0f;
    
 };

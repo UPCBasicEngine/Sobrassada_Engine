@@ -264,6 +264,8 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
         throwTimer = 0;
     }
+
+   
 }
 
 void CuChulainn::LookAtMouse()
@@ -428,6 +430,7 @@ void CuChulainn::Respawn()
     state = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
-    character->EnableMovement(false);
+    character->EnableMovement(true);
     // TODO: Reset hitboxes, timers, enable, etc. If scene is reloaded then probably not needed
 }
+
