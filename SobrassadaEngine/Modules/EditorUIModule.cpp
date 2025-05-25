@@ -65,6 +65,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
         {HashString("UI CanvasScaler"),      COMPONENT_CANVAS_SCALER       },
         {HashString("Billboard"),            COMPONENT_BILLBOARD           },
+		{HashString("Spline"),               COMPONENT_SPLINE              },
     };
 
     fullscreen    = FULLSCREEN;
