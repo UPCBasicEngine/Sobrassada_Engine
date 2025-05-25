@@ -31,6 +31,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
+    fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
 }
 
 bool CuChulainn::Init()
