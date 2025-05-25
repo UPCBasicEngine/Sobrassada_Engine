@@ -27,6 +27,14 @@ ParticleSystemComponent::~ParticleSystemComponent()
     if (particleSystem) particleSystem->RemoveComponent(particleSystemIterator);
 }
 
+void ParticleSystemComponent::Init()
+{
+    for (auto& emitter : emitterInstances)
+    {
+        emitter.Spawn();
+    }
+}
+
 void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);

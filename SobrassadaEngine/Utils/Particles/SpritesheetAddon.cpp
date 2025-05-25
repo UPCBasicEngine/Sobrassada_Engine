@@ -26,6 +26,8 @@ SpritesheetAddon::SpritesheetAddon(const rapidjson::Value& initialState, Particl
     if (initialState.HasMember("RandomizeTiles")) randomizeOffset = initialState["RandomizeTiles"].GetBool();
 
     owner->SetUseSpritesheet(true);
+
+    timePerFrame = (rows * columns) / animationSpeed;
 }
 
 SpritesheetAddon::~SpritesheetAddon()
@@ -104,7 +106,7 @@ void SpritesheetAddon::RenderEditorInspector()
     ImGui::EndDisabled();
     ImGui::SameLine();
     ImGui::Checkbox("##RandomizeOffsets", &randomizeOffset);
-
+    
     timePerFrame = (rows * columns) / animationSpeed;
 
     ImGui::PopItemWidth();

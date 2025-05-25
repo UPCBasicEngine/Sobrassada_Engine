@@ -12,6 +12,13 @@ ColorAddon::ColorAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType
 ColorAddon::ColorAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
     : ParticleAddon(initialState, owner)
 {
+    if (initialState.HasMember("ParticleColor"))
+    {
+        const rapidjson::Value& dataArray = initialState["ParticleColor"];
+        particleColor                     = {
+            dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat(), dataArray[3].GetFloat()
+        };
+    }
 }
 
 ColorAddon::~ColorAddon()
@@ -21,6 +28,13 @@ ColorAddon::~ColorAddon()
 void ColorAddon::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     ParticleAddon::Save(targetState, allocator);
+
+    rapidjson::Value particleColorSave(rapidjson::kArrayType);
+    particleColorSave.PushBack(particleColor.x, allocator)
+        .PushBack(particleColor.y, allocator)
+        .PushBack(particleColor.z, allocator)
+        .PushBack(particleColor.w, allocator);
+    targetState.AddMember("ParticleColor", particleColorSave, allocator);
 }
 
 void ColorAddon::Init(EmitterInstance* emitterInstance)
