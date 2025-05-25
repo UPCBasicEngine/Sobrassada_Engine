@@ -186,7 +186,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         if (useSpritesheet)
         {
             SpritesheetAddon* spritesheet = std::get<SpritesheetAddon*>(addonTuple);
-            float2 tileSize               = float2(spritesheet->rows, spritesheet->columns);
+            float2 tileSize               = float2((float)spritesheet->rows, (float)spritesheet->columns);
             float2 tileOffset             = float2::zero;
 
             glUniform2fv(4, 1, &tileSize[0]);

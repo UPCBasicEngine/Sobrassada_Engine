@@ -2,6 +2,8 @@
 
 #include "ParticleAddon.h"
 
+#include "Math/float2.h"
+
 class SpritesheetAddon : public ParticleAddon
 {
   public:
@@ -17,11 +19,16 @@ class SpritesheetAddon : public ParticleAddon
 
   public:
     float currentFrame = 0.f;
-    int rows           = 0;
-    int columns        = 0;
+    int rows           = 1;
+    int columns        = 1;
 
   private:
     float animationSpeed = 1.f;
     float timePerFrame   = 0.f;
     float playTime       = 0.f;
+
+    int randomXTiles[2]  = {1, 1};
+    int randomYTiles[2]  = {1, 1};
+
+    bool randomizeOffset = false;
 };
