@@ -402,6 +402,7 @@
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MoveGOInSpline.h" />
+    <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
     <ClInclude Include="GodMode.h" />
@@ -412,6 +413,7 @@
     <ClInclude Include="RotateGameObject.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
+    <ClInclude Include="SpawnUI.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="Wwise_IDs.h" />
@@ -1769,6 +1771,7 @@
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
+    <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
     <ClCompile Include="GodMode.cpp" />
@@ -1790,6 +1793,7 @@
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />
+    <ClCompile Include="SpawnUI.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="TileFloatScript.cpp" />

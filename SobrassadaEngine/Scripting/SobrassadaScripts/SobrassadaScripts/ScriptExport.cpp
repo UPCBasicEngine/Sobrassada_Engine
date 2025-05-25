@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "Archer.h"
 #include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
@@ -17,12 +18,13 @@
 #include "Projectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
-#include "Archer.h"
 #include "SpawnPoint.h"
 #include "ChangeSceneScript.h"
+#include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 #include "MoveGOInSpline.h"
+#include "MenuChangeSceneScript.h"
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
@@ -53,10 +55,9 @@ constexpr const char* scripts[] = {
     "FireballTrap",
     "Archer",             
     "ChangeSceneScript",
+    "SpawnUI",
+    "MenuChangeSceneScript",
     "MoveGOInSpline"
-                      
-    
-
 };
 
 Application* AppEngine = nullptr;
@@ -77,6 +78,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "OptionsMenuSwitcherScript") return new OptionsMenuSwitcherScript(parent);
     if (scriptType == "MainMenuSelectorScript") return new MainMenuSelectorScript(parent);
     if (scriptType == "PressAnyKeyScript") return new PressAnyKeyScript(parent);
+    if (scriptType == "SpawnUI") return new SpawnUI(parent);
+    if (scriptType == "MenuChangeSceneScript") return new MenuChangeSceneScript(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
@@ -90,7 +93,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
-   
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);

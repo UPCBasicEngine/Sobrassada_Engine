@@ -44,6 +44,8 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     void ResetOnlyOnceInPlayMode() { onlyOncePlayMode = false; }
 
     void AddGameObjectToUpdate(GameObject* gameObject);
+    void RequestSceneLoad(const std::string& scenePath);
+
 
   private:
     void HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard);
@@ -55,4 +57,6 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     Scene* loadedScene    = nullptr;
     bool inPlayMode       = false;
     bool onlyOncePlayMode = false;
+    bool loadSceneNextFrame = false;
+    std::string pendingScenePath;
 };

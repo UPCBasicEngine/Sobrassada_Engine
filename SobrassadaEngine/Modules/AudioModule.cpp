@@ -177,23 +177,44 @@ update_status AudioModule::Update(float deltaTime)
         AK::SoundEngine::SetPosition(listener->GetParentUID(), listenerPos);
     }
 
-    // Set the sources position
-    for (const AudioSourceComponent* source : sources)
+    // Set the sources position (and disable if too far)
+    for (AudioSourceComponent* source : sources)
     {
         if (!source) continue;
 
-        // Set the source position
-        AkSoundPosition sourcePos;
-        const float3& position   = source->GetGlobalTransform().TranslatePart();
-        const float3x3& rotation = source->GetGlobalTransform().RotatePart();
+        const float3& sourcePos   = source->GetGlobalTransform().TranslatePart();
+        /* float3& listenerPos = listener->GetGlobalTransform().TranslatePart();
 
-        sourcePos.SetPosition({position.x, position.y, position.z});
-        sourcePos.SetOrientation(
+         float distance       = sourcePos.Distance(listenerPos);
+
+        if (distance < maxAudibleDistance)
+        {
+            if (!source->IsPlaying())
+            {
+                AK::SoundEngine::PostEvent(source->GetName(), source->GetParentUID());
+                source->SetIsPlaying(true);
+            }
+        }
+        else
+        {
+            if (source->IsPlaying()) // too far, was playing
+            {
+                AK::SoundEngine::ExecuteActionOnEvent(
+                    source->GetName(), AK::SoundEngine::AkActionOnEventType_Stop, source->GetParentUID()
+                );
+                source->SetIsPlaying(false);
+            }
+        }
+        */
+        AkSoundPosition akPos;
+        const float3x3& rotation = source->GetGlobalTransform().RotatePart();
+        akPos.SetPosition({sourcePos.x, sourcePos.y, sourcePos.z});
+        akPos.SetOrientation(
             {rotation.Col(2).x, rotation.Col(2).y, rotation.Col(2).z},
             {rotation.Col(1).x, rotation.Col(1).y, rotation.Col(1).z}
         );
 
-        AK::SoundEngine::SetPosition(source->GetParentUID(), sourcePos);
+        AK::SoundEngine::SetPosition(source->GetParentUID(), akPos);
     }
 
     AK::SoundEngine::RenderAudio();
@@ -261,6 +282,22 @@ void AudioModule::RemoveAudioListener(AudioListenerComponent* listenerToRemove)
         GLOG("[ERROR] Audio listener could not be unregistered");
 
     listener = nullptr;
+}
+
+void AudioModule::StopAllAudio()
+{
+    for (const AudioSourceComponent* source : sources)
+    {
+        source->StopAudio();
+    }
+}
+
+void AudioModule::PlayOnStart()
+{
+    for (AudioSourceComponent* source : sources)
+    {
+        if (source->IsPlayOnStart()) source->EmitDefaultEvent();
+    }
 }
 
 void AudioModule::ParseEvents()

@@ -31,6 +31,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
+    fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
 }
 
 bool CuChulainn::Init()
@@ -75,6 +76,13 @@ bool CuChulainn::Init()
 
 void CuChulainn::Update(float deltaTime)
 {
+    // TODO: Maybe instead of this call it at the end of death animation (the current animations lasts forever)
+    if (state == CharacterStates::DEATH)
+    {
+        deathTimer += deltaTime;
+        if (deathTimer > 5.0f) parent->SetEnabled(false);
+    }
+
     if (isDead || !character) return;
 
     if (character->GetInputDown()) GetInputs();
@@ -86,6 +94,10 @@ void CuChulainn::Update(float deltaTime)
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
+
+    character->EnableMovement(false);
+    state = CharacterStates::DEATH;
+    if (animComponent) animComponent->UseTrigger("Death");
 }
 
 void CuChulainn::OnDamageTaken(int amount)
@@ -102,25 +114,34 @@ void CuChulainn::OnHealed(int amount)
 
 void CuChulainn::HandleState(float deltaTime)
 {
+    if (state == CharacterStates::AIM && !desiredAim && !resetWeapon)
+    {
+        animComponent->OnResume();
+        animComponent->UseTrigger("Idle");
+        state    = CharacterStates::IDLE;
+        aimTimer = 0.0f;
+    }
+
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
-    else if (desiredAim && CanAim()) Aim();
-    else if (!isAttacking && !isDashing) Move();
-
-    if (state == CharacterStates::DASH)
-    {
-        if (dashTimer <= 0)
-        {
-            GLOG("STOP DASH SCRIPT");
-            character->EndDash();
-        }
-    }
+    else if (desiredAim && CanAim()) Aim(deltaTime);
+    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL)
+        Move();
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
+        const HashString& stateName = animComponent->GetCurrentStateName();
+        GLOG("Animation name: %s", stateName.GetString().c_str());
+
+        if (stateName == HashString("Respawn") || stateName == HashString("Land"))
+        {
+            character->EnableMovement(true);
+        }
+
         state = CharacterStates::IDLE;
-        animComponent->UseTrigger("idle");
+        animComponent->UseTrigger("Idle");
     }
 }
 
@@ -179,28 +200,31 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_F5])
     {
-        SetPosition(spawnPos);
+        // TODO: This should be SetSpawnPos, Respawn is here to test
+        // SetPosition(spawnPos);
+        Respawn();
     }
     if (keyboard[SDL_SCANCODE_F6])
     {
-        spawnPos = parent->GetPosition();
+        spawnPos = parent->GetGlobalTransform().TranslatePart();
     }
 }
 
 bool CuChulainn::CanDash()
 {
     // TODO: Add more condifions if there are (Maybe dashing doesn't cancel attack animations, etc.)
-    return dashTimer <= 0;
+    return dashTimer <= 0 && state != CharacterStates::AIM && state != CharacterStates::BASIC_ATTACK &&
+           state != CharacterStates::FALL;
 }
 
 bool CuChulainn::CanAttack()
 {
-    return (state != CharacterStates::DASH && !isAttacking);
+    return (state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL);
 }
 
 bool CuChulainn::CanAim() const
 {
-    return (state != CharacterStates::DASH && !isAttacking && throwTimer <= 0);
+    return (state != CharacterStates::DASH && !isAttacking && throwTimer <= 0 && state != CharacterStates::FALL);
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
@@ -258,7 +282,22 @@ void CuChulainn::LookAtJoystick()
 
 void CuChulainn::CheckIsFalling()
 {
-    const float maxDepth = -50.0f;
+    const float verticalSpeed = character->GetRealSpeed().y;
+
+    // GLOG("Vertical speed %f", verticalSpeed);
+    if (verticalSpeed <= -2.0f && !character->IsGrounded() && animComponent)
+    {
+        animComponent->UseTrigger("Fall");
+        state = CharacterStates::FALL;
+    }
+
+    if (state == CharacterStates::FALL && verticalSpeed >= -1.0f)
+    {
+        animComponent->UseTrigger("Land");
+        character->EnableMovement(false);
+    }
+
+    const float maxDepth = -60.0f;
 
     if (parent->GetGlobalTransform().TranslatePart().y < maxDepth)
     {
@@ -271,7 +310,9 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
     if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
-    // GLOG("THROW SPEAR");
+    animComponent->OnResume();
+    aimTimer   = 0.0f;
+
     throwTimer = throwCooldown;
     if (weapon)
     {
@@ -279,7 +320,6 @@ void CuChulainn::ThrowSpear()
         resetWeapon = true;
     }
 
-    const auto a = character->GetFrontDirection();
     spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
 }
 
@@ -295,7 +335,7 @@ void CuChulainn::Dash()
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     character->StartDash();
-    if (animComponent) animComponent->UseTrigger("dash");
+    if (animComponent) animComponent->UseTrigger("Dash");
 }
 
 void CuChulainn::PerformAttack()
@@ -332,10 +372,10 @@ void CuChulainn::Attack(float deltaTime)
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    if (animComponent) animComponent->UseTrigger("attack");
+    if (animComponent) animComponent->UseTrigger("Attack");
 }
 
-void CuChulainn::Aim()
+void CuChulainn::Aim(float deltaTime)
 {
     if (!spear) return;
 
@@ -344,12 +384,15 @@ void CuChulainn::Aim()
         if (camera) camera->EnableAimOffset(true);
         state = CharacterStates::AIM;
         character->EnableMovement(false);
+        if (animComponent) animComponent->UseTrigger("Ranged");
     }
-    desiredAim = false;
+    desiredAim  = false;
+
+    aimTimer   += deltaTime;
+    if (aimTimer >= 0.1f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     else LookAtJoystick();
-    if (animComponent) animComponent->UseTrigger("aim");
 }
 
 void CuChulainn::Move()
@@ -357,18 +400,46 @@ void CuChulainn::Move()
     character->EnableMovement(true);
     if (character->GetSpeed() > 0.5f)
     {
-        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("run");
+        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("Walk");
         state = CharacterStates::RUN;
     }
     else
     {
-        if (state != CharacterStates::IDLE && animComponent) animComponent->UseTrigger("idle");
+        if (state != CharacterStates::IDLE && animComponent) animComponent->UseTrigger("Idle");
         state = CharacterStates::IDLE;
     }
 }
 
 void CuChulainn::SetPosition(const float3& position)
 {
-    parent->SetLocalPosition(position);
-    if (camera) camera->SetPosition(position);
+    parent->SetLocalPosition(position - parent->GetParentGlobalTransform().TranslatePart());
+    if (camera) camera->SetPosition(position - parent->GetParentGlobalTransform().TranslatePart());
+}
+
+void CuChulainn::Respawn()
+{
+    state = CharacterStates::RESPAWN;
+    SetPosition(spawnPos);
+    if (animComponent) animComponent->UseTrigger("Respawn");
+    character->EnableMovement(false);
+    // TODO: Reset hitboxes, timers, enable, etc. If scene is reloaded then probably not needed
+}
+
+void CuChulainn::Die()
+{
+    // GLOG("%s dead", parent->GetName().c_str());
+    isDead = true;
+    OnDeath();
+
+    if (characterCollider)
+    {
+        characterCollider->DeleteRigidBody();
+        characterCollider->SetEnabled(false);
+    }
+
+    if (weaponCollider)
+    {
+        weaponCollider->DeleteRigidBody();
+        weaponCollider->SetEnabled(false);
+    }
 }

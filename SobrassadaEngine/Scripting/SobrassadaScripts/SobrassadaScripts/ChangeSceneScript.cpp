@@ -2,29 +2,27 @@
 
 #include "ChangeSceneScript.h"
 #include "CuChulainn.h"
+#include "FileSystem/FileSystem.h"
 #include "GameObject.h"
-#include "Globals.h" 
+#include "Globals.h"
+#include "ProjectModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
-#include "FileSystem/FileSystem.h"
-#include "ProjectModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
-
 
 ChangeSceneScript::ChangeSceneScript(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Target Scene Name", InspectorField::FieldType::InputText, &targetSceneName});
-   
 }
 
 bool ChangeSceneScript::Init()
 {
-    player = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(playerName);
+    player        = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(playerName);
     scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
     fullScenePath = scenesPath + targetSceneName + SCENE_EXTENSION;
-    
+
     if (!player)
     {
         GLOG("[WARNING] ChangeSceneScript: No player found by the name '%s'", playerName.c_str());
@@ -52,21 +50,14 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3& colli
             {
                 if (doc.HasMember("Scene") && doc["Scene"].IsObject())
                 {
-
-                    sceneModule->CloseScene();
                     sceneModule->LoadScene(doc["Scene"], false);
                     sceneModule->SwitchPlayMode(true);
-                    
-                    
 
                     GLOG("Scene change successful!");
-                   
                 }
             }
 
             GLOG("[ERROR] Failed to load scene: %s", targetSceneName);
-
-            
         }
     }
 }
