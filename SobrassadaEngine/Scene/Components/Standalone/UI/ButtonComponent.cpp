@@ -167,11 +167,8 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
 {
     if (!isInteractable || !IsEffectivelyEnabled()) return false;
 
-    if (dismiss) GLOG("Dismissed");
-
     if (!dismiss && IsWithinBounds(mousePos))
     {
-        GLOG("Is within bounds");
         if (!isHovered)
         {
             // On mouse enter
