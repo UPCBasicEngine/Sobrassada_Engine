@@ -13,11 +13,21 @@ namespace AK
 {
     namespace EVENTS
     {
-        static const AkUniqueID BUCKET = 902301855U;
+        static const AkUniqueID CAVE_01 = 4091541804U;
+        static const AkUniqueID CAVE_02 = 4091541807U;
+        static const AkUniqueID FIRE_01 = 1589446069U;
+        static const AkUniqueID FIRE_02 = 1589446070U;
+        static const AkUniqueID FOREST = 491961918U;
         static const AkUniqueID ICE_BLAST = 3920196677U;
-        static const AkUniqueID LOWDRUM = 2306510041U;
-        static const AkUniqueID MUSIC = 3991942870U;
-        static const AkUniqueID TELEPORT = 530129416U;
+        static const AkUniqueID MUSIC_CITY = 3946025416U;
+        static const AkUniqueID MUSIC_TUTORIAL = 931250475U;
+        static const AkUniqueID TORCH = 1904864137U;
+        static const AkUniqueID TREEOFLIFE = 424126604U;
+        static const AkUniqueID WATER = 2654748154U;
+        static const AkUniqueID WATERFALL_01 = 3996293477U;
+        static const AkUniqueID WATERFALL_02 = 3996293478U;
+        static const AkUniqueID WIND_01 = 1291679911U;
+        static const AkUniqueID WIND_02 = 1291679908U;
     } // namespace EVENTS
 
     namespace GAME_PARAMETERS

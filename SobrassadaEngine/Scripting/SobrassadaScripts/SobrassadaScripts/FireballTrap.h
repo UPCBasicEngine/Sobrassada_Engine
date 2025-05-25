@@ -6,6 +6,14 @@ class GameObject;
 class MeshComponent;
 class SphereColliderComponent;
 
+enum ACTIVATION_STATE
+{
+    SLEEPING,
+    IDLE,
+    DROPPING,
+    DAMAGING,
+};
+
 class FireballTrap : public Script
 {
   public:
@@ -16,38 +24,35 @@ class FireballTrap : public Script
     int GetDamage() const { return damage; }
 
   private:
-    void StartAttack(float gameTime);
-    void HandleImpact(float gameTime);
+    void StartAttack();
+    void HandleImpact();
     void DisableDamage();
     void UpdateFireball(float deltaTime);
     float GenerateRandomAttackTime(float min, float max);
 
   private:
-    bool activated                          = false;
     float activationRange                   = 10.0f;
     float minAttackCooldown                 = 0.5f;
     float maxAttackCooldown                 = 3.0f;
-    float randomAttackTime                  = -1.0f;
+    float randomAttackTime                  = 0.0f;
     int damage                              = 1;
     float damageDuration                    = 1.5f;
-    bool attacking                          = false;
 
     MeshComponent* groundMesh               = nullptr;
     SphereColliderComponent* damageCollider = nullptr;
 
-    float lastAttackTime                    = -1.0f;
-    float lastHitTime                       = -1.0f;
-    bool isDealingDamage                    = false;
+    float activatedTime                     = 0.0f;
 
     // fireball
-    std::string fireballName                = "";
     GameObject* fireball                    = nullptr;
+    // fireball
+    GameObject* fireballShadow              = nullptr;
+    
     float verticalSpeed                     = 0.0f;
-    bool hasImpacted                        = false;
     float rotationSpeed                     = 1.0f;
     float fallingHeight                     = 20.0f;
-    float maxFallSpeed                      = -20.0f;
     float editableMaxFallSpeed              = 20.0f;
-    float gravity                           = -9.81f;
     float editableGravity                   = 9.81f;
+
+    ACTIVATION_STATE activationState = SLEEPING;
 };

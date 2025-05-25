@@ -1,33 +1,36 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "Archer.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
+#include "Projectile.h"
 #include "ResourceStateMachine.h"
-#include "Soldier.h"
+#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Soldier)
+Archer::Archer(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint});
+    fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
 }
 
-bool Soldier::Init()
+bool Archer::Init()
 {
     // GLOG("Initiating Soldier");
 
-    currentState = SoldierStates::PATROL;
+    currentState = ArcherStates::PATROL;
 
     Character::Init();
 
     agentAI = parent->GetComponent<AIAgentComponent*>();
-    if (agentAI == nullptr) GLOG("AIAgent component not found for Soldier")
+    if (agentAI == nullptr) GLOG("AIAgent component not found for Archer")
     else
     {
         agentAI->RecreateAgent();
@@ -35,28 +38,35 @@ bool Soldier::Init()
         speed = agentAI->GetSpeed();
     }
 
+    const GameObject* arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowName);
+    if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
+    {
+        arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
+        if (!arrow) GLOG("[WARNING] No projectile found by the name %s", arrowName.c_str());
+    }
+
     return true;
 }
 
-void Soldier::Update(float deltaTime)
+void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
 }
 
-void Soldier::OnDeath()
+void Archer::OnDeath()
 {
     // TODO: include death sound for the character
     // TODO: animation and particles
 }
 
-void Soldier::OnDamageTaken(int amount)
+void Archer::OnDamageTaken(int amount)
 {
     // TODO: play soldier take damage sound
     // TODO: particles? and animation
 }
 
-void Soldier::PerformAttack()
+void Archer::PerformAttack()
 {
     // TODO: play basicAttack sound
     // TODO: make interaction with hitboxes with the character
@@ -64,42 +74,38 @@ void Soldier::PerformAttack()
     // TODO: trails, particles and animation
 }
 
-void Soldier::HandleState(float deltaTime)
+void Archer::HandleState(float deltaTime)
 {
-    if (!animComponent) return;
+    // if (!animComponent) return;
 
     switch (currentState)
     {
-    case SoldierStates::PATROL:
+    case ArcherStates::PATROL:
         // GLOG("Soldier Patrolling");
+        // animComponent->UseTrigger("idle");
         PatrolAI();
-        animComponent->UseTrigger("run");
         break;
-    case SoldierStates::CHASE:
+    case ArcherStates::CHASE:
         // GLOG("Soldier Chasing");
-        animComponent->UseTrigger("run");
+        //  animComponent->UseTrigger("Run");
         ChaseAI();
         break;
-    case SoldierStates::BASIC_ATTACK:
+    case ArcherStates::BASIC_ATTACK:
         // GLOG("Soldier Basic Attack");
+        //  animComponent->UseTrigger("attack");
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     default:
-        GLOG("No state provided to Soldier");
-        currentState = SoldierStates::PATROL;
+        GLOG("No state provided to Archer");
+        currentState = ArcherStates::PATROL;
         break;
-    }
-
-    if (animComponent && animComponent->IsFinished())
-    {
-        animComponent->UseTrigger("idle");
     }
 }
 
-void Soldier::PatrolAI()
+void Archer::PatrolAI()
 {
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
+    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::CHASE;
+    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
 
     bool valid = false;
     if (reachedPatrolPoint)
@@ -114,24 +120,24 @@ void Soldier::PatrolAI()
     }
 }
 
-void Soldier::ChaseAI()
+void Archer::ChaseAI()
 {
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
-        else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = SoldierStates::PATROL;
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::BASIC_ATTACK;
+        else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ArcherStates::PATROL;
     }
-    else currentState = SoldierStates::PATROL;
+    else currentState = ArcherStates::PATROL;
 }
 
-void Soldier::Attack(float deltaTime)
+void Archer::Attack(float deltaTime)
 {
     if (!weaponCollider) return;
 
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
-        if (animComponent) animComponent->UseTrigger("attack");
+        if (animComponent) animComponent->UseTrigger("Attack");
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
     }
@@ -139,23 +145,22 @@ void Soldier::Attack(float deltaTime)
     {
 
         // Enable hitbox when animation hits
-        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-            attackTimer <= attackHitboxDelay + attackHitboxDuration)
+        if (!hasShot && attackTimer >= attackHitboxDelay)
         {
-            weaponCollider->SetEnabled(true);
-        }
-        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
-        {
-            weaponCollider->SetEnabled(false);
+            hasShot          = true;
+            float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
+            direction.Normalize();
+            arrow->Shoot(parent->GetPosition(), direction);
         }
 
         // Reset attack state
         if (attackTimer >= attackDuration)
         {
+            hasShot       = false;
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
-            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
+            if (CheckDistanceWithPlayer() != PlayerDistances::Medium) currentState = ArcherStates::CHASE;
         }
     }
 }

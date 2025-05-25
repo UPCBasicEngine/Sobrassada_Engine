@@ -27,6 +27,9 @@ struct MaterialGPU
     uint64_t specularTex  = 0;
     uint64_t metallicTex  = 0;
     uint64_t normalTex    = 0;
+    int hasSpecular       = 0;
+    int hasMetallic       = 0;
+    uint64_t emmisiveTex  = 0; //Right now works as padding TODO: put emmissive
 };
 
 class ResourceMaterial : public Resource
@@ -41,9 +44,15 @@ class ResourceMaterial : public Resource
 
     UID ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU);
     void ChangeFallBackTexture();
+    void SaveToMeta();
 
+    void SetTransparent(const bool transparent) { isTransparent = transparent; }
+
+    const bool GetIsSpecular() const { return specularTexture.textureID != 0 ? true : false; }
     const bool GetIsMetallicRoughness() const { return metallicTexture.textureID != 0 ? true : false; }
     const MaterialGPU GetMaterial() const { return material; }
+    const bool IsTransparent() const { return isTransparent; }
+    const bool IsDoubleSided() const { return doubleSided; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
 
@@ -54,5 +63,7 @@ class ResourceMaterial : public Resource
     TextureInfo normalTexture;
 
     MaterialGPU material;
+    bool isTransparent    = false;
+    bool doubleSided      = false;
     UID defaultTextureUID = INVALID_UID;
 };

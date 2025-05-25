@@ -15,7 +15,10 @@ enum class CharacterStates
     RUN,
     DASH,
     BASIC_ATTACK,
-    AIM
+    AIM,
+    RESPAWN,
+    DEATH,
+    FALL
 };
 
 class CuChulainn : public Character
@@ -46,32 +49,35 @@ class CuChulainn : public Character
     void UpdateTimers(float deltaTime);
     void LookAtMouse();
     void LookAtJoystick();
+    void CheckIsFalling();
 
     void ThrowSpear();
     void Attack(float deltaTime) override;
     void Dash();
-    void Aim();
+    void Aim(float deltaTime);
     void Move();
-    
+    void SetPosition(const float3& position);
    
 
   private:
     std::string cameraName      = "";
+    GameObject* cameraObject    = nullptr;
     CameraMovement* camera      = nullptr;
 
     std::string spearName       = "";
     Projectile* spear           = nullptr;
 
-    bool isDashing          = false;
-    float dashCooldown      = 2.0f;
-    float dashTimer         = 0.0f;
-    bool desiredDash        = false;
-    float dashBufferTimer   = 0.0f;
-    float dashBuffer        = 0.5f;
+    float3 lastDashStartPos     = float3::zero;
+    bool isDashing              = false;
+    float dashCooldown          = 2.0f;
+    float dashTimer             = 0.0f;
+    bool desiredDash            = false;
+    float dashBufferTimer       = 0.0f;
+    float dashBuffer            = 0.5f;
 
-    bool desiredAttack      = false;
-    float attackBufferTimer = 0.0f;
-    float attackBuffer      = 0.5f;
+    bool desiredAttack          = false;
+    float attackBufferTimer     = 0.0f;
+    float attackBuffer          = 0.5f;
 
     bool desiredAim             = false;
     float throwTimer            = 0.0f;
@@ -79,9 +85,15 @@ class CuChulainn : public Character
     bool resetWeapon            = false;
 
     int reservedHealth          = 0;
+    float deathTimer            = 0.0f;
+    float aimTimer              = 0.0f;
+
     CharacterStates state       = CharacterStates::IDLE;
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
+
+    float3 camFront             = float3::zero;
+    float3 camRight             = float3::zero;
 };
 
 extern CharacterControllerComponent* character;

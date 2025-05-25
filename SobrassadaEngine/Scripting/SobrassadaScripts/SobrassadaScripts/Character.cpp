@@ -213,7 +213,7 @@ PlayerDistances Character::CheckDistanceWithPlayer() const
 {
     if (character != nullptr)
     {
-        float distance = character->GetLastPosition().Distance(parent->GetPosition());
+        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
         if (distance <= rangeAIAttack) return PlayerDistances::Close;
         else if (distance <= rangeAIChase) return PlayerDistances::Medium;
     }
@@ -248,6 +248,4 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
-
-    parent->SetEnabled(false);
 }

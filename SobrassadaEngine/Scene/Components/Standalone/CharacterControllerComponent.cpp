@@ -116,7 +116,7 @@ void CharacterControllerComponent::Clone(const Component* other)
 
 void CharacterControllerComponent::Update(float time) // SO many navmesh getters!!!! Memo to rethink this
 {
-    if (!IsEffectivelyEnabled()) return;
+    if (!IsEffectivelyEnabled() || !inputDown) return;
 
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
@@ -124,14 +124,21 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime == 0.0f) return;
 
+    float3 currentPos    = parent->GetGlobalTransform().TranslatePart();
+    lastPosition         = currentPos;
+
+    ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
+    dtNavMesh* dtNav     = nullptr;
+    if (nav != nullptr)
+    {
+        dtNav = nav->GetDetourNavMesh();
+    }
+
     if (isDashing)
     {
         Dash(deltaTime);
         return;
     }
-
-    dtNavMesh* dtNav =
-        App->GetPathfinderModule()->GetNavMesh()->GetDetourNavMesh(); // crash here means no navmesh loaded
 
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
 
@@ -169,15 +176,12 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (deltaTime < 0.1f) // TODO: deltaTime spikes, need to know why
     {
-        verticalSpeed     += gravity * deltaTime;
-        verticalSpeed      = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
+        verticalSpeed += gravity * deltaTime;
+        verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
 
-        float3 currentPos  = parent->GetGlobalTransform().TranslatePart();
-        currentPos.y      += (verticalSpeed * deltaTime);
+        currentPos.y  += (verticalSpeed * deltaTime);
 
         AdjustHeightToNavMesh(currentPos);
-
-        lastPosition = currentPos;
         parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
     }
 
@@ -185,12 +189,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     {
         LookAtMovement(rotateDirection, deltaTime);
     }
-
-    if (inputDown)
-    {
-        HandleInput(deltaTime);
-        Move(deltaTime);
-    }
+    Move(deltaTime);
 }
 
 void CharacterControllerComponent::Render(float deltaTime)
@@ -251,6 +250,8 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 {
     if (!navMeshQuery || currentPolyRef == 0) return;
 
+    isGrounded = false;
+
     dtQueryFilter filter;
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
@@ -273,8 +274,9 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
     dtStatus stH     = navMeshQuery->getPolyHeight(newRef, closest, &polyHeight);
     if (dtStatusSucceed(stH))
     {
+        isGrounded                = true;
         float distToFloor         = polyHeight - currentPos.y;
-        const float maxStepHeight = 0.5f;
+        const float maxStepHeight = 0.2f;
         if (distToFloor >= 0.0f && distToFloor <= maxStepHeight)
         {
             currentPos.y  = polyHeight;
@@ -285,17 +287,18 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 
 void CharacterControllerComponent::Move(float deltaTime)
 {
-    if (!movementEnabled)
-    {
-        currentSpeed = 0;
-        return;
-    }
-
     if (!navMeshQuery || currentPolyRef == 0) return;
 
     const float3& currentPos = parent->GetGlobalTransform().TranslatePart();
-    currentSpeed          = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
-                                                                : Lerp(currentSpeed, 0, 100 * deltaTime);
+    if (!movementEnabled)
+    {
+        currentSpeed = 0;
+    }
+    else
+    {
+        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
+                                                           : Lerp(currentSpeed, 0, 100 * deltaTime);
+    }
 
     const float3 offsetXZ = rotateDirection * currentSpeed * deltaTime;
     float3 desiredPos     = currentPos + offsetXZ;
@@ -304,7 +307,7 @@ void CharacterControllerComponent::Move(float deltaTime)
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
 
-    float halfExt[3] = {0.5f, 1.0f, 0.5f};
+    float halfExt[3] = {1.0f, 1.0f, 1.5f};
     float nearest[3] = {};
     dtPolyRef newRef = 0;
 
@@ -317,12 +320,16 @@ void CharacterControllerComponent::Move(float deltaTime)
 
     status           = navMeshQuery->closestPointOnPoly(newRef, desiredPos.ptr(), closest, &posOverPoly);
 
-    if (!dtStatusSucceed(status) || !posOverPoly) return;
+    if (!dtStatusSucceed(status)) return;
 
     currentPolyRef = newRef;
 
-    desiredPos.x   = nearest[0];
-    desiredPos.z   = nearest[2];
+    desiredPos.x   = closest[0];
+    desiredPos.y   = closest[1];
+    desiredPos.z   = closest[2];
+
+    // Prevent huge changes in the y pos
+    if (fabs(desiredPos.y - currentPos.y) > 0.5f) return;
 
     parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
 }
@@ -379,41 +386,9 @@ void CharacterControllerComponent::Rotate(float rotationDirection, float deltaTi
     parent->UpdateTransformForGOBranch();
 }
 
-void CharacterControllerComponent::HandleInput(float deltaTime)
+void CharacterControllerComponent::SetDirection(float3& direction)
 {
     if (!movementEnabled) return;
-
-    const InputModule* input       = App->GetInputModule();
-    const KeyState* keyboard       = input->GetKeyboard();
-    const KeyState* mouseButtons   = input->GetMouseButtons();
-    const float2 leftJoystick      = input->GetLeftStick();
-    const KeyState* gamepadButtons = input->GetControllerButtons();
-
-    float3 direction(0.0f, 0.0f, 0.0f);
-
-    if (input->IsUsingKeyboard())
-    {
-
-        if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
-        if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
-        if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
-        if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
-    }
-    else
-    {
-        direction.x = leftJoystick.x;
-        direction.z = leftJoystick.y;
-
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
-        if (gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
-    }
-
-    // float rotationDir = 0.0f;
-
-    // if (keyboard[SDL_SCANCODE_Q] == KEY_REPEAT) rotationDir += 1.0f;
-    // if (keyboard[SDL_SCANCODE_E] == KEY_REPEAT) rotationDir -= 1.0f;
 
     targetDirection = direction;
     if (direction.LengthSq() > 0.001f)
@@ -423,17 +398,25 @@ void CharacterControllerComponent::HandleInput(float deltaTime)
         rotateDirection = direction;
         isRotating      = true;
     }
-
-    // if (fabs(rotationDir) > 0.0001f)
-    //{
-    //     Rotate(rotationDir, deltaTime);
-    // }
 }
 
 void CharacterControllerComponent::LookAt(const float3& direction)
 {
     isRotating      = true;
     rotateDirection = direction;
+}
+
+float2 CharacterControllerComponent::GetRealSpeed() const
+{
+    const float deltaTime       = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
+
+    const float3 positionsDiff  = parent->GetGlobalTransform().TranslatePart() - lastPosition;
+    const float horizontalSpeed = float2(positionsDiff.x / deltaTime, positionsDiff.z / deltaTime).Length();
+    const float verticalSpeed   = positionsDiff.y / deltaTime;
+
+    return {horizontalSpeed, verticalSpeed};
+
+    // horizontalSpeed.Length() / deltaTime;
 }
 
 void CharacterControllerComponent::StartDash()
@@ -454,13 +437,13 @@ void CharacterControllerComponent::StartDash()
     LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * (dashDistance + 0.5f));
     LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * (dashDistance + 0.5f));
 
-    GameObject* centralHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* centralHit = RaycastController::GetRayIntersectionTrees(
         centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
-    GameObject* rightHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* rightHit = RaycastController::GetRayIntersectionTrees(
         rightRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
-    GameObject* leftHit = RaycastController::GetRayIntersectionTrees<Octree, Quadtree>(
+    GameObject* leftHit = RaycastController::GetRayIntersectionTrees(
         leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
 
@@ -498,7 +481,7 @@ void CharacterControllerComponent::StartDash()
     // filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     // filter.setExcludeFlags(0);
 
-    // float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaño de la caja de búsqueda
+    // float extents[3]      = {0.1f, 1.0f, 0.1f}; // Tamaï¿½o de la caja de bï¿½squeda
     // float nearestPoint[3] = {0.0f, 0.0f, 0.0f};
     // dtPolyRef targetRef   = 0;
 

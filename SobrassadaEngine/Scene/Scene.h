@@ -39,7 +39,8 @@ class SOBRASADA_API_ENGINE Scene
 
     void LoadModel(const UID modelUID);
     void LoadPrefab(
-        const UID prefabUid, const ResourcePrefab* prefab = nullptr, const float4x4& transform = float4x4::identity
+        const UID prefabUid, const ResourcePrefab* prefab = nullptr, const float4x4& transform = float4x4::identity,
+        bool isEnabled = true, std::vector<bool> componentsEnabledStates = {}
     );
     void OverridePrefabs(UID prefabUID);
 
@@ -99,7 +100,7 @@ class SOBRASADA_API_ENGINE Scene
     const std::tuple<float, float>& GetWindowSize() const { return sceneWindowSize; };
     const std::tuple<float, float>& GetMousePosition() const { return mousePosition; };
     Octree* GetOctree() const { return sceneOctree; }
-    Quadtree* GetDynamicTree() const { return dynamicTree; }
+    Octree* GetDynamicTree() const { return dynamicTree; }
     UID GetMultiselectUID() const;
     GameObject* GetMultiselectParent() const { return multiSelectParent; }
     UID GetNavmeshUID() const { return navmeshUID; }
@@ -125,15 +126,16 @@ class SOBRASADA_API_ENGINE Scene
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
-    void CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, CameraComponent* camera) const;
+    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, CameraComponent* camera) const;
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
-    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
-        const;
-    void LightingPassRender(
-        const std::vector<GameObject*>& renderGameObjects, CameraComponent* camera, GBuffer* gbuffer,
+    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void TransparentPassRender(
+        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera,
         Framebuffer* framebuffer
     ) const;
+    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
+        const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
 
@@ -156,7 +158,7 @@ class SOBRASADA_API_ENGINE Scene
 
     LightsConfig* lightsConfig                   = nullptr;
     Octree* sceneOctree                          = nullptr;
-    Quadtree* dynamicTree                        = nullptr;
+    Octree* dynamicTree                          = nullptr;
 
     // IMGUI WINDOW DATA
     std::tuple<float, float> sceneWindowPosition = std::make_tuple(0.f, 0.f);

@@ -15,7 +15,7 @@
 
 #pragma warning(disable : 4251)
 
-extern SOBRASADA_API_ENGINE std::vector<char*>* Logs;
+extern std::vector<char*>* Logs;
 extern LCG* rng;
 
 SOBRASADA_API_ENGINE void glog(const char file[], int line, const char* format, ...);
@@ -47,7 +47,7 @@ constexpr int SCREEN_HEIGHT = 720;
 constexpr bool FULLSCREEN   = false;
 
 #ifdef GAME
-constexpr bool FULL_DESKTOP = true;
+constexpr bool FULL_DESKTOP = false;
 #else
 constexpr bool FULL_DESKTOP = false;
 #endif
@@ -157,6 +157,7 @@ constexpr const char* GBUFFER_METALLIC_FRAGMENT_SHADER_PATH =
 constexpr const char* GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH =
     "./EngineDefaults/Shader/Fragment/gBufferSpecularFragment.glsl";
 constexpr const char* LIGHTINGPASS_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/IBLLightingPass.glsl";
+constexpr const char* TRANSPARENT_FRAGMENT_SHADER_PATH   = "./EngineDefaults/Shader/Fragment/transparentShader.glsl";
 constexpr const char* QUAD_FRAGMENT_SHADER_PATH        = "./EngineDefaults/Shader/Fragment/QuadFragment.glsl";
 constexpr const char* DEPTH_FRAGMENT_SHADER_PATH        = "./EngineDefaults/Shader/Fragment/DepthFragment.glsl";
 constexpr const char* BILLBOARD_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/BillboardFragment.glsl";
