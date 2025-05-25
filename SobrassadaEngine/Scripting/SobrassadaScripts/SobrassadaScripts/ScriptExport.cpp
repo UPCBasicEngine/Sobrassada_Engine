@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "Archer.h"
 #include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
@@ -17,9 +18,9 @@
 #include "Projectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
-#include "Archer.h"
 #include "SpawnPoint.h"
 #include "ChangeSceneScript.h"
+#include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 #include <string>
@@ -51,10 +52,8 @@ constexpr const char* scripts[] = {
     "TileFloatScript",
     "FireballTrap",
     "Archer",             
-    "ChangeSceneScript"        
-                      
-    
-
+    "ChangeSceneScript",
+    "SpawnUI"
 };
 
 Application* AppEngine = nullptr;
@@ -75,6 +74,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "OptionsMenuSwitcherScript") return new OptionsMenuSwitcherScript(parent);
     if (scriptType == "MainMenuSelectorScript") return new MainMenuSelectorScript(parent);
     if (scriptType == "PressAnyKeyScript") return new PressAnyKeyScript(parent);
+    if (scriptType == "SpawnUI") return new SpawnUI(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
@@ -88,7 +88,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
-   
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
