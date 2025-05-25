@@ -114,7 +114,12 @@ void AudioSourceComponent::RenderEditorInspector()
 
 void AudioSourceComponent::EmitDefaultEvent()
 {
-    if (enabled) playingEvent = AK::SoundEngine::PostEvent(defaultEvent, (AkGameObjectID)parent->GetUID());
+    if (enabled)
+    {
+        SetInitValues();
+        playingEvent = AK::SoundEngine::PostEvent(defaultEvent, (AkGameObjectID)parent->GetUID());
+    }
+    
 }
 
 void AudioSourceComponent::EmitEvent(const AkUniqueID event)
