@@ -52,14 +52,9 @@ void Component::RenderEditorInspector()
 
     if (parent->IsGloballyEnabled())
     {
-        if (ImGui::Checkbox("Enabled", &enabled)) wasEnabled = enabled;
-        enabled = wasEnabled;
-    }
-    else
-    {
         ImGui::Checkbox("Enabled", &enabled);
-        enabled = false;
     }
+
 }
 
 UID Component::GetParentUID() const

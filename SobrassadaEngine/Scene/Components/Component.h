@@ -42,14 +42,18 @@ class SOBRASADA_API_ENGINE Component
     bool IsEffectivelyEnabled() const;
 
     void SetWasEnabled(bool newEnabled) { wasEnabled = newEnabled; }
-    void SetEnabled(bool newEnabled) { enabled = newEnabled; }
+    void SetEnabled(bool newEnabled)
+    {
+        wasEnabled = enabled;
+        enabled    = newEnabled;
+    }
 
   protected:
     const UID uid;
     GameObject* parent = nullptr;
 
     char name[64];
-    bool enabled = true;
+    bool enabled    = true;
     bool wasEnabled = true;
 
     AABB localComponentAABB;
