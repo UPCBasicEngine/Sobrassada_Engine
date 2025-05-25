@@ -68,6 +68,11 @@ CubeColliderComponent::~CubeColliderComponent()
     DeleteRigidBody();
 }
 
+void CubeColliderComponent::Init()
+{
+    if (rigidBody) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+}
+
 void CubeColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);

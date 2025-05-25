@@ -18,6 +18,7 @@ class SphereColliderComponent : public Component
     SphereColliderComponent(const rapidjson::Value& initialState, GameObject* parent);
     ~SphereColliderComponent() override;
 
+    void Init() override;
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override;
 
