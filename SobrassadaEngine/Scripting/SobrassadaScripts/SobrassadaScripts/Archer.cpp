@@ -76,29 +76,33 @@ void Archer::PerformAttack()
 
 void Archer::HandleState(float deltaTime)
 {
-    // if (!animComponent) return;
+     if (!animComponent) return;
 
     switch (currentState)
     {
     case ArcherStates::PATROL:
         // GLOG("Soldier Patrolling");
-        // animComponent->UseTrigger("idle");
+        animComponent->UseTrigger("idle");
         PatrolAI();
         break;
     case ArcherStates::CHASE:
         // GLOG("Soldier Chasing");
-        //  animComponent->UseTrigger("Run");
+        animComponent->UseTrigger("run");
         ChaseAI();
         break;
     case ArcherStates::BASIC_ATTACK:
         // GLOG("Soldier Basic Attack");
-        //  animComponent->UseTrigger("attack");
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     default:
         GLOG("No state provided to Archer");
         currentState = ArcherStates::PATROL;
         break;
+    }
+
+    if (animComponent && animComponent->IsFinished())
+    {
+        animComponent->UseTrigger("idle");
     }
 }
 
@@ -137,7 +141,7 @@ void Archer::Attack(float deltaTime)
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
-        if (animComponent) animComponent->UseTrigger("Attack");
+        if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
     }
