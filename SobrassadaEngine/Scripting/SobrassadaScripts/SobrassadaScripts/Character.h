@@ -54,7 +54,7 @@ class Character : public Script
     virtual void OnHealed(int amount) {};
     virtual void PerformAttack() {};
     virtual void ShouldAttackTarget() {};
-    void Die();
+    virtual void Die();
 
   protected:
     AnimationComponent* animComponent           = nullptr;
