@@ -3,7 +3,7 @@
 #include "Component.h"
 #include <AK/SoundEngine/Common/AkTypes.h>
 
-class AudioSourceComponent : public Component
+class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
 {
   public:
     AudioSourceComponent(UID uid, GameObject* parent);
@@ -20,8 +20,9 @@ class AudioSourceComponent : public Component
     virtual void RenderDebug(float deltaTime) {};
 
     // More efficient to use the IDs, but both exist in case it is needed to use the string variant in some scenario
-    SOBRASADA_API_ENGINE void EmitEvent(const AkUniqueID event) const;
-    SOBRASADA_API_ENGINE void EmitEvent(const std::string& event) const;
+    void EmitDefaultEvent();
+    void EmitEvent(const AkUniqueID event);
+    void EmitEvent(const std::string& event);
     void SetRTPCValue(const AkUniqueID parameterID, const float value);
     void SetRTPCValue(const std::string& parameterName, const float value);
     void SetSwitch(const AkUniqueID switchGroupID, const AkUniqueID activeSwitchID);
@@ -32,16 +33,26 @@ class AudioSourceComponent : public Component
     void SetPitch(const float newPitch);
     void SetSpatialization(const float newSpatialization);
 
+    bool IsPlaying() const { return isPlaying; }
+    void SetIsPlaying(bool playing) { isPlaying = playing; }
+
+    bool IsPlayOnStart() const { return playOnStart; }
     void UpdateEventsNames();
+    void StopAudio() const;
+    void StopAllAudio() const;
 
   private:
     void SetInitValues();
 
     std::string defaultEventName = "Default";
     AkUniqueID defaultEvent;
+    AkPlayingID playingEvent;
+
     float volume         = 1;
     float pitch          = 0.5f;
     float spatialization = 0;
+    bool isPlaying       = false;
 
     bool isInited        = false;
+    bool playOnStart     = false;
 };

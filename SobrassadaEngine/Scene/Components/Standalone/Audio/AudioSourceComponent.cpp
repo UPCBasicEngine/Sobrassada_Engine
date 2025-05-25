@@ -21,10 +21,12 @@ AudioSourceComponent::AudioSourceComponent(const rapidjson::Value& initialState,
     volume         = initialState["Volume"].GetFloat();
     pitch          = initialState["Pitch"].GetFloat();
     spatialization = initialState["Spatialization"].GetFloat();
+    if (initialState.HasMember("PlayOnStart")) playOnStart = initialState["PlayOnStart"].GetBool();
 }
 
 AudioSourceComponent::~AudioSourceComponent()
 {
+    StopAudio();
     App->GetAudioModule()->RemoveAudioSource(this);
 }
 
@@ -43,6 +45,7 @@ void AudioSourceComponent::Save(rapidjson::Value& targetState, rapidjson::Docume
     targetState.AddMember("Volume", volume, allocator);
     targetState.AddMember("Pitch", pitch, allocator);
     targetState.AddMember("Spatialization", spatialization, allocator);
+    targetState.AddMember("PlayOnStart", playOnStart, allocator);
 }
 
 void AudioSourceComponent::Clone(const Component* other)
@@ -57,6 +60,7 @@ void AudioSourceComponent::Clone(const Component* other)
         volume                                       = otherAudioSource->volume;
         pitch                                        = otherAudioSource->pitch;
         spatialization                               = otherAudioSource->spatialization;
+        playOnStart                                  = otherAudioSource->playOnStart;
 
         SetInitValues();
         UpdateEventsNames();
@@ -71,8 +75,14 @@ void AudioSourceComponent::Update(float deltaTime)
 {
     if (App->GetInputModule()->GetKeyboard()[SDL_SCANCODE_0] == KEY_DOWN)
     {
-        //GLOG("Play audio");
+        // GLOG("Play audio");
         EmitEvent(defaultEvent);
+    }
+
+    if (App->GetInputModule()->GetKeyboard()[SDL_SCANCODE_9] == KEY_DOWN)
+    {
+        // GLOG("Play audio");
+        StopAudio();
     }
 }
 
@@ -99,16 +109,27 @@ void AudioSourceComponent::RenderEditorInspector()
     if (ImGui::DragFloat("Pitch", &pitch, 0.01f, 0, 1, "%.3f", ImGuiSliderFlags_AlwaysClamp)) SetPitch(pitch);
     if (ImGui::DragFloat("3D Spatialization", &spatialization, 0.01f, 0, 1, "%.3f", ImGuiSliderFlags_AlwaysClamp))
         SetSpatialization(spatialization);
+    ImGui::Checkbox("Play On Start", &playOnStart);
 }
 
-void AudioSourceComponent::EmitEvent(const AkUniqueID event) const
+void AudioSourceComponent::EmitDefaultEvent()
 {
-    if (enabled) AK::SoundEngine::PostEvent(event, (AkGameObjectID)parent->GetUID());
+    if (enabled)
+    {
+        SetInitValues();
+        playingEvent = AK::SoundEngine::PostEvent(defaultEvent, (AkGameObjectID)parent->GetUID());
+    }
+    
 }
 
-void AudioSourceComponent::EmitEvent(const std::string& event) const
+void AudioSourceComponent::EmitEvent(const AkUniqueID event)
 {
-    if (enabled) AK::SoundEngine::PostEvent(event.c_str(), (AkGameObjectID)parent->GetUID());
+    if (enabled) playingEvent = AK::SoundEngine::PostEvent(event, (AkGameObjectID)parent->GetUID());
+}
+
+void AudioSourceComponent::EmitEvent(const std::string& event)
+{
+    if (enabled) playingEvent = AK::SoundEngine::PostEvent(event.c_str(), (AkGameObjectID)parent->GetUID());
 }
 
 void AudioSourceComponent::SetVolume(const float newVolume)
@@ -170,4 +191,14 @@ void AudioSourceComponent::UpdateEventsNames()
     {
         if (event.second == defaultEvent) defaultEventName = event.first.GetString();
     }
+}
+
+void AudioSourceComponent::StopAudio() const
+{
+    AK::SoundEngine::StopPlayingID(playingEvent);
+}
+
+void AudioSourceComponent::StopAllAudio() const
+{
+    App->GetAudioModule()->StopAllAudio();
 }
