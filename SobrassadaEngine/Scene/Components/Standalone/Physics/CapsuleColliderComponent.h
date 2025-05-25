@@ -18,6 +18,7 @@ class CapsuleColliderComponent : public Component
     CapsuleColliderComponent(const rapidjson::Value& initialState, GameObject* parent);
     ~CapsuleColliderComponent() override;
 
+    void Init() override;
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override;
 
