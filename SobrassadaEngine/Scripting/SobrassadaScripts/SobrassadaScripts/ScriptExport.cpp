@@ -25,7 +25,6 @@
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 #include "MoveGOInSpline.h"
-#include "MenuChangeSceneScript.h"
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
