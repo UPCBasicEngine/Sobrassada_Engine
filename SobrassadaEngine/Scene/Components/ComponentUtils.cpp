@@ -194,7 +194,7 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
     {
         SplineComponent* spline                           = new SplineComponent(uid, parent);
         std::get<SplineComponent*>(componentTuple) = spline;
-        generatedComponent                                = spline;
+        spline->Init();
 		break;
 	}
     default:
