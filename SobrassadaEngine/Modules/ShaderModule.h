@@ -25,6 +25,7 @@ class ShaderModule : public Module
     int GetDepthProgram() const { return depthProgram; };
     int GetBillboardProgram() const { return billboardProgram; }
     int GetSpritesheetProgram() const { return spritesheetProgram; }
+    int GetParticleSystemProgram() const { return particleSystemProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -50,4 +51,5 @@ class ShaderModule : public Module
     int billboardProgram               = -1;
 
     int spritesheetProgram             = -1;
+    int particleSystemProgram          = -1;
 };

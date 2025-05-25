@@ -174,10 +174,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         float3 cameraUp         = upVector;
         float2 billboardSize    = float2(1, 1);
 
-        glUseProgram(
-            useSpritesheet ? App->GetShaderModule()->GetSpritesheetProgram()
-                           : App->GetShaderModule()->GetBillboardProgram()
-        );
+        glUseProgram(App->GetShaderModule()->GetParticleSystemProgram());
 
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);

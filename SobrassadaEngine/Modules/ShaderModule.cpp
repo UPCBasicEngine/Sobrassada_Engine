@@ -31,6 +31,7 @@ bool ShaderModule::Init()
     depthProgram                = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
     billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
     spritesheetProgram          = CreateShaderProgram(SPRITESHEET_VERTEX_SHADER_PATH, SPRITESHEET_FRAGMENT_SHADER_PATH);
+    particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
     return true;
 }
 
