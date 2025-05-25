@@ -64,8 +64,8 @@ class ParticleEmitter
   private:
     unsigned int quadVBO            = 0;
     unsigned int particlesVBO       = 0;
+    unsigned int particleTileOffsetVBO = 0;
 
-    unsigned int aliveParticles     = 0;
     bool useSpritesheet             = false;
 
     HashString emitterTag           = HashString("");
@@ -77,6 +77,9 @@ class ParticleEmitter
     ResourceMaterial* material      = nullptr;
 
     std::vector<float3> alivePositions;
+    std::vector<std::pair<int, int>> tileOffsets;
+
+    std::vector<Particle> batchedParticles;
 
     std::tuple<ADDON_TYPES> addonTuple = std::make_tuple(ADDON_NULLPTR);
     std::bitset<std::tuple_size<decltype(addonTuple)>::value> createdAddons;

@@ -3,14 +3,14 @@
 layout(location=0) in vec3 vertexPosition;
 layout(location=1) in vec2 vertexUV;
 layout(location=2) in vec3 billboardCenter;
+layout(location=3) in vec2 tileOffset;
 
 layout(location=0) uniform vec3 cameraRightVector;
 layout(location=1) uniform vec3 cameraUpVector;
 layout(location=2) uniform vec2 billboardSize;
 layout(location=3) uniform mat4 VP;
 layout(location=4) uniform vec2 tileSize;
-layout(location=5) uniform vec2 tileOffset;
-layout(location=6) uniform float currentFrame;
+layout(location=5) uniform float currentFrame;
 
 out vec2 uv;
 out vec2 uvNext;

@@ -163,9 +163,9 @@ void ParticleEmitter::Spawn(EmitterInstance* emitterInstance)
 // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
 void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector)
 {
-    if (aliveParticles < 1) return;
+    if (batchedParticles.size() < 1) return;
 
-    if ((useTexture ? texture != nullptr : material != nullptr) && quadVBO && particlesVBO)
+    if ((useTexture ? texture != nullptr : material != nullptr) && quadVBO && particlesVBO && particleTileOffsetVBO)
     {
         const auto start        = std::chrono::high_resolution_clock::now();
 
@@ -187,11 +187,9 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         {
             SpritesheetAddon* spritesheet = std::get<SpritesheetAddon*>(addonTuple);
             float2 tileSize               = float2((float)spritesheet->rows, (float)spritesheet->columns);
-            float2 tileOffset             = float2::zero;
 
             glUniform2fv(4, 1, &tileSize[0]);
-            glUniform2fv(5, 1, &tileOffset[0]);
-            glUniform1f(6, spritesheet->currentFrame);
+            glUniform1f(5, spritesheet->currentFrame);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
@@ -212,24 +210,32 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glVertexAttribDivisor(2, 1);
 
+        glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
+
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 2, GL_INT, GL_FALSE, 2 * sizeof(int), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(3, 1);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)aliveParticles);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)batchedParticles.size());
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
         const auto end                             = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<float> elapsed = end - start;
 
-        unsigned int totalTrangles                 = (unsigned int)aliveParticles * 2;
+        unsigned int totalTrangles                 = (unsigned int)batchedParticles.size() * 2;
 
         App->GetOpenGLModule()->AddTrianglesPerSecond(totalTrangles / elapsed.count());
         App->GetOpenGLModule()->AddVerticesCount(totalTrangles * 3);
         App->GetOpenGLModule()->AddDrawCallsCount();
 
-        aliveParticles = 0;
         alivePositions.clear();
+        tileOffsets.clear();
+        batchedParticles.clear();
     }
 }
 
@@ -393,33 +399,45 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
 
 void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
 {
-    // ONLY ADD CURRENT ALIVE PARTICLES
-    alivePositions.reserve(alivePositions.size() + emitterInstance->particles.size());
 
+    batchedParticles.reserve(batchedParticles.size() + emitterInstance->particles.size());
     for (int i = 0; i < emitterInstance->particles.size(); ++i)
     {
-        if (emitterInstance->particles[i].alive) alivePositions.push_back(emitterInstance->particles[i].position);
+        if (emitterInstance->particles[i].alive) batchedParticles.push_back(emitterInstance->particles[i]);
     }
-    aliveParticles = (unsigned int)alivePositions.size();
+
+    float3 cameraPosition = App->GetCameraModule()->GetCameraPosition();
+    std::sort(
+        batchedParticles.begin(), batchedParticles.end(),
+        [&cameraPosition](const Particle& a, const Particle& b)
+        {
+            float distanceA = (a.position - cameraPosition).LengthSq();
+            float distanceB = (b.position - cameraPosition).LengthSq();
+
+            return distanceA > distanceB;
+        }
+    );
+
+    // ADD AND RESERVE SPACE FOR PARTICLE ARRAY INSTANCES
+    alivePositions.reserve(batchedParticles.size());
+    tileOffsets.reserve(batchedParticles.size());
+
+    for (int i = 0; i < batchedParticles.size(); ++i)
+    {
+        alivePositions.push_back(batchedParticles[i].position);
+        tileOffsets.push_back(batchedParticles[i].tileOffset);
+    }
 
     if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
-    if (aliveParticles > 0)
+    if (particleTileOffsetVBO == 0) glGenBuffers(1, &particleTileOffsetVBO);
+    if (batchedParticles.size() > 0)
     {
-        float3 cameraPosition = App->GetCameraModule()->GetCameraPosition();
-
-        std::sort(
-            alivePositions.begin(), alivePositions.end(),
-            [cameraPosition](const float3& a, const float3& b)
-            {
-                float distanceA = (a - cameraPosition).LengthSq();
-                float distanceB = (b - cameraPosition).LengthSq();
-
-                return distanceA > distanceB;
-            }
-        );
-
         glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * alivePositions.size(), &alivePositions[0], GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 2 * tileOffsets.size(), &tileOffsets[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }

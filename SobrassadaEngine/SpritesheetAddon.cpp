@@ -58,8 +58,8 @@ void SpritesheetAddon::Init(EmitterInstance* emitterInstance)
 
     for (auto& particle : emitterInstance->particles)
     {
-        particle.tileOffset[0] = rng->Int(randomXTiles[0], randomXTiles[1]);
-        particle.tileOffset[1] = rng->Int(randomYTiles[0], randomYTiles[1]);
+        particle.tileOffset.first  = rng->Int(randomXTiles[0], randomXTiles[1]);
+        particle.tileOffset.second = rng->Int(randomYTiles[0], randomYTiles[1]);
     }
 }
 
