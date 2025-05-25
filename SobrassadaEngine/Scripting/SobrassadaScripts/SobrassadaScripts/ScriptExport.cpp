@@ -23,6 +23,7 @@
 #include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "MenuChangeSceneScript.h"
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
@@ -54,6 +55,7 @@ constexpr const char* scripts[] = {
     "Archer",             
     "ChangeSceneScript",
     "SpawnUI"
+    "MenuChangeSceneScript"
 };
 
 Application* AppEngine = nullptr;
@@ -75,6 +77,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MainMenuSelectorScript") return new MainMenuSelectorScript(parent);
     if (scriptType == "PressAnyKeyScript") return new PressAnyKeyScript(parent);
     if (scriptType == "SpawnUI") return new SpawnUI(parent);
+    if (scriptType == "MenuChangeSceneScript") return new MenuChangeSceneScript(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
