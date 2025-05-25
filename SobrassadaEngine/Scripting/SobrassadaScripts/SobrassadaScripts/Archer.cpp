@@ -100,7 +100,7 @@ void Archer::HandleState(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
-        GLOG("FINISH ANIM");
+        // GLOG("FINISH ANIM");
         animComponent->UseTrigger("idle");
     }
 }
