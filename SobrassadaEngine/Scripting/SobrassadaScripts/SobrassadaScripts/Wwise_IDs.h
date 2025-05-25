@@ -17,6 +17,7 @@ namespace AK
         static const AkUniqueID CAVE_02 = 4091541807U;
         static const AkUniqueID FIRE_01 = 1589446069U;
         static const AkUniqueID FIRE_02 = 1589446070U;
+        static const AkUniqueID ICE_BLAST = 3920196677U;
         static const AkUniqueID MUSIC_CITY = 3946025416U;
         static const AkUniqueID MUSIC_TUTORIAL = 931250475U;
         static const AkUniqueID TORCH = 1904864137U;

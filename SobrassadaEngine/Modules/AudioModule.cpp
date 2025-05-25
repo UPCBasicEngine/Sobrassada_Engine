@@ -183,9 +183,9 @@ update_status AudioModule::Update(float deltaTime)
         if (!source) continue;
 
         const float3& sourcePos   = source->GetGlobalTransform().TranslatePart();
-        const float3& listenerPos = listener->GetGlobalTransform().TranslatePart();
+        /* float3& listenerPos = listener->GetGlobalTransform().TranslatePart();
 
-        float distance            = sourcePos.Distance(listenerPos);
+         float distance       = sourcePos.Distance(listenerPos);
 
         if (distance < maxAudibleDistance)
         {
@@ -205,7 +205,7 @@ update_status AudioModule::Update(float deltaTime)
                 source->SetIsPlaying(false);
             }
         }
-
+        */
         AkSoundPosition akPos;
         const float3x3& rotation = source->GetGlobalTransform().RotatePart();
         akPos.SetPosition({sourcePos.x, sourcePos.y, sourcePos.z});
