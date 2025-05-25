@@ -31,20 +31,17 @@ class FireballTrap : public Script
     float GenerateRandomAttackTime(float min, float max);
 
   private:
-    bool activated                          = false;
     float activationRange                   = 10.0f;
     float minAttackCooldown                 = 0.5f;
     float maxAttackCooldown                 = 3.0f;
-    float randomAttackTime                  = -1.0f;
+    float randomAttackTime                  = 0.0f;
     int damage                              = 1;
     float damageDuration                    = 1.5f;
-    bool attacking                          = false;
 
     MeshComponent* groundMesh               = nullptr;
     SphereColliderComponent* damageCollider = nullptr;
 
     float activatedTime                     = 0.0f;
-    bool isDealingDamage                    = false;
 
     // fireball
     GameObject* fireball                    = nullptr;
@@ -52,7 +49,6 @@ class FireballTrap : public Script
     GameObject* fireballShadow              = nullptr;
     
     float verticalSpeed                     = 0.0f;
-    bool hasImpacted                        = false;
     float rotationSpeed                     = 1.0f;
     float fallingHeight                     = 20.0f;
     float editableMaxFallSpeed              = 20.0f;

@@ -124,13 +124,14 @@ void FireballTrap::UpdateFireball(float deltaTime)
 {
     float4x4 newTransform = fireball->GetLocalTransform();
     float3 currentPos     = newTransform.TranslatePart();
+    
     if (deltaTime < 0.5f)
     {
         verticalSpeed = std::min(verticalSpeed + editableGravity * deltaTime, editableMaxFallSpeed); // Clamp fall speed
-        currentPos.y  -= verticalSpeed;
+        currentPos.y  -= verticalSpeed * deltaTime;
     }
-
-    if (currentPos.y <= groundMesh->GetGlobalTransform().TranslatePart().y)
+    
+    if (currentPos.y <= 0)
     {
         HandleImpact();
     } else
