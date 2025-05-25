@@ -29,10 +29,6 @@ ParticleSystemComponent::~ParticleSystemComponent()
 
 void ParticleSystemComponent::Init()
 {
-    for (auto& emitter : emitterInstances)
-    {
-        emitter.Spawn();
-    }
 }
 
 void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
