@@ -552,6 +552,9 @@
     <ClCompile Include="Modules\BillboardModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1078,6 +1081,9 @@
     </ClInclude>
     <ClInclude Include="Modules\BillboardModule.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\TrailComponent.h">
+      <Filter>Scene\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

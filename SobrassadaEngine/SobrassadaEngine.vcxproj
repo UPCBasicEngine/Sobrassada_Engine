@@ -366,6 +366,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
@@ -598,6 +599,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Scene\Components\Standalone\TrailComponent.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
     <ClInclude Include="Modules\BillboardModule.h" />
     <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h" />

@@ -36,6 +36,7 @@ class AudioListenerComponent;
 class CanvasScalerComponent;
 class BillboardComponent;
 class SplineComponent;
+class TrailComponent;
 
 enum MobilitySettings
 {

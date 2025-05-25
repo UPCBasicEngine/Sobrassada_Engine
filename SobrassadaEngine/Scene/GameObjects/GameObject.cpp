@@ -30,6 +30,7 @@
 #include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/BillboardComponent.h"
 #include "Standalone/SplineComponent.h"
+#include "Standalone/TrailComponent.h"
 
 #include "imgui.h"
 #include <queue>
