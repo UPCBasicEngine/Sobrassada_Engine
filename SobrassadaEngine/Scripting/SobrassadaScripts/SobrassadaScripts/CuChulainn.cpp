@@ -424,3 +424,22 @@ void CuChulainn::Respawn()
     character->EnableMovement(false);
     // TODO: Reset hitboxes, timers, enable, etc. If scene is reloaded then probably not needed
 }
+
+void CuChulainn::Die()
+{
+    // GLOG("%s dead", parent->GetName().c_str());
+    isDead = true;
+    OnDeath();
+
+    if (characterCollider)
+    {
+        characterCollider->DeleteRigidBody();
+        characterCollider->SetEnabled(false);
+    }
+
+    if (weaponCollider)
+    {
+        weaponCollider->DeleteRigidBody();
+        weaponCollider->SetEnabled(false);
+    }
+}
