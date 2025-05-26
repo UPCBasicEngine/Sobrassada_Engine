@@ -58,8 +58,7 @@ constexpr const char* scripts[] = {
     "ChangeSceneScript",
     "SpawnUI",
     "MenuChangeSceneScript",
-    "MoveGOInSpline",
-    "RespawnController"
+    "MoveGOInSpline"
 };
 
 Application* AppEngine = nullptr;

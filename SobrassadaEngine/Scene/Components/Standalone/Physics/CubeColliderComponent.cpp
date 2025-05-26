@@ -21,7 +21,7 @@ CubeColliderComponent::CubeColliderComponent(UID uid, GameObject* parent)
         std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
     );
     userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    //App->GetPhysicsModule()->CreateCubeRigidBody(this);
 }
 
 CubeColliderComponent::CubeColliderComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -60,7 +60,7 @@ CubeColliderComponent::CubeColliderComponent(const rapidjson::Value& initialStat
         std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
     );
     userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    //App->GetPhysicsModule()->CreateCubeRigidBody(this);
 }
 
 CubeColliderComponent::~CubeColliderComponent()
@@ -70,7 +70,7 @@ CubeColliderComponent::~CubeColliderComponent()
 
 void CubeColliderComponent::Init()
 {
-    if (rigidBody) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+    if (rigidBody) App->GetPhysicsModule()->CreateCubeRigidBody(this);
 }
 
 void CubeColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
