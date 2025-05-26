@@ -49,7 +49,7 @@ public:
     bool loop     = false;
 
     int selectedIdx = -1;
-    const int stepsDebug      = 16;
+    const int stepsDebug      = 32;
 
     // Debug travel marker
     bool showMarker           = false;

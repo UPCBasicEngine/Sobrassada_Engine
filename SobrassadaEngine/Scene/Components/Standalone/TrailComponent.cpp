@@ -63,37 +63,39 @@ void TrailComponent::Clone(const Component* other)
 
 void TrailComponent::Update(float deltaTime)
 {
-    if (!IsEffectivelyEnabled()) return;
-    if (!spline)
-    {
-        spline = parent->GetComponent<SplineComponent*>();
-        spline->ClearPoints();
-    }
-    if (!spline) return;
-
     for (TrailPoint& tp : points)
         tp.time += deltaTime;
 
     while (!points.empty() && points.front().time > lifeTime)
         points.pop_front();
 
+    vertices.clear();
+    indices.clear();
+
+    if (!spline) spline = parent->GetComponent<SplineComponent*>();
+    if (!spline) return;
+    spline->ClearPoints();
+    if (!IsEffectivelyEnabled()) return;
+    if (!spline->IsEffectivelyEnabled()) return;
+
     float4x4 globalMatrix = parent->GetGlobalTransform();
     float3 position       = globalMatrix.TranslatePart();
     float3 lastPos        = points.empty() ? float3::zero : points.back().position;
 
-    spline->ClearPoints();
-    vertices.clear();
-    indices.clear();
-
-    for (int i = 0; i < points.size(); ++i)
+    if (!points.empty())
     {
         vertices.reserve(2 * points.size());
         indices.reserve(6 * (points.size() - 1));
+    }
+
+    for (int i = 0; i < points.size(); ++i)
+    {
         const TrailPoint& tp = points[i];
 
         spline->AddPoint(tp.position - position);
-        float3 left  = tp.position - tp.perpendicular * width;
-        float3 right = tp.position + tp.perpendicular * width;
+
+        float3 left  = spline->GetPointLocal(i) - tp.perpendicular * width;
+        float3 right = spline->GetPointLocal(i) + tp.perpendicular * width;
 
         vertices.push_back(left);
         vertices.push_back(right);
@@ -117,7 +119,7 @@ void TrailComponent::Update(float deltaTime)
     RecalculateAABB();
 
     if (!points.empty() && (position - lastPos).LengthSq() < minDistance * minDistance) return;
-    float3 perpendicular = globalMatrix.Col3(0);
+    float3 perpendicular = globalMatrix.Col3(0).Normalized();
     points.push_back({position, perpendicular, 0.0f});
 }
 
@@ -136,7 +138,7 @@ void TrailComponent::Render(float deltaTime)
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(uint32_t), indices.data());
 
     float4x4 modelMatrix = parent->GetGlobalTransform();
-    glUniformMatrix4fv(4, 1, GL_FALSE, &modelMatrix[0][0]);
+    glUniformMatrix4fv(4, 1, GL_TRUE, &modelMatrix[0][0]);
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
@@ -152,7 +154,6 @@ void TrailComponent::RenderEditorInspector()
 
 void TrailComponent::ParentUpdated()
 {
-    RecalculateAABB();
 }
 
 void TrailComponent::RecalculateAABB()
@@ -166,19 +167,20 @@ void TrailComponent::RecalculateAABB()
 
     AABB aabb;
     float3 position = parent->GetGlobalTransform().TranslatePart();
-    aabb.minPoint   = position - points[0].position;
-    aabb.maxPoint   = position - points[0].position;
+    aabb.minPoint   = spline->GetPointLocal(0);
+    aabb.maxPoint   = spline->GetPointLocal(0);
 
-    for (const TrailPoint& tp : points)
+    for (int i = 0; i < points.size(); ++i)
     {
-        float3 localPos = position - tp.position;
-        float3 left   = localPos - tp.perpendicular * width;
-        float3 right  = localPos + tp.perpendicular * width;
+        const TrailPoint& tp = points[i];
+        float3 localPos      = spline->GetPointLocal(i);
+        float3 left          = localPos - tp.perpendicular * width;
+        float3 right         = localPos + tp.perpendicular * width;
 
-        aabb.minPoint = aabb.minPoint.Min(left);
-        aabb.minPoint = aabb.minPoint.Min(right);
-        aabb.maxPoint = aabb.maxPoint.Max(left);
-        aabb.maxPoint = aabb.maxPoint.Max(right);
+        aabb.minPoint        = aabb.minPoint.Min(left);
+        aabb.minPoint        = aabb.minPoint.Min(right);
+        aabb.maxPoint        = aabb.maxPoint.Max(left);
+        aabb.maxPoint        = aabb.maxPoint.Max(right);
     }
 
     localComponentAABB = aabb;

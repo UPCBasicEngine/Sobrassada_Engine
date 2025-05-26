@@ -36,15 +36,15 @@ class TrailComponent : public Component
     std::vector<float3> vertices;
     std::vector<int> indices;
 
-    float minDistance = 0.2f;
-    float lifeTime    = 3.0f;
-    float width       = 0.5f;
+    float minDistance = 0.5f;
+    float lifeTime    = 0.5f;
+    float width       = 0.1f;
     SplineComponent* spline;
 
     unsigned int vao = 0;
     unsigned int vbo = 0;
     unsigned int ebo = 0;
 
-    int maxVertices  = 16;
-    int maxIndices   = 90;
+    int maxVertices  = 64;
+    int maxIndices   = 384;
 };
