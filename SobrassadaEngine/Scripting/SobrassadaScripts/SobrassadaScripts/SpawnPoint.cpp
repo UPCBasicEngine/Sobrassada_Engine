@@ -13,6 +13,7 @@ SpawnPoint::SpawnPoint(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Set only once", InspectorField::FieldType::Bool, &isOneUse});
+    fields.push_back({"Set Health for player", InspectorField::FieldType::Int, &setHealth});
 }
 
 bool SpawnPoint::Init()
@@ -38,6 +39,7 @@ void SpawnPoint::OnCollision(GameObject* otherObject, const float3& collisionNor
         if (playerScript)
         {
             playerScript->SetSpawnPosition(parent->GetPosition());
+            playerScript->SetHealth(setHealth);
             if (isOneUse)
             {
                 if (CubeColliderComponent* collider = parent->GetComponent<CubeColliderComponent*>())

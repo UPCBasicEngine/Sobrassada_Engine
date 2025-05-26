@@ -91,6 +91,11 @@ void CuChulainn::Update(float deltaTime)
     CheckIsFalling();
 }
 
+bool CuChulainn::IsDead()
+{
+    return isDead;
+}
+
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
@@ -418,28 +423,12 @@ void CuChulainn::SetPosition(const float3& position)
 
 void CuChulainn::Respawn()
 {
+    parent->SetLocalPosition(spawnPos);
+    if (camera) camera->SetPosition(spawnPos);
+    currentHealth = reservedHealth;
     state = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
-    character->EnableMovement(false);
+    character->EnableMovement(true);
     // TODO: Reset hitboxes, timers, enable, etc. If scene is reloaded then probably not needed
-}
-
-void CuChulainn::Die()
-{
-    // GLOG("%s dead", parent->GetName().c_str());
-    isDead = true;
-    OnDeath();
-
-    if (characterCollider)
-    {
-        characterCollider->DeleteRigidBody();
-        characterCollider->SetEnabled(false);
-    }
-
-    if (weaponCollider)
-    {
-        weaponCollider->DeleteRigidBody();
-        weaponCollider->SetEnabled(false);
-    }
 }

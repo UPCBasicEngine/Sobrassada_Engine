@@ -401,6 +401,7 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
+    <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
@@ -409,6 +410,7 @@
     <ClInclude Include="PressAnyKeyScript.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="RespawnController.h" />
     <ClInclude Include="RotateGameObject.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
@@ -1769,6 +1771,7 @@
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
+    <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
@@ -1787,6 +1790,7 @@
     </ClCompile>
     <ClCompile Include="PressAnyKeyScript.cpp" />
     <ClCompile Include="Projectile.cpp" />
+    <ClCompile Include="RespawnController.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
