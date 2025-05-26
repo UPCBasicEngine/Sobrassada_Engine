@@ -241,7 +241,6 @@ void Character::Die()
 
     if (weaponCollider)
     {
-
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }

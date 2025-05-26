@@ -38,7 +38,6 @@ class CuChulainn : public Character
     bool GetIsInvulnerable() { return isInvulnerable; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     void EnableMovement(bool enable);
-
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -61,6 +60,7 @@ class CuChulainn : public Character
     void Aim(float deltaTime);
     void Move();
     void SetPosition(const float3& position);
+   
 
   private:
     CharacterStates state       = CharacterStates::IDLE;
@@ -93,6 +93,7 @@ class CuChulainn : public Character
     float deathTimer            = 0.5f;
     float aimTimer              = 0.0f;
 
+    
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
 
