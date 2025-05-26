@@ -61,6 +61,7 @@ void Banshee::Update(float deltaTime)
 
 void Banshee::OnDeath()
 {
+    parent->SetEnabled(false);
 }
 
 void Banshee::OnDamageTaken(int amount)

@@ -58,6 +58,7 @@ void Archer::OnDeath()
 {
     // TODO: include death sound for the character
     // TODO: animation and particles
+    parent->SetEnabled(false);
 }
 
 void Archer::OnDamageTaken(int amount)
