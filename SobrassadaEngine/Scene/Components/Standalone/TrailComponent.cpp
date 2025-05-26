@@ -5,6 +5,8 @@
 #include "ShaderModule.h"
 #include "SplineComponent.h"
 #include "glew.h"
+#include "imgui.h"
+#include "imgui_curves.h"
 
 TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, parent, "Trail", COMPONENT_TRAIL)
 {
@@ -54,11 +56,19 @@ TrailComponent::~TrailComponent()
 void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
-    spline->ClearPoints();
+    if (spline) spline->ClearPoints();
 }
 
 void TrailComponent::Clone(const Component* other)
 {
+    if (other->GetType() != COMPONENT_TRAIL) return;
+
+    const TrailComponent* otherTrail = static_cast<const TrailComponent*>(other);
+    minDistance = otherTrail->minDistance;
+    lifeTime    = otherTrail->lifeTime;
+    width       = otherTrail->width;
+    enabled     = otherTrail->enabled;
+    wasEnabled  = otherTrail->wasEnabled;
 }
 
 void TrailComponent::Update(float deltaTime)
@@ -150,6 +160,15 @@ void TrailComponent::RenderDebug(float deltaTime)
 
 void TrailComponent::RenderEditorInspector()
 {
+    Component::RenderEditorInspector();
+
+    ImGui::SeparatorText("Trail Component");
+
+    ImGui::DragFloat("Min Distance", &minDistance, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("LifeTime", &lifeTime, 0.01f, 0.0f, 2.0f);
+    ImGui::DragFloat("Width", &width, 0.01f, 0.0f, 5.0f);
+
+    ImGui::Bezier("Trail Curve", curve);
 }
 
 void TrailComponent::ParentUpdated()

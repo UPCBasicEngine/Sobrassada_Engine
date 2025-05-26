@@ -39,6 +39,7 @@ class TrailComponent : public Component
     float minDistance = 0.5f;
     float lifeTime    = 0.5f;
     float width       = 0.1f;
+    float curve[5]    = {0.42f, 0.0f, 0.58f, 1.0f}; // Last value is an internal value for imgui
     SplineComponent* spline;
 
     unsigned int vao = 0;

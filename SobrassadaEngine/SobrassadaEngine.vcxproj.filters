@@ -1085,6 +1085,9 @@
     <ClInclude Include="Scene\Components\Standalone\TrailComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_curves.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
