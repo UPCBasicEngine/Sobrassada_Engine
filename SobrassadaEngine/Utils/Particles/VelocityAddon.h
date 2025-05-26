@@ -2,6 +2,8 @@
 
 #include "ParticleAddon.h"
 
+#include "Math/float2.h"
+
 class VelocityAddon : public ParticleAddon
 {
   public:
@@ -16,5 +18,11 @@ class VelocityAddon : public ParticleAddon
     void RenderEditorInspector() override;
 
   private:
-    float startSpeed = 1.f;
+    bool randomizeXSpeed = false;
+    bool randomizeYSpeed = false;
+    bool randomizeZSpeed = false;
+
+    float2 xSpeed    = float2::one;
+    float2 ySpeed    = float2::one;
+    float2 zSpeed    = float2::one;
 };
