@@ -135,9 +135,8 @@ void PhysicsModule::CreateCubeRigidBody(CubeColliderComponent* colliderComponent
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
     // MotionState for RENDER AND
-    colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
-    );
+    colliderComponent->motionState =
+        BulletMotionState(colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -178,9 +177,8 @@ void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderCompo
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
     // MotionState for RENDER AND
-    colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
-    );
+    colliderComponent->motionState =
+        BulletMotionState(colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -221,9 +219,8 @@ void PhysicsModule::CreateCapsuleRigidBody(CapsuleColliderComponent* colliderCom
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
     // MotionState
-    colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
-    );
+    colliderComponent->motionState =
+        BulletMotionState(colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -293,7 +290,6 @@ void PhysicsModule::AddRigidBody(btRigidBody* rigidBody, ColliderType colliderTy
 
     dynamicsWorld->addRigidBody(rigidBody, group, mask);
 }
-
 // TODO READ FROM CONFIG FILE
 void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
 {
@@ -316,7 +312,7 @@ void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
         colliderLayerConfig[2] |= config;
 
         // PLAYER
-        config = 1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WORLD_OBJECTS |
+        config                  = 1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WORLD_OBJECTS |
                  1 << (int)ColliderLayer::TRIGGERS | 1 << (int)ColliderLayer::ENEMY_PROJECTILE;
         colliderLayerConfig[3] |= config;
 
@@ -404,11 +400,34 @@ void PhysicsModule::SaveLayerData(rapidjson::Value& targetState, rapidjson::Docu
 
 void PhysicsModule::EmptyWorld()
 {
-    // REMOVE RIGID BODIES
-    for (btRigidBody* rigidBody : bodiesToRemove)
+    for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
     {
-        dynamicsWorld->removeRigidBody(rigidBody);
+        btCollisionObject* obj         = dynamicsWorld->getCollisionObjectArray()[i];
+        BulletUserPointer* userPointer = static_cast<BulletUserPointer*>(obj->getUserPointer());
+
+        if (userPointer->collider->GetType() == ComponentType::COMPONENT_CUBE_COLLIDER)
+        {
+            CubeColliderComponent* comp = userPointer->collider->GetParent()->GetComponent<CubeColliderComponent*>();
+            comp->rigidBody             = nullptr;
+        }
+        else if (userPointer->collider->GetType() == ComponentType::COMPONENT_SPHERE_COLLIDER)
+        {
+            SphereColliderComponent* comp =
+                userPointer->collider->GetParent()->GetComponent<SphereColliderComponent*>();
+            comp->rigidBody = nullptr;
+        }
+        else if (userPointer->collider->GetType() == ComponentType::COMPONENT_CAPSULE_COLLIDER)
+        {
+            CapsuleColliderComponent* comp =
+                userPointer->collider->GetParent()->GetComponent<CapsuleColliderComponent*>();
+            comp->rigidBody = nullptr;
+        }
+
+        btRigidBody* rigidBody  = btRigidBody::upcast(obj);
         btCollisionShape* shape = rigidBody->getCollisionShape();
+        dynamicsWorld->removeCollisionObject(obj);
+        dynamicsWorld->removeRigidBody(rigidBody);
+
         delete shape;
         delete rigidBody;
     }

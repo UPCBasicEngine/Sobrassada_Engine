@@ -31,7 +31,6 @@ Character::Character(
     fields.push_back({"Current Health", InspectorField::FieldType::Int, &currentHealth, 0, 10});
     fields.push_back({"Invulnerable", InspectorField::FieldType::Bool, &isInvulnerable, true, false});
     fields.push_back({"Dead", InspectorField::FieldType::Bool, &isDead, true, false});
-    fields.push_back({"Weapon Name", InspectorField::FieldType::InputText, &weaponName});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &attackDamage, 0, 3});
     fields.push_back({"Attack Range", InspectorField::FieldType::Float, &range, 0.0f, 5.0f});
     fields.push_back({"Attack Duration", InspectorField::FieldType::Float, &attackDuration, 0.0f, 5.0f});
@@ -62,15 +61,16 @@ bool Character::Init()
             parent->GetName().c_str()
         )
 
-    weapon = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(weaponName);
-    if (!weapon)
+    weaponCollider = parent->GetComponentChild<CapsuleColliderComponent*>(AppEngine);
+    
+    if (!weaponCollider)
     {
-        GLOG("[WARNING] No weapon found by the name %s in character %s", weaponName.c_str(), parent->GetName().c_str());
+        GLOG("[WARNING] No capsule weapon collider in child");
     }
     else
     {
-        weaponCollider = weapon->GetComponent<CapsuleColliderComponent*>();
-        if (!weaponCollider) GLOG("Weapon capsule collider component not found for %s", parent->GetName().c_str())
+        weapon         = weaponCollider->GetParent();
+        if (!weapon) GLOG("Weapon game object not found")
         else weaponCollider->SetEnabled(false);
     }
 
@@ -184,20 +184,17 @@ void Character::Restart()
 {
     if (characterCollider)
     {
-        characterCollider->rigidBody;
         characterCollider = parent->GetComponent<CapsuleColliderComponent*>();
         characterCollider->SetEnabled(true);
     }
 
     if (weaponCollider)
     {
-        weaponCollider->rigidBody;
         weaponCollider = weapon->GetComponent<CapsuleColliderComponent*>();
         weaponCollider->SetEnabled(true);
     }
 
     parent->SetEnabled(true);
-    
 }
 
 void Character::Heal(int amount)
@@ -244,7 +241,6 @@ void Character::Die()
 
     if (weaponCollider)
     {
-        
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
