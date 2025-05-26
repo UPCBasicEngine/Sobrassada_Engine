@@ -16,5 +16,5 @@ struct Particle
     float lifeTime                 = 3.f;
     std::pair<int, int> tileOffset = {0, 0};
     float4 color                   = float4::one;
-    bool alive                     = true;
+    bool alive                     = false;
 };
