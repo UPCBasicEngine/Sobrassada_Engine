@@ -21,6 +21,7 @@ class VelocityAddon;
 class SpritesheetAddon;
 class ColorAddon;
 
+class ParticleSystem;
 class ResourceTexture;
 class ResourceMaterial;
 class ParticleSystemComponent;
@@ -29,8 +30,8 @@ class EmitterInstance;
 class ParticleEmitter
 {
   public:
-    ParticleEmitter(const HashString& tag);
-    ParticleEmitter(const rapidjson::Value& initialState);
+    ParticleEmitter(const HashString& tag, ParticleSystem* owner);
+    ParticleEmitter(const rapidjson::Value& initialState, ParticleSystem* owner);
     ~ParticleEmitter();
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
@@ -49,6 +50,7 @@ class ParticleEmitter
     const HashString& GetTag() const { return emitterTag; }
     const std::string& GetName() const { return emitterTag.GetString(); }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
+    int GetRenderPriority() const { return renderPriority; }
 
     void SetAddonCreated(int position) { createdAddons[position] = true; };
     void SetAddonDeleted(int position) { createdAddons[position] = false; };
@@ -58,8 +60,6 @@ class ParticleEmitter
   private:
     void UpdateMaterial(UID newMaterialUID);
     void UpdateTexture(UID newTextureUID);
-
-    // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     void UpdateParticlesVBO(EmitterInstance* emitterInstance);
 
   private:
@@ -68,15 +68,18 @@ class ParticleEmitter
     unsigned int particleTileOffsetVBO = 0;
     unsigned int particleColorsVBO     = 0;
 
+    int renderPriority                 = 0;
+
     bool useSpritesheet                = false;
 
     HashString emitterTag              = HashString("");
 
     bool useTexture                    = false;
-    std::string currentResourceName    = "No material";
 
     ResourceTexture* texture           = nullptr;
     ResourceMaterial* material         = nullptr;
+
+    ParticleSystem* owner              = nullptr;
 
     std::vector<float3> alivePositions;
     std::vector<std::pair<int, int>> tileOffsets;

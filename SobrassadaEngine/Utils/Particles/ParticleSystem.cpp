@@ -5,6 +5,7 @@
 
 #include "Math/float3.h"
 #include "Math/float4x4.h"
+#include <algorithm>
 
 ParticleSystem::ParticleSystem(const HashString& newTag, ParticleSystemComponent* component, unsigned int quadVBO)
     : particleSystemTag(newTag), quadVBO(quadVBO)
@@ -30,7 +31,7 @@ ParticleSystem::ParticleSystem(
         {
             const rapidjson::Value& newEmitterJSON = jsonEmitters[i];
 
-            ParticleEmitter* newEmitter            = new ParticleEmitter(newEmitterJSON);
+            ParticleEmitter* newEmitter            = new ParticleEmitter(newEmitterJSON, this);
             newEmitter->SetQuadVBO(quadVBO);
             emitters.push_back({newEmitter->GetName(), newEmitter});
         }
@@ -40,6 +41,8 @@ ParticleSystem::ParticleSystem(
     component->SetParticleIterator(componentIterator);
     component->SetParticleSystem(this);
     component->ReloadEmitterInstances(emitters);
+
+    SortEmitters();
 }
 
 ParticleSystem::~ParticleSystem()
@@ -89,12 +92,14 @@ void ParticleSystem::AddEmitter(const std::string& newEmitterName)
 
     if (position < 0)
     {
-        ParticleEmitter* newEmitter = new ParticleEmitter(newEmitterTag);
+        ParticleEmitter* newEmitter = new ParticleEmitter(newEmitterTag, this);
         newEmitter->SetQuadVBO(quadVBO);
         emitters.push_back({newEmitterTag, newEmitter});
     }
 
     UpdateComponents();
+
+    SortEmitters();
 }
 
 void ParticleSystem::RemoveEmitter(const HashString& newEmitterTag)
@@ -115,6 +120,8 @@ void ParticleSystem::RemoveEmitter(const HashString& newEmitterTag)
     }
 
     UpdateComponents();
+
+    SortEmitters();
 }
 
 void ParticleSystem::AddComponent(ParticleSystemComponent* component)
@@ -128,6 +135,15 @@ void ParticleSystem::AddComponent(ParticleSystemComponent* component)
 void ParticleSystem::RemoveComponent(std::list<ParticleSystemComponent*>::iterator componentIterator)
 {
     linkedComponents.erase(componentIterator);
+}
+
+void ParticleSystem::SortEmitters()
+{
+    std::sort(
+        emitters.begin(), emitters.end(),
+        [](const std::pair<HashString, ParticleEmitter*>& a, const std::pair<HashString, ParticleEmitter*>& b)
+        { return a.second->GetRenderPriority() > b.second->GetRenderPriority(); }
+    );
 }
 
 void ParticleSystem::UpdateComponents()

@@ -7,6 +7,7 @@
 #include "EmitterInstance.h"
 #include "LibraryModule.h"
 #include "OpenGLModule.h"
+#include "ParticleSystem.h"
 #include "ParticleSystemComponent.h"
 #include "ResourceMaterial.h"
 #include "ResourceTexture.h"
@@ -77,14 +78,14 @@ template <std::size_t I = 0, typename... Tp>
 }
 // ---------- END SECTION FOR TUPLE ITERATION ----------
 
-ParticleEmitter::ParticleEmitter(const HashString& tag) : emitterTag(tag)
+ParticleEmitter::ParticleEmitter(const HashString& tag, ParticleSystem* owner) : emitterTag(tag), owner(owner)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
     createdAddons.reset();
     ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType::BASE, this);
 }
 
-ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState)
+ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleSystem* owner) : owner(owner)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
     createdAddons.reset();
@@ -116,6 +117,8 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState)
             ParticleUtils::CreateExistingComponent(newAddonJSON, this);
         }
     }
+
+    if (initialState.HasMember("RenderPriority")) renderPriority = initialState["RenderPriority"].GetInt();
 }
 
 ParticleEmitter::~ParticleEmitter()
@@ -139,6 +142,7 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
     SaveAddonsTuple(addonTuple, addonsJSON, allocator);
 
     targetState.AddMember("Addons", addonsJSON, allocator);
+    targetState.AddMember("RenderPriority", renderPriority, allocator);
 }
 
 void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
@@ -252,6 +256,8 @@ void ParticleEmitter::RenderEditor()
 
     // CHANGE THIS TO ADD / REMOVE ADDONS, SAME AS RENDER OPTIONS
 
+    ImGui::SameLine();
+
     if (ImGui::Button("Manage Addons"))
     {
         ImGui::OpenPopup("RenderAddonsManager");
@@ -280,6 +286,14 @@ void ParticleEmitter::RenderEditor()
 
         ImGui::EndPopup();
     }
+
+    ImGui::SameLine();
+    ImGui::PushItemWidth(150);
+    if (ImGui::InputInt("Render Priority", &renderPriority))
+    {
+        owner->SortEmitters();
+    }
+    ImGui::PopItemWidth();
 
     ImGui::Spacing();
     ImGui::Separator();

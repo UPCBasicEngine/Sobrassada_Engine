@@ -33,6 +33,8 @@ class ParticleSystem
     void AddComponent(ParticleSystemComponent* component);
     void RemoveComponent(std::list<ParticleSystemComponent*>::iterator componentIterator);
 
+    void SortEmitters();
+
     const HashString& GetTag() const { return particleSystemTag; }
 
   private:

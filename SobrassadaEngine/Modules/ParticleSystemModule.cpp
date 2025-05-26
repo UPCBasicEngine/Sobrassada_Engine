@@ -81,6 +81,7 @@ void ParticleSystemModule::RenderParticles()
     }
 
     glEnable(GL_BLEND);
+    //glDisable(GL_DEPTH_TEST);
     
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
@@ -93,6 +94,7 @@ void ParticleSystemModule::RenderParticles()
         emitter.second->RenderParticles(VP, rightVector, upVector);
     }
 
+    //glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
 
