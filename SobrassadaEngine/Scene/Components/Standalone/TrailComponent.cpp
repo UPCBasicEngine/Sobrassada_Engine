@@ -6,6 +6,7 @@
 #include "SplineComponent.h"
 #include "glew.h"
 #include "imgui.h"
+#include "imgui_color_gradient.h"
 #include "imgui_curves.h"
 
 TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, parent, "Trail", COMPONENT_TRAIL)
@@ -64,11 +65,11 @@ void TrailComponent::Clone(const Component* other)
     if (other->GetType() != COMPONENT_TRAIL) return;
 
     const TrailComponent* otherTrail = static_cast<const TrailComponent*>(other);
-    minDistance = otherTrail->minDistance;
-    lifeTime    = otherTrail->lifeTime;
-    width       = otherTrail->width;
-    enabled     = otherTrail->enabled;
-    wasEnabled  = otherTrail->wasEnabled;
+    minDistance                      = otherTrail->minDistance;
+    lifeTime                         = otherTrail->lifeTime;
+    width                            = otherTrail->width;
+    enabled                          = otherTrail->enabled;
+    wasEnabled                       = otherTrail->wasEnabled;
 }
 
 void TrailComponent::Update(float deltaTime)
@@ -169,6 +170,12 @@ void TrailComponent::RenderEditorInspector()
     ImGui::DragFloat("Width", &width, 0.01f, 0.0f, 5.0f);
 
     ImGui::Bezier("Trail Curve", curve);
+
+    static ImGradient gradient;
+    static ImGradientMark* draggingMark = nullptr;
+    static ImGradientMark* selectedMark = nullptr;
+
+    bool updated                        = ImGui::GradientEditor(&gradient, draggingMark, selectedMark);
 }
 
 void TrailComponent::ParentUpdated()

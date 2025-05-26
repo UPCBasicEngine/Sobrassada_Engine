@@ -322,9 +322,7 @@ namespace ImGui
 
     void ShowBezierDemo()
     {
-        {
-            static float v[5] = {0.950f, 0.050f, 0.795f, 0.035f};
-            Bezier("easeInExpo", v);
-        }
+        static float v[5] = {0.950f, 0.050f, 0.795f, 0.035f};
+        Bezier("easeInExpo", v);
     }
 } // namespace ImGui
