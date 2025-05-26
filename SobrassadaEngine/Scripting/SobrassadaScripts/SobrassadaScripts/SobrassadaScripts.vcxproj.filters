@@ -112,6 +112,9 @@
     <ClInclude Include="Archer.h">
       <Filter>Characters\Enemies</Filter>
     </ClInclude>
+    <ClInclude Include="MoveGOInSpline.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
     <ClInclude Include="SpawnUI.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -770,6 +773,9 @@
     </ClCompile>
     <ClCompile Include="Archer.cpp">
       <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="MoveGOInSpline.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="SpawnUI.cpp">
       <Filter>UI</Filter>
