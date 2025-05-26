@@ -9,6 +9,12 @@
 #include "SceneModule.h"
 #include <imgui.h>
 
+
+PressAnyKeyScript::PressAnyKeyScript(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Next GameObject to Show", InspectorField::FieldType::InputText, &nextGameObjectName});
+}
+
 bool PressAnyKeyScript::Init()
 {
     if (!parent)
@@ -23,12 +29,14 @@ void PressAnyKeyScript::Update(float deltaTime)
 {
     if (!parent || !parent->IsEnabled()) return;
 
-    const KeyState* keys = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
+    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
-    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
+    bool keyPressed                = keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
+                      gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN; 
+
+    if (keyPressed)
     {
-        //GLOG("Valid key pressed - Hiding '{}', showing '{}'", parent->GetName(), nextGameObjectName);
-
         parent->SetEnabled(false);
 
         const auto& gameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
@@ -36,32 +44,13 @@ void PressAnyKeyScript::Update(float deltaTime)
         {
             if (go && go->GetName() == nextGameObjectName)
             {
-                go->SetEnabled(true);
-                //GLOG("Enabled GameObject '{}'", nextGameObjectName);
+                go->SetEnabledRecursive(true);
                 break;
             }
         }
     }
 }
 
-void PressAnyKeyScript::Inspector()
-{
-    ImGui::SetCurrentContext(AppEngine->GetEditorUIModule()->GetImGuiContext());
-
-    AppEngine->GetEditorUIModule()->DrawScriptInspector(
-        [this]()
-        {
-            char buffer[128];
-            strncpy_s(buffer, sizeof(buffer), nextGameObjectName.c_str(), _TRUNCATE);
-            buffer[sizeof(buffer) - 1] = '\0';
-
-            if (ImGui::InputText("Next GameObject to Show", buffer, sizeof(buffer)))
-            {
-                nextGameObjectName = buffer;
-            }
-        }
-    );
-}
 
 void PressAnyKeyScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
 {

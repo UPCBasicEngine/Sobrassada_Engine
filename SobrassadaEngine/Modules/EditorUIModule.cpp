@@ -181,11 +181,8 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 
 update_status EditorUIModule::PostUpdate(float deltaTime)
 {
-#ifndef GAME
-
+    //TODO: Make this for EditorMode only and create new fuction in Application for Game profile
     if (closeApplication) return UPDATE_STOP;
-
-#endif
 
     return UPDATE_CONTINUE;
 }
@@ -953,6 +950,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                     {
                         std::string* str = static_cast<std::string*>(data->UserData);
                         str->resize(data->BufTextLen);
+                        data->Buf = str->data(); 
                     }
                     return 0;
                 },

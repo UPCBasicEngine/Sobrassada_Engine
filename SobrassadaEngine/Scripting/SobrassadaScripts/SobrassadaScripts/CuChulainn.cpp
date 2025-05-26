@@ -31,6 +31,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
+    fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
 }
 
 bool CuChulainn::Init()
@@ -264,8 +265,6 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
         throwTimer = 0;
     }
-
-   
 }
 
 void CuChulainn::LookAtMouse()
@@ -434,3 +433,21 @@ void CuChulainn::Respawn()
     // TODO: Reset hitboxes, timers, enable, etc. If scene is reloaded then probably not needed
 }
 
+void CuChulainn::Die()
+{
+    // GLOG("%s dead", parent->GetName().c_str());
+    isDead = true;
+    OnDeath();
+
+    if (characterCollider)
+    {
+        characterCollider->DeleteRigidBody();
+        characterCollider->SetEnabled(false);
+    }
+
+    if (weaponCollider)
+    {
+        weaponCollider->DeleteRigidBody();
+        weaponCollider->SetEnabled(false);
+    }
+}

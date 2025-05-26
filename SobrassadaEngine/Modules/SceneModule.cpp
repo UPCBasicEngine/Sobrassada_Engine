@@ -154,6 +154,23 @@ update_status SceneModule::PostUpdate(float deltaTime)
             loadedScene->SetStepPlaying(false);
         }
     }
+
+    if (loadSceneNextFrame)
+    {
+        loadSceneNextFrame = false;
+
+        rapidjson::Document doc;
+        if (FileSystem::LoadJSON(pendingScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
+        {
+            CloseScene();
+            LoadScene(doc["Scene"], false);
+            SwitchPlayMode(true);
+        }
+        else
+        {
+            GLOG("[ERROR] Couldn't load scene: %s", pendingScenePath.c_str());
+        }
+    }
     
     return UPDATE_CONTINUE;
 }
@@ -418,4 +435,10 @@ void SceneModule::HandleTreesUpdates()
     }
 
     loadedScene->UpdateGameObjects();
+}
+
+void SceneModule::RequestSceneLoad(const std::string& scenePath)
+{
+    pendingScenePath   = scenePath;
+    loadSceneNextFrame = true;
 }

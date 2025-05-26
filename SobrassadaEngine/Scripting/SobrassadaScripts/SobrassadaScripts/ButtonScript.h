@@ -16,18 +16,18 @@ class ButtonScript : public Script
 
     bool Init() override;
     void Update(float deltaTime) override;
-    void Inspector() override;
 
     void OnClick();
     std::string GetCurrentPanelName() const;
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) override;
     void Load(const rapidjson::Value& initialState) override;
     void OnDestroy() override;
+    void Inspector() override;
 
 
   private:
     std::string panelToHideName = "MainMenuPanel";
-    std::string panelToShowName = "OptionsPanel";
+    std::string panelToShowName = "OptionsMenuManager";
 
     std::list<Delegate<void>>::iterator delegateID;
     bool hasRegisteredCallback = false;
