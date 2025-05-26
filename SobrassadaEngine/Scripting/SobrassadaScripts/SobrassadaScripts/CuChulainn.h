@@ -57,7 +57,6 @@ class CuChulainn : public Character
 
     void ThrowSpear();
     void Attack(float deltaTime) override;
-    void Die() override;
     void Dash();
     void Aim(float deltaTime);
     void Move();
