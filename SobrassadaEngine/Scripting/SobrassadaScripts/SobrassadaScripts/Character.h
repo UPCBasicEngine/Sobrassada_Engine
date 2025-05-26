@@ -60,7 +60,6 @@ class Character : public Script
   protected:
     AnimationComponent* animComponent           = nullptr;
     CapsuleColliderComponent* characterCollider = nullptr;
-    std::string weaponName                      = "";
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
 
