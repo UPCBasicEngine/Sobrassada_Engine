@@ -106,6 +106,8 @@
     <ClInclude Include="CuChulainn.h">
       <Filter>Characters</Filter>
     </ClInclude>
+    <ClInclude Include="RespawnController.h">
+      <Filter>Utils</Filter>
     <ClInclude Include="TileFloatScript.h">
       <Filter>Environment</Filter>
     </ClInclude>
@@ -768,6 +770,8 @@
     <ClCompile Include="CuChulainn.cpp">
       <Filter>Characters</Filter>
     </ClCompile>
+    <ClCompile Include="RespawnController.cpp">
+      <Filter>Utils</Filter>
     <ClCompile Include="TileFloatScript.cpp">
       <Filter>Environment</Filter>
     </ClCompile>
