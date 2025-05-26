@@ -208,7 +208,17 @@ void SplineComponent::InsertPoint(const size_t i, const float3& p)
 
 void SplineComponent::RemovePoint(const size_t i)
 {
-    if (i < points.size()) points.erase(points.begin() + i);
+    if (i < points.size())
+    {
+        points.erase(points.begin() + i);
+        selectedIdx = -1;
+    }
+}
+
+void SplineComponent::ClearPoints()
+{
+    selectedIdx = -1;
+    points.clear();
 }
 
 float SplineComponent::GetT(const float3& p0, const float3& p1, float tPrev) const

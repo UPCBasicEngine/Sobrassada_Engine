@@ -24,6 +24,7 @@ public:
     void AddPoint(const float3& p);
     void InsertPoint(const size_t i, const float3& p);
     void RemovePoint(const size_t i);
+    void ClearPoints();
     float GetT(const float3& p0, const float3& p1, float tPrev) const;
     float3 CatmullRom(
         const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT

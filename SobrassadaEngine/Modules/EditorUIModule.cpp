@@ -65,7 +65,8 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
         {HashString("UI CanvasScaler"),      COMPONENT_CANVAS_SCALER       },
         {HashString("Billboard"),            COMPONENT_BILLBOARD           },
-		{HashString("Spline"),               COMPONENT_SPLINE              },
+        {HashString("Spline"),               COMPONENT_SPLINE              },
+        {HashString("Trail"),                COMPONENT_TRAIL               },
     };
 
     fullscreen    = FULLSCREEN;
@@ -181,7 +182,7 @@ update_status EditorUIModule::RenderEditor(float deltaTime)
 
 update_status EditorUIModule::PostUpdate(float deltaTime)
 {
-    //TODO: Make this for EditorMode only and create new fuction in Application for Game profile
+    // TODO: Make this for EditorMode only and create new fuction in Application for Game profile
     if (closeApplication) return UPDATE_STOP;
 
     return UPDATE_CONTINUE;
@@ -950,7 +951,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                     {
                         std::string* str = static_cast<std::string*>(data->UserData);
                         str->resize(data->BufTextLen);
-                        data->Buf = str->data(); 
+                        data->Buf = str->data();
                     }
                     return 0;
                 },
@@ -995,7 +996,6 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             }
             break;
         }
-
         }
     }
 }

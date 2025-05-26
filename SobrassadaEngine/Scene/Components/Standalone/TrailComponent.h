@@ -1,6 +1,17 @@
 #pragma once
 
 #include "Component.h"
+#include "Math/float3.h"
+#include <deque>
+
+class SplineComponent;
+
+struct TrailPoint
+{
+    float3 position;
+    float3 perpendicular;
+    float time;
+};
 
 class TrailComponent : public Component
 {
@@ -17,4 +28,23 @@ class TrailComponent : public Component
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
     void ParentUpdated() override;
+
+    void RecalculateAABB();
+
+  private:
+    std::deque<TrailPoint> points;
+    std::vector<float3> vertices;
+    std::vector<int> indices;
+
+    float minDistance = 0.2f;
+    float lifeTime    = 3.0f;
+    float width       = 0.5f;
+    SplineComponent* spline;
+
+    unsigned int vao = 0;
+    unsigned int vbo = 0;
+    unsigned int ebo = 0;
+
+    int maxVertices  = 16;
+    int maxIndices   = 90;
 };

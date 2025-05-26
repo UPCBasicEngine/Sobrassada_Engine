@@ -30,6 +30,7 @@ bool ShaderModule::Init()
     quadProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
     depthProgram                = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
     billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
+    trailProgram                = CreateShaderProgram(BASIC_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
     return true;
 }
 
@@ -47,6 +48,9 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(lightingPassProgram);
     glDeleteProgram(quadProgram);
     glDeleteProgram(depthProgram);
+
+    glDeleteProgram(billboardProgram);
+    glDeleteProgram(trailProgram);
 
     return true;
 }

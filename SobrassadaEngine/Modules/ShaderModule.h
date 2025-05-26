@@ -24,6 +24,7 @@ class ShaderModule : public Module
     int GetQuadProgram() const { return quadProgram; };
     int GetDepthProgram() const { return depthProgram; };
     int GetBillboardProgram() const { return billboardProgram; }
+    int GetTrailProgram() const { return trailProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -47,4 +48,6 @@ class ShaderModule : public Module
     int quadProgram                    = -1;
     int depthProgram                   = -1;
     int billboardProgram               = -1;
+
+    int trailProgram                   = -1;
 };
