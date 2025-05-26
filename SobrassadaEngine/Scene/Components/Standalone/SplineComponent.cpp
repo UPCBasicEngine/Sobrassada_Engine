@@ -8,6 +8,9 @@
 #include "Math/MathFunc.h"
 #include "imgui.h"
 
+#include "imgui_color_gradient.h"
+#include "imgui_curves.h"
+
 SplineComponent::SplineComponent(UID uid, GameObject* parent) : Component(uid, parent, "Spline", COMPONENT_SPLINE)
 {
 }
@@ -90,6 +93,13 @@ bool SplineComponent::RenderGizmo()
 void SplineComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
+
+    ImGui::ShowBezierDemo();
+    static ImGradient gradient;
+    static ImGradientMark* draggingMark = nullptr;
+    static ImGradientMark* selectedMark = nullptr;
+ 
+    ImGui::GradientEditor(&gradient, draggingMark, selectedMark);
 
     if (ImGui::TreeNodeEx("Points", ImGuiTreeNodeFlags_DefaultOpen))
     {
