@@ -44,6 +44,7 @@ update_status PhysicsModule::PreUpdate(float time)
     // REMOVE RIGID BODIES
     for (btRigidBody* rigidBody : bodiesToRemove)
     {
+        //dynamicsWorld->removeCollisionObject(rigidBody);
         dynamicsWorld->removeRigidBody(rigidBody);
         btCollisionShape* shape = rigidBody->getCollisionShape();
         delete shape;
@@ -51,7 +52,9 @@ update_status PhysicsModule::PreUpdate(float time)
     }
     bodiesToRemove.clear();
 
-    if (!App->GetSceneModule()->GetInPlayMode()) return UPDATE_CONTINUE;
+    if (!App->GetSceneModule()->GetInPlayMode() || App->GetSceneModule()->GetScene() == nullptr ||
+        !App->GetSceneModule()->GetScene()->isSceneLoaded)
+        return UPDATE_CONTINUE;
 
     if (deltaTime == 0.0f) return UPDATE_CONTINUE;
 
@@ -79,9 +82,9 @@ update_status PhysicsModule::PreUpdate(float time)
             // Calculating normal
             const float3 normal = float3(contactManifold->getContactPoint(0).m_normalWorldOnB);
 
-            if (firstUserPointer->generateCallback)
+            if (firstUserPointer->generateCallback && firstUserPointer->collider && secondUserPointer->collider)
                 firstUserPointer->onCollisionCallback->Call(secondUserPointer->collider->GetParent(), normal);
-            if (secondUserPointer->generateCallback)
+            if (secondUserPointer->generateCallback && secondUserPointer->collider && firstUserPointer->collider)
                 secondUserPointer->onCollisionCallback->Call(firstUserPointer->collider->GetParent(), -normal);
         }
     }
@@ -400,36 +403,27 @@ void PhysicsModule::SaveLayerData(rapidjson::Value& targetState, rapidjson::Docu
 
 void PhysicsModule::EmptyWorld()
 {
+    // REMOVE RIGID BODIES
+    for (btRigidBody* rigidBody : bodiesToRemove)
+    {
+        //dynamicsWorld->removeCollisionObject(rigidBody);
+        dynamicsWorld->removeRigidBody(rigidBody);
+        btCollisionShape* shape = rigidBody->getCollisionShape();
+        delete shape;
+        delete rigidBody;
+    }
+    bodiesToRemove.clear();
+
     for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
     {
         btCollisionObject* obj         = dynamicsWorld->getCollisionObjectArray()[i];
-        BulletUserPointer* userPointer = static_cast<BulletUserPointer*>(obj->getUserPointer());
-
-        if (userPointer->collider->GetType() == ComponentType::COMPONENT_CUBE_COLLIDER)
-        {
-            CubeColliderComponent* comp = userPointer->collider->GetParent()->GetComponent<CubeColliderComponent*>();
-            comp->rigidBody             = nullptr;
-        }
-        else if (userPointer->collider->GetType() == ComponentType::COMPONENT_SPHERE_COLLIDER)
-        {
-            SphereColliderComponent* comp =
-                userPointer->collider->GetParent()->GetComponent<SphereColliderComponent*>();
-            comp->rigidBody = nullptr;
-        }
-        else if (userPointer->collider->GetType() == ComponentType::COMPONENT_CAPSULE_COLLIDER)
-        {
-            CapsuleColliderComponent* comp =
-                userPointer->collider->GetParent()->GetComponent<CapsuleColliderComponent*>();
-            comp->rigidBody = nullptr;
-        }
-
         btRigidBody* rigidBody  = btRigidBody::upcast(obj);
         btCollisionShape* shape = rigidBody->getCollisionShape();
-        dynamicsWorld->removeCollisionObject(obj);
         dynamicsWorld->removeRigidBody(rigidBody);
+        dynamicsWorld->removeCollisionObject(obj);
 
         delete shape;
-        delete rigidBody;
+        delete obj;
     }
 
     bodiesToRemove.clear();

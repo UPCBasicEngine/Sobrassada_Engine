@@ -124,6 +124,7 @@ class SOBRASADA_API_ENGINE Scene
     void SetDynamicModified() { dynamicModified = true; }
     void SetMultiselectPosition(const float3& newPosition);
 
+    bool isSceneLoaded                           = false;
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
@@ -168,6 +169,7 @@ class SOBRASADA_API_ENGINE Scene
 
     bool staticModified                          = false;
     bool dynamicModified                         = false;
+
 
     std::vector<GameObject*> gameObjectsToUpdate;
 
