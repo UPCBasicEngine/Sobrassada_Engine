@@ -17,14 +17,24 @@ ColorAddon::ColorAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType
 ColorAddon::ColorAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
     : ParticleAddon(initialState, owner)
 {
-    if (initialState.HasMember("ParticleColor"))
-    {
-        const rapidjson::Value& dataArray = initialState["ParticleColor"];
-        particleColor                     = {
-            dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat(), dataArray[3].GetFloat()
-        };
-    }
     gradient = new ImGradient();
+    gradient->getMarks().clear();
+
+    if (initialState.HasMember("ColorMarks") && initialState["ColorMarks"].IsArray())
+    {
+        const rapidjson::Value& colorMarkArray = initialState["ColorMarks"];
+
+        for (rapidjson::SizeType i = 0; i < colorMarkArray.Size(); i++)
+        {
+            const rapidjson::Value& currentMark = colorMarkArray[i];
+            gradient->addMark(
+                currentMark[0].GetFloat(), ImColor(
+                                               currentMark[1].GetFloat(), currentMark[2].GetFloat(),
+                                               currentMark[3].GetFloat(), currentMark[4].GetFloat()
+                                           )
+            );
+        }
+    }
 }
 
 ColorAddon::~ColorAddon()
@@ -36,12 +46,22 @@ void ColorAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
 {
     ParticleAddon::Save(targetState, allocator);
 
-    rapidjson::Value particleColorSave(rapidjson::kArrayType);
-    particleColorSave.PushBack(particleColor.x, allocator)
-        .PushBack(particleColor.y, allocator)
-        .PushBack(particleColor.z, allocator)
-        .PushBack(particleColor.w, allocator);
-    targetState.AddMember("ParticleColor", particleColorSave, allocator);
+    auto& gradientMarks = gradient->getMarks();
+    rapidjson::Value colorMarksSave(rapidjson::kArrayType);
+
+    for (ImGradientMark* mark : gradientMarks)
+    {
+        rapidjson::Value currentMarksSave(rapidjson::kArrayType);
+        currentMarksSave.PushBack(mark->position, allocator)
+            .PushBack(mark->color[0], allocator)
+            .PushBack(mark->color[1], allocator)
+            .PushBack(mark->color[2], allocator)
+            .PushBack(mark->color[3], allocator);
+
+        colorMarksSave.PushBack(currentMarksSave, allocator);
+    }
+
+    targetState.AddMember("ColorMarks", colorMarksSave, allocator);
 }
 
 void ColorAddon::Init(EmitterInstance* emitterInstance)
@@ -70,12 +90,8 @@ void ColorAddon::RenderEditorInspector()
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Color Addon");
     ImGui::PushItemWidth(200);
 
-    ImGui::ColorEdit4("Particle color", &particleColor[0]);
-
-    if (ImGui::GradientEditor(gradient, draggingMark, selectedMark))
-    {
-        gradient->getColorAt(0.f, &particleColor[0]);
-    };
+    ImGui::GradientEditor(gradient, draggingMark, selectedMark);
+    auto& marks = gradient->getMarks();
 
     ImGui::PopItemWidth();
     ImGui::Spacing();
