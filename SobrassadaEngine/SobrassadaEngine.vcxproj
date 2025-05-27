@@ -376,6 +376,7 @@
     <ClCompile Include="Utils\Particles\BaseAddon.cpp" />
     <ClCompile Include="Utils\Particles\ParticleAddon.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
