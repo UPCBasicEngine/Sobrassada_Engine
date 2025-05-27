@@ -558,6 +558,7 @@
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1088,10 +1089,10 @@
     <ClInclude Include="Scene\Components\Standalone\TrailComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Libs\ImGui\imgui_curves.h">
+    <ClInclude Include="Libs\ImGui\imgui_color_gradient.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Libs\ImGui\imgui_color_gradient.h">
+    <ClInclude Include="Libs\ImGui\imgui_curves.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
   </ItemGroup>

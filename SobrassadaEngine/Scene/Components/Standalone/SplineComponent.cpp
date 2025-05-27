@@ -8,9 +8,6 @@
 #include "Math/MathFunc.h"
 #include "imgui.h"
 
-#include "imgui_color_gradient.h"
-#include "imgui_curves.h"
-
 SplineComponent::SplineComponent(UID uid, GameObject* parent) : Component(uid, parent, "Spline", COMPONENT_SPLINE)
 {
 }

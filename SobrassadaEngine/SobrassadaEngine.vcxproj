@@ -367,6 +367,7 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
