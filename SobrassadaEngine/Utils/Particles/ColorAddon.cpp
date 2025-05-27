@@ -4,9 +4,14 @@
 #include "ParticleEmitter.h"
 
 #include "imgui.h"
+#include "imgui_color_gradient.h"
+
+static ImGradientMark* draggingMark = nullptr;
+static ImGradientMark* selectedMark = nullptr;
 
 ColorAddon::ColorAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::COLOR, owner)
 {
+    gradient = new ImGradient();
 }
 
 ColorAddon::ColorAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
@@ -19,10 +24,12 @@ ColorAddon::ColorAddon(const rapidjson::Value& initialState, ParticleEmitter* ow
             dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat(), dataArray[3].GetFloat()
         };
     }
+    gradient = new ImGradient();
 }
 
 ColorAddon::~ColorAddon()
 {
+    delete gradient;
 }
 
 void ColorAddon::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -54,7 +61,11 @@ void ColorAddon::RenderEditorInspector()
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Color Addon");
     ImGui::PushItemWidth(200);
 
+
+    
     ImGui::ColorEdit4("Particle color", &particleColor[0]);
+
+    ImGui::GradientEditor(gradient, draggingMark, selectedMark);
 
     ImGui::PopItemWidth();
     ImGui::Spacing();

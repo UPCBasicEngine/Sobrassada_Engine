@@ -4,6 +4,8 @@
 
 #include "Math/float4.h"
 
+class ImGradient;
+
 class ColorAddon : public ParticleAddon
 {
   public:
@@ -19,4 +21,6 @@ class ColorAddon : public ParticleAddon
 
   private:
     float4 particleColor = float4::one;
+
+    ImGradient* gradient = nullptr;
 };
