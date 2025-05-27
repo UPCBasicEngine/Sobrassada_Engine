@@ -558,7 +558,9 @@
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_curves.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
