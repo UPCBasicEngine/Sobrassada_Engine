@@ -130,7 +130,7 @@ Scene::~Scene()
     }
 
     App->GetPhysicsModule()->EmptyWorld();
-    
+
     gameObjectsContainer.clear();
 
     selectedGameObjects.clear();
@@ -341,31 +341,27 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
-    App->GetBillboardModule()->RenderBillboards();
-
-    {
 #ifdef OPTICK
-        OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
+    OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
 #endif
-        for (const auto& gameObject : objectsToRender)
+    for (const auto& gameObject : objectsToRender)
+    {
+        if (gameObject != nullptr)
         {
-            if (gameObject != nullptr)
-            {
-                gameObject->Render(deltaTime);
-            }
+            gameObject->Render(deltaTime);
         }
     }
 
+#ifndef GAME
+    for (const auto& gameObject : gameObjectsContainer)
     {
-#ifdef OPTICK
-        OPTICK_CATEGORY("Scene::GameObject::DrawGizmos", Optick::Category::Rendering)
-#endif
-        for (const auto& gameObject : gameObjectsContainer)
-        {
-            gameObject.second->DrawGizmos();
-        }
+        gameObject.second->DrawGizmos();
     }
+#endif
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::Render_DebugDraw", Optick::Category::Rendering)
+#endif
     DebugDrawModule* debugDraw = App->GetDebugDrawModule();
 
     for (auto& gameObjectIterator : selectedGameObjects)
@@ -378,8 +374,25 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera, framebuffer);
+    glPopDebugGroup();
+
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::Render_Billboards", Optick::Category::Rendering)
+#endif
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
+    App->GetBillboardModule()->RenderBillboards();
+    glPopDebugGroup();
+
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::Render_Particles", Optick::Category::Rendering)
+#endif
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
+    App->GetParticleModule()->RenderParticles();
     glPopDebugGroup();
 }
 

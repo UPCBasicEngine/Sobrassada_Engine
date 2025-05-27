@@ -17,7 +17,7 @@ class AnimController
     void Pause() { playAnimation = false; }
     void Resume() { playAnimation = true; }
 
-    void GetTransform(const std::string& nodeName, float3& pos, Quat& rot);
+    void GetTransform(const HashString& nodeName, float3& pos, Quat& rot);
 
     ResourceAnimation* GetCurrentAnimation() const { return currentAnimation; }
     float GetTime() const { return currentTime; }

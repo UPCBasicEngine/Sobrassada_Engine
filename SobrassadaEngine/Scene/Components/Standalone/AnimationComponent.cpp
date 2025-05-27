@@ -20,6 +20,10 @@
 #include "imgui.h"
 #include <set>
 
+#ifdef OPTICK
+#include "optick.h"
+#endif
+
 AnimationComponent::AnimationComponent(const UID uid, GameObject* parent)
     : Component(uid, parent, "Animation", COMPONENT_ANIMATION)
 {
@@ -329,7 +333,7 @@ void AnimationComponent::RenderEditorInspector()
         {
             if (ImGui::Button(triggerName.c_str()))
             {
-                //GLOG("Trigger selected: %s", triggerName.c_str());
+                // GLOG("Trigger selected: %s", triggerName.c_str());
                 bool triggerAvailable = false;
                 if (IsPlaying())
                 {
@@ -381,76 +385,104 @@ void AnimationComponent::Clone(const Component* other)
 
 void AnimationComponent::Update(float deltaTime)
 {
-    if (!IsEffectivelyEnabled()) return;
-    if (!animController->IsPlaying()) return;
-
-    if (boneMapping.empty())
+#ifdef OPTICK
+    OPTICK_CATEGORY("Application::AnimationUpdate", Optick::Category::GameLogic)
+#endif // OPTICK
     {
-        SetBoneMapping();
-    }
+        if (!IsEffectivelyEnabled()) return;
+        if (!animController->IsPlaying()) return;
 
-    animController->Update(deltaTime);
-
-    std::set<GameObject*> modifiedBones;
-
-    for (auto& channel : currentAnimResource->channels)
-    {
-        const std::string& boneName = channel.first;
-        auto boneIt                 = boneMapping.find(boneName);
-
-        if (boneIt != boneMapping.end())
+        if (boneMapping.empty())
         {
-            GameObject* bone          = boneIt->second;
-
-            // Get current transform components
-            // if the animation doesn't provide values
-            float4x4 currentTransform = bone->GetLocalTransform();
-            float3 position           = currentTransform.TranslatePart();
-            Quat rotation             = Quat(currentTransform.RotatePart());
-            float3 scale              = currentTransform.GetScale();
-
-            // Pass CURRENT values to GetTransform - it will only modify them
-            // if the animation has data for that channel type
-            animController->GetTransform(boneName, position, rotation);
-            rotation.Normalize();
-
-            float4x4 transformMatrix = float4x4::FromTRS(position, rotation, scale);
-            bone->SetLocalTransform(transformMatrix);
-            modifiedBones.insert(bone);
+            SetBoneMapping();
         }
-    }
 
-    // Second pass: Update hierarchical transforms from root to leaves
+        #ifdef OPTICK
+        OPTICK_CATEGORY("Application::AnimationControllerUpdate", Optick::Category::GameLogic)
+        #endif // OPTICK
+        animController->Update(deltaTime);
 
-    std::vector<GameObject*> rootBones;
-    for (auto& bone : modifiedBones)
-    {
-        bool isRoot   = true;
-        UID parentUID = bone->GetParent();
-        if (parentUID != 0)
+        std::set<GameObject*> modifiedBones;
+
+        #ifdef OPTICK
+        OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1", Optick::Category::GameLogic)
+        #endif // OPTICK
+
+        for (auto& channel : currentAnimResource->channelNames)
         {
-            GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
-            // Check if parent is also in our bone mapping
-            for (auto& mapping : boneMapping)
+            //const std::string& boneName = channel.first;
+            const HashString& boneName = channel;
+            #ifdef OPTICK
+            OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1_FIND", Optick::Category::GameLogic)
+            #endif // OPTICK
+            auto boneIt                 = boneMapping.find(boneName);
+
+            #ifdef OPTICK
+            OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1_TRANSFORM", Optick::Category::GameLogic)
+            #endif // OPTICK
+            if (boneIt != boneMapping.end())
             {
-                if (mapping.second == parent)
-                {
-                    isRoot = false;
-                    break;
-                }
+                GameObject* bone          = boneIt->second;
+
+                // Get current transform components
+                // if the animation doesn't provide values
+                float4x4 currentTransform = bone->GetLocalTransform();
+                float3 position           = currentTransform.TranslatePart();
+                Quat rotation             = Quat(currentTransform.RotatePart());
+                float3 scale              = currentTransform.GetScale();
+
+                // Pass CURRENT values to GetTransform - it will only modify them
+                // if the animation has data for that channel type
+#ifdef OPTICK
+                OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1_TRANSFORM_GETTRANSFORM", Optick::Category::GameLogic)
+#endif // OPTICK
+                animController->GetTransform(boneName, position, rotation);
+                rotation.Normalize();
+
+                float4x4 transformMatrix = float4x4::FromTRS(position, rotation, scale);
+                bone->SetLocalTransform(transformMatrix);
+                modifiedBones.insert(bone);
             }
         }
 
-        if (isRoot)
-        {
-            rootBones.push_back(bone);
-        }
-    }
+        // Second pass: Update hierarchical transforms from root to leaves
 
-    // Process hierarchy from roots
-    for (auto rootBone : rootBones)
-    {
-        UpdateBoneHierarchy(rootBone);
+        #ifdef OPTICK
+        OPTICK_CATEGORY("Application::AnimationUpdate_FOR_2", Optick::Category::GameLogic)
+        #endif // OPTICK
+        std::vector<GameObject*> rootBones;
+        for (auto& bone : modifiedBones)
+        {
+            bool isRoot   = true;
+            UID parentUID = bone->GetParent();
+            if (parentUID != 0)
+            {
+                GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
+                // Check if parent is also in our bone mapping
+                for (auto& mapping : boneMapping)
+                {
+                    if (mapping.second == parent)
+                    {
+                        isRoot = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isRoot)
+            {
+                rootBones.push_back(bone);
+            }
+        }
+
+        #ifdef OPTICK
+        OPTICK_CATEGORY("Application::AnimationUpdate_BONE_HIERARCHY", Optick::Category::GameLogic)
+        #endif // OPTICK
+        // Process hierarchy from roots
+        for (auto rootBone : rootBones)
+        {
+            UpdateBoneHierarchy(rootBone);
+        }
     }
 }
 
@@ -493,7 +525,7 @@ void AnimationComponent::SetAnimationResource(UID animResource)
 {
     resource = animResource;
     AddAnimation(resource);
-    //GLOG("Setting animation resource: %llu", resource);
+    // GLOG("Setting animation resource: %llu", resource);
 }
 
 void AnimationComponent::UpdateBoneHierarchy(GameObject* bone)
@@ -504,7 +536,7 @@ void AnimationComponent::UpdateBoneHierarchy(GameObject* bone)
     bone->OnTransformUpdated();
 
     // Debug output to see what's happening
-    //GLOG("Updated bone %s global transform", bone->GetName().c_str());
+    // GLOG("Updated bone %s global transform", bone->GetName().c_str());
 
     for (const UID childUID : bone->GetChildren())
     {
@@ -539,7 +571,7 @@ void AnimationComponent::SetBoneMapping()
     };
     mapBones(parent);
 
-    //GLOG("Bone mapping completed: %zu bones mapped", boneMapping.size());
+    // GLOG("Bone mapping completed: %zu bones mapped", boneMapping.size());
 }
 
 bool AnimationComponent::IsFinished() const

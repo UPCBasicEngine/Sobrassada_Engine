@@ -102,7 +102,7 @@ update_status AnimController::Update(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
-void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat& rot)
+void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat& rot)
 {
     if (!playAnimation || resource == INVALID_UID || currentAnimation == nullptr) return;
 
