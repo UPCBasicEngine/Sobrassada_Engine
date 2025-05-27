@@ -18,6 +18,6 @@ class SpawnPoint : public Script
   private:
     std::string playerName   = "";
     const GameObject* player = nullptr;
-
     bool isOneUse            = false;
+    int setHealth            = 0;
 };

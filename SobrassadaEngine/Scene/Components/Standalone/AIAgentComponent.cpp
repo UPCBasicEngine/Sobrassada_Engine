@@ -210,7 +210,6 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
     float extents[3] = {2.0f, 4.0f, 2.0f}; // bounding box for the search area
     float nearestPoint[3];
     dtPolyRef targetRef;
-
     dtStatus status = navQuery->findNearestPoly(destination.ptr(), extents, &filter, &targetRef, nearestPoint);
     if (dtStatusFailed(status) || targetRef == 0)
     {

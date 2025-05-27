@@ -22,7 +22,7 @@ CapsuleColliderComponent::CapsuleColliderComponent(UID uid, GameObject* parent)
     );
 
     userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    //App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
 }
 
 CapsuleColliderComponent::CapsuleColliderComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -59,7 +59,7 @@ CapsuleColliderComponent::CapsuleColliderComponent(const rapidjson::Value& initi
         parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
 
     userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    //App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
 }
 
 CapsuleColliderComponent::~CapsuleColliderComponent()
@@ -69,7 +69,7 @@ CapsuleColliderComponent::~CapsuleColliderComponent()
 
 void CapsuleColliderComponent::Init()
 {
-    if (rigidBody) App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
+    if (rigidBody) App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
 }
 
 void CapsuleColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const

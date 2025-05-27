@@ -22,7 +22,7 @@ SphereColliderComponent::SphereColliderComponent(UID uid, GameObject* parent)
     );
 
     userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    App->GetPhysicsModule()->CreateSphereRigidBody(this);
+    //App->GetPhysicsModule()->CreateSphereRigidBody(this);
 }
 
 SphereColliderComponent::SphereColliderComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -57,7 +57,7 @@ SphereColliderComponent::SphereColliderComponent(const rapidjson::Value& initial
     );
 
     userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    App->GetPhysicsModule()->CreateSphereRigidBody(this);
+    //App->GetPhysicsModule()->CreateSphereRigidBody(this);
 }
 
 SphereColliderComponent::~SphereColliderComponent()
@@ -67,7 +67,7 @@ SphereColliderComponent::~SphereColliderComponent()
 
 void SphereColliderComponent::Init()
 {
-    if (rigidBody) App->GetPhysicsModule()->UpdateSphereRigidBody(this);
+    if (rigidBody) App->GetPhysicsModule()->CreateSphereRigidBody(this);
 }
 
 void SphereColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
