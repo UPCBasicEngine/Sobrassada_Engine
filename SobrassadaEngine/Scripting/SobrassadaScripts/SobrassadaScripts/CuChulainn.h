@@ -38,6 +38,7 @@ class CuChulainn : public Character
     bool GetIsInvulnerable() { return isInvulnerable; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     void EnableMovement(bool enable);
+    CharacterStates state       = CharacterStates::IDLE;
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -63,7 +64,6 @@ class CuChulainn : public Character
    
 
   private:
-    CharacterStates state       = CharacterStates::IDLE;
 
     std::string cameraName      = "";
     GameObject* cameraObject    = nullptr;

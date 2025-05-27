@@ -14,6 +14,7 @@ struct Particle
     float3 position                = float3::zero;
     float3 velocity                = float3::zero;
     float lifeTime                 = 3.f;
+    float currentLifetime          = 0.f;
     std::pair<int, int> tileOffset = {0, 0};
     float4 color                   = float4::one;
     bool alive                     = false;

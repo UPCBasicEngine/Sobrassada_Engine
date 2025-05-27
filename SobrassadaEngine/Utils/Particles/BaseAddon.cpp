@@ -65,19 +65,19 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
         {
             if (particle.alive)
             {
-                particle.lifeTime -= deltaTime;
-                if (particle.lifeTime <= 0)
+                particle.currentLifetime += deltaTime;
+                if (particle.currentLifetime >= particle.lifeTime)
                 {
-                    particle.lifeTime = 0.f;
-                    particle.alive    = false;
+                    particle.currentLifetime = particle.lifeTime;
+                    particle.alive           = false;
                 }
             }
             else
             {
-                particle.alive    = true;
-                particle.lifeTime = randomLifetime ? rng->Float(minLifetime, maxLifetime) : maxLifetime;
-                particle.position =
-                    float3(emitterPosition.x, emitterPosition.y, emitterPosition.z);
+                particle.alive           = true;
+                particle.lifeTime        = randomLifetime ? rng->Float(minLifetime, maxLifetime) : maxLifetime;
+                particle.currentLifetime = 0;
+                particle.position        = float3(emitterPosition.x, emitterPosition.y, emitterPosition.z);
             }
         }
 

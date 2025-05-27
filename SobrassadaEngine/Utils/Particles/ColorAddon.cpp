@@ -48,12 +48,21 @@ void ColorAddon::Init(EmitterInstance* emitterInstance)
 {
     for (auto& particle : emitterInstance->particles)
     {
-        particle.color = particleColor;
+        gradient->getColorAt(0, &particle.color[0]);
     }
 }
 
 void ColorAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
+    for (auto& particle : emitterInstance->particles)
+    {
+        float colorPosition = particle.currentLifetime / particle.lifeTime;
+        if (colorPosition > 1.f) colorPosition = 1.f;
+
+        gradient->getColorAt(colorPosition, &particle.color[0]);
+
+        int x = 0;
+    }
 }
 
 void ColorAddon::RenderEditorInspector()
@@ -61,11 +70,12 @@ void ColorAddon::RenderEditorInspector()
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Color Addon");
     ImGui::PushItemWidth(200);
 
-
-    
     ImGui::ColorEdit4("Particle color", &particleColor[0]);
 
-    ImGui::GradientEditor(gradient, draggingMark, selectedMark);
+    if (ImGui::GradientEditor(gradient, draggingMark, selectedMark))
+    {
+        gradient->getColorAt(0.f, &particleColor[0]);
+    };
 
     ImGui::PopItemWidth();
     ImGui::Spacing();
