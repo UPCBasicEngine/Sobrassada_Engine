@@ -387,13 +387,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
     App->GetBillboardModule()->RenderBillboards();
     glPopDebugGroup();
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render_Particles", Optick::Category::Rendering)
-#endif
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
-    App->GetParticleModule()->RenderParticles();
-    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)
