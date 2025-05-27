@@ -2,6 +2,8 @@
 
 #include "Component.h"
 #include "Math/float3.h"
+#include "Math/float4.h"
+#include "imgui_color_gradient.h"
 #include <deque>
 
 class SplineComponent;
@@ -11,6 +13,12 @@ struct TrailPoint
     float3 position;
     float3 perpendicular;
     float time;
+};
+
+struct TrailVertex
+{
+    float3 position;
+    float4 color;
 };
 
 class TrailComponent : public Component
@@ -33,13 +41,20 @@ class TrailComponent : public Component
 
   private:
     std::deque<TrailPoint> points;
-    std::vector<float3> vertices;
+    std::vector<TrailVertex> vertices;
     std::vector<int> indices;
 
     float minDistance = 0.5f;
     float lifeTime    = 0.5f;
     float width       = 0.1f;
-    float curve[5]    = {0.42f, 0.0f, 0.58f, 1.0f}; // Last value is an internal value for imgui
+
+    bool invertCurve  = false;
+    float curve[5]    = {0.0f, 0.0f, 1.0f, 1.0f}; // Last value is an internal value for imgui
+
+    ImGradient gradient;
+    ImGradientMark* draggingMark = nullptr;
+    ImGradientMark* selectedMark = nullptr;
+
     SplineComponent* spline;
 
     unsigned int vao = 0;

@@ -6,7 +6,6 @@
 #include "SplineComponent.h"
 #include "glew.h"
 #include "imgui.h"
-#include "imgui_color_gradient.h"
 #include "imgui_curves.h"
 
 TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, parent, "Trail", COMPONENT_TRAIL)
@@ -18,10 +17,13 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
     glBindVertexArray(vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, maxVertices * sizeof(float3), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, maxVertices * sizeof(TrailVertex), nullptr, GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float3), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)0);
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)(sizeof(float3)));
+    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxIndices * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
@@ -39,25 +41,55 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     glBindVertexArray(vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, maxVertices * sizeof(float3), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, maxVertices * sizeof(TrailVertex), nullptr, GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float3), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)0);
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)(sizeof(float3)));
+    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxIndices * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 
     glBindVertexArray(0);
+
+    if (initialState.HasMember("MinDistance")) minDistance = initialState["MinDistance"].GetFloat();
+    if (initialState.HasMember("LifeTime")) lifeTime = initialState["LifeTime"].GetFloat();
+    if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
+    if (initialState.HasMember("InvertCurve")) invertCurve = initialState["InvertCurve"].GetBool();
+
+    if (initialState.HasMember("Curve"))
+    {
+        const rapidjson::Value& initCurve = initialState["Curve"];
+        for (int i = 0; i < 5; ++i) curve[i] = initCurve[i].GetFloat();
+    }
 }
 
 TrailComponent::~TrailComponent()
 {
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
+    glDeleteVertexArrays(1, &vao);
+    if (spline) spline->ClearPoints();
+    spline = nullptr;
 }
 
 void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
     if (spline) spline->ClearPoints();
+    targetState.AddMember("MinDistance", minDistance, allocator);
+    targetState.AddMember("LifeTime", lifeTime, allocator);
+    targetState.AddMember("Width", width, allocator);
+    targetState.AddMember("InvertCurve", invertCurve, allocator);
+    rapidjson::Value curveArray(rapidjson::kArrayType);
+    curveArray.PushBack(curve[0], allocator)
+        .PushBack(curve[1], allocator)
+        .PushBack(curve[2], allocator)
+        .PushBack(curve[3], allocator)
+        .PushBack(curve[4], allocator);
+    targetState.AddMember("Curve", curveArray, allocator);
 }
 
 void TrailComponent::Clone(const Component* other)
@@ -68,8 +100,12 @@ void TrailComponent::Clone(const Component* other)
     minDistance                      = otherTrail->minDistance;
     lifeTime                         = otherTrail->lifeTime;
     width                            = otherTrail->width;
-    enabled                          = otherTrail->enabled;
-    wasEnabled                       = otherTrail->wasEnabled;
+    invertCurve                      = otherTrail->invertCurve;
+    for (int i = 0; i < 5; ++i)
+        curve[i] = otherTrail->curve[i];
+    gradient   = otherTrail->gradient;
+    enabled    = otherTrail->enabled;
+    wasEnabled = otherTrail->wasEnabled;
 }
 
 void TrailComponent::Update(float deltaTime)
@@ -105,11 +141,17 @@ void TrailComponent::Update(float deltaTime)
 
         spline->AddPoint(tp.position - position);
 
-        float3 left  = spline->GetPointLocal(i) - tp.perpendicular * width;
-        float3 right = spline->GetPointLocal(i) + tp.perpendicular * width;
+        float bezier = ImGui::BezierValue(tp.time / lifeTime, curve);
+        float widthL = (invertCurve ? (1.0f - bezier) : bezier) * width;
+        float3 left  = spline->GetPointLocal(i) - tp.perpendicular * widthL;
+        float3 right = spline->GetPointLocal(i) + tp.perpendicular * widthL;
 
-        vertices.push_back(left);
-        vertices.push_back(right);
+        float color[4];
+        gradient.getColorAt(tp.time / lifeTime, color);
+        float4 colorVec = float4(color[0], color[1], color[2], color[3]);
+
+        vertices.push_back({left, colorVec});
+        vertices.push_back({right, colorVec});
 
         if (i > 0)
         {
@@ -143,7 +185,7 @@ void TrailComponent::Render(float deltaTime)
     glUseProgram(program);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float3), vertices.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(TrailVertex), vertices.data());
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(uint32_t), indices.data());
@@ -169,13 +211,10 @@ void TrailComponent::RenderEditorInspector()
     ImGui::DragFloat("LifeTime", &lifeTime, 0.01f, 0.0f, 2.0f);
     ImGui::DragFloat("Width", &width, 0.01f, 0.0f, 5.0f);
 
+    ImGui::Checkbox("Invert Curve", &invertCurve);
     ImGui::Bezier("Trail Curve", curve);
 
-    static ImGradient gradient;
-    static ImGradientMark* draggingMark = nullptr;
-    static ImGradientMark* selectedMark = nullptr;
-
-    bool updated                        = ImGui::GradientEditor(&gradient, draggingMark, selectedMark);
+    ImGui::GradientEditor(&gradient, draggingMark, selectedMark);
 }
 
 void TrailComponent::ParentUpdated()

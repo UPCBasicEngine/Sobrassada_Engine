@@ -244,19 +244,6 @@ void Transform2DComponent::RenderWidgets() const
         renderSize  *= scale;
     }
 
-    // Draw a square to show the width and height (around the widget)
-    debugDraw->DrawLine(float3(renderPos.x - 1, renderPos.y + 1, 0), float3::unitX, renderSize.x + 2, float3(1, 1, 1));
-
-    debugDraw->DrawLine(
-        float3(renderPos.x + renderSize.x + 1, renderPos.y + 1, 0), -float3::unitY, renderSize.y + 2, float3(1, 1, 1)
-    );
-
-    debugDraw->DrawLine(
-        float3(renderPos.x - 1, renderPos.y - renderSize.y - 1, 0), float3::unitX, renderSize.x + 2, float3(1, 1, 1)
-    );
-
-    debugDraw->DrawLine(float3(renderPos.x - 1, renderPos.y + 1, 0), -float3::unitY, renderSize.y + 2, float3(1, 1, 1));
-
     // Draw anchor points when selected
     if (App->GetSceneModule()->GetScene()->GetSelectedGameObject()->GetUID() == parent->GetUID() && renderAnchors)
     {
@@ -277,6 +264,24 @@ void Transform2DComponent::RenderWidgets() const
         // Bottom-right
         const float3 y2 = float3(GetAnchorXPos(anchorsX.y) * scale, GetAnchorYPos(anchorsY.x) * scale, 0);
         debugDraw->DrawCone(y2, float3(10, -10, 0), 5, 1);
+
+        // Draw a square to show the width and height (around the widget)
+        debugDraw->DrawLine(
+            float3(renderPos.x - 1, renderPos.y + 1, 0), float3::unitX, renderSize.x + 2, float3(1, 1, 1)
+        );
+
+        debugDraw->DrawLine(
+            float3(renderPos.x + renderSize.x + 1, renderPos.y + 1, 0), -float3::unitY, renderSize.y + 2,
+            float3(1, 1, 1)
+        );
+
+        debugDraw->DrawLine(
+            float3(renderPos.x - 1, renderPos.y - renderSize.y - 1, 0), float3::unitX, renderSize.x + 2, float3(1, 1, 1)
+        );
+
+        debugDraw->DrawLine(
+            float3(renderPos.x - 1, renderPos.y + 1, 0), -float3::unitY, renderSize.y + 2, float3(1, 1, 1)
+        );
     }
 }
 
@@ -658,14 +663,14 @@ void Transform2DComponent::OnCanvasRenderModeChanged(
         newLocalPos           = savedWorldPos - parentWorldPos;
     }
 
-   //if (newMode == CanvasComponent::CanvasRenderMode::ScreenSpaceOverlay)
-   //{
-   //    position = newLocalPos / scale;
-   //}
-   //else // World Space
-   //{
-   //    position = newLocalPos * scale;
-   //}
+    // if (newMode == CanvasComponent::CanvasRenderMode::ScreenSpaceOverlay)
+    //{
+    //     position = newLocalPos / scale;
+    // }
+    // else // World Space
+    //{
+    //     position = newLocalPos * scale;
+    // }
 
     transform2DUpdated = false;
     UpdateParent3DTransform();
