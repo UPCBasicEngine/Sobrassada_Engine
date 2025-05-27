@@ -94,13 +94,6 @@ void SplineComponent::RenderEditorInspector()
 {
     Component::RenderEditorInspector();
 
-    ImGui::ShowBezierDemo();
-    static ImGradient gradient;
-    static ImGradientMark* draggingMark = nullptr;
-    static ImGradientMark* selectedMark = nullptr;
- 
-    ImGui::GradientEditor(&gradient, draggingMark, selectedMark);
-
     if (ImGui::TreeNodeEx("Points", ImGuiTreeNodeFlags_DefaultOpen))
     {
         for (size_t i = 0; i < points.size(); ++i)
