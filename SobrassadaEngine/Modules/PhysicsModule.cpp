@@ -44,6 +44,7 @@ update_status PhysicsModule::PreUpdate(float time)
     // REMOVE RIGID BODIES
     for (btRigidBody* rigidBody : bodiesToRemove)
     {
+        //dynamicsWorld->removeCollisionObject(rigidBody);
         dynamicsWorld->removeRigidBody(rigidBody);
         btCollisionShape* shape = rigidBody->getCollisionShape();
         delete shape;
@@ -51,7 +52,9 @@ update_status PhysicsModule::PreUpdate(float time)
     }
     bodiesToRemove.clear();
 
-    if (!App->GetSceneModule()->GetInPlayMode()) return UPDATE_CONTINUE;
+    if (!App->GetSceneModule()->GetInPlayMode() || App->GetSceneModule()->GetScene() == nullptr ||
+        !App->GetSceneModule()->GetScene()->isSceneLoaded)
+        return UPDATE_CONTINUE;
 
     if (deltaTime == 0.0f) return UPDATE_CONTINUE;
 
@@ -79,9 +82,9 @@ update_status PhysicsModule::PreUpdate(float time)
             // Calculating normal
             const float3 normal = float3(contactManifold->getContactPoint(0).m_normalWorldOnB);
 
-            if (firstUserPointer->generateCallback)
+            if (firstUserPointer->generateCallback && firstUserPointer->collider && secondUserPointer->collider)
                 firstUserPointer->onCollisionCallback->Call(secondUserPointer->collider->GetParent(), normal);
-            if (secondUserPointer->generateCallback)
+            if (secondUserPointer->generateCallback && secondUserPointer->collider && firstUserPointer->collider)
                 secondUserPointer->onCollisionCallback->Call(firstUserPointer->collider->GetParent(), -normal);
         }
     }
@@ -135,9 +138,8 @@ void PhysicsModule::CreateCubeRigidBody(CubeColliderComponent* colliderComponent
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
     // MotionState for RENDER AND
-    colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
-    );
+    colliderComponent->motionState =
+        BulletMotionState(colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -178,9 +180,8 @@ void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderCompo
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
     // MotionState for RENDER AND
-    colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
-    );
+    colliderComponent->motionState =
+        BulletMotionState(colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -221,9 +222,8 @@ void PhysicsModule::CreateCapsuleRigidBody(CapsuleColliderComponent* colliderCom
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
     // MotionState
-    colliderComponent->motionState = BulletMotionState(
-        colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation
-    );
+    colliderComponent->motionState =
+        BulletMotionState(colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -293,7 +293,6 @@ void PhysicsModule::AddRigidBody(btRigidBody* rigidBody, ColliderType colliderTy
 
     dynamicsWorld->addRigidBody(rigidBody, group, mask);
 }
-
 // TODO READ FROM CONFIG FILE
 void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
 {
@@ -316,7 +315,7 @@ void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
         colliderLayerConfig[2] |= config;
 
         // PLAYER
-        config = 1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WORLD_OBJECTS |
+        config                  = 1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WORLD_OBJECTS |
                  1 << (int)ColliderLayer::TRIGGERS | 1 << (int)ColliderLayer::ENEMY_PROJECTILE;
         colliderLayerConfig[3] |= config;
 
@@ -407,10 +406,24 @@ void PhysicsModule::EmptyWorld()
     // REMOVE RIGID BODIES
     for (btRigidBody* rigidBody : bodiesToRemove)
     {
+        //dynamicsWorld->removeCollisionObject(rigidBody);
         dynamicsWorld->removeRigidBody(rigidBody);
         btCollisionShape* shape = rigidBody->getCollisionShape();
         delete shape;
         delete rigidBody;
+    }
+    bodiesToRemove.clear();
+
+    for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+    {
+        btCollisionObject* obj         = dynamicsWorld->getCollisionObjectArray()[i];
+        btRigidBody* rigidBody  = btRigidBody::upcast(obj);
+        btCollisionShape* shape = rigidBody->getCollisionShape();
+        dynamicsWorld->removeRigidBody(rigidBody);
+        dynamicsWorld->removeCollisionObject(obj);
+
+        delete shape;
+        delete obj;
     }
 
     bodiesToRemove.clear();

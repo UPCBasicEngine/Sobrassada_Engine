@@ -48,6 +48,7 @@ void Soldier::OnDeath()
 {
     // TODO: include death sound for the character
     // TODO: animation and particles
+    parent->SetEnabled(false);
 }
 
 void Soldier::OnDamageTaken(int amount)

@@ -375,6 +375,7 @@
     <ClCompile Include="Utils\Particles\ParticleEmitter.cpp" />
     <ClCompile Include="Utils\Particles\BaseAddon.cpp" />
     <ClCompile Include="Utils\Particles\ParticleAddon.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
@@ -620,6 +621,8 @@
     <ClInclude Include="Utils\Particles\BaseAddon.h" />
     <ClInclude Include="Utils\Particles\ParticleUtils.h" />
     <ClInclude Include="Utils\Particles\ParticleAddon.h" />
+    <ClInclude Include="Libs\ImGui\imgui_color_gradient.h" />
+    <ClInclude Include="Libs\ImGui\imgui_curves.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
     <ClInclude Include="Modules\BillboardModule.h" />
     <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h" />

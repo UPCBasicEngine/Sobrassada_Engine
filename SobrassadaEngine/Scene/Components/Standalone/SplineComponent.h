@@ -37,6 +37,7 @@ public:
     const float3 GetPointLocal(size_t idx) const { return points[idx]; }
     float3 GetPointWorld(size_t idx) const;
     float3 GetWorldPositionInSpine(float posT) const;
+    bool IsLoop() const { return loop; }
 
     void SetPointWorld(size_t idx, const float3& worldPos);
 

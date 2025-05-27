@@ -125,12 +125,14 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
 
 Scene::~Scene()
 {
-    App->GetPhysicsModule()->EmptyWorld();
 
     for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); ++it)
     {
         delete it->second;
     }
+
+    App->GetPhysicsModule()->EmptyWorld();
+    
     gameObjectsContainer.clear();
 
     selectedGameObjects.clear();
@@ -198,6 +200,8 @@ void Scene::Init()
 
     multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
     gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
+
+    isSceneLoaded = true;
 }
 
 void Scene::Save(

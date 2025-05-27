@@ -21,9 +21,11 @@
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
+#include "RespawnController.h"
 #include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "MoveGOInSpline.h"
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
@@ -55,7 +57,8 @@ constexpr const char* scripts[] = {
     "Archer",
     "ChangeSceneScript",
     "SpawnUI",
-    "MenuChangeSceneScript"
+    "MenuChangeSceneScript",
+    "MoveGOInSpline"
 };
 
 Application* AppEngine = nullptr;
@@ -97,6 +100,9 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "GodModeScript") return new GodMode(parent);
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
+    if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
+    if (scriptType == "RespawnController") return new RespawnController(parent);
+
 
     return nullptr;
 }
