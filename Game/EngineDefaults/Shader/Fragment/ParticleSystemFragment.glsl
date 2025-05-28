@@ -14,6 +14,5 @@ void main()
     vec4 color0 = texture2D(myTexture, vec2(uv.x, 1 - uv.y));
     vec4 color1 = texture2D(myTexture, vec2(uvNext.x, 1 - uvNext.y));
     vec4 textureColor = mix(color0, color1, blendFactor);
-    // fragColor = mix(textureColor, fragParticleColor, textureColor.w);
-    if(textureColor.w > 0.f ) fragColor = fragParticleColor;
+    fragColor = vec4(fragParticleColor.xyz, fragParticleColor.w * textureColor.w );
 }
