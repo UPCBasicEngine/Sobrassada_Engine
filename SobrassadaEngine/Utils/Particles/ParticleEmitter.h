@@ -69,7 +69,7 @@ class ParticleEmitter
     unsigned int particleColorsVBO     = 0;
 
     int renderPriority                 = 0;
-
+    bool additiveBlending              = false;
     bool useSpritesheet                = false;
 
     HashString emitterTag              = HashString("");
