@@ -4,6 +4,7 @@
 #include "ParticleSystemComponent.h"
 
 #include "imgui.h"
+#include "imgui_curves.h"
 
 VelocityAddon::VelocityAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::VELOCITY, owner)
 {
@@ -124,9 +125,13 @@ void VelocityAddon::RenderEditorInspector()
     ImGui::SameLine();
     ImGui::Checkbox("Rand.Z Speed", &randomizeZSpeed);
 
+
     // RENDER EDITOR ENDS
 
     ImGui::PopItemWidth();
+
+    ImGui::Bezier("easeOutSine", bezierX); // draw
+    
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
