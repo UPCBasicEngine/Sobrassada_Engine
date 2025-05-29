@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Component.h"
+#include "Math/float2.h"
 #include "Math/float3.h"
 #include "Math/float4.h"
 #include "imgui_color_gradient.h"
 #include <deque>
 
 class SplineComponent;
+class ResourceTexture;
 
 struct TrailPoint
 {
@@ -19,6 +21,7 @@ struct TrailVertex
 {
     float3 position;
     float4 color;
+    float2 uv;
 };
 
 class TrailComponent : public Component
@@ -37,6 +40,7 @@ class TrailComponent : public Component
     void RenderEditorInspector() override;
     void ParentUpdated() override;
 
+    void UpdateTexture(UID newTextureUID);
     void RecalculateAABB();
 
   private:
@@ -55,6 +59,10 @@ class TrailComponent : public Component
     ImGradientMark* draggingMark = nullptr;
     ImGradientMark* selectedMark = nullptr;
     std::list<ImGradientMark*> gradientMarks;
+
+    bool hasTexture                 = false;
+    UID currentTextureUID           = FALLBACK_TEXTURE_UID;
+    ResourceTexture* currentTexture = nullptr;
 
     SplineComponent* spline;
 

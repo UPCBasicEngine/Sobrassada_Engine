@@ -1,7 +1,11 @@
 #include "TrailComponent.h"
 
 #include "Application.h"
+#include "EditorUIModule.h"
 #include "GameObject.h"
+#include "LibraryModule.h"
+#include "ResourceTexture.h"
+#include "ResourcesModule.h"
 #include "ShaderModule.h"
 #include "SplineComponent.h"
 #include "glew.h"
@@ -24,6 +28,9 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
 
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)(sizeof(float3)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)(sizeof(float3) + sizeof(float4)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxIndices * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
@@ -68,8 +75,9 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
             curve[i] = initCurve[i].GetFloat();
     }
 
-    //for (ImGradientMark* mark : gradient.getMarks())
-    //    gradient.removeMark(mark);
+    gradientMarks = gradient.getMarks();
+    for (ImGradientMark* mark : gradientMarks)
+        gradient.removeMark(mark);
 
     if (initialState.HasMember("Color"))
     {
@@ -183,8 +191,9 @@ void TrailComponent::Update(float deltaTime)
         gradient.getColorAt(tp.time / lifeTime, color);
         float4 colorVec = float4(color[0], color[1], color[2], color[3]);
 
-        vertices.push_back({left, colorVec});
-        vertices.push_back({right, colorVec});
+        float u         = tp.time / lifeTime;
+        vertices.push_back({left, colorVec, float2(u, 0.0f)});
+        vertices.push_back({right, colorVec, float2(u, 1.0f)});
 
         if (i > 0)
         {
@@ -226,6 +235,18 @@ void TrailComponent::Render(float deltaTime)
     float4x4 modelMatrix = parent->GetGlobalTransform();
     glUniformMatrix4fv(4, 1, GL_TRUE, &modelMatrix[0][0]);
 
+    if (hasTexture && currentTextureUID != FALLBACK_TEXTURE_UID)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, currentTextureUID);
+        glUniform1i(glGetUniformLocation(program, "uTexture"), 0);
+        glUniform1i(glGetUniformLocation(program, "useTexture"), 1);
+    }
+    else
+    {
+        glUniform1i(glGetUniformLocation(program, "useTexture"), 0);
+    }
+
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 }
@@ -244,13 +265,64 @@ void TrailComponent::RenderEditorInspector()
     ImGui::DragFloat("LifeTime", &lifeTime, 0.01f, 0.0f, 2.0f);
     ImGui::DragFloat("Width", &width, 0.01f, 0.0f, 5.0f);
 
+    ImGui::NewLine();
     ImGui::Checkbox("Invert Curve", &invertCurve);
     ImGui::Bezier("Trail Curve", curve);
 
-    if (ImGui::GradientEditor(&gradient, draggingMark, selectedMark))
+    ImGui::NewLine();
+    ImGui::Checkbox("Has Texture", &hasTexture);
+    ImGui::NewLine();
+
+    if (hasTexture)
+    {
+        if (ImGui::Button("Select texture"))
+        {
+            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+        }
+
+        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+        {
+            UpdateTexture(App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+            ));
+        }
+
+        if (currentTexture != nullptr)
+        {
+            ImGui::Text("Texture");
+            ImGui::Image((ImTextureID)(intptr_t)currentTexture->GetTextureID(), ImVec2(256, 256));
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip(
+                    "Texture Dimensions: %d, %d", currentTexture->GetTextureWidth(), currentTexture->GetTextureWidth()
+                );
+            }
+        }
+    }
+    else if (ImGui::GradientEditor(&gradient, draggingMark, selectedMark))
     {
         gradientMarks.clear();
         gradientMarks = gradient.getMarks();
+    }
+}
+
+void TrailComponent::UpdateTexture(UID newTextureUID)
+{
+    if (newTextureUID == INVALID_UID || App->GetResourcesModule()->RequestResource(newTextureUID) == nullptr)
+    {
+        newTextureUID = FALLBACK_TEXTURE_UID;
+    }
+
+    if (currentTexture != nullptr && currentTexture->GetUID() == newTextureUID) return;
+
+    ResourceTexture* newTexture =
+        dynamic_cast<ResourceTexture*>(App->GetResourcesModule()->RequestResource(newTextureUID));
+
+    if (newTexture != nullptr)
+    {
+        App->GetResourcesModule()->ReleaseResource(currentTexture);
+        currentTexture = newTexture;
+        currentTextureUID = newTextureUID;
     }
 }
 
