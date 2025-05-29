@@ -134,12 +134,6 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
         dtNav = nav->GetDetourNavMesh();
     }
 
-    if (isDashing)
-    {
-        Dash(deltaTime);
-        return;
-    }
-
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
 
     if (!tmpQuery || !dtNav) return;
@@ -185,11 +179,13 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
         parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
     }
 
-    if (isRotating)
+    if (!isDashing && isRotating)
     {
         LookAtMovement(rotateDirection, deltaTime);
     }
-    Move(deltaTime);
+
+    if (isDashing) Dash(deltaTime);
+    else Move(deltaTime);
 }
 
 void CharacterControllerComponent::Render(float deltaTime)
@@ -421,59 +417,64 @@ float2 CharacterControllerComponent::GetRealSpeed() const
 
 void CharacterControllerComponent::StartDash()
 {
-    isDashing                      = true;
+    isDashing         = true;
 
     // WALL COLLISION LOGIC
-    float3 currentPos              = parent->GetGlobalTransform().TranslatePart();
-    dashTarget                     = currentPos + rotateDirection * (dashDistance + 0.5f);
+    float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+    dashTarget        = currentPos + rotateDirection * (dashDistance + 0.5f);
+    dashSpeed         = dashDistance / dashDuration;
+    dashTimeRemaining = dashDuration;
 
-    const float3 lateralDirection  = rotateDirection.Cross(float3::unitY).Normalized();
+    // If the dash ignores the navMesh, the code below is not needed
 
-    currentPos.y                  += 0.5f;
-    float3 rightRayOrigin          = currentPos + lateralDirection * 0.5f;
-    float3 leftRayOrigin           = currentPos - lateralDirection * 0.5f;
-
-    LineSegment centralRay(currentPos, dashTarget);
-    LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * (dashDistance + 0.5f));
-    LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * (dashDistance + 0.5f));
-
-    GameObject* centralHit = RaycastController::GetRayIntersectionTrees(
-        centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
-    GameObject* rightHit = RaycastController::GetRayIntersectionTrees(
-        rightRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
-    GameObject* leftHit = RaycastController::GetRayIntersectionTrees(
-        leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
-
-    const float wallOffset = 0.7f;
-    float tNear, tFar;
-
-    if (centralHit != nullptr)
-    {
-        const AABB& box = centralHit->GetGlobalAABB();
-        if (box.Intersects(centralRay, tNear, tFar))
-        {
-            dashTarget = centralRay.GetPoint(tNear) - rotateDirection * wallOffset;
-        }
-    }
-    else if (rightHit != nullptr)
-    {
-        const AABB& box = rightHit->GetGlobalAABB();
-        if (box.Intersects(rightRay, tNear, tFar))
-        {
-            dashTarget = (rightRay.GetPoint(tNear) - rotateDirection * wallOffset) - lateralDirection * 0.5f;
-        }
-    }
-    else if (leftHit != nullptr)
-    {
-        const AABB& box = leftHit->GetGlobalAABB();
-        if (box.Intersects(leftRay, tNear, tFar))
-        {
-            dashTarget = (leftRay.GetPoint(tNear) - rotateDirection * wallOffset) + lateralDirection * 0.5f;
-        }
-    }
+    // const float3 lateralDirection  = rotateDirection.Cross(float3::unitY).Normalized();
+    //
+    // currentPos.y                  += 0.5f;
+    // float3 rightRayOrigin          = currentPos + lateralDirection * 0.5f;
+    // float3 leftRayOrigin           = currentPos - lateralDirection * 0.5f;
+    //
+    // LineSegment centralRay(currentPos, dashTarget);
+    // LineSegment rightRay(rightRayOrigin, rightRayOrigin + rotateDirection * (dashDistance + 0.5f));
+    // LineSegment leftRay(leftRayOrigin, leftRayOrigin + rotateDirection * (dashDistance + 0.5f));
+    //
+    // GameObject* centralHit = RaycastController::GetRayIntersectionTrees(
+    //     centralRay, App->GetSceneModule()->GetScene()->GetOctree(),
+    //     App->GetSceneModule()->GetScene()->GetDynamicTree()
+    //);
+    // GameObject* rightHit = RaycastController::GetRayIntersectionTrees(
+    //     rightRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
+    //);
+    // GameObject* leftHit = RaycastController::GetRayIntersectionTrees(
+    //     leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
+    //);
+    //
+    // const float wallOffset = 0.7f;
+    // float tNear, tFar;
+    //
+    // if (centralHit != nullptr)
+    //{
+    //     const AABB& box = centralHit->GetGlobalAABB();
+    //     if (box.Intersects(centralRay, tNear, tFar))
+    //     {
+    //         dashTarget = centralRay.GetPoint(tNear) - rotateDirection * wallOffset;
+    //     }
+    // }
+    // else if (rightHit != nullptr)
+    //{
+    //     const AABB& box = rightHit->GetGlobalAABB();
+    //     if (box.Intersects(rightRay, tNear, tFar))
+    //     {
+    //         dashTarget = (rightRay.GetPoint(tNear) - rotateDirection * wallOffset) - lateralDirection * 0.5f;
+    //     }
+    // }
+    // else if (leftHit != nullptr)
+    //{
+    //     const AABB& box = leftHit->GetGlobalAABB();
+    //     if (box.Intersects(leftRay, tNear, tFar))
+    //     {
+    //         dashTarget = (leftRay.GetPoint(tNear) - rotateDirection * wallOffset) + lateralDirection * 0.5f;
+    //     }
+    // }
 
     //// NOT FALLING LOGIC
 
@@ -494,26 +495,54 @@ void CharacterControllerComponent::StartDash()
     //     GLOG("No navmesh found at dash target position. Dash canceled.");
     //     dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]);
     // }
-
-    dashSpeed         = dashDistance / dashDuration;
-    dashTimeRemaining = dashDuration;
 }
 
 void CharacterControllerComponent::Dash(float deltaTime)
 {
-    if (dashTimeRemaining < 0.0f)
+    if (!navMeshQuery || currentPolyRef == 0) return;
+
+    if (dashTimeRemaining <= 0.0f)
     {
         isDashing = false;
     }
 
-    float3 currentPos        = parent->GetGlobalTransform().TranslatePart();
+    const float3 currentPos  = parent->GetGlobalTransform().TranslatePart();
     float3 directionToTarget = dashTarget - currentPos;
     float distanceToTarget   = directionToTarget.Length();
 
-    if (distanceToTarget > 0.2f)
+    if (distanceToTarget > 0.1f)
     {
         directionToTarget.Normalize();
-        float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
+        const float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
+        float3 desiredPos       = currentPos + dashOffset;
+
+        dtQueryFilter filter;
+        filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+        filter.setExcludeFlags(0);
+
+        float halfExt[3] = {1.0f, 1.0f, 1.5f};
+        float nearest[3] = {};
+        dtPolyRef newRef = 0;
+
+        dtStatus status  = navMeshQuery->findNearestPoly(desiredPos.ptr(), halfExt, &filter, &newRef, nearest);
+
+        if (!dtStatusSucceed(status) || newRef == 0) return;
+
+        float closest[3] = {};
+        bool posOverPoly = false;
+
+        status           = navMeshQuery->closestPointOnPoly(newRef, desiredPos.ptr(), closest, &posOverPoly);
+
+        if (!dtStatusSucceed(status)) return;
+
+        currentPolyRef = newRef;
+
+        desiredPos.x   = closest[0];
+        desiredPos.y   = closest[1];
+        desiredPos.z   = closest[2];
+
+        // Prevent huge changes in the y pos
+        if (fabs(desiredPos.y - currentPos.y) > 0.5f) return;
 
         if (dashOffset.Length() >= distanceToTarget)
         {
@@ -523,7 +552,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
         }
         else
         {
-            parent->SetLocalPosition(currentPos + dashOffset - parent->GetParentGlobalTransform().TranslatePart());
+            parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
             dashTimeRemaining -= deltaTime;
         }
     }
