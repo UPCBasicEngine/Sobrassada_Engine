@@ -1036,6 +1036,14 @@ const float4x4& GameObject::GetParentGlobalTransform() const
     return float4x4::identity;
 }
 
+void GameObject::SetJustLocalTransform(const float4x4& newTransform)
+{
+    localTransform = newTransform;
+    position       = localTransform.TranslatePart();
+    rotation       = localTransform.RotatePart().ToEulerXYZ();
+    scale          = localTransform.GetScale();
+}
+
 void GameObject::DrawNodes() const
 {
     DebugDrawModule* debug = App->GetDebugDrawModule();

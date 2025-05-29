@@ -427,10 +427,12 @@ void AnimationComponent::Update(float deltaTime)
 
                 float4x4 transformMatrix = float4x4::FromTRS(position, rotation, scale);
 
-                bone->SetLocalTransform(transformMatrix);
+                bone->SetJustLocalTransform(transformMatrix);
                 modifiedBones.insert(bone);
             }
         }
+
+        parent->UpdateTransformForGOBranch();
 
         // Second pass: Update hierarchical transforms from root to leaves
 
