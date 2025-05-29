@@ -36,6 +36,8 @@ class AnimController
     void SetAnimationResource(ResourceAnimation* anim) { currentAnimation = anim; }
 
     Quat Interpolate(Quat& first, Quat& second, float lambda);
+
+    size_t FindChannelIndex(const std::vector<float>& animChannelVector, float time) const;
   
   private:
     UID resource                        = INVALID_UID;

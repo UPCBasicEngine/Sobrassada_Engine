@@ -397,29 +397,17 @@ void AnimationComponent::Update(float deltaTime)
             SetBoneMapping();
         }
 
-        #ifdef OPTICK
-        OPTICK_CATEGORY("Application::AnimationControllerUpdate", Optick::Category::GameLogic)
-        #endif // OPTICK
         animController->Update(deltaTime);
 
         std::set<GameObject*> modifiedBones;
 
-        #ifdef OPTICK
-        OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1", Optick::Category::GameLogic)
-        #endif // OPTICK
-
         for (auto& channel : currentAnimResource->channelNames)
         {
-            //const std::string& boneName = channel.first;
+            // const std::string& boneName = channel.first;
             const HashString& boneName = channel;
-            #ifdef OPTICK
-            OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1_FIND", Optick::Category::GameLogic)
-            #endif // OPTICK
-            auto boneIt                 = boneMapping.find(boneName);
 
-            #ifdef OPTICK
-            OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1_TRANSFORM", Optick::Category::GameLogic)
-            #endif // OPTICK
+            auto boneIt = boneMapping.find(boneName);
+
             if (boneIt != boneMapping.end())
             {
                 GameObject* bone          = boneIt->second;
@@ -433,13 +421,12 @@ void AnimationComponent::Update(float deltaTime)
 
                 // Pass CURRENT values to GetTransform - it will only modify them
                 // if the animation has data for that channel type
-#ifdef OPTICK
-                OPTICK_CATEGORY("Application::AnimationUpdate_FOR_1_TRANSFORM_GETTRANSFORM", Optick::Category::GameLogic)
-#endif // OPTICK
+
                 animController->GetTransform(boneName, position, rotation);
                 rotation.Normalize();
 
                 float4x4 transformMatrix = float4x4::FromTRS(position, rotation, scale);
+
                 bone->SetLocalTransform(transformMatrix);
                 modifiedBones.insert(bone);
             }
@@ -447,9 +434,9 @@ void AnimationComponent::Update(float deltaTime)
 
         // Second pass: Update hierarchical transforms from root to leaves
 
-        #ifdef OPTICK
+#ifdef OPTICK
         OPTICK_CATEGORY("Application::AnimationUpdate_FOR_2", Optick::Category::GameLogic)
-        #endif // OPTICK
+#endif // OPTICK
         std::vector<GameObject*> rootBones;
         for (auto& bone : modifiedBones)
         {
@@ -475,9 +462,9 @@ void AnimationComponent::Update(float deltaTime)
             }
         }
 
-        #ifdef OPTICK
+#ifdef OPTICK
         OPTICK_CATEGORY("Application::AnimationUpdate_BONE_HIERARCHY", Optick::Category::GameLogic)
-        #endif // OPTICK
+#endif // OPTICK
         // Process hierarchy from roots
         for (auto rootBone : rootBones)
         {
