@@ -29,6 +29,8 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxIndices * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 
     glBindVertexArray(0);
+
+    gradientMarks = gradient.getMarks();
 }
 
 TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -62,7 +64,27 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     if (initialState.HasMember("Curve"))
     {
         const rapidjson::Value& initCurve = initialState["Curve"];
-        for (int i = 0; i < 5; ++i) curve[i] = initCurve[i].GetFloat();
+        for (int i = 0; i < 5; ++i)
+            curve[i] = initCurve[i].GetFloat();
+    }
+
+    //for (ImGradientMark* mark : gradient.getMarks())
+    //    gradient.removeMark(mark);
+
+    if (initialState.HasMember("Color"))
+    {
+        const rapidjson::Value& colorArray = initialState["Color"];
+        for (rapidjson::SizeType i = 0; i < colorArray.Size(); i += 5)
+        {
+            float color[4] = {
+                colorArray[i].GetFloat(), colorArray[i + 1].GetFloat(), colorArray[i + 2].GetFloat(),
+                colorArray[i + 3].GetFloat()
+            };
+            float position = colorArray[i + 4].GetFloat();
+            gradient.addMark(position, ImColor(color[0], color[1], color[2], color[3]));
+        }
+
+        gradientMarks = gradient.getMarks();
     }
 }
 
@@ -90,6 +112,17 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
         .PushBack(curve[3], allocator)
         .PushBack(curve[4], allocator);
     targetState.AddMember("Curve", curveArray, allocator);
+
+    rapidjson::Value colorArray(rapidjson::kArrayType);
+    for (const ImGradientMark* mark : gradientMarks)
+    {
+        colorArray.PushBack(mark->color[0], allocator);
+        colorArray.PushBack(mark->color[1], allocator);
+        colorArray.PushBack(mark->color[2], allocator);
+        colorArray.PushBack(mark->color[3], allocator);
+        colorArray.PushBack(mark->position, allocator);
+    }
+    targetState.AddMember("Color", colorArray, allocator);
 }
 
 void TrailComponent::Clone(const Component* other)
@@ -214,7 +247,11 @@ void TrailComponent::RenderEditorInspector()
     ImGui::Checkbox("Invert Curve", &invertCurve);
     ImGui::Bezier("Trail Curve", curve);
 
-    ImGui::GradientEditor(&gradient, draggingMark, selectedMark);
+    if (ImGui::GradientEditor(&gradient, draggingMark, selectedMark))
+    {
+        gradientMarks.clear();
+        gradientMarks = gradient.getMarks();
+    }
 }
 
 void TrailComponent::ParentUpdated()

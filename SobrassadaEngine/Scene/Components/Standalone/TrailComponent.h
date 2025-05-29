@@ -54,6 +54,7 @@ class TrailComponent : public Component
     ImGradient gradient;
     ImGradientMark* draggingMark = nullptr;
     ImGradientMark* selectedMark = nullptr;
+    std::list<ImGradientMark*> gradientMarks;
 
     SplineComponent* spline;
 
