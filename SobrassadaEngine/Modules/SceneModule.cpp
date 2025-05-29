@@ -95,6 +95,9 @@ update_status SceneModule::RenderEditor(float deltaTime)
 
 update_status SceneModule::PostUpdate(float deltaTime)
 {
+#ifdef OPTICK
+    OPTICK_CATEGORY("SceneModule::PostUpdate", Optick::Category::Rendering)
+#endif
     if (App->GetProjectModule()->IsProjectLoaded())
     {
 
@@ -154,6 +157,9 @@ update_status SceneModule::PostUpdate(float deltaTime)
         }
     }
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("SceneModule::loadSceneNextFrame", Optick::Category::Rendering)
+#endif
     if (loadSceneNextFrame)
     {
         loadSceneNextFrame = false;
