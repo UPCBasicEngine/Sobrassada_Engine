@@ -35,6 +35,7 @@ class AudioSourceComponent;
 class AudioListenerComponent;
 class CanvasScalerComponent;
 class BillboardComponent;
+class SplineComponent;
 class DecalComponent;
 
 enum MobilitySettings
@@ -76,7 +77,7 @@ class SOBRASADA_API_ENGINE GameObject
     void RenderHierarchyNode(UID& selectedGameObjectUID);
     void HandleNodeClick(UID& selectedGameObjectUID);
     void RenderContextMenu();
-    void RenderEditorInspector();
+    void RenderEditorInspector(bool drawGizmo = true);
 
     void UpdateGameObjectHierarchy(UID sourceUID);
     void RenameGameObjectHierarchy();
@@ -137,6 +138,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void CreatePrefab();
     bool IsGloballyEnabled() const;
+    void SetEnabledRecursive(bool value);
     UID GetPrefabUID() const { return prefabUID; }
     void SetPrefabUID(const UID uid) { prefabUID = uid; }
     void ParentUpdatedComponents();

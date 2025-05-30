@@ -534,6 +534,9 @@
     <ClCompile Include="Utils\NavMeshConfig.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\SplineComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
     <ClCompile Include="Scene\Components\Standalone\UI\CanvasScalerComponent.cpp">
       <Filter>Scene\Components\UI</Filter>
     </ClCompile>
@@ -548,6 +551,12 @@
     </ClCompile>
     <ClCompile Include="Modules\BillboardModule.cpp">
       <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_curves.cpp">
+      <Filter>External\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp">
       <Filter>Scene\Components</Filter>
@@ -1061,6 +1070,9 @@
     <ClInclude Include="Utils\HashString.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\SplineComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\UI\CanvasScalerComponent.h">
       <Filter>Scene\Components\UI</Filter>
     </ClInclude>
@@ -1075,6 +1087,12 @@
     </ClInclude>
     <ClInclude Include="Modules\BillboardModule.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_curves.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_color_gradient.h">
+      <Filter>External\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h">
       <Filter>Scene\Components</Filter>

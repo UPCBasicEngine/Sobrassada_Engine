@@ -46,6 +46,7 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/SplineComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
 #include "Standalone/UI/CanvasScalerComponent.h"
@@ -129,12 +130,13 @@ Scene::~Scene()
     glDeleteBuffers(1, &decalEBO);
     glDeleteVertexArrays(1, &decalVAO);
 
-    App->GetPhysicsModule()->EmptyWorld();
-
     for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); ++it)
     {
         delete it->second;
     }
+
+    App->GetPhysicsModule()->EmptyWorld();
+    
     gameObjectsContainer.clear();
 
     selectedGameObjects.clear();
@@ -225,6 +227,7 @@ void Scene::Init()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     glBindVertexArray(0);
+    isSceneLoaded = true;
 }
 
 void Scene::Save(
@@ -905,8 +908,8 @@ void Scene::CreateDynamicSpatialDataStruct()
     // PARAMETRIZED IN FUTURE
     float3 center    = float3::zero;
     float length     = 2000;
-    int nodeCapacity = 5;
-    dynamicTree      = new Quadtree(center, length, nodeCapacity);
+    int nodeCapacity = 15;
+    dynamicTree      = new Octree(center, length, nodeCapacity);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {
@@ -1450,6 +1453,13 @@ CameraComponent* Scene::GetMainCamera() const
     {
         if (mainCamera->IsEffectivelyEnabled()) return mainCamera;
     }
+    return nullptr;
+}
+
+CameraComponent* Scene::GetMainCameraEvenDisabled() const
+{
+    if (mainCamera != nullptr) return mainCamera;
+
     return nullptr;
 }
 

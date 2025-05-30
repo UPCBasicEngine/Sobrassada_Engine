@@ -367,6 +367,8 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
@@ -396,6 +398,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\SplineComponent.cpp" />
     <ClCompile Include="Scene\Components\Standalone\UI\CanvasScalerComponent.cpp" />
     <ClCompile Include="Utils\GBuffer.cpp" />
     <ClCompile Include="Utils\NavMeshConfig.cpp" />
@@ -599,6 +602,8 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h" />
+    <ClInclude Include="Libs\ImGui\imgui_color_gradient.h" />
+    <ClInclude Include="Libs\ImGui\imgui_curves.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
     <ClInclude Include="Modules\BillboardModule.h" />
     <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h" />
@@ -620,6 +625,7 @@
     <ClInclude Include="FileSystem\Meta\MetaNavmesh.h" />
     <ClInclude Include="Modules\AudioModule.h" />
     <ClInclude Include="Scene\Components\Standalone\Audio\AudioSourceComponent.h" />
+    <ClInclude Include="Scene\Components\Standalone\SplineComponent.h" />
     <ClInclude Include="Scene\Components\Standalone\UI\CanvasScalerComponent.h" />
     <ClInclude Include="Utils\GBuffer.h" />
     <ClInclude Include="Utils\HashString.h" />

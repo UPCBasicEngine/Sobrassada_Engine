@@ -39,6 +39,7 @@ class Character : public Script
     void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
 
     void TakeDamage(int amount);
+    void Restart();
 
   protected:
     virtual void Attack(float deltaTime);
@@ -54,12 +55,11 @@ class Character : public Script
     virtual void OnHealed(int amount) {};
     virtual void PerformAttack() {};
     virtual void ShouldAttackTarget() {};
-    void Die();
+    virtual void Die();
 
   protected:
     AnimationComponent* animComponent           = nullptr;
     CapsuleColliderComponent* characterCollider = nullptr;
-    std::string weaponName                      = "";
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
 
@@ -79,7 +79,7 @@ class Character : public Script
     float attackHitboxDelay                     = 0.0f;
     float attackHitboxDuration                  = 0.0f;
 
-    float invulnerabilityTimer                  = -1.0f;
+    float invulnerabilityTimer                  = 0.0f;
     const float invulnerableDuration            = 0.7f;
 
     CharacterType type                          = CharacterType::None;

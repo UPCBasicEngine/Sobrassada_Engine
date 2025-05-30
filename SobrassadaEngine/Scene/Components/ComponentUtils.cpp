@@ -24,6 +24,7 @@
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/UI/CanvasScalerComponent.h"
+#include "Standalone/SplineComponent.h"
 
 
 #include <cstdint>
@@ -183,6 +184,13 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         generatedComponent                            = billboard;
         break;
     }
+    case COMPONENT_SPLINE:
+    {
+        SplineComponent* spline                           = new SplineComponent(uid, parent);
+        std::get<SplineComponent*>(componentTuple) = spline;
+        generatedComponent                                = spline;
+		break;
+	}    
     case COMPONENT_DECAL:
     {
         DecalComponent* decal                     = new DecalComponent(uid, parent);
@@ -320,12 +328,19 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
             std::get<AudioListenerComponent*>(componentTuple) = audioListener;
             break;
         }
+
         case COMPONENT_BILLBOARD:
         {
             BillboardComponent* billboard                 = new BillboardComponent(initialState, parent);
             std::get<BillboardComponent*>(componentTuple) = billboard;
             break;
         }
+		case COMPONENT_SPLINE:
+        {
+            SplineComponent* spline                    = new SplineComponent(initialState, parent);
+            std::get<SplineComponent*>(componentTuple) = spline;
+			break;
+		}        
         case COMPONENT_DECAL:
         {
             DecalComponent* decal                     = new DecalComponent(initialState, parent);

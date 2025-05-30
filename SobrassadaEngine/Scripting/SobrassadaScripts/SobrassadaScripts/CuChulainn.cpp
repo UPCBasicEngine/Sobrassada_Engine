@@ -31,6 +31,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
+    fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
 }
 
 bool CuChulainn::Init()
@@ -79,7 +80,7 @@ void CuChulainn::Update(float deltaTime)
     if (state == CharacterStates::DEATH)
     {
         deathTimer += deltaTime;
-        if (deathTimer > 5.0f) parent->SetEnabled(false);
+        if (deathTimer > 4.0f) Respawn();
     }
 
     if (isDead || !character) return;
@@ -90,10 +91,16 @@ void CuChulainn::Update(float deltaTime)
     CheckIsFalling();
 }
 
+bool CuChulainn::IsDead()
+{
+    return isDead;
+}
+
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
 
+    deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
     if (animComponent) animComponent->UseTrigger("Death");
@@ -213,17 +220,23 @@ bool CuChulainn::CanDash()
 {
     // TODO: Add more condifions if there are (Maybe dashing doesn't cancel attack animations, etc.)
     return dashTimer <= 0 && state != CharacterStates::AIM && state != CharacterStates::BASIC_ATTACK &&
-           state != CharacterStates::FALL;
+           state != CharacterStates::FALL && state != CharacterStates::RESPAWN;
 }
 
 bool CuChulainn::CanAttack()
 {
-    return (state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL);
+    return (
+        state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+        state != CharacterStates::RESPAWN
+    );
 }
 
 bool CuChulainn::CanAim() const
 {
-    return (state != CharacterStates::DASH && !isAttacking && throwTimer <= 0 && state != CharacterStates::FALL);
+    return (
+        state != CharacterStates::DASH && !isAttacking && throwTimer <= 0 && state != CharacterStates::FALL &&
+        state != CharacterStates::RESPAWN
+    );
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
@@ -417,9 +430,14 @@ void CuChulainn::SetPosition(const float3& position)
 
 void CuChulainn::Respawn()
 {
-    state = CharacterStates::RESPAWN;
+    // TODO: This function will be called by the UI in the future
+
+    Character::Restart();
+
+    isDead        = false;
+    currentHealth = reservedHealth;
+    state         = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
-    // TODO: Reset hitboxes, timers, enable, etc. If scene is reloaded then probably not needed
 }

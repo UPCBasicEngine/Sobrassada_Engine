@@ -15,7 +15,7 @@
 
 Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Soldier)
 {
-    fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint});
+    fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
 }
 
 bool Soldier::Init()
@@ -48,6 +48,7 @@ void Soldier::OnDeath()
 {
     // TODO: include death sound for the character
     // TODO: animation and particles
+    parent->SetEnabled(false);
 }
 
 void Soldier::OnDamageTaken(int amount)
@@ -66,29 +67,33 @@ void Soldier::PerformAttack()
 
 void Soldier::HandleState(float deltaTime)
 {
-    // if (!animComponent) return;
+    if (!animComponent) return;
 
     switch (currentState)
     {
     case SoldierStates::PATROL:
         // GLOG("Soldier Patrolling");
-        // animComponent->UseTrigger("idle");
         PatrolAI();
+        animComponent->UseTrigger("run");
         break;
     case SoldierStates::CHASE:
         // GLOG("Soldier Chasing");
-        //  animComponent->UseTrigger("Run");
+        animComponent->UseTrigger("run");
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
         // GLOG("Soldier Basic Attack");
-        //  animComponent->UseTrigger("attack");
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     default:
         GLOG("No state provided to Soldier");
         currentState = SoldierStates::PATROL;
         break;
+    }
+
+    if (animComponent && animComponent->IsFinished())
+    {
+        animComponent->UseTrigger("idle");
     }
 }
 
@@ -127,7 +132,7 @@ void Soldier::Attack(float deltaTime)
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
-        if (animComponent) animComponent->UseTrigger("Attack");
+        if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
     }

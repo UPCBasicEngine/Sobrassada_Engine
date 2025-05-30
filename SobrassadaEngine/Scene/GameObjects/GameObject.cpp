@@ -29,6 +29,7 @@
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/BillboardComponent.h"
+#include "Standalone/SplineComponent.h"
 #include "Standalone/DecalComponent.h"
 
 #include "imgui.h"
@@ -42,6 +43,11 @@
 // (Used in std apply for being able to use the ternary operator for nullptr's)
 static void Nothing()
 {
+}
+
+static bool NothingBool()
+{
+    return false;
 }
 
 // DUPLICATE COMPONENTS
@@ -432,7 +438,7 @@ void GameObject::UpdateEnabledStateRecursive()
     enabled = wasEnabled;
 }
 
-void GameObject::RenderEditorInspector()
+void GameObject::RenderEditorInspector(bool drawGizmo)
 {
     if (!ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu))
     {
@@ -497,7 +503,7 @@ void GameObject::RenderEditorInspector()
 
         ImGui::Spacing();
 
-        if (App->GetEditorUIModule()->RenderTransformWidget(
+        if (drawGizmo && App->GetEditorUIModule()->RenderTransformWidget(
                 localTransform, globalTransform, parentTransform, position, rotation, scale
             ))
         {
@@ -557,7 +563,7 @@ void GameObject::RenderEditorInspector()
 
         ImGui::End();
 
-        if (!App->GetSceneModule()->GetInPlayMode() && App->GetSceneModule()->GetScene()->GetSceneVisible())
+        if (drawGizmo && !App->GetSceneModule()->GetInPlayMode() && App->GetSceneModule()->GetScene()->GetSceneVisible())
         {
             if (App->GetEditorUIModule()->RenderImGuizmo(
                     localTransform, globalTransform, parentTransform, position, rotation, scale
@@ -972,14 +978,21 @@ void GameObject::Render(float deltaTime) const
 
 void GameObject::RenderEditor()
 {
+    bool drawGizmo = true;
+    std::apply(
+        [&drawGizmo](auto&... pointer) { ((pointer ? drawGizmo &= !pointer->RenderGizmo() : NothingBool()), ...); },
+        compTuple
+    );
+
     if (App->GetEditorUIModule()->inspectorMenu)
     {
-        RenderEditorInspector();
+        RenderEditorInspector(drawGizmo);
     }
     if (App->GetEditorUIModule()->hierarchyMenu)
     {
         App->GetSceneModule()->GetScene()->RenderHierarchyUI(App->GetEditorUIModule()->hierarchyMenu);
     }
+
 }
 
 void GameObject::SetLocalTransform(const float4x4& newTransform)
@@ -1152,5 +1165,18 @@ bool GameObject::IsGloballyEnabled() const
 {
     if (!enabled) return false;
     GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
-    return parent ? parent->IsGloballyEnabled() : true;
+    if (this->uid == App->GetSceneModule()->GetScene()->GetGameObjectRootUID()) return true;
+    return parent ? parent->IsGloballyEnabled() : false;
+}
+
+void GameObject::SetEnabledRecursive(bool value)
+{
+    enabled    = value;
+    wasEnabled = value;
+
+    for (UID childUID : children)
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child) child->SetEnabledRecursive(value);
+    }
 }

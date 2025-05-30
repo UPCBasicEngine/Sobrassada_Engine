@@ -61,6 +61,7 @@ void Banshee::Update(float deltaTime)
 
 void Banshee::OnDeath()
 {
+    parent->SetEnabled(false);
 }
 
 void Banshee::OnDamageTaken(int amount)
@@ -98,6 +99,7 @@ void Banshee::ChasePlayer()
 {
     if (!character) return;
 
+    if (animComponent) animComponent->UseTrigger("Chase");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Scream;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
 }
@@ -106,6 +108,7 @@ void Banshee::Flee()
 {
     if (!isFleeing)
     {
+        if (animComponent) animComponent->UseTrigger("Chase");
         isFleeing = true;
         agentAI->SetSpeed(fleeSpeed, 100.0f);
     }
@@ -133,7 +136,7 @@ void Banshee::Attack(float deltaTime)
     {
         GLOG("Banshee attack");
         agentAI->SetLookForward(false);
-        if (animComponent) animComponent->UseTrigger("Attack");
+        if (animComponent) animComponent->UseTrigger("Scream");
 
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);

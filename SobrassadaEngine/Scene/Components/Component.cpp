@@ -40,6 +40,11 @@ void Component::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     targetState.AddMember("Name", rapidjson::Value(std::string(name).c_str(), allocator), allocator);
 }
 
+bool Component::RenderGizmo()
+{
+    return false;
+}
+
 void Component::RenderEditorInspector()
 {
     ImGui::InputText("Name", name, sizeof(name));
@@ -69,5 +74,5 @@ const float4x4& Component::GetGlobalTransform() const
 
 bool Component::IsEffectivelyEnabled() const
 {
-    return enabled && parent->IsGloballyEnabled();
+    return enabled && parent && parent->IsGloballyEnabled();
 }

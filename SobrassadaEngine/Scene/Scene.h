@@ -87,6 +87,7 @@ class SOBRASADA_API_ENGINE Scene
 
     LightsConfig* GetLightsConfig() const { return lightsConfig; }
     CameraComponent* GetMainCamera() const;
+    CameraComponent* GetMainCameraEvenDisabled() const;
 
     template <typename T> std::vector<T> GetEnabledComponentsOfType() const;
 
@@ -101,7 +102,7 @@ class SOBRASADA_API_ENGINE Scene
     const std::tuple<float, float>& GetWindowSize() const { return sceneWindowSize; };
     const std::tuple<float, float>& GetMousePosition() const { return mousePosition; };
     Octree* GetOctree() const { return sceneOctree; }
-    Quadtree* GetDynamicTree() const { return dynamicTree; }
+    Octree* GetDynamicTree() const { return dynamicTree; }
     UID GetMultiselectUID() const;
     GameObject* GetMultiselectParent() const { return multiSelectParent; }
     UID GetNavmeshUID() const { return navmeshUID; }
@@ -124,6 +125,7 @@ class SOBRASADA_API_ENGINE Scene
     void SetDynamicModified() { dynamicModified = true; }
     void SetMultiselectPosition(const float3& newPosition);
 
+    bool isSceneLoaded                           = false;
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
@@ -161,7 +163,7 @@ class SOBRASADA_API_ENGINE Scene
 
     LightsConfig* lightsConfig                   = nullptr;
     Octree* sceneOctree                          = nullptr;
-    Quadtree* dynamicTree                        = nullptr;
+    Octree* dynamicTree                          = nullptr;
 
     // IMGUI WINDOW DATA
     std::tuple<float, float> sceneWindowPosition = std::make_tuple(0.f, 0.f);
@@ -170,6 +172,7 @@ class SOBRASADA_API_ENGINE Scene
 
     bool staticModified                          = false;
     bool dynamicModified                         = false;
+
 
     std::vector<GameObject*> gameObjectsToUpdate;
 
