@@ -403,7 +403,6 @@ void AnimationComponent::Update(float deltaTime)
 
         for (auto& channel : currentAnimResource->channelNames)
         {
-            // const std::string& boneName = channel.first;
             const HashString& boneName = channel;
 
             auto boneIt = boneMapping.find(boneName);
@@ -433,45 +432,6 @@ void AnimationComponent::Update(float deltaTime)
         }
 
         parent->UpdateTransformForGOBranch();
-
-        // Second pass: Update hierarchical transforms from root to leaves
-
-#ifdef OPTICK
-        OPTICK_CATEGORY("Application::AnimationUpdate_FOR_2", Optick::Category::GameLogic)
-#endif // OPTICK
-        std::vector<GameObject*> rootBones;
-        for (auto& bone : modifiedBones)
-        {
-            bool isRoot   = true;
-            UID parentUID = bone->GetParent();
-            if (parentUID != 0)
-            {
-                GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
-                // Check if parent is also in our bone mapping
-                for (auto& mapping : boneMapping)
-                {
-                    if (mapping.second == parent)
-                    {
-                        isRoot = false;
-                        break;
-                    }
-                }
-            }
-
-            if (isRoot)
-            {
-                rootBones.push_back(bone);
-            }
-        }
-
-#ifdef OPTICK
-        OPTICK_CATEGORY("Application::AnimationUpdate_BONE_HIERARCHY", Optick::Category::GameLogic)
-#endif // OPTICK
-        // Process hierarchy from roots
-        for (auto rootBone : rootBones)
-        {
-            UpdateBoneHierarchy(rootBone);
-        }
     }
 }
 
