@@ -26,6 +26,10 @@ ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapid
         isTransparent = importOptions["isTransparent"].GetBool();
     else isTransparent = false;
 
+    if (importOptions.HasMember("isAlphaDiscard") && importOptions["isAlphaDiscard"].IsBool())
+        isAlpha = importOptions["isAlphaDiscard"].GetBool();
+    else isAlpha = false;
+
     if (importOptions.HasMember("isDoubleSided") && importOptions["isDoubleSided"].IsBool())
         doubleSided = importOptions["isDoubleSided"].GetBool();
     else doubleSided = false;
