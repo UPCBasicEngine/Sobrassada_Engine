@@ -48,7 +48,7 @@ Quat AnimController::Interpolate(Quat& first, Quat& second, float lambda)
 size_t AnimController::FindChannelIndex(const std::vector<float>& animChannelVector, float time) const
 {
     int left  = 0;
-    int right = animChannelVector.size() - 1;
+    int right = (int)animChannelVector.size() - 1;
 
     while (left <= right)
     {
