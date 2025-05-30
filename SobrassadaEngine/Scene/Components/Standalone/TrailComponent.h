@@ -61,6 +61,7 @@ class TrailComponent : public Component
     std::list<ImGradientMark*> gradientMarks;
 
     bool hasTexture                 = false;
+    std::string currentResourceName = "No material";
     UID currentTextureUID           = FALLBACK_TEXTURE_UID;
     ResourceTexture* currentTexture = nullptr;
 
@@ -70,6 +71,6 @@ class TrailComponent : public Component
     unsigned int vbo = 0;
     unsigned int ebo = 0;
 
-    int maxVertices  = 64;
-    int maxIndices   = 384;
+    int maxVertices  = 1024;
+    int maxIndices   = 3072;
 };

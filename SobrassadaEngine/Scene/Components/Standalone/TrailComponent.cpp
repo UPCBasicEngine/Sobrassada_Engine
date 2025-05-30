@@ -38,6 +38,11 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
     glBindVertexArray(0);
 
     gradientMarks = gradient.getMarks();
+    vertices.reserve(maxVertices * sizeof(TrailVertex));
+    indices.reserve(maxIndices * sizeof(uint32_t));
+
+    localComponentAABB = AABB(float3(1000, 1000, 1000), float3(-1000, -1000, -1000));
+    parent->OnAABBUpdated();
 }
 
 TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -58,6 +63,9 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)(sizeof(float3)));
     glEnableVertexAttribArray(1);
 
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(TrailVertex), (void*)(sizeof(float3) + sizeof(float4)));
+    glEnableVertexAttribArray(2);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxIndices * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 
@@ -74,6 +82,9 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
         for (int i = 0; i < 5; ++i)
             curve[i] = initCurve[i].GetFloat();
     }
+
+    if (initialState.HasMember("HasTexture")) hasTexture = initialState["HasTexture"].GetBool();
+    if (initialState.HasMember("Texture")) UpdateTexture(initialState["Texture"].GetUint64());
 
     gradientMarks = gradient.getMarks();
     for (ImGradientMark* mark : gradientMarks)
@@ -94,6 +105,11 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
 
         gradientMarks = gradient.getMarks();
     }
+
+    vertices.reserve(maxVertices * sizeof(TrailVertex));
+    indices.reserve(maxIndices * sizeof(uint32_t));
+    localComponentAABB = AABB(float3(1000, 1000, 1000), float3(-1000, -1000, -1000));
+    parent->OnAABBUpdated();
 }
 
 TrailComponent::~TrailComponent()
@@ -120,6 +136,11 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
         .PushBack(curve[3], allocator)
         .PushBack(curve[4], allocator);
     targetState.AddMember("Curve", curveArray, allocator);
+
+    targetState.AddMember(
+        "Texture", currentTexture != nullptr ? currentTexture->GetUID() : FALLBACK_TEXTURE_UID, allocator
+    );
+    targetState.AddMember("HasTexture", hasTexture, allocator);
 
     rapidjson::Value colorArray(rapidjson::kArrayType);
     for (const ImGradientMark* mark : gradientMarks)
@@ -151,49 +172,49 @@ void TrailComponent::Clone(const Component* other)
 
 void TrailComponent::Update(float deltaTime)
 {
-    for (TrailPoint& tp : points)
-        tp.time += deltaTime;
-
-    while (!points.empty() && points.front().time > lifeTime)
-        points.pop_front();
+    /*
+    if (!spline)
+    {
+        spline = parent->GetComponent<SplineComponent*>();
+        if (!spline) return;
+        spline->ClearPoints();
+        spline->SetInWorld(false);
+    }*/
 
     vertices.clear();
     indices.clear();
 
-    if (!spline) spline = parent->GetComponent<SplineComponent*>();
-    if (!spline) return;
-    spline->ClearPoints();
-    if (!IsEffectivelyEnabled()) return;
-    if (!spline->IsEffectivelyEnabled()) return;
+    for (TrailPoint& tp : points)
+        tp.time += deltaTime;
+    if (!points.empty() && points.front().time > lifeTime) points.pop_front();
 
-    float4x4 globalMatrix = parent->GetGlobalTransform();
-    float3 position       = globalMatrix.TranslatePart();
-    float3 lastPos        = points.empty() ? float3::zero : points.back().position;
+    float3 position = parent->GetGlobalTransform().TranslatePart();
+    float3 lastPos  = points.empty() ? float3::zero : points.back().position;
 
-    if (!points.empty())
+    if (IsEffectivelyEnabled() && (points.empty() || (position - lastPos).LengthSq() >= minDistance * minDistance))
     {
-        vertices.reserve(2 * points.size());
-        indices.reserve(6 * (points.size() - 1));
+        float3 direction     = (position - lastPos).Normalized();
+        float3 up            = float3::unitY;
+        float3 perpendicular = direction.Cross(up).Normalized();
+        points.push_back({position, perpendicular, 0.0f});
     }
 
     for (int i = 0; i < points.size(); ++i)
     {
         const TrailPoint& tp = points[i];
+        float normalizedTime = tp.time / lifeTime;
 
-        spline->AddPoint(tp.position - position);
+        float bezier         = ImGui::BezierValue(normalizedTime, curve);
+        float widthL         = (invertCurve ? (1.0f - bezier) : bezier) * width;
 
-        float bezier = ImGui::BezierValue(tp.time / lifeTime, curve);
-        float widthL = (invertCurve ? (1.0f - bezier) : bezier) * width;
-        float3 left  = spline->GetPointLocal(i) - tp.perpendicular * widthL;
-        float3 right = spline->GetPointLocal(i) + tp.perpendicular * widthL;
-
+        float3 left          = tp.position - tp.perpendicular * widthL;
+        float3 right         = tp.position + tp.perpendicular * widthL;
         float color[4];
-        gradient.getColorAt(tp.time / lifeTime, color);
+        gradient.getColorAt(normalizedTime, color);
         float4 colorVec = float4(color[0], color[1], color[2], color[3]);
 
-        float u         = tp.time / lifeTime;
-        vertices.push_back({left, colorVec, float2(u, 0.0f)});
-        vertices.push_back({right, colorVec, float2(u, 1.0f)});
+        vertices.push_back({left, colorVec, float2(normalizedTime, 0.0f)});
+        vertices.push_back({right, colorVec, float2(normalizedTime, 1.0f)});
 
         if (i > 0)
         {
@@ -211,11 +232,8 @@ void TrailComponent::Update(float deltaTime)
             indices.push_back(leftCurrent);
         }
     }
-    RecalculateAABB();
 
-    if (!points.empty() && (position - lastPos).LengthSq() < minDistance * minDistance) return;
-    float3 perpendicular = globalMatrix.Col3(0).Normalized();
-    points.push_back({position, perpendicular, 0.0f});
+    RecalculateAABB();
 }
 
 void TrailComponent::Render(float deltaTime)
@@ -232,20 +250,16 @@ void TrailComponent::Render(float deltaTime)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(uint32_t), indices.data());
 
-    float4x4 modelMatrix = parent->GetGlobalTransform();
+    float4x4 modelMatrix = float4x4::identity;
     glUniformMatrix4fv(4, 1, GL_TRUE, &modelMatrix[0][0]);
 
-    if (hasTexture && currentTextureUID != FALLBACK_TEXTURE_UID)
+    if (hasTexture && currentTexture != nullptr)
     {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, currentTextureUID);
-        glUniform1i(glGetUniformLocation(program, "uTexture"), 0);
+        glBindTexture(GL_TEXTURE_2D, currentTexture->GetTextureID());
         glUniform1i(glGetUniformLocation(program, "useTexture"), 1);
     }
-    else
-    {
-        glUniform1i(glGetUniformLocation(program, "useTexture"), 0);
-    }
+    else glUniform1i(glGetUniformLocation(program, "useTexture"), 0);
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
@@ -262,7 +276,7 @@ void TrailComponent::RenderEditorInspector()
     ImGui::SeparatorText("Trail Component");
 
     ImGui::DragFloat("Min Distance", &minDistance, 0.01f, 0.0f, 1.0f);
-    ImGui::DragFloat("LifeTime", &lifeTime, 0.01f, 0.0f, 2.0f);
+    ImGui::DragFloat("LifeTime", &lifeTime, 0.01f, 0.1f, 2.0f);
     ImGui::DragFloat("Width", &width, 0.01f, 0.0f, 5.0f);
 
     ImGui::NewLine();
@@ -270,9 +284,13 @@ void TrailComponent::RenderEditorInspector()
     ImGui::Bezier("Trail Curve", curve);
 
     ImGui::NewLine();
-    ImGui::Checkbox("Has Texture", &hasTexture);
-    ImGui::NewLine();
+    if (ImGui::GradientEditor(&gradient, draggingMark, selectedMark))
+    {
+        gradientMarks.clear();
+        gradientMarks = gradient.getMarks();
+    }
 
+    ImGui::Checkbox("Has Texture", &hasTexture);
     if (hasTexture)
     {
         if (ImGui::Button("Select texture"))
@@ -299,20 +317,10 @@ void TrailComponent::RenderEditorInspector()
             }
         }
     }
-    else if (ImGui::GradientEditor(&gradient, draggingMark, selectedMark))
-    {
-        gradientMarks.clear();
-        gradientMarks = gradient.getMarks();
-    }
 }
 
 void TrailComponent::UpdateTexture(UID newTextureUID)
 {
-    if (newTextureUID == INVALID_UID || App->GetResourcesModule()->RequestResource(newTextureUID) == nullptr)
-    {
-        newTextureUID = FALLBACK_TEXTURE_UID;
-    }
-
     if (currentTexture != nullptr && currentTexture->GetUID() == newTextureUID) return;
 
     ResourceTexture* newTexture =
@@ -321,8 +329,9 @@ void TrailComponent::UpdateTexture(UID newTextureUID)
     if (newTexture != nullptr)
     {
         App->GetResourcesModule()->ReleaseResource(currentTexture);
-        currentTexture = newTexture;
-        currentTextureUID = newTextureUID;
+        currentTexture      = newTexture;
+        currentResourceName = currentTexture->GetName();
+        currentTextureUID   = currentTexture->GetUID();
     }
 }
 
@@ -339,24 +348,24 @@ void TrailComponent::RecalculateAABB()
         return;
     }
 
-    AABB aabb;
-    float3 position = parent->GetGlobalTransform().TranslatePart();
-    aabb.minPoint   = spline->GetPointLocal(0);
-    aabb.maxPoint   = spline->GetPointLocal(0);
+    AABB globalAABB;
+    globalAABB.minPoint = float3::inf;
+    globalAABB.maxPoint = -float3::inf;
 
-    for (int i = 0; i < points.size(); ++i)
+    for (const TrailPoint& tp : points)
     {
-        const TrailPoint& tp = points[i];
-        float3 localPos      = spline->GetPointLocal(i);
-        float3 left          = localPos - tp.perpendicular * width;
-        float3 right         = localPos + tp.perpendicular * width;
+        float3 left  = tp.position - tp.perpendicular * width;
+        float3 right = tp.position + tp.perpendicular * width;
 
-        aabb.minPoint        = aabb.minPoint.Min(left);
-        aabb.minPoint        = aabb.minPoint.Min(right);
-        aabb.maxPoint        = aabb.maxPoint.Max(left);
-        aabb.maxPoint        = aabb.maxPoint.Max(right);
+        globalAABB.Enclose(float3(left.x + 0.1f, left.y + 0.1f, left.z + 0.1f));
+        globalAABB.Enclose(float3(right.x - 0.1f, right.y - 0.1f, right.z - 0.1f));
     }
 
-    localComponentAABB = aabb;
+    // Convertir AABB global a espacio local
+    float4x4 invTransform = parent->GetGlobalTransform().Inverted();
+    float3 localMin       = invTransform.MulPos(globalAABB.minPoint);
+    float3 localMax       = invTransform.MulPos(globalAABB.maxPoint);
+
+    localComponentAABB    = AABB(localMin.Min(localMax), localMin.Max(localMax));
     parent->OnAABBUpdated();
 }

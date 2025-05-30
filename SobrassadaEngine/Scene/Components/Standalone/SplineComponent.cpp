@@ -51,7 +51,7 @@ void SplineComponent::RenderDebug(float deltaTime)
     const float3 curveColor(0, 1, 0); // Green
     const float3 pointColor(1, 0, 0); // Red
 
-    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
+    const float3 worldOffset = inWorld ? parent->GetGlobalTransform().TranslatePart() : float3(0, 0, 0);
 
     auto drawLine = [&](const float3& a, const float3& b) { dbg->DrawLineSegment(LineSegment(a, b), curveColor); };
 
@@ -81,6 +81,7 @@ void SplineComponent::RenderDebug(float deltaTime)
         dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f);
     }
 }
+
 
 bool SplineComponent::RenderGizmo()
 {
