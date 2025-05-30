@@ -49,7 +49,7 @@ void RespawnController::Update(float deltaTime)
                     }
                     respawnTimer = respawnInit;
                     playerScript->Respawn();
-                    playerScript->state = CharacterStates::IDLE;
+                    //playerScript->state = CharacterStates::IDLE;
                     playerScript->SetInvulnearble(false);
                    
                }
