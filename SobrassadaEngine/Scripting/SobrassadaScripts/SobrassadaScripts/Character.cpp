@@ -7,6 +7,7 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -62,14 +63,14 @@ bool Character::Init()
         )
 
     weaponCollider = parent->GetComponentChild<CapsuleColliderComponent*>(AppEngine);
-    
+
     if (!weaponCollider)
     {
         GLOG("[WARNING] No capsule weapon collider in child");
     }
     else
     {
-        weapon         = weaponCollider->GetParent();
+        weapon = weaponCollider->GetParent();
         if (!weapon) GLOG("Weapon game object not found")
         else weaponCollider->SetEnabled(false);
     }
@@ -108,8 +109,6 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
         {
             if (!enemyScript->isAttacking) return;
             TakeDamage(enemyScript->attackDamage);
-
-            return;
         }
     }
 
@@ -123,8 +122,6 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
-
-            return;
         }
 
         // Trap check
@@ -137,6 +134,17 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
             {
                 TakeDamage(fireballScript->GetDamage());
                 damageCollider->SetEnabled(false);
+            }
+        }
+
+        // Mushroom check
+        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
+        if (desiredHeal && mushroomScript)
+        {
+            if (mushroomScript->IsReady())
+            {
+                Heal(mushroomScript->GetHealingAmount());
+                mushroomScript->Disable();
             }
         }
     }

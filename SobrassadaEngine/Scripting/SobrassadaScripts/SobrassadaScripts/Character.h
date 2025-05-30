@@ -82,6 +82,8 @@ class Character : public Script
     float invulnerabilityTimer                  = 0.0f;
     const float invulnerableDuration            = 0.7f;
 
+    bool desiredHeal                            = false;
+
     CharacterType type                          = CharacterType::None;
 
     // AI
