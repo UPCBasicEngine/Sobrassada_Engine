@@ -272,6 +272,9 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
         throwTimer = 0;
     }
+
+    // When stop dashing this gets automatically disabled in the timers check
+    if (state == CharacterStates::DASH) isInvulnerable = true;
 }
 
 void CuChulainn::LookAtMouse()

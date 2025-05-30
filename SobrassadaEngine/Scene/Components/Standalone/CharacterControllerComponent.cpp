@@ -158,7 +158,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
             if (dtStatusFailed(status) || targetRef == 0)
             {
-                GLOG("Failed to find valid target poly for movement.");
+                //GLOG("Failed to find valid target poly for movement.");
                 return;
             }
 
