@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "EditorUIModule.h"
 #include "GameObject.h"
+#include "Interpolation.h"
 #include "LibraryModule.h"
 #include "ResourceTexture.h"
 #include "ResourcesModule.h"
@@ -172,15 +173,6 @@ void TrailComponent::Clone(const Component* other)
 
 void TrailComponent::Update(float deltaTime)
 {
-    /*
-    if (!spline)
-    {
-        spline = parent->GetComponent<SplineComponent*>();
-        if (!spline) return;
-        spline->ClearPoints();
-        spline->SetInWorld(false);
-    }*/
-
     vertices.clear();
     indices.clear();
 
@@ -191,17 +183,55 @@ void TrailComponent::Update(float deltaTime)
     float3 position = parent->GetGlobalTransform().TranslatePart();
     float3 lastPos  = points.empty() ? float3::zero : points.back().position;
 
+    if (!spline) spline = parent->GetComponent<SplineComponent*>();
+
     if (IsEffectivelyEnabled() && (points.empty() || (position - lastPos).LengthSq() >= minDistance * minDistance))
     {
         float3 direction     = (position - lastPos).Normalized();
         float3 up            = float3::unitY;
         float3 perpendicular = direction.Cross(up).Normalized();
+
         points.push_back({position, perpendicular, 0.0f});
     }
 
-    for (int i = 0; i < points.size(); ++i)
+    const int smoothCount = 8; // últimos N puntos a suavizar
+
+    std::vector<TrailPoint> renderPoints;
+    int smoothStart = std::max(0, (int)points.size() - smoothCount);
+
+    for (int i = 0; i < smoothStart; ++i)
+        renderPoints.push_back(points[i]);
+    if (points.size() >= 4)
     {
-        const TrailPoint& tp = points[i];
+        const int stepsPerSegment = 2;
+
+        for (int i = std::max(1, smoothStart - 1); i < points.size() - 2; ++i)
+        {
+            TrailPoint& P0 = points[i - 1];
+            TrailPoint& P1 = points[i];
+            TrailPoint& P2 = points[i + 1];
+            TrailPoint& P3 = points[i + 2];
+
+            for (int step = 0; step < stepsPerSegment; ++step)
+            {
+                float t                = (float)step / stepsPerSegment;
+                float3 pos             = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
+
+                float3 dir             = (P2.position - P1.position).Normalized();
+                float3 perp            = dir.Cross(float3::unitY).Normalized();
+
+                float interpolatedTime = Interpolation::Lerp(P1.time, P2.time, t);
+                renderPoints.push_back({pos, perp, interpolatedTime});
+            }
+        }
+
+        renderPoints.push_back(points.back());
+    }
+    else renderPoints.assign(points.begin(), points.end());
+
+    for (int i = 0; i < renderPoints.size(); ++i)
+    {
+        const TrailPoint tp  = renderPoints[i];
         float normalizedTime = tp.time / lifeTime;
 
         float bezier         = ImGui::BezierValue(normalizedTime, curve);
@@ -209,6 +239,7 @@ void TrailComponent::Update(float deltaTime)
 
         float3 left          = tp.position - tp.perpendicular * widthL;
         float3 right         = tp.position + tp.perpendicular * widthL;
+
         float color[4];
         gradient.getColorAt(normalizedTime, color);
         float4 colorVec = float4(color[0], color[1], color[2], color[3]);
@@ -238,7 +269,6 @@ void TrailComponent::Update(float deltaTime)
 
 void TrailComponent::Render(float deltaTime)
 {
-    if (!IsEffectivelyEnabled()) return;
     if (vertices.empty() || indices.empty()) return;
 
     const unsigned int program = App->GetShaderModule()->GetTrailProgram();
