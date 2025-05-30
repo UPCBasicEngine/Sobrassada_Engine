@@ -25,6 +25,11 @@ DecalComponent::DecalComponent(const rapidjson::Value& initialState, GameObject*
 
 DecalComponent::~DecalComponent()
 {
+    if (currentMaterial != nullptr)
+    {
+        App->GetResourcesModule()->ReleaseResource(currentMaterial);
+        currentMaterial = nullptr;
+    }
 }
 
 void DecalComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -100,6 +105,7 @@ void DecalComponent::AddMaterial(UID resource)
         dynamic_cast<ResourceMaterial*>(App->GetResourcesModule()->RequestResource(resource));
 
     if (!newMaterial) return;
+    App->GetResourcesModule()->ReleaseResource(currentMaterial);
     currentMaterial     = newMaterial;
     currentResourceName = currentMaterial->GetName();
     currentMaterialUID  = currentMaterial->GetUID();

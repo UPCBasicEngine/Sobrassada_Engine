@@ -205,10 +205,10 @@ void Scene::Init()
     multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
     gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
 
-    const float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
+    constexpr float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
                                         -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
 
-    const unsigned int cubeIndices[] = {0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4,
+    constexpr unsigned int cubeIndices[] = {0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4,
                                         3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
 
     glGenVertexArrays(1, &decalVAO);
