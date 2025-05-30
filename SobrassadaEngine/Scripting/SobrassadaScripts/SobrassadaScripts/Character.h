@@ -83,6 +83,8 @@ class Character : public Script
     const float invulnerableDuration            = 0.7f;
 
     bool desiredHeal                            = false;
+    float healCooldown                          = 0.0f;
+    float healCdTimer                           = 0.0f;
 
     CharacterType type                          = CharacterType::None;
 

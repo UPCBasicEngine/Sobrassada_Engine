@@ -184,6 +184,7 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
     {
         desiredHeal = true;
+        healCdTimer = healCooldown;
     }
     if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {

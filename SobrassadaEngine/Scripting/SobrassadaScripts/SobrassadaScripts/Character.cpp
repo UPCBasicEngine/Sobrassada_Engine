@@ -39,6 +39,8 @@ Character::Character(
     fields.push_back({"Attack Hitbox Delay", InspectorField::FieldType::Float, &attackHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Attack Hitbox Duration", InspectorField::FieldType::Float, &attackHitboxDuration, 0.0f, 5.0f});
 
+    fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
+
     if (type != CharacterType::CuChulainn)
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
@@ -161,19 +163,26 @@ void Character::UpdateTimers(float deltaTime)
     if (isAttacking)
     {
         attackTimer += deltaTime;
-        if (attackTimer <= 0)
+        if (attackTimer <= 0.0f)
         {
             if (weaponCollider && weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
         }
     }
 
     attackCdTimer -= deltaTime;
-    if (attackCdTimer < 0) attackCdTimer = 0;
+    if (attackCdTimer < 0.0f) attackCdTimer = 0.0f;
 
     if (isInvulnerable)
     {
         invulnerabilityTimer -= deltaTime;
-        if (invulnerabilityTimer <= 0) isInvulnerable = false;
+        if (invulnerabilityTimer <= 0.0f) isInvulnerable = false;
+    }
+
+    healCdTimer -= deltaTime;
+    if (healCdTimer <= 0.0f)
+    {
+        desiredHeal = false;
+        healCdTimer = 0.0f;
     }
 }
 
