@@ -366,6 +366,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
@@ -600,6 +601,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Scene\Components\Standalone\DecalComponent.h" />
     <ClInclude Include="Libs\ImGui\imgui_color_gradient.h" />
     <ClInclude Include="Libs\ImGui\imgui_curves.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />

@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+struct DecalModels;
 class GameObject;
 class Component;
 class RootComponent;
@@ -129,15 +130,17 @@ class SOBRASADA_API_ENGINE Scene
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
     void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, CameraComponent* camera) const;
+
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
+    void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(
-        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera,
-        Framebuffer* framebuffer
+        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
     ) const;
-    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
-        const;
+    
+    
+    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
 
@@ -179,4 +182,6 @@ class SOBRASADA_API_ENGINE Scene
     std::map<UID, float4x4> selectedGameObjectsOgLocals;
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
+
+    unsigned int decalVAO, decalVBO, decalEBO;
 };

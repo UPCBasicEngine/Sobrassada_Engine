@@ -66,6 +66,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("UI CanvasScaler"),      COMPONENT_CANVAS_SCALER       },
         {HashString("Billboard"),            COMPONENT_BILLBOARD           },
 		{HashString("Spline"),               COMPONENT_SPLINE              },
+        {HashString("Decal"),                COMPONENT_DECAL               }
     };
 
     fullscreen    = FULLSCREEN;
