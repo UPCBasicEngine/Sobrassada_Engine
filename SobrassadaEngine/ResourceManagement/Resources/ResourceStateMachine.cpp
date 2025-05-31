@@ -295,7 +295,6 @@ bool ResourceStateMachine::ClipExists(const std::string& clipName) const
 
 bool ResourceStateMachine::UseTrigger(const std::string& triggerName, const State*& currentAnimState)
 {
-    bool triggerExists = false;
     HashString incomingTrigger(triggerName);
 
     for (const auto& transition : transitions)
@@ -307,11 +306,10 @@ bool ResourceStateMachine::UseTrigger(const std::string& triggerName, const Stat
                 if (states[i].name == transition.toState)
                 {
                     ChangeCurrentState((int)i, currentAnimState);
-                    triggerExists = true;
-                    break;
+                    return true;
                 }
             }
         }
     }
-    return triggerExists;
+    return false;
 }

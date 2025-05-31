@@ -2,6 +2,8 @@
 
 #include "Character.h"
 
+#include "HashString.h"
+
 class GameObject;
 class CharacterControllerComponent;
 class CameraMovement;
@@ -38,6 +40,7 @@ class CuChulainn : public Character
     bool GetIsInvulnerable() { return isInvulnerable; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     void EnableMovement(bool enable);
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -60,7 +63,6 @@ class CuChulainn : public Character
     void Aim(float deltaTime);
     void Move();
     void SetPosition(const float3& position);
-   
 
   private:
     CharacterStates state       = CharacterStates::IDLE;
@@ -83,6 +85,8 @@ class CuChulainn : public Character
     bool desiredAttack          = false;
     float attackBufferTimer     = 0.0f;
     float attackBuffer          = 0.5f;
+    int comboCounter            = 0;
+    float comboBufferTimer      = 0.0f;
 
     bool desiredAim             = false;
     float throwTimer            = 0.0f;
@@ -93,12 +97,14 @@ class CuChulainn : public Character
     float deathTimer            = 0.5f;
     float aimTimer              = 0.0f;
 
-    
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
 
     float3 camFront             = float3::zero;
     float3 camRight             = float3::zero;
+
+    // TODO: Delete this
+    HashString stateName;
 };
 
 extern CharacterControllerComponent* character;

@@ -160,14 +160,7 @@ void Character::Attack(float deltaTime)
 
 void Character::UpdateTimers(float deltaTime)
 {
-    if (isAttacking)
-    {
-        attackTimer += deltaTime;
-        if (attackTimer <= 0.0f)
-        {
-            if (weaponCollider && weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
-        }
-    }
+    if (isAttacking) attackTimer += deltaTime;
 
     attackCdTimer -= deltaTime;
     if (attackCdTimer < 0.0f) attackCdTimer = 0.0f;
