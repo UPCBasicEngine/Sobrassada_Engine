@@ -1,6 +1,7 @@
 #include "VelocityAddon.h"
 
 #include "EmitterInstance.h"
+#include "Interpolation.h"
 #include "ParticleSystemComponent.h"
 
 #include "imgui.h"
@@ -34,6 +35,38 @@ VelocityAddon::VelocityAddon(const rapidjson::Value& initialState, ParticleEmitt
     if (initialState.HasMember("RandX")) randomizeXSpeed = initialState["RandX"].GetBool();
     if (initialState.HasMember("RandY")) randomizeYSpeed = initialState["RandY"].GetBool();
     if (initialState.HasMember("RandZ")) randomizeZSpeed = initialState["RandZ"].GetBool();
+
+    if (initialState.HasMember("useCurves")) useCurves = initialState["useCurves"].GetBool();
+
+    if (initialState.HasMember("xBezier"))
+    {
+        const rapidjson::Value& dataArray = initialState["xBezier"];
+        bezierX[0]                        = dataArray[0].GetFloat();
+        bezierX[1]                        = dataArray[1].GetFloat();
+        bezierX[2]                        = dataArray[2].GetFloat();
+        bezierX[3]                        = dataArray[3].GetFloat();
+        bezierX[4]                        = dataArray[4].GetFloat();
+    }
+
+    if (initialState.HasMember("yBezier"))
+    {
+        const rapidjson::Value& dataArray = initialState["yBezier"];
+        bezierY[0]                        = dataArray[0].GetFloat();
+        bezierY[1]                        = dataArray[1].GetFloat();
+        bezierY[2]                        = dataArray[2].GetFloat();
+        bezierY[3]                        = dataArray[3].GetFloat();
+        bezierY[4]                        = dataArray[4].GetFloat();
+    }
+
+    if (initialState.HasMember("zBezier"))
+    {
+        const rapidjson::Value& dataArray = initialState["zBezier"];
+        bezierZ[0]                        = dataArray[0].GetFloat();
+        bezierZ[1]                        = dataArray[1].GetFloat();
+        bezierZ[2]                        = dataArray[2].GetFloat();
+        bezierZ[3]                        = dataArray[3].GetFloat();
+        bezierZ[4]                        = dataArray[4].GetFloat();
+    }
 }
 
 VelocityAddon::~VelocityAddon()
@@ -59,15 +92,53 @@ void VelocityAddon::Save(rapidjson::Value& targetState, rapidjson::Document::All
     targetState.AddMember("RandX", randomizeXSpeed, allocator);
     targetState.AddMember("RandY", randomizeYSpeed, allocator);
     targetState.AddMember("RandZ", randomizeZSpeed, allocator);
+
+    targetState.AddMember("useCurves", useCurves, allocator);
+
+    rapidjson::Value xBezier(rapidjson::kArrayType);
+    xBezier.PushBack(bezierX[0], allocator)
+        .PushBack(bezierX[1], allocator)
+        .PushBack(bezierX[2], allocator)
+        .PushBack(bezierX[3], allocator)
+        .PushBack(bezierX[4], allocator);
+    targetState.AddMember("xBezier", xBezier, allocator);
+
+    rapidjson::Value yBezier(rapidjson::kArrayType);
+    yBezier.PushBack(bezierY[0], allocator)
+        .PushBack(bezierY[1], allocator)
+        .PushBack(bezierY[2], allocator)
+        .PushBack(bezierY[3], allocator)
+        .PushBack(bezierY[4], allocator);
+    targetState.AddMember("yBezier", yBezier, allocator);
+
+    rapidjson::Value zBezier(rapidjson::kArrayType);
+    zBezier.PushBack(bezierZ[0], allocator)
+        .PushBack(bezierZ[1], allocator)
+        .PushBack(bezierZ[2], allocator)
+        .PushBack(bezierZ[3], allocator)
+        .PushBack(bezierZ[4], allocator);
+    targetState.AddMember("zBezier", zBezier, allocator);
 }
 
 void VelocityAddon::Init(EmitterInstance* emitterInstance)
 {
     for (auto& particle : emitterInstance->particles)
     {
-        float finalX      = randomizeXSpeed ? rng->Float(xSpeed.x, xSpeed.y) : xSpeed.y;
-        float finalY      = randomizeYSpeed ? rng->Float(ySpeed.x, ySpeed.y) : ySpeed.y;
-        float finalZ      = randomizeZSpeed ? rng->Float(zSpeed.x, zSpeed.y) : zSpeed.y;
+        float finalX = 0;
+        float finalY = 0;
+        float finalZ = 0;
+        if (!useCurves)
+        {
+            finalX = randomizeXSpeed ? rng->Float(xSpeed.x, xSpeed.y) : xSpeed.y;
+            finalY = randomizeYSpeed ? rng->Float(ySpeed.x, ySpeed.y) : ySpeed.y;
+            finalZ = randomizeZSpeed ? rng->Float(zSpeed.x, zSpeed.y) : zSpeed.y;
+        }
+        else
+        {
+            finalX = xSpeed[0];
+            finalY = ySpeed[0];
+            finalZ = zSpeed[0];
+        }
 
         particle.velocity = float3(finalX, finalY, finalZ);
     }
@@ -79,6 +150,14 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
     for (auto& particle : emitterInstance->particles)
     {
+        if (useCurves)
+        {
+            float valueOverLifetime = particle.currentLifetime / particle.lifeTime;
+
+            particle.velocity.x     = Interpolation::Lerp(xSpeed[0], xSpeed[1], valueOverLifetime);
+            particle.velocity.y     = Interpolation::Lerp(ySpeed[0], ySpeed[1], valueOverLifetime);
+            particle.velocity.z     = Interpolation::Lerp(zSpeed[0], zSpeed[1], valueOverLifetime);
+        }
         particle.position = particle.position.Add(particle.velocity * deltaTime);
     }
 }
@@ -140,7 +219,27 @@ void VelocityAddon::RenderEditorInspector()
     }
     else
     {
-        ImGui::Bezier("easeOutSine", bezierX); // draw
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader("X Speed"))
+        {
+            ImGui::Bezier("xBezier", bezierX); // draw
+            ImGui::InputFloat2("X Range", &xSpeed[0]);
+        }
+
+        if (ImGui::CollapsingHeader("Y Speed"))
+        {
+            ImGui::Bezier("yBezier", bezierY); // draw
+            ImGui::InputFloat2("Y Range", &ySpeed[0]);
+        }
+
+        if (ImGui::CollapsingHeader("Z Speed"))
+        {
+            ImGui::Bezier("zBezier", bezierZ); // draw
+            ImGui::InputFloat2("Z Range", &zSpeed[0]);
+        }
+
+        ImGui::Spacing();
     }
 
     // RENDER EDITOR ENDS

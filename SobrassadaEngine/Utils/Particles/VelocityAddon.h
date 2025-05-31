@@ -25,13 +25,13 @@ class VelocityAddon : public ParticleAddon
     bool randomizeYSpeed = false;
     bool randomizeZSpeed = false;
 
-    float2 xSpeed        = float2::one;
-    float2 ySpeed        = float2::one;
-    float2 zSpeed        = float2::one;
+    float2 xSpeed        = float2::zero;
+    float2 ySpeed        = float2::zero;
+    float2 zSpeed        = float2::zero;
 
     bool useCurves       = false;
 
-    float bezierX[5]     = {0.390f, 0.575f, 0.565f, 1.000f};
-    float bezierY[5]     = {0.390f, 0.575f, 0.565f, 1.000f};
-    float bezierZ[5]     = {0.390f, 0.575f, 0.565f, 1.000f};
+    float bezierX[5]     = {0.f, 0.f, 1.f, 1.f};
+    float bezierY[5]     = {0.f, 0.f, 1.f, 1.f};
+    float bezierZ[5]     = {0.f, 0.f, 1.f, 1.f};
 };

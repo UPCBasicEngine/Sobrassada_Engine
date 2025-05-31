@@ -136,8 +136,8 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
     targetState.AddMember("EmitterTag", rapidjson::Value(emitterTag.GetString().c_str(), allocator), allocator);
     targetState.AddMember("UseTexture", useTexture, allocator);
 
-    targetState.AddMember("Material", material != nullptr ? material->GetUID() : DEFAULT_MATERIAL_UID, allocator);
-    targetState.AddMember("Texture", texture != nullptr ? texture->GetUID() : FALLBACK_TEXTURE_UID, allocator);
+    targetState.AddMember("Material", material != nullptr ? material->GetUID() : INVALID_UID, allocator);
+    targetState.AddMember("Texture", texture != nullptr ? texture->GetUID() : INVALID_UID, allocator);
 
     rapidjson::Value addonsJSON(rapidjson::kArrayType);
     SaveAddonsTuple(addonTuple, addonsJSON, allocator);
@@ -185,7 +185,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
 
         glUseProgram(App->GetShaderModule()->GetParticleSystemProgram());
 
-        if (additiveBlending) glBlendFunc(GL_ONE, GL_ONE);
+        if (additiveBlending) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glUniform3fv(0, 1, &cameraRight[0]);
