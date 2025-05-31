@@ -89,49 +89,62 @@ void VelocityAddon::RenderEditorInspector()
 
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Velocity Addon");
 
-    ImGui::PushItemWidth(100);
+    if (ImGui::BeginCombo("Velocity type", VelocityAddonStrings[useCurves ? 1 : 0]))
+    {
+        for (int i = 0; i < VelocityAddonStringsSize; ++i)
+        {
+            if (ImGui::Selectable(VelocityAddonStrings[i])) useCurves = i;
+        }
+        ImGui::EndCombo();
+    }
 
     // RENDER EDITOR STARTS
-    if (randomizeXSpeed)
+    if (!useCurves)
     {
-        ImGui::InputFloat("##MinLXSpeed", &xSpeed[0]);
-        ImGui::SameLine();
-    }
-    ImGui::InputFloat("##MaxXSpeed", &xSpeed[1]);
-    ImGui::SameLine();
-    ImGui::Text("X Speed");
-    ImGui::SameLine();
-    ImGui::Checkbox("Rand.X Speed", &randomizeXSpeed);
+        ImGui::PushItemWidth(100);
 
-    if (randomizeYSpeed)
+        if (randomizeXSpeed)
+        {
+            ImGui::InputFloat("##MinLXSpeed", &xSpeed[0]);
+            ImGui::SameLine();
+        }
+        ImGui::InputFloat("##MaxXSpeed", &xSpeed[1]);
+        ImGui::SameLine();
+        ImGui::Text("X Speed");
+        ImGui::SameLine();
+        ImGui::Checkbox("Rand.X Speed", &randomizeXSpeed);
+
+        if (randomizeYSpeed)
+        {
+            ImGui::InputFloat("##MinLYSpeed", &ySpeed[0]);
+            ImGui::SameLine();
+        }
+        ImGui::InputFloat("##MaxYSpeed", &ySpeed[1]);
+        ImGui::SameLine();
+        ImGui::Text("Y Speed");
+        ImGui::SameLine();
+        ImGui::Checkbox("Rand.Y Speed", &randomizeYSpeed);
+
+        if (randomizeZSpeed)
+        {
+            ImGui::InputFloat("##MinLZSpeed", &zSpeed[0]);
+            ImGui::SameLine();
+        }
+        ImGui::InputFloat("##MaxZSpeed", &zSpeed[1]);
+        ImGui::SameLine();
+        ImGui::Text("Z Speed");
+        ImGui::SameLine();
+        ImGui::Checkbox("Rand.Z Speed", &randomizeZSpeed);
+
+        ImGui::PopItemWidth();
+    }
+    else
     {
-        ImGui::InputFloat("##MinLYSpeed", &ySpeed[0]);
-        ImGui::SameLine();
+        ImGui::Bezier("easeOutSine", bezierX); // draw
     }
-    ImGui::InputFloat("##MaxYSpeed", &ySpeed[1]);
-    ImGui::SameLine();
-    ImGui::Text("Y Speed");
-    ImGui::SameLine();
-    ImGui::Checkbox("Rand.Y Speed", &randomizeYSpeed);
-
-    if (randomizeZSpeed)
-    {
-        ImGui::InputFloat("##MinLZSpeed", &zSpeed[0]);
-        ImGui::SameLine();
-    }
-    ImGui::InputFloat("##MaxZSpeed", &zSpeed[1]);
-    ImGui::SameLine();
-    ImGui::Text("Z Speed");
-    ImGui::SameLine();
-    ImGui::Checkbox("Rand.Z Speed", &randomizeZSpeed);
-
 
     // RENDER EDITOR ENDS
 
-    ImGui::PopItemWidth();
-
-    ImGui::Bezier("easeOutSine", bezierX); // draw
-    
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
