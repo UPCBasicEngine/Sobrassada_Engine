@@ -153,7 +153,8 @@ void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
 
     std::apply(
         [deltaTime, emitterInstance](auto&... pointer)
-        { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); }, addonTuple
+        { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); },
+        addonTuple
     );
 
     UpdateParticlesVBO(emitterInstance);
@@ -180,24 +181,26 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         float3 cameraRight      = rightVector;
         float3 cameraUp         = upVector;
         float2 billboardSize    = float2(1, 1);
+        float2 tileSize         = float2(1, 1);
 
         glUseProgram(App->GetShaderModule()->GetParticleSystemProgram());
 
-        if (additiveBlending) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        if (additiveBlending) glBlendFunc(GL_ONE, GL_ONE);
         else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);
         glUniform2fv(2, 1, &billboardSize[0]);
         glUniformMatrix4fv(3, 1, GL_TRUE, &viewProjection[0][0]);
+
         if (useSpritesheet)
         {
             SpritesheetAddon* spritesheet = std::get<SpritesheetAddon*>(addonTuple);
-            float2 tileSize               = float2((float)spritesheet->rows, (float)spritesheet->columns);
-
-            glUniform2fv(4, 1, &tileSize[0]);
+            tileSize                      = float2((float)spritesheet->rows, (float)spritesheet->columns);
             glUniform1f(5, spritesheet->currentFrame);
         }
+
+        glUniform2fv(4, 1, &tileSize[0]);
 
         glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 
@@ -474,7 +477,7 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * tileOffsets.size(), &particleColors[0], GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * particleColors.size(), &particleColors[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }
