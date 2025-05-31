@@ -20,6 +20,7 @@ class BaseAddon;
 class VelocityAddon;
 class SpritesheetAddon;
 class ColorAddon;
+class AreaAddon;
 
 class ParticleSystem;
 class ResourceTexture;

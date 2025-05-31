@@ -5,6 +5,7 @@
 #include "ParticleEmitter.h"
 #include "SpritesheetAddon.h"
 #include "VelocityAddon.h"
+#include "AreaAddon.h"
 
 void ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType type, ParticleEmitter* emitter)
 {
@@ -35,6 +36,12 @@ void ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType type, ParticleEmi
     {
         ColorAddon* addon            = new ColorAddon(emitter);
         std::get<ColorAddon*>(tuple) = addon;
+        break;
+    }
+    case ParticleAddonType::AREA:
+    {
+        AreaAddon* addon             = new AreaAddon(emitter);
+        std::get<AreaAddon*>(tuple) = addon;
         break;
     }
     default:
@@ -75,6 +82,12 @@ void ParticleUtils::CreateExistingComponent(const rapidjson::Value& initialState
     {
         ColorAddon* addon            = new ColorAddon(initialState, emitter);
         std::get<ColorAddon*>(tuple) = addon;
+        break;
+    }
+    case ParticleAddonType::AREA:
+    {
+        AreaAddon* addon            = new AreaAddon(initialState, emitter);
+        std::get<AreaAddon*>(tuple) = addon;
         break;
     }
     default:

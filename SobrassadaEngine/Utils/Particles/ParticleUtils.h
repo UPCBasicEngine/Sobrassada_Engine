@@ -11,9 +11,10 @@ enum class ParticleAddonType : int
     VELOCITY,
     SPRITESHEET,
     COLOR,
+    AREA,
 };
 
-constexpr const char* AddonTypeStrings[] = {"None", "Base", "Velocity", "Spritesheet", "Color"};
+constexpr const char* AddonTypeStrings[] = {"None", "Base", "Velocity", "Spritesheet", "Color", "Area"};
 constexpr const int AddonTypeStringsSize = sizeof(AddonTypeStrings) / sizeof(char*);
 
 class ParticleUtils
@@ -23,6 +24,6 @@ class ParticleUtils
     static void CreateExistingComponent(const rapidjson::Value& initialState, ParticleEmitter* emitter);
 };
 
-#define ADDON_TYPES BaseAddon*, VelocityAddon*, SpritesheetAddon*, ColorAddon*
+#define ADDON_TYPES BaseAddon*, VelocityAddon*, SpritesheetAddon*, ColorAddon*, AreaAddon*
 
-#define ADDON_NULLPTR nullptr, nullptr, nullptr, nullptr
+#define ADDON_NULLPTR nullptr, nullptr, nullptr, nullptr, nullptr

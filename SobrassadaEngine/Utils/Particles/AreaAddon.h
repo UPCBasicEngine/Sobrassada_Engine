@@ -2,16 +2,12 @@
 
 #include "ParticleAddon.h"
 
-#include "Math/float4.h"
-
-class ImGradient;
-
-class ColorAddon : public ParticleAddon
+class AreaAddon : public ParticleAddon
 {
   public:
-    ColorAddon(ParticleEmitter* owner);
-    ColorAddon(const rapidjson::Value& initialState, ParticleEmitter* owner);
-    ~ColorAddon() override;
+    AreaAddon(ParticleEmitter* owner);
+    AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owner);
+    ~AreaAddon() override;
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
 
@@ -20,7 +16,4 @@ class ColorAddon : public ParticleAddon
     void RenderEditorInspector() override;
 
   private:
-    float4 particleColor = float4::one;
-
-    ImGradient* gradient = nullptr;
 };

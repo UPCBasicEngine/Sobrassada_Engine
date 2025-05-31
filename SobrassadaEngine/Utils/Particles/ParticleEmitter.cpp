@@ -15,6 +15,7 @@
 #include "ShaderModule.h"
 #include "SpritesheetAddon.h"
 #include "VelocityAddon.h"
+#include "AreaAddon.h"
 
 #include "CameraModule.h"
 

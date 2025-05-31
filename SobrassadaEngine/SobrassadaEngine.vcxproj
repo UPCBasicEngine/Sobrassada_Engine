@@ -366,6 +366,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Utils\Particles\AreaAddon.cpp" />
     <ClCompile Include="Utils\Particles\ColorAddon.cpp" />
     <ClCompile Include="Utils\Particles\SpritesheetAddon.cpp" />
     <ClCompile Include="Utils\Particles\EmitterInstance.cpp" />
@@ -611,6 +612,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
     <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />
     <ClInclude Include="Utils\Particles\EmitterInstance.h" />

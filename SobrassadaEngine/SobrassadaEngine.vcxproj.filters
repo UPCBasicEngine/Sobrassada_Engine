@@ -591,6 +591,9 @@
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Particles\AreaAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1162,6 +1165,9 @@
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_color_gradient.h">
       <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\AreaAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

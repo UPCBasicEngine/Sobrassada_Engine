@@ -7,7 +7,7 @@ class SpritesheetAddon : public ParticleAddon
   public:
     SpritesheetAddon(ParticleEmitter* owner);
     SpritesheetAddon(const rapidjson::Value& initialState, ParticleEmitter* owner);
-    ~SpritesheetAddon();
+    ~SpritesheetAddon() override;
 
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
 
