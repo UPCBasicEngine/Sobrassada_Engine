@@ -10,6 +10,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
@@ -189,14 +190,21 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         std::get<SplineComponent*>(componentTuple) = spline;
         generatedComponent                         = spline;
         break;
+    } 
+    case COMPONENT_DECAL:
+    {
+        DecalComponent* decal                     = new DecalComponent(uid, parent);
+        std::get<DecalComponent*>(componentTuple) = decal;
+        generatedComponent                        = decal;
+        break;
     }
     case COMPONENT_TRAIL:
     {
         TrailComponent* trail                     = new TrailComponent(uid, parent);
         std::get<TrailComponent*>(componentTuple) = trail;
         generatedComponent                        = trail;
-        break;
-    }
+		break;
+	}   
     default:
         return;
     }
@@ -339,13 +347,19 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
             SplineComponent* spline                    = new SplineComponent(initialState, parent);
             std::get<SplineComponent*>(componentTuple) = spline;
             break;
+        }      
+        case COMPONENT_DECAL:
+        {
+            DecalComponent* decal                     = new DecalComponent(initialState, parent);
+            std::get<DecalComponent*>(componentTuple) = decal;
+            break;
         }
         case COMPONENT_TRAIL:
         {
             TrailComponent* trail                    = new TrailComponent(initialState, parent);
             std::get<TrailComponent*>(componentTuple) = trail;
-            break;
-        }
+			break;
+		}  
         default:
             return;
         }

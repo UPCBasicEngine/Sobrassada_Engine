@@ -18,7 +18,7 @@ enum class DebugOptions : uint8_t
     RENDER_WIREFRAME,
     RENDER_AABB,
     RENDER_OBB,
-    RENDER_OCTREE,
+    RENDER_STATICTREE,
     RENDER_DYNAMICTREE,
     RENDER_CAMERA_RAY,
     RENDER_NAVMESH,
@@ -26,7 +26,8 @@ enum class DebugOptions : uint8_t
     RENDER_GBUFFERS,
     RENDER_DEPTH,
     RENDER_NAVMESH_MESHES,
-	RENDER_SPLINES
+    RENDER_SPLINES,
+    RENDER_DEBUG_VISUALS
 };
 
 enum DrawNavMeshFlags
@@ -36,10 +37,9 @@ enum DrawNavMeshFlags
     DRAWNAVMESH_COLOR_TILES = 0x04
 };
 
-constexpr const char* DebugStrings[] = {"Render Lights", "Render Wireframe", "AABB",       "OBB",
-                                        "Octree",        "Dynamic Tree",     "Camera Ray", "Navmesh",
-                                        "Physics World", "GBuffers",         "Depth",      "Navmesh Meshes", "Splines"};
-
+constexpr const char* DebugStrings[] = {"Render Lights", "Render Wireframe", "AABB",    "OBB",           "Static Tree",
+                                        "Dynamic Tree",  "Camera Ray",       "Navmesh", "Physics World", "GBuffers",
+                                        "Depth",         "Navmesh Meshes",   "Splines", "Debug Visuals"};
 
 class DebugDrawModule : public Module
 {

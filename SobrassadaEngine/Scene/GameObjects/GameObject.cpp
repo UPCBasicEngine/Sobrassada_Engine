@@ -30,6 +30,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/DecalComponent.h"
 
 #include "imgui.h"
 #include <queue>

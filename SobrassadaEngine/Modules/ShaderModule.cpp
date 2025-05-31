@@ -31,6 +31,8 @@ bool ShaderModule::Init()
     depthProgram                = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
     billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
     trailProgram                = CreateShaderProgram(BASIC_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
+    decalProgram                = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
+
     return true;
 }
 
@@ -38,16 +40,16 @@ bool ShaderModule::ShutDown()
 {
     glDeleteProgram(specularGlossinessProgram);
     glDeleteProgram(specularGlossinessProgramUnlit);
-
     glDeleteProgram(metallicRoughnessProgram);
     glDeleteProgram(metallicRoughnessProgramUnlit);
-
     glDeleteProgram(uiWidgetProgram);
     glDeleteProgram(metallicGeometryPassProgram);
     glDeleteProgram(specularGeometryPassProgram);
     glDeleteProgram(lightingPassProgram);
     glDeleteProgram(quadProgram);
     glDeleteProgram(depthProgram);
+    glDeleteProgram(billboardProgram);
+    glDeleteProgram(decalProgram);
 
     glDeleteProgram(billboardProgram);
     glDeleteProgram(trailProgram);

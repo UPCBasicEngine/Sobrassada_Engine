@@ -51,10 +51,11 @@ void ResourceMaterial::OnEditorUpdate()
             ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
         }
 
-         ImGui::SameLine();
+        /*
+        ImGui::SameLine();
 
         // TODO: commented all select buttons until save data to meta is implemented
-        /*if (ImGui::Button("Select Diffuse Texture"))
+        if (ImGui::Button("Select Diffuse Texture"))
         {
             ImGui::OpenPopup(CONSTANT_DIFFUSE_TEXTURE_SELECT_DIALOG_ID);
         }
@@ -361,6 +362,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
 
         normalTexture.width  = normTexture->GetTextureWidth();
         normalTexture.height = normTexture->GetTextureHeight();
+        hasNormal            = true;
     }
 
     delete diffTexture;
