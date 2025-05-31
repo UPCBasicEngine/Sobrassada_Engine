@@ -49,6 +49,20 @@ bool Banshee::Init()
         else damageArea->SetEnabled(false);
     }
 
+    if (parent->GetChildren().size() > 3)
+    {
+        areaVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
+        if (areaVisual) areaVisual->SetEnabled(false);
+        else GLOG("[WARNING] Banshee: no area visual found as child of base")
+    }
+
+    if (parent->GetChildren().size() > 4)
+    {
+        screamVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
+        if (screamVisual) screamVisual->SetEnabled(false);
+        else GLOG("[WARNING] Banshee: no scream visual found as child of base")
+    }
+
     return true;
 }
 
@@ -141,6 +155,8 @@ void Banshee::Attack(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
         agentAI->SetAngularSpeed(attackAngularSpeed);
+        if (areaVisual) areaVisual->SetEnabled(true);
+        if (screamVisual) screamVisual->SetEnabled(true);
     }
     else
     {
@@ -159,6 +175,8 @@ void Banshee::Attack(float deltaTime)
             GLOG("Banshee disable hitbox");
             damageArea->SetEnabled(false);
             if (weaponCollider) weaponCollider->SetEnabled(false);
+            if (areaVisual) areaVisual->SetEnabled(false);
+            if (screamVisual) screamVisual->SetEnabled(false);
         }
 
         if (attackTimer >= attackDuration)
