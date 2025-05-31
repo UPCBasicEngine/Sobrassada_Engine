@@ -135,7 +135,7 @@ void CuChulainn::HandleState(float deltaTime)
              state != CharacterStates::AIM && state != CharacterStates::FALL)
         Move();
 
-    if (stateName != animComponent->GetCurrentStateName())
+    if (animComponent && stateName != animComponent->GetCurrentStateName())
     {
         stateName = animComponent->GetCurrentStateName();
         GLOG("Current state: %s", stateName.GetString().c_str());
@@ -150,7 +150,7 @@ void CuChulainn::HandleState(float deltaTime)
         if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
             stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
         {
-            if (isAttacking) comboBufferTimer = 0.4f;
+            if (isAttacking) comboBufferTimer = 0.2f;
             isAttacking = false;
         }
         else
@@ -242,7 +242,7 @@ bool CuChulainn::CanAttack()
 {
     return (
         state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-        state != CharacterStates::RESPAWN && comboCounter <= 3
+        state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f
     );
 }
 
@@ -256,6 +256,7 @@ bool CuChulainn::CanAim() const
 
 void CuChulainn::UpdateTimers(float deltaTime)
 {
+    weaponCollider->SetEnabled(false);
     Character::UpdateTimers(deltaTime);
 
     // Dash timers
@@ -293,7 +294,8 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (comboBufferTimer <= 0.0f)
         {
             comboCounter = -1;
-            animComponent->UseTrigger("AttackEnd");
+            if (animComponent) animComponent->UseTrigger("AttackEnd");
+            attackCdTimer = attackCooldown;
         }
     }
 }
