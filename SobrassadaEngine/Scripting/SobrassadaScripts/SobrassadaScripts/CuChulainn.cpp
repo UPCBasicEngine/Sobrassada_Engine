@@ -229,8 +229,12 @@ void CuChulainn::GetInputs()
 
 bool CuChulainn::CanDash()
 {
-    return dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
-           state != CharacterStates::RESPAWN;
+    bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
+                   state != CharacterStates::RESPAWN;
+
+    if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer >= 0.0f;
+
+    return canDash;
 }
 
 bool CuChulainn::CanAttack()
@@ -244,7 +248,7 @@ bool CuChulainn::CanAttack()
 bool CuChulainn::CanAim() const
 {
     return (
-        state != CharacterStates::DASH && !isAttacking && throwTimer <= 0 && state != CharacterStates::FALL &&
+        state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 && state != CharacterStates::FALL &&
         state != CharacterStates::RESPAWN
     );
 }
@@ -369,7 +373,6 @@ void CuChulainn::Dash()
 
     GLOG("DASH");
 
-    // TODO: Dash
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     character->StartDash();
@@ -382,7 +385,6 @@ void CuChulainn::PerformAttack()
 
     // if (attackTimer >= attackDuration) isAttacking = false;
 
-    // TODO: When timer matches animation, enable weapon collider. Disable it afterwards
     if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
         attackTimer < attackHitboxDelay + attackHitboxDuration)
     {
@@ -398,7 +400,7 @@ void CuChulainn::Attack(float deltaTime)
 {
     // TODO: play basicAttack sound
 
-    // GLOG("ATTACK");
+    GLOG("ATTACK");
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     desiredAttack = false;
@@ -409,7 +411,11 @@ void CuChulainn::Attack(float deltaTime)
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    if (animComponent) animComponent->UseTrigger("Attack");
+    if (animComponent)
+    {
+        const std::string trigger = "Attack" + std::to_string(comboCounter);
+        animComponent->UseTrigger(trigger);
+    }
 }
 
 void CuChulainn::Aim(float deltaTime)
