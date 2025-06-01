@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HashString.h"
 #include "Script.h"
 
 #include <vector>
@@ -47,6 +48,7 @@ class Character : public Script
     void Heal(int amount);
     PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
+    void RenderDebug();
 
   private:
     virtual void HandleState(float deltaTime) {};
@@ -87,10 +89,11 @@ class Character : public Script
     float healCdTimer                           = 0.0f;
 
     CharacterType type                          = CharacterType::None;
+    HashString stateName;
 
     // AI
-    float rangeAIChase                          = 0.0f;
-    float rangeAIAttack                         = 0.0f;
-    bool reachedPatrolPoint                     = false;
-    float3 startPos                             = float3::zero;
+    float rangeAIChase      = 0.0f;
+    float rangeAIAttack     = 0.0f;
+    bool reachedPatrolPoint = false;
+    float3 startPos         = float3::zero;
 };

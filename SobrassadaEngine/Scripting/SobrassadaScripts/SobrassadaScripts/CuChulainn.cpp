@@ -5,6 +5,7 @@
 #include "CameraMovement.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "InputModule.h"
 #include "Projectile.h"
@@ -76,7 +77,9 @@ bool CuChulainn::Init()
 
 void CuChulainn::Update(float deltaTime)
 {
-    // TODO: Maybe instead of this call it at the end of death animation (the current animations lasts forever)
+    // TODO: Some debug about life and current state
+    AppEngine->GetDebugDrawModule()->Draw3DText(btVector3(-25, 2, -40), "XD moment");
+
     if (state == CharacterStates::DEATH)
     {
         deathTimer += deltaTime;
@@ -135,18 +138,11 @@ void CuChulainn::HandleState(float deltaTime)
              state != CharacterStates::AIM && state != CharacterStates::FALL)
         Move();
 
-    if (animComponent && stateName != animComponent->GetCurrentStateName())
-    {
-        stateName = animComponent->GetCurrentStateName();
-        GLOG("Current state: %s", stateName.GetString().c_str());
-    }
+    // TODO: Some transition in the dash or idle state, to continue the combo after a dash
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
-        const HashString& stateName = animComponent->GetCurrentStateName();
-        // GLOG("Animation name: %s", stateName.GetString().c_str());
-
         if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
             stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
         {
@@ -233,9 +229,8 @@ void CuChulainn::GetInputs()
 
 bool CuChulainn::CanDash()
 {
-    // TODO: Add more condifions if there are (Maybe dashing doesn't cancel attack animations, etc.)
-    return dashTimer <= 0 && state != CharacterStates::AIM && state != CharacterStates::BASIC_ATTACK &&
-           state != CharacterStates::FALL && state != CharacterStates::RESPAWN;
+    return dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
+           state != CharacterStates::RESPAWN;
 }
 
 bool CuChulainn::CanAttack()
@@ -364,6 +359,11 @@ void CuChulainn::ThrowSpear()
 void CuChulainn::Dash()
 {
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    else if (state == CharacterStates::BASIC_ATTACK)
+    {
+        comboBufferTimer = character->GetDashDuration() + 0.1f;
+        isAttacking      = false;
+    }
     desiredDash = false;
     state       = CharacterStates::DASH;
 

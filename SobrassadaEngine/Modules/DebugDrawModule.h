@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Module.h"
+#include "Globals.h"
 
 #include "Math/float4x4.h"
 #include <bitset>
@@ -69,8 +70,8 @@ class DebugDrawModule : public Module
     void DrawCross(const float3& center, const float length);
     void DrawPoint(const float3& center, const float size);
     void DrawCone(const float3& center, const float3& dir, const float baseRadius, const float apexRadius);
-    void Draw3DText(const btVector3& location, const char* textString);
-    void Draw2DText(const char* textString, const float3& location);
+    SOBRASADA_API_ENGINE void Draw3DText(const btVector3& location, const char* textString);
+    SOBRASADA_API_ENGINE void Draw2DText(const char* textString, const float3& location, const float3& color = float3::zero, float scale = 1.0f);
     void DrawContactPoint(
         const btVector3& PointOnB, const btVector3& normalOnB, float distance, int lifeTime, const btVector3& color
     );

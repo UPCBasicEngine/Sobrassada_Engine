@@ -2,8 +2,6 @@
 
 #include "Character.h"
 
-#include "HashString.h"
-
 class GameObject;
 class CharacterControllerComponent;
 class CameraMovement;
@@ -102,9 +100,6 @@ class CuChulainn : public Character
 
     float3 camFront             = float3::zero;
     float3 camRight             = float3::zero;
-
-    // TODO: Delete this
-    HashString stateName;
 };
 
 extern CharacterControllerComponent* character;

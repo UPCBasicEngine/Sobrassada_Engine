@@ -1,8 +1,10 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
 #include "Character.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "EditorUIModule.h"
 #include "FireballTrap.h"
 #include "GameObject.h"
@@ -88,8 +90,17 @@ void Character::Update(float deltaTime)
 
     if (!characterCollider || !weaponCollider || !weapon) return;
 
+    // Get state name for debugging
+    if (animComponent && stateName != animComponent->GetCurrentStateName())
+    {
+        stateName = animComponent->GetCurrentStateName();
+        // GLOG("Current state: %s", stateName.GetString().c_str());
+    }
+
     HandleState(deltaTime);
     UpdateTimers(deltaTime);
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS)) RenderDebug();
 }
 
 void Character::OnCollision(GameObject* otherObject, const float3& collisionNormal)
@@ -254,4 +265,33 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
+}
+
+void Character::RenderDebug()
+{
+    DebugDrawModule* debug        = AppEngine->GetDebugDrawModule();
+    const CameraComponent* camera = AppEngine->GetSceneModule()->GetScene()->GetMainCamera();
+
+    const float4 clipSpacePos     = camera->GetProjectionMatrix() * camera->GetViewMatrix() *
+                                float4(parent->GetGlobalTransform().TranslatePart(), 1.0f);
+    const float3 ndc         = float3(clipSpacePos.x, clipSpacePos.y, clipSpacePos.z) / clipSpacePos.w;
+
+    const auto& windowSize   = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
+
+    float screenX            = 0 + (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
+    float screenY            = 0 + (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
+
+    const std::string life   = "Health: " + std::to_string(currentHealth);
+    const std::string state  = "Anim state: " + stateName.GetString();
+
+    const float scale        = 0.6f;
+    const float3 color       = type == CharacterType::CuChulainn ? float3(0.0f, 1.0f, 0.0f) : float3(1.0f, 0.0f, 0.0f);
+
+    screenX                 -= 50.0f;
+    screenY                 -= 140.0f;
+    debug->Draw2DText(life.c_str(), float3(screenX, screenY, 0.0f), color, scale);
+
+    screenX -= 40.0f;
+    screenY -= 20.0f;
+    debug->Draw2DText(state.c_str(), float3(screenX, screenY, 0.0f), color, scale);
 }

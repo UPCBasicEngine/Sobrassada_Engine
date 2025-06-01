@@ -20,7 +20,6 @@
 #include "PauseMenuScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
-#include "RespawnController.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
@@ -105,7 +104,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
-    if (scriptType == "RespawnController") return new RespawnController(parent);
 
     return nullptr;
 }
