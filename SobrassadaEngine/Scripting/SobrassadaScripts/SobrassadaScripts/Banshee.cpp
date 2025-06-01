@@ -155,8 +155,6 @@ void Banshee::Attack(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
         agentAI->SetAngularSpeed(attackAngularSpeed);
-        if (areaVisual) areaVisual->SetEnabled(true);
-        if (screamVisual) screamVisual->SetEnabled(true);
     }
     else
     {
@@ -167,6 +165,8 @@ void Banshee::Attack(float deltaTime)
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
             GLOG("Banshee enable hitbox");
+            if (areaVisual) areaVisual->SetEnabled(true);
+            if (screamVisual) screamVisual->SetEnabled(true);
             damageArea->SetEnabled(true);
             if (weaponCollider) weaponCollider->SetEnabled(true);
         }
