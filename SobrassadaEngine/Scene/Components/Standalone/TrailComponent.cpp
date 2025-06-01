@@ -96,11 +96,11 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
         const rapidjson::Value& colorArray = initialState["Color"];
         for (rapidjson::SizeType i = 0; i < colorArray.Size(); i += 5)
         {
-            float color[4] = {
+            const float color[4] = {
                 colorArray[i].GetFloat(), colorArray[i + 1].GetFloat(), colorArray[i + 2].GetFloat(),
                 colorArray[i + 3].GetFloat()
             };
-            float position = colorArray[i + 4].GetFloat();
+            const float position = colorArray[i + 4].GetFloat();
             gradient.addMark(position, ImColor(color[0], color[1], color[2], color[3]));
         }
 
@@ -180,16 +180,16 @@ void TrailComponent::Update(float deltaTime)
         tp.time += deltaTime;
     if (!points.empty() && points.front().time > lifeTime) points.pop_front();
 
-    float3 position = parent->GetGlobalTransform().TranslatePart();
-    float3 lastPos  = points.empty() ? float3::zero : points.back().position;
+    const float3 position = parent->GetGlobalTransform().TranslatePart();
+    const float3 lastPos  = points.empty() ? float3::zero : points.back().position;
 
     if (!spline) spline = parent->GetComponent<SplineComponent*>();
 
     if (IsEffectivelyEnabled() && (points.empty() || (position - lastPos).LengthSq() >= minDistance * minDistance))
     {
-        float3 direction     = (position - lastPos).Normalized();
-        float3 up            = float3::unitY;
-        float3 perpendicular = direction.Cross(up).Normalized();
+        const float3 direction     = (position - lastPos).Normalized();
+        const float3 up            = float3::unitY;
+        const float3 perpendicular = direction.Cross(up).Normalized();
 
         points.push_back({position, perpendicular, 0.0f});
     }
@@ -197,7 +197,7 @@ void TrailComponent::Update(float deltaTime)
     const int smoothCount = 8; // últimos N puntos a suavizar
 
     std::vector<TrailPoint> renderPoints;
-    int smoothStart = std::max(0, (int)points.size() - smoothCount);
+    const int smoothStart = std::max(0, (int)points.size() - smoothCount);
 
     for (int i = 0; i < smoothStart; ++i)
         renderPoints.push_back(points[i]);
@@ -207,20 +207,20 @@ void TrailComponent::Update(float deltaTime)
 
         for (int i = std::max(1, smoothStart - 1); i < points.size() - 2; ++i)
         {
-            TrailPoint& P0 = points[i - 1];
-            TrailPoint& P1 = points[i];
-            TrailPoint& P2 = points[i + 1];
-            TrailPoint& P3 = points[i + 2];
+            const TrailPoint& P0 = points[i - 1];
+            const TrailPoint& P1 = points[i];
+            const TrailPoint& P2 = points[i + 1];
+            const TrailPoint& P3 = points[i + 2];
 
             for (int step = 0; step < stepsPerSegment; ++step)
             {
-                float t                = (float)step / stepsPerSegment;
-                float3 pos             = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
+                const float t                = (float)step / stepsPerSegment;
+                const float3 pos             = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
 
-                float3 dir             = (P2.position - P1.position).Normalized();
-                float3 perp            = dir.Cross(float3::unitY).Normalized();
+                const float3 dir             = (P2.position - P1.position).Normalized();
+                const float3 perp            = dir.Cross(float3::unitY).Normalized();
 
-                float interpolatedTime = Interpolation::Lerp(P1.time, P2.time, t);
+                const float interpolatedTime = Interpolation::Lerp(P1.time, P2.time, t);
                 renderPoints.push_back({pos, perp, interpolatedTime});
             }
         }
@@ -232,27 +232,27 @@ void TrailComponent::Update(float deltaTime)
     for (int i = 0; i < renderPoints.size(); ++i)
     {
         const TrailPoint tp  = renderPoints[i];
-        float normalizedTime = tp.time / lifeTime;
+        const float normalizedTime = tp.time / lifeTime;
 
-        float bezier         = ImGui::BezierValue(normalizedTime, curve);
-        float widthL         = (invertCurve ? (1.0f - bezier) : bezier) * width;
+        const float bezier         = ImGui::BezierValue(normalizedTime, curve);
+        const float widthL         = (invertCurve ? (1.0f - bezier) : bezier) * width;
 
-        float3 left          = tp.position - tp.perpendicular * widthL;
-        float3 right         = tp.position + tp.perpendicular * widthL;
+        const float3 left          = tp.position - tp.perpendicular * widthL;
+        const float3 right         = tp.position + tp.perpendicular * widthL;
 
         float color[4];
         gradient.getColorAt(normalizedTime, color);
-        float4 colorVec = float4(color[0], color[1], color[2], color[3]);
+        const float4 colorVec = float4(color[0], color[1], color[2], color[3]);
 
         vertices.push_back({left, colorVec, float2(normalizedTime, 0.0f)});
         vertices.push_back({right, colorVec, float2(normalizedTime, 1.0f)});
 
         if (i > 0)
         {
-            int leftCurrent  = 2 * i;
-            int rightCurrent = 2 * i + 1;
-            int leftPrev     = 2 * (i - 1);
-            int rightPrev    = 2 * (i - 1) + 1;
+            const int leftCurrent  = 2 * i;
+            const int rightCurrent = 2 * i + 1;
+            const int leftPrev     = 2 * (i - 1);
+            const int rightPrev    = 2 * (i - 1) + 1;
 
             indices.push_back(leftPrev);
             indices.push_back(rightPrev);
@@ -280,7 +280,6 @@ void TrailComponent::Render(float deltaTime)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(uint32_t), indices.data());
 
-    float4x4 modelMatrix = float4x4::identity;
     glUniformMatrix4fv(4, 1, GL_TRUE, &modelMatrix[0][0]);
 
     if (hasTexture && currentTexture != nullptr)
@@ -384,17 +383,17 @@ void TrailComponent::RecalculateAABB()
 
     for (const TrailPoint& tp : points)
     {
-        float3 left  = tp.position - tp.perpendicular * width;
-        float3 right = tp.position + tp.perpendicular * width;
+        const float3 left  = tp.position - tp.perpendicular * width;
+        const float3 right = tp.position + tp.perpendicular * width;
 
         globalAABB.Enclose(float3(left.x + 0.1f, left.y + 0.1f, left.z + 0.1f));
         globalAABB.Enclose(float3(right.x - 0.1f, right.y - 0.1f, right.z - 0.1f));
     }
 
     // Convertir AABB global a espacio local
-    float4x4 invTransform = parent->GetGlobalTransform().Inverted();
-    float3 localMin       = invTransform.MulPos(globalAABB.minPoint);
-    float3 localMax       = invTransform.MulPos(globalAABB.maxPoint);
+    const float4x4 invTransform = parent->GetGlobalTransform().Inverted();
+    const float3 localMin       = invTransform.MulPos(globalAABB.minPoint);
+    const float3 localMax       = invTransform.MulPos(globalAABB.maxPoint);
 
     localComponentAABB    = AABB(localMin.Min(localMax), localMin.Max(localMax));
     parent->OnAABBUpdated();

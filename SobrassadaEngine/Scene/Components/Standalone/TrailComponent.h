@@ -73,4 +73,6 @@ class TrailComponent : public Component
 
     int maxVertices  = 1024;
     int maxIndices   = 3072;
+
+    float4x4 modelMatrix = float4x4::identity;
 };
