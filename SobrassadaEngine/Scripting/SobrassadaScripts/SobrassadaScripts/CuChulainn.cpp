@@ -248,8 +248,8 @@ bool CuChulainn::CanAttack()
 bool CuChulainn::CanAim() const
 {
     return (
-        state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 && state != CharacterStates::FALL &&
-        state != CharacterStates::RESPAWN
+        state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
+        state != CharacterStates::FALL && state != CharacterStates::RESPAWN
     );
 }
 
@@ -310,9 +310,16 @@ void CuChulainn::LookAtMouse()
     character->LookAt(direction);
 }
 
-void CuChulainn::LookAtJoystick()
+void CuChulainn::LookAtRightstick()
 {
     const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
+    const float3 direction = camFront * stick.y + camRight * stick.x;
+    if (direction.LengthSq() > 0.001f) character->LookAt(direction);
+}
+
+void CuChulainn::LookAtLeftstick()
+{
+    const float2& stick    = AppEngine->GetInputModule()->GetLeftStick();
     const float3 direction = camFront * stick.y + camRight * stick.x;
     if (direction.LengthSq() > 0.001f) character->LookAt(direction);
 }
@@ -375,6 +382,7 @@ void CuChulainn::Dash()
 
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
+    LookAtLeftstick();
     character->StartDash();
     if (animComponent) animComponent->UseTrigger("Dash");
 }
@@ -400,14 +408,14 @@ void CuChulainn::Attack(float deltaTime)
 {
     // TODO: play basicAttack sound
 
-    //GLOG("ATTACK");
+    // GLOG("ATTACK");
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
     ++comboCounter;
-    //GLOG("Combo counter: %d", comboCounter);
+    // GLOG("Combo counter: %d", comboCounter);
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
@@ -435,7 +443,7 @@ void CuChulainn::Aim(float deltaTime)
     if (aimTimer >= 0.1f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    else LookAtJoystick();
+    else LookAtRightstick();
 }
 
 void CuChulainn::Move()
