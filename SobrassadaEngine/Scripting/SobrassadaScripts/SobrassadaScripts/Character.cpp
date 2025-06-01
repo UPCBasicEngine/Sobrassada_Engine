@@ -12,6 +12,7 @@
 #include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
+#include "WindowModule.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
@@ -274,12 +275,16 @@ void Character::RenderDebug()
 
     const float4 clipSpacePos     = camera->GetProjectionMatrix() * camera->GetViewMatrix() *
                                 float4(parent->GetGlobalTransform().TranslatePart(), 1.0f);
-    const float3 ndc         = float3(clipSpacePos.x, clipSpacePos.y, clipSpacePos.z) / clipSpacePos.w;
+    const float3 ndc = float3(clipSpacePos.x, clipSpacePos.y, clipSpacePos.z) / clipSpacePos.w;
 
-    const auto& windowSize   = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
-
-    float screenX            = 0 + (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
-    float screenY            = 0 + (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
+#ifdef GAME
+    float screenX          = (ndc.x + 1.0f) * 0.5f * AppEngine->GetWindowModule()->GetWidth();
+    float screenY          = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
+#else
+    const auto& windowSize = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
+    float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
+    float screenY          = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
+#endif
 
     const std::string life   = "Health: " + std::to_string(currentHealth);
     const std::string state  = "Anim state: " + stateName.GetString();
