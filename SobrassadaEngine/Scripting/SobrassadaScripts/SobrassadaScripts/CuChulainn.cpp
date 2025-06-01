@@ -400,14 +400,14 @@ void CuChulainn::Attack(float deltaTime)
 {
     // TODO: play basicAttack sound
 
-    GLOG("ATTACK");
+    //GLOG("ATTACK");
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
     ++comboCounter;
-    GLOG("Combo counter: %d", comboCounter);
+    //GLOG("Combo counter: %d", comboCounter);
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
