@@ -18,7 +18,8 @@ enum class CharacterStates
     AIM,
     RESPAWN,
     DEATH,
-    FALL
+    FALL,
+    ULTIMATE,
 };
 
 class CuChulainn : public Character
@@ -37,7 +38,6 @@ class CuChulainn : public Character
     void Respawn();
     bool GetIsInvulnerable() { return isInvulnerable; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
-    void EnableMovement(bool enable);
 
   private:
     void OnDeath() override;
@@ -46,8 +46,9 @@ class CuChulainn : public Character
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
 
-    bool CanDash();
-    bool CanAttack();
+    bool CanDash() const;
+    bool CanAttack() const;
+    bool CanUltimate() const;
     bool CanAim() const;
     void GetInputs();
     void UpdateTimers(float deltaTime);
@@ -58,6 +59,7 @@ class CuChulainn : public Character
 
     void ThrowSpear();
     void Attack(float deltaTime) override;
+    void UltimateAttack();
     void Dash();
     void Aim(float deltaTime);
     void Move();
@@ -73,17 +75,17 @@ class CuChulainn : public Character
     std::string spearName       = "";
     Projectile* spear           = nullptr;
 
+    float inputBuffer           = 0.5f;
+
     float3 lastDashStartPos     = float3::zero;
     bool isDashing              = false;
     float dashCooldown          = 2.0f;
     float dashTimer             = 0.0f;
     bool desiredDash            = false;
     float dashBufferTimer       = 0.0f;
-    float dashBuffer            = 0.5f;
 
     bool desiredAttack          = false;
     float attackBufferTimer     = 0.0f;
-    float attackBuffer          = 0.5f;
     int comboCounter            = -1;
     float comboBufferTimer      = 0.0f;
 
@@ -96,10 +98,13 @@ class CuChulainn : public Character
     float deathTimer            = 0.5f;
     float aimTimer              = 0.0f;
 
+    std::string ultimateName    = "";
+    GameObject* ultimateObject  = nullptr;
     bool desiredUltimate        = false;
     int ultimateDamage          = 0;
     float ultimateTimer         = 0.0f;
     float ultimateCd            = 0.0f;
+    float ultimateBufferTimer   = 0.0f;
 
     float3 spawnPos             = float3::zero;
     AudioSourceComponent* audio = nullptr;
