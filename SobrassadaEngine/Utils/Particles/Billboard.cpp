@@ -72,6 +72,12 @@ void Billboard::UpdateMaterial(UID newMaterialUID)
         App->GetResourcesModule()->ReleaseResource(material);
         material = newMaterial;
 
+        minTexU  = 0.f;
+        maxTexU  = 1.f;
+
+        minTexV  = 0.f;
+        maxTexV  = 1.f;
+
         for (auto billboardComponent : instanceComponents)
         {
             billboardComponent->SetMaterial(material);
@@ -97,6 +103,12 @@ void Billboard::UpdateTexture(UID newTextureUID)
 
         App->GetResourcesModule()->ReleaseResource(texture);
         texture = newTexture;
+
+        minTexU = 0.f;
+        maxTexU = 1.f;
+
+        minTexV = 0.f;
+        maxTexV = 1.f;
 
         for (auto billboardComponent : instanceComponents)
         {
