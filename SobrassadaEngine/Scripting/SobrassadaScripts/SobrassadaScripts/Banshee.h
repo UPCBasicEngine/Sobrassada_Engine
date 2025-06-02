@@ -38,6 +38,8 @@ class Banshee : public Character
     AIAgentComponent* agentAI           = nullptr;
     BansheeStates currentState          = BansheeStates::Idle;
     SphereColliderComponent* damageArea = nullptr;
+    GameObject* areaVisual              = nullptr;
+    GameObject* screamVisual            = nullptr;
 
     float fleeDistance                  = 0.0f;
     float fleeSpeed                     = 10.0f;
