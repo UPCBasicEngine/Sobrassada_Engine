@@ -1786,7 +1786,6 @@ void Scene::LoadPrefab(
                     if (component != nullptr && componentStateIndex < componentsEnabledStates.size())
                     {
                         bool state = componentsEnabledStates[componentStateIndex];
-                        component->SetWasEnabled(state);
                         component->SetEnabled(state);
                         ++componentStateIndex;
                     }
