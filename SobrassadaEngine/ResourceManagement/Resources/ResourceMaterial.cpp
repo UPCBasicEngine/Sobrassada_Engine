@@ -2,10 +2,10 @@
 
 #include "Application.h"
 #include "EditorUIModule.h"
+#include "FileSystem.h"
 #include "FileSystem/Material.h"
 #include "LibraryModule.h"
 #include "ProjectModule.h"
-#include "FileSystem.h"
 #include "ResourceTexture.h"
 #include "TextureImporter.h"
 
@@ -13,7 +13,6 @@
 #include "imgui.h"
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
-
 
 ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapidjson::Value& importOptions)
     : Resource(uid, name, ResourceType::Material)
@@ -27,6 +26,10 @@ ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapid
         isTransparent = importOptions["isTransparent"].GetBool();
     else isTransparent = false;
 
+    if (importOptions.HasMember("isAlphaDiscard") && importOptions["isAlphaDiscard"].IsBool())
+        isAlpha = importOptions["isAlphaDiscard"].GetBool();
+    else isAlpha = false;
+
     if (importOptions.HasMember("isDoubleSided") && importOptions["isDoubleSided"].IsBool())
         doubleSided = importOptions["isDoubleSided"].GetBool();
     else doubleSided = false;
@@ -39,9 +42,9 @@ ResourceMaterial::~ResourceMaterial()
 
 void ResourceMaterial::OnEditorUpdate()
 {
-    bool updated = false;
+    bool updated  = false;
 
-    updated |= ImGui::Checkbox("Double Sided", &doubleSided);
+    updated      |= ImGui::Checkbox("Double Sided", &doubleSided);
     if (diffuseTexture.textureID != 0)
     {
         ImGui::Text("Diffuse Texture");
@@ -224,6 +227,7 @@ void ResourceMaterial::SaveToMeta()
                     "defaultTextureUID", rapidjson::Value().SetUint64(defaultTextureUID), allocator
                 );
                 importOptions.AddMember("isTransparent", isTransparent, allocator);
+                importOptions.AddMember("isAlphaDiscard", isAlpha, allocator);
                 importOptions.AddMember("isDoubleSided", doubleSided, allocator);
 
                 if (doc.HasMember("importOptions")) doc["importOptions"] = importOptions;
@@ -277,6 +281,8 @@ void ResourceMaterial::LoadMaterialData(Material mat)
     material.roughnessFactor     = mat.GetRoughnessFactor();
     material.shininessInAlpha    = false;
     isTransparent                = mat.IsTransparent();
+    isAlpha                      = mat.IsAlphaDiscard();
+    doubleSided                  = mat.IsDoubleSided();
 
     ResourceTexture* diffTexture = TextureImporter::LoadTexture(mat.GetDiffuseTexture());
     if (diffTexture != nullptr)

@@ -429,7 +429,7 @@ void SceneModule::HandleObjectDeletion()
 
 void SceneModule::HandleTreesUpdates()
 {
-#ifdef GAME
+#ifdef OPTICK
     OPTICK_CATEGORY("Application::HandleTreesUpdates", Optick::Category::GameLogic)
 #endif
     {
