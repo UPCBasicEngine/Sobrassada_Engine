@@ -22,14 +22,14 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/SplineComponent.h"
+#include "Standalone/TrailComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
+#include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/UI/CanvasScalerComponent.h"
-#include "Standalone/BillboardComponent.h"
-#include "Standalone/SplineComponent.h"
 #include "Standalone/DecalComponent.h"
 
 #include "imgui.h"
@@ -386,7 +386,7 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
-
+    
     rapidjson::Value valLocalTransform(rapidjson::kArrayType);
     valLocalTransform.PushBack(localTransform.ptr()[0], allocator)
         .PushBack(localTransform.ptr()[1], allocator)
@@ -504,8 +504,8 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
         ImGui::Spacing();
 
         if (drawGizmo && App->GetEditorUIModule()->RenderTransformWidget(
-                localTransform, globalTransform, parentTransform, position, rotation, scale
-            ))
+                             localTransform, globalTransform, parentTransform, position, rotation, scale
+                         ))
         {
             UpdateTransformForGOBranch();
         }
@@ -563,7 +563,8 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
 
         ImGui::End();
 
-        if (drawGizmo && !App->GetSceneModule()->GetInPlayMode() && App->GetSceneModule()->GetScene()->GetSceneVisible())
+        if (drawGizmo && !App->GetSceneModule()->GetInPlayMode() &&
+            App->GetSceneModule()->GetScene()->GetSceneVisible())
         {
             if (App->GetEditorUIModule()->RenderImGuizmo(
                     localTransform, globalTransform, parentTransform, position, rotation, scale
@@ -992,7 +993,6 @@ void GameObject::RenderEditor()
     {
         App->GetSceneModule()->GetScene()->RenderHierarchyUI(App->GetEditorUIModule()->hierarchyMenu);
     }
-
 }
 
 void GameObject::SetLocalTransform(const float4x4& newTransform)

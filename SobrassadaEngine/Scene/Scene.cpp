@@ -47,6 +47,7 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/SplineComponent.h"
+#include "Standalone/TrailComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
 #include "Standalone/UI/CanvasScalerComponent.h"
@@ -408,6 +409,9 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::TransparentObjects", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera, framebuffer);
     glPopDebugGroup();
@@ -1399,12 +1403,16 @@ void Scene::TransparentPassRender(
     else
     {
         std::vector<MeshComponent*> meshesToRender;
+        std::vector<TrailComponent*> trailsToRender;
 
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
             if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
                 meshesToRender.push_back(mesh);
+
+            TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
+            if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
         }
 
         if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
@@ -1418,11 +1426,33 @@ void Scene::TransparentPassRender(
         {
             glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
             batchManager->RenderTransparent(meshesToRender, camera);
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDisable(GL_CULL_FACE);
+            glDepthMask(GL_FALSE);
+
+            const unsigned int program = App->GetShaderModule()->GetTrailProgram();
+            glUseProgram(program);
+
+            unsigned int cameraUBO;
+            if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
+            else cameraUBO = camera->GetUbo();
+
+            glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+            unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+            glUniformBlockBinding(program, blockIdx, 0);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            for (const auto& trail : trailsToRender)
+                trail->Render(0);
         }
     }
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
 }
 
 GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)
