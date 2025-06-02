@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Character.h"
+#include "Globals.h"
 
 class GameObject;
 class CharacterControllerComponent;
 class CameraMovement;
 class Projectile;
 class AudioSourceComponent;
+class ImageComponent;
+
 
 enum class CharacterStates
 {
@@ -35,6 +38,7 @@ class CuChulainn : public Character
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { reservedHealth = health; }
     void Respawn();
+    void UpdateHealthBarUI();
     bool GetIsInvulnerable() { return isInvulnerable; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     void EnableMovement(bool enable);
@@ -99,6 +103,10 @@ class CuChulainn : public Character
 
     float3 camFront             = float3::zero;
     float3 camRight             = float3::zero;
+
+    std::vector<UID> healthBarTextures;
+    ImageComponent* healthImageComponent = nullptr;
+
 };
 
 extern CharacterControllerComponent* character;

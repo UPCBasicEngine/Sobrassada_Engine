@@ -16,6 +16,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/UI/ImageComponent.h"
 
 #include "SDL.h"
 #include "Wwise_IDs.h"
@@ -40,7 +41,25 @@ bool CuChulainn::Init()
 
     Character::Init();
 
-    character = parent->GetComponent<CharacterControllerComponent*>();
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    if (healthUIObject)
+    {
+        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
+    }
+    healthBarTextures = {
+        1245742346682234, //10HP
+        1231631089695459, //9HP
+        1252962004861188, //8HP
+        1233703817736228, //7HP 
+        1208982244399629, //6HP 
+        1282943880374581, //5HP
+        1249755929133414, //4HP 
+        1223293867423967, //3HP 
+        1295733499112509, //2HP
+        1287917625935170  //1HP
+    };
+
+    character                  = parent->GetComponent<CharacterControllerComponent*>();
     if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
 
@@ -99,7 +118,7 @@ bool CuChulainn::IsDead()
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
-
+    UpdateHealthBarUI();
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -108,12 +127,14 @@ void CuChulainn::OnDeath()
 
 void CuChulainn::OnDamageTaken(int amount)
 {
+    UpdateHealthBarUI();
     // TODO: play CuChulainn take damage sound
     // TODO: fill riastrad bar dinamically
 }
 
 void CuChulainn::OnHealed(int amount)
 {
+    UpdateHealthBarUI();
     // TODO: play CuChulainn recover sound
     // TODO: play particle system effects
 }
@@ -131,7 +152,8 @@ void CuChulainn::HandleState(float deltaTime)
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL)
+    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL)
         Move();
 
     // When finished animation, go back to idle state
@@ -443,4 +465,15 @@ void CuChulainn::Respawn()
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
+}
+
+void CuChulainn::UpdateHealthBarUI()
+{
+    if (!healthImageComponent || healthBarTextures.empty()) return;
+
+    int index = maxHealth - currentHealth;
+    if (index < 0) index = 0;
+    if (index >= (int)healthBarTextures.size()) index = (int)healthBarTextures.size() - 1;
+
+    healthImageComponent->ChangeTexture(healthBarTextures[index]);
 }

@@ -24,11 +24,12 @@ class ImageComponent : public Component
     void RenderUI(const float4x4& view, const float4x4& proj) const;
     void RemoveTransform() { transform2D = nullptr; }
     void SetColor(const float3& newColor) { color = newColor; }
+    void SOBRASADA_API_ENGINE ChangeTexture(const UID textureUID);
+
 
   private:
     void InitBuffers();
     void ClearBuffers() const;
-    void ChangeTexture(const UID textureUID);
 
   private:
     Transform2DComponent* transform2D;
