@@ -47,16 +47,17 @@ bool CuChulainn::Init()
         healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
     }
     healthBarTextures = {
-        1245742346682234, //10HP
-        1231631089695459, //9HP
-        1252962004861188, //8HP
-        1233703817736228, //7HP 
-        1208982244399629, //6HP 
-        1282943880374581, //5HP
-        1249755929133414, //4HP 
-        1223293867423967, //3HP 
-        1295733499112509, //2HP
-        1287917625935170  //1HP
+        1211032143220573, // 1HP
+        1229536411852494, // 2HP
+        1222839804934023, // 3HP
+        1244849110337061, // 4HP
+        1274246616335466, // 5HP
+        1207603259151767, // 6HP
+        1232318091978476, // 7HP
+        1247873624040725, // 8HP
+        1211992175790243, // 9HP
+        1245070082308559  // 10HP
+
     };
 
     character                  = parent->GetComponent<CharacterControllerComponent*>();
@@ -118,7 +119,6 @@ bool CuChulainn::IsDead()
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
-    UpdateHealthBarUI();
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -458,7 +458,7 @@ void CuChulainn::Respawn()
     // TODO: This function will be called by the UI in the future
 
     Character::Restart();
-
+    healthImageComponent->ChangeTexture(healthBarTextures[9]);
     isDead        = false;
     currentHealth = reservedHealth;
     state         = CharacterStates::RESPAWN;
@@ -470,10 +470,6 @@ void CuChulainn::Respawn()
 void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
-
-    int index = maxHealth - currentHealth;
-    if (index < 0) index = 0;
-    if (index >= (int)healthBarTextures.size()) index = (int)healthBarTextures.size() - 1;
-
-    healthImageComponent->ChangeTexture(healthBarTextures[index]);
+    GLOG("Current chucalain health %i", currentHealth);
+    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
 }
