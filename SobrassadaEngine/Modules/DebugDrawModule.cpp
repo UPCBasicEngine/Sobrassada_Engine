@@ -16,6 +16,8 @@
 #include "ResourceNavmesh.h"
 #include "ResourcesModule.h"
 #include "SceneModule.h"
+#include "Standalone/AIAgentComponent.h"
+#include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/SplineComponent.h"
 
 #include "SDL_video.h"
@@ -819,7 +821,7 @@ void DebugDrawModule::HandleDebugRenderOptions()
         }
     }
 
-    if (debugOptionValues[(int)DebugOptions::RENDER_OCTREE])
+    if (debugOptionValues[(int)DebugOptions::RENDER_STATICTREE])
     {
         Octree* staticTree = sceneModule->GetScene()->GetOctree();
         if (staticTree != nullptr) RenderLines(staticTree->GetDrawLines(), float3(1.f, 0.f, 0.f));
@@ -852,6 +854,30 @@ void DebugDrawModule::HandleDebugRenderOptions()
         {
             SplineComponent* spline = gameObject.second->GetComponent<SplineComponent*>();
             if (spline) spline->RenderDebug(0.0f);
+        }
+    }
+
+    if (debugOptionValues[(int)DebugOptions::RENDER_DEBUG_VISUALS])
+    {
+        for (const auto& gameObject : gameObjects)
+        {
+            if (!gameObject.second->IsGloballyEnabled()) continue;
+
+            CharacterControllerComponent* character = gameObject.second->GetComponent<CharacterControllerComponent*>();
+            if (character)
+                DrawLine(
+                    character->GetLastPosition() + float3(0.0f, 1.0f, 0.0f), character->GetFrontDirection(), 2.0f,
+                    float3(1.0f, 0.0f, 0.0f)
+                );
+
+            AIAgentComponent* enemy = gameObject.second->GetComponent<AIAgentComponent*>();
+            if (enemy)
+            {
+                DrawLine(
+                    gameObject.second->GetGlobalTransform().TranslatePart() + float3(0.0f, 1.0f, 0.0f),
+                    gameObject.second->GetGlobalTransform().WorldZ(), 2.0f, float3(1.0f, 0.0f, 0.0f)
+                );
+            }
         }
     }
 }

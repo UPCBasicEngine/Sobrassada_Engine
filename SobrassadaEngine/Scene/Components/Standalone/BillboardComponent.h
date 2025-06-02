@@ -34,8 +34,16 @@ class BillboardComponent : public Component
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
     bool GetLockPitch() const { return lockPitch; }
+
+    float GetXmin() const { return xmin; }
+    float GetYmin() const { return ymin; }
+    float GetSelectionWidth() const { return selectionWidth; }
+    float GetSelectionHeight() const { return selectionHeight; }
+
+
     UID GetMaterialUID() const { return currentMaterialUID; }
     UID GetTextureUID() const { return currentTextureUID; }
+
     const HashString& GetBillboardTag() const { return billboardTag; }
     std::list<BillboardComponent*>::iterator GetBillboardIterator() const { return billboardIterator; }
 
@@ -47,6 +55,15 @@ class BillboardComponent : public Component
     void SetLockPitch(bool newPitch) { lockPitch = newPitch; };
     void SetUseTexture(bool newUseTexture) { useTexture = newUseTexture; };
 
+
+    void SetUVSelection(float newX, float newY, float newWidth, float newHeight)
+    {
+        xmin            = newX;
+        ymin            = newY;
+        selectionWidth  = newWidth;
+        selectionHeight = newHeight;
+    };
+
   private:
     void RecalculateAABB();
 
@@ -54,6 +71,11 @@ class BillboardComponent : public Component
     float width                       = 1.f;
     float height                      = 1.f;
     bool lockPitch                    = false;
+
+    float xmin                        = 0.f;
+    float selectionWidth              = 0.f;
+    float ymin                        = 0.f;
+    float selectionHeight             = 0.f;
 
     char newTagName[64]               = "";
     HashString billboardTag           = HashString("");

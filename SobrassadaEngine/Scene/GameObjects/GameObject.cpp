@@ -23,12 +23,14 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/SplineComponent.h"
+#include "Standalone/TrailComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
 #include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/DecalComponent.h"
 
 #include "imgui.h"
 #include <queue>
@@ -388,7 +390,7 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
-
+    
     rapidjson::Value valLocalTransform(rapidjson::kArrayType);
     valLocalTransform.PushBack(localTransform.ptr()[0], allocator)
         .PushBack(localTransform.ptr()[1], allocator)
