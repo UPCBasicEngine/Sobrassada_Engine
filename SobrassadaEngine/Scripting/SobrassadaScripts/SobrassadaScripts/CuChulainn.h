@@ -52,7 +52,8 @@ class CuChulainn : public Character
     void GetInputs();
     void UpdateTimers(float deltaTime);
     void LookAtMouse();
-    void LookAtJoystick();
+    void LookAtRightstick();
+    void LookAtLeftstick();
     void CheckIsFalling();
 
     void ThrowSpear();
@@ -83,6 +84,8 @@ class CuChulainn : public Character
     bool desiredAttack          = false;
     float attackBufferTimer     = 0.0f;
     float attackBuffer          = 0.5f;
+    int comboCounter            = -1;
+    float comboBufferTimer      = 0.0f;
 
     bool desiredAim             = false;
     float throwTimer            = 0.0f;
