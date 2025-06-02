@@ -21,6 +21,7 @@ class BillboardModule : public Module
     bool ShutDown() override;
 
     update_status PostUpdate(float deltaTime) override;
+    update_status Update(float deltaTime) override;
 
     void CreateTag(const char* newTag);
     void DeleteTag(const HashString tag);
@@ -36,6 +37,7 @@ class BillboardModule : public Module
     void UpdateTagLockPitch(const HashString& tag, bool lockAxis);
     void UpdateTagUseTexture(const HashString& tag, bool useTexture);
     void UpdateTagPositions(const HashString& tag);
+    void UpdateTagUVCoords(const HashString& tag, float xmin, float ymin, float selectionWidth, float selectionHeight);
 
     const std::vector<HashString>& GetTags() const { return billboardTags; };
 

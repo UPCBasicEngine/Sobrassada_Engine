@@ -34,6 +34,13 @@ BillboardComponent::BillboardComponent(const rapidjson::Value& initialState, Gam
     {
         App->GetBillboardModule()->RequestTag(billboardTag, this);
 
+        if (initialState.HasMember("Xmin")) xmin = initialState["Xmin"].GetFloat();
+        if (initialState.HasMember("Ymin")) ymin = initialState["Ymin"].GetFloat();
+        if (initialState.HasMember("SelectionWidth")) selectionWidth = initialState["SelectionWidth"].GetFloat();
+        if (initialState.HasMember("SelectionHeight")) selectionHeight = initialState["SelectionHeight"].GetFloat();
+
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
+
         RecalculateAABB();
     }
 }
@@ -61,6 +68,11 @@ void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember("Width", width, allocator);
     targetState.AddMember("UseTexture", useTexture, allocator);
     targetState.AddMember("LockPitch", lockPitch, allocator);
+
+    targetState.AddMember("Xmin", xmin, allocator);
+    targetState.AddMember("Ymin", ymin, allocator);
+    targetState.AddMember("SelectionWidth", selectionWidth, allocator);
+    targetState.AddMember("SelectionHeight", selectionHeight, allocator);
 }
 
 void BillboardComponent::Clone(const Component* other)
@@ -143,6 +155,26 @@ void BillboardComponent::RenderEditorInspector()
 
     if (ImGui::InputFloat("Width", &width)) App->GetBillboardModule()->UpdateTagWidth(billboardTag, width);
     if (ImGui::InputFloat("Height", &height)) App->GetBillboardModule()->UpdateTagHeight(billboardTag, height);
+
+    ImGui::PushItemWidth(100);
+
+    if (ImGui::InputFloat("##xmin", &xmin))
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
+    ImGui::SameLine();
+    if (ImGui::InputFloat("##ymin", &ymin))
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
+    ImGui::SameLine();
+    ImGui::Text("Starting x,y position");
+
+    if (ImGui::InputFloat("##selectionWidth", &selectionWidth))
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
+    ImGui::SameLine();
+    if (ImGui::InputFloat("##selectionHeight", &selectionHeight))
+        App->GetBillboardModule()->UpdateTagUVCoords(billboardTag, xmin, ymin, selectionWidth, selectionHeight);
+    ImGui::SameLine();
+    ImGui::Text("Width and Height");
+
+    ImGui::PopItemWidth();
 
     ImGui::Separator();
 
@@ -251,6 +283,11 @@ void BillboardComponent::SetMaterial(ResourceMaterial* newMaterial)
     currentMaterial     = newMaterial;
     currentResourceName = currentMaterial->GetName();
     currentMaterialUID  = currentMaterial->GetUID();
+
+    xmin                = 0.f;
+    ymin                = 0.f;
+    selectionWidth      = (float)currentMaterial->GetDiffuseWidth();
+    selectionHeight     = (float)currentMaterial->GetDiffuseHeight();
 }
 
 void BillboardComponent::SetTexture(ResourceTexture* newTexture)
@@ -260,6 +297,11 @@ void BillboardComponent::SetTexture(ResourceTexture* newTexture)
     currentTexture      = newTexture;
     currentResourceName = currentTexture->GetName();
     currentMaterialUID  = currentTexture->GetUID();
+
+    xmin                = 0.f;
+    ymin                = 0.f;
+    selectionWidth      = (float)currentTexture->GetTextureWidth();
+    selectionHeight     = (float)currentTexture->GetTextureHeight();
 }
 
 void BillboardComponent::RecalculateAABB()

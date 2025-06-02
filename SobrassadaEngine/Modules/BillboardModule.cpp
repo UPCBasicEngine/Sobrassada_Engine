@@ -37,6 +37,24 @@ update_status BillboardModule::PostUpdate(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
+update_status BillboardModule::Update(float deltaTime)
+{
+    bool playMode               = App->GetSceneModule()->GetInPlayMode();
+    const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
+    const CameraComponent* gameCamera =
+        App->GetSceneModule()->IsSceneLoaded() ? App->GetSceneModule()->GetScene()->GetMainCamera() : nullptr;
+
+    float3 cameraPosition =
+        playMode ? gameCamera ? gameCamera->GetCameraPosition() : editorCamera.pos : editorCamera.pos;
+
+    for (auto& billboard : billboardMap)
+    {
+        billboard.second.second->UpdatePositionsVbo(cameraPosition);
+    }
+
+    return UPDATE_CONTINUE;
+}
+
 void BillboardModule::CreateTag(const char* newTag)
 {
     HashString tag = HashString(newTag);
@@ -87,6 +105,9 @@ void BillboardModule::RequestTag(const HashString& tag, BillboardComponent* comp
         if (component->IsUsingTexture()) newBillboard->UpdateTexture(component->GetTextureUID());
         else newBillboard->UpdateMaterial(component->GetMaterialUID());
         newBillboard->UpdateLockPitch(component->GetLockPitch());
+        newBillboard->UpdateUVCoords(
+            component->GetXmin(), component->GetYmin(), component->GetSelectionWidth(), component->GetSelectionHeight()
+        );
         newBillboard->AddComponent(component);
 
         billboardMap.insert({tag, std::pair<unsigned int, Billboard*>(1, newBillboard)});
@@ -113,8 +134,8 @@ void BillboardModule::RemoveComponentFromTag(const HashString& tag, BillboardCom
 void BillboardModule::RenderBillboards()
 {
 
-    bool playMode               = App->GetSceneModule()->GetInPlayMode();
-    const Frustum& editorCamera = App->GetCameraModule()->GetCamera();
+    bool playMode                     = App->GetSceneModule()->GetInPlayMode();
+    const Frustum& editorCamera       = App->GetCameraModule()->GetCamera();
     const CameraComponent* gameCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
 
     float4x4 VP;
@@ -123,15 +144,15 @@ void BillboardModule::RenderBillboards()
 
     if (playMode && gameCamera)
     {
-        VP             = gameCamera->GetProjectionMatrix() * gameCamera->GetViewMatrix();
-        rightVector    = gameCamera->GetCameraRight();
-        upVector       = gameCamera->GetCameraUp();
+        VP          = gameCamera->GetProjectionMatrix() * gameCamera->GetViewMatrix();
+        rightVector = gameCamera->GetCameraRight();
+        upVector    = gameCamera->GetCameraUp();
     }
     else
     {
-        VP             = editorCamera.ProjectionMatrix() * editorCamera.ViewMatrix();
-        rightVector    = editorCamera.WorldRight();
-        upVector       = editorCamera.up;
+        VP          = editorCamera.ProjectionMatrix() * editorCamera.ViewMatrix();
+        rightVector = editorCamera.WorldRight();
+        upVector    = editorCamera.up;
     }
 
     glEnable(GL_BLEND);
@@ -193,6 +214,15 @@ void BillboardModule::UpdateTagPositions(const HashString& tag)
     auto billboardIterator = billboardMap.find(tag);
 
     if (billboardIterator != billboardMap.end()) billboardIterator->second.second->SetReloadPositions();
+}
+
+void BillboardModule::UpdateTagUVCoords(
+    const HashString& tag, float xmin, float ymin, float selectionWidth, float selectionHeight
+)
+{
+    auto billboardIterator = billboardMap.find(tag);
+    if (billboardIterator != billboardMap.end())
+        billboardIterator->second.second->UpdateUVCoords(xmin, ymin, selectionWidth, selectionHeight);
 }
 
 bool BillboardModule::FindTag(const HashString& tag, int& outPosition)

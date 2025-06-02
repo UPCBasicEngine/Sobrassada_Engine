@@ -7,6 +7,7 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -38,6 +39,8 @@ Character::Character(
     fields.push_back({"Attack Hitbox Delay", InspectorField::FieldType::Float, &attackHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Attack Hitbox Duration", InspectorField::FieldType::Float, &attackHitboxDuration, 0.0f, 5.0f});
 
+    fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
+
     if (type != CharacterType::CuChulainn)
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
@@ -62,14 +65,14 @@ bool Character::Init()
         )
 
     weaponCollider = parent->GetComponentChild<CapsuleColliderComponent*>(AppEngine);
-    
+
     if (!weaponCollider)
     {
         GLOG("[WARNING] No capsule weapon collider in child");
     }
     else
     {
-        weapon         = weaponCollider->GetParent();
+        weapon = weaponCollider->GetParent();
         if (!weapon) GLOG("Weapon game object not found")
         else weaponCollider->SetEnabled(false);
     }
@@ -108,8 +111,6 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
         {
             if (!enemyScript->isAttacking) return;
             TakeDamage(enemyScript->attackDamage);
-
-            return;
         }
     }
 
@@ -123,8 +124,6 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
-
-            return;
         }
 
         // Trap check
@@ -137,6 +136,17 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
             {
                 TakeDamage(fireballScript->GetDamage());
                 damageCollider->SetEnabled(false);
+            }
+        }
+
+        // Mushroom check
+        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
+        if (desiredHeal && mushroomScript)
+        {
+            if (mushroomScript->IsReady())
+            {
+                Heal(mushroomScript->GetHealingAmount());
+                mushroomScript->Disable();
             }
         }
     }
@@ -153,19 +163,26 @@ void Character::UpdateTimers(float deltaTime)
     if (isAttacking)
     {
         attackTimer += deltaTime;
-        if (attackTimer <= 0)
+        if (attackTimer <= 0.0f)
         {
             if (weaponCollider && weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
         }
     }
 
     attackCdTimer -= deltaTime;
-    if (attackCdTimer < 0) attackCdTimer = 0;
+    if (attackCdTimer < 0.0f) attackCdTimer = 0.0f;
 
     if (isInvulnerable)
     {
         invulnerabilityTimer -= deltaTime;
-        if (invulnerabilityTimer <= 0) isInvulnerable = false;
+        if (invulnerabilityTimer <= 0.0f) isInvulnerable = false;
+    }
+
+    healCdTimer -= deltaTime;
+    if (healCdTimer <= 0.0f)
+    {
+        desiredHeal = false;
+        healCdTimer = 0.0f;
     }
 }
 

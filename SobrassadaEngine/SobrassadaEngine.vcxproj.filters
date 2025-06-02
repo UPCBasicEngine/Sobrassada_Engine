@@ -585,6 +585,9 @@
     <ClCompile Include="Utils\Particles\ColorAddon.cpp">
       <Filter>Utils\Particles\Addons</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
@@ -593,6 +596,9 @@
     </ClCompile>
     <ClCompile Include="Utils\Particles\AreaAddon.cpp">
       <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp">
+      <Filter>Scene\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1160,11 +1166,17 @@
     <ClInclude Include="Utils\Particles\ColorAddon.h">
       <Filter>Utils\Particles\Addons</Filter>
     </ClInclude>
-    <ClInclude Include="Libs\ImGui\imgui_curves.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Scene\Components\Standalone\TrailComponent.h">
+      <Filter>Scene\Components</Filter>
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_color_gradient.h">
       <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_curves.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\DecalComponent.h">
+      <Filter>Scene\Components</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Particles\AreaAddon.h">
       <Filter>Utils\Particles\Addons</Filter>

@@ -24,6 +24,8 @@ class ShaderModule : public Module
     int GetQuadProgram() const { return quadProgram; };
     int GetDepthProgram() const { return depthProgram; };
     int GetBillboardProgram() const { return billboardProgram; }
+    int GetTrailProgram() const { return trailProgram; }
+    int GetDecalProgram() const { return decalProgram; }
     int GetSpritesheetProgram() const { return spritesheetProgram; }
     int GetParticleSystemProgram() const { return particleSystemProgram; }
 
@@ -49,6 +51,9 @@ class ShaderModule : public Module
     int quadProgram                    = -1;
     int depthProgram                   = -1;
     int billboardProgram               = -1;
+
+    int trailProgram                   = -1;
+    int decalProgram                   = -1;
 
     int spritesheetProgram             = -1;
     int particleSystemProgram          = -1;

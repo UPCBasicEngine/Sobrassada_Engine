@@ -8,6 +8,10 @@
 #include "glew.h"
 #include <Windows.h>
 
+#ifdef OPTICK
+#include "optick.h"
+#endif
+
 OpenGLModule::OpenGLModule()
 {
 }
@@ -92,17 +96,17 @@ void __stdcall OurOpenGLErrorFunction(
 
 bool OpenGLModule::Init()
 {
-    //GLOG("Creating Renderer context");
+    // GLOG("Creating Renderer context");
 
     context    = SDL_GL_CreateContext(App->GetWindowModule()->window);
     GLenum err = glewInit();
 
-    //GLOG("Using Glew %s", glewGetString(GLEW_VERSION));
+    // GLOG("Using Glew %s", glewGetString(GLEW_VERSION));
 
-    //GLOG("Vendor: %s", glGetString(GL_VENDOR));
-    //GLOG("Renderer: %s", glGetString(GL_RENDERER));
-    //GLOG("OpenGL version supported %s", glGetString(GL_VERSION));
-    //GLOG("GLSL: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    // GLOG("Vendor: %s", glGetString(GL_VENDOR));
+    // GLOG("Renderer: %s", glGetString(GL_RENDERER));
+    // GLOG("OpenGL version supported %s", glGetString(GL_VERSION));
+    // GLOG("GLSL: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     glEnable(GL_DEPTH_TEST);                // Enable depth test
     glEnable(GL_CULL_FACE);                 // Enable cull backward faces
@@ -114,8 +118,12 @@ bool OpenGLModule::Init()
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Output callbacks
 
     glDebugMessageCallback(&OurOpenGLErrorFunction, nullptr);
-    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE); //Filter notification
-    glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_FALSE); //Filter Low with Other (like another notification message)
+    glDebugMessageControl(
+        GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE
+    ); // Filter notification
+    glDebugMessageControl(
+        GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_FALSE
+    ); // Filter Low with Other (like another notification message)
 #endif
 
     // stencil op
@@ -167,17 +175,26 @@ update_status OpenGLModule::Update(float deltaTime)
 
 update_status OpenGLModule::PostUpdate(float deltaTime)
 {
-    framebuffer->CheckResize();
-    gBuffer->CheckResize();
+#ifdef OPTICK
+    OPTICK_CATEGORY("OpengGLModule::PostUpdate", Optick::Category::Wait)
+#endif
+    {
 
-    SDL_GL_SwapWindow(App->GetWindowModule()->window);
+        framebuffer->CheckResize();
+        gBuffer->CheckResize();
+
+#ifdef OPTICK
+        OPTICK_CATEGORY("OpengGLModule::PostUpdate_SwapWindow", Optick::Category::Wait)
+#endif
+        SDL_GL_SwapWindow(App->GetWindowModule()->window);
+    }
 
     return UPDATE_CONTINUE;
 }
 
 bool OpenGLModule::ShutDown()
 {
-    //GLOG("Destroying renderer");
+    // GLOG("Destroying renderer");
 
     SDL_GL_DeleteContext(App->GetWindowModule()->window);
     delete framebuffer;
