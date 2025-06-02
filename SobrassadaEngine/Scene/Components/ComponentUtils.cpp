@@ -172,9 +172,9 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
     }
     case COMPONENT_CANVAS_SCALER:
     {
-        CanvasScalerComponent* canvasScaler              = new CanvasScalerComponent(uid, parent);
-        std::get<CanvasScalerComponent*>(componentTuple) = canvasScaler;
-        generatedComponent                               = canvasScaler;
+        CanvasScalerComponent* component                 = new CanvasScalerComponent(uid, parent);
+        std::get<CanvasScalerComponent*>(componentTuple) = component;
+        component->Init();
         break;
     }
     case COMPONENT_BILLBOARD:
@@ -193,23 +193,23 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
     }
     case COMPONENT_SPLINE:
     {
-        SplineComponent* spline                    = new SplineComponent(uid, parent);
-        std::get<SplineComponent*>(componentTuple) = spline;
-        generatedComponent                         = spline;
+        SplineComponent* component                 = new SplineComponent(uid, parent);
+        std::get<SplineComponent*>(componentTuple) = component;
+        component->Init();
         break;
     } 
     case COMPONENT_DECAL:
     {
-        DecalComponent* decal                     = new DecalComponent(uid, parent);
-        std::get<DecalComponent*>(componentTuple) = decal;
-        generatedComponent                        = decal;
+        DecalComponent* component                 = new DecalComponent(uid, parent);
+        std::get<DecalComponent*>(componentTuple) = component;
+        component->Init();
         break;
     }
     case COMPONENT_TRAIL:
     {
-        TrailComponent* trail                     = new TrailComponent(uid, parent);
-        std::get<TrailComponent*>(componentTuple) = trail;
-        generatedComponent                        = trail;
+        TrailComponent* component                 = new TrailComponent(uid, parent);
+        std::get<TrailComponent*>(componentTuple) = component;
+        component->Init();
 		break;
 	}   
     default:
