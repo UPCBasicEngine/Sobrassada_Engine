@@ -32,6 +32,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
+    fields.push_back({"Ultimate damage", InspectorField::FieldType::Float, &ultimateDamage, 0.0f, 5.0f});
+    fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
 }
 
 bool CuChulainn::Init()
@@ -131,7 +133,8 @@ void CuChulainn::HandleState(float deltaTime)
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL)
+    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL)
         Move();
 
     // When finished animation, go back to idle state
@@ -208,6 +211,10 @@ void CuChulainn::GetInputs()
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
+    if (keyboard[SDL_SCANCODE_F] || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_DOWN)
+    {
+        desiredUltimate = true;
+    }
     if (keyboard[SDL_SCANCODE_F5])
     {
         // TODO: This should be SetSpawnPos, Respawn is here to test
@@ -275,6 +282,9 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
         throwTimer = 0;
     }
+
+    ultimateTimer -= deltaTime;
+    if (ultimateTimer <= 0.0f) ultimateTimer = 0.0f;
 }
 
 void CuChulainn::LookAtMouse()
