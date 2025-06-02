@@ -137,7 +137,7 @@ Scene::~Scene()
     }
 
     App->GetPhysicsModule()->EmptyWorld();
-    
+
     gameObjectsContainer.clear();
 
     selectedGameObjects.clear();
@@ -374,29 +374,27 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
-    {
 #ifdef OPTICK
-        OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
+    OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
 #endif
-        for (const auto& gameObject : objectsToRender)
+    for (const auto& gameObject : objectsToRender)
+    {
+        if (gameObject != nullptr)
         {
-            if (gameObject != nullptr)
-            {
-                gameObject->Render(deltaTime);
-            }
+            gameObject->Render(deltaTime);
         }
     }
 
+#ifndef GAME
+    for (const auto& gameObject : gameObjectsContainer)
     {
-#ifdef OPTICK
-        OPTICK_CATEGORY("Scene::GameObject::DrawGizmos", Optick::Category::Rendering)
-#endif
-        for (const auto& gameObject : gameObjectsContainer)
-        {
-            gameObject.second->DrawGizmos();
-        }
+        gameObject.second->DrawGizmos();
     }
+#endif
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::Render_DebugDraw", Optick::Category::Rendering)
+#endif
     DebugDrawModule* debugDraw = App->GetDebugDrawModule();
 
     for (auto& gameObjectIterator : selectedGameObjects)
@@ -410,15 +408,20 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     }
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::TransparentObjects", Optick::Category::Rendering)
+    OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera, framebuffer);
     glPopDebugGroup();
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::Render_Billboards", Optick::Category::Rendering)
+#endif
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
     glEnable(GL_BLEND);
     App->GetBillboardModule()->RenderBillboards();
     glDisable(GL_BLEND);
+    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)

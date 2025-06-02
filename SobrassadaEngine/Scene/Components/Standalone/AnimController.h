@@ -17,7 +17,7 @@ class AnimController
     void Pause() { playAnimation = false; }
     void Resume() { playAnimation = true; }
 
-    void GetTransform(const std::string& nodeName, float3& pos, Quat& rot);
+    void GetTransform(const HashString& nodeName, float3& pos, Quat& rot);
 
     ResourceAnimation* GetCurrentAnimation() const { return currentAnimation; }
     float GetTime() const { return currentTime; }
@@ -36,6 +36,8 @@ class AnimController
     void SetAnimationResource(ResourceAnimation* anim) { currentAnimation = anim; }
 
     Quat Interpolate(Quat& first, Quat& second, float lambda);
+
+    size_t FindChannelIndex(const std::vector<float>& animChannelVector, float time) const;
   
   private:
     UID resource                        = INVALID_UID;

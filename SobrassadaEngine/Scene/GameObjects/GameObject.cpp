@@ -37,6 +37,10 @@
 #include <set>
 #include <stack>
 
+#ifdef OPTICK
+#include "optick.h"
+#endif
+
 // ---------- SECTION FOR TUPLE ITERATION ----------
 
 // YES, NOTHING, ABSOLUTELY BEAUTIFUL, NOTHINGNESS
@@ -997,11 +1001,17 @@ void GameObject::RenderEditor()
 
 void GameObject::SetLocalTransform(const float4x4& newTransform)
 {
-    localTransform = newTransform;
-    position       = localTransform.TranslatePart();
-    rotation       = localTransform.RotatePart().ToEulerXYZ();
-    scale          = localTransform.GetScale();
-    UpdateTransformForGOBranch();
+#ifdef OPTICK
+    OPTICK_CATEGORY("GameObject::SetLocalTransform", Optick::Category::GameLogic);
+#endif // OPTICK
+
+    {
+        localTransform = newTransform;
+        position       = localTransform.TranslatePart();
+        rotation       = localTransform.RotatePart().ToEulerXYZ();
+        scale          = localTransform.GetScale();
+        UpdateTransformForGOBranch();
+    }
 }
 
 void GameObject::SetLocalPosition(const float3& newPos)
@@ -1026,6 +1036,14 @@ const float4x4& GameObject::GetParentGlobalTransform() const
         return parent->GetGlobalTransform();
     }
     return float4x4::identity;
+}
+
+void GameObject::SetJustLocalTransform(const float4x4& newTransform)
+{
+    localTransform = newTransform;
+    position       = localTransform.TranslatePart();
+    rotation       = localTransform.RotatePart().ToEulerXYZ();
+    scale          = localTransform.GetScale();
 }
 
 void GameObject::DrawNodes() const

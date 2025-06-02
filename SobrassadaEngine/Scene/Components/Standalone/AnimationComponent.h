@@ -39,7 +39,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     ResourceAnimation* GetCurrentAnimation() const { return currentAnimResource; }
     AnimController* GetAnimationController() { return animController; }
     ResourceStateMachine* GetResourceStateMachine() const { return resourceStateMachine; }
-    const std::unordered_map<std::string, GameObject*>& GetBoneMapping() const { return boneMapping; }
+    const std::unordered_map<HashString, GameObject*>& GetBoneMapping() const { return boneMapping; }
     bool IsPlaying() const;
     bool IsFinished() const;
 
@@ -56,7 +56,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     ResourceStateMachine* resourceStateMachine = nullptr;
     const State* currentState                  = nullptr;
 
-    std::unordered_map<std::string, GameObject*> boneMapping;
+    std::unordered_map<HashString, GameObject*> boneMapping;
     std::map<std::string, float4x4> bindPoseTransforms;
 
     float animationDuration = 0.0f;
