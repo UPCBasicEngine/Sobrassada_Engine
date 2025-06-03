@@ -106,9 +106,6 @@
     <ClInclude Include="CuChulainn.h">
       <Filter>Characters</Filter>
     </ClInclude>
-    <ClInclude Include="RespawnController.h">
-      <Filter>Utils</Filter>
-	</ClInclude>
     <ClInclude Include="TileFloatScript.h">
       <Filter>Environment</Filter>
     </ClInclude>
@@ -123,6 +120,9 @@
     </ClInclude>
     <ClInclude Include="MenuChangeSceneScript.h">
       <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Mushroom.h">
+      <Filter>Environment</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -771,9 +771,6 @@
     <ClCompile Include="CuChulainn.cpp">
       <Filter>Characters</Filter>
     </ClCompile>
-    <ClCompile Include="RespawnController.cpp">
-      <Filter>Utils</Filter>
-	</ClCompile>
     <ClCompile Include="TileFloatScript.cpp">
       <Filter>Environment</Filter>
     </ClCompile>
@@ -788,6 +785,9 @@
     </ClCompile>
     <ClCompile Include="MenuChangeSceneScript.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Mushroom.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

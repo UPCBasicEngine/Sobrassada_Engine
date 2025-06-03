@@ -25,6 +25,7 @@ class Material
     const UID GetNormalTexture() const { return normalTexture; }
     const UID GetOcclusionTexture() const { return occlusionTexture; }
 
+    const bool IsAlphaDiscard() const { return isAlphaDiscard; }
     const bool IsTransparent() const { return isTransparent; }
     const bool IsDoubleSided() const { return isDoubleSided; }
 
@@ -46,6 +47,7 @@ class Material
 
     void SetTransparent(bool transparent) { isTransparent = transparent; }
     void SetDoubleSide(bool isDoubleSided) { isDoubleSided = isDoubleSided; }
+    void SetAlphaDiscard(bool alphaDiscard) { isAlphaDiscard = alphaDiscard; }
 
     void SetMaterialUID(UID uid) { materialUID = uid; }
 
@@ -70,4 +72,5 @@ class Material
 
     bool isTransparent            = false;
     bool isDoubleSided            = false;
+    bool isAlphaDiscard           = false;
 };

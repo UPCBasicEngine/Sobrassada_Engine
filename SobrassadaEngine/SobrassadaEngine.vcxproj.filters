@@ -552,6 +552,18 @@
     <ClCompile Include="Modules\BillboardModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Libs\ImGui\imgui_curves.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1078,6 +1090,18 @@
     </ClInclude>
     <ClInclude Include="Modules\BillboardModule.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\TrailComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_color_gradient.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Libs\ImGui\imgui_curves.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\DecalComponent.h">
+      <Filter>Scene\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

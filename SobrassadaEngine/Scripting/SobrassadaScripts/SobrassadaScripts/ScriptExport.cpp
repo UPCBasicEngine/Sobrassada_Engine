@@ -14,6 +14,8 @@
 #include "GodMode.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
+#include "MoveGOInSpline.h"
+#include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
 #include "PauseMenuScript.h"
 #include "PressAnyKeyScript.h"
@@ -24,7 +26,7 @@
 #include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "MoveGOInSpline.h"
+
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
@@ -57,7 +59,8 @@ constexpr const char* scripts[] = {
     "ChangeSceneScript",
     "SpawnUI",
     "MenuChangeSceneScript",
-    "MoveGOInSpline"
+    "MoveGOInSpline",
+    "Mushroom"
 };
 
 Application* AppEngine = nullptr;
@@ -88,11 +91,12 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Projectile") return new Projectile(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "Banshee") return new Banshee(parent);
-    if (scriptType == "FireballTrap") return new FireballTrap(parent);
     if (scriptType == "Archer") return new Archer(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
+    if (scriptType == "FireballTrap") return new FireballTrap(parent);
+    if (scriptType == "Mushroom") return new Mushroom(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);

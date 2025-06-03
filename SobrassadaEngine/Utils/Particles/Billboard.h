@@ -27,6 +27,8 @@ class Billboard
     void UpdateTexture(UID newTextureUID);
     void UpdateLockPitch(bool newLock);
     void UpdateUseTexture(bool newTexture);
+    void UpdatePositionsVbo(const float3& cameraPosition);
+    void UpdateUVCoords(float xmin, float ymin, float selectionWidth, float selectionHeight);
 
     void Render(const float4x4& VP, const float3& rightVector, const float3& upVector);
 
@@ -38,7 +40,6 @@ class Billboard
 
   private:
     void CreateVertexBufferObject();
-    void UpdatePositionsVbo();
 
   private:
     unsigned int positionsVbo  = 0;
@@ -55,4 +56,10 @@ class Billboard
     std::list<BillboardComponent*> instanceComponents;
     std::vector<float3> instancePositions;
     bool reloadPositions = false;
+
+    float minTexU        = 0.f;
+    float maxTexU        = 1.f;
+
+    float minTexV        = 0.f;
+    float maxTexV        = 1.f;
 };

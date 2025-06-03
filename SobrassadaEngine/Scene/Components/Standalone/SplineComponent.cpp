@@ -51,7 +51,7 @@ void SplineComponent::RenderDebug(float deltaTime)
     const float3 curveColor(0, 1, 0); // Green
     const float3 pointColor(1, 0, 0); // Red
 
-    const float3 worldOffset = parent->GetGlobalTransform().TranslatePart();
+    const float3 worldOffset = inWorld ? parent->GetGlobalTransform().TranslatePart() : float3(0, 0, 0);
 
     auto drawLine = [&](const float3& a, const float3& b) { dbg->DrawLineSegment(LineSegment(a, b), curveColor); };
 
@@ -81,6 +81,7 @@ void SplineComponent::RenderDebug(float deltaTime)
         dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f);
     }
 }
+
 
 bool SplineComponent::RenderGizmo()
 {
@@ -208,7 +209,17 @@ void SplineComponent::InsertPoint(const size_t i, const float3& p)
 
 void SplineComponent::RemovePoint(const size_t i)
 {
-    if (i < points.size()) points.erase(points.begin() + i);
+    if (i < points.size())
+    {
+        points.erase(points.begin() + i);
+        selectedIdx = -1;
+    }
+}
+
+void SplineComponent::ClearPoints()
+{
+    selectedIdx = -1;
+    points.clear();
 }
 
 float SplineComponent::GetT(const float3& p0, const float3& p1, float tPrev) const
