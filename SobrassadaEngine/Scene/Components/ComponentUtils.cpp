@@ -18,14 +18,14 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/SplineComponent.h"
+#include "Standalone/TrailComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Standalone/UI/CanvasComponent.h"
+#include "Standalone/UI/CanvasScalerComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/UI/CanvasScalerComponent.h"
-#include "Standalone/SplineComponent.h"
-
 
 #include <cstdint>
 
@@ -172,9 +172,9 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
     }
     case COMPONENT_CANVAS_SCALER:
     {
-        CanvasScalerComponent* canvasScaler               = new CanvasScalerComponent(uid, parent);
+        CanvasScalerComponent* canvasScaler              = new CanvasScalerComponent(uid, parent);
         std::get<CanvasScalerComponent*>(componentTuple) = canvasScaler;
-        generatedComponent                                = canvasScaler;
+        generatedComponent                               = canvasScaler;
         break;
     }
     case COMPONENT_BILLBOARD:
@@ -186,11 +186,11 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
     }
     case COMPONENT_SPLINE:
     {
-        SplineComponent* spline                           = new SplineComponent(uid, parent);
+        SplineComponent* spline                    = new SplineComponent(uid, parent);
         std::get<SplineComponent*>(componentTuple) = spline;
-        generatedComponent                                = spline;
-		break;
-	}    
+        generatedComponent                         = spline;
+        break;
+    } 
     case COMPONENT_DECAL:
     {
         DecalComponent* decal                     = new DecalComponent(uid, parent);
@@ -198,6 +198,13 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         generatedComponent                        = decal;
         break;
     }
+    case COMPONENT_TRAIL:
+    {
+        TrailComponent* trail                     = new TrailComponent(uid, parent);
+        std::get<TrailComponent*>(componentTuple) = trail;
+        generatedComponent                        = trail;
+		break;
+	}   
     default:
         return;
     }
@@ -335,18 +342,24 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
             std::get<BillboardComponent*>(componentTuple) = billboard;
             break;
         }
-		case COMPONENT_SPLINE:
+        case COMPONENT_SPLINE:
         {
             SplineComponent* spline                    = new SplineComponent(initialState, parent);
             std::get<SplineComponent*>(componentTuple) = spline;
-			break;
-		}        
+            break;
+        }      
         case COMPONENT_DECAL:
         {
             DecalComponent* decal                     = new DecalComponent(initialState, parent);
             std::get<DecalComponent*>(componentTuple) = decal;
             break;
         }
+        case COMPONENT_TRAIL:
+        {
+            TrailComponent* trail                    = new TrailComponent(initialState, parent);
+            std::get<TrailComponent*>(componentTuple) = trail;
+			break;
+		}  
         default:
             return;
         }

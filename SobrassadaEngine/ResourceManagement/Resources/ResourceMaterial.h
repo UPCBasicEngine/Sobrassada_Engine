@@ -47,12 +47,14 @@ class ResourceMaterial : public Resource
     void SaveToMeta();
 
     void SetTransparent(const bool transparent) { isTransparent = transparent; }
+    void SetAlphaDiscard(const bool isAlphaDiscard) { isAlpha = isAlphaDiscard; }
 
     const bool GetIsSpecular() const { return specularTexture.textureID != 0 ? true : false; }
     const bool GetIsMetallicRoughness() const { return metallicTexture.textureID != 0 ? true : false; }
     const MaterialGPU GetMaterial() const { return material; }
     const bool HasNormal() const { return hasNormal; }
     const bool IsTransparent() const { return isTransparent; }
+    const bool IsAlphaDiscard() const { return isAlpha; }
     const bool IsDoubleSided() const { return doubleSided; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
@@ -67,6 +69,7 @@ class ResourceMaterial : public Resource
 
     MaterialGPU material;
     bool isTransparent    = false;
+    bool isAlpha          = false;
     bool doubleSided      = false;
     bool hasNormal        = false;
     UID defaultTextureUID = INVALID_UID;
