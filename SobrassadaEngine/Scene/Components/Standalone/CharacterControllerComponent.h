@@ -64,7 +64,6 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool isRadians               = false;
 
     dtNavMeshQuery* navMeshQuery = nullptr;
-    dtPolyRef currentPolyRef     = 0;
 
     float gravity                = -9.81f;
     float verticalSpeed          = 0.0f;
@@ -81,7 +80,8 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool isDashing               = false;
     float dashTimeRemaining      = 0.0f;
     float dashSpeed              = 20.0f;
-    float3 dashTarget;
-    float dashDistance = 3.0f;
-    float dashDuration = 0.2f;
+    float3 dashTarget            = float3::zero;
+    float dashDistance           = 3.0f;
+    float dashDuration           = 0.2f;
+    bool dashToNavmesh           = false;
 };
