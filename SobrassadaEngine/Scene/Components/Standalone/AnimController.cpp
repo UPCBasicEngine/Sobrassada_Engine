@@ -74,26 +74,6 @@ update_status AnimController::Update(float deltaTime)
 
     const float duration = currentAnimation->GetDuration();
 
-    if (currentTime > duration)
-    {
-        if (loop)
-        {
-            currentTime = fmod(currentTime, duration);
-        }
-        else
-        {
-            currentTime       = duration;
-            playAnimation     = false;
-            animationFinished = true;
-
-            // if (currentAnimation != nullptr)
-            //{
-            //     App->GetResourcesModule()->ReleaseResource(currentAnimation);
-            //     currentAnimation = nullptr;
-            // }
-        }
-    }
-
     if (targetAnimation != nullptr)
     {
         currentTargetTime          += deltaTime;

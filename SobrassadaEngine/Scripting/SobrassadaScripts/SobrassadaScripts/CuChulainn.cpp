@@ -444,7 +444,7 @@ void CuChulainn::Attack(float deltaTime)
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
     ++comboCounter;
-    GLOG("Combo counter: %d", comboCounter);
+    // GLOG("Combo counter: %d", comboCounter);
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
