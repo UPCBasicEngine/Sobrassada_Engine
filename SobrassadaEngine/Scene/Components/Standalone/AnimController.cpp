@@ -45,6 +45,22 @@ Quat AnimController::Interpolate(Quat& first, Quat& second, float lambda)
     else return Quat::Lerp(first, second.Neg(), lambda).Normalized();
 }
 
+size_t AnimController::FindChannelIndex(const std::vector<float>& animChannelVector, float time) const
+{
+    int left  = 0;
+    int right = (int)animChannelVector.size() - 1;
+
+    while (left <= right)
+    {
+        int mid = (right + left) / 2;
+        if (time == animChannelVector[mid]) return mid;
+        else if (animChannelVector[mid] > time) right = mid - 1;
+        else left = mid + 1;
+    }
+
+    return left;
+}
+
 update_status AnimController::Update(float deltaTime)
 {
     if (!playAnimation || resource == INVALID_UID) return UPDATE_CONTINUE;
@@ -99,7 +115,7 @@ update_status AnimController::Update(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
-void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat& rot)
+void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat& rot)
 {
     if (!playAnimation || resource == INVALID_UID || currentAnimation == nullptr) return;
 
@@ -207,11 +223,7 @@ void AnimController::GetChannelPosition(const Channel* animChannel, float3& pos,
         }
         else
         {
-            size_t nextIndex = 0;
-            while (nextIndex < animChannel->numPositions && animChannel->posTimeStamps[nextIndex] <= time)
-            {
-                nextIndex++;
-            }
+            size_t nextIndex = FindChannelIndex(animChannel->posTimeStamps, time);
 
             size_t prevIndex = (nextIndex > 0) ? nextIndex - 1 : 0;
 
@@ -258,11 +270,7 @@ void AnimController::GetChannelRotation(Channel* animChannel, Quat& rot, const f
         }
         else
         {
-            size_t nextIndex = 0;
-            while (nextIndex < animChannel->numRotations && animChannel->rotTimeStamps[nextIndex] <= time)
-            {
-                nextIndex++;
-            }
+            size_t nextIndex = FindChannelIndex(animChannel->rotTimeStamps, time);
 
             size_t prevIndex = (nextIndex > 0) ? nextIndex - 1 : 0;
 

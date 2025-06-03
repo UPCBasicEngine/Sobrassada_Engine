@@ -35,7 +35,16 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
         AddMesh(initialState["Mesh"].GetUint64(), false);
     }
     if (initialState.HasMember("RenderMode")) renderMode = initialState["RenderMode"].GetInt();
-    else renderMode = 0;
+    else
+    {
+        if (currentMaterial != nullptr)
+        {
+            if (currentMaterial->IsAlphaDiscard()) renderMode = 2;     
+            else if (currentMaterial->IsTransparent()) renderMode = 1; 
+            else renderMode = 0;                                       
+        }
+        else renderMode = 0;
+    }
 
     if (initialState.HasMember("Bones"))
     {
@@ -178,7 +187,21 @@ void MeshComponent::RenderEditorInspector()
         if (ImGui::Combo("Render Mode", &currentRenderMode, renderModes, IM_ARRAYSIZE(renderModes)))
         {
             renderMode = currentRenderMode;
-            renderMode == 1 ? currentMaterial->SetTransparent(true) : currentMaterial->SetTransparent(false);
+            if (renderMode == 0)
+            {
+                currentMaterial->SetAlphaDiscard(false);
+                currentMaterial->SetTransparent(false);
+            }
+            else if (renderMode == 1)
+            {
+                currentMaterial->SetAlphaDiscard(false);
+                currentMaterial->SetTransparent(true);
+            }
+            else if (renderMode == 2)
+            {
+                currentMaterial->SetAlphaDiscard(true);
+                currentMaterial->SetTransparent(false);
+            }
             if (batch) BatchEditorMode();
         }
 
@@ -256,7 +279,10 @@ void MeshComponent::AddMaterial(UID resource, bool setDefaultMaterial)
         App->GetResourcesModule()->ReleaseResource(currentMaterial);
         currentMaterial          = newMaterial;
         currentMaterialName      = currentMaterial->GetName();
-        renderMode               = currentMaterial->IsTransparent() ? 1 : 0;
+
+        if (currentMaterial->IsTransparent()) renderMode = 1;
+        else if (currentMaterial->IsAlphaDiscard()) renderMode = 2;
+        else renderMode = 0;
         bUsesMeshDefaultMaterial = setDefaultMaterial;
 
         if (batch) BatchEditorMode();

@@ -54,6 +54,7 @@ AIAgentComponent::~AIAgentComponent()
         agentId = -1;
     }
 }
+
 // Updates agent position evey frame
 void AIAgentComponent::Update(float deltaTime)
 {
