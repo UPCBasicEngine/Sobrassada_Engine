@@ -36,7 +36,9 @@ VelocityAddon::VelocityAddon(const rapidjson::Value& initialState, ParticleEmitt
     if (initialState.HasMember("RandY")) randomizeYSpeed = initialState["RandY"].GetBool();
     if (initialState.HasMember("RandZ")) randomizeZSpeed = initialState["RandZ"].GetBool();
 
-    if (initialState.HasMember("useCurves")) useCurves = initialState["useCurves"].GetBool();
+    if (initialState.HasMember("useXCurve")) useXCurve = initialState["useXCurve"].GetBool();
+    if (initialState.HasMember("useYCurve")) useYCurve = initialState["useYCurve"].GetBool();
+    if (initialState.HasMember("useZCurve")) useZCurve = initialState["useZCurve"].GetBool();
 
     if (initialState.HasMember("xBezier"))
     {
@@ -93,7 +95,9 @@ void VelocityAddon::Save(rapidjson::Value& targetState, rapidjson::Document::All
     targetState.AddMember("RandY", randomizeYSpeed, allocator);
     targetState.AddMember("RandZ", randomizeZSpeed, allocator);
 
-    targetState.AddMember("useCurves", useCurves, allocator);
+    targetState.AddMember("useXCurve", useXCurve, allocator);
+    targetState.AddMember("useYCurve", useYCurve, allocator);
+    targetState.AddMember("useZCurve", useZCurve, allocator);
 
     rapidjson::Value xBezier(rapidjson::kArrayType);
     xBezier.PushBack(bezierX[0], allocator)
@@ -127,18 +131,15 @@ void VelocityAddon::Init(EmitterInstance* emitterInstance)
         float finalX = 0;
         float finalY = 0;
         float finalZ = 0;
-        if (!useCurves)
-        {
-            finalX = randomizeXSpeed ? rng->Float(xSpeed.x, xSpeed.y) : xSpeed.y;
-            finalY = randomizeYSpeed ? rng->Float(ySpeed.x, ySpeed.y) : ySpeed.y;
-            finalZ = randomizeZSpeed ? rng->Float(zSpeed.x, zSpeed.y) : zSpeed.y;
-        }
-        else
-        {
-            finalX = xSpeed[0];
-            finalY = ySpeed[0];
-            finalZ = zSpeed[0];
-        }
+
+        if (!useXCurve) finalX = randomizeXSpeed ? rng->Float(xSpeed.x, xSpeed.y) : xSpeed.y;
+        else finalX = xSpeed[0];
+
+        if (!useYCurve) finalY = randomizeYSpeed ? rng->Float(ySpeed.x, ySpeed.y) : ySpeed.y;
+        else finalY = ySpeed[0];
+
+        if (!useZCurve) finalZ = randomizeZSpeed ? rng->Float(zSpeed.x, zSpeed.y) : zSpeed.y;
+        else finalZ = zSpeed[0];
 
         particle.velocity = float3(finalX, finalY, finalZ);
     }
@@ -150,14 +151,13 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
     for (auto& particle : emitterInstance->particles)
     {
-        if (useCurves)
-        {
-            float valueOverLifetime = particle.currentLifetime / particle.lifeTime;
 
-            particle.velocity.x     = Interpolation::Lerp(xSpeed[0], xSpeed[1], valueOverLifetime);
-            particle.velocity.y     = Interpolation::Lerp(ySpeed[0], ySpeed[1], valueOverLifetime);
-            particle.velocity.z     = Interpolation::Lerp(zSpeed[0], zSpeed[1], valueOverLifetime);
-        }
+        float valueOverLifetime = particle.currentLifetime / particle.lifeTime;
+
+        if (useXCurve) particle.velocity.x = Interpolation::Lerp(xSpeed[0], xSpeed[1], valueOverLifetime);
+        if (useYCurve) particle.velocity.y = Interpolation::Lerp(ySpeed[0], ySpeed[1], valueOverLifetime);
+        if (useZCurve) particle.velocity.z = Interpolation::Lerp(zSpeed[0], zSpeed[1], valueOverLifetime);
+
         particle.position = particle.position.Add(particle.velocity * deltaTime);
     }
 }
@@ -168,78 +168,117 @@ void VelocityAddon::RenderEditorInspector()
 
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Velocity Addon");
 
-    if (ImGui::BeginCombo("Velocity type", VelocityAddonStrings[useCurves ? 1 : 0]))
-    {
-        for (int i = 0; i < VelocityAddonStringsSize; ++i)
-        {
-            if (ImGui::Selectable(VelocityAddonStrings[i])) useCurves = i;
-        }
-        ImGui::EndCombo();
-    }
-
     // RENDER EDITOR STARTS
-    if (!useCurves)
+
+    ImGui::Spacing();
+
+    if (ImGui::CollapsingHeader("X Speed"))
     {
-        ImGui::PushItemWidth(100);
-
-        if (randomizeXSpeed)
+        if (ImGui::BeginCombo("X Velocity type", VelocityAddonStrings[useXCurve ? 1 : 0]))
         {
-            ImGui::InputFloat("##MinLXSpeed", &xSpeed[0]);
-            ImGui::SameLine();
+            for (int i = 0; i < VelocityAddonStringsSize; ++i)
+            {
+                if (ImGui::Selectable(VelocityAddonStrings[i])) useXCurve = i;
+            }
+            ImGui::EndCombo();
         }
-        ImGui::InputFloat("##MaxXSpeed", &xSpeed[1]);
-        ImGui::SameLine();
-        ImGui::Text("X Speed");
-        ImGui::SameLine();
-        ImGui::Checkbox("Rand.X Speed", &randomizeXSpeed);
 
-        if (randomizeYSpeed)
-        {
-            ImGui::InputFloat("##MinLYSpeed", &ySpeed[0]);
-            ImGui::SameLine();
-        }
-        ImGui::InputFloat("##MaxYSpeed", &ySpeed[1]);
-        ImGui::SameLine();
-        ImGui::Text("Y Speed");
-        ImGui::SameLine();
-        ImGui::Checkbox("Rand.Y Speed", &randomizeYSpeed);
-
-        if (randomizeZSpeed)
-        {
-            ImGui::InputFloat("##MinLZSpeed", &zSpeed[0]);
-            ImGui::SameLine();
-        }
-        ImGui::InputFloat("##MaxZSpeed", &zSpeed[1]);
-        ImGui::SameLine();
-        ImGui::Text("Z Speed");
-        ImGui::SameLine();
-        ImGui::Checkbox("Rand.Z Speed", &randomizeZSpeed);
-
-        ImGui::PopItemWidth();
-    }
-    else
-    {
-        ImGui::Spacing();
-
-        if (ImGui::CollapsingHeader("X Speed"))
+        if (useXCurve)
         {
             ImGui::Bezier("xBezier", bezierX); // draw
             ImGui::InputFloat2("X Range", &xSpeed[0]);
         }
+        else
+        {
+            ImGui::PushItemWidth(100);
 
-        if (ImGui::CollapsingHeader("Y Speed"))
+            if (randomizeXSpeed)
+            {
+                ImGui::InputFloat("##MinLXSpeed", &xSpeed[0]);
+                ImGui::SameLine();
+            }
+            ImGui::InputFloat("##MaxXSpeed", &xSpeed[1]);
+            ImGui::SameLine();
+            ImGui::Text("X Speed");
+            ImGui::SameLine();
+            ImGui::Checkbox("Rand.X Speed", &randomizeXSpeed);
+
+            ImGui::PopItemWidth();
+        }
+    }
+
+    ImGui::Spacing();
+
+    if (ImGui::CollapsingHeader("Y Speed"))
+    {
+        if (ImGui::BeginCombo("Y Velocity type", VelocityAddonStrings[useYCurve ? 1 : 0]))
+        {
+            for (int i = 0; i < VelocityAddonStringsSize; ++i)
+            {
+                if (ImGui::Selectable(VelocityAddonStrings[i])) useYCurve = i;
+            }
+            ImGui::EndCombo();
+        }
+
+        if (useYCurve)
         {
             ImGui::Bezier("yBezier", bezierY); // draw
             ImGui::InputFloat2("Y Range", &ySpeed[0]);
         }
+        else
+        {
+            ImGui::PushItemWidth(100);
 
-        if (ImGui::CollapsingHeader("Z Speed"))
+            if (randomizeYSpeed)
+            {
+                ImGui::InputFloat("##MinLYSpeed", &ySpeed[0]);
+                ImGui::SameLine();
+            }
+            ImGui::InputFloat("##MaxYSpeed", &ySpeed[1]);
+            ImGui::SameLine();
+            ImGui::Text("Y Speed");
+            ImGui::SameLine();
+            ImGui::Checkbox("Rand.Y Speed", &randomizeYSpeed);
+
+            ImGui::PopItemWidth();
+        }
+    }
+
+    ImGui::Spacing();
+
+    if (ImGui::CollapsingHeader("Z Speed"))
+    {
+        if (ImGui::BeginCombo("Z Velocity type", VelocityAddonStrings[useZCurve ? 1 : 0]))
+        {
+            for (int i = 0; i < VelocityAddonStringsSize; ++i)
+            {
+                if (ImGui::Selectable(VelocityAddonStrings[i])) useZCurve = i;
+            }
+            ImGui::EndCombo();
+        }
+
+        if (useZCurve)
         {
             ImGui::Bezier("zBezier", bezierZ); // draw
             ImGui::InputFloat2("Z Range", &zSpeed[0]);
         }
+        else
+        {
+            ImGui::PushItemWidth(100);
 
-        ImGui::Spacing();
+            if (randomizeZSpeed)
+            {
+                ImGui::InputFloat("##MinLZSpeed", &zSpeed[0]);
+                ImGui::SameLine();
+            }
+            ImGui::InputFloat("##MaxZSpeed", &zSpeed[1]);
+            ImGui::SameLine();
+            ImGui::Text("Z Speed");
+            ImGui::SameLine();
+            ImGui::Checkbox("Rand.Z Speed", &randomizeZSpeed);
+
+            ImGui::PopItemWidth();
+        }
     }
 
     // RENDER EDITOR ENDS

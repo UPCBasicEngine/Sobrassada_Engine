@@ -29,7 +29,9 @@ class VelocityAddon : public ParticleAddon
     float2 ySpeed        = float2::zero;
     float2 zSpeed        = float2::zero;
 
-    bool useCurves       = false;
+    bool useXCurve       = false;
+    bool useYCurve       = false;
+    bool useZCurve       = false;
 
     float bezierX[5]     = {0.f, 0.f, 1.f, 1.f};
     float bezierY[5]     = {0.f, 0.f, 1.f, 1.f};
