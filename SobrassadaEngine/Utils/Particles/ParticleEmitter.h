@@ -40,7 +40,6 @@ class ParticleEmitter
     void Update(float deltaTime, EmitterInstance* emitterInstance);
     void Spawn(EmitterInstance* emitterInstance);
 
-    // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     void RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector);
 
     void RenderEditor();
@@ -68,6 +67,7 @@ class ParticleEmitter
     unsigned int particlesVBO          = 0;
     unsigned int particleTileOffsetVBO = 0;
     unsigned int particleColorsVBO     = 0;
+    unsigned int particleSizeVBO       = 0;
 
     int renderPriority                 = 0;
     bool additiveBlending              = false;
@@ -85,6 +85,7 @@ class ParticleEmitter
     std::vector<float3> alivePositions;
     std::vector<std::pair<int, int>> tileOffsets;
     std::vector<float4> particleColors;
+    std::vector<float2> particleSize;
 
     std::vector<Particle> batchedParticles;
 

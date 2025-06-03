@@ -1,6 +1,7 @@
 #include "ParticleEmitter.h"
 
 #include "Application.h"
+#include "AreaAddon.h"
 #include "BaseAddon.h"
 #include "ColorAddon.h"
 #include "EditorUIModule.h"
@@ -15,7 +16,6 @@
 #include "ShaderModule.h"
 #include "SpritesheetAddon.h"
 #include "VelocityAddon.h"
-#include "AreaAddon.h"
 
 #include "CameraModule.h"
 
@@ -127,8 +127,10 @@ ParticleEmitter::~ParticleEmitter()
 {
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, addonTuple);
 
-    // TEMPORAL, PROBABLY CAN SEND ACTIVES PARTICLES TO WHOLE BATCH OF EMITTERS THAT SHARE SAME TEXTURE
     glDeleteBuffers(1, &particlesVBO);
+    glDeleteBuffers(1, &particleTileOffsetVBO);
+    glDeleteBuffers(1, &particleColorsVBO);
+    glDeleteBuffers(1, &particleSizeVBO);
 }
 
 void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -154,8 +156,7 @@ void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
 
     std::apply(
         [deltaTime, emitterInstance](auto&... pointer)
-        { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); },
-        addonTuple
+        { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); }, addonTuple
     );
 
     UpdateParticlesVBO(emitterInstance);
@@ -181,7 +182,6 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         float4x4 viewProjection = VP;
         float3 cameraRight      = rightVector;
         float3 cameraUp         = upVector;
-        float2 billboardSize    = float2(1, 1);
         float2 tileSize         = float2(1, 1);
 
         glUseProgram(App->GetShaderModule()->GetParticleSystemProgram());
@@ -191,14 +191,13 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
 
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);
-        glUniform2fv(2, 1, &billboardSize[0]);
-        glUniformMatrix4fv(3, 1, GL_TRUE, &viewProjection[0][0]);
+        glUniformMatrix4fv(2, 1, GL_TRUE, &viewProjection[0][0]);
 
         if (useSpritesheet)
         {
             SpritesheetAddon* spritesheet = std::get<SpritesheetAddon*>(addonTuple);
             tileSize                      = float2((float)spritesheet->rows, (float)spritesheet->columns);
-            glUniform1f(5, spritesheet->currentFrame);
+            glUniform1f(3, spritesheet->currentFrame);
         }
 
         glUniform2fv(4, 1, &tileSize[0]);
@@ -237,6 +236,14 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glVertexAttribDivisor(4, 1);
 
+        // Sending particle size
+        glBindBuffer(GL_ARRAY_BUFFER, particleSizeVBO);
+
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(5, 1);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
 
@@ -257,14 +264,12 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         tileOffsets.clear();
         batchedParticles.clear();
         particleColors.clear();
+        particleSize.clear();
     }
 }
 
 void ParticleEmitter::RenderEditor()
 {
-
-    // CHANGE THIS TO ADD / REMOVE ADDONS, SAME AS RENDER OPTIONS
-
     ImGui::SameLine();
 
     if (ImGui::Button("Manage Addons"))
@@ -456,17 +461,20 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
     alivePositions.reserve(batchedParticles.size());
     tileOffsets.reserve(batchedParticles.size());
     particleColors.reserve(batchedParticles.size());
+    particleSize.reserve(batchedParticles.size());
 
     for (int i = 0; i < batchedParticles.size(); ++i)
     {
         alivePositions.push_back(batchedParticles[i].position);
         tileOffsets.push_back(batchedParticles[i].tileOffset);
         particleColors.push_back(batchedParticles[i].color);
+        particleSize.push_back(batchedParticles[i].size);
     }
 
     if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
     if (particleTileOffsetVBO == 0) glGenBuffers(1, &particleTileOffsetVBO);
     if (particleColorsVBO == 0) glGenBuffers(1, &particleColorsVBO);
+    if (particleSizeVBO == 0) glGenBuffers(1, &particleSizeVBO);
     if (batchedParticles.size() > 0)
     {
         glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
@@ -479,6 +487,10 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
 
         glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * particleColors.size(), &particleColors[0], GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, particleSizeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * particleSize.size(), &particleSize[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }

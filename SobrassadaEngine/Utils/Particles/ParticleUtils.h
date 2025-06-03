@@ -14,8 +14,11 @@ enum class ParticleAddonType : int
     AREA,
 };
 
-constexpr const char* AddonTypeStrings[] = {"None", "Base", "Velocity", "Spritesheet", "Color", "Area"};
-constexpr const int AddonTypeStringsSize = sizeof(AddonTypeStrings) / sizeof(char*);
+constexpr const char* AddonTypeStrings[]          = {"None", "Base", "Velocity", "Spritesheet", "Color", "Area"};
+constexpr const int AddonTypeStringsSize          = sizeof(AddonTypeStrings) / sizeof(char*);
+
+constexpr const char* InterpolationAddonStrings[] = {"Fixed values", "Curve interpolation"};
+constexpr int InterpolationAddonStringsSize       = sizeof(InterpolationAddonStrings) / sizeof(char*);
 
 class ParticleUtils
 {

@@ -4,9 +4,6 @@
 
 #include "Math/float2.h"
 
-constexpr const char* VelocityAddonStrings[] = {"Fixed values", "Curve interpolation"};
-constexpr int VelocityAddonStringsSize       = sizeof(VelocityAddonStrings) / sizeof(char*);
-
 class VelocityAddon : public ParticleAddon
 {
   public:

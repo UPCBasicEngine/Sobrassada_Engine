@@ -2,6 +2,8 @@
 
 #include "ParticleAddon.h"
 
+#include "Math/float2.h"
+
 class BaseAddon : public ParticleAddon
 {
   public:
@@ -16,12 +18,22 @@ class BaseAddon : public ParticleAddon
     void RenderEditorInspector() override;
 
   private:
-    float currentEmissionTime                      = 0.f;
-    float duration                                 = 5.f;
-    bool loop                                      = false;
-    int maxParticles                               = 100;
+    float currentEmissionTime = 0.f;
+    float duration            = 5.f;
+    bool loop                 = false;
+    int maxParticles          = 100;
 
-    bool randomLifetime                            = false;
-    float minLifetime                              = 0.5f;
-    float maxLifetime                              = 3.f;
+    bool randomLifetime       = false;
+    float minLifetime         = 0.5f;
+    float maxLifetime         = 3.f;
+
+    bool randomizeSizeX       = false;
+    bool randomizeSizeY       = false;
+    float2 sizeValuesX        = float2(0, 1);
+    float2 sizeValuesY        = float2(0, 1);
+
+    bool useSizeCurveX        = false;
+    bool useSizeCurveY        = false;
+    float sizeBezierX[5]      = {0.f, 0.f, 1.f, 1.f};
+    float sizeBezierY[5]      = {0.f, 0.f, 1.f, 1.f};
 };

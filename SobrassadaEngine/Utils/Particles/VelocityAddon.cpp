@@ -154,9 +154,15 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
         float valueOverLifetime = particle.currentLifetime / particle.lifeTime;
 
-        if (useXCurve) particle.velocity.x = Interpolation::Lerp(xSpeed[0], xSpeed[1], valueOverLifetime);
-        if (useYCurve) particle.velocity.y = Interpolation::Lerp(ySpeed[0], ySpeed[1], valueOverLifetime);
-        if (useZCurve) particle.velocity.z = Interpolation::Lerp(zSpeed[0], zSpeed[1], valueOverLifetime);
+        if (useXCurve)
+            particle.velocity.x =
+                Interpolation::Lerp(xSpeed[0], xSpeed[1], ImGui::BezierValue(valueOverLifetime, bezierX));
+        if (useYCurve)
+            particle.velocity.y =
+                Interpolation::Lerp(ySpeed[0], ySpeed[1], ImGui::BezierValue(valueOverLifetime, bezierY));
+        if (useZCurve)
+            particle.velocity.z =
+                Interpolation::Lerp(zSpeed[0], zSpeed[1], ImGui::BezierValue(valueOverLifetime, bezierZ));
 
         particle.position = particle.position.Add(particle.velocity * deltaTime);
     }
@@ -174,18 +180,18 @@ void VelocityAddon::RenderEditorInspector()
 
     if (ImGui::CollapsingHeader("X Speed"))
     {
-        if (ImGui::BeginCombo("X Velocity type", VelocityAddonStrings[useXCurve ? 1 : 0]))
+        if (ImGui::BeginCombo("X Velocity type", InterpolationAddonStrings[useXCurve ? 1 : 0]))
         {
-            for (int i = 0; i < VelocityAddonStringsSize; ++i)
+            for (int i = 0; i < InterpolationAddonStringsSize; ++i)
             {
-                if (ImGui::Selectable(VelocityAddonStrings[i])) useXCurve = i;
+                if (ImGui::Selectable(InterpolationAddonStrings[i])) useXCurve = i;
             }
             ImGui::EndCombo();
         }
 
         if (useXCurve)
         {
-            ImGui::Bezier("xBezier", bezierX); // draw
+            ImGui::Bezier("xBezier", bezierX);
             ImGui::InputFloat2("X Range", &xSpeed[0]);
         }
         else
@@ -211,18 +217,18 @@ void VelocityAddon::RenderEditorInspector()
 
     if (ImGui::CollapsingHeader("Y Speed"))
     {
-        if (ImGui::BeginCombo("Y Velocity type", VelocityAddonStrings[useYCurve ? 1 : 0]))
+        if (ImGui::BeginCombo("Y Velocity type", InterpolationAddonStrings[useYCurve ? 1 : 0]))
         {
-            for (int i = 0; i < VelocityAddonStringsSize; ++i)
+            for (int i = 0; i < InterpolationAddonStringsSize; ++i)
             {
-                if (ImGui::Selectable(VelocityAddonStrings[i])) useYCurve = i;
+                if (ImGui::Selectable(InterpolationAddonStrings[i])) useYCurve = i;
             }
             ImGui::EndCombo();
         }
 
         if (useYCurve)
         {
-            ImGui::Bezier("yBezier", bezierY); // draw
+            ImGui::Bezier("yBezier", bezierY);
             ImGui::InputFloat2("Y Range", &ySpeed[0]);
         }
         else
@@ -248,18 +254,18 @@ void VelocityAddon::RenderEditorInspector()
 
     if (ImGui::CollapsingHeader("Z Speed"))
     {
-        if (ImGui::BeginCombo("Z Velocity type", VelocityAddonStrings[useZCurve ? 1 : 0]))
+        if (ImGui::BeginCombo("Z Velocity type", InterpolationAddonStrings[useZCurve ? 1 : 0]))
         {
-            for (int i = 0; i < VelocityAddonStringsSize; ++i)
+            for (int i = 0; i < InterpolationAddonStringsSize; ++i)
             {
-                if (ImGui::Selectable(VelocityAddonStrings[i])) useZCurve = i;
+                if (ImGui::Selectable(InterpolationAddonStrings[i])) useZCurve = i;
             }
             ImGui::EndCombo();
         }
 
         if (useZCurve)
         {
-            ImGui::Bezier("zBezier", bezierZ); // draw
+            ImGui::Bezier("zBezier", bezierZ);
             ImGui::InputFloat2("Z Range", &zSpeed[0]);
         }
         else
