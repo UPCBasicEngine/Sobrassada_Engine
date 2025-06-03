@@ -447,6 +447,13 @@ namespace AnimationImporter
 
         //GLOG("Animation duration: %f", animation->GetDuration());
 
+        animation->channelNames.reserve(animation->channels.size());
+
+        for (auto& channel : animation->channels)
+        {
+            animation->channelNames.push_back(channel.first);
+        }
+
         return animation;
     }
 } // namespace AnimationImporter

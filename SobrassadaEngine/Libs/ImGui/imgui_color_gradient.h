@@ -81,6 +81,4 @@ namespace ImGui
     bool GradientEditor(ImGradient* gradient,
                         ImGradientMark* & draggingMark,
                         ImGradientMark* & selectedMark);
-    
-
 }

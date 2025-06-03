@@ -6,6 +6,10 @@
 #include "imgui.h"
 #include <string>
 
+#ifdef OPTICK
+#include "optick.h"
+#endif
+
 Component::Component(UID uid, GameObject* parent, const char* initName, ComponentType type)
     : uid(uid), parent(parent), type(type), enabled(true)
 {
