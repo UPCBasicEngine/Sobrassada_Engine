@@ -470,6 +470,5 @@ void CuChulainn::Respawn()
 void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
-    GLOG("Current chucalain health %i", currentHealth);
     healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
 }
