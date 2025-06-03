@@ -21,7 +21,22 @@ SplineComponent::SplineComponent(const rapidjson::Value& initialState, GameObjec
     {
         const auto& arrayPoints = initialState["Points"].GetArray();
         for (auto& p : arrayPoints)
-            points.emplace_back(p[0].GetFloat(), p[1].GetFloat(), p[2].GetFloat());
+        {
+            if (p.IsObject() && p.HasMember("Pos") && p.HasMember("Rot"))
+            {
+                const auto& pos = p["Pos"].GetArray();
+                const auto& rot = p["Rot"].GetArray();
+
+                float3 position(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+                Quat rotation(rot[0].GetFloat(), rot[1].GetFloat(), rot[2].GetFloat(), rot[3].GetFloat()); // w,x,y,z
+
+                points.emplace_back(position, rotation);
+            }
+            else if (p.IsArray() && p.Size() == 3) //Old format (array x,y,z)
+            {
+                points.emplace_back(float3(p[0].GetFloat(), p[1].GetFloat(), p[2].GetFloat()), Quat::identity);
+            }
+        }
     }
 }
 
@@ -69,11 +84,11 @@ void SplineComponent::RenderDebug(float deltaTime)
                 prev = p;
             }
         }
-        else drawLine(points[seg], points[seg + 1]);
+        else drawLine(points[seg].position, points[seg + 1].position);
     }
 
-    for (const float3& p : points)
-        dbg->DrawSphere(p + worldOffset, pointColor, 0.08f);
+    for (const SplinePoint& p : points)
+        dbg->DrawSphere(p.position + worldOffset, pointColor, 0.08f);
 
     if (showMarker && points.size() >= 2)
     {
@@ -116,7 +131,7 @@ void SplineComponent::RenderEditorInspector()
 
     if (validSel)
     {
-        float3 tempPoint = points[selectedIdx];
+        float3 tempPoint = points[selectedIdx].position;
         if (ImGui::InputFloat3("Selected Pos", &tempPoint[0]))
         {
             points[selectedIdx] = tempPoint;
@@ -177,9 +192,20 @@ void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
     for (const auto& p : points)
     {
-        rapidjson::Value pArr(rapidjson::kArrayType);
-        pArr.PushBack(p.x, allocator).PushBack(p.y, allocator).PushBack(p.z, allocator);
-        arr.PushBack(pArr, allocator);
+        rapidjson::Value pObj(rapidjson::kObjectType);
+        //position
+        rapidjson::Value posArr(rapidjson::kArrayType);
+        posArr.PushBack(p.position.x, allocator).PushBack(p.position.y, allocator).PushBack(p.position.z, allocator);
+        pObj.AddMember("Pos", posArr, allocator);
+        //rotation
+        rapidjson::Value rotArr(rapidjson::kArrayType);
+        rotArr.PushBack(p.rotation.x, allocator)
+            .PushBack(p.rotation.y, allocator)
+            .PushBack(p.rotation.z, allocator)
+            .PushBack(p.rotation.w, allocator);
+        pObj.AddMember("Rot", rotArr, allocator);
+
+        arr.PushBack(pObj, allocator);
     }
 
     targetState.AddMember("Points", arr, allocator);
@@ -271,7 +297,8 @@ float3 SplineComponent::EvaluateSegment(const size_t seg, float segmentT) const
     };
 
     return CatmullRom(
-        points[idx((int)seg - 1)], points[idx((int)seg)], points[idx((int)seg + 1)], points[idx((int)seg + 2)], segmentT
+        points[idx((int)seg - 1)].position, points[idx((int)seg)].position, points[idx((int)seg + 1)].position,
+        points[idx((int)seg + 2)].position, segmentT
     );
 }
 
@@ -286,7 +313,7 @@ float3 SplineComponent::Evaluate(float t) const
     const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
 
     const float segFloat   = t * numSeg;
-    if (segFloat >= numSeg) return worldOffset + (loop ? points.front() : points.back());
+    if (segFloat >= numSeg) return worldOffset + (loop ? points.front().position : points.back().position);
 
     int seg = (int)floorf(segFloat);
     const float segmentT = segFloat - seg;
@@ -301,7 +328,7 @@ bool SplineComponent::PointGizmo(size_t idx)
 {
     if (selectedIdx >= 0 && selectedIdx < (int)points.size())
     {
-        float4x4 localMatrix  = float4x4::FromTRS(points[idx], float4x4::identity, float3::one);
+        float4x4 localMatrix  = float4x4::FromTRS(points[idx].position, float4x4::identity, float3::one);
         
         //In order to ignore Rotation and Scale from parent and set it to 1
         const float3 translate        = parent->GetGlobalTransform().TranslatePart();
@@ -325,7 +352,7 @@ float3 SplineComponent::GetPointWorld(size_t idx) const
 {
     if (idx >= points.size()) return float3::zero;
 
-    return points[idx] + parent->GetGlobalTransform().TranslatePart();
+    return points[idx].position + parent->GetGlobalTransform().TranslatePart();
 }
 
 float3 SplineComponent::GetWorldPositionInSpine(float posT) const

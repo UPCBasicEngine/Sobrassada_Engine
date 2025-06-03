@@ -2,7 +2,18 @@
 #include "Component.h"
 
 #include "Math/float3.h"
+#include "Math/Quat.h"
 #include <vector>
+
+struct SplinePoint
+{
+    float3 position;
+    Quat rotation;
+
+    SplinePoint() : position(float3::zero), rotation(Quat::identity){}
+    SplinePoint(const float3& p) : position(p), rotation(Quat::identity) {}
+    SplinePoint(const float3& p, Quat r) : position(p), rotation(r){}
+};
 
 class SOBRASADA_API_ENGINE SplineComponent : public Component
 {
@@ -31,7 +42,7 @@ class SOBRASADA_API_ENGINE SplineComponent : public Component
     bool PointGizmo(size_t idx);
 
     size_t GetNumPoints() const { return points.size(); }
-    const float3 GetPointLocal(size_t idx) const { return points[idx]; }
+    const float3 GetPointLocal(size_t idx) const { return points[idx].position; }
     float3 GetPointWorld(size_t idx) const;
     float3 GetWorldPositionInSpine(float posT) const;
     bool IsLoop() const { return loop; }
@@ -40,7 +51,7 @@ class SOBRASADA_API_ENGINE SplineComponent : public Component
     void SetInWorld(bool isInWorld) { inWorld = isInWorld; }
 
   private:
-    std::vector<float3> points;
+    std::vector<SplinePoint> points;
     float3 pendingPoint  = float3::zero;
 
     float alpha          = 0.5f;
