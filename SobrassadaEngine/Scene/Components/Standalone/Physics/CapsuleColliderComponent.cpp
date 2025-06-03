@@ -69,7 +69,7 @@ CapsuleColliderComponent::~CapsuleColliderComponent()
 
 void CapsuleColliderComponent::Init()
 {
-    if (rigidBody) App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    if (rigidBody) App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
 }
 
 void CapsuleColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
