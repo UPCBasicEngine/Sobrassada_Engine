@@ -66,6 +66,8 @@ class CuChulainn : public Character
     void SetPosition(const float3& position);
 
   private:
+    CharacterStates state       = CharacterStates::IDLE;
+
     std::string cameraName      = "";
     GameObject* cameraObject    = nullptr;
     CameraMovement* camera      = nullptr;
