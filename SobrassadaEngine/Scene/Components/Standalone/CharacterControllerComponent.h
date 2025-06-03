@@ -40,6 +40,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     float2 GetRealSpeed() const;
     bool IsGrounded() { return isGrounded; }
     bool GetInputDown() const { return inputDown; }
+    float GetDashDuration() const { return dashDuration; }
 
     void SetTargetDirection(float3 newTargetDirection) { targetDirection = newTargetDirection; }
     void SetMaxSpeed(float newSpeed) { maxSpeed = newSpeed; }

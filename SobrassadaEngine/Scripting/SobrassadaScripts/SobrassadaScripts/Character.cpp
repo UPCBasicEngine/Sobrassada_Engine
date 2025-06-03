@@ -1,14 +1,18 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
 #include "Character.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "EditorUIModule.h"
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
+#include "WindowModule.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
@@ -38,6 +42,8 @@ Character::Character(
     fields.push_back({"Attack Hitbox Delay", InspectorField::FieldType::Float, &attackHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Attack Hitbox Duration", InspectorField::FieldType::Float, &attackHitboxDuration, 0.0f, 5.0f});
 
+    fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
+
     if (type != CharacterType::CuChulainn)
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
@@ -62,14 +68,14 @@ bool Character::Init()
         )
 
     weaponCollider = parent->GetComponentChild<CapsuleColliderComponent*>(AppEngine);
-    
+
     if (!weaponCollider)
     {
         GLOG("[WARNING] No capsule weapon collider in child");
     }
     else
     {
-        weapon         = weaponCollider->GetParent();
+        weapon = weaponCollider->GetParent();
         if (!weapon) GLOG("Weapon game object not found")
         else weaponCollider->SetEnabled(false);
     }
@@ -85,8 +91,17 @@ void Character::Update(float deltaTime)
 
     if (!characterCollider || !weaponCollider || !weapon) return;
 
+    // Get state name for debugging
+    if (animComponent && stateName != animComponent->GetCurrentStateName())
+    {
+        stateName = animComponent->GetCurrentStateName();
+        // GLOG("Current state: %s", stateName.GetString().c_str());
+    }
+
     HandleState(deltaTime);
     UpdateTimers(deltaTime);
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS)) RenderDebug();
 }
 
 void Character::OnCollision(GameObject* otherObject, const float3& collisionNormal)
@@ -108,8 +123,6 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
         {
             if (!enemyScript->isAttacking) return;
             TakeDamage(enemyScript->attackDamage);
-
-            return;
         }
     }
 
@@ -123,8 +136,6 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
-
-            return;
         }
 
         // Trap check
@@ -139,6 +150,17 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
                 damageCollider->SetEnabled(false);
             }
         }
+
+        // Mushroom check
+        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
+        if (desiredHeal && mushroomScript)
+        {
+            if (mushroomScript->IsReady())
+            {
+                Heal(mushroomScript->GetHealingAmount());
+                mushroomScript->Disable();
+            }
+        }
     }
 }
 
@@ -150,22 +172,22 @@ void Character::Attack(float deltaTime)
 
 void Character::UpdateTimers(float deltaTime)
 {
-    if (isAttacking)
-    {
-        attackTimer += deltaTime;
-        if (attackTimer <= 0)
-        {
-            if (weaponCollider && weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
-        }
-    }
+    if (isAttacking) attackTimer += deltaTime;
 
     attackCdTimer -= deltaTime;
-    if (attackCdTimer < 0) attackCdTimer = 0;
+    if (attackCdTimer < 0.0f) attackCdTimer = 0.0f;
 
     if (isInvulnerable)
     {
         invulnerabilityTimer -= deltaTime;
-        if (invulnerabilityTimer <= 0) isInvulnerable = false;
+        if (invulnerabilityTimer <= 0.0f) isInvulnerable = false;
+    }
+
+    healCdTimer -= deltaTime;
+    if (healCdTimer <= 0.0f)
+    {
+        desiredHeal = false;
+        healCdTimer = 0.0f;
     }
 }
 
@@ -244,4 +266,37 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
+}
+
+void Character::RenderDebug()
+{
+    DebugDrawModule* debug        = AppEngine->GetDebugDrawModule();
+    const CameraComponent* camera = AppEngine->GetSceneModule()->GetScene()->GetMainCamera();
+
+    const float4 clipSpacePos     = camera->GetProjectionMatrix() * camera->GetViewMatrix() *
+                                float4(parent->GetGlobalTransform().TranslatePart(), 1.0f);
+    const float3 ndc = float3(clipSpacePos.x, clipSpacePos.y, clipSpacePos.z) / clipSpacePos.w;
+
+#ifdef GAME
+    float screenX          = (ndc.x + 1.0f) * 0.5f * AppEngine->GetWindowModule()->GetWidth();
+    float screenY          = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
+#else
+    const auto& windowSize = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
+    float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
+    float screenY          = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
+#endif
+
+    const std::string life   = "Health: " + std::to_string(currentHealth);
+    const std::string state  = "Anim state: " + stateName.GetString();
+
+    const float scale        = 0.6f;
+    const float3 color       = type == CharacterType::CuChulainn ? float3(0.0f, 1.0f, 0.0f) : float3(1.0f, 0.0f, 0.0f);
+
+    screenX                 -= 50.0f;
+    screenY                 -= 140.0f;
+    debug->Draw2DText(life.c_str(), float3(screenX, screenY, 0.0f), color, scale);
+
+    screenX -= 40.0f;
+    screenY -= 20.0f;
+    debug->Draw2DText(state.c_str(), float3(screenX, screenY, 0.0f), color, scale);
 }

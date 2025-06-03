@@ -1,0 +1,42 @@
+#pragma once
+
+#include "Component.h"
+#include "Math/float4x4.h"
+
+class ResourceMaterial;
+class ResourceTexture;
+
+struct DecalModels
+{
+    float4x4 model;
+    float4x4 invModel;
+};
+
+class DecalComponent : public Component
+{
+  public:
+    DecalComponent(UID uid, GameObject* parent);
+    DecalComponent(const rapidjson::Value& initialState, GameObject* parent);
+    ~DecalComponent() override;
+
+    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
+    void Clone(const Component* other) override;
+
+    void Update(float deltaTime) override;
+    void Render(float deltaTime) override;
+    void RenderDebug(float deltaTime) override;
+    void RenderEditorInspector() override;
+    void AddMaterial(UID resource);
+    void ParentUpdated() override;
+
+    const ResourceMaterial* GetResourceMaterial() const { return currentMaterial; }
+
+  private:
+    void RecalculateAABB();
+
+  private:
+    std::string currentResourceName   = "No material";
+
+    UID currentMaterialUID            = DEFAULT_MATERIAL_UID;
+    ResourceMaterial* currentMaterial = nullptr;
+};

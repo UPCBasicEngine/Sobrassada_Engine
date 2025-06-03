@@ -36,6 +36,8 @@ class AudioListenerComponent;
 class CanvasScalerComponent;
 class BillboardComponent;
 class SplineComponent;
+class TrailComponent;
+class DecalComponent;
 
 enum MobilitySettings
 {
@@ -151,6 +153,7 @@ class SOBRASADA_API_ENGINE GameObject
     void SetSelectParent(bool newSelectParent) { selectParent = newSelectParent; }
     void SetOpenHierarchyNode(bool newOpen) { openHierarchyNode = newOpen; }
 
+    void SetJustLocalTransform(const float4x4& newTransform);
   private:
     void DrawNodes() const;
     void OnDrawConnectionsToggle();

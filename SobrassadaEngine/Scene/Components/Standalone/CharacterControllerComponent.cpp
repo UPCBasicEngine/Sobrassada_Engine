@@ -400,6 +400,9 @@ void CharacterControllerComponent::LookAt(const float3& direction)
 {
     isRotating      = true;
     rotateDirection = direction;
+
+    // Set 1 as deltaTime so it rotates immediatly
+    LookAtMovement(rotateDirection, 1.0f);
 }
 
 float2 CharacterControllerComponent::GetRealSpeed() const

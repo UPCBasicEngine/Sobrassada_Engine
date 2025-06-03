@@ -1,5 +1,7 @@
 #pragma once
 #include "Resource.h"
+#include "HashString.h"
+
 #include "Math/float3.h"
 #include "Math/Quat.h"
 #include <unordered_map>
@@ -30,10 +32,11 @@ class ResourceAnimation : public Resource
 
     void SetDuration();
     float GetDuration() { return duration; }
-    Channel* GetChannel(const std::string& nodeName);
+    Channel* GetChannel(const HashString& nodeName);
 
   public:
-    std::unordered_map<std::string, Channel> channels;
+    std::unordered_map<HashString, Channel> channels;
+    std::vector<HashString> channelNames;
     
   private:
     

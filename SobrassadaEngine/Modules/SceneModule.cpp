@@ -1,23 +1,23 @@
 #include "SceneModule.h"
-#include "Globals.h"
 #include "Application.h"
+#include "AudioModule.h"
 #include "CameraModule.h"
-#include "ScriptComponent.h"
 #include "Config/EngineConfig.h"
 #include "Config/ProjectConfig.h"
 #include "EditorUIModule.h"
 #include "FileSystem.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "Globals.h"
 #include "ImGuizmo.h"
 #include "InputModule.h"
 #include "LibraryModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
-#include "AudioModule.h"
 #include "RaycastController.h"
 #include "ResourcesModule.h"
+#include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
@@ -31,7 +31,6 @@
 #ifdef OPTICK
 #include "optick.h"
 #endif
-
 
 SceneModule::SceneModule()
 {
@@ -96,6 +95,9 @@ update_status SceneModule::RenderEditor(float deltaTime)
 
 update_status SceneModule::PostUpdate(float deltaTime)
 {
+#ifdef OPTICK
+    OPTICK_CATEGORY("SceneModule::PostUpdate", Optick::Category::Rendering)
+#endif
     if (App->GetProjectModule()->IsProjectLoaded())
     {
 
@@ -155,6 +157,9 @@ update_status SceneModule::PostUpdate(float deltaTime)
         }
     }
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("SceneModule::loadSceneNextFrame", Optick::Category::Rendering)
+#endif
     if (loadSceneNextFrame)
     {
         loadSceneNextFrame = false;
@@ -171,14 +176,14 @@ update_status SceneModule::PostUpdate(float deltaTime)
             GLOG("[ERROR] Couldn't load scene: %s", pendingScenePath.c_str());
         }
     }
-    
+
     return UPDATE_CONTINUE;
 }
 
 bool SceneModule::ShutDown()
 {
     CloseScene();
-    //GLOG("Destroying scene")
+    // GLOG("Destroying scene")
     return true;
 }
 
@@ -190,7 +195,7 @@ void SceneModule::CreateScene()
     loadedScene->Init();
 }
 
-void  SceneModule::LoadScene(const rapidjson::Value& initialState, const bool forceReload)
+void SceneModule::LoadScene(const rapidjson::Value& initialState, const bool forceReload)
 {
     const UID extractedSceneUID = initialState["UID"].GetUint64();
     if (!forceReload && loadedScene != nullptr && loadedScene->GetSceneUID() == extractedSceneUID)
@@ -205,8 +210,7 @@ void  SceneModule::LoadScene(const rapidjson::Value& initialState, const bool fo
     loadedScene->Init();
 }
 
-
-void  SceneModule::CloseScene()
+void SceneModule::CloseScene()
 {
     if (inPlayMode)
     {
@@ -222,7 +226,7 @@ void  SceneModule::CloseScene()
     if (App->GetResourcesModule() != nullptr) App->GetResourcesModule()->ShutDown();
 }
 
-void  SceneModule::SwitchPlayMode(bool play)
+void SceneModule::SwitchPlayMode(bool play)
 {
     if (play == inPlayMode || loadedScene == nullptr) return;
 
@@ -425,16 +429,21 @@ void SceneModule::HandleObjectDeletion()
 
 void SceneModule::HandleTreesUpdates()
 {
-    if (loadedScene->IsStaticModified())
+#ifdef OPTICK
+    OPTICK_CATEGORY("Application::HandleTreesUpdates", Optick::Category::GameLogic)
+#endif
     {
-        loadedScene->UpdateStaticSpatialStructure();
-    }
-    if (loadedScene->IsDynamicModified())
-    {
-        loadedScene->UpdateDynamicSpatialStructure();
-    }
+        if (loadedScene->IsStaticModified())
+        {
+            loadedScene->UpdateStaticSpatialStructure();
+        }
+        if (loadedScene->IsDynamicModified())
+        {
+            loadedScene->UpdateDynamicSpatialStructure();
+        }
 
-    loadedScene->UpdateGameObjects();
+        loadedScene->UpdateGameObjects();
+    }
 }
 
 void SceneModule::RequestSceneLoad(const std::string& scenePath)

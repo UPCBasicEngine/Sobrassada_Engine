@@ -18,12 +18,12 @@ AnimController::~AnimController()
 void AnimController::Play(UID newResource, bool shouldLoop)
 {
     if (currentAnimation == nullptr) Stop();
-    resource         = newResource;
-    currentTime      = 0.0f;
-    loop             = shouldLoop;
-    currentAnimation = static_cast<ResourceAnimation*>(App->GetResourcesModule()->RequestResource(resource));
-    playAnimation    = true;
-    playAnimation    = true;
+    resource          = newResource;
+    currentTime       = 0.0f;
+    loop              = shouldLoop;
+    currentAnimation  = static_cast<ResourceAnimation*>(App->GetResourcesModule()->RequestResource(resource));
+    playAnimation     = true;
+    playAnimation     = true;
     animationFinished = false;
 }
 
@@ -45,7 +45,21 @@ Quat AnimController::Interpolate(Quat& first, Quat& second, float lambda)
     else return Quat::Lerp(first, second.Neg(), lambda).Normalized();
 }
 
+size_t AnimController::FindChannelIndex(const std::vector<float>& animChannelVector, float time) const
+{
+    int left  = 0;
+    int right = (int)animChannelVector.size() - 1;
 
+    while (left <= right)
+    {
+        int mid = (right + left) / 2;
+        if (time == animChannelVector[mid]) return mid;
+        else if (animChannelVector[mid] > time) right = mid - 1;
+        else left = mid + 1;
+    }
+
+    return left;
+}
 
 update_status AnimController::Update(float deltaTime)
 {
@@ -59,26 +73,6 @@ update_status AnimController::Update(float deltaTime)
     if (currentAnimation == nullptr) return UPDATE_CONTINUE;
 
     const float duration = currentAnimation->GetDuration();
-
-    if (currentTime > duration)
-    {
-        if (loop)
-        {
-            currentTime = fmod(currentTime, duration);
-        }
-        else
-        {
-            currentTime   = duration;
-            playAnimation = false;
-            animationFinished = true;
-
-            //if (currentAnimation != nullptr)
-            //{
-            //    App->GetResourcesModule()->ReleaseResource(currentAnimation);
-            //    currentAnimation = nullptr;
-            //}
-        }
-    }
 
     if (targetAnimation != nullptr)
     {
@@ -98,11 +92,30 @@ update_status AnimController::Update(float deltaTime)
             currentTargetTime = 0;
         }
     }
+    else if (currentTime > duration)
+    {
+        if (loop)
+        {
+            currentTime = fmod(currentTime, duration);
+        }
+        else
+        {
+            currentTime       = duration;
+            playAnimation     = false;
+            animationFinished = true;
+
+            // if (currentAnimation != nullptr)
+            //{
+            //     App->GetResourcesModule()->ReleaseResource(currentAnimation);
+            //     currentAnimation = nullptr;
+            // }
+        }
+    }
 
     return UPDATE_CONTINUE;
 }
 
-void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat& rot)
+void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat& rot)
 {
     if (!playAnimation || resource == INVALID_UID || currentAnimation == nullptr) return;
 
@@ -111,7 +124,7 @@ void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat
         Channel* animChannel = currentAnimation->GetChannel(nodeName);
         if (animChannel == nullptr)
         {
-            //GLOG("No channel for node %s", nodeName.c_str());
+            // GLOG("No channel for node %s", nodeName.c_str());
             return; // IMPORTANT: Don't modify pos/rot if no channel exists
         }
 
@@ -137,7 +150,7 @@ void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat
 
         if (animChannel == nullptr && targetAnimChannel == nullptr)
         {
-            //GLOG("No channel for node %s in either animation", nodeName.c_str());
+            // GLOG("No channel for node %s in either animation", nodeName.c_str());
             return; // Don't modify pos/rot if no channel exists in either animation
         }
 
@@ -191,13 +204,11 @@ void AnimController::GetTransform(const std::string& nodeName, float3& pos, Quat
     }
 }
 
-
-
 void AnimController::SetTargetAnimationResource(UID uid, unsigned timeTransition, bool shouldLoop)
 {
-    targetAnimation = static_cast<ResourceAnimation*>(App->GetResourcesModule()->RequestResource(uid));
-    transitionTime  = static_cast<float>(timeTransition) / 1000;
-    loop            = shouldLoop;
+    targetAnimation   = static_cast<ResourceAnimation*>(App->GetResourcesModule()->RequestResource(uid));
+    transitionTime    = static_cast<float>(timeTransition) / 1000;
+    loop              = shouldLoop;
     playAnimation     = true;
     animationFinished = false;
 }
@@ -212,11 +223,7 @@ void AnimController::GetChannelPosition(const Channel* animChannel, float3& pos,
         }
         else
         {
-            size_t nextIndex = 0;
-            while (nextIndex < animChannel->numPositions && animChannel->posTimeStamps[nextIndex] <= time)
-            {
-                nextIndex++;
-            }
+            size_t nextIndex = FindChannelIndex(animChannel->posTimeStamps, time);
 
             size_t prevIndex = (nextIndex > 0) ? nextIndex - 1 : 0;
 
@@ -240,13 +247,13 @@ void AnimController::GetChannelPosition(const Channel* animChannel, float3& pos,
 
                 pos = float3::Lerp(animChannel->positions[prevIndex], animChannel->positions[nextIndex], lambda);
 
-                //GLOG(
-                //    "Position interpolation: From (%.2f,%.2f,%.2f) to (%.2f,%.2f,%.2f) with lambda %.2f = "
-                //    "(%.2f,%.2f,%.2f)",
-                //    animChannel->positions[prevIndex].x, animChannel->positions[prevIndex].y,
-                //    animChannel->positions[prevIndex].z, animChannel->positions[nextIndex].x,
-                //    animChannel->positions[nextIndex].y, animChannel->positions[nextIndex].z, lambda, pos.x, pos.y,
-                //    pos.z
+                // GLOG(
+                //     "Position interpolation: From (%.2f,%.2f,%.2f) to (%.2f,%.2f,%.2f) with lambda %.2f = "
+                //     "(%.2f,%.2f,%.2f)",
+                //     animChannel->positions[prevIndex].x, animChannel->positions[prevIndex].y,
+                //     animChannel->positions[prevIndex].z, animChannel->positions[nextIndex].x,
+                //     animChannel->positions[nextIndex].y, animChannel->positions[nextIndex].z, lambda, pos.x, pos.y,
+                //     pos.z
                 //);
             }
         }
@@ -263,11 +270,7 @@ void AnimController::GetChannelRotation(Channel* animChannel, Quat& rot, const f
         }
         else
         {
-            size_t nextIndex = 0;
-            while (nextIndex < animChannel->numRotations && animChannel->rotTimeStamps[nextIndex] <= time)
-            {
-                nextIndex++;
-            }
+            size_t nextIndex = FindChannelIndex(animChannel->rotTimeStamps, time);
 
             size_t prevIndex = (nextIndex > 0) ? nextIndex - 1 : 0;
 
@@ -294,5 +297,3 @@ void AnimController::GetChannelRotation(Channel* animChannel, Quat& rot, const f
         }
     }
 }
-
-
