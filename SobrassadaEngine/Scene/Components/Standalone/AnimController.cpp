@@ -74,26 +74,6 @@ update_status AnimController::Update(float deltaTime)
 
     const float duration = currentAnimation->GetDuration();
 
-    if (currentTime > duration)
-    {
-        if (loop)
-        {
-            currentTime = fmod(currentTime, duration);
-        }
-        else
-        {
-            currentTime       = duration;
-            playAnimation     = false;
-            animationFinished = true;
-
-            // if (currentAnimation != nullptr)
-            //{
-            //     App->GetResourcesModule()->ReleaseResource(currentAnimation);
-            //     currentAnimation = nullptr;
-            // }
-        }
-    }
-
     if (targetAnimation != nullptr)
     {
         currentTargetTime          += deltaTime;
@@ -110,6 +90,25 @@ update_status AnimController::Update(float deltaTime)
             currentTime       = currentTargetTime;
             fadeTime          = 0;
             currentTargetTime = 0;
+        }
+    }
+    else if (currentTime > duration)
+    {
+        if (loop)
+        {
+            currentTime = fmod(currentTime, duration);
+        }
+        else
+        {
+            currentTime       = duration;
+            playAnimation     = false;
+            animationFinished = true;
+
+            // if (currentAnimation != nullptr)
+            //{
+            //     App->GetResourcesModule()->ReleaseResource(currentAnimation);
+            //     currentAnimation = nullptr;
+            // }
         }
     }
 

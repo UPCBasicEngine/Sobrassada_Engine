@@ -92,7 +92,7 @@ void AnimationComponent::OnPlay(bool isTransition)
                     {
                         if (clip.clipName == currentState->clipName)
                         {
-                            if (isTransition)
+                            if (isTransition && transitionTime > 0)
                                 animController->SetTargetAnimationResource(
                                     clip.animationResourceUID, transitionTime, clip.loop
                                 );
