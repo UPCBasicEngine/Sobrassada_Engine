@@ -324,6 +324,36 @@ float3 SplineComponent::Evaluate(float t) const
     return worldOffset + local;
 }
 
+Quat SplineComponent::EvaluateRotation(float t) const
+{
+    if (points.empty()) return Quat::identity;
+    if (points.size() == 1) return points.front().rotation;
+
+    t = std::clamp(t, 0.f, 1.f);
+
+    const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
+    const float segFloat = t * numSeg;
+
+    if (segFloat >= numSeg) return loop ? points.front().rotation : points.back().rotation;
+
+    int seg = (int)floorf(segFloat);
+    float segmentT = segFloat - seg;
+
+    if (loop) seg = seg % points.size();
+
+    const int nextIdx = loop ? (seg + 1) % points.size() : std::min(seg + 1, (int)points.size() - 1);
+    
+    return Quat::Slerp(points[seg].rotation, points[nextIdx].rotation, segmentT).Normalized();
+}
+
+void SplineComponent::EvaluateTransform(float t, float3& pos, Quat& rot) const
+{
+    pos = Evaluate(t);
+    rot = EvaluateRotation(t);
+}
+
+
+
 bool SplineComponent::PointGizmo(size_t idx)
 {
     if (selectedIdx >= 0 && selectedIdx < (int)points.size())
