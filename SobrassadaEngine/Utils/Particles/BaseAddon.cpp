@@ -192,9 +192,13 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
         emitterInstance->currentEmissionTime += deltaTime;
     }
 
-    if (emitterInstance->currentEmissionTime > duration)
+    if (emitterInstance->currentEmissionTime > duration && !loop)
     {
         emitterInstance->isEmitting = false;
+    }
+    else if (emitterInstance->currentEmissionTime > duration && loop)
+    {
+        emitterInstance->currentEmissionTime = 0.f;
     }
 }
 
