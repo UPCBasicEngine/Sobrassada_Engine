@@ -51,6 +51,9 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
   private:
     void Dash(float deltaTime);
+    unsigned int GetClosestPointInNavmesh(
+        const float3& searchPos, const float3& searchArea, bool& posOverPoly, float3& closestPoint
+    ) const;
 
   private:
     float3 targetDirection       = float3::zero;
