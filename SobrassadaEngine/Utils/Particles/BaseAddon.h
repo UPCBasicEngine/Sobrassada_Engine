@@ -32,6 +32,9 @@ class BaseAddon : public ParticleAddon
     float2 sizeValuesX        = float2(0, 1);
     float2 sizeValuesY        = float2(0, 1);
 
+    bool randomRotation       = false;
+    float2 rotation           = float2::zero;
+
     bool useSizeCurveX        = false;
     bool useSizeCurveY        = false;
     float sizeBezierX[5]      = {0.f, 0.f, 1.f, 1.f};

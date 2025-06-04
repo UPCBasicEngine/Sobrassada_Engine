@@ -68,6 +68,7 @@ class ParticleEmitter
     unsigned int particleTileOffsetVBO = 0;
     unsigned int particleColorsVBO     = 0;
     unsigned int particleSizeVBO       = 0;
+    unsigned int particleRotationVBO   = 0;
 
     int renderPriority                 = 0;
     bool additiveBlending              = false;
@@ -86,6 +87,7 @@ class ParticleEmitter
     std::vector<std::pair<int, int>> tileOffsets;
     std::vector<float4> particleColors;
     std::vector<float2> particleSize;
+    std::vector<float> particleRotation;
 
     std::vector<Particle> batchedParticles;
 

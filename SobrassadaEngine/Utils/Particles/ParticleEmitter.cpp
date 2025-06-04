@@ -244,6 +244,14 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glVertexAttribDivisor(5, 1);
 
+        // Sending particle rotation
+        glBindBuffer(GL_ARRAY_BUFFER, particleRotationVBO);
+
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(6, 1);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
 
@@ -265,6 +273,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         batchedParticles.clear();
         particleColors.clear();
         particleSize.clear();
+        particleRotation.clear();
     }
 }
 
@@ -462,6 +471,7 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
     tileOffsets.reserve(batchedParticles.size());
     particleColors.reserve(batchedParticles.size());
     particleSize.reserve(batchedParticles.size());
+    particleRotation.reserve(batchedParticles.size());
 
     for (int i = 0; i < batchedParticles.size(); ++i)
     {
@@ -469,12 +479,14 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
         tileOffsets.push_back(batchedParticles[i].tileOffset);
         particleColors.push_back(batchedParticles[i].color);
         particleSize.push_back(batchedParticles[i].size);
+        particleRotation.push_back(batchedParticles[i].rotation);
     }
 
     if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
     if (particleTileOffsetVBO == 0) glGenBuffers(1, &particleTileOffsetVBO);
     if (particleColorsVBO == 0) glGenBuffers(1, &particleColorsVBO);
     if (particleSizeVBO == 0) glGenBuffers(1, &particleSizeVBO);
+    if (particleRotationVBO == 0) glGenBuffers(1, &particleRotationVBO);
     if (batchedParticles.size() > 0)
     {
         glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
@@ -491,6 +503,10 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
 
         glBindBuffer(GL_ARRAY_BUFFER, particleSizeVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * particleSize.size(), &particleSize[0], GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, particleRotationVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * particleRotation.size(), &particleRotation[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }

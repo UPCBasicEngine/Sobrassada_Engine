@@ -61,6 +61,15 @@ BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
         sizeBezierY[3]                    = dataArray[3].GetFloat();
         sizeBezierY[4]                    = dataArray[4].GetFloat();
     }
+
+    if (initialState.HasMember("rotation"))
+    {
+        const rapidjson::Value& dataArray = initialState["sizeBezierY"];
+        rotation[0]                       = dataArray[0].GetFloat();
+        rotation[1]                       = dataArray[1].GetFloat();
+    }
+
+    if (initialState.HasMember("randomRotation")) randomRotation = initialState["randomRotation"].GetBool();
 }
 
 BaseAddon::~BaseAddon()
@@ -108,6 +117,12 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
         .PushBack(sizeBezierY[3], allocator)
         .PushBack(sizeBezierY[4], allocator);
     targetState.AddMember("sizeBezierY", yBezier, allocator);
+
+    rapidjson::Value rotationSave(rapidjson::kArrayType);
+    rotationSave.PushBack(rotation[0], allocator).PushBack(rotation[1], allocator);
+    targetState.AddMember("rotation", rotationSave, allocator);
+
+    targetState.AddMember("randomRotation", randomRotation, allocator);
 }
 
 void BaseAddon::Init(EmitterInstance* emitterInstance)
@@ -132,6 +147,9 @@ void BaseAddon::Init(EmitterInstance* emitterInstance)
         else finalSizeY = sizeValuesY[0];
 
         particle.size = float2(finalSizeX, finalSizeY);
+        
+        particle.rotation = randomRotation ? rng->Float(rotation[0], rotation[1]) : rotation[1];
+        particle.rotation *= DEGREE_RAD_CONV;
     }
 
     emitterInstance->currentEmissionTime = 0.f;
@@ -186,6 +204,9 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
                 else finalSizeY = sizeValuesY[0];
 
                 particle.size = float2(finalSizeX, finalSizeY);
+
+                particle.rotation  = randomRotation ? rng->Float(rotation[0], rotation[1]) : rotation[1];
+                particle.rotation *= DEGREE_RAD_CONV;
             }
         }
 
@@ -222,6 +243,17 @@ void BaseAddon::RenderEditorInspector()
     ImGui::Text("Lifetime");
     ImGui::SameLine();
     ImGui::Checkbox("Rand##Lifetime", &randomLifetime);
+
+   if (randomRotation)
+    {
+       ImGui::InputFloat("##MinRotation", &rotation[0]);
+        ImGui::SameLine();
+    }
+    ImGui::InputFloat("##MaxRotation", &rotation[1]);
+    ImGui::SameLine();
+    ImGui::Text("Rotation");
+    ImGui::SameLine();
+    ImGui::Checkbox("Rand##Rotation", &randomRotation);
 
     ImGui::PopItemWidth();
 

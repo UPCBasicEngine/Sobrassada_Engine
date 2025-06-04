@@ -6,6 +6,7 @@ layout(location=2) in vec3 billboardCenter;
 layout(location=3) in vec2 tileOffset;
 layout(location=4) in vec4 particleColor;
 layout(location=5) in vec2 billboardSize;
+layout(location=6) in float rotation;
 
 layout(location=0) uniform vec3 cameraRightVector;
 layout(location=1) uniform vec3 cameraUpVector;
@@ -42,6 +43,15 @@ void main()
 
     fragParticleColor = particleColor;
 
-    gl_Position = VP * vec4(billboardCenter + cameraRightVector * vertexPosition.x * billboardSize.x
-    + cameraUpVector * vertexPosition.y * billboardSize.y, 1.f);
+    mat3 zRotation = mat3(
+        cos(rotation), -sin(rotation), 0.f, 
+        sin(rotation), cos(rotation), 0.f, 
+        0.f, 0.f, 1.f
+    );
+
+    vec3 rightRotated = normalize(zRotation * cameraRightVector);
+    vec3 upRotated = normalize(zRotation * cameraUpVector);
+
+    gl_Position = VP * vec4(billboardCenter + rightRotated * vertexPosition.x * billboardSize.x
+    + upRotated * vertexPosition.y * billboardSize.y, 1.f);
 }
