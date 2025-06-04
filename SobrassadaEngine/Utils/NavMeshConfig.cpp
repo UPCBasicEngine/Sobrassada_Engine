@@ -44,7 +44,7 @@ bool NavMeshConfig::LoadFromMeta(UID navmeshUID)
     rapidjson::Document doc;
     bool loaded = FileSystem::LoadJSON(navmeshMetaPath.c_str(), doc);
 
-    if (!doc.HasMember("NavMeshConfig") || !doc["NavMeshConfig"].IsObject()) return false;
+    if (!doc.HasMember("NavMeshConfig")) return false;
 
     const auto& cfg                 = doc["NavMeshConfig"];
 

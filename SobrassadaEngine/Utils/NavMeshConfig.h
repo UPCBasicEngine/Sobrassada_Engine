@@ -13,7 +13,7 @@ struct NavMeshSettings {
     float cellSize = 0.3f;
     float cellHeight = 0.2f;
     float walkableSlopeAngle = 45.0f;
-    int walkableClimb = 4;
+    int walkableClimb = 1;
     int walkableHeight = 2;
     int walkableRadius = 2;
     int maxEdgeLen = 12;
@@ -26,7 +26,7 @@ struct NavMeshSettings {
     SamplePartitionType partitionType = SamplePartitionType::SAMPLE_PARTITION_WATERSHED;
     // Your custom params
     bool filterLowHangingObstacles = true;
-    bool filterLedgeSpans = true;
+    bool filterLedgeSpans = false;
     bool filterWalkableLowHeightSpans = true;
 
     float agentHeight = 2.0f;
