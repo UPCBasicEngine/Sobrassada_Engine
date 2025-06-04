@@ -24,7 +24,6 @@ struct NavMeshSettings {
     float detailSampleDist = 6.0f;
     float detailSampleMaxError = 1.0f;
     SamplePartitionType partitionType = SamplePartitionType::SAMPLE_PARTITION_WATERSHED;
-    // Your custom params
     bool filterLowHangingObstacles = true;
     bool filterLedgeSpans = false;
     bool filterWalkableLowHeightSpans = true;
