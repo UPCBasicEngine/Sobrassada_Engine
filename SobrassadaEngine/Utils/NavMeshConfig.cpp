@@ -1,4 +1,8 @@
 #include "NavMeshConfig.h"
+#include "Application.h"
+#include "FileSystem.h"
+#include "LibraryModule.h"
+#include "ProjectModule.h"
 #include "Recast.h" // Only here!
 #include "imgui.h"
 
@@ -12,27 +16,57 @@ NavMeshConfig::~NavMeshConfig()
 {
 }
 
-void NavMeshConfig::ApplyTo(void* out) const {
+void NavMeshConfig::ApplyTo(void* out) const
+{
     rcConfig& outCfg = *reinterpret_cast<rcConfig*>(out);
     memset(&outCfg, 0, sizeof(rcConfig));
 
-    outCfg.cs = settings.cellSize;
-    outCfg.ch = settings.cellHeight;
-    outCfg.walkableSlopeAngle = settings.walkableSlopeAngle;
-    outCfg.walkableClimb = settings.walkableClimb;
-    outCfg.walkableHeight = settings.walkableHeight;
-    outCfg.walkableRadius = settings.walkableRadius;
-    outCfg.maxEdgeLen = settings.maxEdgeLen;
+    outCfg.cs                     = settings.cellSize;
+    outCfg.ch                     = settings.cellHeight;
+    outCfg.walkableSlopeAngle     = settings.walkableSlopeAngle;
+    outCfg.walkableClimb          = settings.walkableClimb;
+    outCfg.walkableHeight         = settings.walkableHeight;
+    outCfg.walkableRadius         = settings.walkableRadius;
+    outCfg.maxEdgeLen             = settings.maxEdgeLen;
     outCfg.maxSimplificationError = settings.maxSimplificationError;
-    outCfg.minRegionArea = settings.minRegionArea;
-    outCfg.mergeRegionArea = settings.mergeRegionArea;
-    outCfg.maxVertsPerPoly = settings.maxVertsPerPoly;
-    outCfg.detailSampleDist = settings.detailSampleDist;
-    outCfg.detailSampleMaxError = settings.detailSampleMaxError;
-
+    outCfg.minRegionArea          = settings.minRegionArea;
+    outCfg.mergeRegionArea        = settings.mergeRegionArea;
+    outCfg.maxVertsPerPoly        = settings.maxVertsPerPoly;
+    outCfg.detailSampleDist       = settings.detailSampleDist;
+    outCfg.detailSampleMaxError   = settings.detailSampleMaxError;
 }
 
-void NavMeshConfig::RenderEditorUI() {
+bool NavMeshConfig::LoadFromMeta(UID navmeshUID)
+{
+    const std::string navmeshName     = App->GetLibraryModule()->GetResourceName(navmeshUID);
+    const std::string navmeshMetaPath = App->GetProjectModule()->GetLoadedProjectPath() + METADATA_PATH +
+                                        NAVMESH_META_PREFIX + navmeshName + META_EXTENSION;
+    rapidjson::Document doc;
+    bool loaded = FileSystem::LoadJSON(navmeshMetaPath.c_str(), doc);
+
+    if (!doc.HasMember("NavMeshConfig") || !doc["NavMeshConfig"].IsObject()) return false;
+
+    const auto& cfg                 = doc["NavMeshConfig"];
+
+    settings.cellSize               = cfg["cellSize"].GetFloat();
+    settings.cellHeight             = cfg["cellHeight"].GetFloat();
+    settings.walkableSlopeAngle     = cfg["walkableSlopeAngle"].GetFloat();
+    settings.walkableClimb          = cfg["walkableClimb"].GetInt();
+    settings.walkableHeight         = cfg["walkableHeight"].GetInt();
+    settings.walkableRadius         = cfg["walkableRadius"].GetInt();
+    settings.maxEdgeLen             = cfg["maxEdgeLen"].GetInt();
+    settings.maxSimplificationError = cfg["maxSimplificationError"].GetFloat();
+    settings.minRegionArea          = cfg["minRegionArea"].GetInt();
+    settings.mergeRegionArea        = cfg["mergeRegionArea"].GetInt();
+    settings.maxVertsPerPoly        = cfg["maxVertsPerPoly"].GetInt();
+    settings.detailSampleDist       = cfg["detailSampleDist"].GetFloat();
+    settings.detailSampleMaxError   = cfg["detailSampleMaxError"].GetFloat();
+
+    return true;
+}
+
+void NavMeshConfig::RenderEditorUI()
+{
     ImGui::Text("Recast Config");
 
     ImGui::SliderFloat("Cell Size", &settings.cellSize, 0.05f, 1.0f);
@@ -50,13 +84,12 @@ void NavMeshConfig::RenderEditorUI() {
     ImGui::SliderInt("Max Verts Per Poly", &settings.maxVertsPerPoly, 3, 12);
 
     const char* partitionLabels[] = {
-     "SAMPLE_PARTITION_WATERSHED",
-     "SAMPLE_PARTITION_MONOTONE",
-     "SAMPLE_PARTITION_LAYERS"
+        "SAMPLE_PARTITION_WATERSHED", "SAMPLE_PARTITION_MONOTONE", "SAMPLE_PARTITION_LAYERS"
     };
 
     int currentIndex = static_cast<int>(settings.partitionType);
-    if (ImGui::Combo("Partition Type", &currentIndex, partitionLabels, IM_ARRAYSIZE(partitionLabels))) {
+    if (ImGui::Combo("Partition Type", &currentIndex, partitionLabels, IM_ARRAYSIZE(partitionLabels)))
+    {
         settings.partitionType = static_cast<SamplePartitionType>(currentIndex);
     }
 

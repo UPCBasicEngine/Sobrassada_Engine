@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Globals.h"
+
 enum class SamplePartitionType
 {
     SAMPLE_PARTITION_WATERSHED = 0,
@@ -21,7 +23,7 @@ struct NavMeshSettings {
     int maxVertsPerPoly = 6;
     float detailSampleDist = 6.0f;
     float detailSampleMaxError = 1.0f;
-    SamplePartitionType partitionType = SamplePartitionType::SAMPLE_PARTITION_MONOTONE;
+    SamplePartitionType partitionType = SamplePartitionType::SAMPLE_PARTITION_WATERSHED;
     // Your custom params
     bool filterLowHangingObstacles = true;
     bool filterLedgeSpans = true;
@@ -38,6 +40,7 @@ public:
     ~NavMeshConfig();
 
     void ApplyTo(void* outRecastRcConfig) const; // opaque interface
+    bool LoadFromMeta(UID navmeshUID);
     void RenderEditorUI();
     const NavMeshSettings& GetSettings() const { return settings; }
 
