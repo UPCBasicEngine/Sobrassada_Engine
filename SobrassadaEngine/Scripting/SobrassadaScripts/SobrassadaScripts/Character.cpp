@@ -12,12 +12,12 @@
 #include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
-#include "WindowModule.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "WindowModule.h"
 
 #include <string>
 
@@ -118,6 +118,8 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
+        GLOG("Collision in %s", parent->GetName().c_str());
+
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         if (enemyScript)
         {
@@ -278,8 +280,8 @@ void Character::RenderDebug()
     const float3 ndc = float3(clipSpacePos.x, clipSpacePos.y, clipSpacePos.z) / clipSpacePos.w;
 
 #ifdef GAME
-    float screenX          = (ndc.x + 1.0f) * 0.5f * AppEngine->GetWindowModule()->GetWidth();
-    float screenY          = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
+    float screenX = (ndc.x + 1.0f) * 0.5f * AppEngine->GetWindowModule()->GetWidth();
+    float screenY = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
 #else
     const auto& windowSize = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
     float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);

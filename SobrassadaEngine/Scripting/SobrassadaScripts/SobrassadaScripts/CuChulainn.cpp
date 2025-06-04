@@ -36,6 +36,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName, 0.0f, 5.0f});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
+    fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
+    fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
+    );
 }
 
 bool CuChulainn::Init()
@@ -73,7 +76,8 @@ bool CuChulainn::Init()
     }
 
     ultimateObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateName);
-    if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChualin");
+    if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChualin")
+    else ultimateObject->SetEnabled(false);
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -158,7 +162,7 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
-            if (stateName == HashString("Ultimate") && ultimateObject) ultimateObject->SetEnabled(false);
+            if (stateName == HashString("Ultimate")) isAttacking = false;
 
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
@@ -261,7 +265,7 @@ bool CuChulainn::CanAttack() const
 bool CuChulainn::CanUltimate() const
 {
     bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-                       state != CharacterStates::RESPAWN && ultimateTimer <= 0.0f;
+                       state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f;
 
     if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer >= 0.0f;
 
@@ -319,13 +323,15 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
     }
 
-    ultimateTimer -= deltaTime;
-    if (ultimateTimer <= 0.0f) ultimateTimer = 0.0f;
+    ultimateCdTimer -= deltaTime;
+    if (ultimateCdTimer <= 0.0f) ultimateCdTimer = 0.0f;
     if (desiredUltimate)
     {
         ultimateBufferTimer -= deltaTime;
         if (ultimateBufferTimer < 0.0f) desiredUltimate = false;
     }
+
+    if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
 }
 
 void CuChulainn::LookAtMouse()
@@ -422,14 +428,29 @@ void CuChulainn::PerformAttack()
 
     // if (attackTimer >= attackDuration) isAttacking = false;
 
-    if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-        attackTimer < attackHitboxDelay + attackHitboxDuration)
+    if (state == CharacterStates::BASIC_ATTACK)
     {
-        weaponCollider->SetEnabled(true);
+        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+            attackTimer < attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(true);
+        }
+        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(false);
+        }
     }
-    else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+    else if (state == CharacterStates::ULTIMATE)
     {
-        weaponCollider->SetEnabled(false);
+        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay &&
+            ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration)
+        {
+            ultimateObject->SetEnabled(true);
+        }
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration)
+        {
+            ultimateObject->SetEnabled(false);
+        }
     }
 }
 
@@ -457,17 +478,16 @@ void CuChulainn::Attack(float deltaTime)
 
 void CuChulainn::UltimateAttack()
 {
-    GLOG("ULTIMATEEEE");
+    // GLOG("ULTIMATEEEE");
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
-    ultimateTimer   = ultimateCd;
+    ultimateTimer   = 0.0f;
+    ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
 
+    isAttacking     = true;
     if (animComponent) animComponent->UseTrigger("Ultimate");
-
-    // TODO: When the animation exists, trigger this according to it (like in PerformAttack())
-    if (ultimateObject) ultimateObject->SetEnabled(true);
 }
 
 void CuChulainn::Aim(float deltaTime)
