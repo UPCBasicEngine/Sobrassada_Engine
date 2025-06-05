@@ -5,6 +5,7 @@
 #include "CameraMovement.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "InputModule.h"
 #include "Projectile.h"
@@ -96,7 +97,9 @@ bool CuChulainn::Init()
 
 void CuChulainn::Update(float deltaTime)
 {
-    // TODO: Maybe instead of this call it at the end of death animation (the current animations lasts forever)
+    // TODO: Some debug about life and current state
+    AppEngine->GetDebugDrawModule()->Draw3DText(btVector3(-25, 2, -40), "XD moment");
+
     if (state == CharacterStates::DEATH)
     {
         deathTimer += deltaTime;
@@ -152,23 +155,26 @@ void CuChulainn::HandleState(float deltaTime)
     if (desiredDash && CanDash()) Dash();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (!isAttacking && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL)
         Move();
+
+    // TODO: Some transition in the dash or idle state, to continue the combo after a dash
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
-        const HashString& stateName = animComponent->GetCurrentStateName();
-        GLOG("Animation name: %s", stateName.GetString().c_str());
-
-        if (stateName == HashString("Respawn") || stateName == HashString("Land"))
+        if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
+            stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
         {
-            character->EnableMovement(true);
+            if (isAttacking) comboBufferTimer = 0.2f;
+            isAttacking = false;
         }
-
-        state = CharacterStates::IDLE;
-        animComponent->UseTrigger("Idle");
+        else
+        {
+            state = CharacterStates::IDLE;
+            animComponent->UseTrigger("Idle");
+        }
     }
 }
 
@@ -244,29 +250,33 @@ void CuChulainn::GetInputs()
 
 bool CuChulainn::CanDash()
 {
-    // TODO: Add more condifions if there are (Maybe dashing doesn't cancel attack animations, etc.)
-    return dashTimer <= 0 && state != CharacterStates::AIM && state != CharacterStates::BASIC_ATTACK &&
-           state != CharacterStates::FALL && state != CharacterStates::RESPAWN;
+    bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
+                   state != CharacterStates::RESPAWN;
+
+    if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer >= 0.0f;
+
+    return canDash;
 }
 
 bool CuChulainn::CanAttack()
 {
     return (
         state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-        state != CharacterStates::RESPAWN
+        state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f
     );
 }
 
 bool CuChulainn::CanAim() const
 {
     return (
-        state != CharacterStates::DASH && !isAttacking && throwTimer <= 0 && state != CharacterStates::FALL &&
-        state != CharacterStates::RESPAWN
+        state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
+        state != CharacterStates::FALL && state != CharacterStates::RESPAWN
     );
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
 {
+    weaponCollider->SetEnabled(false);
     Character::UpdateTimers(deltaTime);
 
     // Dash timers
@@ -288,15 +298,29 @@ void CuChulainn::UpdateTimers(float deltaTime)
     // Ranged attack timers
     desiredAim  = false;
     throwTimer -= deltaTime;
-    if (throwTimer < 0)
+    if (throwTimer < 0.0f)
     {
         if (resetWeapon)
         {
             weapon->SetEnabled(true);
             resetWeapon = false;
         }
-        throwTimer = 0;
+        throwTimer = 0.0f;
     }
+
+    if (!isAttacking && comboBufferTimer > 0.0f)
+    {
+        comboBufferTimer -= deltaTime;
+        if (comboBufferTimer <= 0.0f)
+        {
+            comboCounter = -1;
+            if (animComponent) animComponent->UseTrigger("AttackEnd");
+            attackCdTimer = attackCooldown;
+        }
+    }
+
+    // When stop dashing this gets automatically disabled in the timers check
+    if (state == CharacterStates::DASH) isInvulnerable = true;
 }
 
 void CuChulainn::LookAtMouse()
@@ -310,9 +334,16 @@ void CuChulainn::LookAtMouse()
     character->LookAt(direction);
 }
 
-void CuChulainn::LookAtJoystick()
+void CuChulainn::LookAtRightstick()
 {
     const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
+    const float3 direction = camFront * stick.y + camRight * stick.x;
+    if (direction.LengthSq() > 0.001f) character->LookAt(direction);
+}
+
+void CuChulainn::LookAtLeftstick()
+{
+    const float2& stick    = AppEngine->GetInputModule()->GetLeftStick();
     const float3 direction = camFront * stick.y + camRight * stick.x;
     if (direction.LengthSq() > 0.001f) character->LookAt(direction);
 }
@@ -363,28 +394,29 @@ void CuChulainn::ThrowSpear()
 void CuChulainn::Dash()
 {
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    else if (state == CharacterStates::BASIC_ATTACK)
+    {
+        comboBufferTimer = character->GetDashDuration() + 0.1f;
+        isAttacking      = false;
+    }
     desiredDash = false;
     state       = CharacterStates::DASH;
 
     GLOG("DASH");
 
-    // TODO: Dash
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
+    LookAtLeftstick();
     character->StartDash();
     if (animComponent) animComponent->UseTrigger("Dash");
 }
 
 void CuChulainn::PerformAttack()
 {
-    // TODO: make interaction with hitboxes with the enemy ones
-    // TODO: activate and disable the box collider located on one on the gameobjects bones
-
     if (!isAttacking) return;
 
-    if (attackTimer >= attackDuration) isAttacking = false;
+    // if (attackTimer >= attackDuration) isAttacking = false;
 
-    // TODO: When timer matches animation, enable weapon collider. Disable it afterwards
     if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
         attackTimer < attackHitboxDelay + attackHitboxDuration)
     {
@@ -406,10 +438,16 @@ void CuChulainn::Attack(float deltaTime)
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
+    ++comboCounter;
+    // GLOG("Combo counter: %d", comboCounter);
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    if (animComponent) animComponent->UseTrigger("Attack");
+    if (animComponent)
+    {
+        const std::string trigger = "Attack" + std::to_string(comboCounter);
+        animComponent->UseTrigger(trigger);
+    }
 }
 
 void CuChulainn::Aim(float deltaTime)
@@ -429,7 +467,7 @@ void CuChulainn::Aim(float deltaTime)
     if (aimTimer >= 0.1f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    else LookAtJoystick();
+    else LookAtRightstick();
 }
 
 void CuChulainn::Move()

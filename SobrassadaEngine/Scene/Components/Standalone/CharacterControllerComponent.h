@@ -40,6 +40,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     float2 GetRealSpeed() const;
     bool IsGrounded() { return isGrounded; }
     bool GetInputDown() const { return inputDown; }
+    float GetDashDuration() const { return dashDuration; }
 
     void SetTargetDirection(float3 newTargetDirection) { targetDirection = newTargetDirection; }
     void SetMaxSpeed(float newSpeed) { maxSpeed = newSpeed; }
@@ -50,12 +51,15 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
   private:
     void Dash(float deltaTime);
+    unsigned int GetClosestPointInNavmesh(
+        const float3& searchPos, const float3& searchArea, bool& posOverPoly, float3& closestPoint
+    ) const;
 
   private:
     float3 targetDirection       = float3::zero;
     float3 lastPosition          = float3::zero;
 
-    float maxSpeed               = 10.0f;
+    float maxSpeed               = 7.0f;
     float maxAngularSpeed        = 0.0f;
     float acceleration           = 10.0f;
     float currentSpeed           = 0.0f;
@@ -63,7 +67,6 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool isRadians               = false;
 
     dtNavMeshQuery* navMeshQuery = nullptr;
-    dtPolyRef currentPolyRef     = 0;
 
     float gravity                = -9.81f;
     float verticalSpeed          = 0.0f;
@@ -80,7 +83,8 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool isDashing               = false;
     float dashTimeRemaining      = 0.0f;
     float dashSpeed              = 20.0f;
-    float3 dashTarget;
-    float dashDistance = 3.0f;
-    float dashDuration = 0.2f;
+    float3 dashTarget            = float3::zero;
+    float dashDistance           = 6.0f;
+    float dashDuration           = 0.3f;
+    bool dashToNavmesh           = false;
 };

@@ -56,7 +56,8 @@ class CuChulainn : public Character
     void GetInputs();
     void UpdateTimers(float deltaTime);
     void LookAtMouse();
-    void LookAtJoystick();
+    void LookAtRightstick();
+    void LookAtLeftstick();
     void CheckIsFalling();
 
     void ThrowSpear();
@@ -66,10 +67,9 @@ class CuChulainn : public Character
     void Move();
     void SetPosition(const float3& position);
 
-  public:
-    CharacterStates state = CharacterStates::IDLE;
-
   private:
+    CharacterStates state = CharacterStates::IDLE;
+  
     std::string cameraName      = "";
     GameObject* cameraObject    = nullptr;
     CameraMovement* camera      = nullptr;
@@ -88,6 +88,8 @@ class CuChulainn : public Character
     bool desiredAttack          = false;
     float attackBufferTimer     = 0.0f;
     float attackBuffer          = 0.5f;
+    int comboCounter            = -1;
+    float comboBufferTimer      = 0.0f;
 
     bool desiredAim             = false;
     float throwTimer            = 0.0f;

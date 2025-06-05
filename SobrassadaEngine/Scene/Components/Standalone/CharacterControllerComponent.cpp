@@ -134,47 +134,34 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
         dtNav = nav->GetDetourNavMesh();
     }
 
-    if (isDashing)
-    {
-        Dash(deltaTime);
-        return;
-    }
-
     dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
 
     if (!tmpQuery || !dtNav) return;
 
     if (!navMeshQuery)
     {
-        navMeshQuery = tmpQuery;
+        navMeshQuery    = tmpQuery;
 
-        if (currentPolyRef == 0)
+        float3 startPos = parent->GetGlobalTransform().TranslatePart();
+
+        dtQueryFilter filter;
+        filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+        filter.setExcludeFlags(0);
+
+        float extents[3] = {10.0f, 10.0f, 10.0f};
+        float nearestPoint[3];
+        dtPolyRef targetRef = 0;
+
+        dtStatus status     = navMeshQuery->findNearestPoly(startPos.ptr(), extents, &filter, &targetRef, nearestPoint);
+
+        if (dtStatusFailed(status) || targetRef == 0)
         {
-            float3 startPos = parent->GetGlobalTransform().TranslatePart();
-
-            dtQueryFilter filter;
-            filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
-            filter.setExcludeFlags(0);
-
-            float extents[3] = {2.0f, 4.0f, 2.0f};
-            float nearestPoint[3];
-            dtPolyRef targetRef = 0;
-
-            dtStatus status = navMeshQuery->findNearestPoly(startPos.ptr(), extents, &filter, &targetRef, nearestPoint);
-
-            if (dtStatusFailed(status) || targetRef == 0)
-            {
-                GLOG("Failed to find valid target poly for movement.");
-                return;
-            }
-
-            currentPolyRef = targetRef;
+            // GLOG("Failed to find valid target poly for movement.");
+            return;
         }
     }
 
-    if (!navMeshQuery || currentPolyRef == 0) return;
-
-    if (deltaTime < 0.1f) // TODO: deltaTime spikes, need to know why
+    if (deltaTime < 0.1f && !isDashing) // TODO: deltaTime spikes, need to know why
     {
         verticalSpeed += gravity * deltaTime;
         verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
@@ -185,11 +172,13 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
         parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
     }
 
-    if (isRotating)
+    if (!isDashing && isRotating)
     {
         LookAtMovement(rotateDirection, deltaTime);
     }
-    Move(deltaTime);
+
+    if (isDashing) Dash(deltaTime);
+    else Move(deltaTime);
 }
 
 void CharacterControllerComponent::Render(float deltaTime)
@@ -248,7 +237,7 @@ void CharacterControllerComponent::RenderEditorInspector()
 
 void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 {
-    if (!navMeshQuery || currentPolyRef == 0) return;
+    if (!navMeshQuery) return;
 
     isGrounded = false;
 
@@ -268,8 +257,6 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
     dtStatus st2 = navMeshQuery->closestPointOnPoly(newRef, currentPos.ptr(), closest, &posOverPoly);
     if (!dtStatusSucceed(st2) || !posOverPoly) return;
 
-    currentPolyRef   = newRef;
-
     float polyHeight = 0.0f;
     dtStatus stH     = navMeshQuery->getPolyHeight(newRef, closest, &polyHeight);
     if (dtStatusSucceed(stH))
@@ -287,7 +274,7 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
 
 void CharacterControllerComponent::Move(float deltaTime)
 {
-    if (!navMeshQuery || currentPolyRef == 0) return;
+    if (!navMeshQuery) return;
 
     const float3& currentPos = parent->GetGlobalTransform().TranslatePart();
     if (!movementEnabled)
@@ -300,38 +287,20 @@ void CharacterControllerComponent::Move(float deltaTime)
                                                            : Lerp(currentSpeed, 0, 100 * deltaTime);
     }
 
-    const float3 offsetXZ = rotateDirection * currentSpeed * deltaTime;
-    float3 desiredPos     = currentPos + offsetXZ;
+    const float3 offsetXZ   = rotateDirection * currentSpeed * deltaTime;
+    const float3 desiredPos = currentPos + offsetXZ;
 
-    dtQueryFilter filter;
-    filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
-    filter.setExcludeFlags(0);
-
-    float halfExt[3] = {1.0f, 1.0f, 1.5f};
-    float nearest[3] = {};
-    dtPolyRef newRef = 0;
-
-    dtStatus status  = navMeshQuery->findNearestPoly(desiredPos.ptr(), halfExt, &filter, &newRef, nearest);
-
-    if (!dtStatusSucceed(status) || newRef == 0) return;
-
-    float closest[3] = {};
-    bool posOverPoly = false;
-
-    status           = navMeshQuery->closestPointOnPoly(newRef, desiredPos.ptr(), closest, &posOverPoly);
+    const float3 searchArea = {1.0f, 1.0f, 1.5f};
+    float3 closestPoint     = float3::zero;
+    bool posOverPoly        = false;
+    dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
 
     if (!dtStatusSucceed(status)) return;
 
-    currentPolyRef = newRef;
-
-    desiredPos.x   = closest[0];
-    desiredPos.y   = closest[1];
-    desiredPos.z   = closest[2];
-
     // Prevent huge changes in the y pos
-    if (fabs(desiredPos.y - currentPos.y) > 0.5f) return;
+    if (fabs(closestPoint.y - currentPos.y) > 0.5f) return;
 
-    parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
+    parent->SetLocalPosition(closestPoint - parent->GetParentGlobalTransform().TranslatePart());
 }
 
 void CharacterControllerComponent::LookAtMovement(const float3& moveDir, float deltaTime)
@@ -404,6 +373,9 @@ void CharacterControllerComponent::LookAt(const float3& direction)
 {
     isRotating      = true;
     rotateDirection = direction;
+
+    // Set 1 as deltaTime so it rotates immediatly
+    LookAtMovement(rotateDirection, 1.0f);
 }
 
 float2 CharacterControllerComponent::GetRealSpeed() const
@@ -421,12 +393,23 @@ float2 CharacterControllerComponent::GetRealSpeed() const
 
 void CharacterControllerComponent::StartDash()
 {
-    isDashing                      = true;
+    isDashing               = true;
 
-    // WALL COLLISION LOGIC
-    float3 currentPos              = parent->GetGlobalTransform().TranslatePart();
-    dashTarget                     = currentPos + rotateDirection * (dashDistance + 0.5f);
+    float3 currentPos       = parent->GetGlobalTransform().TranslatePart();
+    dashTarget              = currentPos + rotateDirection * dashDistance;
+    dashSpeed               = dashDistance / dashDuration;
+    dashTimeRemaining       = dashDuration;
 
+    const float3 searchArea = {1.0f, 30.0f, 1.0f};
+    float3 closestPoint     = float3::zero;
+    bool posOverPoly        = false;
+    dtStatus status         = GetClosestPointInNavmesh(dashTarget, searchArea, posOverPoly, closestPoint);
+    dashToNavmesh           = posOverPoly;
+    //GLOG("Dash to navmesh? %d", dashToNavmesh);
+
+    if (!dashToNavmesh) return;
+
+    // If it's dashing to a point in the navmesh, check there are no obstacles in the path
     const float3 lateralDirection  = rotateDirection.Cross(float3::unitY).Normalized();
 
     currentPos.y                  += 0.5f;
@@ -455,7 +438,17 @@ void CharacterControllerComponent::StartDash()
         const AABB& box = centralHit->GetGlobalAABB();
         if (box.Intersects(centralRay, tNear, tFar))
         {
-            dashTarget = centralRay.GetPoint(tNear) - rotateDirection * wallOffset;
+            // Check whether the obstacle is a walkable area
+            const float3 searchArea = {0.001f, 0.001f, 0.001f};
+            float3 closestPoint     = float3::zero;
+            const float* pos        = centralRay.GetPoint(tNear).ptr();
+            const float3 searchPos  = {pos[0], pos[1], pos[2]};
+            bool posOverPoly        = false;
+
+            dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
+            dashToNavmesh           = posOverPoly;
+            //GLOG("Hit with central. Dash to navmesh? %d", dashToNavmesh);
+            return;
         }
     }
     else if (rightHit != nullptr)
@@ -463,7 +456,17 @@ void CharacterControllerComponent::StartDash()
         const AABB& box = rightHit->GetGlobalAABB();
         if (box.Intersects(rightRay, tNear, tFar))
         {
-            dashTarget = (rightRay.GetPoint(tNear) - rotateDirection * wallOffset) - lateralDirection * 0.5f;
+            // Check whether the obstacle is a walkable area
+            const float3 searchArea = {0.001f, 0.001f, 0.001f};
+            float3 closestPoint     = float3::zero;
+            const float* pos        = rightRay.GetPoint(tNear).ptr();
+            const float3 searchPos  = {pos[0], pos[1], pos[2]};
+            bool posOverPoly        = false;
+
+            dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
+            dashToNavmesh           = posOverPoly;
+            //GLOG("Hit with right. Dash to navmesh? %d", dashToNavmesh);
+            return;
         }
     }
     else if (leftHit != nullptr)
@@ -471,7 +474,17 @@ void CharacterControllerComponent::StartDash()
         const AABB& box = leftHit->GetGlobalAABB();
         if (box.Intersects(leftRay, tNear, tFar))
         {
-            dashTarget = (leftRay.GetPoint(tNear) - rotateDirection * wallOffset) + lateralDirection * 0.5f;
+            // Check whether the obstacle is a walkable area
+            const float3 searchArea = {0.001f, 0.001f, 0.001f};
+            float3 closestPoint     = float3::zero;
+            const float* pos        = leftRay.GetPoint(tNear).ptr();
+            const float3 searchPos  = {pos[0], pos[1], pos[2]};
+            bool posOverPoly        = false;
+
+            dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
+            dashToNavmesh           = posOverPoly;
+            //GLOG("Hit with left. Dash to navmesh? %d", dashToNavmesh);
+            return;
         }
     }
 
@@ -494,26 +507,41 @@ void CharacterControllerComponent::StartDash()
     //     GLOG("No navmesh found at dash target position. Dash canceled.");
     //     dashTarget = float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]);
     // }
-
-    dashSpeed         = dashDistance / dashDuration;
-    dashTimeRemaining = dashDuration;
 }
 
 void CharacterControllerComponent::Dash(float deltaTime)
 {
-    if (dashTimeRemaining < 0.0f)
+    if (dashTimeRemaining <= 0.0f)
     {
         isDashing = false;
     }
 
-    float3 currentPos        = parent->GetGlobalTransform().TranslatePart();
-    float3 directionToTarget = dashTarget - currentPos;
-    float distanceToTarget   = directionToTarget.Length();
+    const float3 currentPos      = parent->GetGlobalTransform().TranslatePart();
+    float3 directionToTarget     = dashTarget - currentPos;
+    const float distanceToTarget = directionToTarget.Length();
 
-    if (distanceToTarget > 0.2f)
+    if (distanceToTarget > 0.1f)
     {
         directionToTarget.Normalize();
-        float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
+        const float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
+        float3 desiredPos       = currentPos + dashOffset;
+        const float3 searchArea = {1.0f, 1.0f, 1.0f};
+        bool posOverPoly        = false;
+        float3 closestPoint     = float3::zero;
+
+        dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
+
+        // if (!dtStatusSucceed(status)) return;
+
+        if (!dashToNavmesh || (posOverPoly && dashToNavmesh))
+        {
+            desiredPos = closestPoint;
+            // Prevent huge changes in the y pos
+            if (fabs(desiredPos.y - currentPos.y) > 1.0f)
+            {
+                return;
+            }
+        }
 
         if (dashOffset.Length() >= distanceToTarget)
         {
@@ -523,7 +551,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
         }
         else
         {
-            parent->SetLocalPosition(currentPos + dashOffset - parent->GetParentGlobalTransform().TranslatePart());
+            parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
             dashTimeRemaining -= deltaTime;
         }
     }
@@ -532,4 +560,26 @@ void CharacterControllerComponent::Dash(float deltaTime)
         isDashing         = false;
         dashTimeRemaining = 0.0f;
     }
+}
+
+unsigned int CharacterControllerComponent::GetClosestPointInNavmesh(
+    const float3& searchPos, const float3& searchArea, bool& posOverPoly, float3& closestPoint
+) const
+{
+    dtQueryFilter filter;
+    filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+    filter.setExcludeFlags(0);
+    float halfExt[3] = {searchArea.x, searchArea.y, searchArea.z};
+    float nearest[3] = {};
+    dtPolyRef newRef = 0;
+
+    dtStatus status  = navMeshQuery->findNearestPoly(searchPos.ptr(), halfExt, &filter, &newRef, nearest);
+
+    // if (!dtStatusSucceed(status) || newRef == 0) return status;  // If unexpected crash, maybe this is needed
+
+    float closest[3] = {};
+    status           = navMeshQuery->closestPointOnPoly(newRef, searchPos.ptr(), closest, &posOverPoly);
+    closestPoint     = {closest[0], closest[1], closest[2]};
+
+    return status;
 }
