@@ -781,12 +781,12 @@ void DebugDrawModule::Draw3DText(const btVector3& location, const char* textStri
     int width                  = framebuffer->GetTextureWidth();
     int height                 = framebuffer->GetTextureHeight();
 
-    dd::projectedText(textString, pos, float3::zero, view * projection, 0, 0, width, height);
+    dd::projectedText(textString, pos, float3::zero, view * projection, 0, 0, width, height, 10.0f);
 }
 
-void DebugDrawModule::Draw2DText(const char* textString, const float3& location)
+void DebugDrawModule::Draw2DText(const char* textString, const float3& location, const float3& color, float scale)
 {
-    dd::screenText(textString, location, float3::zero);
+    dd::screenText(textString, location, color, scale);
 }
 
 void DebugDrawModule::DrawContactPoint(
