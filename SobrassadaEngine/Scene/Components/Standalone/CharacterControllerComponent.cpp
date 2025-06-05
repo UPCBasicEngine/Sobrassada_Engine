@@ -405,7 +405,7 @@ void CharacterControllerComponent::StartDash()
     bool posOverPoly        = false;
     dtStatus status         = GetClosestPointInNavmesh(dashTarget, searchArea, posOverPoly, closestPoint);
     dashToNavmesh           = posOverPoly;
-    GLOG("Dash to navmesh? %d", dashToNavmesh);
+    //GLOG("Dash to navmesh? %d", dashToNavmesh);
 
     if (!dashToNavmesh) return;
 
@@ -447,7 +447,7 @@ void CharacterControllerComponent::StartDash()
 
             dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
             dashToNavmesh           = posOverPoly;
-            GLOG("Hit with central. Dash to navmesh? %d", dashToNavmesh);
+            //GLOG("Hit with central. Dash to navmesh? %d", dashToNavmesh);
             return;
         }
     }
@@ -465,7 +465,7 @@ void CharacterControllerComponent::StartDash()
 
             dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
             dashToNavmesh           = posOverPoly;
-            GLOG("Hit with right. Dash to navmesh? %d", dashToNavmesh);
+            //GLOG("Hit with right. Dash to navmesh? %d", dashToNavmesh);
             return;
         }
     }
@@ -483,7 +483,7 @@ void CharacterControllerComponent::StartDash()
 
             dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
             dashToNavmesh           = posOverPoly;
-            GLOG("Hit with left. Dash to navmesh? %d", dashToNavmesh);
+            //GLOG("Hit with left. Dash to navmesh? %d", dashToNavmesh);
             return;
         }
     }
