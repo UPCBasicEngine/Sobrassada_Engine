@@ -43,40 +43,6 @@ bool Changeling::Init()
 
 void Changeling::Update(float deltaTime)
 {
-    if (isDashing)
-    {
-        GLOG("Dash");
-        float3 currentPos = parent->GetGlobalTransform().TranslatePart();
-        float3 direction     = dashDirection - currentPos;
-        direction.Normalize();
-
-        float dashSpeed      = 20.0f; 
-        float3 movement      = direction * dashSpeed * deltaTime;
-
-        // Mueve al enemigo
-        parent->SetLocalPosition(currentPos + movement);
-
-        // Actualiza el tiempo restante de dash
-        dashTimeRemaining -= deltaTime;
-
-        // Si el dash ha terminado, resetea el estado
-        if (dashTimeRemaining <= 0.0f)
-        {
-            isDashing = false;
-            GLOG("stop Dashing");
-            agentAI->ResetSpeed();
-            agentAI->SetLookForward(true);
-            if (animComponent) animComponent->UseTrigger("idle");
-        }
-        else
-        {
-            // Opcional: activa animación de dash si tienes
-            if (animComponent) animComponent->UseTrigger("dash");
-        }
-
-        return; // Evita que el resto del Update se ejecute durante el dash
-    }
-
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
 }
@@ -187,7 +153,8 @@ void Changeling::Attack(float deltaTime)
             dashDirection = character->GetLastPosition(); //Position of the player
             isDashing         = true;
             dashTimeRemaining = dashDuration;
-            agentAI->PauseMovement(); 
+            agentAI->SetSpeed(dashSpeed, 100000);
+            agentAI->SetPathNavigation(dashDirection);
         }
 
         // Reset attack state
