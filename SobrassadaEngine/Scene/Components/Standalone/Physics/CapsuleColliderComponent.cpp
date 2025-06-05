@@ -18,11 +18,11 @@ CapsuleColliderComponent::CapsuleColliderComponent(UID uid, GameObject* parent)
     CalculateCollider();
 
     onCollissionCallback = CollisionDelegate(
-        std::bind(&CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
     );
 
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    //App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    // App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
 }
 
 CapsuleColliderComponent::CapsuleColliderComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -50,16 +50,11 @@ CapsuleColliderComponent::CapsuleColliderComponent(const rapidjson::Value& initi
     }
 
     onCollissionCallback = CollisionDelegate(
-        std::bind(&CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
     );
 
-    if (colliderType == ColliderType::STATIC && !parent->IsStatic())
-        parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
-    else if (!(colliderType == ColliderType::STATIC) && parent->IsStatic())
-        parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
-
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    //App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    // App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
 }
 
 CapsuleColliderComponent::~CapsuleColliderComponent()
@@ -136,39 +131,27 @@ void CapsuleColliderComponent::RenderEditorInspector()
             if (ImGui::Selectable(ColliderTypeStrings[i]))
             {
                 colliderType = ColliderType(i);
-                if (colliderType == ColliderType::STATIC)
-                {
-                    parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
-                    mass = 0.f;
-                }
-                else
-                {
-                    parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
-                    mass = 1.f;
-                }
                 App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
             }
         }
         ImGui::EndCombo();
     }
 
-        ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
-        if (ImGui::DragFloat("Mass", &mass, 1.f, 0.f, 100.f))
-        {
-            App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
-        }
-        ImGui::EndDisabled();
+    ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
+    if (ImGui::DragFloat("Mass", &mass, 1.f, 0.f, 100.f))
+    {
+        App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
+    }
+    ImGui::EndDisabled();
 
-        if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
-            App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
+    if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
+        App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
 
-        if (ImGui::DragFloat("Radius", &radius, 0.05f, 0.f, 20.f))
-            App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
-        if (ImGui::DragFloat("Length", &length, 0.05f, 0.f, 20.f))
-            App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
+    if (ImGui::DragFloat("Radius", &radius, 0.05f, 0.f, 20.f)) App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
+    if (ImGui::DragFloat("Length", &length, 0.05f, 0.f, 20.f)) App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
 
-        if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
-            App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
+    if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
+        App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
 
     // COLLIDER LAYER SETTINGS
     if (ImGui::BeginCombo("Layer options", ColliderLayerStrings[(int)layer]))
@@ -178,7 +161,8 @@ void CapsuleColliderComponent::RenderEditorInspector()
         {
             if (ImGui::Selectable(ColliderLayerStrings[i]))
             {
-                layer = ColliderLayer(i);
+                layer       = ColliderLayer(i);
+                userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
                 App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
             }
         }
@@ -193,7 +177,7 @@ void CapsuleColliderComponent::RenderEditorInspector()
 
     if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
     {
-        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
+        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
     }
 }
 
@@ -225,26 +209,15 @@ void CapsuleColliderComponent::ParentUpdated()
 
     if (fitToSize) CalculateCollider();
 
-    if (parent->IsStatic() && colliderType != ColliderType::STATIC)
-    {
-        mass         = 0.f;
-        colliderType = ColliderType::STATIC;
-    }
-    else if (!parent->IsStatic() && colliderType == ColliderType::STATIC)
-    {
-        mass         = 1.f;
-        colliderType = ColliderType::DYNAMIC;
-    }
-
     App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
 }
 
-void CapsuleColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal)
+void CapsuleColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
 {
     if (!enabled || !otherObject->IsEnabled()) return;
 
     auto script = parent->GetComponent<ScriptComponent*>();
-    if (script) script->OnCollision(otherObject, collisionNormal);
+    if (script) script->OnCollision(otherObject, collisionNormal, layer);
 }
 
 void CapsuleColliderComponent::DeleteRigidBody()
