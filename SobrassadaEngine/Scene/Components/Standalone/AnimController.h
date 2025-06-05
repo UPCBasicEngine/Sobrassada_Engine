@@ -12,7 +12,7 @@ class AnimController
     ~AnimController();
 
     update_status Update(float deltaTime);
-    void Play(UID resource, bool loop);
+    void Play(UID resource, bool loop, float clipSpeed);
     void Stop();
     void Pause() { playAnimation = false; }
     void Resume() { playAnimation = true; }
@@ -49,7 +49,7 @@ class AnimController
     float fadeTime                      = 0.0f;
     float currentTargetTime             = 0.0f;
     bool animationFinished              = false;
-
+   
     ResourceAnimation* currentAnimation = nullptr;
     ResourceAnimation* targetAnimation  = nullptr;
 };

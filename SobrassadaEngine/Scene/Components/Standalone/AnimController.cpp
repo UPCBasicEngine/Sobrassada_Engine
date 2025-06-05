@@ -15,7 +15,7 @@ AnimController::~AnimController()
     App->GetResourcesModule()->ReleaseResource(currentAnimation);
 }
 
-void AnimController::Play(UID newResource, bool shouldLoop)
+void AnimController::Play(UID newResource, bool shouldLoop, float clipSpeed)
 {
     if (currentAnimation == nullptr) Stop();
     resource          = newResource;
@@ -25,6 +25,7 @@ void AnimController::Play(UID newResource, bool shouldLoop)
     playAnimation     = true;
     playAnimation     = true;
     animationFinished = false;
+    playbackSpeed     = clipSpeed;
 }
 
 void AnimController::Stop()

@@ -96,14 +96,16 @@ void AnimationComponent::OnPlay(bool isTransition)
                                 animController->SetTargetAnimationResource(
                                     clip.animationResourceUID, transitionTime, clip.loop
                                 );
-                            else animController->Play(clip.animationResourceUID, clip.loop);
+                            else animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
                             resource = clip.animationResourceUID;
                         }
+
+                        
                     }
                 }
             }
         }
-        else animController->Play(resource, true);
+        else animController->Play(resource, true, defaultTime);
     }
 }
 
