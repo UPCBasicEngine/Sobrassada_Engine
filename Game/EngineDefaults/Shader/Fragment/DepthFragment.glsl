@@ -16,5 +16,5 @@ void main()
     float depth = texture(u_Texture, uv0).r;
     float linearDepth = LinearizeDepth(depth);
     FragColor = vec4(vec3(linearDepth), 1.0);
-    //FragColor = vec4(vec3(pow(linearDepth, 0.2)), 1.0);
+    //FragColor = vec4(vec3(depth), 1.0);
 }
