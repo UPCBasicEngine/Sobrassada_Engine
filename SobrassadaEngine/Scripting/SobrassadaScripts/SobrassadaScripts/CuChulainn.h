@@ -38,6 +38,8 @@ class CuChulainn : public Character
     void Respawn();
     bool GetIsInvulnerable() { return isInvulnerable; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
+    CharacterStates GetState() const { return state; }
+    int GetUltimateDamage() const { return ultimateDamage; }
 
   private:
     void OnDeath() override;

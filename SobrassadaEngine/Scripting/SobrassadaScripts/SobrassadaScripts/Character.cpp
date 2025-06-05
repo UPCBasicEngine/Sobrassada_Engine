@@ -118,8 +118,12 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
-        GLOG("Collision in %s", parent->GetName().c_str());
+        // Special attack check
+        CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
+        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
+            TakeDamage(playerScript->GetUltimateDamage());
 
+        // Standard attack check
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         if (enemyScript)
         {

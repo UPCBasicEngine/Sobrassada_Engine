@@ -162,8 +162,6 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
-            if (stateName == HashString("Ultimate")) isAttacking = false;
-
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -424,11 +422,7 @@ void CuChulainn::Dash()
 
 void CuChulainn::PerformAttack()
 {
-    if (!isAttacking) return;
-
-    // if (attackTimer >= attackDuration) isAttacking = false;
-
-    if (state == CharacterStates::BASIC_ATTACK)
+    if (isAttacking && state == CharacterStates::BASIC_ATTACK)
     {
         if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
             attackTimer < attackHitboxDelay + attackHitboxDuration)
@@ -486,7 +480,6 @@ void CuChulainn::UltimateAttack()
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
 
-    isAttacking     = true;
     if (animComponent) animComponent->UseTrigger("Ultimate");
 }
 
