@@ -18,31 +18,25 @@ void PauseMenuScript::Update(float deltaTime)
     const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
     const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
-    if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
+    if (!cachedTarget)
     {
         const auto& allGameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
 
         for (const auto& [uid, gameObject] : allGameObjects)
         {
-            if (gameObject->GetName() == panelToShowName)
+            if (gameObject && gameObject->GetName() == panelToShowName)
             {
-                UID parentUID        = gameObject->GetParent();
-                GameObject* parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
-
-                if (parentGO && parentGO->IsEnabled())
-                {
-                    bool newState = !gameObject->IsEnabled();
-                    gameObject->SetEnabledRecursive(newState);
-
-                    if (newState && parent)
-                    {
-                        parent->SetEnabledRecursive(false);
-                    }
-                }
-
+                cachedTarget = gameObject;
                 break;
             }
         }
+    }
+
+    if (cachedTarget &&
+        (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_START] == KEY_DOWN))
+    {
+        bool newState = !cachedTarget->IsEnabled();
+        cachedTarget->SetEnabledRecursive(newState);
     }
 }
 

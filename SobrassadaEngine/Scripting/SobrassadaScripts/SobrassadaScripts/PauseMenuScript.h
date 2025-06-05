@@ -16,4 +16,5 @@ class PauseMenuScript : public Script
 
   private:
     std::string panelToShowName = "PauseMenuPanel";
+    GameObject* cachedTarget    = nullptr;
 };
