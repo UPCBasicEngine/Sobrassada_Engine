@@ -18,6 +18,7 @@ class Octree;
 class ResourcePrefab;
 class Quadtree;
 class CameraComponent;
+class FrustumPlanes;
 class CharacterControllerComponent;
 class GBuffer;
 class Framebuffer;
@@ -130,7 +131,7 @@ class SOBRASADA_API_ENGINE Scene
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
-    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, CameraComponent* camera) const;
+    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
 
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;

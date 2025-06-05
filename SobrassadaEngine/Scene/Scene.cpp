@@ -341,8 +341,11 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
+    FrustumPlanes frustumPlanes;
+    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+    else frustumPlanes = camera->GetFrustrumPlanes();
     std::vector<GameObject*> objectsToRender;
-    CheckObjectsToRender(objectsToRender, camera);
+    CheckObjectsToRender(objectsToRender, frustumPlanes);
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
@@ -952,16 +955,12 @@ void Scene::UpdateDynamicSpatialStructure()
     CreateDynamicSpatialDataStruct();
 }
 
-void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, CameraComponent* camera) const
+void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsToRender", Optick::Category::GameLogic)
 #endif
     std::vector<GameObject*> queriedObjects;
-
-    FrustumPlanes frustumPlanes;
-    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    else frustumPlanes = camera->GetFrustrumPlanes();
 
     sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
@@ -1052,6 +1051,7 @@ void Scene::NavMeshPassRender(
 void Scene::ShadowMapPassRender(CameraComponent* camera) const
 {
     // Calcular sphereCenter y sphereRadius desde el frustum de la cámara
+    
     DirectionalLightComponent* light = lightsConfig->GetDirectionalLight();
 
     float3 lightDir                  = light->GetDirection();
@@ -1075,7 +1075,7 @@ void Scene::ShadowMapPassRender(CameraComponent* camera) const
     frustumPlanes.UpdateFrustumPlanes(shadowfrustum.ViewMatrix(), shadowfrustum.ProjectionMatrix());
 
     std::vector<GameObject*> shadowObjectsToRender;
-    CheckObjectsToRender(shadowObjectsToRender, camera);
+    CheckObjectsToRender(shadowObjectsToRender, frustumPlanes);
 
     CameraMatrices matrices;
     matrices.viewMatrix       = shadowfrustum.ViewMatrix();
