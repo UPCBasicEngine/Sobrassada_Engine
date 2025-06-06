@@ -14,7 +14,7 @@ struct Clip
     HashString clipName;
     bool loop;
 
-    float animationSpeed = 2.0f;
+    float animationSpeed = 1.0f;
 };
 
 struct State
@@ -22,6 +22,7 @@ struct State
     HashString name;
     HashString clipName;
     ImVec2 position;
+    
 };
 
 struct Transition
