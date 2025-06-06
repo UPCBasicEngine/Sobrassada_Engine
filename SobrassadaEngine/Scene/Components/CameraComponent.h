@@ -46,12 +46,15 @@ class CameraComponent : public Component
     Framebuffer* GetFramebuffer() { return previewFramebuffer; }
     float GetNearPlaneDistance() const { return camera.nearPlaneDistance; }
     float GetFarPlaneDistance() const { return camera.farPlaneDistance; }
+    void GetFrustumCorners(float3* corners) const { return camera.GetCornerPoints(corners); }
+    float3 GetCameraCenter() const { return camera.CenterPoint(); };
 
     void SetAspectRatio(float newAspectRatio);
     void SetCameraPosition(const float3& position) { camera.pos = position; }
     void SetCameraFront(const float3& front) { camera.front = front; }
     void SetCameraUp(const float3& up) { camera.up = up; }
     void SetFreeCamera(const bool freecamera) { freeCamera = freecamera; }
+
 
   private:
     Frustum camera;

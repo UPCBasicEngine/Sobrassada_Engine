@@ -206,6 +206,35 @@ void Scene::Init()
     multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
     gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
 
+    glGenFramebuffers(1, &depthFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+
+    const unsigned int shadowWidth  = 2048;
+    const unsigned int shadowHeight = 2048;
+
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+    );
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        GLOG("Error: Shadow framebuffer not complete!");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     constexpr float cubeVertices[] = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
                                       -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
 
@@ -350,6 +379,17 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
+
+    glDisable(GL_STENCIL_TEST);
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
+    DirectionalLightComponent* light = lightsConfig->GetDirectionalLight();
+    ShadowMapPassRender(camera, light, objectsToRender);
+    glPopDebugGroup();
+
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    glViewport(0, 0, width, height);
+
     glEnable(GL_STENCIL_TEST);
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
@@ -357,8 +397,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         NavMeshPassRender(objectsToRender, camera, gbuffer);
     else GeometryPassRender(objectsToRender, camera, gbuffer);
     glPopDebugGroup();
-
-    ShadowMapPassRender(camera);
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
     DecalsPassRender(objectsToRender, camera, gbuffer);
@@ -372,6 +410,12 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
     {
         RenderDepthDebug(gbuffer, camera, framebuffer);
+        return;
+    }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_SHADOWMAP)) &&
+             light != nullptr)
+    {
+        RenderShadowMapDebug(framebuffer);
         return;
     }
 
@@ -1048,13 +1092,26 @@ void Scene::NavMeshPassRender(
     glEnable(GL_BLEND);
 }
 
-void Scene::ShadowMapPassRender(CameraComponent* camera) const
+void Scene::ShadowMapPassRender(CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender)
 {
-    // Calcular sphereCenter y sphereRadius desde el frustum de la cámara
-    
-    DirectionalLightComponent* light = lightsConfig->GetDirectionalLight();
+    if (light == nullptr) return;
 
-    float3 lightDir                  = light->GetDirection();
+    float3 corners[8];
+    camera == nullptr ? App->GetCameraModule()->GetFrustumCorners(corners) : camera->GetFrustumCorners(corners);
+
+    float3 sphereCenter = float3::zero;
+    for (int i = 0; i < 8; ++i)
+        sphereCenter += corners[i];
+    sphereCenter       /= 8.0f;
+
+    float sphereRadius  = 0.0f;
+    for (int i = 0; i < 8; ++i)
+    {
+        float dist = (corners[i] - sphereCenter).Length();
+        if (dist > sphereRadius) sphereRadius = dist;
+    }
+
+    float3 lightDir = light->GetDirection();
     lightDir.Normalize();
     float3 lightRight = lightDir.Cross(float3(0.0, 1.0, 0.0));
     lightRight.Normalize();
@@ -1063,29 +1120,52 @@ void Scene::ShadowMapPassRender(CameraComponent* camera) const
 
     Frustum shadowfrustum;
     shadowfrustum.type               = FrustumType::OrthographicFrustum;
-    shadowfrustum.pos                = sphereCenter - lightDir * sphereRadius;
-    shadowfrustum.front              = lightDir;
-    shadowfrustum.up                 = lightUp;
-    shadowfrustum.nearPlaneDistance  = 0.0f;
-    shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
-    shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
-    shadowfrustum.orthographicHeight = sphereRadius * 2.0f;
+    shadowfrustum.pos                = float3(0, 20, 0); // Arriba de la escena
+    shadowfrustum.front              = float3(0, -1, 0); // Hacia abajo
+    shadowfrustum.up                 = float3(0, 0, -1);
+    shadowfrustum.nearPlaneDistance  = 1.0f;
+    shadowfrustum.farPlaneDistance   = 100.0f;
+    shadowfrustum.orthographicWidth  = 50.0f;
+    shadowfrustum.orthographicHeight = 50.0f;
 
     FrustumPlanes frustumPlanes;
     frustumPlanes.UpdateFrustumPlanes(shadowfrustum.ViewMatrix(), shadowfrustum.ProjectionMatrix());
 
-    std::vector<GameObject*> shadowObjectsToRender;
-    CheckObjectsToRender(shadowObjectsToRender, frustumPlanes);
+    CameraMatrices lightmatrices;
+    lightmatrices.viewMatrix       = shadowfrustum.ViewMatrix();
+    lightmatrices.projectionMatrix = shadowfrustum.ProjectionMatrix();
+    lightview                      = shadowfrustum.ViewMatrix();
+    lightProj                      = shadowfrustum.ProjectionMatrix();
 
-    CameraMatrices matrices;
-    matrices.viewMatrix       = shadowfrustum.ViewMatrix();
-    matrices.projectionMatrix = shadowfrustum.ProjectionMatrix();
-    
-    unsigned int ubo          = 0;
+    unsigned int ubo               = 0;
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    // glDisable(GL_BLEND);
+
+    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+    std::vector<MeshComponent*> meshesToRender;
+
+    for (const auto& gameObject : objectsToRender)
+    {
+        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
+            meshesToRender.push_back(mesh);
+    }
+
+    glViewport(0, 0, 2048, 2048);
+
+    batchManager->RenderShadowMap(meshesToRender, ubo);
+
+    // glEnable(GL_BLEND);
+
+    glDeleteBuffers(1, &ubo);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
@@ -1155,6 +1235,25 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
 
     glUniform1f(glGetUniformLocation(program, "nearPlane"), nearPlane);
     glUniform1f(glGetUniformLocation(program, "farPlane"), farPlane);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void Scene::RenderShadowMapDebug(Framebuffer* framebuffer) const
+{
+    unsigned int width  = framebuffer->GetTextureWidth();
+    unsigned int height = framebuffer->GetTextureHeight();
+    framebuffer->Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetDepthProgram();
+    glUseProgram(program);
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    glViewport(0, 0, width, height);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
@@ -1230,6 +1329,9 @@ void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Frameb
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
 
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
     lightsConfig->SetLightsShaderData();
 
     unsigned int lightingPassProgram = App->GetShaderModule()->GetLightingPassProgram();
@@ -1239,6 +1341,9 @@ void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Frameb
     float3 cameraPos;
     if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
     else cameraPos = camera->GetCameraPosition();
+
+    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "viewLight"), 1, GL_TRUE, lightview.ptr());
+    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "projLight"), 1, GL_TRUE, lightProj.ptr());
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
 

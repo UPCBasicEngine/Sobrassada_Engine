@@ -141,7 +141,7 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
 void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera)
 {
 #ifdef OPTICK
-    OPTICK_CATEGORY("BatchManager::Render", Optick::Category::Rendering)
+    OPTICK_CATEGORY("BatchManager::RenderTransparent", Optick::Category::Rendering)
 #endif
 
     unsigned int cameraUBO;
@@ -238,6 +238,50 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
 
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
+}
+
+void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRender, unsigned int cameraUBO)
+{
+#ifdef OPTICK
+    OPTICK_CATEGORY("BatchManager::RenderShadowMap", Optick::Category::Rendering)
+#endif
+    for (GeometryBatch* it : opaqueBatches)
+    {
+        std::vector<MeshComponent*> batchMeshes;
+        for (MeshComponent* mesh : meshesToRender)
+        {
+            GameObject* owner = mesh->GetParent();
+            if (!owner || !owner->IsGloballyEnabled()) continue;
+
+            if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
+        }
+
+        if (batchMeshes.empty()) continue;
+
+        const unsigned int program = App->GetShaderModule()->GetShadowMapPassProgram();
+
+        const auto start           = std::chrono::high_resolution_clock::now();
+
+        glUseProgram(program);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+        unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+        glUniformBlockBinding(program, blockIdx, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        it->ResetUpdatedOnce();
+        it->Render(batchMeshes, true);
+
+        const auto end                             = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<float> elapsed = end - start;
+
+        const unsigned int vertexCount             = it->GetVertexCount();
+        const int meshTriangles                    = vertexCount / 3;
+        App->GetOpenGLModule()->AddTrianglesPerSecond(meshTriangles / elapsed.count());
+        App->GetOpenGLModule()->AddVerticesCount(vertexCount);
+        App->GetOpenGLModule()->AddDrawCallsCount();
+    }
 }
 
 // We can change that now

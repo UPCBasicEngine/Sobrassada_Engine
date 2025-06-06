@@ -8,6 +8,9 @@ layout(binding = 0) uniform sampler2D gDiffuse;
 layout(binding = 1) uniform sampler2D gSpecular;
 layout(binding = 2) uniform sampler2D gPosition;
 layout(binding = 3) uniform sampler2D gNormal;
+layout(binding = 4) uniform sampler2D shadowMap;
+uniform mat4 viewLight;
+uniform mat4 projLight;
 
 in vec2 uv0;
 
@@ -204,6 +207,23 @@ void main()
     {
 		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0, pos);
     }
+
+    //Shadows
+    float shadow = 0.0;
+    vec4 pos_from_light = projLight * viewLight * vec4(pos, 1.0);
+    vec3 projCoords = pos_from_light.xyz / pos_from_light.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    if(projCoords.x >= 0.0 && projCoords.x <= 1.0 &&
+       projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
+       projCoords.z >= 0.0 && projCoords.z <= 1.0)
+    {
+        float depth = texture(shadowMap, projCoords.xy).r;
+        float bias = 0.005;
+        shadow = projCoords.z - bias > depth ? 1.0 : 0.1;
+    }
+
+    hdr *= (1.0 - shadow);
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));

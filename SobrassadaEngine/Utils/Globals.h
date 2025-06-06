@@ -139,7 +139,8 @@ constexpr const char* SKYBOX_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/
 constexpr const char* UIWIDGET_VERTEX_SHADER_PATH    = "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl";
 constexpr const char* QUAD_VERTEX_SHADER_PATH        = "./EngineDefaults/Shader/Vertex/QuadVertexShader.glsl";
 constexpr const char* BILLBOARD_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/BillboardVertex.glsl";
-constexpr const char* DECAL_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/DecalVertex.glsl";
+constexpr const char* DECAL_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/Vertex/DecalVertex.glsl";
+constexpr const char* SHADOWMAP_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/ShadowMapVertex.glsl";
 
 constexpr const char* UNLIT_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UnlitFragmentShader.glsl";
 constexpr const char* SKYBOX_FRAGMENT_SHADER_PATH    = "./EngineDefaults/Shader/Fragment/SkyboxFragment.glsl";
@@ -163,7 +164,8 @@ constexpr const char* QUAD_FRAGMENT_SHADER_PATH          = "./EngineDefaults/Sha
 constexpr const char* DEPTH_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/DepthFragment.glsl";
 constexpr const char* BILLBOARD_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/BillboardFragment.glsl";
 constexpr const char* TRAIL_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/TrailShader.glsl";
-constexpr const char* DECAL_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/DecalFragment.glsl";
+constexpr const char* DECAL_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/DecalFragment.glsl";
+constexpr const char* EMPTY_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/EmptyFragment.glsl";
 
 using UID                                                = uint64_t;
 

@@ -26,6 +26,7 @@ class ShaderModule : public Module
     int GetBillboardProgram() const { return billboardProgram; }
     int GetTrailProgram() const { return trailProgram; }
     int GetDecalProgram() const { return decalProgram; }
+    int GetShadowMapPassProgram() const { return shadowMapProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -52,4 +53,5 @@ class ShaderModule : public Module
 
     int trailProgram                   = -1;
     int decalProgram                   = -1;
+    int shadowMapProgram               = -1;
 };

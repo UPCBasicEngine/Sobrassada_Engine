@@ -33,6 +33,8 @@ bool ShaderModule::Init()
     trailProgram                = CreateShaderProgram(BASIC_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
     decalProgram                = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
 
+    shadowMapProgram = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
+    
     return true;
 }
 
@@ -50,7 +52,8 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(depthProgram);
     glDeleteProgram(billboardProgram);
     glDeleteProgram(decalProgram);
-    glDeleteProgram(trailProgram);
+    glDeleteProgram(trailProgram);    
+    glDeleteProgram(shadowMapProgram);
 
     return true;
 }

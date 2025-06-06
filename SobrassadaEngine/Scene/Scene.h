@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "LightsConfig.h"
 
+#include "Math/float3x4.h"
 #include "Math/float4x4.h"
 #include <functional>
 #include <map>
@@ -135,8 +136,9 @@ class SOBRASADA_API_ENGINE Scene
 
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
-    void ShadowMapPassRender(CameraComponent* camera) const;
-    void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
+    void ShadowMapPassRender(CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender);
+    void
+    DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(
         const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
@@ -146,6 +148,7 @@ class SOBRASADA_API_ENGINE Scene
     NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
+    void RenderShadowMapDebug(Framebuffer* framebuffer) const;
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;
@@ -186,4 +189,7 @@ class SOBRASADA_API_ENGINE Scene
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
 
     unsigned int decalVAO, decalVBO, decalEBO;
+    unsigned int depthTexture, depthFBO;
+    float3x4 lightview;
+    float4x4 lightProj;
 };
