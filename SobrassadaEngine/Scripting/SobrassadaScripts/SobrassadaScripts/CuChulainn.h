@@ -55,8 +55,8 @@ class CuChulainn : public Character
     void GetInputs();
     void UpdateTimers(float deltaTime);
     void LookAtMouse();
-    void LookAtRightstick();
-    void LookAtLeftstick();
+    void LookAtRightStick();
+    void LookAtLeftStick();
     void CheckIsFalling();
 
     void ThrowSpear();

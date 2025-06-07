@@ -199,7 +199,7 @@ void CuChulainn::GetInputs()
     direction = camFront * direction.z + camRight * direction.x;
     character->SetDirection(direction);
 
-    if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
     {
         desiredHeal = true;
         healCdTimer = healCooldown;
@@ -214,7 +214,7 @@ void CuChulainn::GetInputs()
         desiredAttack     = true;
         attackBufferTimer = inputBuffer;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || input->GetLeftTrigger().first == KEY_REPEAT)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
     {
         desiredAim = true;
     }
@@ -222,11 +222,11 @@ void CuChulainn::GetInputs()
     {
         if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || input->GetRightTrigger().first == KEY_DOWN)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
-    if (keyboard[SDL_SCANCODE_F] || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_F] || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
     {
         desiredUltimate     = true;
         ultimateBufferTimer = inputBuffer;
@@ -346,14 +346,14 @@ void CuChulainn::LookAtMouse()
     character->LookAt(direction);
 }
 
-void CuChulainn::LookAtRightstick()
+void CuChulainn::LookAtRightStick()
 {
     const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
     const float3 direction = camFront * stick.y + camRight * stick.x;
     if (direction.LengthSq() > 0.001f) character->LookAt(direction);
 }
 
-void CuChulainn::LookAtLeftstick()
+void CuChulainn::LookAtLeftStick()
 {
     const float2& stick    = AppEngine->GetInputModule()->GetLeftStick();
     const float3 direction = camFront * stick.y + camRight * stick.x;
@@ -418,7 +418,7 @@ void CuChulainn::Dash()
 
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
-    LookAtLeftstick();
+    LookAtLeftStick();
     character->StartDash();
     if (animComponent) animComponent->UseTrigger("Dash");
 }
@@ -503,7 +503,7 @@ void CuChulainn::Aim(float deltaTime)
     if (aimTimer >= 0.1f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    else LookAtRightstick();
+    else LookAtLeftStick();
 }
 
 void CuChulainn::Move()

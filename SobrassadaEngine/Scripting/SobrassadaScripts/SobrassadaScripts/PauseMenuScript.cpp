@@ -18,7 +18,7 @@ void PauseMenuScript::Update(float deltaTime)
     const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
     const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
-    if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
+    if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_START] == KEY_DOWN)
     {
         const auto& allGameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
 
