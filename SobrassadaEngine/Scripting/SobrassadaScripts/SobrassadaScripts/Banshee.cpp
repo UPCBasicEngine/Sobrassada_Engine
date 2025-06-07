@@ -8,6 +8,7 @@
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
@@ -24,8 +25,7 @@ Banshee::Banshee(GameObject* parent)
           CharacterType::Banshee
       )
 {
-    fields.push_back({"Fleeing Distance", InspectorField::FieldType::Float, &fleeDistance, 0.0f, 10.0f});
-    fields.push_back({"Fleeing Speed", InspectorField::FieldType::Float, &fleeSpeed, 0.0f, 10.0f});
+    fields.push_back({"Invisible time range", InspectorField::FieldType::Vec2, &invisibleTimeRange, 0.0f, 10.0f});
     fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 10.0f});
 }
 
@@ -63,6 +63,12 @@ bool Banshee::Init()
         else GLOG("[WARNING] Banshee: no scream visual found as child of base")
     }
 
+    mesh = parent->GetComponentChild<MeshComponent*>(AppEngine);
+    if (!mesh) GLOG("No mesh found for Banshee");
+
+    rng  = std::mt19937(std::random_device {}());
+    dist = std::uniform_int_distribution<std::mt19937::result_type>(invisibleTimeRange[0], invisibleTimeRange[1]);
+
     return true;
 }
 
@@ -99,11 +105,7 @@ void Banshee::HandleState(float deltaTime)
         ChasePlayer();
         break;
 
-    case BansheeStates::Flee:
-        Flee();
-        break;
-
-    case BansheeStates::Scream:
+    case BansheeStates::Attack:
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     }
@@ -114,32 +116,8 @@ void Banshee::ChasePlayer()
     if (!character) return;
 
     if (animComponent) animComponent->UseTrigger("Chase");
-    if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Scream;
+    if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Attack;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
-}
-
-void Banshee::Flee()
-{
-    if (!isFleeing)
-    {
-        if (animComponent) animComponent->UseTrigger("Chase");
-        isFleeing = true;
-        agentAI->SetSpeed(fleeSpeed, 100.0f);
-    }
-
-    const float3 newPos =
-        (parent->GetGlobalTransform().TranslatePart() - character->GetGlobalTransform().TranslatePart()).Normalized() +
-        parent->GetGlobalTransform().TranslatePart();
-
-    agentAI->SetPathNavigation(newPos);
-
-    const float distance = character->GetLastPosition().Distance(parent->GetPosition());
-    if (attackCdTimer <= 0 && distance > fleeDistance)
-    {
-        isFleeing = false;
-        agentAI->ResetSpeed();
-        ChangeState();
-    }
 }
 
 void Banshee::Attack(float deltaTime)
@@ -150,19 +128,34 @@ void Banshee::Attack(float deltaTime)
     {
         GLOG("Banshee attack");
         agentAI->SetLookForward(false);
-        if (animComponent) animComponent->UseTrigger("Scream");
 
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
         agentAI->SetAngularSpeed(attackAngularSpeed);
+
+        currentInvisibleTime = dist(rng);
+        isInvisible          = true;
+        mesh->SetEnabled(false);
     }
     else
     {
-        // Slowly rotate towards player while charging the attack
-        if (attackTimer < attackHitboxDelay) agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        if (attackTimer < currentInvisibleTime) return;
 
-        if (!damageArea->GetEnabled() && attackTimer >= attackHitboxDelay &&
-            attackTimer <= attackHitboxDelay + attackHitboxDuration)
+        if (isInvisible)
+        {
+            // Tp to player and enable
+            GetAttackPosition();
+            mesh->SetEnabled(true);
+            isInvisible = false;
+            if (animComponent) animComponent->UseTrigger("Scream");
+        }
+
+        // Slowly rotate towards player while charging the attack
+        if (attackTimer < currentInvisibleTime + attackHitboxDelay)
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+        if (!damageArea->GetEnabled() && attackTimer >= currentInvisibleTime + attackHitboxDelay &&
+            attackTimer <= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
         {
             GLOG("Banshee enable hitbox");
             if (areaVisual) areaVisual->SetEnabled(true);
@@ -170,7 +163,8 @@ void Banshee::Attack(float deltaTime)
             damageArea->SetEnabled(true);
             if (weaponCollider) weaponCollider->SetEnabled(true);
         }
-        else if (damageArea->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        else if (damageArea->GetEnabled() &&
+                 attackTimer >= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
         {
             GLOG("Banshee disable hitbox");
             damageArea->SetEnabled(false);
@@ -179,7 +173,7 @@ void Banshee::Attack(float deltaTime)
             if (screamVisual) screamVisual->SetEnabled(false);
         }
 
-        if (attackTimer >= attackDuration)
+        if (attackTimer >= currentInvisibleTime + attackDuration)
         {
             isAttacking   = false;
             attackCdTimer = attackCooldown;
@@ -194,8 +188,12 @@ void Banshee::Attack(float deltaTime)
 void Banshee::ChangeState()
 {
     const float distance = character->GetLastPosition().Distance(parent->GetPosition());
-    if (distance <= fleeDistance) currentState = BansheeStates::Flee;
-    else if (distance <= rangeAIAttack) currentState = BansheeStates::Scream;
+    if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
     else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
     else currentState = BansheeStates::Idle;
+}
+
+void Banshee::GetAttackPosition()
+{
+    agentAI->SetRandomPositionAroundPlayer(character->GetLastPosition(), 2.0f);
 }

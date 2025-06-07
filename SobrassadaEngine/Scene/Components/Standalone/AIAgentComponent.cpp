@@ -210,6 +210,7 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
     float extents[3] = {2.0f, 4.0f, 2.0f}; // bounding box for the search area
     float nearestPoint[3];
     dtPolyRef targetRef;
+
     dtStatus status = navQuery->findNearestPoly(destination.ptr(), extents, &filter, &targetRef, nearestPoint);
     if (dtStatusFailed(status) || targetRef == 0)
     {
@@ -277,6 +278,41 @@ void AIAgentComponent::ResumeMovement()
     currentAngularSpeed        = restoreAngular;
 
     isPaused                   = false;
+}
+
+void AIAgentComponent::SetRandomPositionAroundPlayer(const float3& playerPos, const float radius)
+{
+    isPaused                     = false;
+
+    PathfinderModule* pathfinder = App->GetPathfinderModule();
+    dtNavMeshQuery* navQuery     = pathfinder->GetNavQuery();
+    if (!navQuery) return;
+
+    // Prepare for finding the nearest poly
+    dtQueryFilter filter;
+    float extents[3] = {2.0f, 4.0f, 2.0f}; // bounding box for the search area
+    dtPolyRef polyRef;
+    float nearestPoint[3];
+    dtPolyRef randomRef;
+    float randomPoint[3];
+
+    float searchPos[3] = {playerPos.x, playerPos.y, playerPos.z};
+
+    dtStatus status    = navQuery->findNearestPoly(playerPos.ptr(), extents, &filter, &polyRef, nearestPoint);
+    status             = navQuery->findRandomPointAroundCircle(
+        polyRef, searchPos, radius, &filter, []() { return static_cast<float>(rand()) / RAND_MAX; }, &randomRef,
+        randomPoint
+    );
+
+    const float3 finalPos = {searchPos[0], searchPos[1], searchPos[2]};
+    GLOG("TELEPORT TO: %f %f %f", finalPos[0], finalPos.y, finalPos.z);
+
+    dtCrowd* crowd       = App->GetPathfinderModule()->GetCrowd();
+    dtCrowdAgent* editAg = crowd->getEditableAgent(agentId);
+
+    editAg->npos[0]      = finalPos.x;
+    editAg->npos[1]      = finalPos.y;
+    editAg->npos[2]      = finalPos.z;
 }
 
 void AIAgentComponent::AddToCrowd()
