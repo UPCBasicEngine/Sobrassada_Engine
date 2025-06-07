@@ -92,8 +92,19 @@ void SplineComponent::RenderDebug(float deltaTime)
 
     if (showMarker && points.size() >= 2)
     {
-        const float3 wPos = GetWorldPositionInSpine(markerT);
-        dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f);
+        float3 wPos;
+        Quat wRot;
+
+        EvaluateTransform(markerT, wPos, wRot);
+        
+        auto coneDir = [&](const Quat& rot, float height)
+        {
+            return rot * float3(0, 0, 1) * height;
+        };
+
+        const float h = 0.22f;
+        const float r = 0.08f;
+        dbg->DrawCone(wPos, coneDir(wRot, h), r, 0.f);
     }
 }
 
