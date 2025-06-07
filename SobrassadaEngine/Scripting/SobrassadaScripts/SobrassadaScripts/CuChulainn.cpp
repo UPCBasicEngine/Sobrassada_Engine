@@ -48,6 +48,7 @@ bool CuChulainn::Init()
         healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
     }
     healthBarTextures = {
+        1257129746400865, // 0HP
         1211032143220573, // 1HP
         1229536411852494, // 2HP
         1222839804934023, // 3HP
@@ -122,6 +123,7 @@ bool CuChulainn::IsDead()
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
+    healthImageComponent->ChangeTexture(healthBarTextures[0]);
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -496,7 +498,7 @@ void CuChulainn::Respawn()
     // TODO: This function will be called by the UI in the future
 
     Character::Restart();
-    healthImageComponent->ChangeTexture(healthBarTextures[9]);
+    healthImageComponent->ChangeTexture(healthBarTextures[10]);
     isDead        = false;
     currentHealth = reservedHealth;
     state         = CharacterStates::RESPAWN;
@@ -508,5 +510,5 @@ void CuChulainn::Respawn()
 void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
-    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
+    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth]);
 }
