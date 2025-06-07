@@ -6,6 +6,7 @@
 #include "InputModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
+#include "GameTimer.h"
 
 
 bool PauseMenuScript::Init()
@@ -37,6 +38,19 @@ void PauseMenuScript::Update(float deltaTime)
     {
         bool newState = !cachedTarget->IsEnabled();
         cachedTarget->SetEnabledRecursive(newState);
+
+        GameTimer* gameTimer = AppEngine->GetGameTimer();
+        if (gameTimer)
+        {
+            if (newState && !gameTimer->IsPaused())
+            {
+                gameTimer->TogglePause();
+            }
+            else if (!newState && gameTimer->IsPaused())
+            {
+                gameTimer->TogglePause();
+            }
+        }
     }
 }
 
