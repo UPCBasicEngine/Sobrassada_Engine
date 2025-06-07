@@ -11,6 +11,7 @@
 #include "Standalone/CharacterControllerComponent.h"
 
 #include "DetourCrowd.h"
+#include <random>
 
 AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid, parent, "AI Agent", COMPONENT_AIAGENT)
 {
@@ -300,11 +301,17 @@ void AIAgentComponent::SetRandomPositionAroundPlayer(const float3& playerPos, co
 
     dtStatus status    = navQuery->findNearestPoly(playerPos.ptr(), extents, &filter, &polyRef, nearestPoint);
     status             = navQuery->findRandomPointAroundCircle(
-        polyRef, searchPos, radius, &filter, []() { return static_cast<float>(rand()) / RAND_MAX; }, &randomRef,
-        randomPoint
+        polyRef, searchPos, radius, &filter,
+        []()
+        {
+            static std::mt19937 rng(std::random_device {}());
+            static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+            return dist(rng);
+        },
+        &randomRef, randomPoint
     );
 
-    const float3 finalPos = {searchPos[0], searchPos[1], searchPos[2]};
+    const float3 finalPos = {randomPoint[0], randomPoint[1], randomPoint[2]};
     GLOG("TELEPORT TO: %f %f %f", finalPos[0], finalPos.y, finalPos.z);
 
     dtCrowd* crowd       = App->GetPathfinderModule()->GetCrowd();
@@ -313,6 +320,8 @@ void AIAgentComponent::SetRandomPositionAroundPlayer(const float3& playerPos, co
     editAg->npos[0]      = finalPos.x;
     editAg->npos[1]      = finalPos.y;
     editAg->npos[2]      = finalPos.z;
+
+    parent->SetLocalPosition(finalPos - parent->GetParentGlobalTransform().TranslatePart());
 }
 
 void AIAgentComponent::AddToCrowd()

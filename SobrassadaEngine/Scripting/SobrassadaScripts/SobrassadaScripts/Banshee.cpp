@@ -131,7 +131,6 @@ void Banshee::Attack(float deltaTime)
 
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
-        agentAI->SetAngularSpeed(attackAngularSpeed);
 
         currentInvisibleTime = dist(rng);
         isInvisible          = true;
@@ -147,6 +146,7 @@ void Banshee::Attack(float deltaTime)
             GetAttackPosition();
             mesh->SetEnabled(true);
             isInvisible = false;
+            agentAI->SetAngularSpeed(attackAngularSpeed);
             if (animComponent) animComponent->UseTrigger("Scream");
         }
 
@@ -195,5 +195,6 @@ void Banshee::ChangeState()
 
 void Banshee::GetAttackPosition()
 {
-    agentAI->SetRandomPositionAroundPlayer(character->GetLastPosition(), 2.0f);
+    agentAI->SetRandomPositionAroundPlayer(character->GetLastPosition(), 0.001f);
+    agentAI->LookAtMovement(character->GetLastPosition(), 1000.0f);
 }
