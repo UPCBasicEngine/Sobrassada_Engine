@@ -66,8 +66,9 @@ bool Banshee::Init()
     mesh = parent->GetComponentChild<MeshComponent*>(AppEngine);
     if (!mesh) GLOG("No mesh found for Banshee");
 
-    rng  = std::mt19937(std::random_device {}());
-    dist = std::uniform_int_distribution<std::mt19937::result_type>(invisibleTimeRange[0], invisibleTimeRange[1]);
+    rng            = std::mt19937(std::random_device {}());
+    normalizedDist = std::uniform_real_distribution<float>(0.0f, 1.0f);
+    invisibleDist  = std::uniform_real_distribution<float>(invisibleTimeRange[0], invisibleTimeRange[1]);
 
     return true;
 }
@@ -109,6 +110,11 @@ void Banshee::HandleState(float deltaTime)
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     }
+
+    if (animComponent && animComponent->IsFinished())
+    {
+        animComponent->UseTrigger("Idle");
+    }
 }
 
 void Banshee::ChasePlayer()
@@ -132,8 +138,9 @@ void Banshee::Attack(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
 
-        currentInvisibleTime = dist(rng);
-        isInvisible          = true;
+        currentInvisibleTime = invisibleDist(rng);
+        GLOG("Current inivivible time: %f", currentInvisibleTime);
+        isInvisible = true;
         mesh->SetEnabled(false);
     }
     else
@@ -195,6 +202,16 @@ void Banshee::ChangeState()
 
 void Banshee::GetAttackPosition()
 {
-    agentAI->SetRandomPositionAroundPlayer(character->GetLastPosition(), 0.001f);
-    agentAI->LookAtMovement(character->GetLastPosition(), 1000.0f);
+    const float3 playerPos = character->GetLastPosition();
+    const float maxRadius  = 2.5f;
+    const float minRadius  = 1.5f;
+
+    float angle            = normalizedDist(rng) * 2.0f * PI;
+    float r = sqrtf(normalizedDist(rng) * (maxRadius * maxRadius - minRadius * minRadius) + minRadius * minRadius);
+
+    float3 position(cosf(angle) * r + playerPos.x, playerPos.y, sinf(angle) * r + playerPos.z);
+
+    agentAI->SetPosition(position);
+
+    agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }

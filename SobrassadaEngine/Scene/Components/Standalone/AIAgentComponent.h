@@ -30,7 +30,6 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     bool SetPathNavigation(const math::float3& destination, bool move = true);
     void PauseMovement();
     void ResumeMovement();
-    void SetRandomPositionAroundPlayer(const float3& playerPos, const float radius);
 
     float GetSpeed() const { return currentSpeed; }
     float GetAngularSpeed() const { return currentAngularSpeed; }
@@ -39,6 +38,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void SetLookForward(bool look) { lookForward = look; }
     void SetSpeed(const float newSpeed, const float acceleration);
     void SetAngularSpeed(const float newAngular);
+    void SetPosition(const float3& newPos);
     void ResetSpeed();
     void ResetAngularSpeed();
 

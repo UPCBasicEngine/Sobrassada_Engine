@@ -281,49 +281,6 @@ void AIAgentComponent::ResumeMovement()
     isPaused                   = false;
 }
 
-void AIAgentComponent::SetRandomPositionAroundPlayer(const float3& playerPos, const float radius)
-{
-    isPaused                     = false;
-
-    PathfinderModule* pathfinder = App->GetPathfinderModule();
-    dtNavMeshQuery* navQuery     = pathfinder->GetNavQuery();
-    if (!navQuery) return;
-
-    // Prepare for finding the nearest poly
-    dtQueryFilter filter;
-    float extents[3] = {2.0f, 4.0f, 2.0f}; // bounding box for the search area
-    dtPolyRef polyRef;
-    float nearestPoint[3];
-    dtPolyRef randomRef;
-    float randomPoint[3];
-
-    float searchPos[3] = {playerPos.x, playerPos.y, playerPos.z};
-
-    dtStatus status    = navQuery->findNearestPoly(playerPos.ptr(), extents, &filter, &polyRef, nearestPoint);
-    status             = navQuery->findRandomPointAroundCircle(
-        polyRef, searchPos, radius, &filter,
-        []()
-        {
-            static std::mt19937 rng(std::random_device {}());
-            static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-            return dist(rng);
-        },
-        &randomRef, randomPoint
-    );
-
-    const float3 finalPos = {randomPoint[0], randomPoint[1], randomPoint[2]};
-    GLOG("TELEPORT TO: %f %f %f", finalPos[0], finalPos.y, finalPos.z);
-
-    dtCrowd* crowd       = App->GetPathfinderModule()->GetCrowd();
-    dtCrowdAgent* editAg = crowd->getEditableAgent(agentId);
-
-    editAg->npos[0]      = finalPos.x;
-    editAg->npos[1]      = finalPos.y;
-    editAg->npos[2]      = finalPos.z;
-
-    parent->SetLocalPosition(finalPos - parent->GetParentGlobalTransform().TranslatePart());
-}
-
 void AIAgentComponent::AddToCrowd()
 {
     if (agentId != -1)
@@ -419,6 +376,32 @@ void AIAgentComponent::ResetSpeed()
     agent->params.maxAcceleration = defaultAcceleration;
 
     isPaused                      = false;
+}
+
+void AIAgentComponent::SetPosition(const float3& newPos)
+{
+    isPaused                     = false;
+
+    PathfinderModule* pathfinder = App->GetPathfinderModule();
+    dtNavMeshQuery* navQuery     = pathfinder->GetNavQuery();
+    if (!navQuery) return;
+
+    // Prepare for finding the nearest poly
+    dtQueryFilter filter;
+    float extents[3] = {2.0f, 4.0f, 2.0f}; // bounding box for the search area
+    float nearestPoint[3];
+    dtPolyRef targetRef;
+
+    dtStatus status     = navQuery->findNearestPoly(newPos.ptr(), extents, &filter, &targetRef, nearestPoint);
+
+    dtCrowdAgent* agent = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    agent->npos[0]      = nearestPoint[0];
+    agent->npos[1]      = nearestPoint[1];
+    agent->npos[2]      = nearestPoint[2];
+
+    parent->SetLocalPosition(
+        float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]) - parent->GetParentGlobalTransform().TranslatePart()
+    );
 }
 
 void AIAgentComponent::ResetAngularSpeed()

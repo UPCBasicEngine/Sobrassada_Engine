@@ -51,5 +51,6 @@ class Banshee : public Character
     bool isInvisible                    = false;
 
     std::mt19937 rng;
-    std::uniform_int_distribution<std::mt19937::result_type> dist;
+    std::uniform_real_distribution<float> normalizedDist;
+    std::uniform_real_distribution<float> invisibleDist;
 };
