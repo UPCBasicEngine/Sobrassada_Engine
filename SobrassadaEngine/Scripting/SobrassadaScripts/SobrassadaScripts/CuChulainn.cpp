@@ -17,6 +17,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/UI/ImageComponent.h"
 
 #include "SDL.h"
 #include "Wwise_IDs.h"
@@ -41,7 +42,26 @@ bool CuChulainn::Init()
 
     Character::Init();
 
-    character = parent->GetComponent<CharacterControllerComponent*>();
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    if (healthUIObject)
+    {
+        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
+    }
+    healthBarTextures = {
+        1211032143220573, // 1HP
+        1229536411852494, // 2HP
+        1222839804934023, // 3HP
+        1244849110337061, // 4HP
+        1274246616335466, // 5HP
+        1207603259151767, // 6HP
+        1232318091978476, // 7HP
+        1247873624040725, // 8HP
+        1211992175790243, // 9HP
+        1245070082308559  // 10HP
+
+    };
+
+    character                  = parent->GetComponent<CharacterControllerComponent*>();
     if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
 
@@ -102,7 +122,6 @@ bool CuChulainn::IsDead()
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
-
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -111,12 +130,14 @@ void CuChulainn::OnDeath()
 
 void CuChulainn::OnDamageTaken(int amount)
 {
+    UpdateHealthBarUI();
     // TODO: play CuChulainn take damage sound
     // TODO: fill riastrad bar dinamically
 }
 
 void CuChulainn::OnHealed(int amount)
 {
+    UpdateHealthBarUI();
     // TODO: play CuChulainn recover sound
     // TODO: play particle system effects
 }
@@ -297,6 +318,9 @@ void CuChulainn::UpdateTimers(float deltaTime)
             attackCdTimer = attackCooldown;
         }
     }
+
+    // When stop dashing this gets automatically disabled in the timers check
+    if (state == CharacterStates::DASH) isInvulnerable = true;
 }
 
 void CuChulainn::LookAtMouse()
@@ -472,11 +496,17 @@ void CuChulainn::Respawn()
     // TODO: This function will be called by the UI in the future
 
     Character::Restart();
-
+    healthImageComponent->ChangeTexture(healthBarTextures[9]);
     isDead        = false;
     currentHealth = reservedHealth;
     state         = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
+}
+
+void CuChulainn::UpdateHealthBarUI()
+{
+    if (!healthImageComponent || healthBarTextures.empty()) return;
+    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
 }
