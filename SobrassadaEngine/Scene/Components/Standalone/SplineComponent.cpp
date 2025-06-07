@@ -132,10 +132,13 @@ void SplineComponent::RenderEditorInspector()
     if (validSel)
     {
         float3 tempPoint = points[selectedIdx].position;
-        if (ImGui::InputFloat3("Selected Pos", &tempPoint[0]))
-        {
-            points[selectedIdx] = tempPoint;
-        }
+        if (ImGui::InputFloat3("Selected Pos", &tempPoint[0])) points[selectedIdx] = tempPoint;
+
+        float3 eulerDeg = points[selectedIdx].rotation.ToEulerXYZ() * RAD_DEGREE_CONV;
+        if (ImGui::InputFloat3("Selected Rot (deg)", &eulerDeg[0]))
+            points[selectedIdx].rotation = Quat::FromEulerXYZ(
+                eulerDeg.x * DEGREE_RAD_CONV, eulerDeg.y * DEGREE_RAD_CONV, eulerDeg.z * DEGREE_RAD_CONV
+            );
     }
 
     ImGui::BeginDisabled(!validSel);
