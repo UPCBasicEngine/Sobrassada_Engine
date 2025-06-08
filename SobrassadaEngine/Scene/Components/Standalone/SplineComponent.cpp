@@ -68,6 +68,12 @@ void SplineComponent::RenderDebug(float deltaTime)
 
     const float3 worldOffset = inWorld ? parent->GetGlobalTransform().TranslatePart() : float3(0, 0, 0);
 
+    auto coneDir             = [&](const Quat& rot, float height) { return rot * float3(0, 0, 1) * height; };
+
+    const float coneH            = 0.22f;
+    const float coneR           = 0.08f;
+    const float apexR            = 0.0f;
+
     auto drawLine = [&](const float3& a, const float3& b) { dbg->DrawLineSegment(LineSegment(a, b), curveColor); };
 
     for (size_t seg = 0; seg < endSeg; ++seg)
@@ -88,7 +94,9 @@ void SplineComponent::RenderDebug(float deltaTime)
     }
 
     for (const SplinePoint& p : points)
-        dbg->DrawSphere(p.position + worldOffset, pointColor, 0.08f);
+    {
+        dbg->DrawCone(p.position + worldOffset, coneDir(p.rotation, coneH), coneR, apexR); 
+    }
 
     if (showMarker && points.size() >= 2)
     {
@@ -97,14 +105,7 @@ void SplineComponent::RenderDebug(float deltaTime)
 
         EvaluateTransform(markerT, wPos, wRot);
         
-        auto coneDir = [&](const Quat& rot, float height)
-        {
-            return rot * float3(0, 0, 1) * height;
-        };
-
-        const float h = 0.22f;
-        const float r = 0.08f;
-        dbg->DrawCone(wPos, coneDir(wRot, h), r, 0.f);
+        dbg->DrawCone(wPos, coneDir(wRot, coneH), coneR, apexR);
     }
 }
 
@@ -372,7 +373,7 @@ bool SplineComponent::PointGizmo(size_t idx)
 {
     if (selectedIdx >= 0 && selectedIdx < (int)points.size())
     {
-        float4x4 localMatrix  = float4x4::FromTRS(points[idx].position, float4x4::identity, float3::one);
+        float4x4 localMatrix = float4x4::FromTRS(points[idx].position, points[idx].rotation.ToFloat4x4(), float3::one);
         
         //In order to ignore Rotation and Scale from parent and set it to 1
         const float3 translate        = parent->GetGlobalTransform().TranslatePart();
@@ -380,13 +381,16 @@ bool SplineComponent::PointGizmo(size_t idx)
 
         float4x4 globalMatrix         = parentT * localMatrix;
 
-        float3 newPos, _unusedRot, _unusedScale;
+        float3 newPos, newRot, _unusedScale;
 
-        bool moved = App->GetEditorUIModule()->RenderImGuizmo(
-            localMatrix, globalMatrix, parentT, newPos, _unusedRot, _unusedScale
+        bool moved = App->GetEditorUIModule()->RenderImGuizmo(localMatrix, globalMatrix, parentT, newPos, newRot, _unusedScale
         );
 
-        if (moved) points[idx] = localMatrix.TranslatePart();
+        if (moved)
+        {
+            points[idx].position = localMatrix.TranslatePart();
+            points[idx].rotation = Quat(localMatrix).Normalized();
+        }
         return true;
     }
     return false;
