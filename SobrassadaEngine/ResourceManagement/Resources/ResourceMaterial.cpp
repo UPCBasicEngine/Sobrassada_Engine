@@ -40,7 +40,7 @@ ResourceMaterial::~ResourceMaterial()
     FreeMaterials();
 }
 
-void ResourceMaterial::OnEditorUpdate()
+bool ResourceMaterial::OnEditorUpdate()
 {
     bool updated  = false;
 
@@ -190,6 +190,7 @@ void ResourceMaterial::OnEditorUpdate()
     }
 
     if (updated) SaveToMeta();
+    return updated;
 }
 
 void ResourceMaterial::SaveToMeta()
