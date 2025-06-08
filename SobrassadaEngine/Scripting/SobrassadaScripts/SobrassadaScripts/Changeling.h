@@ -44,6 +44,10 @@ class Changeling : public Character
     float dashTimeRemaining       = 0.0f;
     float dashDuration            = 0.2f;
 
+    std::string pathName         = "";
+
     float3 patrolPoint            = float3::zero;
     bool hasShot                  = false;
+
+    GameObject* pathObj     = nullptr; 
 };

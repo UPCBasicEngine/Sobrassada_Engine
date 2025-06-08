@@ -19,6 +19,7 @@ Changeling::Changeling(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
+    fields.push_back({"Dark Path Name", InspectorField::FieldType::InputText, &pathName});
 }
 
 bool Changeling::Init()
@@ -38,6 +39,8 @@ bool Changeling::Init()
         speed = agentAI->GetSpeed();
     }
 
+    pathObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(pathName);
+
     return true;
 }
 
@@ -45,6 +48,11 @@ void Changeling::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
+
+    //if (CheckDistanceWithPoint(character->GetLastPosition()))
+    //{
+    //    agentAI->PauseMovement();
+    //}
 }
 
 void Changeling::OnDeath()
@@ -70,7 +78,7 @@ void Changeling::PerformAttack()
 
 void Changeling::HandleState(float deltaTime)
 {
-    //if (!animComponent) return;
+    // if (!animComponent) return;
 
     switch (currentState)
     {
@@ -92,16 +100,16 @@ void Changeling::HandleState(float deltaTime)
         break;
     }
 
-    //if (animComponent && animComponent->IsFinished())
+    // if (animComponent && animComponent->IsFinished())
     //{
-    //    // GLOG("FINISH ANIM");
-    //    animComponent->UseTrigger("idle");
-    //}
+    //     // GLOG("FINISH ANIM");
+    //     animComponent->UseTrigger("idle");
+    // }
 }
 
 void Changeling::PatrolAI()
 {
-    //animComponent->UseTrigger("run");
+    // animComponent->UseTrigger("run");
 
     if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ChangelingStates::CHASE;
     else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::BASIC_ATTACK;
@@ -121,7 +129,7 @@ void Changeling::PatrolAI()
 
 void Changeling::ChaseAI()
 {
-    //animComponent->UseTrigger("run");
+    // animComponent->UseTrigger("run");
 
     if (character != nullptr)
     {
@@ -133,11 +141,12 @@ void Changeling::ChaseAI()
 
 void Changeling::Attack(float deltaTime)
 {
-    if (!weaponCollider) return;
+    if (!pathObj) return;
 
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
+        dashDirection = character->GetLastPosition(); // Position of the player
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
@@ -149,12 +158,13 @@ void Changeling::Attack(float deltaTime)
         // Enable hitbox when animation hits
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
-            hasShot       = true;
-            dashDirection = character->GetLastPosition(); //Position of the player
+            hasShot           = true;
             isDashing         = true;
             dashTimeRemaining = dashDuration;
-            agentAI->SetSpeed(dashSpeed, 100000);
+            agentAI->SetSpeed(dashSpeed, 1000000);
             agentAI->SetPathNavigation(dashDirection);
+           // pathObj->SetLocalPosition()
+            pathObj->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true); 
         }
 
         // Reset attack state
@@ -166,7 +176,7 @@ void Changeling::Attack(float deltaTime)
             agentAI->ResetSpeed();
             agentAI->SetLookForward(true);
 
-            if (CheckDistanceWithPlayer() != PlayerDistances::Medium) currentState = ChangelingStates::CHASE;
+            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = ChangelingStates::CHASE;
         }
     }
 }
