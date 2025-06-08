@@ -139,7 +139,7 @@ constexpr const char* SKYBOX_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/
 constexpr const char* UIWIDGET_VERTEX_SHADER_PATH    = "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl";
 constexpr const char* QUAD_VERTEX_SHADER_PATH        = "./EngineDefaults/Shader/Vertex/QuadVertexShader.glsl";
 constexpr const char* BILLBOARD_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/BillboardVertex.glsl";
-constexpr const char* DECAL_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/DecalVertex.glsl";
+constexpr const char* DECAL_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/Vertex/DecalVertex.glsl";
 
 constexpr const char* UNLIT_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UnlitFragmentShader.glsl";
 constexpr const char* SKYBOX_FRAGMENT_SHADER_PATH    = "./EngineDefaults/Shader/Fragment/SkyboxFragment.glsl";
@@ -163,7 +163,7 @@ constexpr const char* QUAD_FRAGMENT_SHADER_PATH          = "./EngineDefaults/Sha
 constexpr const char* DEPTH_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/DepthFragment.glsl";
 constexpr const char* BILLBOARD_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/BillboardFragment.glsl";
 constexpr const char* TRAIL_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/TrailShader.glsl";
-constexpr const char* DECAL_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/DecalFragment.glsl";
+constexpr const char* DECAL_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/DecalFragment.glsl";
 
 using UID                                                = uint64_t;
 
@@ -192,6 +192,11 @@ constexpr float DEGREE_RAD_CONV                                  = PI / 180.f;
 
 constexpr float MINIMUM_TREE_LEAF_SIZE                           = 5.f;
 constexpr int PALETTE_SIZE                                       = 64;
+
+constexpr int SSAO_KERNEL_SIZE_LOW                               = 16;
+constexpr int SSAO_KERNEL_SIZE_MID                               = 32;
+constexpr int SSAO_KERNEL_SIZE_HIGH                              = 64;
+constexpr int SSAO_KERNEL_SIZE_ULTRA                             = 128;
 
 inline UID GenerateUID()
 {

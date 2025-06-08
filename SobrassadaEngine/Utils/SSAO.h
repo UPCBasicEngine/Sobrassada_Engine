@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include "Math/float3.h"
+#include <vector>
 class GBuffer;
 
 class SSAO
@@ -15,12 +15,12 @@ class SSAO
     unsigned int GetSSAOTexture() const { return ssaoTexture; }
 
   private:
-    unsigned int ssaoFBO;
-    unsigned int ssaoTexture;
-    unsigned int noiseTexture;
+    unsigned int ssaoFrameBufferObject = 0;
+    unsigned int ssaoTexture           = 0;
+    unsigned int noiseTexture          = 0;
 
-    std::vector<float3> kernel;
+    std::vector<float3> kernels;
 
-    int width, height;
+    int screenHeight = 0;
+    int screenWidth  = 0;
 };
-
