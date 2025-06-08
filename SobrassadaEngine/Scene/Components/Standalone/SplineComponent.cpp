@@ -26,11 +26,12 @@ SplineComponent::SplineComponent(const rapidjson::Value& initialState, GameObjec
             {
                 const auto& pos = p["Pos"].GetArray();
                 const auto& rot = p["Rot"].GetArray();
+                float sp         = p.HasMember("Speed") ? p["Speed"].GetFloat() : 1.0f;
 
                 float3 position(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
                 Quat rotation(rot[0].GetFloat(), rot[1].GetFloat(), rot[2].GetFloat(), rot[3].GetFloat()); // w,x,y,z
 
-                points.emplace_back(position, rotation);
+                points.emplace_back(position, rotation, sp);
             }
             else if (p.IsArray() && p.Size() == 3) //Old format (array x,y,z)
             {
@@ -151,6 +152,7 @@ void SplineComponent::RenderEditorInspector()
             points[selectedIdx].rotation = Quat::FromEulerXYZ(
                 eulerDeg.x * DEGREE_RAD_CONV, eulerDeg.y * DEGREE_RAD_CONV, eulerDeg.z * DEGREE_RAD_CONV
             );
+        ImGui::DragFloat("Selected Speed", &points[selectedIdx].speed, 0.1f, 0.0f, 100.0f);
     }
 
     ImGui::BeginDisabled(!validSel);
@@ -219,6 +221,8 @@ void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
             .PushBack(p.rotation.z, allocator)
             .PushBack(p.rotation.w, allocator);
         pObj.AddMember("Rot", rotArr, allocator);
+        //speed
+        pObj.AddMember("Speed", p.speed, allocator);
 
         arr.PushBack(pObj, allocator);
     }

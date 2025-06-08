@@ -9,10 +9,12 @@ struct SplinePoint
 {
     float3 position;
     Quat rotation;
+    float speed = 1.0f;
 
-    SplinePoint() : position(float3::zero), rotation(Quat::identity){}
-    SplinePoint(const float3& p) : position(p), rotation(Quat::identity) {}
-    SplinePoint(const float3& p, Quat r) : position(p), rotation(r){}
+    SplinePoint() : position(float3::zero), rotation(Quat::identity), speed(1.0f){}
+    SplinePoint(const float3& p) : position(p), rotation(Quat::identity), speed(1.0f) {}
+    SplinePoint(const float3& p, Quat r) : position(p), rotation(r), speed(1.0f){}
+    SplinePoint(const float3& p, Quat r, float s) : position(p), rotation(r), speed(s){}
 };
 
 class SOBRASADA_API_ENGINE SplineComponent : public Component
