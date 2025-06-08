@@ -140,7 +140,7 @@ void Banshee::Attack(float deltaTime)
 
         currentInvisibleTime = invisibleDist(rng);
         GLOG("Current inivivible time: %f", currentInvisibleTime);
-        isInvisible = true;
+        isInvisible    = true;
         mesh->SetEnabled(false);
     }
     else
@@ -152,7 +152,7 @@ void Banshee::Attack(float deltaTime)
             // Tp to player and enable
             GetAttackPosition();
             mesh->SetEnabled(true);
-            isInvisible = false;
+            isInvisible    = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
             if (animComponent) animComponent->UseTrigger("Scream");
         }
@@ -214,4 +214,11 @@ void Banshee::GetAttackPosition()
     agentAI->SetPosition(position);
 
     agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
+}
+
+void Banshee::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+{
+    if (isInvisible) return;
+
+    Character::OnCollision(otherObject, collisionNormal);
 }

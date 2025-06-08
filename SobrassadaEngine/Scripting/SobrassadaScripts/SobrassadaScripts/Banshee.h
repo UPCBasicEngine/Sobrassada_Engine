@@ -37,6 +37,8 @@ class Banshee : public Character
     void ChangeState();
     void GetAttackPosition();
 
+    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
+
   private:
     AIAgentComponent* agentAI           = nullptr;
     BansheeStates currentState          = BansheeStates::Idle;
