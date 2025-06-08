@@ -50,4 +50,11 @@ class Changeling : public Character
     bool hasShot                  = false;
 
     GameObject* pathObj     = nullptr; 
+
+    float3 lastTrailPos           = float3::zero;
+    float trailSegmentSpacing     = 1.0f; 
+    std::string trailPrefabName   = "DashTrailSegment";
+
+    float3 startPos;
+    float3 endPos;
 };

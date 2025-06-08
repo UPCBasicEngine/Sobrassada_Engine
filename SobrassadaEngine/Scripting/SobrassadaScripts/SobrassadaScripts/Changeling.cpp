@@ -49,10 +49,49 @@ void Changeling::Update(float deltaTime)
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
 
-    //if (CheckDistanceWithPoint(character->GetLastPosition()))
+    // if (CheckDistanceWithPoint(character->GetLastPosition()))
     //{
-    //    agentAI->PauseMovement();
-    //}
+    //     agentAI->PauseMovement();
+    // }
+
+    if (isDashing)
+    {
+        float3 currentPos = parent->GetPosition();
+
+        if ((currentPos - lastTrailPos).Length() >= trailSegmentSpacing)
+        {
+            UID trailPrefabUID             = pathObj->GetPrefabUID();
+
+            float3 position                = currentPos;
+
+            float3 direction               = (currentPos - lastTrailPos).Normalized();
+
+            const float4x4& localTransform = parent->GetLocalTransform();
+            float3 forward                 = parent->GetGlobalTransform().WorldZ();
+            forward.y                      = 0.0f;
+            forward.Normalize();
+
+            float angle             = atan2(forward.Cross(direction).y, forward.Dot(direction));
+
+            const float4x4 rotation = localTransform * float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+
+            float3 scale            = float3::one;
+
+            float4x4 trs            = float4x4::FromTRS(position, rotation, scale);
+
+            pathObj->SetLocalTransform(trs);
+            pathObj->SetLocalPosition(position);
+
+            // AppEngine->GetSceneModule()->GetScene()->LoadPrefab(trailPrefabUID, nullptr, trs, true, {});
+
+            lastTrailPos = currentPos;
+        }
+
+        if (agentAI->GetSpeed() <= 1.0f)
+        {
+            isDashing = false;
+        }
+    }
 }
 
 void Changeling::OnDeath()
@@ -151,6 +190,8 @@ void Changeling::Attack(float deltaTime)
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
+        startPos = parent->GetPosition();
+        endPos   = dashDirection;
     }
     else
     {
@@ -158,18 +199,39 @@ void Changeling::Attack(float deltaTime)
         // Enable hitbox when animation hits
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
+            lastTrailPos      = parent->GetPosition();
             hasShot           = true;
             isDashing         = true;
             dashTimeRemaining = dashDuration;
             agentAI->SetSpeed(dashSpeed, 1000000);
             agentAI->SetPathNavigation(dashDirection);
-           // pathObj->SetLocalPosition()
-            pathObj->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true); 
+            pathObj->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true);
         }
 
         // Reset attack state
         if (attackTimer >= attackDuration)
         {
+            //    float3 startPos                = parent->GetPosition();
+            //    float3 endPos                  = dashDirection;
+            //    float3 midPoint                = (startPos + endPos) * 0.5f;
+            //    float length                   = (endPos - startPos).Length();
+            //    float3 direction               = (endPos - startPos).Normalized();
+
+            //    const float4x4& localTransform = parent->GetLocalTransform();
+            //    float3 forward                 = parent->GetGlobalTransform().WorldZ();
+            //    forward.y                      = 0.0f;
+            //    forward.Normalize();
+
+            //    float angle            = atan2(forward.Cross(direction).y, forward.Dot(direction));
+
+            //    const float4x4 rotated = localTransform * float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+
+            //    float3 originalScale   = pathObj->GetScale();
+            //    float3 scale           = float3(originalScale.x, originalScale.y, length * 0.5f);
+
+            //    // Construir la matriz de transformación
+            //    float4x4 trs           = float4x4::FromTRS(midPoint, rotated, scale);
+            //    pathObj->SetLocalTransform(trs);
             hasShot       = false;
             isAttacking   = false;
             attackCdTimer = attackCooldown;
