@@ -42,6 +42,7 @@ class SOBRASADA_API_ENGINE SplineComponent : public Component
     float3 EvaluateSegment(const size_t seg, float segmentT) const;
     float3 Evaluate(float t) const;
     Quat EvaluateRotation(float t) const;
+    float EvaluateSpeed(float t) const;
     void EvaluateTransform(float t, float3& pos, Quat& rot) const;
     bool PointGizmo(size_t idx);
 

@@ -173,7 +173,7 @@ void SplineComponent::RenderEditorInspector()
     ImGui::SeparatorText("Path Probe");
 
     ImGui::Checkbox("Show marker", &showMarker);
-    if (showMarker) ImGui::DragFloat("t  (0-1)", &markerT, 0.001f, 0.f, 1.f, "%.3f");
+    if (showMarker) ImGui::DragFloat("t  (0-1)", &markerT, 0.001f, 0.0f, 1.0f, "%.3f");
 
     ImGui::SeparatorText("Add Point");
 
@@ -327,7 +327,7 @@ float3 SplineComponent::Evaluate(float t) const
 
     if (points.size() < 2) return worldOffset;
 
-    t = std::clamp(t, 0.f, 1.f);
+    t = std::clamp(t, 0.0f, 1.0f);
 
     const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
 
@@ -348,7 +348,7 @@ Quat SplineComponent::EvaluateRotation(float t) const
     if (points.empty()) return Quat::identity;
     if (points.size() == 1) return points.front().rotation;
 
-    t = std::clamp(t, 0.f, 1.f);
+    t = std::clamp(t, 0.0f, 1.0f);
 
     const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
     const float segFloat = t * numSeg;
@@ -363,6 +363,28 @@ Quat SplineComponent::EvaluateRotation(float t) const
     const int nextIdx = loop ? (seg + 1) % points.size() : std::min(seg + 1, (int)points.size() - 1);
     
     return Quat::Slerp(points[seg].rotation, points[nextIdx].rotation, segmentT).Normalized();
+}
+
+float SplineComponent::EvaluateSpeed(float t) const
+{
+    if (points.empty()) return 1.0f;
+    if (points.size() == 1) return points.front().speed;
+
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
+    const float segFloat = t * numSeg;
+
+    if (segFloat >= numSeg) return loop ? points.front().speed : points.back().speed;
+
+    int seg              = (int)floorf(segFloat);
+    float segmentT       = segFloat - seg;
+
+    if (loop) seg = seg % points.size();
+
+    int next = loop ? (seg + 1) % points.size() : std::min(seg + 1, (int)points.size() - 1);
+
+    return math::Lerp(points[seg].speed, points[next].speed, segmentT);
 }
 
 void SplineComponent::EvaluateTransform(float t, float3& pos, Quat& rot) const
