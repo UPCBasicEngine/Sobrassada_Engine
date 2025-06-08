@@ -11,7 +11,6 @@
 #include "Standalone/CharacterControllerComponent.h"
 
 #include "DetourCrowd.h"
-#include <random>
 
 AIAgentComponent::AIAgentComponent(UID uid, GameObject* parent) : Component(uid, parent, "AI Agent", COMPONENT_AIAGENT)
 {

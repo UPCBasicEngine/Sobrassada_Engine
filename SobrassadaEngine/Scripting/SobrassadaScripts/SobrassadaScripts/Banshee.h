@@ -35,7 +35,7 @@ class Banshee : public Character
     void ChasePlayer();
     void Attack(float deltaTime) override;
     void ChangeState();
-    void GetAttackPosition();
+    void GoToAttackPosition();
 
     void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
 

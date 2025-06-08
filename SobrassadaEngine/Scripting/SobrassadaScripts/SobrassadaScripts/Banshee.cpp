@@ -132,15 +132,14 @@ void Banshee::Attack(float deltaTime)
 
     if (!isAttacking)
     {
-        GLOG("Banshee attack");
+        // GLOG("Banshee attack");
         agentAI->SetLookForward(false);
 
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
 
         currentInvisibleTime = invisibleDist(rng);
-        GLOG("Current inivivible time: %f", currentInvisibleTime);
-        isInvisible    = true;
+        isInvisible          = true;
         mesh->SetEnabled(false);
     }
     else
@@ -150,9 +149,9 @@ void Banshee::Attack(float deltaTime)
         if (isInvisible)
         {
             // Tp to player and enable
-            GetAttackPosition();
+            GoToAttackPosition();
             mesh->SetEnabled(true);
-            isInvisible    = false;
+            isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
             if (animComponent) animComponent->UseTrigger("Scream");
         }
@@ -164,7 +163,7 @@ void Banshee::Attack(float deltaTime)
         if (!damageArea->GetEnabled() && attackTimer >= currentInvisibleTime + attackHitboxDelay &&
             attackTimer <= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
         {
-            GLOG("Banshee enable hitbox");
+            // GLOG("Banshee enable hitbox");
             if (areaVisual) areaVisual->SetEnabled(true);
             if (screamVisual) screamVisual->SetEnabled(true);
             damageArea->SetEnabled(true);
@@ -173,7 +172,7 @@ void Banshee::Attack(float deltaTime)
         else if (damageArea->GetEnabled() &&
                  attackTimer >= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
         {
-            GLOG("Banshee disable hitbox");
+            // GLOG("Banshee disable hitbox");
             damageArea->SetEnabled(false);
             if (weaponCollider) weaponCollider->SetEnabled(false);
             if (areaVisual) areaVisual->SetEnabled(false);
@@ -200,19 +199,20 @@ void Banshee::ChangeState()
     else currentState = BansheeStates::Idle;
 }
 
-void Banshee::GetAttackPosition()
+void Banshee::GoToAttackPosition()
 {
     const float3 playerPos = character->GetLastPosition();
     const float maxRadius  = 2.5f;
     const float minRadius  = 1.5f;
 
-    float angle            = normalizedDist(rng) * 2.0f * PI;
-    float r = sqrtf(normalizedDist(rng) * (maxRadius * maxRadius - minRadius * minRadius) + minRadius * minRadius);
+    // Get a random position within a circle smaller than maxRadius and bigger than minRadius
+    const float angle      = normalizedDist(rng) * 2.0f * PI;
+    const float r =
+        sqrtf(normalizedDist(rng) * (maxRadius * maxRadius - minRadius * minRadius) + minRadius * minRadius);
 
-    float3 position(cosf(angle) * r + playerPos.x, playerPos.y, sinf(angle) * r + playerPos.z);
+    const float3 position(cosf(angle) * r + playerPos.x, playerPos.y, sinf(angle) * r + playerPos.z);
 
     agentAI->SetPosition(position);
-
     agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
