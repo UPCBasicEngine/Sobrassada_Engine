@@ -31,43 +31,48 @@ void MoveGOInSpline::Update(float deltaTime)
     }
     if (speed <= 0.0f) return;
 
-    float delta  = speed * deltaTime * (goingForward ? 1.0f : -1.0f);
-    t += delta;
+    const float deltaT  = speed * deltaTime;
+    
 
-    loop  = spline->IsLoop();
-    if (loop)  //Closed spline
+    isLoop  = spline->IsLoop();
+    if (pingPong && !isLoop)
     {
+        t += goingForward ? deltaT : -deltaT;
+
+        if (t > 1.f)
+        {
+            t            = 1.f;
+            goingForward = false;
+        }
+        else if (t < 0)
+        {
+            t            = 0.f;
+            goingForward = true;
+        }
+    }
+    else
+    {
+        t += deltaT;
         if (t > 1.f) t -= 1.f;
         else if (t < 0.f) t += 1.f;
     }
-    else    //Open Spline
-    {
-        if (pingPong)
-        {
-            if (t > 1.f)
-            {
-                t            = 1.f;
-                goingForward = false;
-            }
-            else if (t < 0)
-            {
-                t            = 0.f;
-                goingForward = true;
-            }
-        }
-        else
-        {
-            if (t > 1.f) t -= 1.f;
-            else if (t < 0.f) t += 1.f;
-        }
-    }
 
-    float3 worldPos = spline->GetWorldPositionInSpine(t);
+    float3 localPos;
+    Quat localRot;
+    spline->EvaluateTransform(t, localPos, localRot);
 
-    float4x4 local  = parent->GetLocalTransform();
-    local.SetTranslatePart(parent->GetParentGlobalTransform().Inverted().TransformPos(worldPos));
+    GameObject* splineGO = spline->GetParent();
+    const float4x4& splineGlob = splineGO->GetGlobalTransform();
 
-    parent->SetLocalTransform(local);
+    float3 worldPos            = splineGlob.TransformPos(localPos);
+    Quat worldRot              = Quat(splineGlob) * localRot;
+    
+    const float4x4& parentGlob = parent->GetParentGlobalTransform();
+
+    float4x4 worldM            = float4x4::FromTRS(worldPos, worldRot.ToFloat4x4(), float3::one);
+    
+    float4x4 localM            = parentGlob.Inverted() * worldM;
+    parent->SetLocalTransform(localM);
 
 }
 
@@ -89,7 +94,7 @@ SplineComponent* MoveGOInSpline::FindSpline()
 
         if (spline)
         {
-            splineGO = childUID;
+            splineIdGO = childUID;
             return spline;
         }
     }
