@@ -15,6 +15,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
@@ -30,7 +31,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/DecalComponent.h"
 
 #include "imgui.h"
 #include <queue>
@@ -238,6 +238,7 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     rotation         = refObject->rotation;
     scale            = refObject->scale;
     prefabUID        = refObject->prefabUID;
+    prefabChildUID   = refObject->prefabChildUID;
     navMeshValid     = refObject->navMeshValid;
     enabled          = refObject->enabled;
     wasEnabled       = refObject->wasEnabled;
@@ -278,6 +279,7 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("SelectParent")) selectParent = initialState["SelectParent"].GetBool();
 
     if (initialState.HasMember("PrefabUID")) prefabUID = initialState["PrefabUID"].GetUint64();
+    if (initialState.HasMember("PrefabChildUID")) prefabChildUID = initialState["PrefabChildUID"].GetUint64();
     if (initialState.HasMember("NavmeshValid")) navMeshValid = initialState["NavmeshValid"].GetBool();
 
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() &&
@@ -390,7 +392,8 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
-    
+    if (prefabChildUID != INVALID_UID) targetState.AddMember("PrefabChildUID", prefabChildUID, allocator);
+
     rapidjson::Value valLocalTransform(rapidjson::kArrayType);
     valLocalTransform.PushBack(localTransform.ptr()[0], allocator)
         .PushBack(localTransform.ptr()[1], allocator)
@@ -1170,7 +1173,28 @@ bool GameObject::RemoveComponent(ComponentType componentType)
 void GameObject::CreatePrefab()
 {
     bool override = this->prefabUID != INVALID_UID;
-    prefabUID     = PrefabManager::SavePrefab(this, override);
+
+    std::queue<UID> childrenUIDs;
+
+    for (UID child : children)
+    {
+        childrenUIDs.push(child);
+    }
+
+    // Set the prefabChildUID to all children of the prefab in case they don't already have
+    while (!childrenUIDs.empty())
+    {
+        GameObject* currentChild = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenUIDs.front());
+        if (currentChild->prefabChildUID == INVALID_UID) currentChild->prefabChildUID = GenerateUID();
+
+        childrenUIDs.pop();
+        for (UID child : currentChild->children)
+        {
+            childrenUIDs.push(child);
+        }
+    }
+
+    prefabUID = PrefabManager::SavePrefab(this, override);
 
     if (override)
     {

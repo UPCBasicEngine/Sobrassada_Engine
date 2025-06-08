@@ -206,11 +206,11 @@ void Scene::Init()
     multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
     gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
 
-    constexpr float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
-                                        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
+    constexpr float cubeVertices[] = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
+                                      -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
 
     constexpr unsigned int cubeIndices[] = {0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4,
-                                        3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
+                                            3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
 
     glGenVertexArrays(1, &decalVAO);
     glGenBuffers(1, &decalVBO);
@@ -1847,48 +1847,76 @@ void Scene::OverridePrefabs(const UID prefabUID)
 
     // Store uids and transforms. We need transforms so when we override the prefab, the objects
     // stay in place. UIDs to delete the duplicates
-    std::vector<UID> updatedObjects;
-    std::vector<float4x4> transforms;
-    std::vector<bool> isEnabled;
-    std::vector<std::vector<bool>> componentsEnabledStates;
+    // std::vector<UID> updatedObjects;
+    // std::vector<float4x4> transforms;
+    // std::vector<bool> isEnabled;
+    // std::vector<std::vector<bool>> componentsEnabledStates;
+    //
+    // for (const auto& gameObject : gameObjectsContainer)
+    //{
+    //    if (gameObject.second != nullptr)
+    //    {
+    //        if (gameObject.second->GetPrefabUID() == prefabUID)
+    //        {
+    //            updatedObjects.push_back(gameObject.first);
+    //            transforms.emplace_back(gameObject.second->GetLocalTransform());
+    //            isEnabled.push_back(gameObject.second->IsEnabled());
+    //
+    //            std::vector<bool> componentStates;
+    //            auto& tuple = gameObject.second->GetComponentsTupleRef();
+    //
+    //            ForEachInTuple(
+    //                tuple,
+    //                [&](auto* component)
+    //                {
+    //                    if (component != nullptr)
+    //                    {
+    //                        componentStates.push_back(component->GetWasEnabled());
+    //                    }
+    //                }
+    //            );
+    //
+    //            componentsEnabledStates.push_back(componentStates);
+    //        }
+    //    }
+    //}
+    //
+    // for (const UID object : updatedObjects)
+    //{
+    //    RemoveGameObjectHierarchy(object);
+    //}
+    //
+    // for (int i = 0; i < transforms.size(); ++i)
+    //{
+    //    LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i], componentsEnabledStates[i]);
+    //}
 
+    // Update all gameObjects that have the same prefabUID
     for (const auto& gameObject : gameObjectsContainer)
     {
-        if (gameObject.second != nullptr)
+        if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
         {
-            if (gameObject.second->GetPrefabUID() == prefabUID)
+            const std::vector<GameObject*>& referenceObjects = prefab->GetGameObjectsVector();
+            // gameObject.second Copy components from root prefab
+
+            std::queue<UID> childUIDs;
+            for (UID child : referenceObjects[0]->GetChildren())
             {
-                updatedObjects.push_back(gameObject.first);
-                transforms.emplace_back(gameObject.second->GetLocalTransform());
-                isEnabled.push_back(gameObject.second->IsEnabled());
-
-                std::vector<bool> componentStates;
-                auto& tuple = gameObject.second->GetComponentsTupleRef();
-
-                ForEachInTuple(
-                    tuple,
-                    [&](auto* component)
-                    {
-                        if (component != nullptr)
-                        {
-                            componentStates.push_back(component->GetWasEnabled());
-                        }
-                    }
-                );
-
-                componentsEnabledStates.push_back(componentStates);
+                childUIDs.push(child);
             }
+
+            while (!childUIDs.empty())
+            {
+                GameObject* currentObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUIDs.front());
+                // Pillar equivalent en el prefab i copies components
+
+                childUIDs.pop();
+
+                // Despres de copiar els gameObjects o borrar els que ja no existeixen, s'han d'afegir si se n'han creat nous. Puc pillar aqui el numero de fills del pare d'aquest i del pare del del prefab.
+                // Si el del prefab es mes gran, miro quins no s'han copiat i els creo. Aixo tambe s'haura de fer al principi per al root
+            }
+
         }
-    }
-
-    for (const UID object : updatedObjects)
-    {
-        RemoveGameObjectHierarchy(object);
-    }
-
-    for (int i = 0; i < transforms.size(); ++i)
-    {
-        LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i], componentsEnabledStates[i]);
     }
 
     App->GetResourcesModule()->ReleaseResource(prefab);
