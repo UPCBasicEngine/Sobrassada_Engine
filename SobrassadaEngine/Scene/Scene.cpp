@@ -1120,13 +1120,13 @@ void Scene::ShadowMapPassRender(CameraComponent* camera, DirectionalLightCompone
 
     Frustum shadowfrustum;
     shadowfrustum.type               = FrustumType::OrthographicFrustum;
-    shadowfrustum.pos                = float3(0, 20, 0); // Arriba de la escena
-    shadowfrustum.front              = float3(0, -1, 0); // Hacia abajo
-    shadowfrustum.up                 = float3(0, 0, -1);
-    shadowfrustum.nearPlaneDistance  = 1.0f;
-    shadowfrustum.farPlaneDistance   = 100.0f;
-    shadowfrustum.orthographicWidth  = 50.0f;
-    shadowfrustum.orthographicHeight = 50.0f;
+    shadowfrustum.pos                = sphereCenter - lightDir * sphereRadius;
+    shadowfrustum.front              = lightDir;
+    shadowfrustum.up                 = lightUp;
+    shadowfrustum.nearPlaneDistance  = 0.1f;
+    shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
+    shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
+    shadowfrustum.orthographicHeight = sphereRadius * 2.0f;
 
     FrustumPlanes frustumPlanes;
     frustumPlanes.UpdateFrustumPlanes(shadowfrustum.ViewMatrix(), shadowfrustum.ProjectionMatrix());
