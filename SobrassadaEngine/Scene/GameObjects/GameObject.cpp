@@ -1218,8 +1218,11 @@ void GameObject::CreatePrefab()
     while (!childrenUIDs.empty())
     {
         GameObject* currentChild = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenUIDs.front());
-        if (currentChild->prefabChildUID == INVALID_UID) currentChild->prefabChildUID = GenerateUID();
-
+        if (currentChild->prefabChildUID == INVALID_UID)
+        {
+            GLOG("New prefab child UID");
+            currentChild->prefabChildUID = GenerateUID();
+        }
         childrenUIDs.pop();
         for (UID child : currentChild->children)
         {
