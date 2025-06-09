@@ -44,7 +44,7 @@ void SSAO::Init()
             kernel.z *= -1.0f;
 
         float scale  = float(i) / float(SSAO_KERNEL_SIZE_LOW);
-        scale        = 0.1f + scale * scale * (1.0f - 0.1f); // Bias function
+        scale        = 0.1f + (scale * scale) * (1.0f - 0.1f); // Near-origin bias
         kernel       *= lcg.Float(0.0f, 1.0f) * scale;
 
         kernels.push_back(kernel);
@@ -60,7 +60,6 @@ void SSAO::Init()
     }
 
     if (noiseTexture == 0) glGenTextures(1, &noiseTexture);
-    glGenTextures(1, &noiseTexture);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT, noise.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -73,4 +72,9 @@ void SSAO::Init()
 
 void SSAO::Render(GBuffer& gbuffer)
 {
+    glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBufferObject);
+    glViewport(0, 0, screenWidth, screenHeight);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    //ssaoShader.Bind();
 }
