@@ -152,7 +152,7 @@ void SplineComponent::RenderEditorInspector()
             points[selectedIdx].rotation = Quat::FromEulerXYZ(
                 eulerDeg.x * DEGREE_RAD_CONV, eulerDeg.y * DEGREE_RAD_CONV, eulerDeg.z * DEGREE_RAD_CONV
             );
-        ImGui::DragFloat("Selected Speed", &points[selectedIdx].speed, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Selected Speed", &points[selectedIdx].speed, 0.001f, 0.0f, 1.0f);
     }
 
     ImGui::BeginDisabled(!validSel);

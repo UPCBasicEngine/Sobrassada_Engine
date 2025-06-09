@@ -18,7 +18,7 @@ private:
 
 private:
     UID splineIdGO = INVALID_UID;
-    float speed  = 0.1f;
+    float speed  = 1.0f;
     bool isLoop    = false;
     
     SplineComponent* spline = nullptr;
