@@ -1840,7 +1840,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
         for (const auto& gameObject : gameObjectsContainer)
         {
             if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
-                gameObject.second->SetPrefabUID(INVALID_UID);
+                gameObject.second->RemovePrefabStatus();
         }
         return;
     }
@@ -1860,10 +1860,16 @@ void Scene::OverridePrefabs(const UID prefabUID)
 
     std::vector<GameObject*> newPrefabInstances;
     std::vector<GameObject*> oldPrefabInstances;
+    int instancesToOverride = 0;
     for (const auto& gameObject : gameObjectsContainer)
     {
         if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
         {
+            if (prefab->GetVersionUID() != INVALID_UID &&
+                gameObject.second->GetPrefabVersionUID() == prefab->GetVersionUID())
+                continue;
+
+            ++instancesToOverride;
             bool newObject = true;
             std::queue<UID> childUIDs;
             for (UID child : gameObject.second->GetChildren())
@@ -1891,7 +1897,12 @@ void Scene::OverridePrefabs(const UID prefabUID)
             else oldPrefabInstances.push_back(gameObject.second);
         }
     }
-
+    GLOG("Instances to override: %d", instancesToOverride);
+    if (instancesToOverride == 0)
+    {
+        App->GetResourcesModule()->ReleaseResource(prefab);
+        return;
+    }
     // Keep this method of overriding for old prefabs, to avoid issues. Eventually all prefabs will get updated and
     // this won't be used anymore
     std::vector<UID> updatedObjects;
@@ -1944,7 +1955,10 @@ void Scene::OverridePrefabs(const UID prefabUID)
         std::unordered_map<UID, GameObject*> referenceObjectsMap;
         prefab->GetGameObjectsMap(referenceObjectsMap);
 
-        // Check for children
+        // Update root
+        gameObject->UpdateFromReference(referenceObjectsVector[0]);
+
+        // Check for root children
         const std::vector<UID>& rootObjectChildrenUIDs = gameObject->GetChildren();
         const std::vector<UID>& rootPrefabChildrenUIDs = referenceObjectsVector[0]->GetChildren();
         if (rootObjectChildrenUIDs.size() < rootPrefabChildrenUIDs.size())
@@ -1979,6 +1993,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
             }
         }
 
+        // Do the same for all the hierarchy
         std::queue<UID> childUIDs;
         for (UID child : gameObject->GetChildren())
         {

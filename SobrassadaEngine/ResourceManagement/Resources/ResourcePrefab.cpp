@@ -1,7 +1,7 @@
 #include "ResourcePrefab.h"
 #include "GameObject.h"
 
-ResourcePrefab::ResourcePrefab(UID uid, const std::string& name) : Resource(uid, name, ResourceType::Prefab)
+ResourcePrefab::ResourcePrefab(UID uid, UID versionUid, const std::string& name) : versionUID(versionUid), Resource(uid, name, ResourceType::Prefab)
 {
 }
 
