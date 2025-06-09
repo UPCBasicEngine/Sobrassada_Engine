@@ -6,14 +6,19 @@
 #include "GameObject.h"
 #include "ParticleEmitter.h"
 
-#include "Geometry/Circle.h"
-#include "Geometry/OBB.h"
-#include "Geometry/Sphere.h"
+#include "Geometry/AABB.h"
+#include "Geometry/LineSegment.h"
+#include "Math/float4x4.h"
 #include "imgui.h"
+
+#include <vector>
 
 AreaAddon::AreaAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::AREA, owner)
 {
-    currentShape = ParticleAreaShape::CUBE;
+    basicCube.minPoint = -float3::one;
+    basicCube.maxPoint = float3::one;
+
+    currentShape       = ParticleAreaShape::CUBE;
     ManageShapeSwitch(ParticleAreaShape::NONE);
 }
 
@@ -31,14 +36,14 @@ AreaAddon::AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
         cubeSize = float3(dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat());
     }
 
+    basicCube.minPoint = -float3::one;
+    basicCube.maxPoint = float3::one;
+
     ManageShapeSwitch(ParticleAreaShape::NONE);
 }
 
 AreaAddon::~AreaAddon()
 {
-    delete cube;
-    delete sphere;
-    delete circle;
 }
 
 void AreaAddon::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -90,13 +95,13 @@ void AreaAddon::RenderEditorInspector()
     case ParticleAreaShape::NONE:
         break;
     case ParticleAreaShape::CUBE:
-        if (cube) RenderCubeEditor();
+        RenderCubeEditor();
         break;
     case ParticleAreaShape::CIRCLE:
-        if (circle) RenderCircleEditor();
+        RenderCircleEditor();
         break;
     case ParticleAreaShape::SPHERE:
-        if (sphere) RenderSphereEditor();
+        RenderSphereEditor();
         break;
     case ParticleAreaShape::CONE:
         RenderConeEditor();
@@ -112,54 +117,59 @@ void AreaAddon::RenderDebug(GameObject* parent)
 {
     DebugDrawModule* debug = App->GetDebugDrawModule();
 
-    debug->DrawLine(
-        parent->GetGlobalTransform().TranslatePart(),
-        (parent->GetGlobalTransform().RotatePart() * -float3::unitY).Normalized(), 2, float3(1, 1, 1)
-    );
-}
-
-void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
-{
-    if (previousShape == currentShape) return;
-
-    switch (previousShape)
+    switch (currentShape)
     {
     case ParticleAreaShape::NONE:
         break;
     case ParticleAreaShape::CUBE:
-        delete cube;
+    {
+        std::vector<LineSegment> edges;
+        edges.assign(12, LineSegment());
+
+        const float4x4& globalTransform = parent->GetGlobalTransform();
+
+        cube                            = globalTransform * OBB(basicCube);
+        cube.r                          = cubeSize;
+
+        for (int i = 0; i < 12; ++i)
+            edges[i] = cube.Edge(i);
+
+        debug->RenderLines(edges, float3::one);
+
         break;
+    }
     case ParticleAreaShape::CIRCLE:
-        delete circle;
         break;
     case ParticleAreaShape::SPHERE:
-        delete sphere;
         break;
     case ParticleAreaShape::CONE:
         break;
     default:
         break;
     }
+}
+
+void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
+{
+    if (previousShape == currentShape) return;
 
     switch (currentShape)
     {
     case ParticleAreaShape::NONE:
         break;
     case ParticleAreaShape::CUBE:
-        cube          = new OBB();
-
-        cube->pos     = float3::zero;
-        cube->r       = cubeSize;
-        cube->axis[0] = float3(1, 0, 0);
-        cube->axis[1] = float3(0, 1, 0);
-        cube->axis[2] = float3(0, 0, 1);
+        cube.pos     = float3::zero;
+        cube.r       = cubeSize;
+        cube.axis[0] = float3(1, 0, 0);
+        cube.axis[1] = float3(0, 1, 0);
+        cube.axis[2] = float3(0, 0, 1);
 
         break;
     case ParticleAreaShape::CIRCLE:
-        circle = new Circle(float3::zero, float3::unitY, baseRadius);
+        circle = Circle(float3::zero, float3::unitY, baseRadius);
         break;
     case ParticleAreaShape::SPHERE:
-        sphere = new Sphere(float3::zero, baseRadius);
+        sphere = Sphere(float3::zero, baseRadius);
         break;
     case ParticleAreaShape::CONE:
         break;
@@ -172,7 +182,7 @@ void AreaAddon::RenderCubeEditor()
 {
     if (ImGui::DragFloat3("Cube Size", &cubeSize[0], 0.01f, 0.f, 50.f, "%.2f"))
     {
-        cube->r = cubeSize;
+        cube.r = cubeSize;
     }
 }
 
@@ -180,7 +190,7 @@ void AreaAddon::RenderCircleEditor()
 {
     if (ImGui::DragFloat("Circle Radius", &baseRadius, 0.01f, 0.f, 50.f, "%.2f"))
     {
-        circle->r = baseRadius;
+        circle.r = baseRadius;
     }
 }
 
@@ -188,7 +198,7 @@ void AreaAddon::RenderSphereEditor()
 {
     if (ImGui::DragFloat("Sphere Radius", &baseRadius, 0.01f, 0.f, 50.f, "%.2f"))
     {
-        sphere->r = baseRadius;
+        sphere.r = baseRadius;
     }
 }
 

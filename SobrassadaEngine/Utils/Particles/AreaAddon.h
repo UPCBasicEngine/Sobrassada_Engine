@@ -2,14 +2,18 @@
 
 #include "ParticleAddon.h"
 
+#include "Geometry/AABB.h"
+#include "Geometry/Circle.h"
+#include "Geometry/OBB.h"
+#include "Geometry/Sphere.h"
 #include "Math/float3.h"
 
-namespace math
-{
-    class Circle;
-    class OBB;
-    class Sphere;
-} // namespace math
+// namespace math
+//{
+//     class Circle;
+//     class OBB;
+//     class Sphere;
+// } // namespace math
 
 class AreaAddon : public ParticleAddon
 {
@@ -32,6 +36,7 @@ class AreaAddon : public ParticleAddon
     void RenderCircleEditor();
     void RenderSphereEditor();
     void RenderConeEditor();
+
   private:
     ParticleAreaShape currentShape = ParticleAreaShape::NONE;
 
@@ -46,7 +51,8 @@ class AreaAddon : public ParticleAddon
 
     float3 cubeSize                = float3::one;
 
-    math::Circle* circle           = nullptr;
-    math::OBB* cube                = nullptr;
-    math::Sphere* sphere           = nullptr;
+    Circle circle;
+    OBB cube;
+    AABB basicCube;
+    Sphere sphere;
 };
