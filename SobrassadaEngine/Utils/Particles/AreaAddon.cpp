@@ -115,7 +115,8 @@ void AreaAddon::RenderEditorInspector()
 
 void AreaAddon::RenderDebug(GameObject* parent)
 {
-    DebugDrawModule* debug = App->GetDebugDrawModule();
+    DebugDrawModule* debug          = App->GetDebugDrawModule();
+    const float4x4& globalTransform = parent->GetGlobalTransform();
 
     switch (currentShape)
     {
@@ -126,10 +127,8 @@ void AreaAddon::RenderDebug(GameObject* parent)
         std::vector<LineSegment> edges;
         edges.assign(12, LineSegment());
 
-        const float4x4& globalTransform = parent->GetGlobalTransform();
-
-        cube                            = globalTransform * OBB(basicCube);
-        cube.r                          = cubeSize;
+        cube   = globalTransform * OBB(basicCube);
+        cube.r = cubeSize;
 
         for (int i = 0; i < 12; ++i)
             edges[i] = cube.Edge(i);
@@ -139,9 +138,22 @@ void AreaAddon::RenderDebug(GameObject* parent)
         break;
     }
     case ParticleAreaShape::CIRCLE:
+    {
+        circle = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
+        circle.r = baseRadius;
+
+        debug->DrawCircle(circle.pos, circle.normal, float3::one, circle.r);
         break;
+    }
     case ParticleAreaShape::SPHERE:
+    {
+        sphere.pos = globalTransform.TranslatePart();
+        sphere.r   = baseRadius;
+
+        debug->DrawSphere(sphere.pos, float3::one, sphere.r);
+
         break;
+    }
     case ParticleAreaShape::CONE:
         break;
     default:
