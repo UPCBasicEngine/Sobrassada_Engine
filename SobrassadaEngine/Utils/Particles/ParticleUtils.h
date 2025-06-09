@@ -20,6 +20,18 @@ constexpr const int AddonTypeStringsSize          = sizeof(AddonTypeStrings) / s
 constexpr const char* InterpolationAddonStrings[] = {"Fixed values", "Curve interpolation"};
 constexpr int InterpolationAddonStringsSize       = sizeof(InterpolationAddonStrings) / sizeof(char*);
 
+enum class ParticleAreaShape : int
+{
+    NONE = -1,
+    CUBE,
+    CIRCLE,
+    SPHERE,
+    CONE,
+};
+
+constexpr const char* AreaAddonStrings[]          = {"Cube", "Circle", "Sphere", "Cone"};
+constexpr int AreaAddonStringsSize                = sizeof(AreaAddonStrings) / sizeof(char*);
+
 class ParticleUtils
 {
   public:

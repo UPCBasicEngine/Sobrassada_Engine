@@ -2,6 +2,15 @@
 
 #include "ParticleAddon.h"
 
+#include "Math/float3.h"
+
+namespace math
+{
+    class Circle;
+    class OBB;
+    class Sphere;
+} // namespace math
+
 class AreaAddon : public ParticleAddon
 {
   public:
@@ -16,4 +25,27 @@ class AreaAddon : public ParticleAddon
     void RenderEditorInspector() override;
 
   private:
+    void ManageShapeSwitch(ParticleAreaShape previousShape);
+
+    void RenderCubeEditor();
+    void RenderCircleEditor();
+    void RenderSphereEditor();
+    void RenderConeEditor();
+  private:
+    ParticleAreaShape currentShape = ParticleAreaShape::NONE;
+
+    // Circle, Shpere radius, cone radius
+    float baseRadius               = 1.f;
+
+    // Cone top radius
+    float topRadius                = 1.f;
+
+    // Cone angle
+    float coneAngle                = 35.f;
+
+    float3 cubeSize                = float3::one;
+
+    math::Circle* circle           = nullptr;
+    math::OBB* cube                = nullptr;
+    math::Sphere* sphere           = nullptr;
 };

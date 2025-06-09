@@ -5,7 +5,11 @@
 #include "Particle.h"
 #include "ParticleUtils.h"
 
+#include "Geometry/Circle.h"
+#include "Geometry/OBB.h"
+#include "Geometry/Sphere.h"
 #include "rapidjson/document.h"
+
 #include <bitset>
 #include <string>
 #include <tuple>
