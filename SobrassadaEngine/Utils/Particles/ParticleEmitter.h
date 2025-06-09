@@ -31,6 +31,7 @@ class ResourceTexture;
 class ResourceMaterial;
 class ParticleSystemComponent;
 class EmitterInstance;
+class GameObject;
 
 class ParticleEmitter
 {
@@ -47,6 +48,7 @@ class ParticleEmitter
     void RenderParticles(const float4x4& VP, const float3& rightVector, const float3& upVector);
 
     void RenderEditor();
+    void RenderDebug(GameObject* parent);
 
     void AddAddon(ParticleAddonType type);
     void RemoveAddon(ParticleAddonType type);

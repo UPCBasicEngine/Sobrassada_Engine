@@ -35,3 +35,8 @@ void EmitterInstance::RenderEditor()
 
     emitter->RenderEditor();
 }
+
+void EmitterInstance::RenderDebug(GameObject* parent)
+{
+    if (emitter) emitter->RenderDebug(parent);
+}

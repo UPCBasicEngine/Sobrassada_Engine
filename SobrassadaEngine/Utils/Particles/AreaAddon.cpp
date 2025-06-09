@@ -1,5 +1,7 @@
 #include "AreaAddon.h"
 
+#include "Application.h"
+#include "DebugDrawModule.h"
 #include "EmitterInstance.h"
 #include "GameObject.h"
 #include "ParticleEmitter.h"
@@ -104,6 +106,16 @@ void AreaAddon::RenderEditorInspector()
     }
 
     ImGui::PopItemWidth();
+}
+
+void AreaAddon::RenderDebug(GameObject* parent)
+{
+    DebugDrawModule* debug = App->GetDebugDrawModule();
+
+    debug->DrawLine(
+        parent->GetGlobalTransform().TranslatePart(),
+        (parent->GetGlobalTransform().RotatePart() * -float3::unitY).Normalized(), 2, float3(1, 1, 1)
+    );
 }
 
 void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)

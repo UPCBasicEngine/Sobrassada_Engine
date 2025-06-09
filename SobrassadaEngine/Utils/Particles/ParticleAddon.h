@@ -6,6 +6,7 @@
 
 class EmitterInstance;
 class ParticleEmitter;
+class GameObject;
 
 class ParticleAddon
 {
@@ -19,6 +20,7 @@ class ParticleAddon
     virtual void Init(EmitterInstance* emitterInstance) {};
     virtual void Update(float deltaTime, EmitterInstance* emitterInstance) = 0;
     virtual void RenderEditorInspector()                                   = 0;
+    virtual void RenderDebug(GameObject* parent) {};
 
     ParticleAddonType GetType() const { return addonType; };
     bool IsEnabled() const { return isEnabled; }

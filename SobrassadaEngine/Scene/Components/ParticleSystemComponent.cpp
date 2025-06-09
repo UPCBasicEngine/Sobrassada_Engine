@@ -61,6 +61,7 @@ void ParticleSystemComponent::Render(float deltaTime)
 
 void ParticleSystemComponent::RenderDebug(float deltaTime)
 {
+    if (currentEmitter) currentEmitter->RenderDebug(parent);
 }
 
 void ParticleSystemComponent::RenderEditorInspector()

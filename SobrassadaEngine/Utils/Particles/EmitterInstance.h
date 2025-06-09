@@ -9,6 +9,7 @@
 
 class ParticleSystemComponent;
 class ParticleEmitter;
+class GameObject;
 
 class EmitterInstance
 {
@@ -23,6 +24,7 @@ class EmitterInstance
     void Spawn();
     void Update(float deltaTime);
     void RenderEditor();
+    void RenderDebug(GameObject* parent);
 
     ParticleSystemComponent* GetOwner() { return owner; }
 

@@ -394,6 +394,11 @@ void ParticleEmitter::RenderEditor()
     std::apply([](auto&... pointer) { ((pointer ? pointer->RenderEditorInspector() : Nothing()), ...); }, addonTuple);
 }
 
+void ParticleEmitter::RenderDebug(GameObject* parent)
+{
+    std::apply([parent](auto&... pointer) { ((pointer ? pointer->RenderDebug(parent) : Nothing()), ...); }, addonTuple);
+}
+
 void ParticleEmitter::AddAddon(ParticleAddonType type)
 {
     if (!createdAddons[(int)type - 1]) ParticleUtils::CreateEmptyParticleAddon(type, this);

@@ -23,6 +23,7 @@ class AreaAddon : public ParticleAddon
     void Init(EmitterInstance* emitterInstance);
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
+    void RenderDebug(GameObject* parent) override;
 
   private:
     void ManageShapeSwitch(ParticleAreaShape previousShape);
