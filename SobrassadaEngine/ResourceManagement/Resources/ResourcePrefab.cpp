@@ -17,6 +17,14 @@ ResourcePrefab::~ResourcePrefab()
 
 void ResourcePrefab::LoadData(const std::vector<GameObject*>& objects, const std::vector<int>& indices)
 {
-    gameObjects = objects;
+    gameObjects   = objects;
     parentIndices = indices;
+}
+
+void ResourcePrefab::GetGameObjectsMap(std::unordered_map<UID, GameObject*>& mapToFill)
+{
+    for (GameObject* object : gameObjects)
+    {
+        mapToFill.insert({object->GetPrefabChildUID(), object});
+    }
 }

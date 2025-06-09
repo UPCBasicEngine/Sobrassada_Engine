@@ -142,6 +142,7 @@ class SOBRASADA_API_ENGINE GameObject
     void SetEnabledRecursive(bool value);
 
     UID GetPrefabUID() const { return prefabUID; }
+    UID GetPrefabChildUID() const { return prefabChildUID; }
     void SetPrefabUID(const UID uid) { prefabUID = uid; }
     void SetPrefabChildUID(const UID uid) { prefabChildUID = uid; }
 
@@ -161,6 +162,8 @@ class SOBRASADA_API_ENGINE GameObject
     void SetOpenHierarchyNode(bool newOpen) { openHierarchyNode = newOpen; }
 
     void SetJustLocalTransform(const float4x4& newTransform);
+
+    void UpdateFromReference(GameObject* reference);
 
   private:
     void DrawNodes() const;

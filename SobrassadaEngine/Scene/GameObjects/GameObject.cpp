@@ -1049,6 +1049,39 @@ void GameObject::SetJustLocalTransform(const float4x4& newTransform)
     scale          = localTransform.GetScale();
 }
 
+void GameObject::UpdateFromReference(GameObject* reference)
+{
+    selectParent     = reference->selectParent;
+    mobilitySettings = reference->mobilitySettings;
+
+    position         = reference->position;
+    rotation         = reference->rotation;
+    scale            = reference->scale;
+    prefabUID        = reference->prefabUID;
+    prefabChildUID   = reference->prefabChildUID;
+    navMeshValid     = reference->navMeshValid;
+    enabled          = reference->enabled;
+    wasEnabled       = reference->wasEnabled;
+
+    for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
+    {
+        // Add missing components and remove the ones that are no longer in the reference
+        if (reference->IsComponentCreated(i) && !IsComponentCreated(i))
+        {
+            CreateComponent(ComponentType(i + 1));
+        }
+        else if (IsComponentCreated(i) && !reference->IsComponentCreated(i))
+        {
+            RemoveComponent(ComponentType(i + 1));
+        }
+    }
+
+    // Update components values
+    DuplicateComponents(compTuple, reference->GetComponentsTupleRef());
+
+    OnAABBUpdated();
+}
+
 void GameObject::DrawNodes() const
 {
     DebugDrawModule* debug = App->GetDebugDrawModule();

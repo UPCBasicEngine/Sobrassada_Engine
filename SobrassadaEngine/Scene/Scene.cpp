@@ -1832,7 +1832,7 @@ void Scene::LoadPrefab(
 
 void Scene::OverridePrefabs(const UID prefabUID)
 {
-    const ResourcePrefab* prefab = (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID);
+    ResourcePrefab* prefab = (ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID);
 
     // If prefab is null, it no longer exists, then remove the prefab UID from all objects that may have it
     if (prefab == nullptr)
@@ -1896,26 +1896,72 @@ void Scene::OverridePrefabs(const UID prefabUID)
     {
         if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
         {
-            const std::vector<GameObject*>& referenceObjects = prefab->GetGameObjectsVector();
-            // gameObject.second Copy components from root prefab
+            std::unordered_map<UID, GameObject*> referenceObjects;
+            prefab->GetGameObjectsMap(referenceObjects);
 
             std::queue<UID> childUIDs;
-            for (UID child : referenceObjects[0]->GetChildren())
+            for (UID child : gameObject.second->GetChildren())
             {
                 childUIDs.push(child);
             }
 
             while (!childUIDs.empty())
             {
-                GameObject* currentObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUIDs.front());
-                // Pillar equivalent en el prefab i copies components
-
+                GameObject* currentObject = GetGameObjectByUID(childUIDs.front());
                 childUIDs.pop();
 
-                // Despres de copiar els gameObjects o borrar els que ja no existeixen, s'han d'afegir si se n'han creat nous. Puc pillar aqui el numero de fills del pare d'aquest i del pare del del prefab.
-                // Si el del prefab es mes gran, miro quins no s'han copiat i els creo. Aixo tambe s'haura de fer al principi per al root
-            }
+                GameObject* refObject = nullptr;
+                if (referenceObjects.find(currentObject->GetPrefabChildUID()) == referenceObjects.end())
+                {
+                    // If not found in prefab, delete the gameObject because it was deleted in the prefab
+                    RemoveGameObjectHierarchy(currentObject->GetUID());
+                    continue;
+                }
 
+                refObject = referenceObjects.at(currentObject->GetPrefabChildUID());
+
+                // Update gameObject
+
+                // Add children to queue
+                for (UID child : currentObject->GetChildren())
+                {
+                    childUIDs.push(child);
+                }
+
+                // Check for children
+                const std::vector<UID>& objectChildrenUIDs = currentObject->GetChildren();
+                const std::vector<UID>& prefabChildrenUIDs = refObject->GetChildren();
+                if (objectChildrenUIDs.size() < prefabChildrenUIDs.size())
+                {
+                    // Fill a vector with the prefab children gameObects
+                    std::vector<GameObject*> prefabChildren;
+                    for (const UID childUID : prefabChildrenUIDs)
+                    {
+                        for (const auto& object : referenceObjects)
+                        {
+                            if (object.second->GetUID() == childUID) prefabChildren.push_back(object.second);
+                        }
+                    }
+
+                    // Fill a map with the current object children for faster lookup
+                    std::map<UID, GameObject*> objectChildren;
+                    for (const UID childUID : objectChildrenUIDs)
+                    {
+                        objectChildren.insert({childUID, GetGameObjectByUID(childUID)});
+                    }
+
+                    for (GameObject* prefabChild : prefabChildren)
+                    {
+                        // If prefab child does not exist in current gameObject, create it here
+                        if (objectChildren.find(prefabChild->GetPrefabChildUID()) == objectChildren.end())
+                        {
+                            GameObject* newObject = new GameObject(currentObject->GetUID(), prefabChild);
+                            currentObject->AddGameObject(newObject->GetUID());
+                            AddGameObject(newObject->GetUID(), newObject);
+                        }
+                    }
+                }
+            }
         }
     }
 
