@@ -88,6 +88,7 @@ void ScriptComponent::Clone(const Component* other)
         const ScriptComponent* otherScript = static_cast<const ScriptComponent*>(other);
         enabled                            = otherScript->enabled;
         wasEnabled                         = otherScript->wasEnabled;
+        DeleteAllScripts();
 
         for (size_t i = 0; i < otherScript->scriptNames.size(); ++i)
         {

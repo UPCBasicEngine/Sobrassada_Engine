@@ -2020,7 +2020,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
             }
         }
     }
-
+    if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
     App->GetResourcesModule()->ReleaseResource(prefab);
 }
 
