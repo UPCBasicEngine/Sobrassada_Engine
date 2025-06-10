@@ -1212,11 +1212,7 @@ void GameObject::CreatePrefab()
     bool override = this->prefabUID != INVALID_UID;
 
     std::queue<UID> childrenUIDs;
-
-    for (UID child : children)
-    {
-        childrenUIDs.push(child);
-    }
+    childrenUIDs.push(uid);
 
     // Set the prefabChildUID to all children of the prefab in case they don't already have
     while (!childrenUIDs.empty())
@@ -1224,7 +1220,7 @@ void GameObject::CreatePrefab()
         GameObject* currentChild = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenUIDs.front());
         if (currentChild->prefabChildUID == INVALID_UID)
         {
-            GLOG("New prefab child UID");
+            //GLOG("New prefab child UID");
             currentChild->prefabChildUID = GenerateUID();
         }
         childrenUIDs.pop();
