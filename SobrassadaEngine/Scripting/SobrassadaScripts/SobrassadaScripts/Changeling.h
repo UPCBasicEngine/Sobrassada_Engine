@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Character.h"
+#include "Math/float4x4.h"
 
 class GameObject;
 class AIAgentComponent;
@@ -54,6 +55,7 @@ class Changeling : public Character
     float3 lastTrailPos           = float3::zero;
     float trailSegmentSpacing     = 1.0f; 
     std::string trailPrefabName   = "DashTrailSegment";
+    float4x4 localTransform      = float4x4::identity;
 
     float3 startPos;
     float3 endPos;

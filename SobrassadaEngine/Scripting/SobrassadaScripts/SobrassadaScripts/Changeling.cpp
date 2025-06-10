@@ -7,6 +7,7 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
+#include "Math/Quat.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
@@ -57,38 +58,43 @@ void Changeling::Update(float deltaTime)
     if (isDashing)
     {
         float3 currentPos = parent->GetPosition();
-
+        float3 scale      = float3::one;
+        float4x4 trs      = float4x4::identity;
+        float3 position   = float3::zero;
         if ((currentPos - lastTrailPos).Length() >= trailSegmentSpacing)
         {
-            UID trailPrefabUID             = pathObj->GetPrefabUID();
+            UID trailPrefabUID = pathObj->GetPrefabUID();
 
-            float3 position                = currentPos;
+            float3 position    = currentPos;
 
-            float3 direction               = (currentPos - lastTrailPos).Normalized();
+            float3 midPoint    = (startPos + position) * 0.5f;
 
-            const float4x4& localTransform = parent->GetLocalTransform();
-            float3 forward                 = parent->GetGlobalTransform().WorldZ();
-            forward.y                      = 0.0f;
+            float3 direction   = (position - startPos).Normalized();
+
+            localTransform     = parent->GetLocalTransform();
+            float3 forward     = parent->GetGlobalTransform().WorldZ();
+            forward.y          = 0.0f;
             forward.Normalize();
 
-            float angle             = atan2(forward.Cross(direction).y, forward.Dot(direction));
+            float length            = (position - startPos).Length();
 
-            const float4x4 rotation = localTransform * float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
+            scale                   = float3(1, 1, length);
+            float angle             = atan2(direction.x, direction.z); // Ajusta si tu eje principal es otro
+            Quat rotation           = Quat::FromEulerXYZ(0.0f, angle, 0.0f);
 
-            float3 scale            = float3::one;
-
-            float4x4 trs            = float4x4::FromTRS(position, rotation, scale);
+            trs                     = float4x4::FromTRS(midPoint, rotation, scale);
 
             pathObj->SetLocalTransform(trs);
-            pathObj->SetLocalPosition(position);
+            pathObj->SetLocalPosition(midPoint);
 
             // AppEngine->GetSceneModule()->GetScene()->LoadPrefab(trailPrefabUID, nullptr, trs, true, {});
 
-            lastTrailPos = currentPos;
+            lastTrailPos            = currentPos;
         }
 
         if (agentAI->GetSpeed() <= 1.0f)
         {
+
             isDashing = false;
         }
     }
@@ -191,7 +197,8 @@ void Changeling::Attack(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
         startPos = parent->GetPosition();
-        endPos   = dashDirection;
+        GLOG("endPos: x=%.3f, y=%.3f, z=%.3f", startPos.x, startPos.y, startPos.z);
+        localTransform = parent->GetLocalTransform();
     }
     else
     {
