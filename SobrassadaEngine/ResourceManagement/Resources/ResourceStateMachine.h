@@ -13,7 +13,6 @@ struct Clip
     UID animationResourceUID;
     HashString clipName;
     bool loop;
-
     float animationSpeed = 1.0f;
 };
 
