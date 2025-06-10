@@ -141,7 +141,8 @@ void AreaAddon::RenderDebug(GameObject* parent)
     {
         circle = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
         circle.r = baseRadius;
-
+        
+        debug->DrawArrow(circle.pos, circle.pos + circle.normal, float3::one, 0.2f);
         debug->DrawCircle(circle.pos, circle.normal, float3::one, circle.r);
         break;
     }
