@@ -139,9 +139,9 @@ void AreaAddon::RenderDebug(GameObject* parent)
     }
     case ParticleAreaShape::CIRCLE:
     {
-        circle = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
+        circle   = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
         circle.r = baseRadius;
-        
+
         debug->DrawArrow(circle.pos, circle.pos + circle.normal, float3::one, 0.2f);
         debug->DrawCircle(circle.pos, circle.normal, float3::one, circle.r);
         break;
@@ -156,7 +156,14 @@ void AreaAddon::RenderDebug(GameObject* parent)
         break;
     }
     case ParticleAreaShape::CONE:
+    {
+        circle   = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
+        circle.r = baseRadius;
+
+        debug->DrawCone(circle.pos, circle.normal * length, float3::one, baseRadius, topRadius);
+
         break;
+    }
     default:
         break;
     }
@@ -185,6 +192,9 @@ void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
         sphere = Sphere(float3::zero, baseRadius);
         break;
     case ParticleAreaShape::CONE:
+        circle    = Circle(float3::zero, float3::unitY, baseRadius);
+        topRadius = 2.f;
+        length = 1.f;
         break;
     default:
         break;
@@ -217,5 +227,11 @@ void AreaAddon::RenderSphereEditor()
 
 void AreaAddon::RenderConeEditor()
 {
-    ImGui::Text("NOT IMPLEMENTED YET :P");
+    if (ImGui::DragFloat("Base Radius", &baseRadius, 0.01f, 0.f, 50.f, "%.2f"))
+    {
+        circle.r = baseRadius;
+    }
+
+    ImGui::DragFloat("Top Radius", &topRadius, 0.01f, 0.f, 50.f, "%.2f");
+    ImGui::DragFloat("Cone length", &length, 0.01f, 0.f, 50.f, "%.2f");
 }

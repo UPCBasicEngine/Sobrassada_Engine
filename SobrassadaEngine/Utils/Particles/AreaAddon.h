@@ -48,6 +48,7 @@ class AreaAddon : public ParticleAddon
 
     // Cone angle
     float coneAngle                = 35.f;
+    float length                   = 1.f;
 
     float3 cubeSize                = float3::one;
 
