@@ -1220,7 +1220,7 @@ void GameObject::CreatePrefab()
         GameObject* currentChild = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenUIDs.front());
         if (currentChild->prefabChildUID == INVALID_UID)
         {
-            //GLOG("New prefab child UID");
+            // GLOG("New prefab child UID");
             currentChild->prefabChildUID = GenerateUID();
         }
         childrenUIDs.pop();
@@ -1247,10 +1247,7 @@ void GameObject::RemovePrefabStatus()
     prefabVersionUID = INVALID_UID;
 
     std::stack<UID> childrenUIDs;
-    for (UID child : children)
-    {
-        childrenUIDs.push(child);
-    }
+    childrenUIDs.push(uid);
 
     while (!childrenUIDs.empty())
     {
