@@ -29,6 +29,7 @@ AreaAddon::AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
     if (initialState.HasMember("baseRadius")) baseRadius = initialState["baseRadius"].GetFloat();
     if (initialState.HasMember("topRadius")) topRadius = initialState["topRadius"].GetFloat();
     if (initialState.HasMember("coneAngle")) coneAngle = initialState["coneAngle"].GetFloat();
+    if (initialState.HasMember("coneLength")) coneLength = initialState["coneLength"].GetFloat();
 
     if (initialState.HasMember("cubeSize"))
     {
@@ -55,6 +56,7 @@ void AreaAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     targetState.AddMember("baseRadius", baseRadius, allocator);
     targetState.AddMember("topRadius", topRadius, allocator);
     targetState.AddMember("coneAngle", coneAngle, allocator);
+    targetState.AddMember("coneLength", coneLength, allocator);
 
     rapidjson::Value cubeSizeSave(rapidjson::kArrayType);
     cubeSizeSave.PushBack(cubeSize.x, allocator).PushBack(cubeSize.y, allocator).PushBack(cubeSize.z, allocator);
@@ -160,7 +162,7 @@ void AreaAddon::RenderDebug(GameObject* parent)
         circle   = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
         circle.r = baseRadius;
 
-        debug->DrawCone(circle.pos, circle.normal * length, float3::one, baseRadius, topRadius);
+        debug->DrawCone(circle.pos, circle.normal * coneLength, float3::one, baseRadius, topRadius);
 
         break;
     }
@@ -193,8 +195,6 @@ void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
         break;
     case ParticleAreaShape::CONE:
         circle    = Circle(float3::zero, float3::unitY, baseRadius);
-        topRadius = 2.f;
-        length = 1.f;
         break;
     default:
         break;
@@ -233,5 +233,5 @@ void AreaAddon::RenderConeEditor()
     }
 
     ImGui::DragFloat("Top Radius", &topRadius, 0.01f, 0.f, 50.f, "%.2f");
-    ImGui::DragFloat("Cone length", &length, 0.01f, 0.f, 50.f, "%.2f");
+    ImGui::DragFloat("Cone length", &coneLength, 0.01f, 0.f, 50.f, "%.2f");
 }
