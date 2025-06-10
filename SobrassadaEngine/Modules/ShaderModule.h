@@ -52,4 +52,6 @@ class ShaderModule : public Module
 
     int trailProgram                   = -1;
     int decalProgram                   = -1;
+    
+    int ssaoProgram                    = -1;
 };

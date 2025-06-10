@@ -11,7 +11,6 @@ class SSAO
     ~SSAO();
 
     void Init();
-    void Render(GBuffer& gbuffer);
     unsigned int GetSSAOTexture() const { return ssaoTexture; }
 
   private:

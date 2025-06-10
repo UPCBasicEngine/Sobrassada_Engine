@@ -69,12 +69,3 @@ void SSAO::Init()
     glBindTexture(GL_TEXTURE_2D, 0);
 
 }
-
-void SSAO::Render(GBuffer& gbuffer)
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBufferObject);
-    glViewport(0, 0, screenWidth, screenHeight);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    //ssaoShader.Bind();
-}

@@ -139,7 +139,7 @@ class SOBRASADA_API_ENGINE Scene
     void TransparentPassRender(
         const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
     ) const;
-    
+    void SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     
     void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
