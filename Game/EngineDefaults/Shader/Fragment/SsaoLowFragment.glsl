@@ -1,6 +1,5 @@
 #version 460
 
-in vec2 TexCoords;
 out float FragColor;
 
 uniform sampler2D gPositions;
@@ -50,7 +49,8 @@ void main()
     for(int i=0; i< KERNEL_SIZE; ++i) 
     {
         vec3 samplePos = position+tangentSpace*kernel_samples[i];
-        if(getSceneDepthAtSamplePos(samplePos) + bias > samplePos.z)&& abs(sampleDepth-position.z) < range)
+        float sampleDepth = getSceneDepthAtSamplePos(samplePos);
+        if ((sampleDepth + bias > samplePos.z) && abs(sampleDepth - position.z) < range)
 	{
 	 ++occlusion;
 	}

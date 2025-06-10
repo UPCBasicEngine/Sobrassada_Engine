@@ -1458,6 +1458,12 @@ void Scene::TransparentPassRender(
     glEnable(GL_CULL_FACE);
 }
 
+void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
+    const
+{
+
+}
+
 GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)
 {
     if (gameObjectsContainer.count(gameObjectUUID))
