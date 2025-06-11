@@ -1463,6 +1463,7 @@ void Scene::TransparentPassRender(
 void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao)
     const
 {
+
     ssao->Bind();
     const unsigned int program = App->GetShaderModule()->GetSsaoProgram();
 
@@ -1478,7 +1479,25 @@ void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, Came
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
     glUniform1i(glGetUniformLocation(program, "gNormal"), 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
+    glUniform1i(glGetUniformLocation(program, "noiseTexture"), 2);
     
+    glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_LOW, &ssao->GetKernels()[0].x);
+
+    glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
+
+    float4x4 projection = camera->GetProjectionMatrix();
+    float4x4 view       = camera->GetViewMatrix();
+
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, projection.ptr());
+    glUniformMatrix4fv(glGetUniformLocation(program, "camera_view"), 1, GL_FALSE, view.ptr());
+
+    glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
+    glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
+
+    //???
 }
 
 GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)

@@ -1,9 +1,9 @@
 #version 460
 
-out float FragColor;
-
 layout(binding = 0) uniform sampler2D gPosition;
 layout(binding = 1) uniform sampler2D gNormal;
+layout(binding = 2) uniform sampler2D noiseTexture;
+
 uniform mat4 projection;
 uniform mat4 camera_view;
 uniform vec2 screenSize;
@@ -12,11 +12,8 @@ in vec2 uv;
 const int KERNEL_SIZE = 16;
 uniform vec3 kernel_samples[KERNEL_SIZE];
 
-const int TANGENT_ROWS = 4;
-const int TANGENT_COLS = 4;
 uniform float bias;
 uniform float range = 0.5;  
-uniform vec3 random_tangents[TANGENT_ROWS][TANGENT_COLS];
 
 out vec4 result;
 
@@ -28,9 +25,8 @@ mat3 createTangentSpace(const vec3 normal, const vec3 up)
 }
 
 vec3 getRandomTangent() {
-    vec2 screenPos = uv * screenSize;
-    ivec2 index    = ivec2(int(mod(screenPos.y, TANGENT_ROWS)), int(mod(screenPos.x, TANGENT_COLS)));
-    return random_tangents[index.x][index.y];
+    vec2 noiseScale = screenSize / 4.0;
+    return texture(noiseTexture, uv * noiseScale).xyz;
 }
 
 float getSceneDepthAtSamplePos(in vec3 samplePos)
