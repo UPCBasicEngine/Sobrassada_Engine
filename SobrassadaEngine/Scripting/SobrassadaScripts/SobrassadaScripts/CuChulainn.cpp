@@ -48,7 +48,7 @@ bool CuChulainn::Init()
 
     Character::Init();
 
-    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Health");
     if (healthUIObject)
     {
         healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
