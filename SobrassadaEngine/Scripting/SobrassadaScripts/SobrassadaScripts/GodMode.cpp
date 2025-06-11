@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "CameraComponent.h"
 #include "Components/Standalone/CharacterControllerComponent.h"
+#include "CuChulainn.h"
 #include "GameObject.h"
 #include "GodMode.h"
 #include "InputModule.h"
@@ -12,14 +13,11 @@
 GodMode::GodMode(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Camera Name", InspectorField::FieldType::InputText, &cameraName});
+    fields.push_back({"Free camera FOV", InspectorField::FieldType::Float, &freeCameraFov});
 }
 
 bool GodMode::Init()
 {
-    characterController = parent->GetComponent<CharacterControllerComponent*>();
-    if (!characterController)
-        GLOG("[WARNING] GodMode character controller component not found for %s", parent->GetName().c_str());
-
     GameObject* cameraGameObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
     if (cameraGameObject)
     {
@@ -33,7 +31,7 @@ bool GodMode::Init()
 
 void GodMode::Update(float deltaTime)
 {
-    if (!characterController || !godCamera) return;
+    if (!godCamera) return;
 
     const KeyState* keyboard = AppEngine->GetInputModule()->GetKeyboard();
 
@@ -67,13 +65,23 @@ void GodMode::Update(float deltaTime)
         {
             freeCamera = false;
             godCamera->SetFreeCamera(false);
-            characterController->SetInputDown(true);
+            character->SetInputDown(true);
+            godCamera->SetFov(35.0f);
+        }
+
+        if (keyboard[SDL_SCANCODE_I] == KEY_DOWN)
+        {
+            const float3& newPlayerPos = godCamera->GetCameraPosition();
+            character->GetParent()->SetLocalPosition(
+                newPlayerPos - character->GetParent()->GetParentGlobalTransform().TranslatePart()
+            );
         }
     }
     if (keyboard[SDL_SCANCODE_P] == KEY_DOWN)
     {
-        characterController->SetInputDown(false);
+        character->SetInputDown(false);
         godCamera->SetFreeCamera(true);
         freeCamera = true;
+        godCamera->SetFov(freeCameraFov);
     }
 }

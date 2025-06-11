@@ -16,9 +16,9 @@ class GodMode : public Script
     void Update(float deltaTime) override;
 
   private:
-    CharacterControllerComponent* characterController = nullptr;
-    std::string cameraName                            = "";
-    CameraComponent* godCamera                        = nullptr;
-    bool freeCamera                                   = false;
-    float4x4 originalTransform;
+    std::string cameraName     = "";
+    CameraComponent* godCamera = nullptr;
+    bool freeCamera            = false;
+    float4x4 originalTransform = float4x4::identity;
+    float freeCameraFov        = 90.0f;
 };
