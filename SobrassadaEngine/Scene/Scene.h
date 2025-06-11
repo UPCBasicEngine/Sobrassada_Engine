@@ -21,6 +21,7 @@ class CameraComponent;
 class CharacterControllerComponent;
 class GBuffer;
 class Framebuffer;
+class SSAO;
 enum class SaveMode;
 enum MobilitySettings;
 
@@ -139,7 +140,7 @@ class SOBRASADA_API_ENGINE Scene
     void TransparentPassRender(
         const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
     ) const;
-    void SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
+    void SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
     
     void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;

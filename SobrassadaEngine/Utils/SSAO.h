@@ -11,7 +11,15 @@ class SSAO
     ~SSAO();
 
     void Init();
+    void Bind();
+    void Unbind();
+
     unsigned int GetSSAOTexture() const { return ssaoTexture; }
+    unsigned int GetNoiseTexture() const { return noiseTexture; }
+    const std::vector<float3>& GetKernels() const { return kernels; }
+
+    int GetWidth() const { return screenWidth; }
+    int GetHeight() const { return screenHeight; }
 
   private:
     unsigned int ssaoFrameBufferObject = 0;

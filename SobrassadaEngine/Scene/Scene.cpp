@@ -11,6 +11,7 @@
 #include "EditorUIModule.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
+#include "SSAO.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "GeometryBatch.h"
@@ -337,6 +338,7 @@ update_status Scene::Render(float deltaTime)
 void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 {
     GBuffer* gbuffer         = App->GetOpenGLModule()->GetGBuffer();
+    SSAO* ssao        = App->GetOpenGLModule()->GetSsao();
     Framebuffer* framebuffer = App->GetSceneModule()->GetInPlayMode() ? App->GetOpenGLModule()->GetFramebuffer()
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
@@ -1458,10 +1460,25 @@ void Scene::TransparentPassRender(
     glEnable(GL_CULL_FACE);
 }
 
-void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
+void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao)
     const
 {
+    ssao->Bind();
+    const unsigned int program = App->GetShaderModule()->GetSsaoProgram();
 
+    glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
+    glUniform1i(glGetUniformLocation(program, "gPosition"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+    glUniform1i(glGetUniformLocation(program, "gNormal"), 1);
+    
 }
 
 GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)

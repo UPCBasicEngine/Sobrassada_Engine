@@ -9,6 +9,8 @@ SSAO::SSAO(int width, int height)
 {
     screenWidth  = width;
     screenHeight = height;
+
+    Init();
 }
 
 SSAO::~SSAO()
@@ -68,4 +70,14 @@ void SSAO::Init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+}
+
+void SSAO::Bind()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBufferObject);
+}
+
+void SSAO::Unbind()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

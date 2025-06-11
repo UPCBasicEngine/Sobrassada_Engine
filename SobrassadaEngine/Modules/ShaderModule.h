@@ -26,6 +26,7 @@ class ShaderModule : public Module
     int GetBillboardProgram() const { return billboardProgram; }
     int GetTrailProgram() const { return trailProgram; }
     int GetDecalProgram() const { return decalProgram; }
+    int GetSsaoProgram() const { return ssaoProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);

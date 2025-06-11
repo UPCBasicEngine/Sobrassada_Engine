@@ -2,8 +2,8 @@
 
 out float FragColor;
 
-uniform sampler2D gPositions;
-uniform sampler2D gNormals;
+layout(binding = 0) uniform sampler2D gPosition;
+layout(binding = 1) uniform sampler2D gNormal;
 uniform mat4 projection;
 uniform mat4 camera_view;
 uniform vec2 screenSize;
@@ -18,7 +18,7 @@ uniform float bias;
 uniform float range = 0.5;  
 uniform vec3 random_tangents[TANGENT_ROWS][TANGENT_COLS];
 
-layout(location = 0) out vec4 result;
+out vec4 result;
 
 mat3 createTangentSpace(const vec3 normal, const vec3 up)
 {
