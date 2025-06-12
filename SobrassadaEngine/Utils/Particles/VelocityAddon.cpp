@@ -149,8 +149,9 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     if (!IsEnabled()) return;
 
-    for (auto& particle : emitterInstance->particles)
+    for (int i = 0; i < emitterInstance->particleVectorPos; ++i)
     {
+        Particle& particle      = emitterInstance->particles[i];
 
         float valueOverLifetime = particle.currentLifetime / particle.lifeTime;
 

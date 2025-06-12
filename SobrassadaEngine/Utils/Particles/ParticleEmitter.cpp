@@ -507,7 +507,7 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleSizeVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * particleSize.size(), &particleSize[0], GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float2) * particleSize.size(), &particleSize[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleRotationVBO);

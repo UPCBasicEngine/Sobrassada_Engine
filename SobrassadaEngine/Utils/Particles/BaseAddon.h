@@ -39,4 +39,7 @@ class BaseAddon : public ParticleAddon
     bool useSizeCurveY        = false;
     float sizeBezierX[5]      = {0.f, 0.f, 1.f, 1.f};
     float sizeBezierY[5]      = {0.f, 0.f, 1.f, 1.f};
+
+    int particlesPerSecond    = 15;
+    float spawnDeltaTime      = 0.f;
 };

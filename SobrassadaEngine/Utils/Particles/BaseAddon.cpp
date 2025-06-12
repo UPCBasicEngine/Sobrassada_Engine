@@ -18,6 +18,7 @@ BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
 {
     if (initialState.HasMember("Duration")) duration = initialState["Duration"].GetFloat();
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
+    if (initialState.HasMember("particlesPerSecond")) particlesPerSecond = initialState["particlesPerSecond"].GetInt();
     if (initialState.HasMember("MaxParticles")) maxParticles = initialState["MaxParticles"].GetInt();
 
     if (initialState.HasMember("RandomLifetime")) randomLifetime = initialState["RandomLifetime"].GetBool();
@@ -84,6 +85,7 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
 
     targetState.AddMember("Duration", duration, allocator);
     targetState.AddMember("Loop", loop, allocator);
+    targetState.AddMember("particlesPerSecond", particlesPerSecond, allocator);
     targetState.AddMember("MaxParticles", maxParticles, allocator);
 
     targetState.AddMember("RandomLifetime", randomLifetime, allocator);
@@ -155,6 +157,8 @@ void BaseAddon::Init(EmitterInstance* emitterInstance)
     }
 
     emitterInstance->currentEmissionTime = 0.f;
+    emitterInstance->particleVectorPos   = 0;
+    spawnDeltaTime                       = 0.f;
     emitterInstance->isEmitting          = true;
 }
 
@@ -162,13 +166,25 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     if (emitterInstance->isEmitting)
     {
-        AreaAddon* areaAddon   = owner->GetAddon<AreaAddon*>();
+        emitterInstance->currentEmissionTime += deltaTime;
+        spawnDeltaTime                       += deltaTime;
+
+        AreaAddon* areaAddon                  = owner->GetAddon<AreaAddon*>();
         if (areaAddon) areaAddon->UpdateShapesTransforms(emitterInstance->GetOwner()->GetGlobalTransform());
 
         float3 emitterPosition = emitterInstance->GetOwner()->GetGlobalTransform().TranslatePart();
 
-        for (auto& particle : emitterInstance->particles)
+        while (spawnDeltaTime > (1.f / particlesPerSecond))
         {
+            spawnDeltaTime -= (1.f / particlesPerSecond);
+            emitterInstance->particleVectorPos++;
+        }
+        if (emitterInstance->particleVectorPos >= maxParticles) emitterInstance->particleVectorPos = maxParticles - 1;
+
+        for (int i = 0; i < emitterInstance->particleVectorPos; ++i)
+        {
+            Particle& particle = emitterInstance->particles[i];
+
             if (particle.alive)
             {
                 particle.currentLifetime += deltaTime;
@@ -195,18 +211,16 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
                 particle.alive           = true;
                 particle.lifeTime        = randomLifetime ? rng->Float(minLifetime, maxLifetime) : maxLifetime;
                 particle.currentLifetime = 0;
-               
 
                 if (areaAddon) areaAddon->AssignPositionDirection(particle);
                 else
                 {
-                    particle.position = float3(emitterPosition.x, emitterPosition.y, emitterPosition.z);
+                    particle.position  = float3(emitterPosition.x, emitterPosition.y, emitterPosition.z);
                     particle.direction = float3::one.Normalized();
                 }
-                
 
-                float finalSizeX         = 1;
-                float finalSizeY         = 1;
+                float finalSizeX = 1;
+                float finalSizeY = 1;
 
                 if (!useSizeCurveX)
                     finalSizeX = randomizeSizeX ? rng->Float(sizeValuesX[0], sizeValuesX[1]) : sizeValuesX[1];
@@ -222,17 +236,17 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
                 particle.rotation *= DEGREE_RAD_CONV;
             }
         }
-
-        emitterInstance->currentEmissionTime += deltaTime;
     }
 
     if (emitterInstance->currentEmissionTime > duration && !loop)
     {
-        emitterInstance->isEmitting = false;
+        emitterInstance->isEmitting        = false;
+        emitterInstance->particleVectorPos = 0;
+        spawnDeltaTime                     = 0;
     }
     else if (emitterInstance->currentEmissionTime > duration && loop)
     {
-        emitterInstance->currentEmissionTime = 0.f;
+        emitterInstance->Spawn();
     }
 }
 
@@ -244,6 +258,7 @@ void BaseAddon::RenderEditorInspector()
 
     ImGui::Checkbox("Loop", &loop);
     ImGui::InputFloat("Duration", &duration, 0.05f, 1.f);
+    ImGui::InputInt("Emitting rate", &particlesPerSecond, 5, 10);
     ImGui::InputInt("Max Particles", &maxParticles, 5, 10);
 
     if (randomLifetime)

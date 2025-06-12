@@ -74,8 +74,10 @@ void ColorAddon::Init(EmitterInstance* emitterInstance)
 
 void ColorAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
-    for (auto& particle : emitterInstance->particles)
+    for (int i = 0; i < emitterInstance->particleVectorPos; ++i)
     {
+        Particle& particle  = emitterInstance->particles[i];
+
         float colorPosition = particle.currentLifetime / particle.lifeTime;
         if (colorPosition > 1.f) colorPosition = 1.f;
 

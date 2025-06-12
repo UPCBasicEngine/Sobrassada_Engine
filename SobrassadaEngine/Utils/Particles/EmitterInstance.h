@@ -4,8 +4,8 @@
 
 #include "HashString.h"
 
-#include <vector>
 #include <string>
+#include <vector>
 
 class ParticleSystemComponent;
 class ParticleEmitter;
@@ -34,6 +34,7 @@ class EmitterInstance
 
     float currentEmissionTime = 0.f;
     bool isEmitting           = false;
+    int particleVectorPos     = 0;
 
   private:
     ParticleEmitter* emitter       = nullptr;
