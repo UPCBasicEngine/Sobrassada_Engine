@@ -226,7 +226,7 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
     }
 
     particle.position  = newPosition;
-    particle.direction = newDirection;
+    particle.direction = newDirection.Normalized();
 }
 
 void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)

@@ -201,7 +201,7 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
                 else
                 {
                     particle.position = float3(emitterPosition.x, emitterPosition.y, emitterPosition.z);
-                    particle.direction = float3::one;
+                    particle.direction = float3::one.Normalized();
                 }
                 
 
