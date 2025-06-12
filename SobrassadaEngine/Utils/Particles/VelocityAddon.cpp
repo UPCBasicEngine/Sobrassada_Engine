@@ -187,11 +187,17 @@ void VelocityAddon::RenderEditorInspector()
 
     ImGui::Spacing();
 
+    ImGui::PushItemWidth(100);
+
     ImGui::Checkbox("Use gravity", &gravity);
     if (gravity)
     {
         ImGui::InputFloat("Gravity value", &gravityValue);
     }
+
+    ImGui::PopItemWidth();
+
+    ImGui::Spacing();
 
     if (ImGui::CollapsingHeader("X Speed"))
     {
