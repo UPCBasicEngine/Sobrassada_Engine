@@ -13,7 +13,7 @@
 GodMode::GodMode(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Camera Name", InspectorField::FieldType::InputText, &cameraName});
-    fields.push_back({"Free camera FOV", InspectorField::FieldType::Float, &freeCameraFov});
+    fields.push_back({"Free camera FOV", InspectorField::FieldType::Float, &freeCameraFov, 0.0f, 180.0f});
 }
 
 bool GodMode::Init()

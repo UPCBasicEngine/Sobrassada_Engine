@@ -110,7 +110,6 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
     // ---- Damage Collisions ----
-    if (isInvulnerable) return;
 
     // Melee check
     CapsuleColliderComponent* otherWeapon = otherObject->GetComponent<CapsuleColliderComponent*>();
@@ -199,6 +198,8 @@ void Character::UpdateTimers(float deltaTime)
 
 void Character::TakeDamage(int amount)
 {
+    if (isInvulnerable) return;
+
     currentHealth        -= amount;
 
     isInvulnerable        = true;

@@ -39,7 +39,7 @@ class Character : public Script
     virtual void Update(float deltaTime) override;
     void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
 
-    void TakeDamage(int amount);
+    virtual void TakeDamage(int amount);
     void Restart();
 
   protected:

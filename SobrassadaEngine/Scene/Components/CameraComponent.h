@@ -54,9 +54,6 @@ class CameraComponent : public Component
     void SetFreeCamera(const bool freecamera) { freeCamera = freecamera; }
     SOBRASADA_API_ENGINE void SetFov(float fov);
 
-    float horizontalFov;
-    float verticalFov;
-
   private:
     Frustum camera;
     FrustumPlanes frustumPlanes;
@@ -71,8 +68,11 @@ class CameraComponent : public Component
 
     float orthographicWidth;
     float orthographicHeight;
-    float ortographicNearPlane      = 25.10f;
-    float ortographicFarPlane       = 50.0f;
+    float ortographicNearPlane = 25.10f;
+    float ortographicFarPlane  = 50.0f;
+
+    float horizontalFov;
+    float verticalFov;
 
     bool firstTime                  = true;
 
