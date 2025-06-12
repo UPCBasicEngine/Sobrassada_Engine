@@ -14,6 +14,9 @@ VelocityAddon::VelocityAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAdd
 VelocityAddon::VelocityAddon(const rapidjson::Value& initialState, ParticleEmitter* owner)
     : ParticleAddon(initialState, owner)
 {
+    if (initialState.HasMember("gravity")) gravity = initialState["gravity"].GetBool();
+    if (initialState.HasMember("gravityValue")) gravityValue = initialState["gravityValue"].GetFloat();
+
     if (initialState.HasMember("XSpeed"))
     {
         const rapidjson::Value& dataArray = initialState["XSpeed"];
@@ -78,6 +81,9 @@ VelocityAddon::~VelocityAddon()
 void VelocityAddon::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     ParticleAddon::Save(targetState, allocator);
+
+    targetState.AddMember("gravity", gravity, allocator);
+    targetState.AddMember("gravityValue", gravityValue, allocator);
 
     rapidjson::Value xSpeedSave(rapidjson::kArrayType);
     xSpeedSave.PushBack(xSpeed.x, allocator).PushBack(xSpeed.y, allocator);
@@ -166,6 +172,8 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
                 Interpolation::Lerp(zSpeed[0], zSpeed[1], ImGui::BezierValue(valueOverLifetime, bezierZ));
 
         particle.position = particle.position.Add(particle.direction.Mul((particle.velocity * deltaTime)));
+
+        if (gravity) particle.position -= (float3::unitY * gravity * deltaTime);
     }
 }
 
@@ -178,6 +186,12 @@ void VelocityAddon::RenderEditorInspector()
     // RENDER EDITOR STARTS
 
     ImGui::Spacing();
+
+    ImGui::Checkbox("Use gravity", &gravity);
+    if (gravity)
+    {
+        ImGui::InputFloat("Gravity value", &gravityValue);
+    }
 
     if (ImGui::CollapsingHeader("X Speed"))
     {

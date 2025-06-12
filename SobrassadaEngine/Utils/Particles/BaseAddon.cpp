@@ -158,7 +158,7 @@ void BaseAddon::Init(EmitterInstance* emitterInstance)
 
     emitterInstance->currentEmissionTime = 0.f;
     emitterInstance->particleVectorPos   = 0;
-    spawnDeltaTime                       = 0.f;
+    spawnDeltaTime                       = (1.f / particlesPerSecond) + 0.01f;
     emitterInstance->isEmitting          = true;
 }
 
@@ -179,6 +179,7 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
             spawnDeltaTime -= (1.f / particlesPerSecond);
             emitterInstance->particleVectorPos++;
         }
+
         if (emitterInstance->particleVectorPos >= maxParticles) emitterInstance->particleVectorPos = maxParticles - 1;
 
         for (int i = 0; i < emitterInstance->particleVectorPos; ++i)

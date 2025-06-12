@@ -33,4 +33,7 @@ class VelocityAddon : public ParticleAddon
     float bezierX[5]     = {0.f, 0.f, 1.f, 1.f};
     float bezierY[5]     = {0.f, 0.f, 1.f, 1.f};
     float bezierZ[5]     = {0.f, 0.f, 1.f, 1.f};
+
+    bool gravity         = false;
+    float gravityValue   = 0.f;
 };
