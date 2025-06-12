@@ -37,8 +37,11 @@ class AreaAddon : public ParticleAddon
     void RenderSphereEditor();
     void RenderConeEditor();
 
+    void RecalculateConeTopRadius();
+
   private:
     ParticleAreaShape currentShape = ParticleAreaShape::NONE;
+    ParticleAreaSpawn currentSpawn = ParticleAreaSpawn::NONE;
 
     // Circle, Shpere radius, cone radius
     float baseRadius               = 1.f;

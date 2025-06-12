@@ -29,8 +29,18 @@ enum class ParticleAreaShape : int
     CONE,
 };
 
-constexpr const char* AreaAddonStrings[]          = {"Cube", "Circle", "Sphere", "Cone"};
-constexpr int AreaAddonStringsSize                = sizeof(AreaAddonStrings) / sizeof(char*);
+constexpr const char* AreaAddonStrings[]      = {"Cube", "Circle", "Sphere", "Cone"};
+constexpr int AreaAddonStringsSize            = sizeof(AreaAddonStrings) / sizeof(char*);
+
+enum class ParticleAreaSpawn : int
+{
+    NONE = -1,
+    SURFACE,
+    VOLUME,
+};
+
+constexpr const char* AreaAddonSpawnStrings[] = {"Surface", "Volume"};
+constexpr int AreaAddonSpawnStringsSize       = sizeof(AreaAddonSpawnStrings) / sizeof(char*);
 
 class ParticleUtils
 {

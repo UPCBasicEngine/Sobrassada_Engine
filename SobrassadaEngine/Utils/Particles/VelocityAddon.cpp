@@ -164,7 +164,7 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
             particle.velocity.z =
                 Interpolation::Lerp(zSpeed[0], zSpeed[1], ImGui::BezierValue(valueOverLifetime, bezierZ));
 
-        particle.position = particle.position.Add(particle.velocity * deltaTime);
+        particle.position = particle.position.Add(particle.direction.Mul((particle.velocity * deltaTime)));
     }
 }
 

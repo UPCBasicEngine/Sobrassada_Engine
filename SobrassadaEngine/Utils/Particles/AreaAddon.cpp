@@ -25,9 +25,9 @@ AreaAddon::AreaAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::
 AreaAddon::AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : ParticleAddon(initialState, owner)
 {
     if (initialState.HasMember("currentShape")) currentShape = ParticleAreaShape(initialState["currentShape"].GetInt());
+    if (initialState.HasMember("currentSpawn")) currentSpawn = ParticleAreaSpawn(initialState["currentSpawn"].GetInt());
 
     if (initialState.HasMember("baseRadius")) baseRadius = initialState["baseRadius"].GetFloat();
-    if (initialState.HasMember("topRadius")) topRadius = initialState["topRadius"].GetFloat();
     if (initialState.HasMember("coneAngle")) coneAngle = initialState["coneAngle"].GetFloat();
     if (initialState.HasMember("coneLength")) coneLength = initialState["coneLength"].GetFloat();
 
@@ -52,9 +52,9 @@ void AreaAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     ParticleAddon::Save(targetState, allocator);
 
     targetState.AddMember("currentShape", (int)currentShape, allocator);
+    targetState.AddMember("currentSpawn", (int)currentSpawn, allocator);
 
     targetState.AddMember("baseRadius", baseRadius, allocator);
-    targetState.AddMember("topRadius", topRadius, allocator);
     targetState.AddMember("coneAngle", coneAngle, allocator);
     targetState.AddMember("coneLength", coneLength, allocator);
 
@@ -194,11 +194,14 @@ void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
         sphere = Sphere(float3::zero, baseRadius);
         break;
     case ParticleAreaShape::CONE:
-        circle    = Circle(float3::zero, float3::unitY, baseRadius);
+        circle = Circle(float3::zero, float3::unitY, baseRadius);
+        RecalculateConeTopRadius();
         break;
     default:
         break;
     }
+
+    currentSpawn = ParticleAreaSpawn::SURFACE;
 }
 
 void AreaAddon::RenderCubeEditor()
@@ -206,6 +209,15 @@ void AreaAddon::RenderCubeEditor()
     if (ImGui::DragFloat3("Cube Size", &cubeSize[0], 0.01f, 0.f, 50.f, "%.2f"))
     {
         cube.r = cubeSize;
+    }
+
+    if (ImGui::BeginCombo("Spawn location", AreaAddonSpawnStrings[(int)currentSpawn]))
+    {
+        for (int i = 0; i < AreaAddonSpawnStringsSize; ++i)
+        {
+            if (ImGui::Selectable(AreaAddonSpawnStrings[i])) currentSpawn = ParticleAreaSpawn(i);
+        }
+        ImGui::EndCombo();
     }
 }
 
@@ -223,6 +235,15 @@ void AreaAddon::RenderSphereEditor()
     {
         sphere.r = baseRadius;
     }
+
+    if (ImGui::BeginCombo("Spawn location", AreaAddonSpawnStrings[(int)currentSpawn]))
+    {
+        for (int i = 0; i < AreaAddonSpawnStringsSize; ++i)
+        {
+            if (ImGui::Selectable(AreaAddonSpawnStrings[i])) currentSpawn = ParticleAreaSpawn(i);
+        }
+        ImGui::EndCombo();
+    }
 }
 
 void AreaAddon::RenderConeEditor()
@@ -230,8 +251,23 @@ void AreaAddon::RenderConeEditor()
     if (ImGui::DragFloat("Base Radius", &baseRadius, 0.01f, 0.f, 50.f, "%.2f"))
     {
         circle.r = baseRadius;
+        RecalculateConeTopRadius();
     }
 
-    ImGui::DragFloat("Top Radius", &topRadius, 0.01f, 0.f, 50.f, "%.2f");
-    ImGui::DragFloat("Cone length", &coneLength, 0.01f, 0.f, 50.f, "%.2f");
+    if (ImGui::DragFloat("Cone angle", &coneAngle, 0.05f, 0.f, 90.f, "%.2f")) RecalculateConeTopRadius();
+    if (ImGui::DragFloat("Cone length", &coneLength, 0.01f, 0.f, 50.f, "%.2f")) RecalculateConeTopRadius();
+
+    if (ImGui::BeginCombo("Spawn location", AreaAddonSpawnStrings[(int)currentSpawn]))
+    {
+        for (int i = 0; i < AreaAddonSpawnStringsSize; ++i)
+        {
+            if (ImGui::Selectable(AreaAddonSpawnStrings[i])) currentSpawn = ParticleAreaSpawn(i);
+        }
+        ImGui::EndCombo();
+    }
+}
+
+void AreaAddon::RecalculateConeTopRadius()
+{
+    topRadius = baseRadius + (tan(coneAngle * DEGREE_RAD_CONV) * coneLength);
 }
