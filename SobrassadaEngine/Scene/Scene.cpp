@@ -424,6 +424,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     App->GetBillboardModule()->RenderBillboards();
     glDisable(GL_BLEND);
     glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
+    SsaoPassRender(camera, gbuffer, ssao);
+    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)
@@ -1460,7 +1464,7 @@ void Scene::TransparentPassRender(
     glEnable(GL_CULL_FACE);
 }
 
-void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao)
+void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao)
     const
 {
 
@@ -1487,9 +1491,21 @@ void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, Came
     glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_LOW, &ssao->GetKernels()[0].x);
 
     glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
+    
+    float4x4 view;
+    float4x4 projection;
 
-    float4x4 projection = camera->GetProjectionMatrix();
-    float4x4 view       = camera->GetViewMatrix();
+    if (!camera)
+    {
+        view = App->GetCameraModule()->GetViewMatrix();
+        projection = App->GetCameraModule()->GetProjectionMatrix();
+    }
+    else 
+    {
+        view = camera->GetViewMatrix();
+        projection = camera->GetProjectionMatrix();
+    }
+
 
     glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, projection.ptr());
     glUniformMatrix4fv(glGetUniformLocation(program, "camera_view"), 1, GL_FALSE, view.ptr());
@@ -1498,6 +1514,10 @@ void Scene::SsaoPassRender(const std::vector<GameObject*>& objectsToRender, Came
     glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
 
     //???
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    ssao->Unbind();
 }
 
 GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)

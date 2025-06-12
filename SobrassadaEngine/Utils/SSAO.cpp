@@ -40,7 +40,7 @@ void SSAO::Init()
 
     for (int i = 0; i < SSAO_KERNEL_SIZE_LOW; ++i)
     {
-        float3 kernel = float3::RandomDir(lcg);
+        float3 kernel = float3::RandomDir(*rng);
 
         if (kernel.z < 0.0f) // flip points in lower hemishpere
             kernel.z *= -1.0f;
@@ -53,6 +53,7 @@ void SSAO::Init()
     }
 
     std::vector<float3> noise;
+    noise.reserve(16);
 
     for (int i = 0; i < 16; i++)
     {

@@ -1,13 +1,13 @@
 #version 460
 
-layout(binding = 0) uniform sampler2D gPosition;
-layout(binding = 1) uniform sampler2D gNormal;
+layout(binding = 0) uniform sampler2D gPositions;
+layout(binding = 1) uniform sampler2D gNormals;
 layout(binding = 2) uniform sampler2D noiseTexture;
 
 uniform mat4 projection;
 uniform mat4 camera_view;
 uniform vec2 screenSize;
-in vec2 uv;
+in vec2 uv0;
 
 const int KERNEL_SIZE = 16;
 uniform vec3 kernel_samples[KERNEL_SIZE];
@@ -26,7 +26,7 @@ mat3 createTangentSpace(const vec3 normal, const vec3 up)
 
 vec3 getRandomTangent() {
     vec2 noiseScale = screenSize / 4.0;
-    return texture(noiseTexture, uv * noiseScale).xyz;
+    return texture(noiseTexture, uv0 * noiseScale).xyz;
 }
 
 float getSceneDepthAtSamplePos(in vec3 samplePos)
@@ -38,8 +38,8 @@ float getSceneDepthAtSamplePos(in vec3 samplePos)
 
 void main()
  {
-    vec3 position     = (camera_view*vec4(texture(gPositions, uv).xyz, 1.0)).xyz;
-    vec3 normal       = mat3(camera_view)*normalize(texture(gNormals, uv).xyz);
+    vec3 position     = (camera_view*vec4(texture(gPositions, uv0).xyz, 1.0)).xyz;
+    vec3 normal       = mat3(camera_view)*normalize(texture(gNormals, uv0).xyz);
     mat3 tangentSpace = createTangentSpace(normal, getRandomTangent());
     int occlusion     = 0;
     for(int i=0; i< KERNEL_SIZE; ++i) 
