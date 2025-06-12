@@ -57,6 +57,7 @@ class ParticleEmitter
     const std::string& GetName() const { return emitterTag.GetString(); }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
     int GetRenderPriority() const { return renderPriority; }
+    template <typename T> T GetAddon() const { return std::get<T>(addonTuple); }
 
     void SetAddonCreated(int position) { createdAddons[position] = true; };
     void SetAddonDeleted(int position) { createdAddons[position] = false; };

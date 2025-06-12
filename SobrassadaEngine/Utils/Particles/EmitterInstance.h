@@ -27,6 +27,7 @@ class EmitterInstance
     void RenderDebug(GameObject* parent);
 
     ParticleSystemComponent* GetOwner() { return owner; }
+    ParticleEmitter* GetEmitter() { return emitter; }
 
     unsigned int aliveParticles = 0;
     std::vector<Particle> particles;

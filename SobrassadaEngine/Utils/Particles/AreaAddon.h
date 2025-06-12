@@ -7,13 +7,9 @@
 #include "Geometry/OBB.h"
 #include "Geometry/Sphere.h"
 #include "Math/float3.h"
+#include "Algorithm/Random/LCG.h"
 
-// namespace math
-//{
-//     class Circle;
-//     class OBB;
-//     class Sphere;
-// } // namespace math
+struct Particle;
 
 class AreaAddon : public ParticleAddon
 {
@@ -28,6 +24,9 @@ class AreaAddon : public ParticleAddon
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
     void RenderDebug(GameObject* parent) override;
+
+    void UpdateShapesTransforms(const float4x4& globalTransform);
+    void AssignPositionDirection(Particle& particle);
 
   private:
     void ManageShapeSwitch(ParticleAreaShape previousShape);
@@ -59,4 +58,5 @@ class AreaAddon : public ParticleAddon
     OBB cube;
     AABB basicCube;
     Sphere sphere;
+    LCG areaRNG;
 };

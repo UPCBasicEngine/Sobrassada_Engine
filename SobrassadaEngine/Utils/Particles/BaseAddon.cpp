@@ -1,8 +1,10 @@
 #include "BaseAddon.h"
 
+#include "AreaAddon.h"
 #include "EmitterInstance.h"
 #include "GameObject.h"
 #include "Interpolation.h"
+#include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
 #include "imgui.h"
@@ -146,9 +148,9 @@ void BaseAddon::Init(EmitterInstance* emitterInstance)
         if (!useSizeCurveY) finalSizeY = randomizeSizeY ? rng->Float(sizeValuesY[0], sizeValuesY[1]) : sizeValuesY[1];
         else finalSizeY = sizeValuesY[0];
 
-        particle.size = float2(finalSizeX, finalSizeY);
-        
-        particle.rotation = randomRotation ? rng->Float(rotation[0], rotation[1]) : rotation[1];
+        particle.size      = float2(finalSizeX, finalSizeY);
+
+        particle.rotation  = randomRotation ? rng->Float(rotation[0], rotation[1]) : rotation[1];
         particle.rotation *= DEGREE_RAD_CONV;
     }
 
@@ -160,6 +162,9 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     if (emitterInstance->isEmitting)
     {
+        AreaAddon* areaAddon   = owner->GetAddon<AreaAddon*>();
+        if (areaAddon) areaAddon->UpdateShapesTransforms(emitterInstance->GetOwner()->GetGlobalTransform());
+
         float3 emitterPosition = emitterInstance->GetOwner()->GetGlobalTransform().TranslatePart();
 
         for (auto& particle : emitterInstance->particles)
@@ -190,7 +195,15 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
                 particle.alive           = true;
                 particle.lifeTime        = randomLifetime ? rng->Float(minLifetime, maxLifetime) : maxLifetime;
                 particle.currentLifetime = 0;
-                particle.position        = float3(emitterPosition.x, emitterPosition.y, emitterPosition.z);
+               
+
+                if (areaAddon) areaAddon->AssignPositionDirection(particle);
+                else
+                {
+                    particle.position = float3(emitterPosition.x, emitterPosition.y, emitterPosition.z);
+                    particle.direction = float3::one;
+                }
+                
 
                 float finalSizeX         = 1;
                 float finalSizeY         = 1;
@@ -203,7 +216,7 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
                     finalSizeY = randomizeSizeY ? rng->Float(sizeValuesY[0], sizeValuesY[1]) : sizeValuesY[1];
                 else finalSizeY = sizeValuesY[0];
 
-                particle.size = float2(finalSizeX, finalSizeY);
+                particle.size      = float2(finalSizeX, finalSizeY);
 
                 particle.rotation  = randomRotation ? rng->Float(rotation[0], rotation[1]) : rotation[1];
                 particle.rotation *= DEGREE_RAD_CONV;
@@ -244,9 +257,9 @@ void BaseAddon::RenderEditorInspector()
     ImGui::SameLine();
     ImGui::Checkbox("Rand##Lifetime", &randomLifetime);
 
-   if (randomRotation)
+    if (randomRotation)
     {
-       ImGui::InputFloat("##MinRotation", &rotation[0]);
+        ImGui::InputFloat("##MinRotation", &rotation[0]);
         ImGui::SameLine();
     }
     ImGui::InputFloat("##MaxRotation", &rotation[1]);

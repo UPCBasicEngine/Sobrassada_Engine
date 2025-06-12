@@ -5,6 +5,7 @@
 #include "EmitterInstance.h"
 #include "GameObject.h"
 #include "ParticleEmitter.h"
+#include "ParticleSystemComponent.h"
 
 #include "Geometry/AABB.h"
 #include "Geometry/LineSegment.h"
@@ -20,6 +21,8 @@ AreaAddon::AreaAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::
 
     currentShape       = ParticleAreaShape::CUBE;
     ManageShapeSwitch(ParticleAreaShape::NONE);
+
+    areaRNG = LCG();
 }
 
 AreaAddon::AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : ParticleAddon(initialState, owner)
@@ -39,6 +42,8 @@ AreaAddon::AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
 
     basicCube.minPoint = -float3::one;
     basicCube.maxPoint = float3::one;
+
+    areaRNG            = LCG();
 
     ManageShapeSwitch(ParticleAreaShape::NONE);
 }
@@ -65,6 +70,13 @@ void AreaAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
 
 void AreaAddon::Init(EmitterInstance* emitterInstance)
 {
+    const float4x4& globalTransform = emitterInstance->GetOwner()->GetParent()->GetGlobalTransform();
+    UpdateShapesTransforms(globalTransform);
+
+    for (auto& particle : emitterInstance->particles)
+    {
+        AssignPositionDirection(particle);
+    }
 }
 
 void AreaAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
@@ -171,6 +183,52 @@ void AreaAddon::RenderDebug(GameObject* parent)
     }
 }
 
+void AreaAddon::AssignPositionDirection(Particle& particle)
+{
+    float3 newPosition  = float3::zero;
+    float3 newDirection = float3::one;
+
+    switch (currentSpawn)
+    {
+    case ParticleAreaSpawn::NONE:
+        break;
+    case ParticleAreaSpawn::SURFACE:
+    {
+        if (currentShape == ParticleAreaShape::CUBE)
+        {
+            newPosition = cube.RandomPointOnSurface(areaRNG);
+        }
+
+        else if (currentShape == ParticleAreaShape::SPHERE)
+        {
+            newPosition = sphere.RandomPointOnSurface(areaRNG);
+            newDirection = newPosition - sphere.pos;
+        }
+        else if (currentShape == ParticleAreaShape::CIRCLE)
+        {
+            newPosition = circle.RandomPointInside(areaRNG);
+            newDirection = newPosition - circle.pos;
+        }
+        else if (currentShape == ParticleAreaShape::CONE)
+        {
+            newPosition = circle.RandomPointInside(areaRNG);
+            newDirection = (newPosition + circle.normal) - circle.pos;
+        }
+
+        break;
+    }
+    case ParticleAreaSpawn::VOLUME:
+    {
+        break;
+    }
+    default:
+        break;
+    }
+
+    particle.position  = newPosition;
+    particle.direction = newDirection;
+}
+
 void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
 {
     if (previousShape == currentShape) return;
@@ -270,4 +328,16 @@ void AreaAddon::RenderConeEditor()
 void AreaAddon::RecalculateConeTopRadius()
 {
     topRadius = baseRadius + (tan(coneAngle * DEGREE_RAD_CONV) * coneLength);
+}
+
+void AreaAddon::UpdateShapesTransforms(const float4x4& globalTransform)
+{
+    cube       = globalTransform * OBB(basicCube);
+    cube.r     = cubeSize;
+
+    circle     = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
+    circle.r   = baseRadius;
+
+    sphere.pos = globalTransform.TranslatePart();
+    sphere.r   = baseRadius;
 }
