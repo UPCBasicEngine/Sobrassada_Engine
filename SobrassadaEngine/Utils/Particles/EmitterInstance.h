@@ -22,6 +22,7 @@ class EmitterInstance
     const HashString& GetTag() const;
 
     void Spawn();
+    void Stop();
     void Update(float deltaTime);
     void RenderEditor();
     void RenderDebug(GameObject* parent);

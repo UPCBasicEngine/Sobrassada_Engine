@@ -117,6 +117,12 @@ void ParticleSystemComponent::RenderEditorInspector()
             emitter.Spawn();
     }
 
+    if(ImGui::Button("Stop playing"))
+    {
+        for (auto& emitter : emitterInstances)
+            emitter.Stop();
+    }
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();

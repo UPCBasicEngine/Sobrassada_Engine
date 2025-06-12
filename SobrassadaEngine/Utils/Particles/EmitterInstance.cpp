@@ -23,6 +23,13 @@ void EmitterInstance::Spawn()
     emitter->Spawn(this);
 }
 
+void EmitterInstance::Stop()
+{
+    isEmitting          = false;
+    currentEmissionTime = 0.f;
+    particleVectorPos   = 0;
+}
+
 void EmitterInstance::Update(float deltaTime)
 {
     // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
