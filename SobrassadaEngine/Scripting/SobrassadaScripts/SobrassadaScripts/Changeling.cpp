@@ -8,6 +8,7 @@
 #include "GameTimer.h"
 #include "Globals.h"
 #include "Math/Quat.h"
+#include "PhysicsModule.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
@@ -76,20 +77,24 @@ void Changeling::Update(float deltaTime)
             forward.y          = 0.0f;
             forward.Normalize();
 
-            float length            = (position - startPos).Length();
+            float length  = (position - startPos).Length();
 
-            scale                   = float3(1, 1, length);
-            float angle             = atan2(direction.x, direction.z); // Ajusta si tu eje principal es otro
-            Quat rotation           = Quat::FromEulerXYZ(0.0f, angle, 0.0f);
+            scale         = float3(1, 1, length);
+            float angle   = atan2(direction.x, direction.z);
+            Quat rotation = Quat::FromEulerXYZ(0.0f, angle, 0.0f);
 
-            trs                     = float4x4::FromTRS(midPoint, rotation, scale);
+            trs           = float4x4::FromTRS(midPoint, rotation, scale);
 
             pathObj->SetLocalTransform(trs);
             pathObj->SetLocalPosition(midPoint);
 
-            // AppEngine->GetSceneModule()->GetScene()->LoadPrefab(trailPrefabUID, nullptr, trs, true, {});
 
-            lastTrailPos            = currentPos;
+            if (angle < 0.0f) pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle + 1.5708f;
+            else pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle - 1.5708f;
+            pathObj->GetComponent<CapsuleColliderComponent*>()->length           = length;
+            AppEngine->GetPhysicsModule()->UpdateCapsuleRigidBody(pathObj->GetComponent<CapsuleColliderComponent*>());
+
+            lastTrailPos = currentPos;
         }
 
         if (agentAI->GetSpeed() <= 1.0f)
