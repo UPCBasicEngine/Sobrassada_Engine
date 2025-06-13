@@ -10,6 +10,7 @@
 #include "Geometry/AABB.h"
 #include "Geometry/LineSegment.h"
 #include "Math/float4x4.h"
+#include "Math/Quat.h"
 #include "imgui.h"
 
 #include <vector>
@@ -212,7 +213,16 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
         else if (currentShape == ParticleAreaShape::CONE)
         {
             newPosition = circle.RandomPointInside(areaRNG);
-            newDirection = (newPosition + circle.normal) - circle.pos;
+
+            float rx          = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            float rz          = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+
+            float3 tempDir    = (float3x3::FromEulerXYZ(rx, 0.f, rz) * float3::unitY).Normalized();
+
+            newDirection      = lastGlobalTransform.MulDir(tempDir).Normalized();
+
+            float3 tempVelocity = float3x3::FromEulerXYZ(rx, 0.f, rz) * particle.velocity;
+            particle.velocity   = lastGlobalTransform.MulDir(tempVelocity);
         }
 
         break;
@@ -340,4 +350,6 @@ void AreaAddon::UpdateShapesTransforms(const float4x4& globalTransform)
 
     sphere.pos = globalTransform.TranslatePart();
     sphere.r   = baseRadius;
+
+    lastGlobalTransform = globalTransform;
 }

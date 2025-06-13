@@ -2,12 +2,13 @@
 
 #include "ParticleAddon.h"
 
+#include "Algorithm/Random/LCG.h"
 #include "Geometry/AABB.h"
 #include "Geometry/Circle.h"
 #include "Geometry/OBB.h"
 #include "Geometry/Sphere.h"
 #include "Math/float3.h"
-#include "Algorithm/Random/LCG.h"
+#include "Math/float4x4.h"
 
 struct Particle;
 
@@ -53,6 +54,7 @@ class AreaAddon : public ParticleAddon
     float coneLength               = 1.f;
 
     float3 cubeSize                = float3::one;
+    float4x4 lastGlobalTransform   = float4x4::identity;
 
     Circle circle;
     OBB cube;
