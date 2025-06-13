@@ -121,9 +121,8 @@ void Soldier::ChaseAI()
 {
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
-        else if (GetDistanceFromPlayer() > maxDetectionRange + 0.5f) currentState = SoldierStates::SEARCH;
-        else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = SoldierStates::PATROL;
+        agentAI->SetPathNavigation(character->GetLastPosition());
+        ChangeState();
     }
     else currentState = SoldierStates::PATROL;
 }
@@ -185,7 +184,15 @@ void Soldier::Attack(float deltaTime)
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
-            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
+            ChangeState();
         }
     }
+}
+
+void Soldier::ChangeState()
+{
+    const float distance = GetDistanceFromPlayer();
+    if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
+    else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
+    else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
 }

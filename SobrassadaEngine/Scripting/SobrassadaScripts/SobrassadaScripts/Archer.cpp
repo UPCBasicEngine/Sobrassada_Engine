@@ -134,8 +134,8 @@ void Archer::ChaseAI()
 
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::BASIC_ATTACK;
-        else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ArcherStates::PATROL;
+        agentAI->SetPathNavigation(character->GetLastPosition());
+        ChangeState();
     }
     else currentState = ArcherStates::PATROL;
 }
@@ -199,7 +199,15 @@ void Archer::Attack(float deltaTime)
             agentAI->ResetSpeed();
             agentAI->SetLookForward(true);
 
-            if (CheckDistanceWithPlayer() != PlayerDistances::Medium) currentState = ArcherStates::CHASE;
+            ChangeState();
         }
     }
+}
+
+void Archer::ChangeState()
+{
+    const float distance = GetDistanceFromPlayer();
+    if (distance <= rangeAIAttack) currentState = ArcherStates::BASIC_ATTACK;
+    else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;
+    else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
 }

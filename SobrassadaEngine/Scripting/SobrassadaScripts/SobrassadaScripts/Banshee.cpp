@@ -192,7 +192,8 @@ void Banshee::Attack(float deltaTime)
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
             agentAI->SetLookForward(true);
-            ChangeState();
+            if (GetDistanceFromPlayer() > maxDetectionRange) currentState = BansheeStates::Search;
+            else ChangeState();
         }
     }
 }

@@ -30,6 +30,7 @@ class Soldier : public Character
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
 
+    void ChangeState();
     void PatrolAI();
     void ChaseAI();
     void SearchForPlayer();
