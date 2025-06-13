@@ -17,6 +17,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/UI/ImageComponent.h"
 
 #include "SDL.h"
 #include "Wwise_IDs.h"
@@ -33,6 +34,12 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
+    fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName, 0.0f, 5.0f});
+    fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
+    fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
+    fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
+    fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
+    );
 }
 
 bool CuChulainn::Init()
@@ -41,7 +48,26 @@ bool CuChulainn::Init()
 
     Character::Init();
 
-    character = parent->GetComponent<CharacterControllerComponent*>();
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    if (healthUIObject)
+    {
+        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
+    }
+    healthBarTextures = {
+        1211032143220573, // 1HP
+        1229536411852494, // 2HP
+        1222839804934023, // 3HP
+        1244849110337061, // 4HP
+        1274246616335466, // 5HP
+        1207603259151767, // 6HP
+        1232318091978476, // 7HP
+        1247873624040725, // 8HP
+        1211992175790243, // 9HP
+        1245070082308559  // 10HP
+
+    };
+
+    character                  = parent->GetComponent<CharacterControllerComponent*>();
     if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
 
@@ -68,6 +94,10 @@ bool CuChulainn::Init()
         spear = spearObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
+
+    ultimateObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateName);
+    if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChualin")
+    else ultimateObject->SetEnabled(false);
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -102,7 +132,6 @@ bool CuChulainn::IsDead()
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
-
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -111,12 +140,14 @@ void CuChulainn::OnDeath()
 
 void CuChulainn::OnDamageTaken(int amount)
 {
+    UpdateHealthBarUI();
     // TODO: play CuChulainn take damage sound
     // TODO: fill riastrad bar dinamically
 }
 
 void CuChulainn::OnHealed(int amount)
 {
+    UpdateHealthBarUI();
     // TODO: play CuChulainn recover sound
     // TODO: play particle system effects
 }
@@ -132,10 +163,11 @@ void CuChulainn::HandleState(float deltaTime)
     }
 
     if (desiredDash && CanDash()) Dash();
+    else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL)
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE)
         Move();
 
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
@@ -188,7 +220,7 @@ void CuChulainn::GetInputs()
     direction = camFront * direction.z + camRight * direction.x;
     character->SetDirection(direction);
 
-    if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
     {
         desiredHeal = true;
         healCdTimer = healCooldown;
@@ -196,14 +228,14 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         desiredDash     = true;
-        dashBufferTimer = dashBuffer;
+        dashBufferTimer = inputBuffer;
     }
     if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
     {
         desiredAttack     = true;
-        attackBufferTimer = attackBuffer;
+        attackBufferTimer = inputBuffer;
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || input->GetLeftTrigger().first == KEY_REPEAT)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
     {
         desiredAim = true;
     }
@@ -211,9 +243,14 @@ void CuChulainn::GetInputs()
     {
         if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
     }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || input->GetRightTrigger().first == KEY_DOWN)
+    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
     {
         if (state == CharacterStates::AIM) ThrowSpear();
+    }
+    if (keyboard[SDL_SCANCODE_F] || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
+    {
+        desiredUltimate     = true;
+        ultimateBufferTimer = inputBuffer;
     }
     if (keyboard[SDL_SCANCODE_F5])
     {
@@ -227,30 +264,37 @@ void CuChulainn::GetInputs()
     }
 }
 
-bool CuChulainn::CanDash()
+bool CuChulainn::CanDash() const
 {
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
-                   state != CharacterStates::RESPAWN;
+                   state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE;
 
     if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer >= 0.0f;
 
     return canDash;
 }
 
-bool CuChulainn::CanAttack()
+bool CuChulainn::CanAttack() const
 {
-    return (
-        state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-        state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f
-    );
+    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+           state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
+           state != CharacterStates::ULTIMATE;
+}
+
+bool CuChulainn::CanUltimate() const
+{
+    bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+                       state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f;
+
+    if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer >= 0.0f;
+
+    return canUltimate;
 }
 
 bool CuChulainn::CanAim() const
 {
-    return (
-        state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
-        state != CharacterStates::FALL && state != CharacterStates::RESPAWN
-    );
+    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
+           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE;
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
@@ -260,18 +304,18 @@ void CuChulainn::UpdateTimers(float deltaTime)
 
     // Dash timers
     dashTimer -= deltaTime;
-    if (dashTimer < 0) dashTimer = 0;
+    if (dashTimer < 0.0f) dashTimer = 0.0f;
     if (desiredDash)
     {
         dashBufferTimer -= deltaTime;
-        if (dashBufferTimer < 0) desiredDash = false;
+        if (dashBufferTimer < 0.0f) desiredDash = false;
     }
 
     // Melee attack timers
     if (desiredAttack)
     {
         attackBufferTimer -= deltaTime;
-        if (attackBufferTimer < 0) desiredAttack = false;
+        if (attackBufferTimer < 0.0f) desiredAttack = false;
     }
 
     // Ranged attack timers
@@ -297,6 +341,19 @@ void CuChulainn::UpdateTimers(float deltaTime)
             attackCdTimer = attackCooldown;
         }
     }
+
+    ultimateCdTimer -= deltaTime;
+    if (ultimateCdTimer <= 0.0f) ultimateCdTimer = 0.0f;
+    if (desiredUltimate)
+    {
+        ultimateBufferTimer -= deltaTime;
+        if (ultimateBufferTimer < 0.0f) desiredUltimate = false;
+    }
+
+    if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
+    
+    // When stop dashing this gets automatically disabled in the timers check
+    if (state == CharacterStates::DASH) isInvulnerable = true;
 }
 
 void CuChulainn::LookAtMouse()
@@ -310,14 +367,14 @@ void CuChulainn::LookAtMouse()
     character->LookAt(direction);
 }
 
-void CuChulainn::LookAtRightstick()
+void CuChulainn::LookAtRightStick()
 {
     const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
     const float3 direction = camFront * stick.y + camRight * stick.x;
     if (direction.LengthSq() > 0.001f) character->LookAt(direction);
 }
 
-void CuChulainn::LookAtLeftstick()
+void CuChulainn::LookAtLeftStick()
 {
     const float2& stick    = AppEngine->GetInputModule()->GetLeftStick();
     const float3 direction = camFront * stick.y + camRight * stick.x;
@@ -382,25 +439,36 @@ void CuChulainn::Dash()
 
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
-    LookAtLeftstick();
+    LookAtLeftStick();
     character->StartDash();
     if (animComponent) animComponent->UseTrigger("Dash");
 }
 
 void CuChulainn::PerformAttack()
 {
-    if (!isAttacking) return;
-
-    // if (attackTimer >= attackDuration) isAttacking = false;
-
-    if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-        attackTimer < attackHitboxDelay + attackHitboxDuration)
+    if (isAttacking && state == CharacterStates::BASIC_ATTACK)
     {
-        weaponCollider->SetEnabled(true);
+        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+            attackTimer < attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(true);
+        }
+        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(false);
+        }
     }
-    else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+    else if (state == CharacterStates::ULTIMATE)
     {
-        weaponCollider->SetEnabled(false);
+        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay &&
+            ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration)
+        {
+            ultimateObject->SetEnabled(true);
+        }
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration)
+        {
+            ultimateObject->SetEnabled(false);
+        }
     }
 }
 
@@ -426,6 +494,19 @@ void CuChulainn::Attack(float deltaTime)
     }
 }
 
+void CuChulainn::UltimateAttack()
+{
+    // GLOG("ULTIMATEEEE");
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    state = CharacterStates::ULTIMATE;
+    character->EnableMovement(false);
+    ultimateTimer   = 0.0f;
+    ultimateCdTimer = ultimateCd;
+    desiredUltimate = false;
+
+    if (animComponent) animComponent->UseTrigger("Ultimate");
+}
+
 void CuChulainn::Aim(float deltaTime)
 {
     if (!spear) return;
@@ -443,7 +524,7 @@ void CuChulainn::Aim(float deltaTime)
     if (aimTimer >= 0.1f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
-    else LookAtRightstick();
+    else LookAtLeftStick();
 }
 
 void CuChulainn::Move()
@@ -472,11 +553,17 @@ void CuChulainn::Respawn()
     // TODO: This function will be called by the UI in the future
 
     Character::Restart();
-
+    healthImageComponent->ChangeTexture(healthBarTextures[9]);
     isDead        = false;
     currentHealth = reservedHealth;
     state         = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
+}
+
+void CuChulainn::UpdateHealthBarUI()
+{
+    if (!healthImageComponent || healthBarTextures.empty()) return;
+    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
 }
