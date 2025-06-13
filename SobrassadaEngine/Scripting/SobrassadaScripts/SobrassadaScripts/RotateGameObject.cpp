@@ -21,23 +21,17 @@ RotateGameObject::RotateGameObject(GameObject* parent) : Script(parent)
 bool RotateGameObject::Init()
 {
     GLOG("Initiating RotationGameObject");
+    if (target != nullptr)
+    {
+        target->SetEnabled(false);
+    }
     return true;
 }
 
 void RotateGameObject::Update(float deltaTime)
 {
-    if (target != nullptr)
-    {
-        float4x4 newTransform = target->GetLocalTransform();
-        newTransform          = newTransform * float4x4::RotateX(speed * deltaTime);
-        target->SetLocalTransform(newTransform);
-        target->UpdateTransformForGOBranch();
-    }
-    else
-    {
-        float4x4 newTransform = parent->GetLocalTransform();
-        newTransform          = newTransform * float4x4::RotateX(speed * deltaTime);
-        parent->SetLocalTransform(newTransform);
-        parent->UpdateTransformForGOBranch();
-    }
+    float4x4 newTransform = parent->GetLocalTransform();
+    newTransform          = newTransform * float4x4::RotateX(speed * deltaTime);
+    parent->SetLocalTransform(newTransform);
+    parent->UpdateTransformForGOBranch();
 }

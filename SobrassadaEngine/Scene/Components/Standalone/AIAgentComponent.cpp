@@ -213,7 +213,7 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
     dtStatus status = navQuery->findNearestPoly(destination.ptr(), extents, &filter, &targetRef, nearestPoint);
     if (dtStatusFailed(status) || targetRef == 0)
     {
-        GLOG("Failed to find valid target poly for movement.");
+        // GLOG("Failed to find valid target poly for movement.");
         return false;
     }
 
