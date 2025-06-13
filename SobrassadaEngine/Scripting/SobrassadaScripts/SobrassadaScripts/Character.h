@@ -41,6 +41,7 @@ class Character : public Script
 
     void TakeDamage(int amount);
     void Restart();
+    bool IsDead() const { return isDead; };
 
   protected:
     virtual void Attack(float deltaTime);
@@ -98,4 +99,8 @@ class Character : public Script
     float maxDetectionRange = 0.0f;
     bool reachedPatrolPoint = false;
     float3 startPos         = float3::zero;
+
+    float searchTimer       = 0.0f;
+    float searchDuration    = 5.0f;
+    bool isSearching        = false;
 };

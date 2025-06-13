@@ -15,7 +15,8 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Archer::Archer(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
+Archer::Archer(GameObject* parent)
+    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
@@ -81,16 +82,17 @@ void Archer::HandleState(float deltaTime)
 
     switch (currentState)
     {
+    case ArcherStates::SEARCH:
+        SearchForPlayer();
+        break;
     case ArcherStates::PATROL:
-        // GLOG("Soldier Patrolling");
+        // TODO: Patrol animation
         PatrolAI();
         break;
     case ArcherStates::CHASE:
-        // GLOG("Soldier Chasing");
         ChaseAI();
         break;
     case ArcherStates::BASIC_ATTACK:
-        // GLOG("Soldier Basic Attack");
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     default:
@@ -136,6 +138,32 @@ void Archer::ChaseAI()
         else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ArcherStates::PATROL;
     }
     else currentState = ArcherStates::PATROL;
+}
+
+void Archer::SearchForPlayer()
+{
+    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
+    if (!isSearching)
+    {
+        // TODO: Would be nice to be a "search" animation instead of idle
+        animComponent->UseTrigger("idle");
+        isSearching = true;
+        searchTimer = searchDuration;
+        agentAI->SetSpeed(0.0f, 0.0f);
+    }
+
+    if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+    {
+        isSearching = false;
+        agentAI->ResetSpeed();
+        currentState = ArcherStates::CHASE;
+    }
+    else if (searchTimer <= 0.0f)
+    {
+        isSearching  = false;
+        currentState = ArcherStates::PATROL;
+        agentAI->ResetSpeed();
+    }
 }
 
 void Archer::Attack(float deltaTime)

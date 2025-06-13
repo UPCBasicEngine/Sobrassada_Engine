@@ -17,7 +17,6 @@ Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
-    fields.push_back({"Player search duration", InspectorField::FieldType::Vec3, &searchDuration, 0.0f, 10.0f});
 }
 
 bool Soldier::Init()
@@ -123,10 +122,7 @@ void Soldier::ChaseAI()
     if (character != nullptr)
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
-        else if (GetDistanceFromPlayer() > maxDetectionRange + 0.5f)
-        {
-            currentState = SoldierStates::SEARCH;
-        }
+        else if (GetDistanceFromPlayer() > maxDetectionRange + 0.5f) currentState = SoldierStates::SEARCH;
         else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = SoldierStates::PATROL;
     }
     else currentState = SoldierStates::PATROL;
@@ -192,12 +188,4 @@ void Soldier::Attack(float deltaTime)
             if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
         }
     }
-}
-
-void Soldier::UpdateTimers(float deltaTime)
-{
-    Character::UpdateTimers(deltaTime);
-
-    searchTimer -= deltaTime;
-    if (searchTimer < 0.0f) searchTimer = 0.0f;
 }

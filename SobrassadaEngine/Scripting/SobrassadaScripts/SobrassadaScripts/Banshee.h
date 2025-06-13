@@ -9,6 +9,7 @@ class SphereColliderComponent;
 enum class BansheeStates
 {
     Idle,
+    Search,
     Chase,
     Flee,
     Scream
@@ -33,6 +34,7 @@ class Banshee : public Character
     void Flee();
     void Attack(float deltaTime) override;
     void ChangeState();
+    void SearchForPlayer();
 
   private:
     AIAgentComponent* agentAI           = nullptr;

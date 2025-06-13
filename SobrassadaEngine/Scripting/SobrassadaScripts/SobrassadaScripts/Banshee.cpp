@@ -14,13 +14,13 @@
 Banshee::Banshee(GameObject* parent)
     : Character(
           parent,
-          2,    // Max Health
-          2,    // Damage
-          2.0f, // Attack Duration
-          4.0f, // Attack Cooldown
-          5.0f, // Attack Range
-          5.0f, // AI Aggro Range
-          5.0f, // AI Chase Range
+          2,     // Max Health
+          2,     // Damage
+          2.0f,  // Attack Duration
+          4.0f,  // Attack Cooldown
+          5.0f,  // Attack Range
+          5.0f,  // AI Aggro Range
+          5.0f,  // AI Chase Range
           10.0f, // Max detection range
           CharacterType::Banshee
       )
@@ -96,6 +96,10 @@ void Banshee::HandleState(float deltaTime)
         ChangeState();
         break;
 
+    case BansheeStates::Search:
+        SearchForPlayer();
+        break;
+
     case BansheeStates::Chase:
         ChasePlayer();
         break;
@@ -116,7 +120,8 @@ void Banshee::ChasePlayer()
 
     if (animComponent) animComponent->UseTrigger("Chase");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Scream;
-    else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
+    else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
+        currentState = BansheeStates::Search;
 }
 
 void Banshee::Flee()
@@ -194,9 +199,37 @@ void Banshee::Attack(float deltaTime)
 
 void Banshee::ChangeState()
 {
-    const float distance = character->GetLastPosition().Distance(parent->GetPosition());
+    const float distance = GetDistanceFromPlayer();
     if (distance <= fleeDistance) currentState = BansheeStates::Flee;
     else if (distance <= rangeAIAttack) currentState = BansheeStates::Scream;
     else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
     else currentState = BansheeStates::Idle;
+}
+
+void Banshee::SearchForPlayer()
+{
+    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
+    if (!isSearching)
+    {
+        // TODO: Would be nice to be a "search" animation instead of idle
+        animComponent->UseTrigger("Idle");
+        isSearching = true;
+        searchTimer = searchDuration;
+        agentAI->SetSpeed(0.0f, 0.0f);
+    }
+
+    if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+    {
+        isSearching = false;
+        agentAI->ResetSpeed();
+        currentState = BansheeStates::Chase;
+    }
+    else if (searchTimer <= 0.0f)
+    {
+        // TODO: When merge with new banshee behaviour, teleport to start pos
+        isSearching  = false;
+        currentState = BansheeStates::Idle;
+        agentAI->ResetSpeed();
+        agentAI->SetPathNavigation(startPos);
+    }
 }

@@ -9,7 +9,6 @@ enum class SoldierStates
 {
     NONE,
     SEARCH,
-
     PATROL,
     CHASE,
     BASIC_ATTACK
@@ -30,7 +29,6 @@ class Soldier : public Character
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
-    void UpdateTimers(float deltaTime) override;
 
     void PatrolAI();
     void ChaseAI();
@@ -41,8 +39,4 @@ class Soldier : public Character
     SoldierStates currentState = SoldierStates::NONE;
 
     float3 patrolPoint         = float3::zero;
-
-    float searchTimer          = 0.0f;
-    float searchDuration       = 5.0f;
-    bool isSearching           = false;
 };
