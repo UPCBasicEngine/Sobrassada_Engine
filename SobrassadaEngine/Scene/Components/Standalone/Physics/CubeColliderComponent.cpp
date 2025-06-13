@@ -70,7 +70,7 @@ CubeColliderComponent::~CubeColliderComponent()
 
 void CubeColliderComponent::Init()
 {
-    if (rigidBody) App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    if (rigidBody) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 }
 
 void CubeColliderComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const

@@ -1,14 +1,12 @@
 #pragma once
 #include "Component.h"
 
-#include <vector>
 #include "Math/float3.h"
-
+#include <vector>
 
 class SOBRASADA_API_ENGINE SplineComponent : public Component
 {
-public:
-
+  public:
     SplineComponent(UID uid, GameObject* parent);
     SplineComponent(const rapidjson::Value& initialState, GameObject* parent);
     ~SplineComponent() override;
@@ -24,10 +22,9 @@ public:
     void AddPoint(const float3& p);
     void InsertPoint(const size_t i, const float3& p);
     void RemovePoint(const size_t i);
+    void ClearPoints();
     float GetT(const float3& p0, const float3& p1, float tPrev) const;
-    float3 CatmullRom(
-        const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT
-    ) const;
+    float3 CatmullRom(const float3& p0, const float3& p1, const float3& p2, const float3& p3, float segmentT) const;
     size_t Wrap(int i) const;
     float3 EvaluateSegment(const size_t seg, float segmentT) const;
     float3 Evaluate(float t) const;
@@ -40,18 +37,20 @@ public:
     bool IsLoop() const { return loop; }
 
     void SetPointWorld(size_t idx, const float3& worldPos);
+    void SetInWorld(bool isInWorld) { inWorld = isInWorld; }
 
   private:
     std::vector<float3> points;
-    float3 pendingPoint = float3::zero;
+    float3 pendingPoint  = float3::zero;
 
-    float alpha = 0.5f;
-    bool loop     = false;
+    float alpha          = 0.5f;
+    bool loop            = false;
 
-    int selectedIdx = -1;
-    const int stepsDebug      = 16;
+    int selectedIdx      = -1;
+    const int stepsDebug = 32;
 
     // Debug travel marker
-    bool showMarker           = false;
-    float markerT             = 0.0f;
+    bool showMarker      = false;
+    float markerT        = 0.0f;
+    bool inWorld         = true;
 };

@@ -46,7 +46,7 @@ void ResourceAnimation::SetDuration()
     duration = maxTime;
 }
 
-Channel* ResourceAnimation::GetChannel(const std::string& nodeName)
+Channel* ResourceAnimation::GetChannel(const HashString& nodeName)
 {
     auto it = channels.find(nodeName);
     if (it != channels.end())
