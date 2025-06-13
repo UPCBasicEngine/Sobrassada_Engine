@@ -31,7 +31,7 @@ class Character : public Script
   public:
     Character(
         GameObject* parent, int maxHealth, int damage, float attackDuration, float cooldown, float range,
-        float rangeAIAttack, float rangeAIChase, CharacterType type
+        float rangeAIAttack, float rangeAIChase, float maxDetectionRange, CharacterType type
     );
     virtual ~Character() noexcept override { parent = nullptr; };
 
@@ -46,6 +46,7 @@ class Character : public Script
     virtual void Attack(float deltaTime);
     virtual void UpdateTimers(float deltaTime);
     void Heal(int amount);
+    float GetDistanceFromPlayer() const;
     PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
     void RenderDebug();
@@ -94,6 +95,7 @@ class Character : public Script
     // AI
     float rangeAIChase      = 0.0f;
     float rangeAIAttack     = 0.0f;
+    float maxDetectionRange = 0.0f;
     bool reachedPatrolPoint = false;
     float3 startPos         = float3::zero;
 };

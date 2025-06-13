@@ -25,7 +25,7 @@
 CharacterControllerComponent* character = nullptr;
 
 CuChulainn::CuChulainn(GameObject* parent)
-    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
+    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
 {
     currentHealth = 3; // mainChar starts low hp
 
@@ -67,7 +67,7 @@ bool CuChulainn::Init()
 
     };
 
-    character                  = parent->GetComponent<CharacterControllerComponent*>();
+    character = parent->GetComponent<CharacterControllerComponent*>();
     if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
 
@@ -351,7 +351,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
     }
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
-    
+
     // When stop dashing this gets automatically disabled in the timers check
     if (state == CharacterStates::DASH) isInvulnerable = true;
 }

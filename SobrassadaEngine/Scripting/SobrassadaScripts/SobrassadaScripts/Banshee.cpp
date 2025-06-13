@@ -14,13 +14,14 @@
 Banshee::Banshee(GameObject* parent)
     : Character(
           parent,
-          2, // Max Health
-          2, // Damage
-          2, // Attack Duration
-          4, // Attack Cooldown
-          5, // Attack Range
-          5, // AI Aggro Range
-          5, // AI Chase Range
+          2,    // Max Health
+          2,    // Damage
+          2.0f, // Attack Duration
+          4.0f, // Attack Cooldown
+          5.0f, // Attack Range
+          5.0f, // AI Aggro Range
+          5.0f, // AI Chase Range
+          10.0f, // Max detection range
           CharacterType::Banshee
       )
 {

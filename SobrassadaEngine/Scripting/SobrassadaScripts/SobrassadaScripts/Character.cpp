@@ -23,11 +23,11 @@
 
 Character::Character(
     GameObject* parent, int newMaxHealth, int newDamage, float newAttackDuration, float newAttackCooldown,
-    float newRange, float newRangeAIAttack, float newRangeAIChase, CharacterType newType
+    float newRange, float newRangeAIAttack, float newRangeAIChase, float newDetectionRange, CharacterType newType
 )
     : Script(parent), maxHealth(newMaxHealth), attackDamage(newDamage), attackDuration(newAttackDuration),
       attackCooldown(newAttackCooldown), range(newRange), rangeAIAttack(newRangeAIAttack),
-      rangeAIChase(newRangeAIChase), type(newType)
+      rangeAIChase(newRangeAIChase), maxDetectionRange(newDetectionRange), type(newType)
 {
     currentHealth = maxHealth;
 
@@ -48,6 +48,7 @@ Character::Character(
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
+        fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
     }
 }
 
@@ -232,6 +233,11 @@ void Character::Heal(int amount)
     if (currentHealth > maxHealth) currentHealth = maxHealth;
 
     OnHealed(amount);
+}
+
+float Character::GetDistanceFromPlayer() const
+{
+    return character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
 }
 
 PlayerDistances Character::CheckDistanceWithPlayer() const
