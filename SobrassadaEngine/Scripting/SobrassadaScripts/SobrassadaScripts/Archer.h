@@ -11,6 +11,7 @@ enum class ArcherStates
     NONE,
     PATROL,
     CHASE,
+    ESCAPE,
     BASIC_ATTACK
 };
 
@@ -29,6 +30,7 @@ class Archer : public Character
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
+    void Escape(float deltaTime);
 
     void PatrolAI();
     void ChaseAI();
