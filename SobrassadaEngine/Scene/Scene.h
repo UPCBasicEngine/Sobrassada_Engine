@@ -11,7 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-struct DecalModels;
 class GameObject;
 class Component;
 class RootComponent;
@@ -21,8 +20,8 @@ class Quadtree;
 class CameraComponent;
 class FrustumPlanes;
 class CharacterControllerComponent;
-class GBuffer;
 class Framebuffer;
+class RenderPass;
 enum class SaveMode;
 enum MobilitySettings;
 
@@ -134,24 +133,6 @@ class SOBRASADA_API_ENGINE Scene
     void CreateDynamicSpatialDataStruct();
     void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
 
-    void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
-        const;
-    void ShadowMapPassRender(
-        CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
-    );
-    void
-    DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
-    void TransparentPassRender(
-        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
-    ) const;
-
-    void
-    NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
-    void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
-    void RenderShadowMapDebug(Framebuffer* framebuffer) const;
-
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;
     UID sceneUID                = INVALID_UID;
@@ -190,8 +171,5 @@ class SOBRASADA_API_ENGINE Scene
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
 
-    unsigned int decalVAO, decalVBO, decalEBO;
-    unsigned int depthTexture, depthFBO;
-    float4x4 lightview;
-    float4x4 lightProj;
+    RenderPass* renderPass = nullptr;
 };

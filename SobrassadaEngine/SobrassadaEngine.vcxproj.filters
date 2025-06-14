@@ -564,6 +564,9 @@
     <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
+    <ClCompile Include="RenderPass.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1102,6 +1105,9 @@
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h">
       <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass.h">
+      <Filter>Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

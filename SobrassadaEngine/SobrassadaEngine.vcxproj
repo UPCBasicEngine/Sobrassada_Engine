@@ -440,6 +440,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
@@ -688,6 +689,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="RenderPass.h" />
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h" />
     <ClInclude Include="Libs\ImGui\imgui_color_gradient.h" />
     <ClInclude Include="Libs\ImGui\imgui_curves.h" />
