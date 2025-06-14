@@ -53,6 +53,8 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(billboardProgram);
     glDeleteProgram(decalProgram);
     glDeleteProgram(trailProgram);
+    glDeleteProgram(spritesheetProgram);
+    glDeleteProgram(particleSystemProgram);
 
     return true;
 }
