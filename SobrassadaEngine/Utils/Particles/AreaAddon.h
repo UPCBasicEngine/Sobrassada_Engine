@@ -2,7 +2,6 @@
 
 #include "ParticleAddon.h"
 
-#include "Algorithm/Random/LCG.h"
 #include "Geometry/AABB.h"
 #include "Geometry/Circle.h"
 #include "Geometry/OBB.h"
@@ -60,5 +59,4 @@ class AreaAddon : public ParticleAddon
     OBB cube;
     AABB basicCube;
     Sphere sphere;
-    LCG areaRNG;
 };

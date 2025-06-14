@@ -22,8 +22,6 @@ AreaAddon::AreaAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::
 
     currentShape       = ParticleAreaShape::CUBE;
     ManageShapeSwitch(ParticleAreaShape::NONE);
-
-    areaRNG = LCG();
 }
 
 AreaAddon::AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : ParticleAddon(initialState, owner)
@@ -43,8 +41,6 @@ AreaAddon::AreaAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
 
     basicCube.minPoint = -float3::one;
     basicCube.maxPoint = float3::one;
-
-    areaRNG            = LCG();
 
     ManageShapeSwitch(ParticleAreaShape::NONE);
 }
@@ -197,32 +193,29 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
     {
         if (currentShape == ParticleAreaShape::CUBE)
         {
-            newPosition = cube.RandomPointOnSurface(areaRNG);
+            newPosition = cube.RandomPointOnSurface(*rng);
         }
 
         else if (currentShape == ParticleAreaShape::SPHERE)
         {
-            newPosition = sphere.RandomPointOnSurface(areaRNG);
+            newPosition  = sphere.RandomPointOnSurface(*rng);
             newDirection = newPosition - sphere.pos;
         }
         else if (currentShape == ParticleAreaShape::CIRCLE)
         {
-            newPosition = circle.RandomPointInside(areaRNG);
+            newPosition  = circle.RandomPointInside(*rng);
             newDirection = newPosition - circle.pos;
         }
         else if (currentShape == ParticleAreaShape::CONE)
         {
-            newPosition = circle.RandomPointInside(areaRNG);
+            newPosition         = circle.RandomPointInside(*rng);
 
-            float rx            = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
-            float rz            = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            float rx            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            float rz            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
 
             float3 tempDir    = (Quat::FromEulerXYZ(rx, 0.f, rz) * float3::unitY).Normalized();
 
             newDirection      = lastGlobalTransform.MulDir(tempDir).Normalized();
-
-            float3 tempVelocity = Quat::FromEulerXYZ(rx, 0.f, rz) * particle.velocity;
-            particle.velocity   = lastGlobalTransform.MulDir(tempVelocity);
         }
 
         break;
@@ -231,13 +224,13 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
     {
         if (currentShape == ParticleAreaShape::CUBE)
         {
-            newPosition = cube.RandomPointInside(areaRNG);
+            newPosition  = cube.RandomPointInside(*rng);
             newDirection = newPosition - cube.pos;
         }
 
         else if (currentShape == ParticleAreaShape::SPHERE)
         {
-            newPosition  = sphere.RandomPointInside(areaRNG);
+            newPosition  = sphere.RandomPointInside(*rng);
             newDirection = newPosition - sphere.pos;
         }
         break;
