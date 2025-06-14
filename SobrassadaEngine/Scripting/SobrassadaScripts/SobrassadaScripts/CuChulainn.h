@@ -127,3 +127,4 @@ class CuChulainn : public Character
 };
 
 extern CharacterControllerComponent* character;
+extern CuChulainn* playerScript;

@@ -200,6 +200,12 @@ void Banshee::Attack(float deltaTime)
 
 void Banshee::ChangeState()
 {
+    if (playerScript->IsDead())
+    {
+        currentState = BansheeStates::Idle;
+        return;
+    }
+
     const float distance = GetDistanceFromPlayer();
     if (distance <= fleeDistance) currentState = BansheeStates::Flee;
     else if (distance <= rangeAIAttack) currentState = BansheeStates::Scream;

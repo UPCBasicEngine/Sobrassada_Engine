@@ -112,8 +112,11 @@ void Archer::PatrolAI()
 {
     animComponent->UseTrigger("run");
 
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
+    if (!playerScript->IsDead())
+    {
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::CHASE;
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
+    }
 
     bool valid = false;
     if (reachedPatrolPoint)
@@ -206,6 +209,12 @@ void Archer::Attack(float deltaTime)
 
 void Archer::ChangeState()
 {
+    if (playerScript->IsDead())
+    {
+        currentState = ArcherStates::PATROL;
+        return;
+    }
+
     const float distance = GetDistanceFromPlayer();
     if (distance <= rangeAIAttack) currentState = ArcherStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;

@@ -101,8 +101,11 @@ void Soldier::HandleState(float deltaTime)
 
 void Soldier::PatrolAI()
 {
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
+    if (!playerScript->IsDead())
+    {
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
+    }
 
     bool valid = false;
     if (reachedPatrolPoint)
@@ -191,6 +194,12 @@ void Soldier::Attack(float deltaTime)
 
 void Soldier::ChangeState()
 {
+    if (playerScript->IsDead())
+    {
+        currentState = SoldierStates::PATROL;
+        return;
+    }
+
     const float distance = GetDistanceFromPlayer();
     if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
