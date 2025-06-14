@@ -122,6 +122,12 @@ update_status SceneModule::PostUpdate(float deltaTime)
             }
         }
 
+        // CTRL+S -> SaveScene
+        if (keyboard[SDL_SCANCODE_LCTRL] && keyboard[SDL_SCANCODE_S] == KeyState::KEY_DOWN)
+        {
+
+        }
+
         // CTRL+D -> Duplicate selected game object
         if (keyboard[SDL_SCANCODE_LCTRL] && keyboard[SDL_SCANCODE_D] == KeyState::KEY_DOWN &&
             loadedScene->GetGameObjectRootUID() != loadedScene->GetSelectedGameObjectUID())
