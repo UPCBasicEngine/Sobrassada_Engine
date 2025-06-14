@@ -229,6 +229,17 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
     }
     case ParticleAreaSpawn::VOLUME:
     {
+        if (currentShape == ParticleAreaShape::CUBE)
+        {
+            newPosition = cube.RandomPointInside(areaRNG);
+            newDirection = newPosition - cube.pos;
+        }
+
+        else if (currentShape == ParticleAreaShape::SPHERE)
+        {
+            newPosition  = sphere.RandomPointInside(areaRNG);
+            newDirection = newPosition - sphere.pos;
+        }
         break;
     }
     default:
@@ -324,15 +335,6 @@ void AreaAddon::RenderConeEditor()
 
     if (ImGui::DragFloat("Cone angle", &coneAngle, 0.05f, 0.f, 90.f, "%.2f")) RecalculateConeTopRadius();
     if (ImGui::DragFloat("Cone length", &coneLength, 0.01f, 0.f, 50.f, "%.2f")) RecalculateConeTopRadius();
-
-    if (ImGui::BeginCombo("Spawn location", AreaAddonSpawnStrings[(int)currentSpawn]))
-    {
-        for (int i = 0; i < AreaAddonSpawnStringsSize; ++i)
-        {
-            if (ImGui::Selectable(AreaAddonSpawnStrings[i])) currentSpawn = ParticleAreaSpawn(i);
-        }
-        ImGui::EndCombo();
-    }
 }
 
 void AreaAddon::RecalculateConeTopRadius()
