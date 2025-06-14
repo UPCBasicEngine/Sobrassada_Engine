@@ -15,6 +15,10 @@ SSAO::SSAO(int width, int height)
 
 SSAO::~SSAO()
 {
+    glDeleteFramebuffers(1, &ssaoFrameBufferObject);
+
+    glDeleteTextures(1, &ssaoTexture);
+    glDeleteTextures(1, &noiseTexture);
 }
 
 void SSAO::Init()
