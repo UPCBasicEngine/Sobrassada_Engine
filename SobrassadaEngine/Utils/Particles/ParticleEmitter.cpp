@@ -186,7 +186,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
 
         glUseProgram(App->GetShaderModule()->GetParticleSystemProgram());
 
-        if (additiveBlending) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        if (additiveBlending) glBlendFunc(GL_ONE, GL_ONE);
         else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glUniform3fv(0, 1, &cameraRight[0]);

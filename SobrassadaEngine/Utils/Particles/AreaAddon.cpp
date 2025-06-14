@@ -214,14 +214,14 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
         {
             newPosition = circle.RandomPointInside(areaRNG);
 
-            float rx          = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
-            float rz          = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            float rx            = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            float rz            = areaRNG.Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
 
-            float3 tempDir    = (float3x3::FromEulerXYZ(rx, 0.f, rz) * float3::unitY).Normalized();
+            float3 tempDir    = (Quat::FromEulerXYZ(rx, 0.f, rz) * float3::unitY).Normalized();
 
             newDirection      = lastGlobalTransform.MulDir(tempDir).Normalized();
 
-            float3 tempVelocity = float3x3::FromEulerXYZ(rx, 0.f, rz) * particle.velocity;
+            float3 tempVelocity = Quat::FromEulerXYZ(rx, 0.f, rz) * particle.velocity;
             particle.velocity   = lastGlobalTransform.MulDir(tempVelocity);
         }
 
