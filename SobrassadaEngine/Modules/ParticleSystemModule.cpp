@@ -80,6 +80,7 @@ void ParticleSystemModule::RenderParticles()
         upVector    = editorCamera.up;
     }
 
+    glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
 
@@ -89,6 +90,7 @@ void ParticleSystemModule::RenderParticles()
         emitter.second->RenderParticles(VP, rightVector, upVector);
     }
 
+    glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
 

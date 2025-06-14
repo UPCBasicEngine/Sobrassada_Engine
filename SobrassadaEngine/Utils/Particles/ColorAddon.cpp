@@ -74,7 +74,7 @@ void ColorAddon::Init(EmitterInstance* emitterInstance)
 
 void ColorAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
-    for (int i = 0; i < emitterInstance->particleVectorPos; ++i)
+    for (int i = 0; i <= emitterInstance->particleVectorPos; ++i)
     {
         Particle& particle  = emitterInstance->particles[i];
 

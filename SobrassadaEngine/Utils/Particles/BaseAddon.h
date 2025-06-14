@@ -42,4 +42,6 @@ class BaseAddon : public ParticleAddon
 
     int particlesPerSecond    = 15;
     float spawnDeltaTime      = 0.f;
+
+    bool burst                = false;
 };

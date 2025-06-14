@@ -9,6 +9,7 @@
 
 #include "imgui.h"
 #include "imgui_curves.h"
+#include <cmath>
 
 BaseAddon::BaseAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::BASE, owner)
 {
@@ -73,6 +74,7 @@ BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
     }
 
     if (initialState.HasMember("randomRotation")) randomRotation = initialState["randomRotation"].GetBool();
+    if (initialState.HasMember("burst")) burst = initialState["burst"].GetBool();
 }
 
 BaseAddon::~BaseAddon()
@@ -127,6 +129,7 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     targetState.AddMember("rotation", rotationSave, allocator);
 
     targetState.AddMember("randomRotation", randomRotation, allocator);
+    targetState.AddMember("burst", burst, allocator);
 }
 
 void BaseAddon::Init(EmitterInstance* emitterInstance)
@@ -157,9 +160,12 @@ void BaseAddon::Init(EmitterInstance* emitterInstance)
     }
 
     emitterInstance->currentEmissionTime = 0.f;
+
     emitterInstance->particleVectorPos   = 0;
-    spawnDeltaTime                       = (1.f / particlesPerSecond) + 0.01f;
-    emitterInstance->isEmitting          = true;
+    if (burst) emitterInstance->particleVectorPos = maxParticles - 1;
+
+    spawnDeltaTime = (1.f / particlesPerSecond) + 0.01f;
+    emitterInstance->isEmitting = true;
 }
 
 void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
@@ -182,7 +188,7 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
         if (emitterInstance->particleVectorPos >= maxParticles) emitterInstance->particleVectorPos = maxParticles - 1;
 
-        for (int i = 0; i < emitterInstance->particleVectorPos; ++i)
+        for (int i = 0; i <= emitterInstance->particleVectorPos; ++i)
         {
             Particle& particle = emitterInstance->particles[i];
 
@@ -259,8 +265,15 @@ void BaseAddon::RenderEditorInspector()
 
     ImGui::Checkbox("Loop", &loop);
     ImGui::InputFloat("Duration", &duration, 0.05f, 1.f);
-    ImGui::InputInt("Emitting rate", &particlesPerSecond, 5, 10);
-    ImGui::InputInt("Max Particles", &maxParticles, 5, 10);
+    if (ImGui::InputInt("Emitting rate", &particlesPerSecond, 5, 10))
+    {
+        particlesPerSecond = particlesPerSecond < 1 ? 1: particlesPerSecond;
+    }
+    if (ImGui::InputInt("Max Particles", &maxParticles, 5, 10))
+    {
+        maxParticles = maxParticles < 1 ? 1 : maxParticles;
+    }
+    ImGui::Checkbox("Burst", &burst);
 
     if (randomLifetime)
     {

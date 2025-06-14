@@ -152,7 +152,7 @@ void ParticleSystemComponent::RenderEditorInspector()
         }
         ImGui::EndCombo();
     }
-
+    ImGui::SameLine();
     if (ImGui::Button("Delete current emmitter"))
     {
         if (currentEmitter && particleSystem) particleSystem->RemoveEmitter(currentEmitter->GetTag());

@@ -155,7 +155,7 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     if (!IsEnabled()) return;
 
-    for (int i = 0; i < emitterInstance->particleVectorPos; ++i)
+    for (int i = 0; i <= emitterInstance->particleVectorPos; ++i)
     {
         Particle& particle      = emitterInstance->particles[i];
 
