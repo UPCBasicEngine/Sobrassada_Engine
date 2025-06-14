@@ -123,9 +123,12 @@ update_status SceneModule::PostUpdate(float deltaTime)
         }
 
         // CTRL+S -> SaveScene
-        if (keyboard[SDL_SCANCODE_LCTRL] && keyboard[SDL_SCANCODE_S] == KeyState::KEY_DOWN)
+        if (keyboard[SDL_SCANCODE_LCTRL] && keyboard[SDL_SCANCODE_S] == KeyState::KEY_DOWN && !inPlayMode)
         {
 
+            App->GetLibraryModule()->SaveScene(
+                (App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH).c_str(), SaveMode::Save
+            );
         }
 
         // CTRL+D -> Duplicate selected game object
