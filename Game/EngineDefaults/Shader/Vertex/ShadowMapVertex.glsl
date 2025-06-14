@@ -24,17 +24,14 @@ readonly layout(std430, row_major, binding = 13) buffer AccBones {
     uint bonesIndex[];
 };
 
-flat out int instance_index;
-
 void main()
 {
-    instance_index = gl_BaseInstance;
-    mat4 model = models[instance_index];
+    mat4 model = models[gl_BaseInstance];
     vec4 pos;
 
     if (hasBones) 
     {
-        uint boneIndex = bonesIndex[instance_index];
+        uint boneIndex = bonesIndex[gl_BaseInstance];
         mat4 skin    = palettes[boneIndex + vertex_joint[0]] * vertex_weights[0] + palettes[boneIndex + vertex_joint[1]] * vertex_weights[1] +             
                        palettes[boneIndex + vertex_joint[2]] * vertex_weights[2] + palettes[boneIndex + vertex_joint[3]] * vertex_weights[3];
         pos          = (skin * vec4(vertex_position, 1.0));

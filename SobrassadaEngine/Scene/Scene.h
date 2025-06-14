@@ -136,7 +136,9 @@ class SOBRASADA_API_ENGINE Scene
 
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
-    void ShadowMapPassRender(CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender);
+    void ShadowMapPassRender(
+        CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
+    );
     void
     DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
@@ -190,6 +192,6 @@ class SOBRASADA_API_ENGINE Scene
 
     unsigned int decalVAO, decalVBO, decalEBO;
     unsigned int depthTexture, depthFBO;
-    float3x4 lightview;
+    float4x4 lightview;
     float4x4 lightProj;
 };

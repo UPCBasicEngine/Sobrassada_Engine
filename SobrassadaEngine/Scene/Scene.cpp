@@ -1092,7 +1092,9 @@ void Scene::NavMeshPassRender(
     glEnable(GL_BLEND);
 }
 
-void Scene::ShadowMapPassRender(CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender)
+void Scene::ShadowMapPassRender(
+    CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
+)
 {
     if (light == nullptr) return;
 
@@ -1100,10 +1102,8 @@ void Scene::ShadowMapPassRender(CameraComponent* camera, DirectionalLightCompone
     camera == nullptr ? App->GetCameraModule()->GetFrustumCorners(corners) : camera->GetFrustumCorners(corners);
 
     float3 sphereCenter = float3::zero;
-    for (int i = 0; i < 8; ++i)
-        sphereCenter += corners[i];
-    sphereCenter       /= 8.0f;
 
+    camera == nullptr ? sphereCenter = App->GetCameraModule()->GetCamera().CenterPoint() : sphereCenter = camera->GetCameraCenter();
     float sphereRadius  = 0.0f;
     for (int i = 0; i < 8; ++i)
     {
@@ -1113,23 +1113,21 @@ void Scene::ShadowMapPassRender(CameraComponent* camera, DirectionalLightCompone
 
     float3 lightDir = light->GetDirection();
     lightDir.Normalize();
-    float3 lightRight = lightDir.Cross(float3(0.0, 1.0, 0.0));
-    lightRight.Normalize();
-    float3 lightUp = lightRight.Cross(lightDir);
+    float3 lightUp = -lightDir.Cross(float3(1.0, 0.0, 0.0));
     lightUp.Normalize();
+    float3 lightRight = lightUp.Cross(lightDir);
+    lightRight.Normalize();
 
     Frustum shadowfrustum;
+
     shadowfrustum.type               = FrustumType::OrthographicFrustum;
     shadowfrustum.pos                = sphereCenter - lightDir * sphereRadius;
     shadowfrustum.front              = lightDir;
     shadowfrustum.up                 = lightUp;
-    shadowfrustum.nearPlaneDistance  = 0.1f;
-    shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
     shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
     shadowfrustum.orthographicHeight = sphereRadius * 2.0f;
-
-    FrustumPlanes frustumPlanes;
-    frustumPlanes.UpdateFrustumPlanes(shadowfrustum.ViewMatrix(), shadowfrustum.ProjectionMatrix());
+    shadowfrustum.nearPlaneDistance  = 0.1f;
+    shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
 
     CameraMatrices lightmatrices;
     lightmatrices.viewMatrix       = shadowfrustum.ViewMatrix();
@@ -1137,7 +1135,10 @@ void Scene::ShadowMapPassRender(CameraComponent* camera, DirectionalLightCompone
     lightview                      = shadowfrustum.ViewMatrix();
     lightProj                      = shadowfrustum.ProjectionMatrix();
 
-    unsigned int ubo               = 0;
+    DebugDrawModule* debug         = App->GetDebugDrawModule();
+    debug->DrawFrustrum(shadowfrustum.ProjectionMatrix(), shadowfrustum.ViewMatrix());
+
+    unsigned int ubo = 0;
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
