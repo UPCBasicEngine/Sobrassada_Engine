@@ -440,11 +440,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp" />
+    <ClCompile Include="Scene\RenderPass.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
@@ -689,11 +689,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="RenderPass.h" />
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h" />
     <ClInclude Include="Libs\ImGui\imgui_color_gradient.h" />
     <ClInclude Include="Libs\ImGui\imgui_curves.h" />
     <ClInclude Include="Scene\Components\Standalone\TrailComponent.h" />
+    <ClInclude Include="Scene\RenderPass.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
     <ClInclude Include="Modules\BillboardModule.h" />
     <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h" />
