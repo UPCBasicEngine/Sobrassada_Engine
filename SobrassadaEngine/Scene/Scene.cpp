@@ -1485,8 +1485,12 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
     glUniform1i(glGetUniformLocation(program, "gNormal"), 1);
 
     glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+    glUniform1i(glGetUniformLocation(program, "gDepth"), 2);
+
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
-    glUniform1i(glGetUniformLocation(program, "noiseTexture"), 2);
+    glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
     
     glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_LOW, &ssao->GetKernels()[0].x);
 
@@ -1513,7 +1517,6 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
     glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
     glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
 
-    //???
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
