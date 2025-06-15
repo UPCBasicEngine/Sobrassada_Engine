@@ -50,8 +50,8 @@ void SSAO::Init()
             kernel.z *= -1.0f;
 
         float scale  = float(i) / float(SSAO_KERNEL_SIZE_LOW);
-        scale        = 0.1f + (scale * scale) * (1.0f - 0.1f); // Near-origin bias
-        kernel       *= lcg.Float(0.0f, 1.0f) * scale;
+        scale        = 0.1f + 0.9f * (scale * scale); // Near-origin bias
+        kernel      *= scale;
 
         kernels.push_back(kernel);
     }
@@ -74,7 +74,6 @@ void SSAO::Init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D, 0);
-
 }
 
 void SSAO::Bind()

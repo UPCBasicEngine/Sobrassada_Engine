@@ -31,7 +31,7 @@ mat3 createTangentSpace(const vec3 normal, const vec3 up)
 
 vec3 getRandomTangent() {
    vec2 noiseScale = screenSize / 4.0;
-   return texture(noiseTexture, uv0 * noiseScale).xyz;
+   return normalize(texture(noiseTexture, uv0 * noiseScale).xyz);
 }
 
 float getSceneDepthAtSamplePos(in vec3 samplePos)
@@ -56,7 +56,7 @@ void main()
     {
         vec3 samplePos = position+tangentSpace*kernel_samples[i];
         float sampleDepth = getSceneDepthAtSamplePos(samplePos);
-        if ((sampleDepth + bias > samplePos.z) && abs(sampleDepth - position.z) < range)
+        if ((sampleDepth + bias < -samplePos.z) && abs(sampleDepth - position.z) < range)
 	{
 	 ++occlusion;
 	}
