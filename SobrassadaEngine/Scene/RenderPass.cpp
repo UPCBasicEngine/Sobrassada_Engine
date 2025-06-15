@@ -217,7 +217,6 @@ void CreateDepthReductionTexture(GLuint& tex, int width, int height)
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
 
-    // Formato RG32F para guardar min (R) y max (G)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -231,28 +230,29 @@ void RenderPass::ShadowMapPassRender(
     GBuffer* gbuffer
 )
 {
-    int width = gbuffer->GetScreenWidth();
+    if (light == nullptr) return;
+
+    // Compute shader to find min/max values
+    int width  = gbuffer->GetScreenWidth();
     int height = gbuffer->GetScreenHeight();
-    GLuint reductionTexA, reductionTexB;
-    CreateDepthReductionTexture(reductionTexA, width, height);
-    CreateDepthReductionTexture(reductionTexB, width, height);
+    GLuint reductionTex;
+    CreateDepthReductionTexture(reductionTex, width, height);
 
-    GLuint currentInput  = gbuffer->GetDepthTexture();
-    GLuint currentOutput = reductionTexA;
+    GLuint currentInput                 = gbuffer->GetDepthTexture();
+    GLuint currentOutput                = reductionTex;
 
-    int currentWidth     = width;
-    int currentHeight    = height;
+    int currentWidth                    = width;
+    int currentHeight                   = height;
 
     unsigned int depthReductionShaderID = App->GetShaderModule()->GetComputeShadowDepthProgram();
+    glUseProgram(depthReductionShaderID);
 
     while (currentWidth > 1 || currentHeight > 1)
     {
         int groupsX = (currentWidth + 7) / 8;
         int groupsY = (currentHeight + 3) / 4;
 
-        glUseProgram(depthReductionShaderID);
-
-        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F); // O RG32F
+        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
         glBindTextureUnit(0, currentInput);
 
         glUniform2i(glGetUniformLocation(depthReductionShaderID, "inSize"), currentWidth, currentHeight);
@@ -260,31 +260,30 @@ void RenderPass::ShadowMapPassRender(
         glDispatchCompute(groupsX, groupsY, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
-        std::swap(currentInput, currentOutput);
+        GLuint newTex;
+        CreateDepthReductionTexture(newTex, groupsX, groupsY);
+        glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+
+        glDeleteTextures(1, &currentOutput);
+        currentOutput = newTex;
+
         currentWidth  = groupsX;
         currentHeight = groupsY;
     }
 
     glFinish();
-
-    if (currentWidth != 1 || currentHeight != 1) {
-        GLOG("AAAAAAAAAAAAAA");
-    }
-
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
-    float minMax[2];
-    glBindTexture(GL_TEXTURE_2D, currentInput);
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        GLOG("AAAAAAAAAAAAAA");
-    }
-    //glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, minMax);
+    float minMax[2] = {0, 0};
 
-    //float minDepth = minMax[0];
-    //float maxDepth = minMax[1];
+    glBindTexture(GL_TEXTURE_2D, currentOutput);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, minMax);
 
-    if (light == nullptr) return;
+    float minDepth = minMax[0];
+    float maxDepth = minMax[1];
 
+    glDeleteTextures(1, &currentOutput);
+
+    // Compute light
     float3 corners[8];
     camera == nullptr ? App->GetCameraModule()->GetFrustumCorners(corners) : camera->GetFrustumCorners(corners);
 
