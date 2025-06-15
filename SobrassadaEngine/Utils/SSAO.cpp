@@ -86,3 +86,19 @@ void SSAO::Unbind()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+void SSAO::Resize(int width, int height)
+{
+    screenWidth  = width;
+    screenHeight = height;
+    shouldResize = true;
+}
+
+void SSAO::CheckResize()
+{
+    if (!shouldResize) return;
+
+    Init();
+
+    shouldResize = false;
+}

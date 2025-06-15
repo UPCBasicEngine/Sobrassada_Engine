@@ -13,6 +13,8 @@ class SSAO
     void Init();
     void Bind();
     void Unbind();
+    void Resize(int width, int height);
+    void CheckResize();
 
     unsigned int GetSSAOTexture() const { return ssaoTexture; }
     unsigned int GetNoiseTexture() const { return noiseTexture; }
@@ -30,4 +32,5 @@ class SSAO
 
     int screenHeight = 0;
     int screenWidth  = 0;
+    bool shouldResize = false;
 };

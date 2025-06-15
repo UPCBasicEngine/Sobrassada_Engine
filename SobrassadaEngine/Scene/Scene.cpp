@@ -372,6 +372,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         return;
     }
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
+    SsaoPassRender(camera, gbuffer, ssao);
+    glPopDebugGroup();
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -425,9 +429,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     glDisable(GL_BLEND);
     glPopDebugGroup();
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
-    SsaoPassRender(camera, gbuffer, ssao);
-    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)
@@ -623,6 +624,7 @@ void Scene::RenderSceneToFrameBuffer()
         App->GetCameraModule()->SetAspectRatio(aspectRatio);
         framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
         App->GetOpenGLModule()->GetGBuffer()->Resize((int)windowSize.x, (int)windowSize.y);
+        App->GetOpenGLModule()->GetSsao()->Resize((int)windowSize.x, (int)windowSize.y);
     }
 
     ImVec2 windowPosition     = ImGui::GetWindowPos();
@@ -1478,11 +1480,11 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glUniform1i(glGetUniformLocation(program, "gPosition"), 0);
+    glUniform1i(glGetUniformLocation(program, "gPositions"), 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "gNormal"), 1);
+    glUniform1i(glGetUniformLocation(program, "gNormals"), 1);
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
@@ -1496,23 +1498,15 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
 
     glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
     
-    float4x4 view;
-    float4x4 projection;
+    unsigned int cameraUBO;
+    if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
+    else cameraUBO = camera->GetUbo();
 
-    if (!camera)
-    {
-        view = App->GetCameraModule()->GetViewMatrix();
-        projection = App->GetCameraModule()->GetProjectionMatrix();
-    }
-    else 
-    {
-        view = camera->GetViewMatrix();
-        projection = camera->GetProjectionMatrix();
-    }
-
-
-    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, projection.ptr());
-    glUniformMatrix4fv(glGetUniformLocation(program, "camera_view"), 1, GL_FALSE, view.ptr());
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
     glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
