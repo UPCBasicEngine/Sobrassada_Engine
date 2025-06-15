@@ -12,6 +12,7 @@ class ShaderModule : public Module
     bool ShutDown() override;
 
     unsigned int CreateShaderProgram(const char* vertexPath, const char* fragmentPath);
+    unsigned int CreateComputeProgram(const char* computePath);
     void DeleteProgram(unsigned int programID);
 
     int GetSpecularGlossinessProgram() const;
@@ -27,11 +28,13 @@ class ShaderModule : public Module
     int GetTrailProgram() const { return trailProgram; }
     int GetDecalProgram() const { return decalProgram; }
     int GetShadowMapPassProgram() const { return shadowMapProgram; }
+    int GetComputeShadowDepthProgram() const { return computeShadowDepthProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
     unsigned int CompileShader(unsigned int shaderType, const char* source);
-    unsigned int CreateProgram(unsigned int vertexShader, unsigned fragmentShader);
+    unsigned int CreateProgram(unsigned int vertexShader, unsigned int fragmentShader);
+    unsigned int CreateCompProgram(unsigned int computeShader);
 
   private:
     int specularGlossinessProgram      = -1;
@@ -54,4 +57,6 @@ class ShaderModule : public Module
     int trailProgram                   = -1;
     int decalProgram                   = -1;
     int shadowMapProgram               = -1;
+
+    int computeShadowDepthProgram      = -1;
 };

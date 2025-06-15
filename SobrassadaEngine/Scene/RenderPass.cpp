@@ -1,6 +1,8 @@
 #include "RenderPass.h"
 #include "Application.h"
 #include "BatchManager.h"
+#include "CameraComponent.h"
+#include "CameraModule.h"
 #include "DebugDrawModule.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
@@ -10,8 +12,6 @@
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
 #include "ShaderModule.h"
-#include "CameraComponent.h"
-#include "CameraModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
@@ -103,7 +103,7 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
-    ShadowMapPassRender(camera, light, objectsToRender);
+    ShadowMapPassRender(camera, light, objectsToRender, gbuffer);
     glPopDebugGroup();
 
     glViewport(0, 0, width, height);
@@ -212,10 +212,77 @@ void RenderPass::NavMeshPassRender(
     glEnable(GL_BLEND);
 }
 
+void CreateDepthReductionTexture(GLuint& tex, int width, int height)
+{
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    // Formato RG32F para guardar min (R) y max (G)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void RenderPass::ShadowMapPassRender(
-    CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
+    CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender,
+    GBuffer* gbuffer
 )
 {
+    int width = gbuffer->GetScreenWidth();
+    int height = gbuffer->GetScreenHeight();
+    GLuint reductionTexA, reductionTexB;
+    CreateDepthReductionTexture(reductionTexA, width, height);
+    CreateDepthReductionTexture(reductionTexB, width, height);
+
+    GLuint currentInput  = gbuffer->GetDepthTexture();
+    GLuint currentOutput = reductionTexA;
+
+    int currentWidth     = width;
+    int currentHeight    = height;
+
+    unsigned int depthReductionShaderID = App->GetShaderModule()->GetComputeShadowDepthProgram();
+
+    while (currentWidth > 1 || currentHeight > 1)
+    {
+        int groupsX = (currentWidth + 7) / 8;
+        int groupsY = (currentHeight + 3) / 4;
+
+        glUseProgram(depthReductionShaderID);
+
+        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F); // O RG32F
+        glBindTextureUnit(0, currentInput);
+
+        glUniform2i(glGetUniformLocation(depthReductionShaderID, "inSize"), currentWidth, currentHeight);
+
+        glDispatchCompute(groupsX, groupsY, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+        std::swap(currentInput, currentOutput);
+        currentWidth  = groupsX;
+        currentHeight = groupsY;
+    }
+
+    glFinish();
+
+    if (currentWidth != 1 || currentHeight != 1) {
+        GLOG("AAAAAAAAAAAAAA");
+    }
+
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+    float minMax[2];
+    glBindTexture(GL_TEXTURE_2D, currentInput);
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        GLOG("AAAAAAAAAAAAAA");
+    }
+    //glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, minMax);
+
+    //float minDepth = minMax[0];
+    //float maxDepth = minMax[1];
+
     if (light == nullptr) return;
 
     float3 corners[8];
@@ -265,8 +332,6 @@ void RenderPass::ShadowMapPassRender(
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    // glDisable(GL_BLEND);
-
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
@@ -280,8 +345,6 @@ void RenderPass::ShadowMapPassRender(
     glViewport(0, 0, 2048, 2048);
 
     batchManager->RenderShadowMap(meshesToRender, ubo);
-
-    // glEnable(GL_BLEND);
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

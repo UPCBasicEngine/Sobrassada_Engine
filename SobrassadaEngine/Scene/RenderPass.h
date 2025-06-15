@@ -21,7 +21,7 @@ class RenderPass
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void ShadowMapPassRender(
-        CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
+        CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender, GBuffer* gbuffer
     );
     void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;

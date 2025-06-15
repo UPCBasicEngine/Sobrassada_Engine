@@ -30,11 +30,13 @@ bool ShaderModule::Init()
     quadProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
     depthProgram                = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
     billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
-    trailProgram                = CreateShaderProgram(BASIC_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
+    trailProgram                = CreateShaderProgram(TRAIL_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
     decalProgram                = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
 
-    shadowMapProgram = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
-    
+    shadowMapProgram            = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
+
+    computeShadowDepthProgram   = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
+
     return true;
 }
 
@@ -52,8 +54,9 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(depthProgram);
     glDeleteProgram(billboardProgram);
     glDeleteProgram(decalProgram);
-    glDeleteProgram(trailProgram);    
+    glDeleteProgram(trailProgram);
     glDeleteProgram(shadowMapProgram);
+    glDeleteProgram(computeShadowDepthProgram);
 
     return true;
 }
@@ -73,6 +76,21 @@ unsigned int ShaderModule::CreateShaderProgram(const char* vertexPath, const cha
 
     free(vertexShader);
     free(fragmentShader);
+
+    return program;
+}
+
+unsigned int ShaderModule::CreateComputeProgram(const char* computePath)
+{
+    unsigned int program   = 0;
+
+    char* computeShader    = LoadShaderSource(computePath);
+
+    unsigned int computeId = CompileShader(GL_COMPUTE_SHADER, computeShader);
+
+    program                = CreateCompProgram(computeId);
+
+    free(computeShader);
 
     return program;
 }
@@ -126,7 +144,7 @@ unsigned int ShaderModule::CompileShader(unsigned int shaderType, const char* so
     return shaderId;
 }
 
-unsigned int ShaderModule::CreateProgram(unsigned int vertexShader, unsigned fragmentShader)
+unsigned int ShaderModule::CreateProgram(unsigned int vertexShader, unsigned int fragmentShader)
 {
     // GLOG("Creating shader program")
     unsigned programId = glCreateProgram();
@@ -155,6 +173,36 @@ unsigned int ShaderModule::CreateProgram(unsigned int vertexShader, unsigned fra
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    return programId;
+}
+
+unsigned int ShaderModule::CreateCompProgram(unsigned int computeShader)
+{
+    unsigned programId = glCreateProgram();
+    glAttachShader(programId, computeShader);
+    glLinkProgram(programId);
+
+    int compileSuccess = GL_FALSE;
+    glGetProgramiv(programId, GL_LINK_STATUS, &compileSuccess);
+
+    if (compileSuccess == GL_FALSE)
+    {
+        GLOG("Error creating shader program")
+        int logLenght = 0;
+        glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &logLenght);
+
+        if (logLenght > 0)
+        {
+            int written = 0;
+            char* info  = (char*)malloc(logLenght);
+            glGetProgramInfoLog(programId, logLenght, &written, info);
+            GLOG("Program Log Info: %s", info);
+            free(info);
+        }
+    }
+
+    glDeleteShader(computeShader);
 
     return programId;
 }
