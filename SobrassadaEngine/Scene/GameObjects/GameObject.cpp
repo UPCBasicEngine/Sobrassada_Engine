@@ -442,6 +442,19 @@ void GameObject::UpdateEnabledStateRecursive()
     enabled = wasEnabled;
 }
 
+void GameObject::UpdateNavmeshValidStateRecursive()
+{
+    for (UID childUID : children)
+    {
+        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child)
+        {
+            child->navMeshValid = navMeshValid;
+            child->UpdateNavmeshValidStateRecursive();
+        }
+    }
+}
+
 void GameObject::RenderEditorInspector(bool drawGizmo)
 {
     if (!ImGui::Begin("Inspector", &App->GetEditorUIModule()->inspectorMenu))
@@ -479,6 +492,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
             {
                 meshComp->BatchEditorMode();
             }
+            UpdateNavmeshValidStateRecursive();
         }
 
         if (ImGui::Button("Add Component"))
