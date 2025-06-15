@@ -137,6 +137,7 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
         .PushBack(curve[4], allocator);
     targetState.AddMember("Curve", curveArray, allocator);
 
+
     targetState.AddMember(
         "Texture", currentTexture != nullptr ? currentTexture->GetUID() : FALLBACK_TEXTURE_UID, allocator
     );
@@ -156,18 +157,23 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
 
 void TrailComponent::Clone(const Component* other)
 {
-    if (other->GetType() != COMPONENT_TRAIL) return;
+    if (other->GetType() == ComponentType::COMPONENT_TRAIL)
+    {
+        const TrailComponent* otherTrail = static_cast<const TrailComponent*>(other);
+        minDistance                      = otherTrail->minDistance;
+        lifeTime                         = otherTrail->lifeTime;
+        width                            = otherTrail->width;
+        invertCurve                      = otherTrail->invertCurve;
+        for (int i = 0; i < 5; ++i)
+            curve[i] = otherTrail->curve[i];
+        gradient   = otherTrail->gradient;
+        enabled    = otherTrail->enabled;
+        wasEnabled = otherTrail->wasEnabled;
+        hasTexture = otherTrail->hasTexture;
+        UpdateTexture(otherTrail->currentTextureUID);
+    }
 
-    const TrailComponent* otherTrail = static_cast<const TrailComponent*>(other);
-    minDistance                      = otherTrail->minDistance;
-    lifeTime                         = otherTrail->lifeTime;
-    width                            = otherTrail->width;
-    invertCurve                      = otherTrail->invertCurve;
-    for (int i = 0; i < 5; ++i)
-        curve[i] = otherTrail->curve[i];
-    gradient   = otherTrail->gradient;
-    enabled    = otherTrail->enabled;
-    wasEnabled = otherTrail->wasEnabled;
+    
 }
 
 void TrailComponent::Update(float deltaTime)
@@ -313,7 +319,6 @@ void TrailComponent::RenderEditorInspector()
 
     ImGui::NewLine();
     ImGui::GradientEditor(gradient, draggingMark, selectedMark);
-    //auto& marks = gradient->getMarks();
 
     ImGui::Checkbox("Has Texture", &hasTexture);
     if (hasTexture)
