@@ -14,6 +14,7 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include <cmath>
 
 Archer::Archer(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
 {
@@ -52,6 +53,7 @@ void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
+
 }
 
 void Archer::OnDeath()
@@ -188,31 +190,90 @@ void Archer::Escape(float deltaTime)
     GLOG("Archer Escaping");
     if (!agentAI || !character) return;
 
-    float3 archerPos = parent->GetGlobalTransform().TranslatePart();
-    float3 playerPos = character->GetLastPosition();
+    float3 archerPos    = parent->GetGlobalTransform().TranslatePart();
+    float3 searchArea   = {1.0f, 2.0f, 1.0f};
+    bool posOverPoly    = false;
+    float3 closestPoint = float3::zero;
 
+    if (hasEscapeTarget)
+    {
+        if ((archerPos - currentEscapeTarget).LengthSq() < 0.5f * 0.5f)
+        {
+            hasEscapeTarget = false; 
+        }
+        else
+        {
+            agentAI->GetClosestPointInNavmesh(currentEscapeTarget, searchArea, posOverPoly, closestPoint);
+            if (posOverPoly)
+            {
+                agentAI->SetPathNavigation(currentEscapeTarget);
+                agentAI->LookAtMovement(currentEscapeTarget, deltaTime);
+                if (animComponent) animComponent->UseTrigger("run");
+                if (CheckDistanceWithPlayer() > PlayerDistances::Medium)
+                {
+                    currentState    = ArcherStates::BASIC_ATTACK;
+                    hasEscapeTarget = false;
+                }
+                return;
+            }
+            else
+            {
+                hasEscapeTarget = false; 
+            }
+        }
+    }
+
+    float3 playerPos = character->GetLastPosition();
     float3 escapeDir = archerPos - playerPos;
+    escapeDir.y      = 0.0f;
+    if (escapeDir.LengthSq() < 0.0001f) escapeDir = float3::unitZ;
     escapeDir.Normalize();
 
-    float escapeDistance = rangeAIChase;
-    float3 escapeTarget  = archerPos + escapeDir * escapeDistance;
+    float escapeDistance  = rangeAIChase;
+    const float angleStep = 15.0f * (3.14159265f / 180.0f);
+    float angleAccum      = 0.0f;
+    bool found            = false;
 
-    float3 searchArea    = {1.0f, 2.0f, 1.0f}; 
-    bool posOverPoly     = false;
-    float3 closestPoint  = float3::zero;
-    float3 navmeshTarget = escapeTarget;
+    for (int i = 0; i < 24; ++i)
+    {
+        float3 dir = escapeDir;
+        float cosA = std::cos(angleAccum);
+        float sinA = std::sin(angleAccum);
+        float x    = dir.x * cosA - dir.z * sinA;
+        float z    = dir.x * sinA + dir.z * cosA;
+        dir.x      = x;
+        dir.z      = z;
+        dir.Normalize();
 
-    agentAI->GetClosestPointInNavmesh(escapeTarget, searchArea, posOverPoly, closestPoint);
-    if (posOverPoly) navmeshTarget = closestPoint;
-    else navmeshTarget = archerPos; 
+        float3 candidateTarget = archerPos + dir * escapeDistance;
+        agentAI->GetClosestPointInNavmesh(candidateTarget, searchArea, posOverPoly, closestPoint);
 
-    agentAI->SetPathNavigation(navmeshTarget);
-    agentAI->LookAtMovement(navmeshTarget, deltaTime);
+        if (posOverPoly)
+        {
+            currentEscapeTarget = closestPoint;
+            hasEscapeTarget     = true;
+            found               = true;
+            break;
+        }
+        angleAccum += angleStep;
+    }
+
+    if (!found)
+    {
+        currentEscapeTarget = archerPos;
+        hasEscapeTarget     = false;
+    }
+
+    agentAI->SetPathNavigation(currentEscapeTarget);
+    agentAI->LookAtMovement(currentEscapeTarget, deltaTime);
+    agentAI->SetSpeed(5.0f, 5.0f);
 
     if (animComponent) animComponent->UseTrigger("run");
 
     if (CheckDistanceWithPlayer() > PlayerDistances::Medium)
     {
-        currentState = ArcherStates::BASIC_ATTACK;
+        currentState    = ArcherStates::BASIC_ATTACK;
+        hasEscapeTarget = false;
+        agentAI->ResetSpeed();
     }
 }
