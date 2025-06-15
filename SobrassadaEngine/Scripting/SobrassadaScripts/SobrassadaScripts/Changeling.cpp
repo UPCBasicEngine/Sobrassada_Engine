@@ -21,6 +21,7 @@ Changeling::Changeling(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
+    fields.push_back({"Dash Distance", InspectorField::FieldType::Float, &dashDistance, 0.0f, 10.0f});
     fields.push_back({"Dark Path Name", InspectorField::FieldType::InputText, &pathName});
 }
 
@@ -42,6 +43,13 @@ bool Changeling::Init()
     }
 
     pathObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(pathName);
+    pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.x = 1.5708f;
+
+    hasShot                                                              = false;
+    isAttacking                                                          = false;
+    attackCdTimer                                                        = attackCooldown;
+    agentAI->ResetSpeed();
+    agentAI->SetLookForward(true);
 
     return true;
 }
@@ -51,10 +59,20 @@ void Changeling::Update(float deltaTime)
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
 
-    // if (CheckDistanceWithPoint(character->GetLastPosition()))
-    //{
-    //     agentAI->PauseMovement();
-    // }
+    if (CheckDistanceWithPoint(dashEndPoint) && isDashing)
+    {
+        // agentAI->PauseMovement();
+        agentAI->SetSpeed(0.0f, 0.0f);
+        isDashing = false;
+        hasShot   = true;
+        if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = ChangelingStates::CHASE;
+
+        hasShot       = false;
+        isAttacking   = false;
+        attackCdTimer = attackCooldown;
+        // agentAI->ResetSpeed();
+        // agentAI->SetLookForward(true);
+    }
 
     if (isDashing)
     {
@@ -88,19 +106,12 @@ void Changeling::Update(float deltaTime)
             pathObj->SetLocalTransform(trs);
             pathObj->SetLocalPosition(midPoint);
 
-
             if (angle < 0.0f) pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle + 1.5708f;
             else pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle - 1.5708f;
-            pathObj->GetComponent<CapsuleColliderComponent*>()->length           = length;
+            pathObj->GetComponent<CapsuleColliderComponent*>()->length = length;
             AppEngine->GetPhysicsModule()->UpdateCapsuleRigidBody(pathObj->GetComponent<CapsuleColliderComponent*>());
 
             lastTrailPos = currentPos;
-        }
-
-        if (agentAI->GetSpeed() <= 1.0f)
-        {
-
-            isDashing = false;
         }
     }
 }
@@ -138,6 +149,7 @@ void Changeling::HandleState(float deltaTime)
         break;
     case ChangelingStates::CHASE:
         // GLOG("Soldier Chasing");
+        agentAI->ResetSpeed();
         ChaseAI();
         break;
     case ChangelingStates::BASIC_ATTACK:
@@ -179,12 +191,16 @@ void Changeling::PatrolAI()
 
 void Changeling::ChaseAI()
 {
-    // animComponent->UseTrigger("run");
-
+    // if (isDashing) return;
+    //  animComponent->UseTrigger("run");
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ChangelingStates::BASIC_ATTACK;
-        else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ChangelingStates::PATROL;
+        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::BASIC_ATTACK;
+        else
+        {
+            isDashing = false;
+            if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ChangelingStates::PATROL;
+        }
     }
     else currentState = ChangelingStates::PATROL;
 }
@@ -196,14 +212,22 @@ void Changeling::Attack(float deltaTime)
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
-        dashDirection = character->GetLastPosition(); // Position of the player
+        float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
+        direction.Normalize();
+
+        dashDirection = character->GetLastPosition() + direction * dashDistance;
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
         startPos = parent->GetPosition();
-        GLOG("endPos: x=%.3f, y=%.3f, z=%.3f", startPos.x, startPos.y, startPos.z);
+        GLOG("startPos: x=%.3f, y=%.3f, z=%.3f", startPos.x, startPos.y, startPos.z);
         localTransform = parent->GetLocalTransform();
+
+        hasShot        = false;
+        attackCdTimer  = attackCooldown;
+        agentAI->ResetSpeed();
+        agentAI->SetLookForward(true);
     }
     else
     {
@@ -211,46 +235,14 @@ void Changeling::Attack(float deltaTime)
         // Enable hitbox when animation hits
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
-            lastTrailPos      = parent->GetPosition();
-            hasShot           = true;
-            isDashing         = true;
-            dashTimeRemaining = dashDuration;
+            lastTrailPos = parent->GetPosition();
+            hasShot      = true;
+            isDashing    = true;
             agentAI->SetSpeed(dashSpeed, 1000000);
-            agentAI->SetPathNavigation(dashDirection);
+
+            dashEndPoint        = dashDirection;
+            agentAI->SetPathNavigation(dashEndPoint);
             pathObj->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true);
-        }
-
-        // Reset attack state
-        if (attackTimer >= attackDuration)
-        {
-            //    float3 startPos                = parent->GetPosition();
-            //    float3 endPos                  = dashDirection;
-            //    float3 midPoint                = (startPos + endPos) * 0.5f;
-            //    float length                   = (endPos - startPos).Length();
-            //    float3 direction               = (endPos - startPos).Normalized();
-
-            //    const float4x4& localTransform = parent->GetLocalTransform();
-            //    float3 forward                 = parent->GetGlobalTransform().WorldZ();
-            //    forward.y                      = 0.0f;
-            //    forward.Normalize();
-
-            //    float angle            = atan2(forward.Cross(direction).y, forward.Dot(direction));
-
-            //    const float4x4 rotated = localTransform * float4x4::FromEulerXYZ(0.0f, angle, 0.0f);
-
-            //    float3 originalScale   = pathObj->GetScale();
-            //    float3 scale           = float3(originalScale.x, originalScale.y, length * 0.5f);
-
-            //    // Construir la matriz de transformación
-            //    float4x4 trs           = float4x4::FromTRS(midPoint, rotated, scale);
-            //    pathObj->SetLocalTransform(trs);
-            hasShot       = false;
-            isAttacking   = false;
-            attackCdTimer = attackCooldown;
-            agentAI->ResetSpeed();
-            agentAI->SetLookForward(true);
-
-            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = ChangelingStates::CHASE;
         }
     }
 }

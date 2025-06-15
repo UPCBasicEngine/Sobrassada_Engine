@@ -35,6 +35,8 @@ class Changeling : public Character
     void ChaseAI();
 
   private:
+    float3 GetDashEndPoint() const;
+
     AIAgentComponent* agentAI     = nullptr;
     ChangelingStates currentState = ChangelingStates::NONE;
 
@@ -42,8 +44,7 @@ class Changeling : public Character
     float3 dashDirection          = float3::zero; // Vector dirección normalizado
     float3 dashTarget             = float3::zero; // Posición objetivo
     float dashSpeed               = 15.0f;
-    float dashTimeRemaining       = 0.0f;
-    float dashDuration            = 0.2f;
+    float dashDistance            = 10.0f;
 
     std::string pathName         = "";
 
@@ -59,4 +60,6 @@ class Changeling : public Character
 
     float3 startPos;
     float3 endPos;
+
+    float3 dashEndPoint = float3::zero; 
 };
