@@ -1184,6 +1184,7 @@ bool GameObject::IsGloballyEnabled() const
     if (!enabled) return false;
     GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
     if (this->uid == App->GetSceneModule()->GetScene()->GetGameObjectRootUID()) return true;
+    if (this->uid == App->GetSceneModule()->GetScene()->GetMultiselectUID()) return true;
     return parent ? parent->IsGloballyEnabled() : false;
 }
 
