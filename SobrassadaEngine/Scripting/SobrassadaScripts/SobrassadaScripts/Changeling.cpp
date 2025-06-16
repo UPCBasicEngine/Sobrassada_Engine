@@ -215,7 +215,22 @@ void Changeling::Attack(float deltaTime)
         float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
         direction.Normalize();
 
-        dashDirection = character->GetLastPosition() + direction * dashDistance;
+        float testDistance = dashDistance;
+        float3 dashTarget;
+        bool posOverPoly    = false;
+        float3 closestPoint = float3::zero;
+        float3 searchArea   = {1.0f, 2.0f, 1.0f};
+
+        // Busca el primer punto válido en la navmesh reduciendo la distancia
+        do
+        {
+            dashDirection = character->GetLastPosition() + direction * testDistance;
+            agentAI->GetClosestPointInNavmesh(dashTarget, searchArea, posOverPoly, closestPoint);
+            if (!posOverPoly) testDistance -= 1.0f;
+        } while (!posOverPoly && testDistance > 0.0f);
+
+        dashDirection = posOverPoly ? closestPoint : character->GetLastPosition();
+
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
