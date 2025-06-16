@@ -1,6 +1,7 @@
 #include "AIAgentComponent.h"
 
 #include "Application.h"
+#include "DetourNavMeshQuery.h"
 #include "EditorUIModule.h"
 #include "EngineTimer.h"
 #include "GameObject.h"
@@ -109,6 +110,22 @@ void AIAgentComponent::Update(float deltaTime)
 
     // float4x4 transform = parent->GetLocalTransform();
     parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
+
+    ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
+    dtNavMesh* dtNav     = nullptr;
+    if (nav != nullptr)
+    {
+        dtNav = nav->GetDetourNavMesh();
+    }
+
+    dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
+
+    if (!tmpQuery || !dtNav) return;
+
+    if (!navMeshQuery)
+    {
+        navMeshQuery = tmpQuery;
+    }
 }
 
 void AIAgentComponent::Render(float deltaTime)

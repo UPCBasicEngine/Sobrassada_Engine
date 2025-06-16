@@ -224,8 +224,8 @@ void Changeling::Attack(float deltaTime)
         // Busca el primer punto válido en la navmesh reduciendo la distancia
         do
         {
-            dashDirection = character->GetLastPosition() + direction * testDistance;
-            agentAI->GetClosestPointInNavmesh(dashTarget, searchArea, posOverPoly, closestPoint);
+            dashDirection = parent->GetGlobalTransform().TranslatePart() + direction * testDistance;
+            agentAI->GetClosestPointInNavmesh(dashDirection, searchArea, posOverPoly, closestPoint);
             if (!posOverPoly) testDistance -= 1.0f;
         } while (!posOverPoly && testDistance > 0.0f);
 
