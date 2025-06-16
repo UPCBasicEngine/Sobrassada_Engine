@@ -734,7 +734,8 @@ void GameObject::RenderHierarchyNode(UID& selectedGameObjectUUID)
         std::string objectName = name;
         if (prefabUID != INVALID_UID)
         {
-            objectName += "(prefab " + std::to_string(prefabUID) + ')';
+            objectName += " (Prefab)";
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 1.0f, 1.0f));
         }
 
         if (!IsGloballyEnabled())
@@ -744,10 +745,8 @@ void GameObject::RenderHierarchyNode(UID& selectedGameObjectUUID)
 
         nodeOpen = ImGui::TreeNodeEx(objectName.c_str(), flags);
 
-        if (!IsGloballyEnabled())
-        {
-            ImGui::PopStyleColor();
-        }
+        if (!IsGloballyEnabled()) ImGui::PopStyleColor();
+        if (prefabUID != INVALID_UID) ImGui::PopStyleColor();
     }
 
     HandleNodeClick(selectedGameObjectUUID);
