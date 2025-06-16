@@ -174,6 +174,8 @@ constexpr UID UID_PREFIX_DIVISOR                         = 100000000000000;
 constexpr UID FALLBACK_TEXTURE_UID                       = 1200000000000000;
 constexpr UID DEFAULT_MATERIAL_UID                       = 1300000000000000;
 
+constexpr const char* NAVMESH_META_PREFIX                = "20_";
+
 constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID     = "mesh-select";
 constexpr const char* CONSTANT_MATERIAL_SELECT_DIALOG_ID = "material-select";
 constexpr const char* CONSTANT_TEXTURE_SELECT_DIALOG_ID  = "texture-select";
