@@ -64,7 +64,10 @@ bool Banshee::Init()
         else GLOG("[WARNING] Banshee: no scream visual found as child of base")
     }
 
-    mesh = parent->GetComponentChild<MeshComponent*>(AppEngine);
+    mesh = AppEngine->GetSceneModule()
+               ->GetScene()
+               ->GetGameObjectByUID(parent->GetChildren()[1])
+               ->GetComponentChild<MeshComponent*>(AppEngine);
     if (!mesh) GLOG("No mesh found for Banshee");
 
     rng            = std::mt19937(std::random_device {}());
@@ -207,7 +210,7 @@ void Banshee::ChangeState()
     }
 
     const float distance = GetDistanceFromPlayer();
-    else if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
+    if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
     else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
     else currentState = BansheeStates::Idle;
 }
@@ -230,13 +233,19 @@ void Banshee::SearchForPlayer()
         agentAI->ResetSpeed();
         currentState = BansheeStates::Chase;
     }
-    else if (searchTimer <= 0.0f)
+    else if (searchTimer >= 0.1f && searchTimer <= 0.3f)
     {
-        // TODO: When merge with new banshee behaviour, teleport to start pos
+        mesh->SetEnabled(false);
+        isInvisible = true;
+        agentAI->ResetSpeed();
+        agentAI->SetPosition(startPos);
+    }
+    else if (searchTimer <= 0.1f)
+    {
         isSearching  = false;
         currentState = BansheeStates::Idle;
-        agentAI->ResetSpeed();
-        agentAI->SetPathNavigation(startPos);
+        mesh->SetEnabled(true);
+        isInvisible = false;
     }
 }
 
