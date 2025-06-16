@@ -21,7 +21,23 @@ SplineComponent::SplineComponent(const rapidjson::Value& initialState, GameObjec
     {
         const auto& arrayPoints = initialState["Points"].GetArray();
         for (auto& p : arrayPoints)
-            points.emplace_back(p[0].GetFloat(), p[1].GetFloat(), p[2].GetFloat());
+        {
+            if (p.IsObject() && p.HasMember("Pos") && p.HasMember("Rot"))
+            {
+                const auto& pos = p["Pos"].GetArray();
+                const auto& rot = p["Rot"].GetArray();
+                float sp         = p.HasMember("Speed") ? p["Speed"].GetFloat() : 1.0f;
+
+                float3 position(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+                Quat rotation(rot[0].GetFloat(), rot[1].GetFloat(), rot[2].GetFloat(), rot[3].GetFloat()); // w,x,y,z
+
+                points.emplace_back(position, rotation, sp);
+            }
+            else if (p.IsArray() && p.Size() == 3) //Old format (array x,y,z)
+            {
+                points.emplace_back(float3(p[0].GetFloat(), p[1].GetFloat(), p[2].GetFloat()), Quat::identity);
+            }
+        }
     }
 }
 
@@ -53,6 +69,12 @@ void SplineComponent::RenderDebug(float deltaTime)
 
     const float3 worldOffset = inWorld ? parent->GetGlobalTransform().TranslatePart() : float3(0, 0, 0);
 
+    auto coneDir             = [&](const Quat& rot, float height) { return rot * float3(0, 0, 1) * height; };
+
+    const float coneH            = 0.22f;
+    const float coneR           = 0.08f;
+    const float apexR            = 0.0f;
+
     auto drawLine = [&](const float3& a, const float3& b) { dbg->DrawLineSegment(LineSegment(a, b), curveColor); };
 
     for (size_t seg = 0; seg < endSeg; ++seg)
@@ -69,16 +91,22 @@ void SplineComponent::RenderDebug(float deltaTime)
                 prev = p;
             }
         }
-        else drawLine(points[seg], points[seg + 1]);
+        else drawLine(points[seg].position, points[seg + 1].position);
     }
 
-    for (const float3& p : points)
-        dbg->DrawSphere(p + worldOffset, pointColor, 0.08f);
+    for (const SplinePoint& p : points)
+    {
+        dbg->DrawCone(p.position + worldOffset, coneDir(p.rotation, coneH), coneR, apexR); 
+    }
 
     if (showMarker && points.size() >= 2)
     {
-        const float3 wPos = GetWorldPositionInSpine(markerT);
-        dbg->DrawSphere(wPos, float3(1, 1, 0), 0.10f);
+        float3 wPos;
+        Quat wRot;
+
+        EvaluateTransform(markerT, wPos, wRot);
+        
+        dbg->DrawCone(wPos, coneDir(wRot, coneH), coneR, apexR);
     }
 }
 
@@ -116,11 +144,15 @@ void SplineComponent::RenderEditorInspector()
 
     if (validSel)
     {
-        float3 tempPoint = points[selectedIdx];
-        if (ImGui::InputFloat3("Selected Pos", &tempPoint[0]))
-        {
-            points[selectedIdx] = tempPoint;
-        }
+        float3 tempPoint = points[selectedIdx].position;
+        if (ImGui::InputFloat3("Selected Pos", &tempPoint[0])) points[selectedIdx] = tempPoint;
+
+        float3 eulerDeg = points[selectedIdx].rotation.ToEulerXYZ() * RAD_DEGREE_CONV;
+        if (ImGui::InputFloat3("Selected Rot (deg)", &eulerDeg[0]))
+            points[selectedIdx].rotation = Quat::FromEulerXYZ(
+                eulerDeg.x * DEGREE_RAD_CONV, eulerDeg.y * DEGREE_RAD_CONV, eulerDeg.z * DEGREE_RAD_CONV
+            );
+        ImGui::DragFloat("Selected Speed", &points[selectedIdx].speed, 0.001f, 0.0f, 1.0f);
     }
 
     ImGui::BeginDisabled(!validSel);
@@ -141,7 +173,7 @@ void SplineComponent::RenderEditorInspector()
     ImGui::SeparatorText("Path Probe");
 
     ImGui::Checkbox("Show marker", &showMarker);
-    if (showMarker) ImGui::DragFloat("t  (0-1)", &markerT, 0.001f, 0.f, 1.f, "%.3f");
+    if (showMarker) ImGui::DragFloat("t  (0-1)", &markerT, 0.001f, 0.0f, 1.0f, "%.3f");
 
     ImGui::SeparatorText("Add Point");
 
@@ -177,9 +209,22 @@ void SplineComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
     for (const auto& p : points)
     {
-        rapidjson::Value pArr(rapidjson::kArrayType);
-        pArr.PushBack(p.x, allocator).PushBack(p.y, allocator).PushBack(p.z, allocator);
-        arr.PushBack(pArr, allocator);
+        rapidjson::Value pObj(rapidjson::kObjectType);
+        //position
+        rapidjson::Value posArr(rapidjson::kArrayType);
+        posArr.PushBack(p.position.x, allocator).PushBack(p.position.y, allocator).PushBack(p.position.z, allocator);
+        pObj.AddMember("Pos", posArr, allocator);
+        //rotation
+        rapidjson::Value rotArr(rapidjson::kArrayType);
+        rotArr.PushBack(p.rotation.x, allocator)
+            .PushBack(p.rotation.y, allocator)
+            .PushBack(p.rotation.z, allocator)
+            .PushBack(p.rotation.w, allocator);
+        pObj.AddMember("Rot", rotArr, allocator);
+        //speed
+        pObj.AddMember("Speed", p.speed, allocator);
+
+        arr.PushBack(pObj, allocator);
     }
 
     targetState.AddMember("Points", arr, allocator);
@@ -271,7 +316,8 @@ float3 SplineComponent::EvaluateSegment(const size_t seg, float segmentT) const
     };
 
     return CatmullRom(
-        points[idx((int)seg - 1)], points[idx((int)seg)], points[idx((int)seg + 1)], points[idx((int)seg + 2)], segmentT
+        points[idx((int)seg - 1)].position, points[idx((int)seg)].position, points[idx((int)seg + 1)].position,
+        points[idx((int)seg + 2)].position, segmentT
     );
 }
 
@@ -281,12 +327,12 @@ float3 SplineComponent::Evaluate(float t) const
 
     if (points.size() < 2) return worldOffset;
 
-    t = std::clamp(t, 0.f, 1.f);
+    t = std::clamp(t, 0.0f, 1.0f);
 
     const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
 
     const float segFloat   = t * numSeg;
-    if (segFloat >= numSeg) return worldOffset + (loop ? points.front() : points.back());
+    if (segFloat >= numSeg) return worldOffset + (loop ? points.front().position : points.back().position);
 
     int seg = (int)floorf(segFloat);
     const float segmentT = segFloat - seg;
@@ -297,11 +343,63 @@ float3 SplineComponent::Evaluate(float t) const
     return worldOffset + local;
 }
 
+Quat SplineComponent::EvaluateRotation(float t) const
+{
+    if (points.empty()) return Quat::identity;
+    if (points.size() == 1) return points.front().rotation;
+
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
+    const float segFloat = t * numSeg;
+
+    if (segFloat >= numSeg) return loop ? points.front().rotation : points.back().rotation;
+
+    int seg = (int)floorf(segFloat);
+    float segmentT = segFloat - seg;
+
+    if (loop) seg = seg % points.size();
+
+    const int nextIdx = loop ? (seg + 1) % points.size() : std::min(seg + 1, (int)points.size() - 1);
+    
+    return Quat::Slerp(points[seg].rotation, points[nextIdx].rotation, segmentT).Normalized();
+}
+
+float SplineComponent::EvaluateSpeed(float t) const
+{
+    if (points.empty()) return 1.0f;
+    if (points.size() == 1) return points.front().speed;
+
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    const int numSeg = loop ? (int)points.size() : (int)points.size() - 1;
+    const float segFloat = t * numSeg;
+
+    if (segFloat >= numSeg) return loop ? points.front().speed : points.back().speed;
+
+    int seg              = (int)floorf(segFloat);
+    float segmentT       = segFloat - seg;
+
+    if (loop) seg = seg % points.size();
+
+    int next = loop ? (seg + 1) % points.size() : std::min(seg + 1, (int)points.size() - 1);
+
+    return math::Lerp(points[seg].speed, points[next].speed, segmentT);
+}
+
+void SplineComponent::EvaluateTransform(float t, float3& pos, Quat& rot) const
+{
+    pos = Evaluate(t);
+    rot = EvaluateRotation(t);
+}
+
+
+
 bool SplineComponent::PointGizmo(size_t idx)
 {
     if (selectedIdx >= 0 && selectedIdx < (int)points.size())
     {
-        float4x4 localMatrix  = float4x4::FromTRS(points[idx], float4x4::identity, float3::one);
+        float4x4 localMatrix = float4x4::FromTRS(points[idx].position, points[idx].rotation.ToFloat4x4(), float3::one);
         
         //In order to ignore Rotation and Scale from parent and set it to 1
         const float3 translate        = parent->GetGlobalTransform().TranslatePart();
@@ -309,13 +407,16 @@ bool SplineComponent::PointGizmo(size_t idx)
 
         float4x4 globalMatrix         = parentT * localMatrix;
 
-        float3 newPos, _unusedRot, _unusedScale;
+        float3 newPos, newRot, _unusedScale;
 
-        bool moved = App->GetEditorUIModule()->RenderImGuizmo(
-            localMatrix, globalMatrix, parentT, newPos, _unusedRot, _unusedScale
+        bool moved = App->GetEditorUIModule()->RenderImGuizmo(localMatrix, globalMatrix, parentT, newPos, newRot, _unusedScale
         );
 
-        if (moved) points[idx] = localMatrix.TranslatePart();
+        if (moved)
+        {
+            points[idx].position = localMatrix.TranslatePart();
+            points[idx].rotation = Quat(localMatrix).Normalized();
+        }
         return true;
     }
     return false;
@@ -325,7 +426,7 @@ float3 SplineComponent::GetPointWorld(size_t idx) const
 {
     if (idx >= points.size()) return float3::zero;
 
-    return points[idx] + parent->GetGlobalTransform().TranslatePart();
+    return points[idx].position + parent->GetGlobalTransform().TranslatePart();
 }
 
 float3 SplineComponent::GetWorldPositionInSpine(float posT) const
