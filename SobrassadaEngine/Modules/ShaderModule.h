@@ -27,6 +27,7 @@ class ShaderModule : public Module
     int GetTrailProgram() const { return trailProgram; }
     int GetDecalProgram() const { return decalProgram; }
     int GetSsaoProgram() const { return ssaoProgram; }
+    int GetSsaoDebugProgram() const { return ssaoDebugProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -53,6 +54,7 @@ class ShaderModule : public Module
 
     int trailProgram                   = -1;
     int decalProgram                   = -1;
-    
+
     int ssaoProgram                    = -1;
+    int ssaoDebugProgram               = -1;
 };

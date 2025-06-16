@@ -28,7 +28,8 @@ enum class DebugOptions : uint8_t
     RENDER_DEPTH,
     RENDER_NAVMESH_MESHES,
     RENDER_SPLINES,
-    RENDER_DEBUG_VISUALS
+    RENDER_DEBUG_VISUALS,
+    RENDER_SSAO,
 };
 
 enum DrawNavMeshFlags
@@ -40,7 +41,7 @@ enum DrawNavMeshFlags
 
 constexpr const char* DebugStrings[] = {"Render Lights", "Render Wireframe", "AABB",    "OBB",           "Static Tree",
                                         "Dynamic Tree",  "Camera Ray",       "Navmesh", "Physics World", "GBuffers",
-                                        "Depth",         "Navmesh Meshes",   "Splines", "Debug Visuals"};
+                                        "Depth",         "Navmesh Meshes",   "Splines", "Debug Visuals", "SSAO"};
 
 class DebugDrawModule : public Module
 {

@@ -136,7 +136,7 @@ class SOBRASADA_API_ENGINE Scene
     void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
         const;
     void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer, SSAO* ssao) const;
     void TransparentPassRender(
         const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
     ) const;
@@ -145,6 +145,7 @@ class SOBRASADA_API_ENGINE Scene
     void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
     void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
+    void RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer);
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;

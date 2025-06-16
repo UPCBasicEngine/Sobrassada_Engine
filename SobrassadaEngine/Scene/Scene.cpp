@@ -11,7 +11,6 @@
 #include "EditorUIModule.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
-#include "SSAO.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "GeometryBatch.h"
@@ -30,6 +29,7 @@
 #include "ResourceModel.h"
 #include "ResourcePrefab.h"
 #include "ResourcesModule.h"
+#include "SSAO.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
@@ -207,11 +207,11 @@ void Scene::Init()
     multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
     gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
 
-    constexpr float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
-                                        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
+    constexpr float cubeVertices[] = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
+                                      -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
 
     constexpr unsigned int cubeIndices[] = {0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4,
-                                        3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
+                                            3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
 
     glGenVertexArrays(1, &decalVAO);
     glGenBuffers(1, &decalVBO);
@@ -338,7 +338,7 @@ update_status Scene::Render(float deltaTime)
 void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 {
     GBuffer* gbuffer         = App->GetOpenGLModule()->GetGBuffer();
-    SSAO* ssao        = App->GetOpenGLModule()->GetSsao();
+    SSAO* ssao               = App->GetOpenGLModule()->GetSsao();
     Framebuffer* framebuffer = App->GetSceneModule()->GetInPlayMode() ? App->GetOpenGLModule()->GetFramebuffer()
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
@@ -371,13 +371,18 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         RenderDepthDebug(gbuffer, camera, framebuffer);
         return;
     }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_SSAO)))
+    {
+        RenderSsaoDebug(ssao, camera, framebuffer);
+        return;
+    }
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
     SsaoPassRender(camera, gbuffer, ssao);
     glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
-    LightingPassRender(camera, gbuffer, framebuffer);
+    LightingPassRender(camera, gbuffer, framebuffer, ssao);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -428,7 +433,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     App->GetBillboardModule()->RenderBillboards();
     glDisable(GL_BLEND);
     glPopDebugGroup();
-
 }
 
 update_status Scene::RenderEditor(float deltaTime)
@@ -1125,7 +1129,27 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
+void Scene::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer)
+{
+    framebuffer->Bind();
+    int width  = framebuffer->GetTextureWidth();
+    int height = framebuffer->GetTextureHeight();
+    glViewport(0, 0, width, height);
+
+    unsigned int program = App->GetShaderModule()->GetSsaoDebugProgram();
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetSSAOTexture());
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    // If using a fullscreen triangle without a VAO:
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer, SSAO* ssao) const
 {
     // LIGHTING PASS
 #ifndef GAME
@@ -1196,6 +1220,9 @@ void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Frameb
 
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetSSAOTexture());
 
     lightsConfig->SetLightsShaderData();
 
@@ -1466,8 +1493,7 @@ void Scene::TransparentPassRender(
     glEnable(GL_CULL_FACE);
 }
 
-void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao)
-    const
+void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const
 {
 
     ssao->Bind();
@@ -1493,11 +1519,11 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
     glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
-    
+
     glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_LOW, &ssao->GetKernels()[0].x);
 
     glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
-    
+
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
@@ -1510,7 +1536,6 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
 
     glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
     glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
-
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 

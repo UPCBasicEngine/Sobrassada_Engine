@@ -33,6 +33,8 @@ bool ShaderModule::Init()
     trailProgram                = CreateShaderProgram(BASIC_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
     decalProgram                = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
     ssaoProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_LOW_FRAGMENT_SHADER_PATH);
+    ssaoDebugProgram            = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_DEBUG_SHADER_PATH);
+
     return true;
 }
 
@@ -52,6 +54,7 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(decalProgram);
     glDeleteProgram(trailProgram);
     glDeleteProgram(ssaoProgram);
+    glDeleteProgram(ssaoDebugProgram);
 
     return true;
 }

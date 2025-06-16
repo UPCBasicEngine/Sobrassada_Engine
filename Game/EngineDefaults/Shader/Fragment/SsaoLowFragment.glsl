@@ -43,7 +43,8 @@ float getSceneDepthAtSamplePos(in vec3 samplePos)
     if (sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0)
         return samplePos.z;
 
-    return texture(gDepth, sampleUV).r;
+    //return (viewMatrix*texture(gDepth, sampleUV)).r;
+      return texture(gDepth, sampleUV).r;
 }
 
 void main()

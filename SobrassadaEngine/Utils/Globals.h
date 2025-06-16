@@ -148,6 +148,8 @@ constexpr const char* SPECULAR_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/
 constexpr const char* METALLIC_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/BRDFCookTorranceShader.glsl";
 constexpr const char* METALLIC_IBL_FRAGMENT_SHADER_PATH = "./EngineDefaults/Shader/Fragment/IBLShader.glsl";
 constexpr const char* UIWIDGET_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UIWidgetFragment.glsl";
+constexpr const char* SSAO_DEBUG_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/SsaoDebugShader.glsl";
+
 constexpr const char* IRRADIANCE_FRAGMENT_SHADER_PATH =
     "./EngineDefaults/Shader/Fragment/IrradianceCubemapFragment.glsl";
 constexpr const char* PREFILTERED_FRAGMENT_SHADER_PATH =
