@@ -18,11 +18,11 @@ SphereColliderComponent::SphereColliderComponent(UID uid, GameObject* parent)
     CalculateCollider();
 
     onCollissionCallback = CollisionDelegate(
-        std::bind(&SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
     );
 
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    //App->GetPhysicsModule()->CreateSphereRigidBody(this);
+    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    // App->GetPhysicsModule()->CreateSphereRigidBody(this);
 }
 
 SphereColliderComponent::SphereColliderComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -47,17 +47,12 @@ SphereColliderComponent::SphereColliderComponent(const rapidjson::Value& initial
         centerRotation                    = {dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat()};
     }
 
-    if (colliderType == ColliderType::STATIC && !parent->IsStatic())
-        parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
-    else if (!(colliderType == ColliderType::STATIC) && parent->IsStatic())
-        parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
-
     onCollissionCallback = CollisionDelegate(
-        std::bind(&SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
     );
 
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    //App->GetPhysicsModule()->CreateSphereRigidBody(this);
+    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    // App->GetPhysicsModule()->CreateSphereRigidBody(this);
 }
 
 SphereColliderComponent::~SphereColliderComponent()
@@ -132,18 +127,6 @@ void SphereColliderComponent::RenderEditorInspector()
             if (ImGui::Selectable(ColliderTypeStrings[i]))
             {
                 colliderType = ColliderType(i);
-                if (colliderType == ColliderType::STATIC)
-                {
-                    parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
-                    mass = 0.f;
-                }
-
-                else
-                {
-                    parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
-                    mass = 1.f;
-                }
-
                 App->GetPhysicsModule()->UpdateSphereRigidBody(this);
             }
         }
@@ -173,7 +156,8 @@ void SphereColliderComponent::RenderEditorInspector()
         {
             if (ImGui::Selectable(ColliderLayerStrings[i]))
             {
-                layer = ColliderLayer(i);
+                layer       = ColliderLayer(i);
+                userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
                 App->GetPhysicsModule()->UpdateSphereRigidBody(this);
             }
         }
@@ -188,7 +172,7 @@ void SphereColliderComponent::RenderEditorInspector()
 
     if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
     {
-        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
+        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
     }
 }
 
@@ -220,27 +204,16 @@ void SphereColliderComponent::ParentUpdated()
 
     if (fitToSize) CalculateCollider();
 
-    if (parent->IsStatic() && colliderType != ColliderType::STATIC)
-    {
-        mass         = 0.f;
-        colliderType = ColliderType::STATIC;
-    }
-    else if (!parent->IsStatic() && colliderType == ColliderType::STATIC)
-    {
-        mass         = 1.f;
-        colliderType = ColliderType::DYNAMIC;
-    }
-
     App->GetPhysicsModule()->UpdateSphereRigidBody(this);
 }
 
-void SphereColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal)
+void SphereColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
 {
     if (!enabled || !otherObject->IsEnabled()) return;
 
     auto script = parent->GetComponent<ScriptComponent*>();
 
-    if (script) script->OnCollision(otherObject, collisionNormal);
+    if (script) script->OnCollision(otherObject, collisionNormal, layer);
 }
 
 void SphereColliderComponent::DeleteRigidBody()

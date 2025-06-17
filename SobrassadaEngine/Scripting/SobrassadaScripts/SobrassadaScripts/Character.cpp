@@ -104,7 +104,7 @@ void Character::Update(float deltaTime)
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS)) RenderDebug();
 }
 
-void Character::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void Character::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
