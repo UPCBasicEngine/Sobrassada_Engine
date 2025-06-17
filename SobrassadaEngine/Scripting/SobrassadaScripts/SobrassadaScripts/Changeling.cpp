@@ -191,7 +191,6 @@ void Changeling::PatrolAI()
 
 void Changeling::ChaseAI()
 {
-    // if (isDashing) return;
     //  animComponent->UseTrigger("run");
     if (character != nullptr)
     {
@@ -211,7 +210,6 @@ void Changeling::Attack(float deltaTime)
 
     if (!isAttacking)
     {
-        GLOG("ATTACK ENEMY");
         float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
         direction.Normalize();
 
@@ -219,7 +217,7 @@ void Changeling::Attack(float deltaTime)
         float3 dashTarget;
         bool posOverPoly    = false;
         float3 closestPoint = float3::zero;
-        float3 searchArea   = {1.0f, 2.0f, 1.0f};
+        const float3 searchArea   = {1.0f, 2.0f, 1.0f};
 
         // Busca el primer punto válido en la navmesh reduciendo la distancia
         do
@@ -236,7 +234,6 @@ void Changeling::Attack(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
         startPos = parent->GetPosition();
-        GLOG("startPos: x=%.3f, y=%.3f, z=%.3f", startPos.x, startPos.y, startPos.z);
         localTransform = parent->GetLocalTransform();
 
         hasShot        = false;
