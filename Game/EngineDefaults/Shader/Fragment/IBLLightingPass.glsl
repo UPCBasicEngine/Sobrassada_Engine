@@ -148,7 +148,21 @@ vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const
         {
             float depth = texture(shadowMap, projCoords.xy).r;
             //shadow = projCoords.z > depth ? 1.0 : 0.0;
-            shadow = projCoords.z - depth >= 0.001 ? 1.0 : 0.0;
+            shadow = projCoords.z - depth >= 0.005 ? 1.0 : 0.0;
+            float factor = 0.0;
+
+            vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+            for (int yOffset = -1; yOffset <= 1; ++yOffset) {
+                for (int xOffset = -1; xOffset <= 1; ++xOffset) {
+                    vec2 offset = vec2(float(xOffset), float(yOffset)) * texelSize;
+                    float sampledDepth = texture(shadowMap, projCoords.xy + offset).r;
+
+                    if (projCoords.z - 0.005 > sampledDepth)
+                        factor += 1.0;
+                }
+            }
+
+            shadow = factor / 9.0; // PCF average
         }
 
         diffspec *= (1.0 - shadow);
@@ -204,8 +218,8 @@ void main()
     const vec3 RF0 = mix(vec3(0.04), BaseColor, metallic);
 
     //vec3 ambient = ambient_color.rgb * ambient_color.a;
-    //const vec3 ambient = GetAmbientLight(N, R, NdotV, roughness, Cd, RF0);
-    vec3 hdr = vec3(0.0);
+    const vec3 ambient = GetAmbientLight(N, R, NdotV, roughness, Cd, RF0);
+    vec3 hdr = ambient;
 
     // Point Lights
     for (int i = 0; i < pointLightsCount; ++i)
