@@ -24,8 +24,8 @@ RenderPass::RenderPass()
     glGenFramebuffers(1, &depthFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
 
-    const unsigned int shadowWidth  = 2048;
-    const unsigned int shadowHeight = 2048;
+    const unsigned int shadowWidth  = 4092;
+    const unsigned int shadowHeight = 4092;
 
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
@@ -82,50 +82,102 @@ RenderPass::~RenderPass()
 
     glDeleteTextures(1, &depthTexture);
     glDeleteFramebuffers(1, &depthFBO);
+
+    gbuffer     = nullptr;
+    framebuffer = nullptr;
+}
+
+void RenderPass::Bind() const
+{
+#ifndef GAME
+    framebuffer->Bind();
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+
+    glViewport(0, 0, width, height);
+}
+
+// Copy Depth to Framebuffer
+void RenderPass::CopyDepth() const
+{
+#ifndef GAME
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
+#else
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#endif
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+#ifndef GAME
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+}
+
+// Copy Depth and Stencil to Framebuffer
+void RenderPass::CopyDepthStencil() const
+{
+#ifndef GAME
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
+#else
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#endif
+
+    glBlitFramebuffer(
+        0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
+    );
+
+#ifndef GAME
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 }
 
 void RenderPass::RenderScene(
-    Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera
+    Framebuffer* framebuff, const std::vector<GameObject*> objectsToRender, CameraComponent* camera
 )
 {
-    GBuffer* gbuffer    = App->GetOpenGLModule()->GetGBuffer();
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
+    gbuffer     = App->GetOpenGLModule()->GetGBuffer();
+    framebuffer = framebuff;
+    width       = framebuffer->GetTextureWidth();
+    height      = framebuffer->GetTextureHeight();
     glViewport(0, 0, width, height);
 
     glEnable(GL_STENCIL_TEST);
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
-        NavMeshPassRender(objectsToRender, camera, gbuffer);
-    else GeometryPassRender(objectsToRender, camera, gbuffer);
+        NavMeshPassRender(objectsToRender, camera);
+    else GeometryPassRender(objectsToRender, camera);
     glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
-    ShadowMapPassRender(camera, light, objectsToRender, gbuffer);
+    ShadowMapPassRender(camera, light, objectsToRender);
     glPopDebugGroup();
 
     glViewport(0, 0, width, height);
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
-    DecalsPassRender(objectsToRender, camera, gbuffer);
+    DecalsPassRender(objectsToRender, camera);
     glPopDebugGroup();
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
     {
-        RenderGBufferDebug(gbuffer, framebuffer);
+        RenderGBufferDebug(gbuffer);
         return;
     }
     else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
     {
-        RenderDepthDebug(gbuffer, camera, framebuffer);
+        RenderDepthDebug(gbuffer, camera);
         return;
     }
     else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_SHADOWMAP)) &&
              light != nullptr)
     {
-        RenderShadowMapDebug(framebuffer);
+        RenderShadowMapDebug();
         return;
     }
 
@@ -137,13 +189,11 @@ void RenderPass::RenderScene(
     OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
-    TransparentPassRender(objectsToRender, camera, framebuffer);
+    TransparentPassRender(objectsToRender, camera);
     glPopDebugGroup();
 }
 
-void RenderPass::GeometryPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
-) const
+void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
 {
     gbuffer->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -176,9 +226,7 @@ void RenderPass::GeometryPassRender(
     gbuffer->Unbind();
 }
 
-void RenderPass::NavMeshPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
-) const
+void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
 {
     gbuffer->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -212,59 +260,61 @@ void RenderPass::NavMeshPassRender(
     glEnable(GL_BLEND);
 }
 
-void CreateDepthReductionTexture(GLuint& tex, int width, int height)
+void CreateDepthReductionTexture(unsigned int& texture, int width, int height)
 {
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void RenderPass::ShadowMapPassRender(
-    CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender,
-    GBuffer* gbuffer
+    CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
 )
 {
     if (light == nullptr) return;
 
     // Compute shader to find min/max values
-    int width  = gbuffer->GetScreenWidth();
-    int height = gbuffer->GetScreenHeight();
-    GLuint reductionTex;
-    CreateDepthReductionTexture(reductionTex, width, height);
+    int gBufferwidth          = gbuffer->GetScreenWidth();
+    int gBufferheight         = gbuffer->GetScreenHeight();
 
-    GLuint currentInput                 = gbuffer->GetDepthTexture();
-    GLuint currentOutput                = reductionTex;
+    unsigned int currentInput = gbuffer->GetDepthTexture();
+    unsigned int currentOutput;
+    CreateDepthReductionTexture(currentOutput, gBufferwidth, gBufferheight);
 
-    int currentWidth                    = width;
-    int currentHeight                   = height;
+    int currentWidth                   = gBufferwidth;
+    int currentHeight                  = gBufferheight;
 
-    unsigned int depthReductionShaderID = App->GetShaderModule()->GetComputeShadowDepthProgram();
-    glUseProgram(depthReductionShaderID);
+    unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
+    glUseProgram(depthReductionProgram);
 
     while (currentWidth > 1 || currentHeight > 1)
     {
         int groupsX = (currentWidth + 7) / 8;
         int groupsY = (currentHeight + 3) / 4;
 
-        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glBindTextureUnit(0, currentInput);
 
-        glUniform2i(glGetUniformLocation(depthReductionShaderID, "inSize"), currentWidth, currentHeight);
+        glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
 
         glDispatchCompute(groupsX, groupsY, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
-        GLuint newTex;
+        unsigned int newTex;
         CreateDepthReductionTexture(newTex, groupsX, groupsY);
         glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
 
-        glDeleteTextures(1, &currentOutput);
+        if (currentInput != gbuffer->GetDepthTexture()) glDeleteTextures(1, &currentInput);
+        currentInput  = currentOutput;
         currentOutput = newTex;
 
         currentWidth  = groupsX;
@@ -272,16 +322,32 @@ void RenderPass::ShadowMapPassRender(
     }
 
     glFinish();
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     float minMax[2] = {0, 0};
 
     glBindTexture(GL_TEXTURE_2D, currentOutput);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, minMax);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, minMax);
 
     float minDepth = minMax[0];
     float maxDepth = minMax[1];
 
     glDeleteTextures(1, &currentOutput);
+
+    float nearD;
+    float farD;
+    camera == nullptr ? nearD = App->GetCameraModule()->GetNearPlaneDistance() : nearD = camera->GetNearPlaneDistance();
+    camera == nullptr ? farD = App->GetCameraModule()->GetFarPlaneDistance() : farD = camera->GetFarPlaneDistance();
+
+    float S       = (-2 * farD * nearD) / (farD - nearD);
+    float T       = -(nearD + farD) / (farD - nearD);
+
+    float distMin = S / (T + minDepth);
+    float distMax = S / (T + maxDepth);
+
+    GLOG("%f, %f", minDepth, maxDepth);
+
+    camera == nullptr ? App->GetCameraModule()->SetNear(distMin * nearD) : camera->SetNear(distMin* nearD);
+    camera == nullptr ? App->GetCameraModule()->SetFar(distMax * farD) : camera->SetFar(distMax * farD);
 
     // Compute light
     float3 corners[8];
@@ -308,7 +374,7 @@ void RenderPass::ShadowMapPassRender(
     Frustum shadowfrustum;
 
     shadowfrustum.type               = FrustumType::OrthographicFrustum;
-    shadowfrustum.pos                = sphereCenter - lightDir * sphereRadius;
+    shadowfrustum.pos                = sphereCenter + lightDir * sphereRadius;
     shadowfrustum.front              = lightDir;
     shadowfrustum.up                 = lightUp;
     shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
@@ -322,7 +388,9 @@ void RenderPass::ShadowMapPassRender(
     lightview                      = shadowfrustum.ViewMatrix();
     lightProj                      = shadowfrustum.ProjectionMatrix();
 
-    unsigned int ubo               = 0;
+    DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
+    debugdraw->DrawFrustrum(lightProj, lightview);
+    unsigned int ubo = 0;
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
@@ -341,7 +409,10 @@ void RenderPass::ShadowMapPassRender(
             meshesToRender.push_back(mesh);
     }
 
-    glViewport(0, 0, 2048, 2048);
+    glViewport(0, 0, 4092, 4092);
+
+    camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
+    camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
 
     batchManager->RenderShadowMap(meshesToRender, ubo);
 
@@ -349,9 +420,7 @@ void RenderPass::ShadowMapPassRender(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void RenderPass::DecalsPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
-) const
+void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
 {
     gbuffer->Bind();
 
@@ -481,12 +550,7 @@ void RenderPass::DecalsPassRender(
 
 void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
 {
-    // LIGHTING PASS
-#ifndef GAME
-    framebuffer->Bind();
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+    Bind();
 
     // SKYBOX
     if (!App->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_WIREFRAME))
@@ -516,26 +580,9 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     // COPYING DEPTH BUFFER AND STENCIL FROM GBUFFER TO RENDER FRAMEBUFFER
     // TODO CHECK IF GAME RELEASE TO RENDER TO DEFAULT BUFFER INSTEAD OF FRAMEBUFFER
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer->gBufferObject);
 
-#ifndef GAME
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
-
-    glBlitFramebuffer(
-        0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
-    );
-
-#ifndef GAME
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+    CopyDepthStencil();
 
     // SETTING STENCIL TEST FOR ONLY RENDER TO GBUFFER FRAGMENTS WRITES
     glStencilFunc(GL_EQUAL, 1, 0xFF);
@@ -578,34 +625,12 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     // COPYING DEPTH BUFFER FROM GBUFFER TO RENDER FRAMEBUFFER
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer->gBufferObject);
 
-#ifndef GAME
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
-    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-#ifndef GAME
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+    CopyDepth();
 }
 
-void RenderPass::TransparentPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
-) const
+void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
 {
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-
-#ifndef GAME
-    framebuffer->Bind();
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-    // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    glViewport(0, 0, width, height);
+    Bind();
 
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
 
@@ -699,11 +724,9 @@ void RenderPass::TransparentPassRender(
     glEnable(GL_CULL_FACE);
 }
 
-void RenderPass::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
+void RenderPass::RenderGBufferDebug(GBuffer* gbuffer) const
 {
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-    framebuffer->Bind();
+    Bind();
 
     const unsigned int program = App->GetShaderModule()->GetQuadProgram();
     glUseProgram(program);
@@ -735,19 +758,16 @@ void RenderPass::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) 
     glViewport(0, 0, width, height);
 }
 
-void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const
+void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) const
 {
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-    framebuffer->Bind();
+    Bind();
 
-    const unsigned int program = App->GetShaderModule()->GetDepthProgram();
+    const unsigned int program = App->GetShaderModule()->GetLinearDepthProgram();
     glUseProgram(program);
 
     GLint loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
-    glViewport(0, 0, width, height);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
 
@@ -769,11 +789,9 @@ void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Fra
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void RenderPass::RenderShadowMapDebug(Framebuffer* framebuffer) const
+void RenderPass::RenderShadowMapDebug() const
 {
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-    framebuffer->Bind();
+    Bind();
 
     const unsigned int program = App->GetShaderModule()->GetDepthProgram();
     glUseProgram(program);
@@ -781,7 +799,6 @@ void RenderPass::RenderShadowMapDebug(Framebuffer* framebuffer) const
     GLint loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
-    glViewport(0, 0, width, height);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
 

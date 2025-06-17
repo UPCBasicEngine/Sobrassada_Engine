@@ -24,6 +24,7 @@ class ShaderModule : public Module
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
     int GetQuadProgram() const { return quadProgram; };
     int GetDepthProgram() const { return depthProgram; };
+    int GetLinearDepthProgram() const { return linearDepthProgram; };
     int GetBillboardProgram() const { return billboardProgram; }
     int GetTrailProgram() const { return trailProgram; }
     int GetDecalProgram() const { return decalProgram; }
@@ -52,6 +53,7 @@ class ShaderModule : public Module
     int transparentPassProgram         = -1;
     int quadProgram                    = -1;
     int depthProgram                   = -1;
+    int linearDepthProgram             = -1;
     int billboardProgram               = -1;
 
     int trailProgram                   = -1;

@@ -18,23 +18,27 @@ class RenderPass
     void RenderScene(Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera);
 
   private:
-    void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void ShadowMapPassRender(
-        CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender, GBuffer* gbuffer
-    );
-    void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
-    void TransparentPassRender(
-        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
-    ) const;
+    void Bind() const;
+    void CopyDepth() const;
+    void CopyDepthStencil() const;
 
-    void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
-    void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
-    void RenderShadowMapDebug(Framebuffer* framebuffer) const;
+    void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void ShadowMapPassRender(
+        CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
+    );
+    void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
+    void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+
+    void RenderGBufferDebug(GBuffer* gbuffer) const;
+    void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) const;
+    void RenderShadowMapDebug() const;
 
   private:
-    GBuffer* gbuffer = nullptr;
+    GBuffer* gbuffer         = nullptr;
+    Framebuffer* framebuffer = nullptr;
+    int width, height;
 
     unsigned int decalVAO, decalVBO, decalEBO;
     unsigned int depthTexture, depthFBO;

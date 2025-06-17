@@ -59,6 +59,8 @@ class CameraModule : public Module
     bool GetOrbiting() const { return orbiting; }
 
     void SetAspectRatio(float newAspectRatio);
+    void SetNear(float nearPlane) { camera.nearPlaneDistance = nearPlane; }
+    void SetFar(float farPlane) { camera.farPlaneDistance = farPlane; }
 
   private:
     void Controls(float deltaTime);
