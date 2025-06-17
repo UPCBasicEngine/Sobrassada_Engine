@@ -150,7 +150,6 @@ void Archer::Attack(float deltaTime)
 
     if (!isAttacking)
     {
-        GLOG("ATTACK ENEMY");
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
@@ -188,11 +187,10 @@ void Archer::Attack(float deltaTime)
 
 void Archer::Escape(float deltaTime)
 {
-    GLOG("Archer Escaping");
     if (!agentAI || !character) return;
 
     float3 archerPos    = parent->GetGlobalTransform().TranslatePart();
-    float3 searchArea   = {1.0f, 2.0f, 1.0f};
+    const float3 searchArea   = {1.0f, 2.0f, 1.0f};
     bool posOverPoly    = false;
     float3 closestPoint = float3::zero;
 
@@ -224,7 +222,7 @@ void Archer::Escape(float deltaTime)
         }
     }
 
-    float3 playerPos = character->GetLastPosition();
+    const float3 playerPos = character->GetLastPosition();
     float3 escapeDir = archerPos - playerPos;
     escapeDir.y      = 0.0f;
     if (escapeDir.LengthSq() < 0.0001f) escapeDir = float3::unitZ;
