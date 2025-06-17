@@ -20,6 +20,7 @@ Archer::Archer(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
+    fields.push_back({"Escape Range", InspectorField::FieldType::Float, &rangeEscape, 0.0f, 10.0f});
 }
 
 bool Archer::Init()
@@ -27,7 +28,6 @@ bool Archer::Init()
     // GLOG("Initiating Soldier");
 
     currentState = ArcherStates::PATROL;
-    rangeEscape  = rangeAIAttack - 1;
 
     Character::Init();
 

@@ -36,7 +36,7 @@ class Archer : public Character
     void ChaseAI();
 
   private:
-    float rangeEscape;
+    float rangeEscape          = rangeAIAttack - 1;
     AIAgentComponent* agentAI  = nullptr;
     ArcherStates currentState  = ArcherStates::NONE;
 
