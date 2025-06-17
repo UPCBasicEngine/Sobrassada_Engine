@@ -27,6 +27,7 @@ bool Archer::Init()
     // GLOG("Initiating Soldier");
 
     currentState = ArcherStates::PATROL;
+    rangeEscape  = rangeAIAttack - 1;
 
     Character::Init();
 
@@ -137,7 +138,7 @@ void Archer::ChaseAI()
 
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::BASIC_ATTACK;
+        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
         else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ArcherStates::PATROL;
     }
     else currentState = ArcherStates::PATROL;
@@ -176,11 +177,11 @@ void Archer::Attack(float deltaTime)
             agentAI->ResetSpeed();
             agentAI->SetLookForward(true);
 
-            if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) <= rangeAIChase / 2)
+            if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) < rangeEscape)
             {
                 currentState = ArcherStates::ESCAPE;
             }
-            else if (CheckDistanceWithPlayer() >= PlayerDistances::Medium) currentState = ArcherStates::CHASE;
+            else if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = ArcherStates::CHASE;
         }
     }
 }
@@ -209,7 +210,7 @@ void Archer::Escape(float deltaTime)
                 agentAI->SetPathNavigation(currentEscapeTarget);
                 agentAI->LookAtMovement(currentEscapeTarget, deltaTime);
                 if (animComponent) animComponent->UseTrigger("run");
-                if (CheckDistanceWithPlayer() > PlayerDistances::Medium)
+                if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
                 {
                     currentState    = ArcherStates::BASIC_ATTACK;
                     hasEscapeTarget = false;
@@ -229,7 +230,7 @@ void Archer::Escape(float deltaTime)
     if (escapeDir.LengthSq() < 0.0001f) escapeDir = float3::unitZ;
     escapeDir.Normalize();
 
-    float escapeDistance  = rangeAIChase;
+    float escapeDistance  = rangeAIAttack;
     const float angleStep = 15.0f * (3.14159265f / 180.0f);
     float angleAccum      = 0.0f;
     bool found            = false;
@@ -270,7 +271,7 @@ void Archer::Escape(float deltaTime)
 
     if (animComponent) animComponent->UseTrigger("run");
 
-    if (CheckDistanceWithPlayer() > PlayerDistances::Medium)
+    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
     {
         currentState    = ArcherStates::BASIC_ATTACK;
         hasEscapeTarget = false;
