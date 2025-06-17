@@ -4,11 +4,12 @@
 #include "Math/float2.h"
 #include "Math/float3.h"
 #include "Math/float4.h"
-#include "imgui_color_gradient.h"
 #include <deque>
 
 class SplineComponent;
 class ResourceTexture;
+class ImGradient;
+struct ImGradientMark;
 
 struct TrailPoint
 {
@@ -55,10 +56,9 @@ class TrailComponent : public Component
     bool invertCurve  = false;
     float curve[5]    = {0.0f, 0.0f, 1.0f, 1.0f}; // Last value is an internal value for imgui
 
-    ImGradient gradient;
+    ImGradient* gradient = nullptr;
     ImGradientMark* draggingMark = nullptr;
     ImGradientMark* selectedMark = nullptr;
-    std::list<ImGradientMark*> gradientMarks;
 
     bool hasTexture                 = false;
     std::string currentResourceName = "No material";

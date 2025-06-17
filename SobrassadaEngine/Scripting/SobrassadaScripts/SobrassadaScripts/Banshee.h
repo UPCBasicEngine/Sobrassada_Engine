@@ -2,7 +2,11 @@
 
 #include "Character.h"
 
+#include "Math/float2.h"
+#include <random>
+
 class GameObject;
+class MeshComponent;
 class AIAgentComponent;
 class SphereColliderComponent;
 
@@ -10,8 +14,7 @@ enum class BansheeStates
 {
     Idle,
     Chase,
-    Flee,
-    Scream
+    Attack
 };
 
 class Banshee : public Character
@@ -30,9 +33,11 @@ class Banshee : public Character
     void HandleState(float deltaTime) override;
 
     void ChasePlayer();
-    void Flee();
     void Attack(float deltaTime) override;
     void ChangeState();
+    void GoToAttackPosition();
+
+    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
 
   private:
     AIAgentComponent* agentAI           = nullptr;
@@ -40,10 +45,14 @@ class Banshee : public Character
     SphereColliderComponent* damageArea = nullptr;
     GameObject* areaVisual              = nullptr;
     GameObject* screamVisual            = nullptr;
+    MeshComponent* mesh                 = nullptr;
 
-    float fleeDistance                  = 0.0f;
-    float fleeSpeed                     = 10.0f;
-    bool isFleeing                      = false;
-
+    float2 invisibleTimeRange           = float2::zero;
+    float currentInvisibleTime          = 0.0f;
     float attackAngularSpeed            = 0.0f;
+    bool isInvisible                    = false;
+
+    std::mt19937 rng;
+    std::uniform_real_distribution<float> normalizedDist;
+    std::uniform_real_distribution<float> invisibleDist;
 };

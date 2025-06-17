@@ -43,6 +43,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void SetLookForward(bool look) { lookForward = look; }
     void SetSpeed(const float newSpeed, const float acceleration);
     void SetAngularSpeed(const float newAngular);
+    void SetPosition(const float3& newPos);
     void ResetSpeed();
     void ResetAngularSpeed();
 

@@ -156,6 +156,9 @@ Scene::~Scene()
 
 void Scene::Init()
 {
+    multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
+    gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
+
     // Init data
     for (const auto& pair : gameObjectDataMap)
     {
@@ -203,8 +206,6 @@ void Scene::Init()
     UpdateStaticSpatialStructure();
     UpdateDynamicSpatialStructure();
 
-    multiSelectParent = new GameObject(GenerateUID(), "MULTISELECT_DUMMY");
-    gameObjectsContainer.insert({multiSelectParent->GetUID(), multiSelectParent});
 
     constexpr float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
                                         -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
