@@ -1,6 +1,7 @@
 #include "AIAgentComponent.h"
 
 #include "Application.h"
+#include "DetourNavMeshQuery.h"
 #include "EditorUIModule.h"
 #include "EngineTimer.h"
 #include "GameObject.h"
@@ -109,6 +110,22 @@ void AIAgentComponent::Update(float deltaTime)
 
     // float4x4 transform = parent->GetLocalTransform();
     parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
+
+    ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
+    dtNavMesh* dtNav     = nullptr;
+    if (nav != nullptr)
+    {
+        dtNav = nav->GetDetourNavMesh();
+    }
+
+    dtNavMeshQuery* tmpQuery = App->GetPathfinderModule()->GetDetourNavMeshQuery();
+
+    if (!tmpQuery || !dtNav) return;
+
+    if (!navMeshQuery)
+    {
+        navMeshQuery = tmpQuery;
+    }
 }
 
 void AIAgentComponent::Render(float deltaTime)
@@ -406,4 +423,26 @@ void AIAgentComponent::SetPosition(const float3& newPos)
 void AIAgentComponent::ResetAngularSpeed()
 {
     currentAngularSpeed = maxAngularSpeed;
+}
+
+unsigned int AIAgentComponent::GetClosestPointInNavmesh(
+    const float3& searchPos, const float3& searchArea, bool& posOverPoly, float3& closestPoint
+) const
+{
+    dtQueryFilter filter;
+    filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+    filter.setExcludeFlags(0);
+    float halfExt[3] = {searchArea.x, searchArea.y, searchArea.z};
+    float nearest[3] = {};
+    dtPolyRef newRef = 0;
+
+    dtStatus status  = navMeshQuery->findNearestPoly(searchPos.ptr(), halfExt, &filter, &newRef, nearest);
+
+    // if (!dtStatusSucceed(status) || newRef == 0) return status;  // If unexpected crash, maybe this is needed
+
+    float closest[3] = {};
+    status           = navMeshQuery->closestPointOnPoly(newRef, searchPos.ptr(), closest, &posOverPoly);
+    closestPoint     = {closest[0], closest[1], closest[2]};
+
+    return status;
 }

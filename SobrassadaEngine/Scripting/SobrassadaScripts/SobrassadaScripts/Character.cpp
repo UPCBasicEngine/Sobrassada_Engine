@@ -132,6 +132,11 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         }
     }
 
+    if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
+    {
+        TakeDamage(1);
+    }
+
     otherScript = otherObject->GetComponent<ScriptComponent*>();
     if (otherScript)
     {
