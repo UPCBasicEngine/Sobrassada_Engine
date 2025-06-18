@@ -87,7 +87,7 @@ void LightsConfig::InitSkybox()
     glBindVertexArray(0);
 
     // default skybox texture
-    if (skyboxID == 0) LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap"));
+    if (skyboxID == 0) LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap_2"));
 
     cubemapIrradiance = CubeMapToTexture(irradianceMapResolution, irradianceMapResolution);
     irradianceHandle  = glGetTextureHandleARB(cubemapIrradiance);

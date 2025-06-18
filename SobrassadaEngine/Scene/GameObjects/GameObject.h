@@ -38,6 +38,7 @@ class BillboardComponent;
 class SplineComponent;
 class TrailComponent;
 class DecalComponent;
+class ParticleSystemComponent;
 
 enum MobilitySettings
 {

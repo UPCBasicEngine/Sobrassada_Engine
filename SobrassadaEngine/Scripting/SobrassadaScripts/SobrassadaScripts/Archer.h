@@ -9,6 +9,7 @@ class Projectile;
 enum class ArcherStates
 {
     NONE,
+    SEARCH,
     PATROL,
     CHASE,
     BASIC_ATTACK
@@ -30,14 +31,15 @@ class Archer : public Character
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
 
+    void ChangeState();
     void PatrolAI();
     void ChaseAI();
+    void SearchForPlayer();
 
   private:
     AIAgentComponent* agentAI = nullptr;
     ArcherStates currentState = ArcherStates::NONE;
 
-    std::string arrowName     = "";
     Projectile* arrow         = nullptr;
 
     float3 patrolPoint        = float3::zero;

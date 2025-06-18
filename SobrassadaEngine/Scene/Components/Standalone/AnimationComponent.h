@@ -59,8 +59,10 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     std::unordered_map<HashString, GameObject*> boneMapping;
     std::map<std::string, float4x4> bindPoseTransforms;
 
+    
     float animationDuration = 0.0f;
     bool playing            = false;
     float currentTime       = 0.0f;
+    float defaultTime       = 1.0f;
     float fadeTime          = 0.0f;
 };

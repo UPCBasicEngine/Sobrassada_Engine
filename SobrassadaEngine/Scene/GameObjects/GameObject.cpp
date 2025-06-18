@@ -8,6 +8,7 @@
 #include "SceneModule.h"
 
 #include "CameraComponent.h"
+#include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -1266,6 +1267,7 @@ bool GameObject::IsGloballyEnabled() const
     if (!enabled) return false;
     GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
     if (this->uid == App->GetSceneModule()->GetScene()->GetGameObjectRootUID()) return true;
+    if (this->uid == App->GetSceneModule()->GetScene()->GetMultiselectUID()) return true;
     return parent ? parent->IsGloballyEnabled() : false;
 }
 
