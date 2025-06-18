@@ -31,6 +31,7 @@ Billboard::~Billboard()
     if (material) App->GetResourcesModule()->ReleaseResource(material);
     if (texture) App->GetResourcesModule()->ReleaseResource(texture);
     glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &positionsVbo);
 }
 
 void Billboard::UpdateWidth(float newWidth)
@@ -217,6 +218,7 @@ void Billboard::CreateVertexBufferObject()
     if (vbo == 0) glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     if (positionsVbo == 0) glGenBuffers(1, &positionsVbo);
 }

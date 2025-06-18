@@ -552,6 +552,39 @@
     <ClCompile Include="Modules\BillboardModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Particles\ParticleAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\BaseAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\VelocityAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\ParticleUtils.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\ParticleEmitter.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\ParticleSystemComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ParticleSystemModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\ParticleSystem.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\EmitterInstance.cpp">
+      <Filter>Utils\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\SpritesheetAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\ColorAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClCompile>
     <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
@@ -560,6 +593,9 @@
     </ClCompile>
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp">
       <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Particles\AreaAddon.cpp">
+      <Filter>Utils\Particles\Addons</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp">
       <Filter>Scene\Components</Filter>
@@ -655,6 +691,9 @@
     </Filter>
     <Filter Include="Utils\Particles">
       <UniqueIdentifier>{b38e44f1-5545-41b1-abb3-0013c2ee5133}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils\Particles\Addons">
+      <UniqueIdentifier>{b61b72e4-b030-4d7f-8e61-f2b2c64a7f8c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1091,6 +1130,42 @@
     <ClInclude Include="Modules\BillboardModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
+    <ClInclude Include="Utils\Particles\ParticleUtils.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\ParticleAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\BaseAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\VelocityAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\Particle.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\ParticleEmitter.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\ParticleSystemComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ParticleSystemModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\ParticleSystem.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\EmitterInstance.h">
+      <Filter>Utils\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\SpritesheetAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\ColorAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
+    </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\TrailComponent.h">
       <Filter>Scene\Components</Filter>
     </ClInclude>
@@ -1102,6 +1177,9 @@
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h">
       <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Particles\AreaAddon.h">
+      <Filter>Utils\Particles\Addons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

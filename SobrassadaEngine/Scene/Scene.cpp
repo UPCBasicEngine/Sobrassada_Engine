@@ -20,6 +20,8 @@
 #include "ModelImporter.h"
 #include "Octree.h"
 #include "OpenGLModule.h"
+#include "ParticleSystemComponent.h"
+#include "ParticleSystemModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
@@ -422,6 +424,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     glEnable(GL_BLEND);
     App->GetBillboardModule()->RenderBillboards();
     glDisable(GL_BLEND);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
+    App->GetParticleModule()->RenderParticles();
     glPopDebugGroup();
 }
 

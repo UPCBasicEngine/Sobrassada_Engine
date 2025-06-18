@@ -297,6 +297,10 @@ void TrailComponent::Render(float deltaTime)
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void TrailComponent::RenderDebug(float deltaTime)
