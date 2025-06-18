@@ -164,6 +164,13 @@ void CuChulainn::OnDeath()
 void CuChulainn::OnDamageTaken(int amount)
 {
     UpdateHealthBarUI();
+
+    if (state == CharacterStates::CHARGING)
+    {
+        character->EnableMovement(true);
+        state = CharacterStates::IDLE;
+        if (animComponent) animComponent->UseTrigger("Idle");
+    }
     // TODO: play CuChulainn take damage sound
     // TODO: fill riastrad bar dinamically
 }
@@ -189,7 +196,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (attackPressTimer >= 0.5f && CanChargeAttack()) ChargeAttack();
+    else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
              state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING)
@@ -349,7 +356,7 @@ bool CuChulainn::CanAim() const
 {
     return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
            state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
-           state != CharacterStates::CHARGED_ATTACK;
+           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING;
 }
 
 bool CuChulainn::CanChargeAttack() const
@@ -419,11 +426,11 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (isChargingAttack)
     {
         attackPressTimer += deltaTime;
-        //GLOG("Attack press timer: %f", attackPressTimer);
+        // GLOG("Attack press timer: %f", attackPressTimer);
 
         if (state == CharacterStates::CHARGING)
         {
-            //GLOG("Charge timer: %f", chargeTimer);
+            // GLOG("Charge timer: %f", chargeTimer);
             chargeTimer -= deltaTime;
             if (chargeTimer < 0.0f) chargeTimer = 0.0f;
         }
