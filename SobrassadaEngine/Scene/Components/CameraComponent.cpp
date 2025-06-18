@@ -279,11 +279,7 @@ void CameraComponent::RenderEditorInspector()
         float hfov = camera.horizontalFov * RAD_DEGREE_CONV;
         if (ImGui::DragFloat("FoV", &hfov, 0.1f, 1.0f, 179.0f, "%.2f"))
         {
-            camera.horizontalFov = hfov * DEGREE_RAD_CONV;
-            auto framebuffer     = App->GetOpenGLModule()->GetFramebuffer();
-            int width            = framebuffer->GetTextureWidth();
-            int height           = framebuffer->GetTextureHeight();
-            camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
+            SetFov(hfov);
         }
     }
     else if (camera.type == OrthographicFrustum)
@@ -509,4 +505,13 @@ void CameraComponent::ChangeToOrtographic()
     camera.orthographicHeight = orthographicHeight;
     camera.nearPlaneDistance  = ortographicNearPlane;
     camera.farPlaneDistance   = ortographicFarPlane;
+}
+
+void CameraComponent::SetFov(float fov)
+{
+    camera.horizontalFov = fov * DEGREE_RAD_CONV;
+    auto framebuffer     = App->GetOpenGLModule()->GetFramebuffer();
+    const int width            = framebuffer->GetTextureWidth();
+    const int height           = framebuffer->GetTextureHeight();
+    camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
 }
