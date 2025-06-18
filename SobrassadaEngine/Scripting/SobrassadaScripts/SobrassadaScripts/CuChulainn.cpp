@@ -116,6 +116,8 @@ bool CuChulainn::Init()
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
+    state = CharacterStates::IDLE;
+
     return true;
 }
 
@@ -187,7 +189,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (isChargingAttack && CanChargeAttack()) ChargeAttack();
+    else if (attackPressTimer >= 0.5f && CanChargeAttack()) ChargeAttack();
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
              state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING)
@@ -328,7 +330,8 @@ bool CuChulainn::CanAttack() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
            state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
+           state != CharacterStates::CHARGING;
 }
 
 bool CuChulainn::CanUltimate() const
@@ -351,9 +354,13 @@ bool CuChulainn::CanAim() const
 
 bool CuChulainn::CanChargeAttack() const
 {
-    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-           state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
-           state != CharacterStates::CHARGED_ATTACK;
+    bool canChargeAttack = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+                           state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
+                           state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK;
+
+    if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer >= 0.0f;
+
+    return canChargeAttack;
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
@@ -411,9 +418,19 @@ void CuChulainn::UpdateTimers(float deltaTime)
 
     if (isChargingAttack)
     {
-        GLOG("Charge timer: %f", chargeTimer);
-        chargeTimer -= deltaTime;
-        if (chargeTimer < 0.0f) chargeTimer = 0.0f;
+        attackPressTimer += deltaTime;
+        //GLOG("Attack press timer: %f", attackPressTimer);
+
+        if (state == CharacterStates::CHARGING)
+        {
+            //GLOG("Charge timer: %f", chargeTimer);
+            chargeTimer -= deltaTime;
+            if (chargeTimer < 0.0f) chargeTimer = 0.0f;
+        }
+    }
+    else
+    {
+        attackPressTimer = 0.0f;
     }
     isChargingAttack = false;
 
@@ -667,15 +684,29 @@ void CuChulainn::ChargeAttack()
 
         if (animComponent) animComponent->UseTrigger("Charge");
     }
-    else if (desiredChargedAttack && chargeTimer <= 0.0f)
+    else if (desiredChargedAttack)
     {
-        GLOG("CHARGED ATTACK")
-
         desiredChargedAttack = false;
-        state                = CharacterStates::CHARGED_ATTACK;
-        chargedAttackTimer   = 0.0f;
+        isChargingAttack     = false;
 
-        if (animComponent) animComponent->UseTrigger("Attack");
+        GLOG("DESIRED CHARGE ATTACK");
+
+        if (chargeTimer <= 0.0f)
+        {
+            GLOG("CHARGED ATTACK")
+
+            state              = CharacterStates::CHARGED_ATTACK;
+            chargedAttackTimer = 0.0f;
+
+            if (animComponent) animComponent->UseTrigger("Attack");
+        }
+        else
+        {
+            GLOG("NOT CHARGED ENOUFGH");
+            character->EnableMovement(true);
+            state = CharacterStates::IDLE;
+            if (animComponent) animComponent->UseTrigger("Idle");
+        }
     }
 }
 

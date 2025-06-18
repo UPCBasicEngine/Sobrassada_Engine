@@ -111,6 +111,7 @@ class CuChulainn : public Character
     float chargedAttackHitboxDelay    = 0.0f;
     float chargedAttackHitboxDuration = 0.0f;
     int chargedAttackDamage           = 0;
+    float attackPressTimer            = 0.0f;
 
     bool desiredAim                   = false;
     float throwTimer                  = 0.0f;
