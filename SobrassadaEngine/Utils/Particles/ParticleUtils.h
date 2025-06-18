@@ -42,6 +42,16 @@ enum class ParticleAreaSpawn : int
 constexpr const char* AreaAddonSpawnStrings[] = {"Surface", "Volume"};
 constexpr int AreaAddonSpawnStringsSize       = sizeof(AreaAddonSpawnStrings) / sizeof(char*);
 
+enum class EmitterBlendingMode : int
+{
+    ALPHA = 0,
+    ALPHA_ADDITIVE,
+    ADDITIVE,
+};
+
+constexpr const char* EmitterBlendingModeStrings[] = {"Alpha", "Alpha additive", "Additive"};
+constexpr int EmitterBlendingModeStringsSize       = sizeof(EmitterBlendingModeStrings) / sizeof(char*);
+
 class ParticleUtils
 {
   public:

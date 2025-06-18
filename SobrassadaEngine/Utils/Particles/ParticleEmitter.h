@@ -81,8 +81,9 @@ class ParticleEmitter
     unsigned int particleRotationVBO   = 0;
 
     int renderPriority                 = 0;
-    bool additiveBlending              = false;
     bool useSpritesheet                = false;
+
+    EmitterBlendingMode blendingMode   = EmitterBlendingMode::ALPHA;
 
     HashString emitterTag              = HashString("");
 

@@ -150,7 +150,7 @@ void ParticleSystem::Stop()
 {
     for (auto component : linkedComponents)
     {
-        component->ReloadEmitterInstances(emitters);
+        component->StopInstances();
     }
 }
 

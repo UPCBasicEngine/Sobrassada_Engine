@@ -120,7 +120,7 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
     }
 
     if (initialState.HasMember("RenderPriority")) renderPriority = initialState["RenderPriority"].GetInt();
-    if (initialState.HasMember("AdditiveBlending")) additiveBlending = initialState["AdditiveBlending"].GetBool();
+    if (initialState.HasMember("blendingMode")) blendingMode = EmitterBlendingMode(initialState["blendingMode"].GetInt());
 }
 
 ParticleEmitter::~ParticleEmitter()
@@ -148,7 +148,7 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
     targetState.AddMember("Addons", addonsJSON, allocator);
     targetState.AddMember("RenderPriority", renderPriority, allocator);
-    targetState.AddMember("AdditiveBlending", additiveBlending, allocator);
+    targetState.AddMember("blendingMode", (int)blendingMode, allocator);
 }
 
 void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
@@ -187,8 +187,20 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
 
         glUseProgram(App->GetShaderModule()->GetParticleSystemProgram());
 
-        if (additiveBlending) glBlendFunc(GL_ONE, GL_ONE);
-        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        switch (blendingMode)
+        {
+        case EmitterBlendingMode::ALPHA:
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        case EmitterBlendingMode::ALPHA_ADDITIVE:
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            break;
+        case EmitterBlendingMode::ADDITIVE:
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+        default:
+            break;
+        }
 
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);
@@ -319,7 +331,19 @@ void ParticleEmitter::RenderEditor()
         owner->SortEmitters();
     }
 
-    ImGui::Checkbox("Additive blending", &additiveBlending);
+    ImGui::Spacing();
+
+    if (ImGui::BeginCombo("Blending mode", EmitterBlendingModeStrings[(int)blendingMode]))
+    {
+        for (int i = 0; i < EmitterBlendingModeStringsSize; ++i)
+        {
+            if (ImGui::Selectable(EmitterBlendingModeStrings[i])) blendingMode = EmitterBlendingMode(i);
+        }
+
+        ImGui::EndCombo();
+    }
+
+    ImGui::Spacing();
 
     ImGui::PopItemWidth();
 

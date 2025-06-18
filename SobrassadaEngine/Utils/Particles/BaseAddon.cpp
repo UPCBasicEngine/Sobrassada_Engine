@@ -75,6 +75,7 @@ BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
 
     if (initialState.HasMember("randomRotation")) randomRotation = initialState["randomRotation"].GetBool();
     if (initialState.HasMember("burst")) burst = initialState["burst"].GetBool();
+    if (initialState.HasMember("respawnLoop")) respawnLoop = initialState["respawnLoop"].GetBool();
 }
 
 BaseAddon::~BaseAddon()
@@ -130,6 +131,7 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
 
     targetState.AddMember("randomRotation", randomRotation, allocator);
     targetState.AddMember("burst", burst, allocator);
+    targetState.AddMember("respawnLoop", respawnLoop, allocator);
 }
 
 void BaseAddon::Init(EmitterInstance* emitterInstance)
@@ -251,7 +253,7 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
         emitterInstance->particleVectorPos = 0;
         spawnDeltaTime                     = 0;
     }
-    else if (emitterInstance->currentEmissionTime > duration && loop)
+    else if (emitterInstance->currentEmissionTime > duration && loop && respawnLoop)
     {
         emitterInstance->Spawn();
     }
@@ -264,6 +266,11 @@ void BaseAddon::RenderEditorInspector()
     ImGui::PushItemWidth(100);
 
     ImGui::Checkbox("Loop", &loop);
+    ImGui::SameLine();
+    ImGui::BeginDisabled(!loop);
+    ImGui::Checkbox("Respawn", &respawnLoop);
+    ImGui::EndDisabled();
+
     ImGui::InputFloat("Duration", &duration, 0.05f, 1.f);
     if (ImGui::InputInt("Emitting rate", &particlesPerSecond, 5, 10))
     {

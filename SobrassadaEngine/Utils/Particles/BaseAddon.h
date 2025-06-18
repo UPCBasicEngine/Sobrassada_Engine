@@ -21,6 +21,7 @@ class BaseAddon : public ParticleAddon
     float currentEmissionTime = 0.f;
     float duration            = 5.f;
     bool loop                 = false;
+    bool respawnLoop          = false;
     int maxParticles          = 100;
 
     bool randomLifetime       = false;
