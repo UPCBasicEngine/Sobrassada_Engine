@@ -37,7 +37,7 @@ class Character : public Script
 
     virtual bool Init() override;
     virtual void Update(float deltaTime) override;
-    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
+    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
     virtual void TakeDamage(int amount);
     void Restart();

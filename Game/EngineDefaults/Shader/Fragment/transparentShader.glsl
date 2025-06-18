@@ -194,7 +194,7 @@ void main()
     vec4 metallicRoughnessTexColor;
     if(mat.hasMetallic == 1) metallicRoughnessTexColor = pow(texture(sampler2D(mat.metallicTex), uv0), vec4(2.2));
     else metallicRoughnessTexColor = vec4(1);
-    const float alpha = texColor.a;
+    const float alpha = texColor.a * mat.diffColor.a;
 
     if (!isWireframe)
     {

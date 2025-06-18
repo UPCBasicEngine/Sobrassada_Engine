@@ -766,6 +766,18 @@ void DebugDrawModule::DrawCone(const float3& center, const float3& dir, const fl
     dd::cone(center, dir, float3(1, 1, 1), baseRadius, apexRadius);
 }
 
+void DebugDrawModule::DrawArrow(const float3& from, const float3& to, const float3& color, float headSize)
+{
+    dd::arrow(from, to, color, headSize);
+}
+
+void DebugDrawModule::DrawCone(
+    const float3& apexPosition, const float3& direction, const float3& color, float apexRadius, float baseRadius
+)
+{
+    dd::cone(apexPosition, direction, color, baseRadius, apexRadius);
+}
+
 void DebugDrawModule::Draw3DText(const btVector3& location, const char* textString)
 {
     bool playMode              = App->GetSceneModule()->GetInPlayMode();
