@@ -18,7 +18,7 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 Changeling::Changeling(GameObject* parent)
-    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
+    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Dash Distance", InspectorField::FieldType::Float, &dashDistance, 0.0f, 10.0f});
@@ -215,9 +215,9 @@ void Changeling::Attack(float deltaTime)
 
         float testDistance = dashDistance;
         float3 dashTarget;
-        bool posOverPoly    = false;
-        float3 closestPoint = float3::zero;
-        const float3 searchArea   = {1.0f, 2.0f, 1.0f};
+        bool posOverPoly        = false;
+        float3 closestPoint     = float3::zero;
+        const float3 searchArea = {1.0f, 2.0f, 1.0f};
 
         // Busca el primer punto válido en la navmesh reduciendo la distancia
         do
@@ -233,7 +233,7 @@ void Changeling::Attack(float deltaTime)
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
-        startPos = parent->GetPosition();
+        startPos       = parent->GetPosition();
         localTransform = parent->GetLocalTransform();
 
         hasShot        = false;
@@ -252,7 +252,7 @@ void Changeling::Attack(float deltaTime)
             isDashing    = true;
             agentAI->SetSpeed(dashSpeed, 1000000);
 
-            dashEndPoint        = dashDirection;
+            dashEndPoint = dashDirection;
             agentAI->SetPathNavigation(dashEndPoint);
             pathObj->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true);
         }

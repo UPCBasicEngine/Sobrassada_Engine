@@ -57,7 +57,7 @@ class CuChulainn : public Character
     bool CanUltimate() const;
     bool CanAim() const;
     void GetInputs();
-    void UpdateTimers(float deltaTime);
+    void UpdateTimers(float deltaTime) override;
     void LookAtMouse();
     void LookAtRightStick();
     void LookAtLeftStick();
@@ -128,3 +128,4 @@ class CuChulainn : public Character
 };
 
 extern CharacterControllerComponent* character;
+extern CuChulainn* playerScript;
