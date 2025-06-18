@@ -28,7 +28,7 @@ bool SpawnPoint::Init()
     return true;
 }
 
-void SpawnPoint::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void SpawnPoint::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     if (otherObject != player) return;
 

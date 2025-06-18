@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Archer.h"
+#include "Changeling.h"
 #include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
@@ -56,6 +57,7 @@ constexpr const char* scripts[] = {
     "TileFloatScript",
     "FireballTrap",
     "Archer",
+    "Changeling",
     "ChangeSceneScript",
     "SpawnUI",
     "MenuChangeSceneScript",
@@ -91,6 +93,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Projectile") return new Projectile(parent);
     if (scriptType == "Banshee") return new Banshee(parent);
     if (scriptType == "Archer") return new Archer(parent);
+    if (scriptType == "Changeling") return new Changeling(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);

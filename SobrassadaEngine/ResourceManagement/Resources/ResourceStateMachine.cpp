@@ -30,6 +30,7 @@ void ResourceStateMachine::AddClip(UID animationResourceUID, const std::string& 
     newClip.animationResourceUID = animationResourceUID;
     newClip.clipName             = hashName;
     newClip.loop                 = loopFlag;
+    
     clips.push_back(newClip);
 }
 
@@ -50,7 +51,7 @@ bool ResourceStateMachine::RemoveClip(const std::string& name)
 }
 
 bool ResourceStateMachine::EditClipInfo(
-    const std::string& oldName, UID newUID, const std::string& newName, bool newLoop
+    const std::string& oldName, UID newUID, const std::string& newName, bool newLoop, float newSpeed
 )
 {
     HashString hashOld(oldName);
@@ -60,7 +61,7 @@ bool ResourceStateMachine::EditClipInfo(
         {
             clip.animationResourceUID = newUID;
             clip.loop                 = newLoop;
-
+            clip.animationSpeed       = newSpeed;
             if (HashString(newName) != hashOld)
             {
                 for (const auto& clip : clips)
@@ -252,6 +253,19 @@ const Clip* ResourceStateMachine::GetClip(const std::string& name) const
         if (clip.clipName == hashName) return &clip;
     }
     return nullptr;
+}
+
+void ResourceStateMachine::SetClipSpeed(const std::string& name,float speed)
+{
+    HashString hashName(name);
+    for ( auto& clip : clips)
+    {
+        if (clip.clipName == hashName)
+        {
+            clip.animationSpeed = speed;
+        }
+    }
+    
 }
 
 const State* ResourceStateMachine::GetState(const std::string& name) const
