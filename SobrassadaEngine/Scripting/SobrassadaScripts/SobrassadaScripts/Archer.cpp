@@ -19,7 +19,6 @@ Archer::Archer(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
-    fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
 }
 
 bool Archer::Init()
@@ -39,11 +38,21 @@ bool Archer::Init()
         speed = agentAI->GetSpeed();
     }
 
-    const GameObject* arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowName);
+    // Get the arrow. This assumes the archer has only one sibling, which is the arrow. If it has more probably will
+    // keep working as long as the arrow is the second gameObject
+    const GameObject* root           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent());
+    const std::vector<UID>& siblings = root->GetChildren();
+    GameObject* arrowObj             = nullptr;
+    for (UID objectUID : siblings)
+    {
+        if (objectUID != parent->GetUID())
+            arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
+    }
+
     if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
     {
         arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
-        if (!arrow) GLOG("[WARNING] No projectile found by the name %s", arrowName.c_str());
+        if (!arrow) GLOG("[WARNING] No arrow found in archer");
     }
 
     return true;

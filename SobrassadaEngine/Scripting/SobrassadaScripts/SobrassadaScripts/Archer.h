@@ -40,7 +40,6 @@ class Archer : public Character
     AIAgentComponent* agentAI = nullptr;
     ArcherStates currentState = ArcherStates::NONE;
 
-    std::string arrowName     = "";
     Projectile* arrow         = nullptr;
 
     float3 patrolPoint        = float3::zero;

@@ -6,6 +6,8 @@
 #include "SceneModule.h"
 #include "Standalone/BillboardComponent.h"
 
+#include "glew.h"
+
 BillboardModule::BillboardModule()
 {
 }
@@ -153,10 +155,16 @@ void BillboardModule::RenderBillboards()
         upVector    = editorCamera.up;
     }
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
+
     for (auto& billboard : billboardMap)
     {
         billboard.second.second->Render(VP, rightVector, upVector);
     }
+
+    glDisable(GL_BLEND);
 }
 
 void BillboardModule::UpdateTagWidth(const HashString& tag, float width)

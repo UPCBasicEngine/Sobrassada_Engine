@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ComponentUtils.h"
 #include "Math/float3.h"
 #include "rapidjson/document.h"
 #include <vector>
@@ -62,7 +63,7 @@ class Script
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator);
     virtual void Load(const rapidjson::Value& initialState);
     virtual void CloneFields(const std::vector<InspectorField>& fields);
-    virtual void OnCollision(GameObject* otherObject, const float3& collisionNormal) {};
+    virtual void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) {};
     virtual void OnDestroy() {};
 
     virtual const std::vector<InspectorField>& GetFields() const { return fields; }

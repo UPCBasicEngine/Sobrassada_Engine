@@ -39,7 +39,7 @@ class Banshee : public Character
     void SearchForPlayer();
     void GoToAttackPosition();
 
-    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
+    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
     AIAgentComponent* agentAI           = nullptr;

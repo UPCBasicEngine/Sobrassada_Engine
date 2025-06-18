@@ -17,9 +17,9 @@ private:
     SplineComponent* FindSpline();
 
 private:
-    UID splineGO = INVALID_UID;
-    float speed  = 0.1f;
-    bool loop    = false;
+    UID splineIdGO = INVALID_UID;
+    float speed  = 1.0f;
+    bool isLoop    = false;
     
     SplineComponent* spline = nullptr;
     float t                 = 0.0f;
