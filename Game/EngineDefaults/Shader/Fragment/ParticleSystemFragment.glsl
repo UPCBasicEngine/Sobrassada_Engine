@@ -11,8 +11,8 @@ out vec4 fragColor;
 
 void main()
 {
-    vec4 color0 = texture2D(myTexture, vec2(uv.x, 1 - uv.y));
-    vec4 color1 = texture2D(myTexture, vec2(uvNext.x, 1 - uvNext.y));
-    vec4 textureColor = mix(color0, color1, blendFactor);
+    const vec4 color0 = texture2D(myTexture, vec2(uv.x, 1 - uv.y));
+    const vec4 color1 = texture2D(myTexture, vec2(uvNext.x, 1 - uvNext.y));
+    const vec4 textureColor = mix(color0, color1, blendFactor);
     fragColor = vec4(fragParticleColor.rgb * textureColor.rgb, min(textureColor.a, fragParticleColor.a));
 }

@@ -146,6 +146,14 @@ void ParticleSystem::SortEmitters()
     );
 }
 
+void ParticleSystem::Stop()
+{
+    for (auto component : linkedComponents)
+    {
+        component->ReloadEmitterInstances(emitters);
+    }
+}
+
 void ParticleSystem::UpdateComponents()
 {
     for (auto component : linkedComponents)

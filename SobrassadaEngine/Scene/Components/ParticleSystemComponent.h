@@ -28,6 +28,7 @@ class ParticleSystemComponent : public Component
     void RenderEditorInspector() override;
 
     void ReloadEmitterInstances(const std::vector<std::pair<HashString, ParticleEmitter*>>& emitters);
+    void StopInstances();
 
     const HashString& GetParticleSystemTag() const { return particleSystemTag; };
 

@@ -19,7 +19,7 @@ ParticleSystemModule::~ParticleSystemModule()
 
 bool ParticleSystemModule::Init()
 {
-    float vertexData[] = {
+    constexpr float vertexData[] = {
         -0.5, 0.5,  0.f, //
         -0.5, -0.5, 0.f, //
         0.5,  -0.5, 0.f, //

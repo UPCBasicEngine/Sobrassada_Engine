@@ -210,8 +210,8 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
         {
             newPosition         = circle.RandomPointInside(*rng);
 
-            float rx            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
-            float rz            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            const float rx            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            const float rz            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
 
             float3 tempDir    = (Quat::FromEulerXYZ(rx, 0.f, rz) * float3::unitY).Normalized();
 

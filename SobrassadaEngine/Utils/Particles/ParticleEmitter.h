@@ -53,6 +53,8 @@ class ParticleEmitter
     void AddAddon(ParticleAddonType type);
     void RemoveAddon(ParticleAddonType type);
 
+    void Stop();
+
     const HashString& GetTag() const { return emitterTag; }
     const std::string& GetName() const { return emitterTag.GetString(); }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
@@ -70,6 +72,7 @@ class ParticleEmitter
     void UpdateParticlesVBO(EmitterInstance* emitterInstance);
 
   private:
+    // quadVBO deleted from ParticleSystemModule which holds the OG.
     unsigned int quadVBO               = 0;
     unsigned int particlesVBO          = 0;
     unsigned int particleTileOffsetVBO = 0;

@@ -131,6 +131,7 @@ ParticleEmitter::~ParticleEmitter()
     glDeleteBuffers(1, &particleTileOffsetVBO);
     glDeleteBuffers(1, &particleColorsVBO);
     glDeleteBuffers(1, &particleSizeVBO);
+    glDeleteBuffers(1, &particleRotationVBO);
 }
 
 void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -411,6 +412,11 @@ void ParticleEmitter::RemoveAddon(ParticleAddonType type)
     {
         RemoveAddonTuple(addonTuple, type, this);
     }
+}
+
+void ParticleEmitter::Stop()
+{
+    owner->Stop();
 }
 
 void ParticleEmitter::UpdateMaterial(UID newMaterialUID)

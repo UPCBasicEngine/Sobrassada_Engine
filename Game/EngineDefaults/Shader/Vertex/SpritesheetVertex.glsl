@@ -19,19 +19,19 @@ flat out float blendFactor;
 void main()
 {
 
-    float X = trunc(mod(currentFrame + tileOffset.x, tileSize.x));
+    const float X = trunc(mod(currentFrame + tileOffset.x, tileSize.x));
     float Y  = trunc((currentFrame + tileOffset.y) / tileSize.y);
     Y = tileSize.y - 1 - Y;
 
-    float XNext = trunc(mod(currentFrame + tileOffset.x + 1.f, tileSize.x));
+    const float XNext = trunc(mod(currentFrame + tileOffset.x + 1.f, tileSize.x));
     float YNext  = trunc((currentFrame + tileOffset.y + 1.f) / tileSize.y);
     YNext = tileSize.y - 1 - YNext;
 
-    float U = mix(X, X+1, vertexUV.x) / tileSize.x;
-    float V = mix(Y, Y+1, vertexUV.y) / tileSize.y;
+    const float U = mix(X, X+1, vertexUV.x) / tileSize.x;
+    const float V = mix(Y, Y+1, vertexUV.y) / tileSize.y;
 
-    float UN = mix(X, X+1, vertexUV.x) / tileSize.x;
-    float VN = mix(Y, Y+1, vertexUV.y) / tileSize.y;
+    const float UN = mix(X, X+1, vertexUV.x) / tileSize.x;
+    const float VN = mix(Y, Y+1, vertexUV.y) / tileSize.y;
 
     blendFactor = currentFrame - trunc(currentFrame);
 

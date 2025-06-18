@@ -119,8 +119,7 @@ void ParticleSystemComponent::RenderEditorInspector()
 
     if(ImGui::Button("Stop playing"))
     {
-        for (auto& emitter : emitterInstances)
-            emitter.Stop();
+        StopInstances();
     }
 
     ImGui::Spacing();
@@ -178,6 +177,12 @@ void ParticleSystemComponent::ReloadEmitterInstances(
     }
 
     if (emitterInstances.size() > 0) currentEmitter = &emitterInstances[0];
+}
+
+void ParticleSystemComponent::StopInstances()
+{
+    for (auto& emitter : emitterInstances)
+        emitter.Stop();
 }
 
 void ParticleSystemComponent::SetParticleSystem(ParticleSystem* newParticleSystem)

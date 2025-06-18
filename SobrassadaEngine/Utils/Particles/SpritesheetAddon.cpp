@@ -27,7 +27,7 @@ SpritesheetAddon::SpritesheetAddon(const rapidjson::Value& initialState, Particl
 
     owner->SetUseSpritesheet(true);
 
-    timePerFrame = (rows * columns) / animationSpeed;
+    timePerFrame = animationSpeed != 0 ? (rows * columns) / animationSpeed : 0;
 }
 
 SpritesheetAddon::~SpritesheetAddon()
@@ -68,7 +68,7 @@ void SpritesheetAddon::Init(EmitterInstance* emitterInstance)
 void SpritesheetAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     playTime     += deltaTime;
-    currentFrame  = playTime / timePerFrame;
+    currentFrame  = timePerFrame ? playTime / timePerFrame : 0;
 }
 
 void SpritesheetAddon::RenderEditorInspector()
@@ -87,7 +87,7 @@ void SpritesheetAddon::RenderEditorInspector()
     }
     if (ImGui::InputFloat("Animation speed", &animationSpeed))
     {
-        if (animationSpeed <= 0) animationSpeed = 1.f;
+        //if (animationSpeed <= 0) animationSpeed = 1.f;
     }
 
     ImGui::BeginDisabled(!randomizeOffset);
@@ -107,7 +107,7 @@ void SpritesheetAddon::RenderEditorInspector()
     ImGui::SameLine();
     ImGui::Checkbox("##RandomizeOffsets", &randomizeOffset);
     
-    timePerFrame = (rows * columns) / animationSpeed;
+    timePerFrame = animationSpeed != 0 ? (rows * columns) / animationSpeed : 0;
 
     ImGui::PopItemWidth();
 

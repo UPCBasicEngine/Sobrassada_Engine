@@ -34,6 +34,7 @@ class ParticleSystem
     void RemoveComponent(std::list<ParticleSystemComponent*>::iterator componentIterator);
 
     void SortEmitters();
+    void Stop();
 
     const HashString& GetTag() const { return particleSystemTag; }
 
@@ -41,6 +42,7 @@ class ParticleSystem
     void UpdateComponents();
 
   private:
+    // quadVBO deleted from ParticleSystemModule which holds the OG.
     unsigned int quadVBO         = 0;
     HashString particleSystemTag = HashString("");
     const HashString emptyString = HashString("");

@@ -271,6 +271,7 @@ void BaseAddon::RenderEditorInspector()
     }
     if (ImGui::InputInt("Max Particles", &maxParticles, 5, 10))
     {
+        owner->Stop();
         maxParticles = maxParticles < 1 ? 1 : maxParticles;
     }
     ImGui::Checkbox("Burst", &burst);
