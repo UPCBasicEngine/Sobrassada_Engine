@@ -39,9 +39,14 @@ class RenderPass
     GBuffer* gbuffer         = nullptr;
     Framebuffer* framebuffer = nullptr;
     int width, height;
+    int shadowResolution = 8192;
 
+    //Decals
     unsigned int decalVAO, decalVBO, decalEBO;
+
+    //Shadows
     unsigned int depthTexture, depthFBO;
     float4x4 lightview;
     float4x4 lightProj;
+    int cascades = 3;
 };

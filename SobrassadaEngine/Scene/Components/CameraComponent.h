@@ -53,9 +53,20 @@ class CameraComponent : public Component
     void SetCameraPosition(const float3& position) { camera.pos = position; }
     void SetCameraFront(const float3& front) { camera.front = front; }
     void SetCameraUp(const float3& up) { camera.up = up; }
-    void SetNear(float nearPlane) { camera.nearPlaneDistance = nearPlane; }
-    void SetFar(float farPlane) { camera.farPlaneDistance = farPlane; }
+    void SetNear(float nearPlane)
+    {
+        camera.nearPlaneDistance = nearPlane;
+        UpdateUBO();
+    }
+    void SetFar(float farPlane)
+    {
+        camera.farPlaneDistance = farPlane;
+        UpdateUBO();
+    }
     void SetFreeCamera(const bool freecamera) { freeCamera = freecamera; }
+
+  private:
+    void UpdateUBO();
 
   private:
     Frustum camera;

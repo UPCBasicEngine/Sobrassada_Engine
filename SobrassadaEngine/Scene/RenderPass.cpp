@@ -24,17 +24,14 @@ RenderPass::RenderPass()
     glGenFramebuffers(1, &depthFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
 
-    const unsigned int shadowWidth  = 4092;
-    const unsigned int shadowHeight = 4092;
-
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowResolution, shadowResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
     );
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -293,6 +290,8 @@ void RenderPass::ShadowMapPassRender(
     int currentWidth                   = gBufferwidth;
     int currentHeight                  = gBufferheight;
 
+    bool firstPass                     = true;
+
     unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
     glUseProgram(depthReductionProgram);
 
@@ -305,10 +304,12 @@ void RenderPass::ShadowMapPassRender(
         glBindTextureUnit(0, currentInput);
 
         glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
+        glUniform1i(glGetUniformLocation(depthReductionProgram, "firstPass"), firstPass);
 
         glDispatchCompute(groupsX, groupsY, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
+        firstPass = false;
         unsigned int newTex;
         CreateDepthReductionTexture(newTex, groupsX, groupsY);
         glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
@@ -321,7 +322,18 @@ void RenderPass::ShadowMapPassRender(
         currentHeight = groupsY;
     }
 
-    glFinish();
+    //Last Pass to make it 1x1
+    int groupsX = (currentWidth + 7) / 8;
+    int groupsY = (currentHeight + 3) / 4;
+
+    glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindTextureUnit(0, currentInput);
+
+    glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
+
+    glDispatchCompute(groupsX, groupsY, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     float minMax[2] = {0, 0};
 
@@ -333,6 +345,7 @@ void RenderPass::ShadowMapPassRender(
 
     glDeleteTextures(1, &currentOutput);
 
+    // Compute the near and far planes based on the min/max depth values
     float nearD;
     float farD;
     camera == nullptr ? nearD = App->GetCameraModule()->GetNearPlaneDistance() : nearD = camera->GetNearPlaneDistance();
@@ -344,10 +357,11 @@ void RenderPass::ShadowMapPassRender(
     float distMin = S / (T + minDepth);
     float distMax = S / (T + maxDepth);
 
-    GLOG("%f, %f", minDepth, maxDepth);
+    //GLOG("Final reduction size: %d, %d", currentWidth, currentHeight);
+    GLOG("%f, %f", distMin, distMax);
 
-    camera == nullptr ? App->GetCameraModule()->SetNear(distMin * nearD) : camera->SetNear(distMin* nearD);
-    camera == nullptr ? App->GetCameraModule()->SetFar(distMax * farD) : camera->SetFar(distMax * farD);
+    camera == nullptr ? App->GetCameraModule()->SetNear(distMin) : camera->SetNear(distMin);
+    camera == nullptr ? App->GetCameraModule()->SetFar(distMax) : camera->SetFar(distMax);
 
     // Compute light
     float3 corners[8];
@@ -390,6 +404,7 @@ void RenderPass::ShadowMapPassRender(
 
     DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
     debugdraw->DrawFrustrum(lightProj, lightview);
+
     unsigned int ubo = 0;
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
@@ -402,14 +417,19 @@ void RenderPass::ShadowMapPassRender(
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
-    for (const auto& gameObject : objectsToRender)
+    FrustumPlanes lightFrustum;
+    lightFrustum.UpdateFrustumPlanes(lightview, lightProj);
+    std::vector<GameObject*> shadowObjectsToRender;
+    App->GetSceneModule()->GetScene()->CheckObjectsToRender(shadowObjectsToRender, lightFrustum);
+
+    for (const auto& gameObject : shadowObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
         if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
             meshesToRender.push_back(mesh);
     }
 
-    glViewport(0, 0, 4092, 4092);
+    glViewport(0, 0, shadowResolution, shadowResolution);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);

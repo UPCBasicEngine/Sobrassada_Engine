@@ -76,6 +76,8 @@ void CameraModule::UpdateUBO()
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(CameraMatrices), &matrices);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    frustumPlanes.UpdateFrustumPlanes(camera.ViewMatrix(), camera.ProjectionMatrix());
 }
 
 const LineSegment& CameraModule::CastCameraRay()
