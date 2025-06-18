@@ -44,6 +44,7 @@ class CuChulainn : public Character
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     CharacterStates GetState() const { return state; }
     int GetUltimateDamage() const { return ultimateDamage; }
+    int GetChargedAttackDamage() const { return chargedAttackDamage; }
 
   private:
     void OnDeath() override;
@@ -100,6 +101,7 @@ class CuChulainn : public Character
     int comboCounter                  = -1;
     float comboBufferTimer            = 0.0f;
 
+    std::string chargedAttackName     = "";
     GameObject* chargedAttackCollider = nullptr;
     bool isChargingAttack             = false;
     float chargeTimer                 = 0.0f;
@@ -108,6 +110,7 @@ class CuChulainn : public Character
     float chargedAttackTimer          = 0.0f;
     float chargedAttackHitboxDelay    = 0.0f;
     float chargedAttackHitboxDuration = 0.0f;
+    int chargedAttackDamage           = 0;
 
     bool desiredAim                   = false;
     float throwTimer                  = 0.0f;

@@ -34,14 +34,22 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
-    fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName, 0.0f, 5.0f});
+    fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
-    fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
+    fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
     fields.push_back({"Attack charging duration", InspectorField::FieldType::Float, &chargeDuration, 0.0f, 10.0f});
+    fields.push_back({"Charged Attack damage", InspectorField::FieldType::Int, &chargedAttackDamage, 0.0f, 5.0f});
+    fields.push_back(
+        {"Charged Attack hitbox delay", InspectorField::FieldType::Float, &chargedAttackHitboxDelay, 0.0f, 5.0f}
+    );
+    fields.push_back(
+        {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
+    );
+    fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
 bool CuChulainn::Init()
@@ -96,6 +104,10 @@ bool CuChulainn::Init()
         spear = spearObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
+
+    chargedAttackCollider = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargedAttackName);
+    if (!chargedAttackCollider) GLOG("[WARNING] No ultimate found for CuChualin")
+    else chargedAttackCollider->SetEnabled(false);
 
     ultimateObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateName);
     if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChualin")
@@ -177,7 +189,8 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (isChargingAttack && CanChargeAttack()) ChargeAttack();
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE)
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING)
         Move();
 
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
@@ -303,7 +316,8 @@ void CuChulainn::GetInputs()
 bool CuChulainn::CanDash() const
 {
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
-                   state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE;
+                   state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
+                   state != CharacterStates::CHARGED_ATTACK;
 
     if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer >= 0.0f;
 
@@ -314,13 +328,14 @@ bool CuChulainn::CanAttack() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
            state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
-           state != CharacterStates::ULTIMATE;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK;
 }
 
 bool CuChulainn::CanUltimate() const
 {
     bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-                       state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f;
+                       state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
+                       state != CharacterStates::CHARGED_ATTACK;
 
     if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer >= 0.0f;
 
@@ -330,13 +345,15 @@ bool CuChulainn::CanUltimate() const
 bool CuChulainn::CanAim() const
 {
     return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
-           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE;
+           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
+           state != CharacterStates::CHARGED_ATTACK;
 }
 
 bool CuChulainn::CanChargeAttack() const
 {
-    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && state != CharacterStates::FALL &&
-           state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE && state != CharacterStates::AIM;
+    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+           state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
+           state != CharacterStates::CHARGED_ATTACK;
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
@@ -361,9 +378,8 @@ void CuChulainn::UpdateTimers(float deltaTime)
     }
 
     // Ranged attack timers
-    desiredAim        = false;
-    isChargingAttack  = false;
-    throwTimer       -= deltaTime;
+    desiredAim  = false;
+    throwTimer -= deltaTime;
     if (throwTimer < 0.0f)
     {
         if (resetWeapon)
@@ -395,9 +411,11 @@ void CuChulainn::UpdateTimers(float deltaTime)
 
     if (isChargingAttack)
     {
+        GLOG("Charge timer: %f", chargeTimer);
         chargeTimer -= deltaTime;
         if (chargeTimer < 0.0f) chargeTimer = 0.0f;
     }
+    isChargingAttack = false;
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
@@ -651,6 +669,8 @@ void CuChulainn::ChargeAttack()
     }
     else if (desiredChargedAttack && chargeTimer <= 0.0f)
     {
+        GLOG("CHARGED ATTACK")
+
         desiredChargedAttack = false;
         state                = CharacterStates::CHARGED_ATTACK;
         chargedAttackTimer   = 0.0f;

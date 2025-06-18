@@ -120,6 +120,10 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
             TakeDamage(playerScript->GetUltimateDamage());
 
+        // Charged attack check
+        if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
+            TakeDamage(playerScript->GetChargedAttackDamage());
+
         // Standard attack check
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         if (enemyScript)
@@ -292,11 +296,11 @@ void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, fl
     float screenY = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
 #else
     const auto& windowSize = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
-    const float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
-    const float screenY          = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
+    const float screenX    = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
+    const float screenY    = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
 #endif
 
-    const float scale        = 0.6f;
+    const float scale = 0.6f;
 
     for (const auto& log : logs)
     {
