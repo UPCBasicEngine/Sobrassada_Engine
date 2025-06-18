@@ -57,7 +57,9 @@ update_status PathfinderModule::Update(float deltaTime)
 }
 
 // All ai agent components will call this to add themselves to crowd
-int PathfinderModule::CreateAgent(const float3& position, const float radius, const float height, const float speed, const float acceleration)
+int PathfinderModule::CreateAgent(
+    const float3& position, const float radius, const float height, const float speed, const float acceleration
+)
 {
 
     dtCrowdAgentParams params;
@@ -218,6 +220,7 @@ void PathfinderModule::LoadNavMesh(const std::string& name)
         return;
     }
 
+    navconf.LoadFromMeta(navmeshUID);
     navmesh = loadedNavmesh;
 
     InitQuerySystem();

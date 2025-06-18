@@ -13,7 +13,7 @@ class SpawnPoint : public Script
 
     bool Init() override;
     void Update(float deltaTime) override {}
-    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
+    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
     std::string playerName   = "";

@@ -67,7 +67,7 @@ enum class ColliderLayer : uint8_t
 constexpr const char* ColliderLayerStrings[] = {"World Objects", "Triggers",          "Enemies",
                                                 "Player",        "Player projectile", "Enemy projectile"};
 
-typedef Delegate<void, GameObject*, float3> CollisionDelegate;
+typedef Delegate<void, GameObject*, float3, ColliderLayer> CollisionDelegate;
 
 constexpr const char* ResourceTypeStrings[] = {"Material", "Texture"};
 constexpr int ResourceTypeStringsSize       = sizeof(ResourceTypeStrings) / sizeof(char*);

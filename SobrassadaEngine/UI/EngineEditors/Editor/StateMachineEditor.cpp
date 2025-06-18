@@ -321,18 +321,22 @@ void StateMachineEditor::ShowInspector()
     if (clip)
     {
         bool loopBuffer = clip->loop;
-
+        float editableSpeed = clip->animationSpeed;
+        
         ImGui::Text("Clip UID: %llu", clip->animationResourceUID);
-
+        
         ImGui::Text("Clip Name: %s", clip->clipName.GetString().c_str());
-
+        if(ImGui::SliderFloat("Clip Speed: %f", &editableSpeed, 0.0f, 2.0f, "%.2f"))
+        {
+            resource->SetClipSpeed(selectedNode->GetClipName(), editableSpeed);
+        }
         if (ImGui::Checkbox("Loop", &loopBuffer))
         {
             if (loopBuffer != clip->loop)
             {
                 resource->EditClipInfo(
-                    clip->clipName.GetString(), clip->animationResourceUID, clip->clipName.GetString(), loopBuffer
-                );
+                    clip->clipName.GetString(), clip->animationResourceUID, clip->clipName.GetString(), loopBuffer,
+                clip->animationSpeed);
             }
         }
     }

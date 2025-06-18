@@ -12,6 +12,7 @@
 #include "glew.h"
 #include "imgui.h"
 #include "imgui_curves.h"
+#include "imgui_color_gradient.h"
 
 TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, parent, "Trail", COMPONENT_TRAIL)
 {
@@ -38,7 +39,8 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
 
     glBindVertexArray(0);
 
-    gradientMarks = gradient.getMarks();
+    gradient      = new ImGradient();
+
     vertices.reserve(maxVertices * sizeof(TrailVertex));
     indices.reserve(maxIndices * sizeof(uint32_t));
 
@@ -87,9 +89,8 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     if (initialState.HasMember("HasTexture")) hasTexture = initialState["HasTexture"].GetBool();
     if (initialState.HasMember("Texture")) UpdateTexture(initialState["Texture"].GetUint64());
 
-    gradientMarks = gradient.getMarks();
-    for (ImGradientMark* mark : gradientMarks)
-        gradient.removeMark(mark);
+    gradient      = new ImGradient();
+    gradient->getMarks().clear();
 
     if (initialState.HasMember("Color"))
     {
@@ -101,10 +102,8 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
                 colorArray[i + 3].GetFloat()
             };
             const float position = colorArray[i + 4].GetFloat();
-            gradient.addMark(position, ImColor(color[0], color[1], color[2], color[3]));
+            gradient->addMark(position, ImColor(color[0], color[1], color[2], color[3]));
         }
-
-        gradientMarks = gradient.getMarks();
     }
 
     vertices.reserve(maxVertices * sizeof(TrailVertex));
@@ -138,13 +137,14 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
         .PushBack(curve[4], allocator);
     targetState.AddMember("Curve", curveArray, allocator);
 
+
     targetState.AddMember(
         "Texture", currentTexture != nullptr ? currentTexture->GetUID() : FALLBACK_TEXTURE_UID, allocator
     );
     targetState.AddMember("HasTexture", hasTexture, allocator);
 
     rapidjson::Value colorArray(rapidjson::kArrayType);
-    for (const ImGradientMark* mark : gradientMarks)
+    for (const ImGradientMark* mark : gradient->getMarks())
     {
         colorArray.PushBack(mark->color[0], allocator);
         colorArray.PushBack(mark->color[1], allocator);
@@ -157,18 +157,23 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
 
 void TrailComponent::Clone(const Component* other)
 {
-    if (other->GetType() != COMPONENT_TRAIL) return;
+    if (other->GetType() == ComponentType::COMPONENT_TRAIL)
+    {
+        const TrailComponent* otherTrail = static_cast<const TrailComponent*>(other);
+        minDistance                      = otherTrail->minDistance;
+        lifeTime                         = otherTrail->lifeTime;
+        width                            = otherTrail->width;
+        invertCurve                      = otherTrail->invertCurve;
+        for (int i = 0; i < 5; ++i)
+            curve[i] = otherTrail->curve[i];
+        gradient   = otherTrail->gradient;
+        enabled    = otherTrail->enabled;
+        wasEnabled = otherTrail->wasEnabled;
+        hasTexture = otherTrail->hasTexture;
+        UpdateTexture(otherTrail->currentTextureUID);
+    }
 
-    const TrailComponent* otherTrail = static_cast<const TrailComponent*>(other);
-    minDistance                      = otherTrail->minDistance;
-    lifeTime                         = otherTrail->lifeTime;
-    width                            = otherTrail->width;
-    invertCurve                      = otherTrail->invertCurve;
-    for (int i = 0; i < 5; ++i)
-        curve[i] = otherTrail->curve[i];
-    gradient   = otherTrail->gradient;
-    enabled    = otherTrail->enabled;
-    wasEnabled = otherTrail->wasEnabled;
+    
 }
 
 void TrailComponent::Update(float deltaTime)
@@ -214,11 +219,11 @@ void TrailComponent::Update(float deltaTime)
 
             for (int step = 0; step < stepsPerSegment; ++step)
             {
-                const float t                = (float)step / stepsPerSegment;
-                const float3 pos             = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
+                const float t     = (float)step / stepsPerSegment;
+                const float3 pos  = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
 
-                const float3 dir             = (P2.position - P1.position).Normalized();
-                const float3 perp            = dir.Cross(float3::unitY).Normalized();
+                const float3 dir  = (P2.position - P1.position).Normalized();
+                const float3 perp = dir.Cross(float3::unitY).Normalized();
 
                 const float interpolatedTime = Interpolation::Lerp(P1.time, P2.time, t);
                 renderPoints.push_back({pos, perp, interpolatedTime});
@@ -231,7 +236,7 @@ void TrailComponent::Update(float deltaTime)
 
     for (int i = 0; i < renderPoints.size(); ++i)
     {
-        const TrailPoint tp  = renderPoints[i];
+        const TrailPoint tp        = renderPoints[i];
         const float normalizedTime = tp.time / lifeTime;
 
         const float bezier         = ImGui::BezierValue(normalizedTime, curve);
@@ -241,7 +246,7 @@ void TrailComponent::Update(float deltaTime)
         const float3 right         = tp.position + tp.perpendicular * widthL;
 
         float color[4];
-        gradient.getColorAt(normalizedTime, color);
+        gradient->getColorAt(normalizedTime, color);
         const float4 colorVec = float4(color[0], color[1], color[2], color[3]);
 
         vertices.push_back({left, colorVec, float2(normalizedTime, 0.0f)});
@@ -317,11 +322,7 @@ void TrailComponent::RenderEditorInspector()
     ImGui::Bezier("Trail Curve", curve);
 
     ImGui::NewLine();
-    if (ImGui::GradientEditor(&gradient, draggingMark, selectedMark))
-    {
-        gradientMarks.clear();
-        gradientMarks = gradient.getMarks();
-    }
+    ImGui::GradientEditor(gradient, draggingMark, selectedMark);
 
     ImGui::Checkbox("Has Texture", &hasTexture);
     if (hasTexture)
@@ -399,6 +400,6 @@ void TrailComponent::RecalculateAABB()
     const float3 localMin       = invTransform.MulPos(globalAABB.minPoint);
     const float3 localMax       = invTransform.MulPos(globalAABB.maxPoint);
 
-    localComponentAABB    = AABB(localMin.Min(localMax), localMin.Max(localMax));
+    localComponentAABB          = AABB(localMin.Min(localMax), localMin.Max(localMax));
     parent->OnAABBUpdated();
 }
