@@ -553,7 +553,14 @@ void CuChulainn::Respawn()
     // TODO: This function will be called by the UI in the future
 
     Character::Restart();
-    healthImageComponent->ChangeTexture(healthBarTextures[9]);
+
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    if (healthUIObject)
+    {
+        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
+        healthImageComponent->ChangeTexture(healthBarTextures[9]);
+    }
+
     isDead        = false;
     currentHealth = reservedHealth;
     state         = CharacterStates::RESPAWN;
