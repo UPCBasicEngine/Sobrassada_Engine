@@ -511,7 +511,7 @@ void CameraComponent::SetFov(float fov)
 {
     camera.horizontalFov = fov * DEGREE_RAD_CONV;
     auto framebuffer     = App->GetOpenGLModule()->GetFramebuffer();
-    int width            = framebuffer->GetTextureWidth();
-    int height           = framebuffer->GetTextureHeight();
+    const int width            = framebuffer->GetTextureWidth();
+    const int height           = framebuffer->GetTextureHeight();
     camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
 }
