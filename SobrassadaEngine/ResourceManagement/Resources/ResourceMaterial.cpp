@@ -40,7 +40,7 @@ ResourceMaterial::~ResourceMaterial()
     FreeMaterials();
 }
 
-void ResourceMaterial::OnEditorUpdate()
+bool ResourceMaterial::OnEditorUpdate()
 {
     bool updated  = false;
 
@@ -81,6 +81,7 @@ void ResourceMaterial::OnEditorUpdate()
     }
 
     updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
+    updated |= ImGui::SliderFloat("Alpha", &material.diffColor.w, 0.0f, 1.0f);
 
     if (specularTexture.textureID != 0)
     {
@@ -189,6 +190,7 @@ void ResourceMaterial::OnEditorUpdate()
     }
 
     if (updated) SaveToMeta();
+    return updated;
 }
 
 void ResourceMaterial::SaveToMeta()

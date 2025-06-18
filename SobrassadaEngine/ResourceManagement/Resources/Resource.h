@@ -18,6 +18,8 @@ enum class ResourceType
     StateMachine,//17
     Navmesh,   // 18
     Font,         // 19
+    ParticleEmmiter,
+    ParticleSystem,
 };
 
 class SOBRASADA_API_ENGINE Resource
