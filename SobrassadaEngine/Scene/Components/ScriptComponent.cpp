@@ -214,11 +214,11 @@ void ScriptComponent::InitScriptInstances()
     }
 }
 
-void ScriptComponent::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void ScriptComponent::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     for (auto& script : scriptInstances)
     {
-        script->OnCollision(otherObject, collisionNormal);
+        script->OnCollision(otherObject, collisionNormal, layer);
     }
 }
 

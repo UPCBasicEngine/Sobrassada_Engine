@@ -83,9 +83,9 @@ update_status PhysicsModule::PreUpdate(float time)
             const float3 normal = float3(contactManifold->getContactPoint(0).m_normalWorldOnB);
 
             if (firstUserPointer->generateCallback && firstUserPointer->collider && secondUserPointer->collider)
-                firstUserPointer->onCollisionCallback->Call(secondUserPointer->collider->GetParent(), normal);
+                firstUserPointer->onCollisionCallback->Call(secondUserPointer->collider->GetParent(), normal, secondUserPointer->layer);
             if (secondUserPointer->generateCallback && secondUserPointer->collider && firstUserPointer->collider)
-                secondUserPointer->onCollisionCallback->Call(firstUserPointer->collider->GetParent(), -normal);
+                secondUserPointer->onCollisionCallback->Call(firstUserPointer->collider->GetParent(), -normal, firstUserPointer->layer);
         }
     }
 

@@ -31,7 +31,7 @@ bool ChangeSceneScript::Init()
     return true;
 }
 
-void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     if (otherObject != player) return;
 

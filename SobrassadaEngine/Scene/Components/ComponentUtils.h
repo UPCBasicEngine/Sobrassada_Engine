@@ -38,7 +38,8 @@ enum ComponentType : int
     COMPONENT_BILLBOARD,
 	COMPONENT_SPLINE,    
     COMPONENT_DECAL,
-    COMPONENT_TRAIL
+    COMPONENT_TRAIL,
+    COMPONENT_PARTICLE_SYSTEM,
 };
 
 enum class ColliderType : uint8_t
@@ -66,7 +67,10 @@ enum class ColliderLayer : uint8_t
 constexpr const char* ColliderLayerStrings[] = {"World Objects", "Triggers",          "Enemies",
                                                 "Player",        "Player projectile", "Enemy projectile"};
 
-typedef Delegate<void, GameObject*, float3> CollisionDelegate;
+typedef Delegate<void, GameObject*, float3, ColliderLayer> CollisionDelegate;
+
+constexpr const char* ResourceTypeStrings[] = {"Material", "Texture"};
+constexpr int ResourceTypeStringsSize       = sizeof(ResourceTypeStrings) / sizeof(char*);
 
 class ComponentUtils
 {
@@ -81,8 +85,8 @@ class ComponentUtils
         CharacterControllerComponent*, Transform2DComponent*, CanvasComponent*,         \
         UILabelComponent*, CameraComponent*, ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*,       \
         CapsuleColliderComponent*, AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*,          \
-        AudioSourceComponent*, AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, DecalComponent*, TrailComponent*
+        AudioSourceComponent*, AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, DecalComponent*, TrailComponent*, ParticleSystemComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr

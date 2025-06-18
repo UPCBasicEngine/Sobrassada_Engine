@@ -30,6 +30,8 @@ class ShaderModule : public Module
     int GetDecalProgram() const { return decalProgram; }
     int GetShadowMapPassProgram() const { return shadowMapProgram; }
     int GetComputeShadowDepthProgram() const { return computeShadowDepthProgram; }
+    int GetSpritesheetProgram() const { return spritesheetProgram; }
+    int GetParticleSystemProgram() const { return particleSystemProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -61,4 +63,7 @@ class ShaderModule : public Module
     int shadowMapProgram               = -1;
 
     int computeShadowDepthProgram      = -1;
+
+    int spritesheetProgram             = -1;
+    int particleSystemProgram          = -1;
 };

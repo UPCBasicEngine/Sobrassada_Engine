@@ -38,6 +38,8 @@ bool ShaderModule::Init()
 
     computeShadowDepthProgram   = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
 
+    spritesheetProgram          = CreateShaderProgram(SPRITESHEET_VERTEX_SHADER_PATH, SPRITESHEET_FRAGMENT_SHADER_PATH);
+    particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
     return true;
 }
 
@@ -59,6 +61,8 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(trailProgram);
     glDeleteProgram(shadowMapProgram);
     glDeleteProgram(computeShadowDepthProgram);
+    glDeleteProgram(spritesheetProgram);
+    glDeleteProgram(particleSystemProgram);
 
     return true;
 }
