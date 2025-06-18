@@ -41,6 +41,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
+    fields.push_back({"Attack charging duration", InspectorField::FieldType::Float, &chargeDuration, 0.0f, 10.0f});
 }
 
 bool CuChulainn::Init()
@@ -108,9 +109,6 @@ bool CuChulainn::Init()
 
 void CuChulainn::Update(float deltaTime)
 {
-    // TODO: Some debug about life and current state
-    AppEngine->GetDebugDrawModule()->Draw3DText(btVector3(-25, 2, -40), "XD moment");
-
     if (state == CharacterStates::DEATH)
     {
         deathTimer += deltaTime;
@@ -123,11 +121,21 @@ void CuChulainn::Update(float deltaTime)
     Character::Update(deltaTime);
     PerformAttack();
     CheckIsFalling();
-}
 
-bool CuChulainn::IsDead()
-{
-    return isDead;
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        const std::string life       = "Health: " + std::to_string(currentHealth);
+        const std::string animState  = "Anim state: " + stateName.GetString();
+        const std::string logicState = "Logic state: " + GetLogicStateName();
+
+        std::vector<std::pair<std::string, float2>> logs {
+            {life,       float2(-50.0f, -140.0f)},
+            {animState,  float2(-80.0f, -160.0f)},
+            {logicState, float2(-80.0f, -180.0f)},
+        };
+
+        RenderDebug(logs, float3(0.0f, 1.0f, 0.0f));
+    }
 }
 
 void CuChulainn::OnDeath()
@@ -167,6 +175,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
+    else if (isChargingAttack && CanChargeAttack()) ChargeAttack();
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE)
         Move();
@@ -221,21 +230,37 @@ void CuChulainn::GetInputs()
     direction = camFront * direction.z + camRight * direction.x;
     character->SetDirection(direction);
 
+    // Heal
     if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
     {
         desiredHeal = true;
         healCdTimer = healCooldown;
     }
+
+    // Dash
     if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         desiredDash     = true;
         dashBufferTimer = inputBuffer;
     }
+
+    // Attack
     if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
     {
         desiredAttack     = true;
         attackBufferTimer = inputBuffer;
     }
+    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_X] == KEY_REPEAT)
+    {
+        isChargingAttack = true;
+    }
+    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
+    {
+        isChargingAttack     = true;
+        desiredChargedAttack = true;
+    }
+
+    // Ranged
     if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
     {
         desiredAim = true;
@@ -248,11 +273,15 @@ void CuChulainn::GetInputs()
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
+
+    // Ultimatee
     if (keyboard[SDL_SCANCODE_F] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
     {
         desiredUltimate     = true;
         ultimateBufferTimer = inputBuffer;
     }
+
+    // Debug
     if (keyboard[SDL_SCANCODE_F5] == KEY_DOWN)
     {
         // TODO: This should be SetPosition, Respawn is here to test
@@ -304,6 +333,12 @@ bool CuChulainn::CanAim() const
            state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE;
 }
 
+bool CuChulainn::CanChargeAttack() const
+{
+    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && state != CharacterStates::FALL &&
+           state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE && state != CharacterStates::AIM;
+}
+
 void CuChulainn::UpdateTimers(float deltaTime)
 {
     weaponCollider->SetEnabled(false);
@@ -326,8 +361,9 @@ void CuChulainn::UpdateTimers(float deltaTime)
     }
 
     // Ranged attack timers
-    desiredAim  = false;
-    throwTimer -= deltaTime;
+    desiredAim        = false;
+    isChargingAttack  = false;
+    throwTimer       -= deltaTime;
     if (throwTimer < 0.0f)
     {
         if (resetWeapon)
@@ -357,7 +393,14 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (ultimateBufferTimer < 0.0f) desiredUltimate = false;
     }
 
+    if (isChargingAttack)
+    {
+        chargeTimer -= deltaTime;
+        if (chargeTimer < 0.0f) chargeTimer = 0.0f;
+    }
+
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
+    if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
 
     // When stop dashing this gets automatically disabled in the timers check
     if (state == CharacterStates::DASH) isInvulnerable = true;
@@ -477,6 +520,19 @@ void CuChulainn::PerformAttack()
             ultimateObject->SetEnabled(false);
         }
     }
+    else if (state == CharacterStates::CHARGED_ATTACK)
+    {
+        if (!chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay &&
+            chargedAttackTimer < chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        {
+            chargedAttackCollider->SetEnabled(true);
+        }
+        else if (chargedAttackCollider->IsEnabled() &&
+                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        {
+            chargedAttackCollider->SetEnabled(false);
+        }
+    }
 }
 
 void CuChulainn::Attack(float deltaTime)
@@ -579,4 +635,66 @@ void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
     healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
+}
+
+void CuChulainn::ChargeAttack()
+{
+    if (state != CharacterStates::CHARGING)
+    {
+        GLOG("START CHARGING ATTACK");
+
+        state       = CharacterStates::CHARGING;
+        chargeTimer = chargeDuration;
+        character->EnableMovement(false);
+
+        if (animComponent) animComponent->UseTrigger("Charge");
+    }
+    else if (desiredChargedAttack && chargeTimer <= 0.0f)
+    {
+        desiredChargedAttack = false;
+        state                = CharacterStates::CHARGED_ATTACK;
+        chargedAttackTimer   = 0.0f;
+
+        if (animComponent) animComponent->UseTrigger("Attack");
+    }
+}
+
+const std::string CuChulainn::GetLogicStateName()
+{
+    switch (state)
+    {
+    case CharacterStates::IDLE:
+        return "Idle";
+        break;
+    case CharacterStates::RUN:
+        return "Run";
+        break;
+    case CharacterStates::DASH:
+        return "Dash";
+        break;
+    case CharacterStates::BASIC_ATTACK:
+        return "Basic Attack";
+        break;
+    case CharacterStates::AIM:
+        return "Aiming";
+        break;
+    case CharacterStates::RESPAWN:
+        return "Respawn";
+        break;
+    case CharacterStates::DEATH:
+        return "Death";
+        break;
+    case CharacterStates::FALL:
+        return "Falling";
+        break;
+    case CharacterStates::ULTIMATE:
+        return "Ultimate";
+        break;
+    case CharacterStates::CHARGING:
+        return "Charging";
+        break;
+    case CharacterStates::CHARGED_ATTACK:
+        return "Charged Attack";
+        break;
+    }
 }

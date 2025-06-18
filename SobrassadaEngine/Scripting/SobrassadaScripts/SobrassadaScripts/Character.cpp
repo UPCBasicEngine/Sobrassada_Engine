@@ -100,8 +100,6 @@ void Character::Update(float deltaTime)
 
     HandleState(deltaTime);
     UpdateTimers(deltaTime);
-
-    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS)) RenderDebug();
 }
 
 void Character::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
@@ -280,7 +278,7 @@ void Character::Die()
     }
 }
 
-void Character::RenderDebug()
+void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)
 {
     DebugDrawModule* debug        = AppEngine->GetDebugDrawModule();
     const CameraComponent* camera = AppEngine->GetSceneModule()->GetScene()->GetMainCamera();
@@ -294,21 +292,16 @@ void Character::RenderDebug()
     float screenY = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
 #else
     const auto& windowSize = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
-    float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
-    float screenY          = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
+    const float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
+    const float screenY          = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
 #endif
 
-    const std::string life   = "Health: " + std::to_string(currentHealth);
-    const std::string state  = "Anim state: " + stateName.GetString();
-
     const float scale        = 0.6f;
-    const float3 color       = type == CharacterType::CuChulainn ? float3(0.0f, 1.0f, 0.0f) : float3(1.0f, 0.0f, 0.0f);
 
-    screenX                 -= 50.0f;
-    screenY                 -= 140.0f;
-    debug->Draw2DText(life.c_str(), float3(screenX, screenY, 0.0f), color, scale);
-
-    screenX -= 40.0f;
-    screenY -= 20.0f;
-    debug->Draw2DText(state.c_str(), float3(screenX, screenY, 0.0f), color, scale);
+    for (const auto& log : logs)
+    {
+        const float x = screenX + log.second.x;
+        const float y = screenY + log.second.y;
+        debug->Draw2DText(log.first.c_str(), float3(x, y, 0.0f), color, scale);
+    }
 }

@@ -4,6 +4,7 @@
 #include "Changeling.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
@@ -114,6 +115,19 @@ void Changeling::Update(float deltaTime)
             lastTrailPos = currentPos;
         }
     }
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        const std::string life      = "Health: " + std::to_string(currentHealth);
+        const std::string animState = "Anim state: " + stateName.GetString();
+
+        std::vector<std::pair<std::string, float2>> logs {
+            {life,      float2(-50.0f, -140.0f)},
+            {animState, float2(-80.0f, -160.0f)},
+        };
+
+        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
+    }
 }
 
 void Changeling::OnDeath()
@@ -215,9 +229,9 @@ void Changeling::Attack(float deltaTime)
 
         float testDistance = dashDistance;
         float3 dashTarget;
-        bool posOverPoly    = false;
-        float3 closestPoint = float3::zero;
-        const float3 searchArea   = {1.0f, 2.0f, 1.0f};
+        bool posOverPoly        = false;
+        float3 closestPoint     = float3::zero;
+        const float3 searchArea = {1.0f, 2.0f, 1.0f};
 
         // Busca el primer punto válido en la navmesh reduciendo la distancia
         do
@@ -233,7 +247,7 @@ void Changeling::Attack(float deltaTime)
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
-        startPos = parent->GetPosition();
+        startPos       = parent->GetPosition();
         localTransform = parent->GetLocalTransform();
 
         hasShot        = false;
@@ -252,7 +266,7 @@ void Changeling::Attack(float deltaTime)
             isDashing    = true;
             agentAI->SetSpeed(dashSpeed, 1000000);
 
-            dashEndPoint        = dashDirection;
+            dashEndPoint = dashDirection;
             agentAI->SetPathNavigation(dashEndPoint);
             pathObj->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true);
         }

@@ -48,7 +48,7 @@ class Character : public Script
     void Heal(int amount);
     PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
-    void RenderDebug();
+    void RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color);
 
   private:
     virtual void HandleState(float deltaTime) {};
