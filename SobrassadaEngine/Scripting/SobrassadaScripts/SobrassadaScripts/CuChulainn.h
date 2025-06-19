@@ -10,7 +10,6 @@ class Projectile;
 class AudioSourceComponent;
 class ImageComponent;
 
-
 enum class CharacterStates
 {
     NONE,
@@ -51,13 +50,14 @@ class CuChulainn : public Character
     void OnHealed(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
+    void TakeDamage(int amount) override;
 
     bool CanDash() const;
     bool CanAttack() const;
     bool CanUltimate() const;
     bool CanAim() const;
     void GetInputs();
-    void UpdateTimers(float deltaTime);
+    void UpdateTimers(float deltaTime) override;
     void LookAtMouse();
     void LookAtRightStick();
     void LookAtLeftStick();
@@ -124,6 +124,8 @@ class CuChulainn : public Character
     std::vector<UID> healthBarTextures;
     ImageComponent* healthImageComponent = nullptr;
 
+    bool godMode                         = false;
 };
 
 extern CharacterControllerComponent* character;
+extern CuChulainn* playerScript;

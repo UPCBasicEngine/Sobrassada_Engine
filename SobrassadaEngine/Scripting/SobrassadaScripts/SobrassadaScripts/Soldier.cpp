@@ -13,7 +13,8 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Soldier::Soldier(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Soldier)
+Soldier::Soldier(GameObject* parent)
+    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
 }
@@ -71,18 +72,19 @@ void Soldier::HandleState(float deltaTime)
 
     switch (currentState)
     {
+    case SoldierStates::SEARCH:
+        SearchForPlayer();
+        break;
     case SoldierStates::PATROL:
-        // GLOG("Soldier Patrolling");
         PatrolAI();
+        // TODO: patrol animation
         animComponent->UseTrigger("run");
         break;
     case SoldierStates::CHASE:
-        // GLOG("Soldier Chasing");
         animComponent->UseTrigger("run");
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
-        // GLOG("Soldier Basic Attack");
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     default:
@@ -99,8 +101,11 @@ void Soldier::HandleState(float deltaTime)
 
 void Soldier::PatrolAI()
 {
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
+    if (!playerScript->IsDead())
+    {
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
+    }
 
     bool valid = false;
     if (reachedPatrolPoint)
@@ -119,10 +124,36 @@ void Soldier::ChaseAI()
 {
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
-        else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = SoldierStates::PATROL;
+        agentAI->SetPathNavigation(character->GetLastPosition());
+        ChangeState();
     }
     else currentState = SoldierStates::PATROL;
+}
+
+void Soldier::SearchForPlayer()
+{
+    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
+    if (!isSearching)
+    {
+        // TODO: Would be nice to be a "search" animation instead of idle
+        animComponent->UseTrigger("idle");
+        isSearching = true;
+        searchTimer = searchDuration;
+        agentAI->SetSpeed(0.0f, 10.0f);
+    }
+
+    if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+    {
+        isSearching = false;
+        agentAI->ResetSpeed();
+        currentState = SoldierStates::CHASE;
+    }
+    else if (searchTimer <= 0.0f)
+    {
+        isSearching  = false;
+        currentState = SoldierStates::PATROL;
+        agentAI->ResetSpeed();
+    }
 }
 
 void Soldier::Attack(float deltaTime)
@@ -156,7 +187,21 @@ void Soldier::Attack(float deltaTime)
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResumeMovement();
-            if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = SoldierStates::CHASE;
+            ChangeState();
         }
     }
+}
+
+void Soldier::ChangeState()
+{
+    if (playerScript->IsDead())
+    {
+        currentState = SoldierStates::PATROL;
+        return;
+    }
+
+    const float distance = GetDistanceFromPlayer();
+    if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
+    else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
+    else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
 }

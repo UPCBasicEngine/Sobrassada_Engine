@@ -23,9 +23,10 @@
 #include "Wwise_IDs.h"
 
 CharacterControllerComponent* character = nullptr;
+CuChulainn* playerScript                = nullptr;
 
 CuChulainn::CuChulainn(GameObject* parent)
-    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
+    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
 {
     currentHealth = 3; // mainChar starts low hp
 
@@ -40,6 +41,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
+    fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
 bool CuChulainn::Init()
@@ -48,7 +50,7 @@ bool CuChulainn::Init()
 
     Character::Init();
 
-    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Health");
     if (healthUIObject)
     {
         healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
@@ -67,7 +69,9 @@ bool CuChulainn::Init()
 
     };
 
-    character                  = parent->GetComponent<CharacterControllerComponent*>();
+    playerScript = this;
+
+    character    = parent->GetComponent<CharacterControllerComponent*>();
     if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
 
@@ -247,20 +251,26 @@ void CuChulainn::GetInputs()
     {
         if (state == CharacterStates::AIM) ThrowSpear();
     }
-    if (keyboard[SDL_SCANCODE_F] || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_F] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
     {
         desiredUltimate     = true;
         ultimateBufferTimer = inputBuffer;
     }
-    if (keyboard[SDL_SCANCODE_F5])
+    if (keyboard[SDL_SCANCODE_F5] == KEY_DOWN)
     {
-        // TODO: This should be SetSpawnPos, Respawn is here to test
+        // TODO: This should be SetPosition, Respawn is here to test
         // SetPosition(spawnPos);
         Respawn();
     }
-    if (keyboard[SDL_SCANCODE_F6])
+    if (keyboard[SDL_SCANCODE_F6] == KEY_DOWN)
     {
         spawnPos = parent->GetGlobalTransform().TranslatePart();
+    }
+    if (keyboard[SDL_SCANCODE_F7] == KEY_DOWN)
+    {
+        godMode = !godMode;
+        if (godMode) GLOG("God Mode enabled")
+        else GLOG("God Mode disabled")
     }
 }
 
@@ -351,7 +361,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
     }
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
-    
+
     // When stop dashing this gets automatically disabled in the timers check
     if (state == CharacterStates::DASH) isInvulnerable = true;
 }
@@ -553,13 +563,26 @@ void CuChulainn::Respawn()
     // TODO: This function will be called by the UI in the future
 
     Character::Restart();
-    healthImageComponent->ChangeTexture(healthBarTextures[9]);
+
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    if (healthUIObject)
+    {
+        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
+        healthImageComponent->ChangeTexture(healthBarTextures[9]);
+    }
+
     isDead        = false;
     currentHealth = reservedHealth;
     state         = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
+}
+
+void CuChulainn::TakeDamage(int amount)
+{
+    if (godMode) return;
+    Character::TakeDamage(amount);
 }
 
 void CuChulainn::UpdateHealthBarUI()
