@@ -467,6 +467,7 @@ void ParticleEmitter::UpdateMaterial(UID newMaterialUID)
 
     if (newMaterial != nullptr)
     {
+        useTexture = false;
         App->GetResourcesModule()->ReleaseResource(material);
         material = newMaterial;
     }
@@ -486,6 +487,8 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
 
     if (newTexture != nullptr)
     {
+        useTexture = true;
+
         App->GetResourcesModule()->ReleaseResource(texture);
         texture = newTexture;
     }
