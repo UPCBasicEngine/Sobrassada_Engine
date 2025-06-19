@@ -38,7 +38,7 @@ class ResourceMaterial : public Resource
     ResourceMaterial(UID uid, const std::string& name, const rapidjson::Value& importOptions);
     ~ResourceMaterial() override;
 
-    void OnEditorUpdate();
+    bool OnEditorUpdate();
     void LoadMaterialData(Material mat);
     void FreeMaterials() const;
 

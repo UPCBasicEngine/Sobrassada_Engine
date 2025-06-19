@@ -16,7 +16,7 @@ class Projectile : public Script
     void Update(float deltaTime) override;
 
     void Shoot(const float3& origin, const float3& direction);
-    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
+    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
     int GetDamage() const { return damage; }
 

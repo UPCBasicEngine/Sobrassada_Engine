@@ -15,7 +15,7 @@ AnimController::~AnimController()
     App->GetResourcesModule()->ReleaseResource(currentAnimation);
 }
 
-void AnimController::Play(UID newResource, bool shouldLoop)
+void AnimController::Play(UID newResource, bool shouldLoop, float clipSpeed)
 {
     if (currentAnimation == nullptr) Stop();
     resource          = newResource;
@@ -25,6 +25,7 @@ void AnimController::Play(UID newResource, bool shouldLoop)
     playAnimation     = true;
     playAnimation     = true;
     animationFinished = false;
+    playbackSpeed     = clipSpeed;
 }
 
 void AnimController::Stop()
@@ -204,13 +205,14 @@ void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat&
     }
 }
 
-void AnimController::SetTargetAnimationResource(UID uid, unsigned timeTransition, bool shouldLoop)
+void AnimController::SetTargetAnimationResource(UID uid, unsigned timeTransition, bool shouldLoop, float clipSpeed)
 {
     targetAnimation   = static_cast<ResourceAnimation*>(App->GetResourcesModule()->RequestResource(uid));
     transitionTime    = static_cast<float>(timeTransition) / 1000;
     loop              = shouldLoop;
     playAnimation     = true;
     animationFinished = false;
+    playbackSpeed     = clipSpeed;
 }
 
 void AnimController::GetChannelPosition(const Channel* animChannel, float3& pos, const float time) const

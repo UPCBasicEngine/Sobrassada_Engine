@@ -27,7 +27,7 @@ void Mushroom::Update(float deltaTime)
     if (!mushroom || !collider) return;
 }
 
-void Mushroom::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void Mushroom::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     ScriptComponent* playerScript = otherObject->GetComponent<ScriptComponent*>();
     if (playerScript)
