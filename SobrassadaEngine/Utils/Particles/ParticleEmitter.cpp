@@ -120,7 +120,9 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
     }
 
     if (initialState.HasMember("RenderPriority")) renderPriority = initialState["RenderPriority"].GetInt();
-    if (initialState.HasMember("blendingMode")) blendingMode = EmitterBlendingMode(initialState["blendingMode"].GetInt());
+    if (initialState.HasMember("blendingMode"))
+        blendingMode = EmitterBlendingMode(initialState["blendingMode"].GetInt());
+    if (initialState.HasMember("colorIntensity")) colorIntensity = initialState["colorIntensity"].GetFloat();
 }
 
 ParticleEmitter::~ParticleEmitter()
@@ -149,6 +151,7 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
     targetState.AddMember("Addons", addonsJSON, allocator);
     targetState.AddMember("RenderPriority", renderPriority, allocator);
     targetState.AddMember("blendingMode", (int)blendingMode, allocator);
+    targetState.AddMember("colorIntensity", colorIntensity, allocator);
 }
 
 void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
@@ -214,6 +217,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         }
 
         glUniform2fv(4, 1, &tileSize[0]);
+        glUniform1f(5, colorIntensity);
 
         glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 
@@ -341,6 +345,12 @@ void ParticleEmitter::RenderEditor()
         }
 
         ImGui::EndCombo();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::DragFloat("Color intensity", &colorIntensity, 0.005f, 0.f, 2.f))
+    {
+        if (colorIntensity < 0.f) colorIntensity = 0.f;
     }
 
     ImGui::Spacing();

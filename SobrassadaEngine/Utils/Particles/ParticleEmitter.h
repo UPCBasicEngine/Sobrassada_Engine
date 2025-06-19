@@ -84,6 +84,7 @@ class ParticleEmitter
     bool useSpritesheet                = false;
 
     EmitterBlendingMode blendingMode   = EmitterBlendingMode::ALPHA;
+    float colorIntensity               = 1.f;
 
     HashString emitterTag              = HashString("");
 
