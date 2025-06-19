@@ -403,8 +403,8 @@ void RenderPass::ShadowMapPassRender(
     lightview                      = shadowfrustum.ViewMatrix();
     lightProj                      = shadowfrustum.ProjectionMatrix();
 
-    DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
-    debugdraw->DrawFrustrum(lightProj, lightview);
+    //DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
+    //debugdraw->DrawFrustrum(lightProj, lightview);
 
     unsigned int ubo = 0;
     glGenBuffers(1, &ubo);

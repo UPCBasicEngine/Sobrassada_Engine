@@ -21,6 +21,7 @@ DirectionalLightComponent::DirectionalLightComponent(const rapidjson::Value& ini
         const rapidjson::Value& shadowArray = initialState["Shadow Tint"];
         shadowTint = {shadowArray[0].GetFloat(), shadowArray[1].GetFloat(), shadowArray[2].GetFloat()};
     }
+    else shadowTint = float3(0.9f, 0.9f, 0.9f);
 }
 
 DirectionalLightComponent::~DirectionalLightComponent()
