@@ -700,6 +700,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Libs\ImGui\imgui_curve.hpp" />
     <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
     <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />

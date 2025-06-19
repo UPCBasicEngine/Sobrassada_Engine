@@ -7,16 +7,32 @@
 #include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
-#include "imgui.h"
+// #include "imgui.h"
+#include "imgui_curve.hpp"
 #include "imgui_curves.h"
 #include <cmath>
 
 BaseAddon::BaseAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::BASE, owner)
 {
+    for (int i = 0; i < 10; ++i)
+    {
+        curveEditorPoints[i].x = (float)i / 10.f;
+        curveEditorPoints[i].y = (float)i / 10.f;
+    }
+
+    curveEditorPoints[0].x = ImGui::CurveTerminator;
 }
 
 BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owner) : ParticleAddon(initialState, owner)
 {
+    for (int i = 0; i < 10; ++i)
+    {
+        curveEditorPoints[i].x = (float)i / 10.f;
+        curveEditorPoints[i].y = (float)i / 10.f;
+    }
+
+    curveEditorPoints[0].x = ImGui::CurveTerminator;
+
     if (initialState.HasMember("Duration")) duration = initialState["Duration"].GetFloat();
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
     if (initialState.HasMember("particlesPerSecond")) particlesPerSecond = initialState["particlesPerSecond"].GetInt();
@@ -166,7 +182,7 @@ void BaseAddon::Init(EmitterInstance* emitterInstance)
     emitterInstance->particleVectorPos   = 0;
     if (burst) emitterInstance->particleVectorPos = maxParticles - 1;
 
-    spawnDeltaTime = (1.f / particlesPerSecond) + 0.01f;
+    spawnDeltaTime              = (1.f / particlesPerSecond) + 0.01f;
     emitterInstance->isEmitting = true;
 }
 
@@ -205,15 +221,21 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
                 float valueOverLifetime = particle.currentLifetime / particle.lifeTime;
 
-                if (useSizeCurveX)
+                /*if (useSizeCurveX)
                     particle.size.x = Interpolation::Lerp(
                         sizeValuesX[0], sizeValuesX[1], ImGui::BezierValue(valueOverLifetime, sizeBezierX)
-                    );
+                    );*/
 
-                if (useSizeCurveY)
+                float value             = ImGui::CurveValue(valueOverLifetime, 10, curveEditorPoints);
+
+                if (useSizeCurveX) particle.size.x = maxYValue * value;
+
+                /*if (useSizeCurveY)
                     particle.size.y = Interpolation::Lerp(
                         sizeValuesY[0], sizeValuesY[1], ImGui::BezierValue(valueOverLifetime, sizeBezierY)
-                    );
+                    );*/
+
+                if (useSizeCurveY) particle.size.y = maxYValue * value;
             }
             else
             {
@@ -274,7 +296,7 @@ void BaseAddon::RenderEditorInspector()
     ImGui::InputFloat("Duration", &duration, 0.05f, 1.f);
     if (ImGui::InputInt("Emitting rate", &particlesPerSecond, 5, 10))
     {
-        particlesPerSecond = particlesPerSecond < 1 ? 1: particlesPerSecond;
+        particlesPerSecond = particlesPerSecond < 1 ? 1 : particlesPerSecond;
     }
     if (ImGui::InputInt("Max Particles", &maxParticles, 5, 10))
     {
@@ -378,6 +400,16 @@ void BaseAddon::RenderEditorInspector()
             ImGui::PopItemWidth();
         }
     }
+
+    ImGui::Spacing();
+
+    if (ImGui::Curve("Y Curve", ImVec2(600, 400), 10, curveEditorPoints, &selectionIndex))
+    {
+        // curve changed
+    }
+    ImGui::InputFloat("Max Size", &maxYValue);
+
+    float value_you_care_about = ImGui::CurveValue(1.f, 10, curveEditorPoints);
 
     ImGui::Spacing();
     ImGui::Separator();
