@@ -11,6 +11,7 @@ layout(binding = 3) uniform sampler2D gNormal;
 layout(binding = 4) uniform sampler2D shadowMap;
 uniform mat4 viewLight;
 uniform mat4 projLight;
+uniform vec3 shadowTint;
 
 in vec2 uv0;
 
@@ -146,6 +147,7 @@ vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const
         projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
         projCoords.z >= 0.0 && projCoords.z <= 1.0)
         {
+            //PCF
             float factor = 0.0;
 
             vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -159,12 +161,13 @@ vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const
                 }
             }
 
-            shadow = factor / 9.0;
+            shadow = factor;
         }
 
-        diffspec *= (1.0 - shadow);
+        //diffspec = mix(diffspec, diffspec * vec3(0.56, 0.78, 0.90), shadow);
+        //diffspec = mix(diffspec, diffspec * vec3(0.0, 0.0, 0.0), shadow);
+        diffspec = mix(diffspec, diffspec * shadowTint, shadow);
     }
-
 
     return diffspec;
 }

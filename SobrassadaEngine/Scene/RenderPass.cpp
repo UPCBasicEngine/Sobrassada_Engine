@@ -637,6 +637,10 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "viewLight"), 1, GL_TRUE, lightview.ptr());
     glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "projLight"), 1, GL_TRUE, lightProj.ptr());
 
+    float3 shadowTint = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight()->GetShadowTint();
+    glUniform3f(
+        glGetUniformLocation(lightingPassProgram, "shadowTint"), shadowTint.x, shadowTint.y, shadowTint.z);
+
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
