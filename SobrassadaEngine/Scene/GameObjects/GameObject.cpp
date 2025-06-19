@@ -442,15 +442,20 @@ void GameObject::UpdateEnabledStateRecursive()
     enabled = wasEnabled;
 }
 
-void GameObject::UpdateNavmeshValidStateRecursive()
+void GameObject::UpdateNavmeshValidState()
 {
-    for (UID childUID : children)
+    std::stack<UID> childrenBuffer;
+    childrenBuffer.push(uid);
+
+    while (!childrenBuffer.empty())
     {
-        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
-        if (child)
+        GameObject* gameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenBuffer.top());
+        childrenBuffer.pop();
+        if (gameObject != nullptr)
         {
-            child->navMeshValid = navMeshValid;
-            child->UpdateNavmeshValidStateRecursive();
+            gameObject->navMeshValid = navMeshValid;
+            for (UID child : gameObject->GetChildren())
+                childrenBuffer.push(child);
         }
     }
 }
@@ -492,7 +497,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
             {
                 meshComp->BatchEditorMode();
             }
-            UpdateNavmeshValidStateRecursive();
+            UpdateNavmeshValidState();
         }
 
         if (ImGui::Button("Add Component"))

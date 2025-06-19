@@ -75,7 +75,7 @@ class SOBRASADA_API_ENGINE GameObject
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
 
     void UpdateEnabledStateRecursive();
-    void UpdateNavmeshValidStateRecursive();
+    void UpdateNavmeshValidState();
     void RenderHierarchyNode(UID& selectedGameObjectUID);
     void HandleNodeClick(UID& selectedGameObjectUID);
     void RenderContextMenu();
