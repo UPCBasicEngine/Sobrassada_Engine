@@ -210,7 +210,7 @@ void CuChulainn::HandleState(float deltaTime)
         if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
             stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
         {
-            if (isAttacking) comboBufferTimer = 0.2f;
+            if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
         }
         else
@@ -328,7 +328,7 @@ bool CuChulainn::CanDash() const
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                    state != CharacterStates::CHARGED_ATTACK;
 
-    if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer >= 0.0f;
+    if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer > 0.0f;
 
     return canDash;
 }
@@ -347,7 +347,7 @@ bool CuChulainn::CanUltimate() const
                        state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
                        state != CharacterStates::CHARGED_ATTACK;
 
-    if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer >= 0.0f;
+    if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer > 0.0f;
 
     return canUltimate;
 }
@@ -365,7 +365,7 @@ bool CuChulainn::CanChargeAttack() const
                            state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                            state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK;
 
-    if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer >= 0.0f;
+    if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer > 0.0f;
 
     return canChargeAttack;
 }
@@ -410,6 +410,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (comboBufferTimer <= 0.0f)
         {
             comboCounter = -1;
+            state        = CharacterStates::IDLE;
             if (animComponent) animComponent->UseTrigger("AttackEnd");
             attackCdTimer = attackCooldown;
         }
@@ -439,7 +440,8 @@ void CuChulainn::UpdateTimers(float deltaTime)
     {
         attackPressTimer = 0.0f;
     }
-    isChargingAttack = false;
+    isChargingAttack     = false;
+    desiredChargedAttack = false;
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
@@ -683,8 +685,7 @@ void CuChulainn::ChargeAttack()
 {
     if (state != CharacterStates::CHARGING)
     {
-        GLOG("START CHARGING ATTACK");
-
+        // GLOG("START CHARGING ATTACK");
         state       = CharacterStates::CHARGING;
         chargeTimer = chargeDuration;
         character->EnableMovement(false);
@@ -696,7 +697,7 @@ void CuChulainn::ChargeAttack()
         desiredChargedAttack = false;
         isChargingAttack     = false;
 
-        GLOG("DESIRED CHARGE ATTACK");
+        // GLOG("DESIRED CHARGE ATTACK");
 
         if (chargeTimer <= 0.0f)
         {

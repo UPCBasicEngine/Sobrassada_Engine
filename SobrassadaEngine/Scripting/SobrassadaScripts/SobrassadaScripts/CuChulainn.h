@@ -105,7 +105,7 @@ class CuChulainn : public Character
     GameObject* chargedAttackCollider = nullptr;
     bool isChargingAttack             = false;
     float chargeTimer                 = 0.0f;
-    float chargeDuration              = 2.0f;
+    float chargeDuration              = 1.0f;
     bool desiredChargedAttack         = false;
     float chargedAttackTimer          = 0.0f;
     float chargedAttackHitboxDelay    = 0.0f;
