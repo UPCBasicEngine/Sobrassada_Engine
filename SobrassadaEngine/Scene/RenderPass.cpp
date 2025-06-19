@@ -343,6 +343,7 @@ void RenderPass::ShadowMapPassRender(
     float minDepth = minMax[0];
     float maxDepth = minMax[1];
 
+    glDeleteTextures(1, &currentInput);
     glDeleteTextures(1, &currentOutput);
 
     // Compute the near and far planes based on the min/max depth values
