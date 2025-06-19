@@ -9,7 +9,7 @@
 DirectionalLightComponent::DirectionalLightComponent(UID uid, GameObject* parent)
     : LightComponent(uid, parent, "Directional Light", COMPONENT_DIRECTIONAL_LIGHT)
 {
-    shadowTint = float3(0.0f, 0.0f, 0.0f);
+    shadowTint = float3(0.9f, 0.9f, 0.9f);
 }
 
 DirectionalLightComponent::DirectionalLightComponent(const rapidjson::Value& initialState, GameObject* parent)
