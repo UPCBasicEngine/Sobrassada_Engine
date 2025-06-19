@@ -1,13 +1,14 @@
 #include "pch.h"
 
-#include "PauseMenuScript.h"
 #include "Application.h"
+#include "CuChulainn.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "InputModule.h"
+#include "PauseMenuScript.h"
 #include "Scene.h"
 #include "SceneModule.h"
-#include "GameTimer.h"
-
+#include "ScriptComponent.h"
 
 bool PauseMenuScript::Init()
 {
@@ -22,15 +23,12 @@ void PauseMenuScript::Update(float deltaTime)
     if (!cachedTarget)
     {
         const auto& allGameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
-
         for (const auto& [uid, gameObject] : allGameObjects)
-        {
             if (gameObject && gameObject->GetName() == panelToShowName)
             {
                 cachedTarget = gameObject;
                 break;
             }
-        }
     }
 
     if (cachedTarget &&
@@ -42,18 +40,10 @@ void PauseMenuScript::Update(float deltaTime)
         GameTimer* gameTimer = AppEngine->GetGameTimer();
         if (gameTimer)
         {
-            if (newState && !gameTimer->IsPaused())
-            {
-                gameTimer->TogglePause();
-            }
-            else if (!newState && gameTimer->IsPaused())
-            {
-                gameTimer->TogglePause();
-            }
+            gameTimer->TogglePause();
         }
     }
 }
-
 
 void PauseMenuScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
 {

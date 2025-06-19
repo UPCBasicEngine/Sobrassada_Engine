@@ -7,6 +7,7 @@
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "InputModule.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
@@ -182,6 +183,8 @@ void CuChulainn::HandleState(float deltaTime)
 
 void CuChulainn::GetInputs()
 {
+    if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
+
     const InputModule* input   = AppEngine->GetInputModule();
     const KeyState* keyboard   = input->GetKeyboard();
     const KeyState* mouse      = input->GetMouseButtons();
