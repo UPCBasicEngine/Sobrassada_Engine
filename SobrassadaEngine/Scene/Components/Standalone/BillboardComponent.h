@@ -5,9 +5,6 @@
 
 #include <list>
 
-constexpr const char* ResourceTypeStrings[] = {"Material", "Texture"};
-constexpr int ResourceTypeStringsSize       = sizeof(ResourceTypeStrings) / sizeof(char*);
-
 class ResourceMaterial;
 class ResourceTexture;
 

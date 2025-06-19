@@ -52,25 +52,27 @@ class CameraComponent : public Component
     void SetCameraFront(const float3& front) { camera.front = front; }
     void SetCameraUp(const float3& up) { camera.up = up; }
     void SetFreeCamera(const bool freecamera) { freeCamera = freecamera; }
+    SOBRASADA_API_ENGINE void SetFov(float fov);
 
   private:
     Frustum camera;
     FrustumPlanes frustumPlanes;
     CameraMatrices matrices;
-    unsigned int ubo  = 0;
+    unsigned int ubo           = 0;
 
-    bool drawGizmos   = true;
-    bool isMainCamera = false;
+    bool drawGizmos            = true;
+    bool isMainCamera          = false;
 
-    float horizontalFov;
-    float verticalFov;
     float perspectiveNearPlane = 0.1f;
     float perspectiveFarPlane  = 50.0f;
 
     float orthographicWidth;
     float orthographicHeight;
-    float ortographicNearPlane      = 25.10f;
-    float ortographicFarPlane       = 50.0f;
+    float ortographicNearPlane = 25.10f;
+    float ortographicFarPlane  = 50.0f;
+
+    float horizontalFov;
+    float verticalFov;
 
     bool firstTime                  = true;
 

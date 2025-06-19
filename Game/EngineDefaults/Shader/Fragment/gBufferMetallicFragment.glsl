@@ -51,7 +51,7 @@ void main()
 {
     const Material mat = materials[instance_index];
     vec4 texColor = texture(sampler2D(mat.diffuseTex), uv0);
-    const float alpha = texColor.a;
+    const float alpha = texColor.a * mat.diffColor.a;
 
     if (!isWireframe && isAlpha)
     {

@@ -68,6 +68,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
 		{HashString("Spline"),               COMPONENT_SPLINE              },
         {HashString("Decal"),                COMPONENT_DECAL               },
         {HashString("Trail"),                COMPONENT_TRAIL               },
+        {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
     };
 
     fullscreen    = FULLSCREEN;

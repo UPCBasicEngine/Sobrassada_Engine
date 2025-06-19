@@ -12,22 +12,22 @@
 #include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
-#include "WindowModule.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "WindowModule.h"
 
 #include <string>
 
 Character::Character(
     GameObject* parent, int newMaxHealth, int newDamage, float newAttackDuration, float newAttackCooldown,
-    float newRange, float newRangeAIAttack, float newRangeAIChase, CharacterType newType
+    float newRange, float newRangeAIAttack, float newRangeAIChase, float newDetectionRange, CharacterType newType
 )
     : Script(parent), maxHealth(newMaxHealth), attackDamage(newDamage), attackDuration(newAttackDuration),
       attackCooldown(newAttackCooldown), range(newRange), rangeAIAttack(newRangeAIAttack),
-      rangeAIChase(newRangeAIChase), type(newType)
+      rangeAIChase(newRangeAIChase), maxDetectionRange(newDetectionRange), type(newType)
 {
     currentHealth = maxHealth;
 
@@ -48,6 +48,8 @@ Character::Character(
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
+        fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
+        fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
     }
 }
 
@@ -104,13 +106,12 @@ void Character::Update(float deltaTime)
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS)) RenderDebug();
 }
 
-void Character::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void Character::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
     // ---- Damage Collisions ----
-    if (isInvulnerable) return;
 
     // Melee check
     CapsuleColliderComponent* otherWeapon = otherObject->GetComponent<CapsuleColliderComponent*>();
@@ -118,12 +119,23 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
+        // Special attack check
+        CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
+        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
+            TakeDamage(playerScript->GetUltimateDamage());
+
+        // Standard attack check
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         if (enemyScript)
         {
             if (!enemyScript->isAttacking) return;
             TakeDamage(enemyScript->attackDamage);
         }
+    }
+
+    if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
+    {
+        TakeDamage(1);
     }
 
     otherScript = otherObject->GetComponent<ScriptComponent*>();
@@ -189,10 +201,15 @@ void Character::UpdateTimers(float deltaTime)
         desiredHeal = false;
         healCdTimer = 0.0f;
     }
+
+    searchTimer -= deltaTime;
+    if (searchTimer < 0.0f) searchTimer = 0.0f;
 }
 
 void Character::TakeDamage(int amount)
 {
+    if (isInvulnerable) return;
+
     currentHealth        -= amount;
 
     isInvulnerable        = true;
@@ -226,6 +243,11 @@ void Character::Heal(int amount)
     if (currentHealth > maxHealth) currentHealth = maxHealth;
 
     OnHealed(amount);
+}
+
+float Character::GetDistanceFromPlayer() const
+{
+    return character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
 }
 
 PlayerDistances Character::CheckDistanceWithPlayer() const
@@ -278,8 +300,8 @@ void Character::RenderDebug()
     const float3 ndc = float3(clipSpacePos.x, clipSpacePos.y, clipSpacePos.z) / clipSpacePos.w;
 
 #ifdef GAME
-    float screenX          = (ndc.x + 1.0f) * 0.5f * AppEngine->GetWindowModule()->GetWidth();
-    float screenY          = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
+    float screenX = (ndc.x + 1.0f) * 0.5f * AppEngine->GetWindowModule()->GetWidth();
+    float screenY = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
 #else
     const auto& windowSize = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
     float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
