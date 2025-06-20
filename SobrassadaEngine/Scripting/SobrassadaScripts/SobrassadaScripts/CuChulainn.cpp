@@ -23,9 +23,10 @@
 #include "Wwise_IDs.h"
 
 CharacterControllerComponent* character = nullptr;
+CuChulainn* playerScript                = nullptr;
 
 CuChulainn::CuChulainn(GameObject* parent)
-    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
+    : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
 {
     currentHealth = 3; // mainChar starts low hp
 
@@ -77,7 +78,9 @@ bool CuChulainn::Init()
 
     };
 
-    character = parent->GetComponent<CharacterControllerComponent*>();
+    playerScript = this;
+
+    character    = parent->GetComponent<CharacterControllerComponent*>();
     if (!character) GLOG("CharacterController component not found for CuChulainn")
     else speed = character->GetSpeed();
 
@@ -660,7 +663,14 @@ void CuChulainn::Respawn()
     // TODO: This function will be called by the UI in the future
 
     Character::Restart();
-    healthImageComponent->ChangeTexture(healthBarTextures[9]);
+
+    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
+    if (healthUIObject)
+    {
+        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
+        healthImageComponent->ChangeTexture(healthBarTextures[9]);
+    }
+
     isDead        = false;
     currentHealth = reservedHealth;
     state         = CharacterStates::RESPAWN;

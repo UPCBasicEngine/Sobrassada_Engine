@@ -19,7 +19,7 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 Changeling::Changeling(GameObject* parent)
-    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, CharacterType::Archer)
+    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Dash Distance", InspectorField::FieldType::Float, &dashDistance, 0.0f, 10.0f});
