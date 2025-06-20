@@ -7,7 +7,7 @@
 #include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
-// #include "imgui.h"
+//#include "imgui.h"
 #include "imgui_curve.hpp"
 #include "imgui_curves.h"
 #include <cmath>
@@ -228,14 +228,14 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
                 float value             = ImGui::CurveValue(valueOverLifetime, 10, curveEditorPoints);
 
-                if (useSizeCurveX) particle.size.x = maxYValue * value;
+                if (useSizeCurveX) particle.size.x = value;
 
                 /*if (useSizeCurveY)
                     particle.size.y = Interpolation::Lerp(
                         sizeValuesY[0], sizeValuesY[1], ImGui::BezierValue(valueOverLifetime, sizeBezierY)
                     );*/
 
-                if (useSizeCurveY) particle.size.y = maxYValue * value;
+                if (useSizeCurveY) particle.size.y = value;
             }
             else
             {
@@ -403,11 +403,15 @@ void BaseAddon::RenderEditorInspector()
 
     ImGui::Spacing();
 
-    if (ImGui::Curve("Y Curve", ImVec2(600, 400), 10, curveEditorPoints, &selectionIndex))
+
+    if (ImGui::Curve(
+            "Y Curve", ImVec2(400, 100), 10, curveEditorPoints, &curveEditorIndex, ImVec2(0.f, curveEditorValueRange.x),
+            ImVec2(1.f, curveEditorValueRange.y)
+        ))
     {
         // curve changed
     }
-    ImGui::InputFloat("Max Size", &maxYValue);
+    ImGui::InputFloat2("Combined Size", &curveEditorValueRange[0]);
 
     float value_you_care_about = ImGui::CurveValue(1.f, 10, curveEditorPoints);
 

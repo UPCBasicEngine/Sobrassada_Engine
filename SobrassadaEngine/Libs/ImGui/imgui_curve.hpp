@@ -673,7 +673,7 @@ int Curve(const char* label, const ImVec2& size, const int maxpoints, ImVec2* po
         // snap X first/last to min/max
         if (points[0].x < points[pointCount - 1].x)
         {
-            points[0].x = rangeMin.y;
+            points[0].x = rangeMin.x;
             points[pointCount - 1].x = rangeMax.x;
         }
         else

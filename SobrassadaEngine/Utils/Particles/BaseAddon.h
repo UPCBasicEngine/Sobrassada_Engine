@@ -42,12 +42,19 @@ class BaseAddon : public ParticleAddon
     float sizeBezierX[5]      = {0.f, 0.f, 1.f, 1.f};
     float sizeBezierY[5]      = {0.f, 0.f, 1.f, 1.f};
 
+    // For same X Y size
     ImVec2 curveEditorPoints[10];
-    int selectionIndex     = -1;
-    float maxYValue        = 1.f;
+    int curveEditorIndex      = -1;
+    float2 curveEditorValueRange = {0.f, 1.f};
 
-    int particlesPerSecond = 15;
-    float spawnDeltaTime   = 0.f;
+    ImVec2 curveEditorXPoints[10];
+    float curveEditorXMaxValue = 1.f;
 
-    bool burst             = false;
+    ImVec2 curveEditorYPoints[10];
+    float curveEditorYMaxValue = 1.f;
+
+    int particlesPerSecond    = 15;
+    float spawnDeltaTime      = 0.f;
+
+    bool burst                = false;
 };
