@@ -300,7 +300,7 @@ void CuChulainn::GetInputs()
     }
     if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
     {
-        if (state == CharacterStates::AIM) ThrowSpear();
+        if (state == CharacterStates::AIM && throwTimer <= 0.0f) ThrowSpear();
     }
 
     // Ultimatee
