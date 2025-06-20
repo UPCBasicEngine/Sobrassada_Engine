@@ -554,8 +554,13 @@ void CuChulainn::PerformAttack()
 {
     if (isAttacking && state == CharacterStates::BASIC_ATTACK)
     {
-        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-            attackTimer < attackHitboxDelay + attackHitboxDuration)
+        if (attackTimer < attackHitboxDelay)
+        {
+            float distance = comboCounter == 2 ? 10.0f : 5.0f;
+            character->MoveTo(distance);
+        }
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+                 attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
