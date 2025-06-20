@@ -8,9 +8,8 @@
 #include "ParticleSystemComponent.h"
 
 // #include "imgui.h"
-#include "imgui_curve.hpp"
+#include "imgui_curve_editor.h"
 #include "imgui_curves.h"
-#include <cmath>
 
 BaseAddon::BaseAddon(ParticleEmitter* owner) : ParticleAddon(ParticleAddonType::BASE, owner)
 {
@@ -59,11 +58,6 @@ BaseAddon::BaseAddon(const rapidjson::Value& initialState, ParticleEmitter* owne
         sizeValuesY.x                     = dataArray[0].GetFloat();
         sizeValuesY.y                     = dataArray[1].GetFloat();
     }
-
-    if (initialState.HasMember("useSizeCurveCombined"))
-        useSizeCurveCombined = initialState["useSizeCurveCombined"].GetBool();
-    if (initialState.HasMember("useSizeCurveX")) useSizeCurveX = initialState["useSizeCurveX"].GetBool();
-    if (initialState.HasMember("useSizeCurveY")) useSizeCurveY = initialState["useSizeCurveY"].GetBool();
 
     if (initialState.HasMember("sizeBezierCombined"))
     {
@@ -190,10 +184,6 @@ void BaseAddon::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
     rapidjson::Value ySizeSave(rapidjson::kArrayType);
     ySizeSave.PushBack(sizeValuesY[0], allocator).PushBack(sizeValuesY[1], allocator);
     targetState.AddMember("sizeValuesY", ySizeSave, allocator);
-
-    targetState.AddMember("useSizeCurveCombined", useSizeCurveCombined, allocator);
-    targetState.AddMember("useSizeCurveX", useSizeCurveX, allocator);
-    targetState.AddMember("useSizeCurveY", useSizeCurveY, allocator);
 
     rapidjson::Value combinedBezier(rapidjson::kArrayType);
     combinedBezier.PushBack(sizeBezierCombined[0], allocator)
@@ -448,7 +438,7 @@ void BaseAddon::RenderEditorInspector()
             ImGui::Spacing();
 
             ImGui::Curve(
-                "Combined Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPoints, &curveEditorIndex,
+                "Combined Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPoints, &curveEditorIndex,
                 ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
             );
 
@@ -508,7 +498,7 @@ void BaseAddon::RenderEditorInspector()
             case ParticleInterpolationType::CURVE_EDITOR:
             {
                 ImGui::Curve(
-                    "X Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorXPoints, &curveEditorIndexX,
+                    "X Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorXPoints, &curveEditorIndexX,
                     ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
                 );
 
@@ -569,7 +559,7 @@ void BaseAddon::RenderEditorInspector()
             case ParticleInterpolationType::CURVE_EDITOR:
             {
                 ImGui::Curve(
-                    "Y Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorYPoints, &curveEditorIndexX,
+                    "Y Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorYPoints, &curveEditorIndexX,
                     ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
                 );
 
