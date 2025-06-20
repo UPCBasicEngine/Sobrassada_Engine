@@ -213,8 +213,12 @@ void CuChulainn::HandleState(float deltaTime)
         if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
             stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
         {
-            if (isAttacking) comboBufferTimer = 0.1f;
+            if (isAttacking) comboBufferTimer = 0.3f;
             isAttacking = false;
+        }
+        else if (stateName == HashString("Charge"))
+        {
+            animComponent->UseTrigger("Charge");
         }
         else
         {
@@ -412,10 +416,14 @@ void CuChulainn::UpdateTimers(float deltaTime)
         comboBufferTimer -= deltaTime;
         if (comboBufferTimer <= 0.0f)
         {
-            comboCounter = -1;
-            state        = CharacterStates::IDLE;
-            if (animComponent) animComponent->UseTrigger("AttackEnd");
+            comboCounter  = -1;
             attackCdTimer = attackCooldown;
+
+            if (state == CharacterStates::BASIC_ATTACK)
+            {
+                state = CharacterStates::IDLE;
+                if (animComponent) animComponent->UseTrigger("AttackEnd");
+            }
         }
     }
 
@@ -448,6 +456,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
+    if (state == CharacterStates::IDLE) idleTimer += deltaTime;
 
     // When stop dashing this gets automatically disabled in the timers check
     if (state == CharacterStates::DASH) isInvulnerable = true;
@@ -631,7 +640,7 @@ void CuChulainn::Aim(float deltaTime)
     desiredAim  = false;
 
     aimTimer   += deltaTime;
-    if (aimTimer >= 0.1f) animComponent->OnPause();
+    if (aimTimer >= 0.06f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     else LookAtLeftStick();
@@ -647,8 +656,20 @@ void CuChulainn::Move()
     }
     else
     {
-        if (state != CharacterStates::IDLE && animComponent) animComponent->UseTrigger("Idle");
-        state = CharacterStates::IDLE;
+        if (state != CharacterStates::IDLE)
+        {
+            if (animComponent) animComponent->UseTrigger("Idle");
+            state     = CharacterStates::IDLE;
+            idleTimer = 0.0f;
+        }
+
+        if (idleTimer > 8.0f && animComponent)
+        {
+            float x = (float)rand() / RAND_MAX;
+            if (x < 0.5f) animComponent->UseTrigger("IdleBreak1");
+            else animComponent->UseTrigger("IdleBreak2");
+            idleTimer = 0.0f;
+        }
     }
 }
 
