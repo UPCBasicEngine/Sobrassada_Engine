@@ -74,6 +74,8 @@ RenderPass::RenderPass()
 
 RenderPass::~RenderPass()
 {
+    glDeleteBuffers(1, &visibleLightIndicesSSBO);
+
     glDeleteBuffers(1, &decalVBO);
     glDeleteBuffers(1, &decalEBO);
     glDeleteVertexArrays(1, &decalVAO);
@@ -178,6 +180,10 @@ void RenderPass::RenderScene(
         RenderShadowMapDebug();
         return;
     }
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
+    TileShadingPass(camera, gbuffer, framebuffer);
+    glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
@@ -568,6 +574,61 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
     glEnable(GL_DEPTH_TEST);
 
     gbuffer->Unbind();
+}
+
+void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer)
+{
+    const int TILE_SIZE             = 16;
+    const int MAX_LIGHTS_PER_TILE   = 1024;
+
+    int tilesX                      = (width + TILE_SIZE - 1) / TILE_SIZE;
+    int tilesY                      = (height + TILE_SIZE - 1) / TILE_SIZE;
+    int numTiles                    = tilesX * tilesY;
+
+    int totalIndices                = numTiles * MAX_LIGHTS_PER_TILE;
+    size_t totalSize = numTiles * MAX_LIGHTS_PER_TILE * sizeof(int);
+
+    unsigned int tileShadingProgram = App->GetShaderModule()->GetTileShadingProgram();
+    glUseProgram(tileShadingProgram);
+
+    glUniform2f(glGetUniformLocation(tileShadingProgram, "screenSize"), width, height);
+
+    // Bind depth texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+    glUniform1i(glGetUniformLocation(tileShadingProgram, "depthMap"), 0);
+
+    unsigned int cameraUBO;
+    if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
+    else cameraUBO = camera->GetUbo();
+
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(tileShadingProgram, "CameraMatrices");
+    glUniformBlockBinding(tileShadingProgram, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    
+    if (visibleLightIndicesSSBO == 0 || totalSize != currentSize)
+    {
+        if (visibleLightIndicesSSBO != 0)
+        {
+            glDeleteBuffers(1, &visibleLightIndicesSSBO);
+        }
+
+        glGenBuffers(1, &visibleLightIndicesSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleLightIndicesSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
+
+        currentSize = totalSize;
+    }
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, visibleLightIndicesSSBO);
+
+    App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
+
+    glDispatchCompute(tilesX, tilesY, 1);
+
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
