@@ -242,6 +242,7 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     navMeshValid     = refObject->navMeshValid;
     enabled          = refObject->enabled;
     wasEnabled       = refObject->wasEnabled;
+    wasNavMeshValid  = refObject->wasNavMeshValid;
 
     // Must make a copy of each manually
     for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
@@ -280,6 +281,7 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
 
     if (initialState.HasMember("PrefabUID")) prefabUID = initialState["PrefabUID"].GetUint64();
     if (initialState.HasMember("NavmeshValid")) navMeshValid = initialState["NavmeshValid"].GetBool();
+    if (initialState.HasMember("WasNavMeshValid")) wasNavMeshValid = initialState["WasNavMeshValid"].GetBool();
 
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() &&
         initialState["LocalTransform"].Size() == 16)
@@ -389,6 +391,8 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Enabled", enabled, allocator);
     targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
+    targetState.AddMember("WasNavMeshValid", wasNavMeshValid, allocator);
+
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
     
@@ -461,9 +465,7 @@ void GameObject::UpdateEnabledState()
         for (UID childUID : go->children)
         {
             if (GameObject* child = scene->GetGameObjectByUID(childUID))
-            {
                 pending.push({child, false});
-            }
         }
     }
 }

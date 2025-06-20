@@ -200,6 +200,7 @@ class SOBRASADA_API_ENGINE GameObject
     bool enabled                         = true;
     bool wasEnabled                      = true;
     bool navMeshValid                    = false;
+    bool wasNavMeshValid                 = false;
     bool openHierarchyNode               = false;
 
     std::tuple<COMPONENTS> compTuple     = std::make_tuple(COMPONENTS_NULLPTR);
