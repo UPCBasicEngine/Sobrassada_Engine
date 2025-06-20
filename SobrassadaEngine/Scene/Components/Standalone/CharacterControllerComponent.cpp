@@ -202,6 +202,7 @@ void CharacterControllerComponent::RenderEditorInspector()
     ImGui::Text("Character Controller");
 
     ImGui::DragFloat("Max Speed", &maxSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Walk Speed", &walkSpeed, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::DragFloat("Acceleration", &acceleration, 0.1f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::DragFloat("Dash Distance", &dashDistance, 3.0f, 0.0f, 10.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::DragFloat("Dash Duration", &dashDuration, 0.2f, 0.0f, 1.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
@@ -283,7 +284,8 @@ void CharacterControllerComponent::Move(float deltaTime)
     }
     else
     {
-        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, maxSpeed, acceleration * deltaTime)
+        const float desiredSpeed = isRunning ? maxSpeed : walkSpeed;
+        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, desiredSpeed, acceleration * deltaTime)
                                                            : Lerp(currentSpeed, 0, 100 * deltaTime);
     }
 
