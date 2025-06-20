@@ -209,11 +209,11 @@ void Scene::Init()
     UpdateDynamicSpatialStructure();
 
 
-    constexpr float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
-                                        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
+    constexpr float cubeVertices[] = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
+                                      -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
 
     constexpr unsigned int cubeIndices[] = {0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4,
-                                        3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
+                                            3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
 
     glGenVertexArrays(1, &decalVAO);
     glGenBuffers(1, &decalVBO);
@@ -1839,7 +1839,7 @@ void Scene::LoadPrefab(
 
 void Scene::OverridePrefabs(const UID prefabUID)
 {
-    const ResourcePrefab* prefab = (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID);
+    ResourcePrefab* prefab = (ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID);
 
     // If prefab is null, it no longer exists, then remove the prefab UID from all objects that may have it
     if (prefab == nullptr)
@@ -1847,45 +1847,106 @@ void Scene::OverridePrefabs(const UID prefabUID)
         for (const auto& gameObject : gameObjectsContainer)
         {
             if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
-                gameObject.second->SetPrefabUID(INVALID_UID);
+                gameObject.second->RemovePrefabStatus();
         }
         return;
     }
 
-    // Store uids and transforms. We need transforms so when we override the prefab, the objects
-    // stay in place. UIDs to delete the duplicates
+    // Check that the prefab and target objects have the field prefabChildUID. If not, override like in the old times
+    bool newPrefab                                = true;
+
+    const std::vector<GameObject*>& prefabObjects = prefab->GetGameObjectsVector();
+    for (int i = 1; i < prefabObjects.size(); ++i)
+    {
+        if (prefabObjects[i]->GetPrefabChildUID() == INVALID_UID)
+        {
+            newPrefab = false;
+            break;
+        }
+    }
+
+    std::vector<GameObject*> newPrefabInstances;
+    std::vector<GameObject*> oldPrefabInstances;
+    int instancesToOverride = 0;
+    for (const auto& gameObject : gameObjectsContainer)
+    {
+        if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
+        {
+            if (prefab->GetVersionUID() != INVALID_UID &&
+                gameObject.second->GetPrefabVersionUID() == prefab->GetVersionUID())
+                continue;
+
+            ++instancesToOverride;
+
+            if (!newPrefab)
+            {
+                oldPrefabInstances.push_back(gameObject.second);
+                continue;
+            }
+
+            bool newObject = true;
+            std::queue<UID> childUIDs;
+            for (UID child : gameObject.second->GetChildren())
+            {
+                childUIDs.push(child);
+            }
+
+            while (!childUIDs.empty())
+            {
+                GameObject* currentObject = GetGameObjectByUID(childUIDs.front());
+                if (currentObject->GetPrefabChildUID() == INVALID_UID)
+                {
+                    newObject = false;
+                    break;
+                }
+                childUIDs.pop();
+
+                for (UID child : currentObject->GetChildren())
+                {
+                    childUIDs.push(child);
+                }
+            }
+
+            if (newObject) newPrefabInstances.push_back(gameObject.second);
+            else oldPrefabInstances.push_back(gameObject.second);
+        }
+    }
+    GLOG("Instances to override: %d", instancesToOverride);
+    if (instancesToOverride == 0)
+    {
+        App->GetResourcesModule()->ReleaseResource(prefab);
+        return;
+    }
+    // Keep this method of overriding for old prefabs, to avoid issues. Eventually all prefabs will get updated and
+    // this won't be used anymore
     std::vector<UID> updatedObjects;
     std::vector<float4x4> transforms;
     std::vector<bool> isEnabled;
     std::vector<std::vector<bool>> componentsEnabledStates;
 
-    for (const auto& gameObject : gameObjectsContainer)
+    for (GameObject* gameObject : oldPrefabInstances)
     {
-        if (gameObject.second != nullptr)
-        {
-            if (gameObject.second->GetPrefabUID() == prefabUID)
+        GLOG("Update OLD prefab");
+
+        updatedObjects.push_back(gameObject->GetUID());
+        transforms.emplace_back(gameObject->GetLocalTransform());
+        isEnabled.push_back(gameObject->IsEnabled());
+
+        std::vector<bool> componentStates;
+        auto& tuple = gameObject->GetComponentsTupleRef();
+
+        ForEachInTuple(
+            tuple,
+            [&](auto* component)
             {
-                updatedObjects.push_back(gameObject.first);
-                transforms.emplace_back(gameObject.second->GetLocalTransform());
-                isEnabled.push_back(gameObject.second->IsEnabled());
-
-                std::vector<bool> componentStates;
-                auto& tuple = gameObject.second->GetComponentsTupleRef();
-
-                ForEachInTuple(
-                    tuple,
-                    [&](auto* component)
-                    {
-                        if (component != nullptr)
-                        {
-                            componentStates.push_back(component->GetWasEnabled());
-                        }
-                    }
-                );
-
-                componentsEnabledStates.push_back(componentStates);
+                if (component != nullptr)
+                {
+                    componentStates.push_back(component->GetWasEnabled());
+                }
             }
-        }
+        );
+
+        componentsEnabledStates.push_back(componentStates);
     }
 
     for (const UID object : updatedObjects)
@@ -1898,6 +1959,82 @@ void Scene::OverridePrefabs(const UID prefabUID)
         LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i], componentsEnabledStates[i]);
     }
 
+    // This new method only works if the gameObjects inside the prefab have the field prefabChildUIDS, so it can't
+    // be used with older prefabs Update all gameObjects that have the same prefabUID
+    for (GameObject* gameObject : newPrefabInstances)
+    {
+        GLOG("Update NEW prefab");
+
+        const std::vector<GameObject*>& referenceObjectsVector = prefab->GetGameObjectsVector();
+        std::unordered_map<UID, GameObject*> referenceObjectsMap;
+        prefab->GetGameObjectsMap(referenceObjectsMap);
+
+       // Update all the hierarchy
+        std::queue<UID> childUIDs;
+        childUIDs.push(gameObject->GetUID());
+
+        while (!childUIDs.empty())
+        {
+            GameObject* currentObject = GetGameObjectByUID(childUIDs.front());
+            childUIDs.pop();
+
+            GameObject* refObject = nullptr;
+            if (referenceObjectsMap.find(currentObject->GetPrefabChildUID()) == referenceObjectsMap.end())
+            {
+                // If not found in prefab, delete the gameObject because it was deleted in the prefab
+                RemoveGameObjectHierarchy(currentObject->GetUID());
+                continue;
+            }
+
+            refObject = referenceObjectsMap.at(currentObject->GetPrefabChildUID());
+
+            // Update gameObject
+            currentObject->UpdateFromReference(refObject);
+
+            // Add children to queue
+            for (UID child : currentObject->GetChildren())
+            {
+                childUIDs.push(child);
+            }
+
+            // Check for children
+            const std::vector<UID>& objectChildrenUIDs = currentObject->GetChildren();
+            const std::vector<UID>& prefabChildrenUIDs = refObject->GetChildren();
+
+            if (objectChildrenUIDs.size() < prefabChildrenUIDs.size())
+            {
+                // Fill a vector with the prefab children gameObects
+                std::vector<GameObject*> prefabChildren;
+                for (const UID childUID : prefabChildrenUIDs)
+                {
+                    for (const auto& object : referenceObjectsMap)
+                    {
+                        if (object.second->GetUID() == childUID) prefabChildren.push_back(object.second);
+                    }
+                }
+
+                // Fill a map with the current object children for faster lookup
+                std::map<UID, GameObject*> objectChildren;
+                for (const UID childUID : objectChildrenUIDs)
+                {
+                    GameObject* objectToAdd = GetGameObjectByUID(childUID);
+                    objectChildren.insert({objectToAdd->GetPrefabChildUID(), objectToAdd});
+                }
+
+                for (GameObject* prefabChild : prefabChildren)
+                {
+                    // If prefab child does not exist in current gameObject, create it here
+                    if (objectChildren.find(prefabChild->GetPrefabChildUID()) == objectChildren.end())
+                    {
+                        GameObject* newObject = new GameObject(currentObject->GetUID(), prefabChild);
+                        currentObject->AddGameObject(newObject->GetUID());
+                        AddGameObject(newObject->GetUID(), newObject);
+                    }
+                }
+            }
+        }
+    }
+    if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
     App->GetResourcesModule()->ReleaseResource(prefab);
 }
 
