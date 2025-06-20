@@ -213,7 +213,7 @@ void CuChulainn::HandleState(float deltaTime)
         if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
             stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
         {
-            if (isAttacking) comboBufferTimer = 0.3f;
+            if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
         }
         else if (stateName == HashString("Charge"))
@@ -611,6 +611,7 @@ void CuChulainn::Attack(float deltaTime)
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
+    else LookAtLeftStick();
     if (animComponent)
     {
         const std::string trigger = "Attack" + std::to_string(comboCounter);
@@ -645,7 +646,7 @@ void CuChulainn::Aim(float deltaTime)
     desiredAim  = false;
 
     aimTimer   += deltaTime;
-    if (aimTimer >= 0.06f) animComponent->OnPause();
+    if (aimTimer >= 0.07f) animComponent->OnPause();
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     else LookAtLeftStick();
