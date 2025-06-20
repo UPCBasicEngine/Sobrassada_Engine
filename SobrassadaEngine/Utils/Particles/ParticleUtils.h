@@ -17,7 +17,14 @@ enum class ParticleAddonType : int
 constexpr const char* AddonTypeStrings[]          = {"None", "Base", "Velocity", "Spritesheet", "Color", "Area"};
 constexpr const int AddonTypeStringsSize          = sizeof(AddonTypeStrings) / sizeof(char*);
 
-constexpr const char* InterpolationAddonStrings[] = {"Fixed values", "Curve interpolation"};
+enum class ParticleInterpolationType : int
+{
+    FIXED_VALUES = 0,
+    BEZIER_SINGLE,
+    CURVE_EDITOR,
+};
+
+constexpr const char* InterpolationAddonStrings[] = {"Fixed values", "Bezier single curve", "Curve editor"};
 constexpr int InterpolationAddonStringsSize       = sizeof(InterpolationAddonStrings) / sizeof(char*);
 
 enum class ParticleAreaShape : int
@@ -29,8 +36,8 @@ enum class ParticleAreaShape : int
     CONE,
 };
 
-constexpr const char* AreaAddonStrings[]      = {"Cube", "Circle", "Sphere", "Cone"};
-constexpr int AreaAddonStringsSize            = sizeof(AreaAddonStrings) / sizeof(char*);
+constexpr const char* AreaAddonStrings[] = {"Cube", "Circle", "Sphere", "Cone"};
+constexpr int AreaAddonStringsSize       = sizeof(AreaAddonStrings) / sizeof(char*);
 
 enum class ParticleAreaSpawn : int
 {
@@ -51,6 +58,8 @@ enum class EmitterBlendingMode : int
 
 constexpr const char* EmitterBlendingModeStrings[] = {"Alpha", "Alpha additive", "Additive"};
 constexpr int EmitterBlendingModeStringsSize       = sizeof(EmitterBlendingModeStrings) / sizeof(char*);
+
+constexpr int MaxCurveEditorPoints                 = 10;
 
 class ParticleUtils
 {
