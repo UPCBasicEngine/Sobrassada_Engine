@@ -360,7 +360,7 @@ void RenderPass::ShadowMapPassRender(
     float distMax = S / (T + maxDepth);
 
     // GLOG("Final reduction size: %d, %d", currentWidth, currentHeight);
-    GLOG("%f, %f", distMin, distMax);
+    //GLOG("%f, %f", distMin, distMax);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(distMin) : camera->SetNear(distMin);
     camera == nullptr ? App->GetCameraModule()->SetFar(distMax) : camera->SetFar(distMax);
