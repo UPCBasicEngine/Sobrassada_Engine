@@ -401,11 +401,11 @@ void RenderPass::ShadowMapPassRender(
     CameraMatrices lightmatrices;
     lightmatrices.viewMatrix       = shadowfrustum.ViewMatrix();
     lightmatrices.projectionMatrix = shadowfrustum.ProjectionMatrix();
-    lightview                      = shadowfrustum.ViewMatrix();
+    lightView                      = shadowfrustum.ViewMatrix();
     lightProj                      = shadowfrustum.ProjectionMatrix();
 
     // DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
-    // debugdraw->DrawFrustrum(lightProj, lightview);
+    // debugdraw->DrawFrustrum(lightProj, lightView);
 
     unsigned int ubo               = 0;
     glGenBuffers(1, &ubo);
@@ -420,7 +420,7 @@ void RenderPass::ShadowMapPassRender(
     std::vector<MeshComponent*> meshesToRender;
 
     FrustumPlanes lightFrustum;
-    lightFrustum.UpdateFrustumPlanes(lightview, lightProj);
+    lightFrustum.UpdateFrustumPlanes(lightView, lightProj);
     std::vector<GameObject*> shadowObjectsToRender;
     App->GetSceneModule()->GetScene()->CheckObjectsToRender(shadowObjectsToRender, lightFrustum);
 
@@ -635,7 +635,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
     else cameraPos = camera->GetCameraPosition();
 
-    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "viewLight"), 1, GL_TRUE, lightview.ptr());
+    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "viewLight"), 1, GL_TRUE, lightView.ptr());
     glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "projLight"), 1, GL_TRUE, lightProj.ptr());
 
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
