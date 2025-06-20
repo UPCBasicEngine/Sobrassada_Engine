@@ -143,7 +143,7 @@ class CuChulainn : public Character
     ImageComponent* healthImageComponent = nullptr;
 
     bool godMode                         = false;
-    float idleTimer                      = 4.0f;
+    float idleTimer                      = 0.0f;
 };
 
 extern CharacterControllerComponent* character;
