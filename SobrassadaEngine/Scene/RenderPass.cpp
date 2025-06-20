@@ -27,7 +27,8 @@ RenderPass::RenderPass()
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowResolution, shadowResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowResolution, shadowResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+        nullptr
     );
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -322,7 +323,7 @@ void RenderPass::ShadowMapPassRender(
         currentHeight = groupsY;
     }
 
-    //Last Pass to make it 1x1
+    // Last Pass to make it 1x1
     int groupsX = (currentWidth + 7) / 8;
     int groupsY = (currentHeight + 3) / 4;
 
@@ -358,7 +359,7 @@ void RenderPass::ShadowMapPassRender(
     float distMin = S / (T + minDepth);
     float distMax = S / (T + maxDepth);
 
-    //GLOG("Final reduction size: %d, %d", currentWidth, currentHeight);
+    // GLOG("Final reduction size: %d, %d", currentWidth, currentHeight);
     GLOG("%f, %f", distMin, distMax);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(distMin) : camera->SetNear(distMin);
@@ -403,10 +404,10 @@ void RenderPass::ShadowMapPassRender(
     lightview                      = shadowfrustum.ViewMatrix();
     lightProj                      = shadowfrustum.ProjectionMatrix();
 
-    //DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
-    //debugdraw->DrawFrustrum(lightProj, lightview);
+    // DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
+    // debugdraw->DrawFrustrum(lightProj, lightview);
 
-    unsigned int ubo = 0;
+    unsigned int ubo               = 0;
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
@@ -637,9 +638,12 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "viewLight"), 1, GL_TRUE, lightview.ptr());
     glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "projLight"), 1, GL_TRUE, lightProj.ptr());
 
-    float3 shadowTint = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight()->GetShadowTint();
-    glUniform3f(
-        glGetUniformLocation(lightingPassProgram, "shadowTint"), shadowTint.x, shadowTint.y, shadowTint.z);
+    DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
+    if (light != nullptr)
+    {
+        float3 shadowTint = light->GetShadowTint();
+        glUniform3f(glGetUniformLocation(lightingPassProgram, "shadowTint"), shadowTint.x, shadowTint.y, shadowTint.z);
+    }
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
 
