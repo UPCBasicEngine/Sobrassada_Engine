@@ -22,6 +22,8 @@ enum class CharacterStates
     DEATH,
     FALL,
     ULTIMATE,
+    TAKE_MUSHROOM,
+    HEAL,
 };
 
 class CuChulainn : public Character
@@ -33,16 +35,22 @@ class CuChulainn : public Character
     bool Init() override;
     void Update(float deltaTime) override;
 
-    void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
-    bool IsDead();
-    void SetDeath(bool death) { isDead = death; }
-    void SetHealth(int health) { reservedHealth = health; }
     void Respawn();
     void UpdateHealthBarUI();
+    bool TakeMushroom();
+    bool CanTakeMushroom() const;
+
+    bool IsDead();
     bool GetIsInvulnerable() { return isInvulnerable; }
-    void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     CharacterStates GetState() const { return state; }
     int GetUltimateDamage() const { return ultimateDamage; }
+    int GetMushrooms() const { return mushrooms; }
+    bool GetDesiredTakeMushroom() const { return desiredTakeMushroom; }
+
+    void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
+    void SetDeath(bool death) { isDead = death; }
+    void SetHealth(int health) { reservedHealth = health; }
+    void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
 
   private:
     void OnDeath() override;
@@ -51,20 +59,23 @@ class CuChulainn : public Character
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
     void TakeDamage(int amount) override;
+    void UpdateTimers(float deltaTime) override;
+    void Attack(float deltaTime) override;
 
+    bool CanHeal() const;
     bool CanDash() const;
     bool CanAttack() const;
     bool CanUltimate() const;
     bool CanAim() const;
     void GetInputs();
-    void UpdateTimers(float deltaTime) override;
+
     void LookAtMouse();
     void LookAtRightStick();
     void LookAtLeftStick();
     void CheckIsFalling();
 
+    void UseMushroom();
     void ThrowSpear();
-    void Attack(float deltaTime) override;
     void UltimateAttack();
     void Dash();
     void Aim(float deltaTime);
@@ -125,6 +136,12 @@ class CuChulainn : public Character
     ImageComponent* healthImageComponent = nullptr;
 
     bool godMode                         = false;
+
+    int mushrooms                        = 0;
+    int mushroomHeal                     = 2;
+    bool desiredTakeMushroom             = false;
+    float takeMushroomCdTimer            = 0.0f;
+    float takeMushroomCd                 = 0.0f;
 };
 
 extern CharacterControllerComponent* character;

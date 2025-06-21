@@ -165,12 +165,11 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
 
         // Mushroom check
         Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
-        if (desiredHeal && mushroomScript)
+        if (mushroomScript)
         {
-            if (mushroomScript->IsReady())
+            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
             {
-                Heal(mushroomScript->GetHealingAmount());
-                mushroomScript->Disable();
+                if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
         }
     }
@@ -321,4 +320,12 @@ void Character::RenderDebug()
     screenX -= 40.0f;
     screenY -= 20.0f;
     debug->Draw2DText(state.c_str(), float3(screenX, screenY, 0.0f), color, scale);
+
+    if (type == CharacterType::CuChulainn)
+    {
+        const std::string mushrooms  = "Mushrooms: " + std::to_string(playerScript->GetMushrooms());
+        screenX                     += 35.0f;
+        screenY                     -= 20.0f;
+        debug->Draw2DText(mushrooms.c_str(), float3(screenX, screenY, 0.0f), color, scale);
+    }
 }

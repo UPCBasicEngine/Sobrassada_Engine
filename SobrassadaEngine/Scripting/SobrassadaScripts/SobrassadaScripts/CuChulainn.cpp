@@ -41,6 +41,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
+    fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -167,11 +168,11 @@ void CuChulainn::HandleState(float deltaTime)
     }
 
     if (desiredDash && CanDash()) Dash();
+    else if (desiredHeal && CanHeal()) UseMushroom();
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL)
         Move();
 
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
@@ -226,6 +227,11 @@ void CuChulainn::GetInputs()
 
     if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
     {
+        desiredTakeMushroom = true;
+        takeMushroomCdTimer = takeMushroomCd;
+    }
+    if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
+    {
         desiredHeal = true;
         healCdTimer = healCooldown;
     }
@@ -277,7 +283,8 @@ void CuChulainn::GetInputs()
 bool CuChulainn::CanDash() const
 {
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
-                   state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE;
+                   state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
+                   state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
 
     if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer >= 0.0f;
 
@@ -288,23 +295,40 @@ bool CuChulainn::CanAttack() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
            state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
-           state != CharacterStates::ULTIMATE;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
+           state != CharacterStates::HEAL;
 }
 
 bool CuChulainn::CanUltimate() const
 {
     bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-                       state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f;
+                       state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
+                       state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
 
     if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer >= 0.0f;
 
     return canUltimate;
 }
 
+bool CuChulainn::CanTakeMushroom() const
+{
+    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+           state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
+           state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL;
+}
+
+bool CuChulainn::CanHeal() const
+{
+    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+           state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
+           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM && mushrooms > 0;
+}
+
 bool CuChulainn::CanAim() const
 {
     return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
-           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE;
+           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
+           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
 }
 
 void CuChulainn::UpdateTimers(float deltaTime)
@@ -339,6 +363,14 @@ void CuChulainn::UpdateTimers(float deltaTime)
             resetWeapon = false;
         }
         throwTimer = 0.0f;
+    }
+
+    // Take mushrooms timers
+    takeMushroomCdTimer -= deltaTime;
+    if (takeMushroomCdTimer <= 0.0f)
+    {
+        desiredTakeMushroom = false;
+        takeMushroomCdTimer = 0.0f;
     }
 
     if (!isAttacking && comboBufferTimer > 0.0f)
@@ -442,10 +474,10 @@ void CuChulainn::Dash()
         comboBufferTimer = character->GetDashDuration() + 0.1f;
         isAttacking      = false;
     }
-    desiredDash = false;
-    state       = CharacterStates::DASH;
+    desiredDash      = false;
+    state            = CharacterStates::DASH;
 
-    GLOG("DASH");
+    // GLOG("DASH");
 
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
@@ -583,6 +615,38 @@ void CuChulainn::TakeDamage(int amount)
 {
     if (godMode) return;
     Character::TakeDamage(amount);
+}
+
+bool CuChulainn::TakeMushroom()
+{
+    bool taken = false;
+    if (mushrooms <= 2)
+    {
+        mushrooms += 1;
+        state      = CharacterStates::TAKE_MUSHROOM;
+        taken      = true;
+        // TODO: take mushrooms anim (maybe not animation), vfx etc
+    }
+
+    desiredTakeMushroom = false;
+
+    return taken;
+}
+
+void CuChulainn::UseMushroom()
+{
+    mushrooms   -= 1;
+
+    state        = CharacterStates::HEAL;
+    desiredHeal  = false;
+
+    // if (animComponent) animComponent->UseTrigger("Heal");
+    if (animComponent) animComponent->UseTrigger("Ultimate");
+    character->EnableMovement(false);
+
+    Heal(mushroomHeal);
+
+    // UpdateMushroomsUI();
 }
 
 void CuChulainn::UpdateHealthBarUI()
