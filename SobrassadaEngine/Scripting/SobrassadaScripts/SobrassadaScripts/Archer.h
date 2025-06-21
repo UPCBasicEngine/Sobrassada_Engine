@@ -46,7 +46,6 @@ class Archer : public Character
     std::string arrowName      = "";
     Projectile* arrow          = nullptr;
 
-    Projectile* arrow         = nullptr;
     float3 patrolPoint         = float3::zero;
     bool hasShot               = false;
 
