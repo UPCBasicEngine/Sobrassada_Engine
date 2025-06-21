@@ -133,13 +133,16 @@ constexpr const wchar_t* BANKNAME_MAIN               = L"main.bnk";
 constexpr const char* BANKMETA_MAIN                  = "main.json";
 
 // SHADER PATHS
-constexpr const char* BASIC_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/Vertex/SimpleVertexShader.glsl";
+constexpr const char* TRAIL_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/Vertex/TrailVertexShader.glsl";
 constexpr const char* LIGHTS_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/Vertex/VertexShader.glsl";
 constexpr const char* SKYBOX_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/Vertex/SkyboxVertex.glsl";
 constexpr const char* UIWIDGET_VERTEX_SHADER_PATH    = "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl";
 constexpr const char* QUAD_VERTEX_SHADER_PATH        = "./EngineDefaults/Shader/Vertex/QuadVertexShader.glsl";
 constexpr const char* BILLBOARD_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/BillboardVertex.glsl";
-constexpr const char* DECAL_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/DecalVertex.glsl";
+constexpr const char* DECAL_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/Vertex/DecalVertex.glsl";
+constexpr const char* SHADOWMAP_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/ShadowMapVertex.glsl";
+constexpr const char* SPRITESHEET_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/Vertex/SpritesheetVertex.glsl";
+constexpr const char* PARTICLESYSTEM_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/Vertex/ParticleSystemVertex.glsl";
 
 constexpr const char* UNLIT_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UnlitFragmentShader.glsl";
 constexpr const char* SKYBOX_FRAGMENT_SHADER_PATH    = "./EngineDefaults/Shader/Fragment/SkyboxFragment.glsl";
@@ -157,24 +160,32 @@ constexpr const char* GBUFFER_METALLIC_FRAGMENT_SHADER_PATH =
     "./EngineDefaults/Shader/Fragment/gBufferMetallicFragment.glsl";
 constexpr const char* GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH =
     "./EngineDefaults/Shader/Fragment/gBufferSpecularFragment.glsl";
-constexpr const char* LIGHTINGPASS_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/IBLLightingPass.glsl";
-constexpr const char* TRANSPARENT_FRAGMENT_SHADER_PATH   = "./EngineDefaults/Shader/Fragment/transparentShader.glsl";
-constexpr const char* QUAD_FRAGMENT_SHADER_PATH          = "./EngineDefaults/Shader/Fragment/QuadFragment.glsl";
+constexpr const char* LIGHTINGPASS_FRAGMENT_SHADER_PATH = "./EngineDefaults/Shader/Fragment/IBLLightingPass.glsl";
+constexpr const char* TRANSPARENT_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/transparentShader.glsl";
+constexpr const char* QUAD_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/QuadFragment.glsl";
 constexpr const char* DEPTH_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/DepthFragment.glsl";
+constexpr const char* LINEARDEPTH_FRAGMENT_SHADER_PATH   = "./EngineDefaults/Shader/Fragment/LinearDepthFragment.glsl";
+constexpr const char* EMPTY_FRAGMENT_SHADER_PATH        = "./EngineDefaults/Shader/Fragment/EmptyFragment.glsl";
 constexpr const char* BILLBOARD_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/BillboardFragment.glsl";
 constexpr const char* TRAIL_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/TrailShader.glsl";
 constexpr const char* DECAL_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/DecalFragment.glsl";
+constexpr const char* SPRITESHEET_FRAGMENT_SHADER_PATH   = "./EngineDefaults/Shader/Fragment/SpritesheetFragment.glsl";
+constexpr const char* PARTICLESYSTEM_FRAGMENT_SHADER_PATH = "./EngineDefaults/Shader/Fragment/ParticleSystemFragment.glsl";
 
-using UID                                                = uint64_t;
+constexpr const char* SHADOW_DEPTH_COMPUTE_SHADER_PATH  = "./EngineDefaults/Shader/Compute/ShadowMapDepthCompute.glsl";
 
-constexpr UID INVALID_UID                                = 0;
-constexpr UID UID_PREFIX_DIVISOR                         = 100000000000000;
-constexpr UID FALLBACK_TEXTURE_UID                       = 1200000000000000;
-constexpr UID DEFAULT_MATERIAL_UID                       = 1300000000000000;
+using UID                                               = uint64_t;
 
-constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID     = "mesh-select";
-constexpr const char* CONSTANT_MATERIAL_SELECT_DIALOG_ID = "material-select";
-constexpr const char* CONSTANT_TEXTURE_SELECT_DIALOG_ID  = "texture-select";
+constexpr UID INVALID_UID                               = 0;
+constexpr UID UID_PREFIX_DIVISOR                        = 100000000000000;
+constexpr UID FALLBACK_TEXTURE_UID                      = 1200000000000000;
+constexpr UID DEFAULT_MATERIAL_UID                      = 1300000000000000;
+
+constexpr const char* NAVMESH_META_PREFIX                = "20_";
+
+constexpr const char* CONSTANT_MESH_SELECT_DIALOG_ID    = "mesh-select";
+constexpr const char* CONSTANT_MATERIAL_SELECT_DIALOG_ID         = "material-select";
+constexpr const char* CONSTANT_TEXTURE_SELECT_DIALOG_ID          = "texture-select";
 constexpr const char* CONSTANT_DIFFUSE_TEXTURE_SELECT_DIALOG_ID  = "diffuse-texture-select";
 constexpr const char* CONSTANT_METALLIC_TEXTURE_SELECT_DIALOG_ID = "metallic-texture-select";
 constexpr const char* CONSTANT_SPECULAR_TEXTURE_SELECT_DIALOG_ID = "specular-texture-select";

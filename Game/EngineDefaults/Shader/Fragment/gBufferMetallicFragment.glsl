@@ -51,7 +51,7 @@ void main()
 {
     const Material mat = materials[instance_index];
     vec4 texColor = texture(sampler2D(mat.diffuseTex), uv0);
-    const float alpha = texColor.a;
+    const float alpha = texColor.a * mat.diffColor.a;
 
     if (!isWireframe && isAlpha)
     {
@@ -61,7 +61,7 @@ void main()
     gDiffuse = vec4(pow(texColor.rgb, vec3(2.2f)), alpha);
     if(mat.hasMetallic == 1) gSpecular = vec4(pow(texture(sampler2D(mat.metallicTex), uv0), vec4(2.2)));
     else gSpecular = vec4(1);
-    gPosition = vec4(pos, 0);
+    gPosition = vec4(pos, 1);
     gNormal = vec4(normal, 0);
 
     gSpecular.y = mat.roughnessFactor * gSpecular.y;

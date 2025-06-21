@@ -24,10 +24,10 @@ struct Command
 GeometryBatch::GeometryBatch(const MeshComponent* component)
     : totalVertexCount(0), totalIndexCount(0), currentBufferIndex(0)
 {
-    mode       = component->GetResourceMesh()->GetMode();
-    isSpecular = component->GetResourceMaterial()->GetIsSpecular();
-    isMetallic = component->GetResourceMaterial()->GetIsMetallicRoughness();
-    hasBones   = component->GetHasBones();
+    mode           = component->GetResourceMesh()->GetMode();
+    isSpecular     = component->GetResourceMaterial()->GetIsSpecular();
+    isMetallic     = component->GetResourceMaterial()->GetIsMetallicRoughness();
+    hasBones       = component->GetHasBones();
     isNavmeshValid = component->GetParent()->IsNavMeshValid();
     isAlpha        = component->GetRenderMode() == 2;
     isDoubleSided  = component->GetResourceMaterial()->IsDoubleSided();
@@ -209,7 +209,7 @@ void GeometryBatch::LoadData()
     );
 }
 
-void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender)
+void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bool shadowMap)
 {
     {
 #ifdef OPTICK
@@ -226,8 +226,11 @@ void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender)
 
     if (!updatedOnce) UpdateBuffers(meshesToRender);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, materials);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, materials);
+    if (!shadowMap)
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, materials);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, materials);
+    }
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, indirect);
     glBufferData(GL_DRAW_INDIRECT_BUFFER, commands.size() * sizeof(Command), commands.data(), GL_DYNAMIC_DRAW);

@@ -13,6 +13,7 @@ struct Clip
     UID animationResourceUID;
     HashString clipName;
     bool loop;
+    float animationSpeed = 1.0f;
 };
 
 struct State
@@ -20,6 +21,7 @@ struct State
     HashString name;
     HashString clipName;
     ImVec2 position;
+    
 };
 
 struct Transition
@@ -38,7 +40,7 @@ class SOBRASADA_API_ENGINE ResourceStateMachine : public Resource
 
     void AddClip(UID animationResourceUID, const std::string& name, bool loop);
     bool RemoveClip(const std::string& name);
-    bool EditClipInfo(const std::string& oldName, UID newUID, const std::string& newName, bool newLoop);
+    bool EditClipInfo(const std::string& oldName, UID newUID, const std::string& newName, bool newLoop, float newSpeed);
     bool ClipExists(const std::string& clipName) const;
 
     void AddState(const std::string& stateName, const std::string& clipName);
@@ -57,6 +59,7 @@ class SOBRASADA_API_ENGINE ResourceStateMachine : public Resource
     bool UseTrigger(const std::string& triggerName, const State*& currentAnimState);
 
     const Clip* GetClip(const std::string& name) const;
+    void SetClipSpeed(const std::string& name,float speed);
     const State* GetState(const std::string& name) const;
     const Transition* GetTransition(const std::string& fromState, const std::string& toState) const;
     const State* GetDefaultState() const

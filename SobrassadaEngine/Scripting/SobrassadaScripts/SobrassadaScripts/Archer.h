@@ -9,6 +9,7 @@ class Projectile;
 enum class ArcherStates
 {
     NONE,
+    SEARCH,
     PATROL,
     CHASE,
     ESCAPE,
@@ -32,8 +33,10 @@ class Archer : public Character
     void Attack(float deltaTime) override;
     void Escape(float deltaTime);
 
+    void ChangeState();
     void PatrolAI();
     void ChaseAI();
+    void SearchForPlayer();
 
   private:
     float rangeEscape          = rangeAIAttack - 1;
@@ -43,6 +46,7 @@ class Archer : public Character
     std::string arrowName      = "";
     Projectile* arrow          = nullptr;
 
+    Projectile* arrow         = nullptr;
     float3 patrolPoint         = float3::zero;
     bool hasShot               = false;
 

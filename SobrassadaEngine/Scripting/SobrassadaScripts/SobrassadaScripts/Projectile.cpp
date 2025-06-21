@@ -47,7 +47,7 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
     parent->SetLocalTransform(transform);
 }
 
-void Projectile::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     //GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
 

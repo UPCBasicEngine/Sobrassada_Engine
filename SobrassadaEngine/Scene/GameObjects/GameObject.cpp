@@ -8,6 +8,7 @@
 #include "SceneModule.h"
 
 #include "CameraComponent.h"
+#include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -15,6 +16,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/BillboardComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
@@ -30,7 +32,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Standalone/DecalComponent.h"
 
 #include "imgui.h"
 #include <queue>
@@ -238,6 +239,8 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     rotation         = refObject->rotation;
     scale            = refObject->scale;
     prefabUID        = refObject->prefabUID;
+    prefabVersionUID = refObject->prefabVersionUID;
+    prefabChildUID   = refObject->prefabChildUID;
     navMeshValid     = refObject->navMeshValid;
     enabled          = refObject->enabled;
     wasEnabled       = refObject->wasEnabled;
@@ -278,6 +281,8 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("SelectParent")) selectParent = initialState["SelectParent"].GetBool();
 
     if (initialState.HasMember("PrefabUID")) prefabUID = initialState["PrefabUID"].GetUint64();
+    if (initialState.HasMember("PrefabVersionUID")) prefabVersionUID = initialState["PrefabVersionUID"].GetUint64();
+    if (initialState.HasMember("PrefabChildUID")) prefabChildUID = initialState["PrefabChildUID"].GetUint64();
     if (initialState.HasMember("NavmeshValid")) navMeshValid = initialState["NavmeshValid"].GetBool();
 
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() &&
@@ -390,7 +395,9 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
-    
+    if (prefabVersionUID != INVALID_UID) targetState.AddMember("PrefabVersionUID", prefabVersionUID, allocator);
+    if (prefabChildUID != INVALID_UID) targetState.AddMember("PrefabChildUID", prefabChildUID, allocator);
+
     rapidjson::Value valLocalTransform(rapidjson::kArrayType);
     valLocalTransform.PushBack(localTransform.ptr()[0], allocator)
         .PushBack(localTransform.ptr()[1], allocator)
@@ -428,18 +435,61 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Children", valChildren, allocator);
 }
 
-void GameObject::UpdateEnabledStateRecursive()
+void GameObject::UpdateEnabledState()
 {
-    for (UID childUID : children)
+
+    Scene* scene = App->GetSceneModule()->GetScene();
+
+    struct StackEntry
     {
-        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
-        if (child)
+        GameObject* go;
+        bool processed;
+    };
+
+    std::stack<StackEntry> pending;
+    pending.push({this, false});
+
+    while (!pending.empty())
+    {
+        StackEntry current = pending.top();
+        pending.pop();
+
+        GameObject* go = current.go;
+
+        if (current.processed)
         {
-            child->UpdateEnabledStateRecursive();
+            go->enabled = go->wasEnabled;
+            continue;
+        }
+
+        pending.push({go, true});
+
+        for (UID childUID : go->children)
+        {
+            if (GameObject* child = scene->GetGameObjectByUID(childUID))
+            {
+                pending.push({child, false});
+            }
         }
     }
+}
 
-    enabled = wasEnabled;
+void GameObject::UpdateNavmeshValidState()
+{
+    std::stack<UID> childrenBuffer;
+    childrenBuffer.push(uid);
+
+    while (!childrenBuffer.empty())
+    {
+        GameObject* gameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenBuffer.top());
+        childrenBuffer.pop();
+        if (gameObject != nullptr)
+        {
+            gameObject->navMeshValid = navMeshValid;
+            for (UID child : gameObject->GetChildren())
+                childrenBuffer.push(child);
+        }
+    }
 }
 
 void GameObject::RenderEditorInspector(bool drawGizmo)
@@ -463,7 +513,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
         if (ImGui::Checkbox("Enabled", &enabled))
         {
             wasEnabled = enabled;
-            UpdateEnabledStateRecursive();
+            UpdateEnabledState();
         }
     }
 
@@ -479,6 +529,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
             {
                 meshComp->BatchEditorMode();
             }
+            UpdateNavmeshValidState();
         }
 
         if (ImGui::Button("Add Component"))
@@ -728,7 +779,8 @@ void GameObject::RenderHierarchyNode(UID& selectedGameObjectUUID)
         std::string objectName = name;
         if (prefabUID != INVALID_UID)
         {
-            objectName += "(prefab " + std::to_string(prefabUID) + ')';
+            objectName += " (Prefab)";
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 1.0f, 1.0f));
         }
 
         if (!IsGloballyEnabled())
@@ -738,10 +790,8 @@ void GameObject::RenderHierarchyNode(UID& selectedGameObjectUUID)
 
         nodeOpen = ImGui::TreeNodeEx(objectName.c_str(), flags);
 
-        if (!IsGloballyEnabled())
-        {
-            ImGui::PopStyleColor();
-        }
+        if (!IsGloballyEnabled()) ImGui::PopStyleColor();
+        if (prefabUID != INVALID_UID) ImGui::PopStyleColor();
     }
 
     HandleNodeClick(selectedGameObjectUUID);
@@ -850,7 +900,7 @@ void GameObject::RenderContextMenu()
         const char* label = prefabUID == INVALID_UID ? "Create Prefab" : "Update Prefab";
         if (ImGui::MenuItem(label)) CreatePrefab();
 
-        if (prefabUID != INVALID_UID && ImGui::MenuItem("Unlink prefab")) prefabUID = INVALID_UID;
+        if (prefabUID != INVALID_UID && ImGui::MenuItem("Unlink prefab")) RemovePrefabStatus();
 
         if (uid != App->GetSceneModule()->GetScene()->GetGameObjectRootUID() && ImGui::MenuItem("Delete"))
         {
@@ -1046,6 +1096,40 @@ void GameObject::SetJustLocalTransform(const float4x4& newTransform)
     scale          = localTransform.GetScale();
 }
 
+void GameObject::UpdateFromReference(GameObject* reference)
+{
+    selectParent     = reference->selectParent;
+    mobilitySettings = reference->mobilitySettings;
+
+    position         = reference->position;
+    rotation         = reference->rotation;
+    scale            = reference->scale;
+    prefabUID        = reference->prefabUID;
+    prefabVersionUID = reference->prefabVersionUID;
+    prefabChildUID   = reference->prefabChildUID;
+    navMeshValid     = reference->navMeshValid;
+    enabled          = reference->enabled;
+    wasEnabled       = reference->wasEnabled;
+
+    for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
+    {
+        // Add missing components and remove the ones that are no longer in the reference
+        if (reference->IsComponentCreated(i) && !IsComponentCreated(i))
+        {
+            CreateComponent(ComponentType(i + 1));
+        }
+        else if (IsComponentCreated(i) && !reference->IsComponentCreated(i))
+        {
+            RemoveComponent(ComponentType(i + 1));
+        }
+    }
+
+    // Update components values
+    DuplicateComponents(compTuple, reference->GetComponentsTupleRef());
+
+    OnAABBUpdated();
+}
+
 void GameObject::DrawNodes() const
 {
     DebugDrawModule* debug = App->GetDebugDrawModule();
@@ -1170,7 +1254,28 @@ bool GameObject::RemoveComponent(ComponentType componentType)
 void GameObject::CreatePrefab()
 {
     bool override = this->prefabUID != INVALID_UID;
-    prefabUID     = PrefabManager::SavePrefab(this, override);
+
+    std::queue<UID> childrenUIDs;
+    childrenUIDs.push(uid);
+
+    // Set the prefabChildUID to all children of the prefab in case they don't already have
+    while (!childrenUIDs.empty())
+    {
+        GameObject* currentChild = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenUIDs.front());
+        if (currentChild->prefabChildUID == INVALID_UID)
+        {
+            // GLOG("New prefab child UID");
+            currentChild->prefabChildUID = GenerateUID();
+        }
+        childrenUIDs.pop();
+        for (UID child : currentChild->children)
+        {
+            childrenUIDs.push(child);
+        }
+    }
+
+    prefabVersionUID = GenerateUID();
+    prefabUID        = PrefabManager::SavePrefab(this, override, prefabVersionUID);
 
     if (override)
     {
@@ -1179,11 +1284,34 @@ void GameObject::CreatePrefab()
     }
 }
 
+void GameObject::RemovePrefabStatus()
+{
+    // Clear prefab flags of all the gameObject hierarchy
+    prefabUID        = INVALID_UID;
+    prefabVersionUID = INVALID_UID;
+
+    std::stack<UID> childrenUIDs;
+    childrenUIDs.push(uid);
+
+    while (!childrenUIDs.empty())
+    {
+        GameObject* currentObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenUIDs.top());
+        childrenUIDs.pop();
+
+        currentObject->prefabChildUID = INVALID_UID;
+        for (UID child : currentObject->children)
+        {
+            childrenUIDs.push(child);
+        }
+    }
+}
+
 bool GameObject::IsGloballyEnabled() const
 {
     if (!enabled) return false;
     GameObject* parent = App->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
     if (this->uid == App->GetSceneModule()->GetScene()->GetGameObjectRootUID()) return true;
+    if (this->uid == App->GetSceneModule()->GetScene()->GetMultiselectUID()) return true;
     return parent ? parent->IsGloballyEnabled() : false;
 }
 

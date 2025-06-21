@@ -1,6 +1,7 @@
 #include "AIAgentComponent.h"
 
 #include "Application.h"
+#include "DetourNavMeshQuery.h"
 #include "EditorUIModule.h"
 #include "EngineTimer.h"
 #include "GameObject.h"
@@ -227,6 +228,7 @@ bool AIAgentComponent::SetPathNavigation(const math::float3& destination, bool m
     float extents[3] = {2.0f, 4.0f, 2.0f}; // bounding box for the search area
     float nearestPoint[3];
     dtPolyRef targetRef;
+
     dtStatus status = navQuery->findNearestPoly(destination.ptr(), extents, &filter, &targetRef, nearestPoint);
     if (dtStatusFailed(status) || targetRef == 0)
     {
@@ -391,6 +393,32 @@ void AIAgentComponent::ResetSpeed()
     agent->params.maxAcceleration = defaultAcceleration;
 
     isPaused                      = false;
+}
+
+void AIAgentComponent::SetPosition(const float3& newPos)
+{
+    isPaused                     = false;
+
+    PathfinderModule* pathfinder = App->GetPathfinderModule();
+    dtNavMeshQuery* navQuery     = pathfinder->GetNavQuery();
+    if (!navQuery) return;
+
+    // Prepare for finding the nearest poly
+    dtQueryFilter filter;
+    float extents[3] = {2.0f, 4.0f, 2.0f}; // bounding box for the search area
+    float nearestPoint[3];
+    dtPolyRef targetRef;
+
+    dtStatus status     = navQuery->findNearestPoly(newPos.ptr(), extents, &filter, &targetRef, nearestPoint);
+
+    dtCrowdAgent* agent = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    agent->npos[0]      = nearestPoint[0];
+    agent->npos[1]      = nearestPoint[1];
+    agent->npos[2]      = nearestPoint[2];
+
+    parent->SetLocalPosition(
+        float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]) - parent->GetParentGlobalTransform().TranslatePart()
+    );
 }
 
 void AIAgentComponent::ResetAngularSpeed()

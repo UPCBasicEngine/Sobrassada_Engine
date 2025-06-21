@@ -9,7 +9,7 @@
 
 MoveGOInSpline::MoveGOInSpline(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Speed (0-1/s)", InspectorField::FieldType::Float, &speed, 0.0f, 10.0f});
+    fields.push_back({"Speed Factor", InspectorField::FieldType::Float, &speed, 0.0f, 10.0f});
     fields.push_back({"PingPong effect", InspectorField::FieldType::Bool, &pingPong});
 }
 
@@ -31,43 +31,65 @@ void MoveGOInSpline::Update(float deltaTime)
     }
     if (speed <= 0.0f) return;
 
-    float delta  = speed * deltaTime * (goingForward ? 1.0f : -1.0f);
-    t += delta;
+    float segSpeed = spline->EvaluateSpeed(t) * speed;
 
-    loop  = spline->IsLoop();
-    if (loop)  //Closed spline
+    const int ptCount  = static_cast<int>(spline->GetNumPoints());
+    const bool isLoop  = spline->IsLoop();
+    const int segCount = isLoop ? ptCount : ptCount - 1;
+
+    float segFloat     = t * segCount;
+    int idxStart           = static_cast<int>(floorf(segFloat));
+    
+    if (isLoop) idxStart %= ptCount;
+
+    int idxEnd    = isLoop ? (idxStart + 1) % ptCount : (std::min)(idxStart + 1, ptCount - 1);
+    
+    float3 pStart = spline->GetPointWorld(idxStart);
+    float3 pEnd   = spline->GetPointWorld(idxEnd);
+    float segLen  = (pEnd - pStart).Length();
+
+    if (segLen < 0.0001f) segLen = 0.0001f;
+    
+    float deltaT = (segSpeed * deltaTime) / (segLen * segCount);
+
+    if (pingPong && !isLoop)
     {
+        t += goingForward ? deltaT : -deltaT;
+
+        if (t > 1.f)
+        {
+            t            = 2.0f - t;
+            goingForward = false;
+        }
+        else if (t < 0)
+        {
+            t            = -t;
+            goingForward = true;
+        }
+    }
+    else
+    {
+        t += deltaT;
         if (t > 1.f) t -= 1.f;
         else if (t < 0.f) t += 1.f;
     }
-    else    //Open Spline
-    {
-        if (pingPong)
-        {
-            if (t > 1.f)
-            {
-                t            = 1.f;
-                goingForward = false;
-            }
-            else if (t < 0)
-            {
-                t            = 0.f;
-                goingForward = true;
-            }
-        }
-        else
-        {
-            if (t > 1.f) t -= 1.f;
-            else if (t < 0.f) t += 1.f;
-        }
-    }
 
-    float3 worldPos = spline->GetWorldPositionInSpine(t);
+    float3 localPos;
+    Quat localRot;
+    spline->EvaluateTransform(t, localPos, localRot);
 
-    float4x4 local  = parent->GetLocalTransform();
-    local.SetTranslatePart(parent->GetParentGlobalTransform().Inverted().TransformPos(worldPos));
+    GameObject* splineGO = spline->GetParent();
+    const float4x4& splineGlob = splineGO->GetGlobalTransform();
 
-    parent->SetLocalTransform(local);
+    float3 worldPos            = splineGlob.TransformPos(localPos);
+    Quat worldRot              = Quat(splineGlob) * localRot;
+    
+    const float4x4& parentGlob = parent->GetParentGlobalTransform();
+
+    float4x4 worldM            = float4x4::FromTRS(worldPos, worldRot.ToFloat4x4(), float3::one);
+    
+    float4x4 localM            = parentGlob.Inverted() * worldM;
+    parent->SetLocalTransform(localM);
 
 }
 
@@ -89,7 +111,7 @@ SplineComponent* MoveGOInSpline::FindSpline()
 
         if (spline)
         {
-            splineGO = childUID;
+            splineIdGO = childUID;
             return spline;
         }
     }

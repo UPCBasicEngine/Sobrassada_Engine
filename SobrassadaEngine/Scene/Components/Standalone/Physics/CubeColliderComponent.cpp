@@ -18,10 +18,10 @@ CubeColliderComponent::CubeColliderComponent(UID uid, GameObject* parent)
     CalculateCollider();
 
     onCollissionCallback = CollisionDelegate(
-        std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
     );
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    //App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    // App->GetPhysicsModule()->CreateCubeRigidBody(this);
 }
 
 CubeColliderComponent::CubeColliderComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -51,16 +51,11 @@ CubeColliderComponent::CubeColliderComponent(const rapidjson::Value& initialStat
         size                              = {dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat()};
     }
 
-    if (colliderType == ColliderType::STATIC && !parent->IsStatic())
-        parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
-    else if (!(colliderType == ColliderType::STATIC) && parent->IsStatic())
-        parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
-
     onCollissionCallback = CollisionDelegate(
-        std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
     );
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
-    //App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    // App->GetPhysicsModule()->CreateCubeRigidBody(this);
 }
 
 CubeColliderComponent::~CubeColliderComponent()
@@ -138,38 +133,26 @@ void CubeColliderComponent::RenderEditorInspector()
             if (ImGui::Selectable(ColliderTypeStrings[i]))
             {
                 colliderType = ColliderType(i);
-                if (colliderType == ColliderType::STATIC)
-                {
-                    parent->UpdateMobilityHierarchy(MobilitySettings::STATIC);
-                    mass = 0.f;
-                }
-
-                else
-                {
-                    parent->UpdateMobilityHierarchy(MobilitySettings::DYNAMIC);
-                    mass = 1.f;
-                }
-
                 App->GetPhysicsModule()->UpdateCubeRigidBody(this);
             }
         }
         ImGui::EndCombo();
     }
 
-        ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
-        if (ImGui::DragFloat("Mass", &mass, 0.05f, 0.f, 20.f))
-        {
-            App->GetPhysicsModule()->UpdateCubeRigidBody(this);
-        }
-        ImGui::EndDisabled();
+    ImGui::BeginDisabled(colliderType == ColliderType::STATIC);
+    if (ImGui::DragFloat("Mass", &mass, 0.05f, 0.f, 20.f))
+    {
+        App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+    }
+    ImGui::EndDisabled();
 
-        if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
-            App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+    if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
+        App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 
-        if (ImGui::DragFloat3("Size", &size[0], 0.05f, 0.f, 20.f)) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+    if (ImGui::DragFloat3("Size", &size[0], 0.05f, 0.f, 20.f)) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 
-        if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
-            App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+    if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
+        App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 
     // COLLIDER LAYER SETTINGS
     if (ImGui::BeginCombo("Layer options", ColliderLayerStrings[(int)layer]))
@@ -179,7 +162,8 @@ void CubeColliderComponent::RenderEditorInspector()
         {
             if (ImGui::Selectable(ColliderLayerStrings[i]))
             {
-                layer = ColliderLayer(i);
+                layer       = ColliderLayer(i);
+                userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
                 App->GetPhysicsModule()->UpdateCubeRigidBody(this);
             }
         }
@@ -194,7 +178,7 @@ void CubeColliderComponent::RenderEditorInspector()
 
     if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
     {
-        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback);
+        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
     }
 }
 
@@ -226,27 +210,16 @@ void CubeColliderComponent::ParentUpdated()
 
     if (fitToSize) CalculateCollider();
 
-    if (parent->IsStatic() && colliderType != ColliderType::STATIC)
-    {
-        mass         = 0.f;
-        colliderType = ColliderType::STATIC;
-    }
-    else if (!parent->IsStatic() && colliderType == ColliderType::STATIC)
-    {
-        mass         = 1.f;
-        colliderType = ColliderType::DYNAMIC;
-    }
-
     App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 }
 
-void CubeColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal)
+void CubeColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
 {
     if (!enabled || !otherObject->IsEnabled()) return;
 
     auto script = parent->GetComponent<ScriptComponent*>();
 
-    if (script) script->OnCollision(otherObject, collisionNormal);
+    if (script) script->OnCollision(otherObject, collisionNormal, layer);
 }
 
 void CubeColliderComponent::DeleteRigidBody()

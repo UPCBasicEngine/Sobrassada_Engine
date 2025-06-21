@@ -88,6 +88,7 @@ void ScriptComponent::Clone(const Component* other)
         const ScriptComponent* otherScript = static_cast<const ScriptComponent*>(other);
         enabled                            = otherScript->enabled;
         wasEnabled                         = otherScript->wasEnabled;
+        DeleteAllScripts();
 
         for (size_t i = 0; i < otherScript->scriptNames.size(); ++i)
         {
@@ -214,11 +215,11 @@ void ScriptComponent::InitScriptInstances()
     }
 }
 
-void ScriptComponent::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void ScriptComponent::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     for (auto& script : scriptInstances)
     {
-        script->OnCollision(otherObject, collisionNormal);
+        script->OnCollision(otherObject, collisionNormal, layer);
     }
 }
 
