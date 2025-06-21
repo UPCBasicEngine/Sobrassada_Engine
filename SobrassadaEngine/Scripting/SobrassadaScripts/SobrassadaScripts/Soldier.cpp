@@ -42,6 +42,16 @@ bool Soldier::Init()
 void Soldier::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+
+    if (isKnockback) {
+        knockbackTimer -= deltaTime;
+        if (knockbackTimer <= 0.0f) {
+            isKnockback = false;
+            if (animComponent) animComponent->UseTrigger("idle");
+        }
+        return; 
+    }
+
     Character::Update(deltaTime);
 }
 
@@ -54,8 +64,17 @@ void Soldier::OnDeath()
 
 void Soldier::OnDamageTaken(int amount)
 {
-    // TODO: play soldier take damage sound
-    // TODO: particles? and animation
+    isAttacking = false;
+    attackTimer = 0.0f;
+    if (weaponCollider && weaponCollider->GetEnabled()) {
+        weaponCollider->SetEnabled(false);
+    }
+
+    if (animComponent) animComponent->UseTrigger("idle");
+
+    if (character) {
+        ApplyKnockback(character->GetLastPosition());
+    }
 }
 
 void Soldier::PerformAttack()
@@ -169,25 +188,27 @@ void Soldier::Attack(float deltaTime)
     }
     else
     {
+        if (!isKnockback)
+        {
+            // Enable hitbox when animation hits
+            if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+                attackTimer <= attackHitboxDelay + attackHitboxDuration)
+            {
+                weaponCollider->SetEnabled(true);
+            }
+            else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+            {
+                weaponCollider->SetEnabled(false);
+            }
 
-        // Enable hitbox when animation hits
-        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-            attackTimer <= attackHitboxDelay + attackHitboxDuration)
-        {
-            weaponCollider->SetEnabled(true);
-        }
-        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
-        {
-            weaponCollider->SetEnabled(false);
-        }
-
-        // Reset attack state
-        if (attackTimer >= attackDuration)
-        {
-            isAttacking   = false;
-            attackCdTimer = attackCooldown;
-            agentAI->ResumeMovement();
-            ChangeState();
+            // Reset attack state
+            if (attackTimer >= attackDuration)
+            {
+                isAttacking   = false;
+                attackCdTimer = attackCooldown;
+                agentAI->ResumeMovement();
+                ChangeState();
+            }
         }
     }
 }
@@ -204,4 +225,24 @@ void Soldier::ChangeState()
     if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
+}
+
+void Soldier::ApplyKnockback(const float3& sourcePosition)
+{
+    float3 myPos = parent->GetGlobalTransform().TranslatePart();
+    float3 dir = (myPos - sourcePosition);
+    dir.y = 0.0f;
+    if (dir.LengthSq() < 0.001f) dir = float3::unitZ; 
+    dir.Normalize();
+
+    float3 knockbackTarget = myPos + dir * knockbackForce;
+
+    if (agentAI) agentAI->PauseMovement();
+
+    float3 targetPos = knockbackTarget - parent->GetParentGlobalTransform().TranslatePart();
+
+    agentAI->SetPosition(targetPos);
+
+    isKnockback = true;
+    knockbackTimer = knockbackTime;
 }

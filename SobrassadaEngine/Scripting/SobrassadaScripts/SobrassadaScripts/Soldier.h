@@ -30,6 +30,8 @@ class Soldier : public Character
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
 
+    void ApplyKnockback(const float3& sourcePosition);
+
     void ChangeState();
     void PatrolAI();
     void ChaseAI();
@@ -40,4 +42,9 @@ class Soldier : public Character
     SoldierStates currentState = SoldierStates::NONE;
 
     float3 patrolPoint         = float3::zero;
+
+    float knockbackForce = 0.5f;
+    float knockbackTime = 0.5f;
+    float knockbackTimer = 0.0f;
+    bool isKnockback = false;
 };
