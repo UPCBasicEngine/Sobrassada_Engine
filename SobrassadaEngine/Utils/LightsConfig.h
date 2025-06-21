@@ -104,6 +104,8 @@ class LightsConfig
 
     void IsHDRTexture(const std::string& name);
 
+    DirectionalLightComponent* GetDirectionalLight() { return directionalLight; }
+
   private:
     void LoadSkyboxTexture(UID cubemapUID);
     void FreeCubemap() const;

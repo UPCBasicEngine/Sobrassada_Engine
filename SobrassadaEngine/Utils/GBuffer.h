@@ -13,6 +13,9 @@ class GBuffer
     void Resize(int width, int height);
     void CheckResize();
     unsigned int GetDepthTexture() const { return depthTexture; }
+    
+    int GetScreenWidth() const { return screenWidth; }
+    int GetScreenHeight() const { return screenHeight; }
 
   private:
     void InitializeGBuffer();
