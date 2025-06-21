@@ -20,7 +20,6 @@ SSAO::~SSAO()
     glDeleteFramebuffers(1, &ssaoFrameBufferObject);
 
     glDeleteTextures(1, &ssaoTexture);
-    glDeleteTextures(1, &noiseTexture);
 }
 
 void SSAO::Init()
@@ -64,7 +63,7 @@ void SSAO::Init()
         kernels.push_back(kernel);
     }
 
-    std::vector<float3> noise;
+    
     noise.reserve(SSAO_KERNEL_SIZE_MID);
 
     for (int i = 0; i < SSAO_KERNEL_SIZE_MID; i++)
@@ -74,7 +73,8 @@ void SSAO::Init()
         noise.push_back(n);
     }
 
-    if (noiseTexture == 0) glGenTextures(1, &noiseTexture);
+    /*
+    if(noiseTexture == 0) glGenTextures(1, &noiseTexture);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT, noise.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -82,6 +82,7 @@ void SSAO::Init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D, 0);
+    */
 }
 
 void SSAO::Bind()

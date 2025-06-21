@@ -3,7 +3,6 @@
 layout(binding = 0) uniform sampler2D gPositions;
 layout(binding = 1) uniform sampler2D gNormals;
 layout(binding = 2) uniform sampler2D gDepth;
-layout(binding = 3) uniform sampler2D noiseTexture;
 
 layout(std140, row_major, binding = 0) uniform CameraMatrices
 {
@@ -16,6 +15,7 @@ in vec2 uv0;
 
 const int KERNEL_SIZE = 32;
 uniform vec3 kernel_samples[KERNEL_SIZE];
+uniform vec3 random_tangents[KERNEL_SIZE];
 
 uniform float bias;
 uniform float range = 0.5;  
@@ -29,11 +29,12 @@ mat3 createTangentSpace(const vec3 normal, const vec3 up)
    return mat3(bitangent, tangent, normal);
 }
 
-vec3 getRandomTangent() {
-   vec2 noiseScale = screenSize / 4.0;
-   return normalize(texture(noiseTexture, uv0 * noiseScale).xyz);
+vec3 getRandomTangent()
+{
+    vec2 screenPos = uv0 * screenSize;
+    int index = int(mod(screenPos.x + screenPos.y, float(KERNEL_SIZE)));
+    return random_tangents[index];
 }
-
 
 float getSceneDepthAtSamplePos(in vec3 samplePos)
 {
@@ -42,10 +43,9 @@ float getSceneDepthAtSamplePos(in vec3 samplePos)
     vec2 sampleUV = ndc.xy * 0.5 + 0.5;
 
     if (sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0)
-        return samplePos.z;
 
-    //return (viewMatrix*texture(gDepth, sampleUV)).r;
-      return texture(gPositions, sampleUV).r;
+    return (viewMatrix*texture(gPositions, sampleUV)).z;
+      //return texture(gPositions, sampleUV).z;
 }
 
 
