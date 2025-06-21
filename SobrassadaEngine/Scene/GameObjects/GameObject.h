@@ -142,8 +142,14 @@ class SOBRASADA_API_ENGINE GameObject
     void CreatePrefab();
     bool IsGloballyEnabled() const;
     void SetEnabledRecursive(bool value);
+
+    void RemovePrefabStatus();
     UID GetPrefabUID() const { return prefabUID; }
+    UID GetPrefabVersionUID() const { return prefabVersionUID; }
+    UID GetPrefabChildUID() const { return prefabChildUID; }
     void SetPrefabUID(const UID uid) { prefabUID = uid; }
+    void SetPrefabChildUID(const UID uid) { prefabChildUID = uid; }
+
     void ParentUpdatedComponents();
     void OnTransformUpdated();
     void SetPosition(float3& newPosition) { position = newPosition; };
@@ -160,6 +166,9 @@ class SOBRASADA_API_ENGINE GameObject
     void SetOpenHierarchyNode(bool newOpen) { openHierarchyNode = newOpen; }
 
     void SetJustLocalTransform(const float4x4& newTransform);
+
+    void UpdateFromReference(GameObject* reference);
+
   private:
     void DrawNodes() const;
     void OnDrawConnectionsToggle();
@@ -184,6 +193,9 @@ class SOBRASADA_API_ENGINE GameObject
     char renameBuffer[128];
 
     UID prefabUID                        = INVALID_UID;
+    UID prefabVersionUID                 = INVALID_UID;
+    UID prefabChildUID                   = INVALID_UID;
+
     bool drawNodes                       = false;
 
     float3 position                      = float3::zero;
