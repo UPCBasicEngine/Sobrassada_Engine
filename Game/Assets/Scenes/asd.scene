@@ -10,14 +10,14 @@
             4.148057460784912
         ],
         "Camera Front": [
-            -0.1372726410627365,
-            -0.6601333022117615,
-            -0.7384987473487854
+            -0.2806326150894165,
+            -0.7501118183135986,
+            -0.598813533782959
         ],
         "Camera Up": [
-            -0.12063946574926376,
-            0.7511487007141113,
-            -0.6490159630775452
+            -0.3183152675628662,
+            0.6613118648529053,
+            -0.6792216897010803
         ],
         "WorldObjectsMask": 13,
         "TriggerMask": 8,
@@ -26,6 +26,41 @@
         "PlayerProjectileMask": 4,
         "EnemyProjectileMask": 8,
         "GameObjects": [
+            {
+                "UID": 1823335798511714123,
+                "ParentUID": 0,
+                "Name": "SceneModule GameObject",
+                "Mobility": 1,
+                "SelectParent": false,
+                "Enabled": true,
+                "WasEnabled": true,
+                "NavmeshValid": false,
+                "LocalTransform": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
+                "Components": [],
+                "Children": [
+                    16658482190926717393,
+                    8286091168129289171,
+                    12720917037898254057,
+                    16302294100690503883
+                ]
+            },
             {
                 "UID": 16658482190926717393,
                 "ParentUID": 1823335798511714123,
@@ -68,41 +103,6 @@
                 "Children": []
             },
             {
-                "UID": 1823335798511714123,
-                "ParentUID": 0,
-                "Name": "SceneModule GameObject",
-                "Mobility": 1,
-                "SelectParent": false,
-                "Enabled": true,
-                "WasEnabled": true,
-                "NavmeshValid": false,
-                "LocalTransform": [
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0
-                ],
-                "Components": [],
-                "Children": [
-                    16658482190926717393,
-                    8286091168129289171,
-                    12720917037898254057,
-                    16302294100690503883
-                ]
-            },
-            {
                 "UID": 8286091168129289171,
                 "ParentUID": 1823335798511714123,
                 "Name": "new Game Object",
@@ -137,6 +137,47 @@
                         "WasEnabled": true,
                         "Name": "Mesh",
                         "Mesh": 1165703895193424,
+                        "Material": 0,
+                        "RenderMode": 0
+                    }
+                ],
+                "Children": []
+            },
+            {
+                "UID": 16302294100690503883,
+                "ParentUID": 1823335798511714123,
+                "Name": "new Game Object",
+                "Mobility": 1,
+                "SelectParent": false,
+                "Enabled": true,
+                "WasEnabled": true,
+                "NavmeshValid": false,
+                "LocalTransform": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    -2.1001553535461426,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.5464088320732117,
+                    0.0,
+                    0.0,
+                    1.0,
+                    -0.708232045173645,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
+                "Components": [
+                    {
+                        "UID": 13093036446577690610,
+                        "Type": 1,
+                        "Enabled": true,
+                        "WasEnabled": true,
+                        "Name": "Mesh",
+                        "Mesh": 1175652718975713,
                         "Material": 0,
                         "RenderMode": 0
                     }
@@ -182,47 +223,6 @@
                         "ColorGreen": 1.0,
                         "ColorBlue": 1.0,
                         "DrawGizmos": true
-                    }
-                ],
-                "Children": []
-            },
-            {
-                "UID": 16302294100690503883,
-                "ParentUID": 1823335798511714123,
-                "Name": "new Game Object",
-                "Mobility": 1,
-                "SelectParent": false,
-                "Enabled": true,
-                "WasEnabled": true,
-                "NavmeshValid": false,
-                "LocalTransform": [
-                    1.0,
-                    0.0,
-                    0.0,
-                    -2.1001553535461426,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.5464088320732117,
-                    0.0,
-                    0.0,
-                    1.0,
-                    -0.708232045173645,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0
-                ],
-                "Components": [
-                    {
-                        "UID": 13093036446577690610,
-                        "Type": 1,
-                        "Enabled": true,
-                        "WasEnabled": true,
-                        "Name": "Mesh",
-                        "Mesh": 1175652718975713,
-                        "Material": 0,
-                        "RenderMode": 0
                     }
                 ],
                 "Children": []

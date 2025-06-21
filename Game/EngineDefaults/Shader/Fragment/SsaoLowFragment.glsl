@@ -14,7 +14,7 @@ layout(std140, row_major, binding = 0) uniform CameraMatrices
 uniform vec2 screenSize;
 in vec2 uv0;
 
-const int KERNEL_SIZE = 16;
+const int KERNEL_SIZE = 32;
 uniform vec3 kernel_samples[KERNEL_SIZE];
 
 uniform float bias;
@@ -34,6 +34,7 @@ vec3 getRandomTangent() {
    return normalize(texture(noiseTexture, uv0 * noiseScale).xyz);
 }
 
+
 float getSceneDepthAtSamplePos(in vec3 samplePos)
 {
     vec4 clipSpace = projMatrix * vec4(samplePos, 1.0);
@@ -44,8 +45,9 @@ float getSceneDepthAtSamplePos(in vec3 samplePos)
         return samplePos.z;
 
     //return (viewMatrix*texture(gDepth, sampleUV)).r;
-      return texture(gDepth, sampleUV).r;
+      return texture(gPositions, sampleUV).r;
 }
+
 
 void main()
  {

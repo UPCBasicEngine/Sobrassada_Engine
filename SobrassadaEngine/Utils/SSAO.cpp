@@ -5,6 +5,8 @@
 #include "Globals.h"
 #include "glew.h"
 
+#include <random>
+
 SSAO::SSAO(int width, int height)
 {
     screenWidth  = width;
@@ -23,8 +25,6 @@ SSAO::~SSAO()
 
 void SSAO::Init()
 {
-    LCG lcg;
-
     if (ssaoFrameBufferObject == 0) glGenFramebuffers(1, &ssaoFrameBufferObject);
     glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBufferObject);
 
@@ -42,14 +42,22 @@ void SSAO::Init()
 
     kernels.clear();
 
-    for (int i = 0; i < SSAO_KERNEL_SIZE_LOW; ++i)
+    std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
+    std::default_random_engine generator;
+
+    for (int i = 0; i < SSAO_KERNEL_SIZE_MID; ++i)
     {
-        float3 kernel = float3::RandomDir(*rng);
+        //float3 kernel = float3::RandomDir(*rng);
+        float3 kernel;
+        kernel.x = distribution(generator) * 2.f - 1.f;
+        kernel.y = distribution(generator) * 2.f - 1.f;
+        kernel.z = distribution(generator);
 
-        if (kernel.z < 0.0f) // flip points in lower hemishpere
-            kernel.z *= -1.0f;
+        //if (kernel.z < 0.0f) // flip points in lower hemishpere
+        //    kernel.z *= -1,.0f;
+        kernel.Normalize();
 
-        float scale  = float(i) / float(SSAO_KERNEL_SIZE_LOW);
+        float scale  = float(i) / float(SSAO_KERNEL_SIZE_MID);
         scale        = 0.1f + 0.9f * (scale * scale); // Near-origin bias
         kernel      *= scale;
 
@@ -57,11 +65,11 @@ void SSAO::Init()
     }
 
     std::vector<float3> noise;
-    noise.reserve(16);
+    noise.reserve(SSAO_KERNEL_SIZE_MID);
 
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < SSAO_KERNEL_SIZE_MID; i++)
     {
-        float3 n(lcg.Float(-1.0f, 1.0f), lcg.Float(-1.0f, 1.0f), 0.0f);
+        float3 n(rng->Float(-1.0f, 1.0f), rng->Float(-1.0f, 1.0f), 0.0f);
         n.Normalize();
         noise.push_back(n);
     }

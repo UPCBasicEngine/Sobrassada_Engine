@@ -1121,7 +1121,7 @@ void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuf
     else
     {
         nearPlane = camera->GetNearPlaneDistance();
-        farPlane  = camera->GetFarPlaneDistance();
+        farPlane = camera->GetFarPlaneDistance();
     }
 
     glUniform1f(glGetUniformLocation(program, "nearPlane"), nearPlane);
@@ -1520,13 +1520,18 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
     glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
     glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
 
-    glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_LOW, &ssao->GetKernels()[0].x);
+    glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
 
     glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
 
+
     unsigned int cameraUBO;
-    if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
-    else cameraUBO = camera->GetUbo();
+    if (camera == nullptr) {
+        cameraUBO = App->GetCameraModule()->GetUbo();
+    }
+    else {
+        cameraUBO = camera->GetUbo();
+    }
 
     glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
     unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
