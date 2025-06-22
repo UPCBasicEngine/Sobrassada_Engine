@@ -299,8 +299,10 @@ void CharacterControllerComponent::Move(float deltaTime)
 
     if (!dtStatusSucceed(status)) return;
 
-    // Prevent huge changes in the y pos
-    if (fabs(closestPoint.y - currentPos.y) > 0.5f) return;
+    // Prevent huge changes
+    if (fabs(closestPoint.x - currentPos.x) > 0.2f || fabs(closestPoint.y - currentPos.y) > 0.6f ||
+        fabs(closestPoint.z - currentPos.z) > 0.2f)
+        return;
 
     parent->SetLocalPosition(closestPoint - parent->GetParentGlobalTransform().TranslatePart());
 }
@@ -547,23 +549,13 @@ void CharacterControllerComponent::Dash(float deltaTime)
         directionToTarget.Normalize();
         const float3 dashOffset = directionToTarget * dashSpeed * deltaTime;
         float3 desiredPos       = currentPos + dashOffset;
-        const float3 searchArea = {1.0f, 1.0f, 1.0f};
+        const float3 searchArea = {1.0f, 0.3f, 1.0f};
         bool posOverPoly        = false;
         float3 closestPoint     = float3::zero;
 
         dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
 
-        // if (!dtStatusSucceed(status)) return;
-
-        if (!dashToNavmesh || (posOverPoly && dashToNavmesh))
-        {
-            desiredPos = closestPoint;
-            // Prevent huge changes in the y pos
-            if (fabs(desiredPos.y - currentPos.y) > 1.0f)
-            {
-                return;
-            }
-        }
+        if (!dashToNavmesh || (posOverPoly && dashToNavmesh)) desiredPos = closestPoint;
 
         if (dashOffset.Length() >= distanceToTarget)
         {
