@@ -24,6 +24,7 @@
 #include "ParticleSystemModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
+#include "ParticleSystemModule.h"
 #include "ProjectModule.h"
 #include "Quadtree.h"
 #include "Resource.h"
@@ -143,6 +144,8 @@ Scene::~Scene()
     gameObjectsContainer.clear();
 
     selectedGameObjects.clear();
+
+    App->GetParticleModule()->ClearParticleSystems();
 
     App->GetPathfinderModule()->ClearNavMesh();
     delete lightsConfig;

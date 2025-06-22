@@ -47,10 +47,7 @@ bool ParticleSystemModule::Init()
 
 bool ParticleSystemModule::ShutDown()
 {
-    for (auto& pair : particleSystems)
-    {
-        delete pair.second;
-    }
+    ClearParticleSystems();
 
     glDeleteBuffers(1, &quadVBO);
 
@@ -83,7 +80,6 @@ void ParticleSystemModule::RenderParticles()
     glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
-
 
     for (auto& emitter : particleSystems)
     {
@@ -131,4 +127,15 @@ void ParticleSystemModule::ResquestParticleSystem(const HashString& requestedTag
     {
         particleSystemIterator->second->AddComponent(component);
     }
+}
+
+void ParticleSystemModule::ClearParticleSystems()
+{
+    for (auto& pair : particleSystems)
+    {
+        delete pair.second;
+    }
+
+    particleTags.clear();
+    particleSystems.clear();
 }
