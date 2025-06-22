@@ -45,6 +45,10 @@ void Soldier::Update(float deltaTime)
 
     if (isKnockback) {
         knockbackTimer -= deltaTime;
+        if (character)
+        {
+            ApplyKnockback(character->GetLastPosition());
+        }
         if (knockbackTimer <= 0.0f) {
             isKnockback = false;
             if (animComponent) animComponent->UseTrigger("idle");
@@ -69,12 +73,9 @@ void Soldier::OnDamageTaken(int amount)
     if (weaponCollider && weaponCollider->GetEnabled()) {
         weaponCollider->SetEnabled(false);
     }
-
+    isKnockback    = true;
+    knockbackTimer = knockbackTime;
     if (animComponent) animComponent->UseTrigger("idle");
-
-    if (character) {
-        ApplyKnockback(character->GetLastPosition());
-    }
 }
 
 void Soldier::PerformAttack()
@@ -235,14 +236,13 @@ void Soldier::ApplyKnockback(const float3& sourcePosition)
     if (dir.LengthSq() < 0.001f) dir = float3::unitZ; 
     dir.Normalize();
 
-    float3 knockbackTarget = myPos + dir * knockbackForce;
+    agentAI->MoveTo(knockbackForce, dir);
 
-    if (agentAI) agentAI->PauseMovement();
+    //float3 knockbackTarget = myPos + dir * knockbackForce;
 
-    float3 targetPos = knockbackTarget - parent->GetParentGlobalTransform().TranslatePart();
+    //if (agentAI) agentAI->PauseMovement();
 
-    agentAI->SetPosition(targetPos);
+    //float3 targetPos = knockbackTarget - parent->GetParentGlobalTransform().TranslatePart();
 
-    isKnockback = true;
-    knockbackTimer = knockbackTime;
+    //
 }
