@@ -42,6 +42,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
+    fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName, 0.0f, 5.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -102,8 +103,12 @@ bool CuChulainn::Init()
     }
 
     ultimateObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateName);
-    if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChualin")
+    if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChulain")
     else ultimateObject->SetEnabled(false);
+
+    aimShadowObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(aimShadowName);
+    if (!aimShadowObject) GLOG("[WARNING] No shadow found for aiming in CuChulain")
+    else aimShadowObject->SetEnabled(false);
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -173,8 +178,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE)
         Move();
 
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
@@ -435,6 +439,7 @@ void CuChulainn::ThrowSpear()
         weapon->SetEnabled(false);
         resetWeapon = true;
     }
+    if (aimShadowObject) aimShadowObject->SetEnabled(false);
 
     spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
 }
@@ -532,6 +537,7 @@ void CuChulainn::Aim(float deltaTime)
         state = CharacterStates::AIM;
         character->EnableMovement(false);
         if (animComponent) animComponent->UseTrigger("Ranged");
+        if (aimShadowObject) aimShadowObject->SetEnabled(true);
     }
     desiredAim  = false;
 
