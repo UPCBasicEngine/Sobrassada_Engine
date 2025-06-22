@@ -42,7 +42,6 @@ class CuChulainn : public Character
     bool TakeMushroom();
     bool CanTakeMushroom() const;
 
-    bool IsDead();
     bool GetIsInvulnerable() { return isInvulnerable; }
     CharacterStates GetState() const { return state; }
     int GetUltimateDamage() const { return ultimateDamage; }
