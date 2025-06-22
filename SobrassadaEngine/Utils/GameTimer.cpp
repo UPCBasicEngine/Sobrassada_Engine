@@ -107,3 +107,8 @@ float GameTimer::TicksSinceReference() const
 {
     return SDL_GetTicks() - referenceTime;
 }
+
+bool GameTimer::IsPaused() const
+{
+    return isPaused;
+}

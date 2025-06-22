@@ -7,6 +7,7 @@
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "InputModule.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
@@ -56,6 +57,7 @@ bool CuChulainn::Init()
         healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
     }
     healthBarTextures = {
+        1257129746400865, // 0HP
         1211032143220573, // 1HP
         1229536411852494, // 2HP
         1222839804934023, // 3HP
@@ -136,6 +138,7 @@ bool CuChulainn::IsDead()
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
+    healthImageComponent->ChangeTexture(healthBarTextures[0]);
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -195,6 +198,8 @@ void CuChulainn::HandleState(float deltaTime)
 
 void CuChulainn::GetInputs()
 {
+    if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
+
     const InputModule* input   = AppEngine->GetInputModule();
     const KeyState* keyboard   = input->GetKeyboard();
     const KeyState* mouse      = input->GetMouseButtons();
@@ -588,5 +593,5 @@ void CuChulainn::TakeDamage(int amount)
 void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
-    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
+    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth]);
 }
