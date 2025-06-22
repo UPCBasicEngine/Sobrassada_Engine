@@ -25,12 +25,14 @@ class OptionsMenuSwitcherScript : public Script
 
 
   private:
-    static const std::unordered_map<std::string, TexPair> panelNames;
-    static const std::vector<std::string> panelOrder;
+    static const std::unordered_map<std::string, TexPair> panelInput;
+    static const std::vector<std::string> panelNames;
 
+    bool lastKbState = true;
     int currentIndex = 0;
     bool initialized = false;
 
+    void ApplyDeviceTextures(bool usingKb);
     void ShowOnlyCurrentPanel();
     GameObject* FindPanelByName(const std::string& name) const;
 };
