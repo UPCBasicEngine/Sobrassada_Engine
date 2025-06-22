@@ -440,6 +440,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp" />
     <ClCompile Include="Utils\Particles\AreaAddon.cpp" />
     <ClCompile Include="Utils\Particles\ColorAddon.cpp" />
     <ClCompile Include="Utils\Particles\SpritesheetAddon.cpp" />
@@ -454,6 +455,7 @@
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp" />
+    <ClCompile Include="Scene\RenderPass.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
@@ -700,6 +702,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
     <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
     <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />
@@ -716,6 +719,7 @@
     <ClInclude Include="Libs\ImGui\imgui_color_gradient.h" />
     <ClInclude Include="Libs\ImGui\imgui_curves.h" />
     <ClInclude Include="Scene\Components\Standalone\TrailComponent.h" />
+    <ClInclude Include="Scene\RenderPass.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
     <ClInclude Include="Modules\BillboardModule.h" />
     <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h" />

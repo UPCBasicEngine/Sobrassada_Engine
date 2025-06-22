@@ -7,6 +7,7 @@
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "InputModule.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
@@ -50,6 +51,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
+    fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName, 0.0f, 5.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -65,6 +67,7 @@ bool CuChulainn::Init()
         healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
     }
     healthBarTextures = {
+        1257129746400865, // 0HP
         1211032143220573, // 1HP
         1229536411852494, // 2HP
         1222839804934023, // 3HP
@@ -113,8 +116,12 @@ bool CuChulainn::Init()
     else chargedAttackCollider->SetEnabled(false);
 
     ultimateObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateName);
-    if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChualin")
+    if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChulain")
     else ultimateObject->SetEnabled(false);
+
+    aimShadowObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(aimShadowName);
+    if (!aimShadowObject) GLOG("[WARNING] No shadow found for aiming in CuChulain")
+    else aimShadowObject->SetEnabled(false);
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -158,6 +165,7 @@ void CuChulainn::Update(float deltaTime)
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
+    healthImageComponent->ChangeTexture(healthBarTextures[0]);
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -230,6 +238,8 @@ void CuChulainn::HandleState(float deltaTime)
 
 void CuChulainn::GetInputs()
 {
+    if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
+
     const InputModule* input   = AppEngine->GetInputModule();
     const KeyState* keyboard   = input->GetKeyboard();
     const KeyState* mouse      = input->GetMouseButtons();
@@ -528,6 +538,7 @@ void CuChulainn::ThrowSpear()
         weapon->SetEnabled(false);
         resetWeapon = true;
     }
+    if (aimShadowObject) aimShadowObject->SetEnabled(false);
 
     spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
 }
@@ -644,6 +655,7 @@ void CuChulainn::Aim(float deltaTime)
         state = CharacterStates::AIM;
         character->EnableMovement(false);
         if (animComponent) animComponent->UseTrigger("Ranged");
+        if (aimShadowObject) aimShadowObject->SetEnabled(true);
     }
     desiredAim  = false;
 
@@ -717,7 +729,7 @@ void CuChulainn::TakeDamage(int amount)
 void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
-    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth - 1]);
+    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth]);
 }
 
 void CuChulainn::ChargeAttack()

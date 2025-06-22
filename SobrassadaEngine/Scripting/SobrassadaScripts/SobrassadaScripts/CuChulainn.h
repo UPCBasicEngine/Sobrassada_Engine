@@ -122,6 +122,9 @@ class CuChulainn : public Character
     float deathTimer                  = 0.5f;
     float aimTimer                    = 0.0f;
 
+    std::string aimShadowName    = "";
+    GameObject* aimShadowObject  = nullptr;
+
     std::string ultimateName          = "";
     GameObject* ultimateObject        = nullptr;
     bool desiredUltimate              = false;

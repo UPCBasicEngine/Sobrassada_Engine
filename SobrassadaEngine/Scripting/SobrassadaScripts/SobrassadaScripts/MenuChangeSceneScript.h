@@ -17,4 +17,5 @@ class MenuChangeSceneScript : public Script
     std::string scenesPath      = "";
     std::string fullScenePath   = "";
     bool sceneLoaded            = false;
+    int inputDelayFrames        = 0;
 };
