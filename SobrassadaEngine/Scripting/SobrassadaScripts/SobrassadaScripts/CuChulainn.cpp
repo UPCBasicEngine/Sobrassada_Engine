@@ -235,10 +235,6 @@ void CuChulainn::GetInputs()
         desiredDash     = true;
         dashBufferTimer = inputBuffer;
     }
-    if (keyboard[SDL_SCANCODE_7] == KEY_DOWN)
-    {
-        OnDamageTaken(1);
-    }
     if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
     {
         desiredAttack     = true;
