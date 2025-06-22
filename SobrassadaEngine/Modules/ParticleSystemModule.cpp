@@ -129,6 +129,23 @@ void ParticleSystemModule::ResquestParticleSystem(const HashString& requestedTag
     }
 }
 
+void ParticleSystemModule::DuplicateParticleSystem(
+    const HashString& requestedTag, ParticleSystemComponent* component, const HashString& duplicateTag
+)
+{
+    if (emptyString == requestedTag || emptyString == duplicateTag) return;
+
+    auto duplicatedIterator = particleSystems.find(duplicateTag);
+    auto requestedIterator  = particleSystems.find(requestedTag);
+
+    if (requestedIterator == particleSystems.end() && duplicatedIterator != particleSystems.end())
+    {
+        ParticleSystem* newPS = new ParticleSystem(requestedTag, component, quadVBO, duplicatedIterator->second);
+        particleSystems.insert({requestedTag, newPS});
+        particleTags.push_back(requestedTag);
+    }
+}
+
 void ParticleSystemModule::ClearParticleSystems()
 {
     for (auto& pair : particleSystems)

@@ -74,6 +74,13 @@ void ParticleSystemComponent::RenderEditorInspector()
         App->GetParticleModule()->ResquestParticleSystem(requestedTag, this);
         memset(newParticleTagName, 0, sizeof(newParticleTagName));
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Duplicate Particle System"))
+    {
+        HashString requestedTag(newParticleTagName);
+        App->GetParticleModule()->DuplicateParticleSystem(requestedTag, this, particleSystemTag);
+        memset(newParticleTagName, 0, sizeof(newParticleTagName));
+    }
 
     ImGui::Text("Selected particle system:");
     ImGui::SameLine();

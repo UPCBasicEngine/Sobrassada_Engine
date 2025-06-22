@@ -28,6 +28,10 @@ class ParticleSystemModule : public Module
     );
     void ResquestParticleSystem(const HashString& requestedTag, ParticleSystemComponent* component);
 
+    void DuplicateParticleSystem(
+        const HashString& requestedTag, ParticleSystemComponent* component, const HashString& duplicateTag
+    );
+
     void ClearParticleSystems();
 
      const std::vector<HashString>& GetTags() const { return particleTags; }

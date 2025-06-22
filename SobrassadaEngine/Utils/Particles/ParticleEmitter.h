@@ -37,6 +37,7 @@ class ParticleEmitter
 {
   public:
     ParticleEmitter(const HashString& tag, ParticleSystem* owner);
+    ParticleEmitter(ParticleEmitter* reference, ParticleSystem* owner);
     ParticleEmitter(const rapidjson::Value& initialState, ParticleSystem* owner);
     ~ParticleEmitter();
 
@@ -54,6 +55,7 @@ class ParticleEmitter
     void RemoveAddon(ParticleAddonType type);
 
     void Stop();
+    bool IsAddonCreated(int position) { return createdAddons[position]; }
 
     const HashString& GetTag() const { return emitterTag; }
     const std::string& GetName() const { return emitterTag.GetString(); }

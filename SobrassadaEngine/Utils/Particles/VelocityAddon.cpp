@@ -426,6 +426,43 @@ void VelocityAddon::RenderEditorInspector()
     ImGui::Spacing();
 }
 
+void VelocityAddon::Duplicate(ParticleAddon* reference)
+{
+    VelocityAddon* other = reinterpret_cast<VelocityAddon*>(reference);
+
+    if (other)
+    {
+        randomizeXSpeed = other->randomizeXSpeed;
+        randomizeYSpeed = other->randomizeYSpeed;
+        randomizeZSpeed = other->randomizeZSpeed;
+
+        xSpeed          = other->xSpeed;
+        ySpeed          = other->ySpeed;
+        zSpeed          = other->zSpeed;
+
+        for (int i = 0; i < 5; ++i)
+        {
+            bezierX[i] = other->bezierX[i];
+            bezierY[i] = other->bezierY[i];
+            bezierZ[i] = other->bezierZ[i];
+        }
+
+        speedXInterpolation = other->speedXInterpolation;
+        speedYInterpolation = other->speedYInterpolation;
+        speedZInterpoaltion = other->speedZInterpoaltion;
+
+        for (int i = 0; i < MaxCurveEditorPoints; ++i)
+        {
+            curveEditorPointsX[i] = other->curveEditorPointsX[i];
+            curveEditorPointsY[i] = other->curveEditorPointsY[i];
+            curveEditorPointsZ[i] = other->curveEditorPointsZ[i];
+        }
+
+        gravity      = other->gravity;
+        gravityValue = other->gravityValue;
+    }
+}
+
 void VelocityAddon::ResetCurveEditorPoints(ImVec2* pointsToReset)
 {
     for (int i = 0; i < MaxCurveEditorPoints; ++i)

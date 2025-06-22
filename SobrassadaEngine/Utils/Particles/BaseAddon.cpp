@@ -584,6 +584,56 @@ void BaseAddon::RenderEditorInspector()
     ImGui::Spacing();
 }
 
+void BaseAddon::Duplicate(ParticleAddon* reference)
+{
+    BaseAddon* other = reinterpret_cast<BaseAddon*>(reference);
+
+    if (other)
+    {
+        duration              = other->duration;
+        loop                  = other->loop;
+        respawnLoop           = other->respawnLoop;
+        maxParticles          = other->maxParticles;
+
+        randomLifetime        = other->randomLifetime;
+        minLifetime           = other->minLifetime;
+        maxLifetime           = other->maxLifetime;
+
+        randomRotation        = other->randomRotation;
+        rotation              = other->rotation;
+
+        updateXYApart         = other->updateXYApart;
+
+        sizeInterpolation     = other->sizeInterpolation;
+        sizeInterpolationX    = other->sizeInterpolationX;
+        sizeInterpolationY    = other->sizeInterpolationY;
+
+        randomizeSizeCombined = other->randomizeSizeCombined;
+        randomizeSizeX        = other->randomizeSizeX;
+        randomizeSizeY        = other->randomizeSizeY;
+        combinedSize          = other->combinedSize;
+        sizeValuesX           = other->sizeValuesX;
+        sizeValuesY           = other->sizeValuesY;
+
+        for (int i = 0; i < 5; ++i)
+        {
+            sizeBezierCombined[i] = other->sizeBezierCombined[i];
+            sizeBezierX[i]        = other->sizeBezierX[i];
+            sizeBezierY[i]        = other->sizeBezierY[i];
+        }
+
+        for (int i = 0; i < MaxCurveEditorPoints; ++i)
+        {
+            curveEditorPoints[i]  = other->curveEditorPoints[i];
+            curveEditorXPoints[i] = other->curveEditorXPoints[i];
+            curveEditorYPoints[i] = other->curveEditorYPoints[i];
+        }
+
+        particlesPerSecond = other->particlesPerSecond;
+        burst              = other->burst;
+    }
+}
+
 void BaseAddon::ResetCurveEditorPoints(ImVec2* pointsToReset)
 {
     for (int i = 0; i < MaxCurveEditorPoints; ++i)

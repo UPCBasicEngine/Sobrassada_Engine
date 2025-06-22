@@ -87,7 +87,7 @@ void SpritesheetAddon::RenderEditorInspector()
     }
     if (ImGui::InputFloat("Animation speed", &animationSpeed))
     {
-        //if (animationSpeed <= 0) animationSpeed = 1.f;
+        // if (animationSpeed <= 0) animationSpeed = 1.f;
     }
 
     ImGui::BeginDisabled(!randomizeOffset);
@@ -106,7 +106,7 @@ void SpritesheetAddon::RenderEditorInspector()
     ImGui::EndDisabled();
     ImGui::SameLine();
     ImGui::Checkbox("##RandomizeOffsets", &randomizeOffset);
-    
+
     timePerFrame = animationSpeed != 0 ? (rows * columns) / animationSpeed : 0;
 
     ImGui::PopItemWidth();
@@ -114,4 +114,26 @@ void SpritesheetAddon::RenderEditorInspector()
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
+}
+
+void SpritesheetAddon::Duplicate(ParticleAddon* reference)
+{
+    SpritesheetAddon* other = reinterpret_cast<SpritesheetAddon*>(reference);
+
+    if (other)
+    {
+        rows           = other->rows;
+        columns        = other->columns;
+
+        animationSpeed = other->animationSpeed;
+        timePerFrame   = other->timePerFrame;
+
+        for (int i = 0; i < 2; ++i)
+        {
+            randomXTiles[i] = other->randomXTiles[i];
+            randomYTiles[i] = other->randomYTiles[i];
+        }
+
+        randomizeOffset = other->randomizeOffset;
+    }
 }

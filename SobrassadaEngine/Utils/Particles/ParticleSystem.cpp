@@ -16,6 +16,26 @@ ParticleSystem::ParticleSystem(const HashString& newTag, ParticleSystemComponent
 }
 
 ParticleSystem::ParticleSystem(
+    const HashString& newTag, ParticleSystemComponent* component, unsigned int quadVBO, ParticleSystem* reference
+)
+    : particleSystemTag(newTag), quadVBO(quadVBO)
+{
+
+    for (auto& emitterPair : reference->emitters)
+    {
+        DuplicateEmitter(emitterPair.second);
+    }
+
+    auto componentIterator = linkedComponents.insert(linkedComponents.end(), component);
+    component->SetParticleIterator(componentIterator);
+    component->SetParticleSystem(this);
+
+    UpdateComponents();
+
+    SortEmitters();
+}
+
+ParticleSystem::ParticleSystem(
     const rapidjson::Value& initialState, ParticleSystemComponent* component, unsigned int quadVBO
 )
     : quadVBO(quadVBO)
@@ -100,6 +120,14 @@ void ParticleSystem::AddEmitter(const std::string& newEmitterName)
     UpdateComponents();
 
     SortEmitters();
+}
+
+// ONLY USE WHEN COPYING ANOTHER PS WHICH MEANS ITS CREATED FROM SCRATCH AND NO EMITTERS ARE PRESENT IN THIS PS
+void ParticleSystem::DuplicateEmitter(ParticleEmitter* reference)
+{
+    ParticleEmitter* newEmitter = new ParticleEmitter(reference, this);
+    newEmitter->SetQuadVBO(quadVBO);
+    emitters.push_back({newEmitter->GetTag(), newEmitter});
 }
 
 void ParticleSystem::RemoveEmitter(const HashString& newEmitterTag)

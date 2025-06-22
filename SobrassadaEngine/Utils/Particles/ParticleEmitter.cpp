@@ -56,7 +56,7 @@ template <std::size_t I = 0, typename... Tp>
     SaveAddonsTuple<I + 1, Tp...>(tuple, addonsJSON, allocator);
 }
 
-// REMOVE COMPONENT
+// REMOVE ADDON
 template <std::size_t I = 0, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), void>::type
 RemoveAddonTuple(std::tuple<Tp...>& tuple, ParticleAddonType selectedType, ParticleEmitter* parent)
@@ -77,6 +77,26 @@ template <std::size_t I = 0, typename... Tp>
     }
     RemoveAddonTuple<I + 1, Tp...>(tuple, selectedType, parent);
 }
+
+// DUPLICATE ADDON
+template <std::size_t I = 0, typename... Tp>
+inline typename std::enable_if<I == sizeof...(Tp), void>::type
+DuplicateAddonTuple(std::tuple<Tp...>& tDuplicate, std::tuple<Tp...>& tOriginal)
+{
+}
+
+template <std::size_t I = 0, typename... Tp>
+    inline typename std::enable_if <
+    I<sizeof...(Tp), void>::type DuplicateAddonTuple(std::tuple<Tp...>& tDuplicate, std::tuple<Tp...>& tOriginal)
+{
+
+    if (std::get<I>(tOriginal))
+    {
+        std::get<I>(tDuplicate)->Duplicate(std::get<I>(tOriginal));
+    }
+    DuplicateAddonTuple<I + 1, Tp...>(tDuplicate, tOriginal);
+}
+
 // ---------- END SECTION FOR TUPLE ITERATION ----------
 
 ParticleEmitter::ParticleEmitter(const HashString& tag, ParticleSystem* owner) : emitterTag(tag), owner(owner)
@@ -85,6 +105,30 @@ ParticleEmitter::ParticleEmitter(const HashString& tag, ParticleSystem* owner) :
     createdAddons.reset();
 
     ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType::BASE, this);
+}
+
+ParticleEmitter::ParticleEmitter(ParticleEmitter* reference, ParticleSystem* owner)
+    : emitterTag(reference->GetTag()), owner(owner)
+{
+    addonTuple = std::make_tuple(ADDON_NULLPTR);
+    createdAddons.reset();
+
+    // Must make a copy of each manually
+    for (int i = 0; i < std::tuple_size<decltype(addonTuple)>::value; ++i)
+    {
+        if (reference->IsAddonCreated(i)) AddAddon(ParticleAddonType(i + 1));
+    }
+
+    DuplicateAddonTuple(addonTuple, reference->addonTuple);
+
+    if (reference->useTexture && reference->texture) UpdateTexture(reference->texture->GetUID());
+    else if (!reference->useTexture && reference->material) UpdateMaterial(reference->material->GetUID());
+
+    renderPriority = reference->renderPriority;
+    useSpritesheet = reference->useSpritesheet;
+
+    blendingMode   = reference->blendingMode;
+    colorIntensity = reference->colorIntensity;
 }
 
 ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleSystem* owner) : owner(owner)
