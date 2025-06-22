@@ -21,6 +21,7 @@ class ParticleAddon
     virtual void Update(float deltaTime, EmitterInstance* emitterInstance) = 0;
     virtual void RenderEditorInspector()                                   = 0;
     virtual void RenderDebug(GameObject* parent) {};
+    virtual void Duplicate(ParticleAddon* reference) = 0;
 
     ParticleAddonType GetType() const { return addonType; };
     bool IsEnabled() const { return isEnabled; }

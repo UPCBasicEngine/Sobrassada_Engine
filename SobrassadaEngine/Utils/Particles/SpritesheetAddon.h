@@ -14,6 +14,7 @@ class SpritesheetAddon : public ParticleAddon
     void Init(EmitterInstance* emitterInstance);
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
+    void Duplicate(ParticleAddon* reference) override;
 
   public:
     float currentFrame = 0.f;
