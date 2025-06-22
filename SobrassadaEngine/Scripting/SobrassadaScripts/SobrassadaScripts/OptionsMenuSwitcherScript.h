@@ -2,7 +2,15 @@
 #include "Script.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
+
 class GameObject;
+
+struct TexPair
+{
+    UID texKeyboard;
+    UID texGamepad;
+};
 
 class OptionsMenuSwitcherScript : public Script
 {
@@ -17,9 +25,8 @@ class OptionsMenuSwitcherScript : public Script
 
 
   private:
-    std::vector<std::string> panelNames = {
-        "OptionsKeyboardPanel", "OptionsControllerPanel", "OptionsAudioPanel", "OptionsVideoPanel"
-    };
+    static const std::unordered_map<std::string, TexPair> panelNames;
+    static const std::vector<std::string> panelOrder;
 
     int currentIndex = 0;
     bool initialized = false;

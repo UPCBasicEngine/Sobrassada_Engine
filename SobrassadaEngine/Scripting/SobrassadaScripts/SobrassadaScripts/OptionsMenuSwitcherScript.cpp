@@ -7,8 +7,21 @@
 #include "Scene.h"
 #include "SceneModule.h"
 
+
+const std::unordered_map<std::string, TexPair> OptionsMenuSwitcherScript::panelInput = {
+    {"OptionsKeyboardPanel",   {1203489876831052, 1296460430598403}},
+    {"OptionsControllerPanel", {1202209373146889, 1250571013944449}},
+    {"OptionsAudioPanel",      {1207353832276846, 1237658736782493}},
+    {"OptionsVideoPanel",      {1204790345600293, 1291434436557419}}
+};
+
+const std::vector<std::string> OptionsMenuSwitcherScript::panelNames = {
+    "OptionsKeyboardPanel", "OptionsControllerPanel", "OptionsAudioPanel", "OptionsVideoPanel"
+};
+
 bool OptionsMenuSwitcherScript::Init()
 {
+
     ShowOnlyCurrentPanel();
     return true;
 }
