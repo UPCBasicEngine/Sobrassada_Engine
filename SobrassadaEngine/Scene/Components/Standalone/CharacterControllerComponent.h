@@ -72,9 +72,9 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     dtNavMeshQuery* navMeshQuery = nullptr;
 
-    float gravity                = -9.81f;
+    float gravity                = -30.0f;
     float verticalSpeed          = 0.0f;
-    float maxFallSpeed           = -20.0f;
+    float maxFallSpeed           = -30.0f;
 
     bool inputDown               = true;
     bool isRotating              = false;
