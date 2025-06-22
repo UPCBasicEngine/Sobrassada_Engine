@@ -130,6 +130,11 @@ void ParticleSystemComponent::RenderEditorInspector()
     {
         StopInstances();
     }
+    ImGui::SameLine();
+    if (ImGui::Button("STOP ALL PLAYING !"))
+    {
+        App->GetParticleModule()->StopAllParticles();
+    }
 
     ImGui::Spacing();
     ImGui::Separator();

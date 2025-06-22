@@ -32,6 +32,7 @@ class ParticleSystemModule : public Module
         const HashString& requestedTag, ParticleSystemComponent* component, const HashString& duplicateTag
     );
 
+    void StopAllParticles();
     void ClearParticleSystems();
 
      const std::vector<HashString>& GetTags() const { return particleTags; }

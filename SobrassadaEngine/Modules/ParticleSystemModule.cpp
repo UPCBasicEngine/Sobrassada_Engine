@@ -146,6 +146,14 @@ void ParticleSystemModule::DuplicateParticleSystem(
     }
 }
 
+void ParticleSystemModule::StopAllParticles()
+{
+    for (auto& pair : particleSystems)
+    {
+        pair.second->Stop();
+    }
+}
+
 void ParticleSystemModule::ClearParticleSystems()
 {
     for (auto& pair : particleSystems)
