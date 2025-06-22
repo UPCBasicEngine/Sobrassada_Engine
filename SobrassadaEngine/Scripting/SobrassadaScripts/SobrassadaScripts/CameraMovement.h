@@ -17,7 +17,7 @@ class CameraMovement : public Script
 
     void EnableAimOffset(bool enable) { aimOffsetEnabled = enable; }
     void SetPosition(const float3& newPos);
-    void StartShake(float duration, float intensity);
+    void StartShake(float duration, float intensity, float smoothness = 0);
 
   private:
     void FollowTarget(float deltaTime);
@@ -47,6 +47,7 @@ class CameraMovement : public Script
     float shakeDuration                            = 0.0f;
     float shakeTimer                               = 0.0f;
     float shakeIntensity                           = 0.0f;
+    float shakeSmoothness                          = 0.0f;
     float3 defaultCameraPos                        = float3::zero;
     std::mt19937 rng;
     std::uniform_real_distribution<float> dist;

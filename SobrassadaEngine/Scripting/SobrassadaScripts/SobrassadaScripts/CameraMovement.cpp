@@ -55,11 +55,12 @@ void CameraMovement::SetPosition(const float3& newPos)
     parent->SetLocalPosition(newPos);
 }
 
-void CameraMovement::StartShake(float duration, float intensity)
+void CameraMovement::StartShake(float duration, float intensity, float smoothness)
 {
     shakeDuration    = duration;
     shakeTimer       = duration;
     shakeIntensity   = intensity;
+    shakeSmoothness  = smoothness;
     defaultCameraPos = camera->GetPosition();
     currentOffset    = float3::zero;
 }
@@ -125,7 +126,7 @@ void CameraMovement::CameraShake(float deltaTime)
     const float y        = dist(rng) * shakeIntensity * fade;
 
     float3 targetOffset  = float3(x, y, 0.0f);
-    currentOffset        = Lerp(currentOffset, targetOffset, deltaTime * 10.0f);
+    currentOffset        = shakeSmoothness > 0 ? Lerp(currentOffset, targetOffset, shakeSmoothness) : targetOffset;
 
     camera->SetLocalPosition(defaultCameraPos + currentOffset);
 

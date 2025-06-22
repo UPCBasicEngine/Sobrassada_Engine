@@ -145,7 +145,7 @@ void CuChulainn::OnDeath()
 void CuChulainn::OnDamageTaken(int amount)
 {
     UpdateHealthBarUI();
-    if (camera) camera->StartShake(0.4f, 2.0f);
+    if (camera) camera->StartShake(0.2f, 0.2f);
     // TODO: play CuChulainn take damage sound
     // TODO: fill riastrad bar dinamically
 }
