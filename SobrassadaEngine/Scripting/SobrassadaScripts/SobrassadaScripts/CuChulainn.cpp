@@ -52,6 +52,7 @@ CuChulainn::CuChulainn(GameObject* parent)
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName, 0.0f, 5.0f});
+    fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -148,14 +149,16 @@ void CuChulainn::Update(float deltaTime)
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
-        const std::string life       = "Health: " + std::to_string(currentHealth);
-        const std::string animState  = "Anim state: " + stateName.GetString();
-        const std::string logicState = "Logic state: " + GetLogicStateName();
+        const std::string life           = "Health: " + std::to_string(currentHealth);
+        const std::string animState      = "Anim state: " + stateName.GetString();
+        const std::string logicState     = "Logic state: " + GetLogicStateName();
+        const std::string mushroomsState = "Mushrooms: " + std::to_string(mushrooms);
 
         std::vector<std::pair<std::string, float2>> logs {
-            {life,       float2(-50.0f, -140.0f)},
-            {animState,  float2(-80.0f, -160.0f)},
-            {logicState, float2(-80.0f, -180.0f)},
+            {life,           float2(-50.0f, -140.0f)},
+            {animState,      float2(-80.0f, -160.0f)},
+            {logicState,     float2(-80.0f, -180.0f)},
+            {mushroomsState, float2(-60.0f, -200.0f)},
         };
 
         RenderDebug(logs, float3(0.0f, 1.0f, 0.0f));
@@ -204,13 +207,12 @@ void CuChulainn::HandleState(float deltaTime)
     }
 
     if (desiredDash && CanDash()) Dash();
+    else if (desiredHeal && CanHeal()) UseMushroom();
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
-             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL)
         Move();
 
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
@@ -273,6 +275,11 @@ void CuChulainn::GetInputs()
 
     // Heal
     if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
+    {
+        desiredTakeMushroom = true;
+        takeMushroomCdTimer = takeMushroomCd;
+    }
+    if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
     {
         desiredHeal = true;
         healCdTimer = healCooldown;
@@ -345,7 +352,8 @@ bool CuChulainn::CanDash() const
 {
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
-                   state != CharacterStates::CHARGED_ATTACK;
+                   state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+                   state != CharacterStates::HEAL;
 
     if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer > 0.0f;
 
@@ -357,32 +365,50 @@ bool CuChulainn::CanAttack() const
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
            state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
-           state != CharacterStates::CHARGING;
+           state != CharacterStates::CHARGING && state != CharacterStates::TAKE_MUSHROOM &&
+           state != CharacterStates::HEAL;
 }
 
 bool CuChulainn::CanUltimate() const
 {
     bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
                        state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
-                       state != CharacterStates::CHARGED_ATTACK;
+                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+                       state != CharacterStates::HEAL;
 
     if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer > 0.0f;
 
     return canUltimate;
 }
 
+bool CuChulainn::CanTakeMushroom() const
+{
+    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+           state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
+           state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL;
+}
+
+bool CuChulainn::CanHeal() const
+{
+    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+           state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
+           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM && mushrooms > 0;
+}
+
 bool CuChulainn::CanAim() const
 {
     return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
            state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
-           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING;
+           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
 }
 
 bool CuChulainn::CanChargeAttack() const
 {
     bool canChargeAttack = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
                            state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
-                           state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK;
+                           state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK &&
+                           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
 
     if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer > 0.0f;
 
@@ -421,6 +447,14 @@ void CuChulainn::UpdateTimers(float deltaTime)
             resetWeapon = false;
         }
         throwTimer = 0.0f;
+    }
+
+    // Take mushrooms timers
+    takeMushroomCdTimer -= deltaTime;
+    if (takeMushroomCdTimer <= 0.0f)
+    {
+        desiredTakeMushroom = false;
+        takeMushroomCdTimer = 0.0f;
     }
 
     if (!isAttacking && comboBufferTimer > 0.0f)
@@ -551,10 +585,10 @@ void CuChulainn::Dash()
         comboBufferTimer = character->GetDashDuration() + 0.1f;
         isAttacking      = false;
     }
-    desiredDash = false;
-    state       = CharacterStates::DASH;
+    desiredDash      = false;
+    state            = CharacterStates::DASH;
 
-    GLOG("DASH");
+    // GLOG("DASH");
 
     dashTimer        = dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
@@ -572,8 +606,7 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-                 attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay && attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -601,8 +634,7 @@ void CuChulainn::PerformAttack()
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() &&
-                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
@@ -726,6 +758,38 @@ void CuChulainn::TakeDamage(int amount)
     Character::TakeDamage(amount);
 }
 
+bool CuChulainn::TakeMushroom()
+{
+    bool taken = false;
+    if (mushrooms <= 2)
+    {
+        mushrooms += 1;
+        state      = CharacterStates::TAKE_MUSHROOM;
+        taken      = true;
+        // TODO: take mushrooms anim (maybe not animation), vfx etc
+    }
+
+    desiredTakeMushroom = false;
+
+    return taken;
+}
+
+void CuChulainn::UseMushroom()
+{
+    mushrooms   -= 1;
+
+    state        = CharacterStates::HEAL;
+    desiredHeal  = false;
+
+    // if (animComponent) animComponent->UseTrigger("Heal");
+    if (animComponent) animComponent->UseTrigger("Ultimate");
+    character->EnableMovement(false);
+
+    Heal(mushroomHeal);
+
+    // UpdateMushroomsUI();
+}
+
 void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
@@ -805,6 +869,15 @@ const std::string CuChulainn::GetLogicStateName()
         break;
     case CharacterStates::CHARGED_ATTACK:
         return "Charged Attack";
+        break;
+    case CharacterStates::TAKE_MUSHROOM:
+        return "Take Mushroom";
+        break;
+    case CharacterStates::HEAL:
+        return "Healing";
+        break;
+    default:
+        return "MISSING!";
         break;
     }
 }
