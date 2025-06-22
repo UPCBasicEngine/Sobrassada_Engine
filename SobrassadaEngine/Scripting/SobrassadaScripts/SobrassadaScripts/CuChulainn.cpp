@@ -190,6 +190,9 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::ULTIMATE &&
+                ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+                return;
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -479,10 +482,13 @@ void CuChulainn::PerformAttack()
             ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration)
         {
             ultimateObject->SetEnabled(true);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
         else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration)
         {
             ultimateObject->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+            ultimateTimer = 0.f;
         }
     }
 }
