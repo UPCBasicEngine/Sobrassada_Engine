@@ -313,6 +313,18 @@ void CameraComponent::Update(float deltaTime)
     const int height = framebuffer->GetTextureHeight();
     SetAspectRatio((float)height / (float)width);
 
+    UpdateUBO();
+
+    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject() == parent && seePreview) previewEnabled = true;
+    else
+    {
+        firstFrame     = true;
+        previewEnabled = false;
+    }
+}
+
+void CameraComponent::UpdateUBO()
+{
     matrices.projectionMatrix = camera.ProjectionMatrix();
     matrices.viewMatrix       = camera.ViewMatrix();
 
@@ -321,13 +333,6 @@ void CameraComponent::Update(float deltaTime)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     frustumPlanes.UpdateFrustumPlanes(camera.ViewMatrix(), camera.ProjectionMatrix());
-
-    if (App->GetSceneModule()->GetScene()->GetSelectedGameObject() == parent && seePreview) previewEnabled = true;
-    else
-    {
-        firstFrame     = true;
-        previewEnabled = false;
-    }
 }
 
 void CameraComponent::RenderCameraPreview(float deltaTime)
@@ -420,13 +425,13 @@ const LineSegment CameraComponent::CastCameraRay()
 {
 #ifdef GAME
     // In game, just get the mouse position because it covers all the window
-    const float2 mousePosition    = App->GetInputModule()->GetMousePosition();
+    const float2 mousePosition = App->GetInputModule()->GetMousePosition();
 
-    const float percentageX       = mousePosition.x / App->GetWindowModule()->GetWidth();
-    const float percentageY       = mousePosition.y / App->GetWindowModule()->GetHeight();
+    const float percentageX    = mousePosition.x / App->GetWindowModule()->GetWidth();
+    const float percentageY    = mousePosition.y / App->GetWindowModule()->GetHeight();
 
-    const float normalizedX       = Clamp(Lerp(-1.0f, 1.0f, percentageX), -1.0f, 1.0f);
-    const float normalizedY       = Clamp(Lerp(1.0f, -1.0f, percentageY), -1.0f, 1.0f);
+    const float normalizedX    = Clamp(Lerp(-1.0f, 1.0f, percentageX), -1.0f, 1.0f);
+    const float normalizedY    = Clamp(Lerp(1.0f, -1.0f, percentageY), -1.0f, 1.0f);
 #else
     // Get the mouse position depending on the scene buffer size and position
     const auto& windowPosition = App->GetSceneModule()->GetScene()->GetWindowPosition();
@@ -481,6 +486,8 @@ void CameraComponent::SetAspectRatio(float newAspectRatio)
     {
         camera.orthographicHeight = camera.orthographicWidth * newAspectRatio;
     }
+
+    UpdateUBO();
 }
 
 void CameraComponent::ChangeToPerspective()
@@ -493,6 +500,8 @@ void CameraComponent::ChangeToPerspective()
     camera.verticalFov       = verticalFov;
     camera.nearPlaneDistance = perspectiveNearPlane;
     camera.farPlaneDistance  = perspectiveFarPlane;
+
+    UpdateUBO();
 }
 
 void CameraComponent::ChangeToOrtographic()
@@ -505,6 +514,8 @@ void CameraComponent::ChangeToOrtographic()
     camera.orthographicHeight = orthographicHeight;
     camera.nearPlaneDistance  = ortographicNearPlane;
     camera.farPlaneDistance   = ortographicFarPlane;
+
+    UpdateUBO();
 }
 
 void CameraComponent::SetFov(float fov)
@@ -514,4 +525,6 @@ void CameraComponent::SetFov(float fov)
     const int width            = framebuffer->GetTextureWidth();
     const int height           = framebuffer->GetTextureHeight();
     camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
+
+    UpdateUBO();
 }

@@ -603,6 +603,9 @@
     <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\RenderPass.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1180,6 +1183,9 @@
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h">
       <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\RenderPass.h">
+      <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Particles\AreaAddon.h">
       <Filter>Utils\Particles\Addons</Filter>

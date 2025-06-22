@@ -25,7 +25,7 @@ class GeometryBatch
     ~GeometryBatch();
 
     void LoadData();
-    void Render(const std::vector<MeshComponent*>& meshesToRender);
+    void Render(const std::vector<MeshComponent*>& meshesToRender, bool shadowMap = false);
 
     void AddComponent(const MeshComponent* component) { components.push_back(component); }
 
