@@ -35,6 +35,9 @@ class GameUIModule : public Module
     void RegisterScreenFromChildren(const std::string& screenName, const std::string& parentGOName);
     void SwitchToScreen(const std::string& screenName);
 
+    bool SOBRASADA_API_ENGINE HasShownIntroScreen() const { return hasShownIntroScreen; }
+    void SOBRASADA_API_ENGINE SetIntroScreenShown(bool shown) { hasShownIntroScreen = shown; }
+
   private:
     GameObject* FindGameObjectByName(const std::string& name);
 
@@ -42,4 +45,5 @@ class GameUIModule : public Module
 
     std::unordered_map<std::string, std::vector<UID>> screens;
     std::string currentScreen;
+    bool hasShownIntroScreen = false;
 };

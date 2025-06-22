@@ -37,6 +37,7 @@ class ParticleEmitter
 {
   public:
     ParticleEmitter(const HashString& tag, ParticleSystem* owner);
+    ParticleEmitter(ParticleEmitter* reference, ParticleSystem* owner);
     ParticleEmitter(const rapidjson::Value& initialState, ParticleSystem* owner);
     ~ParticleEmitter();
 
@@ -54,6 +55,7 @@ class ParticleEmitter
     void RemoveAddon(ParticleAddonType type);
 
     void Stop();
+    bool IsAddonCreated(int position) { return createdAddons[position]; }
 
     const HashString& GetTag() const { return emitterTag; }
     const std::string& GetName() const { return emitterTag.GetString(); }
@@ -63,10 +65,11 @@ class ParticleEmitter
 
     void SetAddonCreated(int position) { createdAddons[position] = true; };
     void SetAddonDeleted(int position) { createdAddons[position] = false; };
-    void SetQuadVBO(unsigned int newVbo) { quadVBO = newVbo; };
+    void SetQuadVBO(unsigned int newVbo);
     void SetUseSpritesheet(bool spritesheet) { useSpritesheet = spritesheet; };
 
   private:
+    void CreateBuffers();
     void UpdateMaterial(UID newMaterialUID);
     void UpdateTexture(UID newTextureUID);
     void UpdateParticlesVBO(EmitterInstance* emitterInstance);
@@ -79,10 +82,13 @@ class ParticleEmitter
     unsigned int particleColorsVBO     = 0;
     unsigned int particleSizeVBO       = 0;
     unsigned int particleRotationVBO   = 0;
+    unsigned int vao                   = 0;
 
     int renderPriority                 = 0;
-    bool additiveBlending              = false;
     bool useSpritesheet                = false;
+
+    EmitterBlendingMode blendingMode   = EmitterBlendingMode::ALPHA;
+    float colorIntensity               = 1.f;
 
     HashString emitterTag              = HashString("");
 
