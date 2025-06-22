@@ -16,7 +16,7 @@
 
 namespace PrefabManager
 {
-    UID SavePrefab(const GameObject* gameObject, bool override)
+    UID SavePrefab(const GameObject* gameObject, bool override, const UID versionUID)
     {
         // Create doc JSON
         rapidjson::Document doc;
@@ -36,6 +36,7 @@ namespace PrefabManager
 
         // Create structure
         prefab.AddMember("UID", finalPrefabUID, allocator);
+        prefab.AddMember("VersionUID", versionUID, allocator);
         prefab.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
 
         // Serialize GameObjects
@@ -133,7 +134,11 @@ namespace PrefabManager
         rapidjson::Value& prefab = doc["Prefab"];
 
         UID uid                  = prefab["UID"].GetUint64();
-        std::string name         = prefab["Name"].GetString();
+
+        UID versionUid           = INVALID_UID;
+        if (prefab.HasMember("VersionUID")) versionUid = prefab["VersionUID"].GetUint64();
+
+        std::string name = prefab["Name"].GetString();
 
         std::vector<GameObject*> loadedGameObjects;
         std::vector<int> parentIndices;
@@ -157,7 +162,7 @@ namespace PrefabManager
                 loadedGameObjects.push_back(newObject);
             }
         }
-        ResourcePrefab* resourcePrefab = new ResourcePrefab(uid, name);
+        ResourcePrefab* resourcePrefab = new ResourcePrefab(uid, versionUid, name);
         resourcePrefab->LoadData(loadedGameObjects, parentIndices);
         return resourcePrefab;
     }

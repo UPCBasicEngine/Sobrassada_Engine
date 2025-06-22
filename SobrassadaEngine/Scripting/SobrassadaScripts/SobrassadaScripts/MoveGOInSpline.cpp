@@ -33,7 +33,7 @@ void MoveGOInSpline::Update(float deltaTime)
 
     float segSpeed = spline->EvaluateSpeed(t) * speed;
 
-    const int ptCount  = spline->GetNumPoints();
+    const int ptCount  = static_cast<int>(spline->GetNumPoints());
     const bool isLoop  = spline->IsLoop();
     const int segCount = isLoop ? ptCount : ptCount - 1;
 
@@ -58,7 +58,7 @@ void MoveGOInSpline::Update(float deltaTime)
 
         if (t > 1.f)
         {
-            t            = 2.0 - t;
+            t            = 2.0f - t;
             goingForward = false;
         }
         else if (t < 0)
