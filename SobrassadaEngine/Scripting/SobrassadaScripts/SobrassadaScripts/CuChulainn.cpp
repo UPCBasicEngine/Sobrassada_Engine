@@ -145,6 +145,7 @@ void CuChulainn::OnDeath()
 void CuChulainn::OnDamageTaken(int amount)
 {
     UpdateHealthBarUI();
+    if (camera) camera->StartShake(0.4f, 2.0f);
     // TODO: play CuChulainn take damage sound
     // TODO: fill riastrad bar dinamically
 }
@@ -233,6 +234,10 @@ void CuChulainn::GetInputs()
     {
         desiredDash     = true;
         dashBufferTimer = inputBuffer;
+    }
+    if (keyboard[SDL_SCANCODE_7] == KEY_DOWN)
+    {
+        OnDamageTaken(1);
     }
     if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
     {
