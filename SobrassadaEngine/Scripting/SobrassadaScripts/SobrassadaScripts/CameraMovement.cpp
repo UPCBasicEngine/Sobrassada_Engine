@@ -117,8 +117,8 @@ void CameraMovement::CameraShake(float deltaTime)
 {
     const float progress = (shakeDuration - shakeTimer) / shakeDuration;
 
-    float fadeIn         = SmoothStep(0.0f, 0.25f, progress);
-    float fadeOut        = 1.0f - SmoothStep(0.75f, 1.0f, progress);
+    const float fadeIn   = SmoothStep(0.0f, 0.25f, progress);
+    const float fadeOut  = 1.0f - SmoothStep(0.75f, 1.0f, progress);
     float fade           = fadeIn < fadeOut ? fadeIn : fadeOut;
     fade                 = fade * fade * (3.0f - 2.0f * fade);
 
