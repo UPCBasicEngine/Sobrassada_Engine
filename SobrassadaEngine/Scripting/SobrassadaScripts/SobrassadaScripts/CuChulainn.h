@@ -114,6 +114,7 @@ class CuChulainn : public Character
     float ultimateBufferTimer    = 0.0f;
     float ultimateHitboxDelay    = 0.0f;
     float ultimateHitboxDuration = 0.0f;
+    float ultimateAnimationDelay = 0.0f;
 
     float3 spawnPos              = float3::zero;
     AudioSourceComponent* audio  = nullptr;
