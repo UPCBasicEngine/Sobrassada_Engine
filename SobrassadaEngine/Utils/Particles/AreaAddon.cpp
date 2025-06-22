@@ -9,8 +9,8 @@
 
 #include "Geometry/AABB.h"
 #include "Geometry/LineSegment.h"
-#include "Math/float4x4.h"
 #include "Math/Quat.h"
+#include "Math/float4x4.h"
 #include "imgui.h"
 
 #include <vector>
@@ -180,6 +180,26 @@ void AreaAddon::RenderDebug(GameObject* parent)
     }
 }
 
+void AreaAddon::Duplicate(ParticleAddon* reference)
+{
+    AreaAddon* other = reinterpret_cast<AreaAddon*>(reference);
+    if (other)
+    {
+        currentShape        = other->currentShape;
+        currentSpawn        = other->currentSpawn;
+
+        baseRadius          = other->baseRadius;
+        topRadius           = other->topRadius;
+        coneAngle           = other->coneAngle;
+        coneLength          = other->coneLength;
+
+        cubeSize            = other->cubeSize;
+        lastGlobalTransform = other->lastGlobalTransform;
+
+        ManageShapeSwitch(ParticleAreaShape::NONE);
+    }
+}
+
 void AreaAddon::AssignPositionDirection(Particle& particle)
 {
     float3 newPosition  = float3::zero;
@@ -208,14 +228,14 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
         }
         else if (currentShape == ParticleAreaShape::CONE)
         {
-            newPosition         = circle.RandomPointInside(*rng);
+            newPosition    = circle.RandomPointInside(*rng);
 
-            const float rx            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
-            const float rz            = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            const float rx = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
+            const float rz = rng->Float(-coneAngle, coneAngle) * DEGREE_RAD_CONV;
 
-            float3 tempDir    = (Quat::FromEulerXYZ(rx, 0.f, rz) * float3::unitY).Normalized();
+            float3 tempDir = (Quat::FromEulerXYZ(rx, 0.f, rz) * float3::unitY).Normalized();
 
-            newDirection      = lastGlobalTransform.MulDir(tempDir).Normalized();
+            newDirection   = lastGlobalTransform.MulDir(tempDir).Normalized();
         }
 
         break;
@@ -337,14 +357,14 @@ void AreaAddon::RecalculateConeTopRadius()
 
 void AreaAddon::UpdateShapesTransforms(const float4x4& globalTransform)
 {
-    cube       = globalTransform * OBB(basicCube);
-    cube.r     = cubeSize;
+    cube                = globalTransform * OBB(basicCube);
+    cube.r              = cubeSize;
 
-    circle     = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
-    circle.r   = baseRadius;
+    circle              = globalTransform * Circle(float3::zero, float3::unitY, baseRadius);
+    circle.r            = baseRadius;
 
-    sphere.pos = globalTransform.TranslatePart();
-    sphere.r   = baseRadius;
+    sphere.pos          = globalTransform.TranslatePart();
+    sphere.r            = baseRadius;
 
     lastGlobalTransform = globalTransform;
 }

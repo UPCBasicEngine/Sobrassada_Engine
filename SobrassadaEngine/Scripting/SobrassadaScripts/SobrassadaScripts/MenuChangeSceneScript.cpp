@@ -15,6 +15,7 @@ MenuChangeSceneScript::MenuChangeSceneScript(GameObject* parent) : Script(parent
 
 bool MenuChangeSceneScript::Init()
 {
+    inputDelayFrames = 10;
     scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
     fullScenePath = scenesPath + targetSceneName + SCENE_EXTENSION;
     return true;
@@ -23,6 +24,12 @@ bool MenuChangeSceneScript::Init()
 void MenuChangeSceneScript::Update(float deltaTime)
 {
     if (sceneLoaded) return;
+
+    if (inputDelayFrames > 0)
+    {
+        --inputDelayFrames;
+        return;
+    }
 
     const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
     const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
