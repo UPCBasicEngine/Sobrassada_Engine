@@ -17,6 +17,8 @@ Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
+    fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
+    fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 5.0f});
 }
 
 bool Soldier::Init()
@@ -51,7 +53,8 @@ void Soldier::Update(float deltaTime)
         }
         if (knockbackTimer <= 0.0f) {
             isKnockback = false;
-            if (animComponent) animComponent->UseTrigger("idle");
+            agentAI->ResetSpeed();
+            ChangeState();
         }
         return; 
     }
@@ -237,12 +240,4 @@ void Soldier::ApplyKnockback(const float3& sourcePosition)
     dir.Normalize();
 
     agentAI->MoveTo(knockbackForce, dir);
-
-    //float3 knockbackTarget = myPos + dir * knockbackForce;
-
-    //if (agentAI) agentAI->PauseMovement();
-
-    //float3 targetPos = knockbackTarget - parent->GetParentGlobalTransform().TranslatePart();
-
-    //
 }

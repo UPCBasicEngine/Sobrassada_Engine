@@ -43,7 +43,7 @@ class Soldier : public Character
 
     float3 patrolPoint         = float3::zero;
 
-    float knockbackForce = 0.5f;
+    float knockbackForce = 0.7f;
     float knockbackTime = 0.5f;
     float knockbackTimer = 0.0f;
     bool isKnockback = false;
