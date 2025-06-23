@@ -448,11 +448,11 @@ unsigned int AIAgentComponent::GetClosestPointInNavmesh(
     return status;
 }
 
-void AIAgentComponent::MoveTo(float speed, float3 rotateDirection)
+void AIAgentComponent::MoveTo(float distance, float3 rotateDirection)
 {
     float deltaTime          = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
     const float3& currentPos = parent->GetGlobalTransform().TranslatePart();
-    const float3 offsetXZ    = rotateDirection * speed * deltaTime;
+    const float3 offsetXZ    = rotateDirection * distance * deltaTime;
     const float3 desiredPos  = currentPos + offsetXZ;
 
     const float3 searchArea  = {1.0f, 1.0f, 1.0f};

@@ -46,7 +46,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void SetPosition(const float3& newPos);
     void ResetSpeed();
     void ResetAngularSpeed();
-    void MoveTo(float speed, float3 rotateDirection);
+    void MoveTo(float distance, float3 rotateDirection);
 
   private:
     float defaultSpeed           = 0.0f;

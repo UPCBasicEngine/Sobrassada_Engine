@@ -39,6 +39,8 @@ bool Soldier::Init()
         speed = agentAI->GetSpeed();
     }
 
+    
+
     return true;
 }
 
@@ -48,10 +50,7 @@ void Soldier::Update(float deltaTime)
 
     if (isKnockback) {
         knockbackTimer -= deltaTime;
-        if (character)
-        {
-            ApplyKnockback(character->GetLastPosition());
-        }
+        agentAI->MoveTo(knockbackForce, knockbackDirection);
         if (knockbackTimer <= 0.0f) {
             isKnockback = false;
             agentAI->ResetSpeed();
@@ -92,6 +91,7 @@ void Soldier::OnDamageTaken(int amount)
     }
     isKnockback    = true;
     knockbackTimer = knockbackTime;
+    ApplyKnockback();
     if (animComponent) animComponent->UseTrigger("idle");
 }
 
@@ -118,6 +118,7 @@ void Soldier::HandleState(float deltaTime)
         animComponent->UseTrigger("run");
         break;
     case SoldierStates::CHASE:
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         animComponent->UseTrigger("run");
         ChaseAI();
         break;
@@ -209,6 +210,7 @@ void Soldier::Attack(float deltaTime)
         if (!isKnockback)
         {
             // Enable hitbox when animation hits
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
             if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
                 attackTimer <= attackHitboxDelay + attackHitboxDuration)
             {
@@ -245,13 +247,11 @@ void Soldier::ChangeState()
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
 }
 
-void Soldier::ApplyKnockback(const float3& sourcePosition)
+void Soldier::ApplyKnockback()
 {
     float3 myPos = parent->GetGlobalTransform().TranslatePart();
-    float3 dir = (myPos - sourcePosition);
-    dir.y = 0.0f;
-    if (dir.LengthSq() < 0.001f) dir = float3::unitZ; 
-    dir.Normalize();
-
-    agentAI->MoveTo(knockbackForce, dir);
+    knockbackDirection = character->GetFrontDirection();
+    knockbackDirection.y = 0.0f;
+    if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ; 
+    knockbackDirection.Normalize();
 }
