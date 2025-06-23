@@ -217,7 +217,7 @@ void TrailComponent::Update(float deltaTime)
 
     for (int i = 0; i < smoothStart; ++i)
         renderPoints.push_back(points[i]);
-    if (points.size() >= 4)
+    if (points.size() >= 4 && spline)
     {
         const int stepsPerSegment = 2;
 
