@@ -638,7 +638,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
 void GameObject::UpdateTransformForGOBranch()
 {
     if (!IsGloballyEnabled()) return;
-    App->GetSceneModule()->AddGameObjectToUpdate(this);
+    App->GetSceneModule()->AddGameObjectToUpdateComponents(this);
     std::stack<UID> childrenBuffer;
     childrenBuffer.push(uid);
 
@@ -648,7 +648,7 @@ void GameObject::UpdateTransformForGOBranch()
         childrenBuffer.pop();
         if (gameObject != nullptr)
         {
-            App->GetSceneModule()->AddGameObjectToUpdate(gameObject);
+            App->GetSceneModule()->AddGameObjectToUpdateComponents(gameObject);
             gameObject->OnAABBUpdated();
             for (UID child : gameObject->GetChildren())
                 childrenBuffer.push(child);
@@ -1156,7 +1156,7 @@ void GameObject::OnDrawConnectionsToggle()
 
 void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
 {
-    App->GetSceneModule()->AddGameObjectToUpdate(this);
+    App->GetSceneModule()->AddGameObjectToUpdateComponents(this);
     SetMobility(type);
     std::set<UID> visitedGameObjects;
     std::stack<UID> toVisitGameObjects;
@@ -1179,7 +1179,7 @@ void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
             GameObject* currentGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
 
             currentGameObject->SetMobility(type);
-            App->GetSceneModule()->AddGameObjectToUpdate(currentGameObject);
+            App->GetSceneModule()->AddGameObjectToUpdateComponents(currentGameObject);
 
             for (UID childID : currentGameObject->GetChildren())
                 toVisitGameObjects.push(childID);
@@ -1202,7 +1202,7 @@ void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
             if (currentGameObject)
             {
                 currentGameObject->SetMobility(type);
-                App->GetSceneModule()->AddGameObjectToUpdate(currentGameObject);
+                App->GetSceneModule()->AddGameObjectToUpdateComponents(currentGameObject);
 
                 for (UID childID : currentGameObject->GetChildren())
                     toVisitGameObjects.push(childID);

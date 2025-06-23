@@ -7,6 +7,7 @@
 #include "Math/float4x4.h"
 #include <functional>
 #include <map>
+#include <set>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -67,9 +68,9 @@ class SOBRASADA_API_ENGINE Scene
     void AddGameObject(UID uid, GameObject* newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
     void RemoveGameObjectHierarchy(UID gameObjectUUID);
 
-    void AddGameObjectToUpdate(GameObject* gameObject);
-    void UpdateGameObjects();
-    void ClearGameObjectsToUpdate();
+    void AddGameObjectToUpdateComponents(GameObject* gameObject);
+    void UpdateGameObjectsComponents();
+    void ClearGameObjectsToUpdateComponents();
 
     void AddGameObjectToSelection(UID gameObject, UID gameObjectParent);
     void ClearObjectSelection();
@@ -162,7 +163,9 @@ class SOBRASADA_API_ENGINE Scene
     bool staticModified                          = false;
     bool dynamicModified                         = false;
 
-    std::vector<GameObject*> gameObjectsToUpdate;
+    std::vector<GameObject*> gameObjectsToUpdateComponents;
+
+    std::set<UID> inFrustumGameObjects;
 
     GameObject* multiSelectParent = nullptr;
     std::map<UID, UID> selectedGameObjects;

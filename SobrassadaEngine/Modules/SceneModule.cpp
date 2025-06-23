@@ -266,10 +266,10 @@ void SceneModule::SwitchPlayMode(bool play)
     }
 }
 
-void SceneModule::AddGameObjectToUpdate(GameObject* gameObject)
+void SceneModule::AddGameObjectToUpdateComponents(GameObject* gameObject)
 {
     if (inPlayMode) return;
-    loadedScene->AddGameObjectToUpdate(gameObject);
+    loadedScene->AddGameObjectToUpdateComponents(gameObject);
 }
 
 void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard)
@@ -451,7 +451,7 @@ void SceneModule::HandleTreesUpdates()
             loadedScene->UpdateDynamicSpatialStructure();
         }
 
-        loadedScene->UpdateGameObjects();
+        loadedScene->UpdateGameObjectsComponents();
     }
 }
 

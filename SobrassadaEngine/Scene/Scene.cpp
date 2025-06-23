@@ -206,7 +206,7 @@ void Scene::Init()
         if (mesh) mesh->InitSkin();
     }
 
-    // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdate
+    // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdateComponents
     GetGameObjectByUID(gameObjectRootUID)->UpdateTransformForGOBranch();
 
     UpdateStaticSpatialStructure();
@@ -724,18 +724,18 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUID)
     }
 }
 
-void Scene::AddGameObjectToUpdate(GameObject* gameObject)
+void Scene::AddGameObjectToUpdateComponents(GameObject* gameObject)
 {
     if (!gameObject->WillUpdate())
     {
         gameObject->SetWillUpdate(true);
-        gameObjectsToUpdate.push_back(gameObject);
+        gameObjectsToUpdateComponents.push_back(gameObject);
     }
 }
 
-void Scene::UpdateGameObjects()
+void Scene::UpdateGameObjectsComponents()
 {
-    for (GameObject* gameObject : gameObjectsToUpdate)
+    for (GameObject* gameObject : gameObjectsToUpdateComponents)
     {
         if (gameObject)
         {
@@ -743,12 +743,12 @@ void Scene::UpdateGameObjects()
             gameObject->SetWillUpdate(false);
         }
     }
-    gameObjectsToUpdate.clear();
+    gameObjectsToUpdateComponents.clear();
 }
 
-void Scene::ClearGameObjectsToUpdate()
+void Scene::ClearGameObjectsToUpdateComponents()
 {
-    gameObjectsToUpdate.clear();
+    gameObjectsToUpdateComponents.clear();
 }
 
 void Scene::AddGameObjectToSelection(UID gameObject, UID gameObjectParent)
@@ -840,7 +840,7 @@ void Scene::DeleteMultiselection()
     }
     selectedGameObjects.clear();
     selectedGameObjectsMobility.clear();
-    ClearGameObjectsToUpdate();
+    ClearGameObjectsToUpdateComponents();
 }
 
 UID Scene::GetMultiselectUID() const
