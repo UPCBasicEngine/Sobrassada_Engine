@@ -13,11 +13,14 @@
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
 }
 
 ScriptComponent::ScriptComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
+
     if (initialState.HasMember("Scripts") && initialState["Scripts"].IsArray())
     {
         for (const auto& scriptData : initialState["Scripts"].GetArray())

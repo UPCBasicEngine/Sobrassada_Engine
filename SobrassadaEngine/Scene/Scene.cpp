@@ -867,27 +867,12 @@ void Scene::CheckObjectsToUpdate()
 
     for (auto gameObject : toUpdateGameObjects)
         toUpdateGameObjectsSet.insert(gameObject->GetUID());
-
+    
+    // ADDING MAIN CAMERA MANUALLY SINCE IS NOT INSIDE ITS OWN FRUSTUM SO NO UPDATES XD
     if (mainCamera && toUpdateGameObjectsSet.find(mainCamera->GetParent()->GetUID()) == toUpdateGameObjectsSet.end())
     {
         toUpdateGameObjects.push_back(mainCamera->GetParent());
         toUpdateGameObjectsSet.insert(mainCamera->GetParent()->GetUID());
-    }
-
-    // ADDING MANUALLY BECAUSE SOME OBJECTS WITH SCRIPTS ARE NOT BEING RETURNED LDGJFHFNLKAJDSFLKAD
-
-    GameObject* walk = GetGameObjectByName("walk");
-    if (walk && toUpdateGameObjectsSet.find(walkxd->GetUID()) == toUpdateGameObjectsSet.end())
-    {
-        toUpdateGameObjects.push_back(walkxd);
-        toUpdateGameObjectsSet.insert(walkxd->GetUID());
-    }
-
-    GameObject* cameraPivot = GetGameObjectByName("Camera Pivot");
-    if (cameraPivot && toUpdateGameObjectsSet.find(cameraPivot->GetUID()) == toUpdateGameObjectsSet.end())
-    {
-        toUpdateGameObjects.push_back(cameraPivot);
-        toUpdateGameObjectsSet.insert(cameraPivot->GetUID());
     }
 }
 
