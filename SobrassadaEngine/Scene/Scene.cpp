@@ -24,7 +24,6 @@
 #include "ParticleSystemModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
-#include "ParticleSystemModule.h"
 #include "ProjectModule.h"
 #include "Quadtree.h"
 #include "RenderPass.h"
@@ -209,9 +208,11 @@ void Scene::Init()
     // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdateComponents
     GetGameObjectByUID(gameObjectRootUID)->UpdateTransformForGOBranch();
 
+    // Worst case all objects are in frustum
+    toUpdateGameObjects.reserve(gameObjectsContainer.size());
+
     UpdateStaticSpatialStructure();
     UpdateDynamicSpatialStructure();
-
 
     isSceneLoaded = true;
 }
@@ -293,8 +294,11 @@ update_status Scene::Update(float deltaTime)
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
 
-    for (auto& gameObject : gameObjectsContainer)
-        gameObject.second->UpdateComponents(deltaTime);
+    //for (auto& gameObject : gameObjectsContainer)
+    //    gameObject.second->UpdateComponents(deltaTime);
+
+     for (auto gameObject : toUpdateGameObjects)
+         gameObject->UpdateComponents(deltaTime);
 
     ImGuiWindow* window = ImGui::FindWindowByName(sceneName.c_str());
     if (window && !(window->Hidden || window->Collapsed)) sceneVisible = true;
@@ -326,23 +330,22 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
-    FrustumPlanes frustumPlanes;
-    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    else frustumPlanes = camera->GetFrustrumPlanes();
-    std::vector<GameObject*> objectsToRender;
-    CheckObjectsToRender(objectsToRender, frustumPlanes);
+    // FrustumPlanes frustumPlanes;
+    // if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+    // else frustumPlanes = camera->GetFrustrumPlanes();
+    // std::vector<GameObject*> objectsToRender;
+    // CheckObjectsInFrustum(objectsToRender, frustumPlanes);
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
 
-    renderPass->RenderScene(framebuffer, objectsToRender, camera);
-    
+    renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera);
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
 #endif
-    for (const auto& gameObject : objectsToRender)
+    for (const auto& gameObject : toUpdateGameObjects)
     {
         if (gameObject != nullptr)
         {
@@ -854,6 +857,46 @@ void Scene::SetMultiselectPosition(const float3& newPosition)
     multiSelectParent->SetLocalTransform(localMat);
 }
 
+void Scene::CheckObjectsToUpdate()
+{
+    CameraComponent* mainCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+    if (App->GetSceneModule()->GetInPlayMode() && mainCamera != nullptr)
+        CheckObjectsInFrustum(toUpdateGameObjects, mainCamera->GetFrustrumPlanes());
+
+    else CheckObjectsInFrustum(toUpdateGameObjects, App->GetCameraModule()->GetFrustrumPlanes());
+
+    for (auto gameObject : toUpdateGameObjects)
+        toUpdateGameObjectsSet.insert(gameObject->GetUID());
+
+    if (mainCamera && toUpdateGameObjectsSet.find(mainCamera->GetParent()->GetUID()) == toUpdateGameObjectsSet.end())
+    {
+        toUpdateGameObjects.push_back(mainCamera->GetParent());
+        toUpdateGameObjectsSet.insert(mainCamera->GetParent()->GetUID());
+    }
+
+    // ADDING MANUALLY BECAUSE SOME OBJECTS WITH SCRIPTS ARE NOT BEING RETURNED LDGJFHFNLKAJDSFLKAD
+
+    GameObject* walk = GetGameObjectByName("walk");
+    if (walk && toUpdateGameObjectsSet.find(walkxd->GetUID()) == toUpdateGameObjectsSet.end())
+    {
+        toUpdateGameObjects.push_back(walkxd);
+        toUpdateGameObjectsSet.insert(walkxd->GetUID());
+    }
+
+    GameObject* cameraPivot = GetGameObjectByName("Camera Pivot");
+    if (cameraPivot && toUpdateGameObjectsSet.find(cameraPivot->GetUID()) == toUpdateGameObjectsSet.end())
+    {
+        toUpdateGameObjects.push_back(cameraPivot);
+        toUpdateGameObjectsSet.insert(cameraPivot->GetUID());
+    }
+}
+
+void Scene::ClearObjectsToUpdate()
+{
+    toUpdateGameObjectsSet.clear();
+    toUpdateGameObjects.clear();
+}
+
 void Scene::CreateStaticSpatialDataStruct()
 {
     // PARAMETRIZED IN FUTURE
@@ -912,10 +955,10 @@ void Scene::UpdateDynamicSpatialStructure()
     CreateDynamicSpatialDataStruct();
 }
 
-void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
+void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
 {
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::CheckObjectsToRender", Optick::Category::GameLogic)
+    OPTICK_CATEGORY("Scene::CheckObjectsInFrustum", Optick::Category::GameLogic)
 #endif
     std::vector<GameObject*> queriedObjects;
 
@@ -1438,7 +1481,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
         std::unordered_map<UID, GameObject*> referenceObjectsMap;
         prefab->GetGameObjectsMap(referenceObjectsMap);
 
-       // Update all the hierarchy
+        // Update all the hierarchy
         std::queue<UID> childUIDs;
         childUIDs.push(gameObject->GetUID());
 

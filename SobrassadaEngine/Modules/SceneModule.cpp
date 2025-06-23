@@ -57,6 +57,10 @@ bool SceneModule::Init()
 
 update_status SceneModule::PreUpdate(float deltaTime)
 {
+    if (loadedScene != nullptr)
+    {
+        loadedScene->CheckObjectsToUpdate();
+    }
     return UPDATE_CONTINUE;
 }
 
@@ -164,6 +168,8 @@ update_status SceneModule::PostUpdate(float deltaTime)
             App->GetGameTimer()->Step();
             loadedScene->SetStepPlaying(false);
         }
+
+        loadedScene->ClearObjectsToUpdate();
     }
 
 #ifdef OPTICK

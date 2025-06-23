@@ -426,7 +426,7 @@ void RenderPass::ShadowMapPassRender(
     FrustumPlanes lightFrustum;
     lightFrustum.UpdateFrustumPlanes(lightView, lightProj);
     std::vector<GameObject*> shadowObjectsToRender;
-    App->GetSceneModule()->GetScene()->CheckObjectsToRender(shadowObjectsToRender, lightFrustum);
+    App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
 
     for (const auto& gameObject : shadowObjectsToRender)
     {

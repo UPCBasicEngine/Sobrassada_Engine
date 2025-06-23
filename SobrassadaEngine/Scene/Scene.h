@@ -126,7 +126,9 @@ class SOBRASADA_API_ENGINE Scene
     void SetStaticModified() { staticModified = true; }
     void SetDynamicModified() { dynamicModified = true; }
     void SetMultiselectPosition(const float3& newPosition);
-    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
+    void CheckObjectsToUpdate();
+    void ClearObjectsToUpdate();
+    void CheckObjectsInFrustum(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
 
     bool isSceneLoaded = false;
 
@@ -165,7 +167,8 @@ class SOBRASADA_API_ENGINE Scene
 
     std::vector<GameObject*> gameObjectsToUpdateComponents;
 
-    std::set<UID> inFrustumGameObjects;
+    std::set<UID> toUpdateGameObjectsSet;
+    std::vector<GameObject*> toUpdateGameObjects;
 
     GameObject* multiSelectParent = nullptr;
     std::map<UID, UID> selectedGameObjects;
