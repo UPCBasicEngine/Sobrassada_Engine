@@ -216,8 +216,8 @@ void Character::TakeDamage(int amount)
     isInvulnerable        = true;
     invulnerabilityTimer  = invulnerableDuration;
 
+    OnDamageTaken(amount);
     if (currentHealth <= 0) Die();
-    else OnDamageTaken(amount);
 }
 
 void Character::Restart()
