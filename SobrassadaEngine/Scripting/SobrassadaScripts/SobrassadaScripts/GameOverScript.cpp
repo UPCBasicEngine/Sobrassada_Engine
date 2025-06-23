@@ -1,57 +1,81 @@
+﻿#include "pch.h"
+
 #include "GameOverScript.h"
-#include "GameUIModule.h"
-#include "InputModule.h"
+#include "Application.h"
+#include "CuChulainn.h"
+#include "GameObject.h"
+#include "GameTimer.h"
+#include "Scene.h"
+#include "EditorUIModule.h"
 #include "SceneModule.h"
 
 bool GameOverScript::Init()
 {
-    if (canvasGO) canvasGO->SetEnabled(false);
+    CachePanel();
+    if (cachedTarget)
+        cachedTarget->SetEnabledRecursive(false);
     return true;
 }
 
-void GameOverScript::OnPlayerDeath()
+void GameOverScript::Update(float deltaTime)
 {
-    pending = true;
-    timer   = 0.0f;
+    if (gameOverShown) return;
+
+    if (!cachedTarget)
+        CachePanel();
+
+    if (playerScript && playerScript->IsDead()) TriggerGameOver();
 }
 
-void GameOverScript::Update(float dt)
+void GameOverScript::TriggerGameOver()
 {
-    if (!pending) return;
+    if (gameOverShown) return;
 
-    timer += dt;
-    if (timer >= showDelay)
-    {
-        pending = false;
-        if (canvasGO) canvasGO->SetEnabled(true);
-
-        AppEngine->GetInputModule()->SetEnabled(false);
-        AppEngine->GetSceneModule()->SetTimeScale(0);
-    }
-
+    ShowPanel();
+    PauseGame();
+    gameOverShown = true;
 }
+
+void GameOverScript::CachePanel()
+{
+    if (cachedTarget) return;
+
+    const auto& allGOs = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
+
+    for (const auto& [uid, go] : allGOs)
+        if (go && go->GetName() == panelToShowName)
+        {
+            cachedTarget = go;
+            break;
+        }
+}
+
+void GameOverScript::ShowPanel()
+{
+    CachePanel();
+    if (cachedTarget) cachedTarget->SetEnabledRecursive(true);
+}
+
+void GameOverScript::PauseGame()
+{
+    if (auto* timer = AppEngine->GetGameTimer()) timer->TogglePause();
+}
+
 
 void GameOverScript::Inspector()
 {
-    fields = {
-        {"Delay (s)", InspectorField::FieldType::Float, &showDelay, 0.f, 10.f},
-        {"GameOver Canvas", InspectorField::FieldType::GameObject, &canvasGO}
-    };
-    Script::Inspector();
+    AppEngine->GetEditorUIModule()->DrawScriptInspector(fields);
 }
 
-void GameOverScript::Save(rapidjson::Value& val, rapidjson::Document::AllocatorType& al)
+void GameOverScript::Save(rapidjson::Value& state, rapidjson::Document::AllocatorType& alloc)
 {
-    Script::Save(val, al);
-    val.AddMember("Delay", showDelay, al);
-    UID uid = canvasGO ? canvasGO->GetUID() : 0;
-    val.AddMember("CanvasUID", uid, al);
+    state.AddMember("PanelToShow", rapidjson::Value(panelToShowName.c_str(), alloc), alloc);
 }
 
-void GameOverScript::Load(const rapidjson::Value& val)
+void GameOverScript::Load(const rapidjson::Value& initialState)
 {
-    Script::Load(val);
-    if (val.HasMember("Delay")) showDelay = val["Delay"].GetFloat();
-    if (val.HasMember("CanvasUID"))
-        canvasGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(val["CanvasUID"].GetUint64());
+    if (initialState.HasMember("PanelToShow") && initialState["PanelToShow"].IsString())
+    {
+        panelToShowName = initialState["PanelToShow"].GetString();
+    }
 }
