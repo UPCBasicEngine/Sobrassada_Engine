@@ -4,6 +4,7 @@
 #include "Changeling.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
@@ -113,6 +114,19 @@ void Changeling::Update(float deltaTime)
 
             lastTrailPos = currentPos;
         }
+    }
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        const std::string life      = "Health: " + std::to_string(currentHealth);
+        const std::string animState = "Anim state: " + stateName.GetString();
+
+        std::vector<std::pair<std::string, float2>> logs {
+            {life,      float2(-50.0f, -140.0f)},
+            {animState, float2(-80.0f, -160.0f)},
+        };
+
+        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
     }
 }
 

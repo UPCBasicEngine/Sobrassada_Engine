@@ -7,6 +7,7 @@
 #include "PressAnyKeyScript.h"
 #include "Scene.h"
 #include "SceneModule.h"
+#include "GameUIModule.h"
 #include <imgui.h>
 
 
@@ -33,10 +34,11 @@ void PressAnyKeyScript::Update(float deltaTime)
     const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
     bool keyPressed                = keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
-                      gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN; 
+                      gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN;
 
-    if (keyPressed)
+    if (AppEngine->GetGameUIModule()->HasShownIntroScreen() || keyPressed)
     {
+        AppEngine->GetGameUIModule()->SetIntroScreenShown(true);
         parent->SetEnabled(false);
 
         const auto& gameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
@@ -50,6 +52,7 @@ void PressAnyKeyScript::Update(float deltaTime)
         }
     }
 }
+
 
 
 void PressAnyKeyScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
