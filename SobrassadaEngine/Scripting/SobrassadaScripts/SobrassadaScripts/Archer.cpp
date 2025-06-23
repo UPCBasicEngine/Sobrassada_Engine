@@ -15,11 +15,14 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include <cmath>
 
 Archer::Archer(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
+    fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
+    fields.push_back({"Escape Range", InspectorField::FieldType::Float, &rangeEscape, 0.0f, 10.0f});
 }
 
 bool Archer::Init()
@@ -101,7 +104,7 @@ void Archer::PerformAttack()
 
 void Archer::HandleState(float deltaTime)
 {
-    if (!animComponent) return;
+    // if (!animComponent) return;
 
     switch (currentState)
     {
@@ -118,6 +121,9 @@ void Archer::HandleState(float deltaTime)
     case ArcherStates::BASIC_ATTACK:
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
+    case ArcherStates::ESCAPE:
+        Escape(deltaTime);
+        break;
     default:
         GLOG("No state provided to Archer");
         currentState = ArcherStates::PATROL;
@@ -133,7 +139,7 @@ void Archer::HandleState(float deltaTime)
 
 void Archer::PatrolAI()
 {
-    animComponent->UseTrigger("run");
+    if (animComponent) animComponent->UseTrigger("run");
 
     if (!playerScript->IsDead())
     {
@@ -156,7 +162,7 @@ void Archer::PatrolAI()
 
 void Archer::ChaseAI()
 {
-    animComponent->UseTrigger("run");
+    if (animComponent) animComponent->UseTrigger("run");
 
     if (character != nullptr)
     {
@@ -198,7 +204,6 @@ void Archer::Attack(float deltaTime)
 
     if (!isAttacking)
     {
-        GLOG("ATTACK ENEMY");
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
@@ -239,7 +244,100 @@ void Archer::ChangeState()
     }
 
     const float distance = GetDistanceFromPlayer();
-    if (distance <= rangeAIAttack) currentState = ArcherStates::BASIC_ATTACK;
+    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) < rangeEscape) currentState = ArcherStates::ESCAPE;
+    else if (distance <= rangeAIAttack) currentState = ArcherStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;
     else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
+}
+
+void Archer::Escape(float deltaTime)
+{
+    if (!agentAI || !character) return;
+
+    float3 archerPos        = parent->GetGlobalTransform().TranslatePart();
+    const float3 searchArea = {1.0f, 2.0f, 1.0f};
+    bool posOverPoly        = false;
+    float3 closestPoint     = float3::zero;
+
+    if (hasEscapeTarget)
+    {
+        if ((archerPos - currentEscapeTarget).LengthSq() < 0.5f * 0.5f)
+        {
+            hasEscapeTarget = false;
+        }
+        else
+        {
+            agentAI->GetClosestPointInNavmesh(currentEscapeTarget, searchArea, posOverPoly, closestPoint);
+            if (posOverPoly)
+            {
+                agentAI->SetPathNavigation(currentEscapeTarget);
+                agentAI->LookAtMovement(currentEscapeTarget, deltaTime);
+                if (animComponent) animComponent->UseTrigger("run");
+                if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
+                {
+                    currentState    = ArcherStates::BASIC_ATTACK;
+                    hasEscapeTarget = false;
+                }
+                return;
+            }
+            else
+            {
+                hasEscapeTarget = false;
+            }
+        }
+    }
+
+    const float3 playerPos = character->GetLastPosition();
+    float3 escapeDir       = archerPos - playerPos;
+    escapeDir.y            = 0.0f;
+    if (escapeDir.LengthSq() < 0.0001f) escapeDir = float3::unitZ;
+    escapeDir.Normalize();
+
+    float escapeDistance = rangeAIAttack - character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+    const float angleStep = 15.0f * (3.14159265f / 180.0f);
+    float angleAccum      = 0.0f;
+    bool found            = false;
+
+    for (int i = 0; i < 24; ++i)
+    {
+        float3 dir = escapeDir;
+        float cosA = std::cos(angleAccum);
+        float sinA = std::sin(angleAccum);
+        float x    = dir.x * cosA - dir.z * sinA;
+        float z    = dir.x * sinA + dir.z * cosA;
+        dir.x      = x;
+        dir.z      = z;
+        dir.Normalize();
+
+        float3 candidateTarget = archerPos + dir * escapeDistance;
+        agentAI->GetClosestPointInNavmesh(candidateTarget, searchArea, posOverPoly, closestPoint);
+
+        if (posOverPoly)
+        {
+            currentEscapeTarget = closestPoint;
+            hasEscapeTarget     = true;
+            found               = true;
+            break;
+        }
+        angleAccum += angleStep;
+    }
+
+    if (!found)
+    {
+        currentEscapeTarget = archerPos;
+        hasEscapeTarget     = false;
+    }
+
+    agentAI->SetPathNavigation(currentEscapeTarget);
+    agentAI->LookAtMovement(currentEscapeTarget, deltaTime);
+    agentAI->SetSpeed(5.0f, 5.0f);
+
+    if (animComponent) animComponent->UseTrigger("run");
+
+    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
+    {
+        currentState    = ArcherStates::BASIC_ATTACK;
+        hasEscapeTarget = false;
+        agentAI->ResetSpeed();
+    }
 }

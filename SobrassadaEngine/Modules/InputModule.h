@@ -49,6 +49,8 @@ class InputModule : public Module
     const std::pair<KeyState, float>& GetRightTrigger() const { return rightTrigger; }
 
     bool IsUsingKeyboard() const { return isUsingKeyboard; }
+    void SOBRASADA_API_ENGINE ClearTransientStates(); 
+
 
   private:
     void OnControllerConnected();
@@ -69,4 +71,6 @@ class InputModule : public Module
     std::pair<KeyState, float> rightTrigger;
 
     bool isUsingKeyboard = true;
+    bool wasPausedLastFrame = false;
+    bool skipNextInputFrame = false;
 };

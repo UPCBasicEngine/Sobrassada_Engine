@@ -167,12 +167,11 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
 
         // Mushroom check
         Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
-        if (desiredHeal && mushroomScript)
+        if (mushroomScript)
         {
-            if (mushroomScript->IsReady())
+            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
             {
-                Heal(mushroomScript->GetHealingAmount());
-                mushroomScript->Disable();
+                if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
         }
     }
@@ -217,8 +216,8 @@ void Character::TakeDamage(int amount)
     isInvulnerable        = true;
     invulnerabilityTimer  = invulnerableDuration;
 
+    OnDamageTaken(amount);
     if (currentHealth <= 0) Die();
-    else OnDamageTaken(amount);
 }
 
 void Character::Restart()
