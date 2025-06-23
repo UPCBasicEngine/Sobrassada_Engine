@@ -428,7 +428,7 @@ void CharacterControllerComponent::StartDash()
     float3 closestPoint     = float3::zero;
     bool posOverPoly        = false;
     dtStatus status         = GetClosestPointInNavmesh(dashTarget, searchArea, posOverPoly, closestPoint);
-    dashToNavmesh           = posOverPoly;
+    dashToNavmesh           = posOverPoly && closestPoint.y <= dashTarget.y + 0.2f;
     // GLOG("Dash to navmesh? %d", dashToNavmesh);
 
     if (!dashToNavmesh) return;
