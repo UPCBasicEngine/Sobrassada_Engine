@@ -12,7 +12,7 @@ class EnemySpawnerScript : public Script
     ~EnemySpawnerScript() noexcept override { parent = nullptr; }
 
     bool Init() override;
-    void Update(float /*deltaTime*/) override {} // no per-frame logic
+    void Update(float deltaTime) override {}
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
     void Save(rapidjson::Value& tgt, rapidjson::Document::AllocatorType& al);
@@ -20,9 +20,10 @@ class EnemySpawnerScript : public Script
     void Load(const rapidjson::Value& src);
 
   private:
-    std::string prefabUIDStr = ""; // text que pots editar a l’Inspector
+    std::string prefabUIDStr = ""; // Enemy UID
     UID prefabUID            = INVALID_UID;
 
     bool spawnOnce           = false;
     bool spawned             = false;
+    int spawnAmount          = 1;
 };
