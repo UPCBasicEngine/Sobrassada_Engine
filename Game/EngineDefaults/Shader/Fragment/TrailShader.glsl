@@ -13,7 +13,8 @@ void main()
     if (useTexture){
         vec4 diffuse = texture(uTexture, vUV);
         if(vColor.a < 0.1) discard;
-        FragColor = vec4(diffuse.rgb * vColor.rgb, diffuse.a * vColor.a);
+        if(diffuse.a < 0.1) discard;
+        FragColor = vec4(vColor.rgb, diffuse.a * vColor.a);
     }
     else
         FragColor = vColor;

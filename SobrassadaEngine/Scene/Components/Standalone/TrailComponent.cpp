@@ -77,6 +77,7 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     glBindVertexArray(0);
 
     if (initialState.HasMember("MinDistance")) minDistance = initialState["MinDistance"].GetFloat();
+    if (initialState.HasMember("UseCurve")) useCurve = initialState["UseCurve"].GetBool();
     if (initialState.HasMember("LifeTime")) lifeTime = initialState["LifeTime"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
     if (initialState.HasMember("InvertCurve")) invertCurve = initialState["InvertCurve"].GetBool();
@@ -130,6 +131,7 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
     targetState.AddMember("MinDistance", minDistance, allocator);
     targetState.AddMember("LifeTime", lifeTime, allocator);
     targetState.AddMember("Width", width, allocator);
+    targetState.AddMember("UseCurve", useCurve, allocator);
     targetState.AddMember("InvertCurve", invertCurve, allocator);
     rapidjson::Value curveArray(rapidjson::kArrayType);
     curveArray.PushBack(curve[0], allocator)
@@ -165,6 +167,7 @@ void TrailComponent::Clone(const Component* other)
         lifeTime                         = otherTrail->lifeTime;
         width                            = otherTrail->width;
         invertCurve                      = otherTrail->invertCurve;
+        useCurve                         = otherTrail->useCurve;
         for (int i = 0; i < 5; ++i)
             curve[i] = otherTrail->curve[i];
         gradient   = otherTrail->gradient;
@@ -198,8 +201,7 @@ void TrailComponent::Update(float deltaTime)
 
     if (IsEffectivelyEnabled() && (points.empty() || (position - lastPos).LengthSq() >= minDistance * minDistance))
     {
-
-        const float3 viewDir             = (cameraPos - position).Normalized();
+        const float3 viewDir       = (cameraPos - position).Normalized();
 
         const float3 direction     = (position - lastPos).Normalized();
         const float3 up            = float3::unitY;
@@ -228,13 +230,13 @@ void TrailComponent::Update(float deltaTime)
 
             for (int step = 0; step < stepsPerSegment; ++step)
             {
-                const float t     = (float)step / stepsPerSegment;
-                const float3 pos  = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
+                const float t        = (float)step / stepsPerSegment;
+                const float3 pos     = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
 
-                const float3 viewDir    = (cameraPos - P2.position).Normalized();
+                const float3 viewDir = (cameraPos - P2.position).Normalized();
 
-                const float3 dir  = (P2.position - P1.position).Normalized();
-                const float3 perp = dir.Cross(viewDir).Normalized();
+                const float3 dir     = (P2.position - P1.position).Normalized();
+                const float3 perp    = dir.Cross(viewDir).Normalized();
 
                 const float interpolatedTime = Interpolation::Lerp(P1.time, P2.time, t);
                 renderPoints.push_back({pos, perp, interpolatedTime});
@@ -250,11 +252,16 @@ void TrailComponent::Update(float deltaTime)
         const TrailPoint tp        = renderPoints[i];
         const float normalizedTime = tp.time / lifeTime;
 
-        const float bezier         = ImGui::BezierValue(normalizedTime, curve);
-        const float widthL         = (invertCurve ? (1.0f - bezier) : bezier) * width;
+        float widthL;
+        if (useCurve)
+        {
+            const float bezier = ImGui::BezierValue(normalizedTime, curve);
+            widthL             = (invertCurve ? (1.0f - bezier) : bezier) * width;
+        }
+        else widthL = width;
 
-        const float3 left          = tp.position - tp.perpendicular * widthL;
-        const float3 right         = tp.position + tp.perpendicular * widthL;
+        const float3 left  = tp.position - tp.perpendicular * widthL;
+        const float3 right = tp.position + tp.perpendicular * widthL;
 
         float color[4];
         gradient->getColorAt(normalizedTime, color);
@@ -329,8 +336,12 @@ void TrailComponent::RenderEditorInspector()
     ImGui::DragFloat("Width", &width, 0.01f, 0.0f, 5.0f);
 
     ImGui::NewLine();
-    ImGui::Checkbox("Invert Curve", &invertCurve);
-    ImGui::Bezier("Trail Curve", curve);
+    ImGui::Checkbox("Use Curve", &useCurve);
+    if (useCurve)
+    {
+        ImGui::Checkbox("Invert Curve", &invertCurve);
+        ImGui::Bezier("Trail Curve", curve);
+    }
 
     ImGui::NewLine();
     ImGui::GradientEditor(gradient, draggingMark, selectedMark);
