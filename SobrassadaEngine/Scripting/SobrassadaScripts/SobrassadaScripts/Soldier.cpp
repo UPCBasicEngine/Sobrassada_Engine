@@ -54,6 +54,7 @@ void Soldier::Update(float deltaTime)
         if (knockbackTimer <= 0.0f) {
             isKnockback = false;
             agentAI->ResetSpeed();
+            agentAI->ResetAngularSpeed();   
             ChangeState();
         }
         return; 
