@@ -39,6 +39,8 @@ class CuChulainn : public Character
     void SetHealth(int health) { reservedHealth = health; }
     void Respawn();
     void UpdateHealthBarUI();
+    void UpdateDashCooldownUI();
+    void UpdateUltimateCooldownUI();
     bool GetIsInvulnerable() { return isInvulnerable; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     CharacterStates GetState() const { return state; }
@@ -123,6 +125,8 @@ class CuChulainn : public Character
 
     std::vector<UID> healthBarTextures;
     ImageComponent* healthImageComponent = nullptr;
+    ImageComponent* dashImageComponent   = nullptr;
+    ImageComponent* ultimateImageComponent = nullptr;
 
     bool godMode                         = false;
 };

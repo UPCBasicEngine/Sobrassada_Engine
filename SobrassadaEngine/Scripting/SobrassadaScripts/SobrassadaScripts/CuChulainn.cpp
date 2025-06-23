@@ -71,6 +71,12 @@ bool CuChulainn::Init()
 
     };
 
+    GameObject* dashUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("DashCooldown");
+    if (dashUIObject) dashImageComponent = dashUIObject->GetComponent<ImageComponent*>();
+
+    GameObject* ultimanteUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("UltimateCooldown");
+    if (ultimanteUIObject) ultimateImageComponent = ultimanteUIObject->GetComponent<ImageComponent*>();
+
     playerScript = this;
 
     character    = parent->GetComponent<CharacterControllerComponent*>();
@@ -168,6 +174,9 @@ void CuChulainn::HandleState(float deltaTime)
         state    = CharacterStates::IDLE;
         aimTimer = 0.0f;
     }
+    
+    UpdateDashCooldownUI();
+    UpdateUltimateCooldownUI();
 
     if (desiredDash && CanDash()) Dash();
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
@@ -177,6 +186,7 @@ void CuChulainn::HandleState(float deltaTime)
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE)
         Move();
 
+    
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
 
     // When finished animation, go back to idle state
@@ -594,4 +604,19 @@ void CuChulainn::UpdateHealthBarUI()
 {
     if (!healthImageComponent || healthBarTextures.empty()) return;
     healthImageComponent->ChangeTexture(healthBarTextures[currentHealth]);
+}
+
+void CuChulainn::UpdateDashCooldownUI()
+{
+    const UID readyTex    = 1258786293084191;
+    const UID cooldownTex = 1288043360624471;
+
+    dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
+
+}
+
+void CuChulainn::UpdateUltimateCooldownUI()
+{
+    if (ultimateCdTimer > 0.0f) ultimateImageComponent->ChangeTexture(1297453458525874); //cooldownTexture
+    else ultimateImageComponent->ChangeTexture(1203132322652717);
 }
