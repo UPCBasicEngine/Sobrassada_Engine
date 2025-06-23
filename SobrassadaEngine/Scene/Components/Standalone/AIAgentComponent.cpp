@@ -10,6 +10,7 @@
 #include "ResourceNavmesh.h"
 #include "SceneModule.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "DetourNavMeshQuery.h"
 
 #include "DetourCrowd.h"
 

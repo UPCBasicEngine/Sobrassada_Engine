@@ -93,10 +93,24 @@ void ColorAddon::RenderEditorInspector()
     ImGui::PushItemWidth(200);
 
     ImGui::GradientEditor(gradient, draggingMark, selectedMark);
-    auto& marks = gradient->getMarks();
 
     ImGui::PopItemWidth();
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
+}
+
+void ColorAddon::Duplicate(ParticleAddon* reference)
+{
+    ColorAddon* other = reinterpret_cast<ColorAddon*>(reference);
+
+    if (other)
+    {
+        particleColor = other->particleColor;
+
+        gradient->getMarks().clear();
+
+        for (auto mark : other->gradient->getMarks())
+            gradient->addMark(mark->position, ImColor(mark->color[0], mark->color[1], mark->color[2], mark->color[3]));
+    }
 }

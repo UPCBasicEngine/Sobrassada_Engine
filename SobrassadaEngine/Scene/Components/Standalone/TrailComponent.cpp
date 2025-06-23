@@ -1,6 +1,8 @@
 #include "TrailComponent.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
+#include "CameraModule.h"
 #include "EditorUIModule.h"
 #include "GameObject.h"
 #include "Interpolation.h"
@@ -11,8 +13,8 @@
 #include "SplineComponent.h"
 #include "glew.h"
 #include "imgui.h"
-#include "imgui_curves.h"
 #include "imgui_color_gradient.h"
+#include "imgui_curves.h"
 
 TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, parent, "Trail", COMPONENT_TRAIL)
 {
@@ -39,7 +41,7 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
 
     glBindVertexArray(0);
 
-    gradient      = new ImGradient();
+    gradient = new ImGradient();
 
     vertices.reserve(maxVertices * sizeof(TrailVertex));
     indices.reserve(maxIndices * sizeof(uint32_t));
@@ -89,7 +91,7 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     if (initialState.HasMember("HasTexture")) hasTexture = initialState["HasTexture"].GetBool();
     if (initialState.HasMember("Texture")) UpdateTexture(initialState["Texture"].GetUint64());
 
-    gradient      = new ImGradient();
+    gradient = new ImGradient();
     gradient->getMarks().clear();
 
     if (initialState.HasMember("Color"))
@@ -137,7 +139,6 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
         .PushBack(curve[4], allocator);
     targetState.AddMember("Curve", curveArray, allocator);
 
-
     targetState.AddMember(
         "Texture", currentTexture != nullptr ? currentTexture->GetUID() : FALLBACK_TEXTURE_UID, allocator
     );
@@ -172,8 +173,6 @@ void TrailComponent::Clone(const Component* other)
         hasTexture = otherTrail->hasTexture;
         UpdateTexture(otherTrail->currentTextureUID);
     }
-
-    
 }
 
 void TrailComponent::Update(float deltaTime)
@@ -185,6 +184,13 @@ void TrailComponent::Update(float deltaTime)
         tp.time += deltaTime;
     if (!points.empty() && points.front().time > lifeTime) points.pop_front();
 
+    float3 cameraPos;
+    if (App->GetSceneModule()->GetInPlayMode() && App->GetSceneModule()->GetScene()->GetMainCamera() != nullptr)
+    {
+        cameraPos = App->GetSceneModule()->GetScene()->GetMainCamera()->GetCameraPosition();
+    }
+    else cameraPos = App->GetCameraModule()->GetCameraPosition();
+
     const float3 position = parent->GetGlobalTransform().TranslatePart();
     const float3 lastPos  = points.empty() ? float3::zero : points.back().position;
 
@@ -192,9 +198,12 @@ void TrailComponent::Update(float deltaTime)
 
     if (IsEffectivelyEnabled() && (points.empty() || (position - lastPos).LengthSq() >= minDistance * minDistance))
     {
+
+        const float3 viewDir             = (cameraPos - position).Normalized();
+
         const float3 direction     = (position - lastPos).Normalized();
         const float3 up            = float3::unitY;
-        const float3 perpendicular = direction.Cross(up).Normalized();
+        const float3 perpendicular = direction.Cross(viewDir).Normalized();
 
         points.push_back({position, perpendicular, 0.0f});
     }
@@ -222,8 +231,10 @@ void TrailComponent::Update(float deltaTime)
                 const float t     = (float)step / stepsPerSegment;
                 const float3 pos  = spline->CatmullRom(P0.position, P1.position, P2.position, P3.position, t);
 
+                const float3 viewDir    = (cameraPos - P2.position).Normalized();
+
                 const float3 dir  = (P2.position - P1.position).Normalized();
-                const float3 perp = dir.Cross(float3::unitY).Normalized();
+                const float3 perp = dir.Cross(viewDir).Normalized();
 
                 const float interpolatedTime = Interpolation::Lerp(P1.time, P2.time, t);
                 renderPoints.push_back({pos, perp, interpolatedTime});

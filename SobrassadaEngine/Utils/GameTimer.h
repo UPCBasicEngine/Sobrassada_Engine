@@ -22,6 +22,8 @@ class GameTimer : public EngineTimer
     float GetTimeScale() const { return timeScale; }
     float GetReferenceTime() const { return referenceTime; }
 
+    bool SOBRASADA_API_ENGINE IsPaused() const;
+
     void SetTimeScale(const float newScale) { timeScale = newScale; }
 
   private:

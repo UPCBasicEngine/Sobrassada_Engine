@@ -24,8 +24,10 @@
 #include "ParticleSystemModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
+#include "ParticleSystemModule.h"
 #include "ProjectModule.h"
 #include "Quadtree.h"
+#include "RenderPass.h"
 #include "Resource.h"
 #include "ResourceMaterial.h"
 #include "ResourceModel.h"
@@ -80,6 +82,7 @@ Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
     gameObjectsContainer.insert({sceneGameObject->GetUID(), sceneGameObject});
 
     lightsConfig = new LightsConfig();
+    renderPass   = new RenderPass();
 }
 
 Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUID(loadedSceneUID)
@@ -124,15 +127,13 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         lightsConfig->LoadData(initialState["Lights Config"]);
     }
 
+    renderPass = new RenderPass();
+
     // GLOG("%s scene loaded", sceneName.c_str());
 }
 
 Scene::~Scene()
 {
-    glDeleteBuffers(1, &decalVBO);
-    glDeleteBuffers(1, &decalEBO);
-    glDeleteVertexArrays(1, &decalVAO);
-
     for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); ++it)
     {
         delete it->second;
@@ -144,10 +145,13 @@ Scene::~Scene()
 
     selectedGameObjects.clear();
 
+    App->GetParticleModule()->ClearParticleSystems();
+
     App->GetPathfinderModule()->ClearNavMesh();
     delete lightsConfig;
     delete sceneOctree;
     delete dynamicTree;
+    delete renderPass;
 
     lightsConfig = nullptr;
     sceneOctree  = nullptr;
@@ -209,28 +213,6 @@ void Scene::Init()
     UpdateDynamicSpatialStructure();
 
 
-    constexpr float cubeVertices[]       = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
-                                        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
-
-    constexpr unsigned int cubeIndices[] = {0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7, 4, 5, 1, 1, 0, 4,
-                                        3, 2, 6, 6, 7, 3, 1, 5, 6, 6, 2, 1, 4, 0, 3, 3, 7, 4};
-
-    glGenVertexArrays(1, &decalVAO);
-    glGenBuffers(1, &decalVBO);
-    glGenBuffers(1, &decalEBO);
-
-    glBindVertexArray(decalVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, decalVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, decalEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    glBindVertexArray(0);
     isSceneLoaded = true;
 }
 
@@ -344,38 +326,18 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
+    FrustumPlanes frustumPlanes;
+    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
+    else frustumPlanes = camera->GetFrustrumPlanes();
     std::vector<GameObject*> objectsToRender;
-    CheckObjectsToRender(objectsToRender, camera);
+    CheckObjectsToRender(objectsToRender, frustumPlanes);
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
-    glEnable(GL_STENCIL_TEST);
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
-        NavMeshPassRender(objectsToRender, camera, gbuffer);
-    else GeometryPassRender(objectsToRender, camera, gbuffer);
-    glPopDebugGroup();
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
-    DecalsPassRender(objectsToRender, camera, gbuffer);
-    glPopDebugGroup();
-
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
-    {
-        RenderGBufferDebug(gbuffer, framebuffer);
-        return;
-    }
-    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_DEPTH)))
-    {
-        RenderDepthDebug(gbuffer, camera, framebuffer);
-        return;
-    }
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
-    LightingPassRender(camera, gbuffer, framebuffer);
-    glPopDebugGroup();
+    renderPass->RenderScene(framebuffer, objectsToRender, camera);
+    
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
@@ -409,13 +371,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         for (int i = 0; i < 12; ++i)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
-#endif
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
-    TransparentPassRender(objectsToRender, camera, framebuffer);
-    glPopDebugGroup();
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render_Billboards", Optick::Category::Rendering)
@@ -957,16 +912,12 @@ void Scene::UpdateDynamicSpatialStructure()
     CreateDynamicSpatialDataStruct();
 }
 
-void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, CameraComponent* camera) const
+void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsToRender", Optick::Category::GameLogic)
 #endif
     std::vector<GameObject*> queriedObjects;
-
-    FrustumPlanes frustumPlanes;
-    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    else frustumPlanes = camera->GetFrustrumPlanes();
 
     sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
@@ -981,488 +932,6 @@ void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects,
             outRenderGameObjects.push_back(gameObject);
         }
     }
-}
-
-void Scene::GeometryPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
-) const
-{
-    gbuffer->Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
-
-    glDisable(GL_BLEND);
-
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
-    std::vector<MeshComponent*> meshesToRender;
-
-    for (const auto& gameObject : objectsToRender)
-    {
-        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
-            meshesToRender.push_back(mesh);
-    }
-
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
-    {
-        App->GetOpenGLModule()->SetRenderWireframe(true);
-        batchManager->Render(meshesToRender, camera, true);
-        App->GetOpenGLModule()->SetRenderWireframe(false);
-    }
-    else batchManager->Render(meshesToRender, camera, false);
-
-    glEnable(GL_BLEND);
-
-    gbuffer->Unbind();
-}
-
-void Scene::NavMeshPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer
-) const
-{
-    gbuffer->Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
-
-    glDisable(GL_BLEND);
-
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
-    std::vector<MeshComponent*> navMeshesToRender;
-    std::vector<MeshComponent*> nonNavMeshesToRender;
-
-    for (const auto& gameObject : objectsToRender)
-    {
-        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
-        {
-            if (gameObject->IsNavMeshValid()) navMeshesToRender.push_back(mesh);
-            else nonNavMeshesToRender.push_back(mesh);
-        }
-    }
-
-    batchManager->Render(navMeshesToRender, camera, false);
-    App->GetOpenGLModule()->SetRenderWireframe(true);
-    batchManager->Render(nonNavMeshesToRender, camera, true);
-    App->GetOpenGLModule()->SetRenderWireframe(false);
-
-    gbuffer->Unbind();
-
-    glEnable(GL_BLEND);
-}
-
-void Scene::RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const
-{
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-    framebuffer->Bind();
-
-    const unsigned int program = App->GetShaderModule()->GetQuadProgram();
-    glUseProgram(program);
-
-    GLint loc = glGetUniformLocation(program, "u_Texture");
-    glUniform1i(loc, 0);
-
-    // Top-left: Diffuse
-    glViewport(0, height / 2, width / 2, height / 2);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Top-right: Specular
-    glViewport(width / 2, height / 2, width / 2, height / 2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->specularTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Bottom-left: Position
-    glViewport(0, 0, width / 2, height / 2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Bottom-right: Normal
-    glViewport(width / 2, 0, width / 2, height / 2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    glViewport(0, 0, width, height);
-}
-
-void Scene::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const
-{
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-    framebuffer->Bind();
-
-    const unsigned int program = App->GetShaderModule()->GetDepthProgram();
-    glUseProgram(program);
-
-    GLint loc = glGetUniformLocation(program, "u_Texture");
-    glUniform1i(loc, 0);
-
-    glViewport(0, 0, width, height);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
-
-    float nearPlane;
-    float farPlane;
-    if (camera == nullptr)
-    {
-        nearPlane = App->GetCameraModule()->GetNearPlaneDistance();
-        farPlane  = 100; // Far plane is too much
-    }
-    else
-    {
-        nearPlane = camera->GetNearPlaneDistance();
-        farPlane  = camera->GetFarPlaneDistance();
-    }
-
-    glUniform1f(glGetUniformLocation(program, "nearPlane"), nearPlane);
-    glUniform1f(glGetUniformLocation(program, "farPlane"), farPlane);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-}
-
-void Scene::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
-{
-    // LIGHTING PASS
-#ifndef GAME
-    framebuffer->Bind();
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-
-    // SKYBOX
-    if (!App->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_WIREFRAME))
-    {
-        float4x4 projection;
-        float4x4 view;
-
-        if (camera == nullptr)
-            lightsConfig->RenderSkybox(
-                App->GetCameraModule()->GetProjectionMatrix(), App->GetCameraModule()->GetViewMatrix()
-            );
-        else
-        {
-            bool change = false;
-            // Cubemap does not support Ortographic projection
-            if (camera->GetFrustumType() == 1)
-            {
-                change = true;
-                camera->ChangeToPerspective();
-            }
-            lightsConfig->RenderSkybox(camera->GetProjectionMatrix(), camera->GetViewMatrix());
-            if (change) camera->ChangeToOrtographic();
-        }
-    }
-
-    // COPYING DEPTH BUFFER AND STENCIL FROM GBUFFER TO RENDER FRAMEBUFFER
-    // TODO CHECK IF GAME RELEASE TO RENDER TO DEFAULT BUFFER INSTEAD OF FRAMEBUFFER
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer->gBufferObject);
-
-#ifndef GAME
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
-
-    glBlitFramebuffer(
-        0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
-    );
-
-#ifndef GAME
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-
-    // SETTING STENCIL TEST FOR ONLY RENDER TO GBUFFER FRAGMENTS WRITES
-    glStencilFunc(GL_EQUAL, 1, 0xFF);
-    glStencilMask(0xFF);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->specularTexture);
-
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-
-    lightsConfig->SetLightsShaderData();
-
-    unsigned int lightingPassProgram = App->GetShaderModule()->GetLightingPassProgram();
-
-    glUseProgram(lightingPassProgram);
-
-    float3 cameraPos;
-    if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
-    else cameraPos = camera->GetCameraPosition();
-
-    glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
-
-    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
-
-    glDisable(GL_STENCIL_TEST);
-
-    // COPYING DEPTH BUFFER FROM GBUFFER TO RENDER FRAMEBUFFER
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer->gBufferObject);
-
-#ifndef GAME
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
-    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-#ifndef GAME
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-}
-
-void Scene::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
-    const
-{
-    gbuffer->Bind();
-
-    std::vector<DecalComponent*> decalsToRender;
-    std::unordered_map<UID, std::vector<DecalComponent*>> groupedDecals;
-
-    for (const auto& gameObject : objectsToRender)
-    {
-        DecalComponent* decal = gameObject->GetComponent<DecalComponent*>();
-
-        if (decal == nullptr) continue;
-        if (decal->GetResourceMaterial() == nullptr) continue;
-
-        const UID uid = decal->GetResourceMaterial()->GetUID();
-        groupedDecals[uid].push_back(decal);
-    }
-
-    if (groupedDecals.empty()) return;
-
-    const unsigned int program = App->GetShaderModule()->GetDecalProgram();
-
-    glUseProgram(program);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
-
-    unsigned int cameraUBO;
-    if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
-    else cameraUBO = camera->GetUbo();
-
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-    glUniformBlockBinding(program, blockIdx, 0);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
-    glEnable(GL_DEPTH_TEST);
-
-    for (const auto& [uid, decals] : groupedDecals)
-    {
-        const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
-        glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
-
-        if (decals[0]->GetResourceMaterial()->GetMaterial().hasMetallic)
-        {
-            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
-
-            const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().metallicTex;
-            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
-        }
-        else if (decals[0]->GetResourceMaterial()->GetMaterial().hasSpecular)
-        {
-            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
-
-            const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().specularTex;
-            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
-        }
-        else glUniform1i(glGetUniformLocation(program, "hasMetallic"), 0);
-
-        glUniform1i(glGetUniformLocation(program, "hasNormal"), decals[0]->GetResourceMaterial()->HasNormal() ? 1 : 0);
-
-        const uint64_t nhandle = decals[0]->GetResourceMaterial()->GetMaterial().normalTex;
-        glUniformHandleui64ARB(glGetUniformLocation(program, "decalNormalTex"), nhandle);
-
-        std::vector<DecalModels> models;
-        models.reserve(decals.size());
-
-        for (const auto& decal : decals)
-        {
-            float4x4 model    = decal->GetParent()->GetGlobalTransform();
-            float4x4 invModel = model.Inverted();
-
-            models.push_back({model, invModel});
-        }
-
-        GLuint decalSSBO;
-        glGenBuffers(1, &decalSSBO);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, decalSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DecalModels) * models.size(), models.data(), GL_STATIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, decalSSBO);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        /*
-        We cant check if we are inside of the decal with instancing (the camera is far away, so we should'nt have any
-        problem)
-
-        float3 cameraPos;
-        if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
-        else cameraPos = camera->GetCameraPosition();
-        float3 localCameraPos = (invModel * float4(cameraPos, 1.0f)).xyz();
-
-        bool insideDecalBox =
-            abs(localCameraPos.x) <= 0.5f && abs(localCameraPos.y) <= 0.5f && abs(localCameraPos.z) <= 0.5f;
-
-
-        if (insideDecalBox)
-        {
-            glDisable(GL_DEPTH_TEST);
-            glFrontFace(GL_CW);
-        }*/
-
-        glBindVertexArray(decalVAO);
-
-        glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, (GLsizei)models.size());
-
-        glBindVertexArray(0);
-
-        glDeleteBuffers(1, &decalSSBO);
-    }
-
-    glEnable(GL_CULL_FACE);
-    glDepthMask(GL_TRUE);
-    glFrontFace(GL_CCW);
-    glEnable(GL_DEPTH_TEST);
-
-    gbuffer->Unbind();
-}
-
-void Scene::TransparentPassRender(
-    const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
-) const
-{
-    unsigned int width  = framebuffer->GetTextureWidth();
-    unsigned int height = framebuffer->GetTextureHeight();
-
-#ifndef GAME
-    framebuffer->Bind();
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-    // glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    glViewport(0, 0, width, height);
-
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
-
-    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
-
-    glUseProgram(program);
-
-    lightsConfig->SetLightsShaderData();
-
-    float3 cameraPos;
-    if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
-    else cameraPos = camera->GetCameraPosition();
-
-    glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
-
-    if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
-    {
-        std::vector<MeshComponent*> navmeshesToRender;
-        std::vector<MeshComponent*> nonnavmeshesToRender;
-
-        for (const auto& gameObject : objectsToRender)
-        {
-            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
-            {
-                if (gameObject->IsNavMeshValid()) navmeshesToRender.push_back(mesh);
-                else nonnavmeshesToRender.push_back(mesh);
-            }
-        }
-
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
-        batchManager->RenderTransparent(navmeshesToRender, camera);
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
-        App->GetOpenGLModule()->SetRenderWireframe(true);
-        batchManager->RenderTransparent(nonnavmeshesToRender, camera);
-        App->GetOpenGLModule()->SetRenderWireframe(false);
-    }
-
-    else
-    {
-        std::vector<MeshComponent*> meshesToRender;
-        std::vector<TrailComponent*> trailsToRender;
-
-        for (const auto& gameObject : objectsToRender)
-        {
-            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
-                meshesToRender.push_back(mesh);
-
-            TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
-            if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
-        }
-
-        if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
-        {
-            glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
-            App->GetOpenGLModule()->SetRenderWireframe(true);
-            batchManager->RenderTransparent(meshesToRender, camera);
-            App->GetOpenGLModule()->SetRenderWireframe(false);
-        }
-        else
-        {
-            glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
-            batchManager->RenderTransparent(meshesToRender, camera);
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDisable(GL_CULL_FACE);
-            glDepthMask(GL_FALSE);
-
-            const unsigned int program = App->GetShaderModule()->GetTrailProgram();
-            glUseProgram(program);
-
-            unsigned int cameraUBO;
-            if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
-            else cameraUBO = camera->GetUbo();
-
-            glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-            unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-            glUniformBlockBinding(program, blockIdx, 0);
-            glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-            for (const auto& trail : trailsToRender)
-                trail->Render(0);
-        }
-    }
-
-    glDepthMask(GL_TRUE);
-    glDisable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
 }
 
 GameObject* Scene::GetGameObjectByUID(UID gameObjectUUID)
@@ -1839,7 +1308,7 @@ void Scene::LoadPrefab(
 
 void Scene::OverridePrefabs(const UID prefabUID)
 {
-    const ResourcePrefab* prefab = (const ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID);
+    ResourcePrefab* prefab = (ResourcePrefab*)App->GetResourcesModule()->RequestResource(prefabUID);
 
     // If prefab is null, it no longer exists, then remove the prefab UID from all objects that may have it
     if (prefab == nullptr)
@@ -1847,45 +1316,106 @@ void Scene::OverridePrefabs(const UID prefabUID)
         for (const auto& gameObject : gameObjectsContainer)
         {
             if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
-                gameObject.second->SetPrefabUID(INVALID_UID);
+                gameObject.second->RemovePrefabStatus();
         }
         return;
     }
 
-    // Store uids and transforms. We need transforms so when we override the prefab, the objects
-    // stay in place. UIDs to delete the duplicates
+    // Check that the prefab and target objects have the field prefabChildUID. If not, override like in the old times
+    bool newPrefab                                = true;
+
+    const std::vector<GameObject*>& prefabObjects = prefab->GetGameObjectsVector();
+    for (int i = 1; i < prefabObjects.size(); ++i)
+    {
+        if (prefabObjects[i]->GetPrefabChildUID() == INVALID_UID)
+        {
+            newPrefab = false;
+            break;
+        }
+    }
+
+    std::vector<GameObject*> newPrefabInstances;
+    std::vector<GameObject*> oldPrefabInstances;
+    int instancesToOverride = 0;
+    for (const auto& gameObject : gameObjectsContainer)
+    {
+        if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
+        {
+            if (prefab->GetVersionUID() != INVALID_UID &&
+                gameObject.second->GetPrefabVersionUID() == prefab->GetVersionUID())
+                continue;
+
+            ++instancesToOverride;
+
+            if (!newPrefab)
+            {
+                oldPrefabInstances.push_back(gameObject.second);
+                continue;
+            }
+
+            bool newObject = true;
+            std::queue<UID> childUIDs;
+            for (UID child : gameObject.second->GetChildren())
+            {
+                childUIDs.push(child);
+            }
+
+            while (!childUIDs.empty())
+            {
+                GameObject* currentObject = GetGameObjectByUID(childUIDs.front());
+                if (currentObject->GetPrefabChildUID() == INVALID_UID)
+                {
+                    newObject = false;
+                    break;
+                }
+                childUIDs.pop();
+
+                for (UID child : currentObject->GetChildren())
+                {
+                    childUIDs.push(child);
+                }
+            }
+
+            if (newObject) newPrefabInstances.push_back(gameObject.second);
+            else oldPrefabInstances.push_back(gameObject.second);
+        }
+    }
+    GLOG("Instances to override: %d", instancesToOverride);
+    if (instancesToOverride == 0)
+    {
+        App->GetResourcesModule()->ReleaseResource(prefab);
+        return;
+    }
+    // Keep this method of overriding for old prefabs, to avoid issues. Eventually all prefabs will get updated and
+    // this won't be used anymore
     std::vector<UID> updatedObjects;
     std::vector<float4x4> transforms;
     std::vector<bool> isEnabled;
     std::vector<std::vector<bool>> componentsEnabledStates;
 
-    for (const auto& gameObject : gameObjectsContainer)
+    for (GameObject* gameObject : oldPrefabInstances)
     {
-        if (gameObject.second != nullptr)
-        {
-            if (gameObject.second->GetPrefabUID() == prefabUID)
+        GLOG("Update OLD prefab");
+
+        updatedObjects.push_back(gameObject->GetUID());
+        transforms.emplace_back(gameObject->GetLocalTransform());
+        isEnabled.push_back(gameObject->IsEnabled());
+
+        std::vector<bool> componentStates;
+        auto& tuple = gameObject->GetComponentsTupleRef();
+
+        ForEachInTuple(
+            tuple,
+            [&](auto* component)
             {
-                updatedObjects.push_back(gameObject.first);
-                transforms.emplace_back(gameObject.second->GetLocalTransform());
-                isEnabled.push_back(gameObject.second->IsEnabled());
-
-                std::vector<bool> componentStates;
-                auto& tuple = gameObject.second->GetComponentsTupleRef();
-
-                ForEachInTuple(
-                    tuple,
-                    [&](auto* component)
-                    {
-                        if (component != nullptr)
-                        {
-                            componentStates.push_back(component->GetWasEnabled());
-                        }
-                    }
-                );
-
-                componentsEnabledStates.push_back(componentStates);
+                if (component != nullptr)
+                {
+                    componentStates.push_back(component->GetWasEnabled());
+                }
             }
-        }
+        );
+
+        componentsEnabledStates.push_back(componentStates);
     }
 
     for (const UID object : updatedObjects)
@@ -1898,6 +1428,82 @@ void Scene::OverridePrefabs(const UID prefabUID)
         LoadPrefab(prefabUID, prefab, transforms[i], isEnabled[i], componentsEnabledStates[i]);
     }
 
+    // This new method only works if the gameObjects inside the prefab have the field prefabChildUIDS, so it can't
+    // be used with older prefabs Update all gameObjects that have the same prefabUID
+    for (GameObject* gameObject : newPrefabInstances)
+    {
+        GLOG("Update NEW prefab");
+
+        const std::vector<GameObject*>& referenceObjectsVector = prefab->GetGameObjectsVector();
+        std::unordered_map<UID, GameObject*> referenceObjectsMap;
+        prefab->GetGameObjectsMap(referenceObjectsMap);
+
+       // Update all the hierarchy
+        std::queue<UID> childUIDs;
+        childUIDs.push(gameObject->GetUID());
+
+        while (!childUIDs.empty())
+        {
+            GameObject* currentObject = GetGameObjectByUID(childUIDs.front());
+            childUIDs.pop();
+
+            GameObject* refObject = nullptr;
+            if (referenceObjectsMap.find(currentObject->GetPrefabChildUID()) == referenceObjectsMap.end())
+            {
+                // If not found in prefab, delete the gameObject because it was deleted in the prefab
+                RemoveGameObjectHierarchy(currentObject->GetUID());
+                continue;
+            }
+
+            refObject = referenceObjectsMap.at(currentObject->GetPrefabChildUID());
+
+            // Update gameObject
+            currentObject->UpdateFromReference(refObject);
+
+            // Add children to queue
+            for (UID child : currentObject->GetChildren())
+            {
+                childUIDs.push(child);
+            }
+
+            // Check for children
+            const std::vector<UID>& objectChildrenUIDs = currentObject->GetChildren();
+            const std::vector<UID>& prefabChildrenUIDs = refObject->GetChildren();
+
+            if (objectChildrenUIDs.size() < prefabChildrenUIDs.size())
+            {
+                // Fill a vector with the prefab children gameObects
+                std::vector<GameObject*> prefabChildren;
+                for (const UID childUID : prefabChildrenUIDs)
+                {
+                    for (const auto& object : referenceObjectsMap)
+                    {
+                        if (object.second->GetUID() == childUID) prefabChildren.push_back(object.second);
+                    }
+                }
+
+                // Fill a map with the current object children for faster lookup
+                std::map<UID, GameObject*> objectChildren;
+                for (const UID childUID : objectChildrenUIDs)
+                {
+                    GameObject* objectToAdd = GetGameObjectByUID(childUID);
+                    objectChildren.insert({objectToAdd->GetPrefabChildUID(), objectToAdd});
+                }
+
+                for (GameObject* prefabChild : prefabChildren)
+                {
+                    // If prefab child does not exist in current gameObject, create it here
+                    if (objectChildren.find(prefabChild->GetPrefabChildUID()) == objectChildren.end())
+                    {
+                        GameObject* newObject = new GameObject(currentObject->GetUID(), prefabChild);
+                        currentObject->AddGameObject(newObject->GetUID());
+                        AddGameObject(newObject->GetUID(), newObject);
+                    }
+                }
+            }
+        }
+    }
+    if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
     App->GetResourcesModule()->ReleaseResource(prefab);
 }
 

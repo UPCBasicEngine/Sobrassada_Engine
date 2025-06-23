@@ -14,12 +14,11 @@ class GameObject;
 class EmitterInstance
 {
   public:
-    EmitterInstance(ParticleEmitter* newEmitter, ParticleSystemComponent* newOwner)
-        : emitter(newEmitter), owner(newOwner) {};
+    EmitterInstance(ParticleEmitter* newEmitter, ParticleSystemComponent* newOwner);
     ~EmitterInstance();
 
-    const std::string& GetName() const;
-    const HashString& GetTag() const;
+    const std::string& GetName() const { return emitterTag.GetString(); };
+    const HashString& GetTag() const { return emitterTag; };
 
     void Spawn();
     void Stop();
@@ -40,4 +39,5 @@ class EmitterInstance
   private:
     ParticleEmitter* emitter       = nullptr;
     ParticleSystemComponent* owner = nullptr;
+    HashString emitterTag          = HashString("");
 };

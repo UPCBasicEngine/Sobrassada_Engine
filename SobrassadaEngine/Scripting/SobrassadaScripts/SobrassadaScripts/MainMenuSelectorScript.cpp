@@ -6,6 +6,7 @@
 #include "MainMenuSelectorScript.h"
 #include "Scene.h"
 #include "SceneModule.h"
+#include "GameTimer.h"
 #include "Standalone/UI/ButtonComponent.h"
 
 bool MainMenuSelectorScript::Init()
@@ -87,11 +88,29 @@ void MainMenuSelectorScript::Update(float deltaTime)
         gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         GameObject* selectedItem = menuItems[selectedIndex];
-        ButtonComponent* button  = selectedItem->GetComponent<ButtonComponent*>();
-        if (button) button->OnClick();
+
+        if (selectedItem->GetName() == "MenuItem_Continue")
+        {
+            UID parentUID        = selectedItem->GetParent();
+            GameObject* parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
+            if (parentGO)
+            {
+                parentGO->SetEnabledRecursive(false);
+            }
+
+            GameTimer* timer = AppEngine->GetGameTimer();
+            if (timer && timer->IsPaused())
+            {
+                timer->TogglePause();
+            }
+        }
+        else
+        {
+            ButtonComponent* button = selectedItem->GetComponent<ButtonComponent*>();
+            if (button) button->OnClick();
+        }
     }
 }
-
 
 
 
