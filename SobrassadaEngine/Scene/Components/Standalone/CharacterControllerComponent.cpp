@@ -467,7 +467,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
     parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
     dashTimeRemaining -= deltaTime;
 
-    if (dashTimeRemaining > 0.05f)
+    if (dashTimeRemaining > 0.05f && preciseDash)
     {
         // Check if the end of the remaining dash is inside the navmesh in case we are sliding next to the edge
         const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
@@ -479,7 +479,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
         dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea, posOverPoly, closestPoint);
         dashToNavmesh           = posOverPoly && closestPoint.y <= finalPos.y + 0.2f;
 
-        if (dashToNavmesh && preciseDash) CheckDashObstacles();
+        if (dashToNavmesh) CheckDashObstacles();
     }
 }
 
