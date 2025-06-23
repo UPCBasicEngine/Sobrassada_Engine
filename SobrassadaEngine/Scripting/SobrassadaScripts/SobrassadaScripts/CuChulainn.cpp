@@ -823,8 +823,10 @@ void CuChulainn::UpdateDashCooldownUI()
 
 void CuChulainn::UpdateUltimateCooldownUI()
 {
-    if (ultimateCdTimer > 0.0f) ultimateImageComponent->ChangeTexture(1297453458525874); //cooldownTexture
-    else ultimateImageComponent->ChangeTexture(1203132322652717);
+    const UID readyTex    = 1203132322652717;
+    const UID cooldownTex = 1297453458525874;
+
+    ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
 }
 void CuChulainn::ChargeAttack()
 {
