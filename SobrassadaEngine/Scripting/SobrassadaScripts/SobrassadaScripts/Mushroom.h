@@ -18,10 +18,7 @@ class Mushroom : public Script
     bool IsReady() const;
     void Disable();
 
-    int GetHealingAmount() const { return healingAmount; }
-
   private:
-    int healingAmount                 = 1;
     SphereColliderComponent* collider = nullptr;
     MeshComponent* mushroom           = nullptr;
 };

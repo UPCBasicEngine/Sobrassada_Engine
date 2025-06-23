@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "FileSystem.h"
+#include "GameTimer.h"
 #include "SceneImporter.h"
 #include "SceneModule.h"
 #include "WindowModule.h"
@@ -41,10 +42,39 @@ bool InputModule::Init()
 
 update_status InputModule::PreUpdate(float deltaTime)
 {
+    bool paused = App->GetGameTimer()->IsPaused();
+    if (wasPausedLastFrame && !paused)
+    {
+        skipNextInputFrame = true;
+        ClearTransientStates();
+        SDL_FlushEvents(SDL_KEYDOWN, SDL_KEYUP);
+    }
+    wasPausedLastFrame = paused;
+
     /*** KEYBOARD AND MOUSE ***/
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
-    mouseMotion       = float2::zero;
-    mouseWheel        = 0;
+    const Uint8* keys  = SDL_GetKeyboardState(NULL);
+    mouseMotion        = float2::zero;
+    mouseWheel         = 0;
+
+    if (skipNextInputFrame)
+    {
+        // Prevent a new KEY_DOWN: convert held keys to REPEAT, others to IDLE
+        for (int i = 0; i < MAX_KEYS; ++i)
+            keyboard[i] = keys[i] ? KEY_REPEAT : KEY_IDLE;
+
+        // Clear mouse buttons
+        for (int i = 0; i < NUM_MOUSE_BUTTONS; ++i)
+            mouseButtons[i] = KEY_IDLE;
+
+        // Convert held controller buttons to REPEAT
+        for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; ++i)
+            controllerButtons[i] = SDL_GameControllerGetButton(controllers[0], static_cast<SDL_GameControllerButton>(i))
+                                     ? KEY_REPEAT
+                                     : KEY_IDLE;
+
+        skipNextInputFrame = false;
+        return UPDATE_CONTINUE;
+    }
 
     for (int i = 0; i < MAX_KEYS; ++i)
     {
@@ -246,4 +276,20 @@ void InputModule::OnControllerDisconnected()
         SDL_GameControllerClose(controllers[0]);
         controllers[0] = nullptr;
     }
+}
+
+void InputModule::ClearTransientStates()
+{
+    // KEY_DOWN and KEY_UP to KEY_IDLE
+    for (int i = 0; i < MAX_KEYS; ++i)
+        if (keyboard[i] == KEY_DOWN || keyboard[i] == KEY_UP) keyboard[i] = KEY_IDLE;
+
+    for (int i = 0; i < NUM_MOUSE_BUTTONS; ++i)
+        if (mouseButtons[i] == KEY_DOWN || mouseButtons[i] == KEY_UP) mouseButtons[i] = KEY_IDLE;
+
+    for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; ++i)
+        if (controllerButtons[i] == KEY_DOWN || controllerButtons[i] == KEY_UP) controllerButtons[i] = KEY_IDLE;
+
+    if (leftTrigger.first == KEY_DOWN || leftTrigger.first == KEY_UP) leftTrigger.first = KEY_IDLE;
+    if (rightTrigger.first == KEY_DOWN || rightTrigger.first == KEY_UP) rightTrigger.first = KEY_IDLE;
 }

@@ -29,6 +29,8 @@ ParticleSystemComponent::~ParticleSystemComponent()
 
 void ParticleSystemComponent::Init()
 {
+    for (auto& emitter : emitterInstances)
+        emitter.Spawn();
 }
 
 void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -72,6 +74,13 @@ void ParticleSystemComponent::RenderEditorInspector()
     {
         HashString requestedTag(newParticleTagName);
         App->GetParticleModule()->ResquestParticleSystem(requestedTag, this);
+        memset(newParticleTagName, 0, sizeof(newParticleTagName));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Duplicate Particle System"))
+    {
+        HashString requestedTag(newParticleTagName);
+        App->GetParticleModule()->DuplicateParticleSystem(requestedTag, this, particleSystemTag);
         memset(newParticleTagName, 0, sizeof(newParticleTagName));
     }
 
@@ -120,6 +129,11 @@ void ParticleSystemComponent::RenderEditorInspector()
     if(ImGui::Button("Stop playing"))
     {
         StopInstances();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("STOP ALL PLAYING !"))
+    {
+        App->GetParticleModule()->StopAllParticles();
     }
 
     ImGui::Spacing();

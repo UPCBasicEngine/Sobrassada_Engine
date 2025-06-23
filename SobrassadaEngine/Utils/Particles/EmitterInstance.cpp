@@ -4,18 +4,14 @@
 
 #include "imgui.h"
 
+EmitterInstance::EmitterInstance(ParticleEmitter* newEmitter, ParticleSystemComponent* newOwner)
+    : emitter(newEmitter), owner(newOwner)
+{
+    emitterTag = newEmitter->GetTag();
+}
+
 EmitterInstance::~EmitterInstance()
 {
-}
-
-const std::string& EmitterInstance::GetName() const
-{
-    if (emitter) return emitter->GetName();
-}
-
-const HashString& EmitterInstance::GetTag() const
-{
-    if (emitter) return emitter->GetTag();
 }
 
 void EmitterInstance::Spawn()
@@ -32,7 +28,6 @@ void EmitterInstance::Stop()
 
 void EmitterInstance::Update(float deltaTime)
 {
-    // Change ParticleEmitter and ParticleAddon to recieve the EmitterInstance and update its particles
     emitter->Update(deltaTime, this);
 }
 

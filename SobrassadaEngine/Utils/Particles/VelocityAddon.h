@@ -3,6 +3,9 @@
 #include "ParticleAddon.h"
 
 #include "Math/float2.h"
+#include "imgui.h"
+
+struct Particle;
 
 class VelocityAddon : public ParticleAddon
 {
@@ -16,24 +19,39 @@ class VelocityAddon : public ParticleAddon
     void Init(EmitterInstance* emitterInstance);
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
+    void Duplicate(ParticleAddon* reference) override;
 
   private:
-    bool randomizeXSpeed = false;
-    bool randomizeYSpeed = false;
-    bool randomizeZSpeed = false;
+    void ResetCurveEditorPoints(ImVec2* pointsToReset);
+    void InitializeParticleVelocity(Particle& particle);
+    void UpdateParticleVelocity(Particle& particle, float valueOverLifetime);
 
-    float2 xSpeed        = float2::zero;
-    float2 ySpeed        = float2::zero;
-    float2 zSpeed        = float2::zero;
+  private:
+    bool randomizeXSpeed                          = false;
+    bool randomizeYSpeed                          = false;
+    bool randomizeZSpeed                          = false;
 
-    bool useXCurve       = false;
-    bool useYCurve       = false;
-    bool useZCurve       = false;
+    float2 xSpeed                                 = float2::zero;
+    float2 ySpeed                                 = float2::zero;
+    float2 zSpeed                                 = float2::zero;
 
-    float bezierX[5]     = {0.f, 0.f, 1.f, 1.f};
-    float bezierY[5]     = {0.f, 0.f, 1.f, 1.f};
-    float bezierZ[5]     = {0.f, 0.f, 1.f, 1.f};
+    float bezierX[5]                              = {0.f, 0.f, 1.f, 1.f};
+    float bezierY[5]                              = {0.f, 0.f, 1.f, 1.f};
+    float bezierZ[5]                              = {0.f, 0.f, 1.f, 1.f};
 
-    bool gravity         = false;
-    float gravityValue   = 0.f;
+    ParticleInterpolationType speedXInterpolation = ParticleInterpolationType::FIXED_VALUES;
+    ParticleInterpolationType speedYInterpolation = ParticleInterpolationType::FIXED_VALUES;
+    ParticleInterpolationType speedZInterpoaltion = ParticleInterpolationType::FIXED_VALUES;
+
+    ImVec2 curveEditorPointsX[MaxCurveEditorPoints];
+    int curveEditorIndexX = -1;
+
+    ImVec2 curveEditorPointsY[MaxCurveEditorPoints];
+    int curveEditorIndexY = -1;
+
+    ImVec2 curveEditorPointsZ[MaxCurveEditorPoints];
+    int curveEditorIndexZ = -1;
+
+    bool gravity          = false;
+    float gravityValue    = 0.f;
 };
