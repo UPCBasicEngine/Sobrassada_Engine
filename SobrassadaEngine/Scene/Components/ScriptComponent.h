@@ -29,7 +29,11 @@ class ScriptComponent : public Component
     void RenderEditorInspector() override;
 
     void InitScriptInstances();
+
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer);
+    void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer);
+    void OnCollisionExit(GameObject* otherObject, ColliderLayer layer);
+
     bool CreateScript(const std::string& scriptType);
     void DeleteScript(const int index);
     void DeleteAllScripts();

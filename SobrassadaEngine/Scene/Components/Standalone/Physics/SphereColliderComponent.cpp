@@ -17,11 +17,22 @@ SphereColliderComponent::SphereColliderComponent(UID uid, GameObject* parent)
 
     CalculateCollider();
 
-    onCollissionCallback = CollisionDelegate(
-        std::bind(&SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+    onCollissionCallback      = CollisionDelegate(std::bind(
+        &SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3
+    ));
+
+    onCollissionEnterCallback = CollisionDelegate(std::bind(
+        &SphereColliderComponent::OnCollisionEnter, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionExitCallback  = CollisionExitDelegate(
+        std::bind(&SphereColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    userPointer = BulletUserPointer(
+        this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
     // App->GetPhysicsModule()->CreateSphereRigidBody(this);
 }
 
@@ -47,11 +58,22 @@ SphereColliderComponent::SphereColliderComponent(const rapidjson::Value& initial
         centerRotation                    = {dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat()};
     }
 
-    onCollissionCallback = CollisionDelegate(
-        std::bind(&SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+    onCollissionCallback      = CollisionDelegate(std::bind(
+        &SphereColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3
+    ));
+
+    onCollissionEnterCallback = CollisionDelegate(std::bind(
+        &SphereColliderComponent::OnCollisionEnter, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionExitCallback  = CollisionExitDelegate(
+        std::bind(&SphereColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    userPointer          = BulletUserPointer(
+        this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
     // App->GetPhysicsModule()->CreateSphereRigidBody(this);
 }
 
@@ -157,7 +179,10 @@ void SphereColliderComponent::RenderEditorInspector()
             if (ImGui::Selectable(ColliderLayerStrings[i]))
             {
                 layer       = ColliderLayer(i);
-                userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+                userPointer = BulletUserPointer(
+                    this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback,
+                    generateCallback, layer
+                );
                 App->GetPhysicsModule()->UpdateSphereRigidBody(this);
             }
         }
@@ -172,7 +197,9 @@ void SphereColliderComponent::RenderEditorInspector()
 
     if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
     {
-        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
     }
 }
 
@@ -212,8 +239,24 @@ void SphereColliderComponent::OnCollision(GameObject* otherObject, float3 collis
     if (!enabled || !otherObject->IsEnabled()) return;
 
     auto script = parent->GetComponent<ScriptComponent*>();
-
     if (script) script->OnCollision(otherObject, collisionNormal, layer);
+}
+
+void SOBRASADA_API_ENGINE
+SphereColliderComponent::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
+{
+    if (!enabled || !otherObject->IsEnabled()) return;
+
+    auto script = parent->GetComponent<ScriptComponent*>();
+    if (script) script->OnCollisionEnter(otherObject, collisionNormal, layer);
+}
+
+void SOBRASADA_API_ENGINE SphereColliderComponent::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
+{
+    if (!enabled || !otherObject->IsEnabled()) return;
+
+    auto script = parent->GetComponent<ScriptComponent*>();
+    if (script) script->OnCollisionExit(otherObject, layer);
 }
 
 void SphereColliderComponent::DeleteRigidBody()

@@ -44,7 +44,7 @@ update_status PhysicsModule::PreUpdate(float time)
     // REMOVE RIGID BODIES
     for (btRigidBody* rigidBody : bodiesToRemove)
     {
-        //dynamicsWorld->removeCollisionObject(rigidBody);
+        // dynamicsWorld->removeCollisionObject(rigidBody);
         dynamicsWorld->removeRigidBody(rigidBody);
         btCollisionShape* shape = rigidBody->getCollisionShape();
         delete shape;
@@ -82,12 +82,75 @@ update_status PhysicsModule::PreUpdate(float time)
             // Calculating normal
             const float3 normal = float3(contactManifold->getContactPoint(0).m_normalWorldOnB);
 
-            if (firstUserPointer->generateCallback && firstUserPointer->collider && secondUserPointer->collider)
-                firstUserPointer->onCollisionCallback->Call(secondUserPointer->collider->GetParent(), normal, secondUserPointer->layer);
-            if (secondUserPointer->generateCallback && secondUserPointer->collider && firstUserPointer->collider)
-                secondUserPointer->onCollisionCallback->Call(firstUserPointer->collider->GetParent(), -normal, firstUserPointer->layer);
+            UID g1              = firstUserPointer->collider ? firstUserPointer->collider->GetParentUID() : INVALID_UID;
+            UID g2 = secondUserPointer->collider ? secondUserPointer->collider->GetParentUID() : INVALID_UID;
+
+            // Still OnCollision
+            if (wereColliding.find(g1) != wereColliding.end())
+            {
+                if (firstUserPointer->generateCallback && firstUserPointer->collider && secondUserPointer->collider)
+                    firstUserPointer->onCollisionCallback->Call(
+                        secondUserPointer->collider->GetParent(), normal, secondUserPointer->layer
+                    );
+                if (secondUserPointer->generateCallback && secondUserPointer->collider && firstUserPointer->collider)
+                    secondUserPointer->onCollisionCallback->Call(
+                        firstUserPointer->collider->GetParent(), -normal, firstUserPointer->layer
+                    );
+            }
+            // First time colliding
+            else
+            {
+                if (firstUserPointer->generateCallback && firstUserPointer->collider && secondUserPointer->collider)
+                    firstUserPointer->onCollisionEnterCallback->Call(
+                        secondUserPointer->collider->GetParent(), normal, secondUserPointer->layer
+                    );
+                if (secondUserPointer->generateCallback && secondUserPointer->collider && firstUserPointer->collider)
+                    secondUserPointer->onCollisionEnterCallback->Call(
+                        firstUserPointer->collider->GetParent(), -normal, firstUserPointer->layer
+                    );
+            }
+
+            // Adding both elements to areColliding
+            if (areColliding.find(g1) != areColliding.end()) areColliding[g1].insert(g2);
+            else areColliding.insert({g1, {g2}});
+
+            if (areColliding.find(g2) != areColliding.end()) areColliding[g2].insert(g1);
+            else areColliding.insert({g2, {g1}});
         }
     }
+
+    // ON COLLISION EXIT CHECKS
+    for (auto& wereCollidingPair : wereColliding)
+    {
+        UID currentUID = wereCollidingPair.first;
+        for (auto& otherUID : wereCollidingPair.second)
+        {
+            bool exit = false;
+            if (areColliding.find(currentUID) == areColliding.end()) exit = true;
+            else if (areColliding.find(currentUID) != areColliding.end() &&
+                     areColliding[currentUID].find(otherUID) == areColliding[currentUID].end())
+                exit = true;
+
+            if (exit && collisionObjects.find(currentUID) != collisionObjects.end() &&
+                collisionObjects.find(otherUID) != collisionObjects.end())
+            {
+                BulletUserPointer firstUserPointer  = collisionObjects[currentUID];
+                BulletUserPointer secondUserPointer = collisionObjects[otherUID];
+
+                if (firstUserPointer.generateCallback && firstUserPointer.collider && secondUserPointer.collider)
+                    firstUserPointer.onCollisionExitCallback->Call(
+                        secondUserPointer.collider->GetParent(), secondUserPointer.layer
+                    );
+                if (secondUserPointer.generateCallback && secondUserPointer.collider && firstUserPointer.collider)
+                    secondUserPointer.onCollisionExitCallback->Call(
+                        firstUserPointer.collider->GetParent(), firstUserPointer.layer
+                    );
+            }
+        }
+    }
+
+    wereColliding.swap(areColliding);
+    areColliding.clear();
 
     return UPDATE_CONTINUE;
 }
@@ -148,6 +211,7 @@ void PhysicsModule::CreateCubeRigidBody(CubeColliderComponent* colliderComponent
     btRigidBody* newRigidBody = new btRigidBody(rbInfo);
 
     newRigidBody->setUserPointer(&colliderComponent->userPointer);
+    collisionObjects[colliderComponent->GetParentUID()] = colliderComponent->userPointer;
 
     colliderComponent->rigidBody = newRigidBody;
 
@@ -164,6 +228,7 @@ void PhysicsModule::DeleteCubeRigidBody(CubeColliderComponent* colliderComponent
 {
     if (colliderComponent->rigidBody == nullptr) return;
 
+    collisionObjects.erase(colliderComponent->GetParentUID());
     bodiesToRemove.push_back(colliderComponent->rigidBody);
     colliderComponent->rigidBody = nullptr;
 }
@@ -190,6 +255,7 @@ void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderCompo
     btRigidBody* newRigidBody = new btRigidBody(rbInfo);
 
     newRigidBody->setUserPointer(&colliderComponent->userPointer);
+    collisionObjects[colliderComponent->GetParentUID()] = colliderComponent->userPointer;
 
     colliderComponent->rigidBody = newRigidBody;
 
@@ -206,6 +272,7 @@ void PhysicsModule::DeleteSphereRigidBody(SphereColliderComponent* colliderCompo
 {
     if (colliderComponent->rigidBody == nullptr) return;
 
+    collisionObjects.erase(colliderComponent->GetParentUID());
     bodiesToRemove.push_back(colliderComponent->rigidBody);
     colliderComponent->rigidBody = nullptr;
 }
@@ -232,6 +299,7 @@ void PhysicsModule::CreateCapsuleRigidBody(CapsuleColliderComponent* colliderCom
     btRigidBody* newRigidBody = new btRigidBody(rbInfo);
 
     newRigidBody->setUserPointer(&colliderComponent->userPointer);
+    collisionObjects[colliderComponent->GetParentUID()] = colliderComponent->userPointer;
 
     colliderComponent->rigidBody = newRigidBody;
 
@@ -248,6 +316,7 @@ void PhysicsModule::DeleteCapsuleRigidBody(CapsuleColliderComponent* colliderCom
 {
     if (colliderComponent->rigidBody == nullptr) return;
 
+    collisionObjects.erase(colliderComponent->GetParentUID());
     bodiesToRemove.push_back(colliderComponent->rigidBody);
     colliderComponent->rigidBody = nullptr;
 }
@@ -406,7 +475,7 @@ void PhysicsModule::EmptyWorld()
     // REMOVE RIGID BODIES
     for (btRigidBody* rigidBody : bodiesToRemove)
     {
-        //dynamicsWorld->removeCollisionObject(rigidBody);
+        // dynamicsWorld->removeCollisionObject(rigidBody);
         dynamicsWorld->removeRigidBody(rigidBody);
         btCollisionShape* shape = rigidBody->getCollisionShape();
         delete shape;
@@ -416,7 +485,7 @@ void PhysicsModule::EmptyWorld()
 
     for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
     {
-        btCollisionObject* obj         = dynamicsWorld->getCollisionObjectArray()[i];
+        btCollisionObject* obj  = dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* rigidBody  = btRigidBody::upcast(obj);
         btCollisionShape* shape = rigidBody->getCollisionShape();
         dynamicsWorld->removeRigidBody(rigidBody);
@@ -426,6 +495,9 @@ void PhysicsModule::EmptyWorld()
         delete obj;
     }
 
+    wereColliding.clear();
+    areColliding.clear();
+    collisionObjects.clear();
     bodiesToRemove.clear();
 }
 

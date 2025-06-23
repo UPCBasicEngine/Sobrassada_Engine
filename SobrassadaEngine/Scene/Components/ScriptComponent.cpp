@@ -226,6 +226,22 @@ void ScriptComponent::OnCollision(GameObject* otherObject, const float3 collisio
     }
 }
 
+void ScriptComponent::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+{
+    for (auto& script : scriptInstances)
+    {
+        script->OnCollisionEnter(otherObject, collisionNormal, layer);
+    }
+}
+
+void ScriptComponent::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
+{
+    for (auto& script : scriptInstances)
+    {
+        script->OnCollisionExit(otherObject, layer);
+    }
+}
+
 bool ScriptComponent::CreateScript(const std::string& scriptType)
 {
     for (const std::string& name : scriptNames)
