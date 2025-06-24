@@ -753,6 +753,7 @@ void CuChulainn::Respawn()
 
     isDead        = false;
     currentHealth = reservedHealth;
+    UpdateHealthBarUI();
     state         = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
