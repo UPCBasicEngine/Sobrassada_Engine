@@ -39,6 +39,8 @@ class CuChulainn : public Character
 
     void Respawn();
     void UpdateHealthBarUI();
+    void UpdateDashCooldownUI();
+    void UpdateUltimateCooldownUI();
     bool TakeMushroom();
     bool CanTakeMushroom() const;
 
@@ -156,6 +158,8 @@ class CuChulainn : public Character
 
     std::vector<UID> healthBarTextures;
     ImageComponent* healthImageComponent = nullptr;
+    ImageComponent* dashImageComponent   = nullptr;
+    ImageComponent* ultimateImageComponent = nullptr;
 
     bool godMode                         = false;
     float idleTimer                      = 0.0f;
