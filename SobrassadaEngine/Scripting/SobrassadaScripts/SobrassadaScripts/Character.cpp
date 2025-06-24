@@ -112,15 +112,12 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
     // ---- Damage Collisions ----
 
     // Melee check
-    CapsuleColliderComponent* otherWeapon = otherObject->GetComponent<CapsuleColliderComponent*>();
-    ScriptComponent* otherScript          = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+    CapsuleColliderComponent* otherWeapon      = otherObject->GetComponent<CapsuleColliderComponent*>();
+    SphereColliderComponent* otherWeaponShpere = otherObject->GetComponent<SphereColliderComponent*>();
+    ScriptComponent* otherScript               = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
-        // Special attack check
-        CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
-        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
-            TakeDamage(playerScript->GetUltimateDamage());
 
         // Charged attack check
         if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
@@ -133,6 +130,13 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             if (!enemyScript->isAttacking) return;
             TakeDamage(enemyScript->attackDamage);
         }
+    }
+    else if (otherScript && otherWeaponShpere && otherWeaponShpere->GetEnabled())
+    {
+        // Special attack check
+        CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
+        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
+            TakeDamage(playerScript->GetUltimateDamage());
     }
 
     if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")

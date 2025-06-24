@@ -459,6 +459,7 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 
         if (decal == nullptr) continue;
         if (decal->GetResourceMaterial() == nullptr) continue;
+        if (!decal->IsEffectivelyEnabled()) continue;
 
         const UID uid = decal->GetResourceMaterial()->GetUID();
         groupedDecals[uid].push_back(decal);
