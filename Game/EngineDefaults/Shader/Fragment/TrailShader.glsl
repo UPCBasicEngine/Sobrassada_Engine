@@ -2,6 +2,7 @@
 
 uniform bool useTexture;
 uniform sampler2D uTexture;
+uniform float cutOff;
 
 layout(location = 0) out vec4 FragColor;
 
@@ -12,7 +13,7 @@ void main()
 {
     if (useTexture){
         vec4 diffuse = texture(uTexture, vUV);
-        if(vColor.a < 0.1) discard;
+        if(vColor.a < cutOff || diffuse.a < cutOff) discard;
         FragColor = vec4(diffuse.rgb * vColor.rgb, diffuse.a * vColor.a);
     }
     else
