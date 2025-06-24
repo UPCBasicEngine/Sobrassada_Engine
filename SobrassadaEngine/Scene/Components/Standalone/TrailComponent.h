@@ -52,6 +52,7 @@ class TrailComponent : public Component
     float minDistance               = 0.5f;
     float lifeTime                  = 0.5f;
     float width                     = 0.1f;
+    float cutoff                    = 0.1f;
 
     bool useCurve                   = false;
     bool invertCurve                = false;

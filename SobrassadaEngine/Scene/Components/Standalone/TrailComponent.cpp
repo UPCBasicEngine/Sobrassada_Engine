@@ -81,6 +81,7 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     if (initialState.HasMember("LifeTime")) lifeTime = initialState["LifeTime"].GetFloat();
     if (initialState.HasMember("Width")) width = initialState["Width"].GetFloat();
     if (initialState.HasMember("InvertCurve")) invertCurve = initialState["InvertCurve"].GetBool();
+    if (initialState.HasMember("Cutoff")) cutoff = initialState["Cutoff"].GetFloat();
 
     if (initialState.HasMember("Curve"))
     {
@@ -131,6 +132,7 @@ void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
     targetState.AddMember("MinDistance", minDistance, allocator);
     targetState.AddMember("LifeTime", lifeTime, allocator);
     targetState.AddMember("Width", width, allocator);
+    targetState.AddMember("Cutoff", cutoff, allocator);
     targetState.AddMember("UseCurve", useCurve, allocator);
     targetState.AddMember("InvertCurve", invertCurve, allocator);
     rapidjson::Value curveArray(rapidjson::kArrayType);
@@ -166,6 +168,7 @@ void TrailComponent::Clone(const Component* other)
         minDistance                      = otherTrail->minDistance;
         lifeTime                         = otherTrail->lifeTime;
         width                            = otherTrail->width;
+        cutoff                           = otherTrail->cutoff;
         invertCurve                      = otherTrail->invertCurve;
         useCurve                         = otherTrail->useCurve;
         for (int i = 0; i < 5; ++i)
@@ -313,6 +316,8 @@ void TrailComponent::Render(float deltaTime)
     }
     else glUniform1i(glGetUniformLocation(program, "useTexture"), 0);
 
+    glUniform1f(glGetUniformLocation(program, "cutOff"), cutoff);
+
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
@@ -334,6 +339,7 @@ void TrailComponent::RenderEditorInspector()
     ImGui::DragFloat("Min Distance", &minDistance, 0.01f, 0.0f, 1.0f);
     ImGui::DragFloat("LifeTime", &lifeTime, 0.01f, 0.1f, 2.0f);
     ImGui::DragFloat("Width", &width, 0.01f, 0.0f, 5.0f);
+    ImGui::DragFloat("Cutoff", &cutoff, 0.01f, 0.0f, 1.0f);
 
     ImGui::NewLine();
     ImGui::Checkbox("Use Curve", &useCurve);
