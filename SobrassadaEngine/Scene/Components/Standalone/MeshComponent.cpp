@@ -152,7 +152,7 @@ void MeshComponent::RenderEditorInspector()
 
     ImGui::SeparatorText("Mesh Component");
 
-    ImGui::Checkbox("Produce Shadows", &produceShadows);
+    if(ImGui::Checkbox("Produce Shadows", &produceShadows)) BatchEditorMode();
 
     ImGui::Text(currentMeshName.c_str());
     ImGui::SameLine();
