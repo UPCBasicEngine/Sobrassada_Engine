@@ -544,3 +544,18 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
     }
     return triggerDone;
 }
+
+void AnimationComponent::AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName)
+{
+    //TODO
+}
+
+void AnimationComponent::RemoveTrigger(UID clipUID, size_t index)
+{
+    //TODO
+}
+
+void AnimationComponent::ClearTriggers(UID clipUID)
+{
+    //TODO
+}

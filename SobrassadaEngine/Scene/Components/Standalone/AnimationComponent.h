@@ -3,6 +3,7 @@
 #include "Component.h"
 #include "Globals.h"
 #include "ResourceStateMachine.h"
+#include "Animation/AnimationTrigger.h"
 
 #include "rapidjson/document.h"
 #include <map>
@@ -33,6 +34,9 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     void OnResume();
     void AddAnimation(UID resource);
     bool UseTrigger(const std::string& triggerName);
+    void AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName);
+    void RemoveTrigger(UID clipUID, size_t index);
+    void ClearTriggers(UID clipUID);
 
     UID GetAnimationResource() const { return resource; }
     const HashString& GetCurrentStateName() const { return currentState->name; }
@@ -58,8 +62,9 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
 
     std::unordered_map<HashString, GameObject*> boneMapping;
     std::map<std::string, float4x4> bindPoseTransforms;
+    std::unordered_map<UID, std::vector<AnimationTrigger>> clipTriggers;
 
-    
+    float lastTime          = 0.0f;
     float animationDuration = 0.0f;
     bool playing            = false;
     float currentTime       = 0.0f;
