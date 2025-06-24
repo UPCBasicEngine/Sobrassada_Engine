@@ -34,10 +34,9 @@ void EnemySpawnerScript::Update(float deltatime)
 void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, ColliderLayer layer)
 {
     isOverlappingNow = true;
-    
+
     if (spawnOnce && spawned) return;
     if (wasOverlapping) return;
-
 
     if (prefabUID == INVALID_UID && !prefabUIDStr.empty()) prefabUID = std::stoull(prefabUIDStr);
     if (prefabUID == INVALID_UID)
@@ -54,21 +53,22 @@ void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, Col
     }
 
     Scene* scene           = AppEngine->GetSceneModule()->GetScene();
-    float4x4 baseTransform = parent->GetGlobalTransform();
+
+    UID parentUID          = parent->GetParent();
+    GameObject* spawnRoot  = (parentUID != INVALID_UID) ? scene->GetGameObjectByUID(parentUID) : nullptr;
+    float4x4 baseTransform = spawnRoot ? spawnRoot->GetGlobalTransform() : parent->GetGlobalTransform();
 
     for (int i = 0; i < spawnAmount; ++i)
     {
         float3 offset            = float3(i * 2.0f, 0, 0);
         float4x4 spawnTransform  = baseTransform;
 
-        spawnTransform[0][3] += offset.x;
-        spawnTransform[1][3] += offset.y;
-        spawnTransform[2][3] += offset.z;
+        spawnTransform[0][3]    += offset.x;
+        spawnTransform[1][3]    += offset.y;
+        spawnTransform[2][3]    += offset.z;
 
         scene->LoadPrefab(prefabUID, prefab, spawnTransform, true);
     }
-
-    //GLOG("EnemySpawner: Spawned %d enemies from prefab %llu", spawnAmount, prefabUID);
 
     if (spawnOnce) spawned = true;
 }
