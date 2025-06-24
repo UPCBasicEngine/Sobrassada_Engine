@@ -31,6 +31,7 @@ class AudioModule : public Module
     void RemoveAudioSource(AudioSourceComponent* newSource);
     bool AddAudioListener(AudioListenerComponent* newListener);
     void RemoveAudioListener(AudioListenerComponent* newListener);
+    void EmitEvent(const std::string& eventName, AkGameObjectID gameObjectID = 0);
 
     void StopAllAudio();
     void PlayOnStart();

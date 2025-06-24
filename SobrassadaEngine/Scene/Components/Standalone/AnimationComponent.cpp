@@ -16,6 +16,7 @@
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
 #include "Animation/AnimationTrigger.h"
+#include "AudioModule.h"
 
 
 #include "Math/Quat.h"
@@ -561,4 +562,23 @@ void AnimationComponent::RemoveTrigger(UID clipUID, size_t index)
 void AnimationComponent::ClearTriggers(UID clipUID)
 {
     clipTriggers[clipUID].clear();
+}
+
+void AnimationComponent::CheckTriggers()
+{
+    if (!currentAnimResource) return;
+
+    UID clipUID = currentAnimResource->GetUID();
+    std::vector<AnimationTrigger>& vec   = clipTriggers[clipUID];
+    float now   = animController->GetTime();
+    bool looped = now < lastTime;
+
+    for (AnimationTrigger& trgg : vec)
+    {
+        if (trgg.Check(lastTime, now, looped))
+        {
+            if (trgg.GetType() == TriggerType::SOUND) 
+                App->GetAudioModule()->EmitEvent(trgg.GetData(), GetParentUID());
+        }
+    }
 }

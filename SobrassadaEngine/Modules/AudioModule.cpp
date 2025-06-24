@@ -284,6 +284,17 @@ void AudioModule::RemoveAudioListener(AudioListenerComponent* listenerToRemove)
     listener = nullptr;
 }
 
+void AudioModule::EmitEvent(const std::string& eventName, AkGameObjectID gameObjectID)
+{
+    const auto it = eventsMap.find(HashString(eventName.c_str()));
+    if (it == eventsMap.end())
+    {
+        GLOG("Audio event not found: %s", eventName.c_str());
+        return;
+    }
+    AK::SoundEngine::PostEvent(it->second, gameObjectID);
+}
+
 void AudioModule::StopAllAudio()
 {
     for (const AudioSourceComponent* source : sources)
