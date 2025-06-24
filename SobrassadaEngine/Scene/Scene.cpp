@@ -372,9 +372,14 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     }
 
 #ifndef GAME
-    for (const auto& gameObject : gameObjectsContainer)
+    // for (const auto& gameObject : gameObjectsContainer)
+    //{
+    //     gameObject.second->DrawGizmos();
+    // }
+
+    for (const auto& gameObject : toUpdateGameObjects)
     {
-        gameObject.second->DrawGizmos();
+        gameObject->DrawGizmos();
     }
 #endif
 
