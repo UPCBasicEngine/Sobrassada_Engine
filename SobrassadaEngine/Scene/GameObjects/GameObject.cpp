@@ -250,6 +250,13 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     enabled          = refObject->enabled;
     wasEnabled       = refObject->wasEnabled;
 
+    // Request tags
+
+    for (auto& tag : refObject->tags)
+    {
+        App->GetSceneModule()->GetScene()->RequestTag(tag, this);
+    }
+
     // Must make a copy of each manually
     for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
     {
