@@ -542,7 +542,7 @@ void CuChulainn::CheckIsFalling()
     const float verticalSpeed = character->GetRealSpeed().y;
 
     // GLOG("Vertical speed %f", verticalSpeed);
-    if (verticalSpeed <= -2.0f && !character->IsGrounded() && animComponent)
+    if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
     {
         animComponent->UseTrigger("Fall");
         state = CharacterStates::FALL;
