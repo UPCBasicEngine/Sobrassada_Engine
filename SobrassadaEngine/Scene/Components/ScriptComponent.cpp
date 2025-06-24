@@ -285,7 +285,7 @@ void ScriptComponent::SetComponentEnabled(bool value)
         for (size_t i = 0; i < scriptEnabled.size(); ++i)
         {
             scriptEnabled[i]     = scriptWasEnabledLastFrame[i];
-            scriptInitialized[i] = false; // forçar un nou Init()
+            scriptInitialized[i] = false; 
         }
     }
     else
@@ -295,7 +295,7 @@ void ScriptComponent::SetComponentEnabled(bool value)
 
             if (scriptEnabled[i]) scriptWasEnabledLastFrame[i] = true;
 
-            scriptEnabled[i] = false; // el Update s’atura
+            scriptEnabled[i] = false; 
         }
     }
 }
