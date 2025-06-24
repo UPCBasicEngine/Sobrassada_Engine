@@ -109,6 +109,10 @@ void AnimationComponent::OnPlay(bool isTransition)
             }
         }
         else animController->Play(resource, true, defaultTime);
+
+        lastTime = 0.0f;
+        for (auto& trgg : clipTriggers[resource])
+            trgg.Reset();
     }
 }
 
@@ -403,6 +407,8 @@ void AnimationComponent::Update(float deltaTime)
         }
 
         animController->Update(deltaTime);
+
+        CheckTriggers();
 
         std::set<GameObject*> modifiedBones;
 

@@ -3,7 +3,6 @@
 #include "Component.h"
 #include "Globals.h"
 #include "ResourceStateMachine.h"
-#include "Animation/AnimationTrigger.h"
 
 #include "rapidjson/document.h"
 #include <map>
@@ -51,6 +50,9 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     void SetAnimationResource(UID animResource);
     void UpdateBoneHierarchy(GameObject* bone);
     void SetBoneMapping();
+
+  private:
+    void CheckTriggers();
 
   private:
     UID resource                               = INVALID_UID;
