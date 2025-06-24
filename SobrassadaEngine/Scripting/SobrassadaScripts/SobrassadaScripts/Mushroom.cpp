@@ -8,7 +8,6 @@
 
 Mushroom::Mushroom(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Heal Amount", InspectorField::FieldType::Int, &healingAmount, 0, 5});
 }
 
 bool Mushroom::Init()

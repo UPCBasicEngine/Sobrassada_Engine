@@ -36,12 +36,33 @@ bool CameraMovement::Init()
         controller = target->GetComponent<CharacterControllerComponent*>();
     }
 
+    camera = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
+
+    rng    = std::mt19937(std::random_device {}());
+    dist   = std::uniform_real_distribution<float>(-1.0f, 1.0f);
+
     return true;
 }
 
 void CameraMovement::Update(float deltaTime)
 {
     FollowTarget(deltaTime);
+    if (shakeTimer > 0.0f) CameraShake(deltaTime);
+}
+
+void CameraMovement::SetPosition(const float3& newPos)
+{
+    parent->SetLocalPosition(newPos);
+}
+
+void CameraMovement::StartShake(float duration, float intensity, float smoothness)
+{
+    shakeDuration    = duration;
+    shakeTimer       = duration;
+    shakeIntensity   = intensity;
+    shakeSmoothness  = smoothness;
+    defaultCameraPos = camera->GetPosition();
+    currentOffset    = float3::zero;
 }
 
 void CameraMovement::FollowTarget(float deltaTime)
@@ -92,7 +113,27 @@ void CameraMovement::FollowTarget(float deltaTime)
     parent->SetLocalPosition(finalPosition - parent->GetParentGlobalTransform().TranslatePart());
 }
 
-void CameraMovement::SetPosition(const float3& newPos)
+void CameraMovement::CameraShake(float deltaTime)
 {
-    parent->SetLocalPosition(newPos);
+    const float progress = (shakeDuration - shakeTimer) / shakeDuration;
+
+    const float fadeIn   = SmoothStep(0.0f, 0.25f, progress);
+    const float fadeOut  = 1.0f - SmoothStep(0.75f, 1.0f, progress);
+    float fade           = fadeIn < fadeOut ? fadeIn : fadeOut;
+    fade                 = fade * fade * (3.0f - 2.0f * fade);
+
+    const float x        = dist(rng) * shakeIntensity * fade;
+    const float y        = dist(rng) * shakeIntensity * fade;
+
+    float3 targetOffset  = float3(x, y, 0.0f);
+    currentOffset        = shakeSmoothness > 0 ? Lerp(currentOffset, targetOffset, shakeSmoothness) : targetOffset;
+
+    camera->SetLocalPosition(defaultCameraPos + currentOffset);
+
+    shakeTimer -= deltaTime;
+
+    if (shakeTimer <= 0.0f)
+    {
+        camera->SetLocalPosition(defaultCameraPos);
+    }
 }

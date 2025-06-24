@@ -50,7 +50,7 @@ class Character : public Script
     float GetDistanceFromPlayer() const;
     PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
-    void RenderDebug();
+    void RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color);
 
   private:
     virtual void HandleState(float deltaTime) {};
@@ -84,10 +84,10 @@ class Character : public Script
     float attackHitboxDuration                  = 0.0f;
 
     float invulnerabilityTimer                  = 0.0f;
-    const float invulnerableDuration            = 0.7f;
+    const float invulnerableDuration            = 0.2f;
 
     bool desiredHeal                            = false;
-    float healCooldown                          = 0.1f;
+    float healCooldown                          = 1.0f;
     float healCdTimer                           = 0.0f;
 
     CharacterType type                          = CharacterType::None;
