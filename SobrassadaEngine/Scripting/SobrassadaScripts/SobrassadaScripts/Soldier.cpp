@@ -19,7 +19,7 @@ Soldier::Soldier(GameObject* parent)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
-    fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 5.0f});
+    fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
 }
 
 bool Soldier::Init()
@@ -39,8 +39,6 @@ bool Soldier::Init()
         speed = agentAI->GetSpeed();
     }
 
-    
-
     return true;
 }
 
@@ -48,16 +46,18 @@ void Soldier::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
 
-    if (isKnockback) {
+    if (isKnockback)
+    {
         knockbackTimer -= deltaTime;
         agentAI->MoveTo(knockbackForce, knockbackDirection);
-        if (knockbackTimer <= 0.0f) {
+        if (knockbackTimer <= 0.0f)
+        {
             isKnockback = false;
             agentAI->ResetSpeed();
-            agentAI->ResetAngularSpeed();   
+            agentAI->ResetAngularSpeed();
             ChangeState();
         }
-        return; 
+        return;
     }
 
     Character::Update(deltaTime);
@@ -87,7 +87,8 @@ void Soldier::OnDamageTaken(int amount)
 {
     isAttacking = false;
     attackTimer = 0.0f;
-    if (weaponCollider && weaponCollider->GetEnabled()) {
+    if (weaponCollider && weaponCollider->GetEnabled())
+    {
         weaponCollider->SetEnabled(false);
     }
     isKnockback    = true;
@@ -250,9 +251,9 @@ void Soldier::ChangeState()
 
 void Soldier::ApplyKnockback()
 {
-    float3 myPos = parent->GetGlobalTransform().TranslatePart();
-    knockbackDirection = character->GetFrontDirection();
+    float3 myPos         = parent->GetGlobalTransform().TranslatePart();
+    knockbackDirection   = character->GetFrontDirection();
     knockbackDirection.y = 0.0f;
-    if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ; 
+    if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
     knockbackDirection.Normalize();
 }
