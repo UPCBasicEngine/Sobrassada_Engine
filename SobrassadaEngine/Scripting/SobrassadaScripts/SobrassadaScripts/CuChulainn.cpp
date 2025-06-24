@@ -212,7 +212,7 @@ void CuChulainn::HandleState(float deltaTime)
         state    = CharacterStates::IDLE;
         aimTimer = 0.0f;
     }
-    
+
     UpdateDashCooldownUI();
     UpdateUltimateCooldownUI();
 
@@ -228,7 +228,6 @@ void CuChulainn::HandleState(float deltaTime)
              state != CharacterStates::HEAL)
         Move();
 
-    
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
 
     // When finished animation, go back to idle state
@@ -817,8 +816,7 @@ void CuChulainn::UpdateDashCooldownUI()
     const UID readyTex    = 1258786293084191;
     const UID cooldownTex = 1288043360624471;
 
-    dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
-
+    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
 }
 
 void CuChulainn::UpdateUltimateCooldownUI()
@@ -826,7 +824,7 @@ void CuChulainn::UpdateUltimateCooldownUI()
     const UID readyTex    = 1203132322652717;
     const UID cooldownTex = 1297453458525874;
 
-    ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
+    if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
 }
 void CuChulainn::ChargeAttack()
 {
