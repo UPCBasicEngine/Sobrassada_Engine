@@ -12,6 +12,7 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include <random>
 
 Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
@@ -163,22 +164,54 @@ void Soldier::Attack(float deltaTime)
     if (!isAttacking)
     {
         GLOG("ATTACK ENEMY");
-        if (animComponent) animComponent->UseTrigger("attack");
+        if (animComponent)
+        {
+            currentAttackTrigger   = ManageAttackAnimations();
+
+            originalAttackDuration = attackDuration;
+
+            if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
+            {
+                attackDuration = attackHitboxDelay + 2 * attackHitboxDuration + 0.2f + 0.1f;
+            }
+            else
+            {
+                attackDuration = originalAttackDuration;
+            }
+        }
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
     }
     else
     {
+        // Doble attack
+        if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
+        {
+            bool inFirstWindow =
+                attackTimer >= attackHitboxDelay && attackTimer <= attackHitboxDelay + attackHitboxDuration;
+            float secondDelay   = attackHitboxDelay + attackHitboxDuration + 0.2f;
+            bool inSecondWindow = attackTimer >= secondDelay && attackTimer <= secondDelay + attackHitboxDuration;
 
-        // Enable hitbox when animation hits
-        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-            attackTimer <= attackHitboxDelay + attackHitboxDuration)
-        {
-            weaponCollider->SetEnabled(true);
+            if ((inFirstWindow || inSecondWindow) && !weaponCollider->GetEnabled())
+            {
+                weaponCollider->SetEnabled(true);
+            }
+            else if (!inFirstWindow && !inSecondWindow && weaponCollider->GetEnabled())
+            {
+                weaponCollider->SetEnabled(false);
+            }
         }
-        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        else // thrust
         {
-            weaponCollider->SetEnabled(false);
+            if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+                attackTimer <= attackHitboxDelay + attackHitboxDuration)
+            {
+                weaponCollider->SetEnabled(true);
+            }
+            else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+            {
+                weaponCollider->SetEnabled(false);
+            }
         }
 
         // Reset attack state
@@ -204,4 +237,45 @@ void Soldier::ChangeState()
     if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
+}
+
+const char* Soldier::ManageAttackAnimations()
+{
+    const char* attackTrigger = nullptr;
+    if (consecutiveAttack >= 2)
+    {
+        attackTrigger     = "thrust";
+        consecutiveThrust = 1;
+        consecutiveAttack = 0;
+    }
+    else if (consecutiveThrust >= 2)
+    {
+        attackTrigger     = "attack";
+        consecutiveAttack = 1;
+        consecutiveThrust = 0;
+    }
+    else
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_int_distribution<> dis(0, 1);
+        bool chooseAttack1 = dis(gen) == 0;
+
+        if (chooseAttack1)
+        {
+            attackTrigger = "attack";
+            consecutiveAttack++;
+            consecutiveThrust = 0;
+        }
+        else
+        {
+            attackTrigger = "thrust";
+            consecutiveThrust++;
+            consecutiveAttack = 0;
+        }
+    }
+
+    animComponent->UseTrigger(attackTrigger);
+
+    return attackTrigger;
 }

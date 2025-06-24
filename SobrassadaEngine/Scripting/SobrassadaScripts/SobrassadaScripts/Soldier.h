@@ -34,10 +34,15 @@ class Soldier : public Character
     void PatrolAI();
     void ChaseAI();
     void SearchForPlayer();
+    const char* ManageAttackAnimations();
 
   private:
     AIAgentComponent* agentAI  = nullptr;
     SoldierStates currentState = SoldierStates::NONE;
 
     float3 patrolPoint         = float3::zero;
+    int consecutiveAttack     = 0; 
+    int consecutiveThrust     = 0; 
+    const char* currentAttackTrigger = nullptr;
+    float originalAttackDuration     = 0.0f;
 };
