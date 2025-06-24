@@ -18,6 +18,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 
 #include "SDL.h"
@@ -39,6 +40,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
+    fields.push_back({"Ultimate Animation delay", InspectorField::FieldType::Float, &ultimateAnimationDelay, 0.0f, 5.0f}
+    );
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
@@ -236,6 +239,8 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+                return;
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -622,14 +627,24 @@ void CuChulainn::PerformAttack()
     }
     else if (state == CharacterStates::ULTIMATE)
     {
-        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay &&
-            ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration)
+        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(true);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
+                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        {
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
+        }
+        else if (ultimateObject->IsEnabled() &&
+                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+            ultimateTimer = 0.f;
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
