@@ -21,6 +21,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 
+#include "Math/Quat.h"
 #include "SDL.h"
 #include "Wwise_IDs.h"
 
@@ -630,7 +631,11 @@ void CuChulainn::Dash()
     if (dashDecal)
     {
         dashDecal->SetEnabled(true);
-        dashDecal->SetLocalPosition(lastDashStartPos);
+        const float3 scale  = dashDecal->GetLocalTransform().ExtractScale();
+        const Quat rotation = Quat::LookAt(float3::unitY, character->GetFrontDirection(), float3::unitZ, float3::unitY);
+        const float3 pos    = lastDashStartPos + 2.5f * character->GetFrontDirection().Normalized();
+        const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
+        dashDecal->SetLocalTransform(decalTransform);
         dashDecalBufferTimer = dashDecalTimer;
     }
 }
@@ -661,13 +666,11 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
-                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay && ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
         }
-        else if (ultimateObject->IsEnabled() &&
-                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
