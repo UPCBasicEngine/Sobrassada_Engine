@@ -2,7 +2,15 @@
 #include "Script.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
+
 class GameObject;
+
+struct TexPair
+{
+    UID texKeyboard;
+    UID texGamepad;
+};
 
 class OptionsMenuSwitcherScript : public Script
 {
@@ -17,13 +25,14 @@ class OptionsMenuSwitcherScript : public Script
 
 
   private:
-    std::vector<std::string> panelNames = {
-        "OptionsKeyboardPanel", "OptionsControllerPanel", "OptionsAudioPanel", "OptionsVideoPanel"
-    };
+    static const std::unordered_map<std::string, TexPair> panelInput;
+    static const std::vector<std::string> panelNames;
 
+    bool lastKbState = true;
     int currentIndex = 0;
     bool initialized = false;
 
+    void ApplyDeviceTextures(bool usingKb);
     void ShowOnlyCurrentPanel();
     GameObject* FindPanelByName(const std::string& name) const;
 };
