@@ -18,6 +18,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 
 #include "SDL.h"
@@ -39,6 +40,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
+    fields.push_back({"Ultimate Animation delay", InspectorField::FieldType::Float, &ultimateAnimationDelay, 0.0f, 5.0f}
+    );
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
@@ -168,7 +171,7 @@ void CuChulainn::Update(float deltaTime)
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
-    healthImageComponent->ChangeTexture(healthBarTextures[0]);
+    if (healthImageComponent) healthImageComponent->ChangeTexture(healthBarTextures[0]);
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -178,6 +181,7 @@ void CuChulainn::OnDeath()
 void CuChulainn::OnDamageTaken(int amount)
 {
     UpdateHealthBarUI();
+    if (camera) camera->StartShake(0.2f, 0.2f);
 
     if (state == CharacterStates::CHARGING)
     {
@@ -212,7 +216,10 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL)
         Move();
 
     // TODO: Some transition in the dash or idle state, to continue the combo after a dash
@@ -232,6 +239,8 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+                return;
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -538,7 +547,7 @@ void CuChulainn::CheckIsFalling()
     const float verticalSpeed = character->GetRealSpeed().y;
 
     // GLOG("Vertical speed %f", verticalSpeed);
-    if (verticalSpeed <= -2.0f && !character->IsGrounded() && animComponent)
+    if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
     {
         animComponent->UseTrigger("Fall");
         state = CharacterStates::FALL;
@@ -606,7 +615,8 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay && attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+                 attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -617,14 +627,24 @@ void CuChulainn::PerformAttack()
     }
     else if (state == CharacterStates::ULTIMATE)
     {
-        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay &&
-            ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration)
+        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(true);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
+                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        {
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
+        }
+        else if (ultimateObject->IsEnabled() &&
+                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+            ultimateTimer = 0.f;
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -634,7 +654,8 @@ void CuChulainn::PerformAttack()
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() &&
+                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
