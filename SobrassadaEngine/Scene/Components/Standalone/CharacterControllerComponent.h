@@ -30,6 +30,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void Rotate(float rotationDirection, float deltaTime);
     void SetDirection(float3& direction);
     void LookAt(const float3& direction);
+    void MoveTo(float speed);
 
     const float3& GetTargetDirection() const { return targetDirection; }
     const float3& GetFrontDirection() const { return rotateDirection; }
@@ -49,8 +50,11 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void StartDash();
     void EndDash() { isDashing = false; }
 
+    void SetIsRunning(bool running) { isRunning = running; }
+
   private:
     void Dash(float deltaTime);
+    void CheckDashObstacles();
     unsigned int GetClosestPointInNavmesh(
         const float3& searchPos, const float3& searchArea, bool& posOverPoly, float3& closestPoint
     ) const;
@@ -59,6 +63,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     float3 targetDirection       = float3::zero;
     float3 lastPosition          = float3::zero;
 
+    float walkSpeed              = 3.0f;
     float maxSpeed               = 7.0f;
     float maxAngularSpeed        = 0.0f;
     float acceleration           = 10.0f;
@@ -68,9 +73,9 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     dtNavMeshQuery* navMeshQuery = nullptr;
 
-    float gravity                = -9.81f;
+    float gravity                = -30.0f;
     float verticalSpeed          = 0.0f;
-    float maxFallSpeed           = -20.0f;
+    float maxFallSpeed           = -30.0f;
 
     bool inputDown               = true;
     bool isRotating              = false;
@@ -83,8 +88,12 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool isDashing               = false;
     float dashTimeRemaining      = 0.0f;
     float dashSpeed              = 20.0f;
-    float3 dashTarget            = float3::zero;
+    float3 dashDirection         = float3::zero;
     float dashDistance           = 6.0f;
     float dashDuration           = 0.3f;
     bool dashToNavmesh           = false;
+    bool obstacleInDash          = false;
+
+    bool isRunning               = false;
+    bool preciseDash             = true;
 };
