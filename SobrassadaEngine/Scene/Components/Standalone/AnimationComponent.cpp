@@ -345,11 +345,22 @@ void AnimationComponent::RenderEditorInspector()
             if (ImGui::InputText("Payload", buf, IM_ARRAYSIZE(buf)))
                 *trgg = AnimationTrigger(t, TriggerType::SOUND, buf);
 
-            if (ImGui::Button("Delete")) 
-                RemoveTrigger(resource, i);
+            if (ImGui::Button("Delete"))
+            {
+                RemoveTrigger(clipUID, i);
+                ImGui::PopID();
+                break;
+            }
 
+            ImGui::Separator();
             ImGui::PopID();
         }
+
+        if (vec.empty())
+            ImGui::TextDisabled("No triggers yet.");
+        
+        if (ImGui::Button("Add Trigger"))
+            AddSoundTrigger(clipUID, 0.0f, "");
     }
 
     ImGui::Separator();
