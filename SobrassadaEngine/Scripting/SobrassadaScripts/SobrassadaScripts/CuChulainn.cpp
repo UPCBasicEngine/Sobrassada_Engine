@@ -53,8 +53,10 @@ CuChulainn::CuChulainn(GameObject* parent)
     );
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName, 0.0f, 5.0f});
     fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
+    fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
+    fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -442,6 +444,15 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (dashBufferTimer < 0.0f) desiredDash = false;
     }
 
+    // Dash decal
+    dashDecalBufferTimer -= deltaTime;
+    if (dashDecalBufferTimer < 0.0f)
+    {
+        if (dashDecal) dashDecal->SetEnabled(false);
+
+        dashDecalBufferTimer = 0.0f;
+    }
+
     // Melee attack timers
     if (desiredAttack)
     {
@@ -611,6 +622,12 @@ void CuChulainn::Dash()
     isDashing = true;
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
+    if (dashDecal)
+    {
+        dashDecal->SetEnabled(true);
+        dashDecal->SetLocalPosition(lastDashStartPos);
+        dashDecalBufferTimer = dashDecalTimer;
+    }
 }
 
 void CuChulainn::PerformAttack()

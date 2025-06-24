@@ -170,6 +170,9 @@ class CuChulainn : public Character
     GameObject* dashTrail                = nullptr;
     std::string dashDecalName            = "";
     GameObject* dashDecal                = nullptr;
+
+    float dashDecalTimer                 = 5.0f;
+    float dashDecalBufferTimer           = 0.0f;
 };
 
 extern CharacterControllerComponent* character;
