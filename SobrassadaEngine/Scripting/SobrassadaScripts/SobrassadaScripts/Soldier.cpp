@@ -202,35 +202,32 @@ void Soldier::Attack(float deltaTime)
 
     if (!isAttacking)
     {
-        GLOG("ATTACK ENEMY");
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
     }
     else
     {
-        if (!isKnockback)
-        {
-            // Enable hitbox when animation hits
-            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-            if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-                attackTimer <= attackHitboxDelay + attackHitboxDuration)
-            {
-                weaponCollider->SetEnabled(true);
-            }
-            else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
-            {
-                weaponCollider->SetEnabled(false);
-            }
 
-            // Reset attack state
-            if (attackTimer >= attackDuration)
-            {
-                isAttacking   = false;
-                attackCdTimer = attackCooldown;
-                agentAI->ResumeMovement();
-                ChangeState();
-            }
+        // Enable hitbox when animation hits
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+            attackTimer <= attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(true);
+        }
+        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        {
+            weaponCollider->SetEnabled(false);
+        }
+
+        // Reset attack state
+        if (attackTimer >= attackDuration)
+        {
+            isAttacking   = false;
+            attackCdTimer = attackCooldown;
+            agentAI->ResumeMovement();
+            ChangeState();
         }
     }
 }
