@@ -1,12 +1,14 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "CuChulainn.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "InputModule.h"
 #include "MainMenuSelectorScript.h"
+#include "ProjectModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
-#include "GameTimer.h"
 #include "Standalone/UI/ButtonComponent.h"
 
 bool MainMenuSelectorScript::Init()
@@ -95,24 +97,29 @@ void MainMenuSelectorScript::Update(float deltaTime)
             GameObject* parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
             if (parentGO)
             {
-                parentGO->SetEnabledRecursive(false);
+                GameObject* goToDisable = selectedItem;
+                Scene* scene            = AppEngine->GetSceneModule()->GetScene();
+                while (goToDisable && goToDisable->GetName() != "GameOverPanel")
+                {
+                    goToDisable = scene->GetGameObjectByUID(goToDisable->GetParent());
+                }
+                if (goToDisable) goToDisable->SetEnabledRecursive(false);
             }
 
             GameTimer* timer = AppEngine->GetGameTimer();
-            if (timer && timer->IsPaused())
-            {
-                timer->TogglePause();
-            }
+            if (timer) timer->TogglePause();
+
+            if (playerScript) playerScript->Respawn();
+
+            return;
         }
-        else
+        else if (selectedItem->GetName() == "MenuItem_Menu")
         {
-            ButtonComponent* button = selectedItem->GetComponent<ButtonComponent*>();
-            if (button) button->OnClick();
+            std::string path = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "MainMenu.scene";
+            AppEngine->GetSceneModule()->RequestSceneLoad(path);
         }
     }
 }
-
-
 
 void MainMenuSelectorScript::UpdateSelection()
 {

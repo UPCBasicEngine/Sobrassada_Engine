@@ -5,29 +5,26 @@
 
 class GameObject;
 
-class GameOverScript final : public Script
+class GameOverScript : public Script
 {
   public:
     explicit GameOverScript(GameObject* parent) : Script(parent) {}
-    ~GameOverScript() override = default;
-
     bool Init() override;
-    void Update(float deltaTime) override;
+    void Update(float) override;
     void Inspector() override;
-    void Save(rapidjson::Value& state, rapidjson::Document::AllocatorType& alloc) override;
-    void Load(const rapidjson::Value& initialState) override;
-
+    void Save(rapidjson::Value&, rapidjson::Document::AllocatorType&) override;
+    void Load(const rapidjson::Value&) override;
+    void CloneFields(const std::vector<InspectorField>&) override {}
     void OnCollision(GameObject*, const float3, ColliderLayer) override {}
 
-    void TriggerGameOver();
-
   private:
+    void TriggerGameOver();
     void CachePanel();
     void ShowPanel();
     void PauseGame();
 
-    std::string panelToShowName        = "GameOverPanel";
-    std::vector<InspectorField> fields = {
+    std::string panelToShowName = "GameOverPanel";
+    std::vector<InspectorField> fields {
         {"Panel To Show", InspectorField::FieldType::InputText, &panelToShowName}
     };
 

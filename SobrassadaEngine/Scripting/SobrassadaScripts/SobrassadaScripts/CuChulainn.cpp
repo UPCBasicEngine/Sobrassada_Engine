@@ -81,6 +81,7 @@ bool CuChulainn::Init()
         1245070082308559  // 10HP
 
     };
+    UpdateHealthBarUI();
 
     playerScript = this;
 
