@@ -95,6 +95,17 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
 
     App->GetPhysicsModule()->LoadLayerData(&initialState);
 
+    if (initialState.HasMember("tags"))
+    {
+        const rapidjson::Value& dataArray = initialState["tags"];
+
+        for (rapidjson::SizeType i = 0; i < dataArray.Size(); i++)
+        {
+            HashString newTag = HashString(dataArray[i].GetString());
+            CreateTag(std::move(newTag));
+        }
+    }
+
     // Load navmesh from scene.
     if (navmeshUID != INVALID_UID)
     {
@@ -241,6 +252,13 @@ void Scene::Save(
 
     App->GetPhysicsModule()->SaveLayerData(targetState, allocator);
 
+    rapidjson::Value sceneTagsJSON(rapidjson::kArrayType);
+    for (auto& tagPair : tags)
+    {
+        sceneTagsJSON.PushBack(rapidjson::Value(tagPair.first.c_str(), allocator), allocator);
+    }
+    targetState.AddMember("tags", sceneTagsJSON, allocator);
+
     // Serialize GameObjects
     rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
 
@@ -294,11 +312,11 @@ update_status Scene::Update(float deltaTime)
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
 
-    //for (auto& gameObject : gameObjectsContainer)
-    //    gameObject.second->UpdateComponents(deltaTime);
+    // for (auto& gameObject : gameObjectsContainer)
+    //     gameObject.second->UpdateComponents(deltaTime);
 
-     for (auto gameObject : toUpdateGameObjects)
-         gameObject->UpdateComponents(deltaTime);
+    for (auto gameObject : toUpdateGameObjects)
+        gameObject->UpdateComponents(deltaTime);
 
     ImGuiWindow* window = ImGui::FindWindowByName(sceneName.c_str());
     if (window && !(window->Hidden || window->Collapsed)) sceneVisible = true;
@@ -846,6 +864,67 @@ void Scene::DeleteMultiselection()
     ClearGameObjectsToUpdateComponents();
 }
 
+void Scene::CreateTag(HashString&& newTag)
+{
+    if (newTag != emptyString && tags.find(newTag) == tags.end())
+    {
+        tags.insert({std::move(newTag), {}});
+    }
+}
+
+void Scene::DeleteTag(const HashString& tagToDelete)
+{
+    auto tagIterator = tags.find(tagToDelete);
+    if (tagIterator != tags.end())
+    {
+        for (GameObject* gameObject : tagIterator->second)
+        {
+            gameObject->RemoveTag(tagToDelete);
+        }
+
+        tags.erase(tagIterator);
+    }
+}
+
+void Scene::RequestTag(const HashString& requestTag, GameObject* gameObject)
+{
+    auto tagIterator = tags.find(requestTag);
+    if (tagIterator != tags.end() && !gameObject->HasTag(requestTag))
+    {
+        tags[requestTag].push_back(gameObject);
+        gameObject->AddTag(requestTag);
+    }
+}
+
+void Scene::RemoveFromTag(const HashString& requestTag, GameObject* gameObject)
+{
+    auto tagIterator = tags.find(requestTag);
+    if (tagIterator != tags.end() && gameObject->HasTag(requestTag))
+    {
+        std::vector<GameObject*>& gameObjects = tags[requestTag];
+
+        for (auto goIterator = gameObjects.begin(); goIterator != gameObjects.end(); ++goIterator)
+        {
+            if (*goIterator == gameObject)
+            {
+                gameObject->RemoveTag(requestTag);
+                gameObjects.erase(goIterator);
+                return;
+            }
+        }
+    }
+}
+
+const std::vector<GameObject*>* Scene::GetTaggedGameObjects(const HashString& requestTag)
+{
+    if (tags.find(requestTag) != tags.end())
+    {
+        return &tags[requestTag];
+    }
+
+    return nullptr;
+}
+
 UID Scene::GetMultiselectUID() const
 {
     return multiSelectParent->GetUID();
@@ -867,7 +946,7 @@ void Scene::CheckObjectsToUpdate()
 
     for (auto gameObject : toUpdateGameObjects)
         toUpdateGameObjectsSet.insert(gameObject->GetUID());
-    
+
     // ADDING MAIN CAMERA MANUALLY SINCE IS NOT INSIDE ITS OWN FRUSTUM SO NO UPDATES XD
     if (mainCamera && toUpdateGameObjectsSet.find(mainCamera->GetParent()->GetUID()) == toUpdateGameObjectsSet.end())
     {

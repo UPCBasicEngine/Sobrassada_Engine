@@ -176,6 +176,7 @@ template <std::size_t I = 0, typename... Tp>
 
 GameObject::GameObject(const std::string& name) : name(name)
 {
+    tags.reserve(maxTags);
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
 
     uid       = GenerateUID();
@@ -192,6 +193,7 @@ GameObject::GameObject(const std::string& name) : name(name)
 
 GameObject::GameObject(UID parentUID, const std::string& name) : parentUID(parentUID), name(name)
 {
+    tags.reserve(maxTags);
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
 
     uid       = GenerateUID();
@@ -207,6 +209,7 @@ GameObject::GameObject(UID parentUID, const std::string& name) : parentUID(paren
 
 GameObject::GameObject(UID parentUID, const std::string& name, UID uid) : parentUID(parentUID), name(name), uid(uid)
 {
+    tags.reserve(maxTags);
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
 
     localAABB = AABB();
@@ -222,6 +225,8 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     : parentUID(parentUID), name(refObject->name), localTransform(refObject->localTransform),
       globalTransform(refObject->globalTransform)
 {
+    tags.reserve(maxTags);
+
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
     createdComponents.reset();
 
@@ -284,6 +289,17 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("PrefabVersionUID")) prefabVersionUID = initialState["PrefabVersionUID"].GetUint64();
     if (initialState.HasMember("PrefabChildUID")) prefabChildUID = initialState["PrefabChildUID"].GetUint64();
     if (initialState.HasMember("NavmeshValid")) navMeshValid = initialState["NavmeshValid"].GetBool();
+
+    if (initialState.HasMember("tags"))
+    {
+        const rapidjson::Value& dataArray = initialState["tags"];
+
+        for (rapidjson::SizeType i = 0; i < dataArray.Size(); i++)
+        {
+            HashString newTag = HashString(dataArray[i].GetString());
+            App->GetSceneModule()->GetScene()->RequestTag(newTag, this);
+        }
+    }
 
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() &&
         initialState["LocalTransform"].Size() == 16)
@@ -393,6 +409,13 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Enabled", enabled, allocator);
     targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
+
+    rapidjson::Value gameObjectsTags(rapidjson::kArrayType);
+    for (auto& tag : tags)
+    {
+        gameObjectsTags.PushBack(rapidjson::Value(tag.c_str(), allocator), allocator);
+    }
+    targetState.AddMember("tags", gameObjectsTags, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
     if (prefabVersionUID != INVALID_UID) targetState.AddMember("PrefabVersionUID", prefabVersionUID, allocator);
@@ -531,6 +554,109 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
             }
             UpdateNavmeshValidState();
         }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader("Tags"))
+        {
+            // ------ GLOBAL TAG LIST ------
+            ImGui::SeparatorText("Global Tags");
+
+            ImGui::InputText("New Tag Name", newTagName, IM_ARRAYSIZE(newTagName));
+            if (ImGui::Button("Create Tag"))
+            {
+                HashString requestedTag(newTagName);
+                App->GetSceneModule()->GetScene()->CreateTag(std::move(requestedTag));
+                memset(newTagName, 0, sizeof(newTagName));
+            }
+
+            auto& sceneTagMap = App->GetSceneModule()->GetScene()->GetTags();
+            if (ImGui::BeginListBox(
+                    "##SceneTags", ImVec2(-FLT_MIN, ImGui::GetFrameHeightWithSpacing() * sceneTagMap.size())
+                ))
+            {
+                int i = 0;
+                for (auto& tagPair : sceneTagMap)
+                {
+                    if (ImGui::Selectable(tagPair.first.c_str(), selectedGlobalTag == i))
+                    {
+                        selectedGlobalTag = i;
+                        globalSelectedTag = tagPair.first;
+                    }
+
+                    ++i;
+                }
+                ImGui::EndListBox();
+            }
+
+            if (ImGui::Button("Add tag"))
+            {
+                App->GetSceneModule()->GetScene()->RequestTag(globalSelectedTag, this);
+                selectedGlobalTag = -1;
+                globalSelectedTag = HashString("");
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("DELETE GLOBAL TAG!"))
+            {
+                App->GetSceneModule()->GetScene()->DeleteTag(globalSelectedTag);
+                selectedGlobalTag = -1;
+                globalSelectedTag = HashString("");
+            }
+
+            // !!!!!!!!!!!!!!!!!!!!!! TESTING THIS HAS TO BE BE DELETED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (ImGui::Button("TESTING GET TAGS PLEASE DELETE!"))
+            {
+                auto taggedObjects = App->GetSceneModule()->GetScene()->GetTaggedGameObjects(globalSelectedTag);
+                if (taggedObjects)
+                {
+                    GLOG("------- PRINTING %s TAGGED GAME OBJECTS -------", globalSelectedTag.c_str());
+                    for (GameObject* go : *taggedObjects)
+                    {
+                        GLOG("%s, %d", go->GetName().c_str(), go->GetUID());
+                    }
+                }
+
+                selectedGlobalTag = -1;
+                globalSelectedTag = HashString("");
+            }
+            // !!!!!!!!!!!!!!!!!!!!!! TESTING THIS HAS TO BE BE DELETED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            // ------ END GLOBAL TAG LIST ------
+
+            // ------ SELF TAG LIST ------
+            ImGui::SeparatorText("Game Object Tags");
+
+            if (ImGui::BeginListBox(
+                    "##GameObjectsTags", ImVec2(-FLT_MIN, ImGui::GetFrameHeightWithSpacing() * tags.size())
+                ))
+            {
+                int i = 0;
+                for (HashString& currentTag : tags)
+                {
+                    if (ImGui::Selectable(currentTag.c_str(), selectedSelfTag == i))
+                    {
+                        selectedSelfTag = i;
+                    }
+
+                    ++i;
+                }
+                ImGui::EndListBox();
+            }
+
+            if (ImGui::Button("Remove Tag"))
+            {
+                App->GetSceneModule()->GetScene()->RemoveFromTag(tags[selectedSelfTag], this);
+                selectedSelfTag = -1;
+            }
+
+            // ------ END SELF TAG LIST ------
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
         if (ImGui::Button("Add Component"))
         {
@@ -747,6 +873,45 @@ void GameObject::UpdateOpenNodeHierarchy(bool openValue)
             gameObjectToUpdate->UpdateOpenNodeHierarchy(openValue);
             if (gameObjectToUpdate->GetParent() != INVALID_UID)
                 gameObjectsToVisit.push(gameObjectToUpdate->GetParent());
+        }
+    }
+}
+
+bool GameObject::HasTag(const HashString& requestedTag)
+{
+    for (HashString& currentTag : tags)
+    {
+        if (currentTag == requestedTag) return true;
+    }
+
+    return false;
+}
+
+void GameObject::AddTag(const HashString& tag)
+{
+    if (tags.size() > maxTags) return;
+    bool add = true;
+
+    for (HashString& currentTag : tags)
+    {
+        if (currentTag == tag)
+        {
+            add = false;
+            break;
+        }
+    }
+
+    if (add) tags.push_back(tag);
+}
+
+void GameObject::RemoveTag(const HashString& tag)
+{
+    for (auto tagIterator = tags.begin(); tagIterator != tags.end(); ++tagIterator)
+    {
+        if (*tagIterator == tag)
+        {
+            tags.erase(tagIterator);
+            return;
         }
     }
 }

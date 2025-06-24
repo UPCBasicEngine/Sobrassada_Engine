@@ -2,6 +2,7 @@
 
 #include "Globals.h"
 #include "LightsConfig.h"
+#include "HashString.h"
 
 #include "Math/float3x4.h"
 #include "Math/float4x4.h"
@@ -75,6 +76,13 @@ class SOBRASADA_API_ENGINE Scene
     void AddGameObjectToSelection(UID gameObject, UID gameObjectParent);
     void ClearObjectSelection();
     void DeleteMultiselection();
+
+    void CreateTag(HashString&& newTag);
+    void DeleteTag(const HashString& tagToDelete);
+    void RequestTag(const HashString& requestTag, GameObject* gameObject);
+    void RemoveFromTag(const HashString& requestTag, GameObject* gameObject);
+    const std::vector<GameObject*>* GetTaggedGameObjects(const HashString& requestTag); 
+    const std::map<HashString, std::vector<GameObject*>>& GetTags() { return tags; };
 
     const std::string& GetSceneName() const { return sceneName; }
     UID GetSceneUID() const { return sceneUID; }
@@ -176,6 +184,9 @@ class SOBRASADA_API_ENGINE Scene
     std::map<UID, float4x4> selectedGameObjectsOgLocals;
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
+
+    HashString emptyString = HashString("");
+    std::map<HashString, std::vector<GameObject*>> tags;
 
     RenderPass* renderPass = nullptr;
 };
