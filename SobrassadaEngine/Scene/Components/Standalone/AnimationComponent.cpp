@@ -57,6 +57,19 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
     {
         resourceStateMachine = nullptr;
     }
+
+    if (initialState.HasMember("ClipTriggers") && initialState["ClipTriggers"].IsArray())
+    {
+        for (const auto& obj : initialState["ClipTriggers"].GetArray())
+        {
+            UID uid        = obj["ClipUID"].GetUint64();
+            float key      = obj["KeyTime"].GetFloat();
+            TriggerType tp = static_cast<TriggerType>(obj["Type"].GetInt());
+            std::string pl = obj["Payload"].GetString();
+
+            clipTriggers[uid].emplace_back(key, tp, pl);
+        }
+    }
 }
 
 AnimationComponent::~AnimationComponent()
@@ -385,6 +398,8 @@ void AnimationComponent::Clone(const Component* other)
             resourceStateMachine->AddReference();
             currentState = resourceStateMachine->GetDefaultState();
         }
+
+        clipTriggers = otherAnimation->clipTriggers;
     }
     else
     {
@@ -456,6 +471,23 @@ void AnimationComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember(
         "StateMachine", resourceStateMachine != nullptr ? resourceStateMachine->GetUID() : INVALID_UID, allocator
     );
+
+    rapidjson::Value trigArr(rapidjson::kArrayType);
+
+    for (const auto& [uid, list] : clipTriggers)
+    {
+        for (const auto& trgg : list)
+        {
+            rapidjson::Value obj(rapidjson::kObjectType);
+            obj.AddMember("ClipUID", uid, allocator);
+            obj.AddMember("KeyTime", trgg.GetTime(), allocator);
+            obj.AddMember("Type", static_cast<int>(trgg.GetType()), allocator);
+            obj.AddMember("Payload", rapidjson::Value(trgg.GetData().c_str(), allocator), allocator);
+            trigArr.PushBack(obj, allocator);
+        }
+    }
+
+    targetState.AddMember("ClipTriggers", trigArr, allocator);
 }
 
 void AnimationComponent::AddAnimation(UID animationUID)
