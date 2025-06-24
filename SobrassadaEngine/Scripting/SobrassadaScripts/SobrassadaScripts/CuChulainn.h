@@ -102,6 +102,7 @@ class CuChulainn : public Character
 
     float3 lastDashStartPos           = float3::zero;
     bool isDashing                    = false;
+    bool wasDashing                   = false;
     float dashCooldown                = 2.0f;
     float dashTimer                   = 0.0f;
     bool desiredDash                  = false;
@@ -133,8 +134,8 @@ class CuChulainn : public Character
     float deathTimer                  = 0.5f;
     float aimTimer                    = 0.0f;
 
-    std::string aimShadowName    = "";
-    GameObject* aimShadowObject  = nullptr;
+    std::string aimShadowName         = "";
+    GameObject* aimShadowObject       = nullptr;
 
     std::string ultimateName          = "";
     GameObject* ultimateObject        = nullptr;
@@ -164,6 +165,11 @@ class CuChulainn : public Character
     bool desiredTakeMushroom             = false;
     float takeMushroomCdTimer            = 0.0f;
     float takeMushroomCd                 = 0.0f;
+
+    std::string dashTrailName            = "";
+    GameObject* dashTrail                = nullptr;
+    std::string dashDecalName            = "";
+    GameObject* dashDecal                = nullptr;
 };
 
 extern CharacterControllerComponent* character;
