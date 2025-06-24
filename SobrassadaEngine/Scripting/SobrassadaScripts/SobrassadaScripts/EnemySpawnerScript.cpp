@@ -3,13 +3,13 @@
 #include "Application.h"
 #include "EnemySpawnerScript.h"
 #include "GameObject.h"
+#include "Math/float3.h"
+#include "Math/float4x4.h"
 #include "PrefabManager.h"
 #include "ResourcePrefab.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "Standalone/AIAgentComponent.h"
-#include "Math/float4x4.h"
-#include "Math/float3.h"
 
 EnemySpawnerScript::EnemySpawnerScript(GameObject* parent) : Script(parent)
 {
@@ -25,22 +25,31 @@ bool EnemySpawnerScript::Init()
     return true;
 }
 
-void EnemySpawnerScript::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+void EnemySpawnerScript::Update(float deltatime)
 {
+    wasOverlapping   = isOverlappingNow; // remember state of current frame
+    isOverlappingNow = false;            // will be set again by OnCollision()
+}
+
+void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, ColliderLayer layer)
+{
+    isOverlappingNow = true;
+    
     if (spawnOnce && spawned) return;
+    if (wasOverlapping) return;
+
 
     if (prefabUID == INVALID_UID && !prefabUIDStr.empty()) prefabUID = std::stoull(prefabUIDStr);
-
     if (prefabUID == INVALID_UID)
     {
-        //GLOG("EnemySpawner: Prefab not defined");
+        GLOG("EnemySpawner: Prefab UID not set");
         return;
     }
 
     ResourcePrefab* prefab = PrefabManager::LoadPrefab(prefabUID);
     if (!prefab)
     {
-        //GLOG("EnemySpawner: prefab not found %llu", prefabUID);
+        GLOG("EnemySpawner: Could not find prefab %llu", prefabUID);
         return;
     }
 
@@ -52,15 +61,16 @@ void EnemySpawnerScript::OnCollision(GameObject* otherObject, const float3 colli
         float3 offset            = float3(i * 2.0f, 0, 0);
         float4x4 spawnTransform  = baseTransform;
 
-        spawnTransform[0][3]    += offset.x;
-        spawnTransform[1][3]    += offset.y;
-        spawnTransform[2][3]    += offset.z;
+        spawnTransform[0][3] += offset.x;
+        spawnTransform[1][3] += offset.y;
+        spawnTransform[2][3] += offset.z;
 
         scene->LoadPrefab(prefabUID, prefab, spawnTransform, true);
     }
 
-    //GLOG("EnemySpawner: number instances %d of the prefab %llu", spawnAmount, prefabUID);
-    spawned = true;
+    //GLOG("EnemySpawner: Spawned %d enemies from prefab %llu", spawnAmount, prefabUID);
+
+    if (spawnOnce) spawned = true;
 }
 
 

@@ -12,7 +12,7 @@ class EnemySpawnerScript : public Script
     ~EnemySpawnerScript() noexcept override { parent = nullptr; }
 
     bool Init() override;
-    void Update(float deltaTime) override {}
+    void Update(float deltaTime) override;
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
     void Save(rapidjson::Value& tgt, rapidjson::Document::AllocatorType& al);
@@ -23,7 +23,11 @@ class EnemySpawnerScript : public Script
     std::string prefabUIDStr = ""; // Enemy UID
     UID prefabUID            = INVALID_UID;
 
+ 
     bool spawnOnce           = false;
     bool spawned             = false;
     int spawnAmount          = 1;
+
+    bool wasOverlapping      = false; // inside during previous frame
+    bool isOverlappingNow    = false; // inside at least once this frame
 };
