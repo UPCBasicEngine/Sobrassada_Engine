@@ -12,6 +12,7 @@
 class ResourceAnimation;
 class AnimController;
 class GameObject;
+class AnimationTrigger;
 
 class SOBRASADA_API_ENGINE AnimationComponent : public Component
 {

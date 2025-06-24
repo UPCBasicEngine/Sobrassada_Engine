@@ -15,6 +15,8 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
+#include "Animation/AnimationTrigger.h"
+
 
 #include "Math/Quat.h"
 #include "imgui.h"
@@ -547,15 +549,16 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
 
 void AnimationComponent::AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName)
 {
-    //TODO
+    clipTriggers[clipUID].emplace_back(atSeconds, TriggerType::SOUND, eventName);
 }
 
 void AnimationComponent::RemoveTrigger(UID clipUID, size_t index)
 {
-    //TODO
+    if (clipTriggers.count(clipUID) && index < clipTriggers[clipUID].size())
+        clipTriggers[clipUID].erase(clipTriggers[clipUID].begin() + index);
 }
 
 void AnimationComponent::ClearTriggers(UID clipUID)
 {
-    //TODO
+    clipTriggers[clipUID].clear();
 }
