@@ -37,11 +37,10 @@ void PauseMenuScript::Update(float deltaTime)
         bool newState = !cachedTarget->IsEnabled();
         cachedTarget->SetEnabledRecursive(newState);
 
-        GameTimer* gameTimer = AppEngine->GetGameTimer();
-        if (gameTimer)
-        {
-            gameTimer->TogglePause();
-        }
+        if (newState)
+            cachedTarget->UpdateTransformForGOBranch();
+
+        if (GameTimer* gameTimer = AppEngine->GetGameTimer()) gameTimer->TogglePause();
     }
 }
 

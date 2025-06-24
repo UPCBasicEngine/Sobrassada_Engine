@@ -50,11 +50,10 @@ void GameOverScript::ShowPanel()
 {
     CachePanel();
     if (!cachedTarget) return;
-    cachedTarget->UpdateMobilityHierarchy(DYNAMIC);
-    cachedTarget->SetEnabledRecursive(true); 
-    cachedTarget->UpdateTransformForGOBranch(); 
-    cachedTarget->InitHierarchy();              
+    cachedTarget->SetEnabledRecursive(true);
+    cachedTarget->UpdateTransformForGOBranch();
 }
+
 
 
 void GameOverScript::PauseGame()

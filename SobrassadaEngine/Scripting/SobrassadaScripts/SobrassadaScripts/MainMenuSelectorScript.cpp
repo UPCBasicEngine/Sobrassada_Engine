@@ -13,6 +13,10 @@
 
 bool MainMenuSelectorScript::Init()
 {
+    menuItems.clear();
+    arrowImages.clear();
+    selectedIndex                    = 0;
+
     const std::vector<UID>& children = parent->GetChildren();
     for (UID childUID : children)
     {
