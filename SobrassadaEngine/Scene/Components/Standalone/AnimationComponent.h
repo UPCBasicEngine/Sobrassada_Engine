@@ -53,6 +53,8 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
 
   private:
     void CheckTriggers();
+    void ReleaseClipTriggers(UID clipUID);
+    void ReleaseAllTriggers();
 
   private:
     UID resource                               = INVALID_UID;
@@ -65,7 +67,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
 
     std::unordered_map<HashString, GameObject*> boneMapping;
     std::map<std::string, float4x4> bindPoseTransforms;
-    std::unordered_map<UID, std::vector<AnimationTrigger>> clipTriggers;
+    std::unordered_map<UID, std::vector<AnimationTrigger*>> clipTriggers;
 
     float lastTime          = 0.0f;
     float animationDuration = 0.0f;

@@ -17,6 +17,7 @@ public:
 
     float GetTime() const { return keyTime; }
     void SetTime(float t) { keyTime = t; }
+    void SetType(TriggerType t) { type = t; }
 
     TriggerType GetType() const { return type; }
     const std::string& GetData() const { return payload; }

@@ -67,14 +67,14 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
             TriggerType tp = static_cast<TriggerType>(obj["Type"].GetInt());
             std::string pl = obj["Payload"].GetString();
 
-            clipTriggers[uid].emplace_back(key, tp, pl);
+            clipTriggers[uid].push_back(new AnimationTrigger(key, tp, pl));
         }
     }
 }
 
 AnimationComponent::~AnimationComponent()
 {
-
+    ReleaseAllTriggers();
     delete animController;
     App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 }
@@ -124,8 +124,8 @@ void AnimationComponent::OnPlay(bool isTransition)
         else animController->Play(resource, true, defaultTime);
 
         lastTime = 0.0f;
-        for (auto& trgg : clipTriggers[resource])
-            trgg.Reset();
+        for (AnimationTrigger* trgg : clipTriggers[resource])
+            trgg->Reset();
     }
 }
 
@@ -321,6 +321,37 @@ void AnimationComponent::RenderEditorInspector()
         }
     }
 
+    if (ImGui::CollapsingHeader("Animation Triggers", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        UID clipUID                        = resource;
+        std::vector<AnimationTrigger*>& vec = clipTriggers[resource]; 
+        for (size_t i = 0; i < vec.size(); ++i)
+        {
+            AnimationTrigger* trgg = vec[i];
+            ImGui::PushID(static_cast<int>(i));
+
+            //Seconds inside clip
+            float t = trgg->GetTime();
+            if (ImGui::SliderFloat("Time", &t, 0.f, currentAnimResource->GetDuration(), "%.2f")) 
+                trgg->SetTime(t);
+
+            const char* types[] = {"Sound" /* Rest of different triggers */};
+            int currentType     = static_cast<int>(trgg->GetType());
+            if (ImGui::Combo("Type", &currentType, types, IM_ARRAYSIZE(types)))
+                trgg->SetType(static_cast<TriggerType>(currentType));
+
+            char buf[128];
+            strncpy_s(buf, trgg->GetData().c_str(), sizeof(buf));
+            if (ImGui::InputText("Payload", buf, IM_ARRAYSIZE(buf)))
+                *trgg = AnimationTrigger(t, TriggerType::SOUND, buf);
+
+            if (ImGui::Button("Delete")) 
+                RemoveTrigger(resource, i);
+
+            ImGui::PopID();
+        }
+    }
+
     ImGui::Separator();
     ImGui::Text("Associated State Machine");
 
@@ -399,7 +430,21 @@ void AnimationComponent::Clone(const Component* other)
             currentState = resourceStateMachine->GetDefaultState();
         }
 
-        clipTriggers = otherAnimation->clipTriggers;
+        clipTriggers.clear(); 
+
+        for (const auto& [uid, srcList] : otherAnimation->clipTriggers)
+        {
+            auto& dstList = clipTriggers[uid];
+            dstList.reserve(srcList.size());
+
+            for (const AnimationTrigger* srcTrig : srcList)
+            {
+                AnimationTrigger* newTrig = new AnimationTrigger(*srcTrig);
+
+                newTrig->Reset();
+                dstList.push_back(newTrig);
+            }
+        }
     }
     else
     {
@@ -476,13 +521,13 @@ void AnimationComponent::Save(rapidjson::Value& targetState, rapidjson::Document
 
     for (const auto& [uid, list] : clipTriggers)
     {
-        for (const auto& trgg : list)
+        for (const AnimationTrigger* trgg : list)
         {
             rapidjson::Value obj(rapidjson::kObjectType);
             obj.AddMember("ClipUID", uid, allocator);
-            obj.AddMember("KeyTime", trgg.GetTime(), allocator);
-            obj.AddMember("Type", static_cast<int>(trgg.GetType()), allocator);
-            obj.AddMember("Payload", rapidjson::Value(trgg.GetData().c_str(), allocator), allocator);
+            obj.AddMember("KeyTime", trgg->GetTime(), allocator);
+            obj.AddMember("Type", static_cast<int>(trgg->GetType()), allocator);
+            obj.AddMember("Payload", rapidjson::Value(trgg->GetData().c_str(), allocator), allocator);
             trigArr.PushBack(obj, allocator);
         }
     }
@@ -588,18 +633,24 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
 
 void AnimationComponent::AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName)
 {
-    clipTriggers[clipUID].emplace_back(atSeconds, TriggerType::SOUND, eventName);
+    clipTriggers[clipUID].push_back(new AnimationTrigger(atSeconds, TriggerType::SOUND, eventName));
 }
 
 void AnimationComponent::RemoveTrigger(UID clipUID, size_t index)
 {
-    if (clipTriggers.count(clipUID) && index < clipTriggers[clipUID].size())
-        clipTriggers[clipUID].erase(clipTriggers[clipUID].begin() + index);
+    auto it = clipTriggers.find(clipUID);
+    if (it == clipTriggers.end()) return;
+
+    auto& vec = it->second;
+    if (index >= vec.size()) return;
+
+    delete vec[index];
+    vec.erase(vec.begin() + index);
 }
 
 void AnimationComponent::ClearTriggers(UID clipUID)
 {
-    clipTriggers[clipUID].clear();
+    ReleaseClipTriggers(clipUID);
 }
 
 void AnimationComponent::CheckTriggers()
@@ -607,16 +658,36 @@ void AnimationComponent::CheckTriggers()
     if (!currentAnimResource) return;
 
     UID clipUID = currentAnimResource->GetUID();
-    std::vector<AnimationTrigger>& vec   = clipTriggers[clipUID];
+    std::vector<AnimationTrigger*>& vec   = clipTriggers[clipUID];
     float now   = animController->GetTime();
     bool looped = now < lastTime;
 
-    for (AnimationTrigger& trgg : vec)
+    for (AnimationTrigger* trgg : vec)
     {
-        if (trgg.Check(lastTime, now, looped))
+        if (trgg->Check(lastTime, now, looped))
         {
-            if (trgg.GetType() == TriggerType::SOUND) 
-                App->GetAudioModule()->EmitEvent(trgg.GetData(), GetParentUID());
+            if (trgg->GetType() == TriggerType::SOUND) 
+                App->GetAudioModule()->EmitEvent(trgg->GetData(), GetParentUID());
         }
     }
+
+    lastTime = now;
+}
+
+void AnimationComponent::ReleaseClipTriggers(UID clipUID)
+{
+    auto it = clipTriggers.find(clipUID);
+    if (it == clipTriggers.end()) return;
+
+    for (AnimationTrigger* t : it->second)
+        delete t;
+    it->second.clear();
+}
+
+void AnimationComponent::ReleaseAllTriggers()
+{
+    for (auto& [uid, vec] : clipTriggers)
+        for (AnimationTrigger* t : vec)
+            delete t;
+    clipTriggers.clear();
 }
