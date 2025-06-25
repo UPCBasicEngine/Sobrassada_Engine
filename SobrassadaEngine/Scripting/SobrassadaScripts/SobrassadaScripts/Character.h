@@ -84,7 +84,7 @@ class Character : public Script
     float attackHitboxDuration                  = 0.0f;
 
     float invulnerabilityTimer                  = 0.0f;
-    const float invulnerableDuration            = 0.2f;
+    const float invulnerableDuration            = 0.4f;
 
     bool desiredHeal                            = false;
     float healCooldown                          = 1.0f;
