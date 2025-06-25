@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
@@ -18,6 +19,8 @@ Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
+    fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
+    fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
     fields.push_back({"Second Attack Delay", InspectorField::FieldType::Float, &secondAttackDelay, 0.0f, 1.0f});
 }
 
@@ -48,7 +51,35 @@ bool Soldier::Init()
 void Soldier::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+
+    if (isKnockback)
+    {
+        knockbackTimer -= deltaTime;
+        agentAI->MoveTo(knockbackForce, knockbackDirection);
+        if (knockbackTimer <= 0.0f)
+        {
+            isKnockback = false;
+            agentAI->ResetSpeed();
+            agentAI->ResetAngularSpeed();
+            ChangeState();
+        }
+        return;
+    }
+
     Character::Update(deltaTime);
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        const std::string life      = "Health: " + std::to_string(currentHealth);
+        const std::string animState = "Anim state: " + stateName.GetString();
+
+        std::vector<std::pair<std::string, float2>> logs {
+            {life,      float2(-50.0f, -140.0f)},
+            {animState, float2(-80.0f, -160.0f)},
+        };
+
+        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
+    }
 }
 
 void Soldier::OnDeath()
@@ -60,8 +91,16 @@ void Soldier::OnDeath()
 
 void Soldier::OnDamageTaken(int amount)
 {
-    // TODO: play soldier take damage sound
-    // TODO: particles? and animation
+    isAttacking = false;
+    attackTimer = 0.0f;
+    if (weaponCollider && weaponCollider->GetEnabled())
+    {
+        weaponCollider->SetEnabled(false);
+    }
+    isKnockback    = true;
+    knockbackTimer = knockbackTime;
+    ApplyKnockback();
+    if (animComponent) animComponent->UseTrigger("idle");
 }
 
 void Soldier::PerformAttack()
@@ -87,6 +126,7 @@ void Soldier::HandleState(float deltaTime)
         animComponent->UseTrigger("run");
         break;
     case SoldierStates::CHASE:
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         animComponent->UseTrigger("run");
         ChaseAI();
         break;
@@ -189,6 +229,7 @@ void Soldier::Attack(float deltaTime)
     }
     else
     {
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         // Doble attack
         if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
         {
@@ -244,18 +285,27 @@ void Soldier::ChangeState()
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
 }
 
+void Soldier::ApplyKnockback()
+{
+    float3 myPos         = parent->GetGlobalTransform().TranslatePart();
+    knockbackDirection   = character->GetFrontDirection();
+    knockbackDirection.y = 0.0f;
+    if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
+    knockbackDirection.Normalize();
+}
+
 const char* Soldier::ManageAttackAnimations()
 {
     const char* attackTrigger = nullptr;
     if (consecutiveAttack >= 2)
     {
-        attackTrigger     = "thrust";
+        attackTrigger = "thrust";
         consecutiveThrust = 1;
         consecutiveAttack = 0;
     }
     else if (consecutiveThrust >= 2)
     {
-        attackTrigger     = "attack";
+        attackTrigger = "attack";
         consecutiveAttack = 1;
         consecutiveThrust = 0;
     }

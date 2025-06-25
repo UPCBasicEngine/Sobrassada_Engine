@@ -13,12 +13,13 @@ layout(location=1) uniform vec3 cameraUpVector;
 layout(location=2) uniform mat4 VP;
 layout(location=3) uniform float currentFrame;
 layout(location=4) uniform vec2 tileSize;
+layout(location=5) uniform float colorIntensity;
 
 flat out vec4 fragParticleColor;
 out vec2 uv;
 out vec2 uvNext;
 flat out float blendFactor;
-
+flat out float fragColorIntensity;
 void main()
 {
 
@@ -42,7 +43,8 @@ void main()
     uvNext = vec2(UN, VN);
 
     fragParticleColor = particleColor;
-
+    fragColorIntensity = colorIntensity;
+    
     const mat3 zRotation = mat3(
         cos(rotation), -sin(rotation), 0.f, 
         sin(rotation), cos(rotation), 0.f, 

@@ -24,6 +24,7 @@ class AreaAddon : public ParticleAddon
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
     void RenderDebug(GameObject* parent) override;
+    void Duplicate(ParticleAddon* reference) override;
 
     void UpdateShapesTransforms(const float4x4& globalTransform);
     void AssignPositionDirection(Particle& particle);

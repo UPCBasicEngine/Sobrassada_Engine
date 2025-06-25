@@ -10,6 +10,7 @@
 #include "ResourceNavmesh.h"
 #include "SceneModule.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "DetourNavMeshQuery.h"
 
 #include "DetourCrowd.h"
 
@@ -445,4 +446,24 @@ unsigned int AIAgentComponent::GetClosestPointInNavmesh(
     closestPoint     = {closest[0], closest[1], closest[2]};
 
     return status;
+}
+
+void AIAgentComponent::MoveTo(float distance, float3 rotateDirection)
+{
+    float deltaTime          = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
+    const float3& currentPos = parent->GetGlobalTransform().TranslatePart();
+    const float3 offsetXZ    = rotateDirection * distance * deltaTime;
+    const float3 desiredPos  = currentPos + offsetXZ;
+
+    const float3 searchArea  = {1.0f, 1.0f, 1.0f};
+    float3 closestPoint      = float3::zero;
+    bool posOverPoly         = false;
+    dtStatus status          = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
+
+    if (!dtStatusSucceed(status)) return;
+
+    // Prevent huge changes in the y pos
+    if (fabs(closestPoint.y - currentPos.y) > 0.5f) return;
+
+    SetPosition(closestPoint - parent->GetParentGlobalTransform().TranslatePart());
 }
