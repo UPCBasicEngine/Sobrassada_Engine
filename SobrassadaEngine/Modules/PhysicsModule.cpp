@@ -141,10 +141,6 @@ update_status PhysicsModule::PreUpdate(float time)
                     firstUserPointer.onCollisionExitCallback->Call(
                         secondUserPointer.collider->GetParent(), secondUserPointer.layer
                     );
-                if (secondUserPointer.generateCallback && secondUserPointer.collider && firstUserPointer.collider)
-                    secondUserPointer.onCollisionExitCallback->Call(
-                        firstUserPointer.collider->GetParent(), firstUserPointer.layer
-                    );
             }
         }
     }
@@ -213,7 +209,7 @@ void PhysicsModule::CreateCubeRigidBody(CubeColliderComponent* colliderComponent
     newRigidBody->setUserPointer(&colliderComponent->userPointer);
     collisionObjects[colliderComponent->GetParentUID()] = colliderComponent->userPointer;
 
-    colliderComponent->rigidBody = newRigidBody;
+    colliderComponent->rigidBody                        = newRigidBody;
 
     AddRigidBody(newRigidBody, colliderComponent->colliderType, colliderComponent->layer);
 }
@@ -257,7 +253,7 @@ void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderCompo
     newRigidBody->setUserPointer(&colliderComponent->userPointer);
     collisionObjects[colliderComponent->GetParentUID()] = colliderComponent->userPointer;
 
-    colliderComponent->rigidBody = newRigidBody;
+    colliderComponent->rigidBody                        = newRigidBody;
 
     AddRigidBody(newRigidBody, colliderComponent->colliderType, colliderComponent->layer);
 }
@@ -301,7 +297,7 @@ void PhysicsModule::CreateCapsuleRigidBody(CapsuleColliderComponent* colliderCom
     newRigidBody->setUserPointer(&colliderComponent->userPointer);
     collisionObjects[colliderComponent->GetParentUID()] = colliderComponent->userPointer;
 
-    colliderComponent->rigidBody = newRigidBody;
+    colliderComponent->rigidBody                        = newRigidBody;
 
     AddRigidBody(newRigidBody, colliderComponent->colliderType, colliderComponent->layer);
 }

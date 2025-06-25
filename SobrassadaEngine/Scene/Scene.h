@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Globals.h"
-#include "LightsConfig.h"
 #include "HashString.h"
+#include "LightsConfig.h"
 
 #include "Math/float3x4.h"
 #include "Math/float4x4.h"
@@ -81,7 +81,7 @@ class SOBRASADA_API_ENGINE Scene
     void DeleteTag(const HashString& tagToDelete);
     void RequestTag(const HashString& requestTag, GameObject* gameObject);
     void RemoveFromTag(const HashString& requestTag, GameObject* gameObject);
-    const std::vector<GameObject*>* GetTaggedGameObjects(const HashString& requestTag); 
+    const std::vector<GameObject*>* GetTaggedGameObjects(const HashString& requestTag);
     const std::map<HashString, std::vector<GameObject*>>& GetTags() { return tags; };
 
     const std::string& GetSceneName() const { return sceneName; }
@@ -134,9 +134,15 @@ class SOBRASADA_API_ENGINE Scene
     void SetStaticModified() { staticModified = true; }
     void SetDynamicModified() { dynamicModified = true; }
     void SetMultiselectPosition(const float3& newPosition);
+
     void CheckObjectsToUpdate();
     void ClearObjectsToUpdate();
     void CheckObjectsInFrustum(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
+    void SetPlayerPosition(const HashString& newPlayerLocation)
+    {
+        playerLocation = newPlayerLocation;
+        GLOG("Player entered: %s", playerLocation.c_str());
+    }
 
     bool isSceneLoaded = false;
 
@@ -185,7 +191,8 @@ class SOBRASADA_API_ENGINE Scene
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
 
-    HashString emptyString = HashString("");
+    HashString emptyString    = HashString("");
+    HashString playerLocation = HashString("");
     std::map<HashString, std::vector<GameObject*>> tags;
 
     RenderPass* renderPass = nullptr;

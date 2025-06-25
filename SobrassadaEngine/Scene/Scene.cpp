@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "Scene.h"
 
 #include "Application.h"
 #include "BatchManager.h"
@@ -952,11 +953,19 @@ void Scene::CheckObjectsToUpdate()
     for (auto gameObject : toUpdateGameObjects)
         toUpdateGameObjectsSet.insert(gameObject->GetUID());
 
-    // ADDING MAIN CAMERA MANUALLY SINCE IS NOT INSIDE ITS OWN FRUSTUM SO NO UPDATES XD
-    if (mainCamera && toUpdateGameObjectsSet.find(mainCamera->GetParent()->GetUID()) == toUpdateGameObjectsSet.end())
+
+    GameObject* camera = GetGameObjectByName("Camera");
+    if (camera && toUpdateGameObjectsSet.find(camera->GetUID()) == toUpdateGameObjectsSet.end())
     {
-        toUpdateGameObjects.push_back(mainCamera->GetParent());
-        toUpdateGameObjectsSet.insert(mainCamera->GetParent()->GetUID());
+        toUpdateGameObjects.push_back(camera);
+        toUpdateGameObjectsSet.insert(camera->GetUID());
+    }
+    GameObject* cameraParent = GetGameObjectByUID(camera->GetParent());
+
+    if (toUpdateGameObjectsSet.find(cameraParent->GetUID()) == toUpdateGameObjectsSet.end())
+    {
+        toUpdateGameObjects.push_back(cameraParent);
+        toUpdateGameObjectsSet.insert(cameraParent->GetUID());
     }
 }
 

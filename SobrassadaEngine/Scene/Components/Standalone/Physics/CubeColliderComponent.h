@@ -38,6 +38,7 @@ class CubeColliderComponent : public Component
 
   private:
     void CalculateCollider();
+    void RecalculateLocalAABB();
 
   public:
     bool generateCallback         = true;

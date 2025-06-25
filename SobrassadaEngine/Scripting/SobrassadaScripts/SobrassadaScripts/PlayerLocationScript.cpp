@@ -20,10 +20,10 @@ bool PlayerLocationScript::Init()
 
 void PlayerLocationScript::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
-
+    AppEngine->GetSceneModule()->GetScene()->SetPlayerPosition(locationTag);
 }
 
 void PlayerLocationScript::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
 {
-
+    AppEngine->GetSceneModule()->GetScene()->SetPlayerPosition(HashString(""));
 }
