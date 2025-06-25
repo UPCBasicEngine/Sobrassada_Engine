@@ -267,7 +267,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
-            meleeVfxObject->SetEnabled(false);
+            if(meleeVfxObject)meleeVfxObject->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
