@@ -65,7 +65,7 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
             UID uid        = obj["ClipUID"].GetUint64();
             float key      = obj["KeyTime"].GetFloat();
             TriggerType tp = static_cast<TriggerType>(obj["Type"].GetInt());
-            std::string pl = obj["Payload"].GetString();
+            std::string pl = obj["EventName"].GetString();
 
             clipTriggers[uid].push_back(new AnimationTrigger(key, tp, pl));
         }
@@ -340,10 +340,11 @@ void AnimationComponent::RenderEditorInspector()
             if (ImGui::Combo("Type", &currentType, types, IM_ARRAYSIZE(types)))
                 trgg->SetType(static_cast<TriggerType>(currentType));
 
-            char buf[128];
-            strncpy_s(buf, trgg->GetData().c_str(), sizeof(buf));
-            if (ImGui::InputText("Payload", buf, IM_ARRAYSIZE(buf)))
-                *trgg = AnimationTrigger(t, TriggerType::SOUND, buf);
+            //char buf[128];
+            //strncpy_s(buf, trgg->GetData().c_str(), sizeof(buf));
+            //if (ImGui::InputText("TriggerName", buf, IM_ARRAYSIZE(buf)))
+            //    *trgg = AnimationTrigger(t, TriggerType::SOUND, buf);
+
 
             if (ImGui::Button("Delete"))
             {
@@ -421,6 +422,82 @@ void AnimationComponent::RenderEditorInspector()
             currentTime = 0.0f;
         }
     }
+}
+
+void AnimationComponent::DrawTriggerInspector()
+{
+    UID clipUID                         = resource;
+    std::vector<AnimationTrigger*>& vec = clipTriggers[resource];
+
+    const auto& eventNames              = App->GetAudioModule()->GetEventNames();
+    if (ImGui::Button("Add Trigger"))
+    {
+        const std::string& defName = eventNames.empty() ? std::string() : eventNames.front();
+
+        AddSoundTrigger(clipUID, 0.f, defName); //Sound by default
+    }
+
+    if (vec.empty())
+    {
+        ImGui::TextDisabled("No triggers yet.");
+        return;
+    }
+
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+        AnimationTrigger* trgg = vec[i];
+        ImGui::PushID(static_cast<int>(i));
+
+        // Seconds inside clip
+        float t = trgg->GetTime();
+        if (ImGui::SliderFloat("Time", &t, 0.f, currentAnimResource->GetDuration(), "%.2f")) trgg->SetTime(t);
+
+        const char* types[] = {"Sound" /* Rest of different triggers */};
+        int currentType     = static_cast<int>(trgg->GetType());
+        if (ImGui::Combo("Type", &currentType, types, IM_ARRAYSIZE(types)))
+            trgg->SetType(static_cast<TriggerType>(currentType));
+
+        switch (trgg->GetType())
+        {
+        case TriggerType::SOUND:
+        {
+            static std::vector<const char*> cstrs;
+            cstrs.clear();
+            for (const std::string& s : eventNames)
+                cstrs.push_back(s.c_str());
+
+            int sel = 0;
+            for (size_t n = 0; n < eventNames.size(); ++n)
+                if (eventNames[n] == trgg->GetName())
+                {
+                    sel = static_cast<int>(n);
+                    break;
+                }
+
+            if (ImGui::Combo("Sound Event", &sel, cstrs.data(), static_cast<int>(cstrs.size())))
+            {
+                trgg->SetName(eventNames[sel]);
+            }
+            break;
+        }
+            // rest of events
+        }
+
+        if (ImGui::Button("Delete"))
+        {
+            RemoveTrigger(clipUID, i);
+            ImGui::PopID();
+            break;
+        }
+
+        ImGui::Separator();
+        ImGui::PopID();
+    }
+
+    
+
+
+    
 }
 
 void AnimationComponent::Clone(const Component* other)
@@ -538,7 +615,7 @@ void AnimationComponent::Save(rapidjson::Value& targetState, rapidjson::Document
             obj.AddMember("ClipUID", uid, allocator);
             obj.AddMember("KeyTime", trgg->GetTime(), allocator);
             obj.AddMember("Type", static_cast<int>(trgg->GetType()), allocator);
-            obj.AddMember("Payload", rapidjson::Value(trgg->GetData().c_str(), allocator), allocator);
+            obj.AddMember("EventName", rapidjson::Value(trgg->GetName().c_str(), allocator), allocator);
             trigArr.PushBack(obj, allocator);
         }
     }
@@ -678,7 +755,7 @@ void AnimationComponent::CheckTriggers()
         if (trgg->Check(lastTime, now, looped))
         {
             if (trgg->GetType() == TriggerType::SOUND) 
-                App->GetAudioModule()->EmitEvent(trgg->GetData(), GetParentUID());
+                App->GetAudioModule()->EmitEvent(trgg->GetName(), GetParentUID());
         }
     }
 

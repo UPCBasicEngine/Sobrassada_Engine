@@ -27,6 +27,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
+    void DrawTriggerInspector();
 
     void OnPlay(bool isTransition);
     void OnStop();

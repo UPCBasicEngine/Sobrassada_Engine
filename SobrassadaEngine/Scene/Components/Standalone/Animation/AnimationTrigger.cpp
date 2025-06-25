@@ -1,7 +1,7 @@
 #include "AnimationTrigger.h"
 
-AnimationTrigger::AnimationTrigger(float atTime, TriggerType type, const std::string& payload)
-    : keyTime(atTime), type(type), payload(payload)
+AnimationTrigger::AnimationTrigger(float atTime, TriggerType type, const std::string& eventName)
+    : keyTime(atTime), type(type), eventName(eventName)
 {
 }
 

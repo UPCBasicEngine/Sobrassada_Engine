@@ -349,6 +349,9 @@ void AudioModule::ParseEvents()
             const std::string id          = event["Id"].GetString();
 
             eventsMap.insert({name, static_cast<uint32_t>(std::stoul(id))});
+
+            if (std::find(eventNames.begin(), eventNames.end(), name) == eventNames.end())
+                eventNames.push_back(name);
         }
     }
     else
