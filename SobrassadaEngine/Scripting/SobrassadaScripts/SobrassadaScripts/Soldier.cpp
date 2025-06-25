@@ -76,6 +76,11 @@ void Soldier::Update(float deltaTime)
     }
 }
 
+void Soldier::OnPlayerExitLocation()
+{
+    currentState = SoldierStates::PATROL;
+}
+
 void Soldier::OnDeath()
 {
     // TODO: include death sound for the character
@@ -143,8 +148,12 @@ void Soldier::PatrolAI()
 {
     if (!playerScript->IsDead())
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = SoldierStates::CHASE;
-        else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = SoldierStates::BASIC_ATTACK;
+        const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+        bool playerInLocation            = parent->HasTag(playerLocation);
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
+            currentState = SoldierStates::CHASE;
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
+            currentState = SoldierStates::BASIC_ATTACK;
     }
 
     bool valid = false;

@@ -274,6 +274,13 @@ GameObject::GameObject(const rapidjson::Value& initialState) : uid(initialState[
 
 GameObject::~GameObject()
 {
+    // REMOVE FROM TAGS REMOVES IT FROM "tags"
+    std::vector<HashString> tagsCopy = tags;
+    for (int i = 0; i < tagsCopy.size(); ++i)
+    {
+        App->GetSceneModule()->GetScene()->RemoveFromTag(tags[i], this);
+    }
+
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
 }
 
@@ -297,16 +304,16 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("PrefabChildUID")) prefabChildUID = initialState["PrefabChildUID"].GetUint64();
     if (initialState.HasMember("NavmeshValid")) navMeshValid = initialState["NavmeshValid"].GetBool();
 
-    if (initialState.HasMember("tags"))
-    {
-        const rapidjson::Value& dataArray = initialState["tags"];
+    //if (initialState.HasMember("tags"))
+    //{
+    //    const rapidjson::Value& dataArray = initialState["tags"];
 
-        for (rapidjson::SizeType i = 0; i < dataArray.Size(); i++)
-        {
-            HashString newTag = HashString(dataArray[i].GetString());
-            App->GetSceneModule()->GetScene()->RequestTag(newTag, this);
-        }
-    }
+    //    for (rapidjson::SizeType i = 0; i < dataArray.Size(); i++)
+    //    {
+    //        HashString newTag = HashString(dataArray[i].GetString());
+    //        App->GetSceneModule()->GetScene()->RequestTag(newTag, this);
+    //    }
+    //}
 
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() &&
         initialState["LocalTransform"].Size() == 16)

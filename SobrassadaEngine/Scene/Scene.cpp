@@ -1,5 +1,4 @@
 #include "Scene.h"
-#include "Scene.h"
 
 #include "Application.h"
 #include "BatchManager.h"
@@ -96,17 +95,6 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
 
     App->GetPhysicsModule()->LoadLayerData(&initialState);
 
-    if (initialState.HasMember("tags"))
-    {
-        const rapidjson::Value& dataArray = initialState["tags"];
-
-        for (rapidjson::SizeType i = 0; i < dataArray.Size(); i++)
-        {
-            HashString newTag = HashString(dataArray[i].GetString());
-            CreateTag(std::move(newTag));
-        }
-    }
-
     // Load navmesh from scene.
     if (navmeshUID != INVALID_UID)
     {
@@ -139,6 +127,23 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
     }
 
     renderPass = new RenderPass();
+
+    if (initialState.HasMember("tags") && initialState.HasMember("tagsGO"))
+    {
+        const rapidjson::Value& tagDataArray   = initialState["tags"];
+        const rapidjson::Value& tagGODataArray = initialState["tagsGO"];
+
+        for (rapidjson::SizeType i = 0; i < tagDataArray.Size(); i++)
+        {
+            HashString newTag = HashString(tagDataArray[i].GetString());
+            CreateTag(std::move(newTag));
+
+            for (int j = 0; j < tagGODataArray[i].Size(); ++j)
+            {
+                RequestTag(newTag, GetGameObjectByUID(tagGODataArray[i][j].GetUint64()));
+            }
+        }
+    }
 
     // GLOG("%s scene loaded", sceneName.c_str());
 }
@@ -253,12 +258,21 @@ void Scene::Save(
 
     App->GetPhysicsModule()->SaveLayerData(targetState, allocator);
 
+    // SAVING FIRST 
     rapidjson::Value sceneTagsJSON(rapidjson::kArrayType);
+    rapidjson::Value sceneTagsGameObjectsJSON(rapidjson::kArrayType);
     for (auto& tagPair : tags)
     {
+        rapidjson::Value currentTagGO(rapidjson::kArrayType);
+        for (GameObject* currentGO : tagPair.second)
+        {
+            currentTagGO.PushBack(currentGO->GetUID(), allocator);
+        }
         sceneTagsJSON.PushBack(rapidjson::Value(tagPair.first.c_str(), allocator), allocator);
+        sceneTagsGameObjectsJSON.PushBack(currentTagGO, allocator);
     }
     targetState.AddMember("tags", sceneTagsJSON, allocator);
+    targetState.AddMember("tagsGO", sceneTagsGameObjectsJSON, allocator);
 
     // Serialize GameObjects
     rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
@@ -894,6 +908,7 @@ void Scene::DeleteTag(const HashString& tagToDelete)
 
 void Scene::RequestTag(const HashString& requestTag, GameObject* gameObject)
 {
+    if (!gameObject) return;
     auto tagIterator = tags.find(requestTag);
     if (tagIterator != tags.end() && !gameObject->HasTag(requestTag))
     {
@@ -904,6 +919,7 @@ void Scene::RequestTag(const HashString& requestTag, GameObject* gameObject)
 
 void Scene::RemoveFromTag(const HashString& requestTag, GameObject* gameObject)
 {
+    if (!gameObject) return;
     auto tagIterator = tags.find(requestTag);
     if (tagIterator != tags.end() && gameObject->HasTag(requestTag))
     {
@@ -953,19 +969,36 @@ void Scene::CheckObjectsToUpdate()
     for (auto gameObject : toUpdateGameObjects)
         toUpdateGameObjectsSet.insert(gameObject->GetUID());
 
+    // ADDING OBJECTS ASSIGNED TO LOCATION
+    auto taggedLocationObjects = GetTaggedGameObjects(playerLocation);
+    if (taggedLocationObjects)
+    {
+        for (GameObject* currentGameObject : *taggedLocationObjects)
+        {
+            if (toUpdateGameObjectsSet.find(currentGameObject->GetUID()) == toUpdateGameObjectsSet.end())
+            {
+                toUpdateGameObjects.push_back(currentGameObject);
+                toUpdateGameObjectsSet.insert(currentGameObject->GetUID());
+            }
+        }
+    }
 
+    // ADDING CAMERA MANUALLY BECAUSE ITS NOT INSIDE ITS OWN FRUSTUM
     GameObject* camera = GetGameObjectByName("Camera");
     if (camera && toUpdateGameObjectsSet.find(camera->GetUID()) == toUpdateGameObjectsSet.end())
     {
         toUpdateGameObjects.push_back(camera);
         toUpdateGameObjectsSet.insert(camera->GetUID());
     }
-    GameObject* cameraParent = GetGameObjectByUID(camera->GetParent());
-
-    if (toUpdateGameObjectsSet.find(cameraParent->GetUID()) == toUpdateGameObjectsSet.end())
+    if (camera)
     {
-        toUpdateGameObjects.push_back(cameraParent);
-        toUpdateGameObjectsSet.insert(cameraParent->GetUID());
+        GameObject* cameraParent = GetGameObjectByUID(camera->GetParent());
+
+        if (toUpdateGameObjectsSet.find(cameraParent->GetUID()) == toUpdateGameObjectsSet.end())
+        {
+            toUpdateGameObjects.push_back(cameraParent);
+            toUpdateGameObjectsSet.insert(cameraParent->GetUID());
+        }
     }
 }
 

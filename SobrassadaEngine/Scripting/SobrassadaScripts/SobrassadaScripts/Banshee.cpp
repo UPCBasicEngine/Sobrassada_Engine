@@ -98,6 +98,11 @@ void Banshee::Update(float deltaTime)
     }
 }
 
+void Banshee::OnPlayerExitLocation()
+{
+    currentState = BansheeStates::Idle;
+}
+
 void Banshee::OnDeath()
 {
     parent->SetEnabled(false);
@@ -222,10 +227,12 @@ void Banshee::ChangeState()
         currentState = BansheeStates::Idle;
         return;
     }
+    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    bool playerInLocation            = parent->HasTag(playerLocation);
 
-    const float distance = GetDistanceFromPlayer();
-    if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
-    else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
+    const float distance             = GetDistanceFromPlayer();
+    if (distance <= rangeAIAttack && playerInLocation) currentState = BansheeStates::Attack;
+    else if (distance <= rangeAIChase && playerInLocation) currentState = BansheeStates::Chase;
     else currentState = BansheeStates::Idle;
 }
 

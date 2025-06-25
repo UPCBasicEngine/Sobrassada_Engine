@@ -138,11 +138,8 @@ class SOBRASADA_API_ENGINE Scene
     void CheckObjectsToUpdate();
     void ClearObjectsToUpdate();
     void CheckObjectsInFrustum(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
-    void SetPlayerPosition(const HashString& newPlayerLocation)
-    {
-        playerLocation = newPlayerLocation;
-        GLOG("Player entered: %s", playerLocation.c_str());
-    }
+    const HashString& GetPlayerLocation() { return playerLocation; }
+    void SetPlayerPosition(const HashString& newPlayerLocation) { playerLocation = newPlayerLocation; }
 
     bool isSceneLoaded = false;
 

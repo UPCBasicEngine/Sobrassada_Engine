@@ -5,6 +5,8 @@
 #include "Scene.h"
 #include "GameObject.h"
 #include "SceneModule.h"
+#include "ScriptComponent.h"
+#include "Character.h"
 
 PlayerLocationScript::PlayerLocationScript(GameObject* parent) : Script(parent)
 {
@@ -26,4 +28,18 @@ void PlayerLocationScript::OnCollisionEnter(GameObject* otherObject, const float
 void PlayerLocationScript::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
 {
     AppEngine->GetSceneModule()->GetScene()->SetPlayerPosition(HashString(""));
+
+    auto taggedGameObjects = AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(locationTag);
+    if (taggedGameObjects)
+    {
+        for (GameObject* currentGameObject : *taggedGameObjects)
+        {
+            ScriptComponent* script = currentGameObject->GetComponent<ScriptComponent*>();
+            if (script)
+            {
+                Character * character = script->GetScriptByType<Character>();
+                if (character) character->OnPlayerExitLocation();
+            }
+        }
+    }
 }
