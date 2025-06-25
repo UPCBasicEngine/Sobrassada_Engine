@@ -9,6 +9,12 @@
 #include "Scene.h"
 #include "SceneModule.h"
 
+
+GameOverScript::GameOverScript(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Panel To Show", InspectorField::FieldType::InputText, &panelToShowName});
+}
+
 bool GameOverScript::Init()
 {
     CachePanel();
@@ -54,24 +60,7 @@ void GameOverScript::ShowPanel()
     cachedTarget->UpdateTransformForGOBranch();
 }
 
-
-
 void GameOverScript::PauseGame()
 {
     if (auto* t = AppEngine->GetGameTimer()) t->TogglePause();
-}
-
-void GameOverScript::Inspector()
-{
-    AppEngine->GetEditorUIModule()->DrawScriptInspector(fields);
-}
-
-void GameOverScript::Save(rapidjson::Value& st, rapidjson::Document::AllocatorType& a)
-{
-    st.AddMember("PanelToShow", rapidjson::Value(panelToShowName.c_str(), a), a);
-}
-
-void GameOverScript::Load(const rapidjson::Value& st)
-{
-    if (st.HasMember("PanelToShow") && st["PanelToShow"].IsString()) panelToShowName = st["PanelToShow"].GetString();
 }
