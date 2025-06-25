@@ -172,7 +172,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
         verticalSpeed += gravity * deltaTime;
         verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
 
-        currentPos.y  += (verticalSpeed * deltaTime);
+        currentPos.y  += std::max(-0.5f, verticalSpeed * deltaTime);
 
         AdjustHeightToNavMesh(currentPos);
         parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
@@ -299,16 +299,17 @@ void CharacterControllerComponent::Move(float deltaTime)
     const float3 offsetXZ   = rotateDirection * currentSpeed * deltaTime;
     const float3 desiredPos = currentPos + offsetXZ;
 
-    const float3 searchArea = {1.0f, 1.0f, 1.0f};
+    const float3 searchArea = {25.0f * deltaTime, 62.5f * deltaTime, 25.0f * deltaTime};
     float3 closestPoint     = float3::zero;
     bool posOverPoly        = false;
     dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
+    GLOG("Search area: %f %f %f", searchArea.x, searchArea.y, searchArea.z);
 
     if (!dtStatusSucceed(status)) return;
 
     // Prevent huge changes
-    if (fabs(closestPoint.x - currentPos.x) > 0.2f || fabs(closestPoint.y - currentPos.y) > 0.6f ||
-        fabs(closestPoint.z - currentPos.z) > 0.2f)
+    if (fabs(closestPoint.x - currentPos.x) > 12.5f * deltaTime || fabs(closestPoint.y - currentPos.y) > 25.0f ||
+        fabs(closestPoint.z - currentPos.z) > 12.5f * deltaTime)
         return;
 
     parent->SetLocalPosition(closestPoint - parent->GetParentGlobalTransform().TranslatePart());
@@ -447,16 +448,11 @@ void CharacterControllerComponent::StartDash()
 
 void CharacterControllerComponent::Dash(float deltaTime)
 {
-    if (dashTimeRemaining <= 0.0f)
-    {
-        isDashing = false;
-    }
-
     const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
 
     const float3 dashOffset = dashDirection * dashSpeed * deltaTime;
     float3 desiredPos       = currentPos + dashOffset;
-    const float3 searchArea = {1.0f, 0.3f, 1.0f};
+    const float3 searchArea = {62.5f * deltaTime, 25.0f * deltaTime, 62.5f * deltaTime};
     bool posOverPoly        = false;
     float3 closestPoint     = float3::zero;
 
@@ -473,7 +469,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
         const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
         const float3 finalPos   = currentPos + dashDirection * dashSpeed * dashTimeRemaining;
 
-        const float3 searchArea = {0.2f, 30.0f, 0.2f};
+        const float3 searchArea = {12.5f * deltaTime, 1875.0f * deltaTime, 12.5f * deltaTime};
         float3 closestPoint     = float3::zero;
         bool posOverPoly        = false;
         dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea, posOverPoly, closestPoint);
@@ -481,6 +477,8 @@ void CharacterControllerComponent::Dash(float deltaTime)
 
         if (dashToNavmesh) CheckDashObstacles();
     }
+
+    if (dashTimeRemaining <= 0.0f) isDashing = false;
 }
 
 void CharacterControllerComponent::CheckDashObstacles()

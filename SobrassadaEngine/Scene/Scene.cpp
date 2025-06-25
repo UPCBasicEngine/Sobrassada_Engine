@@ -24,7 +24,6 @@
 #include "ParticleSystemModule.h"
 #include "PathfinderModule.h"
 #include "PhysicsModule.h"
-#include "ParticleSystemModule.h"
 #include "ProjectModule.h"
 #include "Quadtree.h"
 #include "RenderPass.h"
@@ -212,7 +211,6 @@ void Scene::Init()
     UpdateStaticSpatialStructure();
     UpdateDynamicSpatialStructure();
 
-
     isSceneLoaded = true;
 }
 
@@ -282,7 +280,6 @@ update_status Scene::Update(float deltaTime)
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::Update", Optick::Category::GameLogic)
 #endif
-
     if (App->GetSceneModule()->GetOnlyOnceInPlayMode())
     {
         for (auto& gameObject : gameObjectsContainer)
@@ -337,7 +334,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #endif
 
     renderPass->RenderScene(framebuffer, objectsToRender, camera);
-    
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
@@ -1438,7 +1434,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
         std::unordered_map<UID, GameObject*> referenceObjectsMap;
         prefab->GetGameObjectsMap(referenceObjectsMap);
 
-       // Update all the hierarchy
+        // Update all the hierarchy
         std::queue<UID> childUIDs;
         childUIDs.push(gameObject->GetUID());
 

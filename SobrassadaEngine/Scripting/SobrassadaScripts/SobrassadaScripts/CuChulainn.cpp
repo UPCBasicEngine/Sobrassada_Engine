@@ -202,10 +202,10 @@ void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
     if (healthImageComponent) healthImageComponent->ChangeTexture(healthBarTextures[0]);
+    isAttacking = false;
+    deathTimer  = 0.0f;
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
-
-    deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
     if (animComponent) animComponent->UseTrigger("Death");
@@ -268,7 +268,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
-            meleeVfxObject->SetEnabled(false);
+            if(meleeVfxObject)meleeVfxObject->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
