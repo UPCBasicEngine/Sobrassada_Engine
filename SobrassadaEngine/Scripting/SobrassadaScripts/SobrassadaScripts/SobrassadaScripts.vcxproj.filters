@@ -127,6 +127,9 @@
     <ClInclude Include="Changeling.h">
       <Filter>Characters\Enemies</Filter>
     </ClInclude>
+    <ClInclude Include="PlayerLocationScript.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -794,6 +797,9 @@
     </ClCompile>
     <ClCompile Include="Changeling.cpp">
       <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerLocationScript.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

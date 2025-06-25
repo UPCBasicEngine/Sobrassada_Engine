@@ -27,6 +27,7 @@
 #include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "PlayerLocationScript.h"
 
 #include <string>
 
@@ -62,7 +63,8 @@ constexpr const char* scripts[] = {
     "SpawnUI",
     "MenuChangeSceneScript",
     "MoveGOInSpline",
-    "Mushroom"
+    "Mushroom",
+    "PlayerLocationScript"
 };
 
 Application* AppEngine = nullptr;
@@ -100,6 +102,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "FireballTrap") return new FireballTrap(parent);
     if (scriptType == "Mushroom") return new Mushroom(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
+    if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
