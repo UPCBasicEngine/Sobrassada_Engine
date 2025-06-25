@@ -91,6 +91,7 @@ bool CuChulainn::Init()
         1245070082308559  // 10HP
 
     };
+    UpdateHealthBarUI();
 
     GameObject* dashUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("DashCooldown");
     if (dashUIObject) dashImageComponent = dashUIObject->GetComponent<ImageComponent*>();
@@ -846,6 +847,7 @@ void CuChulainn::Respawn()
 
     isDead        = false;
     currentHealth = reservedHealth;
+    UpdateHealthBarUI();
     state         = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");

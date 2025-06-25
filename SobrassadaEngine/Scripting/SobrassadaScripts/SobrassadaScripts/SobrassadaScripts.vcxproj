@@ -479,6 +479,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
+    <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
@@ -2042,6 +2043,7 @@
     <ClCompile Include="FireballTrap.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
+    <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
