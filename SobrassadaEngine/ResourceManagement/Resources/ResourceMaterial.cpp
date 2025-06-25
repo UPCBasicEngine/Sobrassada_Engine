@@ -54,7 +54,7 @@ bool ResourceMaterial::OnEditorUpdate()
             ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
         }
 
-        /*
+        
         ImGui::SameLine();
 
         // TODO: commented all select buttons until save data to meta is implemented
@@ -77,7 +77,7 @@ bool ResourceMaterial::OnEditorUpdate()
                 material.diffuseTex = handle;
                 updated             = true;
             }
-        }*/
+        }
     }
 
     updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
