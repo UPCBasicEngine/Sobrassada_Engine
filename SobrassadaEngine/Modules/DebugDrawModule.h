@@ -42,7 +42,7 @@ enum DrawNavMeshFlags
 
 constexpr const char* DebugStrings[] = {"Render Lights", "Render Wireframe", "AABB",    "OBB",           "Static Tree",
                                         "Dynamic Tree",  "Camera Ray",       "Navmesh", "Physics World", "GBuffers",
-                                        "Depth",         "Navmesh Meshes",   "Splines", "Debug Visuals", "SSAO"};
+                                        "Depth", "ShadowMap", "Navmesh Meshes",   "Splines", "Debug Visuals", "SSAO"};
 
 class DebugDrawModule : public Module
 {

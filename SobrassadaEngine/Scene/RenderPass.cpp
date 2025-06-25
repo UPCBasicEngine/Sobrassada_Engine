@@ -16,6 +16,7 @@
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
+#include "SSAO.h"
 
 #ifdef OPTICK
 #include "optick.h"
@@ -141,6 +142,7 @@ void RenderPass::RenderScene(
     Framebuffer* framebuff, const std::vector<GameObject*> objectsToRender, CameraComponent* camera
 )
 {
+    ssao        = App->GetOpenGLModule()->GetSsao();
     gbuffer     = App->GetOpenGLModule()->GetGBuffer();
     framebuffer = framebuff;
     width       = framebuffer->GetTextureWidth();
@@ -182,6 +184,15 @@ void RenderPass::RenderScene(
         RenderShadowMapDebug();
         return;
     }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_SSAO)))
+    {
+        RenderSsaoDebug(ssao, camera, framebuffer);
+        return;
+    }
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
+    SsaoPassRender(camera, gbuffer, ssao);
+    glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
@@ -446,6 +457,56 @@ void RenderPass::ShadowMapPassRender(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const
+{
+
+    ssao->Bind();
+    const unsigned int program = App->GetShaderModule()->GetSsaoProgram();
+
+    glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
+    glUniform1i(glGetUniformLocation(program, "gPositions"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+    glUniform1i(glGetUniformLocation(program, "gNormals"), 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+    glUniform1i(glGetUniformLocation(program, "gDepth"), 2);
+
+    glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
+
+    glUniform3fv(glGetUniformLocation(program, "random_tangents"), SSAO_KERNEL_SIZE_MID, &ssao->GetNoise()[0].x);
+
+    glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
+
+    unsigned int cameraUBO;
+    if (camera == nullptr)
+    {
+        cameraUBO = App->GetCameraModule()->GetUbo();
+    }
+    else
+    {
+        cameraUBO = camera->GetUbo();
+    }
+
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    ssao->Unbind();
+}
+
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
 {
     gbuffer->Bind();
@@ -633,6 +694,9 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetSSAOTexture());
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
@@ -824,6 +888,26 @@ void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) con
 
     glUniform1f(glGetUniformLocation(program, "nearPlane"), nearPlane);
     glUniform1f(glGetUniformLocation(program, "farPlane"), farPlane);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void RenderPass::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer) const
+{
+    framebuffer->Bind();
+    int width  = framebuffer->GetTextureWidth();
+    int height = framebuffer->GetTextureHeight();
+    glViewport(0, 0, width, height);
+
+    unsigned int program = App->GetShaderModule()->GetSsaoDebugProgram();
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetSSAOTexture());
+
+    GLint loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    // If using a fullscreen triangle without a VAO:
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 

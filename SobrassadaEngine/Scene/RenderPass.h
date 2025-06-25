@@ -5,6 +5,7 @@
 
 class GameObject;
 class GBuffer;
+class SSAO;
 class Framebuffer;
 class CameraComponent;
 class DirectionalLightComponent;
@@ -30,13 +31,16 @@ class RenderPass
     void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
 
     void RenderGBufferDebug(GBuffer* gbuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) const;
     void RenderShadowMapDebug() const;
+    void RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer) const;
 
   private:
     GBuffer* gbuffer         = nullptr;
+    SSAO* ssao               = nullptr;
     Framebuffer* framebuffer = nullptr;
     int width, height;
     int shadowResolution = 4096;
