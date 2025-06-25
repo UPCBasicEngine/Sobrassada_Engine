@@ -1,4 +1,4 @@
-#include "AudioModule.h"
+﻿#include "AudioModule.h"
 
 #include "Application.h"
 #include "Components/Standalone/Audio/AudioListenerComponent.h"
@@ -248,8 +248,6 @@ void AudioModule::AddAudioSource(AudioSourceComponent* newSource)
     if (it == sources.end()) sources.push_back(newSource);
     else GLOG("DUPLICATED AUDIO");
 
-    RegisterEventName(newSource->GetEventName()); 
-
     if (AK::SoundEngine::RegisterGameObj((AkGameObjectID)newSource->GetParentUID()) != AK_Success)
         GLOG("[ERROR] Audio source could not be registered");
 }
@@ -297,12 +295,6 @@ void AudioModule::EmitEvent(const std::string& eventName, AkGameObjectID gameObj
     AK::SoundEngine::PostEvent(it->second, gameObjectID);
 }
 
-void AudioModule::RegisterEventName(const std::string& name)
-{
-    if (std::find(eventNames.begin(), eventNames.end(), name) == eventNames.end())
-        eventNames.push_back(name);
-}
-
 void AudioModule::StopAllAudio()
 {
     for (const AudioSourceComponent* source : sources)
@@ -321,12 +313,13 @@ void AudioModule::PlayOnStart()
 
 const std::vector<std::string>& AudioModule::GetEventNames()
 {
-    if (!eventNames.empty()) return eventNames;
+    if (eventNames.empty() && !eventsMap.empty())
+    {
+        for (const auto& kv : eventsMap)
+            eventNames.push_back(kv.first.GetString());
 
-    for (AudioSourceComponent* src : sources)
-        RegisterEventName(src->GetName());
-
-    std::sort(eventNames.begin(), eventNames.end());
+        std::sort(eventNames.begin(), eventNames.end());
+    }
     return eventNames;
 }
 
@@ -369,8 +362,13 @@ void AudioModule::ParseEvents()
 
             eventsMap.insert({name, static_cast<uint32_t>(std::stoul(id))});
 
-            RegisterEventName(name);
+            if (std::find(eventNames.begin(), eventNames.end(), name) == eventNames.end())
+                eventNames.push_back(name);
         }
+        std::sort(eventNames.begin(), eventNames.end());
+        GLOG("AudioModule: loaded %zu events", eventNames.size());
+        for (const std::string& s : eventNames)
+            GLOG("EventName:  %s", s.c_str());
     }
     else
     {

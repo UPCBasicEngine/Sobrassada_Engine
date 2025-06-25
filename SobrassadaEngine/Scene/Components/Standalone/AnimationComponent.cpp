@@ -323,45 +323,7 @@ void AnimationComponent::RenderEditorInspector()
 
     if (ImGui::CollapsingHeader("Animation Triggers", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        UID clipUID                        = resource;
-        std::vector<AnimationTrigger*>& vec = clipTriggers[resource]; 
-        for (size_t i = 0; i < vec.size(); ++i)
-        {
-            AnimationTrigger* trgg = vec[i];
-            ImGui::PushID(static_cast<int>(i));
-
-            //Seconds inside clip
-            float t = trgg->GetTime();
-            if (ImGui::SliderFloat("Time", &t, 0.f, currentAnimResource->GetDuration(), "%.2f")) 
-                trgg->SetTime(t);
-
-            const char* types[] = {"Sound" /* Rest of different triggers */};
-            int currentType     = static_cast<int>(trgg->GetType());
-            if (ImGui::Combo("Type", &currentType, types, IM_ARRAYSIZE(types)))
-                trgg->SetType(static_cast<TriggerType>(currentType));
-
-            //char buf[128];
-            //strncpy_s(buf, trgg->GetData().c_str(), sizeof(buf));
-            //if (ImGui::InputText("TriggerName", buf, IM_ARRAYSIZE(buf)))
-            //    *trgg = AnimationTrigger(t, TriggerType::SOUND, buf);
-
-
-            if (ImGui::Button("Delete"))
-            {
-                RemoveTrigger(clipUID, i);
-                ImGui::PopID();
-                break;
-            }
-
-            ImGui::Separator();
-            ImGui::PopID();
-        }
-
-        if (vec.empty())
-            ImGui::TextDisabled("No triggers yet.");
-        
-        if (ImGui::Button("Add Trigger"))
-            AddSoundTrigger(clipUID, 0.0f, "");
+        DrawTriggerInspector();
     }
 
     ImGui::Separator();
@@ -427,22 +389,29 @@ void AnimationComponent::RenderEditorInspector()
 void AnimationComponent::DrawTriggerInspector()
 {
     UID clipUID                         = resource;
-    std::vector<AnimationTrigger*>& vec = clipTriggers[resource];
+    std::vector<AnimationTrigger*>& vec = clipTriggers[clipUID];
 
     const auto& eventNames              = App->GetAudioModule()->GetEventNames();
     if (ImGui::Button("Add Trigger"))
     {
         const std::string& defName = eventNames.empty() ? std::string() : eventNames.front();
 
-        AddSoundTrigger(clipUID, 0.f, defName); //Sound by default
+        AddSoundTrigger(clipUID, 0.0f, defName); //Sound by default
     }
-
+        
     if (vec.empty())
     {
         ImGui::TextDisabled("No triggers yet.");
         return;
     }
 
+    const auto& names = App->GetAudioModule()->GetEventNames();
+    std::vector<const char*> cNames; 
+    cNames.reserve(names.size());
+    
+    for (const std::string& s : names)
+        cNames.push_back(s.c_str());
+        
     for (size_t i = 0; i < vec.size(); ++i)
     {
         AnimationTrigger* trgg = vec[i];
@@ -450,37 +419,56 @@ void AnimationComponent::DrawTriggerInspector()
 
         // Seconds inside clip
         float t = trgg->GetTime();
-        if (ImGui::SliderFloat("Time", &t, 0.f, currentAnimResource->GetDuration(), "%.2f")) trgg->SetTime(t);
+        if (ImGui::SliderFloat("Time", &t, 0.0f, currentAnimResource->GetDuration(), "%.2f"))
+            trgg->SetTime(t);
 
         const char* types[] = {"Sound" /* Rest of different triggers */};
         int currentType     = static_cast<int>(trgg->GetType());
-        if (ImGui::Combo("Type", &currentType, types, IM_ARRAYSIZE(types)))
+
+        if (ImGui::Combo("Type", &currentType, types,
+                         IM_ARRAYSIZE(types)))
+        {
             trgg->SetType(static_cast<TriggerType>(currentType));
+        }
 
         switch (trgg->GetType())
         {
         case TriggerType::SOUND:
         {
-            static std::vector<const char*> cstrs;
-            cstrs.clear();
-            for (const std::string& s : eventNames)
-                cstrs.push_back(s.c_str());
+            const auto& names = App->GetAudioModule()->GetEventNames();
+            std::vector<const char*> cNames;
+            cNames.reserve(names.size());
+            for (const std::string& s : names)
+                cNames.push_back(s.c_str());
 
             int sel = 0;
-            for (size_t n = 0; n < eventNames.size(); ++n)
-                if (eventNames[n] == trgg->GetName())
+            for (size_t n = 0; n < names.size(); ++n)
+                if (names[n] == trgg->GetName())
                 {
                     sel = static_cast<int>(n);
                     break;
                 }
 
-            if (ImGui::Combo("Sound Event", &sel, cstrs.data(), static_cast<int>(cstrs.size())))
+            if (!cNames.empty())
             {
-                trgg->SetName(eventNames[sel]);
+                ImGui::Text("Sound Event");
+                ImGui::SameLine();
+
+                ImGui::SetNextItemWidth(140.0f);
+                if (ImGui::Combo("##SoundEventSelector", &sel, cNames.data(), static_cast<int>(cNames.size())))
+                {
+                    trgg->SetName(names[sel]);
+                }
+            }
+            else
+            {
+                ImGui::TextDisabled("No audio events loaded");
             }
             break;
-        }
             // rest of events
+        }
+        default:
+            break;
         }
 
         if (ImGui::Button("Delete"))
@@ -493,11 +481,6 @@ void AnimationComponent::DrawTriggerInspector()
         ImGui::Separator();
         ImGui::PopID();
     }
-
-    
-
-
-    
 }
 
 void AnimationComponent::Clone(const Component* other)

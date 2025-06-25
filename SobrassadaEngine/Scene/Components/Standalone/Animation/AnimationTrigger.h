@@ -3,7 +3,7 @@
 
 enum class TriggerType
 {
-	SOUND
+	SOUND = 0
 };
 
 class AnimationTrigger
