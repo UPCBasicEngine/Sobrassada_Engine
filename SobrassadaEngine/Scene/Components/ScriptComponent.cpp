@@ -274,3 +274,28 @@ void ScriptComponent::DeleteAllScripts()
     scriptInitialized.clear();
     scriptWasEnabledLastFrame.clear();
 }
+
+void ScriptComponent::SetComponentEnabled(bool value)
+{
+    enabled = value;
+
+    if (value)
+    {
+
+        for (size_t i = 0; i < scriptEnabled.size(); ++i)
+        {
+            scriptEnabled[i]     = scriptWasEnabledLastFrame[i];
+            scriptInitialized[i] = false; 
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < scriptEnabled.size(); ++i)
+        {
+
+            if (scriptEnabled[i]) scriptWasEnabledLastFrame[i] = true;
+
+            scriptEnabled[i] = false; 
+        }
+    }
+}
