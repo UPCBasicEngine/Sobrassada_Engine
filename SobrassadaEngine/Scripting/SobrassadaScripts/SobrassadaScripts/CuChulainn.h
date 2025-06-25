@@ -110,6 +110,10 @@ class CuChulainn : public Character
     bool desiredDash                  = false;
     float dashBufferTimer             = 0.0f;
 
+    std::string meleeVfxName          = "";
+    std::string meleeTrailName        = "";
+    GameObject* meleeVfxObject        = nullptr;
+    GameObject* meleeTrailObject      = nullptr;
     bool desiredAttack                = false;
     float attackBufferTimer           = 0.0f;
     int comboCounter                  = -1;
@@ -139,17 +143,17 @@ class CuChulainn : public Character
     std::string aimShadowName         = "";
     GameObject* aimShadowObject       = nullptr;
 
-    std::string ultimateName     = "";
-    GameObject* ultimateObject   = nullptr;
-    bool desiredUltimate         = false;
-    int ultimateDamage           = 0;
-    float ultimateTimer          = 0.0f;
-    float ultimateCd             = 0.0f;
-    float ultimateCdTimer        = 0.0f;
-    float ultimateBufferTimer    = 0.0f;
-    float ultimateHitboxDelay    = 0.0f;
-    float ultimateHitboxDuration = 0.0f;
-    float ultimateAnimationDelay = 0.0f;
+    std::string ultimateName          = "";
+    GameObject* ultimateObject        = nullptr;
+    bool desiredUltimate              = false;
+    int ultimateDamage                = 0;
+    float ultimateTimer               = 0.0f;
+    float ultimateCd                  = 0.0f;
+    float ultimateCdTimer             = 0.0f;
+    float ultimateBufferTimer         = 0.0f;
+    float ultimateHitboxDelay         = 0.0f;
+    float ultimateHitboxDuration      = 0.0f;
+    float ultimateAnimationDelay      = 0.0f;
 
     float3 spawnPos                   = float3::zero;
     AudioSourceComponent* audio       = nullptr;
@@ -158,26 +162,26 @@ class CuChulainn : public Character
     float3 camRight                   = float3::zero;
 
     std::vector<UID> healthBarTextures;
-    ImageComponent* healthImageComponent = nullptr;
-    ImageComponent* dashImageComponent   = nullptr;
+    ImageComponent* healthImageComponent   = nullptr;
+    ImageComponent* dashImageComponent     = nullptr;
     ImageComponent* ultimateImageComponent = nullptr;
 
-    bool godMode                         = false;
-    float idleTimer                      = 0.0f;
+    bool godMode                           = false;
+    float idleTimer                        = 0.0f;
 
-    int mushrooms                        = 0;
-    int mushroomHeal                     = 2;
-    bool desiredTakeMushroom             = false;
-    float takeMushroomCdTimer            = 0.0f;
-    float takeMushroomCd                 = 0.0f;
+    int mushrooms                          = 0;
+    int mushroomHeal                       = 2;
+    bool desiredTakeMushroom               = false;
+    float takeMushroomCdTimer              = 0.0f;
+    float takeMushroomCd                   = 0.0f;
 
-    std::string dashTrailName            = "";
-    GameObject* dashTrail                = nullptr;
-    std::string dashDecalName            = "";
-    GameObject* dashDecal                = nullptr;
+    std::string dashTrailName              = "";
+    GameObject* dashTrail                  = nullptr;
+    std::string dashDecalName              = "";
+    GameObject* dashDecal                  = nullptr;
 
-    float dashDecalTimer                 = 5.0f;
-    float dashDecalBufferTimer           = 0.0f;
+    float dashDecalTimer                   = 5.0f;
+    float dashDecalBufferTimer             = 0.0f;
 };
 
 extern CharacterControllerComponent* character;
