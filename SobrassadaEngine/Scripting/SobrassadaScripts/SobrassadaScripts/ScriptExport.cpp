@@ -28,6 +28,7 @@
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 #include "EnemySpawnerScript.h"
+#include "GameOverScript.h"
 
 #include <string>
 
@@ -65,6 +66,7 @@ constexpr const char* scripts[] = {
     "MoveGOInSpline",
     "Mushroom",
     "EnemySpawnerScript"
+    "GameOverScript"
 };
 
 Application* AppEngine = nullptr;
@@ -87,6 +89,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "PressAnyKeyScript") return new PressAnyKeyScript(parent);
     if (scriptType == "SpawnUI") return new SpawnUI(parent);
     if (scriptType == "MenuChangeSceneScript") return new MenuChangeSceneScript(parent);
+    if (scriptType == "GameOverScript") return new GameOverScript(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
