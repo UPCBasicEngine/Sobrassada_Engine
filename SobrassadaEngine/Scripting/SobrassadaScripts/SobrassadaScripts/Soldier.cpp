@@ -18,6 +18,7 @@ Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
+    fields.push_back({"Second Attack Delay", InspectorField::FieldType::Float, &secondAttackDelay, 0.0f, 1.0f});
 }
 
 bool Soldier::Init()
@@ -36,6 +37,10 @@ bool Soldier::Init()
         agentAI->SetLookForward(true);
         speed = agentAI->GetSpeed();
     }
+
+    
+    originalAttackDuration    = attackDuration;
+    originalAttackHitboxDelay = attackHitboxDelay;
 
     return true;
 }
@@ -166,13 +171,13 @@ void Soldier::Attack(float deltaTime)
         GLOG("ATTACK ENEMY");
         if (animComponent)
         {
+            attackHitboxDelay    = originalAttackHitboxDelay;
             currentAttackTrigger   = ManageAttackAnimations();
-
-            originalAttackDuration = attackDuration;
 
             if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
             {
-                attackDuration = attackHitboxDelay + 2 * attackHitboxDuration + 0.2f + 0.1f;
+                attackHitboxDelay += 0.4;
+                attackDuration = attackHitboxDelay + 2 * attackHitboxDuration + secondAttackDelay + 0.1f;
             }
             else
             {
@@ -189,7 +194,7 @@ void Soldier::Attack(float deltaTime)
         {
             bool inFirstWindow =
                 attackTimer >= attackHitboxDelay && attackTimer <= attackHitboxDelay + attackHitboxDuration;
-            float secondDelay   = attackHitboxDelay + attackHitboxDuration + 0.2f;
+            float secondDelay   = attackHitboxDelay + attackHitboxDuration + secondAttackDelay;
             bool inSecondWindow = attackTimer >= secondDelay && attackTimer <= secondDelay + attackHitboxDuration;
 
             if ((inFirstWindow || inSecondWindow) && !weaponCollider->GetEnabled())

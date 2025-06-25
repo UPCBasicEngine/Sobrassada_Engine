@@ -43,6 +43,8 @@ class Soldier : public Character
     float3 patrolPoint         = float3::zero;
     int consecutiveAttack     = 0; 
     int consecutiveThrust     = 0; 
+    float secondAttackDelay          = 0.6f;
     const char* currentAttackTrigger = nullptr;
     float originalAttackDuration     = 0.0f;
+    float originalAttackHitboxDelay  = 0.0f;
 };
