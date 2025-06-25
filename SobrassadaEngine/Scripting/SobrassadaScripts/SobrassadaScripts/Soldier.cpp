@@ -18,6 +18,8 @@ Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
 {
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
+    fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
+    fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
 }
 
 bool Soldier::Init()
@@ -43,6 +45,21 @@ bool Soldier::Init()
 void Soldier::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+
+    if (isKnockback)
+    {
+        knockbackTimer -= deltaTime;
+        agentAI->MoveTo(knockbackForce, knockbackDirection);
+        if (knockbackTimer <= 0.0f)
+        {
+            isKnockback = false;
+            agentAI->ResetSpeed();
+            agentAI->ResetAngularSpeed();
+            ChangeState();
+        }
+        return;
+    }
+
     Character::Update(deltaTime);
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
@@ -68,8 +85,16 @@ void Soldier::OnDeath()
 
 void Soldier::OnDamageTaken(int amount)
 {
-    // TODO: play soldier take damage sound
-    // TODO: particles? and animation
+    isAttacking = false;
+    attackTimer = 0.0f;
+    if (weaponCollider && weaponCollider->GetEnabled())
+    {
+        weaponCollider->SetEnabled(false);
+    }
+    isKnockback    = true;
+    knockbackTimer = knockbackTime;
+    ApplyKnockback();
+    if (animComponent) animComponent->UseTrigger("idle");
 }
 
 void Soldier::PerformAttack()
@@ -95,6 +120,7 @@ void Soldier::HandleState(float deltaTime)
         animComponent->UseTrigger("run");
         break;
     case SoldierStates::CHASE:
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         animComponent->UseTrigger("run");
         ChaseAI();
         break;
@@ -176,7 +202,6 @@ void Soldier::Attack(float deltaTime)
 
     if (!isAttacking)
     {
-        GLOG("ATTACK ENEMY");
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
@@ -185,6 +210,7 @@ void Soldier::Attack(float deltaTime)
     {
 
         // Enable hitbox when animation hits
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
@@ -218,4 +244,13 @@ void Soldier::ChangeState()
     if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
+}
+
+void Soldier::ApplyKnockback()
+{
+    float3 myPos         = parent->GetGlobalTransform().TranslatePart();
+    knockbackDirection   = character->GetFrontDirection();
+    knockbackDirection.y = 0.0f;
+    if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
+    knockbackDirection.Normalize();
 }

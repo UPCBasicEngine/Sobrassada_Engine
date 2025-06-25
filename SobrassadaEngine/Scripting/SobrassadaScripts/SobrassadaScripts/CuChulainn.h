@@ -39,6 +39,8 @@ class CuChulainn : public Character
 
     void Respawn();
     void UpdateHealthBarUI();
+    void UpdateDashCooldownUI();
+    void UpdateUltimateCooldownUI();
     bool TakeMushroom();
     bool CanTakeMushroom() const;
 
@@ -136,16 +138,17 @@ class CuChulainn : public Character
     std::string aimShadowName    = "";
     GameObject* aimShadowObject  = nullptr;
 
-    std::string ultimateName          = "";
-    GameObject* ultimateObject        = nullptr;
-    bool desiredUltimate              = false;
-    int ultimateDamage                = 0;
-    float ultimateTimer               = 0.0f;
-    float ultimateCd                  = 0.0f;
-    float ultimateCdTimer             = 0.0f;
-    float ultimateBufferTimer         = 0.0f;
-    float ultimateHitboxDelay         = 0.0f;
-    float ultimateHitboxDuration      = 0.0f;
+    std::string ultimateName     = "";
+    GameObject* ultimateObject   = nullptr;
+    bool desiredUltimate         = false;
+    int ultimateDamage           = 0;
+    float ultimateTimer          = 0.0f;
+    float ultimateCd             = 0.0f;
+    float ultimateCdTimer        = 0.0f;
+    float ultimateBufferTimer    = 0.0f;
+    float ultimateHitboxDelay    = 0.0f;
+    float ultimateHitboxDuration = 0.0f;
+    float ultimateAnimationDelay = 0.0f;
 
     float3 spawnPos                   = float3::zero;
     AudioSourceComponent* audio       = nullptr;
@@ -155,6 +158,8 @@ class CuChulainn : public Character
 
     std::vector<UID> healthBarTextures;
     ImageComponent* healthImageComponent = nullptr;
+    ImageComponent* dashImageComponent   = nullptr;
+    ImageComponent* ultimateImageComponent = nullptr;
 
     bool godMode                         = false;
     float idleTimer                      = 0.0f;

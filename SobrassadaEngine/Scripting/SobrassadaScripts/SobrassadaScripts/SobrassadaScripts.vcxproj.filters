@@ -127,6 +127,9 @@
     <ClInclude Include="Changeling.h">
       <Filter>Characters\Enemies</Filter>
     </ClInclude>
+    <ClInclude Include="EnemySpawnerScript.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
     <ClInclude Include="GameOverScript.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -796,6 +799,9 @@
       <Filter>Environment</Filter>
     </ClCompile>
     <ClCompile Include="Changeling.cpp">
+      <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemySpawnerScript.cpp">
       <Filter>Characters\Enemies</Filter>
     </ClCompile>
     <ClCompile Include="GameOverScript.cpp">

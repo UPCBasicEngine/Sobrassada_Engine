@@ -54,6 +54,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
   private:
     void Dash(float deltaTime);
+    void CheckDashObstacles();
     unsigned int GetClosestPointInNavmesh(
         const float3& searchPos, const float3& searchArea, bool& posOverPoly, float3& closestPoint
     ) const;
@@ -72,9 +73,9 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     dtNavMeshQuery* navMeshQuery = nullptr;
 
-    float gravity                = -9.81f;
+    float gravity                = -30.0f;
     float verticalSpeed          = 0.0f;
-    float maxFallSpeed           = -20.0f;
+    float maxFallSpeed           = -30.0f;
 
     bool inputDown               = true;
     bool isRotating              = false;
@@ -87,10 +88,12 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool isDashing               = false;
     float dashTimeRemaining      = 0.0f;
     float dashSpeed              = 20.0f;
-    float3 dashTarget            = float3::zero;
+    float3 dashDirection         = float3::zero;
     float dashDistance           = 6.0f;
     float dashDuration           = 0.3f;
     bool dashToNavmesh           = false;
+    bool obstacleInDash          = false;
 
     bool isRunning               = false;
+    bool preciseDash             = true;
 };

@@ -18,6 +18,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 
 #include "SDL.h"
@@ -39,6 +40,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
+    fields.push_back({"Ultimate Animation delay", InspectorField::FieldType::Float, &ultimateAnimationDelay, 0.0f, 5.0f}
+    );
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
@@ -82,6 +85,12 @@ bool CuChulainn::Init()
 
     };
     UpdateHealthBarUI();
+
+    GameObject* dashUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("DashCooldown");
+    if (dashUIObject) dashImageComponent = dashUIObject->GetComponent<ImageComponent*>();
+
+    GameObject* ultimanteUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("UltimateCooldown");
+    if (ultimanteUIObject) ultimateImageComponent = ultimanteUIObject->GetComponent<ImageComponent*>();
 
     playerScript = this;
 
@@ -208,6 +217,9 @@ void CuChulainn::HandleState(float deltaTime)
         aimTimer = 0.0f;
     }
 
+    UpdateDashCooldownUI();
+    UpdateUltimateCooldownUI();
+
     if (desiredDash && CanDash()) Dash();
     else if (desiredHeal && CanHeal()) UseMushroom();
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
@@ -237,6 +249,8 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+                return;
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -543,7 +557,7 @@ void CuChulainn::CheckIsFalling()
     const float verticalSpeed = character->GetRealSpeed().y;
 
     // GLOG("Vertical speed %f", verticalSpeed);
-    if (verticalSpeed <= -2.0f && !character->IsGrounded() && animComponent)
+    if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
     {
         animComponent->UseTrigger("Fall");
         state = CharacterStates::FALL;
@@ -623,14 +637,24 @@ void CuChulainn::PerformAttack()
     }
     else if (state == CharacterStates::ULTIMATE)
     {
-        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay &&
-            ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration)
+        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(true);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
+                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        {
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
+        }
+        else if (ultimateObject->IsEnabled() &&
+                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+            ultimateTimer = 0.f;
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -804,6 +828,21 @@ void CuChulainn::UpdateHealthBarUI()
     healthImageComponent->ChangeTexture(healthBarTextures[currentHealth]);
 }
 
+void CuChulainn::UpdateDashCooldownUI()
+{
+    const UID readyTex    = 1258786293084191;
+    const UID cooldownTex = 1288043360624471;
+
+    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
+}
+
+void CuChulainn::UpdateUltimateCooldownUI()
+{
+    const UID readyTex    = 1203132322652717;
+    const UID cooldownTex = 1297453458525874;
+
+    if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
+}
 void CuChulainn::ChargeAttack()
 {
     if (state != CharacterStates::CHARGING)

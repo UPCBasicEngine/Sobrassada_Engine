@@ -49,16 +49,18 @@ class TrailComponent : public Component
     std::vector<TrailVertex> vertices;
     std::vector<int> indices;
 
-    float minDistance = 0.5f;
-    float lifeTime    = 0.5f;
-    float width       = 0.1f;
+    float minDistance               = 0.5f;
+    float lifeTime                  = 0.5f;
+    float width                     = 0.1f;
+    float cutoff                    = 0.1f;
 
-    bool invertCurve  = false;
-    float curve[5]    = {0.0f, 0.0f, 1.0f, 1.0f}; // Last value is an internal value for imgui
+    bool useCurve                   = false;
+    bool invertCurve                = false;
+    float curve[5]                  = {0.0f, 0.0f, 1.0f, 1.0f}; // Last value is an internal value for imgui
 
-    ImGradient* gradient = nullptr;
-    ImGradientMark* draggingMark = nullptr;
-    ImGradientMark* selectedMark = nullptr;
+    ImGradient* gradient            = nullptr;
+    ImGradientMark* draggingMark    = nullptr;
+    ImGradientMark* selectedMark    = nullptr;
 
     bool hasTexture                 = false;
     std::string currentResourceName = "No material";
@@ -67,12 +69,12 @@ class TrailComponent : public Component
 
     SplineComponent* spline;
 
-    unsigned int vao = 0;
-    unsigned int vbo = 0;
-    unsigned int ebo = 0;
+    unsigned int vao     = 0;
+    unsigned int vbo     = 0;
+    unsigned int ebo     = 0;
 
-    int maxVertices  = 1024;
-    int maxIndices   = 3072;
+    int maxVertices      = 1024;
+    int maxIndices       = 3072;
 
     float4x4 modelMatrix = float4x4::identity;
 };
