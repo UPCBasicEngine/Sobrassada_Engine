@@ -292,8 +292,8 @@ void CharacterControllerComponent::Move(float deltaTime)
     else
     {
         const float desiredSpeed = isRunning ? maxSpeed : walkSpeed;
-        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, desiredSpeed, acceleration * deltaTime)
-                                                           : Lerp(currentSpeed, 0, 100 * deltaTime);
+        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, desiredSpeed, std::min(1.f, acceleration * deltaTime))
+                                                           : Lerp(currentSpeed, 0, std::min(1.f, 100 * deltaTime));
     }
 
     const float3 offsetXZ   = rotateDirection * currentSpeed * deltaTime;

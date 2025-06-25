@@ -100,7 +100,7 @@ void CameraMovement::FollowTarget(float deltaTime)
 
         currentLookAhead = Lerp(
             currentLookAhead, lookAheadIntensity * (controller->GetSpeed() / controller->GetMaxSpeed()),
-            lookAheadSmoothness * deltaTime
+            min(1, lookAheadSmoothness * deltaTime)
         );
 
         const float3& targetDir  = controller->GetFrontDirection();
@@ -108,7 +108,7 @@ void CameraMovement::FollowTarget(float deltaTime)
 
         if (isFollowing && distanceToTarget < 0.1f && controller->GetSpeed() < 0.1f) isFollowing = false;
     }
-    finalPosition = Lerp(currentPosition, desiredPosition, smoothnessVelocity * deltaTime);
+    finalPosition = Lerp(currentPosition, desiredPosition, min(1, smoothnessVelocity * deltaTime));
 
     parent->SetLocalPosition(finalPosition - parent->GetParentGlobalTransform().TranslatePart());
 }
