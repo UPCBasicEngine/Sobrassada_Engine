@@ -201,6 +201,9 @@ void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
     if (healthImageComponent) healthImageComponent->ChangeTexture(healthBarTextures[0]);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+
     deathTimer = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
@@ -616,6 +619,7 @@ void CuChulainn::CheckIsFalling()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
     if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
     animComponent->OnResume();
     aimTimer   = 0.0f;
@@ -633,7 +637,11 @@ void CuChulainn::ThrowSpear()
 
 void CuChulainn::Dash()
 {
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    if (state == CharacterStates::AIM && camera)
+    {
+        camera->EnableAimOffset(false);
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    }
     else if (state == CharacterStates::BASIC_ATTACK)
     {
         comboBufferTimer = character->GetDashDuration() + 0.1f;
@@ -726,7 +734,12 @@ void CuChulainn::Attack(float deltaTime)
 
     // GLOG("ATTACK");
 
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    if (state == CharacterStates::AIM && camera)
+    {
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+        camera->EnableAimOffset(false);
+    }
+
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
@@ -748,7 +761,11 @@ void CuChulainn::Attack(float deltaTime)
 void CuChulainn::UltimateAttack()
 {
     // GLOG("ULTIMATEEEE");
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    if (state == CharacterStates::AIM && camera)
+    {
+        camera->EnableAimOffset(false);
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+    }
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
@@ -765,6 +782,7 @@ void CuChulainn::Aim(float deltaTime)
 
     if (state != CharacterStates::AIM)
     {
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
         if (camera) camera->EnableAimOffset(true);
         state = CharacterStates::AIM;
         character->EnableMovement(false);
