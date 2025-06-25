@@ -58,6 +58,8 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include <chrono>
+#include <thread>
 #include <unordered_map>
 
 #include "SDL_mouse.h"
@@ -282,7 +284,7 @@ update_status Scene::Update(float deltaTime)
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::Update", Optick::Category::GameLogic)
 #endif
-
+    //std::this_thread::sleep_for(std::chrono::milliseconds(40));
     if (App->GetSceneModule()->GetOnlyOnceInPlayMode())
     {
         for (auto& gameObject : gameObjectsContainer)

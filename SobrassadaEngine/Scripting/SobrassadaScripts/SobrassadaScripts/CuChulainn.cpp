@@ -178,7 +178,8 @@ void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
     if (healthImageComponent) healthImageComponent->ChangeTexture(healthBarTextures[0]);
-    deathTimer = 0.0f;
+    isAttacking = false;
+    deathTimer  = 0.0f;
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
     if (animComponent) animComponent->UseTrigger("Death");
