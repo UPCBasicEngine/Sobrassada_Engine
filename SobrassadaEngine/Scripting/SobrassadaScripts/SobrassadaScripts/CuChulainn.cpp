@@ -900,16 +900,16 @@ void CuChulainn::UpdateHealthBarUI()
 
 void CuChulainn::UpdateDashCooldownUI()
 {
-    const UID readyTex    = 1258786293084191;
-    const UID cooldownTex = 1288043360624471;
+    const UID readyTex    = 1215467239887490;
+    const UID cooldownTex = 1208292380114543;
 
     if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
 }
 
 void CuChulainn::UpdateUltimateCooldownUI()
 {
-    const UID readyTex    = 1203132322652717;
-    const UID cooldownTex = 1297453458525874;
+    const UID readyTex    = 1269620042662432;
+    const UID cooldownTex = 1278452734324605;
 
     if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
 }
