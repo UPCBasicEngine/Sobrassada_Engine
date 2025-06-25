@@ -13,5 +13,5 @@ namespace PrefabManager
     void CopyPrefab(
         const std::string& filePath, const std::string& targetFilePath, const std::string& name, const UID sourceUID
     );
-    ResourcePrefab* LoadPrefab(UID prefabUID);
+    SOBRASADA_API_ENGINE ResourcePrefab* LoadPrefab(UID prefabUID);
 } // namespace PrefabManager

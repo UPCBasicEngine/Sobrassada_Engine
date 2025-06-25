@@ -68,6 +68,8 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
     }
 
     if (!bonesUIDs.empty() && !bindMatrices.empty()) hasBones = true;
+
+    if (initialState.HasMember("ProduceShadows")) produceShadows = initialState["ProduceShadows"].GetBool();
 }
 
 MeshComponent::~MeshComponent()
@@ -112,6 +114,7 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
         if (modelUID != INVALID_UID) targetState.AddMember("ModelUID", modelUID, allocator);
         if (skinIndex != -1) targetState.AddMember("SkinIndex", skinIndex, allocator);
     }
+    targetState.AddMember("ProduceShadows", produceShadows, allocator);
 }
 
 void MeshComponent::Clone(const Component* other)
@@ -133,6 +136,8 @@ void MeshComponent::Clone(const Component* other)
         bindMatrices = otherMesh->bindMatrices;
         hasBones     = otherMesh->hasBones;
 
+        produceShadows = otherMesh->produceShadows;
+
         // Maybe it could be added to an existing batch, but probably is more costly than what is worth
     }
     else
@@ -146,6 +151,8 @@ void MeshComponent::RenderEditorInspector()
     Component::RenderEditorInspector();
 
     ImGui::SeparatorText("Mesh Component");
+
+    if(ImGui::Checkbox("Produce Shadows", &produceShadows)) BatchEditorMode();
 
     ImGui::Text(currentMeshName.c_str());
     ImGui::SameLine();
@@ -206,7 +213,7 @@ void MeshComponent::RenderEditorInspector()
         }
 
         // TODO: Update batch when modifying material so it changes visually
-        //if (currentMaterial->OnEditorUpdate() && batch) BatchEditorMode();
+        if (currentMaterial->OnEditorUpdate() && batch) BatchEditorMode();
     }
 }
 
