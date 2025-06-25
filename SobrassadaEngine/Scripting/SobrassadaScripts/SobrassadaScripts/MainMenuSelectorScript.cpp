@@ -119,9 +119,14 @@ void MainMenuSelectorScript::Update(float deltaTime)
         }
         else if (selectedItem->GetName() == "MenuItem_Menu")
         {
-            std::string path = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "MainMenu.scene";
+            if (auto* timer = AppEngine->GetGameTimer(); timer && timer->IsPaused()) timer->TogglePause();
+            AppEngine->GetSceneModule()->GetScene()->SetStopPlaying(true);
+            std::string path = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
             AppEngine->GetSceneModule()->RequestSceneLoad(path);
+            return; 
         }
+
+
     }
 }
 
