@@ -110,7 +110,9 @@ class CuChulainn : public Character
     bool desiredDash                  = false;
     float dashBufferTimer             = 0.0f;
 
+    std::string meleeVfxName          = "";
     std::string meleeTrailName        = "";
+    GameObject* meleeVfxObject        = nullptr;
     GameObject* meleeTrailObject      = nullptr;
     bool desiredAttack                = false;
     float attackBufferTimer           = 0.0f;
@@ -167,19 +169,19 @@ class CuChulainn : public Character
     bool godMode                           = false;
     float idleTimer                        = 0.0f;
 
-    int mushrooms                        = 0;
-    int mushroomHeal                     = 2;
-    bool desiredTakeMushroom             = false;
-    float takeMushroomCdTimer            = 0.0f;
-    float takeMushroomCd                 = 0.0f;
+    int mushrooms                          = 0;
+    int mushroomHeal                       = 2;
+    bool desiredTakeMushroom               = false;
+    float takeMushroomCdTimer              = 0.0f;
+    float takeMushroomCd                   = 0.0f;
 
-    std::string dashTrailName            = "";
-    GameObject* dashTrail                = nullptr;
-    std::string dashDecalName            = "";
-    GameObject* dashDecal                = nullptr;
+    std::string dashTrailName              = "";
+    GameObject* dashTrail                  = nullptr;
+    std::string dashDecalName              = "";
+    GameObject* dashDecal                  = nullptr;
 
-    float dashDecalTimer                 = 5.0f;
-    float dashDecalBufferTimer           = 0.0f;
+    float dashDecalTimer                   = 5.0f;
+    float dashDecalBufferTimer             = 0.0f;
 };
 
 extern CharacterControllerComponent* character;

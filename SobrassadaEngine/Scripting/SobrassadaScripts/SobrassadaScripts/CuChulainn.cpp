@@ -57,6 +57,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     );
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
+    fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
     fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
     fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
@@ -142,6 +143,10 @@ bool CuChulainn::Init()
     meleeTrailObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeTrailName);
     if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for aiming in CuChulain")
     else meleeTrailObject->SetEnabled(false);
+
+    meleeVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeVfxName);
+    if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for aiming in CuChulain")
+    else meleeVfxObject->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
@@ -245,7 +250,10 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL)
         Move();
 
     // When finished animation, go back to idle state
@@ -256,7 +264,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
-            // meleeTrailObject->SetEnabled(false);
+            meleeVfxObject->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -664,7 +672,8 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay && attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+                 attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -681,11 +690,13 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay && ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
+                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() &&
+                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
@@ -701,7 +712,8 @@ void CuChulainn::PerformAttack()
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() &&
+                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
@@ -719,6 +731,7 @@ void CuChulainn::Attack(float deltaTime)
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (meleeVfxObject) meleeVfxObject->SetEnabled(true);
     ++comboCounter;
     // GLOG("Combo counter: %d", comboCounter);
 
