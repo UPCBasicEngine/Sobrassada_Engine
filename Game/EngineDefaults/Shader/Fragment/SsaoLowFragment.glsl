@@ -30,7 +30,6 @@ vec3 getRandomTangent()
 {
     vec2 screenPos = uv0 * screenSize;
     int index = int(mod(screenPos.x + screenPos.y, float(KERNEL_SIZE)));
-
     return random_tangents[index];
 }
 
@@ -39,8 +38,8 @@ float getSceneDepthAtSamplePos(in vec3 samplePos)
     vec4 clipSpace = projMatrix * vec4(samplePos, 1.0);
     vec2 sampleUV = (clipSpace.xy/clipSpace.w)*0.5+0.5;
 
-    if (sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0)
-    return 1e6;
+    //if (sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0)
+    //return 1e6;
 
     return (viewMatrix*texture(gPositions, sampleUV)).z;
 }

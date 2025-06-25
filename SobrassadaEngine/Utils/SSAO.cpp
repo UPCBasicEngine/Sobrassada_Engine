@@ -11,7 +11,7 @@ SSAO::SSAO(int width, int height)
 {
     screenWidth  = width;
     screenHeight = height;
-
+    shouldResize = true;
     Init();
 }
 
