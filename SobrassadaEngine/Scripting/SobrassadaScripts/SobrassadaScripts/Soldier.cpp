@@ -100,7 +100,7 @@ void Soldier::OnDamageTaken(int amount)
     isKnockback    = true;
     knockbackTimer = knockbackTime;
     ApplyKnockback();
-    if (animComponent) animComponent->UseTrigger("idle");
+    if (animComponent) animComponent->UseTrigger("damaged");
 }
 
 void Soldier::PerformAttack()
