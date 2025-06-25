@@ -1536,10 +1536,10 @@ void Scene::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao
     glUniformBlockBinding(program, blockIdx, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
+    /*
     glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
     glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
-
+    */
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
     ssao->Unbind();
