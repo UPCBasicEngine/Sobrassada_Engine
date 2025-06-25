@@ -304,17 +304,6 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("PrefabChildUID")) prefabChildUID = initialState["PrefabChildUID"].GetUint64();
     if (initialState.HasMember("NavmeshValid")) navMeshValid = initialState["NavmeshValid"].GetBool();
 
-    //if (initialState.HasMember("tags"))
-    //{
-    //    const rapidjson::Value& dataArray = initialState["tags"];
-
-    //    for (rapidjson::SizeType i = 0; i < dataArray.Size(); i++)
-    //    {
-    //        HashString newTag = HashString(dataArray[i].GetString());
-    //        App->GetSceneModule()->GetScene()->RequestTag(newTag, this);
-    //    }
-    //}
-
     if (initialState.HasMember("LocalTransform") && initialState["LocalTransform"].IsArray() &&
         initialState["LocalTransform"].Size() == 16)
     {
@@ -424,12 +413,12 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
-    rapidjson::Value gameObjectsTags(rapidjson::kArrayType);
-    for (auto& tag : tags)
-    {
-        gameObjectsTags.PushBack(rapidjson::Value(tag.c_str(), allocator), allocator);
-    }
-    targetState.AddMember("tags", gameObjectsTags, allocator);
+    //rapidjson::Value gameObjectsTags(rapidjson::kArrayType);
+    //for (auto& tag : tags)
+    //{
+    //    gameObjectsTags.PushBack(rapidjson::Value(tag.c_str(), allocator), allocator);
+    //}
+    //targetState.AddMember("tags", gameObjectsTags, allocator);
 
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
     if (prefabVersionUID != INVALID_UID) targetState.AddMember("PrefabVersionUID", prefabVersionUID, allocator);

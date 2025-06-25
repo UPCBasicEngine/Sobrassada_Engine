@@ -140,7 +140,9 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
 
             for (int j = 0; j < tagGODataArray[i].Size(); ++j)
             {
-                RequestTag(newTag, GetGameObjectByUID(tagGODataArray[i][j].GetUint64()));
+                RequestTag(
+                    HashString(tagDataArray[i].GetString()), GetGameObjectByUID(tagGODataArray[i][j].GetUint64())
+                );
             }
         }
     }
