@@ -54,7 +54,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
-    fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName, 0.0f, 5.0f});
+    fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
+    fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
@@ -132,6 +133,10 @@ bool CuChulainn::Init()
     aimShadowObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(aimShadowName);
     if (!aimShadowObject) GLOG("[WARNING] No shadow found for aiming in CuChulain")
     else aimShadowObject->SetEnabled(false);
+
+    meleeTrailObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeTrailName);
+    if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for aiming in CuChulain")
+    else meleeTrailObject->SetEnabled(false);
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -231,8 +236,6 @@ void CuChulainn::HandleState(float deltaTime)
              state != CharacterStates::HEAL)
         Move();
 
-    // TODO: Some transition in the dash or idle state, to continue the combo after a dash
-
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
@@ -241,6 +244,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
+            // meleeTrailObject->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -250,6 +254,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
                 return;
+            if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -482,6 +487,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         {
             comboCounter  = -1;
             attackCdTimer = attackCooldown;
+            if (state != CharacterStates::ULTIMATE && meleeTrailObject) meleeTrailObject->SetEnabled(false);
 
             if (state == CharacterStates::BASIC_ATTACK)
             {
@@ -654,6 +660,7 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
             ultimateTimer = 0.f;
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -681,6 +688,7 @@ void CuChulainn::Attack(float deltaTime)
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     ++comboCounter;
     // GLOG("Combo counter: %d", comboCounter);
 
@@ -700,6 +708,7 @@ void CuChulainn::UltimateAttack()
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     ultimateTimer   = 0.0f;
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
@@ -865,6 +874,7 @@ void CuChulainn::ChargeAttack()
 
             state              = CharacterStates::CHARGED_ATTACK;
             chargedAttackTimer = 0.0f;
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
 
             if (animComponent) animComponent->UseTrigger("Attack");
         }
