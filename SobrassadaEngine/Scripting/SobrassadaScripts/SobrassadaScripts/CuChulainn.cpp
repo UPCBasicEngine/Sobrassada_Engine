@@ -85,6 +85,12 @@ bool CuChulainn::Init()
 
     };
 
+    GameObject* dashUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("DashCooldown");
+    if (dashUIObject) dashImageComponent = dashUIObject->GetComponent<ImageComponent*>();
+
+    GameObject* ultimanteUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("UltimateCooldown");
+    if (ultimanteUIObject) ultimateImageComponent = ultimanteUIObject->GetComponent<ImageComponent*>();
+
     playerScript = this;
 
     character    = parent->GetComponent<CharacterControllerComponent*>();
@@ -209,6 +215,9 @@ void CuChulainn::HandleState(float deltaTime)
         state    = CharacterStates::IDLE;
         aimTimer = 0.0f;
     }
+
+    UpdateDashCooldownUI();
+    UpdateUltimateCooldownUI();
 
     if (desiredDash && CanDash()) Dash();
     else if (desiredHeal && CanHeal()) UseMushroom();
@@ -817,6 +826,21 @@ void CuChulainn::UpdateHealthBarUI()
     healthImageComponent->ChangeTexture(healthBarTextures[currentHealth]);
 }
 
+void CuChulainn::UpdateDashCooldownUI()
+{
+    const UID readyTex    = 1258786293084191;
+    const UID cooldownTex = 1288043360624471;
+
+    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
+}
+
+void CuChulainn::UpdateUltimateCooldownUI()
+{
+    const UID readyTex    = 1203132322652717;
+    const UID cooldownTex = 1297453458525874;
+
+    if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
+}
 void CuChulainn::ChargeAttack()
 {
     if (state != CharacterStates::CHARGING)
