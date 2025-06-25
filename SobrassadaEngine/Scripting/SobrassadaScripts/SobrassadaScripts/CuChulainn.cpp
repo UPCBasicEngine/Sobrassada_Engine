@@ -141,11 +141,11 @@ bool CuChulainn::Init()
     else aimShadowObject->SetEnabled(false);
 
     meleeTrailObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeTrailName);
-    if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for aiming in CuChulain")
+    if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for melee attack in CuChulain")
     else meleeTrailObject->SetEnabled(false);
 
     meleeVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeVfxName);
-    if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for aiming in CuChulain")
+    if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
     else meleeVfxObject->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
