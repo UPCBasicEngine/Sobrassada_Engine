@@ -32,12 +32,13 @@ class AudioModule : public Module
     bool AddAudioListener(AudioListenerComponent* newListener);
     void RemoveAudioListener(AudioListenerComponent* newListener);
     void EmitEvent(const std::string& eventName, AkGameObjectID gameObjectID = 0);
+    void RegisterEventName(const std::string& name);
 
     void StopAllAudio();
     void PlayOnStart();
 
     const std::unordered_map<HashString, uint32_t>& GetEventsMap() const { return eventsMap; }
-    const std::vector<std::string>& GetEventNames() const { return eventNames; }
+    const std::vector<std::string>& GetEventNames();
 
   private:
     void ParseEvents();

@@ -248,6 +248,8 @@ void AudioModule::AddAudioSource(AudioSourceComponent* newSource)
     if (it == sources.end()) sources.push_back(newSource);
     else GLOG("DUPLICATED AUDIO");
 
+    RegisterEventName(newSource->GetEventName()); 
+
     if (AK::SoundEngine::RegisterGameObj((AkGameObjectID)newSource->GetParentUID()) != AK_Success)
         GLOG("[ERROR] Audio source could not be registered");
 }
@@ -295,6 +297,12 @@ void AudioModule::EmitEvent(const std::string& eventName, AkGameObjectID gameObj
     AK::SoundEngine::PostEvent(it->second, gameObjectID);
 }
 
+void AudioModule::RegisterEventName(const std::string& name)
+{
+    if (std::find(eventNames.begin(), eventNames.end(), name) == eventNames.end())
+        eventNames.push_back(name);
+}
+
 void AudioModule::StopAllAudio()
 {
     for (const AudioSourceComponent* source : sources)
@@ -309,6 +317,17 @@ void AudioModule::PlayOnStart()
     {
         if (source->IsPlayOnStart()) source->EmitDefaultEvent();
     }
+}
+
+const std::vector<std::string>& AudioModule::GetEventNames()
+{
+    if (!eventNames.empty()) return eventNames;
+
+    for (AudioSourceComponent* src : sources)
+        RegisterEventName(src->GetName());
+
+    std::sort(eventNames.begin(), eventNames.end());
+    return eventNames;
 }
 
 void AudioModule::ParseEvents()
@@ -350,8 +369,7 @@ void AudioModule::ParseEvents()
 
             eventsMap.insert({name, static_cast<uint32_t>(std::stoul(id))});
 
-            if (std::find(eventNames.begin(), eventNames.end(), name) == eventNames.end())
-                eventNames.push_back(name);
+            RegisterEventName(name);
         }
     }
     else
