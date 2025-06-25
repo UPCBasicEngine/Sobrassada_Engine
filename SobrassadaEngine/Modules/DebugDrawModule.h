@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Module.h"
 #include "Globals.h"
+#include "Module.h"
 
 #include "Math/float4x4.h"
 #include <bitset>
@@ -26,6 +26,7 @@ enum class DebugOptions : uint8_t
     RENDER_PHYSICS_WORLD,
     RENDER_GBUFFERS,
     RENDER_DEPTH,
+    RENDER_SHADOWMAP,
     RENDER_NAVMESH_MESHES,
     RENDER_SPLINES,
     RENDER_DEBUG_VISUALS,
@@ -71,8 +72,11 @@ class DebugDrawModule : public Module
     void DrawCross(const float3& center, const float length);
     void DrawPoint(const float3& center, const float size);
     void DrawCone(const float3& center, const float3& dir, const float baseRadius, const float apexRadius);
+    void DrawArrow(const float3& from, const float3& to, const float3& color, float headSize);
+    void DrawCone(const float3& apexPosition, const float3& direction, const float3& color, float apexRadius, float baseRadius);
     SOBRASADA_API_ENGINE void Draw3DText(const btVector3& location, const char* textString);
-    SOBRASADA_API_ENGINE void Draw2DText(const char* textString, const float3& location, const float3& color = float3::zero, float scale = 1.0f);
+    SOBRASADA_API_ENGINE void
+    Draw2DText(const char* textString, const float3& location, const float3& color = float3::zero, float scale = 1.0f);
     void DrawContactPoint(
         const btVector3& PointOnB, const btVector3& normalOnB, float distance, int lifeTime, const btVector3& color
     );

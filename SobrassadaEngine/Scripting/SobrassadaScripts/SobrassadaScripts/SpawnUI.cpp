@@ -36,9 +36,9 @@ void SpawnUI::Update(float deltaTime)
     onCollision = false;
 }
 
-void SpawnUI::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void SpawnUI::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     // triggers only collision with Player
-    imageUI->SetEnabled(true);
+    if (imageUI) imageUI->SetEnabled(true);
     onCollision = true;
 }

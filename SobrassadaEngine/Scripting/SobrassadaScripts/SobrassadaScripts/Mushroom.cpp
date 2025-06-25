@@ -8,7 +8,6 @@
 
 Mushroom::Mushroom(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Heal Amount", InspectorField::FieldType::Int, &healingAmount, 0, 5});
 }
 
 bool Mushroom::Init()
@@ -27,7 +26,7 @@ void Mushroom::Update(float deltaTime)
     if (!mushroom || !collider) return;
 }
 
-void Mushroom::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void Mushroom::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     ScriptComponent* playerScript = otherObject->GetComponent<ScriptComponent*>();
     if (playerScript)

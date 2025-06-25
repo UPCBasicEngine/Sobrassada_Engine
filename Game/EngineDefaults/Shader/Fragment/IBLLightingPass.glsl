@@ -8,7 +8,11 @@ layout(binding = 0) uniform sampler2D gDiffuse;
 layout(binding = 1) uniform sampler2D gSpecular;
 layout(binding = 2) uniform sampler2D gPosition;
 layout(binding = 3) uniform sampler2D gNormal;
-layout(binding = 4) uniform sampler2D ssao;
+layout(binding = 4) uniform sampler2D shadowMap;
+uniform mat4 viewLight;
+uniform mat4 projLight;
+uniform vec3 shadowTint;
+layout(binding = 5) uniform sampler2D ssao;
 
 in vec2 uv0;
 
@@ -117,7 +121,7 @@ float GGXNormalDistribution(const float NdotH, const float roughness){
     return roughness2/denominator;
 }
 
-vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const float NdotL, const float roughness, const vec3 RF0, vec3 pos)
+vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const float NdotL, const float roughness, const vec3 RF0, vec3 pos, bool hasShadows)
  {
     const vec3 V = normalize(cameraPos - pos);
     const vec3 H = normalize(V + L);
@@ -131,7 +135,40 @@ vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const
     const float visibility = VisibilityFunction(NdotL, NdotV, roughness);
     const float GGX = GGXNormalDistribution(NdotH, roughness);
 
-    const vec3 diffspec = (Cd * (1-RF0) + 0.25 * fresnel * visibility * GGX) * Li * NdotL;
+    vec3 diffspec = (Cd * (1-RF0) + 0.25 * fresnel * visibility * GGX) * Li * NdotL;
+
+    //Shadows
+    if(hasShadows){
+        float shadow = 0.0;
+        vec4 pos_from_light = projLight * viewLight * vec4(pos, 1.0);
+        vec3 projCoords = pos_from_light.xyz / pos_from_light.w;
+        projCoords = projCoords * 0.5 + 0.5;
+
+        if(projCoords.x >= 0.0 && projCoords.x <= 1.0 &&
+        projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
+        projCoords.z >= 0.0 && projCoords.z <= 1.0)
+        {
+            //PCF
+            float factor = 0.0;
+
+            vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+            for (int yOffset = -1; yOffset <= 1; ++yOffset) {
+                for (int xOffset = -1; xOffset <= 1; ++xOffset) {
+                    vec2 offset = vec2(float(xOffset), float(yOffset)) * texelSize;
+                    float sampledDepth = texture(shadowMap, projCoords.xy + offset).r;
+
+                    if (projCoords.z - 0.001 > sampledDepth)
+                        factor += 1.0;
+                }
+            }
+
+            shadow = factor;
+        }
+
+        //diffspec = mix(diffspec, diffspec * vec3(0.56, 0.78, 0.90), shadow);
+        //diffspec = mix(diffspec, diffspec * vec3(0.0, 0.0, 0.0), shadow);
+        diffspec = mix(diffspec, diffspec * shadowTint, shadow);
+    }
 
     return diffspec;
 }
@@ -143,7 +180,7 @@ vec3 RenderPointLight(const int index, const vec3 N, const vec3 Cd, float roughn
 	const vec3 Li = pointLights[index].color.rgb * pointLights[index].color.a * attenuation;
 	const float NdotL = dot(N, L);
 
-	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, Cd, Li, NdotL, roughness, RF0, pos);
+	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, Cd, Li, NdotL, roughness, RF0, pos, false);
 	else return vec3(0);	
 }
 
@@ -154,7 +191,7 @@ vec3 RenderSpotLight(const int index, const vec3 N, const vec3 Cd, float roughne
 	const vec3 Li = spotLights[index].color.rgb * spotLights[index].color.a * attenuation;
 	float NdotL = dot(N, L);
 
-	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, Cd, Li, NdotL, roughness, RF0, pos);
+	if (NdotL > 0 && attenuation > 0) return RenderLight(L, N, Cd, Li, NdotL, roughness, RF0, pos, false);
 	else return vec3(0);
 }
 
@@ -203,7 +240,7 @@ void main()
     const float NdotL = max(dot(N, L), 0.001f);
     if (NdotL > 0)
     {
-		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0, pos);
+		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0, pos, true);
     }
 
     vec3 occlusionFactor = vec3(texture(ssao, uv0).r);

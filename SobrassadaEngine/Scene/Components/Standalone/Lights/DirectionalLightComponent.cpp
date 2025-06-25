@@ -4,15 +4,24 @@
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "SceneModule.h"
+#include "imgui.h"
 
 DirectionalLightComponent::DirectionalLightComponent(UID uid, GameObject* parent)
     : LightComponent(uid, parent, "Directional Light", COMPONENT_DIRECTIONAL_LIGHT)
 {
+    shadowTint = float3(0.9f, 0.9f, 0.9f);
 }
 
 DirectionalLightComponent::DirectionalLightComponent(const rapidjson::Value& initialState, GameObject* parent)
     : LightComponent(initialState, parent)
 {
+
+    if (initialState.HasMember("Shadow Tint"))
+    {
+        const rapidjson::Value& shadowArray = initialState["Shadow Tint"];
+        shadowTint = {shadowArray[0].GetFloat(), shadowArray[1].GetFloat(), shadowArray[2].GetFloat()};
+    }
+    else shadowTint = float3(0.9f, 0.9f, 0.9f);
 }
 
 DirectionalLightComponent::~DirectionalLightComponent()
@@ -28,6 +37,13 @@ void DirectionalLightComponent::Init()
 void DirectionalLightComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     LightComponent::Save(targetState, allocator);
+
+    rapidjson::Value shadowTintArray(rapidjson::kArrayType);
+    shadowTintArray.PushBack(shadowTint.x, allocator)
+        .PushBack(shadowTint.y, allocator)
+        .PushBack(shadowTint.z, allocator);
+
+    targetState.AddMember("Shadow Tint", shadowTintArray, allocator);
 }
 
 void DirectionalLightComponent::Clone(const Component* other)
@@ -41,11 +57,19 @@ void DirectionalLightComponent::Clone(const Component* other)
         intensity                                   = otherLight->intensity;
         color                                       = otherLight->color;
         drawGizmos                                  = otherLight->drawGizmos;
+        shadowTint                                  = otherLight->shadowTint;
     }
     else
     {
         GLOG("It is not possible to clone a component of a different type!");
     }
+}
+
+void DirectionalLightComponent::RenderEditorInspector()
+{
+    LightComponent::RenderEditorInspector();
+
+    ImGui::DragFloat3("Shadow Tint", &shadowTint[0], 0.0f, 1.0f);
 }
 
 void DirectionalLightComponent::Render(float deltaTime)

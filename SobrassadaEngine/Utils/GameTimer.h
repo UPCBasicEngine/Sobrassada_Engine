@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EngineTimer.h"
+#include "Globals.h"
 
 class GameTimer : public EngineTimer
 {
@@ -11,7 +12,7 @@ class GameTimer : public EngineTimer
     void Start() override;
     float Tick() override;
 
-    void TogglePause();
+    void SOBRASADA_API_ENGINE TogglePause();
     void Reset();
     float Step();
 
@@ -20,6 +21,8 @@ class GameTimer : public EngineTimer
     float GetUnscaledDeltaTime() const { return unscaledDeltaTime; }
     float GetTimeScale() const { return timeScale; }
     float GetReferenceTime() const { return referenceTime; }
+
+    bool SOBRASADA_API_ENGINE IsPaused() const;
 
     void SetTimeScale(const float newScale) { timeScale = newScale; }
 

@@ -190,7 +190,7 @@ namespace StateMachineManager
                 Clip clip;
                 clip.animationResourceUID = clipJSON["ClipUID"].GetUint64();
                 clip.clipName             = HashString(clipJSON["ClipName"].GetString());
-                clip.animationSpeed       = clipJSON["ClipTime"].GetFloat();
+                clip.animationSpeed       = clipJSON.HasMember("ClipTime") ? clipJSON["ClipTime"].GetFloat() : 1.f;
                 clip.loop                 = clipJSON["Loop"].GetBool();
 
                 stateMachine->clips.push_back(clip);

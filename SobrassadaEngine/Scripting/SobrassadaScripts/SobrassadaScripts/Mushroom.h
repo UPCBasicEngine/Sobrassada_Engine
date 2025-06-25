@@ -13,15 +13,12 @@ class Mushroom : public Script
     bool Init() override;
     void Update(float deltaTime) override;
 
-    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
+    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
     bool IsReady() const;
     void Disable();
 
-    int GetHealingAmount() const { return healingAmount; }
-
   private:
-    int healingAmount                 = 1;
     SphereColliderComponent* collider = nullptr;
     MeshComponent* mushroom           = nullptr;
 };

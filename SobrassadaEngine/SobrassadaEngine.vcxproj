@@ -440,10 +440,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp" />
+    <ClCompile Include="Utils\Particles\AreaAddon.cpp" />
+    <ClCompile Include="Utils\Particles\ColorAddon.cpp" />
+    <ClCompile Include="Utils\Particles\SpritesheetAddon.cpp" />
+    <ClCompile Include="Utils\Particles\EmitterInstance.cpp" />
+    <ClCompile Include="Utils\Particles\ParticleSystem.cpp" />
+    <ClCompile Include="Scene\Components\ParticleSystemComponent.cpp" />
+    <ClCompile Include="Modules\ParticleSystemModule.cpp" />
+    <ClCompile Include="Utils\Particles\ParticleEmitter.cpp" />
+    <ClCompile Include="Utils\Particles\BaseAddon.cpp" />
+    <ClCompile Include="Utils\Particles\ParticleAddon.cpp" />
     <ClCompile Include="Scene\Components\Standalone\DecalComponent.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_color_gradient.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp" />
+    <ClCompile Include="Scene\RenderPass.cpp" />
     <ClCompile Include="Utils\SSAO.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
@@ -483,6 +495,7 @@
     <ClCompile Include="Scene\Components\Standalone\Physics\SphereColliderComponent.cpp" />
     <ClCompile Include="Scene\Components\Standalone\UI\ButtonComponent.cpp" />
     <ClCompile Include="Scene\Components\Standalone\UI\ImageComponent.cpp" />
+    <ClCompile Include="Utils\Particles\ParticleUtils.cpp" />
     <ClCompile Include="Utils\Physics\BulletMotionState.cpp" />
     <ClCompile Include="Scene\Components\Standalone\Physics\CubeColliderComponent.cpp" />
     <ClCompile Include="DebugDraw\BulletDebugDraw.cpp" />
@@ -686,13 +699,28 @@
     <ClCompile Include="Utils\TextManager.cpp" />
     <ClCompile Include="Utils\Trees\Octree.cpp" />
     <ClCompile Include="Utils\Trees\Quadtree.cpp" />
+    <ClCompile Include="Utils\Particles\VelocityAddon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
+    <ClInclude Include="Utils\Particles\AreaAddon.h" />
+    <ClInclude Include="Utils\Particles\ColorAddon.h" />
+    <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />
+    <ClInclude Include="Utils\Particles\EmitterInstance.h" />
+    <ClInclude Include="Utils\Particles\ParticleSystem.h" />
+    <ClInclude Include="Scene\Components\ParticleSystemComponent.h" />
+    <ClInclude Include="Modules\ParticleSystemModule.h" />
+    <ClInclude Include="Utils\Particles\ParticleEmitter.h" />
+    <ClInclude Include="Utils\Particles\Particle.h" />
+    <ClInclude Include="Utils\Particles\BaseAddon.h" />
+    <ClInclude Include="Utils\Particles\ParticleUtils.h" />
+    <ClInclude Include="Utils\Particles\ParticleAddon.h" />
     <ClInclude Include="Scene\Components\Standalone\DecalComponent.h" />
     <ClInclude Include="Libs\ImGui\imgui_color_gradient.h" />
     <ClInclude Include="Libs\ImGui\imgui_curves.h" />
     <ClInclude Include="Scene\Components\Standalone\TrailComponent.h" />
+    <ClInclude Include="Scene\RenderPass.h" />
     <ClInclude Include="Utils\SSAO.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
     <ClInclude Include="Modules\BillboardModule.h" />
@@ -848,6 +876,7 @@
     <ClInclude Include="Utils\Script.h" />
     <ClInclude Include="Utils\Trees\Octree.h" />
     <ClInclude Include="Utils\Trees\Quadtree.h" />
+    <ClInclude Include="Utils\Particles\VelocityAddon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

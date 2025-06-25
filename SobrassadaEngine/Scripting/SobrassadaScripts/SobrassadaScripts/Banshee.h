@@ -13,6 +13,7 @@ class SphereColliderComponent;
 enum class BansheeStates
 {
     Idle,
+    Search,
     Chase,
     Attack
 };
@@ -35,9 +36,10 @@ class Banshee : public Character
     void ChasePlayer();
     void Attack(float deltaTime) override;
     void ChangeState();
+    void SearchForPlayer();
     void GoToAttackPosition();
 
-    void OnCollision(GameObject* otherObject, const float3& collisionNormal) override;
+    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
     AIAgentComponent* agentAI           = nullptr;

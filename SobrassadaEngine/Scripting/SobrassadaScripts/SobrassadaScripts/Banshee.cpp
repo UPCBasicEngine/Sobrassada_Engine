@@ -3,6 +3,7 @@
 #include "Banshee.h"
 
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Standalone/AIAgentComponent.h"
@@ -15,13 +16,14 @@
 Banshee::Banshee(GameObject* parent)
     : Character(
           parent,
-          2, // Max Health
-          2, // Damage
-          2, // Attack Duration
-          4, // Attack Cooldown
-          5, // Attack Range
-          5, // AI Aggro Range
-          5, // AI Chase Range
+          2,     // Max Health
+          2,     // Damage
+          2.0f,  // Attack Duration
+          4.0f,  // Attack Cooldown
+          5.0f,  // Attack Range
+          5.0f,  // AI Aggro Range
+          5.0f,  // AI Chase Range
+          10.0f, // Max detection range
           CharacterType::Banshee
       )
 {
@@ -63,7 +65,10 @@ bool Banshee::Init()
         else GLOG("[WARNING] Banshee: no scream visual found as child of base")
     }
 
-    mesh = parent->GetComponentChild<MeshComponent*>(AppEngine);
+    mesh = AppEngine->GetSceneModule()
+               ->GetScene()
+               ->GetGameObjectByUID(parent->GetChildren()[1])
+               ->GetComponentChild<MeshComponent*>(AppEngine);
     if (!mesh) GLOG("No mesh found for Banshee");
 
     rng            = std::mt19937(std::random_device {}());
@@ -78,6 +83,19 @@ void Banshee::Update(float deltaTime)
     if (agentAI == nullptr) return;
 
     Character::Update(deltaTime);
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        const std::string life      = "Health: " + std::to_string(currentHealth);
+        const std::string animState = "Anim state: " + stateName.GetString();
+
+        std::vector<std::pair<std::string, float2>> logs {
+            {life,      float2(-50.0f, -140.0f)},
+            {animState, float2(-80.0f, -160.0f)},
+        };
+
+        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
+    }
 }
 
 void Banshee::OnDeath()
@@ -102,6 +120,10 @@ void Banshee::HandleState(float deltaTime)
         ChangeState();
         break;
 
+    case BansheeStates::Search:
+        SearchForPlayer();
+        break;
+
     case BansheeStates::Chase:
         ChasePlayer();
         break;
@@ -123,7 +145,8 @@ void Banshee::ChasePlayer()
 
     if (animComponent) animComponent->UseTrigger("Chase");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Attack;
-    else if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = BansheeStates::Idle;
+    else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
+        currentState = BansheeStates::Search;
 }
 
 void Banshee::Attack(float deltaTime)
@@ -186,17 +209,58 @@ void Banshee::Attack(float deltaTime)
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
             agentAI->SetLookForward(true);
-            ChangeState();
+            if (GetDistanceFromPlayer() > maxDetectionRange) currentState = BansheeStates::Search;
+            else ChangeState();
         }
     }
 }
 
 void Banshee::ChangeState()
 {
-    const float distance = character->GetLastPosition().Distance(parent->GetPosition());
+    if (playerScript->IsDead())
+    {
+        currentState = BansheeStates::Idle;
+        return;
+    }
+
+    const float distance = GetDistanceFromPlayer();
     if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
     else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
     else currentState = BansheeStates::Idle;
+}
+
+void Banshee::SearchForPlayer()
+{
+    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
+    if (!isSearching)
+    {
+        // TODO: Would be nice to be a "search" animation instead of idle
+        animComponent->UseTrigger("Idle");
+        isSearching = true;
+        searchTimer = searchDuration;
+        agentAI->SetSpeed(0.0f, 0.0f);
+    }
+
+    if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+    {
+        isSearching = false;
+        agentAI->ResetSpeed();
+        currentState = BansheeStates::Chase;
+    }
+    else if (searchTimer >= 0.1f && searchTimer <= 0.3f)
+    {
+        mesh->SetEnabled(false);
+        isInvisible = true;
+        agentAI->ResetSpeed();
+        agentAI->SetPosition(startPos);
+    }
+    else if (searchTimer <= 0.1f)
+    {
+        isSearching  = false;
+        currentState = BansheeStates::Idle;
+        mesh->SetEnabled(true);
+        isInvisible = false;
+    }
 }
 
 void Banshee::GoToAttackPosition()
@@ -216,9 +280,9 @@ void Banshee::GoToAttackPosition()
     agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
-void Banshee::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void Banshee::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     if (isInvisible) return;
 
-    Character::OnCollision(otherObject, collisionNormal);
+    Character::OnCollision(otherObject, collisionNormal, layer);
 }

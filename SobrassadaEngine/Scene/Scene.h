@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "LightsConfig.h"
 
+#include "Math/float3x4.h"
 #include "Math/float4x4.h"
 #include <functional>
 #include <map>
@@ -10,7 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-struct DecalModels;
 class GameObject;
 class Component;
 class RootComponent;
@@ -18,10 +18,10 @@ class Octree;
 class ResourcePrefab;
 class Quadtree;
 class CameraComponent;
+class FrustumPlanes;
 class CharacterControllerComponent;
-class GBuffer;
 class Framebuffer;
-class SSAO;
+class RenderPass;
 enum class SaveMode;
 enum MobilitySettings;
 
@@ -125,27 +125,13 @@ class SOBRASADA_API_ENGINE Scene
     void SetStaticModified() { staticModified = true; }
     void SetDynamicModified() { dynamicModified = true; }
     void SetMultiselectPosition(const float3& newPosition);
+    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
 
     bool isSceneLoaded = false;
 
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
-    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, CameraComponent* camera) const;
-
-    void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer)
-        const;
-    void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer, SSAO* ssao) const;
-    void TransparentPassRender(
-        const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, Framebuffer* framebuffer
-    ) const;
-    void SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
-    
-    void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera, GBuffer* gbuffer) const;
-    void RenderGBufferDebug(GBuffer* gbuffer, Framebuffer* framebuffer) const;
-    void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera, Framebuffer* framebuffer) const;
-    void RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer);
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;
@@ -185,5 +171,5 @@ class SOBRASADA_API_ENGINE Scene
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
 
-    unsigned int decalVAO, decalVBO, decalEBO;
+    RenderPass* renderPass = nullptr;
 };

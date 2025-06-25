@@ -124,6 +124,12 @@
     <ClInclude Include="Mushroom.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="Changeling.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemySpawnerScript.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -788,6 +794,12 @@
     </ClCompile>
     <ClCompile Include="Mushroom.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Changeling.cpp">
+      <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemySpawnerScript.cpp">
+      <Filter>Characters\Enemies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

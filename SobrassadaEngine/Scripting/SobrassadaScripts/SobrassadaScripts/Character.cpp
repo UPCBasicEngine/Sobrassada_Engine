@@ -23,11 +23,11 @@
 
 Character::Character(
     GameObject* parent, int newMaxHealth, int newDamage, float newAttackDuration, float newAttackCooldown,
-    float newRange, float newRangeAIAttack, float newRangeAIChase, CharacterType newType
+    float newRange, float newRangeAIAttack, float newRangeAIChase, float newDetectionRange, CharacterType newType
 )
     : Script(parent), maxHealth(newMaxHealth), attackDamage(newDamage), attackDuration(newAttackDuration),
       attackCooldown(newAttackCooldown), range(newRange), rangeAIAttack(newRangeAIAttack),
-      rangeAIChase(newRangeAIChase), type(newType)
+      rangeAIChase(newRangeAIChase), maxDetectionRange(newDetectionRange), type(newType)
 {
     currentHealth = maxHealth;
 
@@ -48,6 +48,8 @@ Character::Character(
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
+        fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
+        fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
     }
 }
 
@@ -100,28 +102,26 @@ void Character::Update(float deltaTime)
 
     HandleState(deltaTime);
     UpdateTimers(deltaTime);
-
-    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS)) RenderDebug();
 }
 
-void Character::OnCollision(GameObject* otherObject, const float3& collisionNormal)
+void Character::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
     // ---- Damage Collisions ----
-    if (isInvulnerable) return;
 
     // Melee check
-    CapsuleColliderComponent* otherWeapon = otherObject->GetComponent<CapsuleColliderComponent*>();
-    ScriptComponent* otherScript          = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+    CapsuleColliderComponent* otherWeapon      = otherObject->GetComponent<CapsuleColliderComponent*>();
+    SphereColliderComponent* otherWeaponShpere = otherObject->GetComponent<SphereColliderComponent*>();
+    ScriptComponent* otherScript               = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
-        // Special attack check
-        CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
-        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
-            TakeDamage(playerScript->GetUltimateDamage());
+
+        // Charged attack check
+        if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
+            TakeDamage(playerScript->GetChargedAttackDamage());
 
         // Standard attack check
         Character* enemyScript = otherScript->GetScriptByType<Character>();
@@ -130,6 +130,18 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
             if (!enemyScript->isAttacking) return;
             TakeDamage(enemyScript->attackDamage);
         }
+    }
+    else if (otherScript && otherWeaponShpere && otherWeaponShpere->GetEnabled())
+    {
+        // Special attack check
+        CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
+        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
+            TakeDamage(playerScript->GetUltimateDamage());
+    }
+
+    if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
+    {
+        TakeDamage(1);
     }
 
     otherScript = otherObject->GetComponent<ScriptComponent*>();
@@ -159,12 +171,11 @@ void Character::OnCollision(GameObject* otherObject, const float3& collisionNorm
 
         // Mushroom check
         Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
-        if (desiredHeal && mushroomScript)
+        if (mushroomScript)
         {
-            if (mushroomScript->IsReady())
+            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
             {
-                Heal(mushroomScript->GetHealingAmount());
-                mushroomScript->Disable();
+                if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
         }
     }
@@ -195,17 +206,22 @@ void Character::UpdateTimers(float deltaTime)
         desiredHeal = false;
         healCdTimer = 0.0f;
     }
+
+    searchTimer -= deltaTime;
+    if (searchTimer < 0.0f) searchTimer = 0.0f;
 }
 
 void Character::TakeDamage(int amount)
 {
+    if (isInvulnerable) return;
+
     currentHealth        -= amount;
 
     isInvulnerable        = true;
     invulnerabilityTimer  = invulnerableDuration;
 
+    OnDamageTaken(amount);
     if (currentHealth <= 0) Die();
-    else OnDamageTaken(amount);
 }
 
 void Character::Restart()
@@ -232,6 +248,11 @@ void Character::Heal(int amount)
     if (currentHealth > maxHealth) currentHealth = maxHealth;
 
     OnHealed(amount);
+}
+
+float Character::GetDistanceFromPlayer() const
+{
+    return character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
 }
 
 PlayerDistances Character::CheckDistanceWithPlayer() const
@@ -274,7 +295,7 @@ void Character::Die()
     }
 }
 
-void Character::RenderDebug()
+void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)
 {
     DebugDrawModule* debug        = AppEngine->GetDebugDrawModule();
     const CameraComponent* camera = AppEngine->GetSceneModule()->GetScene()->GetMainCamera();
@@ -288,21 +309,16 @@ void Character::RenderDebug()
     float screenY = (1.0f - ndc.y) * 0.5f * AppEngine->GetWindowModule()->GetHeight();
 #else
     const auto& windowSize = AppEngine->GetSceneModule()->GetScene()->GetWindowSize();
-    float screenX          = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
-    float screenY          = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
+    const float screenX    = (ndc.x + 1.0f) * 0.5f * std::get<0>(windowSize);
+    const float screenY    = (1.0f - ndc.y) * 0.5f * std::get<1>(windowSize);
 #endif
 
-    const std::string life   = "Health: " + std::to_string(currentHealth);
-    const std::string state  = "Anim state: " + stateName.GetString();
+    const float scale = 0.6f;
 
-    const float scale        = 0.6f;
-    const float3 color       = type == CharacterType::CuChulainn ? float3(0.0f, 1.0f, 0.0f) : float3(1.0f, 0.0f, 0.0f);
-
-    screenX                 -= 50.0f;
-    screenY                 -= 140.0f;
-    debug->Draw2DText(life.c_str(), float3(screenX, screenY, 0.0f), color, scale);
-
-    screenX -= 40.0f;
-    screenY -= 20.0f;
-    debug->Draw2DText(state.c_str(), float3(screenX, screenY, 0.0f), color, scale);
+    for (const auto& log : logs)
+    {
+        const float x = screenX + log.second.x;
+        const float y = screenY + log.second.y;
+        debug->Draw2DText(log.first.c_str(), float3(x, y, 0.0f), color, scale);
+    }
 }

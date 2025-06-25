@@ -46,31 +46,48 @@ class CameraComponent : public Component
     Framebuffer* GetFramebuffer() { return previewFramebuffer; }
     float GetNearPlaneDistance() const { return camera.nearPlaneDistance; }
     float GetFarPlaneDistance() const { return camera.farPlaneDistance; }
+    void GetFrustumCorners(float3* corners) const { return camera.GetCornerPoints(corners); }
+    float3 GetCameraCenter() const { return camera.CenterPoint(); };
 
     void SetAspectRatio(float newAspectRatio);
     void SetCameraPosition(const float3& position) { camera.pos = position; }
     void SetCameraFront(const float3& front) { camera.front = front; }
     void SetCameraUp(const float3& up) { camera.up = up; }
+    void SetNear(float nearPlane)
+    {
+        camera.nearPlaneDistance = nearPlane;
+        UpdateUBO();
+    }
+    void SetFar(float farPlane)
+    {
+        camera.farPlaneDistance = farPlane;
+        UpdateUBO();
+    }
     void SetFreeCamera(const bool freecamera) { freeCamera = freecamera; }
+    SOBRASADA_API_ENGINE void SetFov(float fov);
+
+  private:
+    void UpdateUBO();
 
   private:
     Frustum camera;
     FrustumPlanes frustumPlanes;
     CameraMatrices matrices;
-    unsigned int ubo  = 0;
+    unsigned int ubo           = 0;
 
-    bool drawGizmos   = true;
-    bool isMainCamera = false;
+    bool drawGizmos            = true;
+    bool isMainCamera          = false;
 
-    float horizontalFov;
-    float verticalFov;
     float perspectiveNearPlane = 0.1f;
     float perspectiveFarPlane  = 50.0f;
 
     float orthographicWidth;
     float orthographicHeight;
-    float ortographicNearPlane      = 25.10f;
-    float ortographicFarPlane       = 50.0f;
+    float ortographicNearPlane = 25.10f;
+    float ortographicFarPlane  = 50.0f;
+
+    float horizontalFov;
+    float verticalFov;
 
     bool firstTime                  = true;
 
