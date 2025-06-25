@@ -133,6 +133,8 @@ void Changeling::Update(float deltaTime)
 void Changeling::OnPlayerExitLocation()
 {
     currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
 }
 
 void Changeling::OnDeath()

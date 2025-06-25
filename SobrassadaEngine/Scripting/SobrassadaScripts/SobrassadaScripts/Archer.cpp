@@ -84,6 +84,8 @@ void Archer::Update(float deltaTime)
 void Archer::OnPlayerExitLocation()
 {
     currentState = ArcherStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
 }
 
 void Archer::OnDeath()
@@ -146,7 +148,10 @@ void Archer::PatrolAI()
 {
     if (animComponent) animComponent->UseTrigger("run");
 
-    if (!playerScript->IsDead())
+    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    bool playerInLocation            = parent->HasTag(playerLocation);
+
+    if (!playerScript->IsDead() && playerInLocation)
     {
         const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium && parent->HasTag(playerLocation))

@@ -79,6 +79,8 @@ void Soldier::Update(float deltaTime)
 void Soldier::OnPlayerExitLocation()
 {
     currentState = SoldierStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
 }
 
 void Soldier::OnDeath()
@@ -146,13 +148,14 @@ void Soldier::HandleState(float deltaTime)
 
 void Soldier::PatrolAI()
 {
-    if (!playerScript->IsDead())
+    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    bool playerInLocation            = parent->HasTag(playerLocation);
+
+    if (!playerScript->IsDead() && playerInLocation)
     {
-        const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-        bool playerInLocation            = parent->HasTag(playerLocation);
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
             currentState = SoldierStates::CHASE;
-        else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close)
             currentState = SoldierStates::BASIC_ATTACK;
     }
 
