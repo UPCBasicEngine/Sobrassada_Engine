@@ -265,15 +265,14 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         glUniform2fv(4, 1, &tileSize[0]);
         glUniform1f(5, colorIntensity);
 
-        glBindVertexArray(vao);
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
+
+        glBindVertexArray(vao);
 
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)batchedParticles.size());
 
         glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
 
         const auto end                             = std::chrono::high_resolution_clock::now();
