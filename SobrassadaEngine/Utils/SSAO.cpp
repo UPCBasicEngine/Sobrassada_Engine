@@ -64,16 +64,16 @@ void SSAO::Init()
     }
 
     
-    noise.reserve(SSAO_KERNEL_SIZE_MID);
+    noise.reserve(SSAO_KERNEL_SIZE_LOW);
 
-    for (int i = 0; i < SSAO_KERNEL_SIZE_MID; i++)
+    for (int i = 0; i < SSAO_KERNEL_SIZE_LOW; i++)
     {
         float3 n(rng->Float(-1.0f, 1.0f), rng->Float(-1.0f, 1.0f), 0.0f);
         n.Normalize();
         noise.push_back(n);
     }
 
-    /*
+    
     if(noiseTexture == 0) glGenTextures(1, &noiseTexture);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT, noise.data());
@@ -82,7 +82,7 @@ void SSAO::Init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D, 0);
-    */
+    
 }
 
 void SSAO::Bind()

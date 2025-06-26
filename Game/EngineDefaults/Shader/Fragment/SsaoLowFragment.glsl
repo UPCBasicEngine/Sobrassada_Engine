@@ -3,7 +3,7 @@
 layout(binding = 0) uniform sampler2D gPositions;
 layout(binding = 1) uniform sampler2D gNormals;
 layout(binding = 2) uniform sampler2D gDepth;
-
+layout(binding = 3) uniform sampler2D noiseTexture;
 layout(std140, row_major, binding = 0) uniform CameraMatrices
 {
     mat4 projMatrix;
@@ -13,10 +13,12 @@ layout(std140, row_major, binding = 0) uniform CameraMatrices
 uniform vec2 screenSize;
 in vec2 uv0;
 
+uniform float bias;
+uniform float range; 
+ 
 const int KERNEL_SIZE = 32;
 uniform vec3 kernel_samples[KERNEL_SIZE];
 uniform vec3 random_tangents[KERNEL_SIZE];
-
 out vec4 result;
 
 mat3 createTangentSpace(const vec3 normal, const vec3 up)
@@ -26,12 +28,16 @@ mat3 createTangentSpace(const vec3 normal, const vec3 up)
    return mat3(bitangent, tangent, normal);
 }
 
-vec3 getRandomTangent()
-{
-    vec2 screenPos = uv0 * screenSize;
-    int index = int(mod(screenPos.x + screenPos.y, float(KERNEL_SIZE)));
-    return random_tangents[index];
+vec3 getRandomTangent() {
+   vec2 noiseScale = screenSize / 4.0;
+   return normalize(texture(noiseTexture, uv0 * noiseScale).xyz);
 }
+//vec3 getRandomTangent()
+//{
+//    vec2 screenPos = uv0 * screenSize;
+//    int index = int(mod(screenPos.x + screenPos.y, float(KERNEL_SIZE)));
+//    return random_tangents[index];
+//}
 
 float getSceneDepthAtSamplePos(in vec3 samplePos)
 {
@@ -55,14 +61,15 @@ void main()
     {
         vec3 samplePos = position+tangentSpace*kernel_samples[i];
         float sampleDepth = getSceneDepthAtSamplePos(samplePos);
-        if(sampleDepth > samplePos.z)
+        if(getSceneDepthAtSamplePos(samplePos)+bias > samplePos.z && abs(sampleDepth-position.z) < range)
+        //if(sampleDepth > samplePos.z)
 	{
 	 ++occlusion;
 	}
     }
 
     //if(getSceneDepthAtSamplePos(samplePos) > samplePos.z) ++occlusion;
-    //if ((sampleDepth< -samplePos.z) && abs(sampleDepth - position.z))
+    //((sampleDepth + bias < -samplePos.z) && abs(sampleDepth - position.z) < range)
     
     float ao = 1.0 - float(occlusion) / float(KERNEL_SIZE);
     result = vec4(vec3(ao), 1.0);

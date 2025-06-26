@@ -17,6 +17,7 @@ class SSAO
     void CheckResize();
 
     unsigned int GetSSAOTexture() const { return ssaoTexture; }
+    unsigned int GetNoiseTexture() const { return noiseTexture; }
     const std::vector<float3>& GetKernels() const { return kernels; }
     const std::vector<float3>& GetNoise() const { return noise; }
 
@@ -26,6 +27,7 @@ class SSAO
   private:
     unsigned int ssaoFrameBufferObject = 0;
     unsigned int ssaoTexture           = 0;
+    unsigned int noiseTexture          = 0;
 
     std::vector<float3> noise;
     std::vector<float3> kernels;

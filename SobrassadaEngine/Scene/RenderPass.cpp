@@ -480,12 +480,17 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
     glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
     glUniform1i(glGetUniformLocation(program, "gDepth"), 2);
 
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
+    glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
+
     glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
 
     glUniform3fv(glGetUniformLocation(program, "random_tangents"), SSAO_KERNEL_SIZE_MID, &ssao->GetNoise()[0].x);
 
     glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
-
+    glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
+    glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
     unsigned int cameraUBO;
     if (camera == nullptr)
     {
