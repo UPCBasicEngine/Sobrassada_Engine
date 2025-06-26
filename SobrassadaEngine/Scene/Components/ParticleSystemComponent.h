@@ -39,6 +39,8 @@ class ParticleSystemComponent : public Component
     }
 
   private:
+    void CreateLocalAABB();
+  private:
     char newParticleTagName[64]     = "";
     char newEmitterTagName[64]      = "";
     HashString particleSystemTag    = HashString("");
