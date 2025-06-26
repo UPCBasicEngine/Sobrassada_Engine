@@ -51,14 +51,12 @@ void SSAO::Init()
 
     for (int i = 0; i < SSAO_KERNEL_SIZE_MID; ++i)
     {
-        //float3 kernel = float3::RandomDir(*rng);
+
         float3 kernel;
         kernel.x = distribution(generator) * 2.f - 1.f;
         kernel.y = distribution(generator) * 2.f - 1.f;
         kernel.z = distribution(generator);
 
-        //if (kernel.z < 0.0f) // flip points in lower hemishpere
-        //    kernel.z *= -1,.0f;
         kernel.Normalize();
 
         float scale  = float(i) / float(SSAO_KERNEL_SIZE_MID);
