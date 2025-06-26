@@ -233,7 +233,7 @@ void Banshee::ChangeState()
     const float distance             = GetDistanceFromPlayer();
     if (distance <= rangeAIAttack && playerInLocation) currentState = BansheeStates::Attack;
     else if (distance <= rangeAIChase && playerInLocation) currentState = BansheeStates::Chase;
-    else currentState = BansheeStates::Idle;
+    else currentState = BansheeStates::Search;
 }
 
 void Banshee::SearchForPlayer()
