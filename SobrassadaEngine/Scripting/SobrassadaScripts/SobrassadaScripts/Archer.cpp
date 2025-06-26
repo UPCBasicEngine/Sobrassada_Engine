@@ -153,8 +153,7 @@ void Archer::PatrolAI()
 
     if (!playerScript->IsDead() && playerInLocation)
     {
-        const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && parent->HasTag(playerLocation))
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
             currentState = ArcherStates::CHASE;
         else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
     }
