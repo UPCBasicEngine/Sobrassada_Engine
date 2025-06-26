@@ -26,6 +26,7 @@ class Archer : public Character
     void Update(float deltaTime) override;
 
     void OnPlayerExitLocation() override;
+    void OnPlayerEnterLocation() override;
 
   private:
     void OnDeath() override;

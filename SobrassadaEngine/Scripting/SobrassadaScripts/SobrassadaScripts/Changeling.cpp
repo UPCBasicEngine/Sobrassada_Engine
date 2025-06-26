@@ -137,6 +137,11 @@ void Changeling::OnPlayerExitLocation()
     reachedPatrolPoint = false;
 }
 
+void Changeling::OnPlayerEnterLocation()
+{
+
+}
+
 void Changeling::OnDeath()
 {
     // TODO: include death sound for the character

@@ -88,6 +88,11 @@ void Archer::OnPlayerExitLocation()
     reachedPatrolPoint = false;
 }
 
+void Archer::OnPlayerEnterLocation()
+{
+    currentState = ArcherStates::SEARCH;
+}
+
 void Archer::OnDeath()
 {
     // TODO: include death sound for the character

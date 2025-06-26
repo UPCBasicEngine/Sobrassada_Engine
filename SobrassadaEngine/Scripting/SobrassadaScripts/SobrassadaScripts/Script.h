@@ -67,6 +67,7 @@ class Script
     virtual void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) {};
     virtual void OnCollisionExit(GameObject* otherObject, ColliderLayer layer) {};
     virtual void OnPlayerExitLocation() {};
+    virtual void OnPlayerEnterLocation() {};
     virtual void OnDestroy() {};
 
     virtual const std::vector<InspectorField>& GetFields() const { return fields; }

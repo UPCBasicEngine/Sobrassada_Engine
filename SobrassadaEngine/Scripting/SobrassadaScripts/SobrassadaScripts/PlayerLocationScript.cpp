@@ -23,6 +23,20 @@ bool PlayerLocationScript::Init()
 void PlayerLocationScript::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     AppEngine->GetSceneModule()->GetScene()->SetPlayerPosition(locationTag);
+
+    auto taggedGameObjects = AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(locationTag);
+    if (taggedGameObjects)
+    {
+        for (GameObject* currentGameObject : *taggedGameObjects)
+        {
+            ScriptComponent* script = currentGameObject->GetComponent<ScriptComponent*>();
+            if (script)
+            {
+                Character* character = script->GetScriptByType<Character>();
+                if (character) character->OnPlayerEnterLocation();
+            }
+        }
+    }
 }
 
 void PlayerLocationScript::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)

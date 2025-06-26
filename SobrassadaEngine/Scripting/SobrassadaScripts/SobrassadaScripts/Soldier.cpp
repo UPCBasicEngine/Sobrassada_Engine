@@ -89,6 +89,11 @@ void Soldier::OnPlayerExitLocation()
     reachedPatrolPoint = false;
 }
 
+void Soldier::OnPlayerEnterLocation()
+{
+    currentState = SoldierStates::SEARCH;
+}
+
 void Soldier::OnDeath()
 {
     // TODO: include death sound for the character
