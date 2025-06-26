@@ -63,6 +63,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
+    fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -157,6 +158,10 @@ bool CuChulainn::Init()
     if (!dashDecal) GLOG("[WARNING] No dash decal found for CuChulain")
     else dashDecal->SetEnabled(false);
 
+    healVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healVisualName);
+    if (!healVisual) GLOG("[WARNING] No heal visual found for CuChulain")
+    else healVisual->SetEnabled(false);
+
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
@@ -244,6 +249,7 @@ void CuChulainn::HandleState(float deltaTime)
     }
 
     if (!isDashing && dashTrail) dashTrail->SetEnabled(false);
+    if (!isHealing && healVisual) healVisual->SetEnabled(false);
 
     UpdateDashCooldownUI();
     UpdateUltimateCooldownUI();
@@ -254,10 +260,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
-             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL)
         Move();
 
     // When finished animation, go back to idle state
@@ -268,7 +271,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
-            if(meleeVfxObject)meleeVfxObject->SetEnabled(false);
+            if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -328,8 +331,11 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
     {
-        desiredHeal = true;
-        healCdTimer = healCooldown;
+        if (mushrooms != 0)
+        {
+            desiredHeal = true;
+            healCdTimer = healCooldown;
+        }
     }
 
     // Dash
@@ -439,7 +445,9 @@ bool CuChulainn::CanHeal() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM && mushrooms > 0;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
+           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
+           !isHealing;
 }
 
 bool CuChulainn::CanAim() const
@@ -564,6 +572,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (state == CharacterStates::DASH) isInvulnerable = true;
 
     isDashing = state == CharacterStates::DASH ? true : false;
+    isHealing = state == CharacterStates::HEAL ? true : false;
 }
 
 void CuChulainn::LookAtMouse()
@@ -662,6 +671,7 @@ void CuChulainn::Dash()
     if (dashTrail) dashTrail->SetEnabled(true);
     if (dashDecal)
     {
+        // TODO: set dash decal to the final position of player and not to direction
         dashDecal->SetEnabled(true);
         const float3 scale  = dashDecal->GetLocalTransform().ExtractScale();
         const Quat rotation = Quat::LookAt(float3::unitY, character->GetFrontDirection(), float3::unitZ, float3::unitY);
@@ -681,8 +691,7 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-                 attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay && attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -699,13 +708,11 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
-                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay && ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
         }
-        else if (ultimateObject->IsEnabled() &&
-                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
@@ -721,8 +728,7 @@ void CuChulainn::PerformAttack()
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() &&
-                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
@@ -848,7 +854,7 @@ void CuChulainn::Respawn()
     isDead        = false;
     currentHealth = reservedHealth;
     UpdateHealthBarUI();
-    state         = CharacterStates::RESPAWN;
+    state = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
@@ -883,9 +889,12 @@ void CuChulainn::UseMushroom()
     state        = CharacterStates::HEAL;
     desiredHeal  = false;
 
-    // if (animComponent) animComponent->UseTrigger("Heal");
-    if (animComponent) animComponent->UseTrigger("Ultimate");
+    if (animComponent) animComponent->UseTrigger("Heal");
+
     character->EnableMovement(false);
+    isHealing = true;
+
+    if (healVisual) healVisual->SetEnabled(true);
 
     Heal(mushroomHeal);
 

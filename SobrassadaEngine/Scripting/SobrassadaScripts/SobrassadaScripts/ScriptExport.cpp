@@ -65,7 +65,7 @@ constexpr const char* scripts[] = {
     "MenuChangeSceneScript",
     "MoveGOInSpline",
     "Mushroom",
-    "EnemySpawnerScript"
+    "EnemySpawnerScript",
     "GameOverScript"
 };
 

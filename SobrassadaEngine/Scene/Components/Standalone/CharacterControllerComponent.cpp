@@ -303,7 +303,7 @@ void CharacterControllerComponent::Move(float deltaTime)
     float3 closestPoint     = float3::zero;
     bool posOverPoly        = false;
     dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
-    GLOG("Search area: %f %f %f", searchArea.x, searchArea.y, searchArea.z);
+    //GLOG("Search area: %f %f %f", searchArea.x, searchArea.y, searchArea.z);
 
     if (!dtStatusSucceed(status)) return;
 
