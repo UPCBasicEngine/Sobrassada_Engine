@@ -54,6 +54,8 @@ class ScriptComponent : public Component
         return nullptr;
     }
 
+    void SetComponentEnabled(bool value);
+
   private:
     bool startScript = false;
 

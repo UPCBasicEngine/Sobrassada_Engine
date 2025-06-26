@@ -1256,6 +1256,23 @@ const float4x4& GameObject::GetParentGlobalTransform() const
     return float4x4::identity;
 }
 
+void GameObject::SetEnabled(bool active)
+{
+    if (enabled == active) return;
+
+    enabled    = active;
+    wasEnabled = active;
+
+    std::apply([&](auto&... cmp) { ((cmp ? cmp->SetEnabled(active) : void()), ...); }, compTuple);
+
+    Scene* scene = App->GetSceneModule()->GetScene();
+    for (UID childUID : children)
+    {
+        if (GameObject* child = scene->GetGameObjectByUID(childUID)) child->SetEnabled(active);
+    }
+}
+
+
 void GameObject::SetJustLocalTransform(const float4x4& newTransform)
 {
     localTransform = newTransform;
@@ -1488,9 +1505,11 @@ void GameObject::SetEnabledRecursive(bool value)
     enabled    = value;
     wasEnabled = value;
 
+    std::apply([&](auto*... cmp) { ((cmp ? cmp->SetEnabled(value) : void()), ...); }, compTuple);
+
+    if (auto* sc = GetComponent<ScriptComponent*>()) sc->SetComponentEnabled(value);
+
     for (UID childUID : children)
-    {
-        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
-        if (child) child->SetEnabledRecursive(value);
-    }
+        if (auto* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID))
+            child->SetEnabledRecursive(value);
 }

@@ -38,6 +38,7 @@ class Soldier : public Character
     void PatrolAI();
     void ChaseAI();
     void SearchForPlayer();
+    const char* ManageAttackAnimations();
 
   private:
     AIAgentComponent* agentAI  = nullptr;
@@ -50,4 +51,10 @@ class Soldier : public Character
     float knockbackTimer       = 0.0f;
     float3 knockbackDirection  = float3::zero;
     bool isKnockback           = false;
+    int consecutiveAttack     = 0; 
+    int consecutiveThrust     = 0; 
+    float secondAttackDelay          = 0.6f;
+    const char* currentAttackTrigger = nullptr;
+    float originalAttackDuration     = 0.0f;
+    float originalAttackHitboxDelay  = 0.0f;
 };

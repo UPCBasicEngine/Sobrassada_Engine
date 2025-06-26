@@ -318,7 +318,6 @@ update_status Scene::Update(float deltaTime)
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::Update", Optick::Category::GameLogic)
 #endif
-
     if (App->GetSceneModule()->GetOnlyOnceInPlayMode())
     {
         for (auto& gameObject : gameObjectsContainer)

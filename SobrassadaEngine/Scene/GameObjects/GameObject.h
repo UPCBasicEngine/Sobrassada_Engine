@@ -161,11 +161,8 @@ class SOBRASADA_API_ENGINE GameObject
     void SetPosition(float3& newPosition) { position = newPosition; };
     void SetWillUpdate(bool willUpdate) { this->willUpdate = willUpdate; };
     bool IsEnabled() const { return enabled; }
-    void SetEnabled(bool state)
-    {
-        enabled    = state;
-        wasEnabled = state;
-    }
+    void SetEnabled(bool active);
+    
     void SetComponentCreated(int position) { createdComponents[position] = true; }
     void SetComponentRemoved(int position) { createdComponents[position] = false; }
     void SetSelectParent(bool newSelectParent) { selectParent = newSelectParent; }
