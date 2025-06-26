@@ -1,7 +1,7 @@
 #version 460 core
 in vec2 uv0;
 
-layout(location = 0) out vec4 FragColor;
+out float FragColor;
 layout(binding = 0) uniform sampler2D ssaoInput;
 
 uniform bool horizontal;
@@ -18,5 +18,5 @@ void main() {
         result += texture(ssaoInput, uv0 - offset).r * weights[i];
     }
     
-    FragColor = vec4(result, 0.0, 0.0, 1.0);
+    FragColor = result
 }
