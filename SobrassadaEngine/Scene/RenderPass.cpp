@@ -900,7 +900,7 @@ void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) con
     const unsigned int program = App->GetShaderModule()->GetLinearDepthProgram();
     glUseProgram(program);
 
-    GLint loc = glGetUniformLocation(program, "u_Texture");
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
     glActiveTexture(GL_TEXTURE0);
@@ -928,7 +928,6 @@ void RenderPass::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffe
 {
     framebuffer->Bind();
 
-
     glViewport(0, 0, width, height);
 
     unsigned int program = App->GetShaderModule()->GetSsaoDebugProgram();
@@ -937,10 +936,9 @@ void RenderPass::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffe
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, ssao->GetBlurTexture(1));
 
-    GLint loc = glGetUniformLocation(program, "u_Texture");
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
-    // If using a fullscreen triangle without a VAO:
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
