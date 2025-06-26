@@ -211,8 +211,6 @@ constexpr int PALETTE_SIZE                                       = 64;
 
 constexpr int SSAO_KERNEL_SIZE_LOW                               = 16;
 constexpr int SSAO_KERNEL_SIZE_MID                               = 32;
-constexpr int SSAO_KERNEL_SIZE_HIGH                              = 64;
-constexpr int SSAO_KERNEL_SIZE_ULTRA                             = 128;
 
 inline UID GenerateUID()
 {
