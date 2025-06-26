@@ -927,8 +927,8 @@ void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) con
 void RenderPass::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer) const
 {
     framebuffer->Bind();
-    int width  = framebuffer->GetTextureWidth();
-    int height = framebuffer->GetTextureHeight();
+
+
     glViewport(0, 0, width, height);
 
     unsigned int program = App->GetShaderModule()->GetSsaoDebugProgram();
