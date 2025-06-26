@@ -34,6 +34,7 @@ class ShaderModule : public Module
     int GetParticleSystemProgram() const { return particleSystemProgram; }
     int GetSsaoProgram() const { return ssaoProgram; }
     int GetSsaoDebugProgram() const { return ssaoDebugProgram; }
+    int GetSsaoBlurProgram() const { return ssaoBlurProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -71,4 +72,5 @@ class ShaderModule : public Module
 
     int ssaoProgram                    = -1;
     int ssaoDebugProgram               = -1;
+    int ssaoBlurProgram                = -1;
 };

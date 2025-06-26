@@ -32,20 +32,12 @@ vec3 getRandomTangent() {
    vec2 noiseScale = screenSize / 4.0;
    return normalize(texture(noiseTexture, uv0 * noiseScale).xyz);
 }
-//vec3 getRandomTangent()
-//{
-//    vec2 screenPos = uv0 * screenSize;
-//    int index = int(mod(screenPos.x + screenPos.y, float(KERNEL_SIZE)));
-//    return random_tangents[index];
-//}
+
 
 float getSceneDepthAtSamplePos(in vec3 samplePos)
 {
     vec4 clipSpace = projMatrix * vec4(samplePos, 1.0);
     vec2 sampleUV = (clipSpace.xy/clipSpace.w)*0.5+0.5;
-
-    //if (sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0)
-    //return 1e6;
 
     return (viewMatrix*texture(gPositions, sampleUV)).z;
 }
@@ -62,15 +54,11 @@ void main()
         vec3 samplePos = position+tangentSpace*kernel_samples[i];
         float sampleDepth = getSceneDepthAtSamplePos(samplePos);
         if(getSceneDepthAtSamplePos(samplePos)+bias > samplePos.z && abs(sampleDepth-position.z) < range)
-        //if(sampleDepth > samplePos.z)
 	{
 	 ++occlusion;
 	}
     }
 
-    //if(getSceneDepthAtSamplePos(samplePos) > samplePos.z) ++occlusion;
-    //((sampleDepth + bias < -samplePos.z) && abs(sampleDepth - position.z) < range)
-    
     float ao = 1.0 - float(occlusion) / float(KERNEL_SIZE);
     result = vec4(vec3(ao), 1.0);
 

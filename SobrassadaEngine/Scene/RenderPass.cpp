@@ -194,6 +194,10 @@ void RenderPass::RenderScene(
     SsaoPassRender(camera, gbuffer, ssao);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Blur Pass");
+    SsaoBlurPassRender(ssao);
+    glPopDebugGroup();
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -480,13 +484,11 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
     glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
     glUniform1i(glGetUniformLocation(program, "gDepth"), 2);
 
-    glActiveTexture(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
     glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
 
     glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
-
-    glUniform3fv(glGetUniformLocation(program, "random_tangents"), SSAO_KERNEL_SIZE_MID, &ssao->GetNoise()[0].x);
 
     glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
     glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
@@ -510,6 +512,32 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
     ssao->Unbind();
+}
+
+void RenderPass::SsaoBlurPassRender(SSAO* ssao)
+{
+    const GLuint blurShader = App->GetShaderModule()->GetSsaoBlurProgram();
+
+    glUseProgram(blurShader);
+
+    for (int i = 0; i < 2; ++i)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, ssao->GetBlurFBO(i));
+        glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        bool horizontal = (i == 0);
+
+        glUniform1i(glGetUniformLocation(blurShader, "horizontal"), horizontal);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, i == 0 ? ssao->GetSSAOTexture() : ssao->GetBlurTexture(0));
+        glUniform1i(glGetUniformLocation(blurShader, "ssaoInput"), 0);
+
+        App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -701,7 +729,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glBindTexture(GL_TEXTURE_2D, depthTexture);
 
     glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, ssao->GetSSAOTexture());
+    glBindTexture(GL_TEXTURE_2D, ssao->GetBlurTexture(1));
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
@@ -907,7 +935,7 @@ void RenderPass::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffe
     glUseProgram(program);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, ssao->GetSSAOTexture());
+    glBindTexture(GL_TEXTURE_2D, ssao->GetBlurTexture(1));
 
     GLint loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);

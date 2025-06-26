@@ -18,8 +18,13 @@ SSAO::SSAO(int width, int height)
 SSAO::~SSAO()
 {
     glDeleteFramebuffers(1, &ssaoFrameBufferObject);
+    glDeleteFramebuffers(1, &ssaoBlurFrameBufferObject[0]);
+    glDeleteFramebuffers(1, &ssaoBlurFrameBufferObject[1]);
 
     glDeleteTextures(1, &ssaoTexture);
+    glDeleteTextures(1, &noiseTexture);
+    glDeleteTextures(1, &blurTexture[0]);
+    glDeleteTextures(1, &blurTexture[1]);
 }
 
 void SSAO::Init()
@@ -82,6 +87,29 @@ void SSAO::Init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+
+
+    for (int i = 0; i < 2; ++i)
+    {
+        if (ssaoBlurFrameBufferObject[i] == 0) glGenFramebuffers(1, &ssaoBlurFrameBufferObject[i]);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFrameBufferObject[i]);
+
+        if (blurTexture[i] == 0) glGenTextures(1, &blurTexture[i]);
+
+        glBindTexture(GL_TEXTURE_2D, blurTexture[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, screenWidth, screenHeight, 0, GL_RED, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture[i], 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            printf("SSAO Blur FBO %d not complete!\n", i);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     
 }
 
