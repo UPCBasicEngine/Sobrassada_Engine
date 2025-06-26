@@ -182,6 +182,10 @@ class CuChulainn : public Character
 
     float dashDecalTimer                   = 5.0f;
     float dashDecalBufferTimer             = 0.0f;
+
+    bool isHealing                         = false;
+    std::string healVisualName             = "";
+    GameObject* healVisual                 = nullptr;
 };
 
 extern CharacterControllerComponent* character;
