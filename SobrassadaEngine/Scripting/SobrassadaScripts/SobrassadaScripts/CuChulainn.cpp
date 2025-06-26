@@ -331,8 +331,11 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
     {
-        desiredHeal = true;
-        healCdTimer = healCooldown;
+        if (mushrooms != 0)
+        {
+            desiredHeal = true;
+            healCdTimer = healCooldown;
+        }
     }
 
     // Dash
@@ -442,7 +445,9 @@ bool CuChulainn::CanHeal() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM && mushrooms > 0;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
+           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
+           !isHealing;
 }
 
 bool CuChulainn::CanAim() const
@@ -565,7 +570,6 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (state == CharacterStates::IDLE) idleTimer += deltaTime;
 
     if (state == CharacterStates::DASH) isInvulnerable = true;
-    if (state == CharacterStates::HEAL) isInvulnerable = true;
 
     isDashing = state == CharacterStates::DASH ? true : false;
     isHealing = state == CharacterStates::HEAL ? true : false;
