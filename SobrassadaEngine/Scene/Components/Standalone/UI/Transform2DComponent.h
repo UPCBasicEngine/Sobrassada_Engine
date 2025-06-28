@@ -66,6 +66,8 @@ class Transform2DComponent : public Component
     float2 anchorsX;
     float2 anchorsY;
 
+    int orderInCanvas = 0;
+
   private:
     CanvasComponent* parentCanvas                      = nullptr;
     Transform2DComponent* parentTransform              = nullptr;

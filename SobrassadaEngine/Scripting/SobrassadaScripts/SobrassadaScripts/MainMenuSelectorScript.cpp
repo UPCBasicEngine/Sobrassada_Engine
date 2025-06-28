@@ -1,14 +1,17 @@
-#include "pch.h"
+﻿#include "pch.h"
 
 #include "Application.h"
 #include "CuChulainn.h"
 #include "GameObject.h"
+#include "GameOverScript.h"
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MainMenuSelectorScript.h"
+#include "PauseMenuScript.h"
 #include "ProjectModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
+#include "ScriptComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 
 bool MainMenuSelectorScript::Init()
@@ -40,6 +43,20 @@ bool MainMenuSelectorScript::Init()
         }
     }
 
+    Scene* scene     = AppEngine->GetSceneModule()->GetScene();
+    GameObject* node = parent; // start with the object that owns this script
+
+    while (node && (!pauseCtrl || !gameOverCtrl))
+    {
+        ScriptComponent* sc = node->GetComponent<ScriptComponent*>();
+        if (sc)
+        {
+            if (!pauseCtrl) pauseCtrl = sc->GetScriptByType<PauseMenuScript>();
+            if (!gameOverCtrl) gameOverCtrl = sc->GetScriptByType<GameOverScript>();
+        }
+        node = scene->GetGameObjectByUID(node->GetParent());
+    }
+
     UpdateSelection();
     return true;
 }
@@ -63,8 +80,6 @@ void MainMenuSelectorScript::Update(float deltaTime)
     const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
     const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
     const float2& leftStick        = AppEngine->GetInputModule()->GetLeftStick();
-
-    static bool stickMoved         = false;
 
     bool moveDown                  = keys[SDL_SCANCODE_DOWN] == KEY_DOWN ||
                     gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_DOWN || (leftStick.y > 0.5f && !stickMoved);
@@ -97,36 +112,28 @@ void MainMenuSelectorScript::Update(float deltaTime)
 
         if (selectedItem->GetName() == "MenuItem_Continue")
         {
-            UID parentUID        = selectedItem->GetParent();
-            GameObject* parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
-            if (parentGO)
+            if (gameOverCtrl)
             {
-                GameObject* goToDisable = selectedItem;
-                Scene* scene            = AppEngine->GetSceneModule()->GetScene();
-                while (goToDisable && goToDisable->GetName() != "GameOverPanel")
-                {
-                    goToDisable = scene->GetGameObjectByUID(goToDisable->GetParent());
-                }
-                if (goToDisable) goToDisable->SetEnabledRecursive(false);
+                gameOverCtrl->Close();
+                if (playerScript) playerScript->Respawn();
             }
-
-            GameTimer* timer = AppEngine->GetGameTimer();
-            if (timer) timer->TogglePause();
-
-            if (playerScript) playerScript->Respawn();
+            else if (pauseCtrl)
+            {
+                pauseCtrl->Close();
+            }
 
             return;
         }
+
         else if (selectedItem->GetName() == "MenuItem_Menu")
         {
-            if (auto* timer = AppEngine->GetGameTimer(); timer && timer->IsPaused()) timer->TogglePause();
+            if (pauseCtrl) pauseCtrl->Close();
             AppEngine->GetSceneModule()->GetScene()->SetStopPlaying(true);
-            std::string path = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
+            std::string path =
+                AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
             AppEngine->GetSceneModule()->RequestSceneLoad(path);
-            return; 
+            return;
         }
-
-
     }
 }
 
