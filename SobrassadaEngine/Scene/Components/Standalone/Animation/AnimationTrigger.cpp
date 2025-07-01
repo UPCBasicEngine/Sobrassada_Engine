@@ -1,6 +1,6 @@
 #include "AnimationTrigger.h"
 
-AnimationTrigger::AnimationTrigger(float atTime, TriggerType type, const std::string& eventName)
+AnimationTrigger::AnimationTrigger(float atTime, TriggerType type, const std::string& eventName, bool repeat)
     : keyTime(atTime), type(type), eventName(eventName)
 {
 }
@@ -9,15 +9,10 @@ bool AnimationTrigger::Check(float prevTime, float currTime, bool looped)
 {
     if (consumed && !looped) return false;
 
-    bool crossed = (!consumed && prevTime < keyTime && currTime >= keyTime) || (looped && currTime >= keyTime);
+    bool crossed = (!consumed && prevTime < keyTime && currTime >= keyTime) || (looped && currTime >= keyTime && !consumed);
 
     if (crossed) consumed = true;
-    if (looped) consumed = (currTime < keyTime);
+    if (looped && repeatOnLoop) Reset();
 
     return crossed;
-}
-
-void AnimationTrigger::Reset()
-{
-    consumed = false;
 }

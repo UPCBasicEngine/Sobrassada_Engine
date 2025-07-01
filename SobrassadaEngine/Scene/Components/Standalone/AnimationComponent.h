@@ -35,7 +35,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     void OnResume();
     void AddAnimation(UID resource);
     bool UseTrigger(const std::string& triggerName);
-    void AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName);
+    void AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName, bool repeat = true);
     void RemoveTrigger(UID clipUID, size_t index);
     void ClearTriggers(UID clipUID);
 
@@ -53,7 +53,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     void SetBoneMapping();
 
   private:
-    void CheckTriggers();
+    void CheckTriggers(float prevTime, float currTime);
     void ReleaseClipTriggers(UID clipUID);
     void ReleaseAllTriggers();
 
@@ -76,4 +76,5 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     float currentTime       = 0.0f;
     float defaultTime       = 1.0f;
     float fadeTime          = 0.0f;
+    float triggerMuteTime   = 0.0f;
 };

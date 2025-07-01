@@ -66,8 +66,9 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
             float key      = obj["KeyTime"].GetFloat();
             TriggerType tp = static_cast<TriggerType>(obj["Type"].GetInt());
             std::string pl = obj["EventName"].GetString();
+            bool rep       = obj.HasMember("Repeat") ? obj["Repeat"].GetBool() : true;
 
-            clipTriggers[uid].push_back(new AnimationTrigger(key, tp, pl));
+            clipTriggers[uid].push_back(new AnimationTrigger(key, tp, pl, rep));
         }
     }
 }
@@ -109,11 +110,28 @@ void AnimationComponent::OnPlay(bool isTransition)
                         if (clip.clipName == currentState->clipName)
                         {
                             if (isTransition && transitionTime > 0)
+                            {
                                 animController->SetTargetAnimationResource(
                                     clip.animationResourceUID, transitionTime, clip.loop, clip.animationSpeed
                                 );
-                            else animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
+                                triggerMuteTime = static_cast<float>(transitionTime) / 1000.0f;
+                            }
+                            else
+                            {
+                                animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
+                                triggerMuteTime = 0.0f;
+                            }
                             resource = clip.animationResourceUID;
+                            
+                            float startTime = animController->GetTime();
+                            lastTime        = startTime;
+                            auto& vec       = clipTriggers[resource];
+                            for (AnimationTrigger* trg : vec)
+                            {
+                                trg->Reset();
+                                if (trg->GetTime() <= startTime && !trg->RepeatOnLoop())
+                                    trg->Consume();
+                            }
                         }
 
                         
@@ -121,11 +139,21 @@ void AnimationComponent::OnPlay(bool isTransition)
                 }
             }
         }
-        else animController->Play(resource, true, defaultTime);
+        else
+        {
+            animController->Play(resource, true, defaultTime);
 
-        lastTime = 0.0f;
-        for (AnimationTrigger* trgg : clipTriggers[resource])
-            trgg->Reset();
+            float startTime = animController->GetTime();
+            lastTime        = startTime;
+
+            auto& vec       = clipTriggers[resource];
+            for (AnimationTrigger* trg : vec)
+            {
+                trg->Reset();
+
+                if (trg->GetTime() <= startTime && !trg->RepeatOnLoop()) trg->Consume();
+            }
+        }
     }
 }
 
@@ -459,6 +487,8 @@ void AnimationComponent::DrawTriggerInspector()
                 {
                     trgg->SetName(names[sel]);
                 }
+                bool rep = trgg->RepeatOnLoop();
+                if (ImGui::Checkbox("Repeat every loop", &rep)) trgg->SetRepeat(rep);
             }
             else
             {
@@ -537,9 +567,20 @@ void AnimationComponent::Update(float deltaTime)
             SetBoneMapping();
         }
 
+        float prevTime = animController->GetTime();
+
         animController->Update(deltaTime);
 
-        CheckTriggers();
+        float currTime = animController->GetTime();
+        if (triggerMuteTime > 0.0f)
+        {
+            triggerMuteTime -= deltaTime;
+            lastTime         = currTime;
+        }
+        else
+        {
+            CheckTriggers(prevTime, currTime);
+        }
 
         std::set<GameObject*> modifiedBones;
 
@@ -599,6 +640,7 @@ void AnimationComponent::Save(rapidjson::Value& targetState, rapidjson::Document
             obj.AddMember("KeyTime", trgg->GetTime(), allocator);
             obj.AddMember("Type", static_cast<int>(trgg->GetType()), allocator);
             obj.AddMember("EventName", rapidjson::Value(trgg->GetName().c_str(), allocator), allocator);
+            obj.AddMember("Repeat", trgg->RepeatOnLoop(), allocator);
             trigArr.PushBack(obj, allocator);
         }
     }
@@ -702,9 +744,9 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
     return triggerDone;
 }
 
-void AnimationComponent::AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName)
+void AnimationComponent::AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName, bool repeat)
 {
-    clipTriggers[clipUID].push_back(new AnimationTrigger(atSeconds, TriggerType::SOUND, eventName));
+    clipTriggers[clipUID].push_back(new AnimationTrigger(atSeconds, TriggerType::SOUND, eventName, repeat));
 }
 
 void AnimationComponent::RemoveTrigger(UID clipUID, size_t index)
@@ -724,25 +766,24 @@ void AnimationComponent::ClearTriggers(UID clipUID)
     ReleaseClipTriggers(clipUID);
 }
 
-void AnimationComponent::CheckTriggers()
+void AnimationComponent::CheckTriggers(float prevTime, float currTime)
 {
     if (!currentAnimResource) return;
 
     UID clipUID = currentAnimResource->GetUID();
     std::vector<AnimationTrigger*>& vec   = clipTriggers[clipUID];
-    float now   = animController->GetTime();
-    bool looped = now < lastTime;
+    bool looped                         = currTime < prevTime;
 
     for (AnimationTrigger* trgg : vec)
     {
-        if (trgg->Check(lastTime, now, looped))
+        if (trgg->Check(prevTime, currTime, looped))
         {
             if (trgg->GetType() == TriggerType::SOUND) 
                 App->GetAudioModule()->EmitEvent(trgg->GetName(), GetParentUID());
         }
     }
 
-    lastTime = now;
+    lastTime = currTime;
 }
 
 void AnimationComponent::ReleaseClipTriggers(UID clipUID)
