@@ -435,18 +435,61 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Children", valChildren, allocator);
 }
 
-void GameObject::UpdateEnabledStateRecursive()
+void GameObject::UpdateEnabledState()
 {
-    for (UID childUID : children)
+
+    Scene* scene = App->GetSceneModule()->GetScene();
+
+    struct StackEntry
     {
-        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
-        if (child)
+        GameObject* go;
+        bool processed;
+    };
+
+    std::stack<StackEntry> pending;
+    pending.push({this, false});
+
+    while (!pending.empty())
+    {
+        StackEntry current = pending.top();
+        pending.pop();
+
+        GameObject* go = current.go;
+
+        if (current.processed)
         {
-            child->UpdateEnabledStateRecursive();
+            go->enabled = go->wasEnabled;
+            continue;
+        }
+
+        pending.push({go, true});
+
+        for (UID childUID : go->children)
+        {
+            if (GameObject* child = scene->GetGameObjectByUID(childUID))
+            {
+                pending.push({child, false});
+            }
         }
     }
+}
 
-    enabled = wasEnabled;
+void GameObject::UpdateNavmeshValidState()
+{
+    std::stack<UID> childrenBuffer;
+    childrenBuffer.push(uid);
+
+    while (!childrenBuffer.empty())
+    {
+        GameObject* gameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenBuffer.top());
+        childrenBuffer.pop();
+        if (gameObject != nullptr)
+        {
+            gameObject->navMeshValid = navMeshValid;
+            for (UID child : gameObject->GetChildren())
+                childrenBuffer.push(child);
+        }
+    }
 }
 
 void GameObject::RenderEditorInspector(bool drawGizmo)
@@ -470,7 +513,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
         if (ImGui::Checkbox("Enabled", &enabled))
         {
             wasEnabled = enabled;
-            UpdateEnabledStateRecursive();
+            UpdateEnabledState();
         }
     }
 
@@ -486,6 +529,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
             {
                 meshComp->BatchEditorMode();
             }
+            UpdateNavmeshValidState();
         }
 
         if (ImGui::Button("Add Component"))
@@ -1044,6 +1088,23 @@ const float4x4& GameObject::GetParentGlobalTransform() const
     return float4x4::identity;
 }
 
+void GameObject::SetEnabled(bool active)
+{
+    if (enabled == active) return;
+
+    enabled    = active;
+    wasEnabled = active;
+
+    std::apply([&](auto&... cmp) { ((cmp ? cmp->SetEnabled(active) : void()), ...); }, compTuple);
+
+    Scene* scene = App->GetSceneModule()->GetScene();
+    for (UID childUID : children)
+    {
+        if (GameObject* child = scene->GetGameObjectByUID(childUID)) child->SetEnabled(active);
+    }
+}
+
+
 void GameObject::SetJustLocalTransform(const float4x4& newTransform)
 {
     localTransform = newTransform;
@@ -1276,9 +1337,11 @@ void GameObject::SetEnabledRecursive(bool value)
     enabled    = value;
     wasEnabled = value;
 
+    std::apply([&](auto*... cmp) { ((cmp ? cmp->SetEnabled(value) : void()), ...); }, compTuple);
+
+    if (auto* sc = GetComponent<ScriptComponent*>()) sc->SetComponentEnabled(value);
+
     for (UID childUID : children)
-    {
-        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
-        if (child) child->SetEnabledRecursive(value);
-    }
+        if (auto* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID))
+            child->SetEnabledRecursive(value);
 }

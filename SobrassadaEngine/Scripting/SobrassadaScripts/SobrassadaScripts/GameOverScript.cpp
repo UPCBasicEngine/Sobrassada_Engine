@@ -1,0 +1,66 @@
+﻿#include "pch.h"
+
+#include "Application.h"
+#include "CuChulainn.h"
+#include "EditorUIModule.h"
+#include "GameObject.h"
+#include "GameOverScript.h"
+#include "GameTimer.h"
+#include "Scene.h"
+#include "SceneModule.h"
+
+
+GameOverScript::GameOverScript(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Panel To Show", InspectorField::FieldType::InputText, &panelToShowName});
+}
+
+bool GameOverScript::Init()
+{
+    CachePanel();
+    if (cachedTarget) cachedTarget->SetEnabledRecursive(false);
+    return true;
+}
+
+void GameOverScript::Update(float)
+{
+    if (gameOverShown && cachedTarget && !cachedTarget->IsEnabled()) gameOverShown = false;
+
+    if (gameOverShown) return;
+
+    if (!cachedTarget) CachePanel();
+    if (playerScript && playerScript->IsDead()) TriggerGameOver();
+}
+
+void GameOverScript::TriggerGameOver()
+{
+    if (gameOverShown) return;
+    ShowPanel();
+    PauseGame();
+    gameOverShown = true;
+}
+
+void GameOverScript::CachePanel()
+{
+    if (cachedTarget) return;
+    const auto& gos = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
+    for (const auto& [uid, go] : gos)
+        if (go && go->GetName() == panelToShowName)
+        {
+            cachedTarget = go;
+            break;
+        }
+}
+
+void GameOverScript::ShowPanel()
+{
+    CachePanel();
+    if (!cachedTarget) return;
+    cachedTarget->SetEnabledRecursive(true);
+    cachedTarget->UpdateTransformForGOBranch();
+}
+
+void GameOverScript::PauseGame()
+{
+    if (auto* t = AppEngine->GetGameTimer()) t->TogglePause();
+}

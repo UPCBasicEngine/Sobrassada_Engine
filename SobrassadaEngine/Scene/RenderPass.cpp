@@ -17,6 +17,10 @@
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
 
+#ifdef OPTICK
+#include "optick.h"
+#endif
+
 #include <glew.h>
 
 RenderPass::RenderPass()
@@ -336,7 +340,7 @@ void RenderPass::ShadowMapPassRender(
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    float minMax[2] = {0, 0};
+    float minMax[4] = {0, 0, 0, 0};
 
     glBindTexture(GL_TEXTURE_2D, currentOutput);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, minMax);
@@ -427,7 +431,7 @@ void RenderPass::ShadowMapPassRender(
     for (const auto& gameObject : shadowObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 && mesh->GetProduceShadows())
             meshesToRender.push_back(mesh);
     }
 
@@ -455,6 +459,7 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 
         if (decal == nullptr) continue;
         if (decal->GetResourceMaterial() == nullptr) continue;
+        if (!decal->IsEffectivelyEnabled()) continue;
 
         const UID uid = decal->GetResourceMaterial()->GetUID();
         groupedDecals[uid].push_back(decal);
@@ -492,6 +497,7 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 
     for (const auto& [uid, decals] : groupedDecals)
     {
+        
         const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
         glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
 
@@ -521,11 +527,14 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 
         for (const auto& decal : decals)
         {
+            if (!decal->GetEnabled()) continue;
             float4x4 model    = decal->GetParent()->GetGlobalTransform();
             float4x4 invModel = model.Inverted();
 
             models.push_back({model, invModel});
         }
+
+        if (models.empty()) continue;
 
         GLuint decalSSBO;
         glGenBuffers(1, &decalSSBO);

@@ -47,10 +47,7 @@ bool ParticleSystemModule::Init()
 
 bool ParticleSystemModule::ShutDown()
 {
-    for (auto& pair : particleSystems)
-    {
-        delete pair.second;
-    }
+    ClearParticleSystems();
 
     glDeleteBuffers(1, &quadVBO);
 
@@ -83,7 +80,6 @@ void ParticleSystemModule::RenderParticles()
     glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
-
 
     for (auto& emitter : particleSystems)
     {
@@ -131,4 +127,40 @@ void ParticleSystemModule::ResquestParticleSystem(const HashString& requestedTag
     {
         particleSystemIterator->second->AddComponent(component);
     }
+}
+
+void ParticleSystemModule::DuplicateParticleSystem(
+    const HashString& requestedTag, ParticleSystemComponent* component, const HashString& duplicateTag
+)
+{
+    if (emptyString == requestedTag || emptyString == duplicateTag) return;
+
+    auto duplicatedIterator = particleSystems.find(duplicateTag);
+    auto requestedIterator  = particleSystems.find(requestedTag);
+
+    if (requestedIterator == particleSystems.end() && duplicatedIterator != particleSystems.end())
+    {
+        ParticleSystem* newPS = new ParticleSystem(requestedTag, component, quadVBO, duplicatedIterator->second);
+        particleSystems.insert({requestedTag, newPS});
+        particleTags.push_back(requestedTag);
+    }
+}
+
+void ParticleSystemModule::StopAllParticles()
+{
+    for (auto& pair : particleSystems)
+    {
+        pair.second->Stop();
+    }
+}
+
+void ParticleSystemModule::ClearParticleSystems()
+{
+    for (auto& pair : particleSystems)
+    {
+        delete pair.second;
+    }
+
+    particleTags.clear();
+    particleSystems.clear();
 }
