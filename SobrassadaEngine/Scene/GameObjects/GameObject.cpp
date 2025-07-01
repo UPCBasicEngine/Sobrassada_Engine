@@ -413,13 +413,6 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 
-    //rapidjson::Value gameObjectsTags(rapidjson::kArrayType);
-    //for (auto& tag : tags)
-    //{
-    //    gameObjectsTags.PushBack(rapidjson::Value(tag.c_str(), allocator), allocator);
-    //}
-    //targetState.AddMember("tags", gameObjectsTags, allocator);
-
     if (prefabUID != INVALID_UID) targetState.AddMember("PrefabUID", prefabUID, allocator);
     if (prefabVersionUID != INVALID_UID) targetState.AddMember("PrefabVersionUID", prefabVersionUID, allocator);
     if (prefabChildUID != INVALID_UID) targetState.AddMember("PrefabChildUID", prefabChildUID, allocator);
@@ -466,36 +459,33 @@ void GameObject::UpdateEnabledState()
 
     Scene* scene = App->GetSceneModule()->GetScene();
 
-    struct StackEntry
+    std::set<UID> visitedGameObjects;
+    std::stack<UID> toVisitGameObjects;
+
+    for (UID gameObjectID : children)
+        toVisitGameObjects.push(gameObjectID);
+
+    while (!toVisitGameObjects.empty())
     {
-        GameObject* go;
-        bool processed;
-    };
+        UID currentUID = toVisitGameObjects.top();
+        toVisitGameObjects.pop();
 
-    std::stack<StackEntry> pending;
-    pending.push({this, false});
-
-    while (!pending.empty())
-    {
-        StackEntry current = pending.top();
-        pending.pop();
-
-        GameObject* go = current.go;
-
-        if (current.processed)
+        if (visitedGameObjects.find(currentUID) == visitedGameObjects.end())
         {
-            go->enabled = go->wasEnabled;
-            continue;
-        }
+            visitedGameObjects.insert(currentUID);
+            GameObject* currentGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
 
-        pending.push({go, true});
+            // UPDATING STATUS FOR CHILD GO
+            currentGameObject->wasEnabled = currentGameObject->enabled;
+            currentGameObject->enabled    = enabled;
 
-        for (UID childUID : go->children)
-        {
-            if (GameObject* child = scene->GetGameObjectByUID(childUID))
-            {
-                pending.push({child, false});
-            }
+            // UPDATING STATUS FOR CHILD GO COMPONENT
+            std::apply(
+                [&](auto&... cmp) { ((cmp ? cmp->SetEnabled(enabled) : void()), ...); }, currentGameObject->compTuple
+            );
+
+            for (UID childID : currentGameObject->GetChildren())
+                toVisitGameObjects.push(childID);
         }
     }
 }
@@ -1260,18 +1250,19 @@ void GameObject::SetEnabled(bool active)
 {
     if (enabled == active) return;
 
+    wasEnabled = enabled;
     enabled    = active;
-    wasEnabled = active;
 
     std::apply([&](auto&... cmp) { ((cmp ? cmp->SetEnabled(active) : void()), ...); }, compTuple);
 
-    Scene* scene = App->GetSceneModule()->GetScene();
+    UpdateEnabledState();
+
+    /*Scene* scene = App->GetSceneModule()->GetScene();
     for (UID childUID : children)
     {
         if (GameObject* child = scene->GetGameObjectByUID(childUID)) child->SetEnabled(active);
-    }
+    }*/
 }
-
 
 void GameObject::SetJustLocalTransform(const float4x4& newTransform)
 {

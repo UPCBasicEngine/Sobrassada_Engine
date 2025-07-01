@@ -36,6 +36,8 @@ class SphereColliderComponent : public Component
 
     void SOBRASADA_API_ENGINE DeleteRigidBody();
 
+    void SetEnabled(bool newEnabled) override;
+
   private:
     void CalculateCollider();
 

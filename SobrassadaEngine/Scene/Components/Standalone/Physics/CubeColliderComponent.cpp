@@ -285,6 +285,14 @@ void CubeColliderComponent::DeleteRigidBody()
     App->GetPhysicsModule()->DeleteCubeRigidBody(this);
 }
 
+void CubeColliderComponent::SetEnabled(bool newEnabled)
+{
+    Component::SetEnabled(newEnabled);
+
+    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteCubeRigidBody(this);
+}
+
 void CubeColliderComponent::CalculateCollider()
 {
     AABB heriachyAABB               = parent->GetHierarchyAABB();

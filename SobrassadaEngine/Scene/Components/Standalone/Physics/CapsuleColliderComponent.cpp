@@ -270,6 +270,14 @@ void CapsuleColliderComponent::DeleteRigidBody()
     App->GetPhysicsModule()->DeleteCapsuleRigidBody(this);
 }
 
+void CapsuleColliderComponent::SetEnabled(bool newEnabled)
+{
+    Component::SetEnabled(newEnabled);
+
+    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteCapsuleRigidBody(this);
+}
+
 void CapsuleColliderComponent::CalculateCollider()
 {
     AABB heriachyAABB               = parent->GetHierarchyAABB();

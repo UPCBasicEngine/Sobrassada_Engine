@@ -264,6 +264,14 @@ void SphereColliderComponent::DeleteRigidBody()
     App->GetPhysicsModule()->DeleteSphereRigidBody(this);
 }
 
+void SphereColliderComponent::SetEnabled(bool newEnabled)
+{
+    Component::SetEnabled(newEnabled);
+
+    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateSphereRigidBody(this);
+    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteSphereRigidBody(this);
+}
+
 void SphereColliderComponent::CalculateCollider()
 {
     AABB heriachyAABB               = parent->GetHierarchyAABB();

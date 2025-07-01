@@ -35,6 +35,7 @@ class CubeColliderComponent : public Component
     void SOBRASADA_API_ENGINE OnCollisionExit(GameObject* otherObject, ColliderLayer layer);
 
     void SOBRASADA_API_ENGINE DeleteRigidBody();
+    void SetEnabled(bool newEnabled) override;
 
   private:
     void CalculateCollider();
