@@ -970,6 +970,20 @@ void Scene::CheckObjectsToUpdate()
     for (auto gameObject : toUpdateGameObjects)
         toUpdateGameObjectsSet.insert(gameObject->GetUID());
 
+    // ADD ALWAYS UPDATE TAG - UPDATE
+    auto alwaysUpdateObjects   = GetTaggedGameObjects(HashString("UPDATE"));
+    if (alwaysUpdateObjects)
+    {
+        for (GameObject* currentGameObject : *alwaysUpdateObjects)
+        {
+            if (toUpdateGameObjectsSet.find(currentGameObject->GetUID()) == toUpdateGameObjectsSet.end())
+            {
+                toUpdateGameObjects.push_back(currentGameObject);
+                toUpdateGameObjectsSet.insert(currentGameObject->GetUID());
+            }
+        }
+    }
+
     // ADDING OBJECTS ASSIGNED TO LOCATION
     auto taggedLocationObjects = GetTaggedGameObjects(playerLocation);
     if (taggedLocationObjects)
