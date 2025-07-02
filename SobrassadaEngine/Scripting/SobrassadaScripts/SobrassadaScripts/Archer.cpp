@@ -90,7 +90,9 @@ void Archer::OnPlayerExitLocation()
 
 void Archer::OnPlayerEnterLocation()
 {
-    currentState = ArcherStates::SEARCH;
+    currentState = ArcherStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
 }
 
 void Archer::OnDeath()
@@ -156,7 +158,7 @@ void Archer::PatrolAI()
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
-    if (!playerScript->IsDead() && playerInLocation)
+    if (!playerScript->IsDead())
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
             currentState = ArcherStates::CHASE;

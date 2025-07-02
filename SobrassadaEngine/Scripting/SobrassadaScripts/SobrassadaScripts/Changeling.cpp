@@ -139,7 +139,9 @@ void Changeling::OnPlayerExitLocation()
 
 void Changeling::OnPlayerEnterLocation()
 {
-
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
 }
 
 void Changeling::OnDeath()
@@ -202,9 +204,9 @@ void Changeling::PatrolAI()
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
+    if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
         currentState = ChangelingStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
+    else if (CheckDistanceWithPlayer() == PlayerDistances::Close)
         currentState = ChangelingStates::BASIC_ATTACK;
 
     bool valid = false;

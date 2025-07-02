@@ -91,7 +91,9 @@ void Soldier::OnPlayerExitLocation()
 
 void Soldier::OnPlayerEnterLocation()
 {
-    currentState = SoldierStates::SEARCH;
+    currentState = SoldierStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
 }
 
 void Soldier::OnDeath()
@@ -162,7 +164,7 @@ void Soldier::PatrolAI()
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
-    if (!playerScript->IsDead() && playerInLocation)
+    if (!playerScript->IsDead())
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
             currentState = SoldierStates::CHASE;
