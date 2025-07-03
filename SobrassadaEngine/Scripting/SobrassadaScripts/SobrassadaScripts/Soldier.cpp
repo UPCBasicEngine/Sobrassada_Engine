@@ -166,9 +166,9 @@ void Soldier::PatrolAI()
 
     if (!playerScript->IsDead())
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
             currentState = SoldierStates::CHASE;
-        else if (CheckDistanceWithPlayer() == PlayerDistances::Close)
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
             currentState = SoldierStates::BASIC_ATTACK;
     }
 
