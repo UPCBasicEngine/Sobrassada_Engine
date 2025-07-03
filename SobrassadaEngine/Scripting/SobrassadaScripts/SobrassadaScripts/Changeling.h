@@ -10,9 +10,9 @@ class Projectile;
 enum class ChangelingStates
 {
     NONE,
-    PATROL,
+    HIDDEN,
     CHASE,
-    BASIC_ATTACK
+    DASH_ATTACK
 };
 
 class Changeling : public Character
@@ -28,11 +28,14 @@ class Changeling : public Character
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
+    void UpdateHiddenState(float deltaTime);
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
 
-    void PatrolAI();
+    void HiddenManagement();
     void ChaseAI();
+
+    void ChangeState();
 
   private:
     float3 GetDashEndPoint() const;
@@ -41,17 +44,18 @@ class Changeling : public Character
     ChangelingStates currentState = ChangelingStates::NONE;
 
     bool isDashing                = false;
-    float3 dashDirection          = float3::zero; // Vector dirección normalizado
-    float3 dashTarget             = float3::zero; // Posición objetivo
+    float3 dashDirection          = float3::zero; // Vector direcciï¿½n normalizado
+    float3 dashTarget             = float3::zero; // Posiciï¿½n objetivo
     float dashSpeed               = 15.0f;
     float dashDistance            = 10.0f;
 
-    std::string pathName         = "";
+    std::string pathName          = "";
+    std::string bodyMeshPath      = "";
 
-    float3 patrolPoint            = float3::zero;
     bool hasShot                  = false;
 
-    GameObject* pathObj     = nullptr; 
+    GameObject* dashAreaObject    = nullptr;
+    GameObject* bodyMeshObject    = nullptr;
 
     float3 lastTrailPos           = float3::zero;
     float trailSegmentSpacing     = 1.0f; 
@@ -61,5 +65,5 @@ class Changeling : public Character
     float3 startPos;
     float3 endPos;
 
-    float3 dashEndPoint = float3::zero; 
+    float3 dashEndPoint = float3::zero;
 };

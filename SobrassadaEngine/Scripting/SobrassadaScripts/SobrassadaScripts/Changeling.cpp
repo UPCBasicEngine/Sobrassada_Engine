@@ -19,18 +19,18 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 Changeling::Changeling(GameObject* parent)
-    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
+    : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Changeling)
 {
-    fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Dash Distance", InspectorField::FieldType::Float, &dashDistance, 0.0f, 10.0f});
     fields.push_back({"Dark Path Name", InspectorField::FieldType::InputText, &pathName});
+    fields.push_back({"Body mesh", InspectorField::FieldType::InputText, &bodyMeshPath});
 }
 
 bool Changeling::Init()
 {
     // GLOG("Initiating Soldier");
 
-    currentState = ChangelingStates::PATROL;
+    currentState = ChangelingStates::HIDDEN;
 
     Character::Init();
 
@@ -43,8 +43,24 @@ bool Changeling::Init()
         speed = agentAI->GetSpeed();
     }
 
-    pathObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(pathName);
-    pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.x = 1.5708f;
+    for (UID childUID : parent->GetChildren())
+    {
+        GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child != nullptr)
+        {
+            if (child->GetName() == pathName)
+            {
+                dashAreaObject = child;
+            } else if (child->GetName() == bodyMeshPath)
+            {
+                bodyMeshObject = child;
+            }
+        }
+    }
+    
+    dashAreaObject->GetComponent<CapsuleColliderComponent*>()->centerRotation.x = 1.5708f;
+    if (bodyMeshObject != nullptr)
+        bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
 
     hasShot                                                              = false;
     isAttacking                                                          = false;
@@ -60,7 +76,7 @@ void Changeling::Update(float deltaTime)
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
 
-    if (CheckDistanceWithPoint(dashEndPoint) && isDashing)
+    /*if (CheckDistanceWithPoint(dashEndPoint) && isDashing)
     {
         // agentAI->PauseMovement();
         agentAI->SetSpeed(0.0f, 0.0f);
@@ -83,7 +99,7 @@ void Changeling::Update(float deltaTime)
         float3 position   = float3::zero;
         if ((currentPos - lastTrailPos).Length() >= trailSegmentSpacing)
         {
-            UID trailPrefabUID = pathObj->GetPrefabUID();
+            UID trailPrefabUID = dashAreaObject->GetPrefabUID();
 
             float3 position    = currentPos;
 
@@ -104,17 +120,17 @@ void Changeling::Update(float deltaTime)
 
             trs           = float4x4::FromTRS(midPoint, rotation, scale);
 
-            pathObj->SetLocalTransform(trs);
-            pathObj->SetLocalPosition(midPoint);
+            dashAreaObject->SetLocalTransform(trs);
+            dashAreaObject->SetLocalPosition(midPoint);
 
-            if (angle < 0.0f) pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle + 1.5708f;
-            else pathObj->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle - 1.5708f;
-            pathObj->GetComponent<CapsuleColliderComponent*>()->length = length;
-            AppEngine->GetPhysicsModule()->UpdateCapsuleRigidBody(pathObj->GetComponent<CapsuleColliderComponent*>());
+            if (angle < 0.0f) dashAreaObject->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle + 1.5708f;
+            else dashAreaObject->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle - 1.5708f;
+            dashAreaObject->GetComponent<CapsuleColliderComponent*>()->length = length;
+            AppEngine->GetPhysicsModule()->UpdateCapsuleRigidBody(dashAreaObject->GetComponent<CapsuleColliderComponent*>());
 
             lastTrailPos = currentPos;
         }
-    }
+    }*/
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
@@ -151,28 +167,37 @@ void Changeling::PerformAttack()
     // TODO: trails, particles and animation
 }
 
+void Changeling::UpdateHiddenState(float deltaTime)
+{
+}
+
 void Changeling::HandleState(float deltaTime)
 {
     // if (!animComponent) return;
 
     switch (currentState)
     {
-    case ChangelingStates::PATROL:
+    case ChangelingStates::HIDDEN:
         // GLOG("Soldier Patrolling");
-        PatrolAI();
+
+        UpdateHiddenState(deltaTime);
+        HiddenManagement();
         break;
     case ChangelingStates::CHASE:
         // GLOG("Soldier Chasing");
         agentAI->ResetSpeed();
         ChaseAI();
         break;
-    case ChangelingStates::BASIC_ATTACK:
+    case ChangelingStates::DASH_ATTACK:
         // GLOG("Soldier Basic Attack");
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
+    case ChangelingStates::NONE:
+        currentState = ChangelingStates::HIDDEN;
+        break;
     default:
         GLOG("No state provided to Archer");
-        currentState = ChangelingStates::PATROL;
+        currentState = ChangelingStates::NONE;
         break;
     }
 
@@ -183,23 +208,15 @@ void Changeling::HandleState(float deltaTime)
     // }
 }
 
-void Changeling::PatrolAI()
+void Changeling::HiddenManagement()
 {
     // animComponent->UseTrigger("run");
 
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ChangelingStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::BASIC_ATTACK;
-
-    bool valid = false;
-    if (reachedPatrolPoint)
+    if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
     {
-        if (CheckDistanceWithPoint(startPos)) reachedPatrolPoint = false;
-        else valid = agentAI->SetPathNavigation(startPos);
-    }
-    else
-    {
-        if (CheckDistanceWithPoint(patrolPoint)) reachedPatrolPoint = true;
-        else valid = agentAI->SetPathNavigation(patrolPoint);
+        if (bodyMeshObject != nullptr)
+            bodyMeshObject->SetLocalPosition(float3(0, 0, 0));
+        currentState = ChangelingStates::CHASE;
     }
 }
 
@@ -208,19 +225,26 @@ void Changeling::ChaseAI()
     //  animComponent->UseTrigger("run");
     if (character != nullptr)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::BASIC_ATTACK;
+        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::DASH_ATTACK;
         else
         {
             isDashing = false;
-            if (!agentAI->SetPathNavigation(character->GetLastPosition())) currentState = ChangelingStates::PATROL;
+            if (!agentAI->SetPathNavigation(character->GetLastPosition()))
+            {
+                if (bodyMeshObject != nullptr)
+                    bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+                agentAI->ResetSpeed();
+                currentState = ChangelingStates::HIDDEN;
+            }
+            ChangeState();
         }
     }
-    else currentState = ChangelingStates::PATROL;
+    else currentState = ChangelingStates::NONE;
 }
 
 void Changeling::Attack(float deltaTime)
 {
-    if (!pathObj) return;
+    if (!dashAreaObject) return;
 
     if (!isAttacking)
     {
@@ -233,7 +257,7 @@ void Changeling::Attack(float deltaTime)
         float3 closestPoint     = float3::zero;
         const float3 searchArea = {1.0f, 2.0f, 1.0f};
 
-        // Busca el primer punto válido en la navmesh reduciendo la distancia
+        // Busca el primer punto vï¿½lido en la navmesh reduciendo la distancia
         do
         {
             dashDirection = parent->GetGlobalTransform().TranslatePart() + direction * testDistance;
@@ -268,7 +292,19 @@ void Changeling::Attack(float deltaTime)
 
             dashEndPoint = dashDirection;
             agentAI->SetPathNavigation(dashEndPoint);
-            pathObj->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true);
+            dashAreaObject->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true);
         }
+    }
+}
+
+void Changeling::ChangeState()
+{
+    const float distance = GetDistanceFromPlayer();
+    if (playerScript->IsDead() || distance > maxDetectionRange )
+    {
+        if (bodyMeshObject != nullptr)
+            bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+        agentAI->ResetSpeed();
+        currentState = ChangelingStates::HIDDEN;
     }
 }
