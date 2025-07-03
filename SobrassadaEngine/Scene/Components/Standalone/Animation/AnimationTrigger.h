@@ -1,10 +1,7 @@
 #pragma once
 #include <string>
+#include "TriggerType.h"
 
-enum class TriggerType
-{
-	SOUND = 0
-};
 
 class AnimationTrigger
 {

@@ -5,6 +5,7 @@
 
 #include "Math/float2.h"
 #include "imgui.h"
+#include "../Components/Standalone/Animation/TriggerType.h"
 #include <string>
 #include <vector>
 
@@ -21,9 +22,18 @@ struct State
     HashString name;
     HashString clipName;
     ImVec2 position;
+    std::vector<StateTrigger> triggers;
     
 };
 
+struct StateTrigger
+{
+    float keyTimeNorm;
+    TriggerType type;
+    std::string eventName;
+    bool repeatOnLoop = true;
+    bool consumed     = false;
+};
 struct Transition
 {
     HashString fromState;
