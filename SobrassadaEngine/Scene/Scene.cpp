@@ -260,7 +260,7 @@ void Scene::Save(
 
     App->GetPhysicsModule()->SaveLayerData(targetState, allocator);
 
-    // SAVING FIRST 
+    // SAVING FIRST
     rapidjson::Value sceneTagsJSON(rapidjson::kArrayType);
     rapidjson::Value sceneTagsGameObjectsJSON(rapidjson::kArrayType);
     for (auto& tagPair : tags)
@@ -971,7 +971,7 @@ void Scene::CheckObjectsToUpdate()
         toUpdateGameObjectsSet.insert(gameObject->GetUID());
 
     // ADD ALWAYS UPDATE TAG - UPDATE
-    auto alwaysUpdateObjects   = GetTaggedGameObjects(HashString("UPDATE"));
+    auto alwaysUpdateObjects = GetTaggedGameObjects(HashString("UPDATE"));
     if (alwaysUpdateObjects)
     {
         for (GameObject* currentGameObject : *alwaysUpdateObjects)
@@ -1372,7 +1372,7 @@ void Scene::LoadModel(const UID modelUID)
 
 void Scene::LoadPrefab(
     const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform, bool isEnabled,
-    std::vector<bool> componentsEnabledStates
+    std::vector<bool> componentsEnabledStates, const HashString& assignTag
 )
 {
     if (prefabUID != INVALID_UID)
@@ -1472,6 +1472,16 @@ void Scene::LoadPrefab(
         // Get all scene lights, because if the prefab has lights when creating them they won't be added to the
         // scene, as the gameObject is still not part of the scene
         if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
+
+        // ADD TAG TO ALL GO THAT CONTAIN A SCRIPT, NO WAY OF KNOWING WHICH IS THE GO FOR AN ENEMY TO ASSIGN IT DIRECTLY
+        // TO USE IT IN PLAYER LOCATION UPDATES
+        if (assignTag == emptyString) return;
+
+        for (GameObject* currentGO : newObjects)
+        {
+            if (currentGO->IsComponentCreated((int)ComponentType::COMPONENT_SCRIPT - 1))
+                RequestTag(assignTag, currentGO);
+        }
     }
 }
 
