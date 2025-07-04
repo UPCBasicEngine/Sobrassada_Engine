@@ -19,7 +19,7 @@ class ButtonScript : public Script
 
     void OnClick();
     std::string GetCurrentPanelName() const;
-    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) override;
+    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator);
     void Load(const rapidjson::Value& initialState) override;
     void OnDestroy() override;
     void Inspector() override;
