@@ -125,8 +125,11 @@ void MainMenuSelectorScript::Update(float deltaTime)
             AppEngine->GetSceneModule()->RequestSceneLoad(path);
             return; 
         }
-
-
+        else
+        {
+            ButtonComponent* button = selectedItem->GetComponent<ButtonComponent*>();
+            if (button) button->OnClick();
+        }
     }
 }
 

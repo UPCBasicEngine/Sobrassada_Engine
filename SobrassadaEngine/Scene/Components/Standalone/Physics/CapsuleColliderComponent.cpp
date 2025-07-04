@@ -17,11 +17,23 @@ CapsuleColliderComponent::CapsuleColliderComponent(UID uid, GameObject* parent)
 
     CalculateCollider();
 
-    onCollissionCallback = CollisionDelegate(
-        std::bind(&CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+    onCollissionCallback      = CollisionDelegate(std::bind(
+        &CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionEnterCallback = CollisionDelegate(std::bind(
+        &CapsuleColliderComponent::OnCollisionEnter, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionExitCallback  = CollisionExitDelegate(
+        std::bind(&CapsuleColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    userPointer = BulletUserPointer(
+        this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
     // App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
 }
 
@@ -49,11 +61,23 @@ CapsuleColliderComponent::CapsuleColliderComponent(const rapidjson::Value& initi
         centerRotation                    = {dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat()};
     }
 
-    onCollissionCallback = CollisionDelegate(
-        std::bind(&CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+    onCollissionCallback      = CollisionDelegate(std::bind(
+        &CapsuleColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionEnterCallback = CollisionDelegate(std::bind(
+        &CapsuleColliderComponent::OnCollisionEnter, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionExitCallback  = CollisionExitDelegate(
+        std::bind(&CapsuleColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+    userPointer          = BulletUserPointer(
+        this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
     // App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
 }
 
@@ -162,7 +186,10 @@ void CapsuleColliderComponent::RenderEditorInspector()
             if (ImGui::Selectable(ColliderLayerStrings[i]))
             {
                 layer       = ColliderLayer(i);
-                userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+                userPointer = BulletUserPointer(
+                    this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback,
+                    generateCallback, layer
+                );
                 App->GetPhysicsModule()->UpdateCapsuleRigidBody(this);
             }
         }
@@ -177,7 +204,9 @@ void CapsuleColliderComponent::RenderEditorInspector()
 
     if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
     {
-        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
     }
 }
 
@@ -220,9 +249,33 @@ void CapsuleColliderComponent::OnCollision(GameObject* otherObject, float3 colli
     if (script) script->OnCollision(otherObject, collisionNormal, layer);
 }
 
+void CapsuleColliderComponent::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
+{
+    if (!enabled || !otherObject->IsEnabled()) return;
+
+    auto script = parent->GetComponent<ScriptComponent*>();
+    if (script) script->OnCollisionEnter(otherObject, collisionNormal, layer);
+}
+
+void CapsuleColliderComponent::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
+{
+    if (!enabled || !otherObject->IsEnabled()) return;
+
+    auto script = parent->GetComponent<ScriptComponent*>();
+    if (script) script->OnCollisionExit(otherObject, layer);
+}
+
 void CapsuleColliderComponent::DeleteRigidBody()
 {
     App->GetPhysicsModule()->DeleteCapsuleRigidBody(this);
+}
+
+void CapsuleColliderComponent::SetEnabled(bool newEnabled)
+{
+    Component::SetEnabled(newEnabled);
+
+    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteCapsuleRigidBody(this);
 }
 
 void CapsuleColliderComponent::CalculateCollider()

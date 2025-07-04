@@ -130,6 +130,20 @@ void Changeling::Update(float deltaTime)
     }
 }
 
+void Changeling::OnPlayerExitLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
+void Changeling::OnPlayerEnterLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
 void Changeling::OnDeath()
 {
     // TODO: include death sound for the character
@@ -187,8 +201,13 @@ void Changeling::PatrolAI()
 {
     // animComponent->UseTrigger("run");
 
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ChangelingStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::BASIC_ATTACK;
+    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    bool playerInLocation            = parent->HasTag(playerLocation);
+
+    if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
+        currentState = ChangelingStates::CHASE;
+    else if (CheckDistanceWithPlayer() == PlayerDistances::Close)
+        currentState = ChangelingStates::BASIC_ATTACK;
 
     bool valid = false;
     if (reachedPatrolPoint)
