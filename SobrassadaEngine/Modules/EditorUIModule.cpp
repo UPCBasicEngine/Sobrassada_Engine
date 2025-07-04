@@ -65,7 +65,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
         {HashString("UI CanvasScaler"),      COMPONENT_CANVAS_SCALER       },
         {HashString("Billboard"),            COMPONENT_BILLBOARD           },
-		{HashString("Spline"),               COMPONENT_SPLINE              },
+        {HashString("Spline"),               COMPONENT_SPLINE              },
         {HashString("Decal"),                COMPONENT_DECAL               },
         {HashString("Trail"),                COMPONENT_TRAIL               },
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
@@ -915,7 +915,8 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             float* vec2Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat2(
-                field.name.c_str(), vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
@@ -923,7 +924,8 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             float* vec3Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat3(
-                field.name.c_str(), vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
@@ -931,7 +933,8 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             float* vec4Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat4(
-                field.name.c_str(), vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
@@ -965,8 +968,12 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             GameObject** selectedGO = (GameObject**)field.data;
             const char* currentName = (*selectedGO) ? (*selectedGO)->GetName().c_str() : "None";
+
             if (ImGui::BeginCombo(field.name.c_str(), currentName))
             {
+                ImGui::InputText("Search", searchTextResource, IM_ARRAYSIZE(searchTextResource));
+                const std::string searchLower = ToLower(searchTextResource);
+
                 if (ImGui::Selectable("None", *selectedGO == nullptr))
                 {
                     *selectedGO = nullptr;
@@ -978,6 +985,8 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                     const std::string& name = go->GetName();
 
                     if (name == "SceneModule GameObject" || name == "MULTISELECT_DUMMY") continue;
+
+                    if (!searchLower.empty() && ToLower(name).find(searchLower) == std::string::npos) continue;
 
                     std::string label = name + "##" + std::to_string(go->GetUID());
                     bool isSelected   = (*selectedGO == go);
