@@ -1,10 +1,13 @@
 #pragma once
 
 #include "ComponentUtils.h"
+#include "Math/float2.h"
 #include "Math/float3.h"
+#include "Math/float4.h"
 #include "rapidjson/document.h"
-#include <vector>
 #include <functional>
+#include <variant>
+#include <vector>
 
 class Script;
 class GameObject;
@@ -27,25 +30,25 @@ struct InspectorField
         Button
     };
 
-    const char* name;
+    std::string name;
     FieldType type;
     void* data;
     float minValue;
     float maxValue;
     std::function<void(Script*)> callback;
 
-    InspectorField(const char* name, FieldType type, void* data, float minValue, float maxValue)
+    InspectorField(std::string name, FieldType type, void* data, float minValue, float maxValue)
         : name(name), type(type), data(data), minValue(minValue), maxValue(maxValue)
     {
     }
-    InspectorField(const char* name, FieldType type, void* data)
+    InspectorField(std::string name, FieldType type, void* data)
         : name(name), type(type), data(data), minValue(0.0f), maxValue(1.0f)
     {
     }
     InspectorField(FieldType type, void* data) : name("No name"), type(type), data(data), minValue(0.0f), maxValue(1.0f)
     {
     }
-    InspectorField(const char* name, std::function<void(Script*)> callback)
+    InspectorField(std::string name, std::function<void(Script*)> callback)
         : name(name), type(FieldType::Button), data(nullptr), minValue(0.0f), maxValue(1.0f), callback(callback)
     {
     }
@@ -60,7 +63,6 @@ class Script
     virtual bool Init()                  = 0;
     virtual void Update(float deltaTime) = 0;
     virtual void Inspector();
-    virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator);
     virtual void Load(const rapidjson::Value& initialState);
     virtual void CloneFields(const std::vector<InspectorField>& fields);
     virtual void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) {};

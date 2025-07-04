@@ -901,21 +901,21 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             break;
         case InspectorField::FieldType::Float:
             ImGui::DragFloat(
-                field.name, (float*)field.data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                field.name.c_str(), (float*)field.data, 0.01f, field.minValue, field.maxValue, "%.3f",
                 ImGuiSliderFlags_AlwaysClamp
             );
             break;
         case InspectorField::FieldType::Bool:
-            ImGui::Checkbox(field.name, (bool*)field.data);
+            ImGui::Checkbox(field.name.c_str(), (bool*)field.data);
             break;
         case InspectorField::FieldType::Int:
-            ImGui::InputInt(field.name, (int*)field.data);
+            ImGui::InputInt(field.name.c_str(), (int*)field.data);
             break;
         case InspectorField::FieldType::Vec2:
         {
             float* vec2Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat2(
-                field.name, vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
@@ -923,7 +923,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             float* vec3Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat3(
-                field.name, vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
@@ -931,14 +931,14 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             float* vec4Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat4(
-                field.name, vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
         case InspectorField::FieldType::Color:
         {
             ImColor* color = (ImColor*)field.data;
-            ImGui::ColorEdit3(field.name, (float*)&color->Value);
+            ImGui::ColorEdit3(field.name.c_str(), (float*)&color->Value);
             break;
         }
         case InspectorField::FieldType::InputText:
@@ -946,7 +946,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             // Use InputText with strings (I don't know how this works)
             std::string* str = static_cast<std::string*>(field.data);
             ImGui::InputText(
-                field.name, str->data(), str->capacity() + 1, ImGuiInputTextFlags_CallbackResize,
+                field.name.c_str(), str->data(), str->capacity() + 1, ImGuiInputTextFlags_CallbackResize,
                 [](ImGuiInputTextCallbackData* data) -> int
                 {
                     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
@@ -965,7 +965,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             GameObject** selectedGO = (GameObject**)field.data;
             const char* currentName = (*selectedGO) ? (*selectedGO)->GetName().c_str() : "None";
-            if (ImGui::BeginCombo(field.name, currentName))
+            if (ImGui::BeginCombo(field.name.c_str(), currentName))
             {
                 if (ImGui::Selectable("None", *selectedGO == nullptr))
                 {
@@ -992,7 +992,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         }
         case InspectorField::FieldType::Button:
         {
-            if (field.callback && ImGui::Button(field.name))
+            if (field.callback && ImGui::Button(field.name.c_str()))
             {
                 field.callback(script);
             }
