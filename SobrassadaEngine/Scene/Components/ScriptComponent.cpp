@@ -16,11 +16,14 @@
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
 }
 
 ScriptComponent::ScriptComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
+
     if (initialState.HasMember("Scripts") && initialState["Scripts"].IsArray())
     {
         for (const auto& scriptData : initialState["Scripts"].GetArray())
@@ -286,6 +289,22 @@ void ScriptComponent::OnCollision(GameObject* otherObject, const float3 collisio
     for (auto& script : scriptInstances)
     {
         script->OnCollision(otherObject, collisionNormal, layer);
+    }
+}
+
+void ScriptComponent::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+{
+    for (auto& script : scriptInstances)
+    {
+        script->OnCollisionEnter(otherObject, collisionNormal, layer);
+    }
+}
+
+void ScriptComponent::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
+{
+    for (auto& script : scriptInstances)
+    {
+        script->OnCollisionExit(otherObject, layer);
     }
 }
 

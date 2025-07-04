@@ -488,6 +488,7 @@
     <ClInclude Include="PauseMenuScript.h" />
     <ClInclude Include="GodMode.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PlayerLocationScript.h" />
     <ClInclude Include="PressAnyKeyScript.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="resource.h" />
@@ -2065,6 +2066,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Game|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile Game|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PlayerLocationScript.cpp" />
     <ClCompile Include="PressAnyKeyScript.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />

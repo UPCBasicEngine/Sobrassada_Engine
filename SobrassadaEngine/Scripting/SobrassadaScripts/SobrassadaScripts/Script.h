@@ -6,7 +6,6 @@
 #include "Math/float4.h"
 #include "rapidjson/document.h"
 #include <functional>
-#include <variant>
 #include <vector>
 
 class Script;
@@ -66,6 +65,10 @@ class Script
     virtual void Load(const rapidjson::Value& initialState);
     virtual void CloneFields(const std::vector<InspectorField>& fields);
     virtual void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) {};
+    virtual void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) {};
+    virtual void OnCollisionExit(GameObject* otherObject, ColliderLayer layer) {};
+    virtual void OnPlayerExitLocation() {};
+    virtual void OnPlayerEnterLocation() {};
     virtual void OnDestroy() {};
 
     virtual const std::vector<InspectorField>& GetFields() const { return fields; }

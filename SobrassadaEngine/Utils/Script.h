@@ -6,7 +6,6 @@
 #include "Math/float4.h"
 #include "rapidjson/document.h"
 #include <functional>
-#include <variant>
 
 class GameObject;
 
@@ -41,12 +40,16 @@ class Script
   public:
     virtual ~Script() {}
 
-    virtual bool Init()                                                                                  = 0;
-    virtual void Update(float deltaTime)                                                                 = 0;
-    virtual void Inspector()                                                                             = 0;
-    virtual void Load(const rapidjson::Value& initialState)                                              = 0;
-    virtual void CloneFields(const std::vector<InspectorField>& fields)                                  = 0;
-    virtual void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) = 0;
+    virtual bool Init()                                                                                       = 0;
+    virtual void Update(float deltaTime)                                                                      = 0;
+    virtual void Inspector()                                                                                  = 0;
+    virtual void Load(const rapidjson::Value& initialState)                                                   = 0;
+    virtual void CloneFields(const std::vector<InspectorField>& fields)                                       = 0;
+    virtual void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)      = 0;
+    virtual void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) = 0;
+    virtual void OnCollisionExit(GameObject* otherObject, ColliderLayer layer)                                = 0;
+    virtual void OnPlayerExitLocation()                                                                       = 0;
+    virtual void OnPlayerEnterLocation()                                                                      = 0;
     virtual void OnDestroy() {};
 
     virtual const std::vector<InspectorField>& GetFields() = 0;
