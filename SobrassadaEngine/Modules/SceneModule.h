@@ -43,7 +43,7 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     bool GetOnlyOnceInPlayMode() const { return onlyOncePlayMode; }
     void ResetOnlyOnceInPlayMode() { onlyOncePlayMode = false; }
 
-    void AddGameObjectToUpdate(GameObject* gameObject);
+    void AddGameObjectToUpdateComponents(GameObject* gameObject);
     void RequestSceneLoad(const std::string& scenePath);
 
 

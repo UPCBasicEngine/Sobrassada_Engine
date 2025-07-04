@@ -68,6 +68,7 @@ constexpr const char* ColliderLayerStrings[] = {"World Objects", "Triggers",    
                                                 "Player",        "Player projectile", "Enemy projectile"};
 
 typedef Delegate<void, GameObject*, float3, ColliderLayer> CollisionDelegate;
+typedef Delegate<void, GameObject*, ColliderLayer> CollisionExitDelegate;
 
 constexpr const char* ResourceTypeStrings[] = {"Material", "Texture"};
 constexpr int ResourceTypeStringsSize       = sizeof(ResourceTypeStrings) / sizeof(char*);
