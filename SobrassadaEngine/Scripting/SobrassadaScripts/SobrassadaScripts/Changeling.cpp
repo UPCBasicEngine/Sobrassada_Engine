@@ -252,8 +252,8 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     } else {
         float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart);
-        dashAreaObject->SetLocalTransform(float4x4::FromTRS(float3(-distanceFromDashStart / 2.f, 0, 0),
-            Quat::identity, float3(1, 1, 1)));
+        dashAreaObject->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
+            Quat::identity, float3(1, 1, distanceFromDashStart)));
     }
 }
 
