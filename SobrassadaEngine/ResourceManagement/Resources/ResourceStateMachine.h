@@ -17,6 +17,15 @@ struct Clip
     float animationSpeed = 1.0f;
 };
 
+struct StateTrigger
+{
+    float keyTimeNorm;
+    TriggerType type;
+    std::string eventName;
+    bool repeatOnLoop = true;
+    bool consumed     = false;
+};
+
 struct State
 {
     HashString name;
@@ -26,14 +35,6 @@ struct State
     
 };
 
-struct StateTrigger
-{
-    float keyTimeNorm;
-    TriggerType type;
-    std::string eventName;
-    bool repeatOnLoop = true;
-    bool consumed     = false;
-};
 struct Transition
 {
     HashString fromState;

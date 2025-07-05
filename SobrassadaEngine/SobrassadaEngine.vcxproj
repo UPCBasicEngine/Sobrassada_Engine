@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -705,6 +705,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Scene\Components\Standalone\Animation\AnimationTrigger.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
+    <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />
     <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
     <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />

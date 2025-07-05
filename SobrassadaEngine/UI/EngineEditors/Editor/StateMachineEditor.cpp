@@ -6,6 +6,7 @@
 #include "LibraryModule.h"
 #include "ResourcesModule.h"
 #include "StateNode.h"
+#include "AudioModule.h"
 
 StateMachineEditor::StateMachineEditor(const std::string& editorName, UID uid, ResourceStateMachine* stateMachine)
     : EngineEditorBase(editorName, uid), uid(uid), resource(stateMachine)
@@ -345,6 +346,62 @@ void StateMachineEditor::ShowInspector()
         ImGui::TextColored(
             ImVec4(1, 0.5f, 0.5f, 1.0f), "No Clip found with name: %s", selectedNode->GetClipName().c_str()
         );
+    }
+
+    ImGui::Spacing();
+    ImGui::Text("State Triggers");
+    ImGui::Separator();
+
+    State* st = resource->GetState(selectedNode->GetStateName());
+    if (!st) return;
+
+    if (ImGui::Button("+ Add Trigger"))
+    {
+        st->triggers.emplace_back(StateTrigger {0.f, TriggerType::SOUND, "", true});
+    }
+
+    for (size_t i = 0; i < st->triggers.size(); ++i)
+    {
+        ImGui::PushID(int(i));
+        StateTrigger& trg = st->triggers[i];
+
+        ImGui::SliderFloat("Time", &trg.keyTimeNorm, 0.f, 1.f, "%.2f");
+
+        int tp                   = int(trg.type);
+        const char* typeLabels[] = {"Sound"};
+        ImGui::Combo("Type", &tp, typeLabels, IM_ARRAYSIZE(typeLabels));
+        trg.type = TriggerType(tp);
+
+        if (trg.type == TriggerType::SOUND)
+        {
+            const auto& names = App->GetAudioModule()->GetEventNames();
+            std::vector<const char*> cstr;
+            cstr.reserve(names.size());
+            for (auto& s : names)
+                cstr.push_back(s.c_str());
+
+            int sel = 0;
+            for (size_t n = 0; n < names.size(); ++n)
+                if (names[n] == trg.eventName)
+                {
+                    sel = int(n);
+                    break;
+                }
+
+            if (ImGui::Combo("Event", &sel, cstr.data(), int(cstr.size()))) trg.eventName = names[sel];
+        }
+
+        ImGui::Checkbox("Repeat each loop", &trg.repeatOnLoop);
+
+        if (ImGui::Button("Delete"))
+        {
+            st->triggers.erase(st->triggers.begin() + i);
+            ImGui::PopID();
+            break;
+        }
+
+        ImGui::Separator();
+        ImGui::PopID();
     }
 
     ImGui::Spacing();
