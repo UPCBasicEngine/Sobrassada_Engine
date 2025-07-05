@@ -107,7 +107,10 @@ void AnimationComponent::OnPlay(bool isTransition)
                             if (currentAnimResource)
                                 App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 
-                            currentAnimResource = animController->GetCurrentAnimation();
+                            currentAnimResource = static_cast<ResourceAnimation*>(
+                                App->GetResourcesModule()->RequestResource(clip.animationResourceUID)
+                            );
+
                             if (currentAnimResource) currentAnimResource->AddReference();
 
                             resource = clip.animationResourceUID;
@@ -135,6 +138,7 @@ void AnimationComponent::OnPlay(bool isTransition)
             if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 
             animController->Play(resource, true, defaultTime);
+            activeTriggers.clear(); 
 
             currentAnimResource = animController->GetCurrentAnimation();
             if (currentAnimResource) currentAnimResource->AddReference();
@@ -530,7 +534,7 @@ void AnimationComponent::SetActiveTriggers(const std::vector<StateTrigger>& vec,
     activeTriggers = vec;
 
     for (auto& trg : activeTriggers)
-        trg.consumed = (!trg.repeatOnLoop && trg.keyTimeNorm <= startNorm);
+        trg.consumed = false;
 }
 
 bool AnimationComponent::IsPlaying() const
