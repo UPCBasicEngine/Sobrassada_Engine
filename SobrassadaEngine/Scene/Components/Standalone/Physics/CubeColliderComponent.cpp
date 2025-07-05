@@ -213,6 +213,11 @@ void CubeColliderComponent::ParentUpdated()
     App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 }
 
+void CubeColliderComponent::UpdateCollider()
+{
+    App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+}
+
 void CubeColliderComponent::OnCollision(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
 {
     if (!enabled || !otherObject->IsEnabled()) return;

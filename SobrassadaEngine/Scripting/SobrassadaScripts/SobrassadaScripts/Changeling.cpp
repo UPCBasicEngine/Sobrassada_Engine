@@ -259,6 +259,7 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         dashTrailColliderObject->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
             Quat::identity, float3(1, 1, 1)));
         dashAreaCollider->size = float3(.5f, .2f, distanceFromDashStart / 2.f);
+        dashAreaCollider->UpdateCollider();
     }
 }
 
