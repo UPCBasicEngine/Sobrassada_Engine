@@ -13,6 +13,8 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
+#include <Math/Quat.h>
+
 Changeling::Changeling(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Changeling)
 {
@@ -211,6 +213,8 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
 {
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
+
+    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
     
     if (playerScript->IsDead() || distanceToPlayerSq > rangeAIChase * rangeAIChase)
     {
@@ -222,6 +226,8 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
 
 void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq)
 {
+    agentAI->LookAtMovement(dashTarget, deltaTime);
+    
     if (stateTimer < 0.f)
     {
         Character::Attack(deltaTime);
@@ -245,11 +251,9 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         stateTimer = attackCooldown;
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     } else {
-        float4x4 transform = dashAreaObject->GetLocalTransform();
         float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart);
-        transform.SetTranslatePart(dashDirection * (distanceFromDashStart / 4.f));
-        //transform.Scale(distanceFromDashStart, 1, 1);
-        dashAreaObject->SetLocalTransform(transform);
+        dashAreaObject->SetLocalTransform(float4x4::FromTRS(float3(-distanceFromDashStart / 2.f, 0, 0),
+            Quat::identity, float3(1, 1, 1)));
     }
 }
 
