@@ -41,7 +41,7 @@ void Component::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
 
     targetState.AddMember("Enabled", enabled, allocator);
     targetState.AddMember("WasEnabled", wasEnabled, allocator);
-    targetState.AddMember("Name", rapidjson::Value(std::string(name).c_str(), allocator), allocator);
+    targetState.AddMember("Name", rapidjson::Value(name, allocator), allocator);
 }
 
 bool Component::RenderGizmo()
