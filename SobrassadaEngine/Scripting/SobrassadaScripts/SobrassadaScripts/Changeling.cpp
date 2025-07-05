@@ -6,26 +6,21 @@
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
-#include "GameTimer.h"
 #include "Globals.h"
-#include "Math/Quat.h"
-#include "PhysicsModule.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
-#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
-#include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 Changeling::Changeling(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Changeling)
 {
-    fields.push_back({"Dark Path Name", InspectorField::FieldType::InputText, &pathName});
-    fields.push_back({"Body mesh", InspectorField::FieldType::InputText, &bodyMeshPath});
-    fields.push_back({"Abs spotted reaction time", InspectorField::FieldType::Float, &absoluteSpottedReactionTime, 0.1f, 10.0f});
-    fields.push_back({"Abs rise duration", InspectorField::FieldType::Float, &absoluteRiseDuration, 0.1f, 10.0f});
-    fields.push_back({"Version", InspectorField::FieldType::Int, &userSelectedVersion, 0, 3});
+    fields.emplace_back("Dark Path Name", InspectorField::FieldType::InputText, &pathName);
+    fields.emplace_back("Body mesh", InspectorField::FieldType::InputText, &bodyMeshPath);
+    fields.emplace_back("Abs spotted reaction time", InspectorField::FieldType::Float, &absoluteSpottedReactionTime, 0.1f, 10.0f);
+    fields.emplace_back("Abs rise duration", InspectorField::FieldType::Float, &absoluteRiseDuration, 0.1f, 10.0f);
+    fields.emplace_back("Version", InspectorField::FieldType::Int, &userSelectedVersion, 0, 3);
 }
 
 bool Changeling::Init()
@@ -307,7 +302,7 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
     } else
     {
         if (bodyMeshObject != nullptr)
-            bodyMeshObject->SetLocalPosition(Lerp(float3(0, -1.7f,0 ), float3(0, 0, 0), stateTimer / dyingDuration));
+            bodyMeshObject->SetLocalPosition(Lerp(float3(0, -2.f,0 ), float3(0, 0, 0), stateTimer / dyingDuration));
     }
 }
 

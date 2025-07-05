@@ -69,19 +69,11 @@ class Changeling : public Character
     float3 dashTarget             = float3::zero; // Posici�n objetivo
     float dashSpeed               = 15.0f;
 
-    std::string pathName          = "";
-    std::string bodyMeshPath      = "";
+    std::string pathName;
+    std::string bodyMeshPath;
 
     GameObject* dashAreaObject    = nullptr;
     GameObject* bodyMeshObject    = nullptr;
-
-    float3 lastTrailPos           = float3::zero;
-    float trailSegmentSpacing     = 1.0f; 
-    std::string trailPrefabName   = "DashTrailSegment";
-    float4x4 localTransform      = float4x4::identity;
-
-    float3 startPos;
-    float3 endPos;
 
     bool hasPlayerSpotted = false;
     float stateTimer = 0.f;
@@ -93,7 +85,7 @@ class Changeling : public Character
     float biteAttackDuration = .5f;
     float biteAttackCooldown = 2.f;
 
-    float dyingDuration = 1.f;
+    float dyingDuration = 2.f;
 
     int userSelectedVersion = 0;
     ChangelingVersions version = ChangelingVersions::RANDOM;
