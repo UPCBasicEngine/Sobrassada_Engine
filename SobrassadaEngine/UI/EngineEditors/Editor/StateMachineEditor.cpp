@@ -352,7 +352,11 @@ void StateMachineEditor::ShowInspector()
     ImGui::Text("State Triggers");
     ImGui::Separator();
 
-    State* st = resource->GetState(selectedNode->GetStateName());
+    const State* stConst = resource->GetState(selectedNode->GetStateName());
+    if (!stConst) return;
+
+    State* st = const_cast<State*>(stConst);
+
     if (!st) return;
 
     if (ImGui::Button("+ Add Trigger"))

@@ -57,25 +57,10 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
     {
         resourceStateMachine = nullptr;
     }
-
-    if (initialState.HasMember("ClipTriggers") && initialState["ClipTriggers"].IsArray())
-    {
-        for (const auto& obj : initialState["ClipTriggers"].GetArray())
-        {
-            UID uid        = obj["ClipUID"].GetUint64();
-            float key      = obj["KeyTime"].GetFloat();
-            TriggerType tp = static_cast<TriggerType>(obj["Type"].GetInt());
-            std::string pl = obj["EventName"].GetString();
-            bool rep       = obj.HasMember("Repeat") ? obj["Repeat"].GetBool() : true;
-
-            clipTriggers[uid].push_back(new AnimationTrigger(key, tp, pl, rep));
-        }
-    }
 }
 
 AnimationComponent::~AnimationComponent()
 {
-    ReleaseAllTriggers();
     delete animController;
     App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 }
@@ -114,24 +99,12 @@ void AnimationComponent::OnPlay(bool isTransition)
                                 animController->SetTargetAnimationResource(
                                     clip.animationResourceUID, transitionTime, clip.loop, clip.animationSpeed
                                 );
-                                triggerMuteTime = static_cast<float>(transitionTime) / 1000.0f;
                             }
                             else
-                            {
                                 animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
-                                triggerMuteTime = 0.0f;
-                            }
+
                             resource = clip.animationResourceUID;
                             
-                            float startTime = animController->GetTime();
-                            lastTime        = startTime;
-                            auto& vec       = clipTriggers[resource];
-                            for (AnimationTrigger* trg : vec)
-                            {
-                                trg->Reset();
-                                if (trg->GetTime() <= startTime && !trg->RepeatOnLoop())
-                                    trg->Consume();
-                            }
                         }
 
                         
@@ -139,21 +112,7 @@ void AnimationComponent::OnPlay(bool isTransition)
                 }
             }
         }
-        else
-        {
-            animController->Play(resource, true, defaultTime);
-
-            float startTime = animController->GetTime();
-            lastTime        = startTime;
-
-            auto& vec       = clipTriggers[resource];
-            for (AnimationTrigger* trg : vec)
-            {
-                trg->Reset();
-
-                if (trg->GetTime() <= startTime && !trg->RepeatOnLoop()) trg->Consume();
-            }
-        }
+        else animController->Play(resource, true, defaultTime);
     }
 }
 
@@ -349,11 +308,6 @@ void AnimationComponent::RenderEditorInspector()
         }
     }
 
-    if (ImGui::CollapsingHeader("Animation Triggers", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        DrawTriggerInspector();
-    }
-
     ImGui::Separator();
     ImGui::Text("Associated State Machine");
 
@@ -414,105 +368,6 @@ void AnimationComponent::RenderEditorInspector()
     }
 }
 
-void AnimationComponent::DrawTriggerInspector()
-{
-    UID clipUID                         = resource;
-    std::vector<AnimationTrigger*>& vec = clipTriggers[clipUID];
-
-    const auto& eventNames              = App->GetAudioModule()->GetEventNames();
-    if (ImGui::Button("Add Trigger"))
-    {
-        const std::string& defName = eventNames.empty() ? std::string() : eventNames.front();
-
-        AddSoundTrigger(clipUID, 0.0f, defName); //Sound by default
-    }
-        
-    if (vec.empty())
-    {
-        ImGui::TextDisabled("No triggers yet.");
-        return;
-    }
-
-    const auto& names = App->GetAudioModule()->GetEventNames();
-    std::vector<const char*> cNames; 
-    cNames.reserve(names.size());
-    
-    for (const std::string& s : names)
-        cNames.push_back(s.c_str());
-        
-    for (size_t i = 0; i < vec.size(); ++i)
-    {
-        AnimationTrigger* trgg = vec[i];
-        ImGui::PushID(static_cast<int>(i));
-
-        // Seconds inside clip
-        float t = trgg->GetTime();
-        if (ImGui::SliderFloat("Time", &t, 0.0f, currentAnimResource->GetDuration(), "%.2f"))
-            trgg->SetTime(t);
-
-        const char* types[] = {"Sound" /* Rest of different triggers */};
-        int currentType     = static_cast<int>(trgg->GetType());
-
-        if (ImGui::Combo("Type", &currentType, types,
-                         IM_ARRAYSIZE(types)))
-        {
-            trgg->SetType(static_cast<TriggerType>(currentType));
-        }
-
-        switch (trgg->GetType())
-        {
-        case TriggerType::SOUND:
-        {
-            const auto& names = App->GetAudioModule()->GetEventNames();
-            std::vector<const char*> cNames;
-            cNames.reserve(names.size());
-            for (const std::string& s : names)
-                cNames.push_back(s.c_str());
-
-            int sel = 0;
-            for (size_t n = 0; n < names.size(); ++n)
-                if (names[n] == trgg->GetName())
-                {
-                    sel = static_cast<int>(n);
-                    break;
-                }
-
-            if (!cNames.empty())
-            {
-                ImGui::Text("Sound Event");
-                ImGui::SameLine();
-
-                ImGui::SetNextItemWidth(140.0f);
-                if (ImGui::Combo("##SoundEventSelector", &sel, cNames.data(), static_cast<int>(cNames.size())))
-                {
-                    trgg->SetName(names[sel]);
-                }
-                bool rep = trgg->RepeatOnLoop();
-                if (ImGui::Checkbox("Repeat every loop", &rep)) trgg->SetRepeat(rep);
-            }
-            else
-            {
-                ImGui::TextDisabled("No audio events loaded");
-            }
-            break;
-            // rest of events
-        }
-        default:
-            break;
-        }
-
-        if (ImGui::Button("Delete"))
-        {
-            RemoveTrigger(clipUID, i);
-            ImGui::PopID();
-            break;
-        }
-
-        ImGui::Separator();
-        ImGui::PopID();
-    }
-}
-
 void AnimationComponent::Clone(const Component* other)
 {
     if (other->GetType() == ComponentType::COMPONENT_ANIMATION)
@@ -529,22 +384,6 @@ void AnimationComponent::Clone(const Component* other)
             resourceStateMachine = otherAnimation->resourceStateMachine;
             resourceStateMachine->AddReference();
             currentState = resourceStateMachine->GetDefaultState();
-        }
-
-        clipTriggers.clear(); 
-
-        for (const auto& [uid, srcList] : otherAnimation->clipTriggers)
-        {
-            auto& dstList = clipTriggers[uid];
-            dstList.reserve(srcList.size());
-
-            for (const AnimationTrigger* srcTrig : srcList)
-            {
-                AnimationTrigger* newTrig = new AnimationTrigger(*srcTrig);
-
-                newTrig->Reset();
-                dstList.push_back(newTrig);
-            }
         }
     }
     else
@@ -572,15 +411,6 @@ void AnimationComponent::Update(float deltaTime)
         animController->Update(deltaTime);
 
         float currTime = animController->GetTime();
-        if (triggerMuteTime > 0.0f)
-        {
-            triggerMuteTime -= deltaTime;
-            lastTime         = currTime;
-        }
-        else
-        {
-            CheckTriggers(prevTime, currTime);
-        }
 
         std::set<GameObject*> modifiedBones;
 
@@ -628,24 +458,6 @@ void AnimationComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember(
         "StateMachine", resourceStateMachine != nullptr ? resourceStateMachine->GetUID() : INVALID_UID, allocator
     );
-
-    rapidjson::Value trigArr(rapidjson::kArrayType);
-
-    for (const auto& [uid, list] : clipTriggers)
-    {
-        for (const AnimationTrigger* trgg : list)
-        {
-            rapidjson::Value obj(rapidjson::kObjectType);
-            obj.AddMember("ClipUID", uid, allocator);
-            obj.AddMember("KeyTime", trgg->GetTime(), allocator);
-            obj.AddMember("Type", static_cast<int>(trgg->GetType()), allocator);
-            obj.AddMember("EventName", rapidjson::Value(trgg->GetName().c_str(), allocator), allocator);
-            obj.AddMember("Repeat", trgg->RepeatOnLoop(), allocator);
-            trigArr.PushBack(obj, allocator);
-        }
-    }
-
-    targetState.AddMember("ClipTriggers", trigArr, allocator);
 }
 
 void AnimationComponent::AddAnimation(UID animationUID)
@@ -664,6 +476,15 @@ void AnimationComponent::AddAnimation(UID animationUID)
         resource            = animationUID;
         SetBoneMapping();
     }
+}
+
+void AnimationComponent::SetActiveTriggers(std::vector<StateTrigger>* vec, float startNorm)
+{
+    activeTriggers = vec;
+    if (!activeTriggers) return;
+
+    for (auto& trg : *activeTriggers)
+        trg.consumed = (!trg.repeatOnLoop && trg.keyTimeNorm <= startNorm);
 }
 
 bool AnimationComponent::IsPlaying() const
@@ -744,62 +565,3 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
     return triggerDone;
 }
 
-void AnimationComponent::AddSoundTrigger(UID clipUID, float atSeconds, const std::string& eventName, bool repeat)
-{
-    clipTriggers[clipUID].push_back(new AnimationTrigger(atSeconds, TriggerType::SOUND, eventName, repeat));
-}
-
-void AnimationComponent::RemoveTrigger(UID clipUID, size_t index)
-{
-    auto it = clipTriggers.find(clipUID);
-    if (it == clipTriggers.end()) return;
-
-    auto& vec = it->second;
-    if (index >= vec.size()) return;
-
-    delete vec[index];
-    vec.erase(vec.begin() + index);
-}
-
-void AnimationComponent::ClearTriggers(UID clipUID)
-{
-    ReleaseClipTriggers(clipUID);
-}
-
-void AnimationComponent::CheckTriggers(float prevTime, float currTime)
-{
-    if (!currentAnimResource) return;
-
-    UID clipUID = currentAnimResource->GetUID();
-    std::vector<AnimationTrigger*>& vec   = clipTriggers[clipUID];
-    bool looped                         = currTime < prevTime;
-
-    for (AnimationTrigger* trgg : vec)
-    {
-        if (trgg->Check(prevTime, currTime, looped))
-        {
-            if (trgg->GetType() == TriggerType::SOUND) 
-                App->GetAudioModule()->EmitEvent(trgg->GetName(), GetParentUID());
-        }
-    }
-
-    lastTime = currTime;
-}
-
-void AnimationComponent::ReleaseClipTriggers(UID clipUID)
-{
-    auto it = clipTriggers.find(clipUID);
-    if (it == clipTriggers.end()) return;
-
-    for (AnimationTrigger* t : it->second)
-        delete t;
-    it->second.clear();
-}
-
-void AnimationComponent::ReleaseAllTriggers()
-{
-    for (auto& [uid, vec] : clipTriggers)
-        for (AnimationTrigger* t : vec)
-            delete t;
-    clipTriggers.clear();
-}
