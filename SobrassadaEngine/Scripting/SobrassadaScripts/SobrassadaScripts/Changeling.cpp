@@ -72,6 +72,8 @@ bool Changeling::Init()
     agentAI->ResetSpeed();
     agentAI->SetLookForward(true);
 
+    characterCollider->SetEnabled(false);
+
     return true;
 }
 
@@ -80,81 +82,14 @@ void Changeling::Update(float deltaTime)
     if (agentAI == nullptr) return;
     Character::Update(deltaTime);
 
-    /*if (CheckDistanceWithPoint(dashEndPoint) && isDashing)
-    {
-        // agentAI->PauseMovement();
-        agentAI->SetSpeed(0.0f, 0.0f);
-        isDashing = false;
-        hasShot   = true;
-        if (CheckDistanceWithPlayer() != PlayerDistances::Close) currentState = ChangelingStates::CHASE;
-
-        hasShot       = false;
-        isAttacking   = false;
-        attackCdTimer = attackCooldown;
-        // agentAI->ResetSpeed();
-        // agentAI->SetLookForward(true);
-    }
-
-    if (isDashing)
-    {
-        float3 currentPos = parent->GetPosition();
-        float3 scale      = float3::one;
-        float4x4 trs      = float4x4::identity;
-        float3 position   = float3::zero;
-        if ((currentPos - lastTrailPos).Length() >= trailSegmentSpacing)
-        {
-            UID trailPrefabUID = dashAreaObject->GetPrefabUID();
-
-            float3 position    = currentPos;
-
-            float3 midPoint    = (startPos + position) * 0.5f;
-
-            float3 direction   = (position - startPos).Normalized();
-
-            localTransform     = parent->GetLocalTransform();
-            float3 forward     = parent->GetGlobalTransform().WorldZ();
-            forward.y          = 0.0f;
-            forward.Normalize();
-
-            float length  = (position - startPos).Length();
-
-            scale         = float3(1, 1, length);
-            float angle   = atan2(direction.x, direction.z);
-            Quat rotation = Quat::FromEulerXYZ(0.0f, angle, 0.0f);
-
-            trs           = float4x4::FromTRS(midPoint, rotation, scale);
-
-            dashAreaObject->SetLocalTransform(trs);
-            dashAreaObject->SetLocalPosition(midPoint);
-
-            if (angle < 0.0f) dashAreaObject->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle + 1.5708f;
-            else dashAreaObject->GetComponent<CapsuleColliderComponent*>()->centerRotation.y = angle - 1.5708f;
-            dashAreaObject->GetComponent<CapsuleColliderComponent*>()->length = length;
-            AppEngine->GetPhysicsModule()->UpdateCapsuleRigidBody(dashAreaObject->GetComponent<CapsuleColliderComponent*>());
-
-            lastTrailPos = currentPos;
-        }
-    }*/
-
-    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
-    {
-        const std::string life      = "Health: " + std::to_string(currentHealth);
-        const std::string animState = "Anim state: " + stateName.GetString();
-
-        std::vector<std::pair<std::string, float2>> logs {
-            {life,      float2(-50.0f, -140.0f)},
-            {animState, float2(-80.0f, -160.0f)},
-        };
-
-        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
-    }
+    RenderDebugVisuals();
 }
 
 void Changeling::OnDeath()
 {
-    // TODO: include death sound for the character
-    // TODO: animation and particles
-    parent->SetEnabled(false);
+    stateTimer = dyingDuration;
+    isDead = false; // TODO To keep getting updates until the death animation is finished
+    currentState = ChangelingStates::DYING;
 }
 
 void Changeling::OnDamageTaken(int amount)
@@ -189,6 +124,9 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::CHASE:
         UpdateChaseState(deltaTime, distanceToPlayerSq);
         break;
+    case ChangelingStates::DASH_ATTACK_PREPARATION:
+        UpdateDashAttackPreparationState(deltaTime, distanceToPlayerSq);
+        break;
     case ChangelingStates::DASH_ATTACK:
         UpdateDashAttackState(deltaTime, distanceToPlayerSq);
         break;
@@ -200,6 +138,9 @@ void Changeling::HandleState(float deltaTime)
         break;
     case ChangelingStates::BITE_ATTACK_COOLDOWN:
         UpdateBiteAttackCooldownState(deltaTime, distanceToPlayerSq);
+        break;
+    case ChangelingStates::DYING:
+        UpdateDyingState(deltaTime, distanceToPlayerSq);
         break;
     case ChangelingStates::NONE:
         currentState = ChangelingStates::HIDDEN;
@@ -226,6 +167,7 @@ void Changeling::UpdateHiddenState(float deltaTime, float distanceToPlayerSq)
             stateTimer -= deltaTime;
             if (stateTimer < absoluteRiseDuration)
             {
+                characterCollider->SetEnabled(true);
                 currentState = ChangelingStates::DIG_UP_TRANSITION;
                 // TODO Play animation to dig up
             }
@@ -270,6 +212,7 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
         {
             if (bodyMeshObject != nullptr)
                 bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+            characterCollider->SetEnabled(false);
             currentState = ChangelingStates::HIDDEN;
         } else
         {
@@ -296,10 +239,26 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
     }
 }
 
+void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq)
+{
+    if (stateTimer < 0.f)
+    {
+        Character::Attack(deltaTime);
+    
+        agentAI->SetSpeed(dashSpeed, 1000000);
+        agentAI->SetPathNavigation(dashTarget);
+        stateTimer = attackDuration;
+        
+        weaponCollider->SetEnabled(true);
+        currentState = ChangelingStates::DASH_ATTACK;
+    }
+}
+
 void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq)
 {
     if (stateTimer < 0.f)
     {
+        weaponCollider->SetEnabled(false);
         isAttacking = false;
         stateTimer = attackCooldown;
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
@@ -324,6 +283,8 @@ void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq
         if (bodyMeshObject != nullptr)
             bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
         stateTimer = biteAttackCooldown;
+        characterCollider->SetEnabled(false);
+        weaponCollider->SetEnabled(false);
         currentState = ChangelingStates::BITE_ATTACK_COOLDOWN;
     }
 }
@@ -334,6 +295,19 @@ void Changeling::UpdateBiteAttackCooldownState(float deltaTime, float distanceTo
     {
         hasPlayerSpotted = false;
         currentState = ChangelingStates::HIDDEN;
+    }
+}
+
+void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
+{
+    if (stateTimer < 0.f)
+    {
+        isDead = true;
+        parent->SetEnabled(false);
+    } else
+    {
+        if (bodyMeshObject != nullptr)
+            bodyMeshObject->SetLocalPosition(Lerp(float3(0, -1.7f,0 ), float3(0, 0, 0), stateTimer / dyingDuration));
     }
 }
 
@@ -363,20 +337,17 @@ bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
 
     if (!posOverPoly) return false;
     
-    dashEndPoint = targetPoint;
-    currentState = ChangelingStates::DASH_ATTACK;
+    dashTarget = targetPoint;
+    currentState = ChangelingStates::DASH_ATTACK_PREPARATION;
 
     agentAI->SetLookForward(false);
-    Character::Attack(deltaTime);
     agentAI->SetSpeed(0.0f, 0.0f);
     agentAI->ResetSpeed();
     agentAI->SetLookForward(true);
 
     agentAI->LookAtMovement(dashTarget, deltaTime);
     
-    agentAI->SetSpeed(dashSpeed, 1000000);
-    agentAI->SetPathNavigation(dashEndPoint);
-    stateTimer = attackDuration;
+    stateTimer = dashAttackPreparationDuration;
 
     return true;
 }
@@ -390,88 +361,30 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     // Implement state transition
     if (bodyMeshObject != nullptr)
         bodyMeshObject->SetLocalPosition(float3(0, -.8f, 0));
+    characterCollider->SetEnabled(true);
     hasPlayerSpotted = true;
     stateTimer = biteAttackDuration;
     currentState = ChangelingStates::BITE_ATTACK;
+
+    weaponCollider->SetEnabled(true);
 
     Character::Attack(deltaTime);
 
     return true;
 }
 
-/*oid Changeling::ChaseAI()
+void Changeling::RenderDebugVisuals()
 {
-    //  animComponent->UseTrigger("run");
-    if (character != nullptr)
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::DASH_ATTACK;
-        else
-        {
-            isDashing = false;
-            if (!agentAI->SetPathNavigation(character->GetLastPosition()))
-            {
-                if (bodyMeshObject != nullptr)
-                    bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
-                agentAI->ResetSpeed();
-                currentState = ChangelingStates::HIDDEN;
-            }
-            ChangeState();
-        }
+        const std::string life      = "Health: " + std::to_string(currentHealth);
+        const std::string animState = "Anim state: " + stateName.GetString();
+
+        std::vector<std::pair<std::string, float2>> logs {
+                {life,      float2(-50.0f, -140.0f)},
+                {animState, float2(-80.0f, -160.0f)},
+            };
+
+        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
     }
-    else currentState = ChangelingStates::NONE;
 }
-
-void Changeling::Attack(float deltaTime)
-{
-    if (!dashAreaObject) return;
-
-    if (!isAttacking)
-    {
-        float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
-        direction.Normalize();
-
-        float testDistance = dashDistance;
-        float3 dashTarget;
-        bool posOverPoly        = false;
-        float3 closestPoint     = float3::zero;
-        const float3 searchArea = {1.0f, 2.0f, 1.0f};
-
-        // Busca el primer punto v�lido en la navmesh reduciendo la distancia
-        do
-        {
-            dashDirection = parent->GetGlobalTransform().TranslatePart() + direction * testDistance;
-            agentAI->GetClosestPointInNavmesh(dashDirection, searchArea, posOverPoly, closestPoint);
-            if (!posOverPoly) testDistance -= 1.0f;
-        } while (!posOverPoly && testDistance > 0.0f);
-
-        dashDirection = posOverPoly ? closestPoint : character->GetLastPosition();
-
-        agentAI->SetLookForward(false);
-        if (animComponent) animComponent->UseTrigger("attack");
-        Character::Attack(deltaTime);
-        agentAI->SetSpeed(0.0f, 0.0f);
-        startPos       = parent->GetPosition();
-        localTransform = parent->GetLocalTransform();
-
-        hasShot        = false;
-        attackCdTimer  = attackCooldown;
-        agentAI->ResetSpeed();
-        agentAI->SetLookForward(true);
-    }
-    else
-    {
-        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-        // Enable hitbox when animation hits
-        if (!hasShot && attackTimer >= attackHitboxDelay)
-        {
-            lastTrailPos = parent->GetPosition();
-            hasShot      = true;
-            isDashing    = true;
-            agentAI->SetSpeed(dashSpeed, 1000000);
-
-            dashEndPoint = dashDirection;
-            agentAI->SetPathNavigation(dashEndPoint);
-            dashAreaObject->GetComponent<CapsuleColliderComponent*>()->SetEnabled(true);
-        }
-    }
-}*/
