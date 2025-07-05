@@ -1,16 +1,22 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "CuChulainn.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "InputModule.h"
 #include "MainMenuSelectorScript.h"
+#include "ProjectModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
-#include "GameTimer.h"
 #include "Standalone/UI/ButtonComponent.h"
 
 bool MainMenuSelectorScript::Init()
 {
+    menuItems.clear();
+    arrowImages.clear();
+    selectedIndex                    = 0;
+
     const std::vector<UID>& children = parent->GetChildren();
     for (UID childUID : children)
     {
@@ -95,14 +101,30 @@ void MainMenuSelectorScript::Update(float deltaTime)
             GameObject* parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
             if (parentGO)
             {
-                parentGO->SetEnabledRecursive(false);
+                GameObject* goToDisable = selectedItem;
+                Scene* scene            = AppEngine->GetSceneModule()->GetScene();
+                while (goToDisable && goToDisable->GetName() != "GameOverPanel")
+                {
+                    goToDisable = scene->GetGameObjectByUID(goToDisable->GetParent());
+                }
+                if (goToDisable) goToDisable->SetEnabledRecursive(false);
             }
 
             GameTimer* timer = AppEngine->GetGameTimer();
-            if (timer && timer->IsPaused())
-            {
-                timer->TogglePause();
-            }
+            if (timer) timer->TogglePause();
+
+            if (playerScript) playerScript->Respawn();
+
+            return;
+        }
+        else if (selectedItem->GetName() == "MenuItem_Menu")
+        {
+            if (auto* timer = AppEngine->GetGameTimer(); timer && timer->IsPaused()) timer->TogglePause();
+            AppEngine->GetSceneModule()->GetScene()->SetStopPlaying(true);
+            std::string path =
+                AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
+            AppEngine->GetSceneModule()->RequestSceneLoad(path);
+            return;
         }
         else
         {
@@ -111,8 +133,6 @@ void MainMenuSelectorScript::Update(float deltaTime)
         }
     }
 }
-
-
 
 void MainMenuSelectorScript::UpdateSelection()
 {

@@ -14,6 +14,8 @@
 #include <tuple>
 #include <vector>
 
+constexpr int maxTags = 10;
+
 class MeshComponent;
 class PointLightComponent;
 class SpotLightComponent;
@@ -124,6 +126,10 @@ class SOBRASADA_API_ENGINE GameObject
 
     bool WillUpdate() const { return willUpdate; };
 
+    bool HasTag(const HashString& requestedTag);
+    void AddTag(const HashString& tag);
+    void RemoveTag(const HashString& tag);
+
     template <typename T> T GetComponent() const { return std::get<T>(compTuple); }
     template <typename T> T GetComponentChild(Application* app) const;
     template <typename T> T GetComponentParent(Application* app) const;
@@ -155,11 +161,8 @@ class SOBRASADA_API_ENGINE GameObject
     void SetPosition(float3& newPosition) { position = newPosition; };
     void SetWillUpdate(bool willUpdate) { this->willUpdate = willUpdate; };
     bool IsEnabled() const { return enabled; }
-    void SetEnabled(bool state)
-    {
-        enabled    = state;
-        wasEnabled = state;
-    }
+    void SetEnabled(bool active);
+    
     void SetComponentCreated(int position) { createdComponents[position] = true; }
     void SetComponentRemoved(int position) { createdComponents[position] = false; }
     void SetSelectParent(bool newSelectParent) { selectParent = newSelectParent; }
@@ -191,6 +194,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     bool isRenaming = false;
     char renameBuffer[128];
+    char newTagName[64]                  = "";
 
     UID prefabUID                        = INVALID_UID;
     UID prefabVersionUID                 = INVALID_UID;
@@ -217,7 +221,12 @@ class SOBRASADA_API_ENGINE GameObject
     std::tuple<COMPONENTS> compTuple     = std::make_tuple(COMPONENTS_NULLPTR);
     std::bitset<std::tuple_size<decltype(compTuple)>::value> createdComponents;
 
-    bool hasScriptsToLoad = false;
+    bool hasScriptsToLoad        = false;
+
+    int selectedSelfTag          = -1;
+    int selectedGlobalTag        = -1;
+    HashString globalSelectedTag = HashString("");
+    std::vector<HashString> tags;
 };
 
 template <typename T> inline T GameObject::GetComponentChild(Application* app) const

@@ -57,6 +57,8 @@ CameraComponent::CameraComponent(UID uid, GameObject* parent) : Component(uid, p
     }
 
     previewFramebuffer = new Framebuffer(previewWidth, previewHeight, true);
+
+    UpdateUBO();
 }
 
 CameraComponent::CameraComponent(const rapidjson::Value& initialState, GameObject* parent)

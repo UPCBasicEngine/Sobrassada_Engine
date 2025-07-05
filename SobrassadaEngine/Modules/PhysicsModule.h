@@ -2,8 +2,11 @@
 
 #include "ComponentUtils.h"
 #include "Module.h"
+#include "BulletUserPointer.h"
 
 #include <bitset>
+#include <map>
+#include <set>
 #include <vector>
 
 class btDefaultCollisionConfiguration;
@@ -79,4 +82,8 @@ class SOBRASADA_API_ENGINE PhysicsModule : public Module
 
     BulletDebugDraw* debugDraw = nullptr;
     std::vector<LayerBitset> colliderLayerConfig;
+
+    std::map<UID, std::set<UID>> wereColliding;
+    std::map<UID, std::set<UID>> areColliding;
+    std::map<UID, BulletUserPointer> collisionObjects;
 };

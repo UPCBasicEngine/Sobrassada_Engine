@@ -21,6 +21,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 
+#include "Math/Quat.h"
 #include "SDL.h"
 #include "Wwise_IDs.h"
 
@@ -54,8 +55,15 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
-    fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName, 0.0f, 5.0f});
+    fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
+    fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
+    fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
     fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
+    fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
+    fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
+    fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
+    fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
+    fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -84,6 +92,7 @@ bool CuChulainn::Init()
         1245070082308559  // 10HP
 
     };
+    UpdateHealthBarUI();
 
     GameObject* dashUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("DashCooldown");
     if (dashUIObject) dashImageComponent = dashUIObject->GetComponent<ImageComponent*>();
@@ -133,6 +142,26 @@ bool CuChulainn::Init()
     if (!aimShadowObject) GLOG("[WARNING] No shadow found for aiming in CuChulain")
     else aimShadowObject->SetEnabled(false);
 
+    meleeTrailObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeTrailName);
+    if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for melee attack in CuChulain")
+    else meleeTrailObject->SetEnabled(false);
+
+    meleeVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeVfxName);
+    if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
+    else meleeVfxObject->SetEnabled(false);
+
+    dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
+    if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
+    else dashTrail->SetEnabled(false);
+
+    dashDecal = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashDecalName);
+    if (!dashDecal) GLOG("[WARNING] No dash decal found for CuChulain")
+    else dashDecal->SetEnabled(false);
+
+    healVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healVisualName);
+    if (!healVisual) GLOG("[WARNING] No heal visual found for CuChulain")
+    else healVisual->SetEnabled(false);
+
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
@@ -178,7 +207,10 @@ void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
     if (healthImageComponent) healthImageComponent->ChangeTexture(healthBarTextures[0]);
-    deathTimer = 0.0f;
+    isAttacking = false;
+    deathTimer  = 0.0f;
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
     if (animComponent) animComponent->UseTrigger("Death");
@@ -216,6 +248,9 @@ void CuChulainn::HandleState(float deltaTime)
         aimTimer = 0.0f;
     }
 
+    if (!isDashing && dashTrail) dashTrail->SetEnabled(false);
+    if (!isHealing && healVisual) healVisual->SetEnabled(false);
+
     UpdateDashCooldownUI();
     UpdateUltimateCooldownUI();
 
@@ -225,13 +260,8 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
-             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL)
         Move();
-
-    // TODO: Some transition in the dash or idle state, to continue the combo after a dash
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
@@ -241,6 +271,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
+            if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -250,6 +281,7 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
                 return;
+            if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -299,8 +331,11 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
     {
-        desiredHeal = true;
-        healCdTimer = healCooldown;
+        if (mushrooms != 0)
+        {
+            desiredHeal = true;
+            healCdTimer = healCooldown;
+        }
     }
 
     // Dash
@@ -410,7 +445,9 @@ bool CuChulainn::CanHeal() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM && mushrooms > 0;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
+           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
+           !isHealing;
 }
 
 bool CuChulainn::CanAim() const
@@ -445,6 +482,15 @@ void CuChulainn::UpdateTimers(float deltaTime)
     {
         dashBufferTimer -= deltaTime;
         if (dashBufferTimer < 0.0f) desiredDash = false;
+    }
+
+    // Dash decal
+    dashDecalBufferTimer -= deltaTime;
+    if (dashDecalBufferTimer < 0.0f)
+    {
+        if (dashDecal) dashDecal->SetEnabled(false);
+
+        dashDecalBufferTimer = 0.0f;
     }
 
     // Melee attack timers
@@ -482,6 +528,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         {
             comboCounter  = -1;
             attackCdTimer = attackCooldown;
+            if (state != CharacterStates::ULTIMATE && meleeTrailObject) meleeTrailObject->SetEnabled(false);
 
             if (state == CharacterStates::BASIC_ATTACK)
             {
@@ -522,8 +569,10 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
     if (state == CharacterStates::IDLE) idleTimer += deltaTime;
 
-    // When stop dashing this gets automatically disabled in the timers check
     if (state == CharacterStates::DASH) isInvulnerable = true;
+
+    isDashing = state == CharacterStates::DASH ? true : false;
+    isHealing = state == CharacterStates::HEAL ? true : false;
 }
 
 void CuChulainn::LookAtMouse()
@@ -580,6 +629,7 @@ void CuChulainn::CheckIsFalling()
 void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
     if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
     animComponent->OnResume();
     aimTimer   = 0.0f;
@@ -597,7 +647,11 @@ void CuChulainn::ThrowSpear()
 
 void CuChulainn::Dash()
 {
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    if (state == CharacterStates::AIM && camera)
+    {
+        camera->EnableAimOffset(false);
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    }
     else if (state == CharacterStates::BASIC_ATTACK)
     {
         comboBufferTimer = character->GetDashDuration() + 0.1f;
@@ -612,7 +666,20 @@ void CuChulainn::Dash()
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     LookAtLeftStick();
     character->StartDash();
+    isDashing = true;
     if (animComponent) animComponent->UseTrigger("Dash");
+    if (dashTrail) dashTrail->SetEnabled(true);
+    if (dashDecal)
+    {
+        // TODO: set dash decal to the final position of player and not to direction
+        dashDecal->SetEnabled(true);
+        const float3 scale  = dashDecal->GetLocalTransform().ExtractScale();
+        const Quat rotation = Quat::LookAt(float3::unitY, character->GetFrontDirection(), float3::unitZ, float3::unitY);
+        const float3 pos    = lastDashStartPos + 2.5f * character->GetFrontDirection().Normalized();
+        const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
+        dashDecal->SetLocalTransform(decalTransform);
+        dashDecalBufferTimer = dashDecalTimer;
+    }
 }
 
 void CuChulainn::PerformAttack()
@@ -624,8 +691,7 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-                 attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay && attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -642,18 +708,17 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
-                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay && ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
         }
-        else if (ultimateObject->IsEnabled() &&
-                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
             ultimateTimer = 0.f;
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -663,8 +728,7 @@ void CuChulainn::PerformAttack()
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() &&
-                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
@@ -677,10 +741,17 @@ void CuChulainn::Attack(float deltaTime)
 
     // GLOG("ATTACK");
 
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    if (state == CharacterStates::AIM && camera)
+    {
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+        camera->EnableAimOffset(false);
+    }
+
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (meleeVfxObject) meleeVfxObject->SetEnabled(true);
     ++comboCounter;
     // GLOG("Combo counter: %d", comboCounter);
 
@@ -697,9 +768,14 @@ void CuChulainn::Attack(float deltaTime)
 void CuChulainn::UltimateAttack()
 {
     // GLOG("ULTIMATEEEE");
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
+    if (state == CharacterStates::AIM && camera)
+    {
+        camera->EnableAimOffset(false);
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+    }
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     ultimateTimer   = 0.0f;
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
@@ -713,6 +789,7 @@ void CuChulainn::Aim(float deltaTime)
 
     if (state != CharacterStates::AIM)
     {
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
         if (camera) camera->EnableAimOffset(true);
         state = CharacterStates::AIM;
         character->EnableMovement(false);
@@ -776,7 +853,8 @@ void CuChulainn::Respawn()
 
     isDead        = false;
     currentHealth = reservedHealth;
-    state         = CharacterStates::RESPAWN;
+    UpdateHealthBarUI();
+    state = CharacterStates::RESPAWN;
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
@@ -811,9 +889,12 @@ void CuChulainn::UseMushroom()
     state        = CharacterStates::HEAL;
     desiredHeal  = false;
 
-    // if (animComponent) animComponent->UseTrigger("Heal");
-    if (animComponent) animComponent->UseTrigger("Ultimate");
+    if (animComponent) animComponent->UseTrigger("Heal");
+
     character->EnableMovement(false);
+    isHealing = true;
+
+    if (healVisual) healVisual->SetEnabled(true);
 
     Heal(mushroomHeal);
 
@@ -828,16 +909,16 @@ void CuChulainn::UpdateHealthBarUI()
 
 void CuChulainn::UpdateDashCooldownUI()
 {
-    const UID readyTex    = 1258786293084191;
-    const UID cooldownTex = 1288043360624471;
+    const UID readyTex    = 1215467239887490;
+    const UID cooldownTex = 1208292380114543;
 
     if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
 }
 
 void CuChulainn::UpdateUltimateCooldownUI()
 {
-    const UID readyTex    = 1203132322652717;
-    const UID cooldownTex = 1297453458525874;
+    const UID readyTex    = 1269620042662432;
+    const UID cooldownTex = 1278452734324605;
 
     if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
 }
@@ -865,6 +946,7 @@ void CuChulainn::ChargeAttack()
 
             state              = CharacterStates::CHARGED_ATTACK;
             chargedAttackTimer = 0.0f;
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
 
             if (animComponent) animComponent->UseTrigger("Attack");
         }

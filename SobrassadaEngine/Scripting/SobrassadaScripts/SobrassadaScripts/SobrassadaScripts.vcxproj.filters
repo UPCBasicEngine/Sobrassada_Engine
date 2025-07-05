@@ -130,6 +130,12 @@
     <ClInclude Include="EnemySpawnerScript.h">
       <Filter>Characters\Enemies</Filter>
     </ClInclude>
+    <ClInclude Include="GameOverScript.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerLocationScript.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -800,6 +806,12 @@
     </ClCompile>
     <ClCompile Include="EnemySpawnerScript.cpp">
       <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverScript.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerLocationScript.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

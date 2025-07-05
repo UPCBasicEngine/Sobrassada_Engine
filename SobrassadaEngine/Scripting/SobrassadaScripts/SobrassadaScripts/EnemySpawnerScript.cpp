@@ -14,13 +14,18 @@
 EnemySpawnerScript::EnemySpawnerScript(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Prefab UID", InspectorField::FieldType::InputText, &prefabUIDStr});
+    fields.push_back({"Location Tag", InspectorField::FieldType::InputText, &locationTagString});
     fields.push_back({"Spawn Once", InspectorField::FieldType::Bool, &spawnOnce});
     fields.push_back({"Enemies to Spawn", InspectorField::FieldType::Int, &spawnAmount});
 }
 
 bool EnemySpawnerScript::Init()
 {
+
     if (!prefabUIDStr.empty()) prefabUID = std::stoull(prefabUIDStr);
+    prefab = PrefabManager::LoadPrefab(prefabUID);
+
+    locationTag            = HashString(locationTagString);
 
     return true;
 }
@@ -37,20 +42,7 @@ void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, Col
 
     if (spawnOnce && spawned) return;
     if (wasOverlapping) return;
-
-    if (prefabUID == INVALID_UID && !prefabUIDStr.empty()) prefabUID = std::stoull(prefabUIDStr);
-    if (prefabUID == INVALID_UID)
-    {
-        GLOG("EnemySpawner: Prefab UID not set");
-        return;
-    }
-
-    ResourcePrefab* prefab = PrefabManager::LoadPrefab(prefabUID);
-    if (!prefab)
-    {
-        GLOG("EnemySpawner: Could not find prefab %llu", prefabUID);
-        return;
-    }
+    if (!prefab) return;
 
     Scene* scene           = AppEngine->GetSceneModule()->GetScene();
 
@@ -67,7 +59,7 @@ void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, Col
         spawnTransform[1][3]    += offset.y;
         spawnTransform[2][3]    += offset.z;
 
-        scene->LoadPrefab(prefabUID, prefab, spawnTransform, true);
+        scene->LoadPrefab(prefabUID, prefab, spawnTransform, true, {}, locationTag);
     }
 
     if (spawnOnce) spawned = true;

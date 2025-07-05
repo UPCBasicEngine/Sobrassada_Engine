@@ -38,7 +38,7 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
     startPos        = origin;
     this->direction = direction;
     frames          = 0;
-    parent->SetEnabled(true);
+    parent->SetEnabledRecursive(true);
 
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
