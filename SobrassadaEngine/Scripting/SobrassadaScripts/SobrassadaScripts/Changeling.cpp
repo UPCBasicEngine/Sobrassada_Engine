@@ -253,7 +253,9 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
     } else {
         float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart);
         dashAreaObject->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
-            Quat::identity, float3(1, 1, distanceFromDashStart)));
+            Quat::identity, float3(1, .4f, distanceFromDashStart)));
+        //dashAreaCollider->centerRotation = float3(0, parent->GetRotation().y, 0);
+        dashAreaCollider->size = float3(.5f, .2f, distanceFromDashStart / 2.f);
     }
 }
 
@@ -418,6 +420,14 @@ void Changeling::ValidateSetup()
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] BodyMeshObject not found")
+        return;
+    }
+
+    dashAreaCollider = dashAreaObject->GetComponent<CubeColliderComponent*>();
+    if (dashAreaCollider == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] DashAreaObject does not contain a cube collider")
         return;
     }
 }

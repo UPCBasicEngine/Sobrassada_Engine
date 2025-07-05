@@ -2,6 +2,7 @@
 
 #include "Character.h"
 #include "Math/float4x4.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
 
 class GameObject;
 class AIAgentComponent;
@@ -77,6 +78,7 @@ class Changeling : public Character
     std::string bodyMeshPath;
 
     GameObject* dashAreaObject    = nullptr;
+    CubeColliderComponent* dashAreaCollider = nullptr;
     GameObject* bodyMeshObject    = nullptr;
 
     bool hasPlayerSpotted = false;
