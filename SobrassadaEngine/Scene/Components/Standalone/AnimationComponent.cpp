@@ -17,6 +17,7 @@
 #include "StateMachineEditor.h"
 #include "Animation/AnimationTrigger.h"
 #include "AudioModule.h"
+#include "ResourceAnimation.h"
 
 
 #include "Math/Quat.h"
@@ -103,8 +104,25 @@ void AnimationComponent::OnPlay(bool isTransition)
                             else
                                 animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
 
+                            if (currentAnimResource)
+                                App->GetResourcesModule()->ReleaseResource(currentAnimResource);
+
+                            currentAnimResource = animController->GetCurrentAnimation();
+                            if (currentAnimResource) currentAnimResource->AddReference();
+
                             resource = clip.animationResourceUID;
-                            
+
+
+                            SetBoneMapping();
+
+                            float clipLen       = currentAnimResource->GetDuration();
+                            if (clipLen <= 0.f) clipLen = 1.f;
+
+                            float startSec      = animController->GetTime();
+                            float startNorm     = (clipLen > 0.f) ? (startSec / clipLen) : 0.f;
+                            SetActiveTriggers(
+                                currentState->triggers, startNorm
+                            );
                         }
 
                         
@@ -112,7 +130,17 @@ void AnimationComponent::OnPlay(bool isTransition)
                 }
             }
         }
-        else animController->Play(resource, true, defaultTime);
+        else
+        {
+            if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
+
+            animController->Play(resource, true, defaultTime);
+
+            currentAnimResource = animController->GetCurrentAnimation();
+            if (currentAnimResource) currentAnimResource->AddReference();
+
+            SetBoneMapping();
+        }
     }
 }
 
@@ -401,16 +429,35 @@ void AnimationComponent::Update(float deltaTime)
         if (!IsEffectivelyEnabled()) return;
         if (!animController->IsPlaying()) return;
 
-        if (boneMapping.empty())
-        {
-            SetBoneMapping();
-        }
+        float clipLen = currentAnimResource->GetDuration();
+        if (clipLen <= 0.f) clipLen = 1.f;
 
-        float prevTime = animController->GetTime();
+        float prevSec  = animController->GetTime();
+        float prevNorm = prevSec / clipLen;
 
         animController->Update(deltaTime);
 
-        float currTime = animController->GetTime();
+        float currSec  = animController->GetTime();
+        float currNorm = currSec / clipLen;
+        bool looped    = currNorm < prevNorm;
+
+        if (!activeTriggers.empty())
+        {
+            for (StateTrigger& trg : activeTriggers)
+            {
+                if (trg.consumed && !looped) continue;
+
+                bool crossed = (!trg.consumed && prevNorm < trg.keyTimeNorm && currNorm >= trg.keyTimeNorm) ||
+                               (looped && currNorm >= trg.keyTimeNorm);
+
+                if (crossed && trg.type == TriggerType::SOUND)
+                {
+                    App->GetAudioModule()->EmitEvent(trg.eventName, parent->GetUID());
+                    trg.consumed = true;
+                }
+                if (looped && trg.repeatOnLoop) trg.consumed = false;
+            }
+        }
 
         std::set<GameObject*> modifiedBones;
 
@@ -478,12 +525,11 @@ void AnimationComponent::AddAnimation(UID animationUID)
     }
 }
 
-void AnimationComponent::SetActiveTriggers(std::vector<StateTrigger>* vec, float startNorm)
+void AnimationComponent::SetActiveTriggers(const std::vector<StateTrigger>& vec, float startNorm)
 {
     activeTriggers = vec;
-    if (!activeTriggers) return;
 
-    for (auto& trg : *activeTriggers)
+    for (auto& trg : activeTriggers)
         trg.consumed = (!trg.repeatOnLoop && trg.keyTimeNorm <= startNorm);
 }
 

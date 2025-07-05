@@ -71,7 +71,7 @@ class SOBRASADA_API_ENGINE ResourceStateMachine : public Resource
 
     const Clip* GetClip(const std::string& name) const;
     void SetClipSpeed(const std::string& name,float speed);
-    const State* GetState(const std::string& name) const;
+    State* GetState(const std::string& name);
     const Transition* GetTransition(const std::string& fromState, const std::string& toState) const;
     const State* GetDefaultState() const
     {
