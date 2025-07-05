@@ -74,10 +74,12 @@ class Changeling : public Character
     float3 dashTarget             = float3::zero;
     float dashSpeed               = 15.0f;
 
-    std::string pathName;
     std::string bodyMeshPath;
+    std::string dashTrailMeshName;
+    std::string dashTrailCollisionName;
 
-    GameObject* dashAreaObject    = nullptr;
+    GameObject* dashTrailMeshObject    = nullptr;
+    GameObject* dashTrailColliderObject    = nullptr;
     CubeColliderComponent* dashAreaCollider = nullptr;
     GameObject* bodyMeshObject    = nullptr;
 

@@ -18,7 +18,8 @@
 Changeling::Changeling(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Changeling)
 {
-    fields.emplace_back("Dark Path Name", InspectorField::FieldType::InputText, &pathName);
+    fields.emplace_back("Dash trail mesh", InspectorField::FieldType::InputText, &dashTrailMeshName);
+    fields.emplace_back("Dash trail collision", InspectorField::FieldType::InputText, &dashTrailCollisionName);
     fields.emplace_back("Body mesh", InspectorField::FieldType::InputText, &bodyMeshPath);
     fields.emplace_back("Abs spotted reaction time", InspectorField::FieldType::Float, &absoluteSpottedReactionTime, 0.1f, 10.0f);
     fields.emplace_back("Abs rise duration", InspectorField::FieldType::Float, &absoluteRiseDuration, 0.1f, 10.0f);
@@ -47,8 +48,8 @@ bool Changeling::Init()
     agentAI->SetLookForward(true);
     speed = agentAI->GetSpeed();
 
-    dashAreaObject->SetEnabled(false);
-    //dashAreaObject->GetComponent<CapsuleColliderComponent*>()->centerRotation.x = 1.5708f;
+    dashTrailMeshObject->SetEnabled(false);
+    dashTrailColliderObject->SetEnabled(false);
     bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
 
     isAttacking                                                          = false;
@@ -237,7 +238,8 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         stateTimer = attackDuration;
         
         weaponCollider->SetEnabled(true);
-        dashAreaObject->SetEnabled(true);   
+        dashTrailMeshObject->SetEnabled(true);   
+        dashTrailColliderObject->SetEnabled(true);
         currentState = ChangelingStates::DASH_ATTACK;
     }
 }
@@ -252,9 +254,10 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     } else {
         float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart);
-        dashAreaObject->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
+        dashTrailMeshObject->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
             Quat::identity, float3(1, .4f, distanceFromDashStart)));
-        //dashAreaCollider->centerRotation = float3(0, parent->GetRotation().y, 0);
+        dashTrailColliderObject->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
+            Quat::identity, float3(1, 1, 1)));
         dashAreaCollider->size = float3(.5f, .2f, distanceFromDashStart / 2.f);
     }
 }
@@ -263,8 +266,9 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
 {
     if (stateTimer < 0.f)
     {
-        dashAreaObject->SetEnabled(false);
-        dashAreaObject->SetLocalTransform(float4x4::identity);
+        dashTrailMeshObject->SetEnabled(false);
+        dashTrailMeshObject->SetLocalTransform(float4x4::identity);
+        dashTrailColliderObject->SetEnabled(false);
         
         if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
         
@@ -402,18 +406,27 @@ void Changeling::ValidateSetup()
             return;
         }
 
-        if (child->GetName() == pathName)
+        if (child->GetName() == dashTrailMeshName)
         {
-            dashAreaObject = child;
+            dashTrailMeshObject = child;
         } else if (child->GetName() == bodyMeshPath)
         {
             bodyMeshObject = child;
+        } else if (child->GetName() == dashTrailCollisionName)
+        {
+            dashTrailColliderObject = child;
         }
     }
-    if (dashAreaObject == nullptr)
+    if (dashTrailMeshObject == nullptr)
     {
         isSetupCorrectly = false;
-        GLOG("[ERROR] DashAreaObject not found")
+        GLOG("[ERROR] DashTrailMeshObject not found")
+        return;
+    }
+    if (dashTrailColliderObject == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] DashTrailColliderObject not found")
         return;
     }
     if (bodyMeshObject == nullptr)
@@ -423,11 +436,11 @@ void Changeling::ValidateSetup()
         return;
     }
 
-    dashAreaCollider = dashAreaObject->GetComponent<CubeColliderComponent*>();
+    dashAreaCollider = dashTrailColliderObject->GetComponent<CubeColliderComponent*>();
     if (dashAreaCollider == nullptr)
     {
         isSetupCorrectly = false;
-        GLOG("[ERROR] DashAreaObject does not contain a cube collider")
+        GLOG("[ERROR] DashTrailColliderObject does not contain a cube collider")
         return;
     }
 }
