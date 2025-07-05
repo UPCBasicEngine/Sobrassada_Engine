@@ -60,13 +60,17 @@ class Changeling : public Character
 
   private:
 
+    void ValidateSetup();
     void RenderDebugVisuals();
 
+    bool isSetupCorrectly = false;
+    
     AIAgentComponent* agentAI     = nullptr;
     ChangelingStates currentState = ChangelingStates::NONE;
 
-    float3 dashDirection          = float3::zero; // Vector direcci�n normalizado
-    float3 dashTarget             = float3::zero; // Posici�n objetivo
+    float3 dashStart              = float3::zero;
+    float3 dashDirection          = float3::zero;
+    float3 dashTarget             = float3::zero;
     float dashSpeed               = 15.0f;
 
     std::string pathName;
