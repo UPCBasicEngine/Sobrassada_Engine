@@ -21,9 +21,29 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Dash trail mesh", InspectorField::FieldType::InputText, &dashTrailMeshName);
     fields.emplace_back("Dash trail collision", InspectorField::FieldType::InputText, &dashTrailCollisionName);
     fields.emplace_back("Body mesh", InspectorField::FieldType::InputText, &bodyMeshPath);
+    
     fields.emplace_back("Abs spotted reaction time", InspectorField::FieldType::Float, &absoluteSpottedReactionTime, 0.1f, 10.0f);
     fields.emplace_back("Abs rise duration", InspectorField::FieldType::Float, &absoluteRiseDuration, 0.1f, 10.0f);
-    fields.emplace_back("Version", InspectorField::FieldType::Int, &userSelectedVersion, 0, 3);
+
+    fields.emplace_back("Dash attack preparation duration", InspectorField::FieldType::Float, &dashAttackPreparationDuration, 0.1f, 10.0f);
+    fields.emplace_back("Bite attack radius", InspectorField::FieldType::Float, &biteAttackRadius, 0.1f, 10.0f);
+    fields.emplace_back("Bite attack duration", InspectorField::FieldType::Float, &biteAttackDuration, 0.1f, 10.0f);
+    fields.emplace_back("Bite attack cooldown", InspectorField::FieldType::Float, &biteAttackCooldown, 0.1f, 10.0f);
+    
+    fields.emplace_back("Dying duration", InspectorField::FieldType::Float, &dyingDuration, 0.1f, 10.0f);
+
+    // Version selection (0 random, 1 herbert, 2 sepp, 3 giacomo)
+    fields.emplace_back("Version (0: Random)", InspectorField::FieldType::Int, &userSelectedVersion, 0, 2);
+
+    // Herbert specific (Index 1)
+    fields.emplace_back("Chase speed", InspectorField::FieldType::Float, &chaseSpeed, 0.1f, 10.0f);
+    fields.emplace_back("Chase Acceleration", InspectorField::FieldType::Float, &chaseAcceleration, 0.1f, 10.0f);
+
+    // Sepp specific (Index 2)
+    fields.emplace_back("Sneak speed", InspectorField::FieldType::Float, &sneakSpeed, 0.1f, 10.0f);
+    fields.emplace_back("Sneak Acceleration", InspectorField::FieldType::Float, &sneakAcceleration, 0.1f, 10.0f);
+
+    // Giacomo specific (Index 3)
 }
 
 bool Changeling::Init()
@@ -214,14 +234,17 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
 {
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
-
-    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
     
     if (playerScript->IsDead() || distanceToPlayerSq > rangeAIChase * rangeAIChase)
     {
         stateTimer = absoluteRiseDuration;
-        agentAI->ResetSpeed();
+        agentAI->SetSpeed(0.0f, 10.0f);
         currentState = ChangelingStates::DIG_DOWN_TRANSITION;
+    } else
+    {
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        agentAI->SetSpeed(chaseSpeed, chaseAcceleration);
+        agentAI->SetPathNavigation(character->GetLastPosition());
     }
 }
 

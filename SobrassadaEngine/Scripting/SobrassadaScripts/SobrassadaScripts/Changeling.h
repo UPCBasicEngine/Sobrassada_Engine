@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Character.h"
-#include "Math/float4x4.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 
 class GameObject;
@@ -13,7 +12,7 @@ enum class ChangelingVersions
     RANDOM,
     SEPP,
     HERBERT,
-    GIACOMO
+    GIACOMO,
 };
 
 enum class ChangelingStates
@@ -99,8 +98,10 @@ class Changeling : public Character
     ChangelingVersions version = ChangelingVersions::RANDOM;
     
     // Herbert specific (default changeling)
+    float chaseSpeed = 1.0f;
+    float chaseAcceleration = 4.0f;
     // Sepp specific
-    float maxSneakSpeed = 15.0f;
-    // Giacomo specific
+    float sneakSpeed = 1.0f;
+    float sneakAcceleration = 4.0f;
     
 };
