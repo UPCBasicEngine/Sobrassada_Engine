@@ -32,6 +32,8 @@ AnimationComponent::AnimationComponent(const UID uid, GameObject* parent)
     : Component(uid, parent, "Animation", COMPONENT_ANIMATION)
 {
     animController = new AnimController();
+
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
 }
 
 AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -58,6 +60,8 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
     {
         resourceStateMachine = nullptr;
     }
+
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
 }
 
 AnimationComponent::~AnimationComponent()

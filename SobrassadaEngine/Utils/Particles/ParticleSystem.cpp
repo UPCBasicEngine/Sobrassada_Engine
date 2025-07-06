@@ -72,7 +72,7 @@ ParticleSystem::~ParticleSystem()
 void ParticleSystem::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     targetState.AddMember(
-        "ParticleSystemTag", rapidjson::Value(particleSystemTag.GetString().c_str(), allocator), allocator
+        "ParticleSystemTag", rapidjson::Value(particleSystemTag.c_str(), allocator), allocator
     );
 
     rapidjson::Value emittersArrayJSON(rapidjson::kArrayType);
