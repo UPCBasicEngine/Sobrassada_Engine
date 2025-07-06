@@ -7,6 +7,7 @@
 #include "ResourcesModule.h"
 #include "StateNode.h"
 #include "AudioModule.h"
+#include "ResourceAnimation.h"
 
 StateMachineEditor::StateMachineEditor(const std::string& editorName, UID uid, ResourceStateMachine* stateMachine)
     : EngineEditorBase(editorName, uid), uid(uid), resource(stateMachine)
@@ -365,7 +366,17 @@ void StateMachineEditor::ShowInspector()
         ImGui::PushID(int(i));
         StateTrigger& trg = st->triggers[i];
 
-        ImGui::SliderFloat("Time", &trg.keyTimeNorm, 0.f, 1.f, "%.2f");
+        UID clipUID       = clip->animationResourceUID;
+        ResourceAnimation* clipRes =
+            static_cast<ResourceAnimation*>(App->GetResourcesModule()->RequestResource(clipUID));
+
+        float clipLen = (clipRes) ? clipRes->GetDuration() : 1.0f;
+        float timeSec = trg.keyTimeNorm * clipLen;
+        
+        if (ImGui::DragFloat("Time (sec)", &timeSec, 0.01f, 0.0f, clipLen, "%.3f"))
+            trg.keyTimeNorm = std::clamp(timeSec / clipLen, 0.0f, 1.0f);
+
+        if (clipRes) App->GetResourcesModule()->ReleaseResource(clipRes);
 
         int tp                   = int(trg.type);
         const char* typeLabels[] = {"Sound"};
