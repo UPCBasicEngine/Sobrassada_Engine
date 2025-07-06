@@ -19,6 +19,7 @@ enum class ChangelingStates
 {
     NONE,
     HIDDEN,
+    PEEK,
     DIG_UP_TRANSITION,
     DIG_DOWN_TRANSITION,
     CHASE,
@@ -45,6 +46,7 @@ class Changeling : public Character
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
     void UpdateHiddenState(float deltaTime, float distanceToPlayerSq);
+    void UpdatePeekState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
@@ -54,7 +56,8 @@ class Changeling : public Character
     void UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackCooldownState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
-    
+
+    bool ST_Peek(float deltaTime, float distanceToPlayerSq);
     bool ST_DashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
 
@@ -106,6 +109,9 @@ class Changeling : public Character
     float maxSneakSpeed = 1.0f;
     float distanceToPlayerForMaxSneakSpeed = 0.0f;
     float sneakAcceleration = 4.0f;
+    float peekChancePerSecond = 0.1f;
+    float peekDuration = 2.0f;
+    
     // Giacomo specific
     
 };

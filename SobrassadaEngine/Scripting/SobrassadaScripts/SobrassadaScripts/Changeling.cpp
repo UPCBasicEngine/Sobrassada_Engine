@@ -33,7 +33,7 @@ Changeling::Changeling(GameObject* parent)
     
     fields.emplace_back("Dying duration", InspectorField::FieldType::Float, &dyingDuration, 0.1f, 10.0f);
 
-    // Version selection (0 random, 1 herbert, 2 sepp, 3 giacomo)
+    // Version selection (0 random, 1 sepp, 2 herbert, 3 giacomo)
     fields.emplace_back("Version (0: Random)", InspectorField::FieldType::Int, &userSelectedVersion, 0, 2);
 
     // Herbert specific (Index 1)
@@ -46,6 +46,8 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Max sneak speed", InspectorField::FieldType::Float, &maxSneakSpeed, 0.1f, 10.0f);
     fields.emplace_back("Distance to player for max sneak speed", InspectorField::FieldType::Float, &distanceToPlayerForMaxSneakSpeed, 0.1f, 10.0f);
     fields.emplace_back("Sneak Acceleration", InspectorField::FieldType::Float, &sneakAcceleration, 0.1f, 10.0f);
+    fields.emplace_back("Peek chance per second", InspectorField::FieldType::Float, &peekChancePerSecond, 0.1f, 10.0f);
+    fields.emplace_back("Peek duration", InspectorField::FieldType::Float, &peekDuration, 0.001f, 1.0f);
 
     // Giacomo specific (Index 3)
 }
@@ -127,6 +129,9 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::HIDDEN:
         UpdateHiddenState(deltaTime, distanceToPlayerSq);
         break;
+    case ChangelingStates::PEEK:
+        UpdatePeekState(deltaTime, distanceToPlayerSq);
+        break;
     case ChangelingStates::DIG_UP_TRANSITION:
         UpdateDigUpTransitionState(deltaTime, distanceToPlayerSq);
         break;
@@ -174,6 +179,11 @@ void Changeling::UpdateHiddenState(float deltaTime, float distanceToPlayerSq)
 
     if (version == ChangelingVersions::HERBERT)
     {
+        const int randomValue = max(1, (int)round(1.0f / (peekChancePerSecond * deltaTime)));
+        GLOG("FPS: %f => %d", 1.0f / deltaTime, randomValue);
+        // Random value = 1 only if fps are too high -> Ignore those frames then
+        if (randomValue != 1 && rand() % randomValue == 0 && ST_Peek(deltaTime, 0)) return;
+        
         if (distanceToPlayerSq < maxDetectionRange * maxDetectionRange)
         {
             const float3 directionToPlayer = (character->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()).Normalized();
@@ -219,6 +229,16 @@ void Changeling::UpdateHiddenState(float deltaTime, float distanceToPlayerSq)
             hasPlayerSpotted = false;
     }
     
+}
+
+void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
+{
+    if (stateTimer < 0.f)
+    {
+        bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+        characterCollider->SetEnabled(false);
+        currentState = ChangelingStates::HIDDEN;
+    }
 }
 
 void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq)
@@ -364,6 +384,21 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
     {
         bodyMeshObject->SetLocalPosition(Lerp(float3(0, -2.f,0 ), float3(0, 0, 0), stateTimer / dyingDuration));
     }
+}
+
+bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
+{
+    // Check preconditions
+    if (version != ChangelingVersions::HERBERT) return false;
+    if (currentState != ChangelingStates::HIDDEN) return false;
+    
+    // Implement state transition
+    bodyMeshObject->SetLocalPosition(float3(0, -.6f, 0));
+    characterCollider->SetEnabled(true);
+    stateTimer = peekDuration;
+    currentState = ChangelingStates::PEEK;
+
+    return true;
 }
 
 bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
