@@ -13,6 +13,7 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
+#include <Math/MathFunc.h>
 #include <Math/Quat.h>
 
 Changeling::Changeling(GameObject* parent)
@@ -40,7 +41,10 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Chase Acceleration", InspectorField::FieldType::Float, &chaseAcceleration, 0.1f, 10.0f);
 
     // Sepp specific (Index 2)
-    fields.emplace_back("Sneak speed", InspectorField::FieldType::Float, &sneakSpeed, 0.1f, 10.0f);
+    fields.emplace_back("Max sneak angle degrees", InspectorField::FieldType::Float, &maxSneakAngleDegrees, 1.0f, 180.0f);
+    fields.emplace_back("Min sneak speed", InspectorField::FieldType::Float, &minSneakSpeed, 0.001f, 10.0f);
+    fields.emplace_back("Max sneak speed", InspectorField::FieldType::Float, &maxSneakSpeed, 0.1f, 10.0f);
+    fields.emplace_back("Distance to player for max sneak speed", InspectorField::FieldType::Float, &distanceToPlayerForMaxSneakSpeed, 0.1f, 10.0f);
     fields.emplace_back("Sneak Acceleration", InspectorField::FieldType::Float, &sneakAcceleration, 0.1f, 10.0f);
 
     // Giacomo specific (Index 3)
@@ -167,27 +171,54 @@ void Changeling::HandleState(float deltaTime)
 void Changeling::UpdateHiddenState(float deltaTime, float distanceToPlayerSq)
 {
     if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return; // Preconditions are checked in the function
-    
-    if (distanceToPlayerSq < rangeAIChase * rangeAIChase)
-    {
-        if (hasPlayerSpotted)
-        {
-            stateTimer -= deltaTime;
-            if (stateTimer < absoluteRiseDuration)
-            {
-                characterCollider->SetEnabled(true);
-                currentState = ChangelingStates::DIG_UP_TRANSITION;
-                // TODO Play animation to dig up
-            }
 
-            // Only flower should be lit up
-        } else
+    if (version == ChangelingVersions::HERBERT)
+    {
+        if (distanceToPlayerSq < maxDetectionRange * maxDetectionRange)
         {
-            hasPlayerSpotted = true;
-            stateTimer = absoluteSpottedReactionTime + absoluteRiseDuration;
+            const float3 directionToPlayer = (character->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()).Normalized();
+            const float angleToPlayerVision = character->GetFrontDirection().AngleBetween(directionToPlayer) * RAD_DEGREE_CONV;
+            if (angleToPlayerVision < maxSneakAngleDegrees)
+            {
+                const float lerpFactor = max(min((distanceToPlayerSq - Pow(distanceToPlayerForMaxSneakSpeed, 2)) /
+                    Pow(maxDetectionRange - distanceToPlayerForMaxSneakSpeed, 2), 1), 0);
+                
+                const float currentSneakSpeed = minSneakSpeed + (maxSneakSpeed - minSneakSpeed) * (1 - lerpFactor);
+
+                agentAI->ResumeMovement();
+                agentAI->LookAtMovement(character->GetGlobalTransform().TranslatePart(), deltaTime);
+                agentAI->SetSpeed(currentSneakSpeed, sneakAcceleration);
+                agentAI->SetPathNavigation(character->GetGlobalTransform().TranslatePart());
+                
+            } else
+            {
+                agentAI->SetSpeed(0, 10);
+            }
         }
-    } else if (hasPlayerSpotted)
-        hasPlayerSpotted = false;
+    } else
+    {
+        if (distanceToPlayerSq < rangeAIChase * rangeAIChase)
+        {
+            if (hasPlayerSpotted)
+            {
+                stateTimer -= deltaTime;
+                if (stateTimer < absoluteRiseDuration)
+                {
+                    characterCollider->SetEnabled(true);
+                    currentState = ChangelingStates::DIG_UP_TRANSITION;
+                    // TODO Play animation to dig up
+                }
+
+                // Only flower should be lit up
+            } else
+            {
+                hasPlayerSpotted = true;
+                stateTimer = absoluteSpottedReactionTime + absoluteRiseDuration;
+            }
+        } else if (hasPlayerSpotted)
+            hasPlayerSpotted = false;
+    }
+    
 }
 
 void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq)
@@ -473,10 +504,12 @@ void Changeling::RenderDebugVisuals()
 {
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
+        const std::string versionNbr      = "Version: " + std::to_string((int)this->version);
         const std::string life      = "Health: " + std::to_string(currentHealth);
         const std::string animState = "Anim state: " + stateName.GetString();
 
         std::vector<std::pair<std::string, float2>> logs {
+                {versionNbr,float2(-50.0f, -120.0f)},
                 {life,      float2(-50.0f, -140.0f)},
                 {animState, float2(-80.0f, -160.0f)},
             };

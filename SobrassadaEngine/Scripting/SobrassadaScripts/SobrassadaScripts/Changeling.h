@@ -101,7 +101,11 @@ class Changeling : public Character
     float chaseSpeed = 1.0f;
     float chaseAcceleration = 4.0f;
     // Sepp specific
-    float sneakSpeed = 1.0f;
+    float maxSneakAngleDegrees = 45.0f;
+    float minSneakSpeed = 0.25f;
+    float maxSneakSpeed = 1.0f;
+    float distanceToPlayerForMaxSneakSpeed = 0.0f;
     float sneakAcceleration = 4.0f;
+    // Giacomo specific
     
 };
