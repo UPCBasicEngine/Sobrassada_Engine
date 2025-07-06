@@ -64,6 +64,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
     fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
+    fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
 }
 
@@ -191,12 +192,16 @@ void CuChulainn::Update(float deltaTime)
         const std::string animState      = "Anim state: " + stateName.GetString();
         const std::string logicState     = "Logic state: " + GetLogicStateName();
         const std::string mushroomsState = "Mushrooms: " + std::to_string(mushrooms);
+        const std::string riastradState  = isRiastrad ? "Riastrad active: Yes" : "Riastrad active: No";
+        const std::string riastradCharge = "Riastrad meter: " + std::to_string(riastradMeter);
 
         std::vector<std::pair<std::string, float2>> logs {
-            {life,           float2(-50.0f, -140.0f)},
+            {life,           float2(-80.0f, -140.0f)},
             {animState,      float2(-80.0f, -160.0f)},
             {logicState,     float2(-80.0f, -180.0f)},
-            {mushroomsState, float2(-60.0f, -200.0f)},
+            {mushroomsState, float2(-80.0f, -200.0f)},
+            {riastradState,  float2(-80.0f, -220.0f)},
+            {riastradCharge, float2(-80.0f, -240.0f)},
         };
 
         RenderDebug(logs, float3(0.0f, 1.0f, 0.0f));
@@ -254,13 +259,17 @@ void CuChulainn::HandleState(float deltaTime)
     UpdateDashCooldownUI();
     UpdateUltimateCooldownUI();
 
-    if (desiredDash && CanDash()) Dash();
+    if (desiredTransform && CanTransform()) ToggleRiastrad();
+    else if (desiredDash && CanDash()) Dash();
     else if (desiredHeal && CanHeal()) UseMushroom();
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL)
         Move();
 
     // When finished animation, go back to idle state
@@ -338,6 +347,14 @@ void CuChulainn::GetInputs()
         }
     }
 
+    // Riastrad
+    if (keyboard[SDL_SCANCODE_Q] == KEY_DOWN ||
+        (input->GetLeftTrigger().first == KEY_REPEAT && input->GetRightTrigger().first == KEY_REPEAT))
+    {
+        desiredTransform     = true;
+        transformBufferTimer = inputBuffer;
+    }
+
     // Dash
     if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
@@ -398,6 +415,11 @@ void CuChulainn::GetInputs()
         godMode = !godMode;
         if (godMode) GLOG("God Mode enabled")
         else GLOG("God Mode disabled")
+    }
+    if (keyboard[SDL_SCANCODE_F8] == KEY_DOWN)
+    {
+        riastradMeter = 100;
+        GLOG("Fill riastrad")
     }
 }
 
@@ -470,12 +492,37 @@ bool CuChulainn::CanChargeAttack() const
     return canChargeAttack;
 }
 
+bool CuChulainn::CanTransform() const
+{
+    bool canTransform = false;
+    if (!isRiastrad)
+    {
+        canTransform = riastradMeter == 100 && state != CharacterStates::DASH && !isAttacking &&
+                       state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
+                       state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
+                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+                       state != CharacterStates::HEAL;
+
+        if (canTransform && state == CharacterStates::BASIC_ATTACK) canTransform = comboBufferTimer > 0.0f;
+    }
+    else
+    {
+        canTransform = state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK &&
+                       state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
+                       state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
+                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+                       state != CharacterStates::HEAL;
+    }
+
+    return canTransform;
+}
+
 void CuChulainn::UpdateTimers(float deltaTime)
 {
     weaponCollider->SetEnabled(false);
     Character::UpdateTimers(deltaTime);
 
-    // Dash timers
+    // Dash
     dashTimer -= deltaTime;
     if (dashTimer < 0.0f) dashTimer = 0.0f;
     if (desiredDash)
@@ -493,14 +540,14 @@ void CuChulainn::UpdateTimers(float deltaTime)
         dashDecalBufferTimer = 0.0f;
     }
 
-    // Melee attack timers
+    // Melee attack
     if (desiredAttack)
     {
         attackBufferTimer -= deltaTime;
         if (attackBufferTimer < 0.0f) desiredAttack = false;
     }
 
-    // Ranged attack timers
+    // Ranged attack
     desiredAim  = false;
     throwTimer -= deltaTime;
     if (throwTimer < 0.0f)
@@ -513,7 +560,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         throwTimer = 0.0f;
     }
 
-    // Take mushrooms timers
+    // Take mushrooms
     takeMushroomCdTimer -= deltaTime;
     if (takeMushroomCdTimer <= 0.0f)
     {
@@ -538,6 +585,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
     }
 
+    // Ultimate
     ultimateCdTimer -= deltaTime;
     if (ultimateCdTimer <= 0.0f) ultimateCdTimer = 0.0f;
     if (desiredUltimate)
@@ -546,6 +594,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (ultimateBufferTimer < 0.0f) desiredUltimate = false;
     }
 
+    // Charged attack
     if (isChargingAttack)
     {
         attackPressTimer += deltaTime;
@@ -564,6 +613,18 @@ void CuChulainn::UpdateTimers(float deltaTime)
     }
     isChargingAttack     = false;
     desiredChargedAttack = false;
+
+    // Riastrad
+    if (desiredTransform)
+    {
+        transformBufferTimer -= deltaTime;
+        if (transformBufferTimer < 0.0f) desiredTransform = false;
+    }
+    if (isRiastrad)
+    {
+        riastradTimer -= deltaTime;
+        if (riastradTimer <= 0.0f) desiredTransform = true;
+    }
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
@@ -691,7 +752,8 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay && attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+                 attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -708,11 +770,13 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay && ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
+                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() &&
+                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
@@ -728,7 +792,8 @@ void CuChulainn::PerformAttack()
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() &&
+                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
@@ -862,7 +927,7 @@ void CuChulainn::Respawn()
 
 void CuChulainn::TakeDamage(int amount)
 {
-    if (godMode) return;
+    if (godMode || isRiastrad) return;
     Character::TakeDamage(amount);
 }
 
@@ -957,6 +1022,24 @@ void CuChulainn::ChargeAttack()
             state = CharacterStates::IDLE;
             if (animComponent) animComponent->UseTrigger("Idle");
         }
+    }
+}
+
+void CuChulainn::ToggleRiastrad()
+{
+    desiredTransform = false;
+
+    if (!isRiastrad)
+    {
+        // Start Riastrad
+        isRiastrad    = true;
+        riastradTimer = riastradDuration;
+        riastradMeter = 0;
+    }
+    else
+    {
+        // Stop Riastrad
+        isRiastrad = false;
     }
 }
 

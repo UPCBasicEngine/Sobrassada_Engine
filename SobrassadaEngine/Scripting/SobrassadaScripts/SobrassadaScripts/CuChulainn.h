@@ -72,6 +72,7 @@ class CuChulainn : public Character
     bool CanUltimate() const;
     bool CanAim() const;
     bool CanChargeAttack() const;
+    bool CanTransform() const;
     void GetInputs();
 
     void LookAtMouse();
@@ -86,6 +87,7 @@ class CuChulainn : public Character
     void Aim(float deltaTime);
     void Move();
     void ChargeAttack();
+    void ToggleRiastrad();
 
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
@@ -154,6 +156,13 @@ class CuChulainn : public Character
     float ultimateHitboxDelay         = 0.0f;
     float ultimateHitboxDuration      = 0.0f;
     float ultimateAnimationDelay      = 0.0f;
+
+    int riastradMeter                 = 0;
+    bool isRiastrad                   = false;
+    bool desiredTransform             = false;
+    float transformBufferTimer        = 0.0f;
+    float riastradTimer               = 0.0f;
+    float riastradDuration            = 0.0f;
 
     float3 spawnPos                   = float3::zero;
     AudioSourceComponent* audio       = nullptr;
