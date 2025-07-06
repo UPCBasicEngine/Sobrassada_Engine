@@ -26,6 +26,7 @@ enum class ChangelingStates
     DASH_ATTACK_PREPARATION,
     DASH_ATTACK,
     DASH_ATTACK_COOLDOWN,
+    DASH_CHAIN_ATTACK,
     BITE_ATTACK,
     BITE_ATTACK_COOLDOWN,
     DYING,
@@ -53,6 +54,7 @@ class Changeling : public Character
     void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackCooldownState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackCooldownState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
@@ -65,6 +67,7 @@ class Changeling : public Character
 
     void ValidateSetup();
     void RenderDebugVisuals();
+    bool CalculateDashTargetPoint(const float3& aimingPoint, float3& targetPoint);
 
     bool isSetupCorrectly = false;
     
@@ -80,9 +83,9 @@ class Changeling : public Character
     std::string dashTrailMeshName;
     std::string dashTrailCollisionName;
 
-    GameObject* dashTrailMeshObject    = nullptr;
-    GameObject* dashTrailColliderObject    = nullptr;
-    CubeColliderComponent* dashAreaCollider = nullptr;
+    std::vector<GameObject*> dashTrailMeshObjects;
+    std::vector<GameObject*> dashTrailColliderObjects;
+    std::vector<CubeColliderComponent*> dashAreaColliders;
     GameObject* bodyMeshObject    = nullptr;
 
     bool hasPlayerSpotted = false;
@@ -103,6 +106,7 @@ class Changeling : public Character
     // Herbert specific (default changeling)
     float chaseSpeed = 1.0f;
     float chaseAcceleration = 4.0f;
+    
     // Sepp specific
     float maxSneakAngleDegrees = 45.0f;
     float minSneakSpeed = 0.25f;
@@ -113,5 +117,8 @@ class Changeling : public Character
     float peekDuration = 2.0f;
     
     // Giacomo specific
-    
+    bool dashRight = false;
+    unsigned short dashIndex = 0;
+    float dashAngleDegrees = 40.0f;
+    std::vector<float4x4> dashLegacyTransforms;
 };
