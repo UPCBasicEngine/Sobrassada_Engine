@@ -136,6 +136,7 @@
     <ClInclude Include="PlayerLocationScript.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="RenderTestScript.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -813,6 +814,7 @@
     <ClCompile Include="PlayerLocationScript.cpp">
       <Filter>Environment</Filter>
     </ClCompile>
+    <ClCompile Include="RenderTestScript.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SobrassadaScripts.rc" />

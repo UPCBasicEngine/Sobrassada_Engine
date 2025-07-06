@@ -31,6 +31,8 @@
 #include "GameOverScript.h"
 #include "PlayerLocationScript.h"
 
+#include "RenderTestScript.h"
+
 #include <string>
 
 #ifndef SOBRASSADASCRIPTS_EXPORTS
@@ -68,7 +70,8 @@ constexpr const char* scripts[] = {
     "Mushroom",
     "EnemySpawnerScript",
     "GameOverScript",
-    "PlayerLocationScript"
+    "PlayerLocationScript",
+    "RenderTestScript"
 };
 
 Application* AppEngine = nullptr;
@@ -116,6 +119,9 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
+
+    /* Render test */
+    if (scriptType == "RenderTestScript") return new RenderTestScript(parent);
 
     return nullptr;
 }

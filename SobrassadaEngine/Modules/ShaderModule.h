@@ -2,7 +2,7 @@
 
 #include "Module.h"
 
-class ShaderModule : public Module
+class SOBRASADA_API_ENGINE ShaderModule : public Module
 {
   public:
     ShaderModule();

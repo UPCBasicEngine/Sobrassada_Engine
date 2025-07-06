@@ -79,10 +79,6 @@ void PointLightComponent::RenderEditorInspector()
     ImGui::RadioButton("Sphere", &gizmosMode, 1);
 }
 
-void PointLightComponent::Render(float deltaTime)
-{
-}
-
 void PointLightComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;

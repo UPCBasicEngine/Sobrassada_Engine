@@ -6,6 +6,7 @@
 #include <functional>
 
 class GameObject;
+class CameraComponent;
 
 struct InspectorField
 {
@@ -50,6 +51,8 @@ class Script
     virtual void OnPlayerExitLocation()                                                                       = 0;
     virtual void OnPlayerEnterLocation()                                                                      = 0;
     virtual void OnDestroy() {};
+
+    virtual void Render(float deltaTime, CameraComponent* camera) = 0;
 
     virtual const std::vector<InspectorField>& GetFields() = 0;
     virtual void SetFields(const std::vector<InspectorField>& newFields) {}

@@ -753,7 +753,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
             for (const auto& trail : trailsToRender)
-                trail->Render(0);
+                trail->Render(0, nullptr);
         }
     }
 

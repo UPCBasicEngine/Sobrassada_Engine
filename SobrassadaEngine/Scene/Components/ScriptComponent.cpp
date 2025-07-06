@@ -1,6 +1,8 @@
 #include "ScriptComponent.h"
 
 #include "Application.h"
+#include "CameraModule.h"
+#include "Components/CameraComponent.h"
 #include "EditorUIModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
@@ -134,8 +136,24 @@ void ScriptComponent::ResetInitializationFlags()
     std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
 }
 
-void ScriptComponent::Render(float deltaTime)
+void ScriptComponent::Render(float deltaTime, CameraComponent* camera)
 {
+    if (!IsEffectivelyEnabled()) return;
+
+    float gameTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f; // seconds
+    for (size_t i = 0; i < scriptInstances.size(); ++i)
+    {
+        if (scriptEnabled[i])
+        {
+            if (!scriptInitialized[i])
+            {
+                scriptInstances[i]->Init();
+                scriptInitialized[i] = true;
+            }
+
+            scriptInstances[i]->Render(gameTime, camera);
+        }
+    }
 }
 
 void ScriptComponent::RenderDebug(float deltaTime)
@@ -304,7 +322,7 @@ void ScriptComponent::SetComponentEnabled(bool value)
         for (size_t i = 0; i < scriptEnabled.size(); ++i)
         {
             scriptEnabled[i]     = scriptWasEnabledLastFrame[i];
-            scriptInitialized[i] = false; 
+            scriptInitialized[i] = false;
         }
     }
     else
@@ -314,7 +332,7 @@ void ScriptComponent::SetComponentEnabled(bool value)
 
             if (scriptEnabled[i]) scriptWasEnabledLastFrame[i] = true;
 
-            scriptEnabled[i] = false; 
+            scriptEnabled[i] = false;
         }
     }
 }

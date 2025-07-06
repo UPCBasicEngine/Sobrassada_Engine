@@ -93,10 +93,6 @@ void BillboardComponent::Update(float deltaTime)
 {
 }
 
-void BillboardComponent::Render(float deltaTime)
-{
-}
-
 void BillboardComponent::RenderDebug(float deltaTime)
 {
 }

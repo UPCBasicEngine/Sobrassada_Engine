@@ -109,7 +109,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void OnAABBUpdated();
 
-    void Render(float deltatime) const;
+    void Render(float deltatime, CameraComponent* camera) const;
     void RenderEditor();
 
     const float4x4& GetGlobalTransform() const { return globalTransform; }

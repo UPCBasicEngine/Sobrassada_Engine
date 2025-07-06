@@ -383,7 +383,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     {
         if (gameObject != nullptr)
         {
-            gameObject->Render(deltaTime);
+            gameObject->Render(deltaTime, camera);
         }
     }
 
@@ -1123,7 +1123,7 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
         if (obj.second->GetName() == name) return obj.second;
     }
 
-    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    //GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }
 
