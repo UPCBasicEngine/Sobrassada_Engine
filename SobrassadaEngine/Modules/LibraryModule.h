@@ -83,6 +83,7 @@ class LibraryModule : public Module
     const std::unordered_map<HashString, UID>& GetStateMachineMap() const { return stateMachineMap; }
     const std::unordered_map<HashString, UID>& GetFontMap() const { return fontMap; }
     const std::unordered_map<HashString, UID>& GetNavmeshMap() const { return navmeshMap; }
+    const std::unordered_map<UID, HashString>& GetAllNamesMap() const { return namesMap; }
 
   private:
     // maps for user visuals | name -> UID

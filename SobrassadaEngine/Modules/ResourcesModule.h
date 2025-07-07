@@ -16,12 +16,11 @@ class ResourcesModule : public Module
     // update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    SOBRASADA_API_ENGINE Resource* RequestResource(UID uid);
+    Resource* RequestResource(UID uid);
     void ReleaseResource(const Resource* resource);
     void UnloadAllResources();
 
     BatchManager* GetBatchManager() { return batchManager; }
-    const std::map<UID, Resource*>& GetAllResources() { return resources; }
 
   private:
     Resource* CreateNewResource(UID uid);

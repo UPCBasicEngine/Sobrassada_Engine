@@ -1023,10 +1023,10 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                     *resourceUID = INVALID_UID;
                 }
 
-                for (const auto& pair : App->GetResourcesModule()->GetAllResources())
+                for (const auto& pair : App->GetLibraryModule()->GetAllNamesMap())
                 {
                     UID uid                 = pair.first;
-                    const std::string& name = App->GetLibraryModule()->GetResourceName(uid);
+                    const std::string& name = pair.second.GetString();
 
                     if (!searchLower.empty() && ToLower(name).find(searchLower) == std::string::npos) continue;
 

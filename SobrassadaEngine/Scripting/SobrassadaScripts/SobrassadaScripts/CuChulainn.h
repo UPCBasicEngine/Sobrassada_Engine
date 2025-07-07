@@ -187,7 +187,11 @@ class CuChulainn : public Character
     std::string healVisualName             = "";
     GameObject* healVisual                 = nullptr;
 
+    // Images UIDs
     UID dashFillImage                      = 0;
+    UID dashEmptyImage                     = 0;
+    UID ultimateFillImage                  = 0;
+    UID ultimateEmptyImage                 = 0;
 };
 
 extern CharacterControllerComponent* character;
