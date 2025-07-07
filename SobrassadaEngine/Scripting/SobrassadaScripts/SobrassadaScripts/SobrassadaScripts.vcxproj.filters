@@ -28,6 +28,9 @@
     <Filter Include="Environment\Traps">
       <UniqueIdentifier>{542608f8-4ab9-4512-8882-308a6eaeec76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Characters\Boss">
+      <UniqueIdentifier>{93f0e42b-2afb-4e4c-8428-f3482a97d73c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
@@ -135,6 +138,9 @@
     </ClInclude>
     <ClInclude Include="PlayerLocationScript.h">
       <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="BossMirage.h">
+      <Filter>Characters\Boss</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -812,6 +818,9 @@
     </ClCompile>
     <ClCompile Include="PlayerLocationScript.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="BossMirage.cpp">
+      <Filter>Characters\Boss</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
