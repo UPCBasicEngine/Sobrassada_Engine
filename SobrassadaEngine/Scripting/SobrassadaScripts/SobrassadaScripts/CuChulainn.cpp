@@ -65,6 +65,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
     fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
+    fields.push_back({"Dash filled icon", InspectorField::FieldType::Resource, &dashFillImage});
 }
 
 bool CuChulainn::Init()
@@ -909,10 +910,9 @@ void CuChulainn::UpdateHealthBarUI()
 
 void CuChulainn::UpdateDashCooldownUI()
 {
-    const UID readyTex    = 1215467239887490;
     const UID cooldownTex = 1208292380114543;
 
-    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
+    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : dashFillImage);
 }
 
 void CuChulainn::UpdateUltimateCooldownUI()

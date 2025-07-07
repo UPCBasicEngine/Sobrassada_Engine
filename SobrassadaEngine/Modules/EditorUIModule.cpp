@@ -1007,6 +1007,40 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             }
             break;
         }
+        case InspectorField::FieldType::Resource:
+        {
+            UID* resourceUID        = (UID*)field.data;
+            Resource* resource      = App->GetResourcesModule()->RequestResource(*resourceUID);
+            const char* currentName = resource ? resource->GetName().c_str() : "None";
+
+            if (ImGui::BeginCombo(field.name.c_str(), currentName))
+            {
+                ImGui::InputText("Search", searchTextResource, IM_ARRAYSIZE(searchTextResource));
+                const std::string searchLower = ToLower(searchTextResource);
+
+                if (ImGui::Selectable("None", *resourceUID == INVALID_UID))
+                {
+                    *resourceUID = INVALID_UID;
+                }
+
+                for (const auto& pair : App->GetResourcesModule()->GetAllResources())
+                {
+                    UID uid                 = pair.first;
+                    const std::string& name = App->GetLibraryModule()->GetResourceName(uid);
+
+                    if (!searchLower.empty() && ToLower(name).find(searchLower) == std::string::npos) continue;
+
+                    std::string label = name + "##" + std::to_string(uid);
+                    bool isSelected   = (*resourceUID == uid);
+                    if (ImGui::Selectable(label.c_str(), isSelected)) *resourceUID = uid;
+
+                    if (isSelected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            break;
+        }
         }
     }
 }
