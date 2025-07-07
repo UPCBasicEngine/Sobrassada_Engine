@@ -3,6 +3,7 @@
 #include "Banshee.h"
 
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Standalone/AIAgentComponent.h"
@@ -82,6 +83,24 @@ void Banshee::Update(float deltaTime)
     if (agentAI == nullptr) return;
 
     Character::Update(deltaTime);
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        const std::string life      = "Health: " + std::to_string(currentHealth);
+        const std::string animState = "Anim state: " + stateName.GetString();
+
+        std::vector<std::pair<std::string, float2>> logs {
+            {life,      float2(-50.0f, -140.0f)},
+            {animState, float2(-80.0f, -160.0f)},
+        };
+
+        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
+    }
+}
+
+void Banshee::OnPlayerExitLocation()
+{
+    currentState = BansheeStates::Idle;
 }
 
 void Banshee::OnDeath()
@@ -208,11 +227,13 @@ void Banshee::ChangeState()
         currentState = BansheeStates::Idle;
         return;
     }
+    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    bool playerInLocation            = parent->HasTag(playerLocation);
 
-    const float distance = GetDistanceFromPlayer();
-    if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
-    else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
-    else currentState = BansheeStates::Idle;
+    const float distance             = GetDistanceFromPlayer();
+    if (distance <= rangeAIAttack && playerInLocation) currentState = BansheeStates::Attack;
+    else if (distance <= rangeAIChase && playerInLocation) currentState = BansheeStates::Chase;
+    else currentState = BansheeStates::Search;
 }
 
 void Banshee::SearchForPlayer()

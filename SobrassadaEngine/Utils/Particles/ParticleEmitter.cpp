@@ -56,7 +56,7 @@ template <std::size_t I = 0, typename... Tp>
     SaveAddonsTuple<I + 1, Tp...>(tuple, addonsJSON, allocator);
 }
 
-// REMOVE COMPONENT
+// REMOVE ADDON
 template <std::size_t I = 0, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), void>::type
 RemoveAddonTuple(std::tuple<Tp...>& tuple, ParticleAddonType selectedType, ParticleEmitter* parent)
@@ -77,13 +77,58 @@ template <std::size_t I = 0, typename... Tp>
     }
     RemoveAddonTuple<I + 1, Tp...>(tuple, selectedType, parent);
 }
+
+// DUPLICATE ADDON
+template <std::size_t I = 0, typename... Tp>
+inline typename std::enable_if<I == sizeof...(Tp), void>::type
+DuplicateAddonTuple(std::tuple<Tp...>& tDuplicate, std::tuple<Tp...>& tOriginal)
+{
+}
+
+template <std::size_t I = 0, typename... Tp>
+    inline typename std::enable_if <
+    I<sizeof...(Tp), void>::type DuplicateAddonTuple(std::tuple<Tp...>& tDuplicate, std::tuple<Tp...>& tOriginal)
+{
+
+    if (std::get<I>(tOriginal))
+    {
+        std::get<I>(tDuplicate)->Duplicate(std::get<I>(tOriginal));
+    }
+    DuplicateAddonTuple<I + 1, Tp...>(tDuplicate, tOriginal);
+}
+
 // ---------- END SECTION FOR TUPLE ITERATION ----------
 
 ParticleEmitter::ParticleEmitter(const HashString& tag, ParticleSystem* owner) : emitterTag(tag), owner(owner)
 {
     addonTuple = std::make_tuple(ADDON_NULLPTR);
     createdAddons.reset();
+
     ParticleUtils::CreateEmptyParticleAddon(ParticleAddonType::BASE, this);
+}
+
+ParticleEmitter::ParticleEmitter(ParticleEmitter* reference, ParticleSystem* owner)
+    : emitterTag(reference->GetTag()), owner(owner)
+{
+    addonTuple = std::make_tuple(ADDON_NULLPTR);
+    createdAddons.reset();
+
+    // Must make a copy of each manually
+    for (int i = 0; i < std::tuple_size<decltype(addonTuple)>::value; ++i)
+    {
+        if (reference->IsAddonCreated(i)) AddAddon(ParticleAddonType(i + 1));
+    }
+
+    DuplicateAddonTuple(addonTuple, reference->addonTuple);
+
+    if (reference->useTexture && reference->texture) UpdateTexture(reference->texture->GetUID());
+    else if (!reference->useTexture && reference->material) UpdateMaterial(reference->material->GetUID());
+
+    renderPriority = reference->renderPriority;
+    useSpritesheet = reference->useSpritesheet;
+
+    blendingMode   = reference->blendingMode;
+    colorIntensity = reference->colorIntensity;
 }
 
 ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleSystem* owner) : owner(owner)
@@ -120,7 +165,9 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
     }
 
     if (initialState.HasMember("RenderPriority")) renderPriority = initialState["RenderPriority"].GetInt();
-    if (initialState.HasMember("AdditiveBlending")) additiveBlending = initialState["AdditiveBlending"].GetBool();
+    if (initialState.HasMember("blendingMode"))
+        blendingMode = EmitterBlendingMode(initialState["blendingMode"].GetInt());
+    if (initialState.HasMember("colorIntensity")) colorIntensity = initialState["colorIntensity"].GetFloat();
 }
 
 ParticleEmitter::~ParticleEmitter()
@@ -132,6 +179,7 @@ ParticleEmitter::~ParticleEmitter()
     glDeleteBuffers(1, &particleColorsVBO);
     glDeleteBuffers(1, &particleSizeVBO);
     glDeleteBuffers(1, &particleRotationVBO);
+    glDeleteVertexArrays(1, &vao);
 }
 
 void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -148,7 +196,8 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
 
     targetState.AddMember("Addons", addonsJSON, allocator);
     targetState.AddMember("RenderPriority", renderPriority, allocator);
-    targetState.AddMember("AdditiveBlending", additiveBlending, allocator);
+    targetState.AddMember("blendingMode", (int)blendingMode, allocator);
+    targetState.AddMember("colorIntensity", colorIntensity, allocator);
 }
 
 void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
@@ -187,8 +236,20 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
 
         glUseProgram(App->GetShaderModule()->GetParticleSystemProgram());
 
-        if (additiveBlending) glBlendFunc(GL_ONE, GL_ONE);
-        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        switch (blendingMode)
+        {
+        case EmitterBlendingMode::ALPHA:
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        case EmitterBlendingMode::ALPHA_ADDITIVE:
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            break;
+        case EmitterBlendingMode::ADDITIVE:
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+        default:
+            break;
+        }
 
         glUniform3fv(0, 1, &cameraRight[0]);
         glUniform3fv(1, 1, &cameraUp[0]);
@@ -202,64 +263,17 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         }
 
         glUniform2fv(4, 1, &tileSize[0]);
-
-        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-
-        // Sending vertex coords
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        // Sending texture coordiantes
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
-
-        // Sending center billboard positions
-        glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
-
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glVertexAttribDivisor(2, 1);
-
-        // Sending particle offset
-        glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
-
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 2, GL_INT, GL_FALSE, 2 * sizeof(int), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glVertexAttribDivisor(3, 1);
-
-        // Sending particle colors
-        glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
-
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glVertexAttribDivisor(4, 1);
-
-        // Sending particle size
-        glBindBuffer(GL_ARRAY_BUFFER, particleSizeVBO);
-
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glVertexAttribDivisor(5, 1);
-
-        // Sending particle rotation
-        glBindBuffer(GL_ARRAY_BUFFER, particleRotationVBO);
-
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glVertexAttribDivisor(6, 1);
+        glUniform1f(5, colorIntensity);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, useTexture ? texture->GetTextureID() : material->GetDiffuseColorID());
 
+        glBindVertexArray(vao);
+
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)batchedParticles.size());
 
+        glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         const auto end                             = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<float> elapsed = end - start;
@@ -319,7 +333,25 @@ void ParticleEmitter::RenderEditor()
         owner->SortEmitters();
     }
 
-    ImGui::Checkbox("Additive blending", &additiveBlending);
+    ImGui::Spacing();
+
+    if (ImGui::BeginCombo("Blending mode", EmitterBlendingModeStrings[(int)blendingMode]))
+    {
+        for (int i = 0; i < EmitterBlendingModeStringsSize; ++i)
+        {
+            if (ImGui::Selectable(EmitterBlendingModeStrings[i])) blendingMode = EmitterBlendingMode(i);
+        }
+
+        ImGui::EndCombo();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::DragFloat("Color intensity", &colorIntensity, 0.005f, 0.f, 2.f))
+    {
+        if (colorIntensity < 0.f) colorIntensity = 0.f;
+    }
+
+    ImGui::Spacing();
 
     ImGui::PopItemWidth();
 
@@ -419,6 +451,73 @@ void ParticleEmitter::Stop()
     owner->Stop();
 }
 
+void ParticleEmitter::SetQuadVBO(unsigned int newVbo)
+{
+    quadVBO = newVbo;
+
+    CreateBuffers();
+}
+
+void ParticleEmitter::CreateBuffers()
+{
+    if (vao == 0) glGenVertexArrays(1, &vao);
+    if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
+    if (particleTileOffsetVBO == 0) glGenBuffers(1, &particleTileOffsetVBO);
+    if (particleColorsVBO == 0) glGenBuffers(1, &particleColorsVBO);
+    if (particleSizeVBO == 0) glGenBuffers(1, &particleSizeVBO);
+    if (particleRotationVBO == 0) glGenBuffers(1, &particleRotationVBO);
+
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+
+    // Sending vertex coords
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    // Sending texture coordiantes
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * 3 * 6));
+
+    // Sending center billboard positions
+    glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribDivisor(2, 1);
+
+    // Sending particle offset
+    glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
+
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_INT, GL_FALSE, 2 * sizeof(int), (void*)0);
+    glVertexAttribDivisor(3, 1);
+
+    // Sending particle colors
+    glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
+
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribDivisor(4, 1);
+
+    // Sending particle size
+    glBindBuffer(GL_ARRAY_BUFFER, particleSizeVBO);
+
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glVertexAttribDivisor(5, 1);
+
+    // Sending particle rotation
+    glBindBuffer(GL_ARRAY_BUFFER, particleRotationVBO);
+
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0);
+    glVertexAttribDivisor(6, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
 void ParticleEmitter::UpdateMaterial(UID newMaterialUID)
 {
     if (newMaterialUID == INVALID_UID || App->GetResourcesModule()->RequestResource(newMaterialUID) == nullptr)
@@ -433,6 +532,7 @@ void ParticleEmitter::UpdateMaterial(UID newMaterialUID)
 
     if (newMaterial != nullptr)
     {
+        useTexture = false;
         App->GetResourcesModule()->ReleaseResource(material);
         material = newMaterial;
     }
@@ -452,6 +552,8 @@ void ParticleEmitter::UpdateTexture(UID newTextureUID)
 
     if (newTexture != nullptr)
     {
+        useTexture = true;
+
         App->GetResourcesModule()->ReleaseResource(texture);
         texture = newTexture;
     }
@@ -494,31 +596,23 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
         particleRotation.push_back(batchedParticles[i].rotation);
     }
 
-    if (particlesVBO == 0) glGenBuffers(1, &particlesVBO);
-    if (particleTileOffsetVBO == 0) glGenBuffers(1, &particleTileOffsetVBO);
-    if (particleColorsVBO == 0) glGenBuffers(1, &particleColorsVBO);
-    if (particleSizeVBO == 0) glGenBuffers(1, &particleSizeVBO);
-    if (particleRotationVBO == 0) glGenBuffers(1, &particleRotationVBO);
     if (batchedParticles.size() > 0)
     {
         glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * alivePositions.size(), &alivePositions[0], GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 2 * tileOffsets.size(), &tileOffsets[0], GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * particleColors.size(), &particleColors[0], GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleSizeVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float2) * particleSize.size(), &particleSize[0], GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleRotationVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float) * particleRotation.size(), &particleRotation[0], GL_DYNAMIC_DRAW);
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }

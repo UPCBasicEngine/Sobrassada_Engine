@@ -4,6 +4,7 @@
 #include "Changeling.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
@@ -114,6 +115,33 @@ void Changeling::Update(float deltaTime)
             lastTrailPos = currentPos;
         }
     }
+
+    if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        const std::string life      = "Health: " + std::to_string(currentHealth);
+        const std::string animState = "Anim state: " + stateName.GetString();
+
+        std::vector<std::pair<std::string, float2>> logs {
+            {life,      float2(-50.0f, -140.0f)},
+            {animState, float2(-80.0f, -160.0f)},
+        };
+
+        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
+    }
+}
+
+void Changeling::OnPlayerExitLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
+void Changeling::OnPlayerEnterLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
 }
 
 void Changeling::OnDeath()
@@ -173,8 +201,13 @@ void Changeling::PatrolAI()
 {
     // animComponent->UseTrigger("run");
 
-    if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ChangelingStates::CHASE;
-    else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ChangelingStates::BASIC_ATTACK;
+    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    bool playerInLocation            = parent->HasTag(playerLocation);
+
+    if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
+        currentState = ChangelingStates::CHASE;
+    else if (CheckDistanceWithPlayer() == PlayerDistances::Close)
+        currentState = ChangelingStates::BASIC_ATTACK;
 
     bool valid = false;
     if (reachedPatrolPoint)

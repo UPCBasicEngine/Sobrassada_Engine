@@ -471,6 +471,7 @@
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
     <ClInclude Include="ChangeSceneScript.h" />
+    <ClInclude Include="EnemySpawnerScript.h" />
     <ClInclude Include="ExitGameScript.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="CuChulainn.h" />
@@ -478,6 +479,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
+    <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
@@ -486,6 +488,7 @@
     <ClInclude Include="PauseMenuScript.h" />
     <ClInclude Include="GodMode.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PlayerLocationScript.h" />
     <ClInclude Include="PressAnyKeyScript.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="resource.h" />
@@ -2036,10 +2039,12 @@
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="CuChulainn.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="EnemySpawnerScript.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />
     <ClCompile Include="FireballTrap.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
+    <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
@@ -2061,6 +2066,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Game|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile Game|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PlayerLocationScript.cpp" />
     <ClCompile Include="PressAnyKeyScript.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />

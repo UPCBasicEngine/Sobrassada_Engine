@@ -6,9 +6,24 @@
 #include "OptionsMenuSwitcherScript.h"
 #include "Scene.h"
 #include "SceneModule.h"
+#include "Components/Standalone/UI/ImageComponent.h"
+
+
+const std::unordered_map<std::string, TexPair> OptionsMenuSwitcherScript::panelInput = {
+    {"OptionsKeyboardPanel",   {1203489876831052, 1295999750777550}},
+    {"OptionsControllerPanel", {1202209373146889, 1270492191063579}},
+    {"OptionsAudioPanel",      {1207353832276846, 1250092281844907}},
+    {"OptionsVideoPanel",      {1204790345600293, 1206017489546089}}
+};
+
+const std::vector<std::string> OptionsMenuSwitcherScript::panelNames = {
+    "OptionsKeyboardPanel", "OptionsControllerPanel", "OptionsAudioPanel", "OptionsVideoPanel"
+};
 
 bool OptionsMenuSwitcherScript::Init()
 {
+    lastKbState = AppEngine->GetInputModule()->IsUsingKeyboard();
+    ApplyDeviceTextures(lastKbState);
     ShowOnlyCurrentPanel();
     return true;
 }
@@ -21,6 +36,13 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
     {
         ShowOnlyCurrentPanel();
         initialized = true;
+    }
+
+    bool nowKb                     = AppEngine->GetInputModule()->IsUsingKeyboard();
+    if (nowKb != lastKbState)
+    {
+        ApplyDeviceTextures(nowKb);
+        lastKbState = nowKb;
     }
 
     const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
@@ -59,6 +81,21 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
 
         parent->SetEnabledRecursive(false);
         initialized = false;
+    }
+}
+
+void OptionsMenuSwitcherScript::ApplyDeviceTextures(bool usingKb)
+{
+    for (const std::string& name : panelNames)
+    {
+        GameObject* go = FindPanelByName(name);
+        if (!go) continue;
+
+        ImageComponent* img = go->GetComponent<ImageComponent*>();
+        if (!img) continue;
+
+        const TexPair& tp = panelInput.at(name);
+        img->ChangeTexture(usingKb ? tp.texKeyboard : tp.texGamepad);
     }
 }
 

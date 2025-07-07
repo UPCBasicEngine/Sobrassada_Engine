@@ -10,11 +10,13 @@
 ParticleSystemComponent::ParticleSystemComponent(UID uid, GameObject* parent)
     : Component(uid, parent, "ParticleSystem", COMPONENT_PARTICLE_SYSTEM)
 {
+    CreateLocalAABB();
 }
 
 ParticleSystemComponent::ParticleSystemComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
+    CreateLocalAABB();
 
     if (initialState.HasMember("ParticleSystemTag"))
         particleSystemTag = HashString(initialState["ParticleSystemTag"].GetString());
@@ -29,6 +31,8 @@ ParticleSystemComponent::~ParticleSystemComponent()
 
 void ParticleSystemComponent::Init()
 {
+    for (auto& emitter : emitterInstances)
+        emitter.Spawn();
 }
 
 void ParticleSystemComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -72,6 +76,13 @@ void ParticleSystemComponent::RenderEditorInspector()
     {
         HashString requestedTag(newParticleTagName);
         App->GetParticleModule()->ResquestParticleSystem(requestedTag, this);
+        memset(newParticleTagName, 0, sizeof(newParticleTagName));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Duplicate Particle System"))
+    {
+        HashString requestedTag(newParticleTagName);
+        App->GetParticleModule()->DuplicateParticleSystem(requestedTag, this, particleSystemTag);
         memset(newParticleTagName, 0, sizeof(newParticleTagName));
     }
 
@@ -120,6 +131,11 @@ void ParticleSystemComponent::RenderEditorInspector()
     if(ImGui::Button("Stop playing"))
     {
         StopInstances();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("STOP ALL PLAYING !"))
+    {
+        App->GetParticleModule()->StopAllParticles();
     }
 
     ImGui::Spacing();
@@ -189,4 +205,9 @@ void ParticleSystemComponent::SetParticleSystem(ParticleSystem* newParticleSyste
 {
     particleSystem    = newParticleSystem;
     particleSystemTag = newParticleSystem->GetTag();
+}
+
+void ParticleSystemComponent::CreateLocalAABB()
+{
+    localComponentAABB = AABB(-(float3::one / 2.f), (float3::one / 2.f));
 }

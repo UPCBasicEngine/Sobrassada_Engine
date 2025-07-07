@@ -20,6 +20,9 @@ class ParticleSystem
 {
   public:
     ParticleSystem(const HashString& newTag, ParticleSystemComponent* component, unsigned int quadVBO);
+    ParticleSystem(
+        const HashString& newTag, ParticleSystemComponent* component, unsigned int quadVBO, ParticleSystem* reference
+    );
     ParticleSystem(const rapidjson::Value& initialState, ParticleSystemComponent* component, unsigned int quadVBO);
     ~ParticleSystem();
 
@@ -40,6 +43,9 @@ class ParticleSystem
 
   private:
     void UpdateComponents();
+
+    // ONLY USE WHEN COPYING ANOTHER PS WHICH MEANS ITS CREATED FROM SCRATCH AND NO EMITTERS ARE PRESENT IN THIS PS
+    void DuplicateEmitter(ParticleEmitter* reference);
 
   private:
     // quadVBO deleted from ParticleSystemModule which holds the OG.

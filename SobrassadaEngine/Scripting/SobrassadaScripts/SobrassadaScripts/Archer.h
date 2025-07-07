@@ -12,6 +12,7 @@ enum class ArcherStates
     SEARCH,
     PATROL,
     CHASE,
+    ESCAPE,
     BASIC_ATTACK
 };
 
@@ -24,12 +25,16 @@ class Archer : public Character
     bool Init() override;
     void Update(float deltaTime) override;
 
+    void OnPlayerExitLocation() override;
+    void OnPlayerEnterLocation() override;
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
+    void Escape(float deltaTime);
 
     void ChangeState();
     void PatrolAI();
@@ -37,11 +42,16 @@ class Archer : public Character
     void SearchForPlayer();
 
   private:
-    AIAgentComponent* agentAI = nullptr;
-    ArcherStates currentState = ArcherStates::NONE;
+    float rangeEscape          = rangeAIAttack - 1;
+    AIAgentComponent* agentAI  = nullptr;
+    ArcherStates currentState  = ArcherStates::NONE;
 
-    Projectile* arrow         = nullptr;
+    std::string arrowName      = "";
+    Projectile* arrow          = nullptr;
 
-    float3 patrolPoint        = float3::zero;
-    bool hasShot              = false;
+    float3 patrolPoint         = float3::zero;
+    bool hasShot               = false;
+
+    float3 currentEscapeTarget = float3::zero;
+    bool hasEscapeTarget       = false;
 };

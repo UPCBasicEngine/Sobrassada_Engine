@@ -176,6 +176,7 @@ template <std::size_t I = 0, typename... Tp>
 
 GameObject::GameObject(const std::string& name) : name(name)
 {
+    tags.reserve(maxTags);
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
 
     uid       = GenerateUID();
@@ -192,6 +193,7 @@ GameObject::GameObject(const std::string& name) : name(name)
 
 GameObject::GameObject(UID parentUID, const std::string& name) : parentUID(parentUID), name(name)
 {
+    tags.reserve(maxTags);
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
 
     uid       = GenerateUID();
@@ -207,6 +209,7 @@ GameObject::GameObject(UID parentUID, const std::string& name) : parentUID(paren
 
 GameObject::GameObject(UID parentUID, const std::string& name, UID uid) : parentUID(parentUID), name(name), uid(uid)
 {
+    tags.reserve(maxTags);
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
 
     localAABB = AABB();
@@ -222,6 +225,8 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     : parentUID(parentUID), name(refObject->name), localTransform(refObject->localTransform),
       globalTransform(refObject->globalTransform)
 {
+    tags.reserve(maxTags);
+
     compTuple = std::make_tuple(COMPONENTS_NULLPTR);
     createdComponents.reset();
 
@@ -245,6 +250,13 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     enabled          = refObject->enabled;
     wasEnabled       = refObject->wasEnabled;
 
+    // Request tags
+
+    for (auto& tag : refObject->tags)
+    {
+        App->GetSceneModule()->GetScene()->RequestTag(tag, this);
+    }
+
     // Must make a copy of each manually
     for (int i = 0; i < std::tuple_size<decltype(compTuple)>::value; ++i)
     {
@@ -262,6 +274,13 @@ GameObject::GameObject(const rapidjson::Value& initialState) : uid(initialState[
 
 GameObject::~GameObject()
 {
+    // REMOVE FROM TAGS REMOVES IT FROM "tags"
+    std::vector<HashString> tagsCopy = tags;
+    for (int i = 0; i < tagsCopy.size(); ++i)
+    {
+        App->GetSceneModule()->GetScene()->RemoveFromTag(tags[i], this);
+    }
+
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
 }
 
@@ -435,18 +454,58 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("Children", valChildren, allocator);
 }
 
-void GameObject::UpdateEnabledStateRecursive()
+void GameObject::UpdateEnabledState()
 {
-    for (UID childUID : children)
+
+    Scene* scene = App->GetSceneModule()->GetScene();
+
+    std::set<UID> visitedGameObjects;
+    std::stack<UID> toVisitGameObjects;
+
+    for (UID gameObjectID : children)
+        toVisitGameObjects.push(gameObjectID);
+
+    while (!toVisitGameObjects.empty())
     {
-        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
-        if (child)
+        UID currentUID = toVisitGameObjects.top();
+        toVisitGameObjects.pop();
+
+        if (visitedGameObjects.find(currentUID) == visitedGameObjects.end())
         {
-            child->UpdateEnabledStateRecursive();
+            visitedGameObjects.insert(currentUID);
+            GameObject* currentGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
+
+            // UPDATING STATUS FOR CHILD GO
+            currentGameObject->wasEnabled = currentGameObject->enabled;
+            currentGameObject->enabled    = enabled;
+
+            // UPDATING STATUS FOR CHILD GO COMPONENT
+            std::apply(
+                [&](auto&... cmp) { ((cmp ? cmp->SetEnabled(enabled) : void()), ...); }, currentGameObject->compTuple
+            );
+
+            for (UID childID : currentGameObject->GetChildren())
+                toVisitGameObjects.push(childID);
         }
     }
+}
 
-    enabled = wasEnabled;
+void GameObject::UpdateNavmeshValidState()
+{
+    std::stack<UID> childrenBuffer;
+    childrenBuffer.push(uid);
+
+    while (!childrenBuffer.empty())
+    {
+        GameObject* gameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenBuffer.top());
+        childrenBuffer.pop();
+        if (gameObject != nullptr)
+        {
+            gameObject->navMeshValid = navMeshValid;
+            for (UID child : gameObject->GetChildren())
+                childrenBuffer.push(child);
+        }
+    }
 }
 
 void GameObject::RenderEditorInspector(bool drawGizmo)
@@ -470,7 +529,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
         if (ImGui::Checkbox("Enabled", &enabled))
         {
             wasEnabled = enabled;
-            UpdateEnabledStateRecursive();
+            UpdateEnabledState();
         }
     }
 
@@ -486,7 +545,111 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
             {
                 meshComp->BatchEditorMode();
             }
+            UpdateNavmeshValidState();
         }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader("Tags"))
+        {
+            // ------ GLOBAL TAG LIST ------
+            ImGui::SeparatorText("Global Tags");
+
+            ImGui::InputText("New Tag Name", newTagName, IM_ARRAYSIZE(newTagName));
+            if (ImGui::Button("Create Tag"))
+            {
+                HashString requestedTag(newTagName);
+                App->GetSceneModule()->GetScene()->CreateTag(std::move(requestedTag));
+                memset(newTagName, 0, sizeof(newTagName));
+            }
+
+            auto& sceneTagMap = App->GetSceneModule()->GetScene()->GetTags();
+            if (ImGui::BeginListBox(
+                    "##SceneTags", ImVec2(-FLT_MIN, ImGui::GetFrameHeightWithSpacing() * sceneTagMap.size())
+                ))
+            {
+                int i = 0;
+                for (auto& tagPair : sceneTagMap)
+                {
+                    if (ImGui::Selectable(tagPair.first.c_str(), selectedGlobalTag == i))
+                    {
+                        selectedGlobalTag = i;
+                        globalSelectedTag = tagPair.first;
+                    }
+
+                    ++i;
+                }
+                ImGui::EndListBox();
+            }
+
+            if (ImGui::Button("Add tag"))
+            {
+                App->GetSceneModule()->GetScene()->RequestTag(globalSelectedTag, this);
+                selectedGlobalTag = -1;
+                globalSelectedTag = HashString("");
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("DELETE GLOBAL TAG!"))
+            {
+                App->GetSceneModule()->GetScene()->DeleteTag(globalSelectedTag);
+                selectedGlobalTag = -1;
+                globalSelectedTag = HashString("");
+            }
+
+            // !!!!!!!!!!!!!!!!!!!!!! TESTING THIS HAS TO BE BE DELETED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (ImGui::Button("TESTING GET TAGS PLEASE DELETE!"))
+            {
+                auto taggedObjects = App->GetSceneModule()->GetScene()->GetTaggedGameObjects(globalSelectedTag);
+                if (taggedObjects)
+                {
+                    GLOG("------- PRINTING %s TAGGED GAME OBJECTS -------", globalSelectedTag.c_str());
+                    for (GameObject* go : *taggedObjects)
+                    {
+                        GLOG("%s, %d", go->GetName().c_str(), go->GetUID());
+                    }
+                }
+
+                selectedGlobalTag = -1;
+                globalSelectedTag = HashString("");
+            }
+            // !!!!!!!!!!!!!!!!!!!!!! TESTING THIS HAS TO BE BE DELETED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            // ------ END GLOBAL TAG LIST ------
+
+            // ------ SELF TAG LIST ------
+            ImGui::SeparatorText("Game Object Tags");
+
+            if (ImGui::BeginListBox(
+                    "##GameObjectsTags", ImVec2(-FLT_MIN, ImGui::GetFrameHeightWithSpacing() * tags.size())
+                ))
+            {
+                int i = 0;
+                for (HashString& currentTag : tags)
+                {
+                    if (ImGui::Selectable(currentTag.c_str(), selectedSelfTag == i))
+                    {
+                        selectedSelfTag = i;
+                    }
+
+                    ++i;
+                }
+                ImGui::EndListBox();
+            }
+
+            if (ImGui::Button("Remove Tag"))
+            {
+                App->GetSceneModule()->GetScene()->RemoveFromTag(tags[selectedSelfTag], this);
+                selectedSelfTag = -1;
+            }
+
+            // ------ END SELF TAG LIST ------
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
         if (ImGui::Button("Add Component"))
         {
@@ -594,7 +757,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
 void GameObject::UpdateTransformForGOBranch()
 {
     if (!IsGloballyEnabled()) return;
-    App->GetSceneModule()->AddGameObjectToUpdate(this);
+    App->GetSceneModule()->AddGameObjectToUpdateComponents(this);
     std::stack<UID> childrenBuffer;
     childrenBuffer.push(uid);
 
@@ -604,7 +767,7 @@ void GameObject::UpdateTransformForGOBranch()
         childrenBuffer.pop();
         if (gameObject != nullptr)
         {
-            App->GetSceneModule()->AddGameObjectToUpdate(gameObject);
+            App->GetSceneModule()->AddGameObjectToUpdateComponents(gameObject);
             gameObject->OnAABBUpdated();
             for (UID child : gameObject->GetChildren())
                 childrenBuffer.push(child);
@@ -703,6 +866,45 @@ void GameObject::UpdateOpenNodeHierarchy(bool openValue)
             gameObjectToUpdate->UpdateOpenNodeHierarchy(openValue);
             if (gameObjectToUpdate->GetParent() != INVALID_UID)
                 gameObjectsToVisit.push(gameObjectToUpdate->GetParent());
+        }
+    }
+}
+
+bool GameObject::HasTag(const HashString& requestedTag)
+{
+    for (HashString& currentTag : tags)
+    {
+        if (currentTag == requestedTag) return true;
+    }
+
+    return false;
+}
+
+void GameObject::AddTag(const HashString& tag)
+{
+    if (tags.size() > maxTags) return;
+    bool add = true;
+
+    for (HashString& currentTag : tags)
+    {
+        if (currentTag == tag)
+        {
+            add = false;
+            break;
+        }
+    }
+
+    if (add) tags.push_back(tag);
+}
+
+void GameObject::RemoveTag(const HashString& tag)
+{
+    for (auto tagIterator = tags.begin(); tagIterator != tags.end(); ++tagIterator)
+    {
+        if (*tagIterator == tag)
+        {
+            tags.erase(tagIterator);
+            return;
         }
     }
 }
@@ -1044,6 +1246,24 @@ const float4x4& GameObject::GetParentGlobalTransform() const
     return float4x4::identity;
 }
 
+void GameObject::SetEnabled(bool active)
+{
+    if (enabled == active) return;
+
+    wasEnabled = enabled;
+    enabled    = active;
+
+    std::apply([&](auto&... cmp) { ((cmp ? cmp->SetEnabled(active) : void()), ...); }, compTuple);
+
+    UpdateEnabledState();
+
+    /*Scene* scene = App->GetSceneModule()->GetScene();
+    for (UID childUID : children)
+    {
+        if (GameObject* child = scene->GetGameObjectByUID(childUID)) child->SetEnabled(active);
+    }*/
+}
+
 void GameObject::SetJustLocalTransform(const float4x4& newTransform)
 {
     localTransform = newTransform;
@@ -1112,7 +1332,7 @@ void GameObject::OnDrawConnectionsToggle()
 
 void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
 {
-    App->GetSceneModule()->AddGameObjectToUpdate(this);
+    App->GetSceneModule()->AddGameObjectToUpdateComponents(this);
     SetMobility(type);
     std::set<UID> visitedGameObjects;
     std::stack<UID> toVisitGameObjects;
@@ -1135,7 +1355,7 @@ void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
             GameObject* currentGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
 
             currentGameObject->SetMobility(type);
-            App->GetSceneModule()->AddGameObjectToUpdate(currentGameObject);
+            App->GetSceneModule()->AddGameObjectToUpdateComponents(currentGameObject);
 
             for (UID childID : currentGameObject->GetChildren())
                 toVisitGameObjects.push(childID);
@@ -1158,7 +1378,7 @@ void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
             if (currentGameObject)
             {
                 currentGameObject->SetMobility(type);
-                App->GetSceneModule()->AddGameObjectToUpdate(currentGameObject);
+                App->GetSceneModule()->AddGameObjectToUpdateComponents(currentGameObject);
 
                 for (UID childID : currentGameObject->GetChildren())
                     toVisitGameObjects.push(childID);
@@ -1276,9 +1496,11 @@ void GameObject::SetEnabledRecursive(bool value)
     enabled    = value;
     wasEnabled = value;
 
+    std::apply([&](auto*... cmp) { ((cmp ? cmp->SetEnabled(value) : void()), ...); }, compTuple);
+
+    if (auto* sc = GetComponent<ScriptComponent*>()) sc->SetComponentEnabled(value);
+
     for (UID childUID : children)
-    {
-        GameObject* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
-        if (child) child->SetEnabledRecursive(value);
-    }
+        if (auto* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID))
+            child->SetEnabledRecursive(value);
 }

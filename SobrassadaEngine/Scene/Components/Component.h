@@ -41,10 +41,10 @@ class SOBRASADA_API_ENGINE Component
     const float4x4& GetGlobalTransform() const;
     bool IsEffectivelyEnabled() const;
 
-    void SetEnabled(bool newEnabled)
+    virtual void SetEnabled(bool newEnabled)
     {
+        wasEnabled = enabled;
         enabled    = newEnabled;
-        wasEnabled = newEnabled;
     }
 
   protected:

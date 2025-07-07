@@ -24,6 +24,9 @@ class Changeling : public Character
     bool Init() override;
     void Update(float deltaTime) override;
 
+    void OnPlayerExitLocation() override;
+    void OnPlayerEnterLocation() override;
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
