@@ -12,7 +12,7 @@ enum class ChangelingVersions
     RANDOM,
     SEPP,
     HERBERT,
-    GIACOMO,
+    FRANZ,
 };
 
 enum class ChangelingStates
@@ -121,4 +121,5 @@ class Changeling : public Character
     unsigned short dashIndex = 0;
     float dashAngleDegrees = 40.0f;
     std::vector<float4x4> dashLegacyTransforms;
+    std::vector<float4x4> dashColliderLegacyTransforms;
 };

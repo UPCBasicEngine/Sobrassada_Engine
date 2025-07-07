@@ -320,7 +320,7 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         weaponCollider->SetEnabled(true);
         dashTrailMeshObjects[0]->SetEnabled(true);   
         dashTrailColliderObjects[0]->SetEnabled(true);
-        if (version == ChangelingVersions::GIACOMO)
+        if (version == ChangelingVersions::FRANZ)
         {
             dashIndex = 0;
             currentState = ChangelingStates::DASH_CHAIN_ATTACK;
@@ -371,10 +371,8 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
 
 void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq)
 {
-    if (dashIndex == 2) return;
     if (stateTimer < 0.f)
     {
-        if (dashIndex == 1) return;
         if (dashIndex != 3)
         {
             const float2 xzDirectionToPlayer = (character->GetGlobalTransform().TranslatePart().xz() - parent->GetGlobalTransform().TranslatePart().xz()).Normalized();
@@ -395,7 +393,8 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
                 stateTimer = attackCooldown;
                 currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
             }
-            dashLegacyTransforms[dashIndex] = parent->GetGlobalTransform();
+            dashLegacyTransforms[dashIndex] = dashTrailMeshObjects[dashIndex]->GetGlobalTransform();
+            dashColliderLegacyTransforms[dashIndex] = dashTrailColliderObjects[dashIndex]->GetGlobalTransform();
             dashIndex++;
             agentAI->SetPathNavigation(dashTarget);
             agentAI->LookAtMovement(dashTarget, 1000000);
@@ -425,16 +424,10 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
         {
             for (unsigned short i = dashIndex - 1;; --i) // End condition inside the loop
             {
-                GLOG("PG: %f, %f, %f ; PL: %f, %f, %f", parent->GetParentGlobalTransform().TranslatePart().x, parent->GetParentGlobalTransform().TranslatePart().y, parent->GetParentGlobalTransform().TranslatePart().z,
-                    dashLegacyTransforms[i].TranslatePart().x, dashLegacyTransforms[i].TranslatePart().y, dashLegacyTransforms[i].TranslatePart().z)
-                float3 localPosition = parent->GetParentGlobalTransform().TranslatePart() - dashLegacyTransforms[i].TranslatePart();
+                dashTrailMeshObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashLegacyTransforms[i]);
+                dashTrailColliderObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashColliderLegacyTransforms[i]);
+                dashAreaColliders[i]->UpdateCollider();
                 
-                Quat localRotation = parent->GetParentGlobalTransform().RotatePart().ToQuat().Mul(dashLegacyTransforms[i].RotatePart().ToQuat().Inverted());
-
-                dashTrailMeshObjects[i]->SetLocalPosition(localPosition);
-                //dashTrailMeshObjects[i]->SetLocalTransform(float4x4::FromTRS(localPosition, localRotation, dashTrailMeshObjects[i]->GetLocalTransform().GetScale()));
-                //dashTrailColliderObjects[i]->SetLocalPosition(dashTrailColliderObjects[i]->GetLocalTransform().operator+(parent->GetGlobalTransform().operator-(dashLegacyTransforms[i])));
-                //dashLegacyTransforms[i] = parent->GetGlobalTransform();
                 if (i == 0) break;
             }
         }
@@ -494,7 +487,7 @@ bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
     if (version == ChangelingVersions::SEPP && distanceToPlayerSq > rangeAIAttack * rangeAIAttack)   return false;
-    if (version == ChangelingVersions::GIACOMO && distanceToPlayerSq > Pow(rangeAIAttack * 1.5f, 2))   return false;
+    if (version == ChangelingVersions::FRANZ && distanceToPlayerSq > Pow(rangeAIAttack * 1.75f, 2))   return false;
     if (version == ChangelingVersions::HERBERT) return false;
     if (currentState != ChangelingStates::CHASE && currentState != ChangelingStates::DASH_ATTACK_COOLDOWN) return false;
     
@@ -598,6 +591,7 @@ void Changeling::ValidateSetup()
         }
 
         dashLegacyTransforms = {float4x4(), float4x4(), float4x4()};
+        dashColliderLegacyTransforms = {float4x4(), float4x4(), float4x4()};
     } else
     {
         if (dashTrailMeshObjects.empty())
