@@ -55,6 +55,8 @@ class CuChulainn : public Character
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { reservedHealth = health; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
+    void OnEnemyHit();
+    void OnEnemyDefeated();
 
   private:
     void OnDeath() override;
@@ -163,6 +165,9 @@ class CuChulainn : public Character
     float transformBufferTimer        = 0.0f;
     float riastradTimer               = 0.0f;
     float riastradDuration            = 0.0f;
+    int riastradOnDamageTaken         = 0;
+    int riastradOnHit                 = 0;
+    int riastradOnEnemyDeath          = 0;
 
     float3 spawnPos                   = float3::zero;
     AudioSourceComponent* audio       = nullptr;

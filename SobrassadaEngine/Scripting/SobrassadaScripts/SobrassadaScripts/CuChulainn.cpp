@@ -65,6 +65,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
     fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
     fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
+    fields.push_back({"Riastrad on damage taken", InspectorField::FieldType::Int, &riastradOnDamageTaken, 0, 100});
+    fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
+    fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
     fields.push_back({"Dash filled icon", InspectorField::FieldType::Resource, &dashFillImage});
     fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
@@ -229,6 +232,8 @@ void CuChulainn::OnDamageTaken(int amount)
 {
     UpdateHealthBarUI();
     if (camera) camera->StartShake(0.2f, 0.2f);
+
+    riastradMeter += riastradOnDamageTaken;
 
     if (state == CharacterStates::CHARGING)
     {
@@ -983,7 +988,8 @@ void CuChulainn::UpdateDashCooldownUI()
 
 void CuChulainn::UpdateUltimateCooldownUI()
 {
-    if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? ultimateEmptyImage : ultimateFillImage);
+    if (ultimateImageComponent)
+        ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? ultimateEmptyImage : ultimateFillImage);
 }
 void CuChulainn::ChargeAttack()
 {
@@ -1039,6 +1045,16 @@ void CuChulainn::ToggleRiastrad()
         // Stop Riastrad
         isRiastrad = false;
     }
+}
+
+void CuChulainn::OnEnemyHit()
+{
+    riastradMeter += riastradOnHit;
+}
+
+void CuChulainn::OnEnemyDefeated()
+{
+    riastradMeter += riastradOnEnemyDeath;
 }
 
 const std::string CuChulainn::GetLogicStateName()
