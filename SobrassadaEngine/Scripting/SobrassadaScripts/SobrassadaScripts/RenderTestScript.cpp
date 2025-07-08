@@ -1,12 +1,14 @@
 #include "pch.h"
 
+#include "RenderTestScript.h"
+
 #include "Application.h"
 #include "CameraModule.h"
 #include "Components/CameraComponent.h"
 #include "Components/Standalone/MeshComponent.h"
 #include "GameObject.h"
 #include "Mesh.h"
-#include "RenderTestScript.h"
+#include "ResourceMaterial.h"
 #include "ResourceMesh.h"
 #include "Scene.h"
 #include "SceneModule.h"
@@ -51,8 +53,13 @@ bool RenderTestScript::Init()
                 GL_STATIC_DRAW
             );
 
+            // VERTICES
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+
+            // UV'S
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferData(
@@ -62,7 +69,13 @@ bool RenderTestScript::Init()
 
             glBindVertexArray(0);
 
-            indexCount = rmesh->GetIndices().size();
+            indexCount = (unsigned int)rmesh->GetIndices().size();
+        }
+
+        const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
+        if (rmat)
+        {
+            texture = rmat->GetDiffuseColorID();
         }
     }
 
@@ -71,33 +84,44 @@ bool RenderTestScript::Init()
 
 void RenderTestScript::Update(float deltaTime)
 {
+    float newOffset  = deltaTime * animationSpeed;
+    uvOffset.x      += newOffset;
+    uvOffset.y      += newOffset;
 }
 
 void RenderTestScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
-
-    float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
-
-    basicModelMatrix = parent->GetGlobalTransform();
-
-    if (cameraComp)
+    if (shaderProgram && indexCount > 0 && texture)
     {
-        projectionMatrix = cameraComp->GetProjectionMatrix();
-        viewMatrix       = cameraComp->GetViewMatrix();
+        float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
+
+        basicModelMatrix = parent->GetGlobalTransform();
+
+        if (cameraComp)
+        {
+            projectionMatrix = cameraComp->GetProjectionMatrix();
+            viewMatrix       = cameraComp->GetViewMatrix();
+        }
+        else
+        {
+            projectionMatrix = AppEngine->GetCameraModule()->GetProjectionMatrix();
+            viewMatrix       = AppEngine->GetCameraModule()->GetViewMatrix();
+        }
+
+        glUseProgram(shaderProgram);
+
+        glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
+        glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
+        glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
+        glUniform2fv(3, 1, &uvOffset[0]);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glBindVertexArray(vao);
+
+        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(0);
     }
-    else
-    {
-        projectionMatrix = AppEngine->GetCameraModule()->GetProjectionMatrix();
-        viewMatrix       = AppEngine->GetCameraModule()->GetViewMatrix();
-    }
-
-    glUseProgram(shaderProgram);
-
-    glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
-    glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
-    glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
-
-    glBindVertexArray(vao);
-
-    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 }
