@@ -140,6 +140,12 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
                 GameObject* go = *(GameObject**)field.data;
                 UID uid        = go ? go->GetUID() : 0;
                 scriptData.AddMember(name, uid, allocator);
+                break;
+            }
+            case InspectorField::FieldType::Resource:
+            {
+                scriptData.AddMember(name, *(UID*)field.data, allocator);
+                break;
             }
             }
         }
