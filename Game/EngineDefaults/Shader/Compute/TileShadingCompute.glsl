@@ -135,8 +135,8 @@ void main() {
 			break;
 		}
 
-		vec4 position = vec4(pointLights[index].position.xyz, 1.0); 
-		float radius = pointLights[index].position.w;
+		vec4 position = vec4(pointLights[lightIndex].position.xyz, 1.0); 
+		float radius = pointLights[lightIndex].position.w;
 
 		// We check if the light exists in our frustum
 		float distance = 0.0;

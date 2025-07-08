@@ -53,4 +53,5 @@ class RenderPass
     // Tile Shading
     unsigned int visibleLightIndicesSSBO = 0;
     size_t currentSize = 0;
+    int tilesX;
 };

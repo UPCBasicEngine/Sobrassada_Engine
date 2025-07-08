@@ -323,7 +323,7 @@ void RenderPass::ShadowMapPassRender(
         firstPass = false;
         unsigned int newTex;
         CreateDepthReductionTexture(newTex, groupsX, groupsY);
-        glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+        glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
         if (currentInput != gbuffer->GetDepthTexture()) glDeleteTextures(1, &currentInput);
         currentInput  = currentOutput;
@@ -370,7 +370,7 @@ void RenderPass::ShadowMapPassRender(
     float distMax = S / (T + maxDepth);
 
     // GLOG("Final reduction size: %d, %d", currentWidth, currentHeight);
-    //GLOG("%f, %f", distMin, distMax);
+    // GLOG("%f, %f", distMin, distMax);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(distMin) : camera->SetNear(distMin);
     camera == nullptr ? App->GetCameraModule()->SetFar(distMax) : camera->SetFar(distMax);
@@ -437,7 +437,8 @@ void RenderPass::ShadowMapPassRender(
     for (const auto& gameObject : shadowObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 && mesh->GetProduceShadows())
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 &&
+            mesh->GetProduceShadows())
             meshesToRender.push_back(mesh);
     }
 
@@ -503,7 +504,7 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 
     for (const auto& [uid, decals] : groupedDecals)
     {
-        
+
         const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
         glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
 
@@ -590,22 +591,19 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
     const int TILE_SIZE             = 16;
     const int MAX_LIGHTS_PER_TILE   = 1024;
 
-    int tilesX                      = (width + TILE_SIZE - 1) / TILE_SIZE;
+    tilesX                          = (width + TILE_SIZE - 1) / TILE_SIZE;
     int tilesY                      = (height + TILE_SIZE - 1) / TILE_SIZE;
     int numTiles                    = tilesX * tilesY;
 
     int totalIndices                = numTiles * MAX_LIGHTS_PER_TILE;
-    size_t totalSize = numTiles * MAX_LIGHTS_PER_TILE * sizeof(int);
+    size_t totalSize                = numTiles * MAX_LIGHTS_PER_TILE * sizeof(int);
 
     unsigned int tileShadingProgram = App->GetShaderModule()->GetTileShadingProgram();
     glUseProgram(tileShadingProgram);
 
-    glUniform2f(glGetUniformLocation(tileShadingProgram, "screenSize"), width, height);
+    glUniform2i(glGetUniformLocation(tileShadingProgram, "screenSize"), width, height);
 
-    // Bind depth texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
-    glUniform1i(glGetUniformLocation(tileShadingProgram, "depthMap"), 0);
+    glBindTextureUnit(0, gbuffer->GetDepthTexture());
 
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
@@ -616,7 +614,7 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
     glUniformBlockBinding(tileShadingProgram, blockIdx, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    
+
     if (visibleLightIndicesSSBO == 0 || totalSize != currentSize)
     {
         if (visibleLightIndicesSSBO != 0)
@@ -716,6 +714,10 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     }
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
+
+    glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
+    glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
