@@ -67,6 +67,7 @@ layout(std140, binding = 3) uniform Directional
 };
 
 // SSBOs
+//We don't need pointLightsCount and spotLightsCount but we left here as is simpler for the rest of the code
 readonly layout(std430, binding = 4) buffer PointLights
 {
 	int pointLightsCount;

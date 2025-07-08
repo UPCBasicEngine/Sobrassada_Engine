@@ -715,6 +715,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
 
+    //Light Culling
     glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
     glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);

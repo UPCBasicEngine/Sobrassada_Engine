@@ -15,7 +15,6 @@ struct SpotLight
 	float outerAngle;
 };
 
-// SSBOs
 readonly layout(std430, binding = 4) buffer PointLights
 {
 	int pointLightsCount;
@@ -65,7 +64,6 @@ void main() {
 	ivec2 tileNumber = ivec2(gl_NumWorkGroups.xy);
 	uint index = tileID.y * tileNumber.x + tileID.x;
 
-	// Initialize shared global values for depth and light count
 	if (gl_LocalInvocationIndex == 0) {
 		minDepthInt = 0xFFFFFFFF;
 		maxDepthInt = 0;
@@ -123,8 +121,6 @@ void main() {
 	barrier();
 
 	// Step 3: Cull lights.
-	// Parallelize the threads against the lights now.
-	// Can handle 256 simultaniously. Anymore lights than that and additional passes are performed
 	uint threadCount = TILE_SIZE * TILE_SIZE;
 	uint passCount = (pointLightsCount + threadCount - 1) / threadCount;
 	for (uint i = 0; i < passCount; i++) {
@@ -150,7 +146,6 @@ void main() {
 
 		// If greater than zero, then it is a visible light
 		if (distance > 0.0) {
-			// Add index to the shared array of visible indices
 			uint offset = atomicAdd(visibleLightCount, 1);
 			visibleLightIndices[offset] = int(lightIndex);
 		}
@@ -198,8 +193,6 @@ void main() {
 		}
 
 		if (visibleLightCount != 1024) {
-			// Unless we have totally filled the entire array, mark it's end with -1
-			// Final shader step will use this to determine where to stop (without having to pass the light count)
 			visibleLightIndicesBuffer.data[offset + visibleLightCount].index = -1;
 		}
 	}
