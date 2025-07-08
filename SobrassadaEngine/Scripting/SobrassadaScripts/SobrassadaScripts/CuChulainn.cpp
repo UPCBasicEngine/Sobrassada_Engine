@@ -66,6 +66,10 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
     fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
+    fields.push_back({"Dash filled icon", InspectorField::FieldType::Resource, &dashFillImage});
+    fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
+    fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
+    fields.push_back({"Ultimate empty icon", InspectorField::FieldType::Resource, &ultimateEmptyImage});
 }
 
 bool CuChulainn::Init()
@@ -974,18 +978,12 @@ void CuChulainn::UpdateHealthBarUI()
 
 void CuChulainn::UpdateDashCooldownUI()
 {
-    const UID readyTex    = 1215467239887490;
-    const UID cooldownTex = 1208292380114543;
-
-    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? cooldownTex : readyTex);
+    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? dashEmptyImage : dashFillImage);
 }
 
 void CuChulainn::UpdateUltimateCooldownUI()
 {
-    const UID readyTex    = 1269620042662432;
-    const UID cooldownTex = 1278452734324605;
-
-    if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? cooldownTex : readyTex);
+    if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? ultimateEmptyImage : ultimateFillImage);
 }
 void CuChulainn::ChargeAttack()
 {

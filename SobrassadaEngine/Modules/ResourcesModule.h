@@ -8,7 +8,7 @@ class BatchManager;
 class GeometryBatch;
 class Resource;
 
-class ResourcesModule : public Module
+class SOBRASADA_API_ENGINE ResourcesModule : public Module
 {
   public:
     ResourcesModule();
