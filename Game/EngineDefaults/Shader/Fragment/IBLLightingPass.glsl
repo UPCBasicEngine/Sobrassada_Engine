@@ -240,14 +240,15 @@ void main()
         int lightIndex = visibleIndices[baseOffset + i];
         if (lightIndex == -1) break;
 
-        hdr += RenderPointLight(lightIndex, N, Cd, roughness, RF0, pos);
-    }
+        bool isSpot = (lightIndex & 0x80000000) != 0;
+        int realIndex = lightIndex & 0x7FFFFFFF;
 
-    //Spot Lights
-    for (int i = 0; i < spotLightsCount; ++i)
-	{
-		hdr += RenderSpotLight(i, N, Cd, roughness, RF0, pos);
-	}
+        if (isSpot) {
+            hdr += RenderSpotLight(realIndex, N, Cd, roughness, RF0, pos);
+        } else {
+            hdr += RenderPointLight(realIndex, N, Cd, roughness, RF0, pos);
+        }
+    }
 
     // Directional light
     const vec3 lightColor = directional_color.rgb * directional_color.a;

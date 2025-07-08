@@ -662,7 +662,7 @@ void LightsConfig::GetAllSceneLights()
         // GLOG("Point lights count: %d", pointLights.size());
 
         // Spot
-        spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
+        //spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
         // GLOG("Spot lights count: %d", spotLights.size());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);

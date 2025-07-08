@@ -1,6 +1,5 @@
 #version 430
 
-//Lo que tenemos
 struct PointLight
 {
 	vec4 position;		// xyz = position & w = range
@@ -154,6 +153,38 @@ void main() {
 			// Add index to the shared array of visible indices
 			uint offset = atomicAdd(visibleLightCount, 1);
 			visibleLightIndices[offset] = int(lightIndex);
+		}
+	}
+
+	barrier();
+
+	passCount = (spotLightsCount + threadCount - 1) / threadCount;
+	for (uint i = 0; i < passCount; i++) {
+		uint lightIndex = i * threadCount + gl_LocalInvocationIndex;
+		if (lightIndex >= spotLightsCount) {
+			break;
+		}
+
+		SpotLight light = spotLights[lightIndex];
+		vec3 pos = light.position.xyz;
+		float radius = light.position.w;
+
+		vec3 dir = normalize(light.direction);
+		float outerAngle = light.outerAngle;
+
+		// (opcional) Aprox: bounding sphere test
+		vec4 spherePos = vec4(pos, 1.0);
+		float distance = 0.0;
+		for (uint j = 0; j < 6; ++j) {
+			distance = dot(spherePos, frustumPlanes[j]) + radius;
+			if (distance <= 0.0)
+				break;
+		}
+
+		if (distance > 0.0) {
+			uint offset = atomicAdd(visibleLightCount, 1);
+			// Para distinguir entre point y spot, por ejemplo: usar signo
+			visibleLightIndices[offset] = int(0x80000000 | lightIndex); // usar MSB como flag
 		}
 	}
 
