@@ -11,7 +11,10 @@
 #include "ScriptModule.h"
 
 #include "ImGui.h"
+#include "Math/float2.h"
 #include "Math/float3.h"
+#include "PhysicsModule.h"
+#include <debug_draw.hpp>
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
@@ -79,7 +82,76 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
         scriptData.AddMember("Script Name", rapidjson::Value(scriptNames[i].c_str(), allocator), allocator);
         scriptData.AddMember("Enabled", scriptEnabled[i], allocator);
         scriptData.AddMember("WasEnabled", scriptWasEnabledLastFrame[i], allocator);
-        scriptInstances[i]->Save(scriptData, allocator);
+        GLOG("Script Name: %s", scriptNames[i].c_str());
+
+        const auto& fields = scriptInstances[i]->GetFields();
+        for (const auto field : fields)
+        {
+            rapidjson::Value fieldData(rapidjson::kObjectType);
+
+            rapidjson::Value name(field.name.c_str(), allocator);
+            switch (field.type)
+            {
+            case InspectorField::FieldType::Float:
+                scriptData.AddMember(name, *(float*)field.data, allocator);
+                break;
+            case InspectorField::FieldType::Int:
+                scriptData.AddMember(name, *(int*)field.data, allocator);
+                break;
+            case InspectorField::FieldType::Bool:
+                scriptData.AddMember(name, *(bool*)field.data, allocator);
+                break;
+            case InspectorField::FieldType::Vec2:
+            {
+                float2* vec = (float2*)field.data;
+                rapidjson::Value arr(rapidjson::kArrayType);
+                arr.PushBack(vec->x, allocator);
+                arr.PushBack(vec->y, allocator);
+                scriptData.AddMember(name, arr, allocator);
+                break;
+            }
+            case InspectorField::FieldType::Vec3:
+            {
+                float3* vec = (float3*)field.data;
+                rapidjson::Value arr(rapidjson::kArrayType);
+                arr.PushBack(vec->x, allocator);
+                arr.PushBack(vec->y, allocator);
+                arr.PushBack(vec->z, allocator);
+                scriptData.AddMember(name, arr, allocator);
+                break;
+            }
+            case InspectorField::FieldType::Vec4:
+            {
+                float4* vec = (float4*)field.data;
+                rapidjson::Value arr(rapidjson::kArrayType);
+                arr.PushBack(vec->x, allocator);
+                arr.PushBack(vec->y, allocator);
+                arr.PushBack(vec->z, allocator);
+                arr.PushBack(vec->w, allocator);
+                scriptData.AddMember(name, arr, allocator);
+                break;
+            }
+            case InspectorField::FieldType::InputText:
+            {
+                std::string* str = static_cast<std::string*>(field.data);
+                scriptData.AddMember(name, rapidjson::Value(str->c_str(), allocator), allocator);
+                break;
+            }
+            case InspectorField::FieldType::GameObject:
+            {
+                GameObject* go = *(GameObject**)field.data;
+                UID uid        = go ? go->GetUID() : 0;
+                scriptData.AddMember(name, uid, allocator);
+                break;
+            }
+            case InspectorField::FieldType::Resource:
+            {
+                scriptData.AddMember(name, *(UID*)field.data, allocator);
+                break;
+            }
+            }
+        }
+
         scriptsArray.PushBack(scriptData, allocator);
     }
 
@@ -98,8 +170,8 @@ void ScriptComponent::Clone(const Component* other)
         for (size_t i = 0; i < otherScript->scriptNames.size(); ++i)
         {
             CreateScript(otherScript->scriptNames[i]);
-            const auto& a = otherScript->scriptInstances[i]->GetFields();
-            scriptInstances.back()->CloneFields(a);
+            const auto& fields = otherScript->scriptInstances[i]->GetFields();
+            scriptInstances.back()->CloneFields(fields);
         }
     }
     else
