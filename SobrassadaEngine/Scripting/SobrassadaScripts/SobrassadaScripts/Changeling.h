@@ -95,6 +95,7 @@ class Changeling : public Character
     float stateTimer = 0.f;
     
     float absoluteSpottedReactionTime = 1.f;
+    float TEMP_buryingDepth = 0.9f;
     float absoluteRiseDuration = 1.f;
     float dashAttackPreparationDuration = 1.f;
     float biteAttackRadius = .5f;

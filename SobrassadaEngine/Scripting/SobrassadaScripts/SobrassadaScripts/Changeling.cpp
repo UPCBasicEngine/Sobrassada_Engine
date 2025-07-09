@@ -24,6 +24,7 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Body mesh", InspectorField::FieldType::InputText, &bodyMeshPath);
     
     fields.emplace_back("Abs spotted reaction time", InspectorField::FieldType::Float, &absoluteSpottedReactionTime, 0.1f, 10.0f);
+    fields.emplace_back("TEMP: Burying depth", InspectorField::FieldType::Float, &TEMP_buryingDepth, 0.1f, 10.0f);
     fields.emplace_back("Abs rise duration", InspectorField::FieldType::Float, &absoluteRiseDuration, 0.1f, 10.0f);
 
     fields.emplace_back("Dash attack preparation duration", InspectorField::FieldType::Float, &dashAttackPreparationDuration, 0.1f, 10.0f);
@@ -79,7 +80,7 @@ bool Changeling::Init()
         dashTrailMeshObject->SetEnabled(false);
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
         dashTrailColliderObject->SetEnabled(false);
-    bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+    bodyMeshObject->SetLocalPosition(float3(0, -TEMP_buryingDepth, 0));
 
     isAttacking                                                          = false;
     attackCdTimer                                                        = attackCooldown;
@@ -101,16 +102,15 @@ void Changeling::Update(float deltaTime)
 
 void Changeling::OnPlayerExitLocation()
 {
-    currentState = ChangelingStates::PATROL;
-    agentAI->SetPathNavigation(startPos);
-    reachedPatrolPoint = false;
+    // TODO
+
+    //const HashString& playerLocationTag = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    //bool isPlayerInLocation = parent->HasTag(playerLocationTag);
 }
 
 void Changeling::OnPlayerEnterLocation()
 {
-    currentState = ChangelingStates::PATROL;
-    agentAI->SetPathNavigation(startPos);
-    reachedPatrolPoint = false;
+    // TODO
 }
 
 void Changeling::OnDeath()
@@ -255,7 +255,7 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
 {
     if (stateTimer < 0.f)
     {
-        bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+        bodyMeshObject->SetLocalPosition(float3(0, -TEMP_buryingDepth, 0));
         characterCollider->SetEnabled(false);
         currentState = ChangelingStates::HIDDEN;
     }
@@ -271,7 +271,7 @@ void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPla
             currentState = ChangelingStates::CHASE;
         } else
         {
-            bodyMeshObject->SetLocalPosition(Lerp(float3(0, -1.2f,0 ), float3(0, 0, 0), 1.f - stateTimer / absoluteRiseDuration));
+            bodyMeshObject->SetLocalPosition(Lerp(float3(0, -TEMP_buryingDepth,0 ), float3(0, 0, 0), 1.f - stateTimer / absoluteRiseDuration));
         }
     } else
     {
@@ -287,12 +287,12 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
     {
         if (stateTimer < 0.f)
         {
-            bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+            bodyMeshObject->SetLocalPosition(float3(0, -TEMP_buryingDepth, 0));
             characterCollider->SetEnabled(false);
             currentState = ChangelingStates::HIDDEN;
         } else
         {
-            bodyMeshObject->SetLocalPosition(Lerp(float3(0, -1.2f,0 ), float3(0, 0, 0), stateTimer / absoluteRiseDuration));
+            bodyMeshObject->SetLocalPosition(Lerp(float3(0, -TEMP_buryingDepth,0 ), float3(0, 0, 0), stateTimer / absoluteRiseDuration));
         }
     } else
     {
@@ -453,7 +453,7 @@ void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq
 {
     if (stateTimer < 0.f)
     {
-        bodyMeshObject->SetLocalPosition(float3(0, -1.2f, 0));
+        bodyMeshObject->SetLocalPosition(float3(0, -TEMP_buryingDepth, 0));
         stateTimer = biteAttackCooldown;
         characterCollider->SetEnabled(false);
         weaponCollider->SetEnabled(false);
@@ -530,7 +530,7 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     if (currentState != ChangelingStates::HIDDEN && currentState != ChangelingStates::BITE_ATTACK_COOLDOWN) return false;
     
     // Implement state transition
-    bodyMeshObject->SetLocalPosition(float3(0, -.8f, 0));
+    bodyMeshObject->SetLocalPosition(float3(0, -TEMP_buryingDepth + .4f, 0));
     characterCollider->SetEnabled(true);
     hasPlayerSpotted = true;
     stateTimer = biteAttackDuration;
