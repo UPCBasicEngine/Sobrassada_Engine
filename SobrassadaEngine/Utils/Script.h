@@ -23,7 +23,8 @@ struct InspectorField
         Color,
         InputText,
         GameObject,
-        Button
+        Button,
+        Resource
     };
 
     std::string name;
