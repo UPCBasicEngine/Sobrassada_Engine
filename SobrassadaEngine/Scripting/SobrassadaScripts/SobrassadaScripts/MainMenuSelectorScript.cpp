@@ -121,12 +121,16 @@ void MainMenuSelectorScript::Update(float deltaTime)
         {
             if (auto* timer = AppEngine->GetGameTimer(); timer && timer->IsPaused()) timer->TogglePause();
             AppEngine->GetSceneModule()->GetScene()->SetStopPlaying(true);
-            std::string path = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
+            std::string path =
+                AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
             AppEngine->GetSceneModule()->RequestSceneLoad(path);
-            return; 
+            return;
         }
-
-
+        else
+        {
+            ButtonComponent* button = selectedItem->GetComponent<ButtonComponent*>();
+            if (button) button->OnClick();
+        }
     }
 }
 

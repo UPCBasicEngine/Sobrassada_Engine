@@ -32,11 +32,15 @@ class CubeColliderComponent : public Component
     void SOBRASADA_API_ENGINE UpdateCollider();
 
     void SOBRASADA_API_ENGINE OnCollision(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer);
+    void SOBRASADA_API_ENGINE OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer);
+    void SOBRASADA_API_ENGINE OnCollisionExit(GameObject* otherObject, ColliderLayer layer);
 
     void SOBRASADA_API_ENGINE DeleteRigidBody();
+    void SetEnabled(bool newEnabled) override;
 
   private:
     void CalculateCollider();
+    void RecalculateLocalAABB();
 
   public:
     bool generateCallback         = true;
@@ -49,7 +53,14 @@ class CubeColliderComponent : public Component
 
     btRigidBody* rigidBody        = nullptr;
     BulletMotionState motionState = BulletMotionState(nullptr, float3::zero, float3::zero);
+
     CollisionDelegate onCollissionCallback;
+    CollisionDelegate onCollissionEnterCallback;
+    CollisionExitDelegate onCollissionExitCallback;
+
     ColliderLayer layer           = ColliderLayer::WORLD_OBJECTS;
-    BulletUserPointer userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+
+    BulletUserPointer userPointer = BulletUserPointer(
+        this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
 };

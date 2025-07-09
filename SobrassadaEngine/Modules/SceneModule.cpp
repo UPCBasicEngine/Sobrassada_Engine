@@ -57,6 +57,10 @@ bool SceneModule::Init()
 
 update_status SceneModule::PreUpdate(float deltaTime)
 {
+    if (loadedScene != nullptr)
+    {
+        loadedScene->CheckObjectsToUpdate();
+    }
     return UPDATE_CONTINUE;
 }
 
@@ -164,6 +168,8 @@ update_status SceneModule::PostUpdate(float deltaTime)
             App->GetGameTimer()->Step();
             loadedScene->SetStepPlaying(false);
         }
+
+        loadedScene->ClearObjectsToUpdate();
     }
 
 #ifdef OPTICK
@@ -266,10 +272,10 @@ void SceneModule::SwitchPlayMode(bool play)
     }
 }
 
-void SceneModule::AddGameObjectToUpdate(GameObject* gameObject)
+void SceneModule::AddGameObjectToUpdateComponents(GameObject* gameObject)
 {
     if (inPlayMode) return;
-    loadedScene->AddGameObjectToUpdate(gameObject);
+    loadedScene->AddGameObjectToUpdateComponents(gameObject);
 }
 
 void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard)
@@ -451,7 +457,7 @@ void SceneModule::HandleTreesUpdates()
             loadedScene->UpdateDynamicSpatialStructure();
         }
 
-        loadedScene->UpdateGameObjects();
+        loadedScene->UpdateGameObjectsComponents();
     }
 }
 

@@ -99,6 +99,20 @@ void Changeling::Update(float deltaTime)
     RenderDebugVisuals();
 }
 
+void Changeling::OnPlayerExitLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
+void Changeling::OnPlayerEnterLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
 void Changeling::OnDeath()
 {
     stateTimer = dyingDuration;
