@@ -243,7 +243,7 @@ void main()
 		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0, pos, true);
     }
 
-    vec3 occlusionFactor = vec3(texture(ssao, uv0).r);
+    const vec3 occlusionFactor = vec3(texture(ssao, uv0).r);
     hdr = hdr*occlusionFactor;
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));

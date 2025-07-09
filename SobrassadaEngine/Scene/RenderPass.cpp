@@ -866,7 +866,7 @@ void RenderPass::RenderGBufferDebug(GBuffer* gbuffer) const
     const unsigned int program = App->GetShaderModule()->GetQuadProgram();
     glUseProgram(program);
 
-    GLint loc = glGetUniformLocation(program, "u_Texture");
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
     // Top-left: Diffuse
@@ -949,7 +949,7 @@ void RenderPass::RenderShadowMapDebug() const
     const unsigned int program = App->GetShaderModule()->GetDepthProgram();
     glUseProgram(program);
 
-    GLint loc = glGetUniformLocation(program, "u_Texture");
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
     glActiveTexture(GL_TEXTURE0);
