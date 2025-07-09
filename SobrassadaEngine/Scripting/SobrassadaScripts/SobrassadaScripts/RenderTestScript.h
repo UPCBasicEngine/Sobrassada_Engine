@@ -4,6 +4,8 @@
 
 #include "Math/float2.h"
 
+class GBuffer;
+
 class RenderTestScript : public Script
 {
   public:
@@ -27,4 +29,6 @@ class RenderTestScript : public Script
 
     float animationSpeed       = 0.1f;
     float2 uvOffset            = float2::zero;
+
+    GBuffer* gbuffer           = nullptr;
 };

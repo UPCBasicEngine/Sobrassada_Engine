@@ -13,6 +13,8 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
+#include "OpenGLModule.h"
+#include "GBuffer.h"
 
 #include "glew.h"
 
@@ -77,6 +79,8 @@ bool RenderTestScript::Init()
         {
             texture = rmat->GetDiffuseColorID();
         }
+
+        gbuffer = AppEngine->GetOpenGLModule()->GetGBuffer();
     }
 
     return true;
@@ -91,7 +95,7 @@ void RenderTestScript::Update(float deltaTime)
 
 void RenderTestScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && texture)
+    if (shaderProgram && indexCount > 0 && texture && gbuffer)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
