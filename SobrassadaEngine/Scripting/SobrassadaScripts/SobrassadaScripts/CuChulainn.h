@@ -91,6 +91,7 @@ class CuChulainn : public Character
     void Move();
     void ChargeAttack();
     void ToggleRiastrad();
+    void AddRiastrad(int amount);
 
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
@@ -105,7 +106,7 @@ class CuChulainn : public Character
     std::string spearName              = "";
     Projectile* spear                  = nullptr;
 
-    float defaultSpeed                 = 0.0f;
+    float defaultSpeed                 = 7.0f;
     float inputBuffer                  = 0.5f;
 
     float3 lastDashStartPos            = float3::zero;
@@ -161,14 +162,15 @@ class CuChulainn : public Character
     float ultimateHitboxDuration       = 0.0f;
     float ultimateAnimationDelay       = 0.0f;
 
+    GameObject* riastradBar            = nullptr;
     int riastradMeter                  = 0;
     bool isRiastrad                    = false;
     bool desiredTransform              = false;
     float transformBufferTimer         = 0.0f;
     float riastradTimer                = 0.0f;
-    float riastradDuration             = 0.0f;
-    float riastradMovementSpeed        = 0.0f;
-    float riastradAnimationsSpeedRatio = 0.0f;
+    float riastradDuration             = 5.0f;
+    float riastradMovementSpeed        = 12.0f;
+    float riastradAnimationsSpeedRatio = 1.5f;
     int riastradOnDamageTaken          = 0;
     int riastradOnHit                  = 0;
     int riastradOnEnemyDeath           = 0;

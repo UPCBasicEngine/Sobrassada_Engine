@@ -20,6 +20,7 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
+#include "Standalone/UI/Transform2DComponent.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -69,6 +70,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Riastrad parameters"});
+    fields.push_back({"Riastrad Bar object", InspectorField::FieldType::GameObject, &riastradBar});
     fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
     fields.push_back({"Riastrad movement speed", InspectorField::FieldType::Float, &riastradMovementSpeed, 0.0f, 20.0f}
     );
@@ -194,6 +196,8 @@ bool CuChulainn::Init()
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
+    if (!riastradBar) GLOG("[WARNING] CuChulainn: No riastard bar gameObject found");
+
     state = CharacterStates::IDLE;
 
     return true;
@@ -259,7 +263,7 @@ void CuChulainn::OnDamageTaken(int amount)
     UpdateHealthBarUI();
     if (camera) camera->StartShake(0.2f, 0.2f);
 
-    riastradMeter += riastradOnDamageTaken;
+    AddRiastrad(riastradOnDamageTaken);
 
     if (state == CharacterStates::CHARGING)
     {
@@ -453,7 +457,7 @@ void CuChulainn::GetInputs()
     }
     if (keyboard[SDL_SCANCODE_F8] == KEY_DOWN)
     {
-        riastradMeter = 100;
+        AddRiastrad(100);
         GLOG("Fill riastrad")
     }
 }
@@ -1077,6 +1081,7 @@ void CuChulainn::ToggleRiastrad()
     if (!isRiastrad)
     {
         // Start Riastrad
+        AddRiastrad(-100);
         isRiastrad    = true;
         riastradTimer = riastradDuration;
         riastradMeter = 0;
@@ -1096,14 +1101,26 @@ void CuChulainn::ToggleRiastrad()
     }
 }
 
+void CuChulainn::AddRiastrad(int amount)
+{
+    riastradMeter += amount;
+    if (riastradMeter > 100) riastradMeter = 100;
+
+    if (!riastradBar) return;
+    Transform2DComponent* trs = riastradBar->GetComponent<Transform2DComponent*>();
+
+    const int maxBarSize      = 200;
+    trs->size.x               = amount * (maxBarSize / 100.0f);
+}
+
 void CuChulainn::OnEnemyHit()
 {
-    riastradMeter += riastradOnHit;
+    AddRiastrad(riastradOnHit);
 }
 
 void CuChulainn::OnEnemyDefeated()
 {
-    riastradMeter += riastradOnEnemyDeath;
+    AddRiastrad(riastradOnEnemyDeath);
 }
 
 const std::string CuChulainn::GetLogicStateName()
