@@ -247,7 +247,7 @@ void CuChulainn::OnDeath()
     if (healthImageComponent) healthImageComponent->ChangeTexture(healthBarTextures[0]);
     isAttacking = false;
     deathTimer  = 0.0f;
-    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
