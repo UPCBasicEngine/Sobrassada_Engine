@@ -34,10 +34,16 @@ CuChulainn::CuChulainn(GameObject* parent)
     currentHealth = 3; // mainChar starts low hp
 
     // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
+    fields.push_back({InspectorField::FieldType::Spacing, nullptr});
+    fields.push_back({InspectorField::FieldType::Text, (void*)"CuChulainn parameters"});
+    fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
+    fields.push_back({"Default speed", InspectorField::FieldType::Float, &defaultSpeed, 0.0f, 10.0f});
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Ultimate parameters"});
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
@@ -46,6 +52,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Charged attack parameters"});
     fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
     fields.push_back({"Attack charging duration", InspectorField::FieldType::Float, &chargeDuration, 0.0f, 10.0f});
     fields.push_back({"Charged Attack damage", InspectorField::FieldType::Int, &chargedAttackDamage, 0.0f, 5.0f});
@@ -55,20 +63,33 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Healing"});
+    fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
+    fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Riastrad parameters"});
+    fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
+    fields.push_back({"Riastrad movement speed", InspectorField::FieldType::Float, &riastradMovementSpeed, 0.0f, 20.0f}
+    );
+    fields.push_back(
+        {"Riastrad animations speed ratio", InspectorField::FieldType::Float, &riastradAnimationsSpeedRatio, 0.0f, 2.0f}
+    );
+    fields.push_back({"Riastrad on damage taken", InspectorField::FieldType::Int, &riastradOnDamageTaken, 0, 100});
+    fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
+    fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
-    fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
-    fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
+
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
     fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
-    fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
-    fields.push_back({"Riastrad on damage taken", InspectorField::FieldType::Int, &riastradOnDamageTaken, 0, 100});
-    fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
-    fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
-    fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"HUD textures"});
     fields.push_back({"Dash filled icon", InspectorField::FieldType::Resource, &dashFillImage});
     fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
     fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
@@ -112,7 +133,7 @@ bool CuChulainn::Init()
 
     character    = parent->GetComponent<CharacterControllerComponent*>();
     if (!character) GLOG("CharacterController component not found for CuChulainn")
-    else speed = character->GetSpeed();
+    character->SetMaxSpeed(defaultSpeed);
 
     cameraObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(cameraName);
     if (cameraObject && cameraObject->GetComponent<ScriptComponent*>())
@@ -213,6 +234,11 @@ void CuChulainn::Update(float deltaTime)
 
         RenderDebug(logs, float3(0.0f, 1.0f, 0.0f));
     }
+}
+
+void CuChulainn::OnDestroy()
+{
+    animComponent->GetResourceStateMachine()->ResetClipsSpeed();
 }
 
 void CuChulainn::OnDeath()
@@ -756,36 +782,47 @@ void CuChulainn::PerformAttack()
 {
     if (isAttacking && state == CharacterStates::BASIC_ATTACK)
     {
-        if (attackTimer < attackHitboxDelay)
+        float currentHitboxDelay = isRiastrad ? attackHitboxDelay / riastradAnimationsSpeedRatio : attackHitboxDelay;
+        float currentHitboxDuration =
+            isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
+
+        if (attackTimer < currentHitboxDelay)
         {
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
-                 attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
-        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        else if (weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(false);
         }
     }
     else if (state == CharacterStates::ULTIMATE)
     {
-        if (!ultimateObject->IsEnabled() && ultimateTimer >= ultimateAnimationDelay)
+        float currentHitboxDelay =
+            isRiastrad ? ultimateHitboxDelay / riastradAnimationsSpeedRatio : ultimateHitboxDelay;
+        float currentHitboxDuration =
+            isRiastrad ? ultimateHitboxDuration / riastradAnimationsSpeedRatio : ultimateHitboxDuration;
+        float currentAnimationDelay =
+            isRiastrad ? ultimateAnimationDelay / riastradAnimationsSpeedRatio : ultimateAnimationDelay;
+
+        if (!ultimateObject->IsEnabled() && ultimateTimer >= currentAnimationDelay)
         {
             ultimateObject->SetEnabled(true);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
-                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
+                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
         {
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
         }
         else if (ultimateObject->IsEnabled() &&
-                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+                 ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
@@ -796,13 +833,17 @@ void CuChulainn::PerformAttack()
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
     {
-        if (!chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay &&
-            chargedAttackTimer < chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        float currentHitboxDelay =
+            isRiastrad ? chargedAttackHitboxDelay / riastradAnimationsSpeedRatio : chargedAttackHitboxDelay;
+        float currentHitboxDuration =
+            isRiastrad ? chargedAttackHitboxDuration / riastradAnimationsSpeedRatio : chargedAttackHitboxDuration;
+
+        if (!chargedAttackCollider->IsEnabled() && chargedAttackTimer >= currentHitboxDelay &&
+            chargedAttackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() &&
-                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= currentHitboxDelay + currentHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
@@ -997,7 +1038,7 @@ void CuChulainn::ChargeAttack()
     {
         // GLOG("START CHARGING ATTACK");
         state       = CharacterStates::CHARGING;
-        chargeTimer = chargeDuration;
+        chargeTimer = isRiastrad ? chargeDuration * 0.5f : chargeDuration;
         character->EnableMovement(false);
 
         if (animComponent) animComponent->UseTrigger("Charge");
@@ -1039,11 +1080,19 @@ void CuChulainn::ToggleRiastrad()
         isRiastrad    = true;
         riastradTimer = riastradDuration;
         riastradMeter = 0;
+        character->SetMaxSpeed(riastradMovementSpeed);
+
+        for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
+        {
+            clip.animationSpeed *= 1.5f;
+        }
     }
     else
     {
         // Stop Riastrad
         isRiastrad = false;
+        animComponent->GetResourceStateMachine()->ResetClipsSpeed();
+        character->SetMaxSpeed(defaultSpeed);
     }
 }
 
