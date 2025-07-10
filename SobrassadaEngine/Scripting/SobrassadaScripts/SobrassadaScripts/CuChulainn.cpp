@@ -1110,7 +1110,7 @@ void CuChulainn::AddRiastrad(int amount)
     Transform2DComponent* trs = riastradBar->GetComponent<Transform2DComponent*>();
 
     const int maxBarSize      = 200;
-    trs->size.x               = amount * (maxBarSize / 100.0f);
+    trs->size.x               = riastradMeter * (maxBarSize / 100.0f);
 }
 
 void CuChulainn::OnEnemyHit()
