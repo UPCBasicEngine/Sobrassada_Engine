@@ -23,7 +23,8 @@ enum class CharacterType
     CuChulainn,
     Soldier,
     Archer,
-    Banshee
+    Banshee,
+    Boss
 };
 
 class Character : public Script

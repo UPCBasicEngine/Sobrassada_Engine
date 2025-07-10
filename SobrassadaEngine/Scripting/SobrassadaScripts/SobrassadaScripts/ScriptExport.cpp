@@ -1,16 +1,19 @@
 #include "pch.h"
 
 #include "Archer.h"
-#include "Changeling.h"
 #include "Banshee.h"
+#include "Boss.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "ChangeSceneScript.h"
+#include "Changeling.h"
 #include "CuChulainn.h"
+#include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
+#include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
 #include "MainMenuSelectorScript.h"
@@ -19,6 +22,7 @@
 #include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
 #include "PauseMenuScript.h"
+#include "PlayerLocationScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
 #include "RotateGameObject.h"
@@ -27,9 +31,6 @@
 #include "SpawnUI.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "EnemySpawnerScript.h"
-#include "GameOverScript.h"
-#include "PlayerLocationScript.h"
 
 #include <string>
 
@@ -68,7 +69,8 @@ constexpr const char* scripts[] = {
     "Mushroom",
     "EnemySpawnerScript",
     "GameOverScript",
-    "PlayerLocationScript"
+    "PlayerLocationScript",
+    "Boss",
 };
 
 Application* AppEngine = nullptr;
@@ -101,6 +103,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Banshee") return new Banshee(parent);
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
+    if (scriptType == "Boss") return new Boss(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
