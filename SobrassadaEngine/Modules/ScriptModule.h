@@ -67,8 +67,8 @@ class ScriptModule : public Module
     DestroyScriptFunc destroyScriptFunc    = nullptr;
     FreeSobrassadaScripts freeScriptFunc   = nullptr;
 
-    GetScriptNameDLL getScriptNameFunc        = nullptr;
-    GetScriptCountDLL getScriptCountFunc      = nullptr;
+    GetScriptNameDLL getScriptNameFunc     = nullptr;
+    GetScriptCountDLL getScriptCountFunc   = nullptr;
     SearchIdxName searchIdxNameFunc        = nullptr;
 
     int scriptCount                        = 0;

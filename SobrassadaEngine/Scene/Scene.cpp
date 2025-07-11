@@ -57,6 +57,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Components/ShaderScriptComponent.h"
 #include <unordered_map>
 
 #include "SDL_mouse.h"
@@ -379,6 +380,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
 #endif
+    // THIS RENDER AFFECTS THE SCRIPT RENDER FUNCTION -> HAS TO CHANGE DEPENDING ON COMPONENT SCRIPT
     for (const auto& gameObject : toUpdateGameObjects)
     {
         if (gameObject != nullptr)
