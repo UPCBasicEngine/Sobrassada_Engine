@@ -703,7 +703,6 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="resourceIcon.h" />
     <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
