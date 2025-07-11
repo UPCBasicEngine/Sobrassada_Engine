@@ -325,6 +325,9 @@ update_status Scene::Update(float deltaTime)
         {
             ScriptComponent* script = gameObject.second->GetComponent<ScriptComponent*>();
             if (script) script->InitScriptInstances();
+
+            ShaderScriptComponent* shaderScript = gameObject.second->GetComponent<ShaderScriptComponent*>();
+            if (shaderScript) shaderScript->InitScriptInstances();
         }
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
