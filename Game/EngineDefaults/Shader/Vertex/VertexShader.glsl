@@ -7,6 +7,8 @@ layout(location=3) in vec2 vertex_uv0;
 layout(location=4) in ivec4 vertex_joint;
 layout(location=5) in vec4 vertex_weights;
 
+layout(location=0) uniform bool applyWind;
+layout(location=1) uniform float TIME;
 layout(location=4) uniform bool hasBones;
 uniform mat4 viewLight;
 uniform mat4 projLight;
@@ -64,6 +66,13 @@ void main()
     else 
     {
         pos = vec3(model * vec4(vertex_position, 1.0));
+        if (applyWind)
+        {
+            float scaled_time = TIME * 0.005;
+            float intensity = 0.5;
+            pos.x += sin(pos.x + scaled_time * 1.25 + uv0.y) * (1.0 - uv0.y) * 0.2 * intensity;
+            pos.z += cos(pos.z + scaled_time * 0.45 + uv0.y) * (1.0 - uv0.y) * 0.15 * intensity;
+        }
     }
 
     gl_Position = projMatrix * viewMatrix * vec4(pos, 1.0f); 

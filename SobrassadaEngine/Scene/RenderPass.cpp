@@ -21,6 +21,8 @@
 #include "optick.h"
 #endif
 
+#include "EngineTimer.h"
+
 #include <glew.h>
 
 RenderPass::RenderPass()
@@ -675,6 +677,8 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
     const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
 
     glUseProgram(program);
+    glUniform1i(0, true);
+    glUniform1f(1, App->GetEngineTimer()->GetTime());
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
