@@ -11,10 +11,10 @@
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
+#include <Math/MathConstants.h>
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
-#include <Math/MathConstants.h>
 
 FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 {
@@ -29,6 +29,7 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
     fields.push_back({"Gravity", InspectorField::FieldType::Float, &editableGravity, 0.0f, 20.0f});
     fields.push_back({"Activation Range", InspectorField::FieldType::Float, &cfg.activationRange, 0.0f, 100.0f});
     fields.push_back({"Min Attack Cd", InspectorField::FieldType::Float, &cfg.minAttackCooldown, 0.0f, 10.0f});
+    fields.push_back({"Mini Prototype", InspectorField::FieldType::GameObject, &miniPrototype, 0.f, 0.f});
 }
 
 bool FireballTrap::Init()
@@ -54,8 +55,18 @@ bool FireballTrap::Init()
         if (fireballShadow) fireballShadow->SetEnabled(false);
         else GLOG("[WARNING] No fireball shadow found as child of base")
     }
-    
+
     srand(static_cast<unsigned>(time(0))); // random seed
+
+    if (miniPrototype)
+    {
+        miniPrototype->SetEnabled(false);
+        GLOG("Mini OK")
+    }
+    else
+    {
+        GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
+    }
 
     return true;
 }
@@ -65,31 +76,30 @@ void FireballTrap::Update(float deltaTime)
     // TODO Make all movement depended on the deltaTime
     if (!character || !groundMesh || !damageCollider || !fireball) return;
 
-    float distance; 
+    float distance;
     switch (activationState)
     {
-        case SLEEPING:
-            distance = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
-            if (distance <= cfg.activationRange * cfg.activationRange)
-            {
-                randomAttackTime = GenerateRandomAttackTime(cfg.minAttackCooldown, cfg.maxAttackCooldown);
-                activatedTime = 0.0f;
-                activationState = IDLE;
-            }
-            break;
-        case IDLE:
-            activatedTime += deltaTime;
-            if (activatedTime >= randomAttackTime)
-                StartAttack();
-            break;
-        case DROPPING:
-            UpdateFireball(deltaTime);
-            break;
-        case DAMAGING:
-            activatedTime += deltaTime;
-            if (activatedTime - randomAttackTime >= damageDuration) // Not fully accurate, but probably ok
-                DisableDamage();
-            break;
+    case SLEEPING:
+        distance = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
+        if (distance <= cfg.activationRange * cfg.activationRange)
+        {
+            randomAttackTime = GenerateRandomAttackTime(cfg.minAttackCooldown, cfg.maxAttackCooldown);
+            activatedTime    = 0.0f;
+            activationState  = IDLE;
+        }
+        break;
+    case IDLE:
+        activatedTime += deltaTime;
+        if (activatedTime >= randomAttackTime) StartAttack();
+        break;
+    case DROPPING:
+        UpdateFireball(deltaTime);
+        break;
+    case DAMAGING:
+        activatedTime += deltaTime;
+        if (activatedTime - randomAttackTime >= damageDuration) // Not fully accurate, but probably ok
+            DisableDamage();
+        break;
     }
 }
 
@@ -98,16 +108,16 @@ void FireballTrap::StartAttack()
     fireball->SetEnabled(true);
     fireball->SetLocalPosition(float3(0.0f, fallingHeight, 0.0f));
 
-    if (fireballShadow != nullptr)  fireballShadow->SetEnabled(true);
+    if (fireballShadow != nullptr) fireballShadow->SetEnabled(true);
 
-    verticalSpeed  = 0.0f;
+    verticalSpeed   = 0.0f;
     activationState = DROPPING;
 }
 
 void FireballTrap::HandleImpact()
 {
     fireball->SetEnabled(false);
-    if (fireballShadow != nullptr)  fireballShadow->SetEnabled(false);
+    if (fireballShadow != nullptr) fireballShadow->SetEnabled(false);
     groundMesh->SetEnabled(true);
     damageCollider->SetEnabled(true);
 
@@ -126,17 +136,18 @@ void FireballTrap::UpdateFireball(float deltaTime)
 {
     float4x4 newTransform = fireball->GetLocalTransform();
     float3 currentPos     = newTransform.TranslatePart();
-    
+
     if (deltaTime < 0.5f)
     {
         verticalSpeed = std::min(verticalSpeed + editableGravity * deltaTime, editableMaxFallSpeed); // Clamp fall speed
-        currentPos.y  -= verticalSpeed * deltaTime;
+        currentPos.y -= verticalSpeed * deltaTime;
     }
-    
+
     if (currentPos.y <= 0)
     {
         HandleImpact();
-    } else
+    }
+    else
     {
         newTransform = newTransform * float4x4::RotateX(rotationSpeed * deltaTime);
         newTransform.SetTranslatePart(currentPos);

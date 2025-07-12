@@ -80,4 +80,6 @@ class FireballTrap : public Script
 
     ACTIVATION_STATE activationState = SLEEPING;
     FireballTrapSettings cfg;
+    UID miniPrefabUID = 0;
+    GameObject* miniPrototype = nullptr;
 };
