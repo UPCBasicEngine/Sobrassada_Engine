@@ -1,9 +1,10 @@
 #include "pch.h"
 
-#include "Spouts.h"
+#include "Character.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
-#include "Character.h"
+#include "Spouts.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 
 Spouts::Spouts(GameObject* parent) : Script(parent)
 {
@@ -23,11 +24,13 @@ void Spouts::Update(float deltaTime)
     if (activationState == ACTIVATION_STATE::SLEEPING)
     {
         if (character == nullptr) return;
-        float distance = character->GetPosition().DistanceSq(parent->GetPosition());
-        if (distance <= activationRange * activationRange)
+        SphereColliderComponent* damageCollider = parent->GetComponent<SphereColliderComponent*>();
+        damageCollider->SetEnabled(false);
+        float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+        if (distance <= activationRange)
         {
             activationState = ACTIVATION_STATE::CHARGING;
-            chargingTimer       = 0.0f;
+            chargingTimer   = 0.0f;
         }
     }
     else if (activationState == ACTIVATION_STATE::CHARGING)
@@ -40,16 +43,16 @@ void Spouts::Update(float deltaTime)
     }
     else if (activationState == ACTIVATION_STATE::DAMAGING)
     {
-        float distance = character->GetPosition().DistanceSq(parent->GetPosition());
-        if (distance <= activationRange * activationRange)
-        {
-            // Activar Collider y hacer esto en OnCollision
-            ScriptComponent* script = character->GetComponent<ScriptComponent*>();
-            if (script && script->GetScriptByType<Character>()) return;
-
-            Character* characterScript = script->GetScriptByType<Character>();
-            characterScript->TakeDamage(damage);
-        }
+        float distance  = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
         activationState = ACTIVATION_STATE::SLEEPING;
+        if (distance <= activationRange)
+        {
+            SphereColliderComponent* damageCollider = parent->GetComponent<SphereColliderComponent*>();
+
+            if (damageCollider)
+            {
+                damageCollider->SetEnabled(true);
+            }
+        }
     }
 }
