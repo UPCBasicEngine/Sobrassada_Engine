@@ -18,15 +18,17 @@
 
 FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Activation Range", InspectorField::FieldType::Float, &activationRange, 0.0f, 100.0f});
-    fields.push_back({"Min Attack Cooldown", InspectorField::FieldType::Float, &minAttackCooldown, 0.0f, 10.0f});
-    fields.push_back({"Max Attack Cooldown", InspectorField::FieldType::Float, &maxAttackCooldown, 0.0f, 30.0f});
+    fields.push_back({"Activation Range", InspectorField::FieldType::Float, &cfg.activationRange, 0.0f, 100.0f});
+    fields.push_back({"Min Attack Cooldown", InspectorField::FieldType::Float, &cfg.minAttackCooldown, 0.0f, 10.0f});
+    fields.push_back({"Max Attack Cooldown", InspectorField::FieldType::Float, &cfg.maxAttackCooldown, 0.0f, 30.0f});
     fields.push_back({"Trap Damage", InspectorField::FieldType::Int, &damage, 0, 5});
     fields.push_back({"Damage Duration", InspectorField::FieldType::Float, &damageDuration, 0.0f, 10.0f});
     fields.push_back({"Rotation Speed", InspectorField::FieldType::Float, &rotationSpeed, 0.0f, 100.0f});
     fields.push_back({"Falling Height", InspectorField::FieldType::Float, &fallingHeight, 0.0f, 200.0f});
     fields.push_back({"Max Fall Speed", InspectorField::FieldType::Float, &editableMaxFallSpeed, 0.0f, 100.0f});
     fields.push_back({"Gravity", InspectorField::FieldType::Float, &editableGravity, 0.0f, 20.0f});
+    fields.push_back({"Activation Range", InspectorField::FieldType::Float, &cfg.activationRange, 0.0f, 100.0f});
+    fields.push_back({"Min Attack Cd", InspectorField::FieldType::Float, &cfg.minAttackCooldown, 0.0f, 10.0f});
 }
 
 bool FireballTrap::Init()
@@ -68,9 +70,9 @@ void FireballTrap::Update(float deltaTime)
     {
         case SLEEPING:
             distance = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
-            if (distance <= activationRange * activationRange)
+            if (distance <= cfg.activationRange * cfg.activationRange)
             {
-                randomAttackTime = GenerateRandomAttackTime(minAttackCooldown, maxAttackCooldown);
+                randomAttackTime = GenerateRandomAttackTime(cfg.minAttackCooldown, cfg.maxAttackCooldown);
                 activatedTime = 0.0f;
                 activationState = IDLE;
             }
