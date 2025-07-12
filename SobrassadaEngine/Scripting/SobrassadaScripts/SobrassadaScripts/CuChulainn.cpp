@@ -1109,7 +1109,7 @@ void CuChulainn::AddRiastrad(int amount)
     if (!riastradBar) return;
     Transform2DComponent* trs = riastradBar->GetComponent<Transform2DComponent*>();
 
-    const int maxBarSize      = 200;
+    const int maxBarSize      = 400;
     trs->size.x               = riastradMeter * (maxBarSize / 100.0f);
 }
 
