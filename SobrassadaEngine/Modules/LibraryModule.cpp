@@ -48,6 +48,13 @@ bool LibraryModule::Init()
 bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
 {
     Scene* loadedScene = App->GetSceneModule()->GetScene();
+
+#ifdef GAME
+    if (loadedScene != nullptr)
+    {
+        return true;
+    }
+#else
     if (loadedScene != nullptr)
     {
         UID sceneUID = loadedScene->GetSceneUID();
@@ -90,9 +97,10 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
             return false;
         }
 
-        //GLOG("%s saved as scene", sceneName.c_str());
+        // GLOG("%s saved as scene", sceneName.c_str());
         return true;
     }
+#endif
 
     GLOG("No scene loaded");
     return false;
@@ -182,7 +190,10 @@ bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
                 AddName(assetName, assetUID);
                 libraryPath = projectPath + ANIMATIONS_PATH + std::to_string(assetUID) + ANIMATION_EXTENSION;
                 if (FileSystem::Exists(libraryPath.c_str())) AddResource(libraryPath, assetUID);
-                else SceneImporter::ImportAnimationFromMetadata(assetPath, projectPath, assetName, assetUID, importOptions);
+                else
+                    SceneImporter::ImportAnimationFromMetadata(
+                        assetPath, projectPath, assetName, assetUID, importOptions
+                    );
                 break;
             case 16:
                 AddPrefab(assetUID, assetName);
@@ -307,7 +318,7 @@ UID LibraryModule::AssignFiletypeUID(UID originalUID, FileType fileType)
 
     // GLOG("%llu", prefix)
     UID final = (prefix * UID_PREFIX_DIVISOR) + (originalUID % UID_PREFIX_DIVISOR);
-    //GLOG("%llu", final);
+    // GLOG("%llu", final);
     return final;
 }
 

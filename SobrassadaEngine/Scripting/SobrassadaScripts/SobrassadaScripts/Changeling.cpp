@@ -113,6 +113,20 @@ void Changeling::OnPlayerEnterLocation()
     // TODO
 }
 
+void Changeling::OnPlayerExitLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
+void Changeling::OnPlayerEnterLocation()
+{
+    currentState = ChangelingStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
 void Changeling::OnDeath()
 {
     stateTimer = dyingDuration;

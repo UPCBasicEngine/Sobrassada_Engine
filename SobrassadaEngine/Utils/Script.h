@@ -1,7 +1,9 @@
 #pragma once
 
 #include "ComponentUtils.h"
+#include "Math/float2.h"
 #include "Math/float3.h"
+#include "Math/float4.h"
 #include "rapidjson/document.h"
 #include <functional>
 
@@ -21,10 +23,11 @@ struct InspectorField
         Color,
         InputText,
         GameObject,
-        Button
+        Button,
+        Resource
     };
 
-    const char* name;
+    std::string name;
     FieldType type;
     void* data;
     float minValue;
@@ -41,7 +44,6 @@ class Script
     virtual bool Init()                                                                                       = 0;
     virtual void Update(float deltaTime)                                                                      = 0;
     virtual void Inspector()                                                                                  = 0;
-    virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)           = 0;
     virtual void Load(const rapidjson::Value& initialState)                                                   = 0;
     virtual void CloneFields(const std::vector<InspectorField>& fields)                                       = 0;
     virtual void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)      = 0;
@@ -52,5 +54,5 @@ class Script
     virtual void OnDestroy() {};
 
     virtual const std::vector<InspectorField>& GetFields() = 0;
-    virtual void SetFields(const std::vector<InspectorField>& newFields) {}
+    virtual void SetFields(const std::vector<InspectorField>& newFields) {};
 };
