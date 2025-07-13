@@ -31,6 +31,11 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
     fields.push_back({"Min Attack Cd", InspectorField::FieldType::Float, &cfg.minAttackCooldown, 0.0f, 10.0f});
     fields.push_back({"Mini Prototype", InspectorField::FieldType::GameObject, &miniPrototype, 0.f, 0.f});
     fields.push_back({"Mini Pool Size", InspectorField::FieldType::Int, &poolSize, 1.f, 50.f});
+
+    fields.push_back({"Mini Count", InspectorField::FieldType::Int, &miniCount, 1.f, 12.f});
+    fields.push_back({"Mini Speed", InspectorField::FieldType::Float, &miniSpeed, 1.f, 30.f});
+    fields.push_back({"Mini Lifetime", InspectorField::FieldType::Float, &miniLifeTime, 0.f, 10.f});
+    fields.push_back({"Mini Damage", InspectorField::FieldType::Int, &miniDamage, 0.f, 10.f});
 }
 
 bool FireballTrap::Init()
@@ -130,9 +135,6 @@ void FireballTrap::StartAttack()
     fireball->SetEnabled(true);
     fireball->SetLocalPosition(float3(0.0f, fallingHeight, 0.0f));
 
-    GameObject* mini = RequestMini();
-    mini->SetLocalPosition(float3(0, fallingHeight, 0));
-
     if (fireballShadow != nullptr) fireballShadow->SetEnabled(true);
 
     verticalSpeed   = 0.0f;
@@ -142,12 +144,15 @@ void FireballTrap::StartAttack()
 void FireballTrap::HandleImpact()
 {
     fireball->SetEnabled(false);
-    if (fireballShadow != nullptr) fireballShadow->SetEnabled(false);
+    if (fireballShadow) fireballShadow->SetEnabled(false);
+
+    SpawnMiniCluster();
+
     groundMesh->SetEnabled(true);
     damageCollider->SetEnabled(true);
-
     activationState = DAMAGING;
 }
+
 
 void FireballTrap::DisableDamage()
 {
@@ -208,4 +213,8 @@ void FireballTrap::RecycleMini(GameObject* mini)
 {
     if (!mini) return;
     mini->SetEnabled(false);
+}
+
+void FireballTrap::SpawnMiniCluster()
+{
 }
