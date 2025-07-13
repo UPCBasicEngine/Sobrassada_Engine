@@ -128,6 +128,7 @@ void FireballTrap::Update(float deltaTime)
             DisableDamage();
         break;
     }
+    UpdateMinis(deltaTime);
 }
 
 void FireballTrap::StartAttack()
@@ -217,4 +218,49 @@ void FireballTrap::RecycleMini(GameObject* mini)
 
 void FireballTrap::SpawnMiniCluster()
 {
+    if (!miniPrototype) return;
+
+    const float3 origin = parent->GetGlobalTransform().TranslatePart();
+
+    static const float tau = 6.2831853f;
+    const float step    = tau / float(miniCount);
+
+    for (uint32_t i = 0; i < miniCount; ++i)
+    {
+        GameObject* mini = RequestMini();
+        if (!mini) continue;
+
+        // Local trap position
+        mini->SetLocalPosition(float3::zero);
+
+        // Vector angle
+        float angle = i * step + ((rand() / float(RAND_MAX)) - 0.5f) * 0.1f;
+        float3 dir  = float3(cosf(angle), 0.35f, sinf(angle)).Normalized();
+
+        // Collider activation
+        if (auto* col = mini->GetComponent<SphereColliderComponent*>())
+            col->SetEnabled(true);
+
+        activeMinis.push_back({mini, dir * miniSpeed, miniLifeTime});
+    }
+}
+
+
+void FireballTrap::UpdateMinis(float dt)
+{
+    for (auto it = activeMinis.begin(); it != activeMinis.end();)
+    {
+        it->life   -= dt;
+        float3 pos  = it->go->GetLocalTransform().TranslatePart();
+        pos        += it->vel * dt;
+        it->go->SetLocalPosition(pos);
+
+        if (it->life <= 0.f)
+        {
+            // stop collider, VFX
+            RecycleMini(it->go);
+            it = activeMinis.erase(it);
+        }
+        else ++it;
+    }
 }

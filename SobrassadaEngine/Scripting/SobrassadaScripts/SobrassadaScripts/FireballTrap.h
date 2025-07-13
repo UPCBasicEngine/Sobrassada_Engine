@@ -56,9 +56,11 @@ class FireballTrap : public Script
     void DisableDamage();
     void UpdateFireball(float deltaTime);
     float GenerateRandomAttackTime(float min, float max);
+    
     GameObject* RequestMini();
     void RecycleMini(GameObject* mini);
     void SpawnMiniCluster();
+    void UpdateMinis(float deltaTime);  
 
 
   private:
@@ -91,8 +93,17 @@ class FireballTrap : public Script
     uint32_t poolSize = 6;             // default number clones
 
     // --- Split params ---
-    uint32_t miniCount = 6;
-    float miniSpeed    = 7.0f;
+    uint32_t miniCount = 4;
+    float miniSpeed    = 5.0f;
     float miniLifeTime = 2.0f; 
     int miniDamage     = 1;   
+
+    struct MiniInstance
+    {
+        GameObject* go; // ref  clon
+        float3 vel;    
+        float life;    
+    };
+
+    std::vector<MiniInstance> activeMinis;
 };
