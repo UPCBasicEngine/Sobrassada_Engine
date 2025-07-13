@@ -390,8 +390,11 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_Q] == KEY_DOWN ||
         (input->GetLeftTrigger().first == KEY_REPEAT && input->GetRightTrigger().first == KEY_REPEAT))
     {
-        desiredTransform     = true;
-        transformBufferTimer = inputBuffer;
+        if (!isRiastrad)
+        {
+            desiredTransform     = true;
+            transformBufferTimer = inputBuffer;
+        } 
     }
 
     // Dash
