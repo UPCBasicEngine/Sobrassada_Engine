@@ -762,7 +762,7 @@ void CuChulainn::Dash()
 
     // GLOG("DASH");
 
-    dashTimer        = dashCooldown;
+    dashTimer        = isRiastrad ? dashCooldown * 0.75f : dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     LookAtLeftStick();
     character->StartDash();
