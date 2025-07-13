@@ -86,7 +86,6 @@ class FireballTrap : public Script
 
     ACTIVATION_STATE activationState = SLEEPING;
     FireballTrapSettings cfg;
-    UID miniPrefabUID = 0;
     GameObject* miniPrototype = nullptr;
 
     std::vector<GameObject*> miniPool; // container
@@ -96,7 +95,6 @@ class FireballTrap : public Script
     uint32_t miniCount = 4;
     float miniSpeed    = 5.0f;
     float miniLifeTime = 2.0f; 
-    int miniDamage     = 1;   
 
     struct MiniInstance
     {
