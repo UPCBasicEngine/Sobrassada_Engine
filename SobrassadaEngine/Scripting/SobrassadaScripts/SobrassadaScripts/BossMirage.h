@@ -19,6 +19,7 @@ struct SequenceTrigger
 
 class BossMirage : public Script
 {
+    BossMirage(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
 
