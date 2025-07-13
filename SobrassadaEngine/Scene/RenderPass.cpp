@@ -22,6 +22,7 @@
 #endif
 
 #include "EngineTimer.h"
+#include "WindConfig.h"
 
 #include <glew.h>
 
@@ -675,10 +676,9 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
 
     const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
+    const unsigned int wPOProgram = App->GetShaderModule()->GetTransparentWPOPassProgram();
 
     glUseProgram(program);
-    glUniform1i(0, true);
-    glUniform1f(1, App->GetEngineTimer()->GetTime());
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
@@ -714,13 +714,21 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
     else
     {
         std::vector<MeshComponent*> meshesToRender;
+        std::vector<MeshComponent*> vertexOffsetMeshesToRender;
         std::vector<TrailComponent*> trailsToRender;
 
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
             if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
-                meshesToRender.push_back(mesh);
+            {
+                if (mesh->GetResourceMaterial() != nullptr &&
+                    mesh->GetResourceMaterial()->DoApplyWind())
+                    vertexOffsetMeshesToRender.push_back(mesh);
+                else
+                    meshesToRender.push_back(mesh);
+            }
+                
 
             TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
             if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
@@ -736,7 +744,24 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         else
         {
             glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+            
             batchManager->RenderTransparent(meshesToRender, camera);
+
+            glUseProgram(wPOProgram);
+            
+            glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
+            glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+
+            GLOG("Test: %d", vertexOffsetMeshesToRender.size())
+            WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+            if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
+            {
+                glUniform4f(glGetUniformLocation(wPOProgram, "windBasics"), windConfig->GetWindDirection().x,
+                    windConfig->GetWindDirection().y, windConfig->GetWindDirection().z, 1);
+                glUniform4f(glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
+                    windConfig->GetWindSpeed(), windConfig->GetGustFrequency(), windConfig->GetGustSpeed());
+            }
+            batchManager->RenderTransparent(vertexOffsetMeshesToRender, camera);
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

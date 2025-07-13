@@ -69,6 +69,8 @@
 #include "optick.h"
 #endif
 
+#include "WindConfig.h"
+
 #include <set>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
@@ -81,6 +83,7 @@ Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
     gameObjectsContainer.insert({sceneGameObject->GetUID(), sceneGameObject});
 
     lightsConfig = new LightsConfig();
+    windConfig = new WindConfig();
     renderPass   = new RenderPass();
 }
 
@@ -126,6 +129,13 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         lightsConfig->LoadData(initialState["Lights Config"]);
     }
 
+    // Deserialize Wind Config
+    windConfig = new WindConfig();
+    if (initialState.HasMember("Wind Config") && initialState["Wind Config"].IsObject())
+    {
+        windConfig->LoadData(initialState["Wind Config"]);
+    }
+
     renderPass = new RenderPass();
 
     if (initialState.HasMember("tags") && initialState.HasMember("tagsGO"))
@@ -167,11 +177,13 @@ Scene::~Scene()
 
     App->GetPathfinderModule()->ClearNavMesh();
     delete lightsConfig;
+    delete windConfig;
     delete sceneOctree;
     delete dynamicTree;
     delete renderPass;
 
     lightsConfig = nullptr;
+    windConfig = nullptr;
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
 
@@ -307,6 +319,11 @@ void Scene::Save(
     }
 
     else GLOG("Light Config not found");
+
+    // Serialize Wind Config
+    rapidjson::Value wind(rapidjson::kObjectType);
+    windConfig->SaveData(wind, allocator);
+    targetState.AddMember("Wind Config", wind, allocator);
 
     // TODO Convert to parameter which can be set later manually instead of saving a scene as default "on scene
     // save"

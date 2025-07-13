@@ -7,7 +7,9 @@
 #include "LibraryModule.h"
 #include "ProjectModule.h"
 #include "ResourceTexture.h"
+#include "SceneModule.h"
 #include "TextureImporter.h"
+#include "WindConfig.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -33,6 +35,10 @@ ResourceMaterial::ResourceMaterial(UID uid, const std::string& name, const rapid
     if (importOptions.HasMember("isDoubleSided") && importOptions["isDoubleSided"].IsBool())
         doubleSided = importOptions["isDoubleSided"].GetBool();
     else doubleSided = false;
+
+    if (importOptions.HasMember("applyWind") && importOptions["applyWind"].IsBool())
+        applyWind = importOptions["applyWind"].GetBool();
+    else applyWind = false;
 }
 
 ResourceMaterial::~ResourceMaterial()
@@ -45,6 +51,33 @@ bool ResourceMaterial::OnEditorUpdate()
     bool updated  = false;
 
     updated      |= ImGui::Checkbox("Double Sided", &doubleSided);
+    updated      |= ImGui::Checkbox("Apply wind", &applyWind);
+
+    if (applyWind)
+    {
+        WindConfig* globalWindConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+        if (!globalWindConfig->GetApplyWindGlobally())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImVec4(1.f, 0.f, 0.f, 1.0f)));
+            ImGui::Text("Global wind disabled, movement will not show!");
+            ImGui::PopStyleColor();
+        } else
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImVec4(0.f, 1.f, 0.f, 1.0f)));
+            ImGui::Text("Global wind active, movement will show");
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::Checkbox("Apply wind globally", &globalWindConfig->GetApplyWindGloballyRef());
+        ImGui::SliderFloat3("Wind direction", &globalWindConfig->GetWindDirectionRef()[0], 0.f, 20.f);
+        ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 20.f);
+        ImGui::SliderFloat("Gust frequency (s)", &globalWindConfig->GetGustFrequencyRef(), 0.0f, 100.f);
+        ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), globalWindConfig->GetWindSpeed(), 30.f);
+        
+            
+        // TODO Display current wind values and give option to open wind editor   
+    }
+    
     if (diffuseTexture.textureID != 0)
     {
         ImGui::Text("Diffuse Texture");

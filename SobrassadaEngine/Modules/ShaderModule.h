@@ -21,6 +21,7 @@ class ShaderModule : public Module
     int GetSpecularGeometryPassProgram() const;
     int GetLightingPassProgram() const;
     int GetTransparentPassProgram() const { return transparentPassProgram; };
+    int GetTransparentWPOPassProgram() const { return transparentWPOPassProgram; }
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
     int GetQuadProgram() const { return quadProgram; };
     int GetDepthProgram() const { return depthProgram; };
@@ -53,6 +54,7 @@ class ShaderModule : public Module
     int uiWidgetProgram                = -1;
 
     int transparentPassProgram         = -1;
+    int transparentWPOPassProgram      = -1;
     int quadProgram                    = -1;
     int depthProgram                   = -1;
     int linearDepthProgram             = -1;

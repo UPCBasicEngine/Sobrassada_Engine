@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
+class WindConfig;
 class GameObject;
 class Component;
 class RootComponent;
@@ -97,6 +98,7 @@ class SOBRASADA_API_ENGINE Scene
     GameObject* GetGameObjectByName(const std::string& name);
 
     LightsConfig* GetLightsConfig() const { return lightsConfig; }
+    WindConfig* GetWindsConfig() const { return windConfig; }
     CameraComponent* GetMainCamera() const;
     CameraComponent* GetMainCameraEvenDisabled() const;
 
@@ -166,6 +168,7 @@ class SOBRASADA_API_ENGINE Scene
     std::unordered_map<UID, GameObject*> gameObjectsContainer;
 
     LightsConfig* lightsConfig                   = nullptr;
+    WindConfig* windConfig                       = nullptr;
     Octree* sceneOctree                          = nullptr;
     Octree* dynamicTree                          = nullptr;
 
