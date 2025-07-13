@@ -1089,6 +1089,7 @@ void CuChulainn::ToggleRiastrad()
         riastradTimer = riastradDuration;
         riastradMeter = 0;
         character->SetMaxSpeed(riastradMovementSpeed);
+        Heal(maxHealth);
 
         for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
         {
