@@ -56,6 +56,8 @@ class FireballTrap : public Script
     void DisableDamage();
     void UpdateFireball(float deltaTime);
     float GenerateRandomAttackTime(float min, float max);
+    GameObject* RequestMini();
+    void RecycleMini(GameObject* mini);
 
   private:
     float randomAttackTime                  = 0.0f;
@@ -82,4 +84,7 @@ class FireballTrap : public Script
     FireballTrapSettings cfg;
     UID miniPrefabUID = 0;
     GameObject* miniPrototype = nullptr;
+
+    std::vector<GameObject*> miniPool; // container
+    uint32_t poolSize = 6;             // default number clones
 };

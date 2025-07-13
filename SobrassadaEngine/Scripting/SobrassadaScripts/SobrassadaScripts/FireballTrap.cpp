@@ -30,6 +30,7 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
     fields.push_back({"Activation Range", InspectorField::FieldType::Float, &cfg.activationRange, 0.0f, 100.0f});
     fields.push_back({"Min Attack Cd", InspectorField::FieldType::Float, &cfg.minAttackCooldown, 0.0f, 10.0f});
     fields.push_back({"Mini Prototype", InspectorField::FieldType::GameObject, &miniPrototype, 0.f, 0.f});
+    fields.push_back({"Mini Pool Size", InspectorField::FieldType::Int, &poolSize, 1.f, 50.f});
 }
 
 bool FireballTrap::Init()
@@ -62,6 +63,27 @@ bool FireballTrap::Init()
     {
         miniPrototype->SetEnabled(false);
         GLOG("Mini OK")
+    }
+    else
+    {
+        GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
+    }
+
+    if (miniPrototype)
+    {
+        miniPrototype->SetEnabled(false);
+
+        miniPool.reserve(poolSize);
+        for (uint32_t i = 0; i < poolSize; ++i)
+        {
+            // same parent and local transform  as prototype
+            GameObject* clone = new GameObject(parent->GetUID(), miniPrototype);
+            clone->SetEnabled(false);
+            parent->AddChildren(clone->GetUID());
+            AppEngine->GetSceneModule()->GetScene()->AddGameObject(clone->GetUID(), clone);
+
+            miniPool.push_back(clone);
+        }
     }
     else
     {
@@ -107,6 +129,9 @@ void FireballTrap::StartAttack()
 {
     fireball->SetEnabled(true);
     fireball->SetLocalPosition(float3(0.0f, fallingHeight, 0.0f));
+
+    GameObject* mini = RequestMini();
+    mini->SetLocalPosition(float3(0, fallingHeight, 0));
 
     if (fireballShadow != nullptr) fireballShadow->SetEnabled(true);
 
@@ -159,4 +184,28 @@ void FireballTrap::UpdateFireball(float deltaTime)
 float FireballTrap::GenerateRandomAttackTime(float min, float max)
 {
     return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
+}
+
+GameObject* FireballTrap::RequestMini()
+{
+    for (GameObject* go : miniPool)
+        if (!go->IsEnabled()) // free
+        {
+            go->SetEnabled(true);
+            return go;
+        }
+    // pool exhausted? (optional) create a new one
+    GameObject* clone = new GameObject(parent->GetUID(), miniPrototype);
+    parent->AddChildren(clone->GetUID());
+    AppEngine->GetSceneModule()->GetScene()->AddGameObject(clone->GetUID(), clone);
+
+    clone->SetEnabled(true);
+    miniPool.push_back(clone);
+    return clone;
+}
+
+void FireballTrap::RecycleMini(GameObject* mini)
+{
+    if (!mini) return;
+    mini->SetEnabled(false);
 }
