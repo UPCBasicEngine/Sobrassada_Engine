@@ -171,9 +171,9 @@ class CuChulainn : public Character
     float riastradDuration             = 5.0f;
     float riastradMovementSpeed        = 12.0f;
     float riastradAnimationsSpeedRatio = 1.5f;
-    int riastradOnDamageTaken          = 0;
-    int riastradOnHit                  = 0;
-    int riastradOnEnemyDeath           = 0;
+    int riastradOnDamageTaken          = 2;
+    int riastradOnHit                  = 5;
+    int riastradOnEnemyDeath           = 5;
 
     float3 spawnPos                    = float3::zero;
     AudioSourceComponent* audio        = nullptr;
