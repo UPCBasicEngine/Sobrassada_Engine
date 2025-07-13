@@ -67,8 +67,8 @@ class MeshComponent : public Component
 
     void SetEnabled(bool newEnabled) override
     {
-        wasEnabled = enabled;
-        enabled    = newEnabled;
+        Component::SetEnabled(newEnabled);
+
         batchWasEnabled = false;
     }
 

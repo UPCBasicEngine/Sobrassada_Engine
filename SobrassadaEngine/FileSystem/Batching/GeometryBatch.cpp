@@ -256,8 +256,6 @@ void GeometryBatch::GenerateCommands(const std::vector<MeshComponent*>& meshes, 
     {
         if (!component->GetWasEnabled() && !component->GetBatchWasEnabled())
         {
-            GLOG("%s", component->GetParent()->GetName());
-            GLOG("%d", component->GetBatchWasEnabled());
             component->SetBatchWasEnabled();
             continue;
         }
