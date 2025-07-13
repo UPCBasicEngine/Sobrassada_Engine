@@ -3,10 +3,13 @@
 #undef min
 
 #include "Application.h"
+#include "CameraComponent.h"
+#include "CameraMovement.h"
 #include "CuChulainn.h"
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "ScriptComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
@@ -92,6 +95,9 @@ bool FireballTrap::Init()
         GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
     }
 
+    shakeCam = FindShakeCamera();
+    if (!shakeCam) GLOG("[WARNING] FireballTrap: CameraMovement not found");
+
     return true;
 }
 
@@ -146,11 +152,18 @@ void FireballTrap::HandleImpact()
 
     SpawnMiniCluster();
 
+    if (shakeCam)
+    {
+        const float duration   = 0.30f;
+        const float intensity  = std::clamp(fallingHeight * 0.03f, 0.15f, 0.6f);
+        const float smoothness = 0.12f;
+        shakeCam->StartShake(duration, intensity, smoothness);
+    }
+
     groundMesh->SetEnabled(true);
     damageCollider->SetEnabled(true);
     activationState = DAMAGING;
 }
-
 
 void FireballTrap::DisableDamage()
 {
@@ -217,10 +230,10 @@ void FireballTrap::SpawnMiniCluster()
 {
     if (!miniPrototype) return;
 
-    const float3 origin = parent->GetGlobalTransform().TranslatePart();
+    const float3 origin    = parent->GetGlobalTransform().TranslatePart();
 
     static const float tau = 6.2831853f;
-    const float step    = tau / float(miniCount);
+    const float step       = tau / float(miniCount);
 
     for (uint32_t i = 0; i < miniCount; ++i)
     {
@@ -235,13 +248,11 @@ void FireballTrap::SpawnMiniCluster()
         float3 dir  = float3(cosf(angle), 0.35f, sinf(angle)).Normalized();
 
         // Collider activation
-        if (auto* col = mini->GetComponent<SphereColliderComponent*>())
-            col->SetEnabled(true);
+        if (auto* col = mini->GetComponent<SphereColliderComponent*>()) col->SetEnabled(true);
 
         activeMinis.push_back({mini, dir * miniSpeed, miniLifeTime});
     }
 }
-
 
 void FireballTrap::UpdateMinis(float dt)
 {
@@ -260,4 +271,23 @@ void FireballTrap::UpdateMinis(float dt)
         }
         else ++it;
     }
+}
+
+CameraMovement* FireballTrap::FindShakeCamera()
+{
+    CameraComponent* camComp = AppEngine->GetSceneModule()->GetScene()->GetMainCamera();
+    if (camComp == nullptr) return nullptr;
+
+    GameObject* camGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(camComp->GetParentUID());
+    if (camGO == nullptr) return nullptr;
+
+    UID parentUID        = camGO->GetParent();
+    GameObject* parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
+    if (parentGO == nullptr) return nullptr;
+
+    ScriptComponent* sc = parentGO->GetComponent<ScriptComponent*>();
+    if (sc == nullptr) return nullptr;
+
+    CameraMovement* cm = sc->GetScriptByType<CameraMovement>();
+    return cm;
 }

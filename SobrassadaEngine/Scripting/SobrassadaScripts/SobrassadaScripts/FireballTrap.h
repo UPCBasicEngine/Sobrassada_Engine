@@ -5,6 +5,8 @@
 class GameObject;
 class MeshComponent;
 class SphereColliderComponent;
+class CameraMovement;
+class CameraComponent;
 
 enum ACTIVATION_STATE
 {
@@ -60,7 +62,9 @@ class FireballTrap : public Script
     GameObject* RequestMini();
     void RecycleMini(GameObject* mini);
     void SpawnMiniCluster();
-    void UpdateMinis(float deltaTime);  
+    void UpdateMinis(float deltaTime);
+
+    CameraMovement* FindShakeCamera();  
 
 
   private:
@@ -87,6 +91,7 @@ class FireballTrap : public Script
     ACTIVATION_STATE activationState = SLEEPING;
     FireballTrapSettings cfg;
     GameObject* miniPrototype = nullptr;
+    CameraMovement* shakeCam  = nullptr;
 
     std::vector<GameObject*> miniPool; // container
     uint32_t poolSize = 6;             // default number clones
