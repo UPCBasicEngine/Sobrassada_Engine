@@ -1089,7 +1089,7 @@ void CuChulainn::ToggleRiastrad()
 
         for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
         {
-            clip.animationSpeed *= 1.5f;
+            clip.animationSpeed *= riastradAnimationsSpeedRatio;
         }
     }
     else
