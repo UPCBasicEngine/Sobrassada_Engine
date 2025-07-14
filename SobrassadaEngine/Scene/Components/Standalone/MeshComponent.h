@@ -48,6 +48,7 @@ class MeshComponent : public Component
     GeometryBatch* GetBatch() const { return batch; }
     int GetRenderMode() const { return renderMode; }
     bool GetProduceShadows() const { return produceShadows; }
+    bool GetBatchWasEnabled() { return batchWasEnabled; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
     {
@@ -60,6 +61,14 @@ class MeshComponent : public Component
     {
         this->skinIndex = newIndex;
         hasBones        = true;
+    }
+    void SetBatchWasEnabled() { batchWasEnabled = true; }
+
+    void SetEnabled(bool newEnabled) override
+    {
+        Component::SetEnabled(newEnabled);
+
+        batchWasEnabled = false;
     }
 
   private:
@@ -83,7 +92,9 @@ class MeshComponent : public Component
     GeometryBatch* batch    = nullptr;
     bool uniqueBatch        = false;
 
-    int renderMode   = 0; //0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
+    int renderMode          = 0; // 0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
 
     bool produceShadows     = true;
+
+    bool batchWasEnabled    = false;
 };
