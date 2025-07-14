@@ -10,6 +10,7 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Mushroom.h"
+#include "Spouts.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -177,6 +178,12 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             {
                 if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
+        }
+
+        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+        if (spoutsScript)
+        {
+            TakeDamage(spoutsScript->GetDamage());
         }
     }
 }

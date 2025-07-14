@@ -8,21 +8,25 @@ class Spouts : public Script
     {
         SLEEPING,
         CHARGING,
-        DAMAGING
+        DAMAGING,
+        COOLDOWN
     };
 
   public:
     Spouts(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
+    int GetDamage() { return damage; }
 
   private:
     float activationRange                   = 10.0f;
     int damage                              = 1;
     float chargingDuration                  = 1.0f;
     float chargingTimer                     = 0.0f;
+    float rotationSpeed                     = 90.0f;
 
     GameObject* character                   = nullptr;
+    GameObject* decal;
 
     ACTIVATION_STATE activationState = SLEEPING;
 };
