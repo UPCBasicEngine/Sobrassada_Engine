@@ -1,8 +1,11 @@
 #pragma once
 
+#include "HashString.h"
 #include "Module.h"
 
-class SOBRASADA_API_ENGINE ShaderModule : public Module
+#include <map>
+
+class ShaderModule : public Module
 {
   public:
     ShaderModule();
@@ -11,9 +14,10 @@ class SOBRASADA_API_ENGINE ShaderModule : public Module
     bool Init() override;
     bool ShutDown() override;
 
+    unsigned int SOBRASADA_API_ENGINE RequestShaderProgram(const char* vertexPath, const char* fragmentPath);
     unsigned int CreateShaderProgram(const char* vertexPath, const char* fragmentPath);
     unsigned int CreateComputeProgram(const char* computePath);
-    void DeleteProgram(unsigned int programID);
+    void SOBRASADA_API_ENGINE DeleteProgram(unsigned int programID);
 
     int GetSpecularGlossinessProgram() const;
     int GetMetallicRoughnessProgram() const;
@@ -66,4 +70,6 @@ class SOBRASADA_API_ENGINE ShaderModule : public Module
 
     int spritesheetProgram             = -1;
     int particleSystemProgram          = -1;
+
+    std::map<HashString, unsigned int> customShaderPrograms;
 };

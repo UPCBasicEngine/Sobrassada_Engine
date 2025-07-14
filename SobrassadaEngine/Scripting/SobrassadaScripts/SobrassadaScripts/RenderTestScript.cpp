@@ -20,11 +20,6 @@
 
 RenderTestScript::~RenderTestScript()
 {
-    if (shaderProgram)
-    {
-        AppEngine->GetShaderModule()->DeleteProgram(shaderProgram);
-    }
-
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
@@ -32,9 +27,10 @@ RenderTestScript::~RenderTestScript()
 
 bool RenderTestScript::Init()
 {
-    shaderProgram = AppEngine->GetShaderModule()->CreateShaderProgram(
+    shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
         "./EngineDefaults/Shader/Vertex/TestVertex.glsl", "./EngineDefaults/Shader/Fragment/TestFragment.glsl"
     );
+
     MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
 
     if (meshComp)

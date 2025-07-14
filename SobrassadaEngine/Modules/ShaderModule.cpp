@@ -3,6 +3,7 @@
 #include "DebugDrawModule.h"
 
 #include "glew.h"
+#include <string>
 
 ShaderModule::ShaderModule()
 {
@@ -64,7 +65,48 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(spritesheetProgram);
     glDeleteProgram(particleSystemProgram);
 
+    for (auto& shaderIterator : customShaderPrograms)
+    {
+        glDeleteProgram(shaderIterator.second);
+    }
+
+    customShaderPrograms.clear();
+
     return true;
+}
+
+unsigned int ShaderModule::RequestShaderProgram(const char* vertexPath, const char* fragmentPath)
+{
+    std::string vertexPathString   = std::string(vertexPath);
+    std::string fragmentPathString = std::string(fragmentPath);
+
+    auto idxVertex                 = vertexPathString.find_last_of("/\\");
+    auto idxFragment = fragmentPathString.find_last_of("/\\");
+
+    if (idxVertex == std::string::npos && idxFragment != std::string::npos)
+    {
+        GLOG("[ShaderModule] Error requesting shader: %s, %s", vertexPath, fragmentPath);
+        return 0;
+    }
+
+    HashString shaderTag =
+        HashString(vertexPathString.substr(idxVertex + 1).append(fragmentPathString.substr(idxFragment + 1)));
+
+    auto shaderProgramIterator = customShaderPrograms.find(shaderTag);
+
+    if (shaderProgramIterator == customShaderPrograms.end())
+    {
+        unsigned int newProgram = CreateShaderProgram(vertexPath, fragmentPath);
+
+        if (newProgram)
+        {
+            customShaderPrograms.insert({shaderTag, newProgram});
+        }
+
+        return newProgram;
+    }
+
+    return shaderProgramIterator->second;
 }
 
 unsigned int ShaderModule::CreateShaderProgram(const char* vertexPath, const char* fragmentPath)
