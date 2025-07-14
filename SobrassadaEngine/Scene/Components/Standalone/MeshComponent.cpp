@@ -115,6 +115,8 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
         if (skinIndex != -1) targetState.AddMember("SkinIndex", skinIndex, allocator);
     }
     targetState.AddMember("ProduceShadows", produceShadows, allocator);
+
+    currentMaterial;
 }
 
 void MeshComponent::Clone(const Component* other)
