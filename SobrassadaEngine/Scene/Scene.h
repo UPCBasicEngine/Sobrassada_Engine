@@ -142,6 +142,8 @@ class SOBRASADA_API_ENGINE Scene
     const HashString& GetPlayerLocation() { return playerLocation; }
     void SetPlayerPosition(const HashString& newPlayerLocation) { playerLocation = newPlayerLocation; }
 
+    void UpdateAllMaterialInstances(const UID materialUID);
+
     bool isSceneLoaded = false;
 
   private:

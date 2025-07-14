@@ -115,8 +115,6 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
         if (skinIndex != -1) targetState.AddMember("SkinIndex", skinIndex, allocator);
     }
     targetState.AddMember("ProduceShadows", produceShadows, allocator);
-
-    currentMaterial;
 }
 
 void MeshComponent::Clone(const Component* other)
@@ -213,9 +211,7 @@ void MeshComponent::RenderEditorInspector()
             }
             if (batch) BatchEditorMode();
         }
-
-        // TODO: Update batch when modifying material so it changes visually
-        if (currentMaterial->OnEditorUpdate() && batch) BatchEditorMode();
+        currentMaterial->OnEditorUpdate();
     }
 }
 

@@ -8,6 +8,8 @@
 #include "ProjectModule.h"
 #include "ResourceTexture.h"
 #include "TextureImporter.h"
+#include "SceneModule.h"
+#include "Scene.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -24,11 +26,13 @@ ResourceMaterial::~ResourceMaterial()
     FreeMaterials();
 }
 
-bool ResourceMaterial::OnEditorUpdate()
+void ResourceMaterial::OnEditorUpdate()
 {
     bool updated  = false;
 
-    updated      |= ImGui::Checkbox("Double Sided", &doubleSided);
+    ImGui::Checkbox("Double Sided", &doubleSided);
+    if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
+
     if (diffuseTexture.textureID != 0)
     {
         ImGui::Text("Diffuse Texture");
@@ -63,8 +67,12 @@ bool ResourceMaterial::OnEditorUpdate()
         }
     }
 
-    updated |= ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
-    updated |= ImGui::SliderFloat("Alpha", &material.diffColor.w, 0.0f, 1.0f);
+    ImGui::SliderFloat3("Diffuse Color", &material.diffColor.x, 0.0f, 1.0f);
+    if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
+
+    ImGui::SliderFloat("Alpha", &material.diffColor.w, 0.0f, 1.0f);
+    if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
+
 
     if (specularTexture.textureID != 0)
     {
@@ -97,8 +105,14 @@ bool ResourceMaterial::OnEditorUpdate()
             }
         }*/
 
-        updated |= ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
-        if (!material.shininessInAlpha) updated |= ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
+        ImGui::SliderFloat3("Specular Color", &material.specColor.x, 0.0f, 1.0f);
+        if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
+
+        if (!material.shininessInAlpha)
+        {
+            ImGui::SliderFloat("Shininess", &material.shininess, 0.0f, 500.0f);
+            if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
+        }
     }
 
     else
@@ -136,8 +150,11 @@ bool ResourceMaterial::OnEditorUpdate()
             }
         }*/
 
-        updated |= ImGui::SliderFloat("Metallic Factor", &material.metallicFactor, 0.0f, 1.0f);
-        updated |= ImGui::SliderFloat("Roughness Factor", &material.roughnessFactor, 0.0f, 1.0f);
+        ImGui::SliderFloat("Metallic Factor", &material.metallicFactor, 0.0f, 1.0f);
+        if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
+
+        ImGui::SliderFloat("Roughness Factor", &material.roughnessFactor, 0.0f, 1.0f);
+        if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
     }
 
     if (normalTexture.textureID != 0)
@@ -172,8 +189,14 @@ bool ResourceMaterial::OnEditorUpdate()
         }*/
     }
 
-    if (updated) SaveToMeta();
-    return updated;
+    // Do this to avoid saving each frame you are editing the material
+    if (!updated && wasUpdated)
+    {
+        SaveToMeta();
+        App->GetSceneModule()->GetScene()->UpdateAllMaterialInstances(uid);
+    }
+
+    wasUpdated = updated;
 }
 
 void ResourceMaterial::SaveToMeta()

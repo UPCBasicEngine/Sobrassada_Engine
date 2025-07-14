@@ -38,7 +38,7 @@ class ResourceMaterial : public Resource
     ResourceMaterial(UID uid, const std::string& name);
     ~ResourceMaterial() override;
 
-    bool OnEditorUpdate();
+    void OnEditorUpdate();
     void LoadMaterialData(const Material& mat, const rapidjson::Value& importOptions);
     void FreeMaterials() const;
 
@@ -73,4 +73,6 @@ class ResourceMaterial : public Resource
     bool doubleSided      = false;
     bool hasNormal        = false;
     UID defaultTextureUID = INVALID_UID;
+
+    bool wasUpdated       = false;
 };
