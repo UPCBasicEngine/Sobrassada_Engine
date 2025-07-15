@@ -368,12 +368,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
-    // FrustumPlanes frustumPlanes;
-    // if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    // else frustumPlanes = camera->GetFrustrumPlanes();
-    // std::vector<GameObject*> objectsToRender;
-    // CheckObjectsInFrustum(objectsToRender, frustumPlanes);
-
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
@@ -393,11 +387,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     }
 
 #ifndef GAME
-    // for (const auto& gameObject : gameObjectsContainer)
-    //{
-    //     gameObject.second->DrawGizmos();
-    // }
-
     for (const auto& gameObject : toUpdateGameObjects)
     {
         gameObject->DrawGizmos();

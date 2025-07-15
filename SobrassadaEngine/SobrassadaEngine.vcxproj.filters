@@ -609,6 +609,9 @@
     <ClCompile Include="Scene\Components\ShaderScriptComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderScriptModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1198,6 +1201,9 @@
     </ClInclude>
     <ClInclude Include="Scene\Components\ShaderScriptComponent.h">
       <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderScriptModule.h">
+      <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

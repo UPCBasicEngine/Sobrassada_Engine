@@ -74,6 +74,17 @@ typedef Delegate<void, GameObject*, ColliderLayer> CollisionExitDelegate;
 constexpr const char* ResourceTypeStrings[] = {"Material", "Texture"};
 constexpr int ResourceTypeStringsSize       = sizeof(ResourceTypeStrings) / sizeof(char*);
 
+enum class ShaderScriptType : int
+{
+    NONE = -1,
+    GEOMERTY_PASS,
+    TRANSPARENT_PASS,
+    POST_LIGHTING_PASS
+};
+
+constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting"};
+constexpr int ShaderScriptTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
+
 class ComponentUtils
 {
   public:

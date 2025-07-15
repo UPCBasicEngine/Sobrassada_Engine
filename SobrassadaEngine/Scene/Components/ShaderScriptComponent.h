@@ -19,12 +19,13 @@ class ShaderScriptComponent : public Component
 
     void Update(float deltaTime) override;
     void Render(float deltaTime, CameraComponent* camera) override;
+    void RenderScript(float deltaTime, CameraComponent* camera, int scriptIndex);
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
     void InitScriptInstances();
 
-    bool CreateScript(const std::string& scriptType);
+    bool CreateScript(const std::string& scriptType, ShaderScriptType renderType = ShaderScriptType::NONE);
     void DeleteScript(const int index);
     void DeleteAllScripts();
 
@@ -55,4 +56,5 @@ class ShaderScriptComponent : public Component
     std::vector<bool> scriptInitialized;
     std::vector<bool> scriptWasEnabledLastFrame;
     std::vector<int> scriptTypes;
+    std::vector<ShaderScriptType> shaderScriptRenderType;
 };

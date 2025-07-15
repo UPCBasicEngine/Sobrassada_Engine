@@ -28,7 +28,12 @@ ShaderScriptComponent::ShaderScriptComponent(const rapidjson::Value& initialStat
             if (scriptData.HasMember("Script Name"))
             {
                 const char* name = scriptData["Script Name"].GetString();
-                if (CreateScript(name))
+
+                ShaderScriptType scriptRenderType = ShaderScriptType::NONE;
+                if (scriptData.HasMember("RenderType"))
+                    scriptRenderType = ShaderScriptType(scriptData["RenderType"].GetInt());
+
+                if (CreateScript(name, scriptRenderType))
                 {
                     scriptInstances.back()->Load(scriptData);
                     if (scriptData.HasMember("Enabled")) scriptEnabled.back() = scriptData["Enabled"].GetBool();
@@ -53,8 +58,13 @@ void ShaderScriptComponent::Load(const rapidjson::Value& initialState)
         {
             if (scriptData.HasMember("Script Name"))
             {
-                const char* name = scriptData["Script Name"].GetString();
-                if (CreateScript(name))
+                const char* name                  = scriptData["Script Name"].GetString();
+
+                ShaderScriptType scriptRenderType = ShaderScriptType::NONE;
+                if (scriptData.HasMember("RenderType"))
+                    scriptRenderType = ShaderScriptType(scriptData["RenderType"].GetInt());
+
+                if (CreateScript(name, scriptRenderType))
                 {
                     if (scriptData.HasMember("Enabled")) scriptEnabled.back() = scriptData["Enabled"].GetBool();
                     if (scriptData.HasMember("WasEnabled"))
@@ -77,6 +87,7 @@ void ShaderScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Docum
         scriptData.AddMember("Script Name", rapidjson::Value(scriptNames[i].c_str(), allocator), allocator);
         scriptData.AddMember("Enabled", scriptEnabled[i], allocator);
         scriptData.AddMember("WasEnabled", scriptWasEnabledLastFrame[i], allocator);
+        scriptData.AddMember("RenderType", (int)shaderScriptRenderType[i], allocator);
         GLOG("Script Name: %s", scriptNames[i].c_str());
 
         const auto& fields = scriptInstances[i]->GetFields();
@@ -158,13 +169,13 @@ void ShaderScriptComponent::Clone(const Component* other)
     if (other->GetType() == ComponentType::COMPONENT_SHADER_SCRIPT)
     {
         const ShaderScriptComponent* otherScript = static_cast<const ShaderScriptComponent*>(other);
-        enabled                            = otherScript->enabled;
-        wasEnabled                         = otherScript->wasEnabled;
+        enabled                                  = otherScript->enabled;
+        wasEnabled                               = otherScript->wasEnabled;
         DeleteAllScripts();
 
         for (size_t i = 0; i < otherScript->scriptNames.size(); ++i)
         {
-            CreateScript(otherScript->scriptNames[i]);
+            CreateScript(otherScript->scriptNames[i], otherScript->shaderScriptRenderType[i]);
             const auto& fields = otherScript->scriptInstances[i]->GetFields();
             scriptInstances.back()->CloneFields(fields);
         }
@@ -215,6 +226,24 @@ void ShaderScriptComponent::Render(float deltaTime, CameraComponent* camera)
 
             scriptInstances[i]->Render(gameTime, camera);
         }
+    }
+}
+
+void ShaderScriptComponent::RenderScript(float deltaTime, CameraComponent* camera, int scriptIndex)
+{
+    if (!enabled || scriptIndex >= scriptInstances.size()) return;
+
+    float gameTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f; // seconds
+
+    if (scriptEnabled[scriptIndex])
+    {
+        if (!scriptInitialized[scriptIndex])
+        {
+            scriptInstances[scriptIndex]->Init();
+            scriptInitialized[scriptIndex] = true;
+        }
+
+        scriptInstances[scriptIndex]->Render(gameTime, camera);
     }
 }
 
@@ -279,6 +308,21 @@ void ShaderScriptComponent::RenderEditorInspector()
                 scriptEnabled[i] = false;
             }
 
+            char currentSrciptTag[50];
+            snprintf(currentSrciptTag, 50, "Render type##%d", i);
+            if (ImGui::BeginCombo(currentSrciptTag, ShaderScriptTypeStrings[(int)shaderScriptRenderType[i]]))
+            {
+                for (int stringIndex = 0; stringIndex < ShaderScriptTypeStringsSize; ++stringIndex)
+                {
+                    if (ImGui::Selectable(ShaderScriptTypeStrings[stringIndex]))
+                    {
+                        shaderScriptRenderType[i] = ShaderScriptType(stringIndex);
+                        // CALL FUNCTION TO MODULE TO MODIFY VECTORS
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
             scriptInstances[i]->Inspector();
         }
 
@@ -298,7 +342,7 @@ void ShaderScriptComponent::InitScriptInstances()
     }
 }
 
-bool ShaderScriptComponent::CreateScript(const std::string& scriptType)
+bool ShaderScriptComponent::CreateScript(const std::string& scriptType, ShaderScriptType renderType)
 {
     for (const std::string& name : scriptNames)
     {
@@ -314,6 +358,9 @@ bool ShaderScriptComponent::CreateScript(const std::string& scriptType)
     scriptEnabled.push_back(true);
     scriptInitialized.push_back(false);
     scriptWasEnabledLastFrame.push_back(true);
+
+    if (renderType != ShaderScriptType::NONE) shaderScriptRenderType.push_back(renderType);
+    else shaderScriptRenderType.push_back(ShaderScriptType::GEOMERTY_PASS);
 
     return true;
 }
@@ -331,6 +378,7 @@ void ShaderScriptComponent::DeleteScript(const int index)
     scriptEnabled.erase(scriptEnabled.begin() + index);
     scriptInitialized.erase(scriptInitialized.begin() + index);
     scriptWasEnabledLastFrame.erase(scriptWasEnabledLastFrame.begin() + index);
+    shaderScriptRenderType.erase(shaderScriptRenderType.begin() + index);
 }
 
 void ShaderScriptComponent::DeleteAllScripts()
@@ -347,6 +395,7 @@ void ShaderScriptComponent::DeleteAllScripts()
     scriptEnabled.clear();
     scriptInitialized.clear();
     scriptWasEnabledLastFrame.clear();
+    shaderScriptRenderType.clear();
 }
 
 void ShaderScriptComponent::SetComponentEnabled(bool value)
