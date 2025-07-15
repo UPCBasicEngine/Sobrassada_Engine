@@ -111,7 +111,7 @@ void AnimationComponent::OnPlay(bool isTransition)
                             if (currentAnimResource)
                                 App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 
-                            currentAnimResource = static_cast<ResourceAnimation*>(
+                            currentAnimResource = dynamic_cast<ResourceAnimation*>(
                                 App->GetResourcesModule()->RequestResource(clip.animationResourceUID)
                             );
 
