@@ -7,6 +7,7 @@
 #include "CameraModule.h"
 #include "Component.h"
 #include "ComponentUtils.h"
+#include "Components/ShaderScriptComponent.h"
 #include "DebugDrawModule.h"
 #include "EditorUIModule.h"
 #include "Framebuffer.h"
@@ -35,6 +36,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
+#include "ShaderScriptModule.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
@@ -57,8 +59,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include "Components/ShaderScriptComponent.h"
-#include <unordered_map>
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -71,6 +71,7 @@
 #endif
 
 #include <set>
+#include <unordered_map>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
 {
@@ -375,16 +376,9 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera);
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
+    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
 #endif
-    // THIS RENDER AFFECTS THE SCRIPT RENDER FUNCTION -> HAS TO CHANGE DEPENDING ON COMPONENT SCRIPT
-    for (const auto& gameObject : toUpdateGameObjects)
-    {
-        if (gameObject != nullptr)
-        {
-            gameObject->Render(deltaTime, camera);
-        }
-    }
+    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
 
 #ifndef GAME
     for (const auto& gameObject : toUpdateGameObjects)
@@ -1117,7 +1111,7 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
         if (obj.second->GetName() == name) return obj.second;
     }
 
-    //GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }
 

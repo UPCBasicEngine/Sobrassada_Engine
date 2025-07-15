@@ -7,6 +7,7 @@
 #include <vector>
 
 class ShaderScriptComponent;
+class CameraComponent;
 
 class ShaderScriptModule : public Module
 {
@@ -22,6 +23,11 @@ class ShaderScriptModule : public Module
         ShaderScriptComponent* component, unsigned int scriptIndex, ShaderScriptType previous, ShaderScriptType newType
     );
     void ComponentDeleted(ShaderScriptComponent* component);
+    void ComponentDeletedScript(ShaderScriptComponent* component);
+
+    void RenderGeometryPassShaders(float deltaTime, CameraComponent* camera);
+    void RenderTransparentPassShaders(float deltaTime, CameraComponent* camera);
+    void RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera);
 
   private:
     std::vector<std::pair<ShaderScriptComponent*, unsigned int>> geometryPassComponents;

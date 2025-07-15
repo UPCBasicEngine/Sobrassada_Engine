@@ -379,7 +379,7 @@ void ShaderScriptComponent::DeleteScript(const int index)
 
     if (scriptInstances[index]) App->GetScriptModule()->DestroyScript(scriptInstances[index]);
     
-    App->GetShaderScriptModule()->ComponentDeleted(this);
+    App->GetShaderScriptModule()->ComponentDeletedScript(this);
 
     scriptInstances.erase(scriptInstances.begin() + index);
     scriptNames.erase(scriptNames.begin() + index);

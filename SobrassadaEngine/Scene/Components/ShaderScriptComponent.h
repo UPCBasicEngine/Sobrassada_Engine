@@ -32,6 +32,7 @@ class ShaderScriptComponent : public Component
     void ResetInitializationFlags();
 
     const std::vector<Script*>& GetScriptInstances() const { return scriptInstances; }
+    const std::vector<ShaderScriptType>& GetScriptRenderTypes() const { return shaderScriptRenderType; }
     const std::vector<std::string>& GetAllScriptNames() const { return scriptNames; }
 
     template <typename T> T* GetScriptByType()
