@@ -83,6 +83,12 @@ void Script::Load(const rapidjson::Value& initialState)
                 *(GameObject**)field.data = go;
             }
             break;
+        case InspectorField::FieldType::Resource:
+            if (value.IsUint64())
+            {
+                *(UID*)field.data = value.GetUint64();
+            }
+            break;
         }
     }
 }
@@ -123,12 +129,19 @@ void Script::CloneFields(const std::vector<InspectorField>& otherFields)
             break;
         }
         case InspectorField::FieldType::GameObject:
+        {
             // It just works
             GameObject* uid = *(GameObject**)otherFields[i].data;
             if (uid == 0) return;
             GameObject* go                = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(uid->GetUID());
             *(GameObject**)fields[i].data = go;
             break;
+        }
+        case InspectorField::FieldType::Resource:
+        {
+            *(UID*)fields[i].data = *(UID*)otherFields[i].data;
+            break;
+        }
         }
     }
 }
