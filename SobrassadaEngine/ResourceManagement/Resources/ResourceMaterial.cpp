@@ -69,10 +69,10 @@ bool ResourceMaterial::OnEditorUpdate()
         }
 
         ImGui::Checkbox("Apply wind globally", &globalWindConfig->GetApplyWindGloballyRef());
-        ImGui::SliderFloat3("Wind direction", &globalWindConfig->GetWindDirectionRef()[0], 0.f, 20.f);
-        ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 20.f);
-        ImGui::SliderFloat("Gust frequency (s)", &globalWindConfig->GetGustFrequencyRef(), 0.0f, 100.f);
-        ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), globalWindConfig->GetWindSpeed(), 30.f);
+        ImGui::SliderFloat3("Wind direction", &globalWindConfig->GetWindDirectionRef()[0], 0.f, 360.f);
+        ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 10.f);
+        ImGui::SliderFloat("Gust frequency (1/s)", &globalWindConfig->GetGustFrequencyRef(), .3f, 10.f);
+        ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), 0.0f, 20.f);
         
             
         // TODO Display current wind values and give option to open wind editor   

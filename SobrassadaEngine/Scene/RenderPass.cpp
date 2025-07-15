@@ -25,6 +25,7 @@
 #include "WindConfig.h"
 
 #include <glew.h>
+#include <Math/Quat.h>
 
 RenderPass::RenderPass()
 {
@@ -747,19 +748,21 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             
             batchManager->RenderTransparent(meshesToRender, camera);
 
-            glUseProgram(wPOProgram);
+            //glUseProgram(wPOProgram);
             
-            glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
-            glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
-
-            GLOG("Test: %d", vertexOffsetMeshesToRender.size())
+            //glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
+            //glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+            
             WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
             if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
             {
-                glUniform4f(glGetUniformLocation(wPOProgram, "windBasics"), windConfig->GetWindDirection().x,
-                    windConfig->GetWindDirection().y, windConfig->GetWindDirection().z, 1);
-                glUniform4f(glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
-                    windConfig->GetWindSpeed(), windConfig->GetGustFrequency(), windConfig->GetGustSpeed());
+                const Quat windDirection = Quat::FromEulerXYZ(windConfig->GetWindDirection().x * DEGREE_RAD_CONV,
+                    windConfig->GetWindDirection().y * DEGREE_RAD_CONV, windConfig->GetWindDirection().z * DEGREE_RAD_CONV);
+                glUniform4f(glGetUniformLocation(program, "windDirection"), windDirection.x,
+                    windDirection.y, windDirection.z, windDirection.w);
+                glUniform4f(glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),
+                    windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
+                    windConfig->GetGustSpeed());
             }
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, camera);
 

@@ -39,7 +39,7 @@ private:
     bool applyWindGlobally = false;
     float3 windDirection = float3::zero;
     float windSpeed = 0.f;
-    float gustFrequency = 0.f;
+    float gustFrequency = 1.f;
     float gustSpeed = 0.f;
     
 };
