@@ -73,31 +73,33 @@ void main()
 // windDirection: xyzw: quaternion for the wind direction
 // windParameters: x: currentTime (set to 0 disables the wind), y: wind speed, z: gust frequency, y: gust speed
 
-        if (bool(windParameters.x) && bool(windDirection.x + windDirection.y + windDirection.z))
+        if (bool(windParameters.x))
         {
             //float scaled_time = windParameters.x * windParameters.y;
             //pos.x += sin(pos.x + scaled_time * 1.25 + uv0.y) * (1.0 - uv0.y) * 0.2;
             //pos.z += cos(pos.z + scaled_time * 0.45 + uv0.y) * (1.0 - uv0.y) * 0.15;
-
-            //max(0, sin((windParameters.x * 0.001) / windParameters.z));
 
             float gustStrength = max(0, sin((windParameters.x * 0.001) / windParameters.z));
 
             float combinedWindSpeed = windParameters.y + (gustStrength * windParameters.w);
             float scaledTime = windParameters.x * 0.005 * (log(windParameters.y * 2) + 1);
             float scaledWindSpeed = combinedWindSpeed * 0.02;
-            float uvHeightAdaption = 1; // (1.0 - uv0.y) for using the height of the plant to modify wind effect
+            float uvHeightAdaption = (1.0 - uv0.y); // for using the height of the plant to modify wind effect
 
             float offsetX = scaledWindSpeed * (cos( scaledTime/1.5 ) * uvHeightAdaption) * sin( pos.x );
             float offsetY = 0.25 * sin( 1.5*pos.x + 2.0*pos.z )* uvHeightAdaption;
-            float offsetZ = scaledWindSpeed * (cos( scaledTime/2.0 ) * uvHeightAdaption) * sin( pos.z + 2.0);
+            float offsetZ = 0; //scaledWindSpeed * (cos( scaledTime/2.0 ) * uvHeightAdaption) * sin( pos.z + 2.0);
+
+            //offsetX = sin(pos.x + scaledTime * scaledWindSpeed * 1.25 + uv0.y) * (1.0 - uv0.y) * 0.2;
+            //offsetZ = cos(pos.z + scaledTime * scaledWindSpeed * 0.45 + uv0.y) * (1.0 - uv0.y) * 0.15;
+            //offsetY = 0;
 
             vec3 offset = vec3(offsetX, offsetY, offsetZ);
 
-            //vec3 temp = cross(windDirection.xyz, offset) + windDirection.w * offset;
-            //vec3 rotated = offset + 2.0*cross(windDirection.xyz, temp);
+            vec3 temp = cross(windDirection.xyz, offset) + windDirection.w * offset;
+            vec3 rotated = offset + 2.0*cross(windDirection.xyz, temp);
 
-            pos = pos + offset;
+            pos = pos + rotated;
         }
     }
 

@@ -756,8 +756,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
             if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
             {
-                const Quat windDirection = Quat::FromEulerXYZ(windConfig->GetWindDirection().x * DEGREE_RAD_CONV,
-                    windConfig->GetWindDirection().y * DEGREE_RAD_CONV, windConfig->GetWindDirection().z * DEGREE_RAD_CONV);
+                const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
                 glUniform4f(glGetUniformLocation(program, "windDirection"), windDirection.x,
                     windDirection.y, windDirection.z, windDirection.w);
                 glUniform4f(glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),

@@ -69,7 +69,7 @@ bool ResourceMaterial::OnEditorUpdate()
         }
 
         ImGui::Checkbox("Apply wind globally", &globalWindConfig->GetApplyWindGloballyRef());
-        ImGui::SliderFloat3("Wind direction", &globalWindConfig->GetWindDirectionRef()[0], 0.f, 360.f);
+        ImGui::SliderFloat("Wind direction (Angle around y axis)", &globalWindConfig->GetWindDirectionRef(), 0.f, 360.f);
         ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 10.f);
         ImGui::SliderFloat("Gust frequency (1/s)", &globalWindConfig->GetGustFrequencyRef(), .3f, 10.f);
         ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), 0.0f, 20.f);

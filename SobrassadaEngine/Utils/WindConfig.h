@@ -16,7 +16,7 @@ class WindConfig
 
     bool GetApplyWindGlobally() const { return applyWindGlobally; }
 
-    const float3& GetWindDirection() const { return windDirection; }
+    const float& GetWindDirection() const { return windDirection; }
 
     float GetWindSpeed() const { return windSpeed; }
 
@@ -26,7 +26,7 @@ class WindConfig
 
     bool& GetApplyWindGloballyRef() { return applyWindGlobally; }
 
-    float3& GetWindDirectionRef() { return windDirection; }
+    float& GetWindDirectionRef() { return windDirection; }
 
     float& GetWindSpeedRef() { return windSpeed; }
 
@@ -37,7 +37,7 @@ class WindConfig
 private:
 
     bool applyWindGlobally = false;
-    float3 windDirection = float3::zero;
+    float windDirection = 0.f;
     float windSpeed = 0.f;
     float gustFrequency = 1.f;
     float gustSpeed = 0.f;
