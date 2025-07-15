@@ -10,10 +10,26 @@ ShaderScriptModule::~ShaderScriptModule()
 
 bool ShaderScriptModule::Init()
 {
-    return false;
+    return true;
 }
 
 bool ShaderScriptModule::ShutDown()
 {
-    return false;
+    return true;
+}
+
+void ShaderScriptModule::AddShaderScript(
+    ShaderScriptComponent* component, unsigned int scriptIndex, ShaderScriptType shaderType
+)
+{
+}
+
+void ShaderScriptModule::ShaderScriptTypeChange(
+    ShaderScriptComponent* component, unsigned int scriptIndex, ShaderScriptType previous, ShaderScriptType newType
+)
+{
+}
+
+void ShaderScriptModule::ComponentDeleted(ShaderScriptComponent* component)
+{
 }

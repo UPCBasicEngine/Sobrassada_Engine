@@ -17,6 +17,10 @@ class ShaderScriptModule : public Module
     bool Init() override;
     bool ShutDown() override;
 
+    void AddShaderScript(ShaderScriptComponent* component, unsigned int scriptIndex, ShaderScriptType shaderType);
+    void ShaderScriptTypeChange(
+        ShaderScriptComponent* component, unsigned int scriptIndex, ShaderScriptType previous, ShaderScriptType newType
+    );
     void ComponentDeleted(ShaderScriptComponent* component);
 
   private:

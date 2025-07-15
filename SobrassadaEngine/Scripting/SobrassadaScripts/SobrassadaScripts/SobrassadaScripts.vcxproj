@@ -491,7 +491,7 @@
     <ClInclude Include="PlayerLocationScript.h" />
     <ClInclude Include="PressAnyKeyScript.h" />
     <ClInclude Include="Projectile.h" />
-    <ClInclude Include="RenderTestScript.h" />
+    <ClInclude Include="MovingUVScript.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RotateGameObject.h" />
     <ClInclude Include="Script.h" />
@@ -2070,7 +2070,7 @@
     <ClCompile Include="PlayerLocationScript.cpp" />
     <ClCompile Include="PressAnyKeyScript.cpp" />
     <ClCompile Include="Projectile.cpp" />
-    <ClCompile Include="RenderTestScript.cpp" />
+    <ClCompile Include="MovingUVScript.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />

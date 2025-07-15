@@ -1,34 +1,34 @@
 #include "pch.h"
 
-#include "RenderTestScript.h"
+#include "MovingUVScript.h"
 
 #include "Application.h"
 #include "CameraModule.h"
 #include "Components/CameraComponent.h"
 #include "Components/Standalone/MeshComponent.h"
+#include "GBuffer.h"
 #include "GameObject.h"
 #include "Mesh.h"
+#include "OpenGLModule.h"
 #include "ResourceMaterial.h"
 #include "ResourceMesh.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
-#include "OpenGLModule.h"
-#include "GBuffer.h"
 
 #include "glew.h"
 
-RenderTestScript::~RenderTestScript()
+MovingUVScript::~MovingUVScript()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
 }
 
-bool RenderTestScript::Init()
+bool MovingUVScript::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
-        "./EngineDefaults/Shader/Vertex/TestVertex.glsl", "./EngineDefaults/Shader/Fragment/TestFragment.glsl"
+        "./EngineDefaults/Shader/Custom/Vertex/MovingUVVertex.glsl", "./EngineDefaults/Shader/Custom/Fragment/MovingUVFragment.glsl"
     );
 
     MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
@@ -82,14 +82,14 @@ bool RenderTestScript::Init()
     return true;
 }
 
-void RenderTestScript::Update(float deltaTime)
+void MovingUVScript::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
     uvOffset.x      += newOffset;
     uvOffset.y      += newOffset;
 }
 
-void RenderTestScript::Render(float deltaTime, CameraComponent* cameraComp)
+void MovingUVScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
     if (shaderProgram && indexCount > 0 && texture && gbuffer)
     {

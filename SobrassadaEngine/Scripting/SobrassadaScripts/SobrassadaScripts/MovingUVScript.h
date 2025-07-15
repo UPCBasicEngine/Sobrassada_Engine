@@ -6,11 +6,11 @@
 
 class GBuffer;
 
-class RenderTestScript : public Script
+class MovingUVScript : public Script
 {
   public:
-    RenderTestScript(GameObject* parent) : Script(parent) {};
-    ~RenderTestScript() override;
+    MovingUVScript(GameObject* parent) : Script(parent) {};
+    ~MovingUVScript() override;
 
     bool Init() override;
     void Update(float deltaTime) override;

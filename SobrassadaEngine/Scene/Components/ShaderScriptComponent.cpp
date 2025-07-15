@@ -9,6 +9,7 @@
 #include "SceneModule.h"
 #include "Script.h"
 #include "ScriptModule.h"
+#include "ShaderScriptModule.h"
 
 ShaderScriptComponent::ShaderScriptComponent(UID uid, GameObject* parent)
     : Component(uid, parent, "Shader script", COMPONENT_SHADER_SCRIPT)
@@ -27,7 +28,7 @@ ShaderScriptComponent::ShaderScriptComponent(const rapidjson::Value& initialStat
         {
             if (scriptData.HasMember("Script Name"))
             {
-                const char* name = scriptData["Script Name"].GetString();
+                const char* name                  = scriptData["Script Name"].GetString();
 
                 ShaderScriptType scriptRenderType = ShaderScriptType::NONE;
                 if (scriptData.HasMember("RenderType"))
@@ -312,12 +313,16 @@ void ShaderScriptComponent::RenderEditorInspector()
             snprintf(currentSrciptTag, 50, "Render type##%d", i);
             if (ImGui::BeginCombo(currentSrciptTag, ShaderScriptTypeStrings[(int)shaderScriptRenderType[i]]))
             {
+                ShaderScriptType previous = shaderScriptRenderType[i];
                 for (int stringIndex = 0; stringIndex < ShaderScriptTypeStringsSize; ++stringIndex)
                 {
                     if (ImGui::Selectable(ShaderScriptTypeStrings[stringIndex]))
                     {
                         shaderScriptRenderType[i] = ShaderScriptType(stringIndex);
                         // CALL FUNCTION TO MODULE TO MODIFY VECTORS
+                        App->GetShaderScriptModule()->ShaderScriptTypeChange(
+                            this, i, previous, shaderScriptRenderType[i]
+                        );
                     }
                 }
                 ImGui::EndCombo();
@@ -361,6 +366,9 @@ bool ShaderScriptComponent::CreateScript(const std::string& scriptType, ShaderSc
 
     if (renderType != ShaderScriptType::NONE) shaderScriptRenderType.push_back(renderType);
     else shaderScriptRenderType.push_back(ShaderScriptType::GEOMERTY_PASS);
+    
+    unsigned int scriptIndex = (unsigned int)scriptInstances.size() - 1;
+    App->GetShaderScriptModule()->AddShaderScript(this, scriptIndex, shaderScriptRenderType[scriptIndex]);
 
     return true;
 }
@@ -370,6 +378,8 @@ void ShaderScriptComponent::DeleteScript(const int index)
     if (index >= scriptInstances.size()) return;
 
     if (scriptInstances[index]) App->GetScriptModule()->DestroyScript(scriptInstances[index]);
+    
+    App->GetShaderScriptModule()->ComponentDeleted(this);
 
     scriptInstances.erase(scriptInstances.begin() + index);
     scriptNames.erase(scriptNames.begin() + index);
@@ -379,6 +389,7 @@ void ShaderScriptComponent::DeleteScript(const int index)
     scriptInitialized.erase(scriptInitialized.begin() + index);
     scriptWasEnabledLastFrame.erase(scriptWasEnabledLastFrame.begin() + index);
     shaderScriptRenderType.erase(shaderScriptRenderType.begin() + index);
+
 }
 
 void ShaderScriptComponent::DeleteAllScripts()
@@ -396,6 +407,8 @@ void ShaderScriptComponent::DeleteAllScripts()
     scriptInitialized.clear();
     scriptWasEnabledLastFrame.clear();
     shaderScriptRenderType.clear();
+
+    App->GetShaderScriptModule()->ComponentDeleted(this);
 }
 
 void ShaderScriptComponent::SetComponentEnabled(bool value)

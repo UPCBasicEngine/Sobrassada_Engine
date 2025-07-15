@@ -31,7 +31,7 @@
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 
-#include "RenderTestScript.h"
+#include "MovingUVScript.h"
 
 #include <string>
 
@@ -73,7 +73,7 @@ constexpr const char* scripts[] = {
     "PlayerLocationScript",
 };
 
-constexpr const char* shaderScripts[] = {"RenderTestScript"};
+constexpr const char* shaderScripts[] = {"MovingUV"};
 
 Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -122,7 +122,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
 
     /* Render Scripts */
-    if (scriptType == "RenderTestScript") return new RenderTestScript(parent);
+    if (scriptType == "MovingUV") return new MovingUVScript(parent);
 
     return nullptr;
 }

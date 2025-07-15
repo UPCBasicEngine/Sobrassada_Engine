@@ -28,6 +28,9 @@
     <Filter Include="Environment\Traps">
       <UniqueIdentifier>{542608f8-4ab9-4512-8882-308a6eaeec76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ShaderScripts">
+      <UniqueIdentifier>{d1d723a4-b324-40db-b30d-8664c18d659a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
@@ -136,7 +139,9 @@
     <ClInclude Include="PlayerLocationScript.h">
       <Filter>Environment</Filter>
     </ClInclude>
-    <ClInclude Include="RenderTestScript.h" />
+    <ClInclude Include="MovingUVScript.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -814,7 +819,9 @@
     <ClCompile Include="PlayerLocationScript.cpp">
       <Filter>Environment</Filter>
     </ClCompile>
-    <ClCompile Include="RenderTestScript.cpp" />
+    <ClCompile Include="MovingUVScript.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SobrassadaScripts.rc" />
