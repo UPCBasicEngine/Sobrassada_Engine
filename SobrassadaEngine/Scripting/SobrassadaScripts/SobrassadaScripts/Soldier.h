@@ -11,7 +11,8 @@ enum class SoldierStates
     SEARCH,
     PATROL,
     CHASE,
-    BASIC_ATTACK
+    BASIC_ATTACK,
+    DEATH
 };
 
 class Soldier : public Character
@@ -58,4 +59,5 @@ class Soldier : public Character
     const char* currentAttackTrigger = nullptr;
     float originalAttackDuration     = 0.0f;
     float originalAttackHitboxDelay  = 0.0f;
+    float deathTimer                 = 0.0f;
 };

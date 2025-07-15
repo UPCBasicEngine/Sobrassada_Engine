@@ -50,7 +50,13 @@ bool Soldier::Init()
 
 void Soldier::Update(float deltaTime)
 {
-    if (agentAI == nullptr) return;
+    if (currentState == SoldierStates::DEATH)
+    {
+        deathTimer += deltaTime;
+        if (deathTimer > 3.0f) parent->SetEnabled(false);
+    }
+
+    if (currentState == SoldierStates::DEATH || agentAI == nullptr) return;
 
     if (isKnockback)
     {
@@ -100,7 +106,11 @@ void Soldier::OnDeath()
 {
     // TODO: include death sound for the character
     // TODO: animation and particles
-    parent->SetEnabled(false);
+    isAttacking = false;
+    if (animComponent) animComponent->UseTrigger("death");
+    deathTimer  = 0.0f;
+    agentAI->PauseMovement();
+    currentState = SoldierStates::DEATH;
 }
 
 void Soldier::OnDamageTaken(int amount)

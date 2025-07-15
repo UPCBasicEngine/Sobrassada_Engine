@@ -89,13 +89,13 @@ void LightsConfig::InitSkybox()
     // default skybox texture
     if (skyboxID == 0) LoadSkyboxTexture(App->GetLibraryModule()->GetTextureUID("cubemap_2"));
 
-    cubemapIrradiance = CubeMapToTexture(irradianceMapResolution, irradianceMapResolution);
-    irradianceHandle  = glGetTextureHandleARB(cubemapIrradiance);
-    glMakeTextureHandleResidentARB(irradianceHandle);
+    //cubemapIrradiance = CubeMapToTexture(irradianceMapResolution, irradianceMapResolution);
+    //irradianceHandle  = glGetTextureHandleARB(cubemapIrradiance);
+    //glMakeTextureHandleResidentARB(irradianceHandle);
 
-    prefilteredEnvironmentMap = PreFilteredEnvironmentMapGeneration(prefilteredMapResolution, prefilteredMapResolution);
-    prefilteredEnvironmentMapHandle = glGetTextureHandleARB(prefilteredEnvironmentMap);
-    glMakeTextureHandleResidentARB(prefilteredEnvironmentMapHandle);
+    //prefilteredEnvironmentMap = PreFilteredEnvironmentMapGeneration(prefilteredMapResolution, prefilteredMapResolution);
+    //prefilteredEnvironmentMapHandle = glGetTextureHandleARB(prefilteredEnvironmentMap);
+    //glMakeTextureHandleResidentARB(prefilteredEnvironmentMapHandle);
 
     environmentBRDF       = EnvironmentBRDFGeneration(environmentBRDFResolution, environmentBRDFResolution);
     environmentBRDFHandle = glGetTextureHandleARB(environmentBRDF);
