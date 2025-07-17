@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "MovingUVScript.h"
+#include "MovingUVPostScript.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -18,17 +18,18 @@
 
 #include "glew.h"
 
-MovingUVScript::~MovingUVScript()
+MovingUVPostScript::~MovingUVPostScript()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
 }
 
-bool MovingUVScript::Init()
+bool MovingUVPostScript::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
-        "./EngineDefaults/Shader/Custom/Vertex/MovingUVVertex.glsl", "./EngineDefaults/Shader/Custom/Fragment/MovingUVFragment.glsl"
+        "./EngineDefaults/Shader/Custom/Vertex/MovingUV_PostL_Vertex.glsl",
+        "./EngineDefaults/Shader/Custom/Fragment/MovingUV_PostL_Fragment.glsl"
     );
 
     MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
@@ -75,23 +76,21 @@ bool MovingUVScript::Init()
         {
             texture = rmat->GetDiffuseColorID();
         }
-
-        gbuffer = AppEngine->GetOpenGLModule()->GetGBuffer();
     }
 
     return true;
 }
 
-void MovingUVScript::Update(float deltaTime)
+void MovingUVPostScript::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
     uvOffset.x      += newOffset;
     uvOffset.y      += newOffset;
 }
 
-void MovingUVScript::Render(float deltaTime, CameraComponent* cameraComp)
+void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && texture && gbuffer)
+    if (shaderProgram && indexCount > 0 && texture)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 

@@ -378,7 +378,9 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
 #endif
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
     App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
+    glPopDebugGroup();
 
 #ifndef GAME
     for (const auto& gameObject : toUpdateGameObjects)

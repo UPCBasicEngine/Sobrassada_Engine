@@ -1,6 +1,12 @@
 #include "ShaderScriptModule.h"
 
+#include "Application.h"
+#include "OpenGLModule.h"
 #include "Scene/Components/ShaderScriptComponent.h"
+#include "Gbuffer.h"
+#include "Framebuffer.h"
+
+#include "glew.h"
 
 ShaderScriptModule::ShaderScriptModule()
 {
@@ -175,14 +181,31 @@ void ShaderScriptModule::ComponentDeletedScript(ShaderScriptComponent* component
 
 void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraComponent* camera)
 {
+    GBuffer* gbuffer = App->GetOpenGLModule()->GetGBuffer();
+
+    if (!gbuffer) return;
+
+    gbuffer->Bind();
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+
+    glDisable(GL_BLEND);
+
     for (auto& shaderPair : geometryPassComponents)
     {
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
+
+    glEnable(GL_BLEND);
+
+    gbuffer->Unbind();
 }
 
 void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraComponent* camera)
 {
+    Framebuffer* framebuffer = App->GetOpenGLModule()->GetFramebuffer();
+
     for (auto& shaderPair : transparentComponents)
     {
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);

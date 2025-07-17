@@ -4,13 +4,11 @@
 
 #include "Math/float2.h"
 
-class GBuffer;
-
-class MovingUVScript : public Script
+class MovingUVPostScript : public Script
 {
   public:
-    MovingUVScript(GameObject* parent) : Script(parent) {};
-    ~MovingUVScript() override;
+    MovingUVPostScript(GameObject* parent) : Script(parent) {};
+    ~MovingUVPostScript() override;
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -29,6 +27,4 @@ class MovingUVScript : public Script
 
     float animationSpeed       = 0.1f;
     float2 uvOffset            = float2::zero;
-
-    GBuffer* gbuffer           = nullptr;
 };

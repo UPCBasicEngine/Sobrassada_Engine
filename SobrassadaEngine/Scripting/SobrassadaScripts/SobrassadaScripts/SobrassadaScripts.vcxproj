@@ -483,6 +483,7 @@
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
+    <ClInclude Include="MovingUVLight.h" />
     <ClInclude Include="Mushroom.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
@@ -491,7 +492,7 @@
     <ClInclude Include="PlayerLocationScript.h" />
     <ClInclude Include="PressAnyKeyScript.h" />
     <ClInclude Include="Projectile.h" />
-    <ClInclude Include="MovingUVScript.h" />
+    <ClInclude Include="MovingUVPostScript.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RotateGameObject.h" />
     <ClInclude Include="Script.h" />
@@ -2049,6 +2050,7 @@
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
+    <ClCompile Include="MovingUVLight.cpp" />
     <ClCompile Include="Mushroom.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
@@ -2070,7 +2072,7 @@
     <ClCompile Include="PlayerLocationScript.cpp" />
     <ClCompile Include="PressAnyKeyScript.cpp" />
     <ClCompile Include="Projectile.cpp" />
-    <ClCompile Include="MovingUVScript.cpp" />
+    <ClCompile Include="MovingUVPostScript.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
