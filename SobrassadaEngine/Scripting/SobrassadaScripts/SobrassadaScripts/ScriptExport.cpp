@@ -31,6 +31,7 @@
 #include "GameOverScript.h"
 #include "PlayerLocationScript.h"
 #include "Mirage.h"
+#include "BossMirage.h"
 
 #include <string>
 
@@ -70,7 +71,8 @@ constexpr const char* scripts[] = {
     "EnemySpawnerScript",
     "GameOverScript",
     "PlayerLocationScript",
-    "Mirage"
+    "Mirage",
+    "BossMirage"
 };
 
 Application* AppEngine = nullptr;
@@ -121,6 +123,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
 
     /*Boss*/
     if (scriptType == "Mirage") return new Mirage(parent);
+    if (scriptType == "BossMirage") return new BossMirage(parent);
 
     return nullptr;
 }

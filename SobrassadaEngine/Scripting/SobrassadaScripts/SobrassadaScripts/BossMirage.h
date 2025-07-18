@@ -2,14 +2,11 @@
 
 #include "Script.h"
 
-class Mirage;
-
 struct AttackSequence
 {
-    std::vector<Mirage*> mirageZones;
+    std::vector<GameObject*> mirageObjects;
     float delayBetweenZones = 1.0f;
 };
-
 
 struct SequenceTrigger
 {
@@ -19,11 +16,12 @@ struct SequenceTrigger
 
 class BossMirage : public Script
 {
+  public:
     BossMirage(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
 
-
   private:
-    int currentPhase = 0;
+    int currentSequence = 1;
+    std::vector<AttackSequence> sequences;
 };
