@@ -364,7 +364,7 @@ void RenderPass::ShadowMapPassRender(
     float distMax = S / (T + maxDepth);
 
     // GLOG("Final reduction size: %d, %d", currentWidth, currentHeight);
-    //GLOG("%f, %f", distMin, distMax);
+    // GLOG("%f, %f", distMin, distMax);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(distMin) : camera->SetNear(distMin);
     camera == nullptr ? App->GetCameraModule()->SetFar(distMax) : camera->SetFar(distMax);
@@ -431,7 +431,8 @@ void RenderPass::ShadowMapPassRender(
     for (const auto& gameObject : shadowObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 && mesh->GetProduceShadows())
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 &&
+            mesh->GetProduceShadows())
             meshesToRender.push_back(mesh);
     }
 
@@ -497,7 +498,7 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 
     for (const auto& [uid, decals] : groupedDecals)
     {
-        
+
         const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
         glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
 
@@ -633,6 +634,9 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->emissiveTexture);
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 

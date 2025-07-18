@@ -8,6 +8,7 @@ layout(location = 0)out vec4 gDiffuse;
 layout(location = 1)out vec4 gSpecular;
 layout(location = 2)out vec4 gPosition;
 layout(location = 3)out vec4 gNormal;
+layout(location = 4)out vec4 gEmissive;
 
 in vec3 pos;
 in vec2 uv0;
@@ -78,4 +79,5 @@ void main()
         N = normalize(final_normal);
     }
     gNormal = vec4(N,0);
+    gEmissive = vec4(pow(texture(sampler2D(mat.emmisiveTex), uv0), vec4(2.2f)));
 }

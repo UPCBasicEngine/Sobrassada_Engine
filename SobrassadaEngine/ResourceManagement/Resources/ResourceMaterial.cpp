@@ -189,6 +189,38 @@ bool ResourceMaterial::OnEditorUpdate()
         }*/
     }
 
+    if (emmisiveTexture.textureID != 0)
+    {
+        ImGui::Text("Emissive Texture");
+        ImGui::Image((ImTextureID)(intptr_t)emmisiveTexture.textureID, ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", emmisiveTexture.width, emmisiveTexture.height);
+        }
+        // TODO: commented all select buttons until save data to meta is implemented
+        /*ImGui::SameLine();
+        if (ImGui::Button("Select Emissive Texture"))
+        {
+            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+        }
+
+        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+        {
+            UID handle = ChangeTexture(
+                App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                    CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+                ),
+                emmisiveTexture, material.emmisiveTex
+            );
+
+            if (handle != NULL)
+            {
+                material.emmisiveTex = handle;
+                updated              = true;
+            }
+        }*/
+    }
+
     if (updated) SaveToMeta();
     return updated;
 }

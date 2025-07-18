@@ -251,6 +251,10 @@ void main()
 		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0);
     }
 
+    const vec4 emissive = vec4(pow(texture(sampler2D(mat.emmisiveTex), uv0), vec4(2.2f)));
+
+    hdr += emissive.rgb;
+
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));
     if (isWireframe)
