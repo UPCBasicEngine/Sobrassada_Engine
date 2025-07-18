@@ -373,9 +373,37 @@ void ResourceMaterial::LoadMaterialData(Material mat)
         hasNormal            = true;
     }
 
+    ResourceTexture* occTexture = TextureImporter::LoadTexture(mat.GetOcclusionTexture());
+    if (occTexture != nullptr)
+    {
+        // GLOG("%s has normal", normTexture->GetName().c_str());
+        occlusionTexture.textureID = occTexture->GetTextureID();
+
+        material.occlusionTex      = glGetTextureHandleARB(occTexture->GetTextureID());
+        glMakeTextureHandleResidentARB(material.occlusionTex);
+
+        occlusionTexture.width  = occTexture->GetTextureWidth();
+        occlusionTexture.height = occTexture->GetTextureHeight();
+    }
+
+    ResourceTexture* emmTexture = TextureImporter::LoadTexture(mat.GetEmissiveTexture());
+    if (emmTexture != nullptr)
+    {
+        // GLOG("%s has normal", normTexture->GetName().c_str());
+        emmisiveTexture.textureID = emmTexture->GetTextureID();
+
+        material.emmisiveTex      = glGetTextureHandleARB(emmTexture->GetTextureID());
+        glMakeTextureHandleResidentARB(material.occlusionTex);
+
+        emmisiveTexture.width  = emmTexture->GetTextureWidth();
+        emmisiveTexture.height = emmTexture->GetTextureHeight();
+    }
+
     delete diffTexture;
     delete metallicRoughnessTexture;
     delete normTexture;
+    delete occTexture;
+    delete emmTexture;
 }
 
 void ResourceMaterial::FreeMaterials() const
@@ -402,5 +430,17 @@ void ResourceMaterial::FreeMaterials() const
     {
         glMakeTextureHandleNonResidentARB(material.normalTex);
         glDeleteTextures(1, &normalTexture.textureID);
+    }
+
+    if (occlusionTexture.textureID != 0)
+    {
+        glMakeTextureHandleNonResidentARB(material.occlusionTex);
+        glDeleteTextures(1, &occlusionTexture.textureID);
+    }
+
+    if (emmisiveTexture.textureID != 0)
+    {
+        glMakeTextureHandleNonResidentARB(material.emmisiveTex);
+        glDeleteTextures(1, &emmisiveTexture.textureID);
     }
 }

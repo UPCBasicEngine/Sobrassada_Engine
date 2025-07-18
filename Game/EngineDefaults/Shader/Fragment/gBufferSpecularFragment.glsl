@@ -33,6 +33,8 @@ struct Material
     int hasSpecular;
     int hasMetallic;
     uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    uvec2 padding;
 };
 
 readonly layout(std430, binding = 11) buffer Materials {
