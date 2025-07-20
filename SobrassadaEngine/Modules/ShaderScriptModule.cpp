@@ -1,10 +1,10 @@
 #include "ShaderScriptModule.h"
 
 #include "Application.h"
+#include "Framebuffer.h"
+#include "Gbuffer.h"
 #include "OpenGLModule.h"
 #include "Scene/Components/ShaderScriptComponent.h"
-#include "Gbuffer.h"
-#include "Framebuffer.h"
 
 #include "glew.h"
 
@@ -206,10 +206,25 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
 {
     Framebuffer* framebuffer = App->GetOpenGLModule()->GetFramebuffer();
 
+#ifndef GAME
+    framebuffer->Bind();
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_CULL_FACE);
+    glDepthMask(GL_FALSE);
+
     for (auto& shaderPair : transparentComponents)
     {
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
 }
 
 void ShaderScriptModule::RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera)

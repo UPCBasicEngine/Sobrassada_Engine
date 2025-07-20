@@ -33,6 +33,7 @@
 
 #include "MovingUVPostScript.h"
 #include "MovingUVLight.h"
+#include "MovingUVTransparent.h"
 
 #include <string>
 
@@ -74,7 +75,7 @@ constexpr const char* scripts[] = {
     "PlayerLocationScript",
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight"};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
 
 Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -125,6 +126,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
+    if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
 
     return nullptr;
 }

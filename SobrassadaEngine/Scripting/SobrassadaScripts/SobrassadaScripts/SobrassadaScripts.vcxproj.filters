@@ -145,6 +145,9 @@
     <ClInclude Include="MovingUVLight.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="MovingUVTransparent.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -826,6 +829,9 @@
       <Filter>ShaderScripts</Filter>
     </ClCompile>
     <ClCompile Include="MovingUVLight.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="MovingUVTransparent.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
