@@ -34,6 +34,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     currentHealth = 3; // mainChar starts low hp
 
     // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
+    fields.push_back({"Step time", InspectorField::FieldType::Float, &stepTime, 0.0f, 1.0f});
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
@@ -264,7 +265,10 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL)
         Move();
 
     // When finished animation, go back to idle state
@@ -572,6 +576,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
     if (state == CharacterStates::IDLE) idleTimer += deltaTime;
+    if (state == CharacterStates::RUN) runTimer += deltaTime;
 
     if (state == CharacterStates::DASH) isInvulnerable = true;
 
@@ -634,7 +639,7 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
+    //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
     animComponent->OnResume();
     aimTimer   = 0.0f;
 
@@ -671,6 +676,9 @@ void CuChulainn::Dash()
     LookAtLeftStick();
     character->StartDash();
     isDashing = true;
+
+    //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
     if (dashDecal)
@@ -695,8 +703,10 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay && attackTimer < attackHitboxDelay + attackHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+                 attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
+            //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HIT);
             weaponCollider->SetEnabled(true);
         }
         else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
@@ -712,11 +722,13 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay && ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateAnimationDelay &&
+                 ultimateTimer < ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
+        else if (ultimateObject->IsEnabled() &&
+                 ultimateTimer >= ultimateHitboxDelay + ultimateHitboxDuration + ultimateAnimationDelay)
         {
             ultimateObject->SetEnabled(false);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
@@ -732,7 +744,8 @@ void CuChulainn::PerformAttack()
         {
             chargedAttackCollider->SetEnabled(true);
         }
-        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
+        else if (chargedAttackCollider->IsEnabled() &&
+                 chargedAttackTimer >= chargedAttackHitboxDelay + chargedAttackHitboxDuration)
         {
             chargedAttackCollider->SetEnabled(false);
         }
@@ -814,8 +827,20 @@ void CuChulainn::Move()
     character->EnableMovement(true);
     if (character->GetSpeed() > 0.5f)
     {
-        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("Walk");
-        state = CharacterStates::RUN;
+        if (state != CharacterStates::RUN)
+        {
+            state    = CharacterStates::RUN;
+            runTimer = 0.0f;
+            if (animComponent) animComponent->UseTrigger("Walk");
+        }
+
+        if (runTimer > stepTime && audio)
+        {
+            // TODO: The steps have to be a unique event per material, randomized in wwise (search how to do that)
+            // Also cast a ray to see the material below (probably through tags, maybe colliders)
+            audio->EmitEvent(AK::EVENTS::PLAY_SFX_STEPS_WOOD_01);
+            runTimer = 0.0f;
+        }
     }
     else
     {
@@ -918,7 +943,8 @@ void CuChulainn::UpdateDashCooldownUI()
 
 void CuChulainn::UpdateUltimateCooldownUI()
 {
-    if (ultimateImageComponent) ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? ultimateEmptyImage : ultimateFillImage);
+    if (ultimateImageComponent)
+        ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? ultimateEmptyImage : ultimateFillImage);
 }
 void CuChulainn::ChargeAttack()
 {

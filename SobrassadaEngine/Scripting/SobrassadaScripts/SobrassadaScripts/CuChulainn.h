@@ -168,6 +168,8 @@ class CuChulainn : public Character
 
     bool godMode                           = false;
     float idleTimer                        = 0.0f;
+    float runTimer                         = 0.0f;
+    float stepTime                         = 0.37f;
 
     int mushrooms                          = 0;
     int mushroomHeal                       = 2;
