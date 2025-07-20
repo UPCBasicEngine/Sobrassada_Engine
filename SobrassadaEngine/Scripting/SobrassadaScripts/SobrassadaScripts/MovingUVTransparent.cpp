@@ -11,11 +11,13 @@
 #include "Mesh.h"
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
+#include "CameraModule.h"
 #include "ResourceMesh.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
 
+#include "Math/float3.h"
 #include "glew.h"
 
 MovingUVTransparent::~MovingUVTransparent()
@@ -135,6 +137,12 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glUniform1f(7, roughnessFactor);
         glUniform1f(8, metallicFactor);
+
+        float3 cameraPos = float3::zero;
+        if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
+        else cameraPos = cameraComp->GetCameraPosition();
+
+        glUniform3fv(9, 1, &cameraPos[0]);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseTexture);
