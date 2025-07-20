@@ -79,6 +79,6 @@ void main()
     
     gNormal = vec4(N,0);
 
-    if (mat.emmisiveTex.r != 0 || mat.emmisiveTex.g != 0) gEmissive = vec4(pow(texture(sampler2D(mat.emmisiveTex), uv0), vec4(2.2f)));
-    else gEmissive = vec4(0);
+    vec3 emissiveColor = pow(texture(sampler2D(mat.emmisiveTex), uv0).rgb, vec3(2.2f));
+    gEmissive = vec4(emissiveColor, 1.0);
 }

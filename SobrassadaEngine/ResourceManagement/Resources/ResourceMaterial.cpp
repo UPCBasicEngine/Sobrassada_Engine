@@ -425,7 +425,7 @@ void ResourceMaterial::LoadMaterialData(Material mat)
         emmisiveTexture.textureID = emmTexture->GetTextureID();
 
         material.emmisiveTex      = glGetTextureHandleARB(emmTexture->GetTextureID());
-        glMakeTextureHandleResidentARB(material.occlusionTex);
+        glMakeTextureHandleResidentARB(material.emmisiveTex);
 
         emmisiveTexture.width  = emmTexture->GetTextureWidth();
         emmisiveTexture.height = emmTexture->GetTextureHeight();
