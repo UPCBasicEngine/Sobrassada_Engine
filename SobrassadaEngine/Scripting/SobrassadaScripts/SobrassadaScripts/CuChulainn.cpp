@@ -10,6 +10,7 @@
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "Projectile.h"
+#include "RaycastController.h"
 #include "ResourceStateMachine.h"
 #include "Scene.h"
 #include "SceneModule.h"
@@ -225,6 +226,8 @@ void CuChulainn::OnDamageTaken(int amount)
 {
     UpdateHealthBarUI();
     if (camera) camera->StartShake(0.2f, 0.2f);
+
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
 
     if (state == CharacterStates::CHARGING)
     {
@@ -639,7 +642,7 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+    // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
     animComponent->OnResume();
     aimTimer   = 0.0f;
 
@@ -677,7 +680,7 @@ void CuChulainn::Dash()
     character->StartDash();
     isDashing = true;
 
-    //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
 
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
@@ -706,7 +709,6 @@ void CuChulainn::PerformAttack()
         else if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
                  attackTimer < attackHitboxDelay + attackHitboxDuration)
         {
-            //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HIT);
             weaponCollider->SetEnabled(true);
         }
         else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
@@ -764,6 +766,7 @@ void CuChulainn::Attack(float deltaTime)
         camera->EnableAimOffset(false);
     }
 
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
@@ -792,11 +795,12 @@ void CuChulainn::UltimateAttack()
     }
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
-    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     ultimateTimer   = 0.0f;
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
 
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
     if (animComponent) animComponent->UseTrigger("Ultimate");
 }
 
@@ -836,9 +840,24 @@ void CuChulainn::Move()
 
         if (runTimer > stepTime && audio)
         {
-            // TODO: The steps have to be a unique event per material, randomized in wwise (search how to do that)
-            // Also cast a ray to see the material below (probably through tags, maybe colliders)
-            audio->EmitEvent(AK::EVENTS::PLAY_SFX_STEPS_WOOD_01);
+            // TODO: Cast a ray to see the material below (probably through tags, maybe colliders)
+            LineSegment ray(
+                parent->GetGlobalTransform().TranslatePart(),
+                parent->GetGlobalTransform().TranslatePart() - float3::unitY
+            );
+            GameObject* object =
+                RaycastController::GetRayIntersectionTrees(ray, AppEngine->GetSceneModule()->GetScene()->GetOctree());
+
+            if (object)
+            {
+                // Default to grass steps
+                AkUniqueID eventId = AK::EVENTS::PLAY_SFX_STEPS_GRASS;
+                if (object->HasTag(HashString("Wood"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_WOOD;
+                else if (object->HasTag(HashString("Rock"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_ROCK;
+
+                if (audio) audio->EmitEvent(eventId);
+            }
+
             runTimer = 0.0f;
         }
     }
