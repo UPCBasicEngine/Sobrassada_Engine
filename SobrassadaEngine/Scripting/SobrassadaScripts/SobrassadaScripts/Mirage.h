@@ -4,6 +4,12 @@
 
 class CubeColliderComponent;
 
+enum class MirageState
+{
+    Sleeping,
+    Warning,
+    Damaging
+};
 class Mirage : public Script
 {
   public:
@@ -12,11 +18,13 @@ class Mirage : public Script
     void Update(float deltaTime) override;
 
   protected:
+    MirageState state      = MirageState::Sleeping;
     UID mirageWarningImage = 0;
     UID mirageDamageImage  = 0;
 
     int damage             = 0;
     float warningDelay     = 0.f;
     float damageDuration   = 0.f;
+    float stateTimer       = 0.0f;
     int weightOrder        = 0;
 };

@@ -14,7 +14,7 @@ struct SequenceTrigger
     AttackSequence sequence;
 };
 
-enum MirageState
+enum class SequenceState
 {
     Idle,
     PlayingSequence,
@@ -32,8 +32,8 @@ class BossMirage : public Script
     int currentSequence = 1;
     AttackSequence sequence1, sequence2, sequence3;
 
-    MirageState state               = MirageState::Idle;
-    AttackSequence* sequence = nullptr;
-    size_t currentMirageIndex       = 0;
-    float timeSinceLastActivation   = 0.0f;
+    SequenceState state           = SequenceState::Idle;
+    AttackSequence* sequence      = nullptr;
+    size_t currentMirageIndex     = 0;
+    float timeSinceLastActivation = 0.0f;
 };

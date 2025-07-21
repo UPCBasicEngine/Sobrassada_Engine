@@ -62,7 +62,7 @@ bool BossMirage::Init()
 void BossMirage::Update(float deltaTime)
 {
     {
-        if (state == MirageState::PlayingSequence && sequence)
+        if (state == SequenceState::PlayingSequence && sequence)
         {
             timeSinceLastActivation += deltaTime;
 
@@ -79,7 +79,7 @@ void BossMirage::Update(float deltaTime)
             else
             {
                 // Sequence complete
-                state = MirageState::Idle;
+                state = SequenceState::Idle;
             }
         }
     }
@@ -104,5 +104,5 @@ void BossMirage::StartSequence(int sequenceNum)
 
     currentMirageIndex      = 0;
     timeSinceLastActivation = 0.0f;
-    state                   = MirageState::PlayingSequence;
+    state                   = SequenceState::PlayingSequence;
 }
