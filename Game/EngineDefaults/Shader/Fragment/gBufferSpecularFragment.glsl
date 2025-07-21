@@ -8,6 +8,7 @@ layout(location = 0)out vec4 gDiffuse;
 layout(location = 1)out vec4 gSpecular;
 layout(location = 2)out vec4 gPosition;
 layout(location = 3)out vec4 gNormal;
+layout(location = 4)out vec4 gEmissive;
 
 in vec3 pos;
 in vec2 uv0;
@@ -33,6 +34,8 @@ struct Material
     int hasSpecular;
     int hasMetallic;
     uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    uvec2 padding;
 };
 
 readonly layout(std430, binding = 11) buffer Materials {
@@ -75,4 +78,7 @@ void main()
     }
     
     gNormal = vec4(N,0);
+
+    vec3 emissiveColor = pow(texture(sampler2D(mat.emmisiveTex), uv0).rgb, vec3(2.2f));
+    gEmissive = vec4(emissiveColor, 1.0);
 }

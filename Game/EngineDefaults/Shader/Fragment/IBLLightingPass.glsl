@@ -9,6 +9,8 @@ layout(binding = 1) uniform sampler2D gSpecular;
 layout(binding = 2) uniform sampler2D gPosition;
 layout(binding = 3) uniform sampler2D gNormal;
 layout(binding = 4) uniform sampler2D shadowMap;
+layout(binding = 5) uniform sampler2D gEmissive;
+
 uniform mat4 viewLight;
 uniform mat4 projLight;
 uniform vec3 shadowTint;
@@ -259,6 +261,10 @@ void main()
     {
 		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0, pos, true);
     }
+
+    const vec3 emissive = texture(gEmissive, uv0).rgb;
+
+    hdr += emissive;
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));

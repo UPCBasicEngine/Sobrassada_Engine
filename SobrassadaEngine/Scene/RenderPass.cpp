@@ -693,6 +693,9 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
 
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->emissiveTexture);
+
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
     unsigned int lightingPassProgram = App->GetShaderModule()->GetLightingPassProgram();
