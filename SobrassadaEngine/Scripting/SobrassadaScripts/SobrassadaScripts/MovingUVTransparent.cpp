@@ -8,10 +8,10 @@
 #include "Components/Standalone/MeshComponent.h"
 #include "GBuffer.h"
 #include "GameObject.h"
+#include "LightsConfig.h"
 #include "Mesh.h"
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
-#include "CameraModule.h"
 #include "ResourceMesh.h"
 #include "Scene.h"
 #include "SceneModule.h"
@@ -25,6 +25,7 @@ MovingUVTransparent::~MovingUVTransparent()
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
+    glDeleteBuffers(1, &materialBuffer);
 }
 
 bool MovingUVTransparent::Init()
@@ -45,6 +46,7 @@ bool MovingUVTransparent::Init()
             glGenVertexArrays(1, &vao);
             glGenBuffers(1, &vbo);
             glGenBuffers(1, &ebo);
+            glGenBuffers(1, &materialBuffer);
 
             glBindVertexArray(vao);
 
@@ -80,16 +82,17 @@ bool MovingUVTransparent::Init()
         const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
         if (rmat)
         {
-            diffuseTexture  = rmat->GetDiffuseColorID();
-            metallicTexture = rmat->GetMetallicTextureID();
-            specularTexture = rmat->GetSpecularTextureID();
-            normalTexture   = rmat->GetNormalTextureID();
-
             matIsMetallic   = rmat->GetIsMetallicRoughness();
 
             roughnessFactor = rmat->GetMaterial().roughnessFactor;
             metallicFactor  = rmat->GetMaterial().metallicFactor;
             isAlphaDiscard  = rmat->IsAlphaDiscard();
+
+            MaterialGPU mat = rmat->GetMaterial();
+
+            glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
+            
         }
 
         meshComp->SetEnabled(false);
@@ -124,6 +127,8 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
             viewMatrix       = AppEngine->GetCameraModule()->GetViewMatrix();
         }
 
+        AppEngine->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
+
         glUseProgram(shaderProgram);
 
         glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
@@ -138,23 +143,13 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glUniform1f(7, roughnessFactor);
         glUniform1f(8, metallicFactor);
 
+        glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
+
         float3 cameraPos = float3::zero;
         if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
         else cameraPos = cameraComp->GetCameraPosition();
 
         glUniform3fv(9, 1, &cameraPos[0]);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, metallicTexture);
-
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, specularTexture);
-
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, normalTexture);
 
         glBindVertexArray(vao);
 

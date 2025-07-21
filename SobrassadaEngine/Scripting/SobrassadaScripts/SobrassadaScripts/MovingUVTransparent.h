@@ -20,11 +20,7 @@ class MovingUVTransparent : public Script
     unsigned int vao             = 0;
     unsigned int vbo             = 0;
     unsigned int ebo             = 0;
-
-    unsigned int diffuseTexture  = 0;
-    unsigned int metallicTexture = 0;
-    unsigned int specularTexture = 0;
-    unsigned int normalTexture   = 0;
+    unsigned int materialBuffer  = 0;
 
     bool matIsMetallic           = false;
     bool isAlphaDiscard          = false;
