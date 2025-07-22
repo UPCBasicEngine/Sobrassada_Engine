@@ -1,12 +1,17 @@
 #include "ShaderScriptModule.h"
 
 #include "Application.h"
+#include "CameraComponent.h"
+#include "CameraModule.h"
 #include "Framebuffer.h"
 #include "Gbuffer.h"
 #include "OpenGLModule.h"
+#include "GameObject.h"
 #include "Scene/Components/ShaderScriptComponent.h"
 
 #include "glew.h"
+
+#include <algorithm>
 
 ShaderScriptModule::ShaderScriptModule()
 {
@@ -204,6 +209,39 @@ void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraCompon
 
 void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraComponent* camera)
 {
+    // SORT MESHES TO CAMERA DISTABCE
+    std::sort(
+        transparentComponents.begin(), transparentComponents.end(),
+        [camera](
+            const std::pair<ShaderScriptComponent*, unsigned int>& a,
+            const std::pair<ShaderScriptComponent*, unsigned int>& b
+        )
+        {
+            if (camera != nullptr)
+            {
+                float distanceA =
+                    (a.first->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition())
+                        .LengthSq();
+                float distanceB =
+                    (b.first->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition())
+                        .LengthSq();
+
+                return distanceA > distanceB;
+            }
+            else
+            {
+                float distanceA =
+                    (a.first->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
+                        .LengthSq();
+                float distanceB =
+                    (b.first->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
+                        .LengthSq();
+
+                return distanceA > distanceB;
+            }
+        }
+    );
+
     Framebuffer* framebuffer = App->GetOpenGLModule()->GetFramebuffer();
 
 #ifndef GAME

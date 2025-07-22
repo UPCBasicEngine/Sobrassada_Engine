@@ -110,7 +110,7 @@ void MovingUVTransparent::Update(float deltaTime)
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && diffuseTexture)
+    if (shaderProgram && indexCount > 0)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
