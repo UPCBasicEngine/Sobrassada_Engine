@@ -43,6 +43,10 @@ struct FireballTrapSettings
     float miniScale         = 0.6f; // size of minis vs big ball
     float miniBurnRadius    = 1.f;  
     float miniBurnDuration  = 2.f;
+
+    // Arc
+    float maxLaunchRadius   = 6.f;
+    float launchYawDeg      = 0.f;
 };
 
 class FireballTrap : public Script
@@ -119,4 +123,8 @@ class FireballTrap : public Script
 
     float4x4 baseLocal;                      // original local transform
     float3 impactOffsetLocal = float3::zero; // XY of impact relative to base
+
+    float3 fireVelocity      = float3::zero;
+    float3 shadowBaseScale   = float3::one; 
+
 };
