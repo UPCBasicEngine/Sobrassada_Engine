@@ -82,10 +82,6 @@ bool MovingUVTransparent::Init()
         const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
         if (rmat)
         {
-            matIsMetallic   = rmat->GetIsMetallicRoughness();
-
-            roughnessFactor = rmat->GetMaterial().roughnessFactor;
-            metallicFactor  = rmat->GetMaterial().metallicFactor;
             isAlphaDiscard  = rmat->IsAlphaDiscard();
 
             MaterialGPU mat = rmat->GetMaterial();
@@ -138,10 +134,7 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glUniform1i(4, 0);
         glUniform1i(5, isAlphaDiscard);
-        glUniform1i(6, matIsMetallic);
 
-        glUniform1f(7, roughnessFactor);
-        glUniform1f(8, metallicFactor);
 
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
 
@@ -149,7 +142,7 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
         else cameraPos = cameraComp->GetCameraPosition();
 
-        glUniform3fv(9, 1, &cameraPos[0]);
+        glUniform3fv(6, 1, &cameraPos[0]);
 
         glBindVertexArray(vao);
 

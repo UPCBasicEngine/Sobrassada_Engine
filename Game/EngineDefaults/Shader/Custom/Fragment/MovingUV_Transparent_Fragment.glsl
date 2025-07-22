@@ -5,12 +5,8 @@
 #define PI 3.14159265359
 
 layout(location=4) uniform bool isWireframe;
-layout(location=5) uniform bool isAlpha;
-layout(location=6) uniform bool isMetallic;
-
-layout(location=7) uniform float metallicFactor;
-layout(location=8) uniform float roughnessFactor;
-layout(location=9) uniform vec3 cameraPos;
+layout(location=5) uniform bool isAlphaDiscard;
+layout(location=6) uniform vec3 cameraPos;
 
 in vec3 pos;
 in vec2 uv;
@@ -47,8 +43,8 @@ layout(std140, binding = 6) uniform Material
     vec3 specColor;
     float shininess;
     bool shininessInAlpha;
-    float metallicFactorMAT;
-    float roughnessFactorMAT;
+    float metallicFactor;
+    float roughnessFactor;
     uvec2 diffuseTex;
     uvec2 specularTex;
     uvec2 metallicTex;
@@ -194,7 +190,7 @@ void main()
     else metallicRoughnessTexColor = vec4(1);
     const float alpha = texColor.a * diffColor.a;
 
-    if (!isWireframe)
+    if (!isWireframe && isAlphaDiscard)
     {
         if(alpha < 0.1) discard;
     }

@@ -29,7 +29,7 @@ bool MovingUVLight::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
         "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
-        "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Light_Fragment.glsl"
+        "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Gbuffer_Fragment.glsl"
     );
 
     MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
@@ -78,16 +78,19 @@ bool MovingUVLight::Init()
         const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
         if (rmat)
         {
-            diffuseTexture  = rmat->GetDiffuseColorID();
-            metallicTexture = rmat->GetMetallicTextureID();
-            specularTexture = rmat->GetSpecularTextureID();
-            normalTexture   = rmat->GetNormalTextureID();
+            isAlphaDiscard = rmat->IsAlphaDiscard();
+
+            diffuseTex     = rmat->GetDiffuseColorID();
+            
+            if (rmat->GetIsMetallicRoughness()) specularMetallicTex = rmat->GetMetallicTextureID();
+            else specularMetallicTex = rmat->GetSpecularTextureID();
 
             matIsMetallic   = rmat->GetIsMetallicRoughness();
 
             roughnessFactor = rmat->GetMaterial().roughnessFactor;
             metallicFactor  = rmat->GetMaterial().metallicFactor;
-            isAlphaDiscard  = rmat->IsAlphaDiscard();
+
+            normalTex = rmat->GetNormalTextureID();
         }
 
         meshComp->SetEnabled(false);
@@ -105,7 +108,7 @@ void MovingUVLight::Update(float deltaTime)
 
 void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && diffuseTexture)
+    if (shaderProgram && indexCount > 0)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
@@ -137,16 +140,13 @@ void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)
         glUniform1f(8, metallicFactor);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+        glBindTexture(GL_TEXTURE_2D, diffuseTex);
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, metallicTexture);
+        glBindTexture(GL_TEXTURE_2D, specularMetallicTex);
 
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, specularTexture);
-
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, normalTexture);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, specularMetallicTex);
 
         glBindVertexArray(vao);
 

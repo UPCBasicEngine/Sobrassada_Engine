@@ -252,17 +252,13 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_CULL_FACE);
-    glDepthMask(GL_FALSE);
 
     for (auto& shaderPair : transparentComponents)
     {
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 
-    glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
 }
 
 void ShaderScriptModule::RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera)

@@ -1,16 +1,16 @@
 #version 460
 
+#extension GL_ARB_bindless_texture : require
+
 layout(binding=0) uniform sampler2D diffuseTex;
-layout(binding=1) uniform sampler2D metallicTex;
-layout(binding=2) uniform sampler2D specularTex;
-layout(binding=3) uniform sampler2D normalTex;
+layout(binding=1) uniform sampler2D specularMetallicTex;
+layout(binding=2) uniform sampler2D normalTex;
 
 layout(location=4) uniform bool isWireframe;
-layout(location=5) uniform bool isAlpha;
+layout(location=5) uniform bool isAlphaDiscard;
 layout(location=6) uniform bool isMetallic;
-
-layout(location=7) uniform float metallicFactor;
-layout(location=8) uniform float roughnessFactor;
+layout(location=7) uniform float roughnessFactor;
+layout(location=8) uniform float metallicFactor;
 
 layout(location = 0)out vec4 gDiffuse;
 layout(location = 1)out vec4 gSpecular;
@@ -32,25 +32,27 @@ mat3 CreateTBN()
 
 void main()
 {
-    vec4 texColor = texture2D(diffuseTex, uv);
+    vec4 texColor = pow(texture2D(diffuseTex, uv), vec4(2.2f));
 
     const float alpha = texColor.a;
 
-    if (!isWireframe && isAlpha)
+    if (!isWireframe && isAlphaDiscard)
     {
         if(alpha < 0.1) discard;
     }
 
-    gDiffuse = vec4(pow(texColor.rgb, vec3(2.2f)), alpha);
+    gDiffuse = vec4(texColor.rgb, alpha);
 
-    if(isMetallic) gSpecular = vec4(pow(texture2D(metallicTex, uv), vec4(2.2)));
-    else gSpecular = vec4(pow(texture2D(specularTex, uv), vec4(2.2)));
-
+    gSpecular = pow(texture2D(specularMetallicTex, uv), vec4(2.2));
+    
     gPosition = vec4(pos, 1);
     gNormal = vec4(normal, 0);
     
-    gSpecular.y = roughnessFactor * gSpecular.y;
-    gSpecular.z = metallicFactor * gSpecular.z;
+    if(isMetallic)
+    {
+        gSpecular.y = roughnessFactor * gSpecular.y;
+        gSpecular.z = metallicFactor * gSpecular.z;
+    }
     
     vec3 N = normalize(normal);
     vec3 normalTexSample = texture2D(normalTex, uv).xyz;

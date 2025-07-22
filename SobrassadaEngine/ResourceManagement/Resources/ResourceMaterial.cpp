@@ -54,7 +54,6 @@ bool ResourceMaterial::OnEditorUpdate()
             ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
         }
 
-        
         ImGui::SameLine();
 
         // TODO: commented all select buttons until save data to meta is implemented

@@ -22,10 +22,7 @@ class MovingUVTransparent : public Script
     unsigned int ebo             = 0;
     unsigned int materialBuffer  = 0;
 
-    bool matIsMetallic           = false;
     bool isAlphaDiscard          = false;
-    float roughnessFactor        = 1.f;
-    float metallicFactor         = 1.f;
 
     unsigned int indexCount      = 0;
 
