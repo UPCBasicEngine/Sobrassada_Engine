@@ -606,6 +606,9 @@
     <ClCompile Include="Scene\RenderPass.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\VideoComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1194,6 +1197,9 @@
       <Filter>External\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="resourceIcon.h" />
+    <ClInclude Include="Scene\Components\Standalone\VideoComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

@@ -441,6 +441,7 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\VideoComponent.cpp" />
     <ClCompile Include="Utils\Particles\AreaAddon.cpp" />
     <ClCompile Include="Utils\Particles\ColorAddon.cpp" />
     <ClCompile Include="Utils\Particles\SpritesheetAddon.cpp" />
@@ -704,6 +705,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
     <ClInclude Include="resourceIcon.h" />
+    <ClInclude Include="Scene\Components\Standalone\VideoComponent.h" />
     <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
     <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />

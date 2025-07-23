@@ -27,6 +27,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/VideoComponent.h"
 
 #include <cstdint>
 
@@ -211,7 +212,14 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         std::get<TrailComponent*>(componentTuple) = component;
         component->Init();
 		break;
-	}   
+	}  
+    case COMPONENT_VIDEO:
+    {
+        VideoComponent* component                 = new VideoComponent(uid, parent);
+        std::get<VideoComponent*>(componentTuple) = component;
+        component->Init();
+		break;
+	} 
     default:
         return;
     }
@@ -370,6 +378,12 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
         {
             ParticleSystemComponent* component                 = new ParticleSystemComponent(initialState, parent);
             std::get<ParticleSystemComponent*>(componentTuple) = component;
+            break;
+        }
+        case COMPONENT_VIDEO:
+        {
+            VideoComponent* component                 = new VideoComponent(initialState, parent);
+            std::get<VideoComponent*>(componentTuple) = component;
             break;
         }
         default:
