@@ -21,7 +21,7 @@
 MovingUVLight::MovingUVLight(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
-    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection});
+    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
 }
 
 MovingUVLight::~MovingUVLight()
@@ -96,7 +96,7 @@ bool MovingUVLight::Init()
             roughnessFactor = rmat->GetMaterial().roughnessFactor;
             metallicFactor  = rmat->GetMaterial().metallicFactor;
 
-            normalTex       = rmat->GetNormalTextureID();
+            emissiveTex     = rmat->GetEmissiveTextureID();
         }
 
         meshComp->SetEnabled(false);
@@ -152,7 +152,10 @@ void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)
         glBindTexture(GL_TEXTURE_2D, specularMetallicTex);
 
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, specularMetallicTex);
+        glBindTexture(GL_TEXTURE_2D, normalTex);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, emissiveTex);
 
         glBindVertexArray(vao);
 

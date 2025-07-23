@@ -66,6 +66,8 @@ class ResourceMaterial : public Resource
     unsigned int GetSpecularTextureID() const { return specularTexture.textureID; }
     unsigned int GetMetallicTextureID() const { return metallicTexture.textureID; }
     unsigned int GetNormalTextureID() const { return normalTexture.textureID; }
+    unsigned int GetEmissiveTextureID() const { return emmisiveTexture.textureID; }
+    unsigned int GetOcclusionTextureID() const { return occlusionTexture.textureID; }
 
   private:
     TextureInfo diffuseTexture;

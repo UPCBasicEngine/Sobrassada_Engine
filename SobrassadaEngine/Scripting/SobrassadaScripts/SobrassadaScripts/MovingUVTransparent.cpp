@@ -23,7 +23,7 @@
 MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
-    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection});
+    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
 }
 
 MovingUVTransparent::~MovingUVTransparent()

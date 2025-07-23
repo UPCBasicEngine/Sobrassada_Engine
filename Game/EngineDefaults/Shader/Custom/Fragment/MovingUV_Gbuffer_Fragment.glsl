@@ -5,6 +5,7 @@
 layout(binding=0) uniform sampler2D diffuseTex;
 layout(binding=1) uniform sampler2D specularMetallicTex;
 layout(binding=2) uniform sampler2D normalTex;
+layout(binding=3) uniform sampler2D emmisiveTex;
 
 layout(location=4) uniform bool isWireframe;
 layout(location=5) uniform bool isAlphaDiscard;
@@ -16,6 +17,7 @@ layout(location = 0)out vec4 gDiffuse;
 layout(location = 1)out vec4 gSpecular;
 layout(location = 2)out vec4 gPosition;
 layout(location = 3)out vec4 gNormal;
+layout(location = 4)out vec4 gEmissive;
 
 in vec3 pos;
 in vec2 uv;
@@ -64,5 +66,8 @@ void main()
         const vec3 final_normal = space * texNormal;
         N = normalize(final_normal);
     }
-    gNormal = vec4(N,0);;
+    gNormal = vec4(N,0);
+
+    vec3 emissiveColor = pow(texture2D(emmisiveTex, uv).rgb, vec3(2.2f));
+    gEmissive = vec4(emissiveColor, 1.0);
 }

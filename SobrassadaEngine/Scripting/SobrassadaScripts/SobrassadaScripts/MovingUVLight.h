@@ -24,6 +24,7 @@ class MovingUVLight : public Script
     unsigned int diffuseTex          = 0;
     unsigned int specularMetallicTex = 0;
     unsigned int normalTex           = 0;
+    unsigned int emissiveTex         = 0;
 
     bool isAlphaDiscard              = false;
     bool matIsMetallic               = false;

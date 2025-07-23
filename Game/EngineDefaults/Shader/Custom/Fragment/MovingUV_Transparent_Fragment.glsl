@@ -39,7 +39,7 @@ struct SpotLight
 // UBOs
 layout(std140, binding = 6) uniform Material
 {
-	vec4 diffColor;
+    vec4 diffColor;
     vec3 specColor;
     float shininess;
     bool shininessInAlpha;
@@ -52,6 +52,8 @@ layout(std140, binding = 6) uniform Material
     int hasSpecular;
     int hasMetallic;
     uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    uvec2 padding;
 };
 
 layout(std140, binding = 2) uniform Ambient
@@ -241,6 +243,10 @@ void main()
     {
 		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0);
     }
+
+    const vec4 emissive = vec4(pow(texture(sampler2D(emmisiveTex), uv), vec4(2.2f)));
+
+    hdr += emissive.rgb;
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));
