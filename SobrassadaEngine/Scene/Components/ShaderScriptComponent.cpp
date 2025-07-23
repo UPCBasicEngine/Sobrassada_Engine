@@ -435,3 +435,15 @@ void ShaderScriptComponent::SetComponentEnabled(bool value)
         }
     }
 }
+
+void ShaderScriptComponent::SetScriptEnabled(const std::string& scriptName, bool value)
+{
+    for (int i = 0; i < scriptNames.size(); ++i)
+    {
+        if (scriptName == scriptNames[i])
+        {
+            scriptEnabled[i] = value;
+            return;
+        }
+    }
+}

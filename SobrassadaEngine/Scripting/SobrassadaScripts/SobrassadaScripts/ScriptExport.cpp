@@ -28,11 +28,12 @@
 #include "Soldier.h"
 #include "SpawnPoint.h"
 #include "SpawnUI.h"
+#include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 
-#include "MovingUVPostScript.h"
 #include "MovingUVLight.h"
+#include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
 
 #include <string>
@@ -73,6 +74,7 @@ constexpr const char* scripts[] = {
     "EnemySpawnerScript",
     "GameOverScript",
     "PlayerLocationScript",
+    "SwitchScriptTest",
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
@@ -122,6 +124,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
+    if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
 
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);

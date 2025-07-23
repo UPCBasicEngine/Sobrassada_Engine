@@ -47,6 +47,7 @@ class ShaderScriptComponent : public Component
     }
 
     void SetComponentEnabled(bool value);
+    void SOBRASADA_API_ENGINE SetScriptEnabled(const std::string& scriptName, bool value);
 
   private:
     bool startScript = false;

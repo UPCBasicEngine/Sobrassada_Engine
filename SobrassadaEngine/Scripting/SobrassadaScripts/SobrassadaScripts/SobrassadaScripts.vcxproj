@@ -499,6 +499,7 @@
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="SpawnUI.h" />
+    <ClInclude Include="SwitchScriptTest.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="Wwise_IDs.h" />
@@ -2080,6 +2081,7 @@
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />
     <ClCompile Include="SpawnUI.cpp" />
+    <ClCompile Include="SwitchScriptTest.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="TileFloatScript.cpp" />

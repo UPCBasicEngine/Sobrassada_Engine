@@ -148,6 +148,7 @@
     <ClInclude Include="MovingUVTransparent.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="SwitchScriptTest.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -834,6 +835,7 @@
     <ClCompile Include="MovingUVTransparent.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
+    <ClCompile Include="SwitchScriptTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SobrassadaScripts.rc" />
