@@ -7,7 +7,7 @@
 class MovingUVLight : public Script
 {
   public:
-    MovingUVLight(GameObject* parent) : Script(parent) {};
+    MovingUVLight(GameObject* parent);
     ~MovingUVLight() override;
 
     bool Init() override;
@@ -35,4 +35,5 @@ class MovingUVLight : public Script
 
     float animationSpeed             = 0.1f;
     float2 uvOffset                  = float2::zero;
+    float2 uvOffsetDirection         = float2::one;
 };

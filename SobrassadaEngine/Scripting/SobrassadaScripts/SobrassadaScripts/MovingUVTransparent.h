@@ -7,7 +7,7 @@
 class MovingUVTransparent : public Script
 {
   public:
-    MovingUVTransparent(GameObject* parent) : Script(parent) {};
+    MovingUVTransparent(GameObject* parent);
     ~MovingUVTransparent() override;
 
     bool Init() override;
@@ -28,4 +28,5 @@ class MovingUVTransparent : public Script
 
     float animationSpeed         = 0.1f;
     float2 uvOffset              = float2::zero;
+    float2 uvOffsetDirection     = float2::one;
 };

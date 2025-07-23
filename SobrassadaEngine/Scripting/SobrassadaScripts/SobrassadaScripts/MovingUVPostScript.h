@@ -7,7 +7,7 @@
 class MovingUVPostScript : public Script
 {
   public:
-    MovingUVPostScript(GameObject* parent) : Script(parent) {};
+    MovingUVPostScript(GameObject* parent);
     ~MovingUVPostScript() override;
 
     bool Init() override;
@@ -27,4 +27,5 @@ class MovingUVPostScript : public Script
 
     float animationSpeed       = 0.1f;
     float2 uvOffset            = float2::zero;
+    float2 uvOffsetDirection   = float2::one;
 };

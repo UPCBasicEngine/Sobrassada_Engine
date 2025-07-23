@@ -20,6 +20,12 @@
 #include "Math/float3.h"
 #include "glew.h"
 
+MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection});
+}
+
 MovingUVTransparent::~MovingUVTransparent()
 {
     glDeleteVertexArrays(1, &vao);
@@ -100,8 +106,8 @@ bool MovingUVTransparent::Init()
 void MovingUVTransparent::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset;
-    uvOffset.y      += newOffset;
+    uvOffset.x      += newOffset * uvOffsetDirection.x;
+    uvOffset.y      += newOffset * uvOffsetDirection.y;
 }
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)

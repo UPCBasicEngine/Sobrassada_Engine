@@ -18,6 +18,12 @@
 
 #include "glew.h"
 
+MovingUVLight::MovingUVLight(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection});
+}
+
 MovingUVLight::~MovingUVLight()
 {
     glDeleteVertexArrays(1, &vao);
@@ -81,7 +87,7 @@ bool MovingUVLight::Init()
             isAlphaDiscard = rmat->IsAlphaDiscard();
 
             diffuseTex     = rmat->GetDiffuseColorID();
-            
+
             if (rmat->GetIsMetallicRoughness()) specularMetallicTex = rmat->GetMetallicTextureID();
             else specularMetallicTex = rmat->GetSpecularTextureID();
 
@@ -90,7 +96,7 @@ bool MovingUVLight::Init()
             roughnessFactor = rmat->GetMaterial().roughnessFactor;
             metallicFactor  = rmat->GetMaterial().metallicFactor;
 
-            normalTex = rmat->GetNormalTextureID();
+            normalTex       = rmat->GetNormalTextureID();
         }
 
         meshComp->SetEnabled(false);
@@ -102,8 +108,8 @@ bool MovingUVLight::Init()
 void MovingUVLight::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset;
-    uvOffset.y      += newOffset;
+    uvOffset.x      += newOffset * uvOffsetDirection.x;
+    uvOffset.y      += newOffset * uvOffsetDirection.y;
 }
 
 void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)

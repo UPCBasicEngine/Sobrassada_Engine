@@ -18,6 +18,12 @@
 
 #include "glew.h"
 
+MovingUVPostScript::MovingUVPostScript(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection});
+}
+
 MovingUVPostScript::~MovingUVPostScript()
 {
     glDeleteVertexArrays(1, &vao);
@@ -84,8 +90,8 @@ bool MovingUVPostScript::Init()
 void MovingUVPostScript::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset;
-    uvOffset.y      += newOffset;
+    uvOffset.x      += newOffset * uvOffsetDirection.x;
+    uvOffset.y      += newOffset * uvOffsetDirection.y;
 }
 
 void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
