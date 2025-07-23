@@ -37,7 +37,8 @@ bool ShaderModule::Init()
 
     shadowMapProgram            = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
 
-    computeShadowDepthProgram   = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
+    shadowDepthProgram          = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
+    tileShadingProgram          = CreateComputeProgram(TILE_SHADING_COMPUTE_SHADER_PATH);
 
     spritesheetProgram          = CreateShaderProgram(SPRITESHEET_VERTEX_SHADER_PATH, SPRITESHEET_FRAGMENT_SHADER_PATH);
     particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
@@ -61,7 +62,8 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(decalProgram);
     glDeleteProgram(trailProgram);
     glDeleteProgram(shadowMapProgram);
-    glDeleteProgram(computeShadowDepthProgram);
+    glDeleteProgram(shadowDepthProgram);
+    glDeleteProgram(tileShadingProgram);
     glDeleteProgram(spritesheetProgram);
     glDeleteProgram(particleSystemProgram);
 

@@ -33,7 +33,8 @@ class ShaderModule : public Module
     int GetTrailProgram() const { return trailProgram; }
     int GetDecalProgram() const { return decalProgram; }
     int GetShadowMapPassProgram() const { return shadowMapProgram; }
-    int GetComputeShadowDepthProgram() const { return computeShadowDepthProgram; }
+    int GetComputeShadowDepthProgram() const { return shadowDepthProgram; }
+    int GetTileShadingProgram() const { return tileShadingProgram; }
     int GetSpritesheetProgram() const { return spritesheetProgram; }
     int GetParticleSystemProgram() const { return particleSystemProgram; }
 
@@ -66,7 +67,8 @@ class ShaderModule : public Module
     int decalProgram                   = -1;
     int shadowMapProgram               = -1;
 
-    int computeShadowDepthProgram      = -1;
+    int shadowDepthProgram             = -1;
+    int tileShadingProgram             = -1;
 
     int spritesheetProgram             = -1;
     int particleSystemProgram          = -1;
