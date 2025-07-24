@@ -7,15 +7,23 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 
+
 BossMirage::BossMirage(GameObject* parent) : Script(parent)
 {
     std::vector<Mirage*> foundMirages;
-    fields.push_back({"Current Sequence", InspectorField::FieldType::Int, &currentSequence, 1, 4});
+    fields.push_back({"Current Sequence", InspectorField::FieldType::Int, &currentSequence, 1, 3});
+    fields.push_back(
+        {"Trigger Sequence",
+         [this](Script* self)
+         {
+             GLOG("Triggering sequence: %d", currentSequence);
+             StartSequence(currentSequence);
+         }}
+    );
     fields.push_back(
         {"Gather Sequence",
          [this](Script* self)
          {
-
              AttackSequence* targetSequence = nullptr;
 
              switch (currentSequence)
@@ -37,7 +45,7 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
 
              const auto& gameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
 
-             //searches for active objects with a mirage script, adds gameobject references to activate them later
+             // searches for active objects with a mirage script, adds gameobject references to activate them later
              for (const auto& [uid, gameObject] : gameObjects)
              {
                  if (!gameObject || !gameObject->IsEnabled()) continue;
@@ -49,7 +57,6 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
                      targetSequence->mirageObjects.push_back(gameObject);
                  }
              }
-
          }}
     );
 }
