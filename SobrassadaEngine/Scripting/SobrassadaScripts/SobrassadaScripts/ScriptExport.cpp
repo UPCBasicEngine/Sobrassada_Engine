@@ -30,6 +30,7 @@
 #include "EnemySpawnerScript.h"
 #include "GameOverScript.h"
 #include "PlayerLocationScript.h"
+#include "Destructible.h"
 
 #include <string>
 
@@ -68,7 +69,8 @@ constexpr const char* scripts[] = {
     "Mushroom",
     "EnemySpawnerScript",
     "GameOverScript",
-    "PlayerLocationScript"
+    "PlayerLocationScript",
+    "Destructible"
 };
 
 Application* AppEngine = nullptr;
@@ -109,6 +111,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "EnemySpawnerScript") return new EnemySpawnerScript(parent);
     if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
+    if (scriptType == "Destructible") return new Destructible(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
