@@ -13,7 +13,7 @@ class GBuffer
     void Resize(int width, int height);
     void CheckResize();
     unsigned int GetDepthTexture() const { return depthTexture; }
-
+    
     int GetScreenWidth() const { return screenWidth; }
     int GetScreenHeight() const { return screenHeight; }
 
@@ -27,13 +27,12 @@ class GBuffer
     unsigned int specularTexture = 0;
     unsigned int positionTexture = 0;
     unsigned int normalTexture   = 0;
-    unsigned int emissiveTexture = 0;
 
   private:
     bool shouldResize                = false;
     int screenHeight                 = 0;
     int screenWidth                  = 0;
 
-    unsigned int depthTexture        = 0;
-    unsigned int colorAttachments[5] = {};
+    unsigned int depthTexture    = 0;
+    unsigned int colorAttachments[4] = {};
 };

@@ -171,17 +171,6 @@ UID MaterialImporter::ImportMaterial(
         }
     }
 
-    if (gltfMaterial.emissiveTexture.index >= 0)
-    {
-        int texIndex  = gltfMaterial.emissiveTexture.index;
-
-        UID emissiveUID = HandleTextureImport(path + model.images[model.textures[texIndex].source].uri, targetFilePath);
-        if (emissiveUID != INVALID_UID)
-        {
-            material.SetEmissiveTexture(emissiveUID);
-        }
-    }
-
     material.SetAlphaDiscard(isAlphaDiscard);
     material.SetTransparent(isTransparent);
     material.SetDoubleSide(isDoubleSided);
