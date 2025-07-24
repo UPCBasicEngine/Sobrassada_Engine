@@ -24,6 +24,7 @@ class Material
     const UID GetMetallicRoughnessTexture() const { return metallicRoughnessTexture; }
     const UID GetNormalTexture() const { return normalTexture; }
     const UID GetOcclusionTexture() const { return occlusionTexture; }
+    const UID GetEmissiveTexture() const { return emissiveTexture; }
 
     const bool IsAlphaDiscard() const { return isAlphaDiscard; }
     const bool IsTransparent() const { return isTransparent; }
@@ -44,6 +45,7 @@ class Material
     void SetDiffuseTexture(UID texture) { diffuseTexture = texture; }
     void SetMetallicRoughnessTexture(UID texture) { metallicRoughnessTexture = texture; }
     void SetOcclusionTexture(UID texture) { occlusionTexture = texture; }
+    void SetEmissiveTexture(UID texture) { emissiveTexture = texture; }
 
     void SetTransparent(bool transparent) { isTransparent = transparent; }
     void SetDoubleSide(bool isDoubleSided) { isDoubleSided = isDoubleSided; }
@@ -73,4 +75,6 @@ class Material
     bool isTransparent            = false;
     bool isDoubleSided            = false;
     bool isAlphaDiscard           = false;
+
+    UID emissiveTexture          = INVALID_UID;
 };

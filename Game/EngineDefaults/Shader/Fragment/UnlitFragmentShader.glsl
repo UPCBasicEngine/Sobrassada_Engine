@@ -26,8 +26,11 @@ struct Material
     uvec2 specularTex;
     uvec2 metallicTex;
     uvec2 normalTex;
-    bool hasSpecular;
-    bool hasMetallic;
+    int hasSpecular;
+    int hasMetallic;
+    uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    uvec2 padding;
 };
 
 readonly layout(std430, binding = 11) buffer Materials {
