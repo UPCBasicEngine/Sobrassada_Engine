@@ -15,4 +15,6 @@ class MiniFireball : public Script
 
   private:
     float lifeTimer = 0.f;
+    GameObject* shadow = nullptr;
+    float3 baseScale   = float3::one;
 };

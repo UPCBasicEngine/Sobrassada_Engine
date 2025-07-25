@@ -23,62 +23,61 @@ enum class ACTIVATION_STATE
 struct FireballTrapSettings
 {
     // Activation radius & cooldowns
-    float activationRange   = 10.f; 
-    float minAttackCooldown = 0.5f; 
-    float maxAttackCooldown = 3.f;  
+    float activationRange   = 10.f;
+    float minAttackCooldown = 0.5f;
+    float maxAttackCooldown = 3.f;
 
     // Big fireball physics
-    float fallingHeight     = 20.f;  // spawn Y offset
+    float fallingHeight     = 20.0f; // spawn Y offset
     float gravity           = 9.81f; // drop acceleration
-    float maxFallSpeed      = 20.f;
-    float rotationSpeed     = 90.f;  // deg/s spin while falling
+    float maxFallSpeed      = 20.0f;
+    float rotationSpeed     = 90.0f; // deg/s spin while falling
     int impactDamage        = 1;
-    float bigBurnRadius     = 2.f;  
-    float bigBurnDuration   = 3.f;
+    float bigBurnRadius     = 2.0f;
+    float bigBurnDuration   = 3.0f;
 
     // Mini fireball (division)
-    int splitChildren       = 3;    // 0‑3 children per split
-    float splitSpreadDeg    = 40.f; 
-    int splitDepth          = 1;    
+    int splitChildren       = 3; // 0‑3 children per split
+    float splitSpreadDeg    = 40.f;
+    int splitDepth          = 1;
     float miniScale         = 0.6f; // size of minis vs big ball
-    float miniBurnRadius    = 1.f;  
-    float miniBurnDuration  = 2.f;
+    float miniBurnRadius    = 1.0f;
+    float miniBurnDuration  = 2.0f;
 
     // Arc
     float maxLaunchRadius   = 6.f;
-    float launchYawDeg      = 0.f;
+    float launchYawDeg      = 0.0f;
 };
 
 class FireballTrap : public Script
 {
   public:
-    FireballTrap(GameObject* parent);                  
-    bool Init() override;                              
-    void Update(float deltaTime) override;             
-    int GetDamage() const { return cfg.impactDamage; } 
+    FireballTrap(GameObject* parent);
+    bool Init() override;
+    void Update(float deltaTime) override;
+    int GetDamage() const { return cfg.impactDamage; }
+    void RecycleGO(GameObject* go);
 
   private:
     // StateMachine helpers
-    void StartAttack();            
-    void HandleImpact();           
-    void DisableDamage();          
-    void UpdateFireball(float deltaTime); 
-    void UpdateMinis(float deltaTime); 
-    void SpawnMiniCluster();  
+    void StartAttack();
+    void HandleImpact();
+    void DisableDamage();
+    void UpdateFireball(float deltaTime);
+    void UpdateMinis(float deltaTime);
+    void SpawnMiniCluster();
 
-    // Pool helpers
-    GameObject* RequestMini();        // returns an enabled mini from pool
-    void RecycleMini(GameObject*);    // disable & recycle mini
-    GameObject* RequestImpactDecal(); // decal pool
-    void RecycleImpactDecal(GameObject*);
+    // Mini
+    GameObject* RequestMini();
+    GameObject* RequestImpactDecal();
 
     float GenerateRandomAttackTime(float min, float max) const;
-    float3 RandomSpawnPoint() const;                           
-    CameraMovement* FindShakeCamera();                         
-    void SetupInspectorFields();                               
+    float3 RandomSpawnPoint() const;
+    CameraMovement* FindShakeCamera();
+    void SetupInspectorFields();
 
   private:
-    float3 spawnCenter                      = float3::zero;          // local offset of epicenter
+    float3 spawnCenter                      = float3::zero; // local offset of epicenter
     float3 spawnHalfSize                    = float3(5.f, 0.f, 5.f);
 
     float randomAttackTime                  = 0.f; // seconds until next shot
@@ -95,24 +94,18 @@ class FireballTrap : public Script
 
     ACTIVATION_STATE activationState        = ACTIVATION_STATE::SLEEPING;
 
-    FireballTrapSettings cfg;                           
-    mutable std::mt19937 rng {std::random_device {}()}; 
+    FireballTrapSettings cfg;
+    mutable std::mt19937 rng {std::random_device {}()};
 
     GameObject* miniPrototype = nullptr;
-    std::vector<GameObject*> miniPool;
-    uint32_t poolSize                      = 6;
-    static constexpr uint32_t kMaxMiniPool = 50;
 
-    GameObject* impactPrefab               = nullptr; // decal prefab
-    std::vector<GameObject*> decalPool;
-    uint32_t decalPoolSize                  = 3;
-    static constexpr uint32_t kMaxDecalPool = 10;
-    GameObject* currentDecal                = nullptr;
+    GameObject* impactPrefab  = nullptr;
+    GameObject* currentDecal  = nullptr;
 
     // Mini params
-    uint32_t miniCount                      = 4; // how many minis per big impact
-    float miniSpeed                         = 5.f;
-    float miniLifeTime                      = 2.f;
+    uint32_t miniCount        = 4; // how many minis per big impact
+    float miniSpeed           = 5.f;
+    float miniLifeTime        = 2.f;
     struct MiniInstance
     {
         GameObject* go;
@@ -125,6 +118,12 @@ class FireballTrap : public Script
     float3 impactOffsetLocal = float3::zero; // XY of impact relative to base
 
     float3 fireVelocity      = float3::zero;
-    float3 shadowBaseScale   = float3::one; 
+    float3 shadowBaseScale   = float3::one;
 
+    struct MiniDecal
+    {
+        GameObject* go;
+        float timer;
+    };
+    std::vector<MiniDecal> activeMiniDecals;
 };

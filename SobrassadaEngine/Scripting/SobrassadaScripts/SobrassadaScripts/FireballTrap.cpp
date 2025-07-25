@@ -41,14 +41,12 @@ void FireballTrap::SetupInspectorFields()
 
     // Mini fireballs
     fields.push_back({"Mini Prototype", InspectorField::FieldType::GameObject, &miniPrototype, 0.f, 0.f});
-    fields.push_back({"Mini Pool Size", InspectorField::FieldType::Int, &poolSize, 1.f, 50.f});
     fields.push_back({"Mini Count", InspectorField::FieldType::Int, &miniCount, 1.f, 12.f});
     fields.push_back({"Mini Speed", InspectorField::FieldType::Float, &miniSpeed, 1.f, 30.f});
     fields.push_back({"Mini Lifetime", InspectorField::FieldType::Float, &miniLifeTime, 0.f, 10.f});
 
     // Impact decals
     fields.push_back({"Impact Prefab", InspectorField::FieldType::GameObject, &impactPrefab, 0.f, 0.f});
-    fields.push_back({"Decal Pool Size", InspectorField::FieldType::Int, &decalPoolSize, 1.f, 10.f});
 
     // Arc
     fields.push_back({"Max Launch Radius", InspectorField::FieldType::Float, &cfg.maxLaunchRadius, 0.f, 20.f});
@@ -57,7 +55,6 @@ void FireballTrap::SetupInspectorFields()
 
 bool FireballTrap::Init()
 {
-    // Spawn zone
     spawnZone = parent->GetComponent<CubeColliderComponent*>();
     if (!spawnZone)
     {
@@ -65,10 +62,9 @@ bool FireballTrap::Init()
     }
     else
     {
-        spawnHalfSize               = spawnZone->size * 0.5f; // store for RandomSpawnPoint()
+        spawnHalfSize               = spawnZone->size * 0.5f;
         spawnCenter                 = spawnZone->centerOffset;
 
-        // make non‑colliding trigger so player doesn't bump into invisible cube
         spawnZone->generateCallback = false;
         spawnZone->colliderType     = ColliderType::TRIGGER;
         spawnZone->layer            = ColliderLayer::WORLD_OBJECTS;
@@ -83,7 +79,6 @@ bool FireballTrap::Init()
     if (damageCollider) damageCollider->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap without sphere collider component.");
 
-    // Children (big fireball + shadow)
     if (!parent->GetChildren().empty())
     {
         fireball = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
@@ -98,52 +93,18 @@ bool FireballTrap::Init()
         shadowBaseScale = fireballShadow->GetScale();
     }
 
-    // Pools
-    baseLocal = parent->GetLocalTransform(); // remember original transform
+    baseLocal = parent->GetLocalTransform();
 
-    // Mini pool
-    if (miniPrototype)
-    {
-        miniPrototype->SetEnabled(false);
-        miniPool.reserve(poolSize);
-        for (uint32_t i = 0; i < poolSize; ++i)
-        {
-            GameObject* clone = new GameObject(parent->GetUID(), miniPrototype);
-            clone->SetEnabled(false);
-            parent->AddChildren(clone->GetUID());
-            AppEngine->GetSceneModule()->GetScene()->AddGameObject(clone->GetUID(), clone);
-            miniPool.push_back(clone);
-        }
-    }
-    else
-    {
-        GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
-    }
+    if (miniPrototype) miniPrototype->SetEnabled(false);
+    else GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
 
-    // Decal pool
-    if (impactPrefab)
-    {
-        impactPrefab->SetEnabled(false); // keep prefab hidden
-        decalPool.reserve(decalPoolSize);
-        for (uint32_t i = 0; i < decalPoolSize; ++i)
-        {
-            GameObject* clone = new GameObject(parent->GetUID(), impactPrefab);
-            clone->SetEnabled(false);
-            parent->AddChildren(clone->GetUID());
-            AppEngine->GetSceneModule()->GetScene()->AddGameObject(clone->GetUID(), clone);
-            decalPool.push_back(clone);
-        }
-    }
-    else
-    {
-        GLOG("[WARNING] FireballTrap: Impact prefab reference not set");
-    }
+    if (impactPrefab) impactPrefab->SetEnabled(false);
+    else GLOG("[WARNING] FireballTrap: Impact prefab reference not set");
 
-    // Camera shake
     shakeCam = FindShakeCamera();
     if (!shakeCam) GLOG("[WARNING] FireballTrap: CameraMovement not found");
 
-    return true; // trap ready
+    return true;
 }
 
 void FireballTrap::Update(float deltaTime)
@@ -177,6 +138,17 @@ void FireballTrap::Update(float deltaTime)
     }
 
     UpdateMinis(deltaTime);
+
+    for (auto it = activeMiniDecals.begin(); it != activeMiniDecals.end();)
+    {
+        it->timer -= deltaTime;
+        if (it->timer <= 0.f)
+        {
+            RecycleGO(it->go);
+            it = activeMiniDecals.erase(it);
+        }
+        else ++it;
+    }
 }
 void FireballTrap::StartAttack()
 {
@@ -227,7 +199,7 @@ void FireballTrap::HandleImpact()
     fireball->SetEnabled(false);
     if (fireballShadow) fireballShadow->SetEnabled(false);
 
-    currentDecal = RequestImpactDecal(); // grab a decal from pool
+    currentDecal = RequestImpactDecal();
     if (currentDecal) currentDecal->SetLocalPosition(impactOffsetLocal);
 
     if (groundMesh) groundMesh->SetEnabled(true);
@@ -245,7 +217,7 @@ void FireballTrap::DisableDamage()
     if (groundMesh) groundMesh->SetEnabled(false);
     if (damageCollider) damageCollider->SetEnabled(false);
 
-    RecycleImpactDecal(currentDecal);
+    RecycleGO(currentDecal);
     currentDecal    = nullptr;
 
     activationState = ACTIVATION_STATE::SLEEPING;
@@ -272,8 +244,16 @@ void FireballTrap::UpdateFireball(float deltaTime)
         fireballShadow->SetLocalTransform(tf);
     }
 
-    if (pos.y <= 0.f) HandleImpact();
-    else fireball->SetLocalTransform(fireball->GetLocalTransform() * float4x4::RotateX(cfg.rotationSpeed * dt));
+    if (pos.y <= 0.f)
+    {
+        HandleImpact();
+    }
+    else
+    {
+        float4x4 spin =
+            float4x4::RotateX(cfg.rotationSpeed * deltaTime) * float4x4::RotateY(cfg.rotationSpeed * deltaTime);
+        fireball->SetLocalTransform(fireball->GetLocalTransform() * spin);
+    }
 }
 
 float FireballTrap::GenerateRandomAttackTime(float min, float max) const
@@ -284,26 +264,13 @@ float FireballTrap::GenerateRandomAttackTime(float min, float max) const
 
 GameObject* FireballTrap::RequestMini()
 {
-    for (GameObject* go : miniPool)
-        if (!go->IsEnabled())
-        {
-            go->SetEnabled(true);
-            return go;
-        }
+    if (!miniPrototype) return nullptr;
 
-    if (miniPool.size() >= kMaxMiniPool) return nullptr; // hard limit reached
-
-    GameObject* clone = new GameObject(parent->GetUID(), miniPrototype);
+    auto* clone = new GameObject(parent->GetUID(), miniPrototype);
+    clone->SetEnabled(true);
     parent->AddChildren(clone->GetUID());
     AppEngine->GetSceneModule()->GetScene()->AddGameObject(clone->GetUID(), clone);
-    clone->SetEnabled(true);
-    miniPool.push_back(clone);
     return clone;
-}
-
-void FireballTrap::RecycleMini(GameObject* mini)
-{
-    if (mini) mini->SetEnabled(false);
 }
 
 void FireballTrap::SpawnMiniCluster()
@@ -318,15 +285,33 @@ void FireballTrap::SpawnMiniCluster()
         GameObject* mini = RequestMini();
         if (!mini) continue;
 
-        mini->SetLocalPosition(impactOffsetLocal);
+        // Big impact center
+        mini->SetLocalPosition(impactOffsetLocal + float3(0.f, 0.5f, 0.f));
 
+        // Horitzontal
         std::uniform_real_distribution<float> jitter(-0.05f, 0.05f);
-        float angle = i * step + jitter(rng);
-        float3 dir  = float3(cosf(angle), 0.35f, sinf(angle)).Normalized();
+        float angle  = i * step + jitter(rng);
+
+        float3 dirXZ = float3(cosf(angle), 0.f, sinf(angle)).Normalized();
+
+        // Inital speed horizontal + up speed
+        float3 v0;
+        const float targetRadius = 0.4f; // meters
+        const float startHeight  = 0.5f; // spawn mini height
+        const float vUp          = 4.5f; // up speed
+
+        // y<=0:  t = (vUp + sqrt(vUp² + 2*g*startHeight)) / g
+        float tFall              = (vUp + sqrtf(vUp * vUp + 2.f * cfg.gravity * startHeight)) / cfg.gravity;
+
+        // horitzontal speed
+        float vHoriz             = targetRadius / tFall;
+
+        v0                       = dirXZ * vHoriz;
+        v0.y                     = vUp;
 
         if (auto* col = mini->GetComponent<SphereColliderComponent*>()) col->SetEnabled(true);
 
-        activeMinis.push_back({mini, dir * miniSpeed, miniLifeTime});
+        activeMinis.push_back({mini, v0, miniLifeTime});
     }
 }
 
@@ -334,14 +319,32 @@ void FireballTrap::UpdateMinis(float deltaTime)
 {
     for (auto it = activeMinis.begin(); it != activeMinis.end();)
     {
-        it->life   -= deltaTime;
+        it->vel.y  -= cfg.gravity * deltaTime; // g = 9.81
         float3 pos  = it->go->GetLocalTransform().TranslatePart();
         pos        += it->vel * deltaTime;
         it->go->SetLocalPosition(pos);
 
-        if (it->life <= 0.f)
+        bool grounded = (pos.y <= 0.f);
+
+        if (grounded)
         {
-            RecycleMini(it->go);
+            if (GameObject* decal = RequestImpactDecal())
+            {
+                float3 dPos   = float3(pos.x, 0.f, pos.z);
+                float3 dScale = float3(0.4f);
+                decal->SetLocalTransform(float4x4::FromTRS(dPos, float3x3::identity, dScale));
+
+                activeMiniDecals.push_back({decal, 1.0f}); // decal lifetime
+            }
+        }
+
+        // life and ground impact
+        it->life     -= deltaTime;
+        bool expired  = (it->life <= 0.f) || (pos.y <= 0.f);
+
+        if (expired)
+        {
+            RecycleGO(it->go);
             it = activeMinis.erase(it);
         }
         else ++it;
@@ -350,7 +353,7 @@ void FireballTrap::UpdateMinis(float deltaTime)
 
 CameraMovement* FireballTrap::FindShakeCamera()
 {
-    // find the parent script holding CameraMovement so we can shake on impact
+    // find the parent script holding CameraMovement to shake on impact
     CameraComponent* camComp = AppEngine->GetSceneModule()->GetScene()->GetMainCamera();
     if (!camComp) return nullptr;
 
@@ -385,19 +388,20 @@ float3 FireballTrap::RandomSpawnPoint() const
 
 GameObject* FireballTrap::RequestImpactDecal()
 {
-    if (decalPool.size() >= kMaxDecalPool) return nullptr;
+    if (!impactPrefab) return nullptr;
 
-    for (GameObject* go : decalPool)
-        if (!go->IsEnabled())
-        {
-            go->SetEnabled(true);
-            return go;
-        }
+    GameObject* clone = new GameObject(parent->GetUID(), impactPrefab);
+    clone->SetEnabled(true);
+    parent->AddChildren(clone->GetUID());
+    AppEngine->GetSceneModule()->GetScene()->AddGameObject(clone->GetUID(), clone);
 
-    return nullptr;
+    return clone;
 }
 
-void FireballTrap::RecycleImpactDecal(GameObject* go)
+void FireballTrap::RecycleGO(GameObject* go)
 {
-    if (go) go->SetEnabled(false);
+    if (!go) return;
+
+    Scene* scene = AppEngine->GetSceneModule()->GetScene();
+    scene->RemoveGameObjectHierarchy(go->GetUID());
 }
