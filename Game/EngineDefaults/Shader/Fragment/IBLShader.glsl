@@ -29,6 +29,8 @@ struct Material
     int hasSpecular;
     int hasMetallic;
     uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    uvec2 padding;
 };
 
 struct DirectionalLight
