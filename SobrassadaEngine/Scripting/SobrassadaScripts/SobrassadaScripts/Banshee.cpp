@@ -287,9 +287,8 @@ void Banshee::GoToAttackPosition()
     agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
-void Banshee::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+void Banshee::TakeDamage(int amount)
 {
     if (isInvisible) return;
-
-    Character::OnCollision(otherObject, collisionNormal, layer);
+    Character::TakeDamage(amount);
 }
