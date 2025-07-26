@@ -24,7 +24,8 @@ struct InspectorField
         InputText,
         GameObject,
         Button,
-        Resource
+        Resource,
+        Spacing
     };
 
     std::string name;
