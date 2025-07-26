@@ -13,6 +13,7 @@ enum class ArcherStates
     PATROL,
     CHASE,
     ESCAPE,
+    AIM,
     BASIC_ATTACK
 };
 
@@ -35,6 +36,7 @@ class Archer : public Character
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
     void Escape(float deltaTime);
+    void Aim(float deltaTime);
 
     void ChangeState();
     void PatrolAI();
@@ -54,4 +56,8 @@ class Archer : public Character
 
     float3 currentEscapeTarget = float3::zero;
     bool hasEscapeTarget       = false;
+
+    bool isAiming              = false;
+    float aimTimer             = 0.0f;
+    float aimDuration          = 2.0f;
 };

@@ -23,6 +23,7 @@ Archer::Archer(GameObject* parent)
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
     fields.push_back({"Escape Range", InspectorField::FieldType::Float, &rangeEscape, 0.0f, 10.0f});
+    fields.push_back({"Aim Duration", InspectorField::FieldType::Float, &aimDuration, 0.0f, 5.0f});
 }
 
 bool Archer::Init()
@@ -116,22 +117,22 @@ void Archer::PerformAttack()
 
 void Archer::HandleState(float deltaTime)
 {
-    // if (!animComponent) return;
-
     switch (currentState)
     {
     case ArcherStates::SEARCH:
         SearchForPlayer();
         break;
     case ArcherStates::PATROL:
-        // TODO: Patrol animation
         PatrolAI();
         break;
     case ArcherStates::CHASE:
         ChaseAI();
         break;
+    case ArcherStates::AIM:
+        Aim(deltaTime);
+        break;
     case ArcherStates::BASIC_ATTACK:
-        if (attackCdTimer <= 0) Attack(deltaTime);
+        Attack(deltaTime);
         break;
     case ArcherStates::ESCAPE:
         Escape(deltaTime);
@@ -144,7 +145,6 @@ void Archer::HandleState(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
-        // GLOG("FINISH ANIM");
         animComponent->UseTrigger("idle");
     }
 }
@@ -156,14 +156,23 @@ void Archer::PatrolAI()
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
-    if (!playerScript->IsDead())
+    if (!playerScript->IsDead() && playerInLocation)
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
+        PlayerDistances distance = CheckDistanceWithPlayer();
+
+        if (distance == PlayerDistances::Close)
+        {
+            currentState = ArcherStates::AIM;
+            return;
+        }
+        else if (distance == PlayerDistances::Medium)
+        {
             currentState = ArcherStates::CHASE;
-        else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
-            currentState = ArcherStates::BASIC_ATTACK;
+            return;
+        }
     }
 
+    
     bool valid = false;
     if (reachedPatrolPoint)
     {
@@ -215,6 +224,37 @@ void Archer::SearchForPlayer()
     }
 }
 
+void Archer::Aim(float deltaTime)
+{
+    if (!weaponCollider) return;
+
+    if (!isAiming)
+    {
+       
+        agentAI->SetLookForward(false);
+        if (animComponent) animComponent->UseTrigger("aim");
+
+        isAiming = true;
+        aimTimer = 0.0f;
+        agentAI->SetSpeed(0.0f, 0.0f);
+    }
+    else
+    {
+        aimTimer += deltaTime;
+        if (character)
+        {
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        }
+
+        if (aimTimer >= aimDuration)
+        {
+            isAiming     = false;
+            aimTimer     = 0.0f;
+           currentState = ArcherStates::BASIC_ATTACK;
+        }
+    }
+}
+
 void Archer::Attack(float deltaTime)
 {
     if (!weaponCollider) return;
@@ -229,7 +269,7 @@ void Archer::Attack(float deltaTime)
     else
     {
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-        // Enable hitbox when animation hits
+
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
             hasShot          = true;
@@ -238,7 +278,6 @@ void Archer::Attack(float deltaTime)
             arrow->Shoot(parent->GetPosition(), direction);
         }
 
-        // Reset attack state
         if (attackTimer >= attackDuration)
         {
             hasShot       = false;
@@ -247,7 +286,8 @@ void Archer::Attack(float deltaTime)
             agentAI->ResetSpeed();
             agentAI->SetLookForward(true);
 
-            ChangeState();
+          
+            currentState = ArcherStates::AIM;
         }
     }
 }
@@ -261,9 +301,9 @@ void Archer::ChangeState()
     }
 
     const float distance = GetDistanceFromPlayer();
-    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) < rangeEscape)
-        currentState = ArcherStates::ESCAPE;
-    else if (distance <= rangeAIAttack) currentState = ArcherStates::BASIC_ATTACK;
+
+    if (distance < rangeEscape) currentState = ArcherStates::ESCAPE;
+    else if (distance <= rangeAIAttack) currentState = ArcherStates::AIM;
     else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;
     else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
 }
