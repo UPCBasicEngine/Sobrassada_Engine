@@ -142,6 +142,9 @@ class SOBRASADA_API_ENGINE Scene
     const HashString& GetPlayerLocation() { return playerLocation; }
     void SetPlayerPosition(const HashString& newPlayerLocation) { playerLocation = newPlayerLocation; }
 
+    void QueueGameObjectDelete(UID uid);
+    void FlushPendingDeletes();
+
     bool isSceneLoaded = false;
 
   private:
@@ -194,4 +197,6 @@ class SOBRASADA_API_ENGINE Scene
     std::map<HashString, std::vector<GameObject*>> tags;
 
     RenderPass* renderPass = nullptr;
+
+     std::vector<UID> pendingDeletes;
 };

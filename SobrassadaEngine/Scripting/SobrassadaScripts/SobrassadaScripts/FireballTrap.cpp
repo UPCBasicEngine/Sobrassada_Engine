@@ -177,7 +177,7 @@ void FireballTrap::StartAttack()
     float3 impactLocal    = parent->GetGlobalTransform().Inverted().MulPos(impactWorld);
     impactLocal.y         = 0.f;
     impactOffsetLocal     = impactLocal;
-    lastImpactWorld       = impactWorld; 
+    lastImpactWorld       = impactWorld;
 
     // Create indicator
     float3 indicatorLocal = parent->GetGlobalTransform().Inverted().MulPos(impactWorld);
@@ -234,7 +234,12 @@ void FireballTrap::HandleImpact()
     if (currentDecal) currentDecal->SetLocalPosition(impactOffsetLocal);
 
     if (groundMesh) groundMesh->SetEnabled(true);
-    if (damageCollider) damageCollider->SetEnabled(true);
+    if (damageCollider)
+    {
+        damageCollider->SetEnabled(false);                
+        damageCollider->centerOffset = impactOffsetLocal; 
+        damageCollider->SetEnabled(true);                 
+    }
 
     float3 playerPos   = character->GetLastPosition();
     float distToPlayer = sqrtf(playerPos.DistanceSq(lastImpactWorld));
@@ -437,9 +442,8 @@ GameObject* FireballTrap::RequestImpactDecal()
 void FireballTrap::RecycleGO(GameObject* go)
 {
     if (!go) return;
-
     Scene* scene = AppEngine->GetSceneModule()->GetScene();
-    scene->RemoveGameObjectHierarchy(go->GetUID());
+    scene->QueueGameObjectDelete(go->GetUID());
 }
 
 GameObject* FireballTrap::SpawnIndicator(const float3& localPos, float radius)

@@ -353,6 +353,7 @@ update_status Scene::Render(float deltaTime)
 
     GameObject* selectedGameObject = App->GetSceneModule()->GetScene()->GetSelectedGameObject();
     if (selectedGameObject != nullptr) selectedGameObject->RenderDebugComponents(deltaTime);
+    FlushPendingDeletes();
 
     return UPDATE_CONTINUE;
 }
@@ -1684,6 +1685,17 @@ void Scene::OverridePrefabs(const UID prefabUID)
     }
     if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
     App->GetResourcesModule()->ReleaseResource(prefab);
+}
+
+void Scene::QueueGameObjectDelete(UID uid)
+{
+    if (uid != INVALID_UID) pendingDeletes.push_back(uid);
+}
+void Scene::FlushPendingDeletes()
+{
+    for (UID id : pendingDeletes)
+        RemoveGameObjectHierarchy(id);
+    pendingDeletes.clear();
 }
 
 template <typename T> std::vector<T> Scene::GetEnabledComponentsOfType() const
