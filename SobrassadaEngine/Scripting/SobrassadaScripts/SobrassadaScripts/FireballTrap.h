@@ -58,6 +58,8 @@ class FireballTrap : public Script
     int GetDamage() const { return cfg.impactDamage; }
     void RecycleGO(GameObject* go);
 
+    GameObject* SpawnIndicator(const float3& worldPos, float radius);
+
   private:
     // StateMachine helpers
     void StartAttack();
@@ -126,4 +128,15 @@ class FireballTrap : public Script
         float timer;
     };
     std::vector<MiniDecal> activeMiniDecals;
+
+    GameObject* indicatorPrefab = nullptr;
+    GameObject* activeIndicator = nullptr;
+    float indicatorPulse        = 0.0f;
+    float indicatorScale        = 1.0f;
+    float3 indicatorBaseScale   = float3::one;
+
+    float3 lastImpactWorld      = float3::zero;
+    bool allowMiniDecals        = true; 
+    float noMiniHitRadius       = 1.0f;
+
 };

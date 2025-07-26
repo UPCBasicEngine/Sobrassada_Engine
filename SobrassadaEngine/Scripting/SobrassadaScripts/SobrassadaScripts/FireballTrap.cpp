@@ -51,6 +51,10 @@ void FireballTrap::SetupInspectorFields()
     // Arc
     fields.push_back({"Max Launch Radius", InspectorField::FieldType::Float, &cfg.maxLaunchRadius, 0.f, 20.f});
     fields.push_back({"Direction arc", InspectorField::FieldType::Float, &cfg.launchYawDeg, -180.f, 180.f});
+
+    // Fall indicator
+    fields.push_back({"Landing Indicator", InspectorField::FieldType::GameObject, &indicatorPrefab, 0.f, 0.f});
+    fields.push_back({"Indicator Scale", InspectorField::FieldType::Float, &indicatorScale, 0.1f, 2.0f});
 }
 
 bool FireballTrap::Init()
@@ -104,6 +108,9 @@ bool FireballTrap::Init()
     shakeCam = FindShakeCamera();
     if (!shakeCam) GLOG("[WARNING] FireballTrap: CameraMovement not found");
 
+    if (indicatorPrefab) indicatorPrefab->SetEnabled(false);
+    else GLOG("[WARNING] FireballTrap: landing indicator prefab not set");
+
     return true;
 }
 
@@ -139,6 +146,17 @@ void FireballTrap::Update(float deltaTime)
 
     UpdateMinis(deltaTime);
 
+    if (activeIndicator)
+    {
+        indicatorPulse += deltaTime * 4.0f;
+        float s         = 1.0f + 0.25f * sinf(indicatorPulse);
+
+        float3 pos      = activeIndicator->GetLocalTransform().TranslatePart();
+        float3 scale    = indicatorBaseScale * s;
+
+        activeIndicator->SetLocalTransform(float4x4::FromTRS(pos, float3x3::identity, scale));
+    }
+
     for (auto it = activeMiniDecals.begin(); it != activeMiniDecals.end();)
     {
         it->timer -= deltaTime;
@@ -153,17 +171,23 @@ void FireballTrap::Update(float deltaTime)
 void FireballTrap::StartAttack()
 {
     parent->SetLocalTransform(baseLocal); // root never moves -> reset
-    fireball->SetEnabled(true);
 
     // Random IMPACT inside collider
-    float3 impactWorld = RandomSpawnPoint();
-    float3 impactLocal = parent->GetGlobalTransform().Inverted().MulPos(impactWorld);
-    impactLocal.y      = 0.f;
-    impactOffsetLocal  = impactLocal;
+    float3 impactWorld    = RandomSpawnPoint();
+    float3 impactLocal    = parent->GetGlobalTransform().Inverted().MulPos(impactWorld);
+    impactLocal.y         = 0.f;
+    impactOffsetLocal     = impactLocal;
+    lastImpactWorld       = impactWorld; 
+
+    // Create indicator
+    float3 indicatorLocal = parent->GetGlobalTransform().Inverted().MulPos(impactWorld);
+    activeIndicator       = SpawnIndicator(indicatorLocal, cfg.bigBurnRadius * indicatorScale);
+    if (activeIndicator) indicatorBaseScale = activeIndicator->GetScale();
+    indicatorPulse = 0.0f;
 
     // FIXED direction launchYawDeg
-    float angleRad     = cfg.launchYawDeg * 0.0174532925f;
-    float3 dirXZ       = float3(cosf(angleRad), 0.f, sinf(angleRad)).Normalized();
+    float angleRad = cfg.launchYawDeg * 0.0174532925f;
+    float3 dirXZ   = float3(cosf(angleRad), 0.f, sinf(angleRad)).Normalized();
 
     // Distance to spawn
     std::uniform_real_distribution<float> rad(0.5f * cfg.maxLaunchRadius, cfg.maxLaunchRadius);
@@ -171,6 +195,7 @@ void FireballTrap::StartAttack()
     float3 spawnLocal = impactLocal + dirXZ * r;
     spawnLocal.y      = cfg.fallingHeight;
     fireball->SetLocalPosition(spawnLocal);
+    fireball->SetEnabled(true);
 
     // Lateral speed towards impact
     float fallTime   = sqrtf(2.f * cfg.fallingHeight / cfg.gravity);
@@ -199,12 +224,23 @@ void FireballTrap::HandleImpact()
     fireball->SetEnabled(false);
     if (fireballShadow) fireballShadow->SetEnabled(false);
 
+    RecycleGO(activeIndicator);
+    activeIndicator = nullptr;
+
+    fireball->SetEnabled(false);
+    if (fireballShadow) fireballShadow->SetEnabled(false);
+
     currentDecal = RequestImpactDecal();
     if (currentDecal) currentDecal->SetLocalPosition(impactOffsetLocal);
 
     if (groundMesh) groundMesh->SetEnabled(true);
     if (damageCollider) damageCollider->SetEnabled(true);
 
+    float3 playerPos   = character->GetLastPosition();
+    float distToPlayer = sqrtf(playerPos.DistanceSq(lastImpactWorld));
+    bool hitPlayer     = distToPlayer <= noMiniHitRadius;
+
+    allowMiniDecals    = !hitPlayer;
     SpawnMiniCluster();
     if (shakeCam) shakeCam->StartShake(0.30f, std::clamp(cfg.fallingHeight * 0.03f, 0.15f, 0.6f), 0.12f);
 
@@ -326,7 +362,7 @@ void FireballTrap::UpdateMinis(float deltaTime)
 
         bool grounded = (pos.y <= 0.f);
 
-        if (grounded)
+        if (grounded && allowMiniDecals)
         {
             if (GameObject* decal = RequestImpactDecal())
             {
@@ -404,4 +440,25 @@ void FireballTrap::RecycleGO(GameObject* go)
 
     Scene* scene = AppEngine->GetSceneModule()->GetScene();
     scene->RemoveGameObjectHierarchy(go->GetUID());
+}
+
+GameObject* FireballTrap::SpawnIndicator(const float3& localPos, float radius)
+{
+    if (!indicatorPrefab) return nullptr;
+
+    // Clone prefab
+    GameObject* ind = new GameObject(parent->GetUID(), indicatorPrefab);
+
+    // Scale, place
+    float3 scale    = float3(radius);
+    float4x4 tf     = float4x4::FromTRS(localPos, float3x3::identity, scale);
+    ind->SetLocalTransform(tf);
+
+    ind->SetEnabled(true);
+
+    // Add to scene
+    parent->AddChildren(ind->GetUID());
+    AppEngine->GetSceneModule()->GetScene()->AddGameObject(ind->GetUID(), ind);
+
+    return ind;
 }
