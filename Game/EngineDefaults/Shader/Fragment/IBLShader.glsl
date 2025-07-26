@@ -29,6 +29,8 @@ struct Material
     int hasSpecular;
     int hasMetallic;
     uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    uvec2 padding;
 };
 
 struct DirectionalLight
@@ -211,7 +213,7 @@ void main()
     const float NdotV = max(dot(N, V), 0.0001);
 
     // Ambient light
-    const vec3 BaseColor = materials[instance_index].diffColor.rgb * texColor;
+    const vec3 BaseColor = materials[instance_index].diffColor.rgb * texColor.rgb;
     const vec3 Cd = BaseColor * (1 - metallic);
     const vec3 RF0 = mix(vec3(0.04), BaseColor, metallic);
 

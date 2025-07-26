@@ -703,6 +703,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
+    <ClInclude Include="resourceIcon.h" />
     <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
     <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />
@@ -886,6 +887,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Scene\GameObjects\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SobrassadaEngine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Game\1-416023b1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
