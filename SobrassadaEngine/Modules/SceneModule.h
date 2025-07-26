@@ -46,7 +46,6 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     void AddGameObjectToUpdateComponents(GameObject* gameObject);
     void RequestSceneLoad(const std::string& scenePath);
 
-
   private:
     void HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard);
     void HandleObjectDuplication();

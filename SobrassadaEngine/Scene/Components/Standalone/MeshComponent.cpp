@@ -211,9 +211,7 @@ void MeshComponent::RenderEditorInspector()
             }
             if (batch) BatchEditorMode();
         }
-
-        // TODO: Update batch when modifying material so it changes visually
-        if (currentMaterial->OnEditorUpdate() && batch) BatchEditorMode();
+        currentMaterial->OnEditorUpdate();
     }
 }
 
