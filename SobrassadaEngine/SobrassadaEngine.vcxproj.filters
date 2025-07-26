@@ -1193,6 +1193,7 @@
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="resourceIcon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
@@ -1211,5 +1212,11 @@
     <None Include="Libs\Wwise\samples\SoundEngine\Common\AkFilePackageLowLevelIO.inl">
       <Filter>External\Wwise</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SobrassadaEngine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Game\1-416023b1.ico" />
   </ItemGroup>
 </Project>
