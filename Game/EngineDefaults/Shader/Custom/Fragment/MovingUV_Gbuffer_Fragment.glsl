@@ -1,0 +1,73 @@
+#version 460
+
+#extension GL_ARB_bindless_texture : require
+
+layout(binding=0) uniform sampler2D diffuseTex;
+layout(binding=1) uniform sampler2D specularMetallicTex;
+layout(binding=2) uniform sampler2D normalTex;
+layout(binding=3) uniform sampler2D emmisiveTex;
+
+layout(location=4) uniform bool isWireframe;
+layout(location=5) uniform bool isAlphaDiscard;
+layout(location=6) uniform bool isMetallic;
+layout(location=7) uniform float roughnessFactor;
+layout(location=8) uniform float metallicFactor;
+
+layout(location = 0)out vec4 gDiffuse;
+layout(location = 1)out vec4 gSpecular;
+layout(location = 2)out vec4 gPosition;
+layout(location = 3)out vec4 gNormal;
+layout(location = 4)out vec4 gEmissive;
+
+in vec3 pos;
+in vec2 uv;
+in vec3 normal;
+in vec4 tangent;
+
+mat3 CreateTBN()
+{
+    const vec3 T = normalize(vec3(tangent));
+    const vec3 N = normalize(normal);
+    const vec3 B = tangent.w * cross(N, T);
+    return mat3(T, B, N);
+}
+
+void main()
+{
+    vec4 texColor = pow(texture2D(diffuseTex, uv), vec4(2.2f));
+
+    const float alpha = texColor.a;
+
+    if (!isWireframe && isAlphaDiscard)
+    {
+        if(alpha < 0.1) discard;
+    }
+
+    gDiffuse = vec4(texColor.rgb, alpha);
+
+    gSpecular = pow(texture2D(specularMetallicTex, uv), vec4(2.2));
+    
+    gPosition = vec4(pos, 1);
+    gNormal = vec4(normal, 0);
+    
+    if(isMetallic)
+    {
+        gSpecular.y = roughnessFactor * gSpecular.y;
+        gSpecular.z = metallicFactor * gSpecular.z;
+    }
+    
+    vec3 N = normalize(normal);
+    vec3 normalTexSample = texture2D(normalTex, uv).xyz;
+
+    // Retrive normal for normal map
+    if (normalTexSample.r != 0 || normalTexSample.g != 0) {
+        const mat3 space = CreateTBN();
+        const vec3 texNormal = (normalTexSample * 2.0-1.0);
+        const vec3 final_normal = space * texNormal;
+        N = normalize(final_normal);
+    }
+    gNormal = vec4(N,0);
+
+    vec3 emissiveColor = pow(texture2D(emmisiveTex, uv).rgb, vec3(2.2f));
+    gEmissive = vec4(emissiveColor, 1.0);
+}

@@ -2,14 +2,15 @@
 
 #include "Application.h"
 #include "Component.h"
+#include "FileSystem.h"
 #include "GameObject.h"
 #include "SceneModule.h"
 #include "Script.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include <fstream>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
-#include "FileSystem.h"
 
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -51,28 +52,34 @@ void ScriptModule::LoadDLL()
         return;
     }
 
-    if (!FileSystem::Exists("SobrassadaScripts.dll")) FileSystem::Copy(dllPath.string().c_str(), copyPath.string().c_str());
+    if (!FileSystem::Exists("SobrassadaScripts.dll"))
+        FileSystem::Copy(dllPath.string().c_str(), copyPath.string().c_str());
 
-    lastWriteTime      = fs::last_write_time("SobrassadaScripts.dll");
+    lastWriteTime            = fs::last_write_time("SobrassadaScripts.dll");
 
-    startScriptFunc    = (StartSobrassadaScripts)GetProcAddress(dllHandle, "InitSobrassadaScripts");
-    createScriptFunc   = (CreateScriptFunc)GetProcAddress(dllHandle, "CreateScript");
-    destroyScriptFunc  = (DestroyScriptFunc)GetProcAddress(dllHandle, "DestroyScript");
-    freeScriptFunc     = (FreeSobrassadaScripts)GetProcAddress(dllHandle, "FreeSobrassadaScripts");
+    startScriptFunc          = (StartSobrassadaScripts)GetProcAddress(dllHandle, "InitSobrassadaScripts");
+    createScriptFunc         = (CreateScriptFunc)GetProcAddress(dllHandle, "CreateScript");
+    destroyScriptFunc        = (DestroyScriptFunc)GetProcAddress(dllHandle, "DestroyScript");
+    freeScriptFunc           = (FreeSobrassadaScripts)GetProcAddress(dllHandle, "FreeSobrassadaScripts");
 
-    getScriptNameFunc  = (GetScriptNameDLL)GetProcAddress(dllHandle, "GetScriptName");
-    getScriptCountFunc = (GetScriptCountDLL)GetProcAddress(dllHandle, "GetScriptCount");
-    searchIdxNameFunc  = (SearchIdxName)GetProcAddress(dllHandle, "GetScriptIndexByName");
+    getScriptNameFunc        = (GetScriptNameDLL)GetProcAddress(dllHandle, "GetScriptName");
+    getScriptCountFunc       = (GetScriptCountDLL)GetProcAddress(dllHandle, "GetScriptCount");
+    searchIdxNameFunc        = (SearchIdxName)GetProcAddress(dllHandle, "GetScriptIndexByName");
+
+    getShaderScriptCountFunc = (GetShaderScriptCountDLL)GetProcAddress(dllHandle, "GetShaderScriptCount");
+    getShaderScriptNameFunc  = (GetShaderScriptNameDLL)GetProcAddress(dllHandle, "GetShaderScriptName");
+    searchShaderIdxNameFunc  = (SearchShaderIdxName)GetProcAddress(dllHandle, "GetShaderScriptIndexByName");
 
     if (!startScriptFunc || !createScriptFunc || !destroyScriptFunc || !freeScriptFunc || !getScriptNameFunc ||
-        !getScriptCountFunc || !searchIdxNameFunc)
+        !getScriptCountFunc || !searchIdxNameFunc || !getShaderScriptCountFunc || !getShaderScriptNameFunc ||
+        !searchShaderIdxNameFunc)
     {
         GLOG("Failed to load required functions from DLL\n Trying Again.");
         return;
     }
 
     startScriptFunc(App);
-    scriptCount = getScriptCountFunc();
+    scriptCount = getScriptCountFunc() + getShaderScriptCountFunc();
 }
 
 update_status ScriptModule::Update(float deltaTime)
@@ -84,14 +91,18 @@ void ScriptModule::UnloadDLL()
 {
     if (dllHandle)
     {
-        createScriptFunc   = nullptr;
-        destroyScriptFunc  = nullptr;
-        startScriptFunc    = nullptr;
-        freeScriptFunc     = nullptr;
+        createScriptFunc         = nullptr;
+        destroyScriptFunc        = nullptr;
+        startScriptFunc          = nullptr;
+        freeScriptFunc           = nullptr;
 
-        getScriptNameFunc  = nullptr;
-        getScriptCountFunc = nullptr;
-        searchIdxNameFunc  = nullptr;
+        getScriptNameFunc        = nullptr;
+        getScriptCountFunc       = nullptr;
+        searchIdxNameFunc        = nullptr;
+
+        getShaderScriptCountFunc = nullptr;
+        getShaderScriptNameFunc  = nullptr;
+        searchShaderIdxNameFunc  = nullptr;
 
         FreeLibrary(dllHandle);
         dllHandle = nullptr;
@@ -145,12 +156,24 @@ void ScriptModule::DeleteAllScripts(bool saveJson)
             {
                 ScriptComponent* scriptComponent = gameObject.second->GetComponent<ScriptComponent*>();
 
-                if (!scriptComponent) continue;
+                if (scriptComponent)
+                {
+                    rapidjson::Value targetState(rapidjson::kObjectType);
+                    scriptComponent->Save(targetState, allocator);
+                    scriptsArray.PushBack(targetState, allocator);
+                    scriptComponent->DeleteAllScripts();
+                }
 
-                rapidjson::Value targetState(rapidjson::kObjectType);
-                scriptComponent->Save(targetState, allocator);
-                scriptsArray.PushBack(targetState, allocator);
-                scriptComponent->DeleteAllScripts();
+                ShaderScriptComponent* shaderScriptComponent =
+                    gameObject.second->GetComponent<ShaderScriptComponent*>();
+
+                if (shaderScriptComponent)
+                {
+                    rapidjson::Value targetState(rapidjson::kObjectType);
+                    shaderScriptComponent->Save(targetState, allocator);
+                    scriptsArray.PushBack(targetState, allocator);
+                    shaderScriptComponent->DeleteAllScripts();
+                }
             }
 
             doc.AddMember("Scripts", scriptsArray, allocator);
@@ -163,8 +186,11 @@ void ScriptModule::DeleteAllScripts(bool saveJson)
             for (auto& gameObject : App->GetSceneModule()->GetScene()->GetAllGameObjects())
             {
                 ScriptComponent* scriptComponent = gameObject.second->GetComponent<ScriptComponent*>();
-                if (!scriptComponent) continue;
-                scriptComponent->DeleteAllScripts();
+                if (scriptComponent) scriptComponent->DeleteAllScripts();
+
+                ShaderScriptComponent* shaderScriptComponent =
+                    gameObject.second->GetComponent<ShaderScriptComponent*>();
+                if (shaderScriptComponent) shaderScriptComponent->DeleteAllScripts();
             }
             freeScriptFunc();
         }
@@ -217,13 +243,14 @@ void ScriptModule::RecreateAllScripts()
         auto scriptIt                        = scriptsArray.Begin();
         for (auto& gameObject : App->GetSceneModule()->GetScene()->GetAllGameObjects())
         {
-            ScriptComponent* scriptComponent = gameObject.second->GetComponent<ScriptComponent*>();
-            if (!scriptComponent) continue;
+            ScriptComponent* scriptComponent             = gameObject.second->GetComponent<ScriptComponent*>();
+            ShaderScriptComponent* shaderScriptComponent = gameObject.second->GetComponent<ShaderScriptComponent*>();
 
             if (scriptIt != scriptsArray.End())
             {
                 const rapidjson::Value& scriptState = *scriptIt;
-                scriptComponent->Load(scriptState);
+                if (scriptComponent) scriptComponent->Load(scriptState);
+                if (shaderScriptComponent) shaderScriptComponent->Load(scriptState);
 
                 ++scriptIt;
             }

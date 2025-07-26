@@ -54,7 +54,6 @@ bool ResourceMaterial::OnEditorUpdate()
             ImGui::SetTooltip("Texture Dimensions: %d, %d", diffuseTexture.width, diffuseTexture.height);
         }
 
-        
         ImGui::SameLine();
 
         // TODO: commented all select buttons until save data to meta is implemented
@@ -184,6 +183,38 @@ bool ResourceMaterial::OnEditorUpdate()
             if (handle != NULL)
             {
                 material.normalTex = handle;
+                updated              = true;
+            }
+        }*/
+    }
+
+    if (emmisiveTexture.textureID != 0)
+    {
+        ImGui::Text("Emissive Texture");
+        ImGui::Image((ImTextureID)(intptr_t)emmisiveTexture.textureID, ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", emmisiveTexture.width, emmisiveTexture.height);
+        }
+        // TODO: commented all select buttons until save data to meta is implemented
+        /*ImGui::SameLine();
+        if (ImGui::Button("Select Emissive Texture"))
+        {
+            ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+        }
+
+        if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+        {
+            UID handle = ChangeTexture(
+                App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+                    CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+                ),
+                emmisiveTexture, material.emmisiveTex
+            );
+
+            if (handle != NULL)
+            {
+                material.emmisiveTex = handle;
                 updated              = true;
             }
         }*/
@@ -373,9 +404,37 @@ void ResourceMaterial::LoadMaterialData(Material mat)
         hasNormal            = true;
     }
 
+    ResourceTexture* occTexture = TextureImporter::LoadTexture(mat.GetOcclusionTexture());
+    if (occTexture != nullptr)
+    {
+        // GLOG("%s has normal", normTexture->GetName().c_str());
+        occlusionTexture.textureID = occTexture->GetTextureID();
+
+        material.occlusionTex      = glGetTextureHandleARB(occTexture->GetTextureID());
+        glMakeTextureHandleResidentARB(material.occlusionTex);
+
+        occlusionTexture.width  = occTexture->GetTextureWidth();
+        occlusionTexture.height = occTexture->GetTextureHeight();
+    }
+
+    ResourceTexture* emmTexture = TextureImporter::LoadTexture(mat.GetEmissiveTexture());
+    if (emmTexture != nullptr)
+    {
+        // GLOG("%s has normal", normTexture->GetName().c_str());
+        emmisiveTexture.textureID = emmTexture->GetTextureID();
+
+        material.emmisiveTex      = glGetTextureHandleARB(emmTexture->GetTextureID());
+        glMakeTextureHandleResidentARB(material.emmisiveTex);
+
+        emmisiveTexture.width  = emmTexture->GetTextureWidth();
+        emmisiveTexture.height = emmTexture->GetTextureHeight();
+    }
+
     delete diffTexture;
     delete metallicRoughnessTexture;
     delete normTexture;
+    delete occTexture;
+    delete emmTexture;
 }
 
 void ResourceMaterial::FreeMaterials() const
@@ -402,5 +461,17 @@ void ResourceMaterial::FreeMaterials() const
     {
         glMakeTextureHandleNonResidentARB(material.normalTex);
         glDeleteTextures(1, &normalTexture.textureID);
+    }
+
+    if (occlusionTexture.textureID != 0)
+    {
+        glMakeTextureHandleNonResidentARB(material.occlusionTex);
+        glDeleteTextures(1, &occlusionTexture.textureID);
+    }
+
+    if (emmisiveTexture.textureID != 0)
+    {
+        glMakeTextureHandleNonResidentARB(material.emmisiveTex);
+        glDeleteTextures(1, &emmisiveTexture.textureID);
     }
 }

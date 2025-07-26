@@ -226,11 +226,6 @@ void MeshComponent::Update(float deltaTime)
     }
 }
 
-void MeshComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void MeshComponent::RenderDebug(float deltaTime)
 {
 }

@@ -28,6 +28,7 @@ class RenderPass
         CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
     );
     void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer);
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
 
@@ -48,4 +49,9 @@ class RenderPass
     unsigned int depthTexture, depthFBO;
     float4x4 lightView;
     float4x4 lightProj;
+
+    // Tile Shading
+    unsigned int visibleLightIndicesSSBO = 0;
+    size_t currentSize = 0;
+    int tilesX;
 };

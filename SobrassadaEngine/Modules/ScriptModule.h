@@ -35,9 +35,17 @@ class ScriptModule : public Module
     }
 
     void DestroyScript(Script* script) const { destroyScriptFunc(script); }
+
     const int GetScriptCount() const { return getScriptCountFunc(); }
     const char* GetScriptName(const int i) const { return getScriptNameFunc(i); }
     const int GetScriptIdx(const std::string& scriptString) const { return searchIdxNameFunc(scriptString); }
+
+    const int GetShaderScriptCount() const { return getShaderScriptCountFunc(); }
+    const char* GetShaderScriptName(const int i) const { return getShaderScriptNameFunc(i); }
+    const int GetShaderScriptIdx(const std::string& scriptString) const
+    {
+        return searchShaderIdxNameFunc(scriptString);
+    }
 
   private:
     void LoadDLL();
@@ -58,20 +66,28 @@ class ScriptModule : public Module
     typedef void (*StartSobrassadaScripts)(Application* App);
     typedef void (*FreeSobrassadaScripts)();
 
-    typedef const char* (*GetScriptNameDLL)(const int index);
     typedef const int (*GetScriptCountDLL)();
+    typedef const char* (*GetScriptNameDLL)(const int index);
     typedef const int (*SearchIdxName)(const std::string& scriptString);
 
-    StartSobrassadaScripts startScriptFunc = nullptr;
-    CreateScriptFunc createScriptFunc      = nullptr;
-    DestroyScriptFunc destroyScriptFunc    = nullptr;
-    FreeSobrassadaScripts freeScriptFunc   = nullptr;
+    typedef const int (*GetShaderScriptCountDLL)();
+    typedef const char* (*GetShaderScriptNameDLL)(const int index);
+    typedef const int (*SearchShaderIdxName)(const std::string& scriptString);
 
-    GetScriptNameDLL getScriptNameFunc        = nullptr;
-    GetScriptCountDLL getScriptCountFunc      = nullptr;
-    SearchIdxName searchIdxNameFunc        = nullptr;
+    StartSobrassadaScripts startScriptFunc           = nullptr;
+    CreateScriptFunc createScriptFunc                = nullptr;
+    DestroyScriptFunc destroyScriptFunc              = nullptr;
+    FreeSobrassadaScripts freeScriptFunc             = nullptr;
 
-    int scriptCount                        = 0;
+    GetScriptCountDLL getScriptCountFunc             = nullptr;
+    GetScriptNameDLL getScriptNameFunc               = nullptr;
+    SearchIdxName searchIdxNameFunc                  = nullptr;
+
+    GetShaderScriptCountDLL getShaderScriptCountFunc = nullptr;
+    GetShaderScriptNameDLL getShaderScriptNameFunc   = nullptr;
+    SearchShaderIdxName searchShaderIdxNameFunc      = nullptr;
+
+    int scriptCount                                  = 0;
 
     fs::file_time_type lastWriteTime;
     std::atomic<bool> running = true;
