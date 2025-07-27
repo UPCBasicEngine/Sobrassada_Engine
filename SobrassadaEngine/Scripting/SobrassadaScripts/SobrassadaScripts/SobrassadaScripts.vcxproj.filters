@@ -833,7 +833,7 @@
     </ClCompile>
     <ClCompile Include="Spouts.cpp">
       <Filter>Environment\Traps</Filter>
-    </ClInclude>
+    </ClCompile>
     <ClCompile Include="MovingUVPostScript.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>

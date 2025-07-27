@@ -78,7 +78,7 @@ constexpr const char* scripts[] = {
     "EnemySpawnerScript",
     "GameOverScript",
     "PlayerLocationScript",
-    "Spouts"
+    "Spouts",
     "SwitchScriptTest",
 };
 
