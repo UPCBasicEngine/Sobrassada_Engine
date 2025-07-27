@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 
 #include "Application.h"
 #include "Archer.h"
@@ -117,7 +117,8 @@ void Archer::PerformAttack()
 
 void Archer::HandleState(float deltaTime)
 {
-    switch (currentState)
+
+      switch (currentState)
     {
     case ArcherStates::SEARCH:
         SearchForPlayer();
@@ -132,7 +133,7 @@ void Archer::HandleState(float deltaTime)
         Aim(deltaTime);
         break;
     case ArcherStates::BASIC_ATTACK:
-        Attack(deltaTime);
+        Attack(deltaTime); 
         break;
     case ArcherStates::ESCAPE:
         Escape(deltaTime);
@@ -145,13 +146,14 @@ void Archer::HandleState(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
-        animComponent->UseTrigger("idle");
+        //animComponent->UseTrigger("idle");
     }
 }
 
 void Archer::PatrolAI()
 {
-    if (animComponent) animComponent->UseTrigger("run");
+
+  if (animComponent) animComponent->UseTrigger("idle");
 
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
@@ -162,7 +164,7 @@ void Archer::PatrolAI()
 
         if (distance == PlayerDistances::Close)
         {
-            currentState = ArcherStates::AIM;
+            currentState = ArcherStates::AIM; 
             return;
         }
         else if (distance == PlayerDistances::Medium)
@@ -172,7 +174,7 @@ void Archer::PatrolAI()
         }
     }
 
-    
+   
     bool valid = false;
     if (reachedPatrolPoint)
     {
@@ -184,7 +186,11 @@ void Archer::PatrolAI()
         if (CheckDistanceWithPoint(patrolPoint)) reachedPatrolPoint = true;
         else valid = agentAI->SetPathNavigation(patrolPoint);
     }
-}
+ }
+
+    
+    
+
 
 void Archer::ChaseAI()
 {
@@ -193,18 +199,19 @@ void Archer::ChaseAI()
     if (character != nullptr)
     {
         agentAI->SetPathNavigation(character->GetLastPosition());
-        ChangeState();
+        ChangeState(); 
     }
-    else currentState = ArcherStates::PATROL;
+    else
+    {
+        currentState = ArcherStates::PATROL;
+    }
 }
 
 void Archer::SearchForPlayer()
 {
-    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
     if (!isSearching)
     {
-        // TODO: Would be nice to be a "search" animation instead of idle
-        animComponent->UseTrigger("idle");
+        if (animComponent) animComponent->UseTrigger("idle");
         isSearching = true;
         searchTimer = searchDuration;
         agentAI->SetSpeed(0.0f, 0.0f);
@@ -230,17 +237,23 @@ void Archer::Aim(float deltaTime)
 
     if (!isAiming)
     {
-       
         agentAI->SetLookForward(false);
+        agentAI->SetSpeed(0.0f, 0.0f);
+
+        if (character)
+        {
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        }
+
         if (animComponent) animComponent->UseTrigger("aim");
 
         isAiming = true;
         aimTimer = 0.0f;
-        agentAI->SetSpeed(0.0f, 0.0f);
     }
     else
     {
         aimTimer += deltaTime;
+
         if (character)
         {
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
@@ -250,7 +263,7 @@ void Archer::Aim(float deltaTime)
         {
             isAiming     = false;
             aimTimer     = 0.0f;
-           currentState = ArcherStates::BASIC_ATTACK;
+            currentState = ArcherStates::BASIC_ATTACK;
         }
     }
 }
@@ -286,8 +299,10 @@ void Archer::Attack(float deltaTime)
             agentAI->ResetSpeed();
             agentAI->SetLookForward(true);
 
-          
-            currentState = ArcherStates::AIM;
+            isAiming = false;
+            aimTimer = 0.0f;
+
+            ChangeState();
         }
     }
 }
@@ -306,6 +321,7 @@ void Archer::ChangeState()
     else if (distance <= rangeAIAttack) currentState = ArcherStates::AIM;
     else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;
     else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
+    else currentState = ArcherStates::PATROL;
 }
 
 void Archer::Escape(float deltaTime)
