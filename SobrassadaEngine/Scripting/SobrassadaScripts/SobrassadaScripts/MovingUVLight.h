@@ -4,6 +4,8 @@
 
 #include "Math/float2.h"
 
+class MeshComponent;
+
 class MovingUVLight : public Script
 {
   public:
@@ -37,4 +39,6 @@ class MovingUVLight : public Script
     float animationSpeed             = 0.1f;
     float2 uvOffset                  = float2::zero;
     float2 uvOffsetDirection         = float2::one;
+
+    MeshComponent* meshComp          = nullptr;
 };

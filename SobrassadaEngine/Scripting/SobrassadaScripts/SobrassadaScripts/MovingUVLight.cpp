@@ -38,7 +38,7 @@ bool MovingUVLight::Init()
         "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Gbuffer_Fragment.glsl"
     );
 
-    MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
+    meshComp = parent->GetComponent<MeshComponent*>();
 
     if (meshComp)
     {
@@ -114,11 +114,11 @@ void MovingUVLight::Update(float deltaTime)
 
 void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0)
+    if (shaderProgram && indexCount > 0 && meshComp)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
-        basicModelMatrix = parent->GetGlobalTransform();
+        basicModelMatrix = meshComp->GetCombinedMatrix();
 
         if (cameraComp)
         {

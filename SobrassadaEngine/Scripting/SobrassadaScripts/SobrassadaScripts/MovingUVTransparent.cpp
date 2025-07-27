@@ -41,7 +41,7 @@ bool MovingUVTransparent::Init()
         "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Transparent_Fragment.glsl"
     );
 
-    MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
+    meshComp = parent->GetComponent<MeshComponent*>();
 
     if (meshComp)
     {
@@ -94,7 +94,6 @@ bool MovingUVTransparent::Init()
 
             glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
             glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
-            
         }
 
         meshComp->SetEnabled(false);
@@ -112,11 +111,11 @@ void MovingUVTransparent::Update(float deltaTime)
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0)
+    if (shaderProgram && indexCount > 0 && meshComp)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
-        basicModelMatrix = parent->GetGlobalTransform();
+        basicModelMatrix = meshComp->GetCombinedMatrix();
 
         if (cameraComp)
         {
@@ -140,7 +139,6 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glUniform1i(4, 0);
         glUniform1i(5, isAlphaDiscard);
-
 
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
 
