@@ -2,6 +2,9 @@
 #undef max
 #undef min
 
+#include <algorithm>
+#include <random>
+
 #include "Application.h"
 #include "CameraComponent.h"
 #include "CameraMovement.h"
@@ -14,12 +17,22 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
-#include <algorithm>
-#include <random>
+constexpr float TAU                    = 2.0f * PI;
+constexpr float INDICATOR_PULSE_SPEED  = 4.0f;
+constexpr float INDICATOR_PULSE_SCALE  = 0.25f;
+constexpr float SHADOW_MIN_SCALE       = 0.01f;
+constexpr float SHADOW_MAX_SCALE       = 0.80f;
+constexpr float DEFAULT_DECAL_LIFETIME = 1.0f;
+
+static inline float RandomRange(float min, float max)
+{
+    static thread_local std::mt19937 rng {std::random_device {}()};
+    return std::uniform_real_distribution<float>(min, max)(rng);
+}
 
 FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 {
-    SetupInspectorFields(); // everything Inspector‑exposed is registered here
+    SetupInspectorFields();
 }
 
 void FireballTrap::SetupInspectorFields()
@@ -42,7 +55,6 @@ void FireballTrap::SetupInspectorFields()
     // Mini fireballs
     fields.push_back({"Mini Prototype", InspectorField::FieldType::GameObject, &miniPrototype, 0.f, 0.f});
     fields.push_back({"Mini Count", InspectorField::FieldType::Int, &miniCount, 1.f, 12.f});
-    fields.push_back({"Mini Speed", InspectorField::FieldType::Float, &miniSpeed, 1.f, 30.f});
     fields.push_back({"Mini Lifetime", InspectorField::FieldType::Float, &miniLifeTime, 0.f, 10.f});
 
     // Impact decals
@@ -56,48 +68,44 @@ void FireballTrap::SetupInspectorFields()
     fields.push_back({"Landing Indicator", InspectorField::FieldType::GameObject, &indicatorPrefab, 0.f, 0.f});
     fields.push_back({"Indicator Scale", InspectorField::FieldType::Float, &indicatorScale, 0.1f, 2.0f});
 }
-
 bool FireballTrap::Init()
 {
+    // Collider: spawn zone
     spawnZone = parent->GetComponent<CubeColliderComponent*>();
-    if (!spawnZone)
+    if (spawnZone)
     {
-        GLOG("[WARNING] FireballTrap: Spawn zone CubeCollider not found");
-    }
-    else
-    {
-        spawnHalfSize               = spawnZone->size * 0.5f;
-        spawnCenter                 = spawnZone->centerOffset;
-
         spawnZone->generateCallback = false;
         spawnZone->colliderType     = ColliderType::TRIGGER;
         spawnZone->layer            = ColliderLayer::WORLD_OBJECTS;
         spawnZone->SetEnabled(false);
     }
+    else GLOG("[WARNING] FireballTrap: Spawn zone CubeCollider not found");
 
+    // Visual ground burn mesh
     groundMesh = parent->GetComponent<MeshComponent*>();
     if (groundMesh) groundMesh->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap without mesh component.");
 
+    // Damage collider
     damageCollider = parent->GetComponent<SphereColliderComponent*>();
     if (damageCollider) damageCollider->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap without sphere collider component.");
 
+    // Children: 0 = fireball, 1 = shadow
     if (!parent->GetChildren().empty())
     {
         fireball = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
         if (fireball) fireball->SetEnabled(false);
         else GLOG("[WARNING] No fireball found as child of base");
     }
+
     if (parent->GetChildren().size() > 1)
     {
         fireballShadow = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[1]);
         if (fireballShadow) fireballShadow->SetEnabled(false);
         else GLOG("[WARNING] No fireball shadow found as child of base");
-        shadowBaseScale = fireballShadow->GetScale();
+        shadowBaseScale = fireballShadow ? fireballShadow->GetScale() : float3::one;
     }
-
-    baseLocal = parent->GetLocalTransform();
 
     if (miniPrototype) miniPrototype->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
@@ -116,14 +124,14 @@ bool FireballTrap::Init()
 
 void FireballTrap::Update(float deltaTime)
 {
-    if (!character || !groundMesh || !damageCollider || !fireball) return; // missing refs
+    if (!character || !groundMesh || !damageCollider || !fireball) return;
 
     switch (activationState)
     {
     case ACTIVATION_STATE::SLEEPING:
     {
-        float distanceSq = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
-        if (distanceSq <= cfg.activationRange * cfg.activationRange)
+        const float distSq = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
+        if (distSq <= cfg.activationRange * cfg.activationRange)
         {
             randomAttackTime = GenerateRandomAttackTime(cfg.minAttackCooldown, cfg.maxAttackCooldown);
             activatedTime    = 0.f;
@@ -132,35 +140,36 @@ void FireballTrap::Update(float deltaTime)
         break;
     }
     case ACTIVATION_STATE::IDLE:
-        activatedTime += deltaTime;
-        if (activatedTime >= randomAttackTime) StartAttack();
+        if ((activatedTime += deltaTime) >= randomAttackTime) StartAttack();
         break;
+
     case ACTIVATION_STATE::DROPPING:
         UpdateFireball(deltaTime);
         break;
+
     case ACTIVATION_STATE::DAMAGING:
-        impactElapsed += deltaTime;
-        if (impactElapsed >= cfg.bigBurnDuration) DisableDamage();
+        if ((impactElapsed += deltaTime) >= cfg.bigBurnDuration) DisableDamage();
         break;
     }
 
     UpdateMinis(deltaTime);
 
+    // Landing indicator pulse animation
     if (activeIndicator)
     {
-        indicatorPulse += deltaTime * 4.0f;
-        float s         = 1.0f + 0.25f * sinf(indicatorPulse);
+        indicatorPulse     += deltaTime * INDICATOR_PULSE_SPEED;
+        const float s       = 1.0f + INDICATOR_PULSE_SCALE * sinf(indicatorPulse);
 
-        float3 pos      = activeIndicator->GetLocalTransform().TranslatePart();
-        float3 scale    = indicatorBaseScale * s;
+        const float3 pos    = activeIndicator->GetLocalTransform().TranslatePart();
+        const float3 scale  = indicatorBaseScale * s;
 
         activeIndicator->SetLocalTransform(float4x4::FromTRS(pos, float3x3::identity, scale));
     }
 
+    // Lifetime & cleanup of mini decals
     for (auto it = activeMiniDecals.begin(); it != activeMiniDecals.end();)
     {
-        it->timer -= deltaTime;
-        if (it->timer <= 0.f)
+        if ((it->timer -= deltaTime) <= 0.f)
         {
             RecycleGO(it->go);
             it = activeMiniDecals.erase(it);
@@ -168,51 +177,51 @@ void FireballTrap::Update(float deltaTime)
         else ++it;
     }
 }
+
 void FireballTrap::StartAttack()
 {
-    parent->SetLocalTransform(baseLocal); // root never moves -> reset
+    // Reset root transform (trap never moves)
+    parent->SetLocalTransform(parent->GetLocalTransform());
 
-    // Random IMPACT inside collider
-    float3 impactWorld    = RandomSpawnPoint();
-    float3 impactLocal    = parent->GetGlobalTransform().Inverted().MulPos(impactWorld);
-    impactLocal.y         = 0.f;
-    impactOffsetLocal     = impactLocal;
-    lastImpactWorld       = impactWorld;
+    // Random impact position inside spawn zone
+    lastImpactWorld     = RandomSpawnPoint();
+    impactOffsetLocal   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
+    impactOffsetLocal.y = 0.f;
 
-    // Create indicator
-    float3 indicatorLocal = parent->GetGlobalTransform().Inverted().MulPos(impactWorld);
-    activeIndicator       = SpawnIndicator(indicatorLocal, cfg.bigBurnRadius * indicatorScale);
+    // Visual landing indicator
+    if (activeIndicator) RecycleGO(activeIndicator);
+
+    activeIndicator = SpawnIndicator(impactOffsetLocal, cfg.bigBurnRadius * indicatorScale);
     if (activeIndicator) indicatorBaseScale = activeIndicator->GetScale();
-    indicatorPulse = 0.0f;
+    indicatorPulse      = 0.0f;
 
-    // FIXED direction launchYawDeg
-    float angleRad = cfg.launchYawDeg * 0.0174532925f;
-    float3 dirXZ   = float3(cosf(angleRad), 0.f, sinf(angleRad)).Normalized();
+    // Launch direction
+    const float yawRad  = cfg.launchYawDeg * DEGREE_RAD_CONV;
+    const float3 dirXZ  = float3(cosf(yawRad), 0.f, sinf(yawRad)).Normalized();
 
-    // Distance to spawn
-    std::uniform_real_distribution<float> rad(0.5f * cfg.maxLaunchRadius, cfg.maxLaunchRadius);
-    float r           = rad(rng);
-    float3 spawnLocal = impactLocal + dirXZ * r;
-    spawnLocal.y      = cfg.fallingHeight;
+    // Spawn position
+    const float launchR = RandomRange(0.5f * cfg.maxLaunchRadius, cfg.maxLaunchRadius);
+    float3 spawnLocal   = impactOffsetLocal + dirXZ * launchR;
+    spawnLocal.y        = cfg.fallingHeight;
+
     fireball->SetLocalPosition(spawnLocal);
     fireball->SetEnabled(true);
 
-    // Lateral speed towards impact
-    float fallTime   = sqrtf(2.f * cfg.fallingHeight / cfg.gravity);
-    float horizSpeed = r / fallTime;
-    fireVelocity     = -dirXZ * horizSpeed;
-    fireVelocity.y   = 0.f;
+    // Horizontal velocity
+    const float fallTime   = sqrtf(2.f * cfg.fallingHeight / cfg.gravity);
+    const float horizSpeed = launchR / fallTime;
 
-    // Shadow
+    fireVelocity           = -dirXZ * horizSpeed; // towards impact
+
+    // Shadow initial placement
     if (fireballShadow)
     {
         fireballShadow->SetEnabled(true);
 
-        float3 initScale = shadowBaseScale * 0.01f;
-        float3 initPos   = float3(spawnLocal.x, 0.f, spawnLocal.z);
+        const float3 initScale = shadowBaseScale * SHADOW_MIN_SCALE;
+        const float3 initPos   = float3(spawnLocal.x, 0.f, spawnLocal.z);
 
-        float4x4 tf      = float4x4::FromTRS(initPos, float3x3::identity, initScale);
-        fireballShadow->SetLocalTransform(tf);
+        fireballShadow->SetLocalTransform(float4x4::FromTRS(initPos, float3x3::identity, initScale));
     }
 
     dropElapsed     = 0.f;
@@ -221,33 +230,36 @@ void FireballTrap::StartAttack()
 
 void FireballTrap::HandleImpact()
 {
+    // Disable falling visuals
     fireball->SetEnabled(false);
     if (fireballShadow) fireballShadow->SetEnabled(false);
 
     RecycleGO(activeIndicator);
     activeIndicator = nullptr;
 
-    fireball->SetEnabled(false);
-    if (fireballShadow) fireballShadow->SetEnabled(false);
+    // Decal under big fireball
+    if ((currentDecal = RequestImpactDecal())) currentDecal->SetLocalPosition(impactOffsetLocal);
 
-    currentDecal = RequestImpactDecal();
-    if (currentDecal) currentDecal->SetLocalPosition(impactOffsetLocal);
-
+    // Ground burn mesh & damage collider
     if (groundMesh) groundMesh->SetEnabled(true);
     if (damageCollider)
     {
-        damageCollider->SetEnabled(false);                
-        damageCollider->centerOffset = impactOffsetLocal; 
-        damageCollider->SetEnabled(true);                 
+        damageCollider->SetEnabled(false); // reset
+        damageCollider->centerOffset = impactOffsetLocal;
+        damageCollider->SetEnabled(true);
     }
 
-    float3 playerPos   = character->GetLastPosition();
-    float distToPlayer = sqrtf(playerPos.DistanceSq(lastImpactWorld));
-    bool hitPlayer     = distToPlayer <= noMiniHitRadius;
+    // Spawn minis
+    const float distToPlayer = sqrtf(character->GetLastPosition().DistanceSq(lastImpactWorld));
+    allowMiniDecals          = (distToPlayer > noMiniHitRadius);
 
-    allowMiniDecals    = !hitPlayer;
     SpawnMiniCluster();
-    if (shakeCam) shakeCam->StartShake(0.30f, std::clamp(cfg.fallingHeight * 0.03f, 0.15f, 0.6f), 0.12f);
+
+    if (shakeCam)
+    {
+        const float mag = std::clamp(cfg.fallingHeight * 0.03f, 0.15f, 0.6f);
+        shakeCam->StartShake(0.30f, mag, 0.12f);
+    }
 
     impactElapsed   = 0.f;
     activationState = ACTIVATION_STATE::DAMAGING;
@@ -257,10 +269,8 @@ void FireballTrap::DisableDamage()
 {
     if (groundMesh) groundMesh->SetEnabled(false);
     if (damageCollider) damageCollider->SetEnabled(false);
-
     RecycleGO(currentDecal);
     currentDecal    = nullptr;
-
     activationState = ACTIVATION_STATE::SLEEPING;
 }
 
@@ -270,28 +280,26 @@ void FireballTrap::UpdateFireball(float deltaTime)
     fireVelocity.y  = -cfg.gravity * dropElapsed;
     fireVelocity.y  = std::max(fireVelocity.y, -cfg.maxFallSpeed);
 
-    float3 pos      = fireball->GetLocalTransform().TranslatePart();
-    pos            += fireVelocity * deltaTime;
+    float3 pos      = fireball->GetLocalTransform().TranslatePart() + fireVelocity * deltaTime;
     fireball->SetLocalPosition(pos);
 
+    // Shadow scaling
     if (fireballShadow)
     {
-        float t          = 1.f - std::clamp(pos.y / cfg.fallingHeight, 0.f, 1.f);
-
-        float3 scaleNow  = shadowBaseScale * (0.01f + t * 0.80f);
-        float3 shadowPos = float3(pos.x, 0.f, pos.z);
-
-        float4x4 tf      = float4x4::FromTRS(shadowPos, float3x3::identity, scaleNow);
-        fireballShadow->SetLocalTransform(tf);
+        const float t          = 1.f - std::clamp(pos.y / cfg.fallingHeight, 0.f, 1.f);
+        const float3 scaleNow  = shadowBaseScale * (SHADOW_MIN_SCALE + t * SHADOW_MAX_SCALE);
+        const float3 shadowPos = float3(pos.x, 0.f, pos.z);
+        fireballShadow->SetLocalTransform(float4x4::FromTRS(shadowPos, float3x3::identity, scaleNow));
     }
 
+    // Impact
     if (pos.y <= 0.f)
     {
         HandleImpact();
     }
-    else
+    else // spin while falling
     {
-        float4x4 spin =
+        const float4x4 spin =
             float4x4::RotateX(cfg.rotationSpeed * deltaTime) * float4x4::RotateY(cfg.rotationSpeed * deltaTime);
         fireball->SetLocalTransform(fireball->GetLocalTransform() * spin);
     }
@@ -299,8 +307,7 @@ void FireballTrap::UpdateFireball(float deltaTime)
 
 float FireballTrap::GenerateRandomAttackTime(float min, float max) const
 {
-    std::uniform_real_distribution<float> dist(min, max);
-    return dist(rng);
+    return RandomRange(min, max);
 }
 
 GameObject* FireballTrap::RequestMini()
@@ -318,7 +325,7 @@ void FireballTrap::SpawnMiniCluster()
 {
     if (!miniPrototype) return;
 
-    static constexpr float tau = 6.2831853f;
+    static constexpr float tau = 2.f * PI;
     const float step           = tau / float(miniCount);
 
     for (uint32_t i = 0; i < miniCount; ++i)
@@ -392,7 +399,7 @@ void FireballTrap::UpdateMinis(float deltaTime)
     }
 }
 
-CameraMovement* FireballTrap::FindShakeCamera()
+CameraMovement* FireballTrap::FindShakeCamera() const
 {
     // find the parent script holding CameraMovement to shake on impact
     CameraComponent* camComp = AppEngine->GetSceneModule()->GetScene()->GetMainCamera();
@@ -439,7 +446,7 @@ GameObject* FireballTrap::RequestImpactDecal()
     return clone;
 }
 
-void FireballTrap::RecycleGO(GameObject* go)
+void FireballTrap::RecycleGO(GameObject* go) const
 {
     if (!go) return;
     Scene* scene = AppEngine->GetSceneModule()->GetScene();
