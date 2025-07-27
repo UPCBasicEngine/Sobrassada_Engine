@@ -38,7 +38,7 @@ bool MovingUVPostScript::Init()
         "./EngineDefaults/Shader/Custom/Fragment/MovingUV_PostL_Fragment.glsl"
     );
 
-    MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
+    meshComp = parent->GetComponent<MeshComponent*>();
 
     if (meshComp)
     {
@@ -96,11 +96,11 @@ void MovingUVPostScript::Update(float deltaTime)
 
 void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && texture)
+    if (shaderProgram && indexCount > 0 && texture && meshComp)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
-        basicModelMatrix = parent->GetGlobalTransform();
+        basicModelMatrix = meshComp->GetCombinedMatrix();
 
         if (cameraComp)
         {
