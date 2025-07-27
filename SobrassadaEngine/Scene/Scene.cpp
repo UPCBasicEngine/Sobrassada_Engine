@@ -1013,6 +1013,18 @@ void Scene::ClearObjectsToUpdate()
     toUpdateGameObjects.clear();
 }
 
+void Scene::UpdateAllMaterialInstances(const UID materialUID)
+{
+    for (const auto& object : gameObjectsContainer)
+    {
+        MeshComponent* mesh = object.second->GetComponent<MeshComponent*>();
+        if (mesh && mesh->GetResourceMaterial()->GetUID() == materialUID)
+        {
+            mesh->BatchEditorMode();
+        }
+    }
+}
+
 void Scene::CreateStaticSpatialDataStruct()
 {
     // PARAMETRIZED IN FUTURE

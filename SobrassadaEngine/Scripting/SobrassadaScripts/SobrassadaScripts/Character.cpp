@@ -228,6 +228,9 @@ void Character::TakeDamage(int amount)
     invulnerabilityTimer  = invulnerableDuration;
 
     OnDamageTaken(amount);
+
+    if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
+
     if (currentHealth <= 0) Die();
 }
 
@@ -288,6 +291,8 @@ void Character::Die()
     // GLOG("%s dead", parent->GetName().c_str());
     isDead = true;
     OnDeath();
+
+    if (type != CharacterType::CuChulainn) playerScript->OnEnemyDefeated();
 
     if (characterCollider)
     {

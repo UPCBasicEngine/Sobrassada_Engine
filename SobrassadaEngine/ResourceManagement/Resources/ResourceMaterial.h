@@ -37,11 +37,11 @@ struct MaterialGPU
 class ResourceMaterial : public Resource
 {
   public:
-    ResourceMaterial(UID uid, const std::string& name, const rapidjson::Value& importOptions);
+    ResourceMaterial(UID uid, const std::string& name);
     ~ResourceMaterial() override;
 
-    bool OnEditorUpdate();
-    void LoadMaterialData(Material mat);
+    void OnEditorUpdate();
+    void LoadMaterialData(const Material& mat, const rapidjson::Value& importOptions);
     void FreeMaterials() const;
 
     UID ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU);
@@ -83,4 +83,6 @@ class ResourceMaterial : public Resource
     bool doubleSided      = false;
     bool hasNormal        = false;
     UID defaultTextureUID = INVALID_UID;
+
+    bool wasUpdated       = false;
 };
