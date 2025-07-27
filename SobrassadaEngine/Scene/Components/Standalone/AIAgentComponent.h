@@ -21,7 +21,6 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     ~AIAgentComponent() override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
     void Clone(const Component* other) override;

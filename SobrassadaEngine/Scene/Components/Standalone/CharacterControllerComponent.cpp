@@ -187,11 +187,6 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     else Move(deltaTime);
 }
 
-void CharacterControllerComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void CharacterControllerComponent::RenderDebug(float deltaTime)
 {
 }
