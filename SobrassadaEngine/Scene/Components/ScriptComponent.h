@@ -24,12 +24,16 @@ class ScriptComponent : public Component
     void Clone(const Component* other) override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override;
+    void Render(float deltaTime, CameraComponent* camera) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
     void InitScriptInstances();
+
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer);
+    void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer);
+    void OnCollisionExit(GameObject* otherObject, ColliderLayer layer);
+
     bool CreateScript(const std::string& scriptType);
     void DeleteScript(const int index);
     void DeleteAllScripts();

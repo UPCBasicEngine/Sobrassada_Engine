@@ -14,6 +14,8 @@
 #include <tuple>
 #include <vector>
 
+constexpr int maxTags = 10;
+
 class MeshComponent;
 class PointLightComponent;
 class SpotLightComponent;
@@ -39,6 +41,7 @@ class SplineComponent;
 class TrailComponent;
 class DecalComponent;
 class ParticleSystemComponent;
+class ShaderScriptComponent;
 
 enum MobilitySettings
 {
@@ -107,7 +110,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void OnAABBUpdated();
 
-    void Render(float deltatime) const;
+    void Render(float deltatime, CameraComponent* camera) const;
     void RenderEditor();
 
     const float4x4& GetGlobalTransform() const { return globalTransform; }
@@ -123,6 +126,10 @@ class SOBRASADA_API_ENGINE GameObject
     void UpdateOpenNodeHierarchy(bool openValue);
 
     bool WillUpdate() const { return willUpdate; };
+
+    bool HasTag(const HashString& requestedTag);
+    void AddTag(const HashString& tag);
+    void RemoveTag(const HashString& tag);
 
     template <typename T> T GetComponent() const { return std::get<T>(compTuple); }
     template <typename T> T GetComponentChild(Application* app) const;
@@ -188,6 +195,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     bool isRenaming = false;
     char renameBuffer[128];
+    char newTagName[64]                  = "";
 
     UID prefabUID                        = INVALID_UID;
     UID prefabVersionUID                 = INVALID_UID;
@@ -214,7 +222,12 @@ class SOBRASADA_API_ENGINE GameObject
     std::tuple<COMPONENTS> compTuple     = std::make_tuple(COMPONENTS_NULLPTR);
     std::bitset<std::tuple_size<decltype(compTuple)>::value> createdComponents;
 
-    bool hasScriptsToLoad = false;
+    bool hasScriptsToLoad        = false;
+
+    int selectedSelfTag          = -1;
+    int selectedGlobalTag        = -1;
+    HashString globalSelectedTag = HashString("");
+    std::vector<HashString> tags;
 };
 
 template <typename T> inline T GameObject::GetComponentChild(Application* app) const

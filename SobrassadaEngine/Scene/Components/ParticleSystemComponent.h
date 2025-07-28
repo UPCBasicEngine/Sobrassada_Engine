@@ -23,7 +23,6 @@ class ParticleSystemComponent : public Component
     void Clone(const Component* other) override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
@@ -38,6 +37,8 @@ class ParticleSystemComponent : public Component
         particleSystemIterator = iterator;
     }
 
+  private:
+    void CreateLocalAABB();
   private:
     char newParticleTagName[64]     = "";
     char newEmitterTagName[64]      = "";

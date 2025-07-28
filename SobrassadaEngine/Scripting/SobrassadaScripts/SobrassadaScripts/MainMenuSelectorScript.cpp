@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 
 #include "Application.h"
 #include "CuChulainn.h"
@@ -133,6 +133,11 @@ void MainMenuSelectorScript::Update(float deltaTime)
                 AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
             AppEngine->GetSceneModule()->RequestSceneLoad(path);
             return;
+        }
+        else
+        {
+            ButtonComponent* button = selectedItem->GetComponent<ButtonComponent*>();
+            if (button) button->OnClick();
         }
     }
 }

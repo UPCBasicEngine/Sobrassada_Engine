@@ -1,16 +1,18 @@
 #include "pch.h"
 
 #include "Archer.h"
-#include "Changeling.h"
 #include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "ChangeSceneScript.h"
+#include "Changeling.h"
 #include "CuChulainn.h"
+#include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
+#include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
 #include "MainMenuSelectorScript.h"
@@ -19,16 +21,20 @@
 #include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
 #include "PauseMenuScript.h"
+#include "PlayerLocationScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
 #include "SpawnUI.h"
+#include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "EnemySpawnerScript.h"
-#include "GameOverScript.h"
+
+#include "MovingUVLight.h"
+#include "MovingUVPostScript.h"
+#include "MovingUVTransparent.h"
 
 #include <string>
 
@@ -66,10 +72,14 @@ constexpr const char* scripts[] = {
     "MoveGOInSpline",
     "Mushroom",
     "EnemySpawnerScript",
-    "GameOverScript"
+    "GameOverScript",
+    "PlayerLocationScript",
+    "SwitchScriptTest",
 };
 
-Application* AppEngine = nullptr;
+constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
+
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -106,6 +116,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Mushroom") return new Mushroom(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "EnemySpawnerScript") return new EnemySpawnerScript(parent);
+    if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
@@ -113,6 +124,12 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
+    if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
+
+    /* Render Scripts */
+    if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
+    if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
+    if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
 
     return nullptr;
 }
@@ -144,6 +161,29 @@ extern "C" SOBRASSADA_API const int GetScriptIndexByName(const std::string& scri
     for (int i = 0; i < GetScriptCount(); ++i)
     {
         if (scriptString == scripts[i])
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
+extern "C" SOBRASSADA_API const int GetShaderScriptCount()
+{
+    return sizeof(shaderScripts) / sizeof(shaderScripts[0]);
+}
+
+extern "C" SOBRASSADA_API const char* GetShaderScriptName(const int index)
+{
+    if (index < 0 || index >= GetShaderScriptCount()) return nullptr;
+    return shaderScripts[index];
+}
+
+extern "C" SOBRASSADA_API const int GetShaderScriptIndexByName(const std::string& scriptString)
+{
+    for (int i = 0; i < GetScriptCount(); ++i)
+    {
+        if (scriptString == shaderScripts[i])
         {
             return i;
         }

@@ -22,7 +22,7 @@ Component::Component(const rapidjson::Value& initialState, GameObject* parent)
     : uid(initialState["UID"].GetUint64()), parent(parent),
       type(static_cast<ComponentType>(initialState["Type"].GetInt()))
 {
-    enabled              = initialState["Enabled"].GetBool();
+    enabled = initialState["Enabled"].GetBool();
     if (initialState.HasMember("WasEnabled"))
     {
         wasEnabled = initialState["WasEnabled"].GetBool();
@@ -41,7 +41,7 @@ void Component::Save(rapidjson::Value& targetState, rapidjson::Document::Allocat
 
     targetState.AddMember("Enabled", enabled, allocator);
     targetState.AddMember("WasEnabled", wasEnabled, allocator);
-    targetState.AddMember("Name", rapidjson::Value(std::string(name).c_str(), allocator), allocator);
+    targetState.AddMember("Name", rapidjson::Value(name, allocator), allocator);
 }
 
 bool Component::RenderGizmo()
@@ -56,13 +56,15 @@ void Component::RenderEditorInspector()
 
     if (parent->IsGloballyEnabled())
     {
-        if (ImGui::Checkbox("Enabled", &enabled)) wasEnabled = enabled;
-        enabled = wasEnabled;
+        bool previousEnabled = enabled;
+        if (ImGui::Checkbox("Enabled", &enabled))
+        {
+            wasEnabled = previousEnabled;
+        }
     }
     else
     {
         ImGui::Checkbox("Enabled", &enabled);
-        enabled = false;
     }
 }
 

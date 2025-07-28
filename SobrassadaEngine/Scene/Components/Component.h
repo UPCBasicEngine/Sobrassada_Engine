@@ -7,6 +7,7 @@
 #include "rapidjson/document.h"
 
 class GameObject;
+class CameraComponent;
 
 class SOBRASADA_API_ENGINE Component
 {
@@ -21,7 +22,7 @@ class SOBRASADA_API_ENGINE Component
     virtual void Clone(const Component* other) = 0;
 
     virtual void Update(float deltaTime)       = 0;
-    virtual void Render(float deltaTime)       = 0;
+    virtual void Render(float deltaTime, CameraComponent* camera) {};
     virtual void RenderDebug(float deltaTime)  = 0;
     virtual bool RenderGizmo();
     virtual void RenderEditorInspector();
@@ -41,10 +42,10 @@ class SOBRASADA_API_ENGINE Component
     const float4x4& GetGlobalTransform() const;
     bool IsEffectivelyEnabled() const;
 
-    void SetEnabled(bool newEnabled)
+    virtual void SetEnabled(bool newEnabled)
     {
+        wasEnabled = enabled;
         enabled    = newEnabled;
-        wasEnabled = newEnabled;
     }
 
   protected:

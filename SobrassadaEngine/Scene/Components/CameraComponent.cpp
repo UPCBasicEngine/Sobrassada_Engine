@@ -56,6 +56,8 @@ CameraComponent::CameraComponent(UID uid, GameObject* parent) : Component(uid, p
     }
 
     previewFramebuffer = new Framebuffer(previewWidth, previewHeight, true);
+
+    UpdateUBO();
 }
 
 CameraComponent::CameraComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -460,11 +462,6 @@ const float3 CameraComponent::ScreenPointToXZ(const float y)
     const float t         = (y - ray.pos.y) / ray.dir.y;
     const float3 worldPos = ray.pos + ray.dir * t;
     return worldPos;
-}
-
-void CameraComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
 }
 
 void CameraComponent::RenderDebug(float deltaTime)

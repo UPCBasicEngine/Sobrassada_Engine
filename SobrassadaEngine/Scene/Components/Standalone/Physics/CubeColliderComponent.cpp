@@ -17,10 +17,22 @@ CubeColliderComponent::CubeColliderComponent(UID uid, GameObject* parent)
 
     CalculateCollider();
 
-    onCollissionCallback = CollisionDelegate(
-        std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+    onCollissionCallback      = CollisionDelegate(std::bind(
+        &CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3
+    ));
+
+    onCollissionEnterCallback = CollisionDelegate(std::bind(
+        &CubeColliderComponent::OnCollisionEnter, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionExitCallback  = CollisionExitDelegate(
+        std::bind(&CubeColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+
+    userPointer = BulletUserPointer(
+        this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
     // App->GetPhysicsModule()->CreateCubeRigidBody(this);
 }
 
@@ -51,10 +63,24 @@ CubeColliderComponent::CubeColliderComponent(const rapidjson::Value& initialStat
         size                              = {dataArray[0].GetFloat(), dataArray[1].GetFloat(), dataArray[2].GetFloat()};
     }
 
-    onCollissionCallback = CollisionDelegate(
-        std::bind(&CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+    onCollissionCallback      = CollisionDelegate(std::bind(
+        &CubeColliderComponent::OnCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3
+    ));
+
+    onCollissionEnterCallback = CollisionDelegate(std::bind(
+        &CubeColliderComponent::OnCollisionEnter, this, std::placeholders::_1, std::placeholders::_2,
+        std::placeholders::_3
+    ));
+
+    onCollissionExitCallback  = CollisionExitDelegate(
+        std::bind(&CubeColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
-    userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+
+    userPointer = BulletUserPointer(
+        this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
+
+    RecalculateLocalAABB();
     // App->GetPhysicsModule()->CreateCubeRigidBody(this);
 }
 
@@ -147,12 +173,22 @@ void CubeColliderComponent::RenderEditorInspector()
     ImGui::EndDisabled();
 
     if (ImGui::DragFloat3("Center offset", &centerOffset[0], 0.05f, -10.f, 10.f))
+    {
         App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+        RecalculateLocalAABB();
+    }
 
-    if (ImGui::DragFloat3("Size", &size[0], 0.05f, 0.f, 20.f)) App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+    if (ImGui::DragFloat3("Size", &size[0], 0.05f, 0.f, 20.f))
+    {
+        App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+        RecalculateLocalAABB();
+    }
 
     if (ImGui::DragFloat3("Center rotation", &centerRotation[0], 0.01745329f, -1.570796f, 1.570796f))
+    {
         App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+        RecalculateLocalAABB();
+    }
 
     // COLLIDER LAYER SETTINGS
     if (ImGui::BeginCombo("Layer options", ColliderLayerStrings[(int)layer]))
@@ -163,7 +199,10 @@ void CubeColliderComponent::RenderEditorInspector()
             if (ImGui::Selectable(ColliderLayerStrings[i]))
             {
                 layer       = ColliderLayer(i);
-                userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+                userPointer = BulletUserPointer(
+                    this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback,
+                    generateCallback, layer
+                );
                 App->GetPhysicsModule()->UpdateCubeRigidBody(this);
             }
         }
@@ -178,7 +217,9 @@ void CubeColliderComponent::RenderEditorInspector()
 
     if (ImGui::Checkbox("Generate Callbacks", &generateCallback))
     {
-        userPointer = BulletUserPointer(this, &onCollissionCallback, generateCallback, layer);
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
     }
 }
 
@@ -193,11 +234,6 @@ void CubeColliderComponent::Update(float deltaTime)
     {
         if (rigidBody == nullptr) App->GetPhysicsModule()->CreateCubeRigidBody(this);
     }
-}
-
-void CubeColliderComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
 }
 
 void CubeColliderComponent::RenderDebug(float deltaTime)
@@ -222,9 +258,34 @@ void CubeColliderComponent::OnCollision(GameObject* otherObject, float3 collisio
     if (script) script->OnCollision(otherObject, collisionNormal, layer);
 }
 
+void SOBRASADA_API_ENGINE
+CubeColliderComponent::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
+{
+    if (!enabled || !otherObject->IsEnabled()) return;
+
+    auto script = parent->GetComponent<ScriptComponent*>();
+    if (script) script->OnCollisionEnter(otherObject, collisionNormal, layer);
+}
+
+void SOBRASADA_API_ENGINE CubeColliderComponent::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
+{
+    if (!enabled || !otherObject->IsEnabled()) return;
+
+    auto script = parent->GetComponent<ScriptComponent*>();
+    if (script) script->OnCollisionExit(otherObject, layer);
+}
+
 void CubeColliderComponent::DeleteRigidBody()
 {
     App->GetPhysicsModule()->DeleteCubeRigidBody(this);
+}
+
+void CubeColliderComponent::SetEnabled(bool newEnabled)
+{
+    Component::SetEnabled(newEnabled);
+
+    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteCubeRigidBody(this);
 }
 
 void CubeColliderComponent::CalculateCollider()
@@ -237,5 +298,13 @@ void CubeColliderComponent::CalculateCollider()
     {
         size         = heriachyAABB.HalfSize();
         centerOffset = heriachyAABB.CenterPoint() - globalTransform.TranslatePart();
+        RecalculateLocalAABB();
     }
+}
+
+void CubeColliderComponent::RecalculateLocalAABB()
+{
+    float3 minPos      = centerOffset - size;
+    float3 maxPos      = centerOffset + size;
+    localComponentAABB = AABB(minPos, maxPos);
 }

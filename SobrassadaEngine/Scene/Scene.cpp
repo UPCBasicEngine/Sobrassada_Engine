@@ -7,6 +7,7 @@
 #include "CameraModule.h"
 #include "Component.h"
 #include "ComponentUtils.h"
+#include "Components/ShaderScriptComponent.h"
 #include "DebugDrawModule.h"
 #include "EditorUIModule.h"
 #include "Framebuffer.h"
@@ -35,6 +36,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
+#include "ShaderScriptModule.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
@@ -57,7 +59,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include <unordered_map>
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -70,6 +71,7 @@
 #endif
 
 #include <set>
+#include <unordered_map>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
 {
@@ -127,6 +129,25 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
     }
 
     renderPass = new RenderPass();
+
+    if (initialState.HasMember("tags") && initialState.HasMember("tagsGO"))
+    {
+        const rapidjson::Value& tagDataArray   = initialState["tags"];
+        const rapidjson::Value& tagGODataArray = initialState["tagsGO"];
+
+        for (rapidjson::SizeType i = 0; i < tagDataArray.Size(); i++)
+        {
+            HashString newTag = HashString(tagDataArray[i].GetString());
+            CreateTag(std::move(newTag));
+
+            for (int j = 0; j < tagGODataArray[i].Size(); ++j)
+            {
+                RequestTag(
+                    HashString(tagDataArray[i].GetString()), GetGameObjectByUID(tagGODataArray[i][j].GetUint64())
+                );
+            }
+        }
+    }
 
     // GLOG("%s scene loaded", sceneName.c_str());
 }
@@ -205,8 +226,11 @@ void Scene::Init()
         if (mesh) mesh->InitSkin();
     }
 
-    // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdate
+    // Call this after overriding the prefabs to avoid duplicates in gameObjectsToUpdateComponents
     GetGameObjectByUID(gameObjectRootUID)->UpdateTransformForGOBranch();
+
+    // Worst case all objects are in frustum
+    toUpdateGameObjects.reserve(gameObjectsContainer.size());
 
     UpdateStaticSpatialStructure();
     UpdateDynamicSpatialStructure();
@@ -237,6 +261,22 @@ void Scene::Save(
     App->GetCameraModule()->SaveCameraPosition(targetState, allocator);
 
     App->GetPhysicsModule()->SaveLayerData(targetState, allocator);
+
+    // SAVING FIRST
+    rapidjson::Value sceneTagsJSON(rapidjson::kArrayType);
+    rapidjson::Value sceneTagsGameObjectsJSON(rapidjson::kArrayType);
+    for (auto& tagPair : tags)
+    {
+        rapidjson::Value currentTagGO(rapidjson::kArrayType);
+        for (GameObject* currentGO : tagPair.second)
+        {
+            currentTagGO.PushBack(currentGO->GetUID(), allocator);
+        }
+        sceneTagsJSON.PushBack(rapidjson::Value(tagPair.first.c_str(), allocator), allocator);
+        sceneTagsGameObjectsJSON.PushBack(currentTagGO, allocator);
+    }
+    targetState.AddMember("tags", sceneTagsJSON, allocator);
+    targetState.AddMember("tagsGO", sceneTagsGameObjectsJSON, allocator);
 
     // Serialize GameObjects
     rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
@@ -286,12 +326,18 @@ update_status Scene::Update(float deltaTime)
         {
             ScriptComponent* script = gameObject.second->GetComponent<ScriptComponent*>();
             if (script) script->InitScriptInstances();
+
+            ShaderScriptComponent* shaderScript = gameObject.second->GetComponent<ShaderScriptComponent*>();
+            if (shaderScript) shaderScript->InitScriptInstances();
         }
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
 
-    for (auto& gameObject : gameObjectsContainer)
-        gameObject.second->UpdateComponents(deltaTime);
+    // for (auto& gameObject : gameObjectsContainer)
+    //     gameObject.second->UpdateComponents(deltaTime);
+
+    for (auto gameObject : toUpdateGameObjects)
+        gameObject->UpdateComponents(deltaTime);
 
     ImGuiWindow* window = ImGui::FindWindowByName(sceneName.c_str());
     if (window && !(window->Hidden || window->Collapsed)) sceneVisible = true;
@@ -323,33 +369,23 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
-    FrustumPlanes frustumPlanes;
-    if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    else frustumPlanes = camera->GetFrustrumPlanes();
-    std::vector<GameObject*> objectsToRender;
-    CheckObjectsToRender(objectsToRender, frustumPlanes);
-
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
 
-    renderPass->RenderScene(framebuffer, objectsToRender, camera);
+    renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera);
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
+    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
 #endif
-    for (const auto& gameObject : objectsToRender)
-    {
-        if (gameObject != nullptr)
-        {
-            gameObject->Render(deltaTime);
-        }
-    }
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
+    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
+    glPopDebugGroup();
 
 #ifndef GAME
-    for (const auto& gameObject : gameObjectsContainer)
+    for (const auto& gameObject : toUpdateGameObjects)
     {
-        gameObject.second->DrawGizmos();
+        gameObject->DrawGizmos();
     }
 #endif
 
@@ -720,18 +756,18 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUID)
     }
 }
 
-void Scene::AddGameObjectToUpdate(GameObject* gameObject)
+void Scene::AddGameObjectToUpdateComponents(GameObject* gameObject)
 {
     if (!gameObject->WillUpdate())
     {
         gameObject->SetWillUpdate(true);
-        gameObjectsToUpdate.push_back(gameObject);
+        gameObjectsToUpdateComponents.push_back(gameObject);
     }
 }
 
-void Scene::UpdateGameObjects()
+void Scene::UpdateGameObjectsComponents()
 {
-    for (GameObject* gameObject : gameObjectsToUpdate)
+    for (GameObject* gameObject : gameObjectsToUpdateComponents)
     {
         if (gameObject)
         {
@@ -739,12 +775,12 @@ void Scene::UpdateGameObjects()
             gameObject->SetWillUpdate(false);
         }
     }
-    gameObjectsToUpdate.clear();
+    gameObjectsToUpdateComponents.clear();
 }
 
-void Scene::ClearGameObjectsToUpdate()
+void Scene::ClearGameObjectsToUpdateComponents()
 {
-    gameObjectsToUpdate.clear();
+    gameObjectsToUpdateComponents.clear();
 }
 
 void Scene::AddGameObjectToSelection(UID gameObject, UID gameObjectParent)
@@ -836,7 +872,70 @@ void Scene::DeleteMultiselection()
     }
     selectedGameObjects.clear();
     selectedGameObjectsMobility.clear();
-    ClearGameObjectsToUpdate();
+    ClearGameObjectsToUpdateComponents();
+}
+
+void Scene::CreateTag(HashString&& newTag)
+{
+    if (newTag != emptyString && tags.find(newTag) == tags.end())
+    {
+        tags.insert({std::move(newTag), {}});
+    }
+}
+
+void Scene::DeleteTag(const HashString& tagToDelete)
+{
+    auto tagIterator = tags.find(tagToDelete);
+    if (tagIterator != tags.end())
+    {
+        for (GameObject* gameObject : tagIterator->second)
+        {
+            gameObject->RemoveTag(tagToDelete);
+        }
+
+        tags.erase(tagIterator);
+    }
+}
+
+void Scene::RequestTag(const HashString& requestTag, GameObject* gameObject)
+{
+    if (!gameObject) return;
+    auto tagIterator = tags.find(requestTag);
+    if (tagIterator != tags.end() && !gameObject->HasTag(requestTag))
+    {
+        tags[requestTag].push_back(gameObject);
+        gameObject->AddTag(requestTag);
+    }
+}
+
+void Scene::RemoveFromTag(const HashString& requestTag, GameObject* gameObject)
+{
+    if (!gameObject) return;
+    auto tagIterator = tags.find(requestTag);
+    if (tagIterator != tags.end() && gameObject->HasTag(requestTag))
+    {
+        std::vector<GameObject*>& gameObjects = tags[requestTag];
+
+        for (auto goIterator = gameObjects.begin(); goIterator != gameObjects.end(); ++goIterator)
+        {
+            if (*goIterator == gameObject)
+            {
+                gameObject->RemoveTag(requestTag);
+                gameObjects.erase(goIterator);
+                return;
+            }
+        }
+    }
+}
+
+const std::vector<GameObject*>* Scene::GetTaggedGameObjects(const HashString& requestTag)
+{
+    if (tags.find(requestTag) != tags.end())
+    {
+        return &tags[requestTag];
+    }
+
+    return nullptr;
 }
 
 UID Scene::GetMultiselectUID() const
@@ -848,6 +947,82 @@ void Scene::SetMultiselectPosition(const float3& newPosition)
 {
     const float4x4 localMat = float4x4::FromTRS(newPosition, float4x4::identity, float3::one);
     multiSelectParent->SetLocalTransform(localMat);
+}
+
+void Scene::CheckObjectsToUpdate()
+{
+    CameraComponent* mainCamera = App->GetSceneModule()->GetScene()->GetMainCamera();
+    if (App->GetSceneModule()->GetInPlayMode() && mainCamera != nullptr)
+        CheckObjectsInFrustum(toUpdateGameObjects, mainCamera->GetFrustrumPlanes());
+
+    else CheckObjectsInFrustum(toUpdateGameObjects, App->GetCameraModule()->GetFrustrumPlanes());
+
+    for (auto gameObject : toUpdateGameObjects)
+        toUpdateGameObjectsSet.insert(gameObject->GetUID());
+
+    // ADD ALWAYS UPDATE TAG - UPDATE
+    auto alwaysUpdateObjects = GetTaggedGameObjects(HashString("UPDATE"));
+    if (alwaysUpdateObjects)
+    {
+        for (GameObject* currentGameObject : *alwaysUpdateObjects)
+        {
+            if (toUpdateGameObjectsSet.find(currentGameObject->GetUID()) == toUpdateGameObjectsSet.end())
+            {
+                toUpdateGameObjects.push_back(currentGameObject);
+                toUpdateGameObjectsSet.insert(currentGameObject->GetUID());
+            }
+        }
+    }
+
+    // ADDING OBJECTS ASSIGNED TO LOCATION
+    auto taggedLocationObjects = GetTaggedGameObjects(playerLocation);
+    if (taggedLocationObjects)
+    {
+        for (GameObject* currentGameObject : *taggedLocationObjects)
+        {
+            if (toUpdateGameObjectsSet.find(currentGameObject->GetUID()) == toUpdateGameObjectsSet.end())
+            {
+                toUpdateGameObjects.push_back(currentGameObject);
+                toUpdateGameObjectsSet.insert(currentGameObject->GetUID());
+            }
+        }
+    }
+
+    // ADDING CAMERA MANUALLY BECAUSE ITS NOT INSIDE ITS OWN FRUSTUM
+    GameObject* camera = GetGameObjectByName("Camera");
+    if (camera && toUpdateGameObjectsSet.find(camera->GetUID()) == toUpdateGameObjectsSet.end())
+    {
+        toUpdateGameObjects.push_back(camera);
+        toUpdateGameObjectsSet.insert(camera->GetUID());
+    }
+    if (camera)
+    {
+        GameObject* cameraParent = GetGameObjectByUID(camera->GetParent());
+
+        if (toUpdateGameObjectsSet.find(cameraParent->GetUID()) == toUpdateGameObjectsSet.end())
+        {
+            toUpdateGameObjects.push_back(cameraParent);
+            toUpdateGameObjectsSet.insert(cameraParent->GetUID());
+        }
+    }
+}
+
+void Scene::ClearObjectsToUpdate()
+{
+    toUpdateGameObjectsSet.clear();
+    toUpdateGameObjects.clear();
+}
+
+void Scene::UpdateAllMaterialInstances(const UID materialUID)
+{
+    for (const auto& object : gameObjectsContainer)
+    {
+        MeshComponent* mesh = object.second->GetComponent<MeshComponent*>();
+        if (mesh && mesh->GetResourceMaterial()->GetUID() == materialUID)
+        {
+            mesh->BatchEditorMode();
+        }
+    }
 }
 
 void Scene::CreateStaticSpatialDataStruct()
@@ -908,10 +1083,10 @@ void Scene::UpdateDynamicSpatialStructure()
     CreateDynamicSpatialDataStruct();
 }
 
-void Scene::CheckObjectsToRender(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
+void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
 {
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::CheckObjectsToRender", Optick::Category::GameLogic)
+    OPTICK_CATEGORY("Scene::CheckObjectsInFrustum", Optick::Category::GameLogic)
 #endif
     std::vector<GameObject*> queriedObjects;
 
@@ -950,7 +1125,7 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
         if (obj.second->GetName() == name) return obj.second;
     }
 
-    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }
 
@@ -1199,7 +1374,7 @@ void Scene::LoadModel(const UID modelUID)
 
 void Scene::LoadPrefab(
     const UID prefabUID, const ResourcePrefab* prefab, const float4x4& transform, bool isEnabled,
-    std::vector<bool> componentsEnabledStates
+    std::vector<bool> componentsEnabledStates, const HashString& assignTag
 )
 {
     if (prefabUID != INVALID_UID)
@@ -1299,6 +1474,16 @@ void Scene::LoadPrefab(
         // Get all scene lights, because if the prefab has lights when creating them they won't be added to the
         // scene, as the gameObject is still not part of the scene
         if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
+
+        // ADD TAG TO ALL GO THAT CONTAIN A SCRIPT, NO WAY OF KNOWING WHICH IS THE GO FOR AN ENEMY TO ASSIGN IT DIRECTLY
+        // TO USE IT IN PLAYER LOCATION UPDATES
+        if (assignTag == emptyString) return;
+
+        for (GameObject* currentGO : newObjects)
+        {
+            if (currentGO->IsComponentCreated((int)ComponentType::COMPONENT_SCRIPT - 1))
+                RequestTag(assignTag, currentGO);
+        }
     }
 }
 

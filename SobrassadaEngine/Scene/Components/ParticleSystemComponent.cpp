@@ -10,11 +10,13 @@
 ParticleSystemComponent::ParticleSystemComponent(UID uid, GameObject* parent)
     : Component(uid, parent, "ParticleSystem", COMPONENT_PARTICLE_SYSTEM)
 {
+    CreateLocalAABB();
 }
 
 ParticleSystemComponent::ParticleSystemComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
+    CreateLocalAABB();
 
     if (initialState.HasMember("ParticleSystemTag"))
         particleSystemTag = HashString(initialState["ParticleSystemTag"].GetString());
@@ -55,10 +57,6 @@ void ParticleSystemComponent::Update(float deltaTime)
 {
     for (auto& emitter : emitterInstances)
         emitter.Update(deltaTime);
-}
-
-void ParticleSystemComponent::Render(float deltaTime)
-{
 }
 
 void ParticleSystemComponent::RenderDebug(float deltaTime)
@@ -203,4 +201,9 @@ void ParticleSystemComponent::SetParticleSystem(ParticleSystem* newParticleSyste
 {
     particleSystem    = newParticleSystem;
     particleSystemTag = newParticleSystem->GetTag();
+}
+
+void ParticleSystemComponent::CreateLocalAABB()
+{
+    localComponentAABB = AABB(-(float3::one / 2.f), (float3::one / 2.f));
 }

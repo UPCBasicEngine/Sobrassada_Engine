@@ -65,10 +65,11 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Audio Listener"),       COMPONENT_AUDIO_LISTENER      },
         {HashString("UI CanvasScaler"),      COMPONENT_CANVAS_SCALER       },
         {HashString("Billboard"),            COMPONENT_BILLBOARD           },
-		{HashString("Spline"),               COMPONENT_SPLINE              },
+        {HashString("Spline"),               COMPONENT_SPLINE              },
         {HashString("Decal"),                COMPONENT_DECAL               },
         {HashString("Trail"),                COMPONENT_TRAIL               },
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
+        {HashString("Shader Script"),        COMPONENT_SHADER_SCRIPT       },
     };
 
     fullscreen    = FULLSCREEN;
@@ -897,25 +898,30 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         switch (field.type)
         {
         case InspectorField::FieldType::Text:
+            ImGui::Spacing();
             ImGui::Text(static_cast<const char*>(field.data));
+            break;
+        case InspectorField::FieldType::Spacing:
+            ImGui::Dummy({10.0f, 10.0f});
             break;
         case InspectorField::FieldType::Float:
             ImGui::DragFloat(
-                field.name, (float*)field.data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                field.name.c_str(), (float*)field.data, 0.01f, field.minValue, field.maxValue, "%.3f",
                 ImGuiSliderFlags_AlwaysClamp
             );
             break;
         case InspectorField::FieldType::Bool:
-            ImGui::Checkbox(field.name, (bool*)field.data);
+            ImGui::Checkbox(field.name.c_str(), (bool*)field.data);
             break;
         case InspectorField::FieldType::Int:
-            ImGui::InputInt(field.name, (int*)field.data);
+            ImGui::InputInt(field.name.c_str(), (int*)field.data);
             break;
         case InspectorField::FieldType::Vec2:
         {
             float* vec2Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat2(
-                field.name, vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec2Data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
@@ -923,7 +929,8 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             float* vec3Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat3(
-                field.name, vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec3Data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
@@ -931,14 +938,15 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             float* vec4Data = reinterpret_cast<float*>(field.data);
             ImGui::DragFloat4(
-                field.name, vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f", ImGuiSliderFlags_AlwaysClamp
+                field.name.c_str(), vec4Data, 0.01f, field.minValue, field.maxValue, "%.3f",
+                ImGuiSliderFlags_AlwaysClamp
             );
             break;
         }
         case InspectorField::FieldType::Color:
         {
             ImColor* color = (ImColor*)field.data;
-            ImGui::ColorEdit3(field.name, (float*)&color->Value);
+            ImGui::ColorEdit3(field.name.c_str(), (float*)&color->Value);
             break;
         }
         case InspectorField::FieldType::InputText:
@@ -946,7 +954,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             // Use InputText with strings (I don't know how this works)
             std::string* str = static_cast<std::string*>(field.data);
             ImGui::InputText(
-                field.name, str->data(), str->capacity() + 1, ImGuiInputTextFlags_CallbackResize,
+                field.name.c_str(), str->data(), str->capacity() + 1, ImGuiInputTextFlags_CallbackResize,
                 [](ImGuiInputTextCallbackData* data) -> int
                 {
                     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
@@ -965,8 +973,12 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         {
             GameObject** selectedGO = (GameObject**)field.data;
             const char* currentName = (*selectedGO) ? (*selectedGO)->GetName().c_str() : "None";
-            if (ImGui::BeginCombo(field.name, currentName))
+
+            if (ImGui::BeginCombo(field.name.c_str(), currentName))
             {
+                ImGui::InputText("Search", searchTextResource, IM_ARRAYSIZE(searchTextResource));
+                const std::string searchLower = ToLower(searchTextResource);
+
                 if (ImGui::Selectable("None", *selectedGO == nullptr))
                 {
                     *selectedGO = nullptr;
@@ -978,6 +990,8 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                     const std::string& name = go->GetName();
 
                     if (name == "SceneModule GameObject" || name == "MULTISELECT_DUMMY") continue;
+
+                    if (!searchLower.empty() && ToLower(name).find(searchLower) == std::string::npos) continue;
 
                     std::string label = name + "##" + std::to_string(go->GetUID());
                     bool isSelected   = (*selectedGO == go);
@@ -992,10 +1006,44 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         }
         case InspectorField::FieldType::Button:
         {
-            if (field.callback && ImGui::Button(field.name))
+            if (field.callback && ImGui::Button(field.name.c_str()))
             {
                 field.callback(script);
             }
+            break;
+        }
+        case InspectorField::FieldType::Resource:
+        {
+            UID* resourceUID        = (UID*)field.data;
+            Resource* resource      = App->GetResourcesModule()->RequestResource(*resourceUID);
+            const char* currentName = resource ? resource->GetName().c_str() : "None";
+
+            if (ImGui::BeginCombo(field.name.c_str(), currentName))
+            {
+                ImGui::InputText("Search", searchTextResource, IM_ARRAYSIZE(searchTextResource));
+                const std::string searchLower = ToLower(searchTextResource);
+
+                if (ImGui::Selectable("None", *resourceUID == INVALID_UID))
+                {
+                    *resourceUID = INVALID_UID;
+                }
+
+                for (const auto& pair : App->GetLibraryModule()->GetAllNamesMap())
+                {
+                    UID uid                 = pair.first;
+                    const std::string& name = pair.second.GetString();
+
+                    if (!searchLower.empty() && ToLower(name).find(searchLower) == std::string::npos) continue;
+
+                    std::string label = name + "##" + std::to_string(uid);
+                    bool isSelected   = (*resourceUID == uid);
+                    if (ImGui::Selectable(label.c_str(), isSelected)) *resourceUID = uid;
+
+                    if (isSelected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
             break;
         }
         }

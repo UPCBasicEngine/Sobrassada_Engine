@@ -46,7 +46,7 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
     vertices.reserve(maxVertices * sizeof(TrailVertex));
     indices.reserve(maxIndices * sizeof(uint32_t));
 
-    localComponentAABB = AABB(float3(1000, 1000, 1000), float3(-1000, -1000, -1000));
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
     parent->OnAABBUpdated();
 }
 
@@ -112,7 +112,8 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
 
     vertices.reserve(maxVertices * sizeof(TrailVertex));
     indices.reserve(maxIndices * sizeof(uint32_t));
-    localComponentAABB = AABB(float3(1000, 1000, 1000), float3(-1000, -1000, -1000));
+
+    localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
     parent->OnAABBUpdated();
 }
 
@@ -293,7 +294,7 @@ void TrailComponent::Update(float deltaTime)
     RecalculateAABB();
 }
 
-void TrailComponent::Render(float deltaTime)
+void TrailComponent::Render(float deltaTime, CameraComponent* camera)
 {
     if (vertices.empty() || indices.empty()) return;
 
@@ -405,7 +406,8 @@ void TrailComponent::RecalculateAABB()
 {
     if (points.empty())
     {
-        localComponentAABB = AABB(float3::zero, float3::zero);
+        //localComponentAABB = AABB(float3::zero, float3::zero);
+        localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
         parent->OnAABBUpdated();
         return;
     }

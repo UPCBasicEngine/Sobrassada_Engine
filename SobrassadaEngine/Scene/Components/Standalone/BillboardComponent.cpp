@@ -62,7 +62,7 @@ void BillboardComponent::Save(rapidjson::Value& targetState, rapidjson::Document
         "Texture", currentTexture != nullptr ? currentTexture->GetUID() : FALLBACK_TEXTURE_UID, allocator
     );
 
-    targetState.AddMember("Tag", rapidjson::Value(billboardTag.GetString().c_str(), allocator), allocator);
+    targetState.AddMember("Tag", rapidjson::Value(billboardTag.c_str(), allocator), allocator);
 
     targetState.AddMember("Height", height, allocator);
     targetState.AddMember("Width", width, allocator);
@@ -90,10 +90,6 @@ void BillboardComponent::Clone(const Component* other)
 }
 
 void BillboardComponent::Update(float deltaTime)
-{
-}
-
-void BillboardComponent::Render(float deltaTime)
 {
 }
 

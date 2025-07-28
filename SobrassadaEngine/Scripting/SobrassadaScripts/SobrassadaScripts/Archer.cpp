@@ -81,6 +81,18 @@ void Archer::Update(float deltaTime)
     }
 }
 
+void Archer::OnPlayerExitLocation()
+{
+    currentState = ArcherStates::PATROL;
+    agentAI->SetPathNavigation(startPos);
+    reachedPatrolPoint = false;
+}
+
+void Archer::OnPlayerEnterLocation()
+{
+    currentState = ArcherStates::SEARCH;
+}
+
 void Archer::OnDeath()
 {
     // TODO: include death sound for the character
@@ -141,10 +153,15 @@ void Archer::PatrolAI()
 {
     if (animComponent) animComponent->UseTrigger("run");
 
+    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    bool playerInLocation            = parent->HasTag(playerLocation);
+
     if (!playerScript->IsDead())
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium) currentState = ArcherStates::CHASE;
-        else if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentState = ArcherStates::BASIC_ATTACK;
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
+            currentState = ArcherStates::CHASE;
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
+            currentState = ArcherStates::BASIC_ATTACK;
     }
 
     bool valid = false;
@@ -244,7 +261,8 @@ void Archer::ChangeState()
     }
 
     const float distance = GetDistanceFromPlayer();
-    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) < rangeEscape) currentState = ArcherStates::ESCAPE;
+    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) < rangeEscape)
+        currentState = ArcherStates::ESCAPE;
     else if (distance <= rangeAIAttack) currentState = ArcherStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;
     else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
@@ -293,7 +311,8 @@ void Archer::Escape(float deltaTime)
     if (escapeDir.LengthSq() < 0.0001f) escapeDir = float3::unitZ;
     escapeDir.Normalize();
 
-    float escapeDistance = rangeAIAttack - character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+    float escapeDistance =
+        rangeAIAttack - character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
     const float angleStep = 15.0f * (3.14159265f / 180.0f);
     float angleAccum      = 0.0f;
     bool found            = false;

@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Globals.h"
+#include "HashString.h"
 #include "LightsConfig.h"
 
 #include "Math/float3x4.h"
 #include "Math/float4x4.h"
 #include <functional>
 #include <map>
+#include <set>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -41,8 +43,9 @@ class SOBRASADA_API_ENGINE Scene
 
     void LoadModel(const UID modelUID);
     void LoadPrefab(
-        const UID prefabUid, const ResourcePrefab* prefab = nullptr, const float4x4& transform = float4x4::identity,
-        bool isEnabled = true, std::vector<bool> componentsEnabledStates = {}
+        const UID prefabUID, const ResourcePrefab* prefab = nullptr, const float4x4& transform = float4x4::identity,
+        bool isEnabled = true, std::vector<bool> componentsEnabledStates = {},
+        const HashString& assignTag = HashString("")
     );
     void OverridePrefabs(UID prefabUID);
 
@@ -67,13 +70,20 @@ class SOBRASADA_API_ENGINE Scene
     void AddGameObject(UID uid, GameObject* newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
     void RemoveGameObjectHierarchy(UID gameObjectUUID);
 
-    void AddGameObjectToUpdate(GameObject* gameObject);
-    void UpdateGameObjects();
-    void ClearGameObjectsToUpdate();
+    void AddGameObjectToUpdateComponents(GameObject* gameObject);
+    void UpdateGameObjectsComponents();
+    void ClearGameObjectsToUpdateComponents();
 
     void AddGameObjectToSelection(UID gameObject, UID gameObjectParent);
     void ClearObjectSelection();
     void DeleteMultiselection();
+
+    void CreateTag(HashString&& newTag);
+    void DeleteTag(const HashString& tagToDelete);
+    void RequestTag(const HashString& requestTag, GameObject* gameObject);
+    void RemoveFromTag(const HashString& requestTag, GameObject* gameObject);
+    const std::vector<GameObject*>* GetTaggedGameObjects(const HashString& requestTag);
+    const std::map<HashString, std::vector<GameObject*>>& GetTags() { return tags; };
 
     const std::string& GetSceneName() const { return sceneName; }
     UID GetSceneUID() const { return sceneUID; }
@@ -125,7 +135,14 @@ class SOBRASADA_API_ENGINE Scene
     void SetStaticModified() { staticModified = true; }
     void SetDynamicModified() { dynamicModified = true; }
     void SetMultiselectPosition(const float3& newPosition);
-    void CheckObjectsToRender(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
+
+    void CheckObjectsToUpdate();
+    void ClearObjectsToUpdate();
+    void CheckObjectsInFrustum(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
+    const HashString& GetPlayerLocation() { return playerLocation; }
+    void SetPlayerPosition(const HashString& newPlayerLocation) { playerLocation = newPlayerLocation; }
+
+    void UpdateAllMaterialInstances(const UID materialUID);
 
     bool isSceneLoaded = false;
 
@@ -162,7 +179,10 @@ class SOBRASADA_API_ENGINE Scene
     bool staticModified                          = false;
     bool dynamicModified                         = false;
 
-    std::vector<GameObject*> gameObjectsToUpdate;
+    std::vector<GameObject*> gameObjectsToUpdateComponents;
+
+    std::set<UID> toUpdateGameObjectsSet;
+    std::vector<GameObject*> toUpdateGameObjects;
 
     GameObject* multiSelectParent = nullptr;
     std::map<UID, UID> selectedGameObjects;
@@ -170,6 +190,10 @@ class SOBRASADA_API_ENGINE Scene
     std::map<UID, float4x4> selectedGameObjectsOgLocals;
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
+
+    HashString emptyString    = HashString("");
+    HashString playerLocation = HashString("");
+    std::map<HashString, std::vector<GameObject*>> tags;
 
     RenderPass* renderPass = nullptr;
 };

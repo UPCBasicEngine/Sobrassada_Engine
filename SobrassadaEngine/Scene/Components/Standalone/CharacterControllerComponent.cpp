@@ -187,11 +187,6 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     else Move(deltaTime);
 }
 
-void CharacterControllerComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void CharacterControllerComponent::RenderDebug(float deltaTime)
 {
 }
@@ -299,7 +294,7 @@ void CharacterControllerComponent::Move(float deltaTime)
     const float3 offsetXZ   = rotateDirection * currentSpeed * deltaTime;
     const float3 desiredPos = currentPos + offsetXZ;
 
-    const float3 searchArea = {25.0f * deltaTime, 62.5f * deltaTime, 25.0f * deltaTime};
+    const float3 searchArea = {25.0f * deltaTime, 25.0f * deltaTime, 25.0f * deltaTime};
     float3 closestPoint     = float3::zero;
     bool posOverPoly        = false;
     dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
@@ -452,7 +447,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
 
     const float3 dashOffset = dashDirection * dashSpeed * deltaTime;
     float3 desiredPos       = currentPos + dashOffset;
-    const float3 searchArea = {62.5f * deltaTime, 25.0f * deltaTime, 62.5f * deltaTime};
+    const float3 searchArea = {62.5f * deltaTime, std::max(0.4f, 25.0f * deltaTime), 62.5f * deltaTime};
     bool posOverPoly        = false;
     float3 closestPoint     = float3::zero;
 
@@ -469,7 +464,7 @@ void CharacterControllerComponent::Dash(float deltaTime)
         const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
         const float3 finalPos   = currentPos + dashDirection * dashSpeed * dashTimeRemaining;
 
-        const float3 searchArea = {12.5f * deltaTime, 1875.0f * deltaTime, 12.5f * deltaTime};
+        const float3 searchArea = {12.5f * deltaTime, std::max(1875.0f * deltaTime, 30.0f), 12.5f * deltaTime};
         float3 closestPoint     = float3::zero;
         bool posOverPoly        = false;
         dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea, posOverPoly, closestPoint);

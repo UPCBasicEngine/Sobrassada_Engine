@@ -47,7 +47,7 @@ constexpr int SCREEN_HEIGHT = 720;
 constexpr bool FULLSCREEN   = false;
 
 #ifdef GAME
-constexpr bool FULL_DESKTOP = false;
+constexpr bool FULL_DESKTOP = true;
 #else
 constexpr bool FULL_DESKTOP = false;
 #endif
@@ -133,6 +133,7 @@ constexpr const wchar_t* BANKNAME_MAIN               = L"main.bnk";
 constexpr const char* BANKMETA_MAIN                  = "main.json";
 
 // SHADER PATHS
+// Vertex Shaders
 constexpr const char* TRAIL_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/Vertex/TrailVertexShader.glsl";
 constexpr const char* LIGHTS_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/Vertex/VertexShader.glsl";
 constexpr const char* SKYBOX_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/Vertex/SkyboxVertex.glsl";
@@ -144,6 +145,7 @@ constexpr const char* SHADOWMAP_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/
 constexpr const char* SPRITESHEET_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/Vertex/SpritesheetVertex.glsl";
 constexpr const char* PARTICLESYSTEM_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/Vertex/ParticleSystemVertex.glsl";
 
+// Fragment Shaders
 constexpr const char* UNLIT_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UnlitFragmentShader.glsl";
 constexpr const char* SKYBOX_FRAGMENT_SHADER_PATH    = "./EngineDefaults/Shader/Fragment/SkyboxFragment.glsl";
 constexpr const char* SPECULAR_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/BRDFPhongFragmentShader.glsl";
@@ -172,7 +174,9 @@ constexpr const char* DECAL_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/
 constexpr const char* SPRITESHEET_FRAGMENT_SHADER_PATH   = "./EngineDefaults/Shader/Fragment/SpritesheetFragment.glsl";
 constexpr const char* PARTICLESYSTEM_FRAGMENT_SHADER_PATH = "./EngineDefaults/Shader/Fragment/ParticleSystemFragment.glsl";
 
+// Compute Shaders
 constexpr const char* SHADOW_DEPTH_COMPUTE_SHADER_PATH  = "./EngineDefaults/Shader/Compute/ShadowMapDepthCompute.glsl";
+constexpr const char* TILE_SHADING_COMPUTE_SHADER_PATH  = "./EngineDefaults/Shader/Compute/TileShadingCompute.glsl";
 
 using UID                                               = uint64_t;
 
