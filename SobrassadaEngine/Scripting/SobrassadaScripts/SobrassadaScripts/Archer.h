@@ -71,4 +71,6 @@ class Archer : public Character
     int numberOfShoots         = 1;
     float aimTimer             = 0.0f;
     float aimDuration          = 2.0f;
+    float deathTimer    = 0.0f;
+    const float DEATH_DURATION = 2.0f;
 };

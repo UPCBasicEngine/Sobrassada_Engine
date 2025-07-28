@@ -71,24 +71,46 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
-   
+    if (!parent->IsEnabled() && !isDead)
+    {
+        GLOG("CRITICAL BUG - Archer disabled but NOT dead! Health: %d", currentHealth);
+        return;
+    }
      if (isKnockback)
     {
-        GLOG("KNOCKBACK ACTIVE - Timer: %.2f, Force: %.2f", knockbackTimer, knockbackForce);
-        knockbackTimer -= deltaTime;
-        agentAI->MoveTo(knockbackForce, knockbackDirection);
-        if (knockbackTimer <= 0.0f)
-        {
-            GLOG("KNOCKBACK FINISHED");
-            isKnockback = false;
-            agentAI->ResetSpeed();
-            agentAI->ResetAngularSpeed();
-            ChangeState();
-        }
+         float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+         GLOG("KNOCKBACK - Timer: %.2f, Pos: %.2f,%.2f,%.2f", knockbackTimer, currentPos.x, currentPos.y, currentPos.z);
+
+         knockbackTimer      -= deltaTime;
+
+         // ← REEMPLAZAR agentAI->MoveTo() con movimiento directo:
+         float3 movement      = knockbackDirection * knockbackForce * deltaTime;
+         float4x4 transform  = parent->GetGlobalTransform();
+         transform.SetTranslatePart(currentPos + movement);
+         parent->SetLocalTransform(transform);
+
+         if (knockbackTimer <= 0.0f)
+         {
+             GLOG("KNOCKBACK FINISHED - Final pos: %.2f,%.2f,%.2f", currentPos.x, currentPos.y, currentPos.z);
+             isKnockback = false;
+             agentAI->ResetSpeed();
+             agentAI->ResetAngularSpeed();
+             ChangeState();
+         }
         return;
     }
     Character::Update(deltaTime);
    
+    if (isDead)
+    {
+        GLOG("ARCHER IS DEAD - Only processing death");
+        if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
+        {
+            GLOG("DEATH ANIMATION FINISHED - DISABLING OBJECT");
+            parent->SetEnabled(false);
+        }
+      
+    }
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
         const std::string life      = "Health: " + std::to_string(currentHealth);
@@ -128,7 +150,6 @@ void Archer::OnDeath()
         animComponent->UseTrigger("die");
     }
        
-    
     // TODO: animation and particles
     
 }
@@ -176,7 +197,7 @@ void Archer::OverShooting(float deltaTime)
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("overdraw");
         Character::Attack(deltaTime);
-        agentAI->SetSpeed(0.0f, 0.0f);
+        //agentAI->SetSpeed(0.0f, 0.0f);
     }
     else
     {
@@ -238,12 +259,18 @@ void Archer::HandleState(float deltaTime)
         Escape(deltaTime);
         break;
     case ArcherStates::DEATH:
-        if (animComponent && animComponent->IsFinished())
+        
+        deathTimer                 += deltaTime;
+        GLOG("ARCHER IS DEAD - Death timer: %.2f", deathTimer);
+
+        if (deathTimer >= DEATH_DURATION)
         {
-            GLOG("DEATH ANIMATION FINISHED - DISABLING ARCHER OBJECT");
-            parent->SetEnabled(false);
+            GLOG("ARCHER DESTROYED - Removing from scene");
+            parent->SetEnabled(false); // o el método que uses para destruir
+            return;
         }
         break;
+        
     default:
         GLOG("No state provided to Archer");
         currentState = ArcherStates::PATROL;
@@ -288,13 +315,17 @@ void Archer::PatrolAI()
     
 void Archer::ApplyKnockback()
  {
-     float3 myPos         = parent->GetGlobalTransform().TranslatePart();
-     knockbackDirection   = character->GetFrontDirection();
-     knockbackDirection.y = 0.0f;
-     if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
-     knockbackDirection.Normalize();
+    float3 myPos         = parent->GetGlobalTransform().TranslatePart();
+    knockbackDirection   = character->GetFrontDirection();
+    knockbackDirection.y = 0.0f;
+    if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
+    knockbackDirection.Normalize();
    
-    
+     GLOG("ApplyKnockback - MyPos: %.2f,%.2f,%.2f", myPos.x, myPos.y, myPos.z);
+    GLOG(
+        "ApplyKnockback - Direction: %.2f,%.2f,%.2f", knockbackDirection.x, knockbackDirection.y, knockbackDirection.z
+    );
+    GLOG("ApplyKnockback - Force: %.2f, Time: %.2f", knockbackForce, knockbackTime);
  }
 
 void Archer::ChaseAI()
@@ -317,7 +348,7 @@ void Archer::SearchForPlayer()
         animComponent->UseTrigger("idle");
         isSearching = true;
         searchTimer = searchDuration;
-        agentAI->SetSpeed(0.0f, 0.0f);
+        //agentAI->SetSpeed(0.0f, 0.0f);
     }
 
     if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
@@ -347,7 +378,7 @@ void Archer::Aim(float deltaTime)
 
         isAiming = true;
         aimTimer = 0.0f;
-        agentAI->SetSpeed(0.0f, 0.0f);
+        //agentAI->SetSpeed(0.0f, 0.0f);
         GLOG("STARTING AIM - Duration: %.2f", aimDuration);
     }
     else
@@ -392,7 +423,7 @@ void Archer::Attack(float deltaTime)
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
-        agentAI->SetSpeed(0.0f, 0.0f);
+        //agentAI->SetSpeed(0.0f, 0.0f);
     }
     else
     {
@@ -425,6 +456,11 @@ void Archer::Attack(float deltaTime)
 
 void Archer::ChangeState()
 {
+    if (isDead) 
+    {
+        GLOG("ARCHER IS DEAD - NOT CHANGING STATE, keeping DEATH");
+        return;
+    }
     if (playerScript->IsDead())
     {
         GLOG("PLAYER IS DEAD - GOING TO PATROL");
