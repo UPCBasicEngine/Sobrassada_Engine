@@ -208,6 +208,8 @@ class CuChulainn : public Character
     bool isHealing                         = false;
     std::string healVisualName             = "";
     GameObject* healVisual                 = nullptr;
+    std::string healKnockbackName          = "";
+    GameObject* healKnockback              = nullptr;
 
     bool isCursed                          = false;
     float curseSpeed                       = 4.0f;

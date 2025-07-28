@@ -118,7 +118,6 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
-
         // Charged attack check
         if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
             TakeDamage(playerScript->GetChargedAttackDamage());
@@ -137,6 +136,10 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
         if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
             TakeDamage(playerScript->GetUltimateDamage());
+
+        // Heal knockback check
+        if (playerScript && playerScript->GetState() == CharacterStates::HEAL)
+            TakeDamage(0);
     }
 
     if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")

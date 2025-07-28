@@ -36,7 +36,6 @@ CuChulainn::CuChulainn(GameObject* parent)
 {
     currentHealth = 3; // mainChar starts low hp
 
-    // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
     fields.push_back({InspectorField::FieldType::Spacing, nullptr});
     fields.push_back({InspectorField::FieldType::Text, (void*)"CuChulainn parameters"});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
@@ -67,12 +66,18 @@ CuChulainn::CuChulainn(GameObject* parent)
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
 
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
+    fields.push_back({"Curse duration", InspectorField::FieldType::Float, &curseDuration, 0.0f, 100.0f});
+    fields.push_back({"Curse speed", InspectorField::FieldType::Float, &curseSpeed, 0.0f, 100.0f});
+    fields.push_back({"Player material", InspectorField::FieldType::Resource, &playerMaterial});
+
     fields.push_back({InspectorField::FieldType::Text, (void*)"Healing"});
     fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
     fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
+    fields.push_back({"Heal knockback object", InspectorField::FieldType::InputText, &healKnockbackName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Riastrad parameters"});
-    fields.push_back({"Riastrad Bar object", InspectorField::FieldType::GameObject, &riastradBar});
+    //fields.push_back({"Riastrad Bar object", InspectorField::FieldType::GameObject, &riastradBar}); // TODO: Fix GameObject field breaks the loading of the ones after
     fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
     fields.push_back({"Riastrad movement speed", InspectorField::FieldType::Float, &riastradMovementSpeed, 0.0f, 20.0f}
     );
@@ -83,16 +88,10 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
     fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
 
-    fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
-    fields.push_back({"Curse duration", InspectorField::FieldType::Float, &curseDuration, 0.0f, 100.0f});
-    fields.push_back({"Curse speed", InspectorField::FieldType::Float, &curseSpeed, 0.0f, 100.0f});
-    fields.push_back({"Player material", InspectorField::FieldType::Resource, &playerMaterial});
-
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
-
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
@@ -169,8 +168,12 @@ bool CuChulainn::Init()
     }
 
     chargedAttackCollider = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargedAttackName);
-    if (!chargedAttackCollider) GLOG("[WARNING] No ultimate found for CuChualin")
+    if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
+
+    healKnockback = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healKnockbackName);
+    if (!healKnockback) GLOG("[WARNING] No heal knockback found for CuChualin")
+    else healKnockback->SetEnabled(false);
 
     ultimateObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateName);
     if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChulain")
@@ -337,6 +340,7 @@ void CuChulainn::HandleState(float deltaTime)
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
                 return;
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            if (state == CharacterStates::HEAL) healKnockback->SetEnabled(false);
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -1036,6 +1040,7 @@ void CuChulainn::UseMushroom()
     if (healVisual) healVisual->SetEnabled(true);
 
     Heal(mushroomHeal);
+    healKnockback->SetEnabled(true);
 
     // UpdateMushroomsUI();
 }
@@ -1115,7 +1120,6 @@ void CuChulainn::ToggleRiastrad()
             clip.animationSpeed *= riastradAnimationsSpeedRatio;
         }
 
-
         // TODO: Remove when VFX
         Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
         if (res)
@@ -1123,7 +1127,7 @@ void CuChulainn::ToggleRiastrad()
             ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
             float4 newColor       = mat->GetMaterial().diffColor;
             newColor.y            = 0.0f;
-            newColor.x            = 0.0f;
+            newColor.z            = 0.0f;
             mat->SetDiffColor(newColor);
         }
     }
