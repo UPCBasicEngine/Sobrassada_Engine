@@ -14,7 +14,9 @@ enum class ArcherStates
     CHASE,
     ESCAPE,
     AIM,
-    BASIC_ATTACK
+    BASIC_ATTACK,
+    DEATH,
+    OVERSHOOTING
 };
 
 class Archer : public Character
@@ -33,6 +35,7 @@ class Archer : public Character
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
+    void OverShooting(float deltaTime);
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
     void Escape(float deltaTime);
@@ -42,6 +45,7 @@ class Archer : public Character
     void PatrolAI();
     void ChaseAI();
     void SearchForPlayer();
+    void ApplyKnockback();
 
   private:
     float rangeEscape          = rangeAIAttack - 1;
@@ -56,8 +60,15 @@ class Archer : public Character
 
     float3 currentEscapeTarget = float3::zero;
     bool hasEscapeTarget       = false;
+    float knockbackForce       = 7.0f;
+    float knockbackTime        = 0.2f;
+    float knockbackTimer       = 0.0f;
+    float3 knockbackDirection  = float3::zero;
+    bool isKnockback           = false;
 
     bool isAiming              = false;
+    bool hasMultipleShoots     = false;
+    int numberOfShoots         = 1;
     float aimTimer             = 0.0f;
     float aimDuration          = 2.0f;
 };
