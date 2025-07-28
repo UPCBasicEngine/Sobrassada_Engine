@@ -18,7 +18,6 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     ~CharacterControllerComponent() override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;

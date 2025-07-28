@@ -59,10 +59,6 @@ void ParticleSystemComponent::Update(float deltaTime)
         emitter.Update(deltaTime);
 }
 
-void ParticleSystemComponent::Render(float deltaTime)
-{
-}
-
 void ParticleSystemComponent::RenderDebug(float deltaTime)
 {
     if (currentEmitter) currentEmitter->RenderDebug(parent);

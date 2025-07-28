@@ -91,11 +91,6 @@ void SpotLightComponent::RenderEditorInspector()
     }
 }
 
-void SpotLightComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void SpotLightComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;

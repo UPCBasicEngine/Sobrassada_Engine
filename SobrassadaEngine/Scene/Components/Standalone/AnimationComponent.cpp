@@ -142,11 +142,6 @@ void AnimationComponent::OnResume()
     }
 }
 
-void AnimationComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void AnimationComponent::RenderDebug(float deltaTime)
 {
 }

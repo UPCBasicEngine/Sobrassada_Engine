@@ -252,8 +252,14 @@ void GeometryBatch::GenerateCommands(const std::vector<MeshComponent*>& meshes, 
     totalVertexCount = 0;
     totalIndexCount  = 0;
 
-    for (const MeshComponent* component : meshes)
+    for (MeshComponent* component : meshes)
     {
+        if (!component->GetWasEnabled() && !component->GetBatchWasEnabled())
+        {
+            component->SetBatchWasEnabled();
+            continue;
+        }
+
         const ResourceMesh* resource   = component->GetResourceMesh();
 
         const unsigned int vertexCount = static_cast<unsigned int>(resource->GetVertexCount());
