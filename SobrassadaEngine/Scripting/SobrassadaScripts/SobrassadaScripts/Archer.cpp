@@ -240,6 +240,7 @@ void Archer::HandleState(float deltaTime)
     case ArcherStates::DEATH:
         if (animComponent && animComponent->IsFinished())
         {
+            GLOG("DEATH ANIMATION FINISHED - DISABLING ARCHER OBJECT");
             parent->SetEnabled(false);
         }
         break;
@@ -336,7 +337,6 @@ void Archer::SearchForPlayer()
 void Archer::Aim(float deltaTime)
 {
 
-    GLOG("ENTERING AIM STATE");
     GLOG("ENTERING AIM STATE");
     if (!weaponCollider) return;
 
@@ -435,15 +435,16 @@ void Archer::ChangeState()
     const float distance = GetDistanceFromPlayer();
     GLOG("ChangeState - Distance: %.2f, rangeEscape: %.2f, rangeAIAttack: %.2f", distance, rangeEscape, rangeAIAttack);
 
-    if (distance < rangeEscape) 
-    {
-        GLOG("GOING TO ESCAPE");
-        currentState = ArcherStates::ESCAPE;
-    }
-    else if (distance <= rangeAIAttack)
+  
+    if (distance <= rangeAIAttack)
     {
         GLOG("GOING TO AIM");
         currentState = ArcherStates::AIM;
+    }
+    else if (distance < rangeEscape)
+    {
+        GLOG("GOING TO ESCAPE");
+        currentState = ArcherStates::ESCAPE;
     }
     else if (distance <= rangeAIChase)
     {
