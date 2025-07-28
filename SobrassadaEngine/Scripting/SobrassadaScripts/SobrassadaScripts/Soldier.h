@@ -12,7 +12,8 @@ enum class SoldierStates
     PATROL,
     CHASE,
     BASIC_ATTACK,
-    DEATH
+    DEATH,
+    PLAYER_DETECTION
 };
 
 class Soldier : public Character

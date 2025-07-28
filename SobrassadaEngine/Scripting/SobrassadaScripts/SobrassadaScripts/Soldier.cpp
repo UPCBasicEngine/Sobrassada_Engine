@@ -124,6 +124,9 @@ void Soldier::OnDamageTaken(int amount)
     isKnockback    = true;
     knockbackTimer = knockbackTime;
     ApplyKnockback();
+    HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
+    std::string animState               = animStateFromPlayer.GetString();
+    GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
 }
 
@@ -157,6 +160,13 @@ void Soldier::HandleState(float deltaTime)
     case SoldierStates::BASIC_ATTACK:
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
+    case SoldierStates::PLAYER_DETECTION:
+        animComponent->UseTrigger("detectPlayer");
+        if (animComponent->IsFinished())
+        {
+            currentState = SoldierStates::CHASE;  
+        }
+        break;
     default:
         GLOG("No state provided to Soldier");
         currentState = SoldierStates::PATROL;
@@ -165,7 +175,8 @@ void Soldier::HandleState(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
-        animComponent->UseTrigger("idle");
+        if (currentState == SoldierStates::BASIC_ATTACK) animComponent->UseTrigger("idleCombat");
+        else animComponent->UseTrigger("idle");
     }
 }
 
@@ -177,7 +188,9 @@ void Soldier::PatrolAI()
     if (!playerScript->IsDead())
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
-            currentState = SoldierStates::CHASE;
+        {
+            currentState = SoldierStates::PLAYER_DETECTION;
+        }
         else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
             currentState = SoldierStates::BASIC_ATTACK;
     }
@@ -221,7 +234,7 @@ void Soldier::SearchForPlayer()
     {
         isSearching = false;
         agentAI->ResetSpeed();
-        currentState = SoldierStates::CHASE;
+        currentState = SoldierStates::PLAYER_DETECTION;
     }
     else if (searchTimer <= 0.0f)
     {
