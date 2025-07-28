@@ -92,6 +92,8 @@ class CuChulainn : public Character
     void ChargeAttack();
     void ToggleRiastrad();
     void AddRiastrad(int amount);
+    void StartCurse();
+    void EndCurse();
 
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
@@ -206,6 +208,12 @@ class CuChulainn : public Character
     bool isHealing                         = false;
     std::string healVisualName             = "";
     GameObject* healVisual                 = nullptr;
+
+    bool isCursed                          = false;
+    float curseSpeed                       = 4.0f;
+    float curseDuration                    = 5.0f;
+    float curseTimer                       = 0.0f;
+    UID playerMaterial                     = 0;
 
     // Images UIDs
     UID dashFillImage                      = 0;

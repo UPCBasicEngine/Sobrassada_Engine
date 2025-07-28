@@ -10,7 +10,9 @@
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "Projectile.h"
+#include "ResourceMaterial.h"
 #include "ResourceStateMachine.h"
+#include "ResourcesModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
@@ -80,6 +82,11 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Riastrad on damage taken", InspectorField::FieldType::Int, &riastradOnDamageTaken, 0, 100});
     fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
     fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
+    fields.push_back({"Curse duration", InspectorField::FieldType::Float, &curseDuration, 0.0f, 100.0f});
+    fields.push_back({"Curse speed", InspectorField::FieldType::Float, &curseSpeed, 0.0f, 100.0f});
+    fields.push_back({"Player material", InspectorField::FieldType::Resource, &playerMaterial});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
@@ -394,7 +401,7 @@ void CuChulainn::GetInputs()
         {
             desiredTransform     = true;
             transformBufferTimer = inputBuffer;
-        } 
+        }
     }
 
     // Dash
@@ -463,6 +470,10 @@ void CuChulainn::GetInputs()
         AddRiastrad(100);
         GLOG("Fill riastrad")
     }
+    if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
+    {
+        StartCurse();
+    }
 }
 
 bool CuChulainn::CanDash() const
@@ -470,7 +481,7 @@ bool CuChulainn::CanDash() const
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                    state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                   state != CharacterStates::HEAL;
+                   state != CharacterStates::HEAL && !isCursed;
 
     if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer > 0.0f;
 
@@ -666,6 +677,12 @@ void CuChulainn::UpdateTimers(float deltaTime)
     {
         riastradTimer -= deltaTime;
         if (riastradTimer <= 0.0f) desiredTransform = true;
+    }
+
+    if (isCursed)
+    {
+        curseTimer -= deltaTime;
+        if (curseTimer <= 0) EndCurse();
     }
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
@@ -1083,6 +1100,8 @@ void CuChulainn::ToggleRiastrad()
 
     if (!isRiastrad)
     {
+        EndCurse();
+
         // Start Riastrad
         AddRiastrad(-100);
         isRiastrad    = true;
@@ -1095,6 +1114,18 @@ void CuChulainn::ToggleRiastrad()
         {
             clip.animationSpeed *= riastradAnimationsSpeedRatio;
         }
+
+
+        // TODO: Remove when VFX
+        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+        if (res)
+        {
+            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+            float4 newColor       = mat->GetMaterial().diffColor;
+            newColor.y            = 0.0f;
+            newColor.x            = 0.0f;
+            mat->SetDiffColor(newColor);
+        }
     }
     else
     {
@@ -1102,6 +1133,16 @@ void CuChulainn::ToggleRiastrad()
         isRiastrad = false;
         animComponent->GetResourceStateMachine()->ResetClipsSpeed();
         character->SetMaxSpeed(defaultSpeed);
+
+        // TODO: Remove when VFX
+        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+        if (res)
+        {
+            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+            float4 newColor       = mat->GetMaterial().diffColor;
+            newColor              = float4::one;
+            mat->SetDiffColor(newColor);
+        }
     }
 }
 
@@ -1125,6 +1166,40 @@ void CuChulainn::OnEnemyHit()
 void CuChulainn::OnEnemyDefeated()
 {
     AddRiastrad(riastradOnEnemyDeath);
+}
+
+void CuChulainn::StartCurse()
+{
+    // TODO: Remove when VFX
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor.y            = 0.0f;
+        newColor.x            = 0.6f;
+        mat->SetDiffColor(newColor);
+    }
+
+    isCursed = true;
+    character->SetMaxSpeed(curseSpeed);
+    curseTimer = curseDuration;
+}
+
+void CuChulainn::EndCurse()
+{
+    // TODO: Remove when VFX
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor              = float4::one;
+        mat->SetDiffColor(newColor);
+    }
+
+    isCursed = false;
+    character->SetMaxSpeed(defaultSpeed);
 }
 
 const std::string CuChulainn::GetLogicStateName()
