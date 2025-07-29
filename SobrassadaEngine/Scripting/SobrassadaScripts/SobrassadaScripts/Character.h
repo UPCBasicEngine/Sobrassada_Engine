@@ -91,7 +91,7 @@ class Character : public Script
     float healCdTimer                           = 0.0f;
 
     CharacterType type                          = CharacterType::None;
-    HashString stateName;
+    HashString stateName                        = HashString("");
 
     // AI
     float rangeAIChase      = 0.0f;

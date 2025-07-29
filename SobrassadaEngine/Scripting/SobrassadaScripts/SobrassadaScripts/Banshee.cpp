@@ -44,32 +44,47 @@ bool Banshee::Init()
         speed = agentAI->GetSpeed();
     }
 
-    if (weapon)
+    const std::vector<UID>& childVector = parent->GetChildren();
+    Scene* loadedScene                  = AppEngine->GetSceneModule()->GetScene();
+
+    if (!loadedScene)
     {
-        damageArea = weapon->GetComponent<SphereColliderComponent*>();
-        if (damageArea == nullptr) GLOG("Sphere collider not found for Banshee")
-        else damageArea->SetEnabled(false);
+        GLOG("[ERROR BANSHEE SCRIPT]: Scene pointer nullptr")
+        return true;
     }
 
-    if (parent->GetChildren().size() > 3)
+    for (UID childUID : childVector)
     {
-        areaVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
-        if (areaVisual) areaVisual->SetEnabled(false);
-        else GLOG("[WARNING] Banshee: no area visual found as child of base")
-    }
+        GameObject* currentGO = loadedScene->GetGameObjectByUID(childUID);
 
-    if (parent->GetChildren().size() > 4)
-    {
-        screamVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
-        if (screamVisual) screamVisual->SetEnabled(false);
-        else GLOG("[WARNING] Banshee: no scream visual found as child of base")
-    }
+        if (currentGO->GetName() == "BansheeMesh")
+        {
+            mesh = currentGO->GetComponent<MeshComponent*>();
+            if (!mesh) GLOG("[ERROR BANSHEE SCRIPT]: No mesh found")
+        }
+        else if (currentGO->GetName() == "Scream")
+        {
+            weapon     = currentGO;
+            damageArea = weapon->GetComponent<SphereColliderComponent*>();
 
-    mesh = AppEngine->GetSceneModule()
-               ->GetScene()
-               ->GetGameObjectByUID(parent->GetChildren()[1])
-               ->GetComponentChild<MeshComponent*>(AppEngine);
-    if (!mesh) GLOG("No mesh found for Banshee");
+            if (damageArea == nullptr) GLOG("[ERROR BANSHEE SCRIPT]: Sphere collider not found")
+            else damageArea->SetEnabled(false);
+
+            weapon->SetEnabled(false);
+        }
+        else if (currentGO->GetName() == "SphereShadow")
+        {
+            areaVisual = currentGO;
+            if (areaVisual) areaVisual->SetEnabled(false);
+            else GLOG("[ERROR BANSHEE SCRIPT]: No area visual found")
+        }
+        else if (currentGO->GetName() == "ScreamVisual")
+        {
+            screamVisual = currentGO;
+            if (screamVisual) screamVisual->SetEnabled(false);
+            else GLOG("[ERROR BANSHEE SCRIPT]: No scream visual found")
+        }
+    }
 
     rng            = std::mt19937(std::random_device {}());
     normalizedDist = std::uniform_real_distribution<float>(0.0f, 1.0f);
