@@ -2,6 +2,8 @@
 
 #include "Script.h"
 
+class Scene;
+
 struct AttackSequence
 {
     std::vector<GameObject*> mirageObjects;
@@ -27,6 +29,8 @@ class BossMirage : public Script
     bool Init() override;
     void Update(float deltaTime) override;
     void StartSequence(int sequence);
+
+    std::vector<GameObject*> GetMirageChildren(Scene* scene, const std::string& parentName);
 
   private:
     int currentSequence = 1;

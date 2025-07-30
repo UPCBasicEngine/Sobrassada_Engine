@@ -48,7 +48,7 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
              // searches for active objects with a mirage script, adds gameobject references to activate them later
              for (const auto& [uid, gameObject] : gameObjects)
              {
-                 if (!gameObject || !gameObject->IsEnabled()) continue;
+                 if (!gameObject || gameObject->IsEnabled()) continue;
 
                  ScriptComponent* scriptComp = gameObject->GetComponent<ScriptComponent*>();
 
@@ -60,9 +60,16 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
          }}
     );
 }
-
+// CAREFUL!!! Searches for gameobjects with a specific name
 bool BossMirage::Init()
 {
+
+    Scene* scene            = AppEngine->GetSceneModule()->GetScene();
+
+    sequence1.mirageObjects = GetMirageChildren(scene, "Sequence1");
+    sequence2.mirageObjects = GetMirageChildren(scene, "Sequence2");
+    sequence3.mirageObjects = GetMirageChildren(scene, "Sequence3");
+
     return true;
 }
 
@@ -112,4 +119,40 @@ void BossMirage::StartSequence(int sequenceNum)
     currentMirageIndex      = 0;
     timeSinceLastActivation = 0.0f;
     state                   = SequenceState::PlayingSequence;
+}
+
+std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::string& parentName)
+{
+    std::vector<GameObject*> result;
+
+    const auto& gameObjects = scene->GetAllGameObjects();
+
+    for (const auto& [uid, go] : gameObjects)
+    {
+        if (!go || go->GetName() != parentName) continue;
+
+        GLOG("Found parent object: %s", parentName.c_str());
+
+        const auto& childrenUIDs = go->GetChildren();
+
+        for (UID childUID : childrenUIDs)
+        {
+            auto it = gameObjects.find(childUID);
+            if (it == gameObjects.end()) continue;
+
+            GameObject* child = it->second;
+            if (!child || child->IsEnabled()) continue;
+
+            ScriptComponent* scriptComp = child->GetComponent<ScriptComponent*>();
+            if (scriptComp && scriptComp->GetScriptByType<Mirage>())
+            {
+                result.push_back(child);
+                GLOG("Checking child: %s | Active: %s", child->GetName().c_str(), child->IsEnabled() ? "Yes" : "No");
+            }
+        }
+
+        break; // found the correct parent object
+    }
+
+    return result;
 }
