@@ -61,7 +61,8 @@ void main()
         if(alpha < 0.1) discard;
     }
 
-    gDiffuse = vec4(pow(texColor.rgb, vec3(2.2f)), alpha);
+    vec3 baseColor = materials[instance_index].diffColor.rgb * texColor.rgb;
+    gDiffuse = vec4(pow(baseColor, vec3(2.2f)), alpha);
     if(mat.hasMetallic == 1) gSpecular = vec4(pow(texture(sampler2D(mat.metallicTex), uv0), vec4(2.2)));
     else gSpecular = vec4(1);
     gPosition = vec4(pos, 1);

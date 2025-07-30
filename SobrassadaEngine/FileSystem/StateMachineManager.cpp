@@ -194,6 +194,7 @@ namespace StateMachineManager
                 clip.loop                 = clipJSON["Loop"].GetBool();
 
                 stateMachine->clips.push_back(clip);
+                stateMachine->clipsDefaultSpeed.push_back(clip.animationSpeed);
             }
         }
 

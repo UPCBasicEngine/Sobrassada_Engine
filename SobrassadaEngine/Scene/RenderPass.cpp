@@ -12,6 +12,7 @@
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
 #include "ShaderModule.h"
+#include "ShaderScriptModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
@@ -157,6 +158,10 @@ void RenderPass::RenderScene(
     else GeometryPassRender(objectsToRender, camera);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Custom Shaders Pass");
+    App->GetShaderScriptModule()->RenderGeometryPassShaders(0.f, camera);
+    glPopDebugGroup();
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
     ShadowMapPassRender(camera, light, objectsToRender);
@@ -198,6 +203,10 @@ void RenderPass::RenderScene(
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Custom Shader Pass");
+    App->GetShaderScriptModule()->RenderTransparentPassShaders(0.f, camera);
     glPopDebugGroup();
 }
 
@@ -820,7 +829,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
             for (const auto& trail : trailsToRender)
-                trail->Render(0);
+                trail->Render(0, nullptr);
         }
     }
 

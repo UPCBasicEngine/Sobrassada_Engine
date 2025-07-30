@@ -294,7 +294,7 @@ void TrailComponent::Update(float deltaTime)
     RecalculateAABB();
 }
 
-void TrailComponent::Render(float deltaTime)
+void TrailComponent::Render(float deltaTime, CameraComponent* camera)
 {
     if (vertices.empty() || indices.empty()) return;
 
