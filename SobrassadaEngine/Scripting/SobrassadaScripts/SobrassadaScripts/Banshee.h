@@ -18,9 +18,10 @@ enum class BansheeStates : int
     Attack,
     Hit,
     Dead,
+    TeleportStart,
 };
 
-constexpr const char* BansheeStateStrings[] = {"Idle", "Search", "Chase", "Attack", "Hit", "Dead"};
+constexpr const char* BansheeStateStrings[] = {"Idle", "Search", "Chase", "Attack", "Hit", "Dead", "TeleportStart"};
 
 class Banshee : public Character
 {
@@ -44,6 +45,7 @@ class Banshee : public Character
     void ChangeState();
     void SearchForPlayer();
     void GoToAttackPosition();
+    void TeleportToStart();
 
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
@@ -65,4 +67,5 @@ class Banshee : public Character
     std::uniform_real_distribution<float> invisibleDist;
 
     bool firstSearch = false;
+    bool hasMoved    = false;
 };

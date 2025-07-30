@@ -163,6 +163,10 @@ void Banshee::HandleState(float deltaTime)
     case BansheeStates::Dead:
         break;
 
+    case BansheeStates::TeleportStart:
+        TeleportToStart();
+        break;
+
     default:
         currentState = BansheeStates::Idle;
         ChangeState();
@@ -179,6 +183,7 @@ void Banshee::ChasePlayer()
 {
     if (!character) return;
 
+    hasMoved = true;
     if (animComponent) animComponent->UseTrigger("Chase");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Attack;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
@@ -191,6 +196,7 @@ void Banshee::Attack(float deltaTime)
 
     if (!isAttacking)
     {
+        hasMoved = true;
         // GLOG("Banshee attack");
         agentAI->SetLookForward(false);
 
@@ -217,11 +223,11 @@ void Banshee::Attack(float deltaTime)
             mesh->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
-            if (animComponent) animComponent->UseTrigger("ScreamIn");
+            animComponent->UseTrigger("ScreamIn");
         }
 
         // Slowly rotate towards player while charging the attack
-        if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
@@ -246,6 +252,7 @@ void Banshee::Attack(float deltaTime)
         {
             isAttacking  = false;
             currentState = BansheeStates::Idle;
+            animComponent->UseTrigger("Idle");
 
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
@@ -296,9 +303,9 @@ void Banshee::SearchForPlayer()
         }
         else if (animComponent->IsFinished())
         {
-            isSearching  = false;
-            currentState = BansheeStates::Idle;
-            agentAI->SetPosition(startPos);
+            isSearching = false;
+            if (hasMoved) currentState = BansheeStates::TeleportStart;
+            else currentState = BansheeStates::Idle;
         }
     }
 }
@@ -320,6 +327,20 @@ void Banshee::GoToAttackPosition()
     agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
+void Banshee::TeleportToStart()
+{
+    if (animComponent->GetCurrentStateName() != HashString("Teleport"))
+    {
+        animComponent->UseTrigger("Teleport");
+    }
+    else if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished())
+    {
+        agentAI->SetPosition(startPos);
+        currentState = BansheeStates::Idle;
+        animComponent->UseTrigger("Idle");
+        hasMoved = false;
+    }
+}
 void Banshee::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     if (isInvisible) return;
