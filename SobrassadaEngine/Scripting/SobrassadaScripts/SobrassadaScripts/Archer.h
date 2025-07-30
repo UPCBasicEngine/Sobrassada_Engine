@@ -68,9 +68,17 @@ class Archer : public Character
 
     bool isAiming              = false;
     bool hasMultipleShoots     = false;
+    bool isStatic              = false;
+
     int numberOfShoots         = 1;
     float aimTimer             = 0.0f;
     float aimDuration          = 2.0f;
     float deathTimer    = 0.0f;
     const float DEATH_DURATION = 2.0f;
+
+    int currentShot            = 0;
+    float shotDelay            = 0.2f;
+    float shotTimer            = 0.0f;
+    bool hasStartedShooting    = false;
+
 };
