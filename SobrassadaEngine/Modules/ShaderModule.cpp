@@ -3,6 +3,7 @@
 #include "DebugDrawModule.h"
 
 #include "glew.h"
+#include <string>
 
 ShaderModule::ShaderModule()
 {
@@ -37,7 +38,8 @@ bool ShaderModule::Init()
 
     shadowMapProgram            = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
 
-    computeShadowDepthProgram   = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
+    shadowDepthProgram          = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
+    tileShadingProgram          = CreateComputeProgram(TILE_SHADING_COMPUTE_SHADER_PATH);
 
     spritesheetProgram          = CreateShaderProgram(SPRITESHEET_VERTEX_SHADER_PATH, SPRITESHEET_FRAGMENT_SHADER_PATH);
     particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
@@ -61,13 +63,55 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(decalProgram);
     glDeleteProgram(trailProgram);
     glDeleteProgram(shadowMapProgram);
-    glDeleteProgram(computeShadowDepthProgram);
+    glDeleteProgram(shadowDepthProgram);
+    glDeleteProgram(tileShadingProgram);
     glDeleteProgram(spritesheetProgram);
     glDeleteProgram(particleSystemProgram);
     glDeleteProgram(transparentPassProgram);
     glDeleteProgram(transparentWPOPassProgram);
 
+    for (auto& shaderIterator : customShaderPrograms)
+    {
+        glDeleteProgram(shaderIterator.second);
+    }
+
+    customShaderPrograms.clear();
+
     return true;
+}
+
+unsigned int ShaderModule::RequestShaderProgram(const char* vertexPath, const char* fragmentPath)
+{
+    std::string vertexPathString   = std::string(vertexPath);
+    std::string fragmentPathString = std::string(fragmentPath);
+
+    auto idxVertex                 = vertexPathString.find_last_of("/\\");
+    auto idxFragment = fragmentPathString.find_last_of("/\\");
+
+    if (idxVertex == std::string::npos && idxFragment != std::string::npos)
+    {
+        GLOG("[ShaderModule] Error requesting shader: %s, %s", vertexPath, fragmentPath);
+        return 0;
+    }
+
+    HashString shaderTag =
+        HashString(vertexPathString.substr(idxVertex + 1).append(fragmentPathString.substr(idxFragment + 1)));
+
+    auto shaderProgramIterator = customShaderPrograms.find(shaderTag);
+
+    if (shaderProgramIterator == customShaderPrograms.end())
+    {
+        unsigned int newProgram = CreateShaderProgram(vertexPath, fragmentPath);
+
+        if (newProgram)
+        {
+            customShaderPrograms.insert({shaderTag, newProgram});
+        }
+
+        return newProgram;
+    }
+
+    return shaderProgramIterator->second;
 }
 
 unsigned int ShaderModule::CreateShaderProgram(const char* vertexPath, const char* fragmentPath)

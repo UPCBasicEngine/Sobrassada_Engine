@@ -88,7 +88,7 @@ class LightsConfig
     unsigned int EnvironmentBRDFGeneration(int width, int height);
 
     void InitLightBuffers();
-    void SetLightsShaderData() const;
+    void SOBRASADA_API_ENGINE SetLightsShaderData() const;
     void GetAllSceneLights();
 
     void AddDirectionalLight(DirectionalLightComponent* newDirectional);
