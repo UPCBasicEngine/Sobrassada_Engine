@@ -199,10 +199,6 @@ void Banshee::Attack(float deltaTime)
 
         isInvisible = false;
         animComponent->UseTrigger("Teleport");
-
-        // currentInvisibleTime = invisibleDist(rng);
-        // isInvisible          = true;
-        // mesh->SetEnabled(false);
     }
     else
     {
@@ -224,12 +220,10 @@ void Banshee::Attack(float deltaTime)
             if (animComponent) animComponent->UseTrigger("ScreamIn");
         }
 
-        //// Slowly rotate towards player while charging the attack
-        // if (attackTimer < currentInvisibleTime + attackHitboxDelay)
-        //     agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-
+        // Slowly rotate towards player while charging the attack
         if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
         {
             animComponent->UseTrigger("Scream");
@@ -257,36 +251,6 @@ void Banshee::Attack(float deltaTime)
             agentAI->ResetAngularSpeed();
             agentAI->SetLookForward(true);
         }
-
-        // if (!damageArea->GetEnabled() && attackTimer >= currentInvisibleTime + attackHitboxDelay &&
-        //     attackTimer <= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
-        //{
-        //     // GLOG("Banshee enable hitbox");
-        //     if (areaVisual) areaVisual->SetEnabled(true);
-        //     if (screamVisual) screamVisual->SetEnabled(true);
-        //     damageArea->SetEnabled(true);
-        //     if (weaponCollider) weaponCollider->SetEnabled(true);
-        // }
-        // else if (damageArea->GetEnabled() &&
-        //          attackTimer >= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
-        //{
-        //     // GLOG("Banshee disable hitbox");
-        //     damageArea->SetEnabled(false);
-        //     if (weaponCollider) weaponCollider->SetEnabled(false);
-        //     if (areaVisual) areaVisual->SetEnabled(false);
-        //     if (screamVisual) screamVisual->SetEnabled(false);
-        // }
-
-        // if (attackTimer >= currentInvisibleTime + attackDuration)
-        //{
-        //     isAttacking   = false;
-        //     attackCdTimer = attackCooldown;
-        //     agentAI->ResetSpeed();
-        //     agentAI->ResetAngularSpeed();
-        //     agentAI->SetLookForward(true);
-        //     if (GetDistanceFromPlayer() > maxDetectionRange) currentState = BansheeStates::Search;
-        //     else ChangeState();
-        // }
     }
 }
 
