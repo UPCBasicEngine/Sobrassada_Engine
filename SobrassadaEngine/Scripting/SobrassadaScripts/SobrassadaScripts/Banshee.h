@@ -10,13 +10,17 @@ class MeshComponent;
 class AIAgentComponent;
 class SphereColliderComponent;
 
-enum class BansheeStates
+enum class BansheeStates : int
 {
-    Idle,
+    Idle = 0,
     Search,
     Chase,
-    Attack
+    Attack,
+    Hit,
+    Dead,
 };
+
+constexpr const char* BansheeStateStrings[] = {"Idle", "Search", "Chase", "Attack", "Hit", "Dead"};
 
 class Banshee : public Character
 {
@@ -59,4 +63,6 @@ class Banshee : public Character
     std::mt19937 rng;
     std::uniform_real_distribution<float> normalizedDist;
     std::uniform_real_distribution<float> invisibleDist;
+
+    bool firstSearch = false;
 };

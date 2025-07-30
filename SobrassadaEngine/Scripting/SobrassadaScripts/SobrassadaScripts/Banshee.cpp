@@ -101,12 +101,16 @@ void Banshee::Update(float deltaTime)
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
-        const std::string life      = "Health: " + std::to_string(currentHealth);
-        const std::string animState = "Anim state: " + stateName.GetString();
+        const std::string life         = "Health: " + std::to_string(currentHealth);
+        const std::string animState    = "Anim state: " + stateName.GetString();
+
+        std::string currentStateString = BansheeStateStrings[(int)currentState];
+        const std::string logicState   = "Logic state: " + currentStateString;
 
         std::vector<std::pair<std::string, float2>> logs {
-            {life,      float2(-50.0f, -140.0f)},
-            {animState, float2(-80.0f, -160.0f)},
+            {life,       float2(-50.0f, -140.0f)},
+            {animState,  float2(-80.0f, -160.0f)},
+            {logicState, float2(-80.0f, -180.0f)},
         };
 
         RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
@@ -144,12 +148,24 @@ void Banshee::HandleState(float deltaTime)
         SearchForPlayer();
         break;
 
+        break;
     case BansheeStates::Chase:
         ChasePlayer();
         break;
 
     case BansheeStates::Attack:
         if (attackCdTimer <= 0) Attack(deltaTime);
+        break;
+
+    case BansheeStates::Hit:
+        break;
+
+    case BansheeStates::Dead:
+        break;
+
+    default:
+        currentState = BansheeStates::Idle;
+        ChangeState();
         break;
     }
 
@@ -181,12 +197,21 @@ void Banshee::Attack(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
 
-        currentInvisibleTime = invisibleDist(rng);
-        isInvisible          = true;
-        mesh->SetEnabled(false);
+        isInvisible = false;
+        animComponent->UseTrigger("Teleport");
+
+        // currentInvisibleTime = invisibleDist(rng);
+        // isInvisible          = true;
+        // mesh->SetEnabled(false);
     }
     else
     {
+        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished())
+        {
+            currentInvisibleTime = invisibleDist(rng);
+            isInvisible          = true;
+            mesh->SetEnabled(false);
+        }
         if (attackTimer < currentInvisibleTime) return;
 
         if (isInvisible)
@@ -196,42 +221,72 @@ void Banshee::Attack(float deltaTime)
             mesh->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
-            if (animComponent) animComponent->UseTrigger("Scream");
+            if (animComponent) animComponent->UseTrigger("ScreamIn");
         }
 
-        // Slowly rotate towards player while charging the attack
-        if (attackTimer < currentInvisibleTime + attackHitboxDelay)
-            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        //// Slowly rotate towards player while charging the attack
+        // if (attackTimer < currentInvisibleTime + attackHitboxDelay)
+        //     agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-        if (!damageArea->GetEnabled() && attackTimer >= currentInvisibleTime + attackHitboxDelay &&
-            attackTimer <= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
+        if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
         {
-            // GLOG("Banshee enable hitbox");
+            animComponent->UseTrigger("Scream");
+
+            damageArea->SetEnabled(true);
             if (areaVisual) areaVisual->SetEnabled(true);
             if (screamVisual) screamVisual->SetEnabled(true);
-            damageArea->SetEnabled(true);
             if (weaponCollider) weaponCollider->SetEnabled(true);
         }
-        else if (damageArea->GetEnabled() &&
-                 attackTimer >= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
+        else if (animComponent->GetCurrentStateName() == HashString("Scream") && animComponent->IsFinished())
         {
-            // GLOG("Banshee disable hitbox");
+            animComponent->UseTrigger("ScreamOut");
+
             damageArea->SetEnabled(false);
-            if (weaponCollider) weaponCollider->SetEnabled(false);
             if (areaVisual) areaVisual->SetEnabled(false);
             if (screamVisual) screamVisual->SetEnabled(false);
+            if (weaponCollider) weaponCollider->SetEnabled(false);
         }
-
-        if (attackTimer >= currentInvisibleTime + attackDuration)
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
         {
-            isAttacking   = false;
-            attackCdTimer = attackCooldown;
+            isAttacking  = false;
+            currentState = BansheeStates::Idle;
+
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
             agentAI->SetLookForward(true);
-            if (GetDistanceFromPlayer() > maxDetectionRange) currentState = BansheeStates::Search;
-            else ChangeState();
         }
+
+        // if (!damageArea->GetEnabled() && attackTimer >= currentInvisibleTime + attackHitboxDelay &&
+        //     attackTimer <= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
+        //{
+        //     // GLOG("Banshee enable hitbox");
+        //     if (areaVisual) areaVisual->SetEnabled(true);
+        //     if (screamVisual) screamVisual->SetEnabled(true);
+        //     damageArea->SetEnabled(true);
+        //     if (weaponCollider) weaponCollider->SetEnabled(true);
+        // }
+        // else if (damageArea->GetEnabled() &&
+        //          attackTimer >= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
+        //{
+        //     // GLOG("Banshee disable hitbox");
+        //     damageArea->SetEnabled(false);
+        //     if (weaponCollider) weaponCollider->SetEnabled(false);
+        //     if (areaVisual) areaVisual->SetEnabled(false);
+        //     if (screamVisual) screamVisual->SetEnabled(false);
+        // }
+
+        // if (attackTimer >= currentInvisibleTime + attackDuration)
+        //{
+        //     isAttacking   = false;
+        //     attackCdTimer = attackCooldown;
+        //     agentAI->ResetSpeed();
+        //     agentAI->ResetAngularSpeed();
+        //     agentAI->SetLookForward(true);
+        //     if (GetDistanceFromPlayer() > maxDetectionRange) currentState = BansheeStates::Search;
+        //     else ChangeState();
+        // }
     }
 }
 
@@ -242,46 +297,45 @@ void Banshee::ChangeState()
         currentState = BansheeStates::Idle;
         return;
     }
-    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-    bool playerInLocation            = parent->HasTag(playerLocation);
+    // const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    // bool playerInLocation            = parent->HasTag(playerLocation);
 
-    const float distance             = GetDistanceFromPlayer();
-    if (distance <= rangeAIAttack && playerInLocation) currentState = BansheeStates::Attack;
-    else if (distance <= rangeAIChase && playerInLocation) currentState = BansheeStates::Chase;
+    const float distance = GetDistanceFromPlayer();
+    if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
+    else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
     else currentState = BansheeStates::Search;
 }
 
 void Banshee::SearchForPlayer()
 {
-    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
     if (!isSearching)
     {
-        // TODO: Would be nice to be a "search" animation instead of idle
-        animComponent->UseTrigger("Idle");
+        firstSearch = true;
         isSearching = true;
-        searchTimer = searchDuration;
+        animComponent->UseTrigger("SearchRight");
         agentAI->SetSpeed(0.0f, 0.0f);
     }
+    else
+    {
+        if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+        {
+            isSearching = false;
+            agentAI->ResetSpeed();
+            currentState = BansheeStates::Chase;
+            return;
+        }
 
-    if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
-    {
-        isSearching = false;
-        agentAI->ResetSpeed();
-        currentState = BansheeStates::Chase;
-    }
-    else if (searchTimer >= 0.1f && searchTimer <= 0.3f)
-    {
-        mesh->SetEnabled(false);
-        isInvisible = true;
-        agentAI->ResetSpeed();
-        agentAI->SetPosition(startPos);
-    }
-    else if (searchTimer <= 0.1f)
-    {
-        isSearching  = false;
-        currentState = BansheeStates::Idle;
-        mesh->SetEnabled(true);
-        isInvisible = false;
+        if (firstSearch && animComponent->IsFinished())
+        {
+            firstSearch = false;
+            animComponent->UseTrigger("SearchLeft");
+        }
+        else if (animComponent->IsFinished())
+        {
+            isSearching  = false;
+            currentState = BansheeStates::Idle;
+            agentAI->SetPosition(startPos);
+        }
     }
 }
 

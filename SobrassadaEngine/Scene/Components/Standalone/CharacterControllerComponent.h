@@ -16,7 +16,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     CharacterControllerComponent(const rapidjson::Value& initialState, GameObject* parent);
 
     ~CharacterControllerComponent() override;
-
+    void Init() override;
     void Update(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
