@@ -68,5 +68,6 @@ class Banshee : public Character
     bool firstSearch = false;
     bool hasMoved    = false;
 
+    std::vector<ShaderScriptComponent*> shoutStartComponents;
     std::vector<ShaderScriptComponent*> shoutBaseComponents;
 };

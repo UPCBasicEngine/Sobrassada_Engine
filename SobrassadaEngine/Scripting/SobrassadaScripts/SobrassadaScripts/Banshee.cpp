@@ -78,6 +78,15 @@ bool Banshee::Init()
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
         }
+        else if (currentGO->GetName() == "VFX_Banshee_shoutStart")
+        {
+            shoutStartComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+        }
     }
 
     rng            = std::mt19937(std::random_device {}());
@@ -217,13 +226,25 @@ void Banshee::Attack(float deltaTime)
 
         // Slowly rotate towards player while charging the attack
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
+        {
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
+            }
+        }
 
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
         {
             animComponent->UseTrigger("Scream");
 
             weapon->SetEnabled(true);
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
 
             for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
             {
