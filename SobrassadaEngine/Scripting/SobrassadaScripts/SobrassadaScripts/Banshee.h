@@ -4,11 +4,13 @@
 
 #include "Math/float2.h"
 #include <random>
+#include <vector>
 
 class GameObject;
 class MeshComponent;
 class AIAgentComponent;
 class SphereColliderComponent;
+class ShaderScriptComponent;
 
 enum class BansheeStates : int
 {
@@ -53,8 +55,6 @@ class Banshee : public Character
     AIAgentComponent* agentAI           = nullptr;
     BansheeStates currentState          = BansheeStates::Idle;
     SphereColliderComponent* damageArea = nullptr;
-    GameObject* areaVisual              = nullptr;
-    GameObject* screamVisual            = nullptr;
     MeshComponent* mesh                 = nullptr;
 
     float2 invisibleTimeRange           = float2::zero;
@@ -68,4 +68,6 @@ class Banshee : public Character
 
     bool firstSearch = false;
     bool hasMoved    = false;
+
+    std::vector<ShaderScriptComponent*> shoutBaseComponents;
 };

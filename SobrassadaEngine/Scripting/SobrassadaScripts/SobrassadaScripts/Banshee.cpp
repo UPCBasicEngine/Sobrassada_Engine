@@ -6,6 +6,7 @@
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -65,24 +66,20 @@ bool Banshee::Init()
         else if (currentGO->GetName() == "Scream")
         {
             weapon     = currentGO;
-            damageArea = weapon->GetComponent<SphereColliderComponent*>();
 
             if (damageArea == nullptr) GLOG("[ERROR BANSHEE SCRIPT]: Sphere collider not found")
             else damageArea->SetEnabled(false);
 
             weapon->SetEnabled(false);
         }
-        else if (currentGO->GetName() == "SphereShadow")
+        else if (currentGO->GetName() == "VFX_Banshee_shoutBase")
         {
-            areaVisual = currentGO;
-            if (areaVisual) areaVisual->SetEnabled(false);
-            else GLOG("[ERROR BANSHEE SCRIPT]: No area visual found")
-        }
-        else if (currentGO->GetName() == "ScreamVisual")
-        {
-            screamVisual = currentGO;
-            if (screamVisual) screamVisual->SetEnabled(false);
-            else GLOG("[ERROR BANSHEE SCRIPT]: No scream visual found")
+            shoutBaseComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
         }
     }
 
@@ -172,11 +169,6 @@ void Banshee::HandleState(float deltaTime)
         ChangeState();
         break;
     }
-
-    if (animComponent && animComponent->IsFinished())
-    {
-        animComponent->UseTrigger("Idle");
-    }
 }
 
 void Banshee::ChasePlayer()
@@ -234,19 +226,23 @@ void Banshee::Attack(float deltaTime)
         {
             animComponent->UseTrigger("Scream");
 
-            damageArea->SetEnabled(true);
-            if (areaVisual) areaVisual->SetEnabled(true);
-            if (screamVisual) screamVisual->SetEnabled(true);
-            if (weaponCollider) weaponCollider->SetEnabled(true);
+            weapon->SetEnabled(true);
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
+            }
         }
         else if (animComponent->GetCurrentStateName() == HashString("Scream") && animComponent->IsFinished())
         {
             animComponent->UseTrigger("ScreamOut");
 
-            damageArea->SetEnabled(false);
-            if (areaVisual) areaVisual->SetEnabled(false);
-            if (screamVisual) screamVisual->SetEnabled(false);
-            if (weaponCollider) weaponCollider->SetEnabled(false);
+            weapon->SetEnabled(false);
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
         {
