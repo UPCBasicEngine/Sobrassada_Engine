@@ -81,4 +81,10 @@ class Archer : public Character
     float shotTimer            = 0.0f;
     bool hasStartedShooting    = false;
 
+    float escapeUsedTimer      = 0.0f;
+    const float ESCAPE_COOLDOWN = 8.0f;
+    int escapeCount             = 0;
+    const int MAX_ESCAPES       = 2;
+    bool canEscape              = true;
+
 };

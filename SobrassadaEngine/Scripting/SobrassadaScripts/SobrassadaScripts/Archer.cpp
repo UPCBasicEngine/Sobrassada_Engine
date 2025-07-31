@@ -72,10 +72,11 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
-    if (!parent->IsEnabled() && !isDead)
+    if (!canEscape)
     {
-        GLOG("CRITICAL BUG - Archer disabled but NOT dead! Health: %d", currentHealth);
-        return;
+        escapeUsedTimer += deltaTime;
+        if (escapeUsedTimer >= ESCAPE_COOLDOWN) canEscape = true;
+        
     }
      if (isKnockback)
     {
@@ -437,7 +438,7 @@ void Archer::SearchForPlayer()
 void Archer::Aim(float deltaTime)
 {
 
-  
+  float distance = GetDistanceFromPlayer();
     if (!weaponCollider) return;
 
     if (!isAiming)
@@ -476,13 +477,15 @@ void Archer::Aim(float deltaTime)
             }
         }
     }
+
+    
         
   
 }
 
 void Archer::Attack(float deltaTime)
 {
-   
+    float distance = GetDistanceFromPlayer();
     if (!weaponCollider) return;
 
     if (!isAttacking)
@@ -519,6 +522,9 @@ void Archer::Attack(float deltaTime)
             ChangeState(); 
         }
     }
+
+   
+    
 }
 
 void Archer::ChangeState()
@@ -529,6 +535,8 @@ void Archer::ChangeState()
     {
         GLOG("PLAYER IS DEAD - GOING TO PATROL");
         currentState = ArcherStates::PATROL;
+        escapeCount  = 0;
+        canEscape    = true;
         return;
     }
 
@@ -552,9 +560,16 @@ void Archer::ChangeState()
     }
     else
     {
-        if (distance <= rangeAIAttack) currentState = ArcherStates::AIM;
-        else if (distance < rangeEscape) currentState = ArcherStates::ESCAPE;
-        else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;
+        if (distance <= rangeEscape && canEscape && escapeCount < MAX_ESCAPES)
+        {
+            currentState = ArcherStates::ESCAPE;
+            escapeCount++;
+            GLOG("ESCAPE COUNT %d: ", escapeCount);
+            canEscape       = false;
+            escapeUsedTimer = 0.0f;
+        }
+        else if (distance <= rangeAIAttack) currentState = ArcherStates::AIM;
+        else if (distance >= rangeAIChase) currentState = ArcherStates::CHASE;
         else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
         else currentState = ArcherStates::PATROL;
         
@@ -564,6 +579,7 @@ void Archer::ChangeState()
 
 void Archer::Escape(float deltaTime)
 {
+    GLOG("ESCAPE STATE");
   if (!agentAI || !character) return;
 
     float3 archerPos        = parent->GetGlobalTransform().TranslatePart();
