@@ -8,6 +8,7 @@
 SpawnUI::SpawnUI(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Object UI Name", InspectorField::FieldType::InputText, &objectUIName});
+    fields.push_back({"Keep after collision", InspectorField::FieldType::Bool, &keepAfterCollision});
 }
 
 bool SpawnUI::Init()
@@ -31,7 +32,7 @@ void SpawnUI::Update(float deltaTime)
 {
     if (!trigger || !imageUI) return;
 
-    if (!onCollision) imageUI->SetEnabled(false);
+    if (!onCollision && !keepAfterCollision) imageUI->SetEnabled(false);
 
     onCollision = false;
 }

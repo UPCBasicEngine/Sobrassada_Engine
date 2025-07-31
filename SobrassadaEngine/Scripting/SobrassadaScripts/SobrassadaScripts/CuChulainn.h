@@ -116,6 +116,7 @@ class CuChulainn : public Character
     float dashTimer                    = 0.0f;
     bool desiredDash                   = false;
     float dashBufferTimer              = 0.0f;
+    bool dashUnlocked = false;
 
     std::string meleeVfxName           = "";
     std::string meleeTrailName         = "";

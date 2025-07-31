@@ -467,6 +467,8 @@ void CuChulainn::GetInputs()
 
 bool CuChulainn::CanDash() const
 {
+    //if (!dashUnlocked) return false; //When tutorial map is correctly fixed, put this to make progression
+
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                    state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
