@@ -75,24 +75,15 @@ void main()
 
         if (bool(windParameters.x))
         {
-            //float scaled_time = windParameters.x * windParameters.y;
-            //pos.x += sin(pos.x + scaled_time * 1.25 + uv0.y) * (1.0 - uv0.y) * 0.2;
-            //pos.z += cos(pos.z + scaled_time * 0.45 + uv0.y) * (1.0 - uv0.y) * 0.15;
-
             float gustStrength = max(0, sin((windParameters.x * 0.001) / windParameters.z));
 
             float combinedWindSpeed = windParameters.y + (gustStrength * windParameters.w);
-            float scaledTime = windParameters.x * 0.005 * (log(windParameters.y * 2) + 1);
-            float scaledWindSpeed = combinedWindSpeed * 0.02;
-            float uvHeightAdaption = (1.0 - uv0.y); // for using the height of the plant to modify wind effect
+            float scaledTime = windParameters.x * 0.001 * (log(windParameters.y * 2) + 1);
+            float scaledWindSpeed = combinedWindSpeed * 0.2;
 
-            float offsetX = scaledWindSpeed * (cos( scaledTime/1.5 ) * uvHeightAdaption) * sin( pos.x );
-            float offsetY = 0.25 * sin( 1.5*pos.x + 2.0*pos.z )* uvHeightAdaption;
-            float offsetZ = 0; //scaledWindSpeed * (cos( scaledTime/2.0 ) * uvHeightAdaption) * sin( pos.z + 2.0);
-
-            //offsetX = sin(pos.x + scaledTime * scaledWindSpeed * 1.25 + uv0.y) * (1.0 - uv0.y) * 0.2;
-            //offsetZ = cos(pos.z + scaledTime * scaledWindSpeed * 0.45 + uv0.y) * (1.0 - uv0.y) * 0.15;
-            //offsetY = 0;
+            float offsetX = sin(pos.x + scaledTime * 1.25 + uv0.y) * (1.0 - uv0.y) * 0.2 * scaledWindSpeed;
+            float offsetY = cos(pos.y + scaledTime * 0.2 + uv0.y) * (1.0 - uv0.y) * 0.15 * scaledWindSpeed;
+            float offsetZ = cos(pos.z + scaledTime * 0.2 + uv0.y) * (1.0 - uv0.y) * 0.15 * scaledWindSpeed;
 
             vec3 offset = vec3(offsetX, offsetY, offsetZ);
 
