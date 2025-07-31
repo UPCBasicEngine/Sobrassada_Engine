@@ -54,7 +54,6 @@ class Banshee : public Character
   private:
     AIAgentComponent* agentAI           = nullptr;
     BansheeStates currentState          = BansheeStates::Idle;
-    SphereColliderComponent* damageArea = nullptr;
     MeshComponent* mesh                 = nullptr;
 
     float2 invisibleTimeRange           = float2::zero;

@@ -67,9 +67,6 @@ bool Banshee::Init()
         {
             weapon     = currentGO;
 
-            if (damageArea == nullptr) GLOG("[ERROR BANSHEE SCRIPT]: Sphere collider not found")
-            else damageArea->SetEnabled(false);
-
             weapon->SetEnabled(false);
         }
         else if (currentGO->GetName() == "VFX_Banshee_shoutBase")
@@ -184,7 +181,7 @@ void Banshee::ChasePlayer()
 
 void Banshee::Attack(float deltaTime)
 {
-    if (!damageArea) return;
+    if (!weapon) return;
 
     if (!isAttacking)
     {
