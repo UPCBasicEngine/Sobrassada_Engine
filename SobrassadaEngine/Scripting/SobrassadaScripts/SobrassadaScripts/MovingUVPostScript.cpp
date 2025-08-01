@@ -84,6 +84,7 @@ bool MovingUVPostScript::Init()
             texture = rmat->GetDiffuseColorID();
         }
     }
+    uvOffset = uvOffsetStart;
 
     return true;
 }
@@ -91,8 +92,8 @@ bool MovingUVPostScript::Init()
 void MovingUVPostScript::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x + uvOffsetStart.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y + uvOffsetStart.y;
+    uvOffset.x      += newOffset * uvOffsetDirection.x;
+    uvOffset.y      += newOffset * uvOffsetDirection.y;
 }
 
 void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
@@ -130,4 +131,9 @@ void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(0);
     }
+}
+
+void MovingUVPostScript::Reset()
+{
+    uvOffset = uvOffsetStart;
 }

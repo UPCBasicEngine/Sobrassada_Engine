@@ -100,14 +100,16 @@ bool MovingUVTransparent::Init()
         meshComp->SetEnabled(false);
     }
 
+    uvOffset = uvOffsetStart;
+
     return true;
 }
 
 void MovingUVTransparent::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x + uvOffsetStart.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y + uvOffsetStart.y;
+    uvOffset.x      += newOffset * uvOffsetDirection.x;
+    uvOffset.y      += newOffset * uvOffsetDirection.y;
 }
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
@@ -155,4 +157,9 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(0);
     }
+}
+
+void MovingUVTransparent::Reset()
+{
+    uvOffset = uvOffsetStart;
 }
