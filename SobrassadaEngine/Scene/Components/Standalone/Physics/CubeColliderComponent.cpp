@@ -236,11 +236,6 @@ void CubeColliderComponent::Update(float deltaTime)
     }
 }
 
-void CubeColliderComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void CubeColliderComponent::RenderDebug(float deltaTime)
 {
 }

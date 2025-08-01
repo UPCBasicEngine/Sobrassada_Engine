@@ -25,7 +25,6 @@ class SOBRASADA_API_ENGINE SplineComponent : public Component
     ~SplineComponent() override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
     bool RenderGizmo() override;
     void RenderEditorInspector() override;

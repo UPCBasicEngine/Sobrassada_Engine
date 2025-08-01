@@ -216,11 +216,6 @@ void SphereColliderComponent::Update(float deltaTime)
     }
 }
 
-void SphereColliderComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void SphereColliderComponent::RenderDebug(float deltaTime)
 {
 }

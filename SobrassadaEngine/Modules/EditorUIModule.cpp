@@ -69,6 +69,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Decal"),                COMPONENT_DECAL               },
         {HashString("Trail"),                COMPONENT_TRAIL               },
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
+        {HashString("Shader Script"),        COMPONENT_SHADER_SCRIPT       },
     };
 
     fullscreen    = FULLSCREEN;
