@@ -104,6 +104,8 @@ bool MovingUVLight::Init()
     }
     uvOffset = uvOffsetStart;
 
+    uvOffset = uvOffsetStart;
+
     return true;
 }
 
