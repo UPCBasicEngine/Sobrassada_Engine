@@ -102,6 +102,7 @@ bool MovingUVLight::Init()
 
         meshComp->SetEnabled(false);
     }
+    uvOffset = uvOffsetStart;
 
     return true;
 }
@@ -109,8 +110,8 @@ bool MovingUVLight::Init()
 void MovingUVLight::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x + uvOffsetStart.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y + uvOffsetStart.y;
+    uvOffset.x      += newOffset * uvOffsetDirection.x;
+    uvOffset.y      += newOffset * uvOffsetDirection.y;
 }
 
 void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)
@@ -164,4 +165,9 @@ void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(0);
     }
+}
+
+void MovingUVLight::Reset()
+{
+    uvOffset = uvOffsetStart;
 }

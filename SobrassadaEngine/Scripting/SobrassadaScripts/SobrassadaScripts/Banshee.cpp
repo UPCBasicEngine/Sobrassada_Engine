@@ -222,17 +222,17 @@ void Banshee::Attack(float deltaTime)
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
+            }
         }
 
         // Slowly rotate towards player while charging the attack
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
         {
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-
-            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
-            }
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
@@ -244,6 +244,11 @@ void Banshee::Attack(float deltaTime)
             for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->ResetScript("MovingUVTransparent");
             }
 
             for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
@@ -260,6 +265,11 @@ void Banshee::Attack(float deltaTime)
             for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->ResetScript("MovingUVTransparent");
             }
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())

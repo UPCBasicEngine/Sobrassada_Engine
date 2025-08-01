@@ -16,6 +16,8 @@ class MovingUVTransparent : public Script
     void Update(float deltaTime) override;
     void Render(float deltaTime, CameraComponent* cameraComp) override;
 
+    void Reset() override;
+
   private:
     unsigned int shaderProgram  = 0;
 
