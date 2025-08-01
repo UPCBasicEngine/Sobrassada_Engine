@@ -11,6 +11,7 @@
 #include "InputModule.h"
 #include "Projectile.h"
 #include "ResourceMaterial.h"
+#include "RaycastController.h"
 #include "ResourceStateMachine.h"
 #include "ResourcesModule.h"
 #include "Scene.h"
@@ -40,6 +41,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({InspectorField::FieldType::Text, (void*)"CuChulainn parameters"});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
     fields.push_back({"Default speed", InspectorField::FieldType::Float, &defaultSpeed, 0.0f, 10.0f});
+    fields.push_back({"Step time", InspectorField::FieldType::Float, &stepTime, 0.0f, 1.0f});
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
@@ -278,6 +280,7 @@ void CuChulainn::OnDamageTaken(int amount)
     UpdateHealthBarUI();
     if (camera) camera->StartShake(0.2f, 0.2f);
 
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
     if (state == CharacterStates::CHARGING)
@@ -704,6 +707,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
     if (state == CharacterStates::IDLE) idleTimer += deltaTime;
+    if (state == CharacterStates::RUN) runTimer += deltaTime;
 
     if (state == CharacterStates::DASH) isInvulnerable = true;
 
@@ -766,7 +770,7 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
+    // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
     animComponent->OnResume();
     aimTimer   = 0.0f;
 
@@ -803,6 +807,9 @@ void CuChulainn::Dash()
     LookAtLeftStick();
     character->StartDash();
     isDashing = true;
+
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
     if (dashDecal)
@@ -902,6 +909,7 @@ void CuChulainn::Attack(float deltaTime)
         camera->EnableAimOffset(false);
     }
 
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
@@ -930,11 +938,12 @@ void CuChulainn::UltimateAttack()
     }
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
-    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     ultimateTimer   = 0.0f;
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
 
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
     if (animComponent) animComponent->UseTrigger("Ultimate");
 }
 
@@ -965,8 +974,35 @@ void CuChulainn::Move()
     character->EnableMovement(true);
     if (character->GetSpeed() > 0.5f)
     {
-        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("Walk");
-        state = CharacterStates::RUN;
+        if (state != CharacterStates::RUN)
+        {
+            state    = CharacterStates::RUN;
+            runTimer = 0.0f;
+            if (animComponent) animComponent->UseTrigger("Walk");
+        }
+
+        if (runTimer > stepTime && audio)
+        {
+            // TODO: Cast a ray to see the material below (probably through tags, maybe colliders)
+            LineSegment ray(
+                parent->GetGlobalTransform().TranslatePart(),
+                parent->GetGlobalTransform().TranslatePart() - float3::unitY
+            );
+            GameObject* object =
+                RaycastController::GetRayIntersectionTrees(ray, AppEngine->GetSceneModule()->GetScene()->GetOctree());
+
+            if (object)
+            {
+                // Default to grass steps
+                AkUniqueID eventId = AK::EVENTS::PLAY_SFX_STEPS_GRASS;
+                if (object->HasTag(HashString("Wood"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_WOOD;
+                else if (object->HasTag(HashString("Rock"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_ROCK;
+
+                if (audio) audio->EmitEvent(eventId);
+            }
+
+            runTimer = 0.0f;
+        }
     }
     else
     {

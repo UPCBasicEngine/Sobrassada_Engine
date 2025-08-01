@@ -106,6 +106,23 @@ void Character::Update(float deltaTime)
 
 void Character::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
+    ScriptComponent* otherScript = otherObject->GetComponent<ScriptComponent*>();
+    if (otherScript)
+    {
+        // Mushroom check
+        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
+        if (mushroomScript)
+        {
+            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
+            {
+                if (playerScript->TakeMushroom()) mushroomScript->Disable();
+            }
+        }
+    }
+}
+
+void Character::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+{
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
@@ -169,16 +186,6 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             {
                 TakeDamage(fireballScript->GetDamage());
                 damageCollider->SetEnabled(false);
-            }
-        }
-
-        // Mushroom check
-        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
-        if (mushroomScript)
-        {
-            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
-            {
-                if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
         }
     }

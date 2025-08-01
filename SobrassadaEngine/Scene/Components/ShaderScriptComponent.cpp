@@ -411,6 +411,23 @@ void ShaderScriptComponent::DeleteAllScripts()
     App->GetShaderScriptModule()->ComponentDeleted(this);
 }
 
+void ShaderScriptComponent::ResetInitializationFlags()
+{
+    std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
+}
+
+void ShaderScriptComponent::ResetScript(const std::string& scriptName)
+{
+    for (int i = 0; i < scriptNames.size(); ++i)
+    {
+        if (scriptName == scriptNames[i])
+        {
+            scriptInstances[i]->Reset();
+            return;
+        }
+    }
+}
+
 void ShaderScriptComponent::SetComponentEnabled(bool value)
 {
     enabled = value;

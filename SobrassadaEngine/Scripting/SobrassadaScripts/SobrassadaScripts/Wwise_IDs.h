@@ -13,21 +13,37 @@ namespace AK
 {
     namespace EVENTS
     {
-        static const AkUniqueID CAVE_01 = 4091541804U;
-        static const AkUniqueID CAVE_02 = 4091541807U;
-        static const AkUniqueID FIRE_01 = 1589446069U;
-        static const AkUniqueID FIRE_02 = 1589446070U;
-        static const AkUniqueID FOREST = 491961918U;
-        static const AkUniqueID ICE_BLAST = 3920196677U;
-        static const AkUniqueID MUSIC_CITY = 3946025416U;
-        static const AkUniqueID MUSIC_TUTORIAL = 931250475U;
-        static const AkUniqueID TORCH = 1904864137U;
-        static const AkUniqueID TREEOFLIFE = 424126604U;
-        static const AkUniqueID WATER = 2654748154U;
-        static const AkUniqueID WATERFALL_01 = 3996293477U;
-        static const AkUniqueID WATERFALL_02 = 3996293478U;
-        static const AkUniqueID WIND_01 = 1291679911U;
-        static const AkUniqueID WIND_02 = 1291679908U;
+        static const AkUniqueID PLAY_BURNINGCITY = 3779517962U;
+        static const AkUniqueID PLAY_FOREST = 207755397U;
+        static const AkUniqueID PLAY_MAINMENU = 3738780720U;
+        static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
+        static const AkUniqueID PLAY_SFX_BUTTON_01 = 920741356U;
+        static const AkUniqueID PLAY_SFX_BUTTON_02 = 920741359U;
+        static const AkUniqueID PLAY_SFX_BUTTON_03 = 920741358U;
+        static const AkUniqueID PLAY_SFX_CAVE_01 = 3434634929U;
+        static const AkUniqueID PLAY_SFX_CAVE_02 = 3434634930U;
+        static const AkUniqueID PLAY_SFX_CAVE_03 = 3434634931U;
+        static const AkUniqueID PLAY_SFX_CAVE_04 = 3434634932U;
+        static const AkUniqueID PLAY_SFX_FIRE_01 = 3889642976U;
+        static const AkUniqueID PLAY_SFX_FIRE_02 = 3889642979U;
+        static const AkUniqueID PLAY_SFX_MC_DASH = 917195537U;
+        static const AkUniqueID PLAY_SFX_MC_HIT = 2490745552U;
+        static const AkUniqueID PLAY_SFX_MC_HURT = 2204804306U;
+        static const AkUniqueID PLAY_SFX_MC_NORMALATTACK_01 = 2177541458U;
+        static const AkUniqueID PLAY_SFX_MC_ULTIMATEATTACK = 1030865972U;
+        static const AkUniqueID PLAY_SFX_SOLDIER_ATTACK = 3285336459U;
+        static const AkUniqueID PLAY_SFX_STEPS_GRASS = 879946080U;
+        static const AkUniqueID PLAY_SFX_STEPS_ROCK = 2099665009U;
+        static const AkUniqueID PLAY_SFX_STEPS_WOOD = 2418067177U;
+        static const AkUniqueID PLAY_SFX_TREEOFLIFE_02 = 3055317224U;
+        static const AkUniqueID PLAY_SFX_TREEOFLIFE_03 = 3055317225U;
+        static const AkUniqueID PLAY_SFX_WATER_01 = 3212841747U;
+        static const AkUniqueID PLAY_SFX_WATERFALL_01 = 1233267134U;
+        static const AkUniqueID PLAY_SFX_WATERFALL_02 = 1233267133U;
+        static const AkUniqueID PLAY_SFX_WIND_01 = 4018713014U;
+        static const AkUniqueID PLAY_SFX_WIND_02 = 4018713013U;
+        static const AkUniqueID PLAY_TEMPLETRACK = 2635547058U;
+        static const AkUniqueID PLAY_TORCH = 2025845440U;
     } // namespace EVENTS
 
     namespace GAME_PARAMETERS
