@@ -219,6 +219,8 @@ void Character::UpdateTimers(float deltaTime)
 
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
+
+
 }
 
 void Character::TakeDamage(int amount)

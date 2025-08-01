@@ -15,6 +15,7 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
+#include "GameTimer.h"
 
 #include "Math/Quat.h"
 #include "imgui.h"
@@ -27,7 +28,7 @@
 AnimationComponent::AnimationComponent(const UID uid, GameObject* parent)
     : Component(uid, parent, "Animation", COMPONENT_ANIMATION)
 {
-    animController = new AnimController();
+    animController     = new AnimController();
 
     localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
 }
@@ -103,8 +104,6 @@ void AnimationComponent::OnPlay(bool isTransition)
                             else animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
                             resource = clip.animationResourceUID;
                         }
-
-                        
                     }
                 }
             }
@@ -398,7 +397,10 @@ void AnimationComponent::Update(float deltaTime)
             SetBoneMapping();
         }
 
-        animController->Update(deltaTime);
+        // If in game, update animations with game timer so they are paused
+        float currentDelta =
+            App->GetSceneModule()->GetInPlayMode() ? App->GetGameTimer()->GetDeltaTime() / 1000.0f : deltaTime;
+        animController->Update(currentDelta);
 
         std::set<GameObject*> modifiedBones;
 
@@ -406,7 +408,7 @@ void AnimationComponent::Update(float deltaTime)
         {
             const HashString& boneName = channel;
 
-            auto boneIt = boneMapping.find(boneName);
+            auto boneIt                = boneMapping.find(boneName);
 
             if (boneIt != boneMapping.end())
             {

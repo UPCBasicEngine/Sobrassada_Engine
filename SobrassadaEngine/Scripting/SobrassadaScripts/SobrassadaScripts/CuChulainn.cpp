@@ -24,6 +24,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
+#include "GameTimer.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -289,8 +290,9 @@ void CuChulainn::OnDamageTaken(int amount)
         state = CharacterStates::IDLE;
         if (animComponent) animComponent->UseTrigger("Idle");
     }
-    // TODO: play CuChulainn take damage sound
-    // TODO: fill riastrad bar dinamically
+
+    // TODO: Test if hitstop when hit feels nice
+    //AppEngine->GetGameTimer()->SetTimeScale(0.0f);
 }
 
 void CuChulainn::OnHealed(int amount)
@@ -353,6 +355,7 @@ void CuChulainn::HandleState(float deltaTime)
             {
                 riastradVfx->GetComponent<AnimationComponent*>()->OnStop();
                 riastradVfx->SetEnabled(false);
+                AppEngine->GetGameTimer()->SetTimeScale(1.0f);
             }
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
@@ -593,6 +596,16 @@ void CuChulainn::UpdateTimers(float deltaTime)
 {
     weaponCollider->SetEnabled(false);
     Character::UpdateTimers(deltaTime);
+
+    if (AppEngine->GetGameTimer()->GetTimeScale() == 0.0f)
+    {
+        epicTimer += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
+        if (epicTimer > 0.1f)
+        {
+            epicTimer = 0.0f;
+            AppEngine->GetGameTimer()->SetTimeScale(1.0f);
+        }
+    }
 
     // Dash
     dashTimer -= deltaTime;
@@ -1167,6 +1180,7 @@ void CuChulainn::ToggleRiastrad()
         riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(false);
         state          = CharacterStates::TRANSFORM;
         character->EnableMovement(false);
+        AppEngine->GetGameTimer()->SetTimeScale(0.5f);
 
         if (animComponent) animComponent->UseTrigger("Transform");
 
