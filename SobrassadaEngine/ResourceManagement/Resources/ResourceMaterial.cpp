@@ -309,6 +309,7 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("isTransparent", isTransparent, allocator);
                 importOptions.AddMember("isAlphaDiscard", isAlpha, allocator);
                 importOptions.AddMember("isDoubleSided", doubleSided, allocator);
+                importOptions.AddMember("applyWind", applyWind, allocator);
 
                 if (doc.HasMember("importOptions")) doc["importOptions"] = importOptions;
                 else doc.AddMember("importOptions", importOptions, allocator);

@@ -138,7 +138,7 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
     }
 }
 
-void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera)
+void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesToRender, const unsigned int program, CameraComponent* camera)
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("BatchManager::RenderTransparent", Optick::Category::Rendering)
@@ -185,8 +185,6 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
             }
         }
     );
-
-    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
 
     const auto start           = std::chrono::high_resolution_clock::now();
 

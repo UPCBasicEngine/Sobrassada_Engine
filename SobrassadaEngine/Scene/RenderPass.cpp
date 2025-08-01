@@ -781,10 +781,10 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         }
 
         glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
-        batchManager->RenderTransparent(navmeshesToRender, camera);
+        batchManager->RenderTransparent(navmeshesToRender, program, camera);
         glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        batchManager->RenderTransparent(nonnavmeshesToRender, camera);
+        batchManager->RenderTransparent(nonnavmeshesToRender, program, camera);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
 
@@ -815,31 +815,31 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         {
             glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
             App->GetOpenGLModule()->SetRenderWireframe(true);
-            batchManager->RenderTransparent(meshesToRender, camera);
+            batchManager->RenderTransparent(meshesToRender, program, camera);
             App->GetOpenGLModule()->SetRenderWireframe(false);
         }
         else
         {
             glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
             
-            batchManager->RenderTransparent(meshesToRender, camera);
+            batchManager->RenderTransparent(meshesToRender, program, camera);
 
-            //glUseProgram(wPOProgram);
+            glUseProgram(wPOProgram);
             
-            //glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
-            //glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+            glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
+            glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
             
             WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
             if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
             {
                 const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
-                glUniform4f(glGetUniformLocation(program, "windDirection"), windDirection.x,
+                glUniform4f(glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x,
                     windDirection.y, windDirection.z, windDirection.w);
-                glUniform4f(glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),
+                glUniform4f(glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
                     windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
                     windConfig->GetGustSpeed());
             }
-            batchManager->RenderTransparent(vertexOffsetMeshesToRender, camera);
+            batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
