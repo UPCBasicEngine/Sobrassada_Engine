@@ -26,6 +26,7 @@ enum class CharacterStates
     CHARGED_ATTACK,
     TAKE_MUSHROOM,
     HEAL,
+    TRANSFORM,
 };
 
 class CuChulainn : public Character
@@ -111,6 +112,7 @@ class CuChulainn : public Character
     float defaultSpeed                 = 7.0f;
     float inputBuffer                  = 0.5f;
 
+    // Dash
     float3 lastDashStartPos            = float3::zero;
     bool isDashing                     = false;
     bool wasDashing                    = false;
@@ -119,6 +121,7 @@ class CuChulainn : public Character
     bool desiredDash                   = false;
     float dashBufferTimer              = 0.0f;
 
+    // Basic attack
     std::string meleeVfxName           = "";
     std::string meleeTrailName         = "";
     GameObject* meleeVfxObject         = nullptr;
@@ -128,6 +131,7 @@ class CuChulainn : public Character
     int comboCounter                   = -1;
     float comboBufferTimer             = 0.0f;
 
+    // CHarged attack
     std::string chargedAttackName      = "";
     GameObject* chargedAttackCollider  = nullptr;
     bool isChargingAttack              = false;
@@ -152,6 +156,7 @@ class CuChulainn : public Character
     std::string aimShadowName          = "";
     GameObject* aimShadowObject        = nullptr;
 
+    // Ultimate
     std::string ultimateName           = "";
     GameObject* ultimateObject         = nullptr;
     bool desiredUltimate               = false;
@@ -164,6 +169,7 @@ class CuChulainn : public Character
     float ultimateHitboxDuration       = 0.0f;
     float ultimateAnimationDelay       = 0.0f;
 
+    // Riastrad
     GameObject* riastradBar            = nullptr;
     int riastradMeter                  = 0;
     bool isRiastrad                    = false;
@@ -176,6 +182,8 @@ class CuChulainn : public Character
     int riastradOnDamageTaken          = 2;
     int riastradOnHit                  = 5;
     int riastradOnEnemyDeath           = 5;
+    std::string riastradVfxName        = "";
+    GameObject* riastradVfx            = nullptr;
 
     float3 spawnPos                    = float3::zero;
     AudioSourceComponent* audio        = nullptr;

@@ -96,6 +96,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
     fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
+    fields.push_back({"Riastrad VFX object", InspectorField::FieldType::InputText, &riastradVfxName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"HUD textures"});
     fields.push_back({"Dash filled icon", InspectorField::FieldType::Resource, &dashFillImage});
@@ -202,6 +203,10 @@ bool CuChulainn::Init()
     healVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healVisualName);
     if (!healVisual) GLOG("[WARNING] No heal visual found for CuChulain")
     else healVisual->SetEnabled(false);
+
+    riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
+    if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
+    else riastradVfx->SetEnabled(false);
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -318,7 +323,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
              state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL)
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM)
         Move();
 
     // When finished animation, go back to idle state
@@ -341,6 +346,11 @@ void CuChulainn::HandleState(float deltaTime)
                 return;
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
             if (state == CharacterStates::HEAL) healKnockback->SetEnabled(false);
+            if (state == CharacterStates::TRANSFORM)
+            {
+                riastradVfx->GetComponent<AnimationComponent*>()->OnStop();
+                riastradVfx->SetEnabled(false);
+            }
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -485,7 +495,7 @@ bool CuChulainn::CanDash() const
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                    state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                   state != CharacterStates::HEAL && !isCursed;
+                   state != CharacterStates::HEAL && !isCursed && state != CharacterStates::TRANSFORM;
 
     if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer > 0.0f;
 
@@ -498,7 +508,7 @@ bool CuChulainn::CanAttack() const
            state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
            state != CharacterStates::CHARGING && state != CharacterStates::TAKE_MUSHROOM &&
-           state != CharacterStates::HEAL;
+           state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
 }
 
 bool CuChulainn::CanUltimate() const
@@ -506,7 +516,7 @@ bool CuChulainn::CanUltimate() const
     bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
                        state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
                        state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL;
+                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
 
     if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer > 0.0f;
 
@@ -517,7 +527,7 @@ bool CuChulainn::CanTakeMushroom() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
 }
 
 bool CuChulainn::CanHeal() const
@@ -526,7 +536,7 @@ bool CuChulainn::CanHeal() const
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
-           !isHealing;
+           !isHealing && state != CharacterStates::TRANSFORM;
 }
 
 bool CuChulainn::CanAim() const
@@ -534,7 +544,8 @@ bool CuChulainn::CanAim() const
     return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
            state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
+           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
+           state != CharacterStates::TRANSFORM;
 }
 
 bool CuChulainn::CanChargeAttack() const
@@ -542,7 +553,8 @@ bool CuChulainn::CanChargeAttack() const
     bool canChargeAttack = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
                            state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                            state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK &&
-                           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
+                           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
+                           state != CharacterStates::TRANSFORM;
 
     if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer > 0.0f;
 
@@ -558,7 +570,7 @@ bool CuChulainn::CanTransform() const
                        state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
                        state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
                        state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL;
+                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
 
         if (canTransform && state == CharacterStates::BASIC_ATTACK) canTransform = comboBufferTimer > 0.0f;
     }
@@ -568,7 +580,7 @@ bool CuChulainn::CanTransform() const
                        state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
                        state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
                        state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL;
+                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
     }
 
     return canTransform;
@@ -1115,6 +1127,13 @@ void CuChulainn::ToggleRiastrad()
         character->SetMaxSpeed(riastradMovementSpeed);
         Heal(maxHealth);
 
+        riastradVfx->SetEnabled(true);
+        riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(false);
+        state          = CharacterStates::TRANSFORM;
+        character->EnableMovement(false);
+
+        if (animComponent) animComponent->UseTrigger("Transform");
+
         for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
         {
             clip.animationSpeed *= riastradAnimationsSpeedRatio;
@@ -1248,6 +1267,9 @@ const std::string CuChulainn::GetLogicStateName()
         break;
     case CharacterStates::HEAL:
         return "Healing";
+        break;
+    case CharacterStates::TRANSFORM:
+        return "Transform";
         break;
     default:
         return "MISSING!";
