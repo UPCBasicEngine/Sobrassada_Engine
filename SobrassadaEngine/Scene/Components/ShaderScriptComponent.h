@@ -30,6 +30,7 @@ class ShaderScriptComponent : public Component
     void DeleteAllScripts();
 
     void ResetInitializationFlags();
+    void SOBRASADA_API_ENGINE ResetScript(const std::string& scriptName);
 
     const std::vector<Script*>& GetScriptInstances() const { return scriptInstances; }
     const std::vector<ShaderScriptType>& GetScriptRenderTypes() const { return shaderScriptRenderType; }

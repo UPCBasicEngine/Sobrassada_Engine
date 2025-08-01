@@ -22,8 +22,9 @@
 
 MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
     fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
+    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
 }
 
 MovingUVTransparent::~MovingUVTransparent()
@@ -99,6 +100,8 @@ bool MovingUVTransparent::Init()
         meshComp->SetEnabled(false);
     }
 
+    uvOffset = uvOffsetStart;
+
     return true;
 }
 
@@ -154,4 +157,9 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(0);
     }
+}
+
+void MovingUVTransparent::Reset()
+{
+    uvOffset = uvOffsetStart;
 }
