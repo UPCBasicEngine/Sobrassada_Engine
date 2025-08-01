@@ -20,8 +20,9 @@
 
 MovingUVPostScript::MovingUVPostScript(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
     fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
+    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
 }
 
 MovingUVPostScript::~MovingUVPostScript()
@@ -90,8 +91,8 @@ bool MovingUVPostScript::Init()
 void MovingUVPostScript::Update(float deltaTime)
 {
     float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y;
+    uvOffset.x      += newOffset * uvOffsetDirection.x + uvOffsetStart.x;
+    uvOffset.y      += newOffset * uvOffsetDirection.y + uvOffsetStart.y;
 }
 
 void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
