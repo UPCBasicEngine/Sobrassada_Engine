@@ -20,4 +20,5 @@ class SpawnUI : public Script
     std::string objectUIName         = "";
     bool onCollision                 = false;
     bool keepAfterCollision             = false;
+    bool unlockAbility                  = false;
 };

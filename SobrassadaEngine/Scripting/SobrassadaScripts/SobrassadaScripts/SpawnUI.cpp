@@ -8,7 +8,7 @@
 SpawnUI::SpawnUI(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Object UI Name", InspectorField::FieldType::InputText, &objectUIName});
-    fields.push_back({"Keep after collision", InspectorField::FieldType::Bool, &keepAfterCollision});
+    fields.push_back({"Unlocks Ability", InspectorField::FieldType::Bool, &unlockAbility});
 }
 
 bool SpawnUI::Init()
@@ -32,7 +32,7 @@ void SpawnUI::Update(float deltaTime)
 {
     if (!trigger || !imageUI) return;
 
-    if (!onCollision && !keepAfterCollision) imageUI->SetEnabled(false);
+    if (!onCollision && !unlockAbility) imageUI->SetEnabled(false);
 
     onCollision = false;
 }
@@ -42,4 +42,6 @@ void SpawnUI::OnCollision(GameObject* otherObject, const float3 collisionNormal,
     // triggers only collision with Player
     if (imageUI) imageUI->SetEnabled(true);
     onCollision = true;
+
+    if (unlockAbility) 
 }

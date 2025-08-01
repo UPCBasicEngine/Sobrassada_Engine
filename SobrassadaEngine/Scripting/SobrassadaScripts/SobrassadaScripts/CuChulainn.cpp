@@ -1129,6 +1129,14 @@ void CuChulainn::OnEnemyDefeated()
     AddRiastrad(riastradOnEnemyDeath);
 }
 
+void CuChulainn::ActivateAbility(std::string& abilityName)
+{
+    std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
+
+    if (abilityName == "dash") dashUnlocked = true;
+    else if (abilityName == "ultimate") unlockUltimate = true;
+}
+
 const std::string CuChulainn::GetLogicStateName()
 {
     switch (state)
