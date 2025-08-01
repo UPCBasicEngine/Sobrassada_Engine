@@ -12,11 +12,14 @@
 #include "SceneModule.h"
 #include "ShaderModule.h"
 #include "Standalone/MeshComponent.h"
+#include "EngineTimer.h"
+#include "WindConfig.h"
 
 #include "Math/float3.h"
 #include "glew.h"
 #include <algorithm>
 #include <chrono>
+#include <Math/Quat.h>
 #ifdef OPTICK
 #include "optick.h"
 #endif
@@ -101,8 +104,17 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
 
         if (batchMeshes.empty()) continue;
 
-        const unsigned int program = it->GetIsSpecular() ? App->GetShaderModule()->GetSpecularGeometryPassProgram()
-                                                         : App->GetShaderModule()->GetMetallicGeometryPassProgram();
+        unsigned int program;
+
+        if (it->GetIsSpecular())
+        {
+            program = it->DoApplyWind() ? App->GetShaderModule()->GetSpecularGeometryVPOPassProgram() :
+            App->GetShaderModule()->GetSpecularGeometryPassProgram();
+        } else
+        {
+            program = it->DoApplyWind() ? App->GetShaderModule()->GetMetallicGeometryVPOPassProgram() :
+            App->GetShaderModule()->GetMetallicGeometryPassProgram();
+        }
 
         const auto start           = std::chrono::high_resolution_clock::now();
 
@@ -121,6 +133,19 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         else glUniform1i(glGetUniformLocation(program, "isAlpha"), 0);
 
         if (it->IsDoubleSided()) glDisable(GL_CULL_FACE);
+
+        if (it->DoApplyWind())
+        {
+            if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig(); windConfig->GetApplyWindGlobally())
+            {
+                const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+                glUniform4f(glGetUniformLocation(program, "windDirection"), windDirection.x,
+                    windDirection.y, windDirection.z, windDirection.w);
+                glUniform4f(glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),
+                    windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
+                    windConfig->GetGustSpeed());
+            }
+        }
 
         it->ResetUpdatedOnce();
         it->Render(batchMeshes);
@@ -306,7 +331,8 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
             if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
                 it->GetHasBones() == component->GetHasBones() &&
                 it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid() &&
-                it->IsAlpha() == (component->GetRenderMode() == 2) && material->IsDoubleSided() == it->IsDoubleSided())
+                it->IsAlpha() == (component->GetRenderMode() == 2) && material->IsDoubleSided() == it->IsDoubleSided() &&
+                material->DoApplyWind() == it->DoApplyWind())
             {
                 return it;
             }

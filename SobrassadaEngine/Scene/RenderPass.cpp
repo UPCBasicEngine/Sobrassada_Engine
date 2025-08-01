@@ -233,7 +233,7 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
         if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
             meshesToRender.push_back(mesh);
     }
-
+    
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
@@ -753,7 +753,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
 
     const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
-    const unsigned int wPOProgram = App->GetShaderModule()->GetTransparentWPOPassProgram();
+    const unsigned int wPOProgram = App->GetShaderModule()->GetTransparentVPOPassProgram();
 
     glUseProgram(program);
 
@@ -805,8 +805,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
                 else
                     meshesToRender.push_back(mesh);
             }
-                
-
+            
             TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
             if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
         }

@@ -31,6 +31,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isNavmeshValid = component->GetParent()->IsNavMeshValid();
     isAlpha        = component->GetRenderMode() == 2;
     isDoubleSided  = component->GetResourceMaterial()->IsDoubleSided();
+    doApplyWind    = component->GetResourceMaterial()->DoApplyWind();
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);

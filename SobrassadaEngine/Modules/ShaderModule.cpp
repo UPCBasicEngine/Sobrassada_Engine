@@ -24,9 +24,11 @@ bool ShaderModule::Init()
     uiWidgetProgram                = CreateShaderProgram(UIWIDGET_VERTEX_SHADER_PATH, UIWIDGET_FRAGMENT_SHADER_PATH);
 
     metallicGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_METALLIC_FRAGMENT_SHADER_PATH);
+    metallicGeometryVPOPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_METALLIC_FRAGMENT_SHADER_PATH);
     specularGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH);
+    specularGeometryVPOPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH);
     transparentPassProgram      = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
-    transparentWPOPassProgram   = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
+    transparentVPOPassProgram   = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
     lightingPassProgram         = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
 
     quadProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
@@ -68,7 +70,7 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(spritesheetProgram);
     glDeleteProgram(particleSystemProgram);
     glDeleteProgram(transparentPassProgram);
-    glDeleteProgram(transparentWPOPassProgram);
+    glDeleteProgram(transparentVPOPassProgram);
 
     for (auto& shaderIterator : customShaderPrograms)
     {
@@ -287,11 +289,21 @@ int ShaderModule::GetMetallicGeometryPassProgram() const
              : metallicGeometryPassProgram;
 }
 
+int ShaderModule::GetMetallicGeometryVPOPassProgram() const
+{
+    return metallicGeometryVPOPassProgram;
+}
+
 int ShaderModule::GetSpecularGeometryPassProgram() const
 {
     return App->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_LIGTHS)
              ? specularGeometryPassProgram
              : specularGeometryPassProgram;
+}
+
+int ShaderModule::GetSpecularGeometryVPOPassProgram() const
+{
+    return specularGeometryVPOPassProgram;
 }
 
 int ShaderModule::GetLightingPassProgram() const
