@@ -48,6 +48,18 @@ class FireballTrap : public Script
     void SetupInspectorFields();
 
   private:
+    struct TimedVFX
+    {
+        GameObject* go = nullptr;
+        float delay    = 0.f;
+        float life     = 1.f;
+        float timer    = 0.f;
+        bool active    = false;
+    };
+
+    std::vector<TimedVFX> extraVfx; // all "meshes"
+    float vfxClock = 0.f;
+
     struct FireballTrapSettings
     {
         // Activation radius & cooldowns

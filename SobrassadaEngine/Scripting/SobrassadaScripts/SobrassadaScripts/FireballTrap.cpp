@@ -107,6 +107,21 @@ bool FireballTrap::Init()
         shadowBaseScale = fireballShadow ? fireballShadow->GetScale() : float3::one;
     }
 
+    for (size_t i = 2; i < parent->GetChildren().size(); ++i)
+    {
+        GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[i]);
+        if (!child) continue;
+
+        child->SetEnabled(false);
+
+        TimedVFX tv;
+        tv.go    = child;
+        tv.delay = 0.0f;
+        tv.life  = 2.0f;
+
+        extraVfx.push_back(tv);
+    }
+
     if (miniPrototype) miniPrototype->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
 
@@ -154,6 +169,26 @@ void FireballTrap::Update(float deltaTime)
     }
 
     UpdateMinis(deltaTime);
+
+    vfxClock += deltaTime;
+
+    for (auto& v : extraVfx)
+    {
+        if (!v.active && vfxClock >= v.delay)
+        {
+            if (v.go) v.go->SetEnabled(true);
+            v.active = true;
+        }
+        if (v.active)
+        {
+            v.timer += deltaTime;
+            if (v.timer >= v.life)
+            {
+                if (v.go) v.go->SetEnabled(false);
+                v.active = false;
+            }
+        }
+    }
 
     // Landing indicator pulse animation
     if (activeIndicator)
@@ -223,6 +258,15 @@ void FireballTrap::StartAttack()
         const float3 initPos   = float3(spawnLocal.x, 0.f, spawnLocal.z);
 
         fireballShadow->SetLocalTransform(float4x4::FromTRS(initPos, float3x3::identity, initScale));
+    }
+
+    // Reset timeline VFX
+    vfxClock = 0.f;
+    for (auto& v : extraVfx)
+    {
+        v.timer  = 0.f;
+        v.active = false;
+        if (v.go) v.go->SetEnabled(false);
     }
 
     dropElapsed     = 0.f;
