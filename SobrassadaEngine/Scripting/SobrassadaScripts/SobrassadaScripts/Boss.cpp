@@ -75,25 +75,25 @@ void Boss::OnDamageTaken(int amount)
 
 void Boss::HandleState(float deltaTime)
 {
-    switch (currentAction)
+    switch (currentState)
     {
-    case BossActions::Idle:
+    case BossStates::Idle:
         Idle();
         break;
 
-    case BossActions::ShieldStrikes:
+    case BossStates::ShieldStrikes:
         ShieldStrikes(deltaTime);
         break;
 
-    case BossActions::OverheadStrike:
+    case BossStates::OverheadStrike:
         OverheadStrike();
         break;
 
-    case BossActions::Mirage:
+    case BossStates::Mirage:
         Mirage();
         break;
 
-    case BossActions::WaterSpouts:
+    case BossStates::WaterSpouts:
         break;
     }
 
@@ -117,7 +117,7 @@ void Boss::ChooseNextState()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        shieldStrikesRate = 75;
+        shieldStrikesRate  = 75;
         overheadStrikeRate = 100;
         break;
 
@@ -135,15 +135,20 @@ void Boss::ChooseNextState()
     int num = uniformDist(rng);
     if (activateMirage)
     {
-        currentState = BossStates::OverheadStrike;
-    }
-    else if (num <= shieldStrikesRate)
-    {
-        currentState = BossStates::ShieldStrikes;
+        currentState = BossStates::Mirage;
     }
     else
     {
-        currentState  = BossStates::OverheadStrike;
+        if (num <= shieldStrikesRate)
+        {
+            GLOG("ShieldStrikes chosen")
+            currentState = BossStates::ShieldStrikes;
+        }
+        else if (num <= overheadStrikeRate)
+        {
+            GLOG("OverheadStrike chosen")
+            currentState = BossStates::OverheadStrike;
+        }
     }
 
     stateEnter = true;
@@ -158,7 +163,7 @@ void Boss::Idle()
         // TODO: Randomize the idle duration
         stateEnter = false;
         agentAI->SetSpeed(0.0f, 10.0f);
-        // if (animComponent) animComponent->UseTrigger("Idle");
+        if (animComponent) animComponent->UseTrigger("Idle");
     }
 
     ChooseNextState();
@@ -202,12 +207,10 @@ void Boss::ShieldStrikes(float deltaTime)
 
 void Boss::OverheadStrike()
 {
-
 }
 
 void Boss::Mirage()
 {
-
 }
 
 const char* Boss::GetStateName() const
