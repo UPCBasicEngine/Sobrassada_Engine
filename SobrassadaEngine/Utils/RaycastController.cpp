@@ -58,18 +58,18 @@ namespace RaycastController
                 if (indices.size() < 3 || vertices.empty())
                     continue;
 
-                for (size_t i = 2; i < indices.size(); i += 3) // <- usem size_t
+                for (size_t i = 2; i < indices.size(); i += 3) 
                 {
-                    unsigned int ia = indices[i - 2];
-                    unsigned int ib = indices[i - 1];
-                    unsigned int ic = indices[i];
+                    unsigned int indexA = indices[i - 2];
+                    unsigned int indexB = indices[i - 1];
+                    unsigned int indexC = indices[i];
 
-                    if (ia >= vertices.size() || ib >= vertices.size() || ic >= vertices.size())
+                    if (indexA >= vertices.size() || indexB >= vertices.size() || indexC >= vertices.size())
                         continue; 
 
-                    const float3& firstVertex  = vertices[ia].position;
-                    const float3& secondVertex = vertices[ib].position;
-                    const float3& thirdVertex  = vertices[ic].position;
+                    const float3& firstVertex  = vertices[indexA].position;
+                    const float3& secondVertex = vertices[indexB].position;
+                    const float3& thirdVertex  = vertices[indexC].position;
 
                     Triangle currentTriangle(firstVertex, secondVertex, thirdVertex);
 

@@ -50,6 +50,7 @@ class SOBRASADA_API_ENGINE Scene
     void OverridePrefabs(UID prefabUID);
 
     update_status Update(float deltaTime);
+    update_status PostUpdate(float deltaTime);
     update_status Render(float deltaTime);
     update_status RenderEditor(float deltaTime);
 

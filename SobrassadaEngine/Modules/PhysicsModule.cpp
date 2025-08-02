@@ -232,9 +232,9 @@ void PhysicsModule::DeleteCubeRigidBody(CubeColliderComponent* colliderComponent
 void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderComponent)
 {
     // Collision shape
-    const float3 s   = colliderComponent->GetParent()->GetScale(); // (sx,sy,sz)
-    const float3& o = colliderComponent->centerOffset;
-    float3 scaledOff {o.x * s.x, o.y * s.y, o.z * s.z};
+    const float3 scale   = colliderComponent->GetParent()->GetScale();
+    const float3& offset = colliderComponent->centerOffset;
+    float3 scaledOff {offset.x * scale.x, offset.y * scale.y, offset.z * scale.z};
 
     btCollisionShape* collisionShape = new btSphereShape(colliderComponent->radius);
 
