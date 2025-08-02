@@ -55,9 +55,9 @@ class ShaderModule : public Module
     int metallicRoughnessProgramUnlit  = -1;
 
     int metallicGeometryPassProgram    = -1;
-    int metallicGeometryVPOPassProgram    = -1;
+    int metallicGeometryVPOPassProgram = -1;
     int specularGeometryPassProgram    = -1;
-    int specularGeometryVPOPassProgram    = -1;
+    int specularGeometryVPOPassProgram = -1;
     int lightingPassProgram            = -1;
 
     int uiWidgetProgram                = -1;

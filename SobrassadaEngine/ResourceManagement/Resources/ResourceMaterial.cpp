@@ -7,19 +7,17 @@
 #include "LibraryModule.h"
 #include "ProjectModule.h"
 #include "ResourceTexture.h"
+#include "Scene.h"
 #include "SceneModule.h"
 #include "TextureImporter.h"
 #include "WindConfig.h"
-#include "SceneModule.h"
-#include "Scene.h"
 
 #include "glew.h"
 #include "imgui.h"
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 
-ResourceMaterial::ResourceMaterial(UID uid, const std::string& name)
-    : Resource(uid, name, ResourceType::Material)
+ResourceMaterial::ResourceMaterial(UID uid, const std::string& name) : Resource(uid, name, ResourceType::Material)
 {
 }
 
@@ -43,7 +41,8 @@ void ResourceMaterial::OnEditorUpdate()
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImVec4(1.f, 0.f, 0.f, 1.0f)));
             ImGui::Text("Global wind disabled, movement will not show!");
             ImGui::PopStyleColor();
-        } else
+        }
+        else
         {
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImVec4(0.f, 1.f, 0.f, 1.0f)));
             ImGui::Text("Global wind active, movement will show");
@@ -51,13 +50,13 @@ void ResourceMaterial::OnEditorUpdate()
         }
 
         ImGui::Checkbox("Apply wind globally", &globalWindConfig->GetApplyWindGloballyRef());
-        ImGui::SliderFloat("Wind direction (Angle around y axis)", &globalWindConfig->GetWindDirectionRef(), 0.f, 360.f);
+        ImGui::SliderFloat(
+            "Wind direction (Angle around y axis)", &globalWindConfig->GetWindDirectionRef(), 0.f, 360.f
+        );
         ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 10.f);
         ImGui::SliderFloat("Gust frequency (1/s)", &globalWindConfig->GetGustFrequencyRef(), .3f, 10.f);
         ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), 0.0f, 20.f);
-        
-            
-        // TODO Display current wind values and give option to open wind editor   
+
     }
 
     if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
@@ -101,7 +100,6 @@ void ResourceMaterial::OnEditorUpdate()
 
     ImGui::SliderFloat("Alpha", &material.diffColor.w, 0.0f, 1.0f);
     if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
-
 
     if (specularTexture.textureID != 0)
     {

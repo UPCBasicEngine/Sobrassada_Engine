@@ -25,8 +25,8 @@
 #include "EngineTimer.h"
 #include "WindConfig.h"
 
-#include <glew.h>
 #include <Math/Quat.h>
+#include <glew.h>
 
 RenderPass::RenderPass()
 {
@@ -233,7 +233,7 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
         if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
             meshesToRender.push_back(mesh);
     }
-    
+
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
@@ -731,7 +731,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
 
-    //Light Culling
+    // Light Culling
     glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
     glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
@@ -750,9 +750,9 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 {
     Bind();
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+    BatchManager* batchManager    = App->GetResourcesModule()->GetBatchManager();
 
-    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
+    const unsigned int program    = App->GetShaderModule()->GetTransparentPassProgram();
     const unsigned int wPOProgram = App->GetShaderModule()->GetTransparentVPOPassProgram();
 
     glUseProgram(program);
@@ -799,13 +799,11 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
             if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
             {
-                if (mesh->GetResourceMaterial() != nullptr &&
-                    mesh->GetResourceMaterial()->DoApplyWind())
+                if (mesh->GetResourceMaterial() != nullptr && mesh->GetResourceMaterial()->DoApplyWind())
                     vertexOffsetMeshesToRender.push_back(mesh);
-                else
-                    meshesToRender.push_back(mesh);
+                else meshesToRender.push_back(mesh);
             }
-            
+
             TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
             if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
         }
@@ -820,23 +818,27 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         else
         {
             glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
-            
+
             batchManager->RenderTransparent(meshesToRender, program, camera);
 
             glUseProgram(wPOProgram);
-            
+
             glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
             glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
-            
+
             WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
             if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
             {
                 const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
-                glUniform4f(glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x,
-                    windDirection.y, windDirection.z, windDirection.w);
-                glUniform4f(glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
+                glUniform4f(
+                    glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x, windDirection.y,
+                    windDirection.z, windDirection.w
+                );
+                glUniform4f(
+                    glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
                     windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
-                    windConfig->GetGustSpeed());
+                    windConfig->GetGustSpeed()
+                );
             }
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
