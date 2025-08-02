@@ -154,6 +154,9 @@
     <ClInclude Include="Destructible.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="Boss.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">

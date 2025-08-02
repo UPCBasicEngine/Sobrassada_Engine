@@ -9,26 +9,21 @@ class AIAgentComponent;
 
 enum class BossStates
 {
-    Movement,
+    None,
+    Idle,
     ShieldStrikes,
-    ShieldThrow,
-    WaterSpouts,
+    OverheadStrike,
     Mirage,
-    OverheadStrike
+    WaterSpouts,
 };
 
 enum class BossActions
 {
     Idle,
-    Approach,
-    Surround,
-    JumpAway,
-    Chase,
     ShieldStrikes,
-    ShieldThrow,
+    OverheadStrike,
     WaterSpouts,
     Mirage,
-    OverheadStrike
 };
 
 class Boss : public Character
@@ -48,36 +43,27 @@ class Boss : public Character
     void ChooseNextState();
 
     void Idle();
-    void Approach();
-    void Surround();
-    void JumpAway();
-    void Chase();
-
     void ShieldStrikes(float deltaTime);
-    void ShieldThrow();
+    void OverheadStrike();
+    void Mirage();
 
     const char* GetStateName() const;
     const char* GetActionName() const;
 
+  public:
+    bool activateMirage = false;
+
   private:
-    AIAgentComponent* agentAI    = nullptr;
-    BossStates currentState      = BossStates::Movement;
-    BossActions currentAction    = BossActions::Idle;
+    AIAgentComponent* agentAI = nullptr;
+    BossStates currentState   = BossStates::Idle;
+    BossActions currentAction = BossActions::Idle;
 
-    int phase                    = 1;
-    bool stateEnter              = true;
-
-    /* Movement */
-    float movementTimer          = 0.0f;
-    float walkSpeed              = 5.0f;
-    float chaseSpeed             = 10.0f;
+    int phase                 = 1;
+    bool stateEnter           = true;
 
     /* Melee */
-    float shieldStrikesRange     = 5.0f;
-    float overheadStrikeRange    = 5.0f;
-
-    /* Shield throw */
-    float shieldThrowMinDistance = 3.0f;
+    float shieldStrikesRange  = 5.0f;
+    float overheadStrikeRange = 5.0f;
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;

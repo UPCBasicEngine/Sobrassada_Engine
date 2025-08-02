@@ -69,7 +69,7 @@ void Boss::OnDeath()
 
 void Boss::OnDamageTaken(int amount)
 {
-    // TODO: play soldier take damage sound
+    // TODO: play boss take damage sound
     // TODO: particles? and animation
 }
 
@@ -81,37 +81,19 @@ void Boss::HandleState(float deltaTime)
         Idle();
         break;
 
-    case BossActions::Approach:
-        Approach();
-        break;
-
-    case BossActions::Surround:
-        Surround();
-        break;
-
-    case BossActions::JumpAway:
-        JumpAway();
-        break;
-
-    case BossActions::Chase:
-        Chase();
-        break;
-
     case BossActions::ShieldStrikes:
         ShieldStrikes(deltaTime);
         break;
 
-    case BossActions::ShieldThrow:
-        ShieldThrow();
-        break;
-
-    case BossActions::WaterSpouts:
+    case BossActions::OverheadStrike:
+        OverheadStrike();
         break;
 
     case BossActions::Mirage:
+        Mirage();
         break;
 
-    case BossActions::OverheadStrike:
+    case BossActions::WaterSpouts:
         break;
     }
 
@@ -124,73 +106,44 @@ void Boss::HandleState(float deltaTime)
 void Boss::UpdateTimers(float deltaTime)
 {
     Character::UpdateTimers(deltaTime);
-
-    if (currentState == BossStates::Movement) movementTimer -= deltaTime;
 }
 
 void Boss::ChooseNextState()
 {
-    // TODO: This will grow and be modified dynamycally for each phase, but for now
-
-    int movementRate = 0;
-    int meleeRate    = 0;
-    int rangedRate   = 0;
+    int shieldStrikesRate  = 0;
+    int overheadStrikeRate = 0;
 
     // Set states ratio depending on distance
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        meleeRate    = 50;
-        movementRate = 25;
-        rangedRate   = 25;
+        shieldStrikesRate = 75;
+        overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        meleeRate    = 35;
-        movementRate = 30;
-        rangedRate   = 35;
+        shieldStrikesRate  = 50;
+        overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Far:
-        meleeRate    = 25;
-        movementRate = 25;
-        rangedRate   = 50;
+        shieldStrikesRate  = 25;
+        overheadStrikeRate = 100;
+        break;
     }
 
     int num = uniformDist(rng);
-    if (num < movementRate)
+    if (activateMirage)
     {
-        currentState = BossStates::Movement;
-        if (uniformDist(rng) < 30)
-        {
-            currentAction = BossActions::Idle;
-        }
-        else
-        {
-            switch (CheckDistanceWithPlayer())
-            {
-            case PlayerDistances::Close:
-                currentAction = BossActions::JumpAway;
-                break;
-            case PlayerDistances::Medium:
-                currentAction = BossActions::Surround;
-                break;
-            case PlayerDistances::Far:
-                currentAction = BossActions::Approach;
-                break;
-            }
-        }
+        currentState = BossStates::OverheadStrike;
     }
-    else if (num < movementRate + meleeRate)
+    else if (num <= shieldStrikesRate)
     {
-        currentState  = BossStates::ShieldStrikes;
-        currentAction = BossActions::Chase;
+        currentState = BossStates::ShieldStrikes;
     }
     else
     {
-        currentState = BossStates::ShieldThrow;
-        if (GetDistanceFromPlayer() < shieldThrowMinDistance) currentAction = BossActions::JumpAway;
-        else currentAction = BossActions::ShieldThrow;
+        currentState  = BossStates::OverheadStrike;
     }
 
     stateEnter = true;
@@ -203,101 +156,12 @@ void Boss::Idle()
         GLOG("[BOSS] - Idle");
 
         // TODO: Randomize the idle duration
-        stateEnter    = false;
-        movementTimer = 4.0f;
+        stateEnter = false;
         agentAI->SetSpeed(0.0f, 10.0f);
         // if (animComponent) animComponent->UseTrigger("Idle");
     }
 
-    if (movementTimer <= 0.0f)
-    {
-        ChooseNextState();
-    }
-}
-
-void Boss::Approach()
-{
-    if (stateEnter)
-    {
-        GLOG("[BOSS] - Approach");
-
-        // TODO: Randomize the idle duration
-        stateEnter    = false;
-        movementTimer = 4.0f;
-        agentAI->SetSpeed(walkSpeed, 10.0f);
-        // if (animComponent) animComponent->UseTrigger("Walk");
-    }
-
-    agentAI->SetPathNavigation(character->GetLastPosition());
-
-    if (CheckDistanceWithPlayer() == PlayerDistances::Close || movementTimer <= 0.0f)
-    {
-        ChooseNextState();
-    }
-}
-
-void Boss::Surround()
-{
-    if (stateEnter)
-    {
-        GLOG("[BOSS] - Surround");
-
-        // TODO: Randomize the idle duration
-        stateEnter    = false;
-        movementTimer = 4.0f;
-        agentAI->SetSpeed(walkSpeed, 10.0f);
-        // if (animComponent) animComponent->UseTrigger("Walk");
-    }
-
-    // TODO: Move surrounding the player, along the perpendicular of the vector between both
-
-    if (movementTimer <= 0.0f)
-    {
-        ChooseNextState();
-    }
-}
-
-void Boss::JumpAway()
-{
-    if (stateEnter)
-    {
-        GLOG("[BOSS] - Jump Back");
-
-        // TODO: Randomize the idle duration
-        stateEnter    = false;
-        movementTimer = 4.0f;
-        // if (animComponent) animComponent->UseTrigger("Idle");
-    }
-
-    // TODO: Find a distant position valid in the navmesh and jump to it
-
-    if (movementTimer <= 0.0f)
-    {
-        ChooseNextState();
-    }
-}
-
-void Boss::Chase()
-{
-    if (!character) return;
-
-    if (stateEnter)
-    {
-        GLOG("[BOSS] - Chase");
-
-        stateEnter = false;
-        agentAI->SetSpeed(chaseSpeed, 10.0f);
-        // if (animComponent) animComponent->UseTrigger("Run");
-    }
-
-    // TODO: Maybe has time limit? If you are super far he stops chasing and never does the attack
-    agentAI->SetPathNavigation(character->GetLastPosition());
-
-    const float distanceToPlayer = GetDistanceFromPlayer();
-    if (currentState == BossStates::ShieldStrikes && distanceToPlayer < shieldStrikesRange)
-        currentAction = BossActions::ShieldStrikes;
-    else if (currentState == BossStates::OverheadStrike && distanceToPlayer < overheadStrikeRange)
-        currentAction = BossActions::OverheadStrike;
+    ChooseNextState();
 }
 
 void Boss::ShieldStrikes(float deltaTime)
@@ -336,43 +200,34 @@ void Boss::ShieldStrikes(float deltaTime)
     }
 }
 
-void Boss::ShieldThrow()
+void Boss::OverheadStrike()
 {
-    if (stateEnter)
-    {
-        GLOG("[BOSS] - Shield Throw");
 
-        stateEnter = false;
-        // if (animComponent) animComponent->UseTrigger("ShieldThrow");
-    }
-    else
-    {
-        ChooseNextState();
-    }
+}
+
+void Boss::Mirage()
+{
+
 }
 
 const char* Boss::GetStateName() const
 {
     switch (currentState)
     {
-    case BossStates::Movement:
-        return "Movement";
+    case BossStates::None:
+        return "None";
         break;
 
     case BossStates::ShieldStrikes:
         return "ShieldStrikes";
         break;
 
-    case BossStates::ShieldThrow:
-        return "ShieldThrow";
+    case BossStates::OverheadStrike:
+        return "OverheadStrike";
         break;
 
     case BossStates::WaterSpouts:
         return "WaterSpouts";
-        break;
-
-    case BossStates::OverheadStrike:
-        return "OverheadStrike";
         break;
 
     case BossStates::Mirage:
@@ -393,36 +248,16 @@ const char* Boss::GetActionName() const
         return "Idle";
         break;
 
-    case BossActions::Approach:
-        return "Approach";
-        break;
-
-    case BossActions::JumpAway:
-        return "Jump Away";
-        break;
-
-    case BossActions::Surround:
-        return "Surround";
-        break;
-
-    case BossActions::Chase:
-        return "Chase";
-        break;
-
     case BossActions::ShieldStrikes:
-        return "Shield Strikes";
-        break;
-
-    case BossActions::ShieldThrow:
-        return "Shield Throw";
-        break;
-
-    case BossActions::WaterSpouts:
-        return "WaterSpouts";
+        return "ShieldStrikes";
         break;
 
     case BossActions::OverheadStrike:
         return "OverheadStrike";
+        break;
+
+    case BossActions::WaterSpouts:
+        return "WaterSpouts";
         break;
 
     case BossActions::Mirage:
