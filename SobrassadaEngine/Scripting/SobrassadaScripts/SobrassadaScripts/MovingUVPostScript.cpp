@@ -20,8 +20,9 @@
 
 MovingUVPostScript::MovingUVPostScript(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
     fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
+    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
 }
 
 MovingUVPostScript::~MovingUVPostScript()
@@ -38,7 +39,7 @@ bool MovingUVPostScript::Init()
         "./EngineDefaults/Shader/Custom/Fragment/MovingUV_PostL_Fragment.glsl"
     );
 
-    MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
+    meshComp = parent->GetComponent<MeshComponent*>();
 
     if (meshComp)
     {
@@ -83,6 +84,7 @@ bool MovingUVPostScript::Init()
             texture = rmat->GetDiffuseColorID();
         }
     }
+    uvOffset = uvOffsetStart;
 
     return true;
 }
@@ -96,11 +98,11 @@ void MovingUVPostScript::Update(float deltaTime)
 
 void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && texture)
+    if (shaderProgram && indexCount > 0 && texture && meshComp)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
-        basicModelMatrix = parent->GetGlobalTransform();
+        basicModelMatrix = meshComp->GetCombinedMatrix();
 
         if (cameraComp)
         {
@@ -129,4 +131,9 @@ void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(0);
     }
+}
+
+void MovingUVPostScript::Reset()
+{
+    uvOffset = uvOffsetStart;
 }

@@ -22,8 +22,9 @@
 
 MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
     fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
+    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
 }
 
 MovingUVTransparent::~MovingUVTransparent()
@@ -41,7 +42,7 @@ bool MovingUVTransparent::Init()
         "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Transparent_Fragment.glsl"
     );
 
-    MeshComponent* meshComp = parent->GetComponent<MeshComponent*>();
+    meshComp = parent->GetComponent<MeshComponent*>();
 
     if (meshComp)
     {
@@ -94,11 +95,12 @@ bool MovingUVTransparent::Init()
 
             glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
             glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
-            
         }
 
         meshComp->SetEnabled(false);
     }
+
+    uvOffset = uvOffsetStart;
 
     return true;
 }
@@ -112,11 +114,11 @@ void MovingUVTransparent::Update(float deltaTime)
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0)
+    if (shaderProgram && indexCount > 0 && meshComp)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
-        basicModelMatrix = parent->GetGlobalTransform();
+        basicModelMatrix = meshComp->GetCombinedMatrix();
 
         if (cameraComp)
         {
@@ -141,7 +143,6 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glUniform1i(4, 0);
         glUniform1i(5, isAlphaDiscard);
 
-
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
 
         float3 cameraPos = float3::zero;
@@ -156,4 +157,9 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(0);
     }
+}
+
+void MovingUVTransparent::Reset()
+{
+    uvOffset = uvOffsetStart;
 }

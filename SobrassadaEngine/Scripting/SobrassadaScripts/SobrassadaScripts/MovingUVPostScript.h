@@ -4,6 +4,8 @@
 
 #include "Math/float2.h"
 
+class MeshComponent;
+
 class MovingUVPostScript : public Script
 {
   public:
@@ -13,6 +15,8 @@ class MovingUVPostScript : public Script
     bool Init() override;
     void Update(float deltaTime) override;
     void Render(float deltaTime, CameraComponent* cameraComp) override;
+
+    void Reset() override;
 
   private:
     unsigned int shaderProgram = 0;
@@ -27,5 +31,8 @@ class MovingUVPostScript : public Script
 
     float animationSpeed       = 0.1f;
     float2 uvOffset            = float2::zero;
+    float2 uvOffsetStart       = float2::zero;
     float2 uvOffsetDirection   = float2::one;
+
+    MeshComponent* meshComp    = nullptr;
 };

@@ -42,10 +42,14 @@ void SwitchScriptTest::Update(float deltaTime)
     {
         shaderComponent->SetScriptEnabled("MovingUVLight", true);
         shaderComponent->SetScriptEnabled("MovingUVPostScript", false);
+        shaderComponent->ResetScript("MovingUVPostScript");
+        shaderComponent->ResetScript("MovingUVLight");
     }
     else if (keyboard[SDL_SCANCODE_7] == KeyState::KEY_DOWN)
     {
         shaderComponent->SetScriptEnabled("MovingUVLight", false);
         shaderComponent->SetScriptEnabled("MovingUVPostScript", true);
+        shaderComponent->ResetScript("MovingUVPostScript");
+        shaderComponent->ResetScript("MovingUVLight");
     }
 }

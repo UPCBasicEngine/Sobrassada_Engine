@@ -7,6 +7,7 @@
 #include "ChangeSceneScript.h"
 #include "Changeling.h"
 #include "CuChulainn.h"
+#include "Destructible.h"
 #include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
@@ -80,6 +81,7 @@ constexpr const char* scripts[] = {
     "PlayerLocationScript",
     "Spouts",
     "SwitchScriptTest",
+    "Destructible"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
@@ -123,6 +125,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "EnemySpawnerScript") return new EnemySpawnerScript(parent);
     if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
     if (scriptType == "Spouts") return new Spouts(parent);
+    if (scriptType == "Destructible") return new Destructible(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
