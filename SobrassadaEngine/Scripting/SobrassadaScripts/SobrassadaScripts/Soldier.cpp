@@ -22,6 +22,7 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
     fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
     fields.push_back({"Second Attack Delay", InspectorField::FieldType::Float, &secondAttackDelay, 0.0f, 1.0f});
+    //fields.push_back({"Patrol Speed", InspectorField::FieldType::Float, &patrolSpeed, 0.0f, 10.0f});
 }
 
 bool Soldier::Init()
@@ -148,13 +149,14 @@ void Soldier::HandleState(float deltaTime)
         SearchForPlayer();
         break;
     case SoldierStates::PATROL:
-        PatrolAI();
+        PatrolAI(deltaTime);
         // TODO: patrol animation
-        animComponent->UseTrigger("run");
+        animComponent->UseTrigger("patrol");
         break;
     case SoldierStates::CHASE:
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         animComponent->UseTrigger("run");
+        agentAI->ResetSpeed();
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
@@ -180,10 +182,12 @@ void Soldier::HandleState(float deltaTime)
     }
 }
 
-void Soldier::PatrolAI()
+void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
+   /* agentAI->SetSpeed(patrolSpeed, 8.0);
+    GLOG("Speed set to %f", patrolSpeed);*/
 
     if (!playerScript->IsDead())
     {
@@ -199,13 +203,24 @@ void Soldier::PatrolAI()
     if (reachedPatrolPoint)
     {
         if (CheckDistanceWithPoint(startPos)) reachedPatrolPoint = false;
-        else valid = agentAI->SetPathNavigation(startPos);
+        else
+        {
+            valid = agentAI->SetPathNavigation(startPos);
+            agentAI->LookAtMovement(startPos, deltaTime);
+        }
+
     }
     else
     {
         if (CheckDistanceWithPoint(patrolPoint)) reachedPatrolPoint = true;
-        else valid = agentAI->SetPathNavigation(patrolPoint);
+        else
+        {
+            valid = agentAI->SetPathNavigation(patrolPoint);
+            agentAI->LookAtMovement(patrolPoint, deltaTime);
+        }
     }
+
+    
 }
 
 void Soldier::ChaseAI()
@@ -240,7 +255,6 @@ void Soldier::SearchForPlayer()
     {
         isSearching  = false;
         currentState = SoldierStates::PATROL;
-        agentAI->ResetSpeed();
     }
 }
 

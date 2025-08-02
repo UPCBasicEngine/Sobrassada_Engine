@@ -38,7 +38,7 @@ class Soldier : public Character
     void ApplyKnockback();
 
     void ChangeState();
-    void PatrolAI();
+    void PatrolAI(float deltaTime);
     void ChaseAI();
     void SearchForPlayer();
     const char* ManageAttackAnimations();
@@ -61,4 +61,5 @@ class Soldier : public Character
     float originalAttackDuration     = 0.0f;
     float originalAttackHitboxDelay  = 0.0f;
     float deathTimer                 = 0.0f;
+    float patrolSpeed                = 2.0f;
 };
