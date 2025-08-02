@@ -25,6 +25,7 @@ class AudioModule;
 class GameDebugUIModule;
 class BillboardModule;
 class ParticleSystemModule;
+class ShaderScriptModule;
 
 class EngineTimer;
 class GameTimer;
@@ -59,6 +60,7 @@ class SOBRASADA_API_ENGINE Application
     GameDebugUIModule* GetGameDebugUIModule() { return gameDebugUI; }
     BillboardModule* GetBillboardModule() { return billboardModule; }
     ParticleSystemModule* GetParticleModule() { return particleModule; }
+    ShaderScriptModule* GetShaderScriptModule() { return shaderScriptModule; }
 
     EngineTimer* GetEngineTimer() { return engineTimer; }
     GameTimer* GetGameTimer() { return gameTimer; }
@@ -68,30 +70,31 @@ class SOBRASADA_API_ENGINE Application
   private:
     std::list<Module*> modules;
 
-    WindowModule* windowModule           = nullptr;
-    OpenGLModule* openGLModule           = nullptr;
-    ResourcesModule* resourcesModule     = nullptr;
-    InputModule* inputModule             = nullptr;
-    ShaderModule* shaderModule           = nullptr;
-    LibraryModule* libraryModule         = nullptr;
-    EditorUIModule* editorUIModule       = nullptr;
-    ProjectModule* projectModule         = nullptr;
-    SceneModule* sceneModule             = nullptr;
-    CameraModule* cameraModule           = nullptr;
-    DebugDrawModule* debugDraw           = nullptr;
-    GameUIModule* gameUIModule           = nullptr;
-    ScriptModule* scriptModule           = nullptr;
-    PhysicsModule* physicsModule         = nullptr;
-    PathfinderModule* pathModule         = nullptr;
-    AudioModule* audioModule             = nullptr;
-    GameDebugUIModule* gameDebugUI       = nullptr;
-    BillboardModule* billboardModule     = nullptr;
-    ParticleSystemModule* particleModule = nullptr;
+    WindowModule* windowModule             = nullptr;
+    OpenGLModule* openGLModule             = nullptr;
+    ResourcesModule* resourcesModule       = nullptr;
+    InputModule* inputModule               = nullptr;
+    ShaderModule* shaderModule             = nullptr;
+    LibraryModule* libraryModule           = nullptr;
+    EditorUIModule* editorUIModule         = nullptr;
+    ProjectModule* projectModule           = nullptr;
+    SceneModule* sceneModule               = nullptr;
+    CameraModule* cameraModule             = nullptr;
+    DebugDrawModule* debugDraw             = nullptr;
+    GameUIModule* gameUIModule             = nullptr;
+    ScriptModule* scriptModule             = nullptr;
+    PhysicsModule* physicsModule           = nullptr;
+    PathfinderModule* pathModule           = nullptr;
+    AudioModule* audioModule               = nullptr;
+    GameDebugUIModule* gameDebugUI         = nullptr;
+    BillboardModule* billboardModule       = nullptr;
+    ParticleSystemModule* particleModule   = nullptr;
+    ShaderScriptModule* shaderScriptModule = nullptr;
 
-    EngineTimer* engineTimer             = nullptr;
-    GameTimer* gameTimer                 = nullptr;
+    EngineTimer* engineTimer               = nullptr;
+    GameTimer* gameTimer                   = nullptr;
 
-    EngineConfig* engineConfig           = nullptr;
+    EngineConfig* engineConfig             = nullptr;
 };
 
 extern SOBRASADA_API_ENGINE Application* App;

@@ -42,18 +42,18 @@ class Soldier : public Character
     const char* ManageAttackAnimations();
 
   private:
-    AIAgentComponent* agentAI  = nullptr;
-    SoldierStates currentState = SoldierStates::NONE;
+    AIAgentComponent* agentAI        = nullptr;
+    SoldierStates currentState       = SoldierStates::NONE;
 
-    float3 patrolPoint         = float3::zero;
+    float3 patrolPoint               = float3::zero;
 
-    float knockbackForce       = 7.0f;
-    float knockbackTime        = 0.2f;
-    float knockbackTimer       = 0.0f;
-    float3 knockbackDirection  = float3::zero;
-    bool isKnockback           = false;
-    int consecutiveAttack     = 0; 
-    int consecutiveThrust     = 0; 
+    float knockbackForce             = 7.0f;
+    float knockbackTime              = 0.2f;
+    float knockbackTimer             = 0.0f;
+    float3 knockbackDirection        = float3::zero;
+    bool isKnockback                 = false;
+    int consecutiveAttack            = 0;
+    int consecutiveThrust            = 0;
     float secondAttackDelay          = 0.6f;
     const char* currentAttackTrigger = nullptr;
     float originalAttackDuration     = 0.0f;

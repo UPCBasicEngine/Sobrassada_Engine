@@ -12,7 +12,6 @@ class LightComponent : public Component
     LightComponent(const rapidjson::Value& initialState, GameObject* parent);
 
     void Update(float deltaTime) override;
-    virtual void Render(float deltaTime) override;
     virtual void RenderEditorInspector() override;
     virtual void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     virtual void Clone(const Component* other) = 0;

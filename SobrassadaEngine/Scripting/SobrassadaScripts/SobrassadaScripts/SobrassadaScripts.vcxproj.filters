@@ -28,6 +28,9 @@
     <Filter Include="Environment\Traps">
       <UniqueIdentifier>{542608f8-4ab9-4512-8882-308a6eaeec76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ShaderScripts">
+      <UniqueIdentifier>{d1d723a4-b324-40db-b30d-8664c18d659a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Characters\Boss">
       <UniqueIdentifier>{93f0e42b-2afb-4e4c-8428-f3482a97d73c}</UniqueIdentifier>
     </Filter>
@@ -137,6 +140,21 @@
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="PlayerLocationScript.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="MovingUVPostScript.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="MovingUVLight.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="MovingUVTransparent.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="SwitchScriptTest.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Destructible.h">
       <Filter>Environment</Filter>
     </ClInclude>
     <ClInclude Include="BossMirage.h">
@@ -821,6 +839,21 @@
     </ClCompile>
     <ClCompile Include="PlayerLocationScript.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Destructible.cpp">
+      <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="MovingUVPostScript.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="MovingUVLight.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="MovingUVTransparent.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="SwitchScriptTest.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="BossMirage.cpp">
       <Filter>Characters\Boss</Filter>

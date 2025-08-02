@@ -606,6 +606,12 @@
     <ClCompile Include="Scene\RenderPass.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\ShaderScriptComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ShaderScriptModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1192,6 +1198,12 @@
     </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h">
       <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\ShaderScriptComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ShaderScriptModule.h">
+      <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="resourceIcon.h" />
   </ItemGroup>

@@ -15,7 +15,6 @@ class SpotLightComponent : public LightComponent
 
     void Init() override;
 
-    void Render(float deltaTime = 0) override;
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
