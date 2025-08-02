@@ -606,6 +606,12 @@
     <ClCompile Include="Scene\RenderPass.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\ShaderScriptComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ShaderScriptModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1193,6 +1199,13 @@
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="Scene\Components\ShaderScriptComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ShaderScriptModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="resourceIcon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
@@ -1211,5 +1224,11 @@
     <None Include="Libs\Wwise\samples\SoundEngine\Common\AkFilePackageLowLevelIO.inl">
       <Filter>External\Wwise</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SobrassadaEngine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Game\1-416023b1.ico" />
   </ItemGroup>
 </Project>

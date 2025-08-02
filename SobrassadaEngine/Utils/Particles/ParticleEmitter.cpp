@@ -206,7 +206,8 @@ void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
 
     std::apply(
         [deltaTime, emitterInstance](auto&... pointer)
-        { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); }, addonTuple
+        { ((pointer ? pointer->Update(deltaTime, emitterInstance) : Nothing()), ...); },
+        addonTuple
     );
 
     UpdateParticlesVBO(emitterInstance);
@@ -586,6 +587,12 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
     particleColors.reserve(batchedParticles.size());
     particleSize.reserve(batchedParticles.size());
     particleRotation.reserve(batchedParticles.size());
+
+    alivePositions.clear();
+    tileOffsets.clear();
+    particleColors.clear();
+    particleSize.clear();
+    particleRotation.clear();
 
     for (int i = 0; i < batchedParticles.size(); ++i)
     {

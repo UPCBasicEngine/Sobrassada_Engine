@@ -223,11 +223,6 @@ void CapsuleColliderComponent::Update(float deltaTime)
     }
 }
 
-void CapsuleColliderComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void CapsuleColliderComponent::RenderDebug(float deltaTime)
 {
 }

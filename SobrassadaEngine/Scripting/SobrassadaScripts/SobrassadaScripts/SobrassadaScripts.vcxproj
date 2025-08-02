@@ -385,7 +385,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LinearMath.lib;BulletCollision.lib;BulletDynamics.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -433,7 +433,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LinearMath.lib;BulletCollision.lib;BulletDynamics.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -472,6 +472,7 @@
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
     <ClInclude Include="ChangeSceneScript.h" />
+    <ClInclude Include="Destructible.h" />
     <ClInclude Include="EnemySpawnerScript.h" />
     <ClInclude Include="ExitGameScript.h" />
     <ClInclude Include="Character.h" />
@@ -484,6 +485,8 @@
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
+    <ClInclude Include="MovingUVLight.h" />
+    <ClInclude Include="MovingUVTransparent.h" />
     <ClInclude Include="Mushroom.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
@@ -492,11 +495,13 @@
     <ClInclude Include="PlayerLocationScript.h" />
     <ClInclude Include="PressAnyKeyScript.h" />
     <ClInclude Include="Projectile.h" />
+    <ClInclude Include="MovingUVPostScript.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RotateGameObject.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="SpawnUI.h" />
+    <ClInclude Include="SwitchScriptTest.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="Wwise_IDs.h" />
@@ -2040,6 +2045,7 @@
     <ClCompile Include="ChangeSceneScript.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="CuChulainn.cpp" />
+    <ClCompile Include="Destructible.cpp"/>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EnemySpawnerScript.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />
@@ -2050,6 +2056,8 @@
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
+    <ClCompile Include="MovingUVLight.cpp" />
+    <ClCompile Include="MovingUVTransparent.cpp" />
     <ClCompile Include="Mushroom.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
@@ -2071,11 +2079,13 @@
     <ClCompile Include="PlayerLocationScript.cpp" />
     <ClCompile Include="PressAnyKeyScript.cpp" />
     <ClCompile Include="Projectile.cpp" />
+    <ClCompile Include="MovingUVPostScript.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />
     <ClCompile Include="SpawnUI.cpp" />
+    <ClCompile Include="SwitchScriptTest.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="TileFloatScript.cpp" />
