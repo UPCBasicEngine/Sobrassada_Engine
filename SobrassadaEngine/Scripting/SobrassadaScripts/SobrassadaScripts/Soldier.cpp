@@ -125,9 +125,9 @@ void Soldier::OnDamageTaken(int amount)
     isKnockback    = true;
     knockbackTimer = knockbackTime;
     ApplyKnockback();
-    HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
-    std::string animState               = animStateFromPlayer.GetString();
-    GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
+    //HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
+    //std::string animState               = animStateFromPlayer.GetString();
+    //GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
 }
 
