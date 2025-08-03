@@ -2,7 +2,7 @@
 
 #include "Script.h"
 
-class CubeColliderComponent;
+class MeshComponent;
 
 enum class MirageState
 {
@@ -22,6 +22,7 @@ class Mirage : public Script
     UID mirageWarningImage = 0;
     UID mirageDamageImage  = 0;
 
+    MeshComponent* meshComponent = nullptr;
     int damage             = 0;
     float warningDelay     = 0.f;
     float damageDuration   = 0.f;

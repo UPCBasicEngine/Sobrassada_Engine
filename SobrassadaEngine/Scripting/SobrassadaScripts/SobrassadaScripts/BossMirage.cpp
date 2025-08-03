@@ -8,6 +8,7 @@
 #include "ScriptComponent.h"
 
 
+
 BossMirage::BossMirage(GameObject* parent) : Script(parent)
 {
     std::vector<Mirage*> foundMirages;
@@ -85,6 +86,7 @@ void BossMirage::Update(float deltaTime)
                 if (timeSinceLastActivation >= sequence->delayBetweenZones)
                 {
                     GameObject* mirage = sequence->mirageObjects[currentMirageIndex];
+                    GLOG("Now playing mirage %d", currentMirageIndex);
                     if (mirage) mirage->SetEnabled(true); // triggers the Mirage logic
                     currentMirageIndex++;
                     timeSinceLastActivation = 0.f;
@@ -120,7 +122,7 @@ void BossMirage::StartSequence(int sequenceNum)
     timeSinceLastActivation = 0.0f;
     state                   = SequenceState::PlayingSequence;
 }
-
+//SEQUENCE PARENT NEEDS TO BE ENABLED
 std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::string& parentName)
 {
     std::vector<GameObject*> result;
@@ -141,7 +143,6 @@ std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::
             if (it == gameObjects.end()) continue;
 
             GameObject* child = it->second;
-            if (!child || child->IsEnabled()) continue;
 
             ScriptComponent* scriptComp = child->GetComponent<ScriptComponent*>();
             if (scriptComp && scriptComp->GetScriptByType<Mirage>())
