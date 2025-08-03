@@ -4,11 +4,14 @@
 #include "SpawnUI.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
+#include "ScriptComponent.h"
+#include "CuChulainn.h"
 
 SpawnUI::SpawnUI(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Object UI Name", InspectorField::FieldType::InputText, &objectUIName});
     fields.push_back({"Unlocks Ability", InspectorField::FieldType::Bool, &unlockAbility});
+    fields.push_back({"Ability Name", InspectorField::FieldType::InputText, &nameAbility});
 }
 
 bool SpawnUI::Init()
@@ -42,6 +45,8 @@ void SpawnUI::OnCollision(GameObject* otherObject, const float3 collisionNormal,
     // triggers only collision with Player
     if (imageUI) imageUI->SetEnabled(true);
     onCollision = true;
-
+    GameObject* engineGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(otherObject->GetUID());
+    
     if (unlockAbility) 
+        engineGO->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>()->ActivateAbility(nameAbility);
 }

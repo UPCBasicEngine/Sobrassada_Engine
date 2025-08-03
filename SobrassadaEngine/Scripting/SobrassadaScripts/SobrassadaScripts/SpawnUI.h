@@ -19,6 +19,6 @@ class SpawnUI : public Script
     ImageComponent* imageUI             = nullptr;
     std::string objectUIName         = "";
     bool onCollision                 = false;
-    bool keepAfterCollision             = false;
     bool unlockAbility                  = false;
+    std::string nameAbility     = "";
 };
