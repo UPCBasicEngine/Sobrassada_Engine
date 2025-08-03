@@ -75,6 +75,14 @@ void Boss::OnDamageTaken(int amount)
 
 void Boss::HandleState(float deltaTime)
 {
+    if (!mirageActivated && currentHealth <= mirageActivation[phase]) currentState = BossStates::Mirage;
+
+    if (currentHealth <= phaseSwap[phase])
+    {
+        phase++;
+        currentState = BossStates::ChangePhase;
+    }
+
     switch (currentState)
     {
     case BossStates::Idle:
@@ -97,6 +105,9 @@ void Boss::HandleState(float deltaTime)
         Mirage();
         break;
 
+    case BossStates::ChangePhase:
+        break;
+
     case BossStates::WaterSpouts:
         break;
     }
@@ -114,6 +125,27 @@ void Boss::UpdateTimers(float deltaTime)
 
 void Boss::ChooseNextState()
 {
+    switch (phase)
+    {
+    case 1:
+        ChooseNextStateFirstPhase();
+        break;
+    case 2:
+        ChooseNextStateSecondPhase();
+        break;
+
+    case 3:
+        ChooseNextStateThirdPhase();
+        break;
+
+    default:
+        GLOG("Invalid phase boss")
+        break;
+    }
+}
+
+void Boss::ChooseNextStateFirstPhase()
+{
     int shieldStrikesRate  = 0;
     int overheadStrikeRate = 0;
 
@@ -121,13 +153,13 @@ void Boss::ChooseNextState()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        shieldStrikesRate = 100;
+        overheadStrikeRate = 100;
         // shieldStrikesRate  = 75;
         // overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        shieldStrikesRate = 100;
+        overheadStrikeRate = 100;
         // shieldStrikesRate  = 50;
         // overheadStrikeRate = 100;
         break;
@@ -140,12 +172,7 @@ void Boss::ChooseNextState()
     }
 
     int num = uniformDist(rng);
-    if (activateMirage)
-    {
-        GLOG("Mirage chosen")
-        currentState = BossStates::Mirage;
-    }
-    else if (doTaunt)
+    if (doTaunt)
     {
         GLOG("Taunt chosen")
         currentState = BossStates::Taunt;
@@ -170,6 +197,14 @@ void Boss::ChooseNextState()
     }
 
     stateEnter = true;
+}
+
+void Boss::ChooseNextStateSecondPhase()
+{
+}
+
+void Boss::ChooseNextStateThirdPhase()
+{
 }
 
 void Boss::Idle()
@@ -411,6 +446,7 @@ void Boss::OverheadStrike(float deltaTime)
 
 void Boss::Mirage()
 {
+    // TODO: Call Mirage function
 }
 
 const char* Boss::GetStateName() const
@@ -419,6 +455,9 @@ const char* Boss::GetStateName() const
     {
     case BossStates::None:
         return "None";
+
+    case BossStates::ChangePhase:
+        return "ChangePhase";
 
     case BossStates::Idle:
         return "Idle";
@@ -485,6 +524,12 @@ const char* Boss::GetActionName() const
 
     case BossActions::Mirage:
         return "Mirage";
+
+    case BossActions::ChangeStart:
+        return "ChangeStart";
+
+    case BossActions::ChangeCharge:
+        return "ChangeCharge";
 
     case BossActions::WaterSpouts:
         return "WaterSpouts";

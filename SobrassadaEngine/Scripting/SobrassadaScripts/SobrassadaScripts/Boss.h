@@ -11,6 +11,7 @@ class AIAgentComponent;
 enum class BossStates
 {
     None,
+    ChangePhase,
     Idle,
     Taunt,
     ShieldStrikes,
@@ -34,6 +35,8 @@ enum class BossActions
     Attack,
     Recover,
     Mirage,
+    ChangeStart,
+    ChangeCharge,
     WaterSpouts,
 };
 
@@ -52,6 +55,9 @@ class Boss : public Character
     void HandleState(float deltaTime) override;
     void UpdateTimers(float deltaTime) override;
     void ChooseNextState();
+    void ChooseNextStateFirstPhase();
+    void ChooseNextStateSecondPhase();
+    void ChooseNextStateThirdPhase();
 
     void Idle();
     void Taunt(float deltaTime);
@@ -61,9 +67,6 @@ class Boss : public Character
 
     const char* GetStateName() const;
     const char* GetActionName() const;
-
-  public:
-    bool activateMirage = false;
 
   private:
     AIAgentComponent* agentAI           = nullptr;
@@ -80,7 +83,6 @@ class Boss : public Character
     int shieldStrikeLastAction          = 0;
 
     bool mirageActivated                = false;
-
     std::array<int, 3> mirageActivation = {50, 30, 10};
 
     /* Melee */
