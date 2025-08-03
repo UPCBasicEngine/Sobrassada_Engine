@@ -32,11 +32,13 @@
 #include "SpawnUI.h"
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
-#include "VSyncToggleScript.h"
-
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
+#include "VSyncToggleScript.h"
+
+#include "Mirage.h"
+#include "BossMirage.h"
 
 #include <string>
 
@@ -78,8 +80,12 @@ constexpr const char* scripts[] = {
     "PlayerLocationScript",
     "SwitchScriptTest",
     "Destructible",
+    "Mirage",
+    "BossMirage",
     "Boss"
 };
+
+
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
 
@@ -136,6 +142,10 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+
+    /*Boss*/
+    if (scriptType == "Mirage") return new Mirage(parent);
+    if (scriptType == "BossMirage") return new BossMirage(parent);
 
     return nullptr;
 }

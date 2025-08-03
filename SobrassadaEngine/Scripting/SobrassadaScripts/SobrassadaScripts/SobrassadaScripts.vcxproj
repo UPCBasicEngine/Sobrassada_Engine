@@ -467,6 +467,7 @@
   <ItemGroup>
     <ClInclude Include="Archer.h" />
     <ClInclude Include="Banshee.h" />
+    <ClInclude Include="BossMirage.h" />
     <ClInclude Include="Boss.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
@@ -483,6 +484,7 @@
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
+    <ClInclude Include="Mirage.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -2038,6 +2040,7 @@
     </ClCompile>
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Banshee.cpp" />
+    <ClCompile Include="BossMirage.cpp" />
     <ClCompile Include="Boss.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
@@ -2054,6 +2057,7 @@
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
+    <ClCompile Include="Mirage.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
