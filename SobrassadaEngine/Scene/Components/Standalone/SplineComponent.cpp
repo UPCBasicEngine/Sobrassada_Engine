@@ -50,11 +50,6 @@ void SplineComponent::Update(float deltaTime)
     if (!IsEffectivelyEnabled()) return;
 }
 
-void SplineComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void SplineComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;

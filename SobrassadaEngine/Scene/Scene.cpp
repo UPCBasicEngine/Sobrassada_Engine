@@ -7,6 +7,7 @@
 #include "CameraModule.h"
 #include "Component.h"
 #include "ComponentUtils.h"
+#include "Components/ShaderScriptComponent.h"
 #include "DebugDrawModule.h"
 #include "EditorUIModule.h"
 #include "Framebuffer.h"
@@ -35,6 +36,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
+#include "ShaderScriptModule.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
@@ -57,7 +59,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include <unordered_map>
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -70,6 +71,7 @@
 #endif
 
 #include <set>
+#include <unordered_map>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
 {
@@ -324,6 +326,9 @@ update_status Scene::Update(float deltaTime)
         {
             ScriptComponent* script = gameObject.second->GetComponent<ScriptComponent*>();
             if (script) script->InitScriptInstances();
+
+            ShaderScriptComponent* shaderScript = gameObject.second->GetComponent<ShaderScriptComponent*>();
+            if (shaderScript) shaderScript->InitScriptInstances();
         }
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
@@ -365,12 +370,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
 
-    // FrustumPlanes frustumPlanes;
-    // if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    // else frustumPlanes = camera->GetFrustrumPlanes();
-    // std::vector<GameObject*> objectsToRender;
-    // CheckObjectsInFrustum(objectsToRender, frustumPlanes);
-
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
@@ -378,22 +377,13 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera);
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
+    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
 #endif
-    for (const auto& gameObject : toUpdateGameObjects)
-    {
-        if (gameObject != nullptr)
-        {
-            gameObject->Render(deltaTime);
-        }
-    }
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
+    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
+    glPopDebugGroup();
 
 #ifndef GAME
-    // for (const auto& gameObject : gameObjectsContainer)
-    //{
-    //     gameObject.second->DrawGizmos();
-    // }
-
     for (const auto& gameObject : toUpdateGameObjects)
     {
         gameObject->DrawGizmos();
@@ -1136,7 +1126,7 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
         if (obj.second->GetName() == name) return obj.second;
     }
 
-    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }
 

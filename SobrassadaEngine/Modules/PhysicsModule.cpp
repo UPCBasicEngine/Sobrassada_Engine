@@ -86,7 +86,7 @@ update_status PhysicsModule::PreUpdate(float time)
             UID g2 = secondUserPointer->collider ? secondUserPointer->collider->GetParentUID() : INVALID_UID;
 
             // Still OnCollision
-            if (wereColliding.find(g1) != wereColliding.end())
+            if (wereColliding.find(g1) != wereColliding.end() && wereColliding.find(g2) != wereColliding.end())
             {
                 if (firstUserPointer->generateCallback && firstUserPointer->collider && secondUserPointer->collider)
                     firstUserPointer->onCollisionCallback->Call(
