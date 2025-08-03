@@ -65,7 +65,7 @@ bool Banshee::Init()
         }
         else if (currentGO->GetName() == "Scream")
         {
-            weapon     = currentGO;
+            weapon = currentGO;
 
             weapon->SetEnabled(false);
         }
@@ -85,6 +85,20 @@ bool Banshee::Init()
             for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            // Take mesh aurora and enable disable when necessary
+            std::vector<MeshComponent*> shoutStartMeshes =
+                currentGO->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
+
+            for (MeshComponent* currentMesh : shoutStartMeshes)
+            {
+                if (currentMesh->GetParent()->GetName() == "mesh_aurora")
+                {
+                    meshAurora = currentMesh;
+                    meshAurora->SetEnabled(false);
+                    break;
+                }
             }
         }
     }
@@ -227,6 +241,8 @@ void Banshee::Attack(float deltaTime)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
             }
+
+            if (meshAurora) meshAurora->SetEnabled(true);
         }
 
         // Slowly rotate towards player while charging the attack
@@ -250,6 +266,8 @@ void Banshee::Attack(float deltaTime)
             {
                 shaderComponent->ResetScript("MovingUVTransparent");
             }
+
+            if (meshAurora) meshAurora->SetEnabled(false);
 
             for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
             {
