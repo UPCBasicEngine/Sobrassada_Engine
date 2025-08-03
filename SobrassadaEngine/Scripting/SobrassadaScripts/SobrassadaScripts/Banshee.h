@@ -67,7 +67,6 @@ class Banshee : public Character
     BansheeStates currentState     = BansheeStates::Idle;
     MeshComponent* mesh            = nullptr;
 
-    MeshComponent* meshAurora      = nullptr;
     MeshComponent* meshWarningStar = nullptr;
 
     std::mt19937 rng;

@@ -95,12 +95,7 @@ bool Banshee::Init()
 
             for (MeshComponent* currentMesh : shoutStartMeshes)
             {
-                if (currentMesh->GetParent()->GetName() == "mesh_aurora")
-                {
-                    meshAurora = currentMesh;
-                    meshAurora->SetEnabled(false);
-                }
-                else if (currentMesh->GetParent()->GetName() == "mesh_warningStar")
+                if (currentMesh->GetParent()->GetName() == "mesh_warningStar")
                 {
                     meshWarningStar = currentMesh;
                     meshWarningStar->SetEnabled(false);
@@ -263,12 +258,12 @@ void Banshee::Attack(float deltaTime)
             if (elapsedWarning < warningDuration) elapsedWarning += deltaTime;
             else
             {
+                if (meshWarningStar) meshWarningStar->SetEnabled(false);
+
                 for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
                 {
                     shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
                 }
-
-                if (meshAurora) meshAurora->SetEnabled(true);
             }
         }
 
@@ -304,7 +299,6 @@ void Banshee::Attack(float deltaTime)
         {
             animComponent->UseTrigger("ScreamOut");
 
-            if (meshAurora) meshAurora->SetEnabled(false);
             weapon->SetEnabled(false);
 
             elapsedMainScream = 0.f;
@@ -446,7 +440,6 @@ void Banshee::TakeDamage(int amount)
                 shaderComponent->ResetScript("MovingUVTransparent");
             }
 
-            if (meshAurora) meshAurora->SetEnabled(false);
             if (meshWarningStar) meshWarningStar->SetEnabled(false);
 
             isAttacking = false;
