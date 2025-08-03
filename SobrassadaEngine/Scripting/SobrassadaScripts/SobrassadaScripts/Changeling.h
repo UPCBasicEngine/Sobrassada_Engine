@@ -81,7 +81,9 @@ class Changeling : public Character
     AIAgentComponent* agentAI     = nullptr;
     ChangelingStates currentState = ChangelingStates::NONE;
 
-    float3 dashStart              = float3::zero;
+    GameObject* parentGO          = nullptr;
+
+    float4x4 dashStart            = float4x4::identity;
     float3 dashDirection          = float3::zero;
     float3 dashTarget             = float3::zero;
     float dashSpeed               = 15.0f;
@@ -99,6 +101,7 @@ class Changeling : public Character
     float absoluteSpottedReactionTime = 1.f;
     float biteAttackRadius = .5f;
     float biteAttackCooldown = 2.f;
+    float activeDashRange = 0.f;
 
     int userSelectedVersion = 0;
     ChangelingVersions version = ChangelingVersions::RANDOM;
@@ -119,6 +122,4 @@ class Changeling : public Character
     bool dashRight = false;
     unsigned short dashIndex = 0;
     float dashAngleDegrees = 40.0f;
-    std::vector<float4x4> dashLegacyTransforms;
-    std::vector<float4x4> dashColliderLegacyTransforms;
 };

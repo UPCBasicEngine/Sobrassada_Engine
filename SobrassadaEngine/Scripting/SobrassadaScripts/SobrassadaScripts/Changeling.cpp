@@ -27,6 +27,8 @@ Changeling::Changeling(GameObject* parent)
 
     fields.emplace_back("Bite attack radius", InspectorField::FieldType::Float, &biteAttackRadius, 0.1f, 10.0f);
     fields.emplace_back("Bite attack cooldown", InspectorField::FieldType::Float, &biteAttackCooldown, 0.1f, 10.0f);
+    
+    fields.emplace_back("Dash speed", InspectorField::FieldType::Float, &dashSpeed, 0.1f, 100.0f);
 
     // Version selection (0 random, 1 sepp, 2 herbert, 3 giacomo)
     fields.emplace_back("Version (0: Random)", InspectorField::FieldType::Int, &userSelectedVersion, 0, 2);
@@ -86,10 +88,10 @@ bool Changeling::Init()
 
 void Changeling::Update(float deltaTime)
 {
-    if (agentAI == nullptr) return;
-    Character::Update(deltaTime);
-
     RenderDebugVisuals();
+    
+    if (agentAI != nullptr && isSetupCorrectly)
+        Character::Update(deltaTime);
 }
 
 void Changeling::OnPlayerExitLocation()
@@ -329,15 +331,25 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
 
 void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq)
 {
-    agentAI->LookAtMovement(dashTarget, deltaTime);
+    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
     
     if (animComponent && animComponent->IsFinished())
     {
         Character::Attack(deltaTime);
-    
+
+        if (!CalculateDashTargetPoint(character->GetLastPosition(), dashTarget))
+        {
+            isAttacking = false;
+            stateTimer = attackCooldown;
+            if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
+            currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
+            return;
+        }
+        dashTarget += dashDirection; // Set the ai target ahead of the actual target point so the pooka reaches his
+                                    // intended goal and does not stop shortly ahead
+
         agentAI->SetSpeed(dashSpeed, 1000000);
         agentAI->SetPathNavigation(dashTarget);
-        stateTimer = attackDuration;
         
         weaponCollider->SetEnabled(true);
         dashTrailMeshObjects[0]->SetEnabled(true);   
@@ -357,8 +369,8 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
 
 void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq)
 {
-    // TODO This might need a rework so the dash speed is always the same, even if its cancelled early on the route
-    if (stateTimer < 0.f)
+    const float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart.TranslatePart());
+    if (activeDashRange < distanceFromDashStart)
     {
         weaponCollider->SetEnabled(false);
         isAttacking = false;
@@ -366,11 +378,14 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     } else {
-        float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart);
-        dashTrailMeshObjects[0]->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
-            Quat::identity, float3(1, .4f, distanceFromDashStart)));
-        dashTrailColliderObjects[0]->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
-            Quat::identity, float3(1, 1, 1)));
+        const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
+            parentGO->GetGlobalTransform().TranslatePart();
+        const Quat lerpRotation = Quat(dashStart.RotatePart() - parentGO->GetGlobalTransform().RotatePart());
+        
+        dashTrailMeshObjects[0]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
+            lerpRotation, float3(1, .4f, distanceFromDashStart)));
+        dashTrailColliderObjects[0]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
+            lerpRotation, float3(1, 1, 1)));
         dashAreaColliders[0]->size = float3(.5f, .2f, distanceFromDashStart / 2.f);
         dashAreaColliders[0]->UpdateCollider();
     }
@@ -423,8 +438,8 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
                 if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
                 currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
             }
-            dashLegacyTransforms[dashIndex] = dashTrailMeshObjects[dashIndex]->GetGlobalTransform();
-            dashColliderLegacyTransforms[dashIndex] = dashTrailColliderObjects[dashIndex]->GetGlobalTransform();
+            //dashLegacyTransforms[dashIndex] = dashTrailMeshObjects[dashIndex]->GetGlobalTransform();
+            //dashColliderLegacyTransforms[dashIndex] = dashTrailColliderObjects[dashIndex]->GetGlobalTransform();
             dashIndex++;
             agentAI->SetPathNavigation(dashTarget);
             agentAI->LookAtMovement(dashTarget, 1000000);
@@ -442,7 +457,7 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
         }
         
     } else {
-        float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart);
+        float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart.TranslatePart());
         dashTrailMeshObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
             Quat::identity, float3(1, .4f, distanceFromDashStart)));
         dashTrailColliderObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
@@ -455,8 +470,8 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
         {
             for (unsigned short i = dashIndex - 1;; --i) // End condition inside the loop
             {
-                dashTrailMeshObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashLegacyTransforms[i]);
-                dashTrailColliderObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashColliderLegacyTransforms[i]);
+               // dashTrailMeshObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashLegacyTransforms[i]);
+               // dashTrailColliderObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashColliderLegacyTransforms[i]);
                 dashAreaColliders[i]->UpdateCollider();
                 
                 if (i == 0) break;
@@ -525,14 +540,12 @@ bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
     if (currentState != ChangelingStates::CHASE && currentState != ChangelingStates::DASH_ATTACK_COOLDOWN) return false;
     
     // Implement state transition
-    
-    if (!CalculateDashTargetPoint(character->GetLastPosition(), dashTarget)) return false;
 
     if (animComponent) animComponent->UseTrigger("Trigger_PrepareDash");
     currentState = ChangelingStates::DASH_ATTACK_PREPARATION;
 
     agentAI->SetLookForward(false);
-    agentAI->SetSpeed(0.0f, 0.0f);
+    agentAI->SetSpeed(0.0f, 10.0f);
     agentAI->ResetSpeed();
     agentAI->SetLookForward(true);
 
@@ -580,8 +593,16 @@ void Changeling::ValidateSetup()
         return;
     }
 
+    parentGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent());
+    if (parentGO == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Parent game object not found")
+        return;
+    }
+
     // Validate children game objects
-    for (UID childUID : parent->GetChildren())
+    for (const UID childUID : parentGO->GetChildren())
     {
         GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
         if (child == nullptr)
@@ -616,9 +637,6 @@ void Changeling::ValidateSetup()
             GLOG("[ERROR] Four DashTrailColliderObjects are needed for version 3 of the changeling")
             return;
         }
-
-        dashLegacyTransforms = {float4x4(), float4x4(), float4x4()};
-        dashColliderLegacyTransforms = {float4x4(), float4x4(), float4x4()};
     } else
     {
         if (dashTrailMeshObjects.empty())
@@ -657,12 +675,14 @@ void Changeling::RenderDebugVisuals()
         const std::string life      = "Health: " + std::to_string(currentHealth);
         const std::string animState = "Anim state: " + stateName.GetString();
         const std::string characterState = "Character state: " + std::to_string((int)currentState);
+        const std::string setupState = isSetupCorrectly ? "Setup valid" : "Setup invalid";
 
         std::vector<std::pair<std::string, float2>> logs {
                 {versionNbr,float2(-50.0f, -120.0f)},
                 {life,      float2(-50.0f, -140.0f)},
                 {animState, float2(-80.0f, -160.0f)},
                 {characterState, float2(-100.0f, -180.0f)},
+                {setupState, float2(-80.0f, -200.0f)},
             };
 
         RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
@@ -671,8 +691,8 @@ void Changeling::RenderDebugVisuals()
 
 bool Changeling::CalculateDashTargetPoint(const float3& aimingPoint, float3& targetPoint)
 {
-    dashStart = parent->GetGlobalTransform().TranslatePart();
-    dashDirection = aimingPoint - dashStart;
+    dashStart = parent->GetGlobalTransform();
+    dashDirection = aimingPoint - dashStart.TranslatePart();
     dashDirection.Normalize();
     dashDirection.y = 0;
 
@@ -684,13 +704,15 @@ bool Changeling::CalculateDashTargetPoint(const float3& aimingPoint, float3& tar
 
     do
     {
-        intermediateTargetPoint = dashStart + dashDirection * testDistance;
+        intermediateTargetPoint = dashStart.TranslatePart() + dashDirection * testDistance;
         agentAI->GetClosestPointInNavmesh(targetPoint, searchArea, posOverPoly, resultPos);
         if (!posOverPoly) testDistance -= 1;
     } while (!posOverPoly && testDistance > 0.0f);
 
     if (posOverPoly)
         targetPoint = intermediateTargetPoint;
+
+    activeDashRange = targetPoint.Distance(dashStart.TranslatePart());
     
     return posOverPoly;
 }
