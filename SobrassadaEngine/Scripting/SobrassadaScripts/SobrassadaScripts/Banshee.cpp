@@ -171,7 +171,6 @@ void Banshee::HandleState(float deltaTime)
         SearchForPlayer();
         break;
 
-        break;
     case BansheeStates::Chase:
         ChasePlayer();
         break;
@@ -191,6 +190,7 @@ void Banshee::HandleState(float deltaTime)
         break;
 
     case BansheeStates::Dead:
+        HandleDeath();
         break;
 
     case BansheeStates::TeleportOrigin:
@@ -413,6 +413,15 @@ void Banshee::TeleportToOrigin()
     }
 }
 
+void Banshee::HandleDeath()
+{
+    if (animComponent->GetCurrentStateName() == HashString("Death") && animComponent->IsFinished())
+    {
+        currentHealth = 0;
+        Character::Die();
+    }
+}
+
 void Banshee::TakeDamage(int amount)
 {
     if (isInvisible) return;
@@ -463,6 +472,13 @@ void Banshee::TakeDamage(int amount)
         currentState = BansheeStates::Hit;
         agentAI->PauseMovement();
         break;
+    }
+
+    if ((currentHealth - amount) <= 0)
+    {
+        animComponent->UseTrigger("Death");
+        currentState = BansheeStates::Dead;
+        return;
     }
 
     Character::TakeDamage(amount);

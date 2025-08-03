@@ -49,6 +49,7 @@ class Banshee : public Character
     void SearchForPlayer();
     void GoToAttackPosition();
     void TeleportToOrigin();
+    void HandleDeath();
 
   private:
     float2 invisibleTimeRange      = float2::zero;
