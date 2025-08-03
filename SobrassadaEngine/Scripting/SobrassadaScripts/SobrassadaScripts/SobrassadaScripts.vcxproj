@@ -2048,7 +2048,7 @@
     <ClCompile Include="ChangeSceneScript.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="CuChulainn.cpp" />
-    <ClCompile Include="Destructible.cpp"/>
+    <ClCompile Include="Destructible.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EnemySpawnerScript.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />

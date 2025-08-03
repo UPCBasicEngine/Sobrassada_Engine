@@ -6,6 +6,7 @@
 
 class GameObject;
 class AIAgentComponent;
+class BossMirage;
 
 enum class BossStates
 {
@@ -54,6 +55,7 @@ class Boss : public Character
     bool activateMirage = false;
 
   private:
+    BossMirage* bossMirage    = nullptr;
     AIAgentComponent* agentAI = nullptr;
     BossStates currentState   = BossStates::Idle;
     BossActions currentAction = BossActions::Idle;
@@ -67,4 +69,11 @@ class Boss : public Character
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;
+
+    ImageComponent* healthImageComponent = nullptr;
+    UID healthBarImage;
+    int health = 0;
+    int mirage1, mirage2, mirage3 = 0;
+    int currentMirage = 0;
+
 };

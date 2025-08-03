@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "Boss.h"
+#include "BossMirage.h"
 #include "CameraComponent.h"
 #include "Component.h"
 #include "CuChulainn.h"
@@ -16,6 +17,12 @@
 
 Boss::Boss(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 10.0f, CharacterType::Boss)
 {
+    health = 100;
+
+    fields.push_back({"Boss Max Health", InspectorField::FieldType::Int, &health, 0, 1000});
+    fields.push_back({"Mirage1 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
+    fields.push_back({"Mirage2 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
+    fields.push_back({"Mirage3 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
 }
 
 bool Boss::Init()
@@ -31,8 +38,22 @@ bool Boss::Init()
         speed = agentAI->GetSpeed();
     }
 
-    rng         = std::mt19937(std::random_device {}());
-    uniformDist = std::uniform_int_distribution<int>(0, 100);
+    rng                 = std::mt19937(std::random_device {}());
+    uniformDist         = std::uniform_int_distribution<int>(0, 100);
+
+    GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Arena");
+    if (arenaGO)
+    {
+
+        if (scriptComp && scriptComp->GetScriptByType<Mirage>())
+            ScriptComponent* sc = arenaGO->GetComponent<ScriptComponent*>();
+        if (sc && sc->GetScriptByType<BossMirage>())
+            ;
+    }
+    if (!bossMirage)
+    {
+        GLOG("BossMirage not found! Mirage sequences will not trigger.");
+    }
 
     return true;
 }
@@ -69,6 +90,15 @@ void Boss::OnDeath()
 
 void Boss::OnDamageTaken(int amount)
 {
+    health = health - amount;
+    switch (currentMirage)
+    {
+    case 1:
+        if (health < mirage1)
+        {
+        }
+    }
+    // update healthbar
     // TODO: play boss take damage sound
     // TODO: particles? and animation
 }
