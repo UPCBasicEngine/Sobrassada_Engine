@@ -2,6 +2,7 @@
 
 #include "Character.h"
 
+#include <array>
 #include <random>
 
 class GameObject;
@@ -22,6 +23,7 @@ enum class BossActions
 {
     Idle,
     Taunt,
+    Chase,
     Combo1,
     Combo2,
     Combo3,
@@ -52,7 +54,7 @@ class Boss : public Character
     void ChooseNextState();
 
     void Idle();
-    void Taunt();
+    void Taunt(float deltaTime);
     void ShieldStrikes(float deltaTime);
     void OverheadStrike(float deltaTime);
     void Mirage();
@@ -64,18 +66,26 @@ class Boss : public Character
     bool activateMirage = false;
 
   private:
-    AIAgentComponent* agentAI = nullptr;
-    BossStates currentState   = BossStates::Idle;
-    BossActions currentAction = BossActions::Idle;
+    AIAgentComponent* agentAI           = nullptr;
+    BossStates currentState             = BossStates::Idle;
+    BossActions currentAction           = BossActions::Idle;
 
-    int phase                 = 1;
-    bool stateEnter           = true;
-    bool doTaunt              = false;
-    bool actionTriggerDone    = false;
+    int phase                           = 1;
+    std::array<int, 3> phaseSwap        = {40, 20, 0};
+    bool stateEnter                     = true;
+    bool doIdle                         = false;
+    bool doTaunt                        = false;
+    bool actionTriggerDone              = false;
+
+    int shieldStrikeLastAction          = 0;
+
+    bool mirageActivated                = false;
+
+    std::array<int, 3> mirageActivation = {50, 30, 10};
 
     /* Melee */
-    float shieldStrikesRange  = 5.0f;
-    float overheadStrikeRange = 5.0f;
+    float shieldStrikesRange            = 5.0f;
+    float overheadStrikeRange           = 5.0f;
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;

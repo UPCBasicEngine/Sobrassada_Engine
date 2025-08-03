@@ -14,7 +14,7 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Boss)
+Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 13.0f, 18.0f, CharacterType::Boss)
 {
 }
 
@@ -39,7 +39,7 @@ bool Boss::Init()
 
 void Boss::Update(float deltaTime)
 {
-    if (agentAI == nullptr) return;
+    if (agentAI == nullptr || isDead) return;
     Character::Update(deltaTime);
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
@@ -82,7 +82,7 @@ void Boss::HandleState(float deltaTime)
         break;
 
     case BossStates::Taunt:
-        Taunt();
+        Taunt(deltaTime);
         break;
 
     case BossStates::ShieldStrikes:
@@ -99,6 +99,11 @@ void Boss::HandleState(float deltaTime)
 
     case BossStates::WaterSpouts:
         break;
+    }
+
+    if (animComponent && animComponent->IsFinished())
+    {
+        animComponent->UseTrigger("Idle");
     }
 }
 
@@ -128,7 +133,9 @@ void Boss::ChooseNextState()
         break;
 
     case PlayerDistances::Far:
-        doTaunt = true;
+        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+        if (distance <= maxDetectionRange) doTaunt = true;
+        else doIdle = true;
         break;
     }
 
@@ -142,6 +149,11 @@ void Boss::ChooseNextState()
     {
         GLOG("Taunt chosen")
         currentState = BossStates::Taunt;
+    }
+    else if (doIdle)
+    {
+        GLOG("Idle chosen")
+        currentState = BossStates::Idle;
     }
     else
     {
@@ -171,6 +183,7 @@ void Boss::Idle()
 
         stateEnter    = false;
         currentAction = BossActions::Idle;
+        doIdle        = false;
 
         if (animComponent) animComponent->UseTrigger("Idle");
     }
@@ -178,7 +191,7 @@ void Boss::Idle()
     ChooseNextState();
 }
 
-void Boss::Taunt()
+void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
@@ -190,6 +203,7 @@ void Boss::Taunt()
 
         if (animComponent) animComponent->UseTrigger("Taunt");
     }
+    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
     if (animComponent && animComponent->IsFinished()) Idle();
     else ChooseNextState();
@@ -203,26 +217,51 @@ void Boss::ShieldStrikes(float deltaTime)
     {
         GLOG("[BOSS] - Shield Strikes");
 
-        stateEnter    = false;
-
-        currentAction = BossActions::Combo1;
-        agentAI->PauseMovement();
+        stateEnter             = false;
+        currentAction          = BossActions::Chase;
+        shieldStrikeLastAction = 0;
     }
 
     switch (currentAction)
     {
+    case BossActions::Chase:
+        if (!actionTriggerDone)
+        {
+            animComponent->UseTrigger("Run");
+            actionTriggerDone = true;
+        }
+
+        agentAI->SetPathNavigation(character->GetLastPosition());
+
+        if (CheckDistanceWithPlayer() == PlayerDistances::Close)
+        {
+            if (shieldStrikeLastAction == 1) currentAction = BossActions::Combo2;
+            else if (shieldStrikeLastAction == 2) currentAction = BossActions::Combo3;
+            else currentAction = BossActions::Combo1;
+            actionTriggerDone = false;
+        }
+        break;
+
     case BossActions::Combo1:
         if (!actionTriggerDone)
         {
-            attackHitboxDelay = 1.0f;
+            attackHitboxDelay    = 1.0f;
+            attackHitboxDuration = 0.3f;
             Character::Attack(deltaTime);
+            agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("Combo1");
-            actionTriggerDone = true;
+            actionTriggerDone      = true;
+            shieldStrikeLastAction = 1;
+        }
+        else if (!weaponCollider->GetEnabled())
+        {
+            agentAI->ResumeMovement();
         }
 
         if (animComponent && animComponent->IsFinished())
         {
-            currentAction     = BossActions::Combo2;
+            if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentAction = BossActions::Combo2;
+            else currentAction = BossActions::Chase;
             actionTriggerDone = false;
         }
         break;
@@ -230,15 +269,23 @@ void Boss::ShieldStrikes(float deltaTime)
     case BossActions::Combo2:
         if (!actionTriggerDone)
         {
-            attackHitboxDelay = 0.7f;
+            attackHitboxDelay    = 0.7f;
+            attackHitboxDuration = 0.3f;
             Character::Attack(deltaTime);
+            agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("Combo2");
-            actionTriggerDone = true;
+            actionTriggerDone      = true;
+            shieldStrikeLastAction = 2;
+        }
+        else if (!weaponCollider->GetEnabled())
+        {
+            agentAI->ResumeMovement();
         }
 
         if (animComponent && animComponent->IsFinished())
         {
-            currentAction     = BossActions::Combo3;
+            if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentAction = BossActions::Combo3;
+            else currentAction = BossActions::Chase;
             actionTriggerDone = false;
         }
         break;
@@ -246,19 +293,24 @@ void Boss::ShieldStrikes(float deltaTime)
     case BossActions::Combo3:
         if (!actionTriggerDone)
         {
-            attackHitboxDelay = 0.8f;
+            attackHitboxDelay    = 0.9f;
+            attackHitboxDuration = 1.3f;
             Character::Attack(deltaTime);
+            agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("Combo3");
-            actionTriggerDone = true;
+            actionTriggerDone      = true;
+            shieldStrikeLastAction = 3;
+        }
+        else if (!weaponCollider->GetEnabled())
+        {
+            agentAI->ResumeMovement();
         }
 
         if (animComponent && animComponent->IsFinished())
         {
             actionTriggerDone = false;
-
             isAttacking       = false;
             attackCdTimer     = attackCooldown;
-            agentAI->ResumeMovement();
             ChooseNextState();
         }
         break;
@@ -272,11 +324,15 @@ void Boss::ShieldStrikes(float deltaTime)
         attackTimer <= attackHitboxDelay + attackHitboxDuration)
     {
         weaponCollider->SetEnabled(true);
+        agentAI->PauseMovement();
     }
     else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
     {
         weaponCollider->SetEnabled(false);
+        agentAI->ResumeMovement();
     }
+
+    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 }
 
 void Boss::OverheadStrike(float deltaTime)
@@ -396,6 +452,9 @@ const char* Boss::GetActionName() const
 
     case BossActions::Taunt:
         return "Taunt";
+
+    case BossActions::Chase:
+        return "Chase";
 
     case BossActions::Combo1:
         return "Combo1";
