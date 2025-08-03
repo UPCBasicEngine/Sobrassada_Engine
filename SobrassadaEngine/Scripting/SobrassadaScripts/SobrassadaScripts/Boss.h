@@ -2,6 +2,7 @@
 
 #include "Character.h"
 
+#include <array>
 #include <random>
 
 class GameObject;
@@ -11,7 +12,9 @@ class BossMirage;
 enum class BossStates
 {
     None,
+    ChangePhase,
     Idle,
+    Taunt,
     ShieldStrikes,
     OverheadStrike,
     Mirage,
@@ -21,10 +24,21 @@ enum class BossStates
 enum class BossActions
 {
     Idle,
-    ShieldStrikes,
-    OverheadStrike,
-    WaterSpouts,
+    Taunt,
+    Chase,
+    Combo1,
+    Combo2,
+    Combo3,
+    Prepare,
+    Jump,
+    Dash,
+    Land,
+    Attack,
+    Recover,
     Mirage,
+    ChangeStart,
+    ChangeCharge,
+    WaterSpouts,
 };
 
 class Boss : public Character
@@ -42,30 +56,39 @@ class Boss : public Character
     void HandleState(float deltaTime) override;
     void UpdateTimers(float deltaTime) override;
     void ChooseNextState();
+    void ChooseNextStateFirstPhase();
+    void ChooseNextStateSecondPhase();
+    void ChooseNextStateThirdPhase();
 
     void Idle();
+    void Taunt(float deltaTime);
     void ShieldStrikes(float deltaTime);
-    void OverheadStrike();
+    void OverheadStrike(float deltaTime);
     void Mirage();
 
     const char* GetStateName() const;
     const char* GetActionName() const;
 
-  public:
-    bool activateMirage = false;
-
   private:
-    BossMirage* bossMirage    = nullptr;
-    AIAgentComponent* agentAI = nullptr;
-    BossStates currentState   = BossStates::Idle;
-    BossActions currentAction = BossActions::Idle;
+    AIAgentComponent* agentAI           = nullptr;
+    BossStates currentState             = BossStates::Idle;
+    BossActions currentAction           = BossActions::Idle;
 
-    int phase                 = 1;
-    bool stateEnter           = true;
+    int phase                           = 1;
+    std::array<int, 3> phaseSwap        = {40, 20, 0};
+    bool stateEnter                     = true;
+    bool doIdle                         = false;
+    bool doTaunt                        = false;
+    bool actionTriggerDone              = false;
+
+    int shieldStrikeLastAction          = 0;
+
+    bool mirageActivated                = false;
+    std::array<int, 3> mirageActivation = {50, 30, 10};
 
     /* Melee */
-    float shieldStrikesRange  = 5.0f;
-    float overheadStrikeRange = 5.0f;
+    float shieldStrikesRange            = 5.0f;
+    float overheadStrikeRange           = 5.0f;
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;

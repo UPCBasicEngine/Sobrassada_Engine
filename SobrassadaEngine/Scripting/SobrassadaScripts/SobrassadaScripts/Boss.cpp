@@ -15,7 +15,7 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Boss::Boss(GameObject* parent) : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 10.0f, CharacterType::Boss)
+Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 13.0f, 18.0f, CharacterType::Boss)
 {
     health = 100;
 
@@ -60,7 +60,7 @@ bool Boss::Init()
 
 void Boss::Update(float deltaTime)
 {
-    if (agentAI == nullptr) return;
+    if (agentAI == nullptr || isDead) return;
     Character::Update(deltaTime);
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
@@ -105,10 +105,22 @@ void Boss::OnDamageTaken(int amount)
 
 void Boss::HandleState(float deltaTime)
 {
+    if (!mirageActivated && currentHealth <= mirageActivation[phase]) currentState = BossStates::Mirage;
+
+    if (currentHealth <= phaseSwap[phase])
+    {
+        phase++;
+        currentState = BossStates::ChangePhase;
+    }
+
     switch (currentState)
     {
     case BossStates::Idle:
         Idle();
+        break;
+
+    case BossStates::Taunt:
+        Taunt(deltaTime);
         break;
 
     case BossStates::ShieldStrikes:
@@ -116,11 +128,14 @@ void Boss::HandleState(float deltaTime)
         break;
 
     case BossStates::OverheadStrike:
-        OverheadStrike();
+        OverheadStrike(deltaTime);
         break;
 
     case BossStates::Mirage:
         Mirage();
+        break;
+
+    case BossStates::ChangePhase:
         break;
 
     case BossStates::WaterSpouts:
@@ -140,6 +155,27 @@ void Boss::UpdateTimers(float deltaTime)
 
 void Boss::ChooseNextState()
 {
+    switch (phase)
+    {
+    case 1:
+        ChooseNextStateFirstPhase();
+        break;
+    case 2:
+        ChooseNextStateSecondPhase();
+        break;
+
+    case 3:
+        ChooseNextStateThirdPhase();
+        break;
+
+    default:
+        GLOG("Invalid phase boss")
+        break;
+    }
+}
+
+void Boss::ChooseNextStateFirstPhase()
+{
     int shieldStrikesRate  = 0;
     int overheadStrikeRate = 0;
 
@@ -147,25 +183,34 @@ void Boss::ChooseNextState()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        shieldStrikesRate  = 75;
         overheadStrikeRate = 100;
+        // shieldStrikesRate  = 75;
+        // overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        shieldStrikesRate  = 50;
         overheadStrikeRate = 100;
+        // shieldStrikesRate  = 50;
+        // overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Far:
-        shieldStrikesRate  = 25;
-        overheadStrikeRate = 100;
+        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+        if (distance <= maxDetectionRange) doTaunt = true;
+        else doIdle = true;
         break;
     }
 
     int num = uniformDist(rng);
-    if (activateMirage)
+    if (doTaunt)
     {
-        currentState = BossStates::Mirage;
+        GLOG("Taunt chosen")
+        currentState = BossStates::Taunt;
+    }
+    else if (doIdle)
+    {
+        GLOG("Idle chosen")
+        currentState = BossStates::Idle;
     }
     else
     {
@@ -184,6 +229,14 @@ void Boss::ChooseNextState()
     stateEnter = true;
 }
 
+void Boss::ChooseNextStateSecondPhase()
+{
+}
+
+void Boss::ChooseNextStateThirdPhase()
+{
+}
+
 void Boss::Idle()
 {
     if (stateEnter)
@@ -191,28 +244,201 @@ void Boss::Idle()
         GLOG("[BOSS] - Idle");
 
         // TODO: Randomize the idle duration
-        stateEnter = false;
-        agentAI->SetSpeed(0.0f, 10.0f);
+        // agentAI->SetSpeed(0.0f, 10.0f);
+
+        stateEnter    = false;
+        currentAction = BossActions::Idle;
+        doIdle        = false;
+
         if (animComponent) animComponent->UseTrigger("Idle");
     }
 
     ChooseNextState();
 }
 
+void Boss::Taunt(float deltaTime)
+{
+    if (stateEnter)
+    {
+        GLOG("[BOSS] - Taunt");
+
+        stateEnter    = false;
+        doTaunt       = false;
+        currentAction = BossActions::Taunt;
+
+        if (animComponent) animComponent->UseTrigger("Taunt");
+    }
+    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+    if (animComponent && animComponent->IsFinished()) Idle();
+    else ChooseNextState();
+}
+
 void Boss::ShieldStrikes(float deltaTime)
 {
     if (!weaponCollider) return;
 
-    if (!isAttacking)
+    if (stateEnter)
     {
         GLOG("[BOSS] - Shield Strikes");
 
-        if (animComponent) animComponent->UseTrigger("ShieldStrikes");
-        Character::Attack(deltaTime);
+        stateEnter             = false;
+        currentAction          = BossActions::Chase;
+        shieldStrikeLastAction = 0;
+    }
+
+    switch (currentAction)
+    {
+    case BossActions::Chase:
+        if (!actionTriggerDone)
+        {
+            animComponent->UseTrigger("Run");
+            actionTriggerDone = true;
+        }
+
+        agentAI->SetPathNavigation(character->GetLastPosition());
+
+        if (CheckDistanceWithPlayer() == PlayerDistances::Close)
+        {
+            if (shieldStrikeLastAction == 1) currentAction = BossActions::Combo2;
+            else if (shieldStrikeLastAction == 2) currentAction = BossActions::Combo3;
+            else currentAction = BossActions::Combo1;
+            actionTriggerDone = false;
+        }
+        break;
+
+    case BossActions::Combo1:
+        if (!actionTriggerDone)
+        {
+            attackHitboxDelay    = 1.0f;
+            attackHitboxDuration = 0.3f;
+            Character::Attack(deltaTime);
+            agentAI->PauseMovement();
+            if (animComponent) animComponent->UseTrigger("Combo1");
+            actionTriggerDone      = true;
+            shieldStrikeLastAction = 1;
+        }
+        else if (!weaponCollider->GetEnabled())
+        {
+            agentAI->ResumeMovement();
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentAction = BossActions::Combo2;
+            else currentAction = BossActions::Chase;
+            actionTriggerDone = false;
+        }
+        break;
+
+    case BossActions::Combo2:
+        if (!actionTriggerDone)
+        {
+            attackHitboxDelay    = 0.7f;
+            attackHitboxDuration = 0.3f;
+            Character::Attack(deltaTime);
+            agentAI->PauseMovement();
+            if (animComponent) animComponent->UseTrigger("Combo2");
+            actionTriggerDone      = true;
+            shieldStrikeLastAction = 2;
+        }
+        else if (!weaponCollider->GetEnabled())
+        {
+            agentAI->ResumeMovement();
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentAction = BossActions::Combo3;
+            else currentAction = BossActions::Chase;
+            actionTriggerDone = false;
+        }
+        break;
+
+    case BossActions::Combo3:
+        if (!actionTriggerDone)
+        {
+            attackHitboxDelay    = 0.9f;
+            attackHitboxDuration = 1.3f;
+            Character::Attack(deltaTime);
+            agentAI->PauseMovement();
+            if (animComponent) animComponent->UseTrigger("Combo3");
+            actionTriggerDone      = true;
+            shieldStrikeLastAction = 3;
+        }
+        else if (!weaponCollider->GetEnabled())
+        {
+            agentAI->ResumeMovement();
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            actionTriggerDone = false;
+            isAttacking       = false;
+            attackCdTimer     = attackCooldown;
+            ChooseNextState();
+        }
+        break;
+    default:
+        GLOG("Error: ShieldStrikes");
+        break;
+    }
+
+    // Enable hitbox when animation hits
+    if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+        attackTimer <= attackHitboxDelay + attackHitboxDuration)
+    {
+        weaponCollider->SetEnabled(true);
         agentAI->PauseMovement();
     }
-    else
+    else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
     {
+        weaponCollider->SetEnabled(false);
+        agentAI->ResumeMovement();
+    }
+
+    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+}
+
+void Boss::OverheadStrike(float deltaTime)
+{
+    if (!weaponCollider) return;
+
+    if (stateEnter)
+    {
+        GLOG("[BOSS] - Overhead Strikes");
+
+        stateEnter = false;
+        agentAI->PauseMovement();
+        currentAction = BossActions::Prepare;
+    }
+
+    switch (currentAction)
+    {
+    case BossActions::Prepare:
+        if (animComponent) animComponent->UseTrigger("Prepare");
+        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Jump;
+        break;
+
+    case BossActions::Jump:
+        if (animComponent) animComponent->UseTrigger("Jump");
+        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Dash;
+        break;
+
+    case BossActions::Dash:
+        if (animComponent) animComponent->UseTrigger("Dash");
+        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Land;
+        break;
+
+    case BossActions::Land:
+        if (animComponent) animComponent->UseTrigger("Land");
+        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Attack;
+        break;
+
+    case BossActions::Attack:
+        Character::Attack(deltaTime);
+        if (animComponent) animComponent->UseTrigger("Attack");
+
         // Enable hitbox when animation hits
         if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
@@ -224,23 +450,33 @@ void Boss::ShieldStrikes(float deltaTime)
             weaponCollider->SetEnabled(false);
         }
 
-        // Reset attack state
-        if (attackTimer >= attackDuration)
+        if (animComponent && animComponent->IsFinished())
         {
             isAttacking   = false;
             attackCdTimer = attackCooldown;
+            currentAction = BossActions::Recover;
+        }
+        break;
+
+    case BossActions::Recover:
+        if (animComponent) animComponent->UseTrigger("Recover");
+        if (animComponent && animComponent->IsFinished())
+        {
             agentAI->ResumeMovement();
             ChooseNextState();
         }
-    }
-}
 
-void Boss::OverheadStrike()
-{
+        break;
+
+    default:
+        GLOG("Error: OverheadStrike")
+        break;
+    }
 }
 
 void Boss::Mirage()
 {
+    // TODO: Call Mirage function
 }
 
 const char* Boss::GetStateName() const
@@ -249,27 +485,30 @@ const char* Boss::GetStateName() const
     {
     case BossStates::None:
         return "None";
-        break;
+
+    case BossStates::ChangePhase:
+        return "ChangePhase";
+
+    case BossStates::Idle:
+        return "Idle";
+
+    case BossStates::Taunt:
+        return "Taunt";
 
     case BossStates::ShieldStrikes:
         return "ShieldStrikes";
-        break;
 
     case BossStates::OverheadStrike:
         return "OverheadStrike";
-        break;
-
-    case BossStates::WaterSpouts:
-        return "WaterSpouts";
-        break;
 
     case BossStates::Mirage:
         return "Mirage";
-        break;
+
+    case BossStates::WaterSpouts:
+        return "WaterSpouts";
 
     default:
         return "ERROR: NO STATE";
-        break;
     }
 }
 
@@ -279,26 +518,53 @@ const char* Boss::GetActionName() const
     {
     case BossActions::Idle:
         return "Idle";
-        break;
 
-    case BossActions::ShieldStrikes:
-        return "ShieldStrikes";
-        break;
+    case BossActions::Taunt:
+        return "Taunt";
 
-    case BossActions::OverheadStrike:
-        return "OverheadStrike";
-        break;
+    case BossActions::Chase:
+        return "Chase";
 
-    case BossActions::WaterSpouts:
-        return "WaterSpouts";
-        break;
+    case BossActions::Combo1:
+        return "Combo1";
+
+    case BossActions::Combo2:
+        return "Combo2";
+
+    case BossActions::Combo3:
+        return "Combo3";
+
+    case BossActions::Prepare:
+        return "Prepare";
+
+    case BossActions::Jump:
+        return "Jump";
+
+    case BossActions::Dash:
+        return "Dash";
+
+    case BossActions::Land:
+        return "Land";
+
+    case BossActions::Attack:
+        return "Attack";
+
+    case BossActions::Recover:
+        return "Recover";
 
     case BossActions::Mirage:
         return "Mirage";
-        break;
+
+    case BossActions::ChangeStart:
+        return "ChangeStart";
+
+    case BossActions::ChangeCharge:
+        return "ChangeCharge";
+
+    case BossActions::WaterSpouts:
+        return "WaterSpouts";
 
     default:
         return "ERROR: NO ACTION";
-        break;
     }
 }
