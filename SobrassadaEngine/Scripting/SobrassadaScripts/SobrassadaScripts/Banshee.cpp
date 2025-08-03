@@ -186,8 +186,8 @@ void Banshee::HandleState(float deltaTime)
     case BansheeStates::Dead:
         break;
 
-    case BansheeStates::TeleportStart:
-        TeleportToStart();
+    case BansheeStates::TeleportOrigin:
+        TeleportToOrigin();
         break;
 
     default:
@@ -367,7 +367,7 @@ void Banshee::SearchForPlayer()
         else if (animComponent->IsFinished())
         {
             isSearching = false;
-            if (hasMoved) currentState = BansheeStates::TeleportStart;
+            if (hasMoved) currentState = BansheeStates::TeleportOrigin;
             else currentState = BansheeStates::Idle;
         }
     }
@@ -390,7 +390,7 @@ void Banshee::GoToAttackPosition()
     agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
-void Banshee::TeleportToStart()
+void Banshee::TeleportToOrigin()
 {
     if (animComponent->GetCurrentStateName() != HashString("Teleport"))
     {

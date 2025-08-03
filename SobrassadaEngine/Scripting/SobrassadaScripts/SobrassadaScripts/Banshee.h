@@ -20,10 +20,10 @@ enum class BansheeStates : int
     Attack,
     Hit,
     Dead,
-    TeleportStart,
+    TeleportOrigin,
 };
 
-constexpr const char* BansheeStateStrings[] = {"Idle", "Search", "Chase", "Attack", "Hit", "Dead", "TeleportStart"};
+constexpr const char* BansheeStateStrings[] = {"Idle", "Search", "Chase", "Attack", "Hit", "Dead", "TeleportOrigin"};
 
 class Banshee : public Character
 {
@@ -48,7 +48,7 @@ class Banshee : public Character
     void ChangeState();
     void SearchForPlayer();
     void GoToAttackPosition();
-    void TeleportToStart();
+    void TeleportToOrigin();
 
   private:
     float2 invisibleTimeRange      = float2::zero;
