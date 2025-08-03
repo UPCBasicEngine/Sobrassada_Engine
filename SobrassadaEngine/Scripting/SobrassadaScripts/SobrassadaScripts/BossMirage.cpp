@@ -2,10 +2,9 @@
 #include "BossMirage.h"
 #include "Application.h"
 #include "GameObject.h"
-#include "Mirage.h"
-#include "RotateGameObject.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Mirage.h"
 
 
 

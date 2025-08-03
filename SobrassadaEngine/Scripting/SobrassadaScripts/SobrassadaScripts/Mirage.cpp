@@ -1,8 +1,9 @@
 #include "pch.h"
 #include "Mirage.h"
+#include "Application.h"
 #include "GameObject.h"
-//#include "MeshComponent.h"
-
+#include "SceneModule.h"
+#include "Standalone\MeshComponent.h"
 
 
 Mirage::Mirage(GameObject* parent) : Script(parent)
@@ -18,9 +19,9 @@ Mirage::Mirage(GameObject* parent) : Script(parent)
 
 bool Mirage::Init()
 {
-    state = MirageState::Sleeping;
-    stateTimer = 0.0f;
-    meshComponent = parent->GetComponent<MeshComponent>();
+    state         = MirageState::Sleeping;
+    stateTimer    = 0.0f;
+    meshComponent = parent->GetComponent<MeshComponent*>();
     return true;
 }
 
@@ -33,13 +34,13 @@ void Mirage::Update(float deltaTime)
         state      = MirageState::Warning;
         stateTimer = 0.0f;
         GLOG("Calling gameobject");
-        /* switch
-            to damage visual
+        /*
         if (meshComponent && mirageWarningImage != 0)
         {
             meshComponent->AddMaterial(mirageWarningImage, false);
         }
         */
+
         break;
     }
 
@@ -47,6 +48,12 @@ void Mirage::Update(float deltaTime)
     {
         stateTimer += deltaTime;
         GLOG("Activating gameobject");
+        /*
+        if (meshComponent && mirageWarningImage != 0)
+        {
+            meshComponent->AddMaterial(mirageDamageImage, false);
+        }
+        */
         if (stateTimer >= warningDelay)
         {
             state      = MirageState::Damaging;
@@ -68,6 +75,4 @@ void Mirage::Update(float deltaTime)
         break;
     }
     }
-
-
 }
