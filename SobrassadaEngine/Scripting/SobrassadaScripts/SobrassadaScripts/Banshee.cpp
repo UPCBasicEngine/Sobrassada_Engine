@@ -283,8 +283,6 @@ void Banshee::Attack(float deltaTime)
                 shaderComponent->ResetScript("MovingUVTransparent");
             }
 
-            if (meshWarningStar) meshWarningStar->SetEnabled(false);
-
             for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
