@@ -41,6 +41,7 @@ class Banshee : public Character
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
+    void TakeDamage(int amount) override;
 
     void ChasePlayer();
     void Attack(float deltaTime) override;
@@ -48,8 +49,6 @@ class Banshee : public Character
     void SearchForPlayer();
     void GoToAttackPosition();
     void TeleportToStart();
-
-    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
     AIAgentComponent* agentAI  = nullptr;
