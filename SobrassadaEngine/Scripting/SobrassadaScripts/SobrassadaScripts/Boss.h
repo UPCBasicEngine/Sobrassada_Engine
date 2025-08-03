@@ -11,6 +11,7 @@ enum class BossStates
 {
     None,
     Idle,
+    Taunt,
     ShieldStrikes,
     OverheadStrike,
     Mirage,
@@ -20,10 +21,18 @@ enum class BossStates
 enum class BossActions
 {
     Idle,
-    ShieldStrikes,
-    OverheadStrike,
-    WaterSpouts,
+    Taunt,
+    Combo1,
+    Combo2,
+    Combo3,
+    Prepare,
+    Jump,
+    Dash,
+    Land,
+    Attack,
+    Recover,
     Mirage,
+    WaterSpouts,
 };
 
 class Boss : public Character
@@ -43,8 +52,9 @@ class Boss : public Character
     void ChooseNextState();
 
     void Idle();
+    void Taunt();
     void ShieldStrikes(float deltaTime);
-    void OverheadStrike();
+    void OverheadStrike(float deltaTime);
     void Mirage();
 
     const char* GetStateName() const;
@@ -60,6 +70,8 @@ class Boss : public Character
 
     int phase                 = 1;
     bool stateEnter           = true;
+    bool doTaunt              = false;
+    bool actionTriggerDone    = false;
 
     /* Melee */
     float shieldStrikesRange  = 5.0f;
