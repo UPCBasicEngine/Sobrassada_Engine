@@ -3,6 +3,7 @@
 #include <random>
 
 #include "Script.h"
+#include <array>
 
 class GameObject;
 class MeshComponent;
@@ -52,13 +53,15 @@ class FireballTrap : public Script
     {
         GameObject* go = nullptr;
         float delay    = 0.f;
-        float life     = 1.f;
+        float life     = 2.f;
         float timer    = 0.f;
         bool active    = false;
     };
 
-    std::vector<TimedVFX> extraVfx; // all "meshes"
+    static constexpr int EXTRA_VFX_COUNT = 11;
+    std::array<TimedVFX, EXTRA_VFX_COUNT> extraVfx {};
     float vfxClock = 0.f;
+
 
     struct FireballTrapSettings
     {

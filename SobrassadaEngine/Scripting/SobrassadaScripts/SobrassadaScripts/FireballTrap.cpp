@@ -67,6 +67,8 @@ void FireballTrap::SetupInspectorFields()
     // Fall indicator
     fields.push_back({"Landing Indicator", InspectorField::FieldType::GameObject, &indicatorPrefab, 0.f, 0.f});
     fields.push_back({"Indicator Scale", InspectorField::FieldType::Float, &indicatorScale, 0.1f, 2.0f});
+
+    fields.push_back({"Life 1", InspectorField::FieldType::Float, &extraVfx[1].life, 0.1f, 10.f});
 }
 bool FireballTrap::Init()
 {
@@ -107,21 +109,6 @@ bool FireballTrap::Init()
         shadowBaseScale = fireballShadow ? fireballShadow->GetScale() : float3::one;
     }
 
-    for (size_t i = 2; i < parent->GetChildren().size(); ++i)
-    {
-        GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[i]);
-        if (!child) continue;
-
-        child->SetEnabled(false);
-
-        TimedVFX tv;
-        tv.go    = child;
-        tv.delay = 0.0f;
-        tv.life  = 2.0f;
-
-        extraVfx.push_back(tv);
-    }
-
     if (miniPrototype) miniPrototype->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap: Mini prototype reference not set");
 
@@ -133,6 +120,18 @@ bool FireballTrap::Init()
 
     if (indicatorPrefab) indicatorPrefab->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap: landing indicator prefab not set");
+
+    int idx = 0;
+    for (size_t i = 2; i < parent->GetChildren().size() && idx < EXTRA_VFX_COUNT; ++i, ++idx)
+    {
+        GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[i]);
+        if (!child) continue;
+
+        child->SetEnabled(false);
+        extraVfx[idx].go = child;
+    }
+
+    if (idx < EXTRA_VFX_COUNT) GLOG("[FireballTrap] Avis: falten %d meshes extres", EXTRA_VFX_COUNT - idx);
 
     return true;
 }
@@ -172,8 +171,9 @@ void FireballTrap::Update(float deltaTime)
 
     vfxClock += deltaTime;
 
-    for (auto& v : extraVfx)
+    for (int i = 0; i < EXTRA_VFX_COUNT; ++i)
     {
+        TimedVFX& v = extraVfx[i];
         if (!v.active && vfxClock >= v.delay)
         {
             if (v.go) v.go->SetEnabled(true);
@@ -249,6 +249,16 @@ void FireballTrap::StartAttack()
 
     fireVelocity           = -dirXZ * horizSpeed; // towards impact
 
+    // -- VFX 0 (circle)
+    extraVfx[0].life       = fallTime + 0.1f; 
+    extraVfx[0].delay      = 0.f;             
+
+    const float step       = 0.05f;
+    for (int i = 1; i < EXTRA_VFX_COUNT; ++i)
+    {
+        extraVfx[i].delay = fallTime + (i - 1) * step;
+    }
+
     // Shadow initial placement
     if (fireballShadow)
     {
@@ -262,11 +272,11 @@ void FireballTrap::StartAttack()
 
     // Reset timeline VFX
     vfxClock = 0.f;
-    for (auto& v : extraVfx)
+    for (int i = 0; i < EXTRA_VFX_COUNT; ++i)
     {
-        v.timer  = 0.f;
-        v.active = false;
-        if (v.go) v.go->SetEnabled(false);
+        extraVfx[i].timer  = 0.f;
+        extraVfx[i].active = false;
+        if (extraVfx[i].go) extraVfx[i].go->SetEnabled(false);
     }
 
     dropElapsed     = 0.f;
@@ -308,6 +318,9 @@ void FireballTrap::HandleImpact()
 
     impactElapsed   = 0.f;
     activationState = ACTIVATION_STATE::DAMAGING;
+
+    if (extraVfx[0].go) extraVfx[0].go->SetEnabled(false);
+    extraVfx[0].active = false;
 }
 
 void FireballTrap::DisableDamage()
