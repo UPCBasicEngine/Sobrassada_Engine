@@ -58,7 +58,9 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(metallicRoughnessProgramUnlit);
     glDeleteProgram(uiWidgetProgram);
     glDeleteProgram(metallicGeometryPassProgram);
+    glDeleteProgram(metallicGeometryVPOPassProgram);
     glDeleteProgram(specularGeometryPassProgram);
+    glDeleteProgram(specularGeometryVPOPassProgram);
     glDeleteProgram(lightingPassProgram);
     glDeleteProgram(quadProgram);
     glDeleteProgram(depthProgram);
@@ -291,21 +293,11 @@ int ShaderModule::GetMetallicGeometryPassProgram() const
              : metallicGeometryPassProgram;
 }
 
-int ShaderModule::GetMetallicGeometryVPOPassProgram() const
-{
-    return metallicGeometryVPOPassProgram;
-}
-
 int ShaderModule::GetSpecularGeometryPassProgram() const
 {
     return App->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_LIGTHS)
              ? specularGeometryPassProgram
              : specularGeometryPassProgram;
-}
-
-int ShaderModule::GetSpecularGeometryVPOPassProgram() const
-{
-    return specularGeometryVPOPassProgram;
 }
 
 int ShaderModule::GetLightingPassProgram() const

@@ -22,9 +22,9 @@ class ShaderModule : public Module
     int GetSpecularGlossinessProgram() const;
     int GetMetallicRoughnessProgram() const;
     int GetMetallicGeometryPassProgram() const;
-    int GetMetallicGeometryVPOPassProgram() const;
+    int GetMetallicGeometryVPOPassProgram() const { return metallicGeometryVPOPassProgram; }
     int GetSpecularGeometryPassProgram() const;
-    int GetSpecularGeometryVPOPassProgram() const;
+    int GetSpecularGeometryVPOPassProgram() const { return specularGeometryVPOPassProgram; }
     int GetLightingPassProgram() const;
     int GetTransparentPassProgram() const { return transparentPassProgram; };
     int GetTransparentVPOPassProgram() const { return transparentVPOPassProgram; }

@@ -25,7 +25,7 @@
 #include "EngineTimer.h"
 #include "WindConfig.h"
 
-#include <Math/Quat.h>
+#include "Math/Quat.h"
 #include <glew.h>
 
 RenderPass::RenderPass()

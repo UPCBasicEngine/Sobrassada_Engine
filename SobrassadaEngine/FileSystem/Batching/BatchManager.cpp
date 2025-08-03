@@ -17,7 +17,7 @@
 
 #include "Math/float3.h"
 #include "glew.h"
-#include <Math/Quat.h>
+#include "Math/Quat.h"
 #include <algorithm>
 #include <chrono>
 #ifdef OPTICK
