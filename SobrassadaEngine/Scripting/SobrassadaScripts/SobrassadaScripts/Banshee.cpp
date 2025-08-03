@@ -30,6 +30,8 @@ Banshee::Banshee(GameObject* parent)
 {
     fields.push_back({"Invisible time range", InspectorField::FieldType::Vec2, &invisibleTimeRange, 0.0f, 10.0f});
     fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 10.0f});
+    fields.push_back({"Main scream duration", InspectorField::FieldType::Float, &mainScreamDuration, 0.1f, 10.0f});
+    fields.push_back({"Warning duration", InspectorField::FieldType::Float, &warningDuration, 0.1f, 10.0f});
 }
 
 bool Banshee::Init()
@@ -97,7 +99,11 @@ bool Banshee::Init()
                 {
                     meshAurora = currentMesh;
                     meshAurora->SetEnabled(false);
-                    break;
+                }
+                else if (currentMesh->GetParent()->GetName() == "mesh_warningStar")
+                {
+                    meshWarningStar = currentMesh;
+                    meshWarningStar->SetEnabled(false);
                 }
             }
         }
@@ -237,18 +243,25 @@ void Banshee::Attack(float deltaTime)
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
 
-            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
-            }
-
-            if (meshAurora) meshAurora->SetEnabled(true);
+            elapsedWarning = 0.f;
+            if (meshWarningStar) meshWarningStar->SetEnabled(true);
         }
 
         // Slowly rotate towards player while charging the attack
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
         {
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+            if (elapsedWarning < warningDuration) elapsedWarning += deltaTime;
+            else
+            {
+                for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+                {
+                    shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
+                }
+
+                if (meshAurora) meshAurora->SetEnabled(true);
+            }
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
@@ -267,18 +280,26 @@ void Banshee::Attack(float deltaTime)
                 shaderComponent->ResetScript("MovingUVTransparent");
             }
 
-            if (meshAurora) meshAurora->SetEnabled(false);
+            if (meshWarningStar) meshWarningStar->SetEnabled(false);
 
             for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
             }
         }
-        else if (animComponent->GetCurrentStateName() == HashString("Scream") && animComponent->IsFinished())
+
+        else if (animComponent->GetCurrentStateName() == HashString("Scream") && elapsedMainScream < mainScreamDuration)
+            elapsedMainScream += deltaTime;
+
+        else if (animComponent->GetCurrentStateName() == HashString("Scream") &&
+                 elapsedMainScream >= mainScreamDuration)
         {
             animComponent->UseTrigger("ScreamOut");
 
+            if (meshAurora) meshAurora->SetEnabled(false);
             weapon->SetEnabled(false);
+
+            elapsedMainScream = 0.f;
 
             for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
             {
@@ -383,7 +404,6 @@ void Banshee::TeleportToStart()
         hasMoved = false;
     }
 }
-
 
 void Banshee::TakeDamage(int amount)
 {

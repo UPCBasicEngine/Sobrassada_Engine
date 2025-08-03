@@ -51,16 +51,23 @@ class Banshee : public Character
     void TeleportToStart();
 
   private:
-    AIAgentComponent* agentAI  = nullptr;
-    BansheeStates currentState = BansheeStates::Idle;
-    MeshComponent* mesh        = nullptr;
+    float2 invisibleTimeRange      = float2::zero;
+    float currentInvisibleTime     = 0.0f;
+    float attackAngularSpeed       = 0.0f;
+    bool isInvisible               = false;
 
-    MeshComponent* meshAurora  = nullptr;
+    float warningDuration          = 0.2f;
+    float elapsedWarning           = 0.f;
 
-    float2 invisibleTimeRange  = float2::zero;
-    float currentInvisibleTime = 0.0f;
-    float attackAngularSpeed   = 0.0f;
-    bool isInvisible           = false;
+    float mainScreamDuration       = 2.f;
+    float elapsedMainScream        = 0.f;
+
+    AIAgentComponent* agentAI      = nullptr;
+    BansheeStates currentState     = BansheeStates::Idle;
+    MeshComponent* mesh            = nullptr;
+
+    MeshComponent* meshAurora      = nullptr;
+    MeshComponent* meshWarningStar = nullptr;
 
     std::mt19937 rng;
     std::uniform_real_distribution<float> normalizedDist;
