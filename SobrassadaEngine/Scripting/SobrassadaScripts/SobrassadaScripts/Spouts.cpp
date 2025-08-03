@@ -3,7 +3,9 @@
 #include "Character.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Spouts.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
 Spouts::Spouts(GameObject* parent) : Script(parent)
@@ -17,7 +19,13 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
 
 bool Spouts::Init()
 {
-    decal = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
+    decal          = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
+    waterMesh      = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[1]);
+    damageCollider = parent->GetComponent<SphereColliderComponent*>();
+
+    shaderMesh     = waterMesh->GetComponent<MeshComponent*>();
+    shaderScript   = waterMesh->GetComponent<ShaderScriptComponent*>();
+
     return true;
 }
 
@@ -26,7 +34,7 @@ void Spouts::Update(float deltaTime)
     if (activationState == ACTIVATION_STATE::SLEEPING)
     {
         if (character == nullptr) return;
-        SphereColliderComponent* damageCollider = parent->GetComponent<SphereColliderComponent*>();
+
         damageCollider->SetEnabled(false);
         float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
         if (distance <= activationRange)
@@ -38,11 +46,10 @@ void Spouts::Update(float deltaTime)
     }
     else if (activationState == ACTIVATION_STATE::CHARGING)
     {
-        chargingTimer += deltaTime;
+        chargingTimer         += deltaTime;
 
-
-        float4x4 newTransform = decal->GetLocalTransform();
-        newTransform          = newTransform * float4x4::RotateY(rotationSpeed * deltaTime);
+        float4x4 newTransform  = decal->GetLocalTransform();
+        newTransform           = newTransform * float4x4::RotateY(rotationSpeed * deltaTime);
         decal->SetLocalTransform(newTransform);
 
         if (chargingTimer >= chargingDuration)
@@ -54,26 +61,26 @@ void Spouts::Update(float deltaTime)
     {
         float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
         decal->SetEnabled(false);
+        waterMesh->SetEnabled(true);
+        shaderScript->SetScriptEnabled("MovingUVTransparent", true);
+        shaderMesh->SetEnabled(false);
+
         activationState = ACTIVATION_STATE::COOLDOWN;
         chargingTimer   = 0.0f;
         if (distance <= activationRange)
         {
-            SphereColliderComponent* damageCollider = parent->GetComponent<SphereColliderComponent*>();
-
-            if (damageCollider)
-            {
-                damageCollider->SetEnabled(true);
-            }
+            damageCollider->SetEnabled(true);
         }
     }
     else if (activationState == ACTIVATION_STATE::COOLDOWN)
     {
-        SphereColliderComponent* damageCollider = parent->GetComponent<SphereColliderComponent*>();
-
-        chargingTimer += deltaTime;
+        chargingTimer                           += deltaTime;
         if (chargingTimer >= chargingDuration)
         {
-                    damageCollider->SetEnabled(false);
+            waterMesh->SetEnabled(false);
+            shaderScript->ResetScript("MovingUVTransparent");
+
+            damageCollider->SetEnabled(false);
             activationState = ACTIVATION_STATE::SLEEPING;
         }
     }

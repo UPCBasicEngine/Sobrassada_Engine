@@ -2,6 +2,10 @@
 
 #include "Script.h"
 
+class ShaderScriptComponent;
+class MeshComponent;
+class SphereColliderComponent;
+
 class Spouts : public Script
 {
     enum ACTIVATION_STATE
@@ -26,7 +30,11 @@ class Spouts : public Script
     float rotationSpeed                     = 90.0f;
 
     GameObject* character                   = nullptr;
-    GameObject* decal;
+    GameObject* decal                       = nullptr;
+    GameObject* waterMesh                   = nullptr;
+    ShaderScriptComponent* shaderScript     = nullptr;
+    MeshComponent* shaderMesh               = nullptr;
+    SphereColliderComponent* damageCollider = nullptr;
 
-    ACTIVATION_STATE activationState = SLEEPING;
+    ACTIVATION_STATE activationState        = SLEEPING;
 };
