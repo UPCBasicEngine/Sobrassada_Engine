@@ -1225,10 +1225,4 @@
       <Filter>External\Wwise</Filter>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="SobrassadaEngine.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\Game\1-416023b1.ico" />
-  </ItemGroup>
 </Project>
