@@ -94,6 +94,7 @@ void BossMirage::Update(float deltaTime)
             else
             {
                 // Sequence complete
+
                 state = SequenceState::Idle;
             }
         }

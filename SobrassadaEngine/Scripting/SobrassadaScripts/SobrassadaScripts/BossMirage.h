@@ -29,6 +29,7 @@ class BossMirage : public Script
     bool Init() override;
     void Update(float deltaTime) override;
     void StartSequence(int sequence);
+    SequenceState GetSequenceState() { return state; };
 
     std::vector<GameObject*> GetMirageChildren(Scene* scene, const std::string& parentName);
 

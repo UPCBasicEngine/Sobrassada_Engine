@@ -10,6 +10,7 @@
 #include "GameObject.h"
 #include "Globals.h"
 #include "ResourceStateMachine.h"
+#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -44,15 +45,11 @@ bool Boss::Init()
     GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Arena");
     if (arenaGO)
     {
-
-        if (scriptComp && scriptComp->GetScriptByType<Mirage>())
-            ScriptComponent* sc = arenaGO->GetComponent<ScriptComponent*>();
+        ScriptComponent* sc = arenaGO->GetComponent<ScriptComponent*>();
         if (sc && sc->GetScriptByType<BossMirage>())
-            ;
-    }
-    if (!bossMirage)
-    {
-        GLOG("BossMirage not found! Mirage sequences will not trigger.");
+        {
+            bossMirageScript = sc->GetScriptByType<BossMirage>();
+        }
     }
 
     return true;
@@ -90,14 +87,7 @@ void Boss::OnDeath()
 
 void Boss::OnDamageTaken(int amount)
 {
-    health = health - amount;
-    switch (currentMirage)
-    {
-    case 1:
-        if (health < mirage1)
-        {
-        }
-    }
+
     // update healthbar
     // TODO: play boss take damage sound
     // TODO: particles? and animation
@@ -476,9 +466,24 @@ void Boss::OverheadStrike(float deltaTime)
 
 void Boss::Mirage()
 {
-    // TODO: Call Mirage function
-}
 
+    if (stateEnter)
+    {
+        GLOG("[BOSS] - Overhead Strikes");
+
+        stateEnter = false;
+        agentAI->PauseMovement();
+        currentAction = BossActions::Mirage;
+        isInvulnerable = true;
+        bossMirageScript->StartSequence(phase);
+    }
+
+    if ((int)bossMirageScript->GetSequenceState() == 0)
+    {
+        isInvulnerable = false;
+        ChooseNextState();
+    }
+}
 const char* Boss::GetStateName() const
 {
     switch (currentState)

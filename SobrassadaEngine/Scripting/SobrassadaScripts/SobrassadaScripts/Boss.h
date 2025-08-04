@@ -84,7 +84,7 @@ class Boss : public Character
     int shieldStrikeLastAction          = 0;
 
     bool mirageActivated                = false;
-    std::array<int, 3> mirageActivation = {50, 30, 10};
+    std::array<int, 3> mirageActivation = {mirage1, mirage2, mirage3};
 
     /* Melee */
     float shieldStrikesRange            = 5.0f;
@@ -92,6 +92,7 @@ class Boss : public Character
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;
+    BossMirage* bossMirageScript    = nullptr;
 
     ImageComponent* healthImageComponent = nullptr;
     UID healthBarImage;
