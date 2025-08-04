@@ -154,8 +154,9 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
             TakeDamage(playerScript->GetChargedAttackDamage());
 
-        // Heal knockback check
-        if (playerScript && playerScript->GetState() == CharacterStates::HEAL)
+        // Heal & Riastrad knockback check
+        if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
+                             playerScript->GetState() == CharacterStates::TRANSFORM))
             TakeDamage(0);
     }
 
@@ -219,8 +220,6 @@ void Character::UpdateTimers(float deltaTime)
 
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
-
-
 }
 
 void Character::TakeDamage(int amount)
