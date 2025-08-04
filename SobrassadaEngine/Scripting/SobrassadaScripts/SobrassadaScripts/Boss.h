@@ -66,8 +66,9 @@ class Boss : public Character
     void ShieldStrikes(float deltaTime);
     void OverheadStrike(float deltaTime);
     void StartDash();
-    void StartJump();
-    void Jump(float deltaTime);
+    void Dash(float deltaTime);
+    void StartJump(bool fall = false);
+    void Jump(float deltaTime, bool fall = false);
 
     void Mirage();
 
@@ -88,14 +89,25 @@ class Boss : public Character
     bool actionTriggerDone       = false;
 
     int shieldStrikeLastAction   = 0;
-    float dashDuration           = 0.2f;
 
+    float3 startPosLocal         = float3::zero;
+
+    // Dash
+    bool isDashing               = false;
+    float dashSpeed              = 0.0f;
+    float dashTimeRemaining      = 0.0f;
+    float dashDuration           = 0.5f;
+    float dashDistance           = 0.0f;
+    float3 dashDirection         = float3::zero;
+
+    // Jump
     bool isJumping               = false;
     float jumpSpeed              = 0.0f;
     float jumpTimeRemaining      = 0.0f;
-    float3 startPosLocal         = float3::zero;
-    float jumpDuration           = 0.2f;
+
     float heightJump             = 4.0f;
+    float jumpDuration           = 0.2f;
+    float fallDuration           = 0.2f;
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;

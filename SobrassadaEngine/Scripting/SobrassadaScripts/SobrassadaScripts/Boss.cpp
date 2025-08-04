@@ -100,9 +100,9 @@ void Boss::OnDamageTaken(int amount)
 
 void Boss::HandleState(float deltaTime)
 {
-    if (!mirageActivated && currentHealth <= mirageActivation[phase-1]) currentState = BossStates::Mirage;
+    if (!mirageActivated && currentHealth <= mirageActivation[phase - 1]) currentState = BossStates::Mirage;
 
-    if (currentHealth <= phaseSwap[phase-1])
+    if (currentHealth <= phaseSwap[phase - 1])
     {
         phase++;
         currentState = BossStates::ChangePhase;
@@ -178,15 +178,15 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        shieldStrikesRate = 100;
-        // shieldStrikesRate  = 75;
-        // overheadStrikeRate = 100;
+        //overheadStrikeRate = 100;
+         shieldStrikesRate  = 75;
+         overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        shieldStrikesRate = 100;
-        // shieldStrikesRate  = 50;
-        // overheadStrikeRate = 100;
+        //overheadStrikeRate = 100;
+         shieldStrikesRate  = 50;
+         overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Far:
@@ -430,13 +430,18 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             agentAI->SetFreeMove(true);
-            //StartJump();
+            StartJump();
             if (animComponent) animComponent->UseTrigger("Jump");
             actionTriggerDone = true;
         }
 
-        //if (isJumping) Jump(deltaTime);
-        //else GLOG("Finished jump")
+        if (isJumping) Jump(deltaTime);
+        else
+        {
+            GLOG("Finished jump")
+            currentAction     = BossActions::Dash;
+            actionTriggerDone = false;
+        }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
@@ -456,7 +461,13 @@ void Boss::OverheadStrike(float deltaTime)
             if (animComponent) animComponent->UseTrigger("Dash");
         }
 
-        if (agentAI->GetIsDashing()) agentAI->Dash(deltaTime);
+        if (isDashing) Dash(deltaTime);
+        else
+        {
+            GLOG("Finished dashing")
+            currentAction     = BossActions::Land;
+            actionTriggerDone = false;
+        }
 
         if (animComponent && animComponent->IsFinished())
         {
@@ -468,9 +479,17 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::Land:
         if (!actionTriggerDone)
         {
-            agentAI->SetFreeMove(false);
+            StartJump();
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Land");
+        }
+
+        if (isJumping) Jump(deltaTime, true);
+        else
+        {
+            currentAction     = BossActions::Attack;
+            actionTriggerDone = false;
+            GLOG("Finished fall");
         }
 
         if (animComponent && animComponent->IsFinished())
@@ -483,6 +502,7 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::Attack:
         if (!actionTriggerDone)
         {
+            agentAI->SetFreeMove(false);
             attackHitboxDelay    = 0.5f;
             attackHitboxDuration = 0.2f;
             Character::Attack(deltaTime);
@@ -528,8 +548,9 @@ void Boss::OverheadStrike(float deltaTime)
 
         if (animComponent && animComponent->IsFinished())
         {
-            actionTriggerDone = false;
             agentAI->ResumeMovement();
+            actionTriggerDone = false;
+
             ChooseNextState();
         }
         break;
@@ -542,27 +563,62 @@ void Boss::OverheadStrike(float deltaTime)
 
 void Boss::StartDash()
 {
+    isDashing        = true;
+
     float3 bossPos   = parent->GetGlobalTransform().TranslatePart();
     float3 playerPos = character->GetLastPosition();
+
     bossPos.y        = 0.0f;
     playerPos.y      = 0.0f;
-    float distance   = (playerPos - bossPos).Length();
-    float3 direction = (playerPos - bossPos).Normalized();
-    GLOG("Distance: %.2f", distance);
-    GLOG("Direction: %.2f %.2f %.2f", direction.x, direction.y, direction.z);
-    agentAI->StartDash(distance, direction, dashDuration);
+
+    dashDistance     = (playerPos - bossPos).Length();
+    dashDirection    = (playerPos - bossPos).Normalized();
+
+    GLOG("Distance: %.2f", dashDistance);
+    GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
+
+    dashSpeed         = dashDistance / dashDuration;
+    dashTimeRemaining = dashDuration;
+
+    startPosLocal     = parent->GetLocalTransform().TranslatePart();
+
+    GLOG("Speed: %.2f", dashSpeed);
 }
 
-void Boss::StartJump()
+void Boss::Dash(float deltaTime)
+{
+    dashTimeRemaining -= deltaTime;
+    if (dashTimeRemaining < 0.0f) dashTimeRemaining = 0.0f;
+
+    float elapsedTime       = dashDuration - dashTimeRemaining;
+    float offsetDist        = dashSpeed * elapsedTime;
+
+    float3 horizontalOffset = dashDirection * offsetDist;
+    float originalY         = startPosLocal.y;
+
+    float3 newPos           = startPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z);
+    newPos.y                = originalY;
+
+    parent->SetLocalPosition(newPos);
+
+    if (dashTimeRemaining <= 0.0f)
+    {
+        isDashing = false;
+        parent->SetLocalPosition(startPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z));
+    }
+}
+
+void Boss::StartJump(bool fall)
 {
     isJumping         = true;
-    jumpSpeed         = heightJump / jumpDuration;
-    jumpTimeRemaining = jumpDuration;
+    float duration    = fall ? fallDuration : jumpDuration;
+    jumpSpeed         = heightJump / duration;
+    jumpTimeRemaining = duration;
     startPosLocal     = parent->GetLocalTransform().TranslatePart();
-    GLOG("Speed: %.2f", jumpSpeed)
+    GLOG("Speed: %.2f", jumpSpeed);
 }
 
-void Boss::Jump(float deltaTime)
+void Boss::Jump(float deltaTime, bool fall)
 {
     jumpTimeRemaining -= deltaTime;
     if (jumpTimeRemaining < 0.0f) jumpTimeRemaining = 0.0f;
@@ -570,7 +626,9 @@ void Boss::Jump(float deltaTime)
     float elapsedTime = jumpDuration - jumpTimeRemaining;
     float offsetY     = jumpSpeed * elapsedTime;
 
-    float3 newPos     = startPosLocal + float3::unitY * offsetY;
+    float3 dir        = fall ? -float3::unitY : float3::unitY;
+
+    float3 newPos     = startPosLocal + dir * offsetY;
 
     parent->SetLocalPosition(newPos);
 
