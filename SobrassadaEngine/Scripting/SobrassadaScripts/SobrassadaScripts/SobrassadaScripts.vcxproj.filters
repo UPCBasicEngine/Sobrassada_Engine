@@ -160,10 +160,10 @@
     <ClInclude Include="BossMirage.h">
       <Filter>Characters\Boss</Filter>
     </ClInclude>
-    <ClInclude Include="Mirage.h">
+    <ClInclude Include="Boss.h">
       <Filter>Characters\Boss</Filter>
     </ClInclude>
-    <ClInclude Include="Boss.h">
+    <ClInclude Include="Mirage.h">
       <Filter>Characters\Boss</Filter>
     </ClInclude>
   </ItemGroup>
@@ -861,10 +861,10 @@
     <ClCompile Include="BossMirage.cpp">
       <Filter>Characters\Boss</Filter>
     </ClCompile>
-    <ClCompile Include="Mirage.cpp">
+    <ClCompile Include="Boss.cpp">
       <Filter>Characters\Boss</Filter>
     </ClCompile>
-    <ClCompile Include="Boss.cpp">
+    <ClCompile Include="Mirage.cpp">
       <Filter>Characters\Boss</Filter>
     </ClCompile>
   </ItemGroup>

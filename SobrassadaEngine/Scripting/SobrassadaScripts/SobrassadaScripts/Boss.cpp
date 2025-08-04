@@ -199,24 +199,20 @@ void Boss::ChooseNextStateFirstPhase()
     int num = uniformDist(rng);
     if (doTaunt)
     {
-        GLOG("Taunt chosen")
         currentState = BossStates::Taunt;
     }
     else if (doIdle)
     {
-        GLOG("Idle chosen")
         currentState = BossStates::Idle;
     }
     else
     {
         if (num <= shieldStrikesRate)
         {
-            GLOG("ShieldStrikes chosen")
             currentState = BossStates::ShieldStrikes;
         }
         else if (num <= overheadStrikeRate)
         {
-            GLOG("OverheadStrike chosen")
             currentState = BossStates::OverheadStrike;
         }
     }
@@ -236,7 +232,6 @@ void Boss::Idle()
 {
     if (stateEnter)
     {
-        GLOG("[BOSS] - Idle");
 
         // TODO: Randomize the idle duration
         // agentAI->SetSpeed(0.0f, 10.0f);
@@ -255,7 +250,6 @@ void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
-        GLOG("[BOSS] - Taunt");
 
         stateEnter    = false;
         doTaunt       = false;
@@ -275,7 +269,7 @@ void Boss::ShieldStrikes(float deltaTime)
 
     if (stateEnter)
     {
-        GLOG("[BOSS] - Shield Strikes");
+
 
         stateEnter             = false;
         currentAction          = BossActions::Chase;
@@ -401,7 +395,6 @@ void Boss::OverheadStrike(float deltaTime)
 
     if (stateEnter)
     {
-        GLOG("[BOSS] - Overhead Strikes");
 
         stateEnter    = false;
         currentAction = BossActions::Prepare;
@@ -585,8 +578,9 @@ void Boss::Mirage()
 {
     if (stateEnter)
     {
-        GLOG("[BOSS] - Overhead Strikes");
-
+        GLOG("[BOSS] - Mirage");
+        
+        mirageActivated = true;
         stateEnter = false;
         agentAI->PauseMovement();
         currentAction  = BossActions::Mirage;
