@@ -22,7 +22,7 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
     fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
     fields.push_back({"Second Attack Delay", InspectorField::FieldType::Float, &secondAttackDelay, 0.0f, 1.0f});
-    //fields.push_back({"Patrol Speed", InspectorField::FieldType::Float, &patrolSpeed, 0.0f, 10.0f});
+    fields.push_back({"Patrol Speed", InspectorField::FieldType::Float, &patrolSpeed, 0.0f, 10.0f});
 }
 
 bool Soldier::Init()
@@ -51,10 +51,9 @@ bool Soldier::Init()
 
 void Soldier::Update(float deltaTime)
 {
-    if (currentState == SoldierStates::DEATH)
+    if (currentState == SoldierStates::DEATH && animComponent && animComponent->IsFinished())
     {
-        deathTimer += deltaTime;
-        if (deathTimer > 3.0f) parent->SetEnabled(false);
+        parent->SetEnabled(false);
     }
 
     if (currentState == SoldierStates::DEATH || agentAI == nullptr) return;
@@ -109,7 +108,6 @@ void Soldier::OnDeath()
     // TODO: animation and particles
     isAttacking = false;
     if (animComponent) animComponent->UseTrigger("death");
-    deathTimer  = 0.0f;
     agentAI->PauseMovement();
     currentState = SoldierStates::DEATH;
 }
@@ -149,6 +147,8 @@ void Soldier::HandleState(float deltaTime)
         SearchForPlayer();
         break;
     case SoldierStates::PATROL:
+        //agentAI->SetSpeed(patrolSpeed, 8.0);
+        //GLOG("Speed set to %f", patrolSpeed);
         PatrolAI(deltaTime);
         // TODO: patrol animation
         animComponent->UseTrigger("patrol");
@@ -186,8 +186,7 @@ void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
-   /* agentAI->SetSpeed(patrolSpeed, 8.0);
-    GLOG("Speed set to %f", patrolSpeed);*/
+
 
     if (!playerScript->IsDead())
     {
@@ -235,6 +234,7 @@ void Soldier::ChaseAI()
 
 void Soldier::SearchForPlayer()
 {
+    GLOG("Searching for player");
     // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
     if (!isSearching)
     {
@@ -254,6 +254,8 @@ void Soldier::SearchForPlayer()
     else if (searchTimer <= 0.0f)
     {
         isSearching  = false;
+        agentAI->SetSpeed(patrolSpeed, 8.0);
+        GLOG("Speed set to %f", patrolSpeed);
         currentState = SoldierStates::PATROL;
     }
 }
@@ -331,7 +333,7 @@ void Soldier::ChangeState()
 {
     if (playerScript->IsDead())
     {
-        currentState = SoldierStates::PATROL;
+        currentState = SoldierStates::DEATH;
         return;
     }
 
