@@ -119,22 +119,7 @@ void Changeling::OnDeath()
 
 void Changeling::OnDamageTaken(int amount)
 {
-    currentState = ChangelingStates::DAMAGED;
-
-    agentAI->ResetSpeed();
-    agentAI->SetSpeed(0, 10);
-
-    for (auto dashTrailMeshObject : dashTrailMeshObjects)
-        dashTrailMeshObject->SetEnabled(false);
-    
-    for (auto dashTrailColliderObject : dashTrailColliderObjects)
-        dashTrailColliderObject->SetEnabled(false);
-    
-    if (animComponent)
-    {
-        if (!animComponent->UseTrigger("Trigger_Hit")) // TODO Randomize different damage animations
-            animComponent->UseTrigger("Trigger_HitUnderground");
-    }
+    ST_Damaged();
 }
 
 void Changeling::PerformAttack()
@@ -205,12 +190,6 @@ void Changeling::HandleState(float deltaTime)
     }
 
     stateTimer -= deltaTime;
-
-    // if (animComponent && animComponent->IsFinished())
-    //{
-    //     // GLOG("FINISH ANIM");
-    //     animComponent->UseTrigger("idle");
-    // }
 }
 
 void Changeling::UpdateIdleBurriedState(float deltaTime, float distanceToPlayerSq)
@@ -306,15 +285,12 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
     {
         if (animComponent) animComponent->UseTrigger("Trigger_PrepareDash");
         currentState = ChangelingStates::DASH_ATTACK_PREPARATION;
-    } else if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
-    {
-        if (animComponent) animComponent->UseTrigger("Trigger_Run");
-        currentState = ChangelingStates::CHASE;
-    } else 
-    {
-        if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
-        currentState = ChangelingStates::DIG_DOWN_TRANSITION;
     }
+
+    if (ST_StartChase(deltaTime, distanceToPlayerSq)) return;
+    
+    if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
+    currentState = ChangelingStates::DIG_DOWN_TRANSITION;
 }
 
 void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
@@ -329,7 +305,6 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
     } else
     {
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-        agentAI->SetSpeed(chaseSpeed, chaseAcceleration);
         agentAI->SetPathNavigation(character->GetLastPosition());
     }
 }
@@ -427,7 +402,10 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
 void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceToPlayerSq)
 {
     if (animComponent && animComponent->IsFinished())
-        animComponent->UseTrigger("Trigger_VisibleIdle");
+    {
+        const bool bUseAnimation1 = rand() % 2;
+        animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Scream" : "Trigger_Scream2");
+    }
     if (stateTimer < 0.f)
     {
         for (auto dashTrailMeshObject : dashTrailMeshObjects)
@@ -529,6 +507,47 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
         isDead = true;
         parent->SetEnabled(false);
     }
+}
+
+bool Changeling::ST_StartChase(float deltaTime, float distanceToPlayerSq)
+{
+    // Check preconditions
+    if (currentState != ChangelingStates::IDLE_VISIBLE) return false;
+    if (distanceToPlayerSq > rangeAIChase * rangeAIChase) return false;
+    
+    // Implement state transition
+    const bool bUseAnimation1 = rand() % 2;
+    if (animComponent) animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Run" : "Trigger_Run2");
+
+    agentAI->ResetSpeed();
+    agentAI->SetSpeed(chaseSpeed, chaseAcceleration);
+    
+    currentState = ChangelingStates::CHASE;
+
+    return true;
+}
+
+bool Changeling::ST_Damaged()
+{
+    currentState = ChangelingStates::DAMAGED;
+
+    agentAI->ResetSpeed();
+    agentAI->SetSpeed(0, 10);
+
+    for (auto dashTrailMeshObject : dashTrailMeshObjects)
+        dashTrailMeshObject->SetEnabled(false);
+    
+    for (auto dashTrailColliderObject : dashTrailColliderObjects)
+        dashTrailColliderObject->SetEnabled(false);
+    
+    if (animComponent)
+    {
+        const bool bUseAnimation1 = rand() % 2;
+        if (!animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Hit" : "Trigger_Hit2")) 
+            animComponent->UseTrigger("Trigger_HitUnderground");
+    }
+
+    return true;
 }
 
 bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)

@@ -68,6 +68,8 @@ class Changeling : public Character
     void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
 
+    bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
+    bool ST_Damaged();
     bool ST_Peek(float deltaTime, float distanceToPlayerSq);
     bool ST_DashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
