@@ -27,6 +27,7 @@ enum class CharacterStates
     TAKE_MUSHROOM,
     HEAL,
     TRANSFORM,
+    HURT
 };
 
 class CuChulainn : public Character
@@ -85,6 +86,7 @@ class CuChulainn : public Character
     void CheckIsFalling();
 
     void UseMushroom();
+    void HealKnockback();
     void ThrowSpear();
     void UltimateAttack();
     void Dash();
@@ -215,12 +217,16 @@ class CuChulainn : public Character
     float dashDecalTimer                   = 5.0f;
     float dashDecalBufferTimer             = 0.0f;
 
+    // Heal
     bool isHealing                         = false;
     std::string healVisualName             = "";
     GameObject* healVisual                 = nullptr;
     std::string healKnockbackName          = "";
     GameObject* healKnockback              = nullptr;
+    float healTimer                        = 0.0f;
+    float healKnockbackDelay               = 0.0f;
 
+    // Curse
     bool isCursed                          = false;
     float curseSpeed                       = 4.0f;
     float curseDuration                    = 5.0f;
