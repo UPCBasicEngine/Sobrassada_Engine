@@ -137,7 +137,49 @@ void Banshee::Update(float deltaTime)
 
 void Banshee::OnPlayerExitLocation()
 {
-    currentState = BansheeStates::Idle;
+
+    switch (currentState)
+    {
+    case BansheeStates::Search:
+        isSearching = false;
+        break;
+    case BansheeStates::Attack:
+    {
+        for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        if (meshWarningStar) meshWarningStar->SetEnabled(false);
+
+        weapon->SetEnabled(false);
+
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->ResetAngularSpeed();
+        agentAI->SetLookForward(true);
+
+        break;
+    }
+    default:
+        break;
+    }
+    currentState = BansheeStates::TeleportOrigin;
 }
 
 void Banshee::OnDeath()
@@ -205,7 +247,8 @@ void Banshee::ChasePlayer()
 
     hasMoved = true;
     if (animComponent) animComponent->UseTrigger("Chase");
-    //if (animComponent && animComponent->GetCurrentStateName() != HashString("Idle")) animComponent->UseTrigger("Chase");
+    // if (animComponent && animComponent->GetCurrentStateName() != HashString("Idle"))
+    // animComponent->UseTrigger("Chase");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Attack;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
         currentState = BansheeStates::Search;
