@@ -75,12 +75,13 @@ class Boss : public Character
     const char* GetActionName() const;
 
   private:
-    AIAgentComponent* agentAI    = nullptr;
-    BossStates currentState      = BossStates::Idle;
-    BossActions currentAction    = BossActions::Idle;
+    AIAgentComponent* agentAI = nullptr;
+    BossStates currentState   = BossStates::Idle;
+    BossActions currentAction = BossActions::Idle;
 
-    int phase                    = 1;
-    std::array<int, 3> phaseSwap = {40, 20, 0};
+    int phase                 = 1;
+    int phase1 = 40, phase2 = 20, phase3 = 0;
+    std::array<int, 3> phaseSwap = {phase1, phase2, phase3};
     bool stateEnter              = true;
     bool doIdle                  = false;
     bool doTaunt                 = false;
@@ -95,7 +96,6 @@ class Boss : public Character
     float3 startPosLocal         = float3::zero;
     float jumpDuration           = 0.2f;
     float heightJump             = 4.0f;
-    
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;

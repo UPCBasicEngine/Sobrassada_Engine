@@ -102,7 +102,7 @@ void Boss::HandleState(float deltaTime)
 {
     if (!mirageActivated && currentHealth <= mirageActivation[phase-1]) currentState = BossStates::Mirage;
 
-    if (currentHealth <= phaseSwap[phase])
+    if (currentHealth <= phaseSwap[phase-1])
     {
         phase++;
         currentState = BossStates::ChangePhase;
