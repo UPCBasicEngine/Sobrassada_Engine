@@ -350,7 +350,7 @@ void CuChulainn::HandleState(float deltaTime)
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
                 return;
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
-            if (state == CharacterStates::HEAL) healKnockback->SetEnabled(false);
+            if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
             if (state == CharacterStates::TRANSFORM)
             {
                 riastradVfx->GetComponent<AnimationComponent*>()->OnStop();
@@ -1101,7 +1101,7 @@ void CuChulainn::UseMushroom()
     if (healVisual) healVisual->SetEnabled(true);
 
     Heal(mushroomHeal);
-    healKnockback->SetEnabled(true);
+    if (healKnockback) healKnockback->SetEnabled(true);
 
     // UpdateMushroomsUI();
 }

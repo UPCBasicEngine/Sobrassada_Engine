@@ -102,11 +102,11 @@ class CuChulainn : public Character
   private:
     CharacterStates state              = CharacterStates::IDLE;
 
-    std::string cameraName             = "";
+    std::string cameraName             = "Camera Pivot";
     GameObject* cameraObject           = nullptr;
     CameraMovement* camera             = nullptr;
 
-    std::string spearName              = "";
+    std::string spearName              = "SpearProjectile";
     Projectile* spear                  = nullptr;
 
     float defaultSpeed                 = 7.0f;
@@ -122,8 +122,8 @@ class CuChulainn : public Character
     float dashBufferTimer              = 0.0f;
 
     // Basic attack
-    std::string meleeVfxName           = "";
-    std::string meleeTrailName         = "";
+    std::string meleeVfxName           = "SpearVFX";
+    std::string meleeTrailName         = "SpearMeleeTrail";
     GameObject* meleeVfxObject         = nullptr;
     GameObject* meleeTrailObject       = nullptr;
     bool desiredAttack                 = false;
@@ -132,7 +132,7 @@ class CuChulainn : public Character
     float comboBufferTimer             = 0.0f;
 
     // CHarged attack
-    std::string chargedAttackName      = "";
+    std::string chargedAttackName      = "Charged";
     GameObject* chargedAttackCollider  = nullptr;
     bool isChargingAttack              = false;
     float chargeTimer                  = 0.0f;
@@ -153,11 +153,11 @@ class CuChulainn : public Character
     float deathTimer                   = 0.5f;
     float aimTimer                     = 0.0f;
 
-    std::string aimShadowName          = "";
+    std::string aimShadowName          = "AimShadow";
     GameObject* aimShadowObject        = nullptr;
 
     // Ultimate
-    std::string ultimateName           = "";
+    std::string ultimateName           = "Ultimate";
     GameObject* ultimateObject         = nullptr;
     bool desiredUltimate               = false;
     int ultimateDamage                 = 0;
@@ -182,7 +182,7 @@ class CuChulainn : public Character
     int riastradOnDamageTaken          = 2;
     int riastradOnHit                  = 5;
     int riastradOnEnemyDeath           = 5;
-    std::string riastradVfxName        = "";
+    std::string riastradVfxName        = "riastrad_all";
     GameObject* riastradVfx            = nullptr;
 
     float3 spawnPos                    = float3::zero;
@@ -207,9 +207,9 @@ class CuChulainn : public Character
     float takeMushroomCdTimer              = 0.0f;
     float takeMushroomCd                   = 0.0f;
 
-    std::string dashTrailName              = "";
+    std::string dashTrailName              = "DashTrail";
     GameObject* dashTrail                  = nullptr;
-    std::string dashDecalName              = "";
+    std::string dashDecalName              = "DashDecal";
     GameObject* dashDecal                  = nullptr;
 
     float dashDecalTimer                   = 5.0f;
