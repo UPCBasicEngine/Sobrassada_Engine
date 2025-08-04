@@ -96,6 +96,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
     fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
     fields.push_back({"Ultimate empty icon", InspectorField::FieldType::Resource, &ultimateEmptyImage});
+
+    //Unlocked abilities
+    fields.push_back({"Dash Activated", InspectorField::FieldType::Bool, &dashUnlocked});
 }
 
 bool CuChulainn::Init()

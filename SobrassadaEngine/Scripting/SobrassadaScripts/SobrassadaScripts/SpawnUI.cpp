@@ -10,7 +10,7 @@
 SpawnUI::SpawnUI(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Object UI Name", InspectorField::FieldType::InputText, &objectUIName});
-    fields.push_back({"Unlocks Ability", InspectorField::FieldType::Bool, &unlockAbility});
+    fields.push_back({"Unlock Ability", InspectorField::FieldType::Bool, &unlockAbility});
     fields.push_back({"Ability Name", InspectorField::FieldType::InputText, &nameAbility});
 }
 
