@@ -44,6 +44,11 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
 
+    // Unlocked abilities
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
+    fields.push_back({"Dash unlocked", InspectorField::FieldType::Bool, &dashUnlocked});
+    fields.push_back({"Ultimate unlocked", InspectorField::FieldType::Bool, &unlockUltimate});
+
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ultimate parameters"});
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
@@ -97,8 +102,6 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
     fields.push_back({"Ultimate empty icon", InspectorField::FieldType::Resource, &ultimateEmptyImage});
 
-    //Unlocked abilities
-    fields.push_back({"Dash Activated", InspectorField::FieldType::Bool, &dashUnlocked});
 }
 
 bool CuChulainn::Init()
