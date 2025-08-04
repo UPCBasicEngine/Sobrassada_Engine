@@ -178,13 +178,13 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        overheadStrikeRate = 100;
+        shieldStrikesRate = 100;
         // shieldStrikesRate  = 75;
         // overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        overheadStrikeRate = 100;
+        shieldStrikesRate = 100;
         // shieldStrikesRate  = 50;
         // overheadStrikeRate = 100;
         break;

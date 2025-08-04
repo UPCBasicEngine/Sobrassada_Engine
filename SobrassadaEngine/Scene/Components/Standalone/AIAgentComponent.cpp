@@ -497,7 +497,11 @@ void AIAgentComponent::Dash(float deltaTime)
 
     if (!dashToNavmesh || (posOverPoly && dashToNavmesh)) desiredPos = closestPoint;
 
-    parent->SetLocalPosition(desiredPos - parent->GetGlobalTransform().TranslatePart());
+    float4x4 globalTransform = parent->GetGlobalTransform();
+    float4x4 globalInverse   = globalTransform.Inverted();
+
+    float3 desiredLocalPos   = globalInverse.TransformPos(desiredPos);
+    parent->SetLocalPosition(desiredLocalPos);
     dashTimeRemaining -= deltaTime;
 
     if (dashTimeRemaining > 0.05f && preciseDash)
