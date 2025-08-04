@@ -127,7 +127,6 @@ void Spouts::Update(float deltaTime)
 
         chargingTimer += deltaTime;
 
-        chargingTimer += deltaTime;
         if (chargingTimer >= chargingDuration)
         {
             whiteWaves->SetEnabled(false);
@@ -137,7 +136,8 @@ void Spouts::Update(float deltaTime)
             shaderScript->ResetScript("MovingUVTransparent");
 
             damageCollider->SetEnabled(false);
-            activationState = ACTIVATION_STATE::SLEEPING;
+
+            if (chargingTimer >= chargingDuration + 2.0f) activationState = ACTIVATION_STATE::SLEEPING;
         }
     }
 }
