@@ -26,6 +26,7 @@ enum class ChangelingStates
     CHASE,
     DASH_ATTACK_PREPARATION,
     DASH_ATTACK,
+    DASH_ATTACK_WIGGLE,
     DASH_ATTACK_COOLDOWN,
     DASH_CHAIN_ATTACK,
     BITE_ATTACK,
@@ -59,6 +60,7 @@ class Changeling : public Character
     void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDashAttackWiggleState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackCooldownState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq);
@@ -74,6 +76,8 @@ class Changeling : public Character
 
     void ValidateSetup();
     void RenderDebugVisuals();
+
+    // Returns true only if the pooka did not dash against a wall
     bool CalculateDashTargetPoint(const float3& aimingPoint, float3& targetPoint);
 
     bool isSetupCorrectly = false;
@@ -87,6 +91,7 @@ class Changeling : public Character
     float3 dashDirection          = float3::zero;
     float3 dashTarget             = float3::zero;
     float dashSpeed               = 15.0f;
+    float minDashDistance         = 1;
 
     std::string dashTrailMeshName;
     std::string dashTrailCollisionName;
@@ -122,4 +127,5 @@ class Changeling : public Character
     bool dashRight = false;
     unsigned short dashIndex = 0;
     float dashAngleDegrees = 40.0f;
+    float timeBetweenDashes = 2.f;
 };

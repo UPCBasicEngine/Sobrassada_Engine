@@ -29,6 +29,7 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Bite attack cooldown", InspectorField::FieldType::Float, &biteAttackCooldown, 0.1f, 10.0f);
     
     fields.emplace_back("Dash speed", InspectorField::FieldType::Float, &dashSpeed, 0.1f, 100.0f);
+    fields.emplace_back("Min dash distance", InspectorField::FieldType::Float, &minDashDistance, 0.1f, 100.0f);
 
     // Version selection (0 random, 1 sepp, 2 herbert, 3 giacomo)
     fields.emplace_back("Version (0: Random)", InspectorField::FieldType::Int, &userSelectedVersion, 0, 2);
@@ -47,6 +48,7 @@ Changeling::Changeling(GameObject* parent)
 
     // Giacomo specific (Index 3)
     fields.emplace_back("Dash angle degrees", InspectorField::FieldType::Float, &dashAngleDegrees, 0.0f, 180.0f);
+    fields.emplace_back("Time between dashes", InspectorField::FieldType::Float, &timeBetweenDashes, 0.0f, 10.0f);
 }
 
 bool Changeling::Init()
@@ -175,6 +177,9 @@ void Changeling::HandleState(float deltaTime)
         break;
     case ChangelingStates::DASH_ATTACK:
         UpdateDashAttackState(deltaTime, distanceToPlayerSq);
+        break;
+    case ChangelingStates::DASH_ATTACK_WIGGLE:
+        UpdateDashAttackWiggleState(deltaTime, distanceToPlayerSq);
         break;
     case ChangelingStates::DASH_ATTACK_COOLDOWN:
         UpdateDashAttackCooldownState(deltaTime, distanceToPlayerSq);
@@ -337,7 +342,9 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
     {
         Character::Attack(deltaTime);
 
-        if (!CalculateDashTargetPoint(character->GetLastPosition(), dashTarget))
+        const bool unInterruptedDash = CalculateDashTargetPoint(character->GetLastPosition(), dashTarget);
+
+        if (minDashDistance > activeDashRange)
         {
             isAttacking = false;
             stateTimer = attackCooldown;
@@ -345,8 +352,6 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
             currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
             return;
         }
-        dashTarget += dashDirection; // Set the ai target ahead of the actual target point so the pooka reaches his
-                                    // intended goal and does not stop shortly ahead
 
         agentAI->SetSpeed(dashSpeed, 1000000);
         agentAI->SetPathNavigation(dashTarget);
@@ -354,9 +359,9 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         weaponCollider->SetEnabled(true);
         dashTrailMeshObjects[0]->SetEnabled(true);   
         dashTrailColliderObjects[0]->SetEnabled(true);
-        if (version == ChangelingVersions::FRANZ)
+        dashIndex = 0;
+        if (version == ChangelingVersions::FRANZ && unInterruptedDash)
         {
-            dashIndex = 0;
             animComponent->UseTrigger("Trigger_Dash");
             currentState = ChangelingStates::DASH_CHAIN_ATTACK;
         } else
@@ -378,16 +383,44 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     } else {
-        const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
+        const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * (distanceFromDashStart / 2.f)) -
             parentGO->GetGlobalTransform().TranslatePart();
-        const Quat lerpRotation = Quat(dashStart.RotatePart() - parentGO->GetGlobalTransform().RotatePart());
+        const Quat lerpRotation = Quat(dashStart.RotatePart());
         
-        dashTrailMeshObjects[0]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
+        dashTrailMeshObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
             lerpRotation, float3(1, .4f, distanceFromDashStart)));
-        dashTrailColliderObjects[0]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
+        dashTrailColliderObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
             lerpRotation, float3(1, 1, 1)));
-        dashAreaColliders[0]->size = float3(.5f, .2f, distanceFromDashStart / 2.f);
-        dashAreaColliders[0]->UpdateCollider();
+        dashAreaColliders[dashIndex]->size = float3(.5f, .2f, distanceFromDashStart / 2.f);
+        dashAreaColliders[dashIndex]->UpdateCollider();
+    }
+}
+
+void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPlayerSq)
+{
+    agentAI->LookAtMovement(dashTarget, deltaTime);
+    if (stateTimer < 0)
+    {
+
+        const bool unInterruptedDash = CalculateDashTargetPoint(dashTarget, dashTarget);
+
+        if (minDashDistance > activeDashRange)
+        {
+            weaponCollider->SetEnabled(false);
+            isAttacking = false;
+            stateTimer = attackCooldown;
+            if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
+            currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
+        }
+
+        agentAI->ResetSpeed();
+        agentAI->SetSpeed(dashSpeed, 1000000);
+        agentAI->SetPathNavigation(dashTarget);
+        dashTrailMeshObjects[dashIndex]->SetEnabled(true);   
+        dashTrailColliderObjects[dashIndex]->SetEnabled(true);
+
+        animComponent->UseTrigger("Trigger_Dash");
+        currentState = unInterruptedDash ? ChangelingStates::DASH_CHAIN_ATTACK : ChangelingStates::DASH_ATTACK;
     }
 }
 
@@ -402,7 +435,6 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
     
         for (auto dashTrailColliderObject : dashTrailColliderObjects)
             dashTrailColliderObject->SetEnabled(false);
-        //dashTrailMeshObjects[0]->SetLocalTransform(float4x4::identity);
         
         if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
 
@@ -415,7 +447,8 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
 
 void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq)
 {
-    if (stateTimer < 0.f)
+    const float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart.TranslatePart());
+    if (activeDashRange < distanceFromDashStart)
     {
         if (dashIndex != 3)
         {
@@ -430,22 +463,14 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
             const float dashAngleRads = dashAngleDegrees * DEGREE_RAD_CONV * (dashRight ? 1.f : -1.f);
             directionToPlayer = Quat::FromEulerXYZ(0, dashAngleRads, 0).Mul(directionToPlayer);
 
-            if (!CalculateDashTargetPoint(parent->GetGlobalTransform().TranslatePart() + directionToPlayer, dashTarget))
-            {
-                weaponCollider->SetEnabled(false);
-                isAttacking = false;
-                stateTimer = attackCooldown;
-                if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
-                currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
-            }
-            //dashLegacyTransforms[dashIndex] = dashTrailMeshObjects[dashIndex]->GetGlobalTransform();
-            //dashColliderLegacyTransforms[dashIndex] = dashTrailColliderObjects[dashIndex]->GetGlobalTransform();
+            dashTarget = parent->GetGlobalTransform().TranslatePart() + directionToPlayer;
+
             dashIndex++;
-            agentAI->SetPathNavigation(dashTarget);
-            agentAI->LookAtMovement(dashTarget, 1000000);
-            dashTrailMeshObjects[dashIndex]->SetEnabled(true);   
-            dashTrailColliderObjects[dashIndex]->SetEnabled(true);
-            stateTimer = attackDuration;
+            agentAI->SetSpeed(0, 1000000);
+
+            stateTimer = timeBetweenDashes;
+            currentState = ChangelingStates::DASH_ATTACK_WIGGLE;
+            if (animComponent) animComponent->UseTrigger("Trigger_Wiggle");
         }
         else
         {
@@ -457,27 +482,16 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
         }
         
     } else {
-        float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart.TranslatePart());
-        dashTrailMeshObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
-            Quat::identity, float3(1, .4f, distanceFromDashStart)));
-        dashTrailColliderObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(float3(0, 0, -distanceFromDashStart / 2.f),
-            Quat::identity, float3(1, 1, 1)));
+        const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * (distanceFromDashStart / 2.f)) -
+            parentGO->GetGlobalTransform().TranslatePart();
+        const Quat lerpRotation = Quat(dashStart.RotatePart());
+        
+        dashTrailMeshObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
+            lerpRotation, float3(1, .4f, distanceFromDashStart)));
+        dashTrailColliderObjects[dashIndex]->SetLocalTransform(float4x4::FromTRS(lerpTranslation,
+            lerpRotation, float3(1, 1, 1)));
         dashAreaColliders[dashIndex]->size = float3(.5f, .2f, distanceFromDashStart / 2.f);
         dashAreaColliders[dashIndex]->UpdateCollider();
-
-        // Update transforms of previous trails meshes and collisions
-        if (dashIndex != 0)
-        {
-            for (unsigned short i = dashIndex - 1;; --i) // End condition inside the loop
-            {
-               // dashTrailMeshObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashLegacyTransforms[i]);
-               // dashTrailColliderObjects[i]->SetLocalTransform(parent->GetGlobalTransform().Inverted() * dashColliderLegacyTransforms[i]);
-                dashAreaColliders[i]->UpdateCollider();
-                
-                if (i == 0) break;
-            }
-        }
-        
     }
 }
 
@@ -538,6 +552,11 @@ bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
     if (version == ChangelingVersions::FRANZ && distanceToPlayerSq > Pow(rangeAIAttack * 1.75f, 2))   return false;
     if (version == ChangelingVersions::HERBERT) return false;
     if (currentState != ChangelingStates::CHASE && currentState != ChangelingStates::DASH_ATTACK_COOLDOWN) return false;
+
+    // Reset parameters
+    dashStart = float4x4();
+    dashStart.SetTranslatePart(float3::inf);
+    dashStart.SetRotatePart(Quat::nan);
     
     // Implement state transition
 
@@ -700,19 +719,25 @@ bool Changeling::CalculateDashTargetPoint(const float3& aimingPoint, float3& tar
     float3 resultPos;
     float testDistance = rangeAIAttack;
     bool posOverPoly        = false;
+    bool unInterruptedDash    = true;
     const float3 searchArea = {1.0f, 1.0f, 1.0f};
 
     do
     {
         intermediateTargetPoint = dashStart.TranslatePart() + dashDirection * testDistance;
-        agentAI->GetClosestPointInNavmesh(targetPoint, searchArea, posOverPoly, resultPos);
-        if (!posOverPoly) testDistance -= 1;
+        agentAI->GetClosestPointInNavmesh(intermediateTargetPoint, searchArea, posOverPoly, resultPos);
+        if (!posOverPoly)
+        {
+            unInterruptedDash = false;
+            testDistance -= 1;
+        }
     } while (!posOverPoly && testDistance > 0.0f);
 
     if (posOverPoly)
         targetPoint = intermediateTargetPoint;
 
-    activeDashRange = targetPoint.Distance(dashStart.TranslatePart());
+    // -0.5f: Reduce target distance so the dash always stops
+    activeDashRange = targetPoint.Distance(dashStart.TranslatePart()) - 0.5f; 
     
-    return posOverPoly;
+    return unInterruptedDash;
 }
