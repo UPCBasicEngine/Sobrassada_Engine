@@ -40,6 +40,8 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     void StopAudio() const;
     void StopAllAudio() const;
 
+    const std::string& GetEventName() const { return defaultEventName; }
+
   private:
     void SetInitValues();
 
