@@ -79,8 +79,7 @@ void Archer::Update(float deltaTime)
     if (isKnockback)
     {
         float3 currentPos = parent->GetGlobalTransform().TranslatePart();
-        GLOG("KNOCKBACK - Timer: %.2f, Pos: %.2f,%.2f,%.2f", knockbackTimer, currentPos.x, currentPos.y, currentPos.z);
-
+      
         knockbackTimer     -= deltaTime;
 
         float3 movement     = knockbackDirection * knockbackForce * deltaTime;
@@ -90,7 +89,6 @@ void Archer::Update(float deltaTime)
 
         if (knockbackTimer <= 0.0f)
         {
-            GLOG("KNOCKBACK FINISHED - Final pos: %.2f,%.2f,%.2f", currentPos.x, currentPos.y, currentPos.z);
             isKnockback = false;
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
@@ -102,7 +100,7 @@ void Archer::Update(float deltaTime)
 
     if (isDead)
     {
-        GLOG("ARCHER IS DEAD - Only processing death");
+   
         if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
         {
             GLOG("DEATH ANIMATION FINISHED - DISABLING OBJECT");
