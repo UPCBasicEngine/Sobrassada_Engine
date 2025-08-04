@@ -18,7 +18,6 @@
 
 Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 13.0f, 18.0f, CharacterType::Boss)
 {
-    health = 100;
 
     fields.push_back({"Boss Max Health", InspectorField::FieldType::Int, &health, 0, 1000});
     fields.push_back({"Mirage1 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});

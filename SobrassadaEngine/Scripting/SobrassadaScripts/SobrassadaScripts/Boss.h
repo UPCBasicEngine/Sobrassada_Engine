@@ -8,6 +8,7 @@
 class GameObject;
 class AIAgentComponent;
 class BossMirage;
+class ImageComponent;
 
 enum class BossStates
 {
