@@ -100,7 +100,7 @@ void Boss::OnDamageTaken(int amount)
 
 void Boss::HandleState(float deltaTime)
 {
-    if (!mirageActivated && currentHealth <= mirageActivation[phase-1]) currentState = BossStates::Mirage;
+    if (!mirageActivated && currentHealth <= mirageActivation[phase]) currentState = BossStates::Mirage;
 
     if (currentHealth <= phaseSwap[phase])
     {

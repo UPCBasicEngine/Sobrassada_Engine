@@ -109,7 +109,8 @@ void AIAgentComponent::Update(float deltaTime)
     else newPos = float3(ag->npos[0], ag->npos[1], ag->npos[2]);
 
     // float4x4 transform = parent->GetLocalTransform();
-    parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
+    if (!freeMovement)
+        parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
 
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
     dtNavMesh* dtNav     = nullptr;
@@ -471,6 +472,8 @@ void AIAgentComponent::StartDash(const float dashDistance, const float3& rotateD
     dashDirection           = rotateDirection;
     dashSpeed               = dashDistance / dashDuration;
     dashTimeRemaining       = dashDuration;
+
+    GLOG("FinalPosition: %.2f, %.2f, %.2f", finalPos.x, finalPos.y, finalPos.z);
 
     const float3 searchArea = {0.2f, 30.0f, 0.2f};
     float3 closestPoint     = float3::zero;
