@@ -46,6 +46,10 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void ResetSpeed();
     void ResetAngularSpeed();
     void MoveTo(float distance, float3 rotateDirection);
+    // Ferdiad
+    void StartDash(const float dashDistance, const float3& rotateDirection, float dashDuration);
+    void Dash(float deltaTime);
+    bool GetIsDashing() const { return isDashing; }
 
   private:
     float defaultSpeed           = 0.0f;
@@ -70,4 +74,12 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
 
     bool lookForward             = false;
     float3 previousPos           = float3::zero;
+
+    // Ferdiad
+    bool isDashing               = false;
+    float3 dashDirection         = float3::zero;
+    float dashSpeed              = 0.0f;
+    float dashTimeRemaining      = 0.0f;
+    bool dashToNavmesh           = false;
+    bool preciseDash             = false;
 };

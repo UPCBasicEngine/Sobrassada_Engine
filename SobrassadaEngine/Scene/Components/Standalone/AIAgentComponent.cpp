@@ -10,7 +10,6 @@
 #include "ResourceNavmesh.h"
 #include "SceneModule.h"
 #include "Standalone/CharacterControllerComponent.h"
-#include "DetourNavMeshQuery.h"
 
 #include "DetourCrowd.h"
 
@@ -461,4 +460,55 @@ void AIAgentComponent::MoveTo(float distance, float3 rotateDirection)
     if (fabs(closestPoint.y - currentPos.y) > 0.5f) return;
 
     SetPosition(closestPoint - parent->GetParentGlobalTransform().TranslatePart());
+}
+
+void AIAgentComponent::StartDash(const float dashDistance, const float3& rotateDirection, float dashDuration)
+{
+    isDashing               = true;
+
+    const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+    const float3 finalPos   = currentPos + rotateDirection * dashDistance;
+    dashDirection           = rotateDirection;
+    dashSpeed               = dashDistance / dashDuration;
+    dashTimeRemaining       = dashDuration;
+
+    const float3 searchArea = {0.2f, 30.0f, 0.2f};
+    float3 closestPoint     = float3::zero;
+    bool posOverPoly        = false;
+    dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea, posOverPoly, closestPoint);
+    dashToNavmesh           = posOverPoly && closestPoint.y <= finalPos.y + 0.2f;
+    GLOG("Dash to navmesh? %d", dashToNavmesh);
+}
+
+void AIAgentComponent::Dash(float deltaTime)
+{
+    const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+
+    const float3 dashOffset = dashDirection * dashSpeed * deltaTime;
+    float3 desiredPos       = currentPos + dashOffset;
+    const float3 searchArea = {62.5f * deltaTime, std::max(0.4f, 25.0f * deltaTime), 62.5f * deltaTime};
+    bool posOverPoly        = false;
+    float3 closestPoint     = float3::zero;
+
+    dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
+
+    if (!dashToNavmesh || (posOverPoly && dashToNavmesh)) desiredPos = closestPoint;
+
+    parent->SetLocalPosition(desiredPos - parent->GetGlobalTransform().TranslatePart());
+    dashTimeRemaining -= deltaTime;
+
+    if (dashTimeRemaining > 0.05f && preciseDash)
+    {
+        // Check if the end of the remaining dash is inside the navmesh in case we are sliding next to the edge
+        const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 finalPos   = currentPos + dashDirection * dashSpeed * dashTimeRemaining;
+
+        const float3 searchArea = {12.5f * deltaTime, std::max(1875.0f * deltaTime, 30.0f), 12.5f * deltaTime};
+        float3 closestPoint     = float3::zero;
+        bool posOverPoly        = false;
+        dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea, posOverPoly, closestPoint);
+        dashToNavmesh           = posOverPoly && closestPoint.y <= finalPos.y + 0.2f;
+    }
+
+    if (dashTimeRemaining <= 0.0f) isDashing = false;
 }

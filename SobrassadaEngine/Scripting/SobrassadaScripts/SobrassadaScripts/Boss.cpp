@@ -16,9 +16,9 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 13.0f, 18.0f, CharacterType::Boss)
+Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
-
+    fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
     fields.push_back({"Boss Max Health", InspectorField::FieldType::Int, &health, 0, 1000});
     fields.push_back({"Mirage1 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
     fields.push_back({"Mirage2 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
@@ -41,7 +41,7 @@ bool Boss::Init()
     rng                 = std::mt19937(std::random_device {}());
     uniformDist         = std::uniform_int_distribution<int>(0, 100);
 
-    GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Arena");
+    GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("arena");
     if (arenaGO)
     {
         ScriptComponent* sc = arenaGO->GetComponent<ScriptComponent*>();
@@ -49,6 +49,10 @@ bool Boss::Init()
         {
             bossMirageScript = sc->GetScriptByType<BossMirage>();
         }
+    }
+    else
+    {
+        GLOG("Boss arena not found");
     }
 
     return true;
@@ -65,12 +69,14 @@ void Boss::Update(float deltaTime)
         const std::string animState   = "Anim state: " + stateName.GetString();
         const std::string logicAction = "Action: " + std::string(GetActionName());
         const std::string logicState  = "State: " + std::string(GetStateName());
+        const std::string phaseState  = "Phase: " + std::to_string(phase);
 
         std::vector<std::pair<std::string, float2>> logs {
             {life,        float2(-50.0f, -140.0f)},
             {animState,   float2(-80.0f, -160.0f)},
             {logicAction, float2(-80.0f, -180.0f)},
             {logicState,  float2(-80.0f, -200.0f)},
+            {phaseState,  float2(-50.0f, -220.0f)},
         };
 
         RenderDebug(logs, float3(1.0f, 0.5f, 0.0f));
@@ -397,64 +403,134 @@ void Boss::OverheadStrike(float deltaTime)
     {
         GLOG("[BOSS] - Overhead Strikes");
 
-        stateEnter = false;
-        agentAI->PauseMovement();
+        stateEnter    = false;
         currentAction = BossActions::Prepare;
     }
 
     switch (currentAction)
     {
     case BossActions::Prepare:
-        if (animComponent) animComponent->UseTrigger("Prepare");
-        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Jump;
+        if (!actionTriggerDone)
+        {
+            if (animComponent) animComponent->UseTrigger("Prepare");
+            actionTriggerDone = true;
+        }
+
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossActions::Jump;
+            actionTriggerDone = false;
+        }
         break;
 
     case BossActions::Jump:
-        if (animComponent) animComponent->UseTrigger("Jump");
-        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Dash;
+    {
+        if (!actionTriggerDone)
+        {
+            agentAI->ResumeMovement();
+            if (animComponent) animComponent->UseTrigger("Jump");
+            actionTriggerDone = true;
+        }
+
+        float3 newPos = parent->GetGlobalTransform().TranslatePart() + float3::unitY;
+        GLOG("NewPos: %.2f %.2f %.2f", newPos.x, newPos.y, newPos.z);
+        parent->SetLocalPosition(newPos);
+
+        // agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossActions::Dash;
+            actionTriggerDone = false;
+        }
         break;
+    }
 
     case BossActions::Dash:
-        if (animComponent) animComponent->UseTrigger("Dash");
-        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Land;
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            StartDash();
+            if (animComponent) animComponent->UseTrigger("Dash");
+        }
+
+        if (agentAI->GetIsDashing()) agentAI->Dash(deltaTime);
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossActions::Land;
+            actionTriggerDone = false;
+        }
         break;
 
     case BossActions::Land:
-        if (animComponent) animComponent->UseTrigger("Land");
-        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Attack;
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            if (animComponent) animComponent->UseTrigger("Land");
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossActions::Attack;
+            actionTriggerDone = false;
+        }
         break;
 
     case BossActions::Attack:
-        Character::Attack(deltaTime);
-        if (animComponent) animComponent->UseTrigger("Attack");
+        if (!actionTriggerDone)
+        {
+            attackHitboxDelay    = 0.5f;
+            attackHitboxDuration = 0.2f;
+            Character::Attack(deltaTime);
+            agentAI->PauseMovement();
+            if (animComponent) animComponent->UseTrigger("Attack");
+            actionTriggerDone = true;
+        }
+        else if (!weaponCollider->GetEnabled())
+        {
+            agentAI->ResumeMovement();
+        }
 
         // Enable hitbox when animation hits
         if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
+            agentAI->PauseMovement();
         }
         else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
         {
             weaponCollider->SetEnabled(false);
+            agentAI->ResumeMovement();
         }
+
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
         if (animComponent && animComponent->IsFinished())
         {
-            isAttacking   = false;
-            attackCdTimer = attackCooldown;
-            currentAction = BossActions::Recover;
+            isAttacking       = false;
+            attackCdTimer     = attackCooldown;
+            actionTriggerDone = false;
+            currentAction     = BossActions::Recover;
         }
         break;
 
     case BossActions::Recover:
-        if (animComponent) animComponent->UseTrigger("Recover");
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            if (animComponent) animComponent->UseTrigger("Recover");
+        }
+
         if (animComponent && animComponent->IsFinished())
         {
+            actionTriggerDone = false;
             agentAI->ResumeMovement();
             ChooseNextState();
         }
-
         break;
 
     default:
@@ -463,16 +539,28 @@ void Boss::OverheadStrike(float deltaTime)
     }
 }
 
+void Boss::StartDash()
+{
+    float3 bossPos   = parent->GetGlobalTransform().TranslatePart();
+    float3 playerPos = character->GetLastPosition();
+    bossPos.y        = 0.0f;
+    playerPos.y      = 0.0f;
+    float distance   = (playerPos - bossPos).Length();
+    float3 direction = (playerPos - bossPos).Normalized();
+    GLOG("Distance: %.2f", distance);
+    GLOG("Direction: %.2f %.2f %.2f", direction.x, direction.y, direction.z);
+    agentAI->StartDash(distance, direction, dashDuration);
+}
+
 void Boss::Mirage()
 {
-
     if (stateEnter)
     {
         GLOG("[BOSS] - Overhead Strikes");
 
         stateEnter = false;
         agentAI->PauseMovement();
-        currentAction = BossActions::Mirage;
+        currentAction  = BossActions::Mirage;
         isInvulnerable = true;
         bossMirageScript->StartSequence(phase);
     }
@@ -483,6 +571,7 @@ void Boss::Mirage()
         ChooseNextState();
     }
 }
+
 const char* Boss::GetStateName() const
 {
     switch (currentState)

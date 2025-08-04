@@ -65,40 +65,39 @@ class Boss : public Character
     void Taunt(float deltaTime);
     void ShieldStrikes(float deltaTime);
     void OverheadStrike(float deltaTime);
+    void StartDash();
+
     void Mirage();
 
     const char* GetStateName() const;
     const char* GetActionName() const;
 
   private:
-    AIAgentComponent* agentAI           = nullptr;
-    BossStates currentState             = BossStates::Idle;
-    BossActions currentAction           = BossActions::Idle;
+    AIAgentComponent* agentAI    = nullptr;
+    BossStates currentState      = BossStates::Idle;
+    BossActions currentAction    = BossActions::Idle;
 
-    int phase                           = 1;
-    std::array<int, 3> phaseSwap        = {40, 20, 0};
-    bool stateEnter                     = true;
-    bool doIdle                         = false;
-    bool doTaunt                        = false;
-    bool actionTriggerDone              = false;
+    int phase                    = 1;
+    std::array<int, 3> phaseSwap = {40, 20, 0};
+    bool stateEnter              = true;
+    bool doIdle                  = false;
+    bool doTaunt                 = false;
+    bool actionTriggerDone       = false;
 
-    int shieldStrikeLastAction          = 0;
-
-    bool mirageActivated                = false;
-    std::array<int, 3> mirageActivation = {mirage1, mirage2, mirage3};
-
-    /* Melee */
-    float shieldStrikesRange            = 5.0f;
-    float overheadStrikeRange           = 5.0f;
+    int shieldStrikeLastAction   = 0;
+    float dashDuration           = 0.2f;
+    float heightJump             = 10.0f;
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;
-    BossMirage* bossMirageScript    = nullptr;
 
     ImageComponent* healthImageComponent = nullptr;
     UID healthBarImage;
-    int health = 0;
-    int mirage1, mirage2, mirage3 = 0;
-    int currentMirage = 0;
+    int health  = 0;
 
+    int mirage1 = 50, mirage2 = 30, mirage3 = 10;
+    std::array<int, 3> mirageActivation = {mirage1, mirage2, mirage3};
+    BossMirage* bossMirageScript        = nullptr;
+    bool mirageActivated                = false;
+    int currentMirage                   = 0;
 };
