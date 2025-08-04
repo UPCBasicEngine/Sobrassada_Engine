@@ -61,5 +61,5 @@ class Soldier : public Character
     float originalAttackDuration     = 0.0f;
     float originalAttackHitboxDelay  = 0.0f;
     float deathTimer                 = 0.0f;
-    float patrolSpeed                = 2.0f;
+    float chaseSpeed                = 2.0f;
 };

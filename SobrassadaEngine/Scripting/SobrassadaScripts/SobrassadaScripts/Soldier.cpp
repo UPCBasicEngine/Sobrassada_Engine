@@ -22,7 +22,7 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
     fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
     fields.push_back({"Second Attack Delay", InspectorField::FieldType::Float, &secondAttackDelay, 0.0f, 1.0f});
-    fields.push_back({"Patrol Speed", InspectorField::FieldType::Float, &patrolSpeed, 0.0f, 10.0f});
+    fields.push_back({"Chase Speed", InspectorField::FieldType::Float, &chaseSpeed, 0.0f, 10.0f});
 }
 
 bool Soldier::Init()
@@ -147,8 +147,7 @@ void Soldier::HandleState(float deltaTime)
         SearchForPlayer();
         break;
     case SoldierStates::PATROL:
-        //agentAI->SetSpeed(patrolSpeed, 8.0);
-        //GLOG("Speed set to %f", patrolSpeed);
+        agentAI->ResetSpeed();
         PatrolAI(deltaTime);
         // TODO: patrol animation
         animComponent->UseTrigger("patrol");
@@ -156,7 +155,8 @@ void Soldier::HandleState(float deltaTime)
     case SoldierStates::CHASE:
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         animComponent->UseTrigger("run");
-        agentAI->ResetSpeed();
+        agentAI->SetSpeed(chaseSpeed, 8.0);
+        // GLOG("Speed set to %f", patrolSpeed);
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
@@ -254,8 +254,8 @@ void Soldier::SearchForPlayer()
     else if (searchTimer <= 0.0f)
     {
         isSearching  = false;
-        agentAI->SetSpeed(patrolSpeed, 8.0);
-        GLOG("Speed set to %f", patrolSpeed);
+        agentAI->SetSpeed(chaseSpeed, 8.0);
+        GLOG("Speed set to %f", chaseSpeed);
         currentState = SoldierStates::PATROL;
     }
 }
