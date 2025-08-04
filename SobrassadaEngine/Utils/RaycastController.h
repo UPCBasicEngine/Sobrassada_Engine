@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Globals.h"
 #include "Octree.h"
 #include "Quadtree.h"
 
@@ -14,7 +15,7 @@ class GameObject;
 
 namespace RaycastController
 {
-    GameObject*
+    SOBRASADA_API_ENGINE GameObject*
     GetRayIntersectionObject(const math::LineSegment& ray, const std::vector<GameObject*>& queriedGameObjects);
 
     template <typename... Tree> GameObject* GetRayIntersectionTrees(const math::LineSegment& ray, const Tree*... trees)

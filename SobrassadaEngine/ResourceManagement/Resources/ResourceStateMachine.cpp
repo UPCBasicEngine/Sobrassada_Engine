@@ -327,3 +327,11 @@ bool ResourceStateMachine::UseTrigger(const std::string& triggerName, const Stat
     }
     return false;
 }
+
+void ResourceStateMachine::ResetClipsSpeed()
+{
+    for (int i = 0; i < clipsDefaultSpeed.size(); ++i)
+    {
+        clips[i].animationSpeed = clipsDefaultSpeed[i];
+    }
+}

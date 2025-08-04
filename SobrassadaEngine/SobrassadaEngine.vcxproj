@@ -442,6 +442,8 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Scene\Components\Standalone\Animation\AnimationTrigger.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp" />
+    <ClCompile Include="Scene\Components\ShaderScriptComponent.cpp" />
+    <ClCompile Include="Modules\ShaderScriptModule.cpp" />
     <ClCompile Include="Utils\Particles\AreaAddon.cpp" />
     <ClCompile Include="Utils\Particles\ColorAddon.cpp" />
     <ClCompile Include="Utils\Particles\SpritesheetAddon.cpp" />
@@ -706,6 +708,9 @@
     <ClInclude Include="Scene\Components\Standalone\Animation\AnimationTrigger.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
     <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />
+    <ClInclude Include="Scene\Components\ShaderScriptComponent.h" />
+    <ClInclude Include="Modules\ShaderScriptModule.h" />
+    <ClInclude Include="resourceIcon.h" />
     <ClInclude Include="Utils\Particles\AreaAddon.h" />
     <ClInclude Include="Utils\Particles\ColorAddon.h" />
     <ClInclude Include="Utils\Particles\SpritesheetAddon.h" />
@@ -889,6 +894,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Scene\GameObjects\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SobrassadaEngine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Game\1-416023b1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -12,6 +12,7 @@
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
 #include "ShaderModule.h"
+#include "ShaderScriptModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
@@ -78,6 +79,8 @@ RenderPass::RenderPass()
 
 RenderPass::~RenderPass()
 {
+    glDeleteBuffers(1, &visibleLightIndicesSSBO);
+
     glDeleteBuffers(1, &decalVBO);
     glDeleteBuffers(1, &decalEBO);
     glDeleteVertexArrays(1, &decalVAO);
@@ -155,6 +158,10 @@ void RenderPass::RenderScene(
     else GeometryPassRender(objectsToRender, camera);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Custom Shaders Pass");
+    App->GetShaderScriptModule()->RenderGeometryPassShaders(0.f, camera);
+    glPopDebugGroup();
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
     ShadowMapPassRender(camera, light, objectsToRender);
@@ -183,6 +190,10 @@ void RenderPass::RenderScene(
         return;
     }
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
+    TileShadingPass(camera, gbuffer, framebuffer);
+    glPopDebugGroup();
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -192,6 +203,10 @@ void RenderPass::RenderScene(
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Custom Shader Pass");
+    App->GetShaderScriptModule()->RenderTransparentPassShaders(0.f, camera);
     glPopDebugGroup();
 }
 
@@ -317,7 +332,7 @@ void RenderPass::ShadowMapPassRender(
         firstPass = false;
         unsigned int newTex;
         CreateDepthReductionTexture(newTex, groupsX, groupsY);
-        glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32F);
+        glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
         if (currentInput != gbuffer->GetDepthTexture()) glDeleteTextures(1, &currentInput);
         currentInput  = currentOutput;
@@ -364,7 +379,7 @@ void RenderPass::ShadowMapPassRender(
     float distMax = S / (T + maxDepth);
 
     // GLOG("Final reduction size: %d, %d", currentWidth, currentHeight);
-    //GLOG("%f, %f", distMin, distMax);
+    // GLOG("%f, %f", distMin, distMax);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(distMin) : camera->SetNear(distMin);
     camera == nullptr ? App->GetCameraModule()->SetFar(distMax) : camera->SetFar(distMax);
@@ -431,7 +446,8 @@ void RenderPass::ShadowMapPassRender(
     for (const auto& gameObject : shadowObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 && mesh->GetProduceShadows())
+        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 &&
+            mesh->GetProduceShadows())
             meshesToRender.push_back(mesh);
     }
 
@@ -497,7 +513,7 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 
     for (const auto& [uid, decals] : groupedDecals)
     {
-        
+
         const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
         glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
 
@@ -579,6 +595,58 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
     gbuffer->Unbind();
 }
 
+void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer)
+{
+    const int TILE_SIZE             = 16;
+    const int MAX_LIGHTS_PER_TILE   = 1024;
+
+    tilesX                          = (width + TILE_SIZE - 1) / TILE_SIZE;
+    int tilesY                      = (height + TILE_SIZE - 1) / TILE_SIZE;
+    int numTiles                    = tilesX * tilesY;
+
+    int totalIndices                = numTiles * MAX_LIGHTS_PER_TILE;
+    size_t totalSize                = numTiles * MAX_LIGHTS_PER_TILE * sizeof(int);
+
+    unsigned int tileShadingProgram = App->GetShaderModule()->GetTileShadingProgram();
+    glUseProgram(tileShadingProgram);
+
+    glUniform2i(glGetUniformLocation(tileShadingProgram, "screenSize"), width, height);
+
+    glBindTextureUnit(0, gbuffer->GetDepthTexture());
+
+    unsigned int cameraUBO;
+    if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
+    else cameraUBO = camera->GetUbo();
+
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(tileShadingProgram, "CameraMatrices");
+    glUniformBlockBinding(tileShadingProgram, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    if (visibleLightIndicesSSBO == 0 || totalSize != currentSize)
+    {
+        if (visibleLightIndicesSSBO != 0)
+        {
+            glDeleteBuffers(1, &visibleLightIndicesSSBO);
+        }
+
+        glGenBuffers(1, &visibleLightIndicesSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleLightIndicesSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
+
+        currentSize = totalSize;
+    }
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, visibleLightIndicesSSBO);
+
+    App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
+
+    glDispatchCompute(tilesX, tilesY, 1);
+
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+}
+
 void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const
 {
     Bind();
@@ -634,6 +702,9 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
 
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->emissiveTexture);
+
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
     unsigned int lightingPassProgram = App->GetShaderModule()->GetLightingPassProgram();
@@ -655,6 +726,11 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     }
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
+
+    //Light Culling
+    glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
+    glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -753,7 +829,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
             for (const auto& trail : trailsToRender)
-                trail->Render(0);
+                trail->Render(0, nullptr);
         }
     }
 
