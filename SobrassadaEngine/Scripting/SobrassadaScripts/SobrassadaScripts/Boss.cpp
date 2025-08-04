@@ -178,15 +178,15 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        //overheadStrikeRate = 100;
-         shieldStrikesRate  = 75;
-         overheadStrikeRate = 100;
+        // overheadStrikeRate = 100;
+        shieldStrikesRate  = 75;
+        overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        //overheadStrikeRate = 100;
-         shieldStrikesRate  = 50;
-         overheadStrikeRate = 100;
+        // overheadStrikeRate = 100;
+        shieldStrikesRate  = 50;
+        overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Far:
@@ -270,7 +270,6 @@ void Boss::ShieldStrikes(float deltaTime)
     if (stateEnter)
     {
 
-
         stateEnter             = false;
         currentAction          = BossActions::Chase;
         shieldStrikeLastAction = 0;
@@ -348,7 +347,7 @@ void Boss::ShieldStrikes(float deltaTime)
         if (!actionTriggerDone)
         {
             attackHitboxDelay    = 0.9f;
-            attackHitboxDuration = 1.3f;
+            attackHitboxDuration = 0.9f;
             Character::Attack(deltaTime);
             agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("Combo3");
@@ -637,9 +636,9 @@ void Boss::Mirage()
     if (stateEnter)
     {
         GLOG("[BOSS] - Mirage");
-        
+
         mirageActivated = true;
-        stateEnter = false;
+        stateEnter      = false;
         agentAI->PauseMovement();
         currentAction  = BossActions::Mirage;
         isInvulnerable = true;
