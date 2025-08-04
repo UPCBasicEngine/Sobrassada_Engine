@@ -27,10 +27,18 @@ class Spouts : public Script
     int damage                              = 1;
     float chargingDuration                  = 1.0f;
     float chargingTimer                     = 0.0f;
-    float rotationSpeed                     = 90.0f;
+    float rotationSpeedWhiteWaves           = 90.0f;
+    float minScaleTornado                   = 0.1f;
+    float maxScaleTornado                   = 12.0f;
+    float initialScaleTornado               = 9.0f;
+    float rotationSpeedTornado              = 90.0f;
+    float rotationSpeedBlueWaves            = 90.0f;
 
     GameObject* character                   = nullptr;
-    GameObject* decal                       = nullptr;
+    GameObject* whiteWaves                  = nullptr;
+    GameObject* tornadoWater                = nullptr;
+    GameObject* blueWaves                   = nullptr;
+    GameObject* explosion                   = nullptr;
     GameObject* waterMesh                   = nullptr;
     ShaderScriptComponent* shaderScript     = nullptr;
     MeshComponent* shaderMesh               = nullptr;
