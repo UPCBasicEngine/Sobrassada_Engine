@@ -18,12 +18,13 @@ enum class ChangelingVersions
 enum class ChangelingStates
 {
     NONE,
-    IDLE_BURRIED,
+    IDLE_BURIED,
     PEEK,
     DIG_UP_TRANSITION,
     DIG_DOWN_TRANSITION,
     IDLE_VISIBLE,
     CHASE,
+    BURIED_CHASE,
     DASH_ATTACK_PREPARATION,
     DASH_ATTACK,
     DASH_ATTACK_WIGGLE,
@@ -52,12 +53,13 @@ class Changeling : public Character
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
-    void UpdateIdleBurriedState(float deltaTime, float distanceToPlayerSq);
+    void UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq);
     void UpdatePeekState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq);
     void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
+    void UpdateBuriedChaseState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackWiggleState(float deltaTime, float distanceToPlayerSq);
@@ -69,9 +71,12 @@ class Changeling : public Character
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
 
     bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
+    bool ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq);
     bool ST_Damaged();
     bool ST_Peek(float deltaTime, float distanceToPlayerSq);
     bool ST_DashAttack(float deltaTime, float distanceToPlayerSq);
+    bool ST_AimNextDashChainAttack(float deltaTime, float distanceToPlayerSq);
+    bool ST_AimNextDashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
 
   private:
@@ -81,6 +86,8 @@ class Changeling : public Character
 
     // Returns true only if the pooka did not dash against a wall
     bool CalculateDashTargetPoint(const float3& aimingPoint, float3& targetPoint);
+
+    bool ShouldSwapStatesOnRandomVersion(const float deltaTime) const;
 
     bool isSetupCorrectly = false;
     
@@ -109,15 +116,18 @@ class Changeling : public Character
     float biteAttackRadius = .5f;
     float biteAttackCooldown = 2.f;
     float activeDashRange = 0.f;
+    bool bNextDashInterrupted = false;
 
     int userSelectedVersion = 0;
     ChangelingVersions version = ChangelingVersions::RANDOM;
+    float swapStatesRandomlyPercentage = 5.0f;
+    ChangelingVersions randomVersion = ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
     
-    // Herbert specific (default changeling)
+    // Sepp specific (default changeling)
     float chaseSpeed = 1.0f;
     float chaseAcceleration = 4.0f;
     
-    // Sepp specific
+    // Herbert specific
     float maxSneakAngleDegrees = 45.0f;
     float minSneakSpeed = 0.25f;
     float maxSneakSpeed = 1.0f;
@@ -125,7 +135,7 @@ class Changeling : public Character
     float sneakAcceleration = 4.0f;
     float peekChancePerSecond = 0.1f;
     
-    // Giacomo specific
+    // Franz specific
     bool dashRight = false;
     unsigned short dashIndex = 0;
     float dashAngleDegrees = 40.0f;
