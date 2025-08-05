@@ -53,6 +53,7 @@ class Character : public Script
     PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
     void RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color);
+    virtual void Die();
 
   private:
     virtual void HandleState(float deltaTime) {};
@@ -61,7 +62,6 @@ class Character : public Script
     virtual void OnHealed(int amount) {};
     virtual void PerformAttack() {};
     virtual void ShouldAttackTarget() {};
-    virtual void Die();
 
   protected:
     AnimationComponent* animComponent           = nullptr;
@@ -93,7 +93,7 @@ class Character : public Script
     float healCdTimer                           = 0.0f;
 
     CharacterType type                          = CharacterType::None;
-    HashString stateName;
+    HashString stateName                        = HashString("");
 
     // AI
     float rangeAIChase      = 0.0f;

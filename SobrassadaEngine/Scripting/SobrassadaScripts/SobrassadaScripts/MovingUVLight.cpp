@@ -102,6 +102,7 @@ bool MovingUVLight::Init()
 
         meshComp->SetEnabled(false);
     }
+    uvOffset = uvOffsetStart;
 
     uvOffset = uvOffsetStart;
 

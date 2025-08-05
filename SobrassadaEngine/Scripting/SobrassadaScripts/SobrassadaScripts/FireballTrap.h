@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <random>
 
@@ -23,6 +23,14 @@ enum class ACTIVATION_STATE
 
 class FireballTrap : public Script
 {
+    enum ACTIVATION_STATE
+    {
+        SLEEPING,
+        IDLE,
+        DROPPING,
+        DAMAGING,
+    };
+
   public:
     FireballTrap(GameObject* parent);
     bool Init() override;

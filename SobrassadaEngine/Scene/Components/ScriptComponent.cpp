@@ -15,6 +15,7 @@
 #include "Math/float3.h"
 #include "PhysicsModule.h"
 #include <debug_draw.hpp>
+#include "ShaderScriptComponent.h"
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
@@ -207,6 +208,7 @@ void ScriptComponent::ResetInitializationFlags()
 {
     std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
 }
+
 
 void ScriptComponent::Render(float deltaTime, CameraComponent* camera)
 {

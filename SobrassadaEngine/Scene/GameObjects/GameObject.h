@@ -133,6 +133,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     template <typename T> T GetComponent() const { return std::get<T>(compTuple); }
     template <typename T> T GetComponentChild(Application* app) const;
+    template <typename T> std::vector<T> GetAllComponentsInChilds(Application* app) const;
     template <typename T> T GetComponentParent(Application* app) const;
 
     const float3& GetPosition() const { return position; }
@@ -163,7 +164,7 @@ class SOBRASADA_API_ENGINE GameObject
     void SetWillUpdate(bool willUpdate) { this->willUpdate = willUpdate; };
     bool IsEnabled() const { return enabled; }
     void SetEnabled(bool active);
-    
+
     void SetComponentCreated(int position) { createdComponents[position] = true; }
     void SetComponentRemoved(int position) { createdComponents[position] = false; }
     void SetSelectParent(bool newSelectParent) { selectParent = newSelectParent; }
@@ -260,6 +261,38 @@ template <typename T> inline T GameObject::GetComponentChild(Application* app) c
     }
 
     return component;
+}
+
+template <typename T> inline std::vector<T> GameObject::GetAllComponentsInChilds(Application* app) const
+{
+    std::vector<T> componentVector;
+
+    std::queue<UID> gameObjects;
+
+    for (UID child : this->GetChildren())
+    {
+        gameObjects.push(child);
+    }
+
+    Scene* scene = app->GetSceneModule()->GetScene();
+
+    while (!gameObjects.empty())
+    {
+        UID currentGameObject = gameObjects.front();
+        gameObjects.pop();
+
+        GameObject* current = scene->GetGameObjectByUID(currentGameObject);
+        T component         = current->GetComponent<T>();
+
+        if (component) componentVector.push_back(component);
+
+        for (UID child : current->GetChildren())
+        {
+            gameObjects.push(child);
+        }
+    }
+
+    return componentVector;
 }
 
 template <typename T> inline T GameObject::GetComponentParent(Application* app) const
