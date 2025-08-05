@@ -398,6 +398,7 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         weaponCollider->SetEnabled(false);
         isAttacking = false;
         stateTimer = attackCooldown;
+        dashIndex = 0;
         if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     } else {
@@ -468,8 +469,6 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
 
             dashIndex++;
 
-            GLOG(bNextDashInterrupted ? "Interrupted" : "Free")
-
             agentAI->SetSpeed(0, 10);
             stateTimer = timeBetweenDashes;
             currentState = ChangelingStates::DASH_ATTACK_WIGGLE;
@@ -480,6 +479,7 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
             weaponCollider->SetEnabled(false);
             isAttacking = false;
             stateTimer = attackCooldown;
+            dashIndex = 0;
             if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
             currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
         }
