@@ -24,23 +24,28 @@ bool ShaderModule::Init()
     uiWidgetProgram                = CreateShaderProgram(UIWIDGET_VERTEX_SHADER_PATH, UIWIDGET_FRAGMENT_SHADER_PATH);
 
     metallicGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_METALLIC_FRAGMENT_SHADER_PATH);
+    metallicGeometryVPOPassProgram =
+        CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_METALLIC_FRAGMENT_SHADER_PATH);
     specularGeometryPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH);
-    transparentPassProgram      = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
-    lightingPassProgram         = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
+    specularGeometryVPOPassProgram =
+        CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, GBUFFER_SPECULAR_FRAGMENT_SHADER_PATH);
+    transparentPassProgram    = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
+    transparentVPOPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
+    lightingPassProgram       = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
 
-    quadProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
-    depthProgram                = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
-    linearDepthProgram          = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LINEARDEPTH_FRAGMENT_SHADER_PATH);
-    billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
-    trailProgram                = CreateShaderProgram(TRAIL_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
-    decalProgram                = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
+    quadProgram               = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
+    depthProgram              = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
+    linearDepthProgram        = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LINEARDEPTH_FRAGMENT_SHADER_PATH);
+    billboardProgram          = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
+    trailProgram              = CreateShaderProgram(TRAIL_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
+    decalProgram              = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
 
-    shadowMapProgram            = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
+    shadowMapProgram          = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
 
-    shadowDepthProgram          = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
-    tileShadingProgram          = CreateComputeProgram(TILE_SHADING_COMPUTE_SHADER_PATH);
+    shadowDepthProgram        = CreateComputeProgram(SHADOW_DEPTH_COMPUTE_SHADER_PATH);
+    tileShadingProgram        = CreateComputeProgram(TILE_SHADING_COMPUTE_SHADER_PATH);
 
-    spritesheetProgram          = CreateShaderProgram(SPRITESHEET_VERTEX_SHADER_PATH, SPRITESHEET_FRAGMENT_SHADER_PATH);
+    spritesheetProgram        = CreateShaderProgram(SPRITESHEET_VERTEX_SHADER_PATH, SPRITESHEET_FRAGMENT_SHADER_PATH);
     particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
     return true;
 }
@@ -53,7 +58,9 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(metallicRoughnessProgramUnlit);
     glDeleteProgram(uiWidgetProgram);
     glDeleteProgram(metallicGeometryPassProgram);
+    glDeleteProgram(metallicGeometryVPOPassProgram);
     glDeleteProgram(specularGeometryPassProgram);
+    glDeleteProgram(specularGeometryVPOPassProgram);
     glDeleteProgram(lightingPassProgram);
     glDeleteProgram(quadProgram);
     glDeleteProgram(depthProgram);
@@ -66,6 +73,8 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(tileShadingProgram);
     glDeleteProgram(spritesheetProgram);
     glDeleteProgram(particleSystemProgram);
+    glDeleteProgram(transparentPassProgram);
+    glDeleteProgram(transparentVPOPassProgram);
 
     for (auto& shaderIterator : customShaderPrograms)
     {
@@ -83,7 +92,7 @@ unsigned int ShaderModule::RequestShaderProgram(const char* vertexPath, const ch
     std::string fragmentPathString = std::string(fragmentPath);
 
     auto idxVertex                 = vertexPathString.find_last_of("/\\");
-    auto idxFragment = fragmentPathString.find_last_of("/\\");
+    auto idxFragment               = fragmentPathString.find_last_of("/\\");
 
     if (idxVertex == std::string::npos && idxFragment != std::string::npos)
     {

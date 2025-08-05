@@ -702,6 +702,7 @@
     <ClCompile Include="Utils\Trees\Octree.cpp" />
     <ClCompile Include="Utils\Trees\Quadtree.cpp" />
     <ClCompile Include="Utils\Particles\VelocityAddon.cpp" />
+    <ClCompile Include="Utils\WindConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -883,6 +884,7 @@
     <ClInclude Include="Utils\Trees\Octree.h" />
     <ClInclude Include="Utils\Trees\Quadtree.h" />
     <ClInclude Include="Utils\Particles\VelocityAddon.h" />
+    <ClInclude Include="Utils\WindConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
