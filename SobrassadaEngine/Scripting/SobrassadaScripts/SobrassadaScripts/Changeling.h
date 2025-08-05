@@ -121,7 +121,7 @@ class Changeling : public Character
 
     int userSelectedVersion = 0;
     ChangelingVersions version = ChangelingVersions::RANDOM;
-    float swapStatesRandomlyPercentage = 5.0f;
+    float swapStateChancePerSecond = 0.05f;
     ChangelingVersions randomVersion = ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
     
     // Default specific

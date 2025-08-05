@@ -31,9 +31,9 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Dash speed", InspectorField::FieldType::Float, &dashSpeed, 0.1f, 100.0f);
     fields.emplace_back("Min dash distance", InspectorField::FieldType::Float, &minDashDistance, 0.1f, 100.0f);
     
-    // Version selection (0 random, 1 sepp, 2 herbert, 3 giacomo)
+    // Version selection (0 random, 1 default, 2 sneak, 3 block)
     fields.emplace_back("Version (0: Random)", InspectorField::FieldType::Int, &userSelectedVersion, 0, 2);
-    fields.emplace_back("Swap states (% / s) (Only with version 0)", InspectorField::FieldType::Float, &swapStatesRandomlyPercentage, 0.0f, 100.0f);
+    fields.emplace_back("Swap states chance per second (Only with version 0)", InspectorField::FieldType::Float, &swapStateChancePerSecond, 0.001f, 1.0f);
     
     // Herbert specific (Index 1)
     fields.emplace_back("Chase speed", InspectorField::FieldType::Float, &chaseSpeed, 0.1f, 10.0f);
@@ -870,10 +870,10 @@ bool Changeling::ShouldSwapStatesOnRandomVersion(const float deltaTime) const
     if (version != ChangelingVersions::RANDOM)   return false;
     
     // Implement state transition
-    const int swapValue = max(1, (int)round(1.0f / (peekChancePerSecond * deltaTime)));
+    const int swapValue = max(1, (int)round(1.0f / (swapStateChancePerSecond * deltaTime)));
     
     // Random value = 1 only if fps are too high -> Ignore those frames then
-    if (swapValue == 1 || rand() % swapValue) return false;
+    if (swapValue == 1 || rand() % swapValue != 0) return false;
 
     return true;
 }
