@@ -69,7 +69,7 @@ bool Changeling::Init()
     Character::Init();
 
     version = static_cast<ChangelingVersions>(userSelectedVersion);
-    if (version == ChangelingVersions::RANDOM) randomVersion = ChangelingVersions::HERBERT;
+    if (version == ChangelingVersions::RANDOM) randomVersion = ChangelingVersions::SNEAK;
 
     agentAI->RecreateAgent();
     agentAI->SetLookForward(true);
@@ -259,7 +259,9 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
     {
         randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
 
-        if (randomVersion == ChangelingVersions::HERBERT)
+        GLOG("[INFO] Swapping to random version: %d", randomVersion)
+        
+        if (randomVersion == ChangelingVersions::SNEAK)
         {
             agentAI->SetSpeed(0.0f, 10.0f);
             if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
@@ -268,12 +270,6 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
     }
     
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
-
-    if (distanceToPlayerSq <= rangeAIAttack * rangeAIAttack)
-    {
-        if (animComponent) animComponent->UseTrigger("Trigger_PrepareDash");
-        currentState = ChangelingStates::DASH_ATTACK_PREPARATION;
-    }
 
     if (ST_StartChase(deltaTime, distanceToPlayerSq)) return;
     
@@ -287,7 +283,9 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
     {
         randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
 
-        if (randomVersion == ChangelingVersions::HERBERT)
+        GLOG("[INFO] Swapping to random version: %d", randomVersion)
+        
+        if (randomVersion == ChangelingVersions::SNEAK)
         {
             agentAI->SetSpeed(0.0f, 10.0f);
             if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
@@ -315,7 +313,9 @@ void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerS
     {
         randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
 
-        if (randomVersion != ChangelingVersions::HERBERT)
+        GLOG("[INFO] Swapping to random version: %d", randomVersion)
+
+        if (randomVersion != ChangelingVersions::SNEAK)
         {
             agentAI->SetSpeed(0.0f, 10.0f);
             currentState = ChangelingStates::IDLE_BURIED;
@@ -360,7 +360,12 @@ void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerS
 
 void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq)
 {
-    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+    if (version == ChangelingVersions::BLOCK || randomVersion == ChangelingVersions::BLOCK)
+    {
+        float3 calculatedAimPoint;
+        CalculateAimPoint(calculatedAimPoint);
+        agentAI->LookAtMovement(calculatedAimPoint, deltaTime);
+    } else agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
     
     if (animComponent && animComponent->IsFinished())
     {
@@ -370,10 +375,11 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         dashTrailMeshObjects[0]->SetEnabled(true);   
         dashTrailColliderObjects[0]->SetEnabled(true);
         dashIndex = 0;
-        if (version == ChangelingVersions::FRANZ && ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
+        if (version == ChangelingVersions::BLOCK && !ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
-            dashIndex = 0;
             animComponent->UseTrigger("Trigger_Dash");
+            agentAI->SetSpeed(dashSpeed, 1000000);
+            agentAI->SetPathNavigation(dashTarget);
             currentState = ChangelingStates::DASH_CHAIN_ATTACK;
         } else
         {
@@ -453,12 +459,18 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
 void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq)
 {
     const float distanceFromDashStart = parent->GetGlobalTransform().TranslatePart().Distance(dashStart.TranslatePart());
+    
     if (activeDashRange < distanceFromDashStart)
     {
         if (dashIndex != 3)
         {
             ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq);
 
+            dashIndex++;
+
+            GLOG(bNextDashInterrupted ? "Interrupted" : "Free")
+
+            agentAI->SetSpeed(0, 10);
             stateTimer = timeBetweenDashes;
             currentState = ChangelingStates::DASH_ATTACK_WIGGLE;
             if (animComponent) animComponent->UseTrigger("Trigger_Wiggle");
@@ -544,7 +556,7 @@ bool Changeling::ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
     if (currentState != ChangelingStates::IDLE_BURIED) return false;
-    if (version != ChangelingVersions::HERBERT && randomVersion != ChangelingVersions::HERBERT) return false;
+    if (version != ChangelingVersions::SNEAK && randomVersion != ChangelingVersions::SNEAK) return false;
     if (distanceToPlayerSq > maxDetectionRange * maxDetectionRange) return false;
     
     // Implement state transition
@@ -579,8 +591,8 @@ bool Changeling::ST_Damaged()
 bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (version != ChangelingVersions::HERBERT) return false;
-    if (currentState != ChangelingStates::IDLE_BURIED) return false;
+    if (version != ChangelingVersions::SNEAK) return false;
+    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BURIED_CHASE) return false;
     
     // Implement state transition
     characterCollider->SetEnabled(true);
@@ -593,8 +605,8 @@ bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (version != ChangelingVersions::HERBERT && distanceToPlayerSq > rangeAIAttack * rangeAIAttack)   return false;
-    if (version == ChangelingVersions::HERBERT || randomVersion == ChangelingVersions::HERBERT) return false;
+    if (version != ChangelingVersions::SNEAK && distanceToPlayerSq > rangeAIAttack * rangeAIAttack)   return false;
+    if (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK) return false;
     if (currentState != ChangelingStates::CHASE && currentState != ChangelingStates::DASH_ATTACK_COOLDOWN) return false;
 
     // Reset parameters
@@ -612,25 +624,16 @@ bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
     agentAI->ResetSpeed();
     agentAI->SetLookForward(true);
 
-    agentAI->LookAtMovement(dashTarget, deltaTime);
-
     return true;
 }
 
 bool Changeling::ST_AimNextDashChainAttack(float deltaTime, float distanceToPlayerSq)
 {
-    const float2 xzDirectionToPlayer = (character->GetGlobalTransform().TranslatePart().xz() - parent->GetGlobalTransform().TranslatePart().xz()).Normalized();
-    float3 directionToPlayer = float3(xzDirectionToPlayer.x, 0, xzDirectionToPlayer.y);
-    if (dashIndex == 0)
-    {
-        const float dot = character->GetFrontDirection().Dot(directionToPlayer.Cross(float3(0, 1, 0)));
-        dashRight = dot > 0;
-    }
+    float3 calculatedAimPoint;
 
-    const float dashAngleRads = dashAngleDegrees * DEGREE_RAD_CONV * (dashRight ? 1.f : -1.f);
-    directionToPlayer = Quat::FromEulerXYZ(0, dashAngleRads, 0).Mul(directionToPlayer);
+    CalculateAimPoint(calculatedAimPoint);
     
-    bNextDashInterrupted = CalculateDashTargetPoint(parent->GetGlobalTransform().TranslatePart() + directionToPlayer, dashTarget);
+    bNextDashInterrupted = !CalculateDashTargetPoint(calculatedAimPoint, dashTarget);
 
     if (minDashDistance > activeDashRange)
     {
@@ -640,10 +643,6 @@ bool Changeling::ST_AimNextDashChainAttack(float deltaTime, float distanceToPlay
         if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     }
-
-    dashIndex++;
-    agentAI->SetSpeed(0, 1000000);
-    agentAI->SetPathNavigation(dashTarget);
 
     return bNextDashInterrupted;
 }
@@ -671,7 +670,8 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
     if (distanceToPlayerSq > biteAttackRadius * biteAttackRadius)   return false;
-    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BITE_ATTACK_COOLDOWN) return false;
+    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BURIED_CHASE &&
+        currentState != ChangelingStates::BITE_ATTACK_COOLDOWN) return false;
     
     // Implement state transition
     characterCollider->SetEnabled(true);
@@ -815,7 +815,7 @@ bool Changeling::CalculateDashTargetPoint(const float3& aimingPoint, float3& tar
     float3 resultPos;
     float testDistance = rangeAIAttack;
     bool posOverPoly        = false;
-    bool unInterruptedDash    = true;
+    bool uninterruptedDash    = true;
     const float3 searchArea = {1.0f, 1.0f, 1.0f};
 
     do
@@ -824,7 +824,7 @@ bool Changeling::CalculateDashTargetPoint(const float3& aimingPoint, float3& tar
         agentAI->GetClosestPointInNavmesh(intermediateTargetPoint, searchArea, posOverPoly, resultPos);
         if (!posOverPoly)
         {
-            unInterruptedDash = false;
+            uninterruptedDash = false;
             testDistance -= 1;
         }
     } while (!posOverPoly && testDistance > 0.0f);
@@ -835,13 +835,13 @@ bool Changeling::CalculateDashTargetPoint(const float3& aimingPoint, float3& tar
     // -0.5f: Reduce target distance so the dash always stops
     activeDashRange = targetPoint.Distance(dashStart.TranslatePart()) - 0.5f; 
     
-    return unInterruptedDash;
+    return uninterruptedDash;
 }
 
 bool Changeling::ShouldSwapStatesOnRandomVersion(const float deltaTime) const
 {
     // Check preconditions
-    if (version == ChangelingVersions::RANDOM)   return false;
+    if (version != ChangelingVersions::RANDOM)   return false;
     
     // Implement state transition
     const int swapValue = max(1, (int)round(1.0f / (peekChancePerSecond * deltaTime)));
@@ -851,3 +851,24 @@ bool Changeling::ShouldSwapStatesOnRandomVersion(const float deltaTime) const
 
     return true;
 }
+
+void Changeling::CalculateAimPoint(float3& outTargetPoint)
+{
+    float3 directionToAimPoint;
+    if (dashIndex == 0)
+    {
+        const float2 xzDirectionToPlayer = (character->GetGlobalTransform().TranslatePart().xz() - parent->GetGlobalTransform().TranslatePart().xz()).Normalized();
+        float3 directionToPlayer = float3(xzDirectionToPlayer.x, 0, xzDirectionToPlayer.y);
+        const float dot = character->GetFrontDirection().Dot(directionToPlayer.Cross(float3(0, 1, 0)));
+        dashRight = dot > 0;
+        const float dashAngleRads = dashAngleDegrees * DEGREE_RAD_CONV * (dashRight ? -1.f : 1.f);
+        directionToAimPoint = Quat::FromEulerXYZ(0, dashAngleRads, 0).Mul(directionToPlayer);
+    } else
+    {
+        const float dashAngleRads = dashAngleDegrees * DEGREE_RAD_CONV * (dashRight ? 1.f : -1.f);
+        directionToAimPoint = Quat::FromEulerXYZ(0, dashAngleRads, 0).Mul(dashDirection);
+    }
+
+    outTargetPoint = parent->GetGlobalTransform().TranslatePart() + directionToAimPoint;
+}
+

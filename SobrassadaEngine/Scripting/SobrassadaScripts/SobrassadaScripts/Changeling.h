@@ -10,30 +10,30 @@ class Projectile;
 enum class ChangelingVersions
 {
     RANDOM,
-    SEPP,
-    HERBERT,
-    FRANZ,
+    DEFAULT,
+    SNEAK,
+    BLOCK,
 };
 
 enum class ChangelingStates
 {
-    NONE,
-    IDLE_BURIED,
-    PEEK,
-    DIG_UP_TRANSITION,
-    DIG_DOWN_TRANSITION,
-    IDLE_VISIBLE,
-    CHASE,
-    BURIED_CHASE,
-    DASH_ATTACK_PREPARATION,
-    DASH_ATTACK,
-    DASH_ATTACK_WIGGLE,
-    DASH_ATTACK_COOLDOWN,
-    DASH_CHAIN_ATTACK,
-    BITE_ATTACK,
-    BITE_ATTACK_COOLDOWN,
-    DAMAGED,
-    DYING,
+    NONE = 0,
+    IDLE_BURIED = 1,
+    PEEK = 2,
+    DIG_UP_TRANSITION = 3,
+    DIG_DOWN_TRANSITION = 4,
+    IDLE_VISIBLE = 5,
+    CHASE = 6,
+    BURIED_CHASE = 7,
+    DASH_ATTACK_PREPARATION = 8,
+    DASH_ATTACK = 9,
+    DASH_ATTACK_WIGGLE = 10,
+    DASH_ATTACK_COOLDOWN = 11,
+    DASH_CHAIN_ATTACK = 12,
+    BITE_ATTACK = 13,
+    BITE_ATTACK_COOLDOWN = 14,
+    DAMAGED = 15,
+    DYING = 16,
 };
 
 class Changeling : public Character
@@ -88,6 +88,7 @@ class Changeling : public Character
     bool CalculateDashTargetPoint(const float3& aimingPoint, float3& targetPoint);
 
     bool ShouldSwapStatesOnRandomVersion(const float deltaTime) const;
+    void CalculateAimPoint(float3& outTargetPoint);
 
     bool isSetupCorrectly = false;
     
@@ -123,11 +124,11 @@ class Changeling : public Character
     float swapStatesRandomlyPercentage = 5.0f;
     ChangelingVersions randomVersion = ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
     
-    // Sepp specific (default changeling)
+    // Default specific
     float chaseSpeed = 1.0f;
     float chaseAcceleration = 4.0f;
     
-    // Herbert specific
+    // Sneak specific
     float maxSneakAngleDegrees = 45.0f;
     float minSneakSpeed = 0.25f;
     float maxSneakSpeed = 1.0f;
@@ -135,7 +136,7 @@ class Changeling : public Character
     float sneakAcceleration = 4.0f;
     float peekChancePerSecond = 0.1f;
     
-    // Franz specific
+    // Block specific
     bool dashRight = false;
     unsigned short dashIndex = 0;
     float dashAngleDegrees = 40.0f;
