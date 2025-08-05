@@ -19,10 +19,10 @@
 Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
-    fields.push_back({"Boss Max Health", InspectorField::FieldType::Int, &health, 0, 1000});
-    fields.push_back({"Mirage1 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
-    fields.push_back({"Mirage2 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
-    fields.push_back({"Mirage3 Threshhold", InspectorField::FieldType::Int, &health, 0, 1000});
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
+    fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
+    fields.push_back({"Close Area", InspectorField::FieldType::InputText, &closeAreaName});
+    fields.push_back({"Big Area", InspectorField::FieldType::InputText, &bigAreaName});
 }
 
 bool Boss::Init()
@@ -38,8 +38,24 @@ bool Boss::Init()
         speed = agentAI->GetSpeed();
     }
 
-    rng                 = std::mt19937(std::random_device {}());
-    uniformDist         = std::uniform_int_distribution<int>(0, 100);
+    rng                      = std::mt19937(std::random_device {}());
+    uniformDist              = std::uniform_int_distribution<int>(0, 100);
+
+    GameObject* shieldObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldName);
+    if (shieldObject)
+    {
+        weaponCollider = shieldObject->GetComponent<CapsuleColliderComponent*>();
+        if (weaponCollider) weaponCollider->SetEnabled(false);
+        else GLOG("Ferdiad without shield collider");
+    }
+
+    closeArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(closeAreaName);
+    if (closeArea) closeArea->SetEnabled(false);
+    else GLOG("Not close area object found for ferdiad");
+
+    bigArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(bigAreaName);
+    if (bigArea) bigArea->SetEnabled(false);
+    else GLOG("Not big area object found for ferdiad");
 
     GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("arena");
     if (arenaGO)
@@ -100,11 +116,15 @@ void Boss::OnDamageTaken(int amount)
 
 void Boss::HandleState(float deltaTime)
 {
-    if (!mirageActivated && currentHealth <= mirageActivation[phase - 1]) currentState = BossStates::Mirage;
+    if (!mirageActivated && !isDashing && !isJumping && !isFalling && currentHealth <= mirageActivation[phase - 1])
+    {
+        stateEnter   = true;
+        currentState = BossStates::Mirage;
+    }
 
     if (currentHealth <= phaseSwap[phase - 1])
     {
-        phase++;
+        stateEnter   = true;
         currentState = BossStates::ChangePhase;
     }
 
@@ -127,10 +147,13 @@ void Boss::HandleState(float deltaTime)
         break;
 
     case BossStates::Mirage:
+        ResetValues(true);
         Mirage();
         break;
 
     case BossStates::ChangePhase:
+        ResetValues(false);
+        ChangePhase();
         break;
 
     case BossStates::WaterSpouts:
@@ -146,6 +169,8 @@ void Boss::HandleState(float deltaTime)
 void Boss::UpdateTimers(float deltaTime)
 {
     Character::UpdateTimers(deltaTime);
+
+    if (currentState == BossStates::Mirage) isInvulnerable = true;
 }
 
 void Boss::ChooseNextState()
@@ -155,6 +180,7 @@ void Boss::ChooseNextState()
     case 1:
         ChooseNextStateFirstPhase();
         break;
+
     case 2:
         ChooseNextStateSecondPhase();
         break;
@@ -167,6 +193,8 @@ void Boss::ChooseNextState()
         GLOG("Invalid phase boss")
         break;
     }
+
+    stateEnter = true;
 }
 
 void Boss::ChooseNextStateFirstPhase()
@@ -178,13 +206,11 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        // overheadStrikeRate = 100;
         shieldStrikesRate  = 75;
         overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        // overheadStrikeRate = 100;
         shieldStrikesRate  = 50;
         overheadStrikeRate = 100;
         break;
@@ -216,8 +242,6 @@ void Boss::ChooseNextStateFirstPhase()
             currentState = BossStates::OverheadStrike;
         }
     }
-
-    stateEnter = true;
 }
 
 void Boss::ChooseNextStateSecondPhase()
@@ -269,7 +293,6 @@ void Boss::ShieldStrikes(float deltaTime)
 
     if (stateEnter)
     {
-
         stateEnter             = false;
         currentAction          = BossActions::Chase;
         shieldStrikeLastAction = 0;
@@ -390,7 +413,7 @@ void Boss::ShieldStrikes(float deltaTime)
 
 void Boss::OverheadStrike(float deltaTime)
 {
-    if (!weaponCollider) return;
+    if (!closeArea || !bigArea) return;
 
     if (stateEnter)
     {
@@ -471,12 +494,12 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::Land:
         if (!actionTriggerDone)
         {
-            StartJump();
+            StartFall();
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Land");
         }
 
-        if (isJumping) Jump(deltaTime, true);
+        if (isFalling) Fall(deltaTime);
         else
         {
             currentAction     = BossActions::Attack;
@@ -495,32 +518,35 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             agentAI->SetFreeMove(false);
-            attackHitboxDelay    = 0.5f;
-            attackHitboxDuration = 0.2f;
+            attackHitboxDelay    = 0.7f;
+            attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
             agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("Attack");
             actionTriggerDone = true;
         }
-        else if (!weaponCollider->GetEnabled())
-        {
-            agentAI->ResumeMovement();
-        }
 
         // Enable hitbox when animation hits
-        if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
+        if (!closeArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
             attackTimer <= attackHitboxDelay + attackHitboxDuration)
         {
-            weaponCollider->SetEnabled(true);
+            closeArea->SetEnabled(true);
             agentAI->PauseMovement();
+            animComponent->OnPause();
         }
-        else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+        else if (closeArea->IsEnabled() && bigArea->IsEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
         {
-            weaponCollider->SetEnabled(false);
+            closeArea->SetEnabled(false);
+            bigArea->SetEnabled(false);
             agentAI->ResumeMovement();
+            animComponent->OnResume();
         }
 
-        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        if (!bigArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
+            attackTimer <= attackHitboxDelay + attackHitboxDuration && attackTimer >= 1.5f)
+        {
+            bigArea->SetEnabled(true);
+        }
 
         if (animComponent && animComponent->IsFinished())
         {
@@ -572,7 +598,7 @@ void Boss::StartDash()
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
 
-    startPosLocal     = parent->GetLocalTransform().TranslatePart();
+    dashStartPosLocal = parent->GetLocalTransform().TranslatePart();
 
     GLOG("Speed: %.2f", dashSpeed);
 }
@@ -586,9 +612,9 @@ void Boss::Dash(float deltaTime)
     float offsetDist        = dashSpeed * elapsedTime;
 
     float3 horizontalOffset = dashDirection * offsetDist;
-    float originalY         = startPosLocal.y;
+    float originalY         = dashStartPosLocal.y;
 
-    float3 newPos           = startPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z);
+    float3 newPos           = dashStartPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z);
     newPos.y                = originalY;
 
     parent->SetLocalPosition(newPos);
@@ -596,21 +622,20 @@ void Boss::Dash(float deltaTime)
     if (dashTimeRemaining <= 0.0f)
     {
         isDashing = false;
-        parent->SetLocalPosition(startPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z));
+        parent->SetLocalPosition(dashStartPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z));
     }
 }
 
-void Boss::StartJump(bool fall)
+void Boss::StartJump()
 {
     isJumping         = true;
-    float duration    = fall ? fallDuration : jumpDuration;
-    jumpSpeed         = heightJump / duration;
-    jumpTimeRemaining = duration;
-    startPosLocal     = parent->GetLocalTransform().TranslatePart();
+    jumpSpeed         = heightJump / jumpDuration;
+    jumpTimeRemaining = jumpDuration;
+    jumpStartPosLocal = parent->GetLocalTransform().TranslatePart();
     GLOG("Speed: %.2f", jumpSpeed);
 }
 
-void Boss::Jump(float deltaTime, bool fall)
+void Boss::Jump(float deltaTime)
 {
     jumpTimeRemaining -= deltaTime;
     if (jumpTimeRemaining < 0.0f) jumpTimeRemaining = 0.0f;
@@ -618,16 +643,42 @@ void Boss::Jump(float deltaTime, bool fall)
     float elapsedTime = jumpDuration - jumpTimeRemaining;
     float offsetY     = jumpSpeed * elapsedTime;
 
-    float3 dir        = fall ? -float3::unitY : float3::unitY;
-
-    float3 newPos     = startPosLocal + dir * offsetY;
+    float3 newPos     = jumpStartPosLocal + float3::unitY * offsetY;
 
     parent->SetLocalPosition(newPos);
 
     if (jumpTimeRemaining <= 0.0f)
     {
         isJumping = false;
-        parent->SetLocalPosition(startPosLocal + float3::unitY * heightJump);
+        parent->SetLocalPosition(jumpStartPosLocal + float3::unitY * heightJump);
+    }
+}
+
+void Boss::StartFall()
+{
+    isFalling         = true;
+    fallSpeed         = heightJump / fallDuration;
+    fallTimeRemaining = fallDuration;
+    fallStartPosLocal = parent->GetLocalTransform().TranslatePart();
+    GLOG("Speed: %.2f", fallSpeed);
+}
+
+void Boss::Fall(float deltaTime)
+{
+    fallTimeRemaining -= deltaTime;
+    if (fallTimeRemaining < 0.0f) fallTimeRemaining = 0.0f;
+
+    float elapsedTime = fallDuration - fallTimeRemaining;
+    float offsetY     = fallSpeed * elapsedTime;
+
+    float3 newPos     = fallStartPosLocal - float3::unitY * offsetY;
+
+    parent->SetLocalPosition(newPos);
+
+    if (fallTimeRemaining <= 0.0f)
+    {
+        isFalling = false;
+        parent->SetLocalPosition(fallStartPosLocal - float3::unitY * heightJump);
     }
 }
 
@@ -640,15 +691,103 @@ void Boss::Mirage()
         mirageActivated = true;
         stateEnter      = false;
         agentAI->PauseMovement();
-        currentAction  = BossActions::Mirage;
-        isInvulnerable = true;
+        currentAction = BossActions::Start;
         bossMirageScript->StartSequence(phase);
     }
 
-    if ((int)bossMirageScript->GetSequenceState() == 0)
+    switch (currentAction)
     {
-        isInvulnerable = false;
-        ChooseNextState();
+    case BossActions::Start:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            animComponent->UseTrigger("Start");
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossActions::Charge;
+            actionTriggerDone = false;
+        }
+        break;
+
+    case BossActions::Charge:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            animComponent->UseTrigger("Charge");
+        }
+
+        if ((int)bossMirageScript->GetSequenceState() == 0)
+        {
+            GLOG("Leaving Mirage")
+            currentAction     = BossActions::End;
+            actionTriggerDone = false;
+        }
+        break;
+
+    case BossActions::End:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            animComponent->UseTrigger("End");
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            agentAI->ResumeMovement();
+            actionTriggerDone = false;
+            isInvulnerable    = false;
+
+            ChooseNextState();
+        }
+        break;
+
+    default:
+        GLOG("Error: Mirage")
+        break;
+    }
+}
+
+void Boss::ResetValues(bool isForMirage)
+{
+    doIdle                 = false;
+    doTaunt                = false;
+    actionTriggerDone      = false;
+
+    shieldStrikeLastAction = 0;
+
+    isDashing              = false;
+    dashSpeed              = 0.0f;
+    dashTimeRemaining      = 0.0f;
+    dashDistance           = 0.0f;
+    dashDirection          = float3::zero;
+    dashStartPosLocal      = float3::zero;
+
+    isJumping              = false;
+    jumpSpeed              = 0.0f;
+    jumpTimeRemaining      = 0.0f;
+    jumpStartPosLocal      = float3::zero;
+
+    isFalling              = false;
+    fallSpeed              = 0.0f;
+    fallTimeRemaining      = 0.0f;
+    fallStartPosLocal      = float3::zero;
+
+    if (!isForMirage) mirageActivated = false;
+
+    weaponCollider->SetEnabled(false);
+    closeArea->SetEnabled(false);
+    bigArea->SetEnabled(false);
+}
+
+void Boss::ChangePhase()
+{
+    if (stateEnter)
+    {
+        stateEnter = false;
+        phase++;
+        // TODO: anim changePhase
     }
 }
 
@@ -725,8 +864,14 @@ const char* Boss::GetActionName() const
     case BossActions::Recover:
         return "Recover";
 
-    case BossActions::Mirage:
-        return "Mirage";
+    case BossActions::Start:
+        return "Start";
+
+    case BossActions::Charge:
+        return "Charge";
+
+    case BossActions::End:
+        return "End";
 
     case BossActions::ChangeStart:
         return "ChangeStart";

@@ -33,7 +33,7 @@ void Mirage::Update(float deltaTime)
     {
         state      = MirageState::Warning;
         stateTimer = 0.0f;
-        GLOG("Calling gameobject");
+        //GLOG("Calling gameobject");
         /*
         if (meshComponent && mirageWarningImage != 0)
         {
@@ -47,7 +47,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Warning:
     {
         stateTimer += deltaTime;
-        GLOG("Activating gameobject");
+        //GLOG("Activating gameobject");
         /*
         if (meshComponent && mirageWarningImage != 0)
         {
@@ -65,7 +65,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
-        GLOG("DISABLING");
+        //GLOG("DISABLING");
         if (stateTimer >= damageDuration)
         {
 

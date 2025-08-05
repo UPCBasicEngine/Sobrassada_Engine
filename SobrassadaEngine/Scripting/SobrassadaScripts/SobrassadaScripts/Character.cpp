@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "Boss.h"
 #include "CameraComponent.h"
 #include "Character.h"
 #include "CuChulainn.h"
@@ -145,7 +146,10 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         if (enemyScript)
         {
             if (!enemyScript->isAttacking) return;
-            TakeDamage(enemyScript->attackDamage);
+
+            Boss* bossScript = otherScript->GetScriptByType<Boss>();
+            if (bossScript && bossScript->GetCloseArea() == otherObject) TakeDamage(bossScript->GetCloseAreaDamage());
+            else TakeDamage(enemyScript->attackDamage);
         }
     }
     else if (otherScript && otherWeaponShpere && otherWeaponShpere->GetEnabled())
