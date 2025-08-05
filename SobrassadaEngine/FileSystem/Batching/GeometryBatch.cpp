@@ -31,6 +31,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isNavmeshValid = component->GetParent()->IsNavMeshValid();
     isAlpha        = component->GetRenderMode() == 2;
     isDoubleSided  = component->GetResourceMaterial()->IsDoubleSided();
+    doApplyWind    = component->GetResourceMaterial()->DoApplyWind();
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);
@@ -252,8 +253,14 @@ void GeometryBatch::GenerateCommands(const std::vector<MeshComponent*>& meshes, 
     totalVertexCount = 0;
     totalIndexCount  = 0;
 
-    for (const MeshComponent* component : meshes)
+    for (MeshComponent* component : meshes)
     {
+        if (!component->GetWasEnabled() && !component->GetBatchWasEnabled())
+        {
+            component->SetBatchWasEnabled();
+            continue;
+        }
+
         const ResourceMesh* resource   = component->GetResourceMesh();
 
         const unsigned int vertexCount = static_cast<unsigned int>(resource->GetVertexCount());

@@ -30,16 +30,18 @@ struct MaterialGPU
     int hasSpecular       = 0;
     int hasMetallic       = 0;
     uint64_t emmisiveTex  = 0; // Right now works as padding TODO: put emmissive
+    uint64_t occlusionTex = 0;
+    uint64_t padding      = 0;
 };
 
 class ResourceMaterial : public Resource
 {
   public:
-    ResourceMaterial(UID uid, const std::string& name, const rapidjson::Value& importOptions);
+    ResourceMaterial(UID uid, const std::string& name);
     ~ResourceMaterial() override;
 
-    bool OnEditorUpdate();
-    void LoadMaterialData(Material mat);
+    void OnEditorUpdate();
+    void LoadMaterialData(const Material& mat, const rapidjson::Value& importOptions);
     void FreeMaterials() const;
 
     UID ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU);
@@ -56,21 +58,33 @@ class ResourceMaterial : public Resource
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlphaDiscard() const { return isAlpha; }
     const bool IsDoubleSided() const { return doubleSided; }
+    bool DoApplyWind() const { return applyWind; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
     int GetDiffuseWidth() const { return diffuseTexture.width; }
     int GetDiffuseHeight() const { return diffuseTexture.height; }
+
+    unsigned int GetSpecularTextureID() const { return specularTexture.textureID; }
+    unsigned int GetMetallicTextureID() const { return metallicTexture.textureID; }
+    unsigned int GetNormalTextureID() const { return normalTexture.textureID; }
+    unsigned int GetEmissiveTextureID() const { return emmisiveTexture.textureID; }
+    unsigned int GetOcclusionTextureID() const { return occlusionTexture.textureID; }
 
   private:
     TextureInfo diffuseTexture;
     TextureInfo specularTexture;
     TextureInfo metallicTexture;
     TextureInfo normalTexture;
+    TextureInfo emmisiveTexture;
+    TextureInfo occlusionTexture;
 
     MaterialGPU material;
     bool isTransparent    = false;
     bool isAlpha          = false;
     bool doubleSided      = false;
     bool hasNormal        = false;
+    bool applyWind        = false;
     UID defaultTextureUID = INVALID_UID;
+
+    bool wasUpdated       = false;
 };

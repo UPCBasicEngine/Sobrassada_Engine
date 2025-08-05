@@ -10,7 +10,7 @@ class PressAnyKeyScript : public Script
     PressAnyKeyScript(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
-    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) override;
+    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator);
     void Load(const rapidjson::Value& initialState) override;
 
 

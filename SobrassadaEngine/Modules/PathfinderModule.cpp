@@ -81,7 +81,7 @@ int PathfinderModule::CreateAgent(
 
 void PathfinderModule::RemoveAgent(int agentId)
 {
-    if (agentId < 0 || agentId >= crowd->getAgentCount()) return;
+    if (agentId < 0 || !crowd || agentId >= crowd->getAgentCount()) return;
 
     const dtCrowdAgent* agent = crowd->getAgent(agentId);
     if (!agent || !agent->active) return;

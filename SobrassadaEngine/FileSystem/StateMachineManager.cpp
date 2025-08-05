@@ -71,6 +71,19 @@ namespace StateMachineManager
             position.AddMember("y", state.position.y, allocator);
             stateJSON.AddMember("Position", position, allocator);
 
+            //Triggers
+            rapidjson::Value trigArr(rapidjson::kArrayType);
+            for (const StateTrigger& trg : state.triggers)
+            {
+                rapidjson::Value triggerJSON(rapidjson::kObjectType);
+                triggerJSON.AddMember("Time", trg.keyTimeNorm, allocator);
+                triggerJSON.AddMember("Type", int(trg.type), allocator);
+                triggerJSON.AddMember("Name", rapidjson::Value(trg.eventName.c_str(), allocator), allocator);
+                triggerJSON.AddMember("Repeat", trg.repeatOnLoop, allocator);
+                trigArr.PushBack(triggerJSON, allocator);
+            }
+            stateJSON.AddMember("Triggers", trigArr, allocator);
+
             statesArray.PushBack(stateJSON, allocator);
         }
         stateMachineJSON.AddMember("States", statesArray, allocator);
@@ -94,6 +107,7 @@ namespace StateMachineManager
             transitionsArray.PushBack(transitionJSON, allocator);
         }
         stateMachineJSON.AddMember("Transitions", transitionsArray, allocator);
+
 
         doc.AddMember("StateMachine", stateMachineJSON, allocator);
         rapidjson::StringBuffer buffer;
@@ -194,6 +208,7 @@ namespace StateMachineManager
                 clip.loop                 = clipJSON["Loop"].GetBool();
 
                 stateMachine->clips.push_back(clip);
+                stateMachine->clipsDefaultSpeed.push_back(clip.animationSpeed);
             }
         }
 
@@ -209,6 +224,20 @@ namespace StateMachineManager
                 {
                     state.position.x = stateJSON["Position"]["x"].GetFloat();
                     state.position.y = stateJSON["Position"]["y"].GetFloat();
+                }
+
+                //Triggers
+                if (stateJSON.HasMember("Triggers"))
+                {
+                    for (const auto& triggerJSON : stateJSON["Triggers"].GetArray())
+                    {
+                        StateTrigger trg;
+                        trg.keyTimeNorm  = triggerJSON["Time"].GetFloat();
+                        trg.type         = TriggerType(triggerJSON["Type"].GetInt());
+                        trg.eventName    = triggerJSON["Name"].GetString();
+                        trg.repeatOnLoop = triggerJSON.HasMember("Repeat") ? triggerJSON["Repeat"].GetBool() : true;
+                        state.triggers.push_back(trg);
+                    }
                 }
 
                 stateMachine->states.push_back(state);

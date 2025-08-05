@@ -530,6 +530,7 @@ void LightsConfig::AddDirectionalLight(DirectionalLightComponent* newDirectional
 
     if (directionalLight == nullptr) directionalLight = newDirectional;
 }
+
 void LightsConfig::AddPointLight(PointLightComponent* newPoint)
 {
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
@@ -550,6 +551,7 @@ void LightsConfig::AddPointLight(PointLightComponent* newPoint)
         bufferSize
     );*/
 }
+
 void LightsConfig::AddSpotLight(SpotLightComponent* newSpot)
 {
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
@@ -656,11 +658,11 @@ void LightsConfig::GetAllSceneLights()
         directionalLight      = dirLights.empty() ? nullptr : dirLights[0];
 
         // Point
-        pointLights           = scene->GetEnabledComponentsOfType<PointLightComponent*>();
+        //pointLights           = scene->GetEnabledComponentsOfType<PointLightComponent*>();
         // GLOG("Point lights count: %d", pointLights.size());
 
         // Spot
-        spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
+        //spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
         // GLOG("Spot lights count: %d", spotLights.size());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);

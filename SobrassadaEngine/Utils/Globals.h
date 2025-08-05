@@ -133,6 +133,7 @@ constexpr const wchar_t* BANKNAME_MAIN               = L"main.bnk";
 constexpr const char* BANKMETA_MAIN                  = "main.json";
 
 // SHADER PATHS
+// Vertex Shaders
 constexpr const char* TRAIL_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/Vertex/TrailVertexShader.glsl";
 constexpr const char* LIGHTS_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/Vertex/VertexShader.glsl";
 constexpr const char* SKYBOX_VERTEX_SHADER_PATH      = "./EngineDefaults/Shader/Vertex/SkyboxVertex.glsl";
@@ -145,6 +146,7 @@ constexpr const char* SPRITESHEET_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/
 constexpr const char* PARTICLESYSTEM_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/Vertex/ParticleSystemVertex.glsl";
 constexpr const char* SSAO_VERTEX_SHADER_PATH        = "./EngineDefaults/Shader/Vertex/SsaoVertex.glsl";
 
+// Fragment Shaders
 constexpr const char* UNLIT_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UnlitFragmentShader.glsl";
 constexpr const char* SKYBOX_FRAGMENT_SHADER_PATH    = "./EngineDefaults/Shader/Fragment/SkyboxFragment.glsl";
 constexpr const char* SPECULAR_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/BRDFPhongFragmentShader.glsl";
@@ -177,7 +179,9 @@ constexpr const char* PARTICLESYSTEM_FRAGMENT_SHADER_PATH = "./EngineDefaults/Sh
 constexpr const char* SSAO_LOW_FRAGMENT_SHADER_PATH      = "./EngineDefaults/Shader/Fragment/SsaoLowFragment.glsl";
 constexpr const char* SSAO_BLUR_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/SsaoBlurFragment.glsl";
 
+// Compute Shaders
 constexpr const char* SHADOW_DEPTH_COMPUTE_SHADER_PATH  = "./EngineDefaults/Shader/Compute/ShadowMapDepthCompute.glsl";
+constexpr const char* TILE_SHADING_COMPUTE_SHADER_PATH  = "./EngineDefaults/Shader/Compute/TileShadingCompute.glsl";
 
 using UID                                               = uint64_t;
 

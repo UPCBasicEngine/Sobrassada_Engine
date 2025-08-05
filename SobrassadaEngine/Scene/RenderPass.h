@@ -29,6 +29,7 @@ class RenderPass
         CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
     );
     void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer);
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
     void SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
@@ -46,11 +47,16 @@ class RenderPass
     int width, height;
     int shadowResolution = 4096;
 
-    //Decals
+    // Decals
     unsigned int decalVAO, decalVBO, decalEBO;
 
-    //Shadows
+    // Shadows
     unsigned int depthTexture, depthFBO;
     float4x4 lightView;
     float4x4 lightProj;
+
+    // Tile Shading
+    unsigned int visibleLightIndicesSSBO = 0;
+    size_t currentSize                   = 0;
+    int tilesX;
 };

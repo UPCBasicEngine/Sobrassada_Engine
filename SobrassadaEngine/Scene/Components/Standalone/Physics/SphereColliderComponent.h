@@ -25,7 +25,6 @@ class SphereColliderComponent : public Component
     void RenderEditorInspector() override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
 
     void ParentUpdated() override;

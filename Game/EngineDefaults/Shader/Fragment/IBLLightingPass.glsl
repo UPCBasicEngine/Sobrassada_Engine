@@ -9,10 +9,18 @@ layout(binding = 1) uniform sampler2D gSpecular;
 layout(binding = 2) uniform sampler2D gPosition;
 layout(binding = 3) uniform sampler2D gNormal;
 layout(binding = 4) uniform sampler2D shadowMap;
+layout(binding = 5) uniform sampler2D gEmissive;
+
 layout(binding = 5) uniform sampler2D ssao;
 uniform mat4 viewLight;
 uniform mat4 projLight;
 uniform vec3 shadowTint;
+
+#define TILE_SIZE 16
+#define MAX_LIGHTS_PER_TILE 1024
+
+uniform vec2 screenSize;
+uniform int numTilesX;
 
 in vec2 uv0;
 
@@ -41,6 +49,10 @@ struct SpotLight
 	float outerAngle;
 };
 
+layout(std430, binding = 6) readonly buffer VisibleLightIndicesBuffer {
+    int visibleIndices[];
+};
+
 // UBOs
 layout(std140, binding = 2) uniform Ambient
 {
@@ -58,6 +70,7 @@ layout(std140, binding = 3) uniform Directional
 };
 
 // SSBOs
+//We don't need pointLightsCount and spotLightsCount but we left here as is simpler for the rest of the code
 readonly layout(std430, binding = 4) buffer PointLights
 {
 	int pointLightsCount;
@@ -222,17 +235,24 @@ void main()
     const vec3 ambient = GetAmbientLight(N, R, NdotV, roughness, Cd, RF0);
     vec3 hdr = ambient;
 
-    // Point Lights
-    for (int i = 0; i < pointLightsCount; ++i)
-	{
-		hdr += RenderPointLight(i, N, Cd, roughness, RF0, pos);
-	}
+    ivec2 tileCoord = ivec2(gl_FragCoord.xy) / TILE_SIZE;
+    int tileIndex = tileCoord.y * numTilesX + tileCoord.x;
+    int baseOffset = tileIndex * MAX_LIGHTS_PER_TILE;
 
-    //Spot Lights
-    for (int i = 0; i < spotLightsCount; ++i)
-	{
-		hdr += RenderSpotLight(i, N, Cd, roughness, RF0, pos);
-	}
+    for (int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
+    {
+        int lightIndex = visibleIndices[baseOffset + i];
+        if (lightIndex == -1) break;
+
+        bool isSpot = (lightIndex & 0x80000000) != 0;
+        int realIndex = lightIndex & 0x7FFFFFFF;
+
+        if (isSpot) {
+            hdr += RenderSpotLight(realIndex, N, Cd, roughness, RF0, pos);
+        } else {
+            hdr += RenderPointLight(realIndex, N, Cd, roughness, RF0, pos);
+        }
+    }
 
     // Directional light
     const vec3 lightColor = directional_color.rgb * directional_color.a;
@@ -242,6 +262,10 @@ void main()
     {
 		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0, pos, true);
     }
+
+    const vec3 emissive = texture(gEmissive, uv0).rgb;
+
+    hdr += emissive;
 
     const vec3 occlusionFactor = vec3(texture(ssao, uv0).r);
     hdr = hdr*occlusionFactor;

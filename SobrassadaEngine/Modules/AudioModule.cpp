@@ -1,4 +1,4 @@
-#include "AudioModule.h"
+﻿#include "AudioModule.h"
 
 #include "Application.h"
 #include "Components/Standalone/Audio/AudioListenerComponent.h"
@@ -284,6 +284,17 @@ void AudioModule::RemoveAudioListener(AudioListenerComponent* listenerToRemove)
     listener = nullptr;
 }
 
+void AudioModule::EmitEvent(const std::string& eventName, AkGameObjectID gameObjectID)
+{
+    const auto it = eventsMap.find(HashString(eventName.c_str()));
+    if (it == eventsMap.end())
+    {
+        GLOG("Audio event not found: %s", eventName.c_str());
+        return;
+    }
+    AK::SoundEngine::PostEvent(it->second, gameObjectID);
+}
+
 void AudioModule::StopAllAudio()
 {
     for (const AudioSourceComponent* source : sources)
@@ -298,6 +309,18 @@ void AudioModule::PlayOnStart()
     {
         if (source->IsPlayOnStart()) source->EmitDefaultEvent();
     }
+}
+
+const std::vector<std::string>& AudioModule::GetEventNames()
+{
+    if (eventNames.empty() && !eventsMap.empty())
+    {
+        for (const auto& kv : eventsMap)
+            eventNames.push_back(kv.first.GetString());
+
+        std::sort(eventNames.begin(), eventNames.end());
+    }
+    return eventNames;
 }
 
 void AudioModule::ParseEvents()
@@ -338,7 +361,14 @@ void AudioModule::ParseEvents()
             const std::string id          = event["Id"].GetString();
 
             eventsMap.insert({name, static_cast<uint32_t>(std::stoul(id))});
+
+            if (std::find(eventNames.begin(), eventNames.end(), name) == eventNames.end())
+                eventNames.push_back(name);
         }
+        std::sort(eventNames.begin(), eventNames.end());
+        GLOG("AudioModule: loaded %zu events", eventNames.size());
+        for (const std::string& s : eventNames)
+            GLOG("EventName:  %s", s.c_str());
     }
     else
     {

@@ -471,11 +471,6 @@ const float3 CameraComponent::ScreenPointToXZ(const float y)
     return worldPos;
 }
 
-void CameraComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void CameraComponent::RenderDebug(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;

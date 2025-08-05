@@ -14,77 +14,13 @@ void Script::Inspector()
     AppEngine->GetEditorUIModule()->DrawScriptInspector(fields);
 }
 
-void Script::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
-{
-    for (const auto& field : fields)
-    {
-        rapidjson::Value name(field.name, allocator);
-        switch (field.type)
-        {
-        case InspectorField::FieldType::Float:
-            targetState.AddMember(name, *(float*)field.data, allocator);
-            break;
-        case InspectorField::FieldType::Int:
-            targetState.AddMember(name, *(int*)field.data, allocator);
-            break;
-        case InspectorField::FieldType::Bool:
-            targetState.AddMember(name, *(bool*)field.data, allocator);
-            break;
-        case InspectorField::FieldType::Vec2:
-        {
-            float2* vec = (float2*)field.data;
-            rapidjson::Value arr(rapidjson::kArrayType);
-            arr.PushBack(vec->x, allocator);
-            arr.PushBack(vec->y, allocator);
-            targetState.AddMember(name, arr, allocator);
-            break;
-        }
-        case InspectorField::FieldType::Vec3:
-        case InspectorField::FieldType::Color: // Vec3 == Color
-        {
-            float3* vec = (float3*)field.data;
-            rapidjson::Value arr(rapidjson::kArrayType);
-            arr.PushBack(vec->x, allocator);
-            arr.PushBack(vec->y, allocator);
-            arr.PushBack(vec->z, allocator);
-            targetState.AddMember(name, arr, allocator);
-            break;
-        }
-        case InspectorField::FieldType::Vec4:
-        {
-            float4* vec = (float4*)field.data;
-            rapidjson::Value arr(rapidjson::kArrayType);
-            arr.PushBack(vec->x, allocator);
-            arr.PushBack(vec->y, allocator);
-            arr.PushBack(vec->z, allocator);
-            arr.PushBack(vec->w, allocator);
-            targetState.AddMember(name, arr, allocator);
-            break;
-        }
-        case InspectorField::FieldType::InputText:
-        {
-            std::string* str = static_cast<std::string*>(field.data);
-            targetState.AddMember(name, rapidjson::Value(str->c_str(), allocator), allocator);
-            break;
-        }
-        case InspectorField::FieldType::GameObject:
-        {
-            GameObject* go = *(GameObject**)field.data;
-            UID uid        = go ? go->GetUID() : 0;
-            targetState.AddMember(name, uid, allocator);
-            break;
-        }
-        }
-    }
-}
-
 void Script::Load(const rapidjson::Value& initialState)
 {
     for (auto& field : fields)
     {
-        if (!initialState.HasMember(field.name)) continue;
+        if (!initialState.HasMember(field.name.c_str())) continue;
 
-        const auto& value = initialState[field.name];
+        const auto& value = initialState[field.name.c_str()];
 
         switch (field.type)
         {
@@ -147,6 +83,12 @@ void Script::Load(const rapidjson::Value& initialState)
                 *(GameObject**)field.data = go;
             }
             break;
+        case InspectorField::FieldType::Resource:
+            if (value.IsUint64())
+            {
+                *(UID*)field.data = value.GetUint64();
+            }
+            break;
         }
     }
 }
@@ -187,12 +129,19 @@ void Script::CloneFields(const std::vector<InspectorField>& otherFields)
             break;
         }
         case InspectorField::FieldType::GameObject:
+        {
             // It just works
             GameObject* uid = *(GameObject**)otherFields[i].data;
             if (uid == 0) return;
             GameObject* go                = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(uid->GetUID());
             *(GameObject**)fields[i].data = go;
             break;
+        }
+        case InspectorField::FieldType::Resource:
+        {
+            *(UID*)fields[i].data = *(UID*)otherFields[i].data;
+            break;
+        }
         }
     }
 }
