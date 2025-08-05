@@ -199,38 +199,28 @@ void Changeling::HandleState(float deltaTime)
 
 void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq)
 {
-    if (ShouldSwapStatesOnRandomVersion(deltaTime)) randomVersion = static_cast<ChangelingVersions>(rand() % 3 + 1); 
-
-    if (ST_StartBuriedChase(deltaTime, distanceToPlayerSq)) return;
-
-    if (distanceToPlayerSq < rangeAIChase * rangeAIChase)
-    {
-        // Only start digging up when the reaction time is over
-        if (hasPlayerSpotted)
-        {
-            if (stateTimer < 0)
-            {
-                hasPlayerSpotted = false;
-                characterCollider->SetEnabled(true);
-                if (animComponent) animComponent->UseTrigger("Trigger_BuryUp");
-                currentState = ChangelingStates::DIG_UP_TRANSITION;
-            }
-        } else
-        {
-            hasPlayerSpotted = true;
-            stateTimer = absoluteSpottedReactionTime;
-        }
-    } else hasPlayerSpotted = false;
+    if (ShouldSwapStatesOnRandomVersion(deltaTime)) randomVersion = static_cast<ChangelingVersions>(rand() % 3 + 1);
     
+    if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
+
+    if (ST_BuryUp(deltaTime, distanceToPlayerSq)) return;
+    if (ST_StartBuriedChase(deltaTime, distanceToPlayerSq)) return;
+    
+    if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
 }
 
 void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
 {
+    if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+    
     if (animComponent && animComponent->IsFinished())
     {
+        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
         characterCollider->SetEnabled(false);
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
+        stateTimer = absoluteSpottedReactionTime; // Wait reaction time for bury up
     }
 }
 
@@ -248,6 +238,7 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 {
     if (animComponent && animComponent->IsFinished())
     {
+        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
     }
@@ -325,11 +316,9 @@ void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerS
     agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
     if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return; // Preconditions are checked in the function
-    
-    const int randomValue = max(1, (int)round(1.0f / (peekChancePerSecond * deltaTime)));
         
     // Random value = 1 only if fps are too high -> Ignore those frames then
-    if (randomValue != 1 && rand() % randomValue == 0 && ST_Peek(deltaTime, 0)) return;
+    if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
         
     if (distanceToPlayerSq <= maxDetectionRange * maxDetectionRange)
     {
@@ -534,6 +523,24 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
     }
 }
 
+bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
+{
+    // Check preconditions
+    if (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK) return false;
+    if (currentState != ChangelingStates::IDLE_BURIED) return false;
+    if (!spottedLocation.IsFinite()) return false;
+    
+    // Implement state transition
+    if (stateTimer <= 0.f)
+    {
+        characterCollider->SetEnabled(true);
+        if (animComponent) animComponent->UseTrigger("Trigger_BuryUp");
+        currentState = ChangelingStates::DIG_UP_TRANSITION;
+    }
+
+    return true;
+}
+
 bool Changeling::ST_StartChase(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
@@ -557,7 +564,7 @@ bool Changeling::ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq)
     // Check preconditions
     if (currentState != ChangelingStates::IDLE_BURIED) return false;
     if (version != ChangelingVersions::SNEAK && randomVersion != ChangelingVersions::SNEAK) return false;
-    if (distanceToPlayerSq > maxDetectionRange * maxDetectionRange) return false;
+    if (!spottedLocation.IsFinite()) return false;
     
     // Implement state transition
     currentState = ChangelingStates::BURIED_CHASE;
@@ -591,11 +598,16 @@ bool Changeling::ST_Damaged()
 bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (version != ChangelingVersions::SNEAK) return false;
     if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BURIED_CHASE) return false;
     
     // Implement state transition
+    const int randomValue = max(1, (int)round(1.0f / (peekChancePerSecond * deltaTime)));
+        
+    // Random value = 1 only if fps are too high -> Ignore those frames then
+    if (randomValue == 1 || rand() % randomValue != 0) return false; // Only peek randomly
+    
     characterCollider->SetEnabled(true);
+    agentAI->SetSpeed(0.0f, 10.0f);
     if (animComponent) animComponent->UseTrigger("Trigger_Peek");
     currentState = ChangelingStates::PEEK;
 
@@ -675,6 +687,7 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     
     // Implement state transition
     characterCollider->SetEnabled(true);
+    agentAI->SetSpeed(0.0f, 10.0f);
     if (animComponent) animComponent->UseTrigger("Trigger_Bite");
     currentState = ChangelingStates::BITE_ATTACK;
 

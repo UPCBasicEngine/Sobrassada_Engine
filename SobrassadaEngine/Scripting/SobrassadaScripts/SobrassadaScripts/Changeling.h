@@ -70,6 +70,7 @@ class Changeling : public Character
     void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
 
+    bool ST_BuryUp(float deltaTime, float distanceToPlayerSq);
     bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
     bool ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq);
     bool ST_Damaged();
@@ -110,7 +111,6 @@ class Changeling : public Character
     std::vector<GameObject*> dashTrailColliderObjects;
     std::vector<CubeColliderComponent*> dashAreaColliders;
 
-    bool hasPlayerSpotted = false;
     float stateTimer = 0.f;
     
     float absoluteSpottedReactionTime = 1.f;
@@ -135,6 +135,7 @@ class Changeling : public Character
     float distanceToPlayerForMaxSneakSpeed = 0.0f;
     float sneakAcceleration = 4.0f;
     float peekChancePerSecond = 0.1f;
+    float3 spottedLocation = float3::nan;
     
     // Block specific
     bool dashRight = false;
