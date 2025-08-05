@@ -10,6 +10,7 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Mushroom.h"
+#include "Spouts.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -106,6 +107,23 @@ void Character::Update(float deltaTime)
 
 void Character::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
+    ScriptComponent* otherScript = otherObject->GetComponent<ScriptComponent*>();
+    if (otherScript)
+    {
+        // Mushroom check
+        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
+        if (mushroomScript)
+        {
+            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
+            {
+                if (playerScript->TakeMushroom()) mushroomScript->Disable();
+            }
+        }
+    }
+}
+
+void Character::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+{
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
@@ -169,6 +187,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             }
         }
 
+        /*
         // Mushroom check
         Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
         if (mushroomScript)
@@ -177,6 +196,12 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             {
                 if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
+        }*/
+
+        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+        if (spoutsScript)
+        {
+            TakeDamage(spoutsScript->GetDamage());
         }
     }
 }
@@ -221,6 +246,9 @@ void Character::TakeDamage(int amount)
     invulnerabilityTimer  = invulnerableDuration;
 
     OnDamageTaken(amount);
+
+    if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
+
     if (currentHealth <= 0) Die();
 }
 
@@ -281,6 +309,8 @@ void Character::Die()
     // GLOG("%s dead", parent->GetName().c_str());
     isDead = true;
     OnDeath();
+
+    if (type != CharacterType::CuChulainn) playerScript->OnEnemyDefeated();
 
     if (characterCollider)
     {

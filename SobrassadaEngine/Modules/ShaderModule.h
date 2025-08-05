@@ -1,6 +1,9 @@
 #pragma once
 
+#include "HashString.h"
 #include "Module.h"
+
+#include <map>
 
 class ShaderModule : public Module
 {
@@ -11,16 +14,20 @@ class ShaderModule : public Module
     bool Init() override;
     bool ShutDown() override;
 
+    unsigned int SOBRASADA_API_ENGINE RequestShaderProgram(const char* vertexPath, const char* fragmentPath);
     unsigned int CreateShaderProgram(const char* vertexPath, const char* fragmentPath);
     unsigned int CreateComputeProgram(const char* computePath);
-    void DeleteProgram(unsigned int programID);
+    void SOBRASADA_API_ENGINE DeleteProgram(unsigned int programID);
 
     int GetSpecularGlossinessProgram() const;
     int GetMetallicRoughnessProgram() const;
     int GetMetallicGeometryPassProgram() const;
+    int GetMetallicGeometryVPOPassProgram() const { return metallicGeometryVPOPassProgram; }
     int GetSpecularGeometryPassProgram() const;
+    int GetSpecularGeometryVPOPassProgram() const { return specularGeometryVPOPassProgram; }
     int GetLightingPassProgram() const;
     int GetTransparentPassProgram() const { return transparentPassProgram; };
+    int GetTransparentVPOPassProgram() const { return transparentVPOPassProgram; }
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
     int GetQuadProgram() const { return quadProgram; };
     int GetDepthProgram() const { return depthProgram; };
@@ -48,12 +55,15 @@ class ShaderModule : public Module
     int metallicRoughnessProgramUnlit  = -1;
 
     int metallicGeometryPassProgram    = -1;
+    int metallicGeometryVPOPassProgram = -1;
     int specularGeometryPassProgram    = -1;
+    int specularGeometryVPOPassProgram = -1;
     int lightingPassProgram            = -1;
 
     int uiWidgetProgram                = -1;
 
     int transparentPassProgram         = -1;
+    int transparentVPOPassProgram      = -1;
     int quadProgram                    = -1;
     int depthProgram                   = -1;
     int linearDepthProgram             = -1;
@@ -68,4 +78,6 @@ class ShaderModule : public Module
 
     int spritesheetProgram             = -1;
     int particleSystemProgram          = -1;
+
+    std::map<HashString, unsigned int> customShaderPrograms;
 };

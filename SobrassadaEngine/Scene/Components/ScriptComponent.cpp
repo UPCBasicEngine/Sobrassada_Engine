@@ -1,6 +1,8 @@
 #include "ScriptComponent.h"
 
 #include "Application.h"
+#include "CameraModule.h"
+#include "Components/CameraComponent.h"
 #include "EditorUIModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
@@ -13,6 +15,7 @@
 #include "Math/float3.h"
 #include "PhysicsModule.h"
 #include <debug_draw.hpp>
+#include "ShaderScriptComponent.h"
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
@@ -206,8 +209,25 @@ void ScriptComponent::ResetInitializationFlags()
     std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
 }
 
-void ScriptComponent::Render(float deltaTime)
+
+void ScriptComponent::Render(float deltaTime, CameraComponent* camera)
 {
+    if (!IsEffectivelyEnabled()) return;
+
+    float gameTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f; // seconds
+    for (size_t i = 0; i < scriptInstances.size(); ++i)
+    {
+        if (scriptEnabled[i])
+        {
+            if (!scriptInitialized[i])
+            {
+                scriptInstances[i]->Init();
+                scriptInitialized[i] = true;
+            }
+
+            scriptInstances[i]->Render(gameTime, camera);
+        }
+    }
 }
 
 void ScriptComponent::RenderDebug(float deltaTime)

@@ -6,16 +6,16 @@ class GameObject;
 class MeshComponent;
 class SphereColliderComponent;
 
-enum ACTIVATION_STATE
-{
-    SLEEPING,
-    IDLE,
-    DROPPING,
-    DAMAGING,
-};
-
 class FireballTrap : public Script
 {
+    enum ACTIVATION_STATE
+    {
+        SLEEPING,
+        IDLE,
+        DROPPING,
+        DAMAGING,
+    };
+
   public:
     FireballTrap(GameObject* parent);
     bool Init() override;
@@ -47,12 +47,12 @@ class FireballTrap : public Script
     GameObject* fireball                    = nullptr;
     // fireball
     GameObject* fireballShadow              = nullptr;
-    
+
     float verticalSpeed                     = 0.0f;
     float rotationSpeed                     = 1.0f;
     float fallingHeight                     = 20.0f;
     float editableMaxFallSpeed              = 20.0f;
     float editableGravity                   = 9.81f;
 
-    ACTIVATION_STATE activationState = SLEEPING;
+    ACTIVATION_STATE activationState        = SLEEPING;
 };

@@ -69,6 +69,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Decal"),                COMPONENT_DECAL               },
         {HashString("Trail"),                COMPONENT_TRAIL               },
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
+        {HashString("Shader Script"),        COMPONENT_SHADER_SCRIPT       },
     };
 
     fullscreen    = FULLSCREEN;
@@ -897,7 +898,11 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         switch (field.type)
         {
         case InspectorField::FieldType::Text:
+            ImGui::Spacing();
             ImGui::Text(static_cast<const char*>(field.data));
+            break;
+        case InspectorField::FieldType::Spacing:
+            ImGui::Dummy({10.0f, 10.0f});
             break;
         case InspectorField::FieldType::Float:
             ImGui::DragFloat(

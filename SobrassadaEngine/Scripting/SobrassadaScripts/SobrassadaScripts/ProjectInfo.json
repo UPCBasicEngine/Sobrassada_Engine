@@ -1,0 +1,29 @@
+{
+ "ProjectInfo": {
+  "Project": {
+   "Name": "SobrassadaSound",
+   "GUID": "{C9341814-2FEF-4729-80F5-E19420EBAC78}",
+   "Generator": "2024.1.3.8749"
+  },
+  "CacheRoot": "../../../../../The-Hound-of-Ulster/SobrassadaSound/.cache",
+  "Platforms": [
+   {
+    "Name": "Windows",
+    "GUID": "{6CA4C6AE-FD2D-42EA-876B-1E8B66830987}",
+    "BasePlatform": "Windows",
+    "BasePlatformGUID": "{6E0CB257-C6C8-4C5C-8366-2740DFC441EB}",
+    "Path": "../../../../../The-Hound-of-Ulster/Assets/Soundbanks"
+   }
+  ],
+  "Languages": [
+   {
+    "Name": "English(US)",
+    "Id": "684519430",
+    "GUID": "{6947EA6E-67BD-4375-82C7-AEECB0B37809}",
+    "Default": "true",
+    "UseAsStandIn": "true"
+   }
+  ],
+  "FileHash": "{A6C6C755-8FC8-D53D-E551-900F400C09D1}"
+ }
+}
