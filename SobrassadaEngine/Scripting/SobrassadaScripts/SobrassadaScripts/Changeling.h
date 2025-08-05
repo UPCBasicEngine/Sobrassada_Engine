@@ -136,6 +136,7 @@ class Changeling : public Character
     float sneakAcceleration = 4.0f;
     float peekChancePerSecond = 0.1f;
     float3 spottedLocation = float3::nan;
+    float3 spottedViewingDirection = float3::nan;
     
     // Block specific
     bool dashRight = false;

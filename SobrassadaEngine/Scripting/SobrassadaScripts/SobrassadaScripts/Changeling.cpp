@@ -216,7 +216,15 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
     
     if (animComponent && animComponent->IsFinished())
     {
-        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
+        if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
+        {
+            spottedLocation = character->GetLastPosition();
+            spottedViewingDirection = character->GetFrontDirection();
+        } else
+        {
+            spottedLocation = float3::nan;
+            spottedViewingDirection = float3::nan;
+        }
         characterCollider->SetEnabled(false);
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
@@ -238,7 +246,15 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 {
     if (animComponent && animComponent->IsFinished())
     {
-        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
+        if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
+        {
+            spottedLocation = character->GetLastPosition();
+            spottedViewingDirection = character->GetFrontDirection();
+        } else
+        {
+            spottedLocation = float3::nan;
+            spottedViewingDirection = float3::nan;
+        }
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
     }
@@ -313,34 +329,30 @@ void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerS
         }
     }
 
-    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+    agentAI->LookAtMovement(spottedLocation, deltaTime);
 
-    if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return; // Preconditions are checked in the function
-        
-    // Random value = 1 only if fps are too high -> Ignore those frames then
+    if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return; 
+    
     if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
-        
-    if (distanceToPlayerSq <= maxDetectionRange * maxDetectionRange)
-    {
-        const float3 directionToPlayer = (character->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()).Normalized();
-        const float angleToPlayerVision = character->GetFrontDirection().AngleBetween(directionToPlayer) * RAD_DEGREE_CONV;
-        if (angleToPlayerVision < maxSneakAngleDegrees)
-        {
-            const float lerpFactor = max(min((distanceToPlayerSq - Pow(distanceToPlayerForMaxSneakSpeed, 2)) /
-                Pow(maxDetectionRange - distanceToPlayerForMaxSneakSpeed, 2), 1), 0);
-                
-            const float currentSneakSpeed = minSneakSpeed + (maxSneakSpeed - minSneakSpeed) * (1 - lerpFactor);
 
-            agentAI->ResumeMovement();
-            agentAI->LookAtMovement(character->GetGlobalTransform().TranslatePart(), deltaTime);
-            agentAI->SetSpeed(currentSneakSpeed, sneakAcceleration);
-            agentAI->SetPathNavigation(character->GetGlobalTransform().TranslatePart());
+    const float3 directionToPlayer = (spottedLocation - parent->GetGlobalTransform().TranslatePart()).Normalized();
+    const float angleToPlayerVision = spottedViewingDirection.AngleBetween(directionToPlayer) * RAD_DEGREE_CONV;
+    if (angleToPlayerVision < maxSneakAngleDegrees)
+    {
+        const float lerpFactor = max(min((distanceToPlayerSq - Pow(distanceToPlayerForMaxSneakSpeed, 2)) /
+            Pow(maxDetectionRange - distanceToPlayerForMaxSneakSpeed, 2), 1), 0);
                 
-        } else
-        {
-            agentAI->SetSpeed(0, 10);
-        }
+        const float currentSneakSpeed = minSneakSpeed + (maxSneakSpeed - minSneakSpeed) * (1 - lerpFactor);
+
+        agentAI->SetSpeed(currentSneakSpeed, sneakAcceleration);
+        agentAI->SetPathNavigation(spottedLocation);
+                
     } else
+    {
+        agentAI->SetSpeed(0, 10);
+    }
+        
+    if (spottedLocation.Distance(parent->GetGlobalTransform().TranslatePart()) < 0.5f)
     {
         agentAI->SetSpeed(0.0f, 10.0f);
         currentState = ChangelingStates::IDLE_BURIED;
@@ -567,6 +579,7 @@ bool Changeling::ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq)
     if (!spottedLocation.IsFinite()) return false;
     
     // Implement state transition
+    agentAI->ResetSpeed();
     currentState = ChangelingStates::BURIED_CHASE;
 
     return true;
