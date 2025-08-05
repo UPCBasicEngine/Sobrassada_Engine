@@ -10,6 +10,7 @@
 #include "CameraComponent.h"
 #include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
@@ -1183,10 +1184,11 @@ void GameObject::OnAABBUpdated()
     OnTransformUpdated();
 }
 
-void GameObject::Render(float deltaTime) const
+void GameObject::Render(float deltaTime, CameraComponent* camera) const
 {
     std::apply(
-        [&deltaTime](auto&... pointer) { ((pointer ? pointer->Render(deltaTime) : Nothing()), ...); }, compTuple
+        [&deltaTime, camera](auto&... pointer) { ((pointer ? pointer->Render(deltaTime, camera) : Nothing()), ...); },
+        compTuple
     );
 }
 

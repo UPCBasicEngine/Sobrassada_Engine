@@ -210,7 +210,8 @@ UID MaterialImporter::ImportMaterial(
 
         std::string assetPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(sourceFilePath);
         MetaMaterial meta(
-            finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID, isTransparent, isDoubleSided, isAlphaDiscard
+            finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID, isTransparent, isDoubleSided,
+            isAlphaDiscard
         );
         meta.Save(materialName, assetPath);
     }
@@ -269,9 +270,9 @@ ResourceMaterial* MaterialImporter::LoadMaterial(UID materialUID)
     // Create Mesh
     Material mat               = *reinterpret_cast<Material*>(cursor);
 
-    ResourceMaterial* material = new ResourceMaterial(materialUID, name, importOptions);
+    ResourceMaterial* material = new ResourceMaterial(materialUID, name);
 
-    material->LoadMaterialData(mat);
+    material->LoadMaterialData(mat, importOptions);
 
     delete[] buffer;
 

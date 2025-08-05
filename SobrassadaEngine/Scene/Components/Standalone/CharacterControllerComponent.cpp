@@ -120,6 +120,11 @@ void CharacterControllerComponent::Clone(const Component* other)
     }
 }
 
+void CharacterControllerComponent::Init()
+{
+    lastPosition = parent->GetGlobalTransform().TranslatePart();
+}
+
 void CharacterControllerComponent::Update(float time) // SO many navmesh getters!!!! Memo to rethink this
 {
     if (!IsEffectivelyEnabled() || !inputDown) return;
@@ -185,11 +190,6 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
     if (isDashing) Dash(deltaTime);
     else Move(deltaTime);
-}
-
-void CharacterControllerComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
 }
 
 void CharacterControllerComponent::RenderDebug(float deltaTime)

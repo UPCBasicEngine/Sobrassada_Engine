@@ -28,6 +28,7 @@
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/VideoComponent.h"
+#include "ShaderScriptComponent.h"
 
 #include <cstdint>
 
@@ -198,7 +199,7 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         std::get<SplineComponent*>(componentTuple) = component;
         component->Init();
         break;
-    } 
+    }
     case COMPONENT_DECAL:
     {
         DecalComponent* component                 = new DecalComponent(uid, parent);
@@ -219,7 +220,14 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         std::get<VideoComponent*>(componentTuple) = component;
         component->Init();
 		break;
-	} 
+	}
+    case COMPONENT_SHADER_SCRIPT:
+    {
+        ShaderScriptComponent* component          = new ShaderScriptComponent(uid, parent);
+        std::get<ShaderScriptComponent*>(componentTuple) = component;
+        component->Init();
+        break;
+    }
     default:
         return;
     }
@@ -361,7 +369,7 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
             SplineComponent* spline                    = new SplineComponent(initialState, parent);
             std::get<SplineComponent*>(componentTuple) = spline;
             break;
-        }      
+        }
         case COMPONENT_DECAL:
         {
             DecalComponent* decal                     = new DecalComponent(initialState, parent);
@@ -370,10 +378,10 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
         }
         case COMPONENT_TRAIL:
         {
-            TrailComponent* trail                    = new TrailComponent(initialState, parent);
+            TrailComponent* trail                     = new TrailComponent(initialState, parent);
             std::get<TrailComponent*>(componentTuple) = trail;
-			break;
-		}  
+            break;
+        }
         case COMPONENT_PARTICLE_SYSTEM:
         {
             ParticleSystemComponent* component                 = new ParticleSystemComponent(initialState, parent);
@@ -384,6 +392,12 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
         {
             VideoComponent* component                 = new VideoComponent(initialState, parent);
             std::get<VideoComponent*>(componentTuple) = component;
+            break;
+        }
+        case COMPONENT_SHADER_SCRIPT:
+        {
+            ShaderScriptComponent* component                 = new ShaderScriptComponent(initialState, parent);
+            std::get<ShaderScriptComponent*>(componentTuple) = component;
             break;
         }
         default:

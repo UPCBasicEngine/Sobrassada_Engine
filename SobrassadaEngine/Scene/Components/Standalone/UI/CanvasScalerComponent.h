@@ -16,7 +16,6 @@ class CanvasScalerComponent : public Component
 
     void Init() override;
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override {};
     void RenderDebug(float deltaTime) override {};
     void Save(rapidjson::Value& state, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override {};
