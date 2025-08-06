@@ -31,6 +31,9 @@
     <Filter Include="ShaderScripts">
       <UniqueIdentifier>{d1d723a4-b324-40db-b30d-8664c18d659a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ShaderScripts\HealVFX">
+      <UniqueIdentifier>{065672c1-b0b3-42a7-a7a2-a6db5e08f08a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
@@ -156,6 +159,9 @@
     </ClInclude>
     <ClInclude Include="Destructible.h">
       <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="HealVFXGround.h">
+      <Filter>ShaderScripts\HealVFX</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -851,6 +857,9 @@
     </ClCompile>
     <ClCompile Include="SwitchScriptTest.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="HealVFXGround.cpp">
+      <Filter>ShaderScripts\HealVFX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

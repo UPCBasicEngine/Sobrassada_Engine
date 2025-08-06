@@ -78,7 +78,7 @@ class ResourceMaterial : public Resource
     TextureInfo emmisiveTexture;
     TextureInfo occlusionTexture;
 
-    MaterialGPU material;
+    MaterialGPU material  = {};
     bool isTransparent    = false;
     bool isAlpha          = false;
     bool doubleSided      = false;

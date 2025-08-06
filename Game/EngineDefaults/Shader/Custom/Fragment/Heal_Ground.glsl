@@ -7,13 +7,12 @@
 layout(location=4) uniform bool isWireframe;
 layout(location=5) uniform bool isAlphaDiscard;
 layout(location=6) uniform vec3 cameraPos;
+layout(location=7) uniform float frameTimer;
 
 in vec3 pos;
 in vec2 uv;
 in vec3 normal;
 in vec4 tangent;
-
-
 
 out vec4 fragColor;
 
@@ -177,7 +176,6 @@ vec3 RenderSpotLight(const int index, const vec3 N, const vec3 Cd, float roughne
 	else return vec3(0);
 }
 
-
 mat3 CreateTBN()
 {
     const vec3 T = normalize(vec3(tangent));
@@ -188,11 +186,19 @@ mat3 CreateTBN()
 
 void main()
 {
-    const vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
+    vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
     vec4 metallicRoughnessTexColor;
     if(hasMetallic == 1) metallicRoughnessTexColor = pow(texture(sampler2D(metallicTex), uv), vec4(2.2));
     else metallicRoughnessTexColor = vec4(1);
-    const float alpha = texColor.a * diffColor.a;
+
+    // Here all the blender nodes probably
+    //vec3 addNode = vec3(uv, 0.0f) + vec3(0.0f, 1.1f - frameTimer * 0.15f, 1.9f);
+    //vec2 combineNode = vec2(clamp(addNode.y, 0.0f, 1.0f), addNode.x);
+    //vec4 textureNode = texture(sampler2D(diffuseTex), combineNode);
+//
+    //float scalar = clamp(frameTimer, 0.0f, 1.0f);
+    //vec4 finalAlpha = textureNode * 1.0f;
+    float alpha = texColor.a  * diffColor.a;
 
     if (!isWireframe && isAlphaDiscard)
     {

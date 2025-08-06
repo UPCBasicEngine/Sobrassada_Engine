@@ -16,6 +16,7 @@
 #include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
+#include "HealVFXGround.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MoveGOInSpline.h"
@@ -29,13 +30,10 @@
 #include "Soldier.h"
 #include "SpawnPoint.h"
 #include "SpawnUI.h"
+#include "Spouts.h"
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "EnemySpawnerScript.h"
-#include "GameOverScript.h"
-#include "PlayerLocationScript.h"
-#include "Spouts.h"
 
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
@@ -84,9 +82,11 @@ constexpr const char* scripts[] = {
     "Destructible"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
+constexpr const char* shaderScripts[] = {
+    "MovingUVPostScript", "MovingUVLight", "MovingUVTransparent", "HealVFXGround", "HealVFXPlanes"
+};
 
-Application* AppEngine                = nullptr;
+Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -139,6 +139,17 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "HealVFXGround")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/Heal_Ground.glsl"
+        );
+
+    if (scriptType == "HealVFXPlanes")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/Heal_Planes.glsl"
+        );
 
     return nullptr;
 }
