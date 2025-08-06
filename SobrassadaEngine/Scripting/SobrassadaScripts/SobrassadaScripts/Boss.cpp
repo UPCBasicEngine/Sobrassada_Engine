@@ -18,7 +18,12 @@
 
 Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
     fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
+    fields.push_back({"Height Jump", InspectorField::FieldType::Float, &heightJump, 0.0f, 5.0f});
+    fields.push_back({"Jump Duration", InspectorField::FieldType::Float, &jumpDuration, 0.0f, 2.0f});
+    fields.push_back({"Fall Duration", InspectorField::FieldType::Float, &fallDuration, 0.0f, 2.0f});
+    fields.push_back({"Close Area Damage", InspectorField::FieldType::Int, &closeAreaDamage, 0, 5});
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
     fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
     fields.push_back({"Close Area", InspectorField::FieldType::InputText, &closeAreaName});
@@ -206,13 +211,15 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistanceWithPlayer())
     {
     case PlayerDistances::Close:
-        shieldStrikesRate  = 75;
-        overheadStrikeRate = 100;
+        shieldStrikesRate = 100;
+        // shieldStrikesRate  = 75;
+        // overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Medium:
-        shieldStrikesRate  = 50;
         overheadStrikeRate = 100;
+        // shieldStrikesRate  = 50;
+        // overheadStrikeRate = 100;
         break;
 
     case PlayerDistances::Far:
