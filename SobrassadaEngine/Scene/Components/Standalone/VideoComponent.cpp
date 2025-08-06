@@ -31,7 +31,7 @@ void VideoComponent::Update(float deltaTime)
 {
 }
 
-void VideoComponent::Render(float deltaTime)
+void VideoComponent::Render(float deltaTime, CameraComponent* camera)
 {
 }
 
