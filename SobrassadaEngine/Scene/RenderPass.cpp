@@ -208,7 +208,7 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Blur Pass");
     SsaoBlurPassRender(ssao);
     glPopDebugGroup();
-
+     
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -803,7 +803,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, gbuffer->emissiveTexture);
 
-    glActiveTexture(GL_TEXTURE5);
+    glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, ssao->GetBlurTexture(1));
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();

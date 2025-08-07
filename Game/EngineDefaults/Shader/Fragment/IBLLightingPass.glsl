@@ -10,8 +10,8 @@ layout(binding = 2) uniform sampler2D gPosition;
 layout(binding = 3) uniform sampler2D gNormal;
 layout(binding = 4) uniform sampler2D shadowMap;
 layout(binding = 5) uniform sampler2D gEmissive;
+layout(binding = 6) uniform sampler2D ssao;
 
-layout(binding = 5) uniform sampler2D ssao;
 uniform mat4 viewLight;
 uniform mat4 projLight;
 uniform vec3 shadowTint;

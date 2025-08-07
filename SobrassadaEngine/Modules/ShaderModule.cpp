@@ -33,15 +33,15 @@ bool ShaderModule::Init()
     transparentVPOPassProgram = CreateShaderProgram(LIGHTS_VERTEX_SHADER_PATH, TRANSPARENT_FRAGMENT_SHADER_PATH);
     lightingPassProgram       = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LIGHTINGPASS_FRAGMENT_SHADER_PATH);
 
-    quadProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
-    depthProgram                = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
-    linearDepthProgram          = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LINEARDEPTH_FRAGMENT_SHADER_PATH);
-    billboardProgram            = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
-    trailProgram                = CreateShaderProgram(TRAIL_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
-    decalProgram                = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
-    ssaoProgram                 = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_LOW_FRAGMENT_SHADER_PATH);
-    ssaoBlurProgram             = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_BLUR_FRAGMENT_SHADER_PATH);
-    ssaoDebugProgram            = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_DEBUG_SHADER_PATH);
+    quadProgram               = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, QUAD_FRAGMENT_SHADER_PATH);
+    depthProgram              = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, DEPTH_FRAGMENT_SHADER_PATH);
+    linearDepthProgram        = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, LINEARDEPTH_FRAGMENT_SHADER_PATH);
+    billboardProgram          = CreateShaderProgram(BILLBOARD_VERTEX_SHADER_PATH, BILLBOARD_FRAGMENT_SHADER_PATH);
+    trailProgram              = CreateShaderProgram(TRAIL_VERTEX_SHADER_PATH, TRAIL_FRAGMENT_SHADER_PATH);
+    decalProgram              = CreateShaderProgram(DECAL_VERTEX_SHADER_PATH, DECAL_FRAGMENT_SHADER_PATH);
+    ssaoProgram               = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_LOW_FRAGMENT_SHADER_PATH);
+    ssaoBlurProgram           = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_BLUR_FRAGMENT_SHADER_PATH);
+    ssaoDebugProgram          = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, SSAO_DEBUG_SHADER_PATH);
 
     shadowMapProgram          = CreateShaderProgram(SHADOWMAP_VERTEX_SHADER_PATH, EMPTY_FRAGMENT_SHADER_PATH);
 
