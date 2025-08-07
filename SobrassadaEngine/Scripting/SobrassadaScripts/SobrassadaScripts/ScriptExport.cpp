@@ -82,9 +82,8 @@ constexpr const char* scripts[] = {
     "Destructible"
 };
 
-constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight", "MovingUVTransparent", "HealVFXGround", "HealVFXPlanes"
-};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight",      "MovingUVTransparent",
+                                         "HealGroundHalo",     "HealVerticalPlanes", "HealSpikesBurst" };
 
 Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -139,16 +138,22 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
-    if (scriptType == "HealVFXGround")
+    if (scriptType == "HealGroundHalo")
         return new HealVFXGround(
-            parent, "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
-            "./EngineDefaults/Shader/Custom/Fragment/Heal_Ground.glsl"
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/Heal_GroundHalo.glsl"
         );
 
-    if (scriptType == "HealVFXPlanes")
+    if (scriptType == "HealVerticalPlanes")
         return new HealVFXGround(
-            parent, "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
-            "./EngineDefaults/Shader/Custom/Fragment/Heal_Planes.glsl"
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/Heal_VerticalPlanes.glsl"
+        );
+    
+    if (scriptType == "HealSpikesBurst")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/Heal_SpikesBurst.glsl"
         );
 
     return nullptr;

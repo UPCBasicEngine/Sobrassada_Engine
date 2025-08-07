@@ -92,8 +92,6 @@ bool HealVFXGround::Init()
 
             MaterialGPU mat = rmat->GetMaterial();
 
-            xd              = rmat->GetDiffuseColorID();
-
             glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
             glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
         }
@@ -144,9 +142,6 @@ void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
-        float2 uvOffset(0.0f, 0.0f);
-        glUniform2fv(3, 1, &uvOffset[0]);
-
         glUniform1i(4, 0);
         glUniform1i(5, true);
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
@@ -157,9 +152,6 @@ void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
 
         glUniform3fv(6, 1, &cameraPos[0]);
         glUniform1f(7, frameTimer);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, xd);
 
         glBindVertexArray(vao);
 

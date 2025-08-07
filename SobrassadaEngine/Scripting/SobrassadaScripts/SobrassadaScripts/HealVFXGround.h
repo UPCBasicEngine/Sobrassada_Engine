@@ -37,5 +37,4 @@ class HealVFXGround : public Script
     MeshComponent* meshComp     = nullptr;
     std::string fragment        = "";
     std::string vertex          = "";
-    unsigned int xd             = 0;
 };
