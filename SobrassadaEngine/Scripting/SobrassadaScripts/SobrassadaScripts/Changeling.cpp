@@ -376,7 +376,7 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         dashTrailMeshObjects[0]->SetEnabled(true);   
         dashTrailColliderObjects[0]->SetEnabled(true);
         dashIndex = 0;
-        if (version == ChangelingVersions::BLOCK && !ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
+        if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
             animComponent->UseTrigger("Trigger_Dash");
             agentAI->SetSpeed(dashSpeed, 1000000);
@@ -430,7 +430,7 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
         dashTrailColliderObjects[dashIndex]->SetEnabled(true);
 
         animComponent->UseTrigger("Trigger_Dash");
-        currentState = bNextDashInterrupted ? ChangelingStates::DASH_ATTACK : ChangelingStates::DASH_CHAIN_ATTACK;
+        currentState = bNextDashUninterrupted ? ChangelingStates::DASH_CHAIN_ATTACK : ChangelingStates::DASH_ATTACK;
     }
 }
 
@@ -654,11 +654,14 @@ bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
 
 bool Changeling::ST_AimNextDashChainAttack(float deltaTime, float distanceToPlayerSq)
 {
+    // Check preconditions
+    if (version != ChangelingVersions::BLOCK && randomVersion != ChangelingVersions::BLOCK) return false;
+    
     float3 calculatedAimPoint;
 
     CalculateAimPoint(calculatedAimPoint);
     
-    bNextDashInterrupted = !CalculateDashTargetPoint(calculatedAimPoint, dashTarget);
+    bNextDashUninterrupted = CalculateDashTargetPoint(calculatedAimPoint, dashTarget);
 
     if (minDashDistance > activeDashRange)
     {
@@ -669,7 +672,7 @@ bool Changeling::ST_AimNextDashChainAttack(float deltaTime, float distanceToPlay
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     }
 
-    return bNextDashInterrupted;
+    return bNextDashUninterrupted;
 }
 
 bool Changeling::ST_AimNextDashAttack(float deltaTime, float distanceToPlayerSq)

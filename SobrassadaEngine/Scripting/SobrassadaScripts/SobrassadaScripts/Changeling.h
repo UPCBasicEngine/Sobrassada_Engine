@@ -117,7 +117,7 @@ class Changeling : public Character
     float biteAttackRadius = .5f;
     float biteAttackCooldown = 2.f;
     float activeDashRange = 0.f;
-    bool bNextDashInterrupted = false;
+    bool bNextDashUninterrupted = false;
 
     int userSelectedVersion = 0;
     ChangelingVersions version = ChangelingVersions::RANDOM;
