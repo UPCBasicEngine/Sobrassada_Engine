@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Globals.h"
+
 #include "Math/float4x4.h"
 #include <unordered_map>
 #include <vector>
@@ -41,6 +43,9 @@ class GeometryBatch
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
+
+    void SOBRASADA_API_ENGINE BindBonesBuffer();
+    void SOBRASADA_API_ENGINE UnbindBonesBuffer();
 
   private:
     void LockBuffer();

@@ -49,6 +49,7 @@ class MeshComponent : public Component
     int GetRenderMode() const { return renderMode; }
     bool GetProduceShadows() const { return produceShadows; }
     bool GetBatchWasEnabled() { return batchWasEnabled; }
+    bool GetBoneIndexOffset() const { return boneIndexOffset; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
     {
@@ -70,6 +71,8 @@ class MeshComponent : public Component
 
         batchWasEnabled = false;
     }
+
+    void SetBoneIndexOffset(unsigned int newIndexOffset) { boneIndexOffset = newIndexOffset; }
 
   private:
     std::string currentMeshName       = "Not selected";
@@ -97,4 +100,6 @@ class MeshComponent : public Component
     bool produceShadows     = true;
 
     bool batchWasEnabled    = false;
+
+    unsigned int boneIndexOffset  = 0;
 };
