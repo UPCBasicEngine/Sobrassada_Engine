@@ -40,6 +40,9 @@ class ShaderModule : public Module
     int GetTileShadingProgram() const { return tileShadingProgram; }
     int GetSpritesheetProgram() const { return spritesheetProgram; }
     int GetParticleSystemProgram() const { return particleSystemProgram; }
+    int GetSsaoProgram() const { return ssaoProgram; }
+    int GetSsaoDebugProgram() const { return ssaoDebugProgram; }
+    int GetSsaoBlurProgram() const { return ssaoBlurProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -78,6 +81,10 @@ class ShaderModule : public Module
 
     int spritesheetProgram             = -1;
     int particleSystemProgram          = -1;
+
+    int ssaoProgram                    = -1;
+    int ssaoDebugProgram               = -1;
+    int ssaoBlurProgram                = -1;
 
     std::map<HashString, unsigned int> customShaderPrograms;
 };
