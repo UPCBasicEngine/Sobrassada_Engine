@@ -560,3 +560,10 @@ void ResourceMaterial::FreeMaterials() const
         glDeleteTextures(1, &emmisiveTexture.textureID);
     }
 }
+
+void ResourceMaterial::SetDiffColor(const float4& newColor)
+{
+    material.diffColor = newColor;
+    //SaveToMeta();
+    App->GetSceneModule()->GetScene()->UpdateAllMaterialInstances(uid);
+}

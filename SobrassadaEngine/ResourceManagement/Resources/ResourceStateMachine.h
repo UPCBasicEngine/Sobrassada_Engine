@@ -84,6 +84,8 @@ class SOBRASADA_API_ENGINE ResourceStateMachine : public Resource
     void SetDefaultState(int state) { defaultStateIndex = state; }
     void ResetClipsSpeed();
 
+    void RemoveAllClips();
+
   public:
     std::vector<Clip> clips;
     std::vector<State> states;
