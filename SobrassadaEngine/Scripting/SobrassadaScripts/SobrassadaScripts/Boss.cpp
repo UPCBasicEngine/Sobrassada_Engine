@@ -901,7 +901,7 @@ const char* Boss::GetActionName() const
         return "Recover";
 
     case BossActions::Waiting:
-        return "Recover";
+        return "Waiting";
 
     case BossActions::Start:
         return "Start";
