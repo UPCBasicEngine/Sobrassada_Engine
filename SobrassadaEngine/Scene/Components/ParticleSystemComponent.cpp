@@ -203,6 +203,12 @@ void ParticleSystemComponent::SetParticleSystem(ParticleSystem* newParticleSyste
     particleSystemTag = newParticleSystem->GetTag();
 }
 
+void ParticleSystemComponent::SpawnAllInstances()
+{
+    for (auto& emitter : emitterInstances)
+        emitter.Spawn();
+}
+
 void ParticleSystemComponent::CreateLocalAABB()
 {
     localComponentAABB = AABB(-(float3::one / 2.f), (float3::one / 2.f));

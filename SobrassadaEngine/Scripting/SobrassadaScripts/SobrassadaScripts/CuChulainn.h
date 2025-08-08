@@ -201,7 +201,7 @@ class CuChulainn : public Character
     GameObject* riastradBlur           = nullptr;
     GameObject* riastradHalo           = nullptr;
     GameObject* riastradSphere         = nullptr;
-    GameObject* riastradCrack         = nullptr;
+    GameObject* riastradCrack          = nullptr;
     GameObject* riastradWaring         = nullptr;
     GameObject* riastradSmoke1         = nullptr;
     GameObject* riastradSmoke2         = nullptr;
@@ -239,9 +239,11 @@ class CuChulainn : public Character
 
     // Heal
     bool isHealing                         = false;
-    std::string healVisualName             = "";
-    GameObject* healVisual                 = nullptr;
+    std::string healVfxName                = "HealVfx";
+    std::string healParticlesName          = "HealParticles";
     std::string healKnockbackName          = "Heal Knockback";
+    GameObject* healVfx                    = nullptr;
+    GameObject* healParticles              = nullptr;
     GameObject* healKnockback              = nullptr;
     float healTimer                        = 0.0f;
     float healKnockbackDelay               = 0.0f;

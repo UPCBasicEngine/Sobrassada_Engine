@@ -47,6 +47,7 @@ namespace RaycastController
             if (meshComponent != nullptr)
             {
                 const ResourceMesh* resourceMesh = meshComponent->GetResourceMesh();
+                if (!resourceMesh) continue;
 
                 float4x4 globalTransform         = meshComponent->GetCombinedMatrix();
                 globalTransform.Inverse();
