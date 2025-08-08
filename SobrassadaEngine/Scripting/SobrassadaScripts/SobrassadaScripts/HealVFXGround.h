@@ -32,7 +32,7 @@ class HealVFXGround : public Script
     unsigned int indexCount     = 0;
 
     float frameTimer            = 0.1f;
-    int animationFPS            = 0;
+    float animationFPS            = 0.0f;
 
     MeshComponent* meshComp     = nullptr;
     std::string fragment        = "";

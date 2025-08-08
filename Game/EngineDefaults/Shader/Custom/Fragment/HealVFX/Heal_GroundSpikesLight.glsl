@@ -192,22 +192,18 @@ void main()
     else metallicRoughnessTexColor = vec4(1);
 
     // Blender nodes recreation
-    float subtractNode = (frameTimer * 0.15f) - 2.0f;
-    float powerNode = pow(subtractNode, 0.35f);
-    float multiplyAddNode = (powerNode * 2.91f) - 2.21f;
-    vec2 combineNode = vec2(0.0f, multiplyAddNode);
+    vec2 invertedUvs = vec2(uv.x, 1.0f - uv.y);
+    vec2 addNode = invertedUvs + vec2(0.0f, 1.1f - frameTimer * 0.15f);
+    vec2 combineNode = vec2(clamp(addNode.y, 0.0f, 1.0f), addNode.x);
+    vec4 textureNode = texture(sampler2D(diffuseTex), combineNode);
 
-    vec2 flippedUvs = vec2(uv.x, (1.0f - uv.y));
-    vec2 addNode = flippedUvs + combineNode;
-    vec2 combineNode2 = vec2(clamp(addNode.y, 0.0f, 1.0f), addNode.x);
-    vec4 textureNode = texture(sampler2D(diffuseTex), combineNode2);
-
-    vec4 scaleNode = textureNode * flippedUvs.y;
-    float alpha = scaleNode.a * diffColor.a;
+    float scalar = clamp(frameTimer * 0.03f - 0.2f, 0.0f, 1.0f);
+    vec4 finalAlpha = textureNode * scalar * 100.0f;
+    float alpha = finalAlpha.a * diffColor.a;
 
     if (!isWireframe && isAlphaDiscard)
     {
-        if(alpha < 0.1) discard;
+        if(alpha < 0.05) discard;
     }
 
     vec3 N = normalize(normal);
@@ -228,7 +224,7 @@ void main()
     const float NdotV = max(dot(N, V), 0.0001);
 
     // Ambient light
-    const vec3 BaseColor = diffColor.rgb * textureNode.rgb;
+    const vec3 BaseColor = diffColor.rgb * texColor.rgb;
     const vec3 Cd = BaseColor * (1 - metallic);
     const vec3 RF0 = mix(vec3(0.04), BaseColor, metallic);
 

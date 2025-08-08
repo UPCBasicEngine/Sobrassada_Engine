@@ -26,7 +26,7 @@ HealVFXGround::HealVFXGround(GameObject* parent, const std::string& ver, const s
 {
     vertex   = ver;
     fragment = frag;
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Int, &animationFPS, 0, 100});
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationFPS, 0.0f, 100.0f});
 }
 
 HealVFXGround::~HealVFXGround()
@@ -103,9 +103,6 @@ bool HealVFXGround::Init()
 
 void HealVFXGround::Update(float deltaTime)
 {
-    // Calculate the frame since beginning and pass it to shader (Maybe just a timer and adjust its speed to match the
-    // animation)
-
     // TODO: DELETE
     if (AppEngine->GetInputModule()->GetKeyboard()[SDL_SCANCODE_F4] == KeyState::KEY_DOWN)
     {
@@ -155,7 +152,12 @@ void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(vao);
 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+        glEnable(GL_CULL_FACE);
 
         glBindVertexArray(0);
     }
