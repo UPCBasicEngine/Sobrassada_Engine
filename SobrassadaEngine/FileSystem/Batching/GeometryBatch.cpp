@@ -261,6 +261,9 @@ void GeometryBatch::GenerateCommands(const std::vector<MeshComponent*>& meshes, 
             continue;
         }
 
+        // CHECK AGAIN BECAUSE IF UPDATE_SHADERSTORAGE == TRUE WILL ARRIVE TO THIS POINT
+        if (!component->GetEnabled()) continue;
+
         const ResourceMesh* resource   = component->GetResourceMesh();
 
         const unsigned int vertexCount = static_cast<unsigned int>(resource->GetVertexCount());

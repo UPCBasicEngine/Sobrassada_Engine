@@ -350,9 +350,6 @@ update_status Scene::Update(float deltaTime)
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
 
-    // for (auto& gameObject : gameObjectsContainer)
-    //     gameObject.second->UpdateComponents(deltaTime);
-
     for (auto gameObject : toUpdateGameObjects)
         gameObject->UpdateComponents(deltaTime);
 
@@ -432,6 +429,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
     App->GetParticleModule()->RenderParticles();
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
+    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 }
 

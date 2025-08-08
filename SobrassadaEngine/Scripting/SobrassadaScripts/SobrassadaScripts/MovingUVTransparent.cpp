@@ -105,6 +105,7 @@ bool MovingUVTransparent::Init()
         }
 
         meshComp->SetEnabled(false);
+        meshComp->SetUpdateShaderStorage(true);
     }
     uvOffset = uvOffsetStart;
     return true;

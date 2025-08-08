@@ -42,5 +42,5 @@ void main()
     } 
 
     uv = vertexUV + uvOffset;
-    gl_Position =  gl_Position = proj * view * vec4(pos, 1.0f);
+    gl_Position = proj * view * vec4(pos, 1.0f);
 }
