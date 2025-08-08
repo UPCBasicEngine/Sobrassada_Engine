@@ -121,7 +121,7 @@ void Boss::OnDamageTaken(int amount)
 
 void Boss::HandleState(float deltaTime)
 {
-    if (!mirageActivated && !isDashing && !isJumping && !isFalling && currentHealth <= mirageActivation[phase - 1])
+    if (!mirageActivated && currentHealth <= mirageActivation[phase - 1])
     {
         stateEnter   = true;
         currentState = BossStates::Mirage;
@@ -164,11 +164,6 @@ void Boss::HandleState(float deltaTime)
     case BossStates::WaterSpouts:
         break;
     }
-
-    if (animComponent && animComponent->IsFinished())
-    {
-        animComponent->UseTrigger("Idle");
-    }
 }
 
 void Boss::UpdateTimers(float deltaTime)
@@ -180,6 +175,8 @@ void Boss::UpdateTimers(float deltaTime)
 
 void Boss::ChooseNextState()
 {
+    stateEnter = true;
+
     switch (phase)
     {
     case 1:
@@ -198,36 +195,52 @@ void Boss::ChooseNextState()
         GLOG("Invalid phase boss")
         break;
     }
-
-    stateEnter = true;
 }
 
 void Boss::ChooseNextStateFirstPhase()
 {
-    int shieldStrikesRate  = 0;
-    int overheadStrikeRate = 0;
+    int shieldStrikesRate  = -1;
+    int overheadStrikeRate = -1;
 
     // Set states ratio depending on distance
-    switch (CheckDistanceWithPlayer())
+    switch (CheckDistance())
     {
-    case PlayerDistances::Close:
+    case BossDistance::Close:
         shieldStrikesRate = 100;
-        // shieldStrikesRate  = 75;
-        // overheadStrikeRate = 100;
         break;
 
-    case PlayerDistances::Medium:
+    case BossDistance::Near:
+        shieldStrikesRate  = 80;
         overheadStrikeRate = 100;
-        // shieldStrikesRate  = 50;
-        // overheadStrikeRate = 100;
         break;
 
-    case PlayerDistances::Far:
+    case BossDistance::Medium:
+        shieldStrikesRate  = 60;
+        overheadStrikeRate = 100;
+        break;
+
+    case BossDistance::Distant:
+        shieldStrikesRate  = 50;
+        overheadStrikeRate = 100;
+        break;
+
+    case BossDistance::Far:
+        shieldStrikesRate  = 35;
+        overheadStrikeRate = 100;
+        break;
+
+    case BossDistance::Farther:
+        shieldStrikesRate  = 20;
+        overheadStrikeRate = 100;
+        break;
+
+    case BossDistance::Extreme:
         float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
         if (distance <= maxDetectionRange) doTaunt = true;
         else doIdle = true;
         break;
     }
+    // shieldStrikesRate = -1;
 
     int num = uniformDist(rng);
     if (doTaunt)
@@ -301,6 +314,7 @@ void Boss::ShieldStrikes(float deltaTime)
     if (stateEnter)
     {
         stateEnter             = false;
+        actionTriggerDone      = false;
         currentAction          = BossActions::Chase;
         shieldStrikeLastAction = 0;
     }
@@ -345,6 +359,7 @@ void Boss::ShieldStrikes(float deltaTime)
         {
             if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentAction = BossActions::Combo2;
             else currentAction = BossActions::Chase;
+            StopAttacking();
             actionTriggerDone = false;
         }
         break;
@@ -369,6 +384,7 @@ void Boss::ShieldStrikes(float deltaTime)
         {
             if (CheckDistanceWithPlayer() == PlayerDistances::Close) currentAction = BossActions::Combo3;
             else currentAction = BossActions::Chase;
+            StopAttacking();
             actionTriggerDone = false;
         }
         break;
@@ -392,8 +408,7 @@ void Boss::ShieldStrikes(float deltaTime)
         if (animComponent && animComponent->IsFinished())
         {
             actionTriggerDone = false;
-            isAttacking       = false;
-            attackCdTimer     = attackCooldown;
+            StopAttacking();
             ChooseNextState();
         }
         break;
@@ -424,9 +439,9 @@ void Boss::OverheadStrike(float deltaTime)
 
     if (stateEnter)
     {
-
-        stateEnter    = false;
-        currentAction = BossActions::Prepare;
+        stateEnter        = false;
+        actionTriggerDone = false;
+        currentAction     = BossActions::Prepare;
     }
 
     switch (currentAction)
@@ -452,17 +467,8 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             agentAI->SetFreeMove(true);
-            StartJump();
             if (animComponent) animComponent->UseTrigger("Jump");
             actionTriggerDone = true;
-        }
-
-        if (isJumping) Jump(deltaTime);
-        else
-        {
-            GLOG("Finished jump")
-            currentAction     = BossActions::Dash;
-            actionTriggerDone = false;
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
@@ -479,14 +485,15 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
-            StartDash();
             if (animComponent) animComponent->UseTrigger("Dash");
+            StartDash();
+            Attack(deltaTime);
+            weaponCollider->SetEnabled(true);
         }
 
         if (isDashing) Dash(deltaTime);
         else
         {
-            GLOG("Finished dashing")
             currentAction     = BossActions::Land;
             actionTriggerDone = false;
         }
@@ -501,17 +508,10 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::Land:
         if (!actionTriggerDone)
         {
-            StartFall();
+            weaponCollider->SetEnabled(false);
+            StopAttacking();
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Land");
-        }
-
-        if (isFalling) Fall(deltaTime);
-        else
-        {
-            currentAction     = BossActions::Attack;
-            actionTriggerDone = false;
-            GLOG("Finished fall");
         }
 
         if (animComponent && animComponent->IsFinished())
@@ -524,41 +524,19 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::Attack:
         if (!actionTriggerDone)
         {
+            actionTriggerDone = true;
             agentAI->SetFreeMove(false);
+            agentAI->PauseMovement();
             attackHitboxDelay    = 0.7f;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
-            agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("Attack");
-            actionTriggerDone = true;
         }
 
-        // Enable hitbox when animation hits
-        if (!closeArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
-            attackTimer <= attackHitboxDelay + attackHitboxDuration)
-        {
-            closeArea->SetEnabled(true);
-            agentAI->PauseMovement();
-            animComponent->OnPause();
-        }
-        else if (closeArea->IsEnabled() && bigArea->IsEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
-        {
-            closeArea->SetEnabled(false);
-            bigArea->SetEnabled(false);
-            agentAI->ResumeMovement();
-            animComponent->OnResume();
-        }
-
-        if (!bigArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
-            attackTimer <= attackHitboxDelay + attackHitboxDuration && attackTimer >= 1.5f)
-        {
-            bigArea->SetEnabled(true);
-        }
+        DamageAreaLogic();
 
         if (animComponent && animComponent->IsFinished())
         {
-            isAttacking       = false;
-            attackCdTimer     = attackCooldown;
             actionTriggerDone = false;
             currentAction     = BossActions::Recover;
         }
@@ -571,13 +549,19 @@ void Boss::OverheadStrike(float deltaTime)
             if (animComponent) animComponent->UseTrigger("Recover");
         }
 
+        DamageAreaLogic();
+
         if (animComponent && animComponent->IsFinished())
         {
-            agentAI->ResumeMovement();
             actionTriggerDone = false;
-
-            ChooseNextState();
+            currentAction     = BossActions::Waiting;
         }
+        break;
+
+    case BossActions::Waiting:
+        if (animComponent && animComponent->IsFinished()) animComponent->UseTrigger("Idle");
+
+        DamageAreaLogic();
         break;
 
     default:
@@ -639,7 +623,6 @@ void Boss::StartJump()
     jumpSpeed         = heightJump / jumpDuration;
     jumpTimeRemaining = jumpDuration;
     jumpStartPosLocal = parent->GetLocalTransform().TranslatePart();
-    GLOG("Speed: %.2f", jumpSpeed);
 }
 
 void Boss::Jump(float deltaTime)
@@ -687,6 +670,52 @@ void Boss::Fall(float deltaTime)
         isFalling = false;
         parent->SetLocalPosition(fallStartPosLocal - float3::unitY * heightJump);
     }
+}
+
+void Boss::DamageAreaLogic()
+{
+    // Enable hitbox when animation hits
+    if (!closeArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
+        attackTimer <= attackHitboxDelay + attackHitboxDuration)
+    {
+        closeArea->SetEnabled(true);
+    }
+    else if (closeArea->IsEnabled() && bigArea->IsEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+    {
+        closeArea->SetEnabled(false);
+        bigArea->SetEnabled(false);
+        agentAI->ResumeMovement();
+        StopAttacking();
+
+        ChooseNextState();
+    }
+
+    if (!bigArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
+        attackTimer <= attackHitboxDelay + attackHitboxDuration && attackTimer >= bigAreaHitboxDelay)
+    {
+        bigArea->SetEnabled(true);
+    }
+}
+
+BossDistance Boss::CheckDistance() const
+{
+    if (character != nullptr)
+    {
+        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+        if (distance <= rangeAIAttack) return BossDistance::Close;
+        else if (distance <= rangeAIChase / 3) return BossDistance::Near;
+        else if (distance <= rangeAIChase / 2) return BossDistance::Medium;
+        else if (distance <= rangeAIChase / 1.5f) return BossDistance::Distant;
+        else if (distance <= rangeAIChase / 1.2f) return BossDistance::Far;
+        else if (distance <= rangeAIChase) return BossDistance::Farther;
+    }
+    return BossDistance::Extreme;
+}
+
+void Boss::StopAttacking()
+{
+    isAttacking   = false;
+    attackCdTimer = attackCooldown;
 }
 
 void Boss::Mirage()
@@ -869,6 +898,9 @@ const char* Boss::GetActionName() const
         return "Attack";
 
     case BossActions::Recover:
+        return "Recover";
+
+    case BossActions::Waiting:
         return "Recover";
 
     case BossActions::Start:

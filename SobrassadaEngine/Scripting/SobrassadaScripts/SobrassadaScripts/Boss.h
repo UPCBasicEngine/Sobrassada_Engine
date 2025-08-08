@@ -10,6 +10,17 @@ class AIAgentComponent;
 class BossMirage;
 class ImageComponent;
 
+enum class BossDistance
+{
+    Close,   // 3m
+    Near,    // 5m
+    Medium,  // 7.5m
+    Distant, // 10m
+    Far,     // 12.5m
+    Farther, // 15m
+    Extreme  // 20m
+};
+
 enum class BossStates
 {
     None,
@@ -36,6 +47,7 @@ enum class BossActions
     Land,
     Attack,
     Recover,
+    Waiting,
     Start,
     Charge,
     End,
@@ -77,6 +89,10 @@ class Boss : public Character
     void Jump(float deltaTime);
     void StartFall();
     void Fall(float deltaTime);
+    void DamageAreaLogic();
+
+    BossDistance CheckDistance() const;
+    void StopAttacking();
 
     void Mirage();
     void ChangePhase();
@@ -129,6 +145,7 @@ class Boss : public Character
     GameObject* closeArea                = nullptr;
     std::string bigAreaName              = "";
     GameObject* bigArea                  = nullptr;
+    float bigAreaHitboxDelay             = 1.5f;
 
     // Inspector values
     int closeAreaDamage                  = 2;
