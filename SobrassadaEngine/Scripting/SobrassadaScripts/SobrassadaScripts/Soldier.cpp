@@ -22,6 +22,7 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
     fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
     fields.push_back({"Second Attack Delay", InspectorField::FieldType::Float, &secondAttackDelay, 0.0f, 1.0f});
+    fields.push_back({"Chase Speed", InspectorField::FieldType::Float, &chaseSpeed, 0.0f, 10.0f});
 }
 
 bool Soldier::Init()
@@ -50,7 +51,12 @@ bool Soldier::Init()
 
 void Soldier::Update(float deltaTime)
 {
-    if (agentAI == nullptr) return;
+    if (currentState == SoldierStates::DEATH && animComponent && animComponent->IsFinished())
+    {
+        parent->SetEnabled(false);
+    }
+
+    if (currentState == SoldierStates::DEATH || agentAI == nullptr) return;
 
     if (isKnockback)
     {
@@ -100,7 +106,10 @@ void Soldier::OnDeath()
 {
     // TODO: include death sound for the character
     // TODO: animation and particles
-    parent->SetEnabled(false);
+    isAttacking = false;
+    if (animComponent) animComponent->UseTrigger("death");
+    agentAI->PauseMovement();
+    currentState = SoldierStates::DEATH;
 }
 
 void Soldier::OnDamageTaken(int amount)
@@ -114,6 +123,9 @@ void Soldier::OnDamageTaken(int amount)
     isKnockback    = true;
     knockbackTimer = knockbackTime;
     ApplyKnockback();
+    //HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
+    //std::string animState               = animStateFromPlayer.GetString();
+    //GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
 }
 
@@ -135,17 +147,27 @@ void Soldier::HandleState(float deltaTime)
         SearchForPlayer();
         break;
     case SoldierStates::PATROL:
-        PatrolAI();
+        agentAI->ResetSpeed();
+        PatrolAI(deltaTime);
         // TODO: patrol animation
-        animComponent->UseTrigger("run");
+        animComponent->UseTrigger("patrol");
         break;
     case SoldierStates::CHASE:
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         animComponent->UseTrigger("run");
+        agentAI->SetSpeed(chaseSpeed, 8.0);
+        // GLOG("Speed set to %f", patrolSpeed);
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
         if (attackCdTimer <= 0) Attack(deltaTime);
+        break;
+    case SoldierStates::PLAYER_DETECTION:
+        animComponent->UseTrigger("detectPlayer");
+        if (animComponent->IsFinished())
+        {
+            currentState = SoldierStates::CHASE;  
+        }
         break;
     default:
         GLOG("No state provided to Soldier");
@@ -155,19 +177,23 @@ void Soldier::HandleState(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
-        animComponent->UseTrigger("idle");
+        if (currentState == SoldierStates::BASIC_ATTACK) animComponent->UseTrigger("idleCombat");
+        else animComponent->UseTrigger("idle");
     }
 }
 
-void Soldier::PatrolAI()
+void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
+
     if (!playerScript->IsDead())
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
-            currentState = SoldierStates::CHASE;
+        {
+            currentState = SoldierStates::PLAYER_DETECTION;
+        }
         else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
             currentState = SoldierStates::BASIC_ATTACK;
     }
@@ -176,13 +202,24 @@ void Soldier::PatrolAI()
     if (reachedPatrolPoint)
     {
         if (CheckDistanceWithPoint(startPos)) reachedPatrolPoint = false;
-        else valid = agentAI->SetPathNavigation(startPos);
+        else
+        {
+            valid = agentAI->SetPathNavigation(startPos);
+            agentAI->LookAtMovement(startPos, deltaTime);
+        }
+
     }
     else
     {
         if (CheckDistanceWithPoint(patrolPoint)) reachedPatrolPoint = true;
-        else valid = agentAI->SetPathNavigation(patrolPoint);
+        else
+        {
+            valid = agentAI->SetPathNavigation(patrolPoint);
+            agentAI->LookAtMovement(patrolPoint, deltaTime);
+        }
     }
+
+    
 }
 
 void Soldier::ChaseAI()
@@ -197,6 +234,7 @@ void Soldier::ChaseAI()
 
 void Soldier::SearchForPlayer()
 {
+    GLOG("Searching for player");
     // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
     if (!isSearching)
     {
@@ -211,13 +249,14 @@ void Soldier::SearchForPlayer()
     {
         isSearching = false;
         agentAI->ResetSpeed();
-        currentState = SoldierStates::CHASE;
+        currentState = SoldierStates::PLAYER_DETECTION;
     }
     else if (searchTimer <= 0.0f)
     {
         isSearching  = false;
+        agentAI->SetSpeed(chaseSpeed, 8.0);
+        GLOG("Speed set to %f", chaseSpeed);
         currentState = SoldierStates::PATROL;
-        agentAI->ResetSpeed();
     }
 }
 
@@ -294,7 +333,7 @@ void Soldier::ChangeState()
 {
     if (playerScript->IsDead())
     {
-        currentState = SoldierStates::PATROL;
+        currentState = SoldierStates::DEATH;
         return;
     }
 

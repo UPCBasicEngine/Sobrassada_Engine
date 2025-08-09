@@ -59,6 +59,7 @@ class ResourceMaterial : public Resource
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlphaDiscard() const { return isAlpha; }
     const bool IsDoubleSided() const { return doubleSided; }
+    bool DoApplyWind() const { return applyWind; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
     int GetDiffuseWidth() const { return diffuseTexture.width; }
@@ -85,6 +86,7 @@ class ResourceMaterial : public Resource
     bool isAlpha          = false;
     bool doubleSided      = false;
     bool hasNormal        = false;
+    bool applyWind        = false;
     UID defaultTextureUID = INVALID_UID;
 
     bool wasUpdated       = false;

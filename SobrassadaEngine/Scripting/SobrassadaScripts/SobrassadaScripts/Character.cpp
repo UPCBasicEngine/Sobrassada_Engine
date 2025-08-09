@@ -10,6 +10,7 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Mushroom.h"
+#include "Spouts.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -188,6 +189,23 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 TakeDamage(fireballScript->GetDamage());
                 damageCollider->SetEnabled(false);
             }
+        }
+
+        /*
+        // Mushroom check
+        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
+        if (mushroomScript)
+        {
+            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
+            {
+                if (playerScript->TakeMushroom()) mushroomScript->Disable();
+            }
+        }*/
+
+        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+        if (spoutsScript)
+        {
+            TakeDamage(spoutsScript->GetDamage());
         }
     }
 }

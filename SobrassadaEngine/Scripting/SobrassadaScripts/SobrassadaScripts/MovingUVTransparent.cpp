@@ -100,9 +100,7 @@ bool MovingUVTransparent::Init()
 
         meshComp->SetEnabled(false);
     }
-
     uvOffset = uvOffsetStart;
-
     return true;
 }
 

@@ -139,6 +139,9 @@
     <ClInclude Include="PlayerLocationScript.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="Spouts.h">
+      <Filter>Environment\Traps</Filter>
+    </ClInclude>
     <ClInclude Include="MovingUVPostScript.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
@@ -830,6 +833,9 @@
     </ClCompile>
     <ClCompile Include="PlayerLocationScript.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Spouts.cpp">
+      <Filter>Environment\Traps</Filter>
     </ClCompile>
     <ClCompile Include="Destructible.cpp">
       <Filter>Environment</Filter>

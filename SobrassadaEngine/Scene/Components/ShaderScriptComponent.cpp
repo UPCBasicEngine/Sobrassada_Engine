@@ -232,7 +232,7 @@ void ShaderScriptComponent::Render(float deltaTime, CameraComponent* camera)
 
 void ShaderScriptComponent::RenderScript(float deltaTime, CameraComponent* camera, int scriptIndex)
 {
-    if (!enabled || scriptIndex >= scriptInstances.size()) return;
+    if (!IsEffectivelyEnabled() || scriptIndex >= scriptInstances.size()) return;
 
     float gameTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f; // seconds
 

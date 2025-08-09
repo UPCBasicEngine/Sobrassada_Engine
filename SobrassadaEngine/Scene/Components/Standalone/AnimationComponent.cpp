@@ -16,6 +16,10 @@
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
 #include "GameTimer.h"
+#include "Animation/AnimationTrigger.h"
+#include "AudioModule.h"
+#include "ResourceAnimation.h"
+
 
 #include "Math/Quat.h"
 #include "imgui.h"
@@ -63,7 +67,6 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
 
 AnimationComponent::~AnimationComponent()
 {
-
     delete animController;
     App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 }
@@ -98,17 +101,53 @@ void AnimationComponent::OnPlay(bool isTransition)
                         if (clip.clipName == currentState->clipName)
                         {
                             if (isTransition && transitionTime > 0)
+                            {
                                 animController->SetTargetAnimationResource(
                                     clip.animationResourceUID, transitionTime, clip.loop, clip.animationSpeed
                                 );
-                            else animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
+                            }
+                            else
+                                animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
+
+                            if (currentAnimResource)
+                                App->GetResourcesModule()->ReleaseResource(currentAnimResource);
+
+                            currentAnimResource = dynamic_cast<ResourceAnimation*>(
+                                App->GetResourcesModule()->RequestResource(clip.animationResourceUID)
+                            );
+
+                            if (currentAnimResource) currentAnimResource->AddReference();
+
                             resource = clip.animationResourceUID;
+
+
+                            SetBoneMapping();
+
+                            float clipLen       = currentAnimResource->GetDuration();
+                            if (clipLen <= 0.f) clipLen = 1.f;
+
+                            float startSec      = animController->GetTime();
+                            float startNorm     = (clipLen > 0.f) ? (startSec / clipLen) : 0.f;
+                            SetActiveTriggers(
+                                currentState->triggers, startNorm
+                            );
                         }
                     }
                 }
             }
         }
-        else animController->Play(resource, true, defaultTime);
+        else
+        {
+            if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
+
+            animController->Play(resource, true, defaultTime);
+            activeTriggers.clear(); 
+
+            currentAnimResource = animController->GetCurrentAnimation();
+            if (currentAnimResource) currentAnimResource->AddReference();
+
+            SetBoneMapping();
+        }
     }
 }
 
@@ -392,15 +431,38 @@ void AnimationComponent::Update(float deltaTime)
         if (!IsEffectivelyEnabled()) return;
         if (!animController->IsPlaying()) return;
 
-        if (boneMapping.empty())
-        {
-            SetBoneMapping();
-        }
+        float clipLen = currentAnimResource->GetDuration();
+        if (clipLen <= 0.f) clipLen = 1.f;
+
+        float prevSec  = animController->GetTime();
+        float prevNorm = prevSec / clipLen;
 
         // If in game, update animations with game timer so they are paused
         float currentDelta =
             App->GetSceneModule()->GetInPlayMode() ? App->GetGameTimer()->GetDeltaTime() / 1000.0f : deltaTime;
         animController->Update(currentDelta);
+
+        float currSec  = animController->GetTime();
+        float currNorm = currSec / clipLen;
+        bool looped    = currNorm < prevNorm;
+
+        if (!activeTriggers.empty())
+        {
+            for (StateTrigger& trg : activeTriggers)
+            {
+                if (trg.consumed && !looped) continue;
+
+                bool crossed = (!trg.consumed && prevNorm < trg.keyTimeNorm && currNorm >= trg.keyTimeNorm) ||
+                               (looped && currNorm >= trg.keyTimeNorm);
+
+                if (crossed && trg.type == TriggerType::SOUND)
+                {
+                    App->GetAudioModule()->EmitEvent(trg.eventName, parent->GetUID());
+                    trg.consumed = true;
+                }
+                if (looped && trg.repeatOnLoop) trg.consumed = false;
+            }
+        }
 
         std::set<GameObject*> modifiedBones;
 
@@ -466,6 +528,14 @@ void AnimationComponent::AddAnimation(UID animationUID)
         resource            = animationUID;
         SetBoneMapping();
     }
+}
+
+void AnimationComponent::SetActiveTriggers(const std::vector<StateTrigger>& vec, float startNorm)
+{
+    activeTriggers = vec;
+
+    for (auto& trg : activeTriggers)
+        trg.consumed = false;
 }
 
 bool AnimationComponent::IsPlaying() const
@@ -545,3 +615,4 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
     }
     return triggerDone;
 }
+
