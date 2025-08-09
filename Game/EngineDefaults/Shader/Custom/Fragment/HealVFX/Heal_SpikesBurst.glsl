@@ -187,9 +187,6 @@ mat3 CreateTBN()
 void main()
 {
     vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
-    vec4 metallicRoughnessTexColor;
-    if(hasMetallic == 1) metallicRoughnessTexColor = pow(texture(sampler2D(metallicTex), uv), vec4(2.2));
-    else metallicRoughnessTexColor = vec4(1);
 
     // Blender nodes recreation
     float subtractNode = (frameTimer * 0.15f) - 2.0f;
@@ -210,64 +207,17 @@ void main()
         if(alpha < 0.05) discard;
     }
 
-    vec3 N = normalize(normal);
-    // Retrive normal for normal map
-    if (normalTex.r != 0 || normalTex.g != 0) {
-        const mat3 space = CreateTBN();
-        const vec3 texNormal = (texture(sampler2D(normalTex), uv).xyz*2.0-1.0);
-        const vec3 final_normal = space * texNormal;
-        N = normalize(final_normal);
-    }
+    vec3 BaseColor = diffColor.rgb * texColor.rgb;
+    const vec3 emissive = vec3(0.276f, 1.0f, 0.009f);
+    BaseColor += emissive.rgb * 2;
+    const vec3 ldr = BaseColor / (BaseColor + vec3(1.0));
 
-    const float roughness = roughnessFactor * metallicRoughnessTexColor.y;
-    //roughness = roughness * roughness;
-    const float metallic = metallicFactor * metallicRoughnessTexColor.z;
-
-    const vec3 V = normalize(cameraPos - pos);
-    const vec3 R = reflect(-V, N);
-    const float NdotV = max(dot(N, V), 0.0001);
-
-    // Ambient light
-    const vec3 BaseColor = diffColor.rgb * texColor.rgb;
-    const vec3 Cd = BaseColor * (1 - metallic);
-    const vec3 RF0 = mix(vec3(0.04), BaseColor, metallic);
-
-    //vec3 ambient = ambient_color.rgb * ambient_color.a;
-    const vec3 ambient = GetAmbientLight(N, R, NdotV, roughness, Cd, RF0);
-    vec3 hdr = ambient;
-
-    // Point Lights
-    for (int i = 0; i < pointLightsCount; ++i)
-	{
-		hdr += RenderPointLight(i, N, Cd, roughness, RF0);
-	}
-
-    //Spot Lights
-    for (int i = 0; i < spotLightsCount; ++i)
-	{
-		hdr += RenderSpotLight(i, N, Cd, roughness, RF0);
-	}
-
-    // Directional light
-    const vec3 lightColor = directional_color.rgb * directional_color.a;
-    const vec3 L = -normalize(directional_dir.xyz);
-    const float NdotL = max(dot(N, L), 0.001f);
-    if (NdotL > 0)
-    {
-		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0);
-    }
-
-    const vec4 emissive = vec4(pow(texture(sampler2D(emmisiveTex), uv), vec4(2.2f)));
-
-    hdr += emissive.rgb;
-
-    vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
-    ldr = pow(hdr, vec3(1.0/2.2));
     if (isWireframe)
     {
         fragColor = vec4(ldr, 1.0);
     }
-    else {
-        fragColor = vec4(ldr, alpha);
+    else 
+    {
+        fragColor = vec4(ldr * alpha, 1.0f);
     } 
 }

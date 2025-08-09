@@ -27,6 +27,7 @@ HealVFXGround::HealVFXGround(GameObject* parent, const std::string& ver, const s
     vertex   = ver;
     fragment = frag;
     fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationFPS, 0.0f, 100.0f});
+    fields.push_back({"Additive", InspectorField::FieldType::Bool, &isAdditive});
 }
 
 HealVFXGround::~HealVFXGround()
@@ -152,8 +153,8 @@ void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(vao);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);

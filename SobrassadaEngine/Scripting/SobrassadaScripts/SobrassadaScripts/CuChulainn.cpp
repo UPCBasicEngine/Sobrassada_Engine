@@ -306,6 +306,8 @@ void CuChulainn::Update(float deltaTime)
     }
     CheckIsFalling();
 
+    if (!isDashing && dashTrail && dashTrail->IsEnabled()) dashTrail->SetEnabled(false);
+
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
         const std::string life           = "Health: " + std::to_string(currentHealth);
@@ -418,7 +420,6 @@ void CuChulainn::HandleState(float deltaTime)
         else
         {
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
-            if (state == CharacterStates::DASH && dashTrail) dashTrail->SetEnabled(false);
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
                 return;
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
@@ -1190,6 +1191,7 @@ void CuChulainn::UseMushroom()
     if (healVfx)
     {
         healVfx->SetEnabled(true);
+        healVfx->SetLocalPosition(parent->GetLocalTransform().TranslatePart());
         Scene* scene = AppEngine->GetSceneModule()->GetScene();
         for (UID child : healVfx->GetChildren())
         {
