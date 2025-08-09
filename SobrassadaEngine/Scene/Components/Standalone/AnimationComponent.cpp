@@ -15,6 +15,7 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
+#include "GameTimer.h"
 #include "Animation/AnimationTrigger.h"
 #include "AudioModule.h"
 #include "ResourceAnimation.h"
