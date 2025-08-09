@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Resource.h"
+#include "Globals.h"
 
 #include "Math/float3.h"
 #include "Math/float4.h"
@@ -69,6 +70,8 @@ class ResourceMaterial : public Resource
     unsigned int GetNormalTextureID() const { return normalTexture.textureID; }
     unsigned int GetEmissiveTextureID() const { return emmisiveTexture.textureID; }
     unsigned int GetOcclusionTextureID() const { return occlusionTexture.textureID; }
+
+    SOBRASADA_API_ENGINE void SetDiffColor(const float4& newColor);
 
   private:
     TextureInfo diffuseTexture;

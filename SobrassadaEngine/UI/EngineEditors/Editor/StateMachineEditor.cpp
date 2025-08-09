@@ -73,6 +73,11 @@ bool StateMachineEditor::RenderEditor()
         ShowTriggers();
     }
     ShowTriggersPopup();
+    ImGui::SameLine();
+    if (ImGui::Button("DELETE ALL CLIPS"))
+    {
+        resource->RemoveAllClips();
+    }
 
     const State* activeState = resource->GetDefaultState();
     for (const auto& pair : graph->getNodes())

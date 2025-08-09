@@ -615,6 +615,9 @@
     <ClCompile Include="Modules\ShaderScriptModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\SSAO.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1215,6 +1218,9 @@
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="resourceIcon.h" />
+    <ClInclude Include="Utils\SSAO.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
