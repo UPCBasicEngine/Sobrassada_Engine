@@ -26,7 +26,8 @@ class MovingUVTransparent : public Script
     unsigned int ebo            = 0;
     unsigned int materialBuffer = 0;
 
-    bool isAlphaDiscard         = false;
+    bool isAlphaDiscard          = false;
+    bool isDoubleSided           = false;
 
     unsigned int indexCount     = 0;
 

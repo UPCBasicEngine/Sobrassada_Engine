@@ -6,6 +6,7 @@
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -29,6 +30,8 @@ Banshee::Banshee(GameObject* parent)
 {
     fields.push_back({"Invisible time range", InspectorField::FieldType::Vec2, &invisibleTimeRange, 0.0f, 10.0f});
     fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 10.0f});
+    fields.push_back({"Main scream duration", InspectorField::FieldType::Float, &mainScreamDuration, 0.1f, 10.0f});
+    fields.push_back({"Warning duration", InspectorField::FieldType::Float, &warningDuration, 0.1f, 10.0f});
 }
 
 bool Banshee::Init()
@@ -44,32 +47,62 @@ bool Banshee::Init()
         speed = agentAI->GetSpeed();
     }
 
-    if (weapon)
+    const std::vector<UID>& childVector = parent->GetChildren();
+    Scene* loadedScene                  = AppEngine->GetSceneModule()->GetScene();
+
+    if (!loadedScene)
     {
-        damageArea = weapon->GetComponent<SphereColliderComponent*>();
-        if (damageArea == nullptr) GLOG("Sphere collider not found for Banshee")
-        else damageArea->SetEnabled(false);
+        GLOG("[ERROR BANSHEE SCRIPT]: Scene pointer nullptr")
+        return true;
     }
 
-    if (parent->GetChildren().size() > 3)
+    for (UID childUID : childVector)
     {
-        areaVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
-        if (areaVisual) areaVisual->SetEnabled(false);
-        else GLOG("[WARNING] Banshee: no area visual found as child of base")
-    }
+        GameObject* currentGO = loadedScene->GetGameObjectByUID(childUID);
 
-    if (parent->GetChildren().size() > 4)
-    {
-        screamVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
-        if (screamVisual) screamVisual->SetEnabled(false);
-        else GLOG("[WARNING] Banshee: no scream visual found as child of base")
-    }
+        if (currentGO->GetName() == "BansheeMesh")
+        {
+            mesh = currentGO->GetComponent<MeshComponent*>();
+            if (!mesh) GLOG("[ERROR BANSHEE SCRIPT]: No mesh found")
+        }
+        else if (currentGO->GetName() == "Scream")
+        {
+            weapon = currentGO;
 
-    mesh = AppEngine->GetSceneModule()
-               ->GetScene()
-               ->GetGameObjectByUID(parent->GetChildren()[1])
-               ->GetComponentChild<MeshComponent*>(AppEngine);
-    if (!mesh) GLOG("No mesh found for Banshee");
+            weapon->SetEnabled(false);
+        }
+        else if (currentGO->GetName() == "VFX_Banshee_shoutBase")
+        {
+            shoutBaseComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+        }
+        else if (currentGO->GetName() == "VFX_Banshee_shoutStart")
+        {
+            shoutStartComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            // Take mesh aurora and enable disable when necessary
+            std::vector<MeshComponent*> shoutStartMeshes =
+                currentGO->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
+
+            for (MeshComponent* currentMesh : shoutStartMeshes)
+            {
+                if (currentMesh->GetParent()->GetName() == "mesh_warningStar")
+                {
+                    meshWarningStar = currentMesh;
+                    meshWarningStar->SetEnabled(false);
+                }
+            }
+        }
+    }
 
     rng            = std::mt19937(std::random_device {}());
     normalizedDist = std::uniform_real_distribution<float>(0.0f, 1.0f);
@@ -86,12 +119,16 @@ void Banshee::Update(float deltaTime)
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
-        const std::string life      = "Health: " + std::to_string(currentHealth);
-        const std::string animState = "Anim state: " + stateName.GetString();
+        const std::string life         = "Health: " + std::to_string(currentHealth);
+        const std::string animState    = "Anim state: " + stateName.GetString();
+
+        std::string currentStateString = BansheeStateStrings[(int)currentState];
+        const std::string logicState   = "Logic state: " + currentStateString;
 
         std::vector<std::pair<std::string, float2>> logs {
-            {life,      float2(-50.0f, -140.0f)},
-            {animState, float2(-80.0f, -160.0f)},
+            {life,       float2(-50.0f, -140.0f)},
+            {animState,  float2(-80.0f, -160.0f)},
+            {logicState, float2(-80.0f, -180.0f)},
         };
 
         RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
@@ -100,7 +137,49 @@ void Banshee::Update(float deltaTime)
 
 void Banshee::OnPlayerExitLocation()
 {
-    currentState = BansheeStates::Idle;
+
+    switch (currentState)
+    {
+    case BansheeStates::Search:
+        isSearching = false;
+        break;
+    case BansheeStates::Attack:
+    {
+        for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        if (meshWarningStar) meshWarningStar->SetEnabled(false);
+
+        weapon->SetEnabled(false);
+
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->ResetAngularSpeed();
+        agentAI->SetLookForward(true);
+
+        break;
+    }
+    default:
+        break;
+    }
+    currentState = BansheeStates::TeleportOrigin;
 }
 
 void Banshee::OnDeath()
@@ -136,11 +215,29 @@ void Banshee::HandleState(float deltaTime)
     case BansheeStates::Attack:
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
-    }
 
-    if (animComponent && animComponent->IsFinished())
-    {
-        animComponent->UseTrigger("Idle");
+    case BansheeStates::Hit:
+        if (animComponent->GetCurrentStateName() == HashString("Hit") && animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Idle");
+            currentState = BansheeStates::Idle;
+            agentAI->ResumeMovement();
+            ChangeState();
+        }
+        break;
+
+    case BansheeStates::Dead:
+        HandleDeath();
+        break;
+
+    case BansheeStates::TeleportOrigin:
+        TeleportToOrigin();
+        break;
+
+    default:
+        currentState = BansheeStates::Idle;
+        ChangeState();
+        break;
     }
 }
 
@@ -148,7 +245,10 @@ void Banshee::ChasePlayer()
 {
     if (!character) return;
 
+    hasMoved = true;
     if (animComponent) animComponent->UseTrigger("Chase");
+    // if (animComponent && animComponent->GetCurrentStateName() != HashString("Idle"))
+    // animComponent->UseTrigger("Chase");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Attack;
     else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
         currentState = BansheeStates::Search;
@@ -156,22 +256,28 @@ void Banshee::ChasePlayer()
 
 void Banshee::Attack(float deltaTime)
 {
-    if (!damageArea) return;
+    if (!weapon) return;
 
     if (!isAttacking)
     {
+        hasMoved = true;
         // GLOG("Banshee attack");
         agentAI->SetLookForward(false);
 
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
 
-        currentInvisibleTime = invisibleDist(rng);
-        isInvisible          = true;
-        mesh->SetEnabled(false);
+        isInvisible = false;
+        animComponent->UseTrigger("Teleport");
     }
     else
     {
+        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished())
+        {
+            currentInvisibleTime = invisibleDist(rng);
+            isInvisible          = true;
+            mesh->SetEnabled(false);
+        }
         if (attackTimer < currentInvisibleTime) return;
 
         if (isInvisible)
@@ -181,41 +287,82 @@ void Banshee::Attack(float deltaTime)
             mesh->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
-            if (animComponent) animComponent->UseTrigger("Scream");
+            animComponent->UseTrigger("ScreamIn");
+
+            elapsedWarning = 0.f;
+            if (meshWarningStar) meshWarningStar->SetEnabled(true);
         }
 
         // Slowly rotate towards player while charging the attack
-        if (attackTimer < currentInvisibleTime + attackHitboxDelay)
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
+        {
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-        if (!damageArea->GetEnabled() && attackTimer >= currentInvisibleTime + attackHitboxDelay &&
-            attackTimer <= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
-        {
-            // GLOG("Banshee enable hitbox");
-            if (areaVisual) areaVisual->SetEnabled(true);
-            if (screamVisual) screamVisual->SetEnabled(true);
-            damageArea->SetEnabled(true);
-            if (weaponCollider) weaponCollider->SetEnabled(true);
-        }
-        else if (damageArea->GetEnabled() &&
-                 attackTimer >= currentInvisibleTime + attackHitboxDelay + attackHitboxDuration)
-        {
-            // GLOG("Banshee disable hitbox");
-            damageArea->SetEnabled(false);
-            if (weaponCollider) weaponCollider->SetEnabled(false);
-            if (areaVisual) areaVisual->SetEnabled(false);
-            if (screamVisual) screamVisual->SetEnabled(false);
+            if (elapsedWarning < warningDuration) elapsedWarning += deltaTime;
+            else
+            {
+                if (meshWarningStar) meshWarningStar->SetEnabled(false);
+
+                for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+                {
+                    shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
+                }
+            }
         }
 
-        if (attackTimer >= currentInvisibleTime + attackDuration)
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
         {
-            isAttacking   = false;
-            attackCdTimer = attackCooldown;
+            animComponent->UseTrigger("Scream");
+
+            weapon->SetEnabled(true);
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->ResetScript("MovingUVTransparent");
+            }
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
+            }
+        }
+
+        else if (animComponent->GetCurrentStateName() == HashString("Scream") && elapsedMainScream < mainScreamDuration)
+            elapsedMainScream += deltaTime;
+
+        else if (animComponent->GetCurrentStateName() == HashString("Scream") &&
+                 elapsedMainScream >= mainScreamDuration)
+        {
+            animComponent->UseTrigger("ScreamOut");
+
+            weapon->SetEnabled(false);
+
+            elapsedMainScream = 0.f;
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            {
+                shaderComponent->ResetScript("MovingUVTransparent");
+            }
+        }
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
+        {
+            isAttacking  = false;
+            currentState = BansheeStates::Idle;
+            animComponent->UseTrigger("Idle");
+
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
             agentAI->SetLookForward(true);
-            if (GetDistanceFromPlayer() > maxDetectionRange) currentState = BansheeStates::Search;
-            else ChangeState();
         }
     }
 }
@@ -227,46 +374,45 @@ void Banshee::ChangeState()
         currentState = BansheeStates::Idle;
         return;
     }
-    const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-    bool playerInLocation            = parent->HasTag(playerLocation);
+    // const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    // bool playerInLocation            = parent->HasTag(playerLocation);
 
-    const float distance             = GetDistanceFromPlayer();
-    if (distance <= rangeAIAttack && playerInLocation) currentState = BansheeStates::Attack;
-    else if (distance <= rangeAIChase && playerInLocation) currentState = BansheeStates::Chase;
+    const float distance = GetDistanceFromPlayer();
+    if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
+    else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
     else currentState = BansheeStates::Search;
 }
 
 void Banshee::SearchForPlayer()
 {
-    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
     if (!isSearching)
     {
-        // TODO: Would be nice to be a "search" animation instead of idle
-        animComponent->UseTrigger("Idle");
+        firstSearch = true;
         isSearching = true;
-        searchTimer = searchDuration;
+        animComponent->UseTrigger("SearchRight");
         agentAI->SetSpeed(0.0f, 0.0f);
     }
+    else
+    {
+        if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+        {
+            isSearching = false;
+            agentAI->ResetSpeed();
+            currentState = BansheeStates::Chase;
+            return;
+        }
 
-    if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
-    {
-        isSearching = false;
-        agentAI->ResetSpeed();
-        currentState = BansheeStates::Chase;
-    }
-    else if (searchTimer >= 0.1f && searchTimer <= 0.3f)
-    {
-        mesh->SetEnabled(false);
-        isInvisible = true;
-        agentAI->ResetSpeed();
-        agentAI->SetPosition(startPos);
-    }
-    else if (searchTimer <= 0.1f)
-    {
-        isSearching  = false;
-        currentState = BansheeStates::Idle;
-        mesh->SetEnabled(true);
-        isInvisible = false;
+        if (firstSearch && animComponent->IsFinished())
+        {
+            firstSearch = false;
+            animComponent->UseTrigger("SearchLeft");
+        }
+        else if (animComponent->IsFinished())
+        {
+            isSearching = false;
+            if (hasMoved) currentState = BansheeStates::TeleportOrigin;
+            else currentState = BansheeStates::Idle;
+        }
     }
 }
 
@@ -287,8 +433,87 @@ void Banshee::GoToAttackPosition()
     agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
+void Banshee::TeleportToOrigin()
+{
+    if (animComponent->GetCurrentStateName() != HashString("Teleport"))
+    {
+        animComponent->UseTrigger("Teleport");
+    }
+    else if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished())
+    {
+        agentAI->SetPosition(startPos);
+        currentState = BansheeStates::Idle;
+        animComponent->UseTrigger("Idle");
+        hasMoved = false;
+    }
+}
+
+void Banshee::HandleDeath()
+{
+    if (animComponent->GetCurrentStateName() == HashString("Death") && animComponent->IsFinished())
+    {
+        currentHealth = 0;
+        Character::Die();
+    }
+}
+
 void Banshee::TakeDamage(int amount)
 {
     if (isInvisible) return;
+
+    switch (currentState)
+    {
+    case BansheeStates::Attack:
+
+        if (animComponent->GetCurrentStateName() == HashString("ScreamIn") ||
+            animComponent->GetCurrentStateName() == HashString("Teleport"))
+        {
+            animComponent->UseTrigger("Hit");
+            currentState = BansheeStates::Hit;
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            {
+                shaderComponent->ResetScript("MovingUVTransparent");
+            }
+
+            if (meshWarningStar) meshWarningStar->SetEnabled(false);
+
+            isAttacking = false;
+            agentAI->ResetSpeed();
+            agentAI->ResetAngularSpeed();
+            agentAI->SetLookForward(true);
+        }
+
+        break;
+    case BansheeStates::Hit:
+        if (animComponent->GetCurrentStateName() == HashString("Hit") && animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Idle");
+            currentState = BansheeStates::Idle;
+            agentAI->ResumeMovement();
+        }
+        break;
+    case BansheeStates::Dead:
+        break;
+    default:
+        isSearching = false;
+        animComponent->UseTrigger("Hit");
+        currentState = BansheeStates::Hit;
+        agentAI->PauseMovement();
+        break;
+    }
+
+    if ((currentHealth - amount) <= 0)
+    {
+        animComponent->UseTrigger("Death");
+        currentState = BansheeStates::Dead;
+        return;
+    }
+
     Character::TakeDamage(amount);
 }

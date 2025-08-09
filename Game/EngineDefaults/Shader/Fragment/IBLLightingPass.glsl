@@ -10,6 +10,7 @@ layout(binding = 2) uniform sampler2D gPosition;
 layout(binding = 3) uniform sampler2D gNormal;
 layout(binding = 4) uniform sampler2D shadowMap;
 layout(binding = 5) uniform sampler2D gEmissive;
+layout(binding = 6) uniform sampler2D ssao;
 
 uniform mat4 viewLight;
 uniform mat4 projLight;
@@ -265,6 +266,9 @@ void main()
     const vec3 emissive = texture(gEmissive, uv0).rgb;
 
     hdr += emissive;
+
+    const vec3 occlusionFactor = vec3(texture(ssao, uv0).r);
+    hdr = hdr*occlusionFactor;
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));
