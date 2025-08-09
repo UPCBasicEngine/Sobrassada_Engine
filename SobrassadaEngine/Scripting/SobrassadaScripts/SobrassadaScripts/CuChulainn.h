@@ -191,8 +191,8 @@ class CuChulainn : public Character
     std::string riastradBlurName       = "mesh_blur";
     std::string riastradHaloName       = "mesh_halo";
     std::string riastradSphereName     = "mesh_sphere_glow";
-    std::string riastradCrackName      = "mesh_sphere_glow";
-    std::string riastradWaringName     = "mesh_sphere_glow";
+    std::string riastradCrackName      = "mesh_crack";
+    std::string riastradWaringName     = "mesh_warning";
     std::string riastradSmoke1Name     = "mesh_smoke_a";
     std::string riastradSmoke2Name     = "mesh_smoke_a.001";
     std::string riastradSmoke3Name     = "mesh_smoke_a.002";

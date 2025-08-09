@@ -154,6 +154,7 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(vao);
 
+
         if (isDoubleSided) glDisable(GL_CULL_FACE);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
         if (isDoubleSided) glEnable(GL_CULL_FACE);
