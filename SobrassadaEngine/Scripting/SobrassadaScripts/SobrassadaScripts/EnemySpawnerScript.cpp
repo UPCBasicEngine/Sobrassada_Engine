@@ -65,6 +65,9 @@ void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, Col
     if (spawnOnce) spawned = true;
 }
 
+
+
+
 void EnemySpawnerScript::Save(rapidjson::Value& tgt, rapidjson::Document::AllocatorType& al)
 {
     if (!prefabUIDStr.empty()) prefabUID = std::stoull(prefabUIDStr);
