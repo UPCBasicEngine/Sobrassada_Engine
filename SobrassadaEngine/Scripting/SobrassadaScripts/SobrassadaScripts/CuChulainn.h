@@ -65,6 +65,7 @@ class CuChulainn : public Character
     void TakeDamage(int amount) override;
     void UpdateTimers(float deltaTime) override;
     void Attack(float deltaTime) override;
+    void OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer) override;
 
     bool CanHeal() const;
     bool CanDash() const;
@@ -92,6 +93,7 @@ class CuChulainn : public Character
 
   private:
     CharacterStates state             = CharacterStates::IDLE;
+
 
     std::string cameraName            = "";
     GameObject* cameraObject          = nullptr;

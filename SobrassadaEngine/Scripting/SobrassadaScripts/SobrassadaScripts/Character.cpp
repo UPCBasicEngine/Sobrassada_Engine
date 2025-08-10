@@ -116,6 +116,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
     SphereColliderComponent* otherWeaponShpere = otherObject->GetComponent<SphereColliderComponent*>();
     ScriptComponent* otherScript               = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
 
+
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
 
@@ -180,6 +181,33 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         }
     }
 }
+
+void Character::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
+{
+    collidingEnemyUIDs.erase(otherObject->GetUID());
+}
+
+void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
+{
+    // Verifica si el objeto es realmente un enemigo
+    ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+    Character* enemyScript       = nullptr;
+    if (otherScript)
+    {
+        enemyScript = otherScript->GetScriptByType<Character>();
+    }
+
+    if (enemyScript)
+    {
+        UID enemyUID        = otherObject->GetUID(); 
+        auto [it, inserted] = collidingEnemyUIDs.insert(enemyUID);
+        if (inserted)
+        {
+            GLOG("Enemy entered. Total unique enemies colliding: %zu", collidingEnemyUIDs.size());
+        }
+    }
+}
+
 
 void Character::Attack(float deltaTime)
 {

@@ -4,6 +4,7 @@
 #include "Script.h"
 
 #include <vector>
+#include <unordered_set>
 
 class GameObject;
 class CharacterControllerComponent;
@@ -38,6 +39,8 @@ class Character : public Script
     virtual bool Init() override;
     virtual void Update(float deltaTime) override;
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
+    void OnCollisionExit(GameObject* otherObject, ColliderLayer layer) override;
+    void OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer) override;
 
     virtual void TakeDamage(int amount);
     void Restart();
@@ -66,6 +69,8 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
+    std::unordered_set<UID> collidingEnemyUIDs;
+    int enemiesCont = 0;
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;
