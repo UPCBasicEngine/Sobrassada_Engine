@@ -14,6 +14,7 @@
 #include "Transform2DComponent.h"
 #include "UILabelComponent.h"
 #include "WindowModule.h"
+#include <algorithm>
 
 #include "glew.h"
 #include "imgui.h"
@@ -201,6 +202,18 @@ void CanvasComponent::UpdateChildren()
             children.push(child);
         }
     }
+
+    std::sort(
+        sortedChildren.begin(), sortedChildren.end(),
+        [](const GameObject* a, const GameObject* b)
+        {
+            Transform2DComponent* ta = a->GetComponent<Transform2DComponent*>();
+            Transform2DComponent* tb = b->GetComponent<Transform2DComponent*>();
+            int oa   = ta ? ta->orderInCanvas : 0;
+            int ob   = tb ? tb->orderInCanvas : 0;
+            return oa < ob;
+        }
+    );
 }
 
 void CanvasComponent::UpdateMousePosition(const float2& mousePos)
