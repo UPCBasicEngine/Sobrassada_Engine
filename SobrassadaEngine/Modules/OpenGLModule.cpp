@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
+#include "SSAO.h"
 #include "WindowModule.h"
 
 #include "glew.h"
@@ -132,6 +133,7 @@ bool OpenGLModule::Init()
 
     framebuffer = new Framebuffer(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight(), true);
     gBuffer     = new GBuffer(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight());
+    ssao        = new SSAO(App->GetWindowModule()->GetWidth(), App->GetWindowModule()->GetHeight());
 
     WindowModule* windowModule = App->GetWindowModule();
     windowModule->SetVsync(windowModule->GetVsync());
@@ -182,6 +184,7 @@ update_status OpenGLModule::PostUpdate(float deltaTime)
 
         framebuffer->CheckResize();
         gBuffer->CheckResize();
+        ssao->CheckResize();
 
 #ifdef OPTICK
         OPTICK_CATEGORY("OpengGLModule::PostUpdate_SwapWindow", Optick::Category::Wait)
@@ -199,6 +202,7 @@ bool OpenGLModule::ShutDown()
     SDL_GL_DeleteContext(App->GetWindowModule()->window);
     delete framebuffer;
     delete gBuffer;
+    delete ssao;
     return true;
 }
 

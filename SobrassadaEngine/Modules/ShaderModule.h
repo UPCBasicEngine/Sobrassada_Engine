@@ -22,9 +22,12 @@ class ShaderModule : public Module
     int GetSpecularGlossinessProgram() const;
     int GetMetallicRoughnessProgram() const;
     int GetMetallicGeometryPassProgram() const;
+    int GetMetallicGeometryVPOPassProgram() const { return metallicGeometryVPOPassProgram; }
     int GetSpecularGeometryPassProgram() const;
+    int GetSpecularGeometryVPOPassProgram() const { return specularGeometryVPOPassProgram; }
     int GetLightingPassProgram() const;
     int GetTransparentPassProgram() const { return transparentPassProgram; };
+    int GetTransparentVPOPassProgram() const { return transparentVPOPassProgram; }
     int GetUIWidgetProgram() const { return uiWidgetProgram; }
     int GetQuadProgram() const { return quadProgram; };
     int GetDepthProgram() const { return depthProgram; };
@@ -37,6 +40,9 @@ class ShaderModule : public Module
     int GetTileShadingProgram() const { return tileShadingProgram; }
     int GetSpritesheetProgram() const { return spritesheetProgram; }
     int GetParticleSystemProgram() const { return particleSystemProgram; }
+    int GetSsaoProgram() const { return ssaoProgram; }
+    int GetSsaoDebugProgram() const { return ssaoDebugProgram; }
+    int GetSsaoBlurProgram() const { return ssaoBlurProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -52,12 +58,15 @@ class ShaderModule : public Module
     int metallicRoughnessProgramUnlit  = -1;
 
     int metallicGeometryPassProgram    = -1;
+    int metallicGeometryVPOPassProgram = -1;
     int specularGeometryPassProgram    = -1;
+    int specularGeometryVPOPassProgram = -1;
     int lightingPassProgram            = -1;
 
     int uiWidgetProgram                = -1;
 
     int transparentPassProgram         = -1;
+    int transparentVPOPassProgram      = -1;
     int quadProgram                    = -1;
     int depthProgram                   = -1;
     int linearDepthProgram             = -1;
@@ -72,6 +81,10 @@ class ShaderModule : public Module
 
     int spritesheetProgram             = -1;
     int particleSystemProgram          = -1;
+
+    int ssaoProgram                    = -1;
+    int ssaoDebugProgram               = -1;
+    int ssaoBlurProgram                = -1;
 
     std::map<HashString, unsigned int> customShaderPrograms;
 };

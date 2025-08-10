@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 #include "Script.h"
-#include <string>
 #include <vector>
 
-class GameObject;
+class PauseMenuScript;
+class GameOverScript;
 
 class MainMenuSelectorScript : public Script
 {
@@ -17,7 +17,11 @@ class MainMenuSelectorScript : public Script
   private:
     std::vector<GameObject*> menuItems;
     std::vector<GameObject*> arrowImages;
-    int selectedIndex = 0;
+    int selectedIndex            = 0;
+    bool stickMoved              = false;
+
+    PauseMenuScript* pauseCtrl   = nullptr;
+    GameOverScript* gameOverCtrl = nullptr;
 
     void UpdateSelection();
 };
