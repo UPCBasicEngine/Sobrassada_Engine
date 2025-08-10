@@ -164,7 +164,7 @@ class CuChulainn : public Character
     float ultimateHitboxDelay          = 0.0f;
     float ultimateHitboxDuration       = 0.0f;
     float ultimateAnimationDelay       = 0.0f;
-    bool unlockUltimate                = false;
+    bool ultimateUnlocked              = false;
 
     GameObject* riastradBar            = nullptr;
     int riastradMeter                  = 0;

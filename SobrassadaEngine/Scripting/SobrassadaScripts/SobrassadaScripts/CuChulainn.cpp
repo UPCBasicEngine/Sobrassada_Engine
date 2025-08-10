@@ -49,7 +49,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
     fields.push_back({"Dash unlocked", InspectorField::FieldType::Bool, &dashUnlocked});
-    fields.push_back({"Ultimate unlocked", InspectorField::FieldType::Bool, &unlockUltimate});
+    fields.push_back({"Ultimate unlocked", InspectorField::FieldType::Bool, &ultimateUnlocked});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ultimate parameters"});
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
@@ -1176,7 +1176,7 @@ void CuChulainn::ActivateAbility(std::string& abilityName)
     std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
 
     if (abilityName == "dash") dashUnlocked = true;
-    else if (abilityName == "ultimate") unlockUltimate = true;
+    else if (abilityName == "ultimate") ultimateUnlocked = true;
 }
 
 const std::string CuChulainn::GetLogicStateName()
