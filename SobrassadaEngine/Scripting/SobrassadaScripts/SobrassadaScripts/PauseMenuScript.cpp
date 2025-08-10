@@ -12,47 +12,70 @@
 
 bool PauseMenuScript::Init()
 {
+    CachePanel();
+    if (cachedTarget) cachedTarget->SetEnabledRecursive(false);
+    isOpen = false;
     return true;
 }
 
-void PauseMenuScript::Update(float deltaTime)
+void PauseMenuScript::Show()
 {
-    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
-    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
-
-    if (!cachedTarget)
+    if (isOpen) return;
+    CachePanel();
+    if (cachedTarget)
     {
-        const auto& allGameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
-        for (const auto& [uid, gameObject] : allGameObjects)
-            if (gameObject && gameObject->GetName() == panelToShowName)
-            {
-                cachedTarget = gameObject;
-                break;
-            }
+        cachedTarget->SetEnabledRecursive(true);
+        cachedTarget->UpdateTransformForGOBranch();
     }
-
-    if (cachedTarget &&
-        (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_START] == KEY_DOWN))
-    {
-        bool newState = !cachedTarget->IsEnabled();
-        cachedTarget->SetEnabledRecursive(newState);
-
-        if (newState)
-            cachedTarget->UpdateTransformForGOBranch();
-
-        if (GameTimer* gameTimer = AppEngine->GetGameTimer()) gameTimer->TogglePause();
-    }
+    if (auto* t = AppEngine->GetGameTimer(); t && !t->IsPaused()) t->TogglePause();
+    isOpen = true;
 }
 
-void PauseMenuScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
+void PauseMenuScript::Close()
 {
-    targetState.AddMember("PanelToShow", rapidjson::Value(panelToShowName.c_str(), allocator), allocator);
+    if (!isOpen) return;
+    if (cachedTarget) cachedTarget->SetEnabledRecursive(false);
+    if (auto* t = AppEngine->GetGameTimer(); t && t->IsPaused()) t->TogglePause();
+    isOpen = false;
 }
 
-void PauseMenuScript::Load(const rapidjson::Value& initialState)
+void PauseMenuScript::Toggle()
 {
-    if (initialState.HasMember("PanelToShow") && initialState["PanelToShow"].IsString())
+    isOpen ? Close() : Show();
+}
+
+void PauseMenuScript::Update(float)
+{
+    const KeyState* k = AppEngine->GetInputModule()->GetKeyboard();
+    if (k[SDL_SCANCODE_ESCAPE] == KEY_DOWN) Toggle();
+}
+
+void PauseMenuScript::Save(rapidjson::Value& out, rapidjson::Document::AllocatorType& a)
+{
+    out.AddMember("PanelToShow", rapidjson::Value(panelToShowName.c_str(), a), a);
+}
+
+void PauseMenuScript::Load(const rapidjson::Value& in)
+{
+    if (in.HasMember("PanelToShow") && in["PanelToShow"].IsString()) panelToShowName = in["PanelToShow"].GetString();
+}
+
+void PauseMenuScript::CachePanel()
+{
+    if (cachedTarget != nullptr) return;
+
+    Scene* scene        = AppEngine->GetSceneModule()->GetScene();
+    const auto& objects = scene->GetAllGameObjects();
+
+    for (const auto& [uid, go] : objects)
     {
-        panelToShowName = initialState["PanelToShow"].GetString();
+        if (go == nullptr)
+            continue;
+
+        if (go->GetName() == panelToShowName)
+        {
+            cachedTarget = go; 
+            return;            
+        }
     }
 }

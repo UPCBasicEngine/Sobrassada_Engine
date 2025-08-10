@@ -14,7 +14,14 @@ class PauseMenuScript : public Script
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator);
     void Load(const rapidjson::Value& initialState) override;
 
+    void Show();  // open & pause
+    void Close(); // close & unpause
+    void Toggle();
+
   private:
+    void CachePanel();
+
     std::string panelToShowName = "PauseMenuPanel";
     GameObject* cachedTarget    = nullptr;
+    bool isOpen                 = false;
 };
