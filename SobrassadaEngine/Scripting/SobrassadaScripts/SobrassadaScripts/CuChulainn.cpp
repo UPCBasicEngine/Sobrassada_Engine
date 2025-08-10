@@ -235,45 +235,6 @@ bool CuChulainn::Init()
     else riastradBurst->SetEnabled(false);
 
     riastradBlur = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBlurName);
-    if (!riastradBlur) GLOG("[WARNING] No riastrad B�ur VFX found for CuChulain")
-    else riastradBlur->SetEnabled(false);
-
-    riastradHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradHaloName);
-    if (!riastradHalo) GLOG("[WARNING] No riastrad Halo VFX found for CuChulain")
-    else riastradHalo->SetEnabled(false);
-
-    riastradSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSphereName);
-    if (!riastradSphere) GLOG("[WARNING] No riastrad Sphere VFX found for CuChulain")
-    else riastradSphere->SetEnabled(false);
-
-    riastradCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradCrackName);
-    if (!riastradCrack) GLOG("[WARNING] No riastrad Sphere VFX found for CuChulain")
-    else riastradCrack->SetEnabled(false);
-
-    riastradWaring = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradWaringName);
-    if (!riastradWaring) GLOG("[WARNING] No riastrad Sphere VFX found for CuChulain")
-    else riastradWaring->SetEnabled(false);
-
-    riastradSmoke1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke1Name);
-    if (!riastradSmoke1) GLOG("[WARNING] No riastrad Smoke 1 VFX found for CuChulain")
-    else riastradSmoke1->SetEnabled(false);
-
-    riastradSmoke2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke2Name);
-    if (!riastradSmoke2) GLOG("[WARNING] No riastrad Smoke 2 VFX found for CuChulain")
-    else riastradSmoke2->SetEnabled(false);
-
-    riastradSmoke3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke3Name);
-    if (!riastradSmoke3) GLOG("[WARNING] No riastrad Smoke 3 VFX found for CuChulain")
-    else riastradSmoke3->SetEnabled(false);
-
-    riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
-    if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
-
-    riastradBurst = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBurstName);
-    if (!riastradBurst) GLOG("[WARNING] No riastrad Burst VFX found for CuChulain")
-    else riastradBurst->SetEnabled(false);
-
-    riastradBlur = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBlurName);
     if (!riastradBlur) GLOG("[WARNING] No riastrad Blur VFX found for CuChulain")
     else riastradBlur->SetEnabled(false);
 
@@ -1332,42 +1293,6 @@ void CuChulainn::ToggleRiastrad()
         for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
         {
             clip.animationSpeed *= riastradAnimationsSpeedRatio;
-        }
-
-        // Starting VFX
-        if (riastradVfx)
-        {
-            riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(true);
-        }
-        if (riastradSmoke1)
-        {
-            riastradSmoke1->SetEnabled(true);
-            riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
-            riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-        }
-        if (riastradSmoke2)
-        {
-            riastradSmoke2->SetEnabled(true);
-            riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
-            riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-        }
-        if (riastradSmoke3)
-        {
-            riastradSmoke3->SetEnabled(true);
-            riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
-            riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-        }
-        if (riastradSphere)
-        {
-            riastradSphere->SetEnabled(true);
-            riastradSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
-            riastradSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-        }
-        if (riastradHalo)
-        {
-            riastradHalo->SetEnabled(true);
-            riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
-            riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
         }
     }
     else
