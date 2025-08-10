@@ -2,8 +2,6 @@
 
 #extension GL_ARB_bindless_texture : require
 
-#define PI 3.14159265359
-
 layout(location=4) uniform bool isWireframe;
 layout(location=5) uniform bool isAlphaDiscard;
 layout(location=6) uniform vec3 cameraPos;
@@ -41,18 +39,18 @@ void main()
     vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
 
     // Blender nodes recreation
-    float subtractNode = (frameTimer * 0.15f) - 2.0f;
-    float powerNode = pow(subtractNode, 0.35f);
-    float multiplyAddNode = (powerNode * 2.91f) - 2.21f;
-    vec2 combineNode = vec2(0.0f, multiplyAddNode);
-
-    vec2 flippedUvs = vec2(uv.x, (1.0f - uv.y));
-    vec2 addNode = flippedUvs + combineNode;
-    vec2 combineNode2 = vec2(clamp(addNode.y, 0.0f, 1.0f), addNode.x);
-    vec4 textureNode = texture(sampler2D(diffuseTex), combineNode2);
-
-    vec4 scaleNode = textureNode * flippedUvs.y;
-    float alpha = scaleNode.a * diffColor.a;
+    const float subtractNode = (frameTimer * 0.15f) - 2.0f;
+    const float powerNode = pow(subtractNode, 0.35f);
+    const float multiplyAddNode = (powerNode * 2.91f) - 2.21f;
+    const vec2 combineNode = vec2(0.0f, multiplyAddNode);
+ 
+    const vec2 flippedUvs = vec2(uv.x, (1.0f - uv.y));
+    const vec2 addNode = flippedUvs + combineNode;
+    const vec2 combineNode2 = vec2(clamp(addNode.y, 0.0f, 1.0f), addNode.x);
+    const vec4 textureNode = texture(sampler2D(diffuseTex), combineNode2);
+ 
+    const vec4 scaleNode = textureNode * flippedUvs.y;
+    const float alpha = scaleNode.a * diffColor.a;
 
     if (!isWireframe && isAlphaDiscard)
     {

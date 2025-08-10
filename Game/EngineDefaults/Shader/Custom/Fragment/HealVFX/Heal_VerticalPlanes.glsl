@@ -2,8 +2,6 @@
 
 #extension GL_ARB_bindless_texture : require
 
-#define PI 3.14159265359
-
 layout(location=4) uniform bool isWireframe;
 layout(location=5) uniform bool isAlphaDiscard;
 layout(location=6) uniform vec3 cameraPos;
@@ -38,22 +36,22 @@ layout(std140, binding = 6) uniform Material
 
 void main()
 {
-    const vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
+    vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
 
     // Blender nodes recreation
-    vec2 flippedUvs = vec2(uv.x, 1.0f - uv.y);
-    float subtractNode = flippedUvs.x - 0.5f;
-    float absoluteNode = abs(subtractNode);
-    float subtractNode2 = clamp(0.5f - absoluteNode, 0.0f, 1.0f);
-    float subtractNode3 = clamp(1.0f - flippedUvs.y, 0.0f, 1.0f);
-    float multiplyNode = subtractNode2 * subtractNode3;
+    const vec2 flippedUvs = vec2(uv.x, 1.0f - uv.y);
+    const float subtractNode = flippedUvs.x - 0.5f;
+    const float absoluteNode = abs(subtractNode);
+    const float subtractNode2 = clamp(0.5f - absoluteNode, 0.0f, 1.0f);
+    const float subtractNode3 = clamp(1.0f - flippedUvs.y, 0.0f, 1.0f);
+    const float multiplyNode = subtractNode2 * subtractNode3;
     
-    float subtractNode4 = 25.0f - frameTimer;
-    float multiplyNode2 = subtractNode4 * 0.03f;
-    float bol = frameTimer > 14.0f ? 1.0f : 0.0f;
-    float multiplyNode3 = multiplyNode2 * bol;
+    const float subtractNode4 = 25.0f - frameTimer;
+    const float multiplyNode2 = subtractNode4 * 0.03f;
+    const float bol = frameTimer > 14.0f ? 1.0f : 0.0f;
+    const float multiplyNode3 = multiplyNode2 * bol;
     
-    float multiplyNode4 = clamp(multiplyNode * multiplyNode3, 0.0f, 1.0f);
+    const float multiplyNode4 = clamp(multiplyNode * multiplyNode3, 0.0f, 1.0f);
     const float alpha = multiplyNode4 * diffColor.a;
 
     if (!isWireframe && isAlphaDiscard)

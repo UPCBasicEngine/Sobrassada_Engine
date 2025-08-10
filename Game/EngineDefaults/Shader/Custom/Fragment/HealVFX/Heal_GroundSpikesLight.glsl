@@ -41,14 +41,14 @@ void main()
     vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
 
     // Blender nodes recreation
-    vec2 invertedUvs = vec2(uv.x, 1.0f - uv.y);
-    vec2 addNode = invertedUvs + vec2(0.0f, 1.1f - frameTimer * 0.15f);
-    vec2 combineNode = vec2(clamp(addNode.y, 0.0f, 1.0f), addNode.x);
-    vec4 textureNode = texture(sampler2D(diffuseTex), combineNode);
-
-    float scalar = clamp(frameTimer * 0.03f - 0.2f, 0.0f, 1.0f);
-    vec4 finalAlpha = textureNode * scalar * 100.0f;
-    float alpha = finalAlpha.a * diffColor.a;
+    const vec2 invertedUvs = vec2(uv.x, 1.0f - uv.y);
+    const vec2 addNode = invertedUvs + vec2(0.0f, 1.1f - frameTimer * 0.15f);
+    const vec2 combineNode = vec2(clamp(addNode.y, 0.0f, 1.0f), addNode.x);
+    const vec4 textureNode = texture(sampler2D(diffuseTex), combineNode);
+ 
+    const float scalar = clamp(frameTimer * 0.03f - 0.2f, 0.0f, 1.0f);
+    const vec4 finalAlpha = textureNode * scalar * 5.0f;
+    const float alpha = finalAlpha.a * diffColor.a;
 
     if (!isWireframe && isAlphaDiscard)
     {
