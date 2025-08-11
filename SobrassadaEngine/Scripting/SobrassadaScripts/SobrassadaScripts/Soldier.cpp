@@ -253,12 +253,14 @@ void Soldier::SearchForPlayer()
     }
     else if (searchTimer <= 0.0f)
     {
-        isSearching  = false;
+        isSearching = false;
         agentAI->SetSpeed(chaseSpeed, 8.0);
         GLOG("Speed set to %f", chaseSpeed);
         currentState = SoldierStates::PATROL;
     }
+   
 }
+
 
 void Soldier::Attack(float deltaTime)
 {
@@ -284,9 +286,11 @@ void Soldier::Attack(float deltaTime)
         }
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
+        thrustAdvance = false;
     }
     else
     {
+        agentAI->ResumeMovement();
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         // Doble attack
         if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
@@ -311,19 +315,33 @@ void Soldier::Attack(float deltaTime)
                 attackTimer <= attackHitboxDelay + attackHitboxDuration)
             {
                 weaponCollider->SetEnabled(true);
+
+               thrustAdvance = true;
+
             }
             else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
             {
                 weaponCollider->SetEnabled(false);
             }
+
+             if (animComponent && !animComponent->IsFinished() && thrustAdvance)
+            {
+                 agentAI->PauseMovement();
+                 float thrustSpeed = 2.0f;
+                 float3 forward    = parent->GetGlobalTransform().WorldZ();
+                 forward.y         = parent->GetGlobalTransform().WorldY().y;
+                 forward.Normalize();
+                 agentAI->SetPosition(parent->GetGlobalTransform().TranslatePart() + forward * thrustSpeed * deltaTime);
+            }
+
         }
 
         // Reset attack state
         if (attackTimer >= attackDuration)
         {
+            agentAI->ResumeMovement();
             isAttacking   = false;
             attackCdTimer = attackCooldown;
-            agentAI->ResumeMovement();
             ChangeState();
         }
     }
