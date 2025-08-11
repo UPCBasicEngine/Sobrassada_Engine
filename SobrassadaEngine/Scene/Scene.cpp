@@ -358,7 +358,6 @@ update_status Scene::Render(float deltaTime)
 
     GameObject* selectedGameObject = App->GetSceneModule()->GetScene()->GetSelectedGameObject();
     if (selectedGameObject != nullptr) selectedGameObject->RenderDebugComponents(deltaTime);
-    FlushPendingDeletes();
 
     return UPDATE_CONTINUE;
 }
