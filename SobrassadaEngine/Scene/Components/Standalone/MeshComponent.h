@@ -49,6 +49,8 @@ class MeshComponent : public Component
     int GetRenderMode() const { return renderMode; }
     bool GetProduceShadows() const { return produceShadows; }
     bool GetBatchWasEnabled() { return batchWasEnabled; }
+    bool GetBoneIndexOffset() const { return boneIndexOffset; }
+    bool GetUpdateShaderStorage() const { return updateShaderStorage; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
     {
@@ -71,6 +73,9 @@ class MeshComponent : public Component
         batchWasEnabled = false;
     }
 
+    void SetBoneIndexOffset(unsigned int newIndexOffset) { boneIndexOffset = newIndexOffset; }
+    void SetUpdateShaderStorage(bool newUpdate) { updateShaderStorage = newUpdate; }
+
   private:
     std::string currentMeshName       = "Not selected";
     ResourceMesh* currentMesh         = nullptr;
@@ -82,19 +87,22 @@ class MeshComponent : public Component
     std::vector<UID> bonesUIDs;
     std::vector<GameObject*> bones;
     std::vector<float4x4> bindMatrices;
-    bool hasBones           = false;
+    bool hasBones                = false;
 
-    UID modelUID            = INVALID_UID;
-    int skinIndex           = -1;
+    UID modelUID                 = INVALID_UID;
+    int skinIndex                = -1;
 
-    float4x4 combinedMatrix = float4x4::identity;
+    float4x4 combinedMatrix      = float4x4::identity;
 
-    GeometryBatch* batch    = nullptr;
-    bool uniqueBatch        = false;
+    GeometryBatch* batch         = nullptr;
+    bool uniqueBatch             = false;
 
-    int renderMode          = 0; // 0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
+    int renderMode               = 0; // 0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
 
-    bool produceShadows     = true;
+    bool produceShadows          = true;
 
-    bool batchWasEnabled    = false;
+    bool batchWasEnabled         = false;
+
+    unsigned int boneIndexOffset = 0;
+    bool updateShaderStorage     = false;
 };
