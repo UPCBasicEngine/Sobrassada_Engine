@@ -1709,6 +1709,17 @@ void Scene::OverridePrefabs(const UID prefabUID)
     App->GetResourcesModule()->ReleaseResource(prefab);
 }
 
+void Scene::QueueGameObjectDelete(UID uid)
+{
+    if (uid != INVALID_UID) pendingDeletes.push_back(uid);
+}
+void Scene::FlushPendingDeletes()
+{
+    for (UID id : pendingDeletes)
+        RemoveGameObjectHierarchy(id);
+    pendingDeletes.clear();
+}
+
 template <typename T> std::vector<T> Scene::GetEnabledComponentsOfType() const
 {
     std::vector<T> result;

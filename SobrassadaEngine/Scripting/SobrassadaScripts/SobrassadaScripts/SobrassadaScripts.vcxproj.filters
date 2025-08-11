@@ -157,6 +157,9 @@
     <ClInclude Include="Destructible.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="MiniFireball.h">
+      <Filter>Environment\Traps</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -851,6 +854,9 @@
     </ClCompile>
     <ClCompile Include="SwitchScriptTest.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="MiniFireball.cpp">
+      <Filter>Environment\Traps</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
