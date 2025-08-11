@@ -125,7 +125,6 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
     fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
     fields.push_back({"Ultimate empty icon", InspectorField::FieldType::Resource, &ultimateEmptyImage});
-
 }
 
 bool CuChulainn::Init()
@@ -292,6 +291,7 @@ void CuChulainn::Update(float deltaTime)
     if (state == CharacterStates::HEAL && healTimer > healKnockbackDelay && !healKnockback->IsEnabled())
     {
         healKnockback->SetEnabled(true);
+        Heal(mushroomHeal);
     }
     if (state == CharacterStates::TRANSFORM && transformTimer > transformVfxDelay && !riastradCrack->IsEnabled())
     {
@@ -347,7 +347,7 @@ void CuChulainn::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
-    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN || state == CharacterStates::HEAL)
     {
         state = CharacterStates::HURT;
         if (animComponent)
@@ -576,7 +576,7 @@ void CuChulainn::GetInputs()
 
 bool CuChulainn::CanDash() const
 {
-    if (!dashUnlocked) return false; //When tutorial map is correctly fixed, put this to make progression
+    if (!dashUnlocked) return false; // When tutorial map is correctly fixed, put this to make progression
 
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
@@ -1081,13 +1081,14 @@ void CuChulainn::Move()
 
         if (runTimer > stepTime && audio)
         {
-            // TODO: Cast a ray to see the material below (probably through tags, maybe colliders)
             LineSegment ray(
                 parent->GetGlobalTransform().TranslatePart(),
                 parent->GetGlobalTransform().TranslatePart() - float3::unitY
             );
-            GameObject* object =
-                RaycastController::GetRayIntersectionTrees(ray, AppEngine->GetSceneModule()->GetScene()->GetOctree());
+            GameObject* object = RaycastController::GetRayIntersectionTrees(
+                ray, AppEngine->GetSceneModule()->GetScene()->GetOctree(),
+                AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
+            );
 
             if (object)
             {
@@ -1151,7 +1152,7 @@ void CuChulainn::Respawn()
 
 void CuChulainn::TakeDamage(int amount)
 {
-    if (godMode || isRiastrad) return;
+    if (godMode || isRiastrad || state == CharacterStates::ULTIMATE) return;
     Character::TakeDamage(amount);
 }
 
@@ -1185,7 +1186,6 @@ void CuChulainn::UseMushroom()
 
     if (healVisual) healVisual->SetEnabled(true);
 
-    Heal(mushroomHeal);
     healTimer = 0.0f;
 
     // UpdateMushroomsUI();
