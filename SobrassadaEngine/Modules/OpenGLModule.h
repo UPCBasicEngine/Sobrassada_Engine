@@ -22,7 +22,7 @@ class OpenGLModule : public Module
     bool ShutDown() override;
 
     void DrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
-    void DrawArrays(GLenum mode, GLint first, GLsizei count);
+    SOBRASADA_API_ENGINE void DrawArrays(GLenum mode, GLint first, GLsizei count);
 
     void AddTrianglesPerSecond(float meshTrianglesPerSecond) { trianglesPerSecond += meshTrianglesPerSecond; }
     void AddVerticesCount(int meshVertices) { verticesCount += meshVertices; }

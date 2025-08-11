@@ -503,6 +503,7 @@
     <ClInclude Include="SpawnUI.h" />
     <ClInclude Include="Spouts.h" />
     <ClInclude Include="SwitchScriptTest.h" />
+    <ClInclude Include="RiastradBarFill.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="Wwise_IDs.h" />
@@ -2045,7 +2046,7 @@
     <ClCompile Include="ChangeSceneScript.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="CuChulainn.cpp" />
-    <ClCompile Include="Destructible.cpp"/>
+    <ClCompile Include="Destructible.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EnemySpawnerScript.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />
@@ -2088,6 +2089,7 @@
     <ClCompile Include="SpawnUI.cpp" />
     <ClCompile Include="Spouts.cpp" />
     <ClCompile Include="SwitchScriptTest.cpp" />
+    <ClCompile Include="RiastradBarFill.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="TileFloatScript.cpp" />

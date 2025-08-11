@@ -9,6 +9,7 @@ class CameraMovement;
 class Projectile;
 class AudioSourceComponent;
 class ImageComponent;
+class RiastradBarFill;
 
 enum class CharacterStates
 {
@@ -124,7 +125,7 @@ class CuChulainn : public Character
     float dashTimer                    = 0.0f;
     bool desiredDash                   = false;
     float dashBufferTimer              = 0.0f;
-    bool dashUnlocked = false;
+    bool dashUnlocked                  = false;
 
     // Basic attack
     std::string meleeVfxName           = "SpearVFX";
@@ -176,7 +177,8 @@ class CuChulainn : public Character
     bool ultimateUnlocked              = false;
 
     // Riastrad
-    GameObject* riastradBar            = nullptr;
+    std::string riastradBarName        = "BarFill";
+    RiastradBarFill* riastradBar       = nullptr;
     int riastradMeter                  = 0;
     bool isRiastrad                    = false;
     bool desiredTransform              = false;
@@ -205,7 +207,7 @@ class CuChulainn : public Character
     GameObject* riastradBlur           = nullptr;
     GameObject* riastradHalo           = nullptr;
     GameObject* riastradSphere         = nullptr;
-    GameObject* riastradCrack         = nullptr;
+    GameObject* riastradCrack          = nullptr;
     GameObject* riastradWaring         = nullptr;
     GameObject* riastradSmoke1         = nullptr;
     GameObject* riastradSmoke2         = nullptr;

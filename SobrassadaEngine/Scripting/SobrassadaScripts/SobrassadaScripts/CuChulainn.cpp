@@ -18,6 +18,7 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "RiastradBarFill.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
@@ -88,8 +89,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Heal knockback delay", InspectorField::FieldType::Float, &healKnockbackDelay});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Riastrad parameters"});
-    // fields.push_back({"Riastrad Bar object", InspectorField::FieldType::GameObject, &riastradBar}); // TODO: Fix
-    // GameObject field breaks the loading of the ones after
+    fields.push_back({"Riastrad Bar object", InspectorField::FieldType::InputText, &riastradBarName});
     fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
     fields.push_back({"Riastrad movement speed", InspectorField::FieldType::Float, &riastradMovementSpeed, 0.0f, 20.0f}
     );
@@ -264,6 +264,14 @@ bool CuChulainn::Init()
     riastradSmoke3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke3Name);
     if (!riastradSmoke3) GLOG("[WARNING] No riastrad Smoke 3 VFX found for CuChulain")
     else riastradSmoke3->SetEnabled(false);
+
+    GameObject* riastradObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBarName);
+    if (riastradObj)
+    {
+        ShaderScriptComponent* shaderScript = riastradObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript) riastradBar = shaderScript->GetScriptByType<RiastradBarFill>();
+    }
+    if (!riastradBar) GLOG("[WARNING] No riastrad Fill Bar Shader Script found for CuChulain")
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -567,6 +575,10 @@ void CuChulainn::GetInputs()
     {
         AddRiastrad(100);
         GLOG("Fill riastrad")
+    }
+    if (keyboard[SDL_SCANCODE_F10] == KEY_DOWN)
+    {
+        AddRiastrad(10);
     }
     if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
     {
@@ -1365,10 +1377,7 @@ void CuChulainn::AddRiastrad(int amount)
     if (riastradMeter > 100) riastradMeter = 100;
 
     if (!riastradBar) return;
-    Transform2DComponent* trs = riastradBar->GetComponent<Transform2DComponent*>();
-
-    const int maxBarSize      = 400;
-    trs->size.x               = riastradMeter * (maxBarSize / 100.0f);
+    riastradBar->SetFillAmount(riastradMeter / 100.0f);
 }
 
 void CuChulainn::OnEnemyHit()

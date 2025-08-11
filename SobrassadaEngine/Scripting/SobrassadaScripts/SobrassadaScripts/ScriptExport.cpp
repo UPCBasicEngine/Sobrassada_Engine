@@ -11,7 +11,6 @@
 #include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
-#include "MiniFireball.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
 #include "GameOverScript.h"
@@ -19,6 +18,7 @@
 #include "GodMode.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
+#include "MiniFireball.h"
 #include "MoveGOInSpline.h"
 #include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
@@ -30,13 +30,11 @@
 #include "Soldier.h"
 #include "SpawnPoint.h"
 #include "SpawnUI.h"
+#include "Spouts.h"
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
+#include "RiastradBarFill.h"
 #include "VSyncToggleScript.h"
-#include "EnemySpawnerScript.h"
-#include "GameOverScript.h"
-#include "PlayerLocationScript.h"
-#include "Spouts.h"
 
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
@@ -86,7 +84,7 @@ constexpr const char* scripts[] = {
     "Destructible"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent", "RiastradBarFill"};
 
 Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -142,6 +140,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "RiastradBarFill") return new RiastradBarFill(parent);
 
     return nullptr;
 }
