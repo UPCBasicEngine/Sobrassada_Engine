@@ -10,6 +10,8 @@ extern "C"
 #include <libswscale/swscale.h>
 }
 
+class ResourceTexture;
+
 class VideoComponent : public Component
 {
   public:
@@ -28,6 +30,7 @@ class VideoComponent : public Component
 
   private:
     bool InitVideo(const std::string& path);
+    bool UpdateFrame();
     void Cleanup();
 
     AVFormatContext* formatCtx = nullptr;
@@ -45,4 +48,7 @@ class VideoComponent : public Component
     float frameDelay           = 0.0f;
 
     std::string videoPath      = "";
+    ResourceTexture* videoTexture;
+
+    float timeSinceLastFrame = 0.0f;
 };
