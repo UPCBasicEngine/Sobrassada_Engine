@@ -335,3 +335,8 @@ void ResourceStateMachine::ResetClipsSpeed()
         clips[i].animationSpeed = clipsDefaultSpeed[i];
     }
 }
+
+void ResourceStateMachine::RemoveAllClips()
+{
+    clips.clear();
+}

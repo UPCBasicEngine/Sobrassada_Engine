@@ -80,10 +80,11 @@ enum class ShaderScriptType : int
     NONE = -1,
     GEOMERTY_PASS,
     TRANSPARENT_PASS,
-    POST_LIGHTING_PASS
+    POST_LIGHTING_PASS,
+    POST_EFFECTS_PASS
 };
 
-constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting"};
+constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting", "Post effects"};
 constexpr int ShaderScriptTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
 
 class ComponentUtils

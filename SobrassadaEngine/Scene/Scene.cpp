@@ -33,6 +33,7 @@
 #include "ResourceModel.h"
 #include "ResourcePrefab.h"
 #include "ResourcesModule.h"
+#include "SSAO.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
@@ -351,9 +352,6 @@ update_status Scene::Update(float deltaTime)
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
 
-    // for (auto& gameObject : gameObjectsContainer)
-    //     gameObject.second->UpdateComponents(deltaTime);
-
     for (auto gameObject : toUpdateGameObjects)
         gameObject->UpdateComponents(deltaTime);
 
@@ -383,6 +381,7 @@ update_status Scene::Render(float deltaTime)
 void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 {
     GBuffer* gbuffer         = App->GetOpenGLModule()->GetGBuffer();
+    SSAO* ssao               = App->GetOpenGLModule()->GetSsao();
     Framebuffer* framebuffer = App->GetSceneModule()->GetInPlayMode() ? App->GetOpenGLModule()->GetFramebuffer()
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
@@ -433,6 +432,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
     App->GetParticleModule()->RenderParticles();
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
+    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 }
 
@@ -629,6 +632,7 @@ void Scene::RenderSceneToFrameBuffer()
         App->GetCameraModule()->SetAspectRatio(aspectRatio);
         framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
         App->GetOpenGLModule()->GetGBuffer()->Resize((int)windowSize.x, (int)windowSize.y);
+        App->GetOpenGLModule()->GetSsao()->Resize((int)windowSize.x, (int)windowSize.y);
     }
 
     ImVec2 windowPosition     = ImGui::GetWindowPos();
@@ -1704,6 +1708,17 @@ void Scene::OverridePrefabs(const UID prefabUID)
     }
     if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
     App->GetResourcesModule()->ReleaseResource(prefab);
+}
+
+void Scene::QueueGameObjectDelete(UID uid)
+{
+    if (uid != INVALID_UID) pendingDeletes.push_back(uid);
+}
+void Scene::FlushPendingDeletes()
+{
+    for (UID id : pendingDeletes)
+        RemoveGameObjectHierarchy(id);
+    pendingDeletes.clear();
 }
 
 template <typename T> std::vector<T> Scene::GetEnabledComponentsOfType() const

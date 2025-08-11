@@ -4,6 +4,7 @@
 #include "GameUIModule.h"
 #include "OpenGLModule.h"
 #include "GBuffer.h"
+#include "SSAO.h"
 #include "Framebuffer.h"
 #include "ProjectModule.h"
 
@@ -87,6 +88,7 @@ void WindowModule::WindowResized(const unsigned int width, const unsigned int he
     windowWidth  = width;
     windowHeight = height;
     App->GetOpenGLModule()->GetGBuffer()->Resize(width, height);
+    App->GetOpenGLModule()->GetSsao()->Resize(width, height);
     App->GetOpenGLModule()->GetFramebuffer()->Resize(width, height);
 
     App->GetGameUIModule()->OnWindowResize(width, height);
