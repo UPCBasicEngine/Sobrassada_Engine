@@ -17,23 +17,23 @@ enum class ChangelingVersions
 
 enum class ChangelingStates
 {
-    NONE = 0,
-    IDLE_BURIED = 1,
-    PEEK = 2,
-    DIG_UP_TRANSITION = 3,
-    DIG_DOWN_TRANSITION = 4,
-    IDLE_VISIBLE = 5,
-    CHASE = 6,
-    BURIED_CHASE = 7,
+    NONE                    = 0,
+    IDLE_BURIED             = 1,
+    PEEK                    = 2,
+    DIG_UP_TRANSITION       = 3,
+    DIG_DOWN_TRANSITION     = 4,
+    IDLE_VISIBLE            = 5,
+    CHASE                   = 6,
+    BURIED_CHASE            = 7,
     DASH_ATTACK_PREPARATION = 8,
-    DASH_ATTACK = 9,
-    DASH_ATTACK_WIGGLE = 10,
-    DASH_ATTACK_COOLDOWN = 11,
-    DASH_CHAIN_ATTACK = 12,
-    BITE_ATTACK = 13,
-    BITE_ATTACK_COOLDOWN = 14,
-    DAMAGED = 15,
-    DYING = 16,
+    DASH_ATTACK             = 9,
+    DASH_ATTACK_WIGGLE      = 10,
+    DASH_ATTACK_COOLDOWN    = 11,
+    DASH_CHAIN_ATTACK       = 12,
+    BITE_ATTACK             = 13,
+    BITE_ATTACK_COOLDOWN    = 14,
+    DAMAGED                 = 15,
+    DYING                   = 16,
 };
 
 class Changeling : public Character
@@ -81,7 +81,6 @@ class Changeling : public Character
     bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
 
   private:
-
     void ValidateSetup();
     void RenderDebugVisuals();
 
@@ -91,8 +90,8 @@ class Changeling : public Character
     bool ShouldSwapStatesOnRandomVersion(const float deltaTime) const;
     void CalculateAimPoint(float3& outTargetPoint);
 
-    bool isSetupCorrectly = false;
-    
+    bool isSetupCorrectly         = false;
+
     AIAgentComponent* agentAI     = nullptr;
     ChangelingStates currentState = ChangelingStates::NONE;
 
@@ -111,36 +110,37 @@ class Changeling : public Character
     std::vector<GameObject*> dashTrailColliderObjects;
     std::vector<CubeColliderComponent*> dashAreaColliders;
 
-    float stateTimer = 0.f;
-    
-    float absoluteSpottedReactionTime = 1.f;
-    float biteAttackRadius = .5f;
-    float biteAttackCooldown = 2.f;
-    float activeDashRange = 0.f;
-    bool bNextDashUninterrupted = false;
+    float stateTimer                  = 0.f;
 
-    int userSelectedVersion = 0;
-    ChangelingVersions version = ChangelingVersions::RANDOM;
-    float swapStateChancePerSecond = 0.05f;
-    ChangelingVersions randomVersion = ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
-    
+    float absoluteSpottedReactionTime = 1.f;
+    float biteAttackRadius            = .5f;
+    float biteAttackCooldown          = 2.f;
+    float activeDashRange             = 0.f;
+    bool bNextDashUninterrupted       = false;
+
+    int userSelectedVersion           = 0;
+    ChangelingVersions version        = ChangelingVersions::RANDOM;
+    float swapStateChancePerSecond    = 0.05f;
+    ChangelingVersions randomVersion =
+        ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
+
     // Default specific
-    float chaseSpeed = 1.0f;
-    float chaseAcceleration = 4.0f;
-    
+    float chaseSpeed                       = 1.0f;
+    float chaseAcceleration                = 4.0f;
+
     // Sneak specific
-    float maxSneakAngleDegrees = 45.0f;
-    float minSneakSpeed = 0.25f;
-    float maxSneakSpeed = 1.0f;
+    float maxSneakAngleDegrees             = 45.0f;
+    float minSneakSpeed                    = 0.25f;
+    float maxSneakSpeed                    = 1.0f;
     float distanceToPlayerForMaxSneakSpeed = 0.0f;
-    float sneakAcceleration = 4.0f;
-    float peekChancePerSecond = 0.1f;
-    float3 spottedLocation = float3::nan;
-    float3 spottedViewingDirection = float3::nan;
-    
+    float sneakAcceleration                = 4.0f;
+    float peekChancePerSecond              = 0.1f;
+    float3 spottedLocation                 = float3::nan;
+    float3 spottedViewingDirection         = float3::nan;
+
     // Block specific
-    bool dashRight = false;
-    unsigned short dashIndex = 0;
-    float dashAngleDegrees = 40.0f;
-    float timeBetweenDashes = 2.f;
+    bool dashRight                         = false;
+    unsigned short dashIndex               = 0;
+    float dashAngleDegrees                 = 40.0f;
+    float timeBetweenDashes                = 2.f;
 };
