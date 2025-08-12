@@ -57,6 +57,8 @@ Transform2DComponent::Transform2DComponent(const rapidjson::Value& initialState,
     {
         renderAnchors = initialState["RenderAnchors"].GetBool();
     }
+
+    if (initialState.HasMember("OrderInCanvas")) orderInCanvas = initialState["OrderInCanvas"].GetInt();
 }
 
 Transform2DComponent::~Transform2DComponent()
@@ -129,6 +131,7 @@ void Transform2DComponent::Save(rapidjson::Value& targetState, rapidjson::Docume
     targetState.AddMember("Anchors", valAnchors, allocator);
 
     targetState.AddMember("RenderAnchors", renderAnchors, allocator);
+    targetState.AddMember("OrderInCanvas", orderInCanvas, allocator);
 }
 
 void Transform2DComponent::Clone(const Component* other)
@@ -225,6 +228,10 @@ void Transform2DComponent::RenderEditorInspector()
 
         if (ImGui::DragFloat2("X-axis bounds", &anchorsX.x, 0.001f, 0.0f, 1.0f)) OnAnchorsUpdated();
         if (ImGui::DragFloat2("Y-axis bounds", &anchorsY.x, 0.001f, 0.0f, 1.0f)) OnAnchorsUpdated();
+
+        ImGui::Separator();
+
+        ImGui::DragInt("Order In Canvas", &orderInCanvas, 1.0f, -1000, 1000);
 
         ImGui::Separator();
     }

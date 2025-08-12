@@ -482,6 +482,7 @@
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
+    <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -500,6 +501,7 @@
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="SpawnUI.h" />
+    <ClInclude Include="Spouts.h" />
     <ClInclude Include="SwitchScriptTest.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
@@ -2052,6 +2054,7 @@
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
+    <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
@@ -2083,6 +2086,7 @@
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />
     <ClCompile Include="SpawnUI.cpp" />
+    <ClCompile Include="Spouts.cpp" />
     <ClCompile Include="SwitchScriptTest.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />

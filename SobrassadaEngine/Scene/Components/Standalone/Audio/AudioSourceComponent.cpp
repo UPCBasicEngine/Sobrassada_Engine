@@ -22,6 +22,7 @@ AudioSourceComponent::AudioSourceComponent(const rapidjson::Value& initialState,
     pitch          = initialState["Pitch"].GetFloat();
     spatialization = initialState["Spatialization"].GetFloat();
     if (initialState.HasMember("PlayOnStart")) playOnStart = initialState["PlayOnStart"].GetBool();
+    UpdateEventsNames();
 }
 
 AudioSourceComponent::~AudioSourceComponent()
@@ -32,6 +33,7 @@ AudioSourceComponent::~AudioSourceComponent()
 
 void AudioSourceComponent::Init()
 {
+    UpdateEventsNames();
     App->GetAudioModule()->AddAudioSource(this);
     SetInitValues();
     isInited = true;

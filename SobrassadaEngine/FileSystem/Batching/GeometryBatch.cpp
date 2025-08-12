@@ -31,6 +31,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isNavmeshValid = component->GetParent()->IsNavMeshValid();
     isAlpha        = component->GetRenderMode() == 2;
     isDoubleSided  = component->GetResourceMaterial()->IsDoubleSided();
+    doApplyWind    = component->GetResourceMaterial()->DoApplyWind();
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);
@@ -260,6 +261,9 @@ void GeometryBatch::GenerateCommands(const std::vector<MeshComponent*>& meshes, 
             continue;
         }
 
+        // CHECK AGAIN BECAUSE IF UPDATE_SHADERSTORAGE == TRUE WILL ARRIVE TO THIS POINT
+        if (!component->GetEnabled()) continue;
+
         const ResourceMesh* resource   = component->GetResourceMesh();
 
         const unsigned int vertexCount = static_cast<unsigned int>(resource->GetVertexCount());
@@ -305,7 +309,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextBuffer);
 
-        for (const MeshComponent* component : meshesToRender)
+        for (MeshComponent* component : meshesToRender)
         {
             const std::size_t index                         = componentsMap[component];
             const std::size_t accBones                      = bonesCount[index];
@@ -315,6 +319,9 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
             {
                 ptrBones[nextBufferIndex][accBones + i] = bonesGameObject[i]->GetGlobalTransform() * bindMatrices[i];
             }
+
+            // SETTING BONE INDEX FOR USE IN SHADER SCRIPTS
+            component->SetBoneIndexOffset((unsigned int)accBones);
         }
         glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
@@ -344,6 +351,21 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10, currentBuffer, 0, modelsSize);
 
     currentBufferIndex = nextBufferIndex;
+}
+
+void GeometryBatch::BindBonesBuffer()
+{
+    const GLuint currentBuffer = bones[currentBufferIndex];
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentBuffer);
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 12, currentBuffer, 0, bonesSize);
+}
+
+void GeometryBatch::UnbindBonesBuffer()
+{
+    const GLuint currentBuffer = bones[currentBufferIndex];
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, 0);
 }
 
 void GeometryBatch::LockBuffer()

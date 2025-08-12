@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -440,6 +440,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Scene\Components\Standalone\Animation\AnimationTrigger.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp" />
     <ClCompile Include="Scene\Components\ShaderScriptComponent.cpp" />
     <ClCompile Include="Modules\ShaderScriptModule.cpp" />
@@ -458,6 +459,7 @@
     <ClCompile Include="Libs\ImGui\imgui_curves.cpp" />
     <ClCompile Include="Scene\Components\Standalone\TrailComponent.cpp" />
     <ClCompile Include="Scene\RenderPass.cpp" />
+    <ClCompile Include="Utils\SSAO.cpp" />
     <ClCompile Include="Utils\Particles\Billboard.cpp" />
     <ClCompile Include="Modules\BillboardModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\BillboardComponent.cpp" />
@@ -701,10 +703,13 @@
     <ClCompile Include="Utils\Trees\Octree.cpp" />
     <ClCompile Include="Utils\Trees\Quadtree.cpp" />
     <ClCompile Include="Utils\Particles\VelocityAddon.cpp" />
+    <ClCompile Include="Utils\WindConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Scene\Components\Standalone\Animation\AnimationTrigger.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
+    <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />
     <ClInclude Include="Scene\Components\ShaderScriptComponent.h" />
     <ClInclude Include="Modules\ShaderScriptModule.h" />
     <ClInclude Include="resourceIcon.h" />
@@ -725,6 +730,7 @@
     <ClInclude Include="Libs\ImGui\imgui_curves.h" />
     <ClInclude Include="Scene\Components\Standalone\TrailComponent.h" />
     <ClInclude Include="Scene\RenderPass.h" />
+    <ClInclude Include="Utils\SSAO.h" />
     <ClInclude Include="Utils\Particles\Billboard.h" />
     <ClInclude Include="Modules\BillboardModule.h" />
     <ClInclude Include="Scene\Components\Standalone\BillboardComponent.h" />
@@ -880,6 +886,7 @@
     <ClInclude Include="Utils\Trees\Octree.h" />
     <ClInclude Include="Utils\Trees\Quadtree.h" />
     <ClInclude Include="Utils\Particles\VelocityAddon.h" />
+    <ClInclude Include="Utils\WindConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
