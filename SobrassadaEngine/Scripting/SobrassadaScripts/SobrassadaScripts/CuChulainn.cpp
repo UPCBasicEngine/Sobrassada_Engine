@@ -1025,6 +1025,7 @@ void CuChulainn::PerformAttack()
             ultimateObject->SetEnabled(true);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
+            UpdateUltimateVfx();
         }
         else if (ultimateObject->IsEnabled() && ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
                  ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
