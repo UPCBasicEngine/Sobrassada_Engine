@@ -239,7 +239,7 @@ void Soldier::SearchForPlayer()
     if (!isSearching)
     {
         // TODO: Would be nice to be a "search" animation instead of idle
-        animComponent->UseTrigger("idle");
+        animComponent->UseTrigger("detectPlayer");
         isSearching = true;
         searchTimer = searchDuration;
         agentAI->SetSpeed(0.0f, 10.0f);
@@ -303,6 +303,7 @@ void Soldier::Attack(float deltaTime)
             if ((inFirstWindow || inSecondWindow) && !weaponCollider->GetEnabled())
             {
                 weaponCollider->SetEnabled(true);
+
             }
             else if (!inFirstWindow && !inSecondWindow && weaponCollider->GetEnabled())
             {
@@ -351,7 +352,7 @@ void Soldier::ChangeState()
 {
     if (playerScript->IsDead())
     {
-        currentState = SoldierStates::DEATH;
+        currentState = SoldierStates::PATROL;
         return;
     }
 
