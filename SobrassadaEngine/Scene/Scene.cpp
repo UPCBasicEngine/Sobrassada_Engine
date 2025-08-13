@@ -351,9 +351,6 @@ update_status Scene::Update(float deltaTime)
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
 
-    // for (auto& gameObject : gameObjectsContainer)
-    //     gameObject.second->UpdateComponents(deltaTime);
-
     for (auto gameObject : toUpdateGameObjects)
         gameObject->UpdateComponents(deltaTime);
 
@@ -434,6 +431,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
     App->GetParticleModule()->RenderParticles();
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
+    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 }
 
@@ -1706,6 +1707,17 @@ void Scene::OverridePrefabs(const UID prefabUID)
     }
     if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
     App->GetResourcesModule()->ReleaseResource(prefab);
+}
+
+void Scene::QueueGameObjectDelete(UID uid)
+{
+    if (uid != INVALID_UID) pendingDeletes.push_back(uid);
+}
+void Scene::FlushPendingDeletes()
+{
+    for (UID id : pendingDeletes)
+        RemoveGameObjectHierarchy(id);
+    pendingDeletes.clear();
 }
 
 template <typename T> std::vector<T> Scene::GetEnabledComponentsOfType() const

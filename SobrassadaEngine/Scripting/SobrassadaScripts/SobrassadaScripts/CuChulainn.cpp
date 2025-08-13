@@ -51,6 +51,11 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
 
+    // Unlocked abilities
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
+    fields.push_back({"Dash unlocked", InspectorField::FieldType::Bool, &dashUnlocked});
+    fields.push_back({"Ultimate unlocked", InspectorField::FieldType::Bool, &ultimateUnlocked});
+
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ultimate parameters"});
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
     fields.push_back({"Ultimate damage", InspectorField::FieldType::Int, &ultimateDamage, 0.0f, 5.0f});
@@ -122,6 +127,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
     fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
     fields.push_back({"Ultimate empty icon", InspectorField::FieldType::Resource, &ultimateEmptyImage});
+
 }
 
 bool CuChulainn::Init()
@@ -583,6 +589,8 @@ void CuChulainn::GetInputs()
 
 bool CuChulainn::CanDash() const
 {
+    if (!dashUnlocked) return false; //When tutorial map is correctly fixed, put this to make progression
+
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                    state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
@@ -1405,6 +1413,13 @@ void CuChulainn::OnEnemyDefeated()
     AddRiastrad(riastradOnEnemyDeath);
 }
 
+void CuChulainn::ActivateAbility(std::string& abilityName)
+{
+    std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
+
+    if (abilityName == "dash") dashUnlocked = true;
+    else if (abilityName == "ultimate") ultimateUnlocked = true;
+}
 void CuChulainn::StartCurse()
 {
     // TODO: Remove when VFX

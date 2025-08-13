@@ -483,6 +483,7 @@
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="HealVFXGround.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
+    <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -2055,6 +2056,7 @@
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
+    <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />

@@ -11,6 +11,7 @@
 #include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
+#include "MiniFireball.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
 #include "GameOverScript.h"
@@ -67,6 +68,7 @@ constexpr const char* scripts[] = {
     "Banshee",
     "TileFloatScript",
     "FireballTrap",
+    "MiniFireball",
     "Archer",
     "Changeling",
     "ChangeSceneScript",
@@ -121,6 +123,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
     if (scriptType == "FireballTrap") return new FireballTrap(parent);
+    if (scriptType == "MiniFireball") return new MiniFireball(parent);
     if (scriptType == "Mushroom") return new Mushroom(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "EnemySpawnerScript") return new EnemySpawnerScript(parent);
