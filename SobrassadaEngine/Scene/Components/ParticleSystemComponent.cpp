@@ -55,8 +55,12 @@ void ParticleSystemComponent::Clone(const Component* other)
 
 void ParticleSystemComponent::Update(float deltaTime)
 {
-    for (auto& emitter : emitterInstances)
-        emitter.Update(deltaTime);
+    if (IsEffectivelyEnabled())
+    {
+        for (auto& emitter : emitterInstances)
+            emitter.Update(deltaTime);
+    }
+   
 }
 
 void ParticleSystemComponent::RenderDebug(float deltaTime)
