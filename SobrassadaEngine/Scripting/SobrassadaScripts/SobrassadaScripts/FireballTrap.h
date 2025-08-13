@@ -23,13 +23,6 @@ enum class ACTIVATION_STATE
 
 class FireballTrap : public Script
 {
-    enum ACTIVATION_STATE
-    {
-        SLEEPING,
-        IDLE,
-        DROPPING,
-        DAMAGING,
-    };
 
   public:
     FireballTrap(GameObject* parent);
@@ -37,8 +30,6 @@ class FireballTrap : public Script
     void Update(float deltaTime) override;
     int GetDamage() const { return cfg.impactDamage; }
     void RecycleGO(GameObject* go) const;
-
-    GameObject* SpawnIndicator(const float3& worldPos, float radius);
 
   private:
     void StartAttack();
@@ -69,7 +60,6 @@ class FireballTrap : public Script
     static constexpr int EXTRA_VFX_COUNT = 11;
     std::array<TimedVFX, EXTRA_VFX_COUNT> extraVfx {};
     float vfxClock = 0.f;
-
 
     struct FireballTrapSettings
     {
@@ -132,19 +122,68 @@ class FireballTrap : public Script
     };
     std::vector<MiniDecal> activeMiniDecals;
 
-    // Indicator (where will fall)
-    GameObject* indicatorPrefab = nullptr;
-    GameObject* activeIndicator = nullptr;
-    float indicatorPulse        = 0.0f;
-    float indicatorScale        = 1.0f;
-    float3 indicatorBaseScale   = float3::one;
+    // ---- VFX scheduling (skeleton) ----
+    struct VFXEvent
+    {
+        GameObject* prefab   = nullptr;      // source prefab to clone
+        float delay          = 0.f;          // start time relative to StartAttack() (seconds)
+        float life           = 1.f;          // auto-despawn after 'life' seconds
+        float3 localPos      = float3::zero; // placement relative to trap base
+        float3 localScale    = float3::one;
 
-    float3 impactOffsetLocal    = float3::zero; // XY of impact relative to base
-    float3 fireVelocity         = float3::zero;
-    float3 shadowBaseScale      = float3::one;
-    float3 lastImpactWorld      = float3::zero;
-    bool allowMiniDecals        = true;
-    float noMiniHitRadius       = 1.0f;
+        // runtime
+        bool triggered       = false;
+        float timer          = 0.f;
+        GameObject* instance = nullptr;
+    };
+
+    std::vector<VFXEvent> scheduledVfx;
+    float vfxSchedClock = 0.f;
+
+    // API
+    void ScheduleVfx(GameObject* prefab, float delay, float life, const float3& pos, const float3& scale = float3::one);
+    void UpdateScheduledVfx(float dt);
+    void ClearScheduledVfx();
+
+    // Prefabs (set via Inspector later)
+    GameObject* vfxMainLightPrefab   = nullptr;
+    GameObject* vfxLightImpactPrefab = nullptr;
+    GameObject* vfxFireImpactPrefab  = nullptr;
+    GameObject* vfxBombGroundPrefab  = nullptr;
+    GameObject* vfxBlackStainPrefab  = nullptr; // if null, we’ll fallback to impactPrefab
+
+    // Timings relative to IMPACT
+    float vfxMainLightDelay          = 0.00f; // main light at impact
+    float vfxLightImpactDelay        = 0.00f; // light impact at impact
+    float vfxFireImpactDelay         = 0.15f;
+    float vfxBombGroundDelay         = 0.35f;
+    float vfxBlackStainDelay         = 0.70f;
+
+    // Lifetimes
+    float vfxMainLightLife           = 0.6f;
+    float vfxLightImpactLife         = 0.4f;
+    float vfxFireImpactLife          = 1.5f;
+    float vfxBombGroundLife          = 3.0f; // could tie to bigBurnDuration later
+    float vfxBlackStainLife          = 2.5f;
+
+    float vfxIndicatorScale          = 1.0f; // extra multiplier
+
+    // Indicator (where will fall)
+    GameObject* vfxIndicatorPrefab   = nullptr; // pre-fall indicator VFX
+
+    float3 impactOffsetLocal         = float3::zero; // XY of impact relative to base
+    float3 fireVelocity              = float3::zero;
+    float3 shadowBaseScale           = float3::one;
+    float3 lastImpactWorld           = float3::zero;
+    bool allowMiniDecals             = true;
+    float noMiniHitRadius            = 1.0f;
+    float vfxIndicatorWorldRadius    = 0.6f;
+
+    // Mini impact VFX
+    GameObject* miniImpactVfxPrefab  = nullptr; 
+    float miniImpactVfxLife          = 1.0f;    
+    float miniImpactVfxScale         = 0.4f;    
+
 
     mutable std::mt19937 rng {std::random_device {}()};
 };

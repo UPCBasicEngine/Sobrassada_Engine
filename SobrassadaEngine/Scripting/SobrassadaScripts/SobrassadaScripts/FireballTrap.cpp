@@ -18,8 +18,6 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 
 constexpr float TAU                    = 2.0f * PI;
-constexpr float INDICATOR_PULSE_SPEED  = 4.0f;
-constexpr float INDICATOR_PULSE_SCALE  = 0.25f;
 constexpr float SHADOW_MIN_SCALE       = 0.01f;
 constexpr float SHADOW_MAX_SCALE       = 0.80f;
 constexpr float DEFAULT_DECAL_LIFETIME = 1.0f;
@@ -28,6 +26,14 @@ static inline float RandomRange(float min, float max)
 {
     static thread_local std::mt19937 rng {std::random_device {}()};
     return std::uniform_real_distribution<float>(min, max)(rng);
+}
+
+static inline float3 SafeDiv(const float3& a, const float3& b)
+{
+    const float eps = 1e-4f;
+    return float3(
+        a.x / (fabsf(b.x) < eps ? 1.f : b.x), a.y / (fabsf(b.y) < eps ? 1.f : b.y), a.z / (fabsf(b.z) < eps ? 1.f : b.z)
+    );
 }
 
 FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
@@ -64,11 +70,36 @@ void FireballTrap::SetupInspectorFields()
     fields.push_back({"Max Launch Radius", InspectorField::FieldType::Float, &cfg.maxLaunchRadius, 0.f, 20.f});
     fields.push_back({"Direction arc", InspectorField::FieldType::Float, &cfg.launchYawDeg, -180.f, 180.f});
 
-    // Fall indicator
-    fields.push_back({"Landing Indicator", InspectorField::FieldType::GameObject, &indicatorPrefab, 0.f, 0.f});
-    fields.push_back({"Indicator Scale", InspectorField::FieldType::Float, &indicatorScale, 0.1f, 2.0f});
+    // --- VFX prefabs (assign in Inspector) ---
+    fields.push_back({"VFX Main Light", InspectorField::FieldType::GameObject, &vfxMainLightPrefab, 0.f, 0.f});
+    fields.push_back({"VFX Light Impact", InspectorField::FieldType::GameObject, &vfxLightImpactPrefab, 0.f, 0.f});
+    fields.push_back({"VFX Fire Impact", InspectorField::FieldType::GameObject, &vfxFireImpactPrefab, 0.f, 0.f});
+    fields.push_back({"VFX Bomb Ground", InspectorField::FieldType::GameObject, &vfxBombGroundPrefab, 0.f, 0.f});
+    fields.push_back({"VFX Black Stain", InspectorField::FieldType::GameObject, &vfxBlackStainPrefab, 0.f, 0.f});
 
-    fields.push_back({"Life 1", InspectorField::FieldType::Float, &extraVfx[1].life, 0.1f, 10.f});
+    // --- VFX delays (seconds, relative to IMPACT moment) ---
+    fields.push_back({"VFX Delay (Main Light)", InspectorField::FieldType::Float, &vfxMainLightDelay, 0.f, 5.f});
+    fields.push_back({"VFX Delay (Light Impact)", InspectorField::FieldType::Float, &vfxLightImpactDelay, 0.f, 5.f});
+    fields.push_back({"VFX Delay (Fire Impact)", InspectorField::FieldType::Float, &vfxFireImpactDelay, 0.f, 5.f});
+    fields.push_back({"VFX Delay (Bomb Ground)", InspectorField::FieldType::Float, &vfxBombGroundDelay, 0.f, 5.f});
+    fields.push_back({"VFX Delay (Black Stain)", InspectorField::FieldType::Float, &vfxBlackStainDelay, 0.f, 5.f});
+
+    // --- VFX lifetimes (seconds) ---
+    fields.push_back({"VFX Life (Main Light)", InspectorField::FieldType::Float, &vfxMainLightLife, 0.1f, 10.f});
+    fields.push_back({"VFX Life (Light Impact)", InspectorField::FieldType::Float, &vfxLightImpactLife, 0.1f, 10.f});
+    fields.push_back({"VFX Life (Fire Impact)", InspectorField::FieldType::Float, &vfxFireImpactLife, 0.1f, 10.f});
+    fields.push_back({"VFX Life (Bomb Ground)", InspectorField::FieldType::Float, &vfxBombGroundLife, 0.1f, 10.f});
+    fields.push_back({"VFX Life (Black Stain)", InspectorField::FieldType::Float, &vfxBlackStainLife, 0.1f, 10.f});
+    fields.push_back({"VFX Indicator (pre-fall)", InspectorField::FieldType::GameObject, &vfxIndicatorPrefab, 0.f, 0.f}
+    );
+    fields.push_back({"VFX Indicator Scale", InspectorField::FieldType::Float, &vfxIndicatorScale, 0.1f, 5.0f});
+    fields.push_back(
+        {"VFX Indicator World Radius", InspectorField::FieldType::Float, &vfxIndicatorWorldRadius, 0.05f, 5.0f}
+    );
+
+    fields.push_back({"Mini Impact VFX", InspectorField::FieldType::GameObject, &miniImpactVfxPrefab, 0.f, 0.f});
+    fields.push_back({"Mini Impact VFX Life", InspectorField::FieldType::Float, &miniImpactVfxLife, 0.1f, 5.0f});
+    fields.push_back({"Mini Impact VFX Scale", InspectorField::FieldType::Float, &miniImpactVfxScale, 0.05f, 5.0f});
 }
 bool FireballTrap::Init()
 {
@@ -118,9 +149,6 @@ bool FireballTrap::Init()
     shakeCam = FindShakeCamera();
     if (!shakeCam) GLOG("[WARNING] FireballTrap: CameraMovement not found");
 
-    if (indicatorPrefab) indicatorPrefab->SetEnabled(false);
-    else GLOG("[WARNING] FireballTrap: landing indicator prefab not set");
-
     int idx = 0;
     for (size_t i = 2; i < parent->GetChildren().size() && idx < EXTRA_VFX_COUNT; ++i, ++idx)
     {
@@ -132,6 +160,20 @@ bool FireballTrap::Init()
     }
 
     if (idx < EXTRA_VFX_COUNT) GLOG("[FireballTrap] Avis: falten %d meshes extres", EXTRA_VFX_COUNT - idx);
+
+    // Deactivate VFX to not view them by default
+    if (vfxMainLightPrefab) vfxMainLightPrefab->SetEnabled(false);
+    else GLOG("[INFO] VFX Main Light prefab not set");
+    if (vfxLightImpactPrefab) vfxLightImpactPrefab->SetEnabled(false);
+    else GLOG("[INFO] VFX Light Impact prefab not set");
+    if (vfxFireImpactPrefab) vfxFireImpactPrefab->SetEnabled(false);
+    else GLOG("[INFO] VFX Fire Impact prefab not set");
+    if (vfxBombGroundPrefab) vfxBombGroundPrefab->SetEnabled(false);
+    else GLOG("[INFO] VFX Bomb Ground prefab not set");
+    if (vfxBlackStainPrefab) vfxBlackStainPrefab->SetEnabled(false);
+    else GLOG("[INFO] VFX Black Stain prefab not set (will use legacy impact decal on impact)");
+    if (vfxIndicatorPrefab) vfxIndicatorPrefab->SetEnabled(false);
+    if (miniImpactVfxPrefab) miniImpactVfxPrefab->SetEnabled(false);
 
     return true;
 }
@@ -190,18 +232,6 @@ void FireballTrap::Update(float deltaTime)
         }
     }
 
-    // Landing indicator pulse animation
-    if (activeIndicator)
-    {
-        indicatorPulse               += deltaTime * INDICATOR_PULSE_SPEED;
-        const float pulseScaleFactor  = 1.0f + INDICATOR_PULSE_SCALE * sinf(indicatorPulse);
-
-        const float3 pos              = activeIndicator->GetLocalTransform().TranslatePart();
-        const float3 scale            = indicatorBaseScale * pulseScaleFactor;
-
-        activeIndicator->SetLocalTransform(float4x4::FromTRS(pos, float3x3::identity, scale));
-    }
-
     // Lifetime & cleanup of mini decals
     for (auto it = activeMiniDecals.begin(); it != activeMiniDecals.end();)
     {
@@ -212,6 +242,7 @@ void FireballTrap::Update(float deltaTime)
         }
         else ++it;
     }
+    UpdateScheduledVfx(deltaTime);
 }
 
 void FireballTrap::StartAttack()
@@ -223,13 +254,6 @@ void FireballTrap::StartAttack()
     lastImpactWorld     = RandomSpawnPoint();
     impactOffsetLocal   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
     impactOffsetLocal.y = 0.f;
-
-    // Visual landing indicator
-    if (activeIndicator) RecycleGO(activeIndicator);
-
-    activeIndicator = SpawnIndicator(impactOffsetLocal, cfg.bigBurnRadius * indicatorScale);
-    if (activeIndicator) indicatorBaseScale = activeIndicator->GetScale();
-    indicatorPulse      = 0.0f;
 
     // Launch direction
     const float yawRad  = cfg.launchYawDeg * DEGREE_RAD_CONV;
@@ -249,11 +273,14 @@ void FireballTrap::StartAttack()
 
     fireVelocity           = -dirXZ * horizSpeed; // towards impact
 
-    // -- VFX 0 (circle)
-    extraVfx[0].life       = fallTime + 0.1f; 
-    extraVfx[0].delay      = 0.f;             
+    // -- Extra VFX 0 (optional mesh, if present)
+    if (extraVfx[0].go)
+    {
+        extraVfx[0].life  = fallTime + 0.1f;
+        extraVfx[0].delay = 0.f;
+    }
 
-    const float step       = 0.05f;
+    const float step = 0.05f;
     for (int i = 1; i < EXTRA_VFX_COUNT; ++i)
     {
         extraVfx[i].delay = fallTime + (i - 1) * step;
@@ -270,13 +297,37 @@ void FireballTrap::StartAttack()
         fireballShadow->SetLocalTransform(float4x4::FromTRS(initPos, float3x3::identity, initScale));
     }
 
-    // Reset timeline VFX
+    // Reset timeline VFX (existing)
     vfxClock = 0.f;
     for (int i = 0; i < EXTRA_VFX_COUNT; ++i)
     {
         extraVfx[i].timer  = 0.f;
         extraVfx[i].active = false;
         if (extraVfx[i].go) extraVfx[i].go->SetEnabled(false);
+    }
+
+    // Schedule impact VFX
+    ClearScheduledVfx();
+    vfxSchedClock         = 0.f;
+
+    const float impactT   = fallTime;          // moment of impact
+    const float3 vfxPos   = impactOffsetLocal; // ground (local to trap)
+    const float3 vfxScale = float3::one;
+
+    ScheduleVfx(vfxMainLightPrefab, impactT + vfxMainLightDelay, vfxMainLightLife, vfxPos, vfxScale);
+    ScheduleVfx(vfxLightImpactPrefab, impactT + vfxLightImpactDelay, vfxLightImpactLife, vfxPos, vfxScale);
+    ScheduleVfx(vfxFireImpactPrefab, impactT + vfxFireImpactDelay, vfxFireImpactLife, vfxPos, vfxScale);
+    ScheduleVfx(
+        vfxBombGroundPrefab, impactT + vfxBombGroundDelay,
+        /*life*/ cfg.bigBurnDuration, vfxPos, vfxScale
+    );
+
+    if (vfxBlackStainPrefab)
+        ScheduleVfx(vfxBlackStainPrefab, impactT + vfxBlackStainDelay, vfxBlackStainLife, vfxPos, vfxScale);
+    if (vfxIndicatorPrefab)
+    {
+        const float3 indicatorScaleVfx = float3(vfxIndicatorWorldRadius);
+        ScheduleVfx(vfxIndicatorPrefab, 0.0f, impactT, vfxPos, indicatorScaleVfx);
     }
 
     dropElapsed     = 0.f;
@@ -289,11 +340,11 @@ void FireballTrap::HandleImpact()
     fireball->SetEnabled(false);
     if (fireballShadow) fireballShadow->SetEnabled(false);
 
-    RecycleGO(activeIndicator);
-    activeIndicator = nullptr;
-
     // Decal under big fireball
-    if ((currentDecal = RequestImpactDecal())) currentDecal->SetLocalPosition(impactOffsetLocal);
+    if (!vfxBlackStainPrefab)
+    {
+        if ((currentDecal = RequestImpactDecal())) currentDecal->SetLocalPosition(impactOffsetLocal);
+    }
 
     // Ground burn mesh & damage collider
     if (groundMesh) groundMesh->SetEnabled(true);
@@ -330,6 +381,7 @@ void FireballTrap::DisableDamage()
     RecycleGO(currentDecal);
     currentDecal    = nullptr;
     activationState = ACTIVATION_STATE::SLEEPING;
+    ClearScheduledVfx();
 }
 
 void FireballTrap::UpdateFireball(float deltaTime)
@@ -383,9 +435,7 @@ void FireballTrap::SpawnMiniCluster()
 {
     if (!miniPrototype) return;
 
-    static constexpr float tau = 2.f * PI;
-    const float step           = tau / float(miniCount);
-
+    const float step = TAU / float(miniCount);
     for (uint32_t i = 0; i < miniCount; ++i)
     {
         GameObject* mini = RequestMini();
@@ -434,13 +484,22 @@ void FireballTrap::UpdateMinis(float deltaTime)
 
         if (grounded && allowMiniDecals)
         {
-            if (GameObject* decal = RequestImpactDecal())
-            {
-                float3 dPos   = float3(pos.x, 0.f, pos.z);
-                float3 dScale = float3(0.4f);
-                decal->SetLocalTransform(float4x4::FromTRS(dPos, float3x3::identity, dScale));
+            float3 dPos = float3(pos.x, 0.f, pos.z);
 
-                activeMiniDecals.push_back({decal, 1.0f}); // decal lifetime
+            if (miniImpactVfxPrefab)
+            {
+                const float3 localS = SafeDiv(float3(miniImpactVfxScale), parent->GetScale());
+
+                GameObject* vfx     = new GameObject(parent->GetUID(), miniImpactVfxPrefab);
+                parent->AddChildren(vfx->GetUID());
+                AppEngine->GetSceneModule()->GetScene()->AddGameObject(vfx->GetUID(), vfx);
+
+                const float4x4 tf = float4x4::FromTRS(dPos, float3x3::identity, localS);
+                vfx->SetLocalTransform(tf);
+                vfx->SetEnabled(true);
+                vfx->SetLocalTransform(tf); 
+
+                activeMiniDecals.push_back({vfx, miniImpactVfxLife});
             }
         }
 
@@ -511,23 +570,73 @@ void FireballTrap::RecycleGO(GameObject* go) const
     scene->QueueGameObjectDelete(go->GetUID());
 }
 
-GameObject* FireballTrap::SpawnIndicator(const float3& localPos, float radius)
+void FireballTrap::ScheduleVfx(GameObject* prefab, float delay, float life, const float3& pos, const float3& scale)
 {
-    if (!indicatorPrefab) return nullptr;
+    if (!prefab) return;
+    scheduledVfx.push_back({prefab, delay, life, pos, scale});
+}
 
-    // Clone prefab
-    GameObject* ind = new GameObject(parent->GetUID(), indicatorPrefab);
+void FireballTrap::UpdateScheduledVfx(float dt)
+{
+    vfxSchedClock += dt;
 
-    // Scale, place
-    float3 scale    = float3(radius);
-    float4x4 tf     = float4x4::FromTRS(localPos, float3x3::identity, scale);
-    ind->SetLocalTransform(tf);
+    for (auto& e : scheduledVfx)
+    {
+        if (!e.prefab) continue;
 
-    ind->SetEnabled(true);
+        // Trigger when delay elapsed
+        if (!e.triggered && vfxSchedClock >= e.delay)
+        {
+            GameObject* inst = new GameObject(parent->GetUID(), e.prefab);
 
-    // Add to scene
-    parent->AddChildren(ind->GetUID());
-    AppEngine->GetSceneModule()->GetScene()->AddGameObject(ind->GetUID(), ind);
+            parent->AddChildren(inst->GetUID());
+            AppEngine->GetSceneModule()->GetScene()->AddGameObject(inst->GetUID(), inst);
 
-    return ind;
+            const float3 parentS = parent->GetScale();             // escala del pare
+            const float3 localS  = SafeDiv(e.localScale, parentS); // local = world / parent
+
+            // TRS local
+            const float4x4 tf    = float4x4::FromTRS(e.localPos, float3x3::identity, localS);
+            inst->SetLocalTransform(tf);
+
+            inst->SetEnabled(true);
+            inst->SetLocalTransform(tf);
+
+            e.instance  = inst;
+            e.triggered = true;
+            e.timer     = 0.f;
+        }
+
+        // Lifetime countdown
+        if (e.triggered && e.instance)
+        {
+            e.timer += dt;
+            if (e.timer >= e.life)
+            {
+                RecycleGO(e.instance);
+                e.instance = nullptr; // keep triggered=true to avoid retrigger
+            }
+        }
+    }
+
+    // Purge finished events (triggered and no live instance)
+    scheduledVfx.erase(
+        std::remove_if(
+            scheduledVfx.begin(), scheduledVfx.end(),
+            [](const VFXEvent& ev) { return ev.triggered && ev.instance == nullptr; }
+        ),
+        scheduledVfx.end()
+    );
+}
+
+void FireballTrap::ClearScheduledVfx()
+{
+    for (auto& e : scheduledVfx)
+    {
+        if (e.instance) RecycleGO(e.instance);
+        e.instance  = nullptr;
+        e.triggered = true;
+    }
+    scheduledVfx.clear();
+    vfxSchedClock = 0.f;
 }
