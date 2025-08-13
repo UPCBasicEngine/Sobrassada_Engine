@@ -75,7 +75,7 @@ bool AbilityIconFill::Init()
         static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(otherImageUID) 
         );
 
-    otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetUID());
+    otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
     glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
     return true;
@@ -106,12 +106,13 @@ void AbilityIconFill::Render(float deltaTime, CameraComponent* cameraComp)
 
     glUniform3fv(3, 1, imageComp->GetColor().ptr());
 
-    fillAmount = 0.3f;
+    time += deltaTime;
     glUniform1f(6, fillAmount);
+    glUniform1f(7, time);
 
-    glUniform1f(7, waveAmplitude);
-    glUniform1f(8, waveFrequency);
-    glUniform1f(9, waveSpeed);
+    glUniform1f(8, waveAmplitude);
+    glUniform1f(9, waveFrequency);
+    glUniform1f(10, waveSpeed);
 
     glBindVertexArray(vao);
 

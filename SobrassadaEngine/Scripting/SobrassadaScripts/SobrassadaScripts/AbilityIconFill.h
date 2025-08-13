@@ -32,6 +32,7 @@ class AbilityIconFill : public Script
     float waveAmplitude         = 0.0f;
     float waveFrequency         = 0.0f;
     float waveSpeed             = 0.0f;
+    float time                  = 0.0f;
 
     ImageComponent* imageComp   = nullptr;
     ResourceTexture* otherImage = nullptr;

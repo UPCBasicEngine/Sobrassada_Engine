@@ -11,15 +11,12 @@ layout(location = 5) uniform uvec2 filledTexture;
 
 // Transition parameters
 layout(location = 6) uniform float fillAmount;
-//layout(location = 7) uniform float prevFillAmount;
-//layout(location = 8) uniform float transitionTime;
-//layout(location = 9) uniform float time;
-//layout(location = 10) uniform float startTime;
+layout(location = 7) uniform float time;
 
 // Wave parameters
-layout(location = 7) uniform float waveAmplitude;
-layout(location = 8) uniform float waveFrequency;
-layout(location = 9) uniform float waveSpeed;
+layout(location = 8) uniform float waveAmplitude;
+layout(location = 9) uniform float waveFrequency;
+layout(location = 10) uniform float waveSpeed;
 
 float easeOutElastic(float t) {
     float p = 0.7f;
@@ -35,10 +32,10 @@ void main()
        discard;
     }
 
-    //float wave = sin(uv0.y * waveFrequency + time * waveSpeed) * waveAmplitude;
-    //float liquidLevel = fillAmount + wave;
+    float wave = sin(uv0.x * waveFrequency + time * waveSpeed) * waveAmplitude;
+    float liquidLevel = fillAmount + wave;
 
-    if (uv0.y > 1.0f - fillAmount)
+    if (uv0.y > 1.0f - liquidLevel)
     {
         outColor = vec4(filled.r * inputColor.r, filled.g * inputColor.g, filled.b * inputColor.b, filled.a);
     }
