@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "RiastradBarFill.h"
+#include "AbilityIconFill.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -17,29 +17,33 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
+#include "ResourcesModule.h"
 
 #include "glew.h"
 
-RiastradBarFill::RiastradBarFill(GameObject* parent) : Script(parent)
+AbilityIconFill::AbilityIconFill(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Transition Time", InspectorField::FieldType::Float, &transitionTime, 0.f, 1.0f});
     fields.push_back({"Wave Amplitude", InspectorField::FieldType::Float, &waveAmplitude, 0.f, 1.0f});
     fields.push_back({"Wave Frequency", InspectorField::FieldType::Float, &waveFrequency, 0.f, 100.0f});
     fields.push_back({"Wave Speed", InspectorField::FieldType::Float, &waveSpeed, 0.f, 100.0f});
+    fields.push_back({"Other Image", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
-RiastradBarFill::~RiastradBarFill()
+AbilityIconFill::~AbilityIconFill()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
+
+    glMakeTextureHandleNonResidentARB(otherImageBindlessUID);
+    AppEngine->GetResourcesModule()->ReleaseResource(otherImage);
 }
 
-bool RiastradBarFill::Init()
+bool AbilityIconFill::Init()
 {
     // This init is being called twice
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
         "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl",
-        "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl"
+        "./EngineDefaults/Shader/Custom/Fragment/UI_AbilitiesFill.glsl"
     );
 
     imageComp = parent->GetComponent<ImageComponent*>();
@@ -64,14 +68,24 @@ bool RiastradBarFill::Init()
 
     imageComp->SetEnabled(false);
 
+    // Init other texture
+    if (otherImageUID == INVALID_UID || otherImage || otherImageBindlessUID != INVALID_UID) return true;
+
+    otherImage =
+        static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(otherImageUID) 
+        );
+
+    otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetUID());
+    glMakeTextureHandleResidentARB(otherImageBindlessUID);
+
     return true;
 }
 
-void RiastradBarFill::Update(float deltaTime)
+void AbilityIconFill::Update(float deltaTime)
 {
 }
 
-void RiastradBarFill::Render(float deltaTime, CameraComponent* cameraComp)
+void AbilityIconFill::Render(float deltaTime, CameraComponent* cameraComp)
 {
     // Custom UVs in UI only work in screen space (for now)
     if (!shaderProgram || !imageComp) return;
@@ -92,17 +106,12 @@ void RiastradBarFill::Render(float deltaTime, CameraComponent* cameraComp)
 
     glUniform3fv(3, 1, imageComp->GetColor().ptr());
 
-    time += deltaTime;
+    fillAmount = 0.3f;
+    glUniform1f(6, fillAmount);
 
-    glUniform1f(5, nextFillAmount);
-    glUniform1f(6, prevFillAmount);
-    glUniform1f(7, transitionTime);
-    glUniform1f(8, time);
-    glUniform1f(9, startTime);
-
-    glUniform1f(10, waveAmplitude);
-    glUniform1f(11, waveFrequency);
-    glUniform1f(12, waveSpeed);
+    glUniform1f(7, waveAmplitude);
+    glUniform1f(8, waveFrequency);
+    glUniform1f(9, waveSpeed);
 
     glBindVertexArray(vao);
 
@@ -140,23 +149,25 @@ void RiastradBarFill::Render(float deltaTime, CameraComponent* cameraComp)
         1.0f
     };
 
-    UID bindlessUID     = imageComp->GetTextureUID();
-    const GLuint lower  = static_cast<GLuint>(bindlessUID & 0xFFFFFFFF);
-    const GLuint higher = static_cast<GLuint>(bindlessUID >> 32);
+    GLuint lower = static_cast<GLuint>(otherImageBindlessUID & 0xFFFFFFFF);
+    GLuint higher = static_cast<GLuint>(otherImageBindlessUID >> 32);
     glUniform2ui(4, lower, higher);
+
+    lower  = static_cast<GLuint>(imageComp->GetTextureUID() & 0xFFFFFFFF);
+    higher = static_cast<GLuint>(imageComp->GetTextureUID() >> 32);
+    glUniform2ui(5, lower, higher);   
+
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     AppEngine->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 6);
 
     glDisable(GL_BLEND);
 }
 
-void RiastradBarFill::Reset()
+void AbilityIconFill::Reset()
 {
 }
 
-void RiastradBarFill::SetFillAmount(float newFill)
+void AbilityIconFill::SetFillAmount(float newFill)
 {
-    prevFillAmount = nextFillAmount;
-    nextFillAmount = newFill;
-    startTime      = time;
+    fillAmount = newFill;
 }

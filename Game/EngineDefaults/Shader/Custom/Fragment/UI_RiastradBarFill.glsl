@@ -6,7 +6,7 @@ in vec2 uv0;
 out vec4 outColor;
 
 layout(location = 3) uniform vec3 inputColor;
-layout(location = 4) uniform uvec2 fontTexture;
+layout(location = 4) uniform uvec2 barTexture;
 
 // Transition parameters
 layout(location = 5) uniform float nextFillAmount;
@@ -27,7 +27,7 @@ float easeOutElastic(float t) {
 
 void main()
 {
-    vec4 sampled = texture(sampler2D(fontTexture), uv0);
+    vec4 sampled = texture(sampler2D(barTexture), uv0);
     if (sampled.a < 0.05) 
     {
        discard;

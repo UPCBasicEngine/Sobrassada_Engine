@@ -163,6 +163,9 @@
     <ClInclude Include="RiastradBarFill.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="AbilityIconFill.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -862,6 +865,9 @@
       <Filter>Environment\Traps</Filter>
     </ClCompile>
     <ClCompile Include="RiastradBarFill.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="AbilityIconFill.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>

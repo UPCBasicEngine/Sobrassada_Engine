@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "AbilityIconFill.h"
 #include "Application.h"
 #include "CameraComponent.h"
 #include "CameraMovement.h"
@@ -50,6 +51,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
+    fields.push_back({"Dash Icon Name", InspectorField::FieldType::InputText, &dashIconName});
 
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
@@ -65,6 +67,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
+    fields.push_back({"Ultimate Icon Name", InspectorField::FieldType::InputText, &ultimateIconName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Charged attack parameters"});
     fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
@@ -272,7 +275,23 @@ bool CuChulainn::Init()
         ShaderScriptComponent* shaderScript = riastradObj->GetComponent<ShaderScriptComponent*>();
         if (shaderScript) riastradBar = shaderScript->GetScriptByType<RiastradBarFill>();
     }
-    if (!riastradBar) GLOG("[WARNING] No riastrad Fill Bar Shader Script found for CuChulain")
+    if (!riastradBar) GLOG("[WARNING] No riastrad Fill Bar Shader Script found for CuChulain");
+
+    GameObject* dashIconObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashIconName);
+    if (dashIconObj)
+    {
+        ShaderScriptComponent* shaderScript = dashIconObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript) dashIcon = shaderScript->GetScriptByType<AbilityIconFill>();
+    }
+    if (!dashIcon) GLOG("[WARNING] No dash icon Shader Script found for CuChulain");
+
+    GameObject* ultimateIconObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateIconName);
+    if (ultimateIconObj)
+    {
+        ShaderScriptComponent* shaderScript = ultimateIconObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript) ultimateIcon = shaderScript->GetScriptByType<AbilityIconFill>();
+    }
+    if (!ultimateIcon) GLOG("[WARNING] No dash icon Shader Script found for CuChulain");
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
@@ -302,11 +321,13 @@ void CuChulainn::Update(float deltaTime)
         healKnockback->SetEnabled(true);
         Heal(mushroomHeal);
     }
-    if (state == CharacterStates::TRANSFORM && transformTimer > transformVfxDelay && !riastradCrack->IsEnabled())
+    if (state == CharacterStates::TRANSFORM && !riastradVfx->IsEnabled())
     {
         EnableRiastradVfx();
     }
     CheckIsFalling();
+    if (dashIcon) dashIcon->SetFillAmount(1.0f - (dashTimer / dashCooldown));
+    if (ultimateIcon) ultimateIcon->SetFillAmount(1.0f - (ultimateCdTimer / ultimateCd));
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
@@ -769,7 +790,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
 
     // Ultimate
     ultimateCdTimer -= deltaTime;
-    if (ultimateCdTimer <= 0.0f) ultimateCdTimer = 0.0f;
+    if (ultimateCdTimer < 0.0f) ultimateCdTimer = 0.0f;
     if (desiredUltimate)
     {
         ultimateBufferTimer -= deltaTime;
@@ -1306,6 +1327,8 @@ void CuChulainn::ToggleRiastrad()
 
 void CuChulainn::EnableRiastradVfx()
 {
+    if (transformTimer < transformVfxDelay) return;
+
     AppEngine->GetGameTimer()->SetTimeScale(0.5f);
 
     // Reuse charge attack collider (If needed different size, create another)
@@ -1322,7 +1345,7 @@ void CuChulainn::EnableRiastradVfx()
         mat->SetDiffColor(newColor);
     }
 
-    // Stomp VFX
+    // TODO: Adjust timings for every specific effect
     if (riastradVfx)
     {
         riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(true);

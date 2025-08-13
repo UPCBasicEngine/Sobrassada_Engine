@@ -33,12 +33,13 @@
 #include "Spouts.h"
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
-#include "RiastradBarFill.h"
 #include "VSyncToggleScript.h"
 
+#include "AbilityIconFill.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
+#include "RiastradBarFill.h"
 
 #include <string>
 
@@ -84,9 +85,11 @@ constexpr const char* scripts[] = {
     "Destructible"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent", "RiastradBarFill"};
+constexpr const char* shaderScripts[] = {
+    "MovingUVPostScript", "MovingUVLight", "MovingUVTransparent", "RiastradBarFill", "AbilityIconFill"
+};
 
-Application* AppEngine                = nullptr;
+Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -141,6 +144,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
     if (scriptType == "RiastradBarFill") return new RiastradBarFill(parent);
+    if (scriptType == "AbilityIconFill") return new AbilityIconFill(parent);
 
     return nullptr;
 }

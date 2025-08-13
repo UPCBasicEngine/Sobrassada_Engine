@@ -10,6 +10,7 @@ class Projectile;
 class AudioSourceComponent;
 class ImageComponent;
 class RiastradBarFill;
+class AbilityIconFill;
 
 enum class CharacterStates
 {
@@ -118,6 +119,8 @@ class CuChulainn : public Character
     float inputBuffer                  = 0.5f;
 
     // Dash
+    std::string dashIconName           = "";
+    AbilityIconFill* dashIcon           = nullptr;
     float3 lastDashStartPos            = float3::zero;
     bool isDashing                     = false;
     bool wasDashing                    = false;
@@ -164,6 +167,8 @@ class CuChulainn : public Character
     GameObject* aimShadowObject        = nullptr;
 
     // Ultimate
+    std::string ultimateIconName       = "";
+    AbilityIconFill* ultimateIcon       = nullptr;
     std::string ultimateName           = "Ultimate";
     GameObject* ultimateObject         = nullptr;
     bool desiredUltimate               = false;
