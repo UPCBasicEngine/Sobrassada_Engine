@@ -113,7 +113,7 @@ void MovingUVPostScript::Update(float deltaTime)
 
 void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && texture && meshComp)
+    if (shaderProgram && indexCount > 0 && texture && meshComp && meshComp->GetBatch())
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
