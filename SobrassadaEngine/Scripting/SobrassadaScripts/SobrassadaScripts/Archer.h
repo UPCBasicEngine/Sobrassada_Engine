@@ -86,4 +86,8 @@ class Archer : public Character
     int escapeCount             = 0;
     const int MAX_ESCAPES       = 2;
     bool canEscape              = true;
+
+    std::vector<Projectile*> arrowPool; 
+    int currentArrowIndex = 0;          
+    int poolSize          = 5;          
 };

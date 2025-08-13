@@ -57,6 +57,30 @@ bool Archer::Init()
     {
         if (objectUID != parent->GetUID())
             arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
+
+          if (hasMultipleShoots)
+        {
+            GameObject* obj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
+            if (obj != parent)
+            {
+                std::string objName = obj->GetName();
+
+               
+                if (objName.find("Arrow_") != std::string::npos)
+                {
+                    ScriptComponent* scriptComp = obj->GetComponent<ScriptComponent*>();
+                    if (scriptComp)
+                    {
+                        Projectile* projectile = scriptComp->GetScriptByType<Projectile>();
+                        if (projectile)
+                        {
+                            arrowPool.push_back(projectile);
+                            obj->SetEnabledRecursive(false); 
+                        }
+                    }
+                }
+            }
+        }
     }
 
     if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
@@ -64,6 +88,8 @@ bool Archer::Init()
         arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
         if (!arrow) GLOG("[WARNING] No arrow found in archer");
     }
+
+  
 
     return true;
 }
@@ -229,8 +255,13 @@ void Archer::OverShooting(float deltaTime)
                 shootDirection.x      = x;
                 shootDirection.z      = z;
 
-                arrow->Shoot(parent->GetPosition(), shootDirection);
-                currentShot++;
+                if (!arrowPool.empty())
+                {
+                    Projectile* currentArrow = arrowPool[currentArrowIndex];
+                    currentArrow->Shoot(parent->GetPosition(), shootDirection);
+                    currentArrowIndex = (currentArrowIndex + 1) % arrowPool.size();
+                }
+               
                 shotTimer = 0.0f;
             }
         }
