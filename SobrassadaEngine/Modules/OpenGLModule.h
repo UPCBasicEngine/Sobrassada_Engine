@@ -21,7 +21,7 @@ class OpenGLModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    void DrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
+    SOBRASADA_API_ENGINE void DrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
     void DrawArrays(GLenum mode, GLint first, GLsizei count);
 
     void AddTrianglesPerSecond(float meshTrianglesPerSecond) { trianglesPerSecond += meshTrianglesPerSecond; }

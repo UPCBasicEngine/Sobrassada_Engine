@@ -27,6 +27,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
+#include "ParticleSystemComponent.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -117,7 +118,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
-    fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
+    fields.push_back({"Heal vfx object", InspectorField::FieldType::InputText, &healVfxName});
+    fields.push_back({"Heal particles object", InspectorField::FieldType::InputText, &healParticlesName});
     fields.push_back({"Riastrad VFX object", InspectorField::FieldType::InputText, &riastradVfxName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"HUD textures"});
@@ -223,9 +225,13 @@ bool CuChulainn::Init()
     if (!dashDecal) GLOG("[WARNING] No dash decal found for CuChulain")
     else dashDecal->SetEnabled(false);
 
-    healVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healVisualName);
-    if (!healVisual) GLOG("[WARNING] No heal visual found for CuChulain")
-    else healVisual->SetEnabled(false);
+    healVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healVfxName);
+    if (!healVfx) GLOG("[WARNING] No heal visual found for CuChulain")
+    else healVfx->SetEnabled(false);
+
+    healParticles = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healParticlesName);
+    if (!healParticles) GLOG("[WARNING] No heal visual found for CuChulain")
+    else healParticles->SetEnabled(false);
 
     riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
     if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
@@ -289,15 +295,24 @@ void CuChulainn::Update(float deltaTime)
     if (character->GetInputDown()) GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
+
     if (state == CharacterStates::HEAL && healTimer > healKnockbackDelay && !healKnockback->IsEnabled())
     {
-        healKnockback->SetEnabled(true);
+        if (healKnockback) healKnockback->SetEnabled(true);
+        if (healParticles)
+        {
+            healParticles->SetEnabled(true);
+            healParticles->GetComponent<ParticleSystemComponent*>()->SpawnAllInstances();
+        }
     }
+
     if (state == CharacterStates::TRANSFORM && transformTimer > transformVfxDelay && !riastradCrack->IsEnabled())
     {
         EnableRiastradVfx();
     }
     CheckIsFalling();
+
+    if (!isDashing && dashTrail && dashTrail->IsEnabled()) dashTrail->SetEnabled(false);
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
@@ -378,9 +393,6 @@ void CuChulainn::HandleState(float deltaTime)
         aimTimer = 0.0f;
     }
 
-    if (!isDashing && dashTrail) dashTrail->SetEnabled(false);
-    if (!isHealing && healVisual) healVisual->SetEnabled(false);
-
     UpdateDashCooldownUI();
     UpdateUltimateCooldownUI();
 
@@ -413,6 +425,7 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
                 return;
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
@@ -1183,7 +1196,26 @@ void CuChulainn::UseMushroom()
     character->EnableMovement(false);
     isHealing = true;
 
-    if (healVisual) healVisual->SetEnabled(true);
+    if (healVfx)
+    {
+        healVfx->SetEnabled(true);
+        healVfx->SetLocalPosition(parent->GetLocalTransform().TranslatePart());
+        Scene* scene = AppEngine->GetSceneModule()->GetScene();
+        for (UID child : healVfx->GetChildren())
+        {
+            GameObject* currentChild = scene->GetGameObjectByUID(child);
+            MeshComponent* mesh      = currentChild->GetComponent<MeshComponent*>();
+            if (mesh) mesh->SetEnabled(false);
+            ShaderScriptComponent* shaderScript = currentChild->GetComponent<ShaderScriptComponent*>();
+            if (shaderScript)
+            {
+                for (Script* script : shaderScript->GetScriptInstances())
+                {
+                    script->Reset();
+                }
+            }
+        }
+    }
 
     Heal(mushroomHeal);
     healTimer = 0.0f;
