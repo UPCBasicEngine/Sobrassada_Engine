@@ -11,13 +11,13 @@
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
+#include "SSAO.h"
 #include "ShaderModule.h"
 #include "ShaderScriptModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
-#include "SSAO.h"
 
 #ifdef OPTICK
 #include "optick.h"
@@ -208,7 +208,7 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Blur Pass");
     SsaoBlurPassRender(ssao);
     glPopDebugGroup();
-     
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -897,7 +897,8 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
             {
                 if (mesh->GetResourceMaterial() != nullptr && mesh->GetResourceMaterial()->DoApplyWind())
                     vertexOffsetMeshesToRender.push_back(mesh);

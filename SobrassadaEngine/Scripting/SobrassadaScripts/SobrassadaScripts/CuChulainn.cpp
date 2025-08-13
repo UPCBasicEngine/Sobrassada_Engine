@@ -15,10 +15,10 @@
 #include "ResourceMaterial.h"
 #include "ResourceStateMachine.h"
 #include "ResourcesModule.h"
+#include "RiastradBarFill.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
-#include "RiastradBarFill.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
@@ -69,6 +69,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({InspectorField::FieldType::Text, (void*)"Charged attack parameters"});
     fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
     fields.push_back({"Attack charging duration", InspectorField::FieldType::Float, &chargeDuration, 0.0f, 10.0f});
+    fields.push_back({"Charge threshold", InspectorField::FieldType::Float, &chargeThreshold, 0.0f, 10.0f});
     fields.push_back({"Charged Attack damage", InspectorField::FieldType::Int, &chargedAttackDamage, 0.0f, 5.0f});
     fields.push_back(
         {"Charged Attack hitbox delay", InspectorField::FieldType::Float, &chargedAttackHitboxDelay, 0.0f, 5.0f}
@@ -355,7 +356,8 @@ void CuChulainn::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
-    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN || state == CharacterStates::HEAL)
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
+        state == CharacterStates::HEAL)
     {
         state = CharacterStates::HURT;
         if (animComponent)
@@ -398,7 +400,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredUltimate && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (attackPressTimer >= 0.2f && CanChargeAttack()) ChargeAttack();
+    else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
              state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
@@ -518,7 +520,7 @@ void CuChulainn::GetInputs()
     }
 
     // Attack
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
+    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
     {
         desiredAttack     = true;
         attackBufferTimer = inputBuffer;
@@ -603,9 +605,9 @@ bool CuChulainn::CanDash() const
 
 bool CuChulainn::CanAttack() const
 {
-    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-           state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
+    return attackPressTimer < chargeThreshold && state != CharacterStates::DASH && !isAttacking &&
+           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && comboCounter <= 1 &&
+           attackCdTimer <= 0.0f && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
            state != CharacterStates::CHARGING && state != CharacterStates::TAKE_MUSHROOM &&
            state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 }

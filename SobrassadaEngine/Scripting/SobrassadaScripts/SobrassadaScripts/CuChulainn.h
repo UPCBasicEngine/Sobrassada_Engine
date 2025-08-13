@@ -137,7 +137,7 @@ class CuChulainn : public Character
     int comboCounter                   = -1;
     float comboBufferTimer             = 0.0f;
 
-    // CHarged attack
+    // Charged attack
     std::string chargedAttackName      = "Charged";
     GameObject* chargedAttackCollider  = nullptr;
     bool isChargingAttack              = false;
@@ -149,6 +149,7 @@ class CuChulainn : public Character
     float chargedAttackHitboxDuration  = 0.0f;
     int chargedAttackDamage            = 0;
     float attackPressTimer             = 0.0f;
+    float chargeThreshold              = 0.2f;
 
     bool desiredAim                    = false;
     float throwTimer                   = 0.0f;
