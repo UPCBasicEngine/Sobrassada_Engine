@@ -153,7 +153,9 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glUniform1i(5, isAlphaDiscard);
 
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-        meshComp->GetBatch()->BindBonesBuffer();
+
+        GeometryBatch* batch = meshComp->GetBatch();
+        if (batch) batch->BindBonesBuffer();
 
         float3 cameraPos = float3::zero;
         if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
@@ -167,7 +169,7 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
         if (isDoubleSided) glEnable(GL_CULL_FACE);
 
-        meshComp->GetBatch()->UnbindBonesBuffer();
+        if (batch) batch->BindBonesBuffer();
 
         glBindVertexArray(0);
     }
