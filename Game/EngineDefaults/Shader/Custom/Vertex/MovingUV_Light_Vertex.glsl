@@ -13,7 +13,6 @@ layout(location=3) uniform vec2 uvOffset;
 layout(location=9) uniform bool hasBones;
 layout(location=10) uniform uint boneIndex;
 
-
 readonly layout(std430, row_major, binding = 12) buffer Bones {
     mat4 palettes[];
 };
