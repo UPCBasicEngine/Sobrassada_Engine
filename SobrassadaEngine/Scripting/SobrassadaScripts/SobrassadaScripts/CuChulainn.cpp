@@ -135,8 +135,6 @@ CuChulainn::CuChulainn(GameObject* parent)
 
 bool CuChulainn::Init()
 {
-    // GLOG("Initiating CuChulainn");
-
     Character::Init();
 
     GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Health");
@@ -238,6 +236,7 @@ bool CuChulainn::Init()
 
     riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
     if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
+    else riastradVfx->SetEnabled(false);
 
     riastradBurst = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBurstName);
     if (!riastradBurst) GLOG("[WARNING] No riastrad Burst VFX found for CuChulain")
@@ -465,18 +464,7 @@ void CuChulainn::HandleState(float deltaTime)
                 transformTimer = 0.0f;
                 chargedAttackCollider->SetEnabled(false);
                 riastradVfx->GetComponent<AnimationComponent*>()->OnStop();
-                AppEngine->GetGameTimer()->SetTimeScale(1.0f);
-
-                // StopVFX
-                if (riastradBlur) riastradBlur->SetEnabled(false);
-                if (riastradBurst) riastradBurst->SetEnabled(false);
-                if (riastradHalo) riastradHalo->SetEnabled(false);
-                if (riastradSphere) riastradSphere->SetEnabled(false);
-                if (riastradCrack) riastradCrack->SetEnabled(false);
-                if (riastradWaring) riastradWaring->SetEnabled(false);
-                if (riastradSmoke1) riastradSmoke1->SetEnabled(false);
-                if (riastradSmoke2) riastradSmoke2->SetEnabled(false);
-                if (riastradSmoke3) riastradSmoke3->SetEnabled(false);
+                riastradVfx->SetEnabled(false);
             }
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
@@ -726,16 +714,6 @@ void CuChulainn::UpdateTimers(float deltaTime)
 {
     weaponCollider->SetEnabled(false);
     Character::UpdateTimers(deltaTime);
-
-    if (AppEngine->GetGameTimer()->GetTimeScale() == 0.0f)
-    {
-        epicTimer += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
-        if (epicTimer > 0.1f)
-        {
-            epicTimer = 0.0f;
-            AppEngine->GetGameTimer()->SetTimeScale(1.0f);
-        }
-    }
 
     // Dash
     dashTimer -= deltaTime;
@@ -1329,7 +1307,6 @@ void CuChulainn::ToggleRiastrad()
 
         state = CharacterStates::TRANSFORM;
         character->EnableMovement(false);
-        // AppEngine->GetGameTimer()->SetTimeScale(0.5f);
 
         if (animComponent) animComponent->UseTrigger("Transform");
         for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
@@ -1360,8 +1337,6 @@ void CuChulainn::EnableRiastradVfx()
 {
     if (transformTimer < transformVfxDelay) return;
 
-    AppEngine->GetGameTimer()->SetTimeScale(0.5f);
-
     // Reuse charge attack collider (If needed different size, create another)
     chargedAttackCollider->SetEnabled(true);
 
@@ -1379,52 +1354,53 @@ void CuChulainn::EnableRiastradVfx()
     // TODO: Adjust timings for every specific effect
     if (riastradVfx)
     {
+        riastradVfx->SetEnabled(true);
         riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(true);
     }
-    if (riastradSmoke1)
-    {
-        riastradSmoke1->SetEnabled(true);
-        riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradSmoke2)
-    {
-        riastradSmoke2->SetEnabled(true);
-        riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradSmoke3)
-    {
-        riastradSmoke3->SetEnabled(true);
-        riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradSphere)
-    {
-        riastradSphere->SetEnabled(true);
-        riastradSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradHalo)
-    {
-        riastradHalo->SetEnabled(true);
-        riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradCrack) riastradCrack->SetEnabled(true);
-    if (riastradWaring) riastradWaring->SetEnabled(true);
-    if (riastradBurst)
-    {
-        riastradBurst->SetEnabled(true);
-        riastradBurst->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradBurst->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradBlur)
-    {
-        riastradBlur->SetEnabled(true);
-        riastradBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
+    //if (riastradSmoke1)
+    //{
+    //    riastradSmoke1->SetEnabled(true);
+    //    riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //    //riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    //}
+    //if (riastradSmoke2)
+    //{
+    //    riastradSmoke2->SetEnabled(true);
+    //    riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //    //riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    //}
+    //if (riastradSmoke3)
+    //{
+    //    riastradSmoke3->SetEnabled(true);
+    //    riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //    //riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    //}
+    //if (riastradSphere)
+    //{
+    //    riastradSphere->SetEnabled(true);
+    //   //riastradSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //   //riastradSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    //}
+    //if (riastradHalo)
+    //{
+    //    riastradHalo->SetEnabled(true);
+    //    //riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //    //riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    //}
+    //if (riastradCrack) riastradCrack->SetEnabled(true);
+    //if (riastradWaring) riastradWaring->SetEnabled(true);
+    //if (riastradBurst)
+    //{
+    //    riastradBurst->SetEnabled(true);
+    //    //riastradBurst->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //    //riastradBurst->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    //}
+    //if (riastradBlur)
+    //{
+    //    riastradBlur->SetEnabled(true);
+    //    //riastradBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //    //riastradBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    //}
 }
 
 void CuChulainn::AddRiastrad(int amount)

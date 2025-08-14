@@ -272,8 +272,6 @@ class CuChulainn : public Character
     UID dashEmptyImage                     = 0;
     UID ultimateFillImage                  = 0;
     UID ultimateEmptyImage                 = 0;
-
-    float epicTimer                        = 0.0f;
 };
 
 extern CharacterControllerComponent* character;

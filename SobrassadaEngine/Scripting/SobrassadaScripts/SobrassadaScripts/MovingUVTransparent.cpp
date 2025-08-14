@@ -28,7 +28,6 @@ MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
     fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
 
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
-    fields.push_back({"Use bones", InspectorField::FieldType::Bool, &useBones});
 }
 
 MovingUVTransparent::~MovingUVTransparent()

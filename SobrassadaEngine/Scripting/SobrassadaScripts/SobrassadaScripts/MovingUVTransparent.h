@@ -28,7 +28,6 @@ class MovingUVTransparent : public Script
 
     bool isAlphaDiscard          = false;
     bool isDoubleSided           = false;
-    bool useBones                = true;
 
     unsigned int indexCount     = 0;
 
