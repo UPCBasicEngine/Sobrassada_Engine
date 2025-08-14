@@ -35,6 +35,7 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "Banshee_v2.h"
 
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
@@ -81,7 +82,8 @@ constexpr const char* scripts[] = {
     "PlayerLocationScript",
     "Spouts",
     "SwitchScriptTest",
-    "Destructible"
+    "Destructible",
+    "Banshee_v2"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
@@ -119,6 +121,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Banshee") return new Banshee(parent);
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
+    if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);

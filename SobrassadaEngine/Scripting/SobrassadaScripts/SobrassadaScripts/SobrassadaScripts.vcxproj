@@ -467,6 +467,7 @@
   <ItemGroup>
     <ClInclude Include="Archer.h" />
     <ClInclude Include="Banshee.h" />
+    <ClInclude Include="Banshee_v2.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
@@ -2040,6 +2041,7 @@
     </ClCompile>
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Banshee.cpp" />
+    <ClCompile Include="Banshee_v2.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Changeling.cpp" />
