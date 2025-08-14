@@ -123,7 +123,7 @@ void MovingUVTransparent::Update(float deltaTime)
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && meshComp)
+    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
