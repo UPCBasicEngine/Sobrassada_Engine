@@ -18,8 +18,6 @@
 #include "GameTimer.h"
 #include "Animation/AnimationTrigger.h"
 #include "AudioModule.h"
-#include "ResourceAnimation.h"
-
 
 #include "Math/Quat.h"
 #include "imgui.h"
