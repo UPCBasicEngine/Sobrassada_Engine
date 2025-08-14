@@ -16,6 +16,7 @@
 #include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
+#include "HealVFXGround.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MiniFireball.h"
@@ -85,9 +86,10 @@ constexpr const char* scripts[] = {
     "Destructible"
 };
 
-constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight", "MovingUVTransparent", "RiastradBarFill", "AbilityIconFill"
-};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
+                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
+                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
+                                         "HealSpikesUp", "RiastradBarFill", "AbilityIconFill"};
 
 Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -145,6 +147,47 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
     if (scriptType == "RiastradBarFill") return new RiastradBarFill(parent);
     if (scriptType == "AbilityIconFill") return new AbilityIconFill(parent);
+    if (scriptType == "HealGroundHalo")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundHalo.glsl"
+        );
+
+    if (scriptType == "HealVerticalPlanes")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_VerticalPlanes.glsl"
+        );
+
+    if (scriptType == "HealSpikesBurst")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesBurst.glsl"
+        );
+
+    if (scriptType == "HealGroundSpikesLight")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundSpikesLight.glsl"
+        );
+
+    if (scriptType == "HealGroundSpikesDark")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundSpikesDark.glsl"
+        );
+
+    if (scriptType == "HealLightBurst")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_LightBurst.glsl"
+        );
+
+    if (scriptType == "HealSpikesUp")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesUp.glsl"
+        );
 
     return nullptr;
 }

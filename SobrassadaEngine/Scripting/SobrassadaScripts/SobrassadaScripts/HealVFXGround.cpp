@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "MovingUVTransparent.h"
+#include "HealVFXGround.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -8,7 +8,6 @@
 #include "Components/Standalone/MeshComponent.h"
 #include "GBuffer.h"
 #include "GameObject.h"
-#include "GeometryBatch.h"
 #include "LightsConfig.h"
 #include "Mesh.h"
 #include "OpenGLModule.h"
@@ -18,20 +17,20 @@
 #include "SceneModule.h"
 #include "ShaderModule.h"
 
+#include "InputModule.h" // TODO: DELETE
+
 #include "Math/float3.h"
 #include "glew.h"
 
-MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
+HealVFXGround::HealVFXGround(GameObject* parent, const std::string& ver, const std::string& frag) : Script(parent)
 {
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
-    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
-    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
-
-    fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
-    fields.push_back({"Use bones", InspectorField::FieldType::Bool, &useBones});
+    vertex   = ver;
+    fragment = frag;
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationFPS, 0.0f, 100.0f});
+    fields.push_back({"Additive", InspectorField::FieldType::Bool, &isAdditive});
 }
 
-MovingUVTransparent::~MovingUVTransparent()
+HealVFXGround::~HealVFXGround()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
@@ -39,14 +38,11 @@ MovingUVTransparent::~MovingUVTransparent()
     glDeleteBuffers(1, &materialBuffer);
 }
 
-bool MovingUVTransparent::Init()
+bool HealVFXGround::Init()
 {
-    shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
-        "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
-        "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Transparent_Fragment.glsl"
-    );
+    shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(vertex.c_str(), fragment.c_str());
 
-    meshComp = parent->GetComponent<MeshComponent*>();
+    meshComp      = parent->GetComponent<MeshComponent*>();
 
     if (meshComp)
     {
@@ -79,12 +75,6 @@ bool MovingUVTransparent::Init()
             glEnableVertexAttribArray(3);
             glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
 
-            glEnableVertexAttribArray(4);
-            glVertexAttribIPointer(4, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, joint));
-
-            glEnableVertexAttribArray(5);
-            glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
-
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferData(
                 GL_ELEMENT_ARRAY_BUFFER, rmesh->GetIndices().size() * sizeof(unsigned int), rmesh->GetIndices().data(),
@@ -108,20 +98,22 @@ bool MovingUVTransparent::Init()
         }
 
         meshComp->SetEnabled(false);
-        meshComp->SetUpdateShaderStorage(true);
     }
-    uvOffset = uvOffsetStart;
     return true;
 }
 
-void MovingUVTransparent::Update(float deltaTime)
+void HealVFXGround::Update(float deltaTime)
 {
-    float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y;
+    // TODO: DELETE
+    if (AppEngine->GetInputModule()->GetKeyboard()[SDL_SCANCODE_F4] == KeyState::KEY_DOWN)
+    {
+        Reset();
+    }
+
+    frameTimer += deltaTime * animationFPS;
 }
 
-void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
+void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
 {
     if (shaderProgram && indexCount > 0 && meshComp)
     {
@@ -147,37 +139,32 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
-        glUniform2fv(3, 1, &uvOffset[0]);
-        glUniform1i(9, meshComp->GetHasBones());
-        glUniform1ui(10, meshComp->GetBoneIndexOffset());
 
         glUniform1i(4, 0);
-        glUniform1i(5, isAlphaDiscard);
-
+        glUniform1i(5, true);
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-
-        GeometryBatch* batch = meshComp->GetBatch();
-        if (batch) batch->BindBonesBuffer();
 
         float3 cameraPos = float3::zero;
         if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
         else cameraPos = cameraComp->GetCameraPosition();
 
         glUniform3fv(6, 1, &cameraPos[0]);
+        glUniform1f(7, frameTimer);
 
         glBindVertexArray(vao);
 
-        if (isDoubleSided) glDisable(GL_CULL_FACE);
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-        if (isDoubleSided) glEnable(GL_CULL_FACE);
+        if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        if (batch) batch->BindBonesBuffer();
+        glDisable(GL_CULL_FACE);
+        AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+        glEnable(GL_CULL_FACE);
 
         glBindVertexArray(0);
     }
 }
 
-void MovingUVTransparent::Reset()
+void HealVFXGround::Reset()
 {
-    uvOffset = uvOffsetStart;
+    frameTimer = 0.0f;
 }

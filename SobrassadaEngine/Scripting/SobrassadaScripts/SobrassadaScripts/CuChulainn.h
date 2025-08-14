@@ -251,9 +251,11 @@ class CuChulainn : public Character
 
     // Heal
     bool isHealing                         = false;
-    std::string healVisualName             = "";
-    GameObject* healVisual                 = nullptr;
+    std::string healVfxName                = "HealVfx";
+    std::string healParticlesName          = "HealParticles";
     std::string healKnockbackName          = "Heal Knockback";
+    GameObject* healVfx                    = nullptr;
+    GameObject* healParticles              = nullptr;
     GameObject* healKnockback              = nullptr;
     float healTimer                        = 0.0f;
     float healKnockbackDelay               = 0.0f;
