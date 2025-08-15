@@ -49,7 +49,8 @@ class MeshComponent : public Component
     int GetRenderMode() const { return renderMode; }
     bool GetProduceShadows() const { return produceShadows; }
     bool GetBatchWasEnabled() { return batchWasEnabled; }
-    bool GetBoneIndexOffset() const { return boneIndexOffset; }
+
+    unsigned int GetBoneIndexOffset() const { return boneIndexOffset; }
     bool GetUpdateShaderStorage() const { return updateShaderStorage; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
