@@ -1,7 +1,5 @@
 #pragma once
 
-#include <random>
-
 #include "Script.h"
 #include <array>
 
@@ -80,6 +78,10 @@ class FireballTrap : public Script
         // Arc
         float maxLaunchRadius   = 6.f;
         float launchYawDeg      = 0.0f;
+
+        float miniStartHeight   = 0.5f; // spawn Y of each mini
+        float miniUpSpeed       = 4.5f; // initial up velocity of each mini
+        float miniLandingRadius = 0.4f; // where we expect minis to land (ring radius)
     };
 
     FireballTrapSettings cfg;
@@ -91,7 +93,7 @@ class FireballTrap : public Script
     float impactElapsed                     = 0.f; // burning timer after impact
     float dropElapsed                       = 0.f; // time since fireball spawned
 
-    // Scene referennces
+    // Scene references
     MeshComponent* groundMesh               = nullptr;
     SphereColliderComponent* damageCollider = nullptr;
     GameObject* fireball                    = nullptr;
@@ -114,13 +116,6 @@ class FireballTrap : public Script
         float life;
     };
     std::vector<MiniInstance> activeMinis;
-
-    struct MiniDecal
-    {
-        GameObject* go;
-        float timer;
-    };
-    std::vector<MiniDecal> activeMiniDecals;
 
     // ---- VFX scheduling (skeleton) ----
     struct VFXEvent
@@ -146,44 +141,39 @@ class FireballTrap : public Script
     void ClearScheduledVfx();
 
     // Prefabs (set via Inspector later)
-    GameObject* vfxMainLightPrefab   = nullptr;
-    GameObject* vfxLightImpactPrefab = nullptr;
-    GameObject* vfxFireImpactPrefab  = nullptr;
-    GameObject* vfxBombGroundPrefab  = nullptr;
-    GameObject* vfxBlackStainPrefab  = nullptr; // if null, we’ll fallback to impactPrefab
+    GameObject* vfxMainLightPrefab     = nullptr;
+    GameObject* vfxLightImpactPrefab   = nullptr;
+    GameObject* vfxFireImpactPrefab    = nullptr;
+    GameObject* vfxBombGroundPrefab    = nullptr;
+    GameObject* vfxBlackStainPrefab    = nullptr; 
 
     // Timings relative to IMPACT
-    float vfxMainLightDelay          = 0.00f; // main light at impact
-    float vfxLightImpactDelay        = 0.00f; // light impact at impact
-    float vfxFireImpactDelay         = 0.15f;
-    float vfxBombGroundDelay         = 0.35f;
-    float vfxBlackStainDelay         = 0.70f;
+    float vfxMainLightDelay            = 0.00f; // main light at impact
+    float vfxLightImpactDelay          = 0.00f; // light impact at impact
+    float vfxFireImpactDelay           = 0.15f;
+    float vfxBombGroundDelay           = 0.35f;
+    float vfxBlackStainDelay           = 0.70f;
 
     // Lifetimes
-    float vfxMainLightLife           = 0.6f;
-    float vfxLightImpactLife         = 0.4f;
-    float vfxFireImpactLife          = 1.5f;
-    float vfxBombGroundLife          = 3.0f; // could tie to bigBurnDuration later
-    float vfxBlackStainLife          = 2.5f;
+    float vfxMainLightLife             = 0.6f;
+    float vfxLightImpactLife           = 0.4f;
+    float vfxFireImpactLife            = 1.5f;
+    float vfxBombGroundLife            = 3.0f; // could tie to bigBurnDuration later
+    float vfxBlackStainLife            = 2.5f;
 
-    float vfxIndicatorScale          = 1.0f; // extra multiplier
+    float vfxIndicatorScale            = 1.0f; // extra multiplier
 
     // Indicator (where will fall)
-    GameObject* vfxIndicatorPrefab   = nullptr; // pre-fall indicator VFX
+    GameObject* vfxIndicatorPrefab     = nullptr; // pre-fall indicator VFX
 
-    float3 impactOffsetLocal         = float3::zero; // XY of impact relative to base
-    float3 fireVelocity              = float3::zero;
-    float3 shadowBaseScale           = float3::one;
-    float3 lastImpactWorld           = float3::zero;
-    bool allowMiniDecals             = true;
-    float noMiniHitRadius            = 1.0f;
-    float vfxIndicatorWorldRadius    = 0.6f;
+    float3 impactOffsetLocal           = float3::zero; // XY of impact relative to base
+    float3 fireVelocity                = float3::zero;
+    float3 shadowBaseScale             = float3::one;
+    float3 lastImpactWorld             = float3::zero;
+    float vfxIndicatorWorldRadius      = 0.6f;
 
     // Mini impact VFX
-    GameObject* miniImpactVfxPrefab  = nullptr; 
-    float miniImpactVfxLife          = 1.0f;    
-    float miniImpactVfxScale         = 0.4f;    
-
-
-    mutable std::mt19937 rng {std::random_device {}()};
+    GameObject* miniIndicatorVfxPrefab = nullptr; // pre-fall indicator for minis
+    float miniIndicatorVfxScale        = 0.4f;    // world radius/scale of the indicator
+    std::vector<float> plannedMiniAngles;
 };

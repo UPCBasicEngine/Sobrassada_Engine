@@ -12,15 +12,26 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
-constexpr float TAU                    = 2.0f * PI;
-constexpr float SHADOW_MIN_SCALE       = 0.01f;
-constexpr float SHADOW_MAX_SCALE       = 0.80f;
-constexpr float DEFAULT_DECAL_LIFETIME = 1.0f;
+constexpr float TAU                  = 2.0f * PI;
+constexpr float SHADOW_MIN_SCALE     = 0.01f;
+constexpr float SHADOW_MAX_SCALE     = 0.80f;
+constexpr float MINI_ANGLE_JITTER    = 0.05f; // ± jitter angular dels minis (rad)
+constexpr float VFX_CHAIN_STEP       = 0.05f; // espaiat entre VFX encadenats durant la caiguda
+constexpr float EXTRA_VFX0_LIFE_EPS  = 0.10f; // marge perquè el VFX0 arribi a impacte
+
+constexpr float CAM_SHAKE_DURATION   = 0.30f;
+constexpr float CAM_SHAKE_FREQ       = 0.12f; // 3r paràmetre del StartShake
+constexpr float CAM_SHAKE_MAG_FACTOR = 0.03f; // magnitud ~ height * factor
+constexpr float CAM_SHAKE_MAG_MIN    = 0.15f;
+constexpr float CAM_SHAKE_MAG_MAX    = 0.60f;
+
+constexpr float EPS                  = 1e-4f; // epsilon numèric comú
 
 static inline float RandomRange(float min, float max)
 {
@@ -30,9 +41,8 @@ static inline float RandomRange(float min, float max)
 
 static inline float3 SafeDiv(const float3& a, const float3& b)
 {
-    const float eps = 1e-4f;
     return float3(
-        a.x / (fabsf(b.x) < eps ? 1.f : b.x), a.y / (fabsf(b.y) < eps ? 1.f : b.y), a.z / (fabsf(b.z) < eps ? 1.f : b.z)
+        a.x / (fabsf(b.x) < EPS ? 1.f : b.x), a.y / (fabsf(b.y) < EPS ? 1.f : b.y), a.z / (fabsf(b.z) < EPS ? 1.f : b.z)
     );
 }
 
@@ -97,9 +107,13 @@ void FireballTrap::SetupInspectorFields()
         {"VFX Indicator World Radius", InspectorField::FieldType::Float, &vfxIndicatorWorldRadius, 0.05f, 5.0f}
     );
 
-    fields.push_back({"Mini Impact VFX", InspectorField::FieldType::GameObject, &miniImpactVfxPrefab, 0.f, 0.f});
-    fields.push_back({"Mini Impact VFX Life", InspectorField::FieldType::Float, &miniImpactVfxLife, 0.1f, 5.0f});
-    fields.push_back({"Mini Impact VFX Scale", InspectorField::FieldType::Float, &miniImpactVfxScale, 0.05f, 5.0f});
+    fields.push_back(
+        {"Mini Indicator VFX (pre-fall)", InspectorField::FieldType::GameObject, &miniIndicatorVfxPrefab, 0.f, 0.f}
+    );
+    fields.push_back({"Mini Indicator Scale", InspectorField::FieldType::Float, &miniIndicatorVfxScale, 0.05f, 5.0f});
+    fields.push_back({"Mini Start Height", InspectorField::FieldType::Float, &cfg.miniStartHeight, 0.f, 5.f});
+    fields.push_back({"Mini Up Speed", InspectorField::FieldType::Float, &cfg.miniUpSpeed, 0.f, 20.f});
+    fields.push_back({"Mini Landing Radius", InspectorField::FieldType::Float, &cfg.miniLandingRadius, 0.f, 3.f});
 }
 bool FireballTrap::Init()
 {
@@ -159,8 +173,6 @@ bool FireballTrap::Init()
         extraVfx[idx].go = child;
     }
 
-    if (idx < EXTRA_VFX_COUNT) GLOG("[FireballTrap] Avis: falten %d meshes extres", EXTRA_VFX_COUNT - idx);
-
     // Deactivate VFX to not view them by default
     if (vfxMainLightPrefab) vfxMainLightPrefab->SetEnabled(false);
     else GLOG("[INFO] VFX Main Light prefab not set");
@@ -173,7 +185,7 @@ bool FireballTrap::Init()
     if (vfxBlackStainPrefab) vfxBlackStainPrefab->SetEnabled(false);
     else GLOG("[INFO] VFX Black Stain prefab not set (will use legacy impact decal on impact)");
     if (vfxIndicatorPrefab) vfxIndicatorPrefab->SetEnabled(false);
-    if (miniImpactVfxPrefab) miniImpactVfxPrefab->SetEnabled(false);
+    if (miniIndicatorVfxPrefab) miniIndicatorVfxPrefab->SetEnabled(false);
 
     return true;
 }
@@ -232,24 +244,11 @@ void FireballTrap::Update(float deltaTime)
         }
     }
 
-    // Lifetime & cleanup of mini decals
-    for (auto it = activeMiniDecals.begin(); it != activeMiniDecals.end();)
-    {
-        if ((it->timer -= deltaTime) <= 0.f)
-        {
-            RecycleGO(it->go);
-            it = activeMiniDecals.erase(it);
-        }
-        else ++it;
-    }
     UpdateScheduledVfx(deltaTime);
 }
 
 void FireballTrap::StartAttack()
 {
-    // Reset root transform (trap never moves)
-    parent->SetLocalTransform(parent->GetLocalTransform());
-
     // Random impact position inside spawn zone
     lastImpactWorld     = RandomSpawnPoint();
     impactOffsetLocal   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
@@ -272,18 +271,15 @@ void FireballTrap::StartAttack()
     const float horizSpeed = launchR / fallTime;
 
     fireVelocity           = -dirXZ * horizSpeed; // towards impact
-
-    // -- Extra VFX 0 (optional mesh, if present)
     if (extraVfx[0].go)
     {
-        extraVfx[0].life  = fallTime + 0.1f;
+        extraVfx[0].life  = fallTime + EXTRA_VFX0_LIFE_EPS;
         extraVfx[0].delay = 0.f;
     }
 
-    const float step = 0.05f;
     for (int i = 1; i < EXTRA_VFX_COUNT; ++i)
     {
-        extraVfx[i].delay = fallTime + (i - 1) * step;
+        extraVfx[i].delay = fallTime + (i - 1) * VFX_CHAIN_STEP;
     }
 
     // Shadow initial placement
@@ -326,7 +322,7 @@ void FireballTrap::StartAttack()
         ScheduleVfx(vfxBlackStainPrefab, impactT + vfxBlackStainDelay, vfxBlackStainLife, vfxPos, vfxScale);
     if (vfxIndicatorPrefab)
     {
-        const float3 indicatorScaleVfx = float3(vfxIndicatorWorldRadius);
+        const float3 indicatorScaleVfx = float3(vfxIndicatorWorldRadius * vfxIndicatorScale);
         ScheduleVfx(vfxIndicatorPrefab, 0.0f, impactT, vfxPos, indicatorScaleVfx);
     }
 
@@ -355,16 +351,38 @@ void FireballTrap::HandleImpact()
         damageCollider->SetEnabled(true);
     }
 
-    // Spawn minis
-    const float distToPlayer = sqrtf(character->GetLastPosition().DistanceSq(lastImpactWorld));
-    allowMiniDecals          = (distToPlayer > noMiniHitRadius);
+    plannedMiniAngles.clear();
+
+    const float stepAng     = TAU / float(std::max(1u, miniCount));
+
+    // Physics to compute time-to-ground for minis (so indicator lives until landing)
+    const float startHeight = cfg.miniStartHeight;
+    const float vUp         = cfg.miniUpSpeed;
+    const float g           = cfg.gravity;
+    // time until y<=0 starting at startHeight with upward velocity vUp
+    const float tFall       = (vUp + sqrtf(std::max(0.f, vUp * vUp + 2.f * g * startHeight))) / g;
+
+    for (uint32_t i = 0; i < miniCount; ++i)
+    {
+        const float ang = i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER);
+        plannedMiniAngles.push_back(ang);
+
+        if (miniIndicatorVfxPrefab)
+        {
+            const float3 dirXZ = float3(cosf(ang), 0.f, sinf(ang));
+            const float3 pos   = impactOffsetLocal + dirXZ * cfg.miniLandingRadius;
+
+            ScheduleVfx(miniIndicatorVfxPrefab, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
+        }
+    }
 
     SpawnMiniCluster();
 
     if (shakeCam)
     {
-        const float cameraShakeMagnitude = std::clamp(cfg.fallingHeight * 0.03f, 0.15f, 0.6f);
-        shakeCam->StartShake(0.30f, cameraShakeMagnitude, 0.12f);
+        const float cameraShakeMagnitude =
+            std::clamp(cfg.fallingHeight * CAM_SHAKE_MAG_FACTOR, CAM_SHAKE_MAG_MIN, CAM_SHAKE_MAG_MAX);
+        shakeCam->StartShake(CAM_SHAKE_DURATION, cameraShakeMagnitude, CAM_SHAKE_FREQ);
     }
 
     impactElapsed   = 0.f;
@@ -435,84 +453,59 @@ void FireballTrap::SpawnMiniCluster()
 {
     if (!miniPrototype) return;
 
-    const float step = TAU / float(miniCount);
+    const float stepAng = TAU / float(std::max(1u, miniCount));
+
+    // fallback
+    if (plannedMiniAngles.size() != miniCount)
+    {
+        plannedMiniAngles.clear();
+        for (uint32_t i = 0; i < miniCount; ++i)
+            plannedMiniAngles.push_back(i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER));
+    }
+
+    const float startHeight = cfg.miniStartHeight;
+    const float vUp         = cfg.miniUpSpeed;
+    const float g           = cfg.gravity;
+
+    const float tFall       = (vUp + sqrtf(std::max(0.f, vUp * vUp + 2.f * g * startHeight))) / g;
+
+    const float vHoriz      = (tFall > 0.f) ? (cfg.miniLandingRadius / tFall) : 0.f;
+
     for (uint32_t i = 0; i < miniCount; ++i)
     {
         GameObject* mini = RequestMini();
         if (!mini) continue;
 
-        // Big impact center
-        mini->SetLocalPosition(impactOffsetLocal + float3(0.f, 0.5f, 0.f));
+        mini->SetLocalPosition(impactOffsetLocal + float3(0.f, startHeight, 0.f));
 
-        // Horitzontal
-        std::uniform_real_distribution<float> jitter(-0.05f, 0.05f);
-        float angle  = i * step + jitter(rng);
+        const float ang  = plannedMiniAngles[i];
+        const float3 dir = float3(cosf(ang), 0.f, sinf(ang)).Normalized();
 
-        float3 dirXZ = float3(cosf(angle), 0.f, sinf(angle)).Normalized();
-
-        // Inital speed horizontal + up speed
-        float3 miniInitialVelocity;
-        const float targetRadius  = 0.4f; // meters
-        const float startHeight   = 0.5f; // spawn mini height
-        const float vUp           = 4.5f; // up speed
-
-        // y<=0:  t = (vUp + sqrt(vUp² + 2*g*startHeight)) / g
-        float miniFallDuration    = (vUp + sqrtf(vUp * vUp + 2.f * cfg.gravity * startHeight)) / cfg.gravity;
-
-        // horitzontal speed
-        float miniHorizontalSpeed = targetRadius / miniFallDuration;
-
-        miniInitialVelocity       = dirXZ * miniHorizontalSpeed;
-        miniInitialVelocity.y     = vUp;
+        float3 vel       = dir * vHoriz;
+        vel.y            = vUp;
 
         if (auto* col = mini->GetComponent<SphereColliderComponent*>()) col->SetEnabled(true);
-
-        activeMinis.push_back({mini, miniInitialVelocity, miniLifeTime});
+        activeMinis.push_back({mini, vel, miniLifeTime});
     }
 }
 
 void FireballTrap::UpdateMinis(float deltaTime)
 {
-    for (auto miniProjectile = activeMinis.begin(); miniProjectile != activeMinis.end();)
+    for (auto it = activeMinis.begin(); it != activeMinis.end();)
     {
-        miniProjectile->vel.y -= cfg.gravity * deltaTime; // g = 9.81
-        float3 pos             = miniProjectile->go->GetLocalTransform().TranslatePart();
-        pos                   += miniProjectile->vel * deltaTime;
-        miniProjectile->go->SetLocalPosition(pos);
+        it->vel.y  -= cfg.gravity * deltaTime;
+        float3 pos  = it->go->GetLocalTransform().TranslatePart() + it->vel * deltaTime;
+        it->go->SetLocalPosition(pos);
 
-        bool grounded = (pos.y <= 0.f);
-
-        if (grounded && allowMiniDecals)
-        {
-            float3 dPos = float3(pos.x, 0.f, pos.z);
-
-            if (miniImpactVfxPrefab)
-            {
-                const float3 localS = SafeDiv(float3(miniImpactVfxScale), parent->GetScale());
-
-                GameObject* vfx     = new GameObject(parent->GetUID(), miniImpactVfxPrefab);
-                parent->AddChildren(vfx->GetUID());
-                AppEngine->GetSceneModule()->GetScene()->AddGameObject(vfx->GetUID(), vfx);
-
-                const float4x4 tf = float4x4::FromTRS(dPos, float3x3::identity, localS);
-                vfx->SetLocalTransform(tf);
-                vfx->SetEnabled(true);
-                vfx->SetLocalTransform(tf); 
-
-                activeMiniDecals.push_back({vfx, miniImpactVfxLife});
-            }
-        }
-
-        // life and ground impact
-        miniProjectile->life -= deltaTime;
-        bool expired          = (miniProjectile->life <= 0.f) || (pos.y <= 0.f);
+        it->life           -= deltaTime;
+        const bool expired  = (it->life <= 0.f) || (pos.y <= 0.f);
 
         if (expired)
         {
-            RecycleGO(miniProjectile->go);
-            miniProjectile = activeMinis.erase(miniProjectile);
+            RecycleGO(it->go);
+            it = activeMinis.erase(it);
         }
-        else ++miniProjectile;
+        else ++it;
     }
 }
 
@@ -539,13 +532,12 @@ float3 FireballTrap::RandomSpawnPoint() const
     if (!spawnZone) // if no cube = fallback to root position
         return parent->GetGlobalTransform().TranslatePart();
 
-    float3 half   = spawnZone->size * 0.5f; // world‑space half‑extents
-    float3 center = parent->GetGlobalTransform().TranslatePart() + spawnZone->centerOffset;
+    float3 half    = spawnZone->size * 0.5f; // world‑space half‑extents
+    float3 center  = parent->GetGlobalTransform().TranslatePart() + spawnZone->centerOffset;
 
-    std::uniform_real_distribution<float> dx(-half.x, half.x);
-    std::uniform_real_distribution<float> dz(-half.z, half.z);
-
-    float3 p {center.x + dx(rng), center.y, center.z + dz(rng)};
+    const float rx = RandomRange(-half.x, half.x);
+    const float rz = RandomRange(-half.z, half.z);
+    float3 p {center.x + rx, center.y, center.z + rz};
 
     // GLOG("Spawn point: %f %f %f", p.x, p.y, p.z);
     return p;
@@ -592,15 +584,20 @@ void FireballTrap::UpdateScheduledVfx(float dt)
             parent->AddChildren(inst->GetUID());
             AppEngine->GetSceneModule()->GetScene()->AddGameObject(inst->GetUID(), inst);
 
-            const float3 parentS = parent->GetScale();             // escala del pare
-            const float3 localS  = SafeDiv(e.localScale, parentS); // local = world / parent
+            const float3 parentS = parent->GetScale();            
+            const float3 localS  = SafeDiv(e.localScale, parentS);
 
             // TRS local
             const float4x4 tf    = float4x4::FromTRS(e.localPos, float3x3::identity, localS);
+
+            inst->SetEnabled(true);     
             inst->SetLocalTransform(tf);
 
-            inst->SetEnabled(true);
-            inst->SetLocalTransform(tf);
+            if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>())
+            {
+                ssc->SetScriptEnabled("MovingUVTransparent", true);
+                if (auto* m = inst->GetComponent<MeshComponent*>()) m->SetEnabled(false);
+            }
 
             e.instance  = inst;
             e.triggered = true;
