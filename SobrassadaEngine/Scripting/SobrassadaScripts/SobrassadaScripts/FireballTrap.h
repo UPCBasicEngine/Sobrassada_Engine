@@ -10,7 +10,7 @@ class CameraMovement;
 class CameraComponent;
 class CubeColliderComponent;
 
-// trap lifecycle (big ball -> impact -> cooldown)
+// trap lifecycle big ball -> impact -> cooldown
 enum class ACTIVATION_STATE
 {
     SLEEPING, // waiting, player out of range
@@ -95,7 +95,7 @@ class FireballTrap : public Script
 
     // Scene references
     MeshComponent* groundMesh               = nullptr;
-    SphereColliderComponent* damageCollider = nullptr;
+    SphereColliderComponent* damageAreaCollider = nullptr;
     GameObject* fireball                    = nullptr;
     GameObject* fireballShadow              = nullptr;
     CameraMovement* shakeCam                = nullptr;
@@ -105,7 +105,7 @@ class FireballTrap : public Script
     GameObject* miniPrototype               = nullptr;
     GameObject* impactPrefab                = nullptr;
     GameObject* currentDecal                = nullptr;
-    uint32_t miniCount                      = 4; // how many minis per big impact
+    uint32_t miniCount                      = 4; // how many minis
     float miniLifeTime                      = 2.f;
 
     // Mini params
@@ -117,7 +117,7 @@ class FireballTrap : public Script
     };
     std::vector<MiniInstance> activeMinis;
 
-    // ---- VFX scheduling (skeleton) ----
+    // VFX scheduling
     struct VFXEvent
     {
         GameObject* prefab   = nullptr;      // source prefab to clone
@@ -126,7 +126,6 @@ class FireballTrap : public Script
         float3 localPos      = float3::zero; // placement relative to trap base
         float3 localScale    = float3::one;
 
-        // runtime
         bool triggered       = false;
         float timer          = 0.f;
         GameObject* instance = nullptr;
@@ -147,33 +146,31 @@ class FireballTrap : public Script
     GameObject* vfxBombGroundPrefab    = nullptr;
     GameObject* vfxBlackStainPrefab    = nullptr; 
 
-    // Timings relative to IMPACT
-    float vfxMainLightDelay            = 0.00f; // main light at impact
-    float vfxLightImpactDelay          = 0.00f; // light impact at impact
+    // Delays VFX
+    float vfxMainLightDelay            = 0.00f; 
+    float vfxLightImpactDelay          = 0.00f; 
     float vfxFireImpactDelay           = 0.15f;
     float vfxBombGroundDelay           = 0.35f;
     float vfxBlackStainDelay           = 0.70f;
 
-    // Lifetimes
+    // Lifetimes VFX
     float vfxMainLightLife             = 0.6f;
     float vfxLightImpactLife           = 0.4f;
     float vfxFireImpactLife            = 1.5f;
-    float vfxBombGroundLife            = 3.0f; // could tie to bigBurnDuration later
+    float vfxBombGroundLife            = 3.0f;
     float vfxBlackStainLife            = 2.5f;
 
-    float vfxIndicatorScale            = 1.0f; // extra multiplier
-
     // Indicator (where will fall)
-    GameObject* vfxIndicatorPrefab     = nullptr; // pre-fall indicator VFX
+    GameObject* vfxIndicatorPrefab     = nullptr; // prefall indicator VFX
 
-    float3 impactOffsetLocal           = float3::zero; // XY of impact relative to base
-    float3 fireVelocity                = float3::zero;
+    float3 impactLocalPos           = float3::zero; // XY of impact relative to base
+    float3 fireballVelocity                = float3::zero;
     float3 shadowBaseScale             = float3::one;
     float3 lastImpactWorld             = float3::zero;
     float vfxIndicatorWorldRadius      = 0.6f;
 
     // Mini impact VFX
-    GameObject* miniIndicatorVfxPrefab = nullptr; // pre-fall indicator for minis
+    GameObject* miniIndicatorVfxPrefab = nullptr; // prefall indicator for minis
     float miniIndicatorVfxScale        = 0.4f;    // world radius/scale of the indicator
     std::vector<float> plannedMiniAngles;
 };

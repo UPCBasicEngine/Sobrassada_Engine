@@ -21,17 +21,17 @@
 constexpr float TAU                  = 2.0f * PI;
 constexpr float SHADOW_MIN_SCALE     = 0.01f;
 constexpr float SHADOW_MAX_SCALE     = 0.80f;
-constexpr float MINI_ANGLE_JITTER    = 0.05f; // ± jitter angular dels minis (rad)
-constexpr float VFX_CHAIN_STEP       = 0.05f; // espaiat entre VFX encadenats durant la caiguda
-constexpr float EXTRA_VFX0_LIFE_EPS  = 0.10f; // marge perquè el VFX0 arribi a impacte
+constexpr float MINI_ANGLE_JITTER    = 0.05f;
+constexpr float VFX_CHAIN_STEP       = 0.05f;
+constexpr float EXTRA_VFX0_LIFE_EPS  = 0.10f;
 
 constexpr float CAM_SHAKE_DURATION   = 0.30f;
-constexpr float CAM_SHAKE_FREQ       = 0.12f; // 3r paràmetre del StartShake
-constexpr float CAM_SHAKE_MAG_FACTOR = 0.03f; // magnitud ~ height * factor
+constexpr float CAM_SHAKE_FREQ       = 0.12f;
+constexpr float CAM_SHAKE_MAG_FACTOR = 0.03f;
 constexpr float CAM_SHAKE_MAG_MIN    = 0.15f;
 constexpr float CAM_SHAKE_MAG_MAX    = 0.60f;
 
-constexpr float EPS                  = 1e-4f; // epsilon numèric comú
+constexpr float EPS                  = 1e-4f;
 
 static inline float RandomRange(float min, float max)
 {
@@ -39,6 +39,7 @@ static inline float RandomRange(float min, float max)
     return std::uniform_real_distribution<float>(min, max)(rng);
 }
 
+// Used to convert a world scale into local scale relative to the parent.
 static inline float3 SafeDiv(const float3& a, const float3& b)
 {
     return float3(
@@ -102,7 +103,6 @@ void FireballTrap::SetupInspectorFields()
     fields.push_back({"VFX Life (Black Stain)", InspectorField::FieldType::Float, &vfxBlackStainLife, 0.1f, 10.f});
     fields.push_back({"VFX Indicator (pre-fall)", InspectorField::FieldType::GameObject, &vfxIndicatorPrefab, 0.f, 0.f}
     );
-    fields.push_back({"VFX Indicator Scale", InspectorField::FieldType::Float, &vfxIndicatorScale, 0.1f, 5.0f});
     fields.push_back(
         {"VFX Indicator World Radius", InspectorField::FieldType::Float, &vfxIndicatorWorldRadius, 0.05f, 5.0f}
     );
@@ -134,8 +134,8 @@ bool FireballTrap::Init()
     else GLOG("[WARNING] FireballTrap without mesh component.");
 
     // Damage collider
-    damageCollider = parent->GetComponent<SphereColliderComponent*>();
-    if (damageCollider) damageCollider->SetEnabled(false);
+    damageAreaCollider = parent->GetComponent<SphereColliderComponent*>();
+    if (damageAreaCollider) damageAreaCollider->SetEnabled(false);
     else GLOG("[WARNING] FireballTrap without sphere collider component.");
 
     // Children: 0 = fireball, 1 = shadow
@@ -192,7 +192,7 @@ bool FireballTrap::Init()
 
 void FireballTrap::Update(float deltaTime)
 {
-    if (!character || !groundMesh || !damageCollider || !fireball) return;
+    if (!character || !groundMesh || !damageAreaCollider || !fireball) return;
 
     switch (activationState)
     {
@@ -251,8 +251,8 @@ void FireballTrap::StartAttack()
 {
     // Random impact position inside spawn zone
     lastImpactWorld     = RandomSpawnPoint();
-    impactOffsetLocal   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
-    impactOffsetLocal.y = 0.f;
+    impactLocalPos   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
+    impactLocalPos.y = 0.f;
 
     // Launch direction
     const float yawRad  = cfg.launchYawDeg * DEGREE_RAD_CONV;
@@ -260,7 +260,7 @@ void FireballTrap::StartAttack()
 
     // Spawn position
     const float launchR = RandomRange(0.5f * cfg.maxLaunchRadius, cfg.maxLaunchRadius);
-    float3 spawnLocal   = impactOffsetLocal + dirXZ * launchR;
+    float3 spawnLocal   = impactLocalPos + dirXZ * launchR;
     spawnLocal.y        = cfg.fallingHeight;
 
     fireball->SetLocalPosition(spawnLocal);
@@ -270,7 +270,7 @@ void FireballTrap::StartAttack()
     const float fallTime   = sqrtf(2.f * cfg.fallingHeight / cfg.gravity);
     const float horizSpeed = launchR / fallTime;
 
-    fireVelocity           = -dirXZ * horizSpeed; // towards impact
+    fireballVelocity           = -dirXZ * horizSpeed; // towards impact
     if (extraVfx[0].go)
     {
         extraVfx[0].life  = fallTime + EXTRA_VFX0_LIFE_EPS;
@@ -307,7 +307,7 @@ void FireballTrap::StartAttack()
     vfxSchedClock         = 0.f;
 
     const float impactT   = fallTime;          // moment of impact
-    const float3 vfxPos   = impactOffsetLocal; // ground (local to trap)
+    const float3 vfxPos   = impactLocalPos; // ground (local to trap)
     const float3 vfxScale = float3::one;
 
     ScheduleVfx(vfxMainLightPrefab, impactT + vfxMainLightDelay, vfxMainLightLife, vfxPos, vfxScale);
@@ -322,7 +322,7 @@ void FireballTrap::StartAttack()
         ScheduleVfx(vfxBlackStainPrefab, impactT + vfxBlackStainDelay, vfxBlackStainLife, vfxPos, vfxScale);
     if (vfxIndicatorPrefab)
     {
-        const float3 indicatorScaleVfx = float3(vfxIndicatorWorldRadius * vfxIndicatorScale);
+        const float3 indicatorScaleVfx = float3(vfxIndicatorWorldRadius);
         ScheduleVfx(vfxIndicatorPrefab, 0.0f, impactT, vfxPos, indicatorScaleVfx);
     }
 
@@ -339,16 +339,16 @@ void FireballTrap::HandleImpact()
     // Decal under big fireball
     if (!vfxBlackStainPrefab)
     {
-        if ((currentDecal = RequestImpactDecal())) currentDecal->SetLocalPosition(impactOffsetLocal);
+        if ((currentDecal = RequestImpactDecal())) currentDecal->SetLocalPosition(impactLocalPos);
     }
 
     // Ground burn mesh & damage collider
     if (groundMesh) groundMesh->SetEnabled(true);
-    if (damageCollider)
+    if (damageAreaCollider)
     {
-        damageCollider->SetEnabled(false); // reset
-        damageCollider->centerOffset = impactOffsetLocal;
-        damageCollider->SetEnabled(true);
+        damageAreaCollider->SetEnabled(false); // reset
+        damageAreaCollider->centerOffset = impactLocalPos;
+        damageAreaCollider->SetEnabled(true);
     }
 
     plannedMiniAngles.clear();
@@ -370,7 +370,7 @@ void FireballTrap::HandleImpact()
         if (miniIndicatorVfxPrefab)
         {
             const float3 dirXZ = float3(cosf(ang), 0.f, sinf(ang));
-            const float3 pos   = impactOffsetLocal + dirXZ * cfg.miniLandingRadius;
+            const float3 pos   = impactLocalPos + dirXZ * cfg.miniLandingRadius;
 
             ScheduleVfx(miniIndicatorVfxPrefab, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
         }
@@ -395,7 +395,7 @@ void FireballTrap::HandleImpact()
 void FireballTrap::DisableDamage()
 {
     if (groundMesh) groundMesh->SetEnabled(false);
-    if (damageCollider) damageCollider->SetEnabled(false);
+    if (damageAreaCollider) damageAreaCollider->SetEnabled(false);
     RecycleGO(currentDecal);
     currentDecal    = nullptr;
     activationState = ACTIVATION_STATE::SLEEPING;
@@ -405,10 +405,10 @@ void FireballTrap::DisableDamage()
 void FireballTrap::UpdateFireball(float deltaTime)
 {
     dropElapsed    += deltaTime;
-    fireVelocity.y  = -cfg.gravity * dropElapsed;
-    fireVelocity.y  = std::max(fireVelocity.y, -cfg.maxFallSpeed);
+    fireballVelocity.y  = -cfg.gravity * dropElapsed;
+    fireballVelocity.y  = std::max(fireballVelocity.y, -cfg.maxFallSpeed);
 
-    float3 pos      = fireball->GetLocalTransform().TranslatePart() + fireVelocity * deltaTime;
+    float3 pos      = fireball->GetLocalTransform().TranslatePart() + fireballVelocity * deltaTime;
     fireball->SetLocalPosition(pos);
 
     // Shadow scaling
@@ -476,7 +476,7 @@ void FireballTrap::SpawnMiniCluster()
         GameObject* mini = RequestMini();
         if (!mini) continue;
 
-        mini->SetLocalPosition(impactOffsetLocal + float3(0.f, startHeight, 0.f));
+        mini->SetLocalPosition(impactLocalPos + float3(0.f, startHeight, 0.f));
 
         const float ang  = plannedMiniAngles[i];
         const float3 dir = float3(cosf(ang), 0.f, sinf(ang)).Normalized();
@@ -584,13 +584,13 @@ void FireballTrap::UpdateScheduledVfx(float dt)
             parent->AddChildren(inst->GetUID());
             AppEngine->GetSceneModule()->GetScene()->AddGameObject(inst->GetUID(), inst);
 
-            const float3 parentS = parent->GetScale();            
+            const float3 parentS = parent->GetScale();
             const float3 localS  = SafeDiv(e.localScale, parentS);
 
             // TRS local
             const float4x4 tf    = float4x4::FromTRS(e.localPos, float3x3::identity, localS);
 
-            inst->SetEnabled(true);     
+            inst->SetEnabled(true);
             inst->SetLocalTransform(tf);
 
             if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>())
