@@ -11,13 +11,15 @@
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
+#include "SSAO.h"
 #include "ShaderModule.h"
 #include "ShaderScriptModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
-#include "SSAO.h"
+
+#include "Standalone/VideoComponent.h"
 
 #ifdef OPTICK
 #include "optick.h"
@@ -208,7 +210,7 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Blur Pass");
     SsaoBlurPassRender(ssao);
     glPopDebugGroup();
-     
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -241,14 +243,18 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
 
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
+    std::vector<VideoComponent*> videosToRender;
 
     for (const auto& gameObject : objectsToRender)
     {
-        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        MeshComponent* mesh   = gameObject->GetComponent<MeshComponent*>();
+        VideoComponent* video = gameObject->GetComponent<VideoComponent*>();
 
         if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr &&
             mesh->GetRenderMode() != 1)
             meshesToRender.push_back(mesh);
+
+        if (video != nullptr) videosToRender.push_back(video);
     }
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
@@ -258,6 +264,11 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
     else batchManager->Render(meshesToRender, camera, false);
+
+    for (const auto& video : videosToRender)
+    {
+        video->Render(0.0f, camera);
+    }
 
     glEnable(GL_BLEND);
 

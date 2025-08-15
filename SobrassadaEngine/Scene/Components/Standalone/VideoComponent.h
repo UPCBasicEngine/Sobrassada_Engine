@@ -29,7 +29,7 @@ class VideoComponent : public Component
     void ParentUpdated() override;
 
   private:
-    bool InitVideo(const std::string& path);
+    bool InitVideo();
     bool UpdateFrame();
     void Cleanup();
 
@@ -47,8 +47,10 @@ class VideoComponent : public Component
     float accumulatedTime      = 0.0f;
     float frameDelay           = 0.0f;
 
-    std::string videoPath      = "";
+    char videoName[64]         = "";
     ResourceTexture* videoTexture;
 
     float timeSinceLastFrame = 0.0f;
+
+    unsigned int VAO, VBO, EBO;
 };

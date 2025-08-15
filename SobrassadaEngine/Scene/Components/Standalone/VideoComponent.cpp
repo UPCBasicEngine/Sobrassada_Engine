@@ -1,25 +1,112 @@
 #include "VideoComponent.h"
+#include "Application.h"
 #include "ResourceTexture.h"
+#include "ShaderModule.h"
+#include "imgui.h"
 #include <glew.h>
 
 VideoComponent::VideoComponent(UID uid, GameObject* parent) : Component(uid, parent, "Video", COMPONENT_VIDEO)
 {
-    UID videoTextureUID = GenerateUID();
-    videoTexture        = new ResourceTexture(videoTextureUID, "VideoTexture");
+    localComponentAABB                   = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
+    UID videoTextureUID                  = GenerateUID();
+    videoTexture                         = new ResourceTexture(videoTextureUID, "VideoTexture");
+
+    constexpr float quadVertices[]       = {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f,  -1.0f, 1.0f, 0.0f,
+                                            1.0f,  1.0f,  1.0f, 1.0f, -1.0f, 1.0f,  0.0f, 1.0f};
+
+    constexpr unsigned int quadIndices[] = {0, 1, 2, 2, 3, 0};
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
 }
 
 VideoComponent::VideoComponent(const rapidjson::Value& initialState, GameObject* parent)
     : Component(initialState, parent)
 {
+    localComponentAABB  = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
+
+    UID videoTextureUID = GenerateUID();
+    videoTexture        = new ResourceTexture(videoTextureUID, "VideoTexture");
+
+    if (initialState.HasMember("Video Name"))
+    {
+        strncpy_s(videoName, sizeof(videoName), initialState["Video Name"].GetString(), _TRUNCATE);
+        videoName[sizeof(videoName) - 1] = '\0';
+    }
+
+    constexpr float quadVertices[]       = {-1.0f, -1.0f, 0.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 1.0f,
+                                            1.0f,  1.0f,  1.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f};
+
+    constexpr unsigned int quadIndices[] = {0, 1, 2, 2, 3, 0};
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
 }
 
 VideoComponent::~VideoComponent()
 {
+    if (packet) av_packet_free(&packet);
+    if (frame) av_frame_free(&frame);
+    if (rgbFrame)
+    {
+        av_free(frameBuffer);
+        av_frame_free(&rgbFrame);
+    }
+    if (codecCtx) avcodec_free_context(&codecCtx);
+    if (formatCtx) avformat_close_input(&formatCtx);
+    if (swsCtx) sws_freeContext(swsCtx);
+
+    if (videoTexture)
+    {
+        unsigned int texture = videoTexture->GetTextureID();
+        glDeleteTextures(1, &texture);
+        delete videoTexture;
+    }
+
+    glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO);
 }
 
 void VideoComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
+
+    targetState.AddMember("Video Name", rapidjson::Value(videoName, allocator), allocator);
 }
 
 void VideoComponent::Clone(const Component* other)
@@ -41,6 +128,18 @@ void VideoComponent::Update(float deltaTime)
 
 void VideoComponent::Render(float deltaTime, CameraComponent* camera)
 {
+    if (!videoTexture || videoTexture->GetTextureID() == 0) return;
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, videoTexture->GetTextureID());
+
+    const unsigned int program = App->GetShaderModule()->GetVideoProgram();
+    glUseProgram(program);
+
+    // Render
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 void VideoComponent::RenderDebug(float deltaTime)
@@ -49,14 +148,21 @@ void VideoComponent::RenderDebug(float deltaTime)
 
 void VideoComponent::RenderEditorInspector()
 {
+    ImGui::InputText("Video Name", videoName, IM_ARRAYSIZE(videoName));
+
+    if (ImGui::Button("Play"))
+    {
+        InitVideo();
+    }
 }
 
 void VideoComponent::ParentUpdated()
 {
 }
 
-bool VideoComponent::InitVideo(const std::string& path)
+bool VideoComponent::InitVideo()
 {
+    const std::string path = VIDEOS_ASSETS_PATH + std::string(videoName) + VIDEOS_EXTENSION;
     if (avformat_open_input(&formatCtx, path.c_str(), nullptr, nullptr) != 0) return false;
     if (avformat_find_stream_info(formatCtx, nullptr) < 0) return false;
 
@@ -109,11 +215,15 @@ bool VideoComponent::InitVideo(const std::string& path)
 
     // frameDelay       = 1.0 / av_q2d(formatCtx->streams[videoStreamIndex]->avg_frame_rate);
 
+    timeSinceLastFrame  = 0.0f;
+
     return true;
 }
 
 bool VideoComponent::UpdateFrame()
 {
+    if (!formatCtx || !packet || !codecCtx || !frame || !rgbFrame || !swsCtx || !videoTexture) return false;
+
     while (av_read_frame(formatCtx, packet) >= 0)
     {
         if (packet->stream_index == videoStreamIndex)
