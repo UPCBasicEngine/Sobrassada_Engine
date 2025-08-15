@@ -40,7 +40,7 @@
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
-#include "RiastradBarFill.h"
+#include "BarFill.h"
 
 #include <string>
 
@@ -145,7 +145,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
-    if (scriptType == "RiastradBarFill") return new RiastradBarFill(parent);
+    if (scriptType == "RiastradBarFill") return new BarFill(parent);
     if (scriptType == "AbilityIconFill") return new AbilityIconFill(parent);
     if (scriptType == "HealGroundHalo")
         return new HealVFXGround(

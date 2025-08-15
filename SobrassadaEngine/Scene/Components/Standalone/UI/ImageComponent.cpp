@@ -81,7 +81,7 @@ void ImageComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
 {
     Component::Save(targetState, allocator);
 
-    targetState.AddMember("TextureUID", texture->GetUID(), allocator);
+    if (texture) targetState.AddMember("TextureUID", texture->GetUID(), allocator);
 
     rapidjson::Value valColor(rapidjson::kArrayType);
     valColor.PushBack(color.x, allocator);

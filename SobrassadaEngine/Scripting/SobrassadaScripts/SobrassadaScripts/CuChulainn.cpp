@@ -11,12 +11,13 @@
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
+#include "ParticleSystemComponent.h"
 #include "Projectile.h"
 #include "RaycastController.h"
 #include "ResourceMaterial.h"
 #include "ResourceStateMachine.h"
 #include "ResourcesModule.h"
-#include "RiastradBarFill.h"
+#include "BarFill.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
@@ -29,7 +30,6 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
-#include "ParticleSystemComponent.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -53,6 +53,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
     fields.push_back({"Dash Icon Name", InspectorField::FieldType::InputText, &dashIconName});
+    fields.push_back({"Health Bar Name", InspectorField::FieldType::InputText, &healthBarName});
 
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
@@ -125,44 +126,11 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Heal vfx object", InspectorField::FieldType::InputText, &healVfxName});
     fields.push_back({"Heal particles object", InspectorField::FieldType::InputText, &healParticlesName});
     fields.push_back({"Riastrad VFX object", InspectorField::FieldType::InputText, &riastradVfxName});
-
-    fields.push_back({InspectorField::FieldType::Text, (void*)"HUD textures"});
-    fields.push_back({"Dash filled icon", InspectorField::FieldType::Resource, &dashFillImage});
-    fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
-    fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
-    fields.push_back({"Ultimate empty icon", InspectorField::FieldType::Resource, &ultimateEmptyImage});
 }
 
 bool CuChulainn::Init()
 {
     Character::Init();
-
-    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Health");
-    if (healthUIObject)
-    {
-        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
-    }
-    healthBarTextures = {
-        1257129746400865, // 0HP
-        1211032143220573, // 1HP
-        1229536411852494, // 2HP
-        1222839804934023, // 3HP
-        1244849110337061, // 4HP
-        1274246616335466, // 5HP
-        1207603259151767, // 6HP
-        1232318091978476, // 7HP
-        1247873624040725, // 8HP
-        1211992175790243, // 9HP
-        1245070082308559  // 10HP
-
-    };
-    UpdateHealthBarUI();
-
-    GameObject* dashUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("DashCooldown");
-    if (dashUIObject) dashImageComponent = dashUIObject->GetComponent<ImageComponent*>();
-
-    GameObject* ultimanteUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("UltimateCooldown");
-    if (ultimanteUIObject) ultimateImageComponent = ultimanteUIObject->GetComponent<ImageComponent*>();
 
     playerScript = this;
 
@@ -274,13 +242,25 @@ bool CuChulainn::Init()
     if (!riastradSmoke3) GLOG("[WARNING] No riastrad Smoke 3 VFX found for CuChulain")
     else riastradSmoke3->SetEnabled(false);
 
-    GameObject* riastradObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBarName);
-    if (riastradObj)
+    GameObject* riastradBarObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBarName);
+    if (riastradBarObj)
     {
-        ShaderScriptComponent* shaderScript = riastradObj->GetComponent<ShaderScriptComponent*>();
-        if (shaderScript) riastradBar = shaderScript->GetScriptByType<RiastradBarFill>();
+        ShaderScriptComponent* shaderScript = riastradBarObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript) riastradBar = shaderScript->GetScriptByType<BarFill>();
     }
     if (!riastradBar) GLOG("[WARNING] No riastrad Fill Bar Shader Script found for CuChulain");
+
+    GameObject* healthBarObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healthBarName);
+    if (healthBarObj)
+    {
+        ShaderScriptComponent* shaderScript = healthBarObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript)
+        {
+            healthBar = shaderScript->GetScriptByType<BarFill>();
+            healthBar->SetFillAmount(0.1f);
+        }
+    }
+    if (!healthBar) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
 
     GameObject* dashIconObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashIconName);
     if (dashIconObj)
@@ -372,7 +352,6 @@ void CuChulainn::OnDestroy()
 void CuChulainn::OnDeath()
 {
     // TODO: include death sound for the character
-    if (healthImageComponent) healthImageComponent->ChangeTexture(healthBarTextures[0]);
     isAttacking = false;
     deathTimer  = 0.0f;
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
@@ -384,8 +363,10 @@ void CuChulainn::OnDeath()
 
 void CuChulainn::OnDamageTaken(int amount)
 {
-    UpdateHealthBarUI();
+    // TODO: Update health
     if (camera) camera->StartShake(0.2f, 0.2f);
+
+    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
@@ -407,9 +388,9 @@ void CuChulainn::OnDamageTaken(int amount)
 
 void CuChulainn::OnHealed(int amount)
 {
-    UpdateHealthBarUI();
     // TODO: play CuChulainn recover sound
-    // TODO: play particle system effects
+    // TODO: update health bar
+    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 }
 
 void CuChulainn::HandleState(float deltaTime)
@@ -421,9 +402,6 @@ void CuChulainn::HandleState(float deltaTime)
         state    = CharacterStates::IDLE;
         aimTimer = 0.0f;
     }
-
-    UpdateDashCooldownUI();
-    UpdateUltimateCooldownUI();
 
     if (desiredTransform && CanTransform()) ToggleRiastrad();
     else if (desiredDash && CanDash()) Dash();
@@ -602,6 +580,7 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_F10] == KEY_DOWN)
     {
         AddRiastrad(10);
+        Heal(10);
     }
     if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
     {
@@ -1155,21 +1134,14 @@ void CuChulainn::SetPosition(const float3& position)
 
 void CuChulainn::Respawn()
 {
-    // TODO: This function will be called by the UI in the future
-
     Character::Restart();
-
-    GameObject* healthUIObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("HealthBar");
-    if (healthUIObject)
-    {
-        healthImageComponent = healthUIObject->GetComponent<ImageComponent*>();
-        healthImageComponent->ChangeTexture(healthBarTextures[9]);
-    }
 
     isDead        = false;
     currentHealth = reservedHealth;
-    UpdateHealthBarUI();
-    state = CharacterStates::RESPAWN;
+    state         = CharacterStates::RESPAWN;
+
+    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
@@ -1235,22 +1207,6 @@ void CuChulainn::UseMushroom()
     // UpdateMushroomsUI();
 }
 
-void CuChulainn::UpdateHealthBarUI()
-{
-    if (!healthImageComponent || healthBarTextures.empty()) return;
-    healthImageComponent->ChangeTexture(healthBarTextures[currentHealth]);
-}
-
-void CuChulainn::UpdateDashCooldownUI()
-{
-    if (dashImageComponent) dashImageComponent->ChangeTexture(dashTimer > 0.0f ? dashEmptyImage : dashFillImage);
-}
-
-void CuChulainn::UpdateUltimateCooldownUI()
-{
-    if (ultimateImageComponent)
-        ultimateImageComponent->ChangeTexture(ultimateCdTimer > 0.0f ? ultimateEmptyImage : ultimateFillImage);
-}
 void CuChulainn::ChargeAttack()
 {
     if (state != CharacterStates::CHARGING)
@@ -1357,50 +1313,50 @@ void CuChulainn::EnableRiastradVfx()
         riastradVfx->SetEnabled(true);
         riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(true);
     }
-    //if (riastradSmoke1)
+    // if (riastradSmoke1)
     //{
-    //    riastradSmoke1->SetEnabled(true);
-    //    riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
-    //    //riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    //}
-    //if (riastradSmoke2)
+    //     riastradSmoke1->SetEnabled(true);
+    //     riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //     //riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    // }
+    // if (riastradSmoke2)
     //{
-    //    riastradSmoke2->SetEnabled(true);
-    //    riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
-    //    //riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    //}
-    //if (riastradSmoke3)
+    //     riastradSmoke2->SetEnabled(true);
+    //     riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //     //riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    // }
+    // if (riastradSmoke3)
     //{
-    //    riastradSmoke3->SetEnabled(true);
-    //    riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
-    //    //riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    //}
-    //if (riastradSphere)
+    //     riastradSmoke3->SetEnabled(true);
+    //     riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //     //riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    // }
+    // if (riastradSphere)
     //{
-    //    riastradSphere->SetEnabled(true);
-    //   //riastradSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
-    //   //riastradSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    //}
-    //if (riastradHalo)
+    //     riastradSphere->SetEnabled(true);
+    //    //riastradSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //    //riastradSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    // }
+    // if (riastradHalo)
     //{
-    //    riastradHalo->SetEnabled(true);
-    //    //riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
-    //    //riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    //}
-    //if (riastradCrack) riastradCrack->SetEnabled(true);
-    //if (riastradWaring) riastradWaring->SetEnabled(true);
-    //if (riastradBurst)
+    //     riastradHalo->SetEnabled(true);
+    //     //riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //     //riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    // }
+    // if (riastradCrack) riastradCrack->SetEnabled(true);
+    // if (riastradWaring) riastradWaring->SetEnabled(true);
+    // if (riastradBurst)
     //{
-    //    riastradBurst->SetEnabled(true);
-    //    //riastradBurst->GetComponent<MeshComponent*>()->SetEnabled(false);
-    //    //riastradBurst->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    //}
-    //if (riastradBlur)
+    //     riastradBurst->SetEnabled(true);
+    //     //riastradBurst->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //     //riastradBurst->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    // }
+    // if (riastradBlur)
     //{
-    //    riastradBlur->SetEnabled(true);
-    //    //riastradBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
-    //    //riastradBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    //}
+    //     riastradBlur->SetEnabled(true);
+    //     //riastradBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+    //     //riastradBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    // }
 }
 
 void CuChulainn::AddRiastrad(int amount)

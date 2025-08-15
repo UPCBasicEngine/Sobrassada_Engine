@@ -6,11 +6,11 @@
 
 class ImageComponent;
 
-class RiastradBarFill : public Script
+class BarFill : public Script
 {
   public:
-    RiastradBarFill(GameObject* parent);
-    ~RiastradBarFill() override;
+    BarFill(GameObject* parent);
+    ~BarFill() override;
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -35,6 +35,10 @@ class RiastradBarFill : public Script
     float waveAmplitude        = 0.0f;
     float waveFrequency        = 0.0f;
     float waveSpeed            = 0.0f;
+
+    float textureStart         = 0;
+    float textureEnd           = 0;
+    float textureWidth         = 0;
 
     ImageComponent* imageComp  = nullptr;
 };

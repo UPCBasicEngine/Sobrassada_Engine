@@ -166,7 +166,7 @@
     <ClInclude Include="MiniFireball.h">
       <Filter>Environment\Traps</Filter>
     </ClInclude>
-    <ClInclude Include="RiastradBarFill.h">
+    <ClInclude Include="BarFill.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
     <ClInclude Include="AbilityIconFill.h">
@@ -873,7 +873,7 @@
     <ClCompile Include="MiniFireball.cpp">
       <Filter>Environment\Traps</Filter>
     </ClCompile>
-    <ClCompile Include="RiastradBarFill.cpp">
+    <ClCompile Include="BarFill.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
     <ClCompile Include="AbilityIconFill.cpp">

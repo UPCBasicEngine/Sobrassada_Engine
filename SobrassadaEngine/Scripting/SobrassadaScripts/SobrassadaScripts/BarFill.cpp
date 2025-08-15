@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "RiastradBarFill.h"
+#include "BarFill.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -20,26 +20,29 @@
 
 #include "glew.h"
 
-RiastradBarFill::RiastradBarFill(GameObject* parent) : Script(parent)
+BarFill::BarFill(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Transition Time", InspectorField::FieldType::Float, &transitionTime, 0.f, 1.0f});
     fields.push_back({"Wave Amplitude", InspectorField::FieldType::Float, &waveAmplitude, 0.f, 1.0f});
     fields.push_back({"Wave Frequency", InspectorField::FieldType::Float, &waveFrequency, 0.f, 100.0f});
     fields.push_back({"Wave Speed", InspectorField::FieldType::Float, &waveSpeed, 0.f, 100.0f});
+    fields.push_back({"Texture Start", InspectorField::FieldType::Float, &textureStart, 0, 10000.0f});
+    fields.push_back({"Texture End", InspectorField::FieldType::Float, &textureEnd, 0, 10000.0f});
+    fields.push_back({"Texture Width", InspectorField::FieldType::Float, &textureWidth, 0, 10000.0f});
 }
 
-RiastradBarFill::~RiastradBarFill()
+BarFill::~BarFill()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
 }
 
-bool RiastradBarFill::Init()
+bool BarFill::Init()
 {
     // This init is being called twice
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
         "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl",
-        "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl"
+        "./EngineDefaults/Shader/Custom/Fragment/UI_BarFill.glsl"
     );
 
     imageComp = parent->GetComponent<ImageComponent*>();
@@ -67,11 +70,11 @@ bool RiastradBarFill::Init()
     return true;
 }
 
-void RiastradBarFill::Update(float deltaTime)
+void BarFill::Update(float deltaTime)
 {
 }
 
-void RiastradBarFill::Render(float deltaTime, CameraComponent* cameraComp)
+void BarFill::Render(float deltaTime, CameraComponent* cameraComp)
 {
     // Custom UVs in UI only work in screen space (for now)
     if (!shaderProgram || !imageComp) return;
@@ -99,10 +102,14 @@ void RiastradBarFill::Render(float deltaTime, CameraComponent* cameraComp)
     glUniform1f(7, transitionTime);
     glUniform1f(8, time);
     glUniform1f(9, startTime);
-
+    
     glUniform1f(10, waveAmplitude);
     glUniform1f(11, waveFrequency);
     glUniform1f(12, waveSpeed);
+
+    glUniform1f(13, textureStart);
+    glUniform1f(14, textureEnd);
+    glUniform1f(15, textureWidth);
 
     glBindVertexArray(vao);
 
@@ -150,11 +157,11 @@ void RiastradBarFill::Render(float deltaTime, CameraComponent* cameraComp)
     glDisable(GL_BLEND);
 }
 
-void RiastradBarFill::Reset()
+void BarFill::Reset()
 {
 }
 
-void RiastradBarFill::SetFillAmount(float newFill)
+void BarFill::SetFillAmount(float newFill)
 {
     prevFillAmount = nextFillAmount;
     nextFillAmount = newFill;

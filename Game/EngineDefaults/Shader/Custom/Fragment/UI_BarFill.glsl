@@ -20,6 +20,10 @@ layout(location = 10) uniform float waveAmplitude;
 layout(location = 11) uniform float waveFrequency;
 layout(location = 12) uniform float waveSpeed;
 
+layout(location = 13) uniform float textureStart;
+layout(location = 14) uniform float textureEnd;
+layout(location = 15) uniform float textureWidth;
+
 float easeOutElastic(float t) {
     float p = 0.7f;
     return pow(2.0, -10.0 * t) * sin((t - p / 4.0) * (6.28318) / p) + 1.0;
@@ -33,11 +37,16 @@ void main()
        discard;
     }
 
+    float startUv = textureStart / textureWidth;
+    float endUv = textureEnd / textureWidth;
+    float width = endUv - startUv;
+
     float t = clamp((time - startTime) / transitionTime, 0.0f, 1.0f);
     float fillAmount = mix(prevFillAmount, nextFillAmount, easeOutElastic(t));
+    float scaledFill = startUv + (fillAmount * width);
 
     float wave = sin(uv0.y * waveFrequency + time * waveSpeed) * waveAmplitude;
-    float liquidLevel = fillAmount + wave;
+    float liquidLevel = scaledFill + wave;    
 
     if (uv0.x <= liquidLevel)
     {
@@ -47,4 +56,5 @@ void main()
     {
         discard;
     }
+        
 }
