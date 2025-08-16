@@ -143,4 +143,12 @@ class Changeling : public Character
     unsigned short dashIndex               = 0;
     float dashAngleDegrees                 = 40.0f;
     float timeBetweenDashes                = 2.f;
+
+    // VFX
+    // Dig up
+    std::string vfxDigUpRocksName           = "VFX_DigUpRocks";
+    GameObject* vfxDigUpRocksObject         = nullptr;
+    
+    std::string vfxDigUpHoleName           = "VFX_DigUpHole";
+    GameObject* vfxDigUpHoleObject         = nullptr;
 };

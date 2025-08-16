@@ -10,6 +10,7 @@
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
 #include "Standalone/AIAgentComponent.h"
+#include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
@@ -96,6 +97,9 @@ bool Changeling::Init()
     agentAI->SetLookForward(true);
 
     characterCollider->SetEnabled(false);
+
+    vfxDigUpRocksObject->SetEnabled(false);
+    //vfxDigUpHoleObject->SetEnabled(false);
 
     return true;
 }
@@ -246,6 +250,8 @@ void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPla
 {
     if (animComponent && animComponent->IsFinished())
     {
+        vfxDigUpRocksObject->SetEnabled(false);
+        //vfxDigUpHoleObject->SetEnabled(false);
         animComponent->UseTrigger("Trigger_VisibleIdle");
         currentState = ChangelingStates::IDLE_VISIBLE;
     }
@@ -569,6 +575,10 @@ bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
     // Implement state transition
     if (stateTimer <= 0.f)
     {
+        vfxDigUpRocksObject->SetEnabled(true);
+        vfxDigUpRocksObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
+        //vfxDigUpHoleObject->SetEnabled(true);
+        //vfxDigUpHoleObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
         characterCollider->SetEnabled(true);
         if (animComponent) animComponent->UseTrigger("Trigger_BuryUp");
         currentState = ChangelingStates::DIG_UP_TRANSITION;
@@ -768,14 +778,14 @@ void Changeling::ValidateSetup()
         return;
     }
 
-    // Validate children game objects
+    // Validate parents children game objects
     for (const UID childUID : parentGO->GetChildren())
     {
         GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
         if (child == nullptr)
         {
             isSetupCorrectly = false;
-            GLOG("[ERROR] Child game object is nullptr")
+            GLOG("[ERROR] Parent child game object is nullptr")
             return;
         }
 
@@ -834,6 +844,57 @@ void Changeling::ValidateSetup()
 
         dashAreaColliders.emplace_back(cCComponent);
     }
+
+    //VFX validation
+    
+    // Validate children game objects
+    for (const UID childUID : parent->GetChildren())
+    {
+        GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child == nullptr)
+        {
+            isSetupCorrectly = false;
+            GLOG("[ERROR] Child game object is nullptr")
+            return;
+        }
+
+        if (child->GetName() == vfxDigUpRocksName)
+        {
+            vfxDigUpRocksObject = child;
+        }
+        else if (child->GetName() == vfxDigUpHoleName)
+        {
+            vfxDigUpHoleObject = child;
+        }
+    }
+
+    if (vfxDigUpRocksObject == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dig up rocks game object not found")
+        return;
+    }
+
+    if (vfxDigUpRocksObject->GetComponent<AnimationComponent*>() == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dig up rocks game object has no animation component")
+        return;
+    }
+
+    /*if (vfxDigUpHoleObject == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dig up hole game object not found")
+        return;
+    }
+
+    if (vfxDigUpHoleObject->GetComponent<AnimationComponent*>() == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dig up hole game object has no animation component")
+        return;
+    }*/
 }
 
 void Changeling::RenderDebugVisuals()

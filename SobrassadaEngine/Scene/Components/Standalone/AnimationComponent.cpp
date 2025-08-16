@@ -75,7 +75,7 @@ void AnimationComponent::Init()
     currentAnimName     = App->GetLibraryModule()->GetResourceName(resource);
 }
 
-void AnimationComponent::OnPlay(bool isTransition)
+void AnimationComponent::OnPlay(bool isTransition, bool loop)
 {
     playing                 = true;
     unsigned transitionTime = 0;
@@ -133,7 +133,7 @@ void AnimationComponent::OnPlay(bool isTransition)
         {
             if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 
-            animController->Play(resource, true, defaultTime);
+            animController->Play(resource, loop, defaultTime);
             activeTriggers.clear();
 
             currentAnimResource = animController->GetCurrentAnimation();
