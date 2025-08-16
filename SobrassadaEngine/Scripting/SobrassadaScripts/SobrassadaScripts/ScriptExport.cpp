@@ -37,10 +37,10 @@
 #include "VSyncToggleScript.h"
 
 #include "AbilityIconFill.h"
+#include "BarFill.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
-#include "BarFill.h"
 
 #include <string>
 
@@ -89,9 +89,10 @@ constexpr const char* scripts[] = {
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
                                          "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
                                          "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
-                                         "HealSpikesUp", "RiastradBarFill", "AbilityIconFill"};
+                                         "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
+                                         "AbilityIconFill"};
 
-Application* AppEngine = nullptr;
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -145,7 +146,10 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
-    if (scriptType == "RiastradBarFill") return new BarFill(parent);
+    if (scriptType == "RiastradBarFill")
+        return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
+    if (scriptType == "HealthBarFill")
+        return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_HealthBarFill.glsl");
     if (scriptType == "AbilityIconFill") return new AbilityIconFill(parent);
     if (scriptType == "HealGroundHalo")
         return new HealVFXGround(

@@ -20,7 +20,7 @@
 
 #include "glew.h"
 
-BarFill::BarFill(GameObject* parent) : Script(parent)
+BarFill::BarFill(GameObject* parent, const std::string& frag) : fragment(frag), Script(parent)
 {
     fields.push_back({"Transition Time", InspectorField::FieldType::Float, &transitionTime, 0.f, 1.0f});
     fields.push_back({"Wave Amplitude", InspectorField::FieldType::Float, &waveAmplitude, 0.f, 1.0f});
@@ -41,8 +41,7 @@ bool BarFill::Init()
 {
     // This init is being called twice
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
-        "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl",
-        "./EngineDefaults/Shader/Custom/Fragment/UI_BarFill.glsl"
+        "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl", fragment.c_str()
     );
 
     imageComp = parent->GetComponent<ImageComponent*>();
@@ -83,7 +82,7 @@ void BarFill::Render(float deltaTime, CameraComponent* cameraComp)
     float3 startPos                   = float3(transform2D->GetRenderingPosition(), 0);
 
     float4x4 view                     = float4x4::identity;
-    float4x4 proj = float4x4::D3DOrthoProjLH(
+    float4x4 proj                     = float4x4::D3DOrthoProjLH(
         -1, 1, transform2D->GetParentCanvas()->GetWidth(), transform2D->GetParentCanvas()->GetHeight()
     );
 
@@ -102,7 +101,7 @@ void BarFill::Render(float deltaTime, CameraComponent* cameraComp)
     glUniform1f(7, transitionTime);
     glUniform1f(8, time);
     glUniform1f(9, startTime);
-    
+
     glUniform1f(10, waveAmplitude);
     glUniform1f(11, waveFrequency);
     glUniform1f(12, waveSpeed);

@@ -257,7 +257,7 @@ bool CuChulainn::Init()
         if (shaderScript)
         {
             healthBar = shaderScript->GetScriptByType<BarFill>();
-            healthBar->SetFillAmount(0.1f);
+            healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
         }
     }
     if (!healthBar) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");

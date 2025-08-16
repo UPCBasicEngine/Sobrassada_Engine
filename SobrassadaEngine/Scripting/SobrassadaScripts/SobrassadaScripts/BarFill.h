@@ -9,7 +9,7 @@ class ImageComponent;
 class BarFill : public Script
 {
   public:
-    BarFill(GameObject* parent);
+    BarFill(GameObject* parent, const std::string& frag);
     ~BarFill() override;
 
     bool Init() override;
@@ -20,6 +20,7 @@ class BarFill : public Script
     void SetFillAmount(float newFill);
 
   private:
+    std::string fragment       = "";
     unsigned int shaderProgram = 0;
 
     unsigned int vao           = 0;
