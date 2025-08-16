@@ -104,7 +104,7 @@ bool Changeling::Init()
     characterCollider->SetEnabled(false);
 
     vfxDigUpRocksObject->SetEnabled(false);
-    //vfxDigUpHoleObject->SetEnabled(false);
+    vfxDigUpHoleObject->SetEnabled(false);
 
     return true;
 }
@@ -256,7 +256,7 @@ void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPla
     if (animComponent && animComponent->IsFinished())
     {
         vfxDigUpRocksObject->SetEnabled(false);
-        //vfxDigUpHoleObject->SetEnabled(false);
+        vfxDigUpHoleObject->SetEnabled(false);
         animComponent->UseTrigger("Trigger_VisibleIdle");
         currentState = ChangelingStates::IDLE_VISIBLE;
     }
@@ -582,8 +582,8 @@ bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
     {
         vfxDigUpRocksObject->SetEnabled(true);
         vfxDigUpRocksObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
-        //vfxDigUpHoleObject->SetEnabled(true);
-        //vfxDigUpHoleObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
+        vfxDigUpHoleObject->SetEnabled(true);
+        vfxDigUpHoleObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
         characterCollider->SetEnabled(true);
         if (animComponent) animComponent->UseTrigger("Trigger_BuryUp");
         currentState = ChangelingStates::DIG_UP_TRANSITION;
@@ -887,7 +887,7 @@ void Changeling::ValidateSetup()
         return;
     }
 
-    /*if (vfxDigUpHoleObject == nullptr)
+    if (vfxDigUpHoleObject == nullptr)
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] VFX dig up hole game object not found")
@@ -899,7 +899,7 @@ void Changeling::ValidateSetup()
         isSetupCorrectly = false;
         GLOG("[ERROR] VFX dig up hole game object has no animation component")
         return;
-    }*/
+    }
 
     // Audio
     audioComp = parent->GetComponent<AudioSourceComponent*>();
