@@ -25,6 +25,7 @@ enum class CharacterType
     Archer,
     Banshee,
     Destructible,
+    Changeling
 };
 
 class Character : public Script
