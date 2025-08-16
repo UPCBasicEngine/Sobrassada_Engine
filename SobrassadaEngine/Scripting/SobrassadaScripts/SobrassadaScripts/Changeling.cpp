@@ -61,6 +61,11 @@ Changeling::Changeling(GameObject* parent)
     // Giacomo specific (Index 3)
     fields.emplace_back("Dash angle degrees", InspectorField::FieldType::Float, &dashAngleDegrees, 0.0f, 180.0f);
     fields.emplace_back("Time between dashes", InspectorField::FieldType::Float, &timeBetweenDashes, 0.0f, 10.0f);
+
+    // VFX
+
+    fields.emplace_back("VFX_DigUpRocks", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
+    fields.emplace_back("VFX_DigUpHole", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
 }
 
 bool Changeling::Init()
@@ -895,6 +900,15 @@ void Changeling::ValidateSetup()
         GLOG("[ERROR] VFX dig up hole game object has no animation component")
         return;
     }*/
+
+    // Audio
+    audioComp = parent->GetComponent<AudioSourceComponent*>();
+    if (audioComp == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Script parent does not contain an audio component")
+        return;
+    }
 }
 
 void Changeling::RenderDebugVisuals()

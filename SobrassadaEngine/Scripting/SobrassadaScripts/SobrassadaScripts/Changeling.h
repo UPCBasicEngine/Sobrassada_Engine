@@ -3,6 +3,7 @@
 #include "Character.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 
+class AudioSourceComponent;
 class GameObject;
 class AIAgentComponent;
 class Projectile;
@@ -151,4 +152,7 @@ class Changeling : public Character
     
     std::string vfxDigUpHoleName           = "VFX_DigUpHole";
     GameObject* vfxDigUpHoleObject         = nullptr;
+
+    // Audio
+    AudioSourceComponent* audioComp        = nullptr;
 };
