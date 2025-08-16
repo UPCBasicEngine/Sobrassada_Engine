@@ -18,11 +18,6 @@ layout(location = 8) uniform float waveAmplitude;
 layout(location = 9) uniform float waveFrequency;
 layout(location = 10) uniform float waveSpeed;
 
-float easeOutElastic(float t) {
-    float p = 0.7f;
-    return pow(2.0, -10.0 * t) * sin((t - p / 4.0) * (6.28318) / p) + 1.0;
-}
-
 void main()
 {
     vec4 empty = texture(sampler2D(emptyTexture), uv0);
