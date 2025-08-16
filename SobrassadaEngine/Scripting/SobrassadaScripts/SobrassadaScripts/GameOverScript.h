@@ -8,11 +8,11 @@ class GameObject;
 class GameOverScript : public Script
 {
   public:
-
     GameOverScript(GameObject* parent);
 
     bool Init() override;
     void Update(float) override;
+    void Close();
 
   private:
     void TriggerGameOver();

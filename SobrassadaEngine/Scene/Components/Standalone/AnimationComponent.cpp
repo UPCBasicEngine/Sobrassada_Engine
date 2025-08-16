@@ -1,11 +1,14 @@
 #include "AnimationComponent.h"
 
 #include "AnimController.h"
+#include "Animation/AnimationTrigger.h"
 #include "Application.h"
+#include "AudioModule.h"
 #include "CameraModule.h"
 #include "EditorUIModule.h"
 #include "FileSystem.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "HashString.h"
 #include "LibraryModule.h"
 #include "ProjectModule.h"
@@ -15,10 +18,6 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "StateMachineEditor.h"
-#include "Animation/AnimationTrigger.h"
-#include "AudioModule.h"
-#include "ResourceAnimation.h"
-
 
 #include "Math/Quat.h"
 #include "imgui.h"
@@ -31,7 +30,7 @@
 AnimationComponent::AnimationComponent(const UID uid, GameObject* parent)
     : Component(uid, parent, "Animation", COMPONENT_ANIMATION)
 {
-    animController = new AnimController();
+    animController     = new AnimController();
 
     localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
 }
@@ -105,11 +104,9 @@ void AnimationComponent::OnPlay(bool isTransition)
                                     clip.animationResourceUID, transitionTime, clip.loop, clip.animationSpeed
                                 );
                             }
-                            else
-                                animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
+                            else animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
 
-                            if (currentAnimResource)
-                                App->GetResourcesModule()->ReleaseResource(currentAnimResource);
+                            if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 
                             currentAnimResource = dynamic_cast<ResourceAnimation*>(
                                 App->GetResourcesModule()->RequestResource(clip.animationResourceUID)
@@ -119,20 +116,15 @@ void AnimationComponent::OnPlay(bool isTransition)
 
                             resource = clip.animationResourceUID;
 
-
                             SetBoneMapping();
 
-                            float clipLen       = currentAnimResource->GetDuration();
+                            float clipLen = currentAnimResource->GetDuration();
                             if (clipLen <= 0.f) clipLen = 1.f;
 
-                            float startSec      = animController->GetTime();
-                            float startNorm     = (clipLen > 0.f) ? (startSec / clipLen) : 0.f;
-                            SetActiveTriggers(
-                                currentState->triggers, startNorm
-                            );
+                            float startSec  = animController->GetTime();
+                            float startNorm = (clipLen > 0.f) ? (startSec / clipLen) : 0.f;
+                            SetActiveTriggers(currentState->triggers, startNorm);
                         }
-
-                        
                     }
                 }
             }
@@ -142,7 +134,7 @@ void AnimationComponent::OnPlay(bool isTransition)
             if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 
             animController->Play(resource, true, defaultTime);
-            activeTriggers.clear(); 
+            activeTriggers.clear();
 
             currentAnimResource = animController->GetCurrentAnimation();
             if (currentAnimResource) currentAnimResource->AddReference();
@@ -438,7 +430,10 @@ void AnimationComponent::Update(float deltaTime)
         float prevSec  = animController->GetTime();
         float prevNorm = prevSec / clipLen;
 
-        animController->Update(deltaTime);
+        // If in game, update animations with game timer so they are paused
+        float currentDelta =
+            App->GetSceneModule()->GetInPlayMode() ? App->GetGameTimer()->GetDeltaTime() / 1000.0f : deltaTime;
+        animController->Update(currentDelta);
 
         float currSec  = animController->GetTime();
         float currNorm = currSec / clipLen;
@@ -468,7 +463,7 @@ void AnimationComponent::Update(float deltaTime)
         {
             const HashString& boneName = channel;
 
-            auto boneIt = boneMapping.find(boneName);
+            auto boneIt                = boneMapping.find(boneName);
 
             if (boneIt != boneMapping.end())
             {
@@ -484,7 +479,7 @@ void AnimationComponent::Update(float deltaTime)
                 // Pass CURRENT values to GetTransform - it will only modify them
                 // if the animation has data for that channel type
 
-                animController->GetTransform(boneName, position, rotation);
+                animController->GetTransform(boneName, position, rotation, scale);
                 rotation.Normalize();
 
                 float4x4 transformMatrix = float4x4::FromTRS(position, rotation, scale);
@@ -613,4 +608,3 @@ bool AnimationComponent::UseTrigger(const std::string& triggerName)
     }
     return triggerDone;
 }
-

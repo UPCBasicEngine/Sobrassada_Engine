@@ -232,6 +232,10 @@ void PhysicsModule::DeleteCubeRigidBody(CubeColliderComponent* colliderComponent
 void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderComponent)
 {
     // Collision shape
+    const float3 scale   = colliderComponent->GetParent()->GetScale();
+    const float3& offset = colliderComponent->centerOffset;
+    float3 scaledOff {offset.x * scale.x, offset.y * scale.y, offset.z * scale.z};
+
     btCollisionShape* collisionShape = new btSphereShape(colliderComponent->radius);
 
     const bool isDynamic             = (colliderComponent->mass != 0.f);
@@ -242,7 +246,7 @@ void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderCompo
 
     // MotionState for RENDER AND
     colliderComponent->motionState =
-        BulletMotionState(colliderComponent, colliderComponent->centerOffset, colliderComponent->centerRotation);
+        BulletMotionState(colliderComponent, scaledOff, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(

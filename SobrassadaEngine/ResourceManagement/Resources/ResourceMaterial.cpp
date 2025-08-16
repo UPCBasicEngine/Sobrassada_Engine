@@ -355,6 +355,8 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
 {
     // Prioitize updated values saved in meta. If they are missing, fall back on the ones in the original material
 
+
+
     if (importOptions.HasMember("defaultTextureUID") && importOptions["defaultTextureUID"].IsUint64())
         defaultTextureUID = importOptions["defaultTextureUID"].GetUint64();
     else defaultTextureUID = INVALID_UID;
@@ -557,4 +559,11 @@ void ResourceMaterial::FreeMaterials() const
         glMakeTextureHandleNonResidentARB(material.emmisiveTex);
         glDeleteTextures(1, &emmisiveTexture.textureID);
     }
+}
+
+void ResourceMaterial::SetDiffColor(const float4& newColor)
+{
+    material.diffColor = newColor;
+    //SaveToMeta();
+    App->GetSceneModule()->GetScene()->UpdateAllMaterialInstances(uid);
 }
