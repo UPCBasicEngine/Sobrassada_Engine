@@ -112,7 +112,7 @@ class FireballTrap : public Script
     struct MiniInstance
     {
         GameObject* go;
-        float3 vel;
+        float3 velocity;
         float life;
     };
     std::vector<MiniInstance> activeMinis;

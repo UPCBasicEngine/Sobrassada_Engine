@@ -251,8 +251,8 @@ void FireballTrap::StartAttack()
 {
     // Random impact position inside spawn zone
     lastImpactWorld     = RandomSpawnPoint();
-    impactLocalPos   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
-    impactLocalPos.y = 0.f;
+    impactLocalPos      = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
+    impactLocalPos.y    = 0.f;
 
     // Launch direction
     const float yawRad  = cfg.launchYawDeg * DEGREE_RAD_CONV;
@@ -270,7 +270,7 @@ void FireballTrap::StartAttack()
     const float fallTime   = sqrtf(2.f * cfg.fallingHeight / cfg.gravity);
     const float horizSpeed = launchR / fallTime;
 
-    fireballVelocity           = -dirXZ * horizSpeed; // towards impact
+    fireballVelocity       = -dirXZ * horizSpeed; // towards impact
     if (extraVfx[0].go)
     {
         extraVfx[0].life  = fallTime + EXTRA_VFX0_LIFE_EPS;
@@ -306,7 +306,7 @@ void FireballTrap::StartAttack()
     ClearScheduledVfx();
     vfxSchedClock         = 0.f;
 
-    const float impactT   = fallTime;          // moment of impact
+    const float impactT   = fallTime;       // moment of impact
     const float3 vfxPos   = impactLocalPos; // ground (local to trap)
     const float3 vfxScale = float3::one;
 
@@ -404,11 +404,11 @@ void FireballTrap::DisableDamage()
 
 void FireballTrap::UpdateFireball(float deltaTime)
 {
-    dropElapsed    += deltaTime;
+    dropElapsed        += deltaTime;
     fireballVelocity.y  = -cfg.gravity * dropElapsed;
     fireballVelocity.y  = std::max(fireballVelocity.y, -cfg.maxFallSpeed);
 
-    float3 pos      = fireball->GetLocalTransform().TranslatePart() + fireballVelocity * deltaTime;
+    float3 pos          = fireball->GetLocalTransform().TranslatePart() + fireballVelocity * deltaTime;
     fireball->SetLocalPosition(pos);
 
     // Shadow scaling
@@ -493,8 +493,8 @@ void FireballTrap::UpdateMinis(float deltaTime)
 {
     for (auto it = activeMinis.begin(); it != activeMinis.end();)
     {
-        it->vel.y  -= cfg.gravity * deltaTime;
-        float3 pos  = it->go->GetLocalTransform().TranslatePart() + it->vel * deltaTime;
+        it->velocity.y -= cfg.gravity * deltaTime;
+        float3 pos      = it->go->GetLocalTransform().TranslatePart() + it->velocity * deltaTime;
         it->go->SetLocalPosition(pos);
 
         it->life           -= deltaTime;
@@ -595,7 +595,8 @@ void FireballTrap::UpdateScheduledVfx(float dt)
 
             if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>())
             {
-                ssc->SetScriptEnabled("MovingUVTransparent", true);
+                const bool isBlackStain = (e.prefab == vfxBlackStainPrefab);
+                ssc->SetScriptEnabled("MovingUVClipErode", true);
                 if (auto* m = inst->GetComponent<MeshComponent*>()) m->SetEnabled(false);
             }
 

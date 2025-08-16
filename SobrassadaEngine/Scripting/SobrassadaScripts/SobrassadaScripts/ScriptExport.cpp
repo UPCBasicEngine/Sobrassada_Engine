@@ -11,7 +11,6 @@
 #include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
-#include "MiniFireball.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
 #include "GameOverScript.h"
@@ -20,6 +19,7 @@
 #include "HealVFXGround.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
+#include "MiniFireball.h"
 #include "MoveGOInSpline.h"
 #include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
@@ -36,6 +36,7 @@
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
 
+#include "MovingUVClipErode.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
@@ -84,10 +85,10 @@ constexpr const char* scripts[] = {
     "Destructible"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
-                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
-                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
-                                         "HealSpikesUp"};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",
+                                         "MovingUVClipErode",  "HealGroundHalo",        "HealVerticalPlanes",
+                                         "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark",
+                                         "HealLightBurst",     "HealSpikesUp"};
 
 Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -143,6 +144,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "MovingUVClipErode") return new MovingUVClipErode(parent);
     if (scriptType == "HealGroundHalo")
         return new HealVFXGround(
             parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
