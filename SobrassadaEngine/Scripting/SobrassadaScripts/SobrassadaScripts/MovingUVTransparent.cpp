@@ -154,7 +154,6 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glUniform1i(5, isAlphaDiscard);
 
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-        meshComp->GetBatch()->BindBonesBuffer();
 
         GeometryBatch* batch = meshComp->GetBatch();
         if (batch) batch->BindBonesBuffer();
