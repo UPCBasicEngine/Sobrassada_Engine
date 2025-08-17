@@ -485,6 +485,7 @@
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="Mirage.h" />
+    <ClInclude Include="MirageBossDash.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -2059,6 +2060,7 @@
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="Mirage.cpp" />
+    <ClCompile Include="MirageBossDash.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />

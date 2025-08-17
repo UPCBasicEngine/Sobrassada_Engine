@@ -169,6 +169,9 @@
     <ClInclude Include="Mirage.h">
       <Filter>Characters\Boss</Filter>
     </ClInclude>
+    <ClInclude Include="MirageBossDash.h">
+      <Filter>Characters\Boss</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -871,6 +874,9 @@
       <Filter>Characters\Boss</Filter>
     </ClCompile>
     <ClCompile Include="Mirage.cpp">
+      <Filter>Characters\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="MirageBossDash.cpp">
       <Filter>Characters\Boss</Filter>
     </ClCompile>
   </ItemGroup>
