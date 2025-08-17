@@ -345,8 +345,10 @@ void Soldier::ChangeState()
 
 void Soldier::ApplyKnockback()
 {
-    float3 myPos         = parent->GetGlobalTransform().TranslatePart();
-    knockbackDirection   = character->GetFrontDirection();
+    const float3 myPos         = parent->GetGlobalTransform().TranslatePart();
+    const float3 origin        = character ? character->GetLastPosition() : float3::zero;
+
+    knockbackDirection   = myPos - origin;
     knockbackDirection.y = 0.0f;
     if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
     knockbackDirection.Normalize();
