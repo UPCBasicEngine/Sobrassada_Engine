@@ -60,6 +60,10 @@ class ResourceMaterial : public Resource
     const bool IsAlphaDiscard() const { return isAlpha; }
     const bool IsDoubleSided() const { return doubleSided; }
     bool DoApplyWind() const { return applyWind; }
+    const float GetVCoord0() const { return vCoord0; }
+    const float GetVCoord1() const { return vCoord1; }
+    const bool UseCentralPivot() const { return useCentralPivot; }
+    const bool UseWindGravity() const { return useWindGravity; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
     int GetDiffuseWidth() const { return diffuseTexture.width; }
@@ -87,6 +91,10 @@ class ResourceMaterial : public Resource
     bool doubleSided      = false;
     bool hasNormal        = false;
     bool applyWind        = false;
+    float vCoord0 = 0.0f;
+    float vCoord1 = 1.0f;
+    bool useCentralPivot = false;
+    bool useWindGravity          = false;
     UID defaultTextureUID = INVALID_UID;
 
     bool wasUpdated       = false;

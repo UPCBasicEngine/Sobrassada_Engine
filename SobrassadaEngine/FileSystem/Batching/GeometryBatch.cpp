@@ -32,6 +32,11 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isAlpha        = component->GetRenderMode() == 2;
     isDoubleSided  = component->GetResourceMaterial()->IsDoubleSided();
     doApplyWind    = component->GetResourceMaterial()->DoApplyWind();
+    vCoord0 = component->GetResourceMaterial()->GetVCoord0();
+    vCoord1= component->GetResourceMaterial()->GetVCoord1();
+    useCentralPivot = component->GetResourceMaterial()->UseCentralPivot();
+    useWindGravity = component->GetResourceMaterial()->UseWindGravity();
+    
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);

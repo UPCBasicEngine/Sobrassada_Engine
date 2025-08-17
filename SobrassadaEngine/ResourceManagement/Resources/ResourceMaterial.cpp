@@ -35,6 +35,13 @@ void ResourceMaterial::OnEditorUpdate()
 
     if (applyWind)
     {
+        ImGui::Text("Material wind settings");
+        updated |= ImGui::SliderFloat("UV 0 border", &vCoord0, 0, vCoord1 - 0.01f);
+        updated |= ImGui::SliderFloat("UV 1 border", &vCoord1, vCoord0 + 0.01f, 1);
+        updated |= ImGui::Checkbox("Use central pivot", &useCentralPivot);
+        updated |= ImGui::Checkbox("Wind gravity", &useWindGravity);
+
+        ImGui::Text("Global wind settings");
         WindConfig* globalWindConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
         if (!globalWindConfig->GetApplyWindGlobally())
         {
@@ -308,6 +315,10 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("isAlphaDiscard", isAlpha, allocator);
                 importOptions.AddMember("isDoubleSided", doubleSided, allocator);
                 importOptions.AddMember("applyWind", applyWind, allocator);
+                importOptions.AddMember("vCoord0", vCoord0, allocator);
+                importOptions.AddMember("vCoord1", vCoord1, allocator);
+                importOptions.AddMember("useCentralPivot", useCentralPivot, allocator);
+                importOptions.AddMember("useWindGravity", useWindGravity, allocator);
 
                 if (doc.HasMember("importOptions")) doc["importOptions"] = importOptions;
                 else doc.AddMember("importOptions", importOptions, allocator);
@@ -397,6 +408,22 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     if (importOptions.HasMember("applyWind") && importOptions["applyWind"].IsBool())
         applyWind = importOptions["applyWind"].GetBool();
     else applyWind = false;
+
+    if (importOptions.HasMember("vCoord0") && importOptions["vCoord0"].IsFloat())
+        vCoord0 = importOptions["vCoord0"].GetFloat();
+    else vCoord0 = 0.0f;
+
+    if (importOptions.HasMember("vCoord1") && importOptions["vCoord1"].IsFloat())
+        vCoord1 = importOptions["vCoord1"].GetFloat();
+    else vCoord1 = 1.0f;
+
+    if (importOptions.HasMember("useCentralPivot") && importOptions["useCentralPivot"].IsBool())
+        useCentralPivot = importOptions["useCentralPivot"].GetBool();
+    else useCentralPivot = false;
+
+    if (importOptions.HasMember("useWindGravity") && importOptions["useWindGravity"].IsBool())
+        useWindGravity = importOptions["useWindGravity"].GetBool();
+    else useWindGravity = false;
 
     material.specColor           = mat.GetSpecularFactor();
     material.shininess           = mat.GetGlossinessFactor();

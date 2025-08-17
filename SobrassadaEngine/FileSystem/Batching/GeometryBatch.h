@@ -40,6 +40,10 @@ class GeometryBatch
     const bool IsAlpha() const { return isAlpha; }
     const bool IsDoubleSided() const { return isDoubleSided; }
     const bool DoApplyWind() const { return doApplyWind; }
+    const float GetVCoord0() const { return vCoord0; }
+    const float GetVCoord1() const { return vCoord1; }
+    const bool UseCentralPivot() const { return useCentralPivot; }
+    const bool UseWindGravity() const { return useWindGravity; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
@@ -96,4 +100,8 @@ class GeometryBatch
     bool isAlpha                  = false;
     bool isDoubleSided            = false;
     bool doApplyWind              = false;
+    float vCoord0 = 0.0f;
+    float vCoord1 = 1.0f;
+    bool useCentralPivot = false;
+    bool useWindGravity          = false;
 };

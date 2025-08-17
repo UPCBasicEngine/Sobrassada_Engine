@@ -150,6 +150,12 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                     windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
                     windConfig->GetGustSpeed()
                 );
+                glUniform4f(
+                    glGetUniformLocation(program, "windUVParameters"), it->GetVCoord0(), it->GetVCoord1(),
+                    it->UseCentralPivot(), it->UseWindGravity());
+                float vCoordLerp = std::max(std::min((0.1f - it->GetVCoord0()) / (it->GetVCoord1() - it->GetVCoord0()), 1.0f), 0.f);
+
+                GLOG("Coord: %f", vCoordLerp)
             }
         }
 
