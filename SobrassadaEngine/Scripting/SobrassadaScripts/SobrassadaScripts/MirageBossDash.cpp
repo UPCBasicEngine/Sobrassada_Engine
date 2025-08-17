@@ -2,7 +2,6 @@
 
 #include "Application.h"
 #include "MirageBossDash.h"
-#include "BossMirage.h"
 #include "CameraComponent.h"
 #include "Component.h"
 #include "CuChulainn.h"
@@ -15,21 +14,22 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
+MirageBossDash::MirageBossDash(GameObject* parent)
+    : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
     fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
 }
 
-bool Boss::Init()
+bool MirageBossDash::Init()
 {
     Character::Init();
 
     return true;
 }
 
-void Boss::Update(float deltaTime)
+void MirageBossDash::Update(float deltaTime)
 {
     Character::Update(deltaTime);
 
@@ -49,7 +49,7 @@ void Boss::Update(float deltaTime)
     }
 }
 
-void Boss::HandleState(float deltaTime)
+void MirageBossDash::HandleState(float deltaTime)
 {
   
 
@@ -66,7 +66,7 @@ void Boss::HandleState(float deltaTime)
 }
 
 
-void Boss::Idle()
+void MirageBossDash::Idle()
 {
     if (stateEnter)
     {
@@ -80,11 +80,9 @@ void Boss::Idle()
 
         if (animComponent) animComponent->UseTrigger("Idle");
     }
-
-    ChooseNextState();
 }
 
-void Boss::OverheadStrike(float deltaTime)
+void MirageBossDash::OverheadStrike(float deltaTime)
 {
 
     if (stateEnter)
@@ -114,18 +112,17 @@ void Boss::OverheadStrike(float deltaTime)
     }
 }
 
-void Boss::StartDash()
+void MirageBossDash::StartDash()
 {
     isDashing        = true;
 
     float3 bossPos   = parent->GetGlobalTransform().TranslatePart();
-    float3 playerPos = character->GetLastPosition();
 
     bossPos.y        = 0.0f;
-    playerPos.y      = 0.0f;
+    dashEnd.y      = 0.0f;
 
-    dashDistance     = (playerPos - bossPos).Length();
-    dashDirection    = (playerPos - bossPos).Normalized();
+    dashDistance     = (dashEnd - bossPos).Length();
+    dashDirection    = (dashEnd - bossPos).Normalized();
 
     GLOG("Distance: %.2f", dashDistance);
     GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
@@ -138,7 +135,7 @@ void Boss::StartDash()
     GLOG("Speed: %.2f", dashSpeed);
 }
 
-void Boss::Dash(float deltaTime)
+void MirageBossDash::Dash(float deltaTime)
 {
     dashTimeRemaining -= deltaTime;
     if (dashTimeRemaining < 0.0f) dashTimeRemaining = 0.0f;
@@ -162,7 +159,7 @@ void Boss::Dash(float deltaTime)
 }
 
 
-const char* Boss::GetStateName() const
+const char* MirageBossDash::GetStateName() const
 {
     switch (currentState)
     {
@@ -180,7 +177,7 @@ const char* Boss::GetStateName() const
     }
 }
 
-const char* Boss::GetActionName() const
+const char* MirageBossDash::GetActionName() const
 {
     switch (currentAction)
     {
@@ -188,9 +185,6 @@ const char* Boss::GetActionName() const
         return "Idle";
     case BossActions::Dash:
         return "Dash";
-
-  
-
     default:
         return "ERROR: NO ACTION";
     }

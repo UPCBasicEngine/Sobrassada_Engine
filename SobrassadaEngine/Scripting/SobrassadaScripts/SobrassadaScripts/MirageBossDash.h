@@ -23,27 +23,17 @@ enum class BossActions
     Dash,
 };
 
-class Boss : public Character
+class MirageBossDash : public Character
 {
   public:
-    Boss(GameObject* parent);
-    ~Boss() noexcept override { parent = nullptr; };
+    MirageBossDash(GameObject* parent);
+    ~MirageBossDash() noexcept override { parent = nullptr; };
 
     bool Init() override;
     void Update(float deltaTime) override;
 
-    GameObject* GetCloseArea() const { return closeArea; }
-    int GetCloseAreaDamage() const { return closeAreaDamage; }
-
   private:
-    void OnDeath() override;
-    void OnDamageTaken(int amount) override;
     void HandleState(float deltaTime) override;
-    void UpdateTimers(float deltaTime) override;
-    void ChooseNextState();
-    void ChooseNextStateFirstPhase();
-    void ChooseNextStateSecondPhase();
-    void ChooseNextStateThirdPhase();
 
     void Idle();
 
@@ -67,6 +57,7 @@ class Boss : public Character
     float dashSpeed           = 0.0f;
     float dashTimeRemaining   = 0.0f;
     float dashDistance        = 0.0f;
+    float3 dashEnd;
     float3 dashDirection      = float3::zero;
     float3 dashStartPosLocal  = float3::zero;
 
