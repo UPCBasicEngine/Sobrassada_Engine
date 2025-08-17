@@ -463,6 +463,12 @@ void CuChulainn::HandleState(float deltaTime)
              state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
         Move();
 
+    if (state == CharacterStates::TAKE_MUSHROOM)
+    {
+        state = CharacterStates::IDLE;
+        if (animComponent) animComponent->UseTrigger("Idle");
+    }
+
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
     {
@@ -531,6 +537,9 @@ void CuChulainn::GetInputs()
     const float2& leftJoystick = input->GetLeftStick();
 
     float3 direction           = float3::zero;
+
+    const bool isBusy          = (state == CharacterStates::TAKE_MUSHROOM) || (state == CharacterStates::HEAL);
+    
     if (input->IsUsingKeyboard())
     {
 
@@ -560,6 +569,11 @@ void CuChulainn::GetInputs()
     {
         desiredTakeMushroom = true;
         takeMushroomCdTimer = takeMushroomCd;
+
+        desiredAttack        = false;
+        attackBufferTimer    = 0.0f;
+        isChargingAttack     = false;
+        desiredChargedAttack = false;
     }
     if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
     {
@@ -567,6 +581,11 @@ void CuChulainn::GetInputs()
         {
             desiredHeal = true;
             healCdTimer = healCooldown;
+
+            desiredAttack        = false;
+            attackBufferTimer    = 0.0f;
+            isChargingAttack     = false;
+            desiredChargedAttack = false;
         }
     }
 
@@ -587,35 +606,38 @@ void CuChulainn::GetInputs()
         desiredDash     = true;
         dashBufferTimer = inputBuffer;
     }
+    
+    if (!isBusy)
+    {
+        // Attack
+        if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
+        {
+            desiredAttack     = true;
+            attackBufferTimer = inputBuffer;
+        }
+        if (mouse[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_X] == KEY_REPEAT)
+        {
+            isChargingAttack = true;
+        }
+        if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
+        {
+            isChargingAttack     = true;
+            desiredChargedAttack = true;
+        }
 
-    // Attack
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_X] == KEY_DOWN)
-    {
-        desiredAttack     = true;
-        attackBufferTimer = inputBuffer;
-    }
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_X] == KEY_REPEAT)
-    {
-        isChargingAttack = true;
-    }
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
-    {
-        isChargingAttack     = true;
-        desiredChargedAttack = true;
-    }
-
-    // Ranged
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
-    {
-        desiredAim = true;
-    }
-    if (input->GetLeftTrigger().first == KEY_UP)
-    {
-        if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
-    }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
-    {
-        if (state == CharacterStates::AIM && throwTimer <= 0.0f) ThrowSpear();
+        // Ranged
+        if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
+        {
+            desiredAim = true;
+        }
+        if (input->GetLeftTrigger().first == KEY_UP)
+        {
+            if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
+        }
+        if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
+        {
+            if (state == CharacterStates::AIM && throwTimer <= 0.0f) ThrowSpear();
+        }
     }
 
     // Ultimatee
@@ -1285,6 +1307,44 @@ void CuChulainn::TakeDamage(int amount)
 
 bool CuChulainn::TakeMushroom()
 {
+    if (state == CharacterStates::BASIC_ATTACK || isAttacking || state == CharacterStates::CHARGED_ATTACK ||
+        state == CharacterStates::CHARGING)
+    {
+        isAttacking          = false;
+        desiredAttack        = false;
+        attackBufferTimer    = 0.0f;
+        isChargingAttack     = false;
+        desiredChargedAttack = false;
+        attackPressTimer     = 0.0f;
+        comboCounter         = -1;
+        comboBufferTimer     = 0.0f;
+
+        if (weaponCollider) weaponCollider->SetEnabled(false);
+        if (chargedAttackCollider) chargedAttackCollider->SetEnabled(false);
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+        if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+
+        if (animComponent) animComponent->UseTrigger("Idle");
+        character->EnableMovement(true);
+    }
+
+    if (state == CharacterStates::AIM || desiredAim)
+    {
+        desiredAim = false;
+        // pendingThrow   = false;
+        // aimPressed     = false;
+        // aimBufferTimer = 0.0f;
+
+        if (camera) camera->EnableAimOffset(false);
+        if (aimShadowObject) aimShadowObject->SetEnabled(false);
+
+        if (animComponent)
+        {
+            animComponent->OnResume();
+            animComponent->UseTrigger("Idle");
+        }
+    }
+
     bool taken = false;
     if (mushrooms <= 2)
     {
