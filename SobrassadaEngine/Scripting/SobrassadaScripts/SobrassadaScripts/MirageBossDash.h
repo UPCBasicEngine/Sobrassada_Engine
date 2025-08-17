@@ -10,14 +10,14 @@ class AIAgentComponent;
 class BossMirage;
 class ImageComponent;
 
-enum class BossStates
+enum class BossDashStates
 {
     None,
     Idle,
     OverheadStrike,
 };
 
-enum class BossActions
+enum class BossDashActions
 {
     Idle,
     Dash,
@@ -45,8 +45,8 @@ class MirageBossDash : public Character
     const char* GetActionName() const;
 
   private:
-    BossStates currentState   = BossStates::Idle;
-    BossActions currentAction = BossActions::Idle;
+    BossDashStates currentState   = BossDashStates::Idle;
+    BossDashActions currentAction = BossDashActions::Idle;
 
     bool stateEnter           = true;
     bool doIdle               = false;

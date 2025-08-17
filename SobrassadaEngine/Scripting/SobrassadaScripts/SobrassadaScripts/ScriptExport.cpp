@@ -30,21 +30,19 @@
 #include "Soldier.h"
 #include "SpawnPoint.h"
 #include "SpawnUI.h"
+#include "Spouts.h"
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "EnemySpawnerScript.h"
-#include "GameOverScript.h"
-#include "PlayerLocationScript.h"
-#include "Spouts.h"
 
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
 #include "VSyncToggleScript.h"
 
-#include "Mirage.h"
 #include "BossMirage.h"
+#include "Mirage.h"
+#include "MirageBossDash.h"
 
 #include <string>
 
@@ -89,10 +87,9 @@ constexpr const char* scripts[] = {
     "Destructible",
     "Mirage",
     "BossMirage",
-    "Boss"
+    "Boss",
+    "MirageBossDash"
 };
-
-
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
 
@@ -154,6 +151,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /*Boss*/
     if (scriptType == "Mirage") return new Mirage(parent);
     if (scriptType == "BossMirage") return new BossMirage(parent);
+    if (scriptType == "MirageBossDash") return new MirageBossDash(parent);
 
     return nullptr;
 }

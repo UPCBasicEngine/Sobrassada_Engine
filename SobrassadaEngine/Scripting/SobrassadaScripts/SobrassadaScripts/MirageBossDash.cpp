@@ -55,11 +55,11 @@ void MirageBossDash::HandleState(float deltaTime)
 
     switch (currentState)
     {
-    case BossStates::Idle:
+    case BossDashStates::Idle:
         Idle();
         break;
 
-    case BossStates::OverheadStrike:
+    case BossDashStates::OverheadStrike:
         OverheadStrike(deltaTime);
         break;
     }
@@ -71,11 +71,8 @@ void MirageBossDash::Idle()
     if (stateEnter)
     {
 
-        // TODO: Randomize the idle duration
-        // agentAI->SetSpeed(0.0f, 10.0f);
-
         stateEnter    = false;
-        currentAction = BossActions::Idle;
+        currentAction = BossDashActions::Idle;
         doIdle        = false;
 
         if (animComponent) animComponent->UseTrigger("Idle");
@@ -94,7 +91,7 @@ void MirageBossDash::OverheadStrike(float deltaTime)
     switch (currentAction)
     {
 
-    case BossActions::Dash:
+    case BossDashActions::Dash:
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
@@ -163,13 +160,13 @@ const char* MirageBossDash::GetStateName() const
 {
     switch (currentState)
     {
-    case BossStates::None:
+    case BossDashStates::None:
         return "None";
 
-    case BossStates::Idle:
+    case BossDashStates::Idle:
         return "Idle";
 
-    case BossStates::OverheadStrike:
+    case BossDashStates::OverheadStrike:
         return "OverheadStrike";
 
     default:
@@ -181,9 +178,9 @@ const char* MirageBossDash::GetActionName() const
 {
     switch (currentAction)
     {
-    case BossActions::Idle:
+    case BossDashActions::Idle:
         return "Idle";
-    case BossActions::Dash:
+    case BossDashActions::Dash:
         return "Dash";
     default:
         return "ERROR: NO ACTION";
