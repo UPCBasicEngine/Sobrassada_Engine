@@ -51,8 +51,14 @@ void main()
     vec4 healthyColor = vec4(0.369f, 0.529f, 0.314f, 1.0f);
     vec4 damagedColor = vec4(1.0f, 0.1f, 0.1f,1.0f);
 
-    vec4 finalColor = fillAmount <= 0.5f ? mix(damagedColor, healthyColor, fillAmount * 2.0f) : healthyColor;
-    
+    vec4 finalColor = healthyColor;
+
+    if (fillAmount <= 0.5f)
+    {
+        finalColor = mix(damagedColor, healthyColor, fillAmount * 2.0f);
+    }
+
+
     if (uv0.x <= liquidLevel)
     {
         outColor = vec4(finalColor.r * inputColor.r, finalColor.g * inputColor.g, finalColor.b * inputColor.b, sampled.a);
