@@ -28,4 +28,6 @@ class Mirage : public Script
     float damageDuration         = 0.f;
     float stateTimer             = 0.0f;
     int weightOrder              = 0;
+
+    const float4x4* endPoint         = nullptr;
 };

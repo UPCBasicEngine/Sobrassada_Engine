@@ -19,9 +19,14 @@ Mirage::Mirage(GameObject* parent) : Script(parent)
 
 bool Mirage::Init()
 {
-    state         = MirageState::Sleeping;
-    stateTimer    = 0.0f;
-    meshComponent = parent->GetComponent<MeshComponent*>();
+    Scene* scene              = AppEngine->GetSceneModule()->GetScene();
+    state                     = MirageState::Sleeping;
+    stateTimer                = 0.0f;
+    meshComponent             = parent->GetComponent<MeshComponent*>();
+    std::vector<UID> children = parent->GetChildren();
+
+    GameObject* firstChild    = scene->GetGameObjectByUID(children[0]);
+    endPoint                  = &firstChild->GetLocalTransform();
     return true;
 }
 
@@ -33,13 +38,13 @@ void Mirage::Update(float deltaTime)
     {
         state      = MirageState::Warning;
         stateTimer = 0.0f;
-        //GLOG("Calling gameobject");
-        /*
+        GLOG("Calling gameobject");
+        
         if (meshComponent && mirageWarningImage != 0)
         {
-            meshComponent->AddMaterial(mirageWarningImage, false);
+            //meshComponent->AddMaterial(mirageWarningImage, false);
         }
-        */
+        
 
         break;
     }
@@ -47,13 +52,13 @@ void Mirage::Update(float deltaTime)
     case MirageState::Warning:
     {
         stateTimer += deltaTime;
-        //GLOG("Activating gameobject");
-        /*
+         GLOG("Activating gameobject");
+        
         if (meshComponent && mirageWarningImage != 0)
         {
-            meshComponent->AddMaterial(mirageDamageImage, false);
+           // meshComponent->AddMaterial(mirageDamageImage, false);
         }
-        */
+        
         if (stateTimer >= warningDelay)
         {
             state      = MirageState::Damaging;
@@ -65,7 +70,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
-        //GLOG("DISABLING");
+        // GLOG("DISABLING");
         if (stateTimer >= damageDuration)
         {
 
