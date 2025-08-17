@@ -623,11 +623,12 @@ bool CuChulainn::CanTransform() const
     bool canTransform = false;
     if (!isRiastrad)
     {
-        canTransform =
-            riastradMeter == 100 && state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-            state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
-            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-            state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+        canTransform = riastradMeter == 100 && state != CharacterStates::DASH && !isAttacking &&
+                       character->IsGrounded() && state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
+                       state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
+                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM &&
+                       state != CharacterStates::HURT;
 
         if (canTransform && state == CharacterStates::BASIC_ATTACK) canTransform = comboBufferTimer > 0.0f;
     }
