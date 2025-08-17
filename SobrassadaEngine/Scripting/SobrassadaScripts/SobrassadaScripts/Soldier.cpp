@@ -61,10 +61,13 @@ void Soldier::Update(float deltaTime)
     if (isKnockback)
     {
         knockbackTimer -= deltaTime;
-        agentAI->MoveTo(knockbackForce, knockbackDirection);
+
+        const float appliedForce  = isStrongKnockback ? knockbackForce * 2 : knockbackForce;  
+        agentAI->MoveTo(appliedForce, knockbackDirection);
         if (knockbackTimer <= 0.0f)
         {
             isKnockback = false;
+            isStrongKnockback = false;
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
             ChangeState();
@@ -122,6 +125,11 @@ void Soldier::OnDamageTaken(int amount)
     }
     isKnockback    = true;
     knockbackTimer = knockbackTime;
+
+    isStrongKnockback =
+        (playerScript &&
+         (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM));
+    
     ApplyKnockback();
     //HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
     //std::string animState               = animStateFromPlayer.GetString();
