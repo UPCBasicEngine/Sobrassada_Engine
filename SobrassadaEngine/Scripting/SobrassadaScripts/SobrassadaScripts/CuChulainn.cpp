@@ -1140,20 +1140,14 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateBrust)
     {
         ultimateBrust->SetEnabled(true);
-        ultimateBrust->GetComponent<MeshComponent*>()->SetEnabled(false);
-        ultimateBrust->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (ultimateCrack1)
     {
         ultimateCrack1->SetEnabled(true);
-        //ultimateCrack1->GetComponent<MeshComponent*>()->SetEnabled(false);
-        //ultimateCrack1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (ultimateCrack2)
     {
         ultimateCrack2->SetEnabled(true);
-        //ultimateCrack2->GetComponent<MeshComponent*>()->SetEnabled(false);
-        //ultimateCrack2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (ultimateHalo)
     {
@@ -1176,8 +1170,6 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateWarning)
     {
         ultimateWarning->SetEnabled(true);
-        ultimateWarning->GetComponent<MeshComponent*>()->SetEnabled(false);
-        ultimateWarning->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
 }
 
