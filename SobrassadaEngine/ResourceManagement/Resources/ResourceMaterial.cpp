@@ -40,10 +40,14 @@ void ResourceMaterial::OnEditorUpdate()
         updated |= ImGui::SliderFloat("UV 1 border", &vCoord1, vCoord0 + 0.01f, 1);
         updated |= ImGui::Checkbox("Use central pivot", &useCentralPivot);
         updated |= ImGui::Checkbox("Wind gravity", &useWindGravity);
-        updated |= ImGui::SliderFloat("X axis effect", &windXAxis, 0, 1);
-        updated |= ImGui::SliderFloat("Y axis effect", &windYAxis, 0, 1);
-        updated |= ImGui::SliderFloat("Z axis effect", &windZAxis, 0, 1);
+        updated |= ImGui::SliderFloat("X amplitude", &windXAmplitude, 0, 2);
+        updated |= ImGui::SliderFloat("Y amplitude", &windYAmplitude, 0, 2);
+        updated |= ImGui::SliderFloat("Z amplitude", &windZAmplitude, 0, 2);
         updated |= ImGui::SliderFloat("Resistance", &windResistance, 0, 1);
+        updated |= ImGui::SliderFloat("X frequency", &windXFrequency, 0, 5);
+        updated |= ImGui::SliderFloat("Y frequency", &windYFrequency, 0, 5);
+        updated |= ImGui::SliderFloat("Z frequency", &windZFrequency, 0, 5);
+        updated |= ImGui::SliderFloat("Time scale", &windTimeScale, 0, 10);
 
         ImGui::Text("Global wind settings");
         WindConfig* globalWindConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
@@ -323,10 +327,14 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("vCoord1", vCoord1, allocator);
                 importOptions.AddMember("useCentralPivot", useCentralPivot, allocator);
                 importOptions.AddMember("useWindGravity", useWindGravity, allocator);
-                importOptions.AddMember("windXAxis", windXAxis, allocator);
-                importOptions.AddMember("windYAxis", windYAxis, allocator);
-                importOptions.AddMember("windZAxis", windZAxis, allocator);
+                importOptions.AddMember("windXAmplitude", windXAmplitude, allocator);
+                importOptions.AddMember("windYAmplitude", windYAmplitude, allocator);
+                importOptions.AddMember("windZAmplitude", windZAmplitude, allocator);
                 importOptions.AddMember("windResistance", windResistance, allocator);
+                importOptions.AddMember("windXFrequency", windXFrequency, allocator);
+                importOptions.AddMember("windYFrequency", windYFrequency, allocator);
+                importOptions.AddMember("windZFrequency", windZFrequency, allocator);
+                importOptions.AddMember("windTimeScale", windTimeScale, allocator);
 
                 if (doc.HasMember("importOptions")) doc["importOptions"] = importOptions;
                 else doc.AddMember("importOptions", importOptions, allocator);
@@ -433,21 +441,37 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
         useWindGravity = importOptions["useWindGravity"].GetBool();
     else useWindGravity = false;
 
-    if (importOptions.HasMember("windXAxis") && importOptions["windXAxis"].IsFloat())
-        windXAxis = importOptions["windXAxis"].GetFloat();
-    else windXAxis = 1.0f;
+    if (importOptions.HasMember("windXAmplitude") && importOptions["windXAmplitude"].IsFloat())
+        windXAmplitude = importOptions["windXAmplitude"].GetFloat();
+    else windXAmplitude = 1.0f;
 
-    if (importOptions.HasMember("windYAxis") && importOptions["windYAxis"].IsFloat())
-        windYAxis = importOptions["windYAxis"].GetFloat();
-    else windYAxis = 1.0f;
+    if (importOptions.HasMember("windYAmplitude") && importOptions["windYAmplitude"].IsFloat())
+        windYAmplitude = importOptions["windYAmplitude"].GetFloat();
+    else windYAmplitude = 1.0f;
 
-    if (importOptions.HasMember("windZAxis") && importOptions["windZAxis"].IsFloat())
-        windZAxis = importOptions["windZAxis"].GetFloat();
-    else windZAxis = 1.0f;
+    if (importOptions.HasMember("windZAmplitude") && importOptions["windZAmplitude"].IsFloat())
+        windZAmplitude = importOptions["windZAmplitude"].GetFloat();
+    else windZAmplitude = 1.0f;
 
     if (importOptions.HasMember("windResistance") && importOptions["windResistance"].IsFloat())
         windResistance = importOptions["windResistance"].GetFloat();
     else windResistance = 0.0f;
+
+    if (importOptions.HasMember("windXFrequency") && importOptions["windXFrequency"].IsFloat())
+        windXFrequency = importOptions["windXFrequency"].GetFloat();
+    else windXFrequency = 1.0f;
+
+    if (importOptions.HasMember("windYFrequency") && importOptions["windYFrequency"].IsFloat())
+        windYFrequency = importOptions["windYFrequency"].GetFloat();
+    else windYFrequency = 1.0f;
+
+    if (importOptions.HasMember("windZFrequency") && importOptions["windZFrequency"].IsFloat())
+        windZFrequency = importOptions["windZFrequency"].GetFloat();
+    else windZFrequency = 1.0f;
+
+    if (importOptions.HasMember("windTimeScale") && importOptions["windTimeScale"].IsFloat())
+        windTimeScale = importOptions["windTimeScale"].GetFloat();
+    else windTimeScale = 1.0f;
 
     material.specColor           = mat.GetSpecularFactor();
     material.shininess           = mat.GetGlossinessFactor();

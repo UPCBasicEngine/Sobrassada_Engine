@@ -157,8 +157,11 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                     glGetUniformLocation(program, "windUVParameters"), it->GetVCoord0(), it->GetVCoord1(),
                     it->UseCentralPivot(), it->UseWindGravity());
                 glUniform4f(
-                    glGetUniformLocation(program, "windCustomStrength"), it->GetWindXAxis(), it->GetWindYAxis(),
-                    it->GetWindZAxis(), it->GetWindResistance());
+                    glGetUniformLocation(program, "windAmplitudes"), it->GetWindXAmplitude(), it->GetWindYAmplitude(),
+                    it->GetWindZAmplitude(), it->GetWindResistance());
+                glUniform4f(
+                    glGetUniformLocation(program, "windFrequency"), it->GetWindXFrequency(),
+                    it->GetWindYFrequency(), it->GetWindZFrequency(), it->GetWindTimeScale());
             }
         }
 

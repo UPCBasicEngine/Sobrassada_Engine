@@ -17,8 +17,10 @@ uniform vec4 deltaWindDirection;
 uniform vec4 windParameters;
 // x: v0 (no movement border), y: v1 (full movement border), z: use central pivot, w: use gravity
 uniform vec4 windUVParameters;
-// x: axis affect, y: axis affect, z: axis affect, w: windResistance
-uniform vec4 windCustomStrength;
+// x: axis amplitude, y: axis amplitude, z: axis amplitude, w: windResistance
+uniform vec4 windAmplitudes;
+// x: axis frequency, y: axis frequency, z: axis frequency, w: time scale
+uniform vec4 windFrequency;
 
 layout(std140, row_major, binding = 0) uniform CameraMatrices
 {
@@ -100,12 +102,16 @@ void main()
             float gustStrength = max(0, sin((windParameters.x * 0.001) / windParameters.z));
 
             float combinedWindSpeed = windParameters.y + (gustStrength * windParameters.w);
-            float scaledTime = windParameters.x * 0.001 * (log(windParameters.y * 2) + 1);
-            float scaledWindSpeed = combinedWindSpeed * (1 - windCustomStrength.w);
+            float scaledTime = windParameters.x * 0.001 * (log(windParameters.y * 2) + 1) * windFrequency.w;
+            float scaledWindSpeed = combinedWindSpeed * (1 - windAmplitudes.w);
 
             float basicOffset = sin(pos.x + scaledTime + 1.0 - vCoordLerp) * vCoordLerp * scaledWindSpeed;
 
-            vec3 offset = vec3(basicOffset * windCustomStrength.x, basicOffset * windCustomStrength.y, basicOffset * windCustomStrength.z);
+            float offsetX = sin((pos.x + scaledTime + 1.0 - vCoordLerp) * windFrequency.x) * vCoordLerp * scaledWindSpeed * windAmplitudes.x;
+            float offsetY = sin((pos.y + scaledTime + 1.0 - vCoordLerp) * windFrequency.y) * vCoordLerp * scaledWindSpeed * windAmplitudes.y;
+            float offsetZ = sin((pos.z + scaledTime + 1.0 - vCoordLerp) * windFrequency.z) * vCoordLerp * scaledWindSpeed * windAmplitudes.z;
+
+            vec3 offset = vec3(offsetX, offsetY, offsetZ);
 
             vec3 temp = cross(deltaWindDirection.xyz, offset) + deltaWindDirection.w * offset;
             vec3 rotated = offset + 2.0*cross(deltaWindDirection.xyz, temp);

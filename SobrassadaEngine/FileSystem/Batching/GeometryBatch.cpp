@@ -36,10 +36,14 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     vCoord1= component->GetResourceMaterial()->GetVCoord1();
     useCentralPivot = component->GetResourceMaterial()->UseCentralPivot();
     useWindGravity = component->GetResourceMaterial()->UseWindGravity();
-    windXAxis = component->GetResourceMaterial()->GetWindXAxis();
-    windYAxis = component->GetResourceMaterial()->GetWindYAxis();
-    windZAxis = component->GetResourceMaterial()->GetWindZAxis();
+    windXAmplitude = component->GetResourceMaterial()->GetWindXAmplitude();
+    windYAmplitude = component->GetResourceMaterial()->GetWindYAmplitude();
+    windZAmplitude = component->GetResourceMaterial()->GetWindZAmplitude();
     windResistance = component->GetResourceMaterial()->GetWindResistance();
+    windXFrequency = component->GetResourceMaterial()->GetWindXFrequency();
+    windYFrequency = component->GetResourceMaterial()->GetWindYFrequency();
+    windZFrequency = component->GetResourceMaterial()->GetWindZFrequency();
+    windTimeScale = component->GetResourceMaterial()->GetWindTimeScale();
     
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
