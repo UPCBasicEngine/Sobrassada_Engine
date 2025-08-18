@@ -4,9 +4,9 @@
 #include "CameraComponent.h"
 #include "CameraModule.h"
 #include "Framebuffer.h"
+#include "GameObject.h"
 #include "Gbuffer.h"
 #include "OpenGLModule.h"
-#include "GameObject.h"
 #include "Scene/Components/ShaderScriptComponent.h"
 
 #include "glew.h"
@@ -49,6 +49,9 @@ void ShaderScriptModule::AddShaderScript(
     case ShaderScriptType::POST_EFFECTS_PASS:
         postEffectsComponents.push_back({component, scriptIndex});
         break;
+    case ShaderScriptType::UI_PASS:
+        uiComponents.push_back({component, scriptIndex});
+        break;
     default:
         break;
     }
@@ -74,6 +77,8 @@ void ShaderScriptModule::ShaderScriptTypeChange(
     case ShaderScriptType::POST_EFFECTS_PASS:
         originalVector = &postEffectsComponents;
         break;
+    case ShaderScriptType::UI_PASS:
+        originalVector = &uiComponents;
     default:
         return;
         break;
@@ -108,6 +113,9 @@ void ShaderScriptModule::ShaderScriptTypeChange(
             break;
         case ShaderScriptType::POST_EFFECTS_PASS:
             destinationVector = &postEffectsComponents;
+            break;
+        case ShaderScriptType::UI_PASS:
+            destinationVector = &uiComponents;
             break;
         default:
             return;
@@ -205,6 +213,9 @@ void ShaderScriptModule::ComponentDeletedScript(ShaderScriptComponent* component
         case ShaderScriptType::POST_EFFECTS_PASS:
             postEffectsComponents.push_back({component, i});
             break;
+        case ShaderScriptType::UI_PASS:
+            uiComponents.push_back({component, i});
+            break;
         default:
             break;
         }
@@ -257,12 +268,12 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
             }
             else
             {
-                float distanceA =
-                    (a.first->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
-                        .LengthSq();
-                float distanceB =
-                    (b.first->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
-                        .LengthSq();
+                float distanceA = (a.first->GetParent()->GetGlobalTransform().TranslatePart() -
+                                   App->GetCameraModule()->GetCameraPosition())
+                                      .LengthSq();
+                float distanceB = (b.first->GetParent()->GetGlobalTransform().TranslatePart() -
+                                   App->GetCameraModule()->GetCameraPosition())
+                                      .LengthSq();
 
                 return distanceA > distanceB;
             }
@@ -301,5 +312,13 @@ void ShaderScriptModule::RenderPostEffectsPassShaders(float deltaTime, CameraCom
     for (auto& shaderPair : postEffectsComponents)
     {
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
+    }
+}
+
+void ShaderScriptModule::RenderUiPassShaders(float deltaTime)
+{
+    for (auto& shaderPair : uiComponents)
+    {
+        shaderPair.first->RenderScript(deltaTime, nullptr, shaderPair.second);
     }
 }

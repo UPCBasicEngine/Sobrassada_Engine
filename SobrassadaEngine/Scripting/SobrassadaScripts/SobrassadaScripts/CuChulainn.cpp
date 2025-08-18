@@ -275,7 +275,7 @@ bool CuChulainn::Init()
         if (shaderScript)
         {
             damageMask = shaderScript->GetScriptByType<DamageMask>();
-            damageMask->SetLife(currentHealth);
+            damageMask->SetLife(static_cast<float>(currentHealth));
         }
     }
     if (!damageMask) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
@@ -389,7 +389,11 @@ void CuChulainn::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
-    if (damageMask) damageMask->SetLife(currentHealth);
+    if (damageMask)
+    {
+        damageMask->SetLife(static_cast<float>(currentHealth));
+        damageMask->OnHit();
+    }
 
     if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
         state == CharacterStates::HEAL)
@@ -410,7 +414,7 @@ void CuChulainn::OnHealed(int amount)
 {
     // TODO: play CuChulainn recover sound
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
-    if (damageMask) damageMask->SetLife(currentHealth);
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 }
 
 void CuChulainn::HandleState(float deltaTime)
@@ -1169,6 +1173,7 @@ void CuChulainn::Respawn()
     state         = CharacterStates::RESPAWN;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");

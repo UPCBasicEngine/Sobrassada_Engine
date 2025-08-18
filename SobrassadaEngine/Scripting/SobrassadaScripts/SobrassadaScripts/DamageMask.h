@@ -17,10 +17,11 @@ class DamageMask : public Script
 
     void SetLife(float newLife)
     {
-        prevLife = nextLife;
-        nextLife = newLife;
+        prevLife  = nextLife;
+        nextLife  = newLife;
         startTime = time;
     }
+    void OnHit() { hitTimer = 0.2f; }
 
   private:
     unsigned int shaderProgram = 0;
@@ -36,6 +37,7 @@ class DamageMask : public Script
     float nextLife             = 3.0f;
     float prevLife             = 3.0f;
     float startTime            = 0.0f;
+    float hitTimer             = 0.0f;
 
     ImageComponent* imageComp  = nullptr;
 };
