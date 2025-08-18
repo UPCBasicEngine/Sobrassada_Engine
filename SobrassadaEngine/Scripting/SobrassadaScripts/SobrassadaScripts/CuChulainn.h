@@ -173,6 +173,7 @@ class CuChulainn : public Character
     std::string ultimateSmokeName       = "mesh_outer_smoke";
     std::string ultimateSphereName       = "mesh_sphere_glow";
     std::string ultimateWarningName       = "mesh_warning";
+    std::string ultimateSpikesName       = "spike";
     GameObject* ultimateObject         = nullptr;
     GameObject* ultimateGlow          = nullptr;
     GameObject* ultimateBlur          = nullptr;
@@ -183,6 +184,7 @@ class CuChulainn : public Character
     GameObject* ultimateSmoke         = nullptr;
     GameObject* ultimateSphere        = nullptr;
     GameObject* ultimateWarning       = nullptr;
+    GameObject* ultimateSpikes            = nullptr;
     bool desiredUltimate               = false;
     int ultimateDamage                 = 0;
     float ultimateTimer                = 0.0f;

@@ -12,6 +12,7 @@
 #include "MovingUVTransparent.h"
 #include "Projectile.h"
 #include "RaycastController.h"
+#include "ResourceAnimation.h"
 #include "ResourceMaterial.h"
 #include "ResourceStateMachine.h"
 #include "ResourcesModule.h"
@@ -330,6 +331,12 @@ bool CuChulainn::Init()
     );
     if (!ultimateWarning) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
     else ultimateWarning->SetEnabled(false);
+
+    ultimateSpikes = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSpikesName
+    );
+    if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateSpikes->SetEnabled(false);
 
     state = CharacterStates::IDLE;
 
@@ -1015,8 +1022,7 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
-                 attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -1045,19 +1051,35 @@ void CuChulainn::PerformAttack()
 
             UpdateUltimateVfx();
         }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
-                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+        else if (ultimateObject->IsEnabled())
         {
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
-        }
-        else if (ultimateObject->IsEnabled() &&
-                 ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
-        {
-            ultimateObject->SetEnabled(false);
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
-            ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
-            ultimateTimer = 0.f;
-            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            if (ultimateSpikes) //Control spikes animation appearance
+            {
+                AnimationComponent* ac = ultimateObject->GetComponent<AnimationComponent*>();
+                if (ac && ac->GetCurrentAnimation())
+                {
+                    const float dur  = ac->GetCurrentAnimation()->GetDuration();
+                    const float t    = ac->GetAnimationController()->GetTime();
+                    const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
+
+                    ultimateSpikes->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack1) ultimateCrack1->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack2) ultimateCrack2->SetEnabled(norm >= 0.15f);
+                }
+            }
+            if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
+                ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+            {
+                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
+            }
+            else if (ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+            {
+                ultimateObject->SetEnabled(false);
+                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+                ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+                ultimateTimer = 0.f;
+                if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            }
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
