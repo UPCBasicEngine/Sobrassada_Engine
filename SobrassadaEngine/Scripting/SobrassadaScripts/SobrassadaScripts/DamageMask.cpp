@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "pch.h"
 
 #include "DamageMask.h"
@@ -10,6 +11,7 @@
 #include "GBuffer.h"
 #include "GameObject.h"
 #include "GeometryBatch.h"
+#include "Interpolation.h"
 #include "Mesh.h"
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
@@ -19,11 +21,10 @@
 #include "ShaderModule.h"
 
 #include "glew.h"
+#include <algorithm>
 
 DamageMask::DamageMask(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Pulse Speed", InspectorField::FieldType::Float, &pulseSpeed, 0.0f, 100.0f});
-    fields.push_back({"Intensity", InspectorField::FieldType::Float, &intensity, 0.0f, 1.0f});
     fields.push_back({"Noise Tiling", InspectorField::FieldType::Float, &noiseTiling, 0.0f, 10.0f});
     fields.push_back({"Noise Speed", InspectorField::FieldType::Float, &noiseSpeed, 0.0f, 1.0f});
 }
@@ -38,7 +39,8 @@ bool DamageMask::Init()
 {
     // This init is being called twice
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
-        "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl", "./EngineDefaults/Shader/Custom/Fragment/UI_DamageMask.glsl"
+        "./EngineDefaults/Shader/Vertex/UIWidgetVertex.glsl",
+        "./EngineDefaults/Shader/Custom/Fragment/UI_DamageMask.glsl"
     );
 
     imageComp = parent->GetComponent<ImageComponent*>();
@@ -91,7 +93,12 @@ void DamageMask::Render(float deltaTime, CameraComponent* cameraComp)
 
     glUniform3fv(3, 1, imageComp->GetColor().ptr());
 
-    time += deltaTime;
+    const float elapsedTime  = std::min<float>(time - startTime, 1.0f);
+    const float playerLife   = Interpolation::Lerp<float>(prevLife, nextLife, elapsedTime);
+
+    time                    += deltaTime;
+    const float intensity    = std::max<float>(0.0f, 0.5f - (playerLife / 10.0f));
+    const float pulseSpeed   = std::max<float>(0.0f, 5.0f - nextLife) + 1.0f;
 
     glUniform1f(5, intensity);
     glUniform1f(6, pulseSpeed);

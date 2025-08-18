@@ -15,6 +15,13 @@ class DamageMask : public Script
     void Render(float deltaTime, CameraComponent* cameraComp) override;
     void Reset() override;
 
+    void SetLife(float newLife)
+    {
+        prevLife = nextLife;
+        nextLife = newLife;
+        startTime = time;
+    }
+
   private:
     unsigned int shaderProgram = 0;
 
@@ -23,10 +30,12 @@ class DamageMask : public Script
     unsigned int texture       = 0;
 
     float time                 = 0.0f;
-    float pulseSpeed           = 0.0f;
-    float intensity            = 0.0f;
     float noiseTiling          = 5.0f;
     float noiseSpeed           = 0.05f;
+
+    float nextLife             = 3.0f;
+    float prevLife             = 3.0f;
+    float startTime            = 0.0f;
 
     ImageComponent* imageComp  = nullptr;
 };
