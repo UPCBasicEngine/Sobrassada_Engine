@@ -64,6 +64,10 @@ class ResourceMaterial : public Resource
     const float GetVCoord1() const { return vCoord1; }
     const bool UseCentralPivot() const { return useCentralPivot; }
     const bool UseWindGravity() const { return useWindGravity; }
+    const float GetWindXAxis() const { return windXAxis; }
+    const float GetWindYAxis() const { return windYAxis; }
+    const float GetWindZAxis() const { return windZAxis; }
+    const float GetWindResistance() const { return windResistance; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
     int GetDiffuseWidth() const { return diffuseTexture.width; }
@@ -95,6 +99,10 @@ class ResourceMaterial : public Resource
     float vCoord1 = 1.0f;
     bool useCentralPivot = false;
     bool useWindGravity          = false;
+    float windXAxis = 1.0f;
+    float windYAxis = 1.0f;
+    float windZAxis = 1.0f;
+    float windResistance = 1.0f;
     UID defaultTextureUID = INVALID_UID;
 
     bool wasUpdated       = false;

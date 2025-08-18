@@ -140,11 +140,14 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
             if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
                 windConfig->GetApplyWindGlobally())
             {
-                const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+                Quat deltaWindDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+                if (it->UseCentralPivot())
+                    deltaWindDirection = deltaWindDirection * Quat(batchMeshes[0]->GetGlobalTransform().RotatePart().Transposed());
                 glUniform4f(
-                    glGetUniformLocation(program, "windDirection"), windDirection.x, windDirection.y, windDirection.z,
-                    windDirection.w
-                );
+                        glGetUniformLocation(program, "deltaWindDirection"), deltaWindDirection.x,
+                        deltaWindDirection.y, deltaWindDirection.z, deltaWindDirection.w
+                    );
+                
                 glUniform4f(
                     glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),
                     windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
@@ -153,9 +156,9 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                 glUniform4f(
                     glGetUniformLocation(program, "windUVParameters"), it->GetVCoord0(), it->GetVCoord1(),
                     it->UseCentralPivot(), it->UseWindGravity());
-                float vCoordLerp = std::max(std::min((0.1f - it->GetVCoord0()) / (it->GetVCoord1() - it->GetVCoord0()), 1.0f), 0.f);
-
-                GLOG("Coord: %f", vCoordLerp)
+                glUniform4f(
+                    glGetUniformLocation(program, "windCustomStrength"), it->GetWindXAxis(), it->GetWindYAxis(),
+                    it->GetWindZAxis(), it->GetWindResistance());
             }
         }
 
