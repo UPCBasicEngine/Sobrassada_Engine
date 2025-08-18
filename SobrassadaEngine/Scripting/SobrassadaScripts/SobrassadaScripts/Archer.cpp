@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 
 #include "Application.h"
 #include "Archer.h"
@@ -33,14 +33,15 @@ Archer::Archer(GameObject* parent)
 
 bool Archer::Init()
 {
-    // GLOG("Initiating Soldier");
-
     currentState = ArcherStates::PATROL;
-
     Character::Init();
 
     agentAI = parent->GetComponent<AIAgentComponent*>();
-    if (agentAI == nullptr) GLOG("AIAgent component not found for Archer")
+    if (agentAI == nullptr)
+    {
+        GLOG("AIAgent component not found for Archer");
+        return false;
+    }
     else
     {
         agentAI->RecreateAgent();
@@ -48,24 +49,18 @@ bool Archer::Init()
         speed = agentAI->GetSpeed();
     }
 
-    // Get the arrow. This assumes the archer has only one sibling, which is the arrow. If it has more probably will
-    // keep working as long as the arrow is the second gameObject
     const GameObject* root           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent());
     const std::vector<UID>& siblings = root->GetChildren();
-    GameObject* arrowObj             = nullptr;
-    for (UID objectUID : siblings)
-    {
-        if (objectUID != parent->GetUID())
-            arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
 
-          if (hasMultipleShoots)
+    
+    if (hasMultipleShoots)
+    {
+        for (UID objectUID : siblings)
         {
             GameObject* obj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
             if (obj != parent)
             {
                 std::string objName = obj->GetName();
-
-               
                 if (objName.find("Arrow_") != std::string::npos)
                 {
                     ScriptComponent* scriptComp = obj->GetComponent<ScriptComponent*>();
@@ -75,21 +70,33 @@ bool Archer::Init()
                         if (projectile)
                         {
                             arrowPool.push_back(projectile);
-                            obj->SetEnabledRecursive(false); 
+                            obj->SetEnabledRecursive(false);
                         }
                     }
                 }
             }
         }
+        GLOG("Arrow pool initialized with %d arrows", arrowPool.size());
     }
-
-    if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
+    else
     {
-        arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
-        if (!arrow) GLOG("[WARNING] No arrow found in archer");
-    }
+       
+        GameObject* arrowObj = nullptr;
+        for (UID objectUID : siblings)
+        {
+            if (objectUID != parent->GetUID())
+            {
+                arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
+                break; 
+            }
+        }
 
-  
+        if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
+        {
+            arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
+            if (!arrow) GLOG("[WARNING] No arrow found in archer");
+        }
+    }
 
     return true;
 }
