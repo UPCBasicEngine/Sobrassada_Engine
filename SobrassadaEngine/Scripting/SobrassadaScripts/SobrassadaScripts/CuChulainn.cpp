@@ -692,7 +692,7 @@ bool CuChulainn::CanUltimate() const
 
 bool CuChulainn::CanTakeMushroom() const
 {
-    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && state != CharacterStates::AIM &&
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL &&
            state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
