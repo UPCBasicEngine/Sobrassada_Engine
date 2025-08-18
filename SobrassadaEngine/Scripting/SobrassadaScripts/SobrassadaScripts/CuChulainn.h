@@ -206,8 +206,9 @@ class CuChulainn : public Character
     std::string riastradCrackName      = "mesh_crack";
     std::string riastradWaringName     = "mesh_warning";
     std::string riastradSmoke1Name     = "mesh_smoke_a";
-    std::string riastradSmoke2Name     = "mesh_smoke_a.001";
-    std::string riastradSmoke3Name     = "mesh_smoke_a.002";
+    std::string riastradSmoke2Name     = "mesh_smoke_b";
+    std::string riastradSmoke3Name     = "mesh_smoke_c";
+    std::string riastradStarsName      = "mesh_stars";
     GameObject* riastradVfx            = nullptr;
     GameObject* riastradBurst          = nullptr;
     GameObject* riastradBlur           = nullptr;
@@ -218,6 +219,7 @@ class CuChulainn : public Character
     GameObject* riastradSmoke1         = nullptr;
     GameObject* riastradSmoke2         = nullptr;
     GameObject* riastradSmoke3         = nullptr;
+    GameObject* riastradStars          = nullptr;
 
     float3 spawnPos                    = float3::zero;
     AudioSourceComponent* audio        = nullptr;
