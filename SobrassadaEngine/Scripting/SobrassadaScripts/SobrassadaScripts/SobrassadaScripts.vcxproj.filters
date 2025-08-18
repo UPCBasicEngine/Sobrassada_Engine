@@ -172,6 +172,9 @@
     <ClInclude Include="AbilityIconFill.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="DamageMask.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -877,6 +880,9 @@
       <Filter>ShaderScripts</Filter>
     </ClCompile>
     <ClCompile Include="AbilityIconFill.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="DamageMask.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
