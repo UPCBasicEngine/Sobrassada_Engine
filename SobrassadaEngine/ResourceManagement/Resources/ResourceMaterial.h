@@ -67,7 +67,6 @@ class ResourceMaterial : public Resource
     const float GetWindXAmplitude() const { return windXAmplitude; }
     const float GetWindYAmplitude() const { return windYAmplitude; }
     const float GetWindZAmplitude() const { return windZAmplitude; }
-    const float GetWindResistance() const { return windResistance; }
     const float GetWindXFrequency() const { return windXFrequency; }
     const float GetWindYFrequency() const { return windYFrequency; }
     const float GetWindZFrequency() const { return windZFrequency; }
@@ -106,7 +105,6 @@ class ResourceMaterial : public Resource
     float windXAmplitude = 1.0f;
     float windYAmplitude = 1.0f;
     float windZAmplitude = 1.0f;
-    float windResistance = 1.0f;
     float windXFrequency = 1.0f;
     float windYFrequency = 1.0f;
     float windZFrequency = 1.0f;

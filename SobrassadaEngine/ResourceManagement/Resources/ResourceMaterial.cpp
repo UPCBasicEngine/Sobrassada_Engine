@@ -43,7 +43,6 @@ void ResourceMaterial::OnEditorUpdate()
         updated |= ImGui::SliderFloat("X amplitude", &windXAmplitude, 0, 2);
         updated |= ImGui::SliderFloat("Y amplitude", &windYAmplitude, 0, 2);
         updated |= ImGui::SliderFloat("Z amplitude", &windZAmplitude, 0, 2);
-        updated |= ImGui::SliderFloat("Resistance", &windResistance, 0, 1);
         updated |= ImGui::SliderFloat("X frequency", &windXFrequency, 0, 5);
         updated |= ImGui::SliderFloat("Y frequency", &windYFrequency, 0, 5);
         updated |= ImGui::SliderFloat("Z frequency", &windZFrequency, 0, 5);
@@ -330,7 +329,6 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("windXAmplitude", windXAmplitude, allocator);
                 importOptions.AddMember("windYAmplitude", windYAmplitude, allocator);
                 importOptions.AddMember("windZAmplitude", windZAmplitude, allocator);
-                importOptions.AddMember("windResistance", windResistance, allocator);
                 importOptions.AddMember("windXFrequency", windXFrequency, allocator);
                 importOptions.AddMember("windYFrequency", windYFrequency, allocator);
                 importOptions.AddMember("windZFrequency", windZFrequency, allocator);
@@ -452,10 +450,6 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     if (importOptions.HasMember("windZAmplitude") && importOptions["windZAmplitude"].IsFloat())
         windZAmplitude = importOptions["windZAmplitude"].GetFloat();
     else windZAmplitude = 1.0f;
-
-    if (importOptions.HasMember("windResistance") && importOptions["windResistance"].IsFloat())
-        windResistance = importOptions["windResistance"].GetFloat();
-    else windResistance = 0.0f;
 
     if (importOptions.HasMember("windXFrequency") && importOptions["windXFrequency"].IsFloat())
         windXFrequency = importOptions["windXFrequency"].GetFloat();

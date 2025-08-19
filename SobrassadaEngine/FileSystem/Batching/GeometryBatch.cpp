@@ -5,9 +5,12 @@
 #include "Mesh.h"
 #include "ResourceMaterial.h"
 #include "ResourceMesh.h"
+#include "WindConfig.h"
 #include "Standalone/MeshComponent.h"
 
 #include "glew.h"
+
+#include <Math/Quat.h>
 #ifdef OPTICK
 #include "optick.h"
 #endif
@@ -39,7 +42,6 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     windXAmplitude = component->GetResourceMaterial()->GetWindXAmplitude();
     windYAmplitude = component->GetResourceMaterial()->GetWindYAmplitude();
     windZAmplitude = component->GetResourceMaterial()->GetWindZAmplitude();
-    windResistance = component->GetResourceMaterial()->GetWindResistance();
     windXFrequency = component->GetResourceMaterial()->GetWindXFrequency();
     windYFrequency = component->GetResourceMaterial()->GetWindYFrequency();
     windZFrequency = component->GetResourceMaterial()->GetWindZFrequency();
@@ -50,6 +52,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
     glGenBuffers(2, models);
+    glGenBuffers(2, deltaWindDirections);
     if (hasBones)
     {
         glGenBuffers(2, bones);
@@ -79,6 +82,7 @@ GeometryBatch::~GeometryBatch()
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
     glDeleteBuffers(2, models);
+    glDeleteBuffers(2, deltaWindDirections);
     glDeleteBuffers(2, bones);
     glDeleteBuffers(1, &bonesIndex);
     glDeleteBuffers(1, &materials);
@@ -99,6 +103,13 @@ void GeometryBatch::CleanUp()
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
             glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
             ptrModels[i] = nullptr;
+        }
+
+        if (ptrDeltaWindDirections[i])
+        {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, deltaWindDirections[i]);
+            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+            ptrDeltaWindDirections[i] = nullptr;
         }
 
         if (hasBones && ptrBones[i])
@@ -183,6 +194,8 @@ void GeometryBatch::LoadData()
     glBindVertexArray(0);
 
     modelsSize             = totalModels.size() * sizeof(float4x4);
+    deltaWindDirectionsSize             = totalModels.size() * sizeof(float4);
+    
     const GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
     for (int i = 0; i < 2; i++)
     {
@@ -196,7 +209,19 @@ void GeometryBatch::LoadData()
             GLOG("Error mapping ssbo model %d", i);
             return;
         }
+        
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, deltaWindDirections[i]);
 
+        glBufferStorage(GL_SHADER_STORAGE_BUFFER, deltaWindDirectionsSize, nullptr, flags);
+        ptrDeltaWindDirections[i] = (float4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
+            deltaWindDirectionsSize, flags);
+
+        if (ptrDeltaWindDirections[i] == nullptr)
+        {
+            GLOG("Error mapping delta wind directions %d", i);
+            return;
+        }
+        
         if (!hasBones) continue;
 
         bonesSize = accBonesCount * sizeof(float4x4);
@@ -362,6 +387,27 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentBuffer);
     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10, currentBuffer, 0, modelsSize);
+
+    if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig(); windConfig->GetApplyWindGlobally() && doApplyWind)
+    {
+        const GLuint nextWindBuffer    = deltaWindDirections[nextBufferIndex];
+        const GLuint currentWindBuffer = deltaWindDirections[currentBufferIndex];
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextWindBuffer);
+        
+        Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+        for (const MeshComponent* component : meshesToRender)
+        {
+            Quat deltaWindDirection = windDirection * Quat(component->GetCombinedMatrix().RotatePart().Transposed());
+            const std::size_t index           = componentsMap[component];
+            ptrDeltaWindDirections[nextBufferIndex][index] = float4(deltaWindDirection.x, deltaWindDirection.y,
+                deltaWindDirection.z, deltaWindDirection.w);
+        }
+        glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentWindBuffer);
+        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 14, currentWindBuffer, 0, deltaWindDirectionsSize);
+    }
 
     currentBufferIndex = nextBufferIndex;
 }

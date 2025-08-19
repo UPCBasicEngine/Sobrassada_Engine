@@ -140,14 +140,6 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
             if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
                 windConfig->GetApplyWindGlobally())
             {
-                Quat deltaWindDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
-                if (it->UseCentralPivot())
-                    deltaWindDirection = deltaWindDirection * Quat(batchMeshes[0]->GetGlobalTransform().RotatePart().Transposed());
-                glUniform4f(
-                        glGetUniformLocation(program, "deltaWindDirection"), deltaWindDirection.x,
-                        deltaWindDirection.y, deltaWindDirection.z, deltaWindDirection.w
-                    );
-                
                 glUniform4f(
                     glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),
                     windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
@@ -156,9 +148,9 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                 glUniform4f(
                     glGetUniformLocation(program, "windUVParameters"), it->GetVCoord0(), it->GetVCoord1(),
                     it->UseCentralPivot(), it->UseWindGravity());
-                glUniform4f(
+                glUniform3f(
                     glGetUniformLocation(program, "windAmplitudes"), it->GetWindXAmplitude(), it->GetWindYAmplitude(),
-                    it->GetWindZAmplitude(), it->GetWindResistance());
+                    it->GetWindZAmplitude());
                 glUniform4f(
                     glGetUniformLocation(program, "windFrequency"), it->GetWindXFrequency(),
                     it->GetWindYFrequency(), it->GetWindZFrequency(), it->GetWindTimeScale());

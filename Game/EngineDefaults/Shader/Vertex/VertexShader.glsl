@@ -11,14 +11,12 @@ layout(location=4) uniform bool hasBones;
 uniform mat4 viewLight;
 uniform mat4 projLight;
 
-// xyzw: quaternion for the wind direction
-uniform vec4 deltaWindDirection;
 // x: currentTime (set to 0 disables the wind), y: wind speed, z: gust frequency, y: gust speed
 uniform vec4 windParameters;
 // x: v0 (no movement border), y: v1 (full movement border), z: use central pivot, w: use gravity
 uniform vec4 windUVParameters;
-// x: axis amplitude, y: axis amplitude, z: axis amplitude, w: windResistance
-uniform vec4 windAmplitudes;
+// x: axis amplitude, y: axis amplitude, z: axis amplitude
+uniform vec3 windAmplitudes;
 // x: axis frequency, y: axis frequency, z: axis frequency, w: time scale
 uniform vec4 windFrequency;
 
@@ -38,6 +36,10 @@ readonly layout(std430, row_major, binding = 12) buffer Bones {
 
 readonly layout(std430, row_major, binding = 13) buffer AccBones {
     uint bonesIndex[];
+};
+
+readonly layout(std430, row_major, binding = 14) buffer DeltaWindDirections {
+    vec4 deltaWindDirections[];
 };
 
 out vec3 pos;
@@ -74,10 +76,10 @@ void main()
     }
     else
     {
-        // windDirection: xyzw: quaternion for the wind direction
     // windParameters: x: currentTime (set to 0 disables the wind), y: wind speed, z: gust frequency, y: gust speed
     // windUVParameters: x: v0 (no movement border), y: v1 (full movement border), z: use central pivot, w: use gravity
-    // windCustomStrength: x: axis affect, y: axis affect, z: axis affect, w: windResistance
+    // windAmplitudes: x: axis amplitude, y: axis amplitude, z: axis amplitude
+    // windFrequency: x: axis frequency, y: axis frequency, z: axis frequency, w: time scale
 
         pos = vertex_position;
 
@@ -85,13 +87,7 @@ void main()
         {
             float vCoordLerp = max(min(((1-uv0.y) - windUVParameters.x) / (windUVParameters.y - windUVParameters.x), 1), 0);
 
-            if (bool(windUVParameters.z))
-            {
-                vec3 tempLocal = cross(deltaWindDirection.xyz, pos) + deltaWindDirection.w * pos;
-                vec3 rotatedAroundPivot = pos + 2.0*cross(deltaWindDirection.xyz, tempLocal);
-
-                pos = rotatedAroundPivot;
-            }
+            vec4 deltaWindDirection = deltaWindDirections[instance_index];
 
             // Gravity pulling parts further from origin down
             if (bool(windUVParameters.w)) {
@@ -103,7 +99,7 @@ void main()
 
             float combinedWindSpeed = windParameters.y + (gustStrength * windParameters.w);
             float scaledTime = windParameters.x * 0.001 * (log(windParameters.y * 2) + 1) * windFrequency.w;
-            float scaledWindSpeed = combinedWindSpeed * (1 - windAmplitudes.w);
+            float scaledWindSpeed = combinedWindSpeed;
 
             float basicOffset = sin(pos.x + scaledTime + 1.0 - vCoordLerp) * vCoordLerp * scaledWindSpeed;
 
@@ -113,25 +109,21 @@ void main()
 
             vec3 offset = vec3(offsetX, offsetY, offsetZ);
 
-            vec3 temp = cross(deltaWindDirection.xyz, offset) + deltaWindDirection.w * offset;
-            vec3 rotated = offset + 2.0*cross(deltaWindDirection.xyz, temp);
+            if (bool(windUVParameters.z)) {
+                pos += offset;
 
-            pos = pos + rotated;
+                vec3 tempLocal = cross(deltaWindDirection.xyz, pos) + deltaWindDirection.w * pos;
+                vec3 rotatedAroundPivot = pos + 2.0*cross(deltaWindDirection.xyz, tempLocal);
+
+                pos = rotatedAroundPivot;
+
+            } else {
+                vec3 temp = cross(deltaWindDirection.xyz, offset) + deltaWindDirection.w * offset;
+                vec3 rotated = offset + 2.0*cross(deltaWindDirection.xyz, temp);
+
+                pos += rotated;
+            }
         }
-
-        /*if (bool(windParameters.x) && bool(windUVParameters.z)) {
-            // If wind is activated with wind rotations around the pivot ignore the model rotation
-            mat4 scalingMatrix = transpose(model) * model;
-
-            mat4 modelWithoutRotation;
-            modelWithoutRotation[3][0] = model[3][0];
-            modelWithoutRotation[3][1] = model[3][1];
-            modelWithoutRotation[3][2] = model[3][2];
-            modelWithoutRotation[0][0] = sqrt(scalingMatrix[0][0]);
-            modelWithoutRotation[1][1] = sqrt(scalingMatrix[1][1]);
-            modelWithoutRotation[2][2] = sqrt(scalingMatrix[2][2]);
-            model = modelWithoutRotation;
-        }*/
 
         pos = vec3(model * vec4(pos, 1.0));
     }
