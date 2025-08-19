@@ -28,10 +28,13 @@ class VideoComponent : public Component
     void RenderEditorInspector() override;
     void ParentUpdated() override;
 
+    void ClearVideo();
+    void SOBRASADA_API_ENGINE Play();
+    bool IsPlaying() const { return isPlaying; }
+
   private:
     bool InitVideo();
     bool UpdateFrame();
-    void Cleanup();
 
     AVFormatContext* formatCtx = nullptr;
     AVCodecContext* codecCtx   = nullptr;
@@ -53,4 +56,6 @@ class VideoComponent : public Component
     float timeSinceLastFrame = 0.0f;
 
     unsigned int VAO, VBO, EBO;
+
+    bool isPlaying = false;
 };

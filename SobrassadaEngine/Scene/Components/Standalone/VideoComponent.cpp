@@ -79,16 +79,7 @@ VideoComponent::VideoComponent(const rapidjson::Value& initialState, GameObject*
 
 VideoComponent::~VideoComponent()
 {
-    if (packet) av_packet_free(&packet);
-    if (frame) av_frame_free(&frame);
-    if (rgbFrame)
-    {
-        av_free(frameBuffer);
-        av_frame_free(&rgbFrame);
-    }
-    if (codecCtx) avcodec_free_context(&codecCtx);
-    if (formatCtx) avformat_close_input(&formatCtx);
-    if (swsCtx) sws_freeContext(swsCtx);
+    ClearVideo();
 
     if (videoTexture)
     {
@@ -136,6 +127,9 @@ void VideoComponent::Render(float deltaTime, CameraComponent* camera)
     const unsigned int program = App->GetShaderModule()->GetVideoProgram();
     glUseProgram(program);
 
+    GLint loc = glGetUniformLocation(program, "videoTexture");
+    glUniform1i(loc, 0);
+
     // Render
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -152,7 +146,7 @@ void VideoComponent::RenderEditorInspector()
 
     if (ImGui::Button("Play"))
     {
-        InitVideo();
+        Play();
     }
 }
 
@@ -211,11 +205,12 @@ bool VideoComponent::InitVideo()
     videoTexture->SetTextureID(texID);
 
     AVRational timeBase = formatCtx->streams[videoStreamIndex]->time_base;
-    frameDelay          = av_q2d(timeBase) * formatCtx->streams[videoStreamIndex]->avg_frame_rate.den;
+    //frameDelay          = av_q2d(timeBase) * formatCtx->streams[videoStreamIndex]->avg_frame_rate.den;
 
-    // frameDelay       = 1.0 / av_q2d(formatCtx->streams[videoStreamIndex]->avg_frame_rate);
+    frameDelay       = 1.0 / av_q2d(formatCtx->streams[videoStreamIndex]->avg_frame_rate);
 
     timeSinceLastFrame  = 0.0f;
+    isPlaying           = true;
 
     return true;
 }
@@ -247,5 +242,49 @@ bool VideoComponent::UpdateFrame()
         }
         av_packet_unref(packet);
     }
+    isPlaying = false;
     return false;
+}
+
+void VideoComponent::ClearVideo()
+{
+    if (packet) {
+        av_packet_free(&packet);
+        packet = nullptr;
+    }
+    if (frame) {
+        av_frame_free(&frame);
+        frame = nullptr;
+    }
+    if (rgbFrame) {
+        av_free(frameBuffer);
+        av_frame_free(&rgbFrame);
+        rgbFrame = nullptr;
+        frameBuffer = nullptr;
+    }
+    if (codecCtx) {
+        avcodec_free_context(&codecCtx);
+        codecCtx = nullptr;
+    }
+    if (formatCtx) {
+        avformat_close_input(&formatCtx);
+        formatCtx = nullptr;
+    }
+    if (swsCtx) {
+        sws_freeContext(swsCtx);
+        swsCtx = nullptr;
+    }
+
+    videoStreamIndex = -1;
+    isPlaying = false;
+    timeSinceLastFrame = 0.0f;
+}
+
+void VideoComponent::Play()
+{
+    if (formatCtx || codecCtx || frame || rgbFrame || packet || swsCtx) {
+        ClearVideo();
+    }
+
+    InitVideo();
 }
