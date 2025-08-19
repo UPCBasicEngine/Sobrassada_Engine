@@ -21,7 +21,7 @@ class DamageMask : public Script
         nextLife  = newLife;
         startTime = time;
     }
-    void OnHit() { hitTimer = 0.2f; }
+    void OnHit() { hitTimer = 0.3f; }
 
   private:
     unsigned int shaderProgram = 0;

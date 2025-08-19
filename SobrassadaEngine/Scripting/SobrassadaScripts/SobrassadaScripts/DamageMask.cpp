@@ -97,14 +97,14 @@ void DamageMask::Render(float deltaTime, CameraComponent* cameraComp)
     const float playerLife   = Interpolation::Lerp<float>(prevLife, nextLife, elapsedTime * 4.0f);
 
     time                    += deltaTime;
-    float intensity          = std::max<float>(0.0f, 0.5f - (playerLife / 10.0f));
-    const float pulseSpeed   = std::max<float>(0.0f, 5.0f - nextLife) + 1.0f;
+    float intensity          = std::max<float>(0.0f, 0.3f - (playerLife / 10.0f)) * 2.5f; // 2hp -> 2.5 | 1hp -> 5
+    const float pulseSpeed   = std::max<float>(0.0f, 3.0f - nextLife)  * 4.0f;
 
     if (hitTimer > 0.0f)
     {
-        const float t  = hitTimer > 0.1f ? 1.0f - ((hitTimer / 0.2f - 0.5f) * 2.0f) : hitTimer / 0.1f;
+        const float t  = hitTimer > 0.2f ? 1.0f - ((hitTimer / 0.3f - 0.75f) * 4.0f) : hitTimer / 0.1f;
         hitTimer      -= deltaTime;
-        intensity      = Interpolation::Lerp<float>(intensity, 0.6f, t);
+        intensity      = Interpolation::Lerp<float>(intensity, 0.6f, std::min<float>(1.0f, t));
     }
 
     glUniform1f(5, intensity);

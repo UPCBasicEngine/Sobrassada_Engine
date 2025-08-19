@@ -79,6 +79,7 @@ void ShaderScriptModule::ShaderScriptTypeChange(
         break;
     case ShaderScriptType::UI_PASS:
         originalVector = &uiComponents;
+        break;
     default:
         return;
         break;
@@ -186,6 +187,21 @@ void ShaderScriptModule::ComponentDeleted(ShaderScriptComponent* component)
     for (auto& iterator : iteratorsToRemove)
     {
         postEffectsComponents.erase(iterator);
+    }
+
+    iteratorsToRemove.clear();
+
+    for (auto iterator = uiComponents.begin(); iterator != uiComponents.end(); ++iterator)
+    {
+        if (iterator->first == component)
+        {
+            iteratorsToRemove.push_back(iterator);
+        }
+    }
+
+    for (auto& iterator : iteratorsToRemove)
+    {
+        uiComponents.erase(iterator);
     }
 
     iteratorsToRemove.clear();

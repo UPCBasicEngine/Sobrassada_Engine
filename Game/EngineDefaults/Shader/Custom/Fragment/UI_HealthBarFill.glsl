@@ -60,6 +60,5 @@ void main()
     else
     {
         discard;
-    }
-        
+    }        
 }
