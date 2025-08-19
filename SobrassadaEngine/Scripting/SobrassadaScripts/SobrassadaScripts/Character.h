@@ -69,8 +69,7 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
-    std::unordered_set<UID> collidingEnemyUIDs;
-    int enemiesCont = 0;
+    
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;

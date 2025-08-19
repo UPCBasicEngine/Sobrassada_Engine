@@ -184,7 +184,18 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
 
 void Character::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
 {
-    collidingEnemyUIDs.erase(otherObject->GetUID());
+    ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+    Character* enemyScript       = nullptr;
+    if (otherScript)
+    {
+        enemyScript = otherScript->GetScriptByType<Character>();
+    }
+
+    if (enemyScript)
+    {
+        playerScript->RemoveEnemy();
+        GLOG("Enemy out. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+    }
 }
 
 void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
@@ -199,12 +210,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal
 
     if (enemyScript)
     {
-        UID enemyUID        = otherObject->GetUID(); 
-        auto [it, inserted] = collidingEnemyUIDs.insert(enemyUID);
-        if (inserted)
-        {
-            GLOG("Enemy entered. Total unique enemies colliding: %zu", collidingEnemyUIDs.size());
-        }
+        playerScript->AddEnemy();
+        GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
     }
 }
 

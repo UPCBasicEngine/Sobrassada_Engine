@@ -292,12 +292,6 @@ void CuChulainn::HandleState(float deltaTime)
     }
 }
 
-void CuChulainn::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
-{
-
-     GLOG("Hola");
-
-}
 
 void CuChulainn::GetInputs()
 {
