@@ -105,6 +105,19 @@ void VideoComponent::Clone(const Component* other)
     if (other->GetType() == ComponentType::COMPONENT_VIDEO)
     {
         const VideoComponent* videoComponent = static_cast<const VideoComponent*>(other);
+
+        strncpy_s(videoName, sizeof(videoName), videoComponent->videoName, _TRUNCATE);
+        videoName[sizeof(videoName) - 1] = '\0';
+
+        if (videoTexture)
+        {
+            unsigned int texture = videoTexture->GetTextureID();
+            glDeleteTextures(1, &texture);
+            delete videoTexture;
+        }
+
+        UID videoTextureUID = GenerateUID();
+        videoTexture = new ResourceTexture(videoTextureUID, "VideoTexture");
     }
 }
 
@@ -147,6 +160,12 @@ void VideoComponent::RenderEditorInspector()
     if (ImGui::Button("Play"))
     {
         Play();
+    }
+
+    if (ImGui::Button("Stop"))
+    {
+        timeSinceLastFrame  = 0.0f;
+        isPlaying = false;
     }
 }
 
