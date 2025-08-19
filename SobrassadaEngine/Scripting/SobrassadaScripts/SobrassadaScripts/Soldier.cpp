@@ -169,6 +169,8 @@ void Soldier::HandleState(float deltaTime)
             currentState = SoldierStates::CHASE;  
         }
         break;
+    case SoldierStates::CHEERING:
+        break;
     default:
         GLOG("No state provided to Soldier");
         currentState = SoldierStates::PATROL;
@@ -411,3 +413,12 @@ const char* Soldier::ManageAttackAnimations()
 
     return attackTrigger;
 }
+
+void Soldier::SetOnWaiting()
+{
+    GLOG("Soldier %s is waiting", parent->GetName().c_str());
+    currentState = SoldierStates::CHEERING;
+    agentAI->SetSpeed(0.0f, 10.0f);
+    if (animComponent) animComponent->UseTrigger("idle");
+}
+

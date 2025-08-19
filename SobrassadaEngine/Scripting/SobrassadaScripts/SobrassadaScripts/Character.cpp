@@ -210,8 +210,16 @@ void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal
 
     if (enemyScript)
     {
-        playerScript->AddEnemy();
-        GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+        if (playerScript->GetEnemiesCount() >= 2)
+        {
+            SetOnWaiting();
+        }
+        else
+        {
+            playerScript->AddEnemy();
+            GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+        }
+        
     }
 }
 

@@ -13,7 +13,8 @@ enum class SoldierStates
     CHASE,
     BASIC_ATTACK,
     DEATH,
-    PLAYER_DETECTION
+    PLAYER_DETECTION,
+    CHEERING
 };
 
 class Soldier : public Character
@@ -31,6 +32,7 @@ class Soldier : public Character
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
+    void SetOnWaiting() override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
