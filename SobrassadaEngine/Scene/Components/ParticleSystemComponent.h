@@ -37,6 +37,8 @@ class ParticleSystemComponent : public Component
         particleSystemIterator = iterator;
     }
 
+    SOBRASADA_API_ENGINE void SpawnAllInstances();
+
   private:
     void CreateLocalAABB();
   private:

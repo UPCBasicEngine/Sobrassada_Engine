@@ -969,7 +969,8 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
             {
                 if (mesh->GetResourceMaterial() != nullptr && mesh->GetResourceMaterial()->DoApplyWind())
                     vertexOffsetMeshesToRender.push_back(mesh);

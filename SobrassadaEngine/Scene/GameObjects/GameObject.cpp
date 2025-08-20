@@ -758,7 +758,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
 
 void GameObject::UpdateTransformForGOBranch()
 {
-    if (!IsGloballyEnabled()) return;
+    //if (!IsGloballyEnabled()) return;
     App->GetSceneModule()->AddGameObjectToUpdateComponents(this);
     std::stack<UID> childrenBuffer;
     childrenBuffer.push(uid);
