@@ -3,6 +3,7 @@
 #include "Character.h"
 #include "GameObject.h"
 #include "Math/Quat.h"
+#include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Spouts.h"
@@ -24,20 +25,31 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
     fields.push_back(
         {"Rotation Speed Blue Waves", InspectorField::FieldType::Float, &rotationSpeedBlueWaves, 0.0f, 180.0f}
     );
+    fields.push_back({"Explosion Duration", InspectorField::FieldType::Float, &explosionDuration, 0.01f, 0.5f});
     fields.push_back({"Character", InspectorField::FieldType::GameObject, &character});
 }
 
 bool Spouts::Init()
 {
-    whiteWaves     = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
-    tornadoWater   = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[1]);
-    blueWaves      = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[2]);
-    explosion      = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
-    waterMesh      = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
-    damageCollider = parent->GetComponent<SphereColliderComponent*>();
+    whiteWaves           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
+    tornadoWater         = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[1]);
+    blueWaves            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[2]);
+    explosion            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
+    waterMesh            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
+    particleGO           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[5]);
 
-    shaderMesh     = waterMesh->GetComponent<MeshComponent*>();
-    shaderScript   = waterMesh->GetComponent<ShaderScriptComponent*>();
+    damageCollider       = parent->GetComponent<SphereColliderComponent*>();
+
+    shaderWaterMesh      = waterMesh->GetComponent<MeshComponent*>();
+    shaderScript         = waterMesh->GetComponent<ShaderScriptComponent*>();
+
+    shaderExplosionMesh  = explosion->GetComponent<MeshComponent*>();
+    explosionScript      = explosion->GetComponent<ShaderScriptComponent*>();
+
+    shaderwhiteWavesMesh = whiteWaves->GetComponent<MeshComponent*>();
+    whiteWavesScript     = whiteWaves->GetComponent<ShaderScriptComponent*>();
+
+    particles            = particleGO->GetComponent<ParticleSystemComponent*>();
 
     return true;
 }
@@ -88,9 +100,18 @@ void Spouts::Update(float deltaTime)
         float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
         waterMesh->SetEnabled(true);
         shaderScript->SetScriptEnabled("MovingUVTransparent", true);
-        shaderMesh->SetEnabled(false);
+        shaderWaterMesh->SetEnabled(false);
         whiteWaves->SetEnabled(true);
         blueWaves->SetEnabled(true);
+        explosion->SetEnabled(true);
+
+        explosionScript->SetScriptEnabled("MovingUVTransparent", true);
+        shaderExplosionMesh->SetEnabled(false);
+
+        whiteWavesScript->SetScriptEnabled("MovingUVTransparent", true);
+        shaderwhiteWavesMesh->SetEnabled(false);
+
+        particles->Init();
 
         // Tornado Water
         float3 translation, scale;
@@ -127,6 +148,7 @@ void Spouts::Update(float deltaTime)
 
         chargingTimer += deltaTime;
 
+        if (chargingTimer >= explosionDuration) explosion->SetEnabled(false);
         if (chargingTimer >= chargingDuration)
         {
             whiteWaves->SetEnabled(false);

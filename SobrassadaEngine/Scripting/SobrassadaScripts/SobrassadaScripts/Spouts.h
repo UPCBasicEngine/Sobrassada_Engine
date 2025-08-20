@@ -5,6 +5,7 @@
 class ShaderScriptComponent;
 class MeshComponent;
 class SphereColliderComponent;
+class ParticleSystemComponent;
 
 class Spouts : public Script
 {
@@ -33,6 +34,7 @@ class Spouts : public Script
     float initialScaleTornado               = 9.0f;
     float rotationSpeedTornado              = 90.0f;
     float rotationSpeedBlueWaves            = 90.0f;
+    float explosionDuration                 = 0.01f;
 
     GameObject* character                   = nullptr;
     GameObject* whiteWaves                  = nullptr;
@@ -40,9 +42,19 @@ class Spouts : public Script
     GameObject* blueWaves                   = nullptr;
     GameObject* explosion                   = nullptr;
     GameObject* waterMesh                   = nullptr;
+    GameObject* particleGO                  = nullptr;
+
+    ShaderScriptComponent* whiteWavesScript = nullptr;
+    MeshComponent* shaderwhiteWavesMesh     = nullptr;
+
     ShaderScriptComponent* shaderScript     = nullptr;
-    MeshComponent* shaderMesh               = nullptr;
+    MeshComponent* shaderWaterMesh          = nullptr;
+
+    ShaderScriptComponent* explosionScript  = nullptr;
+    MeshComponent* shaderExplosionMesh      = nullptr;
+
     SphereColliderComponent* damageCollider = nullptr;
+    ParticleSystemComponent* particles      = nullptr;
 
     ACTIVATION_STATE activationState        = SLEEPING;
 };
