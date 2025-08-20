@@ -18,9 +18,9 @@
 #include "Math/Quat.h"
 #include "Math/float3.h"
 #include "glew.h"
+#include <Math/MathFunc.h>
 #include <algorithm>
 #include <chrono>
-#include <Math/MathFunc.h>
 #ifdef OPTICK
 #include "optick.h"
 #endif
@@ -91,7 +91,7 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
-    
+
     for (GeometryBatch* it : opaqueBatches)
     {
         std::vector<MeshComponent*> batchMeshes;
@@ -135,8 +135,8 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         else glUniform1i(glGetUniformLocation(program, "isAlpha"), 0);
 
         if (it->IsDoubleSided()) glDisable(GL_CULL_FACE);
-        
-        //GLOG("%s", it->UseCentralPivot() ? "Pivot" : "No pivot")
+
+        // GLOG("%s", it->UseCentralPivot() ? "Pivot" : "No pivot")
         if (it->DoApplyWind())
         {
             if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
@@ -149,13 +149,16 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                 );
                 glUniform4f(
                     glGetUniformLocation(program, "windUVParameters"), it->GetVCoord0(), it->GetVCoord1(),
-                    it->UseCentralPivot(), it->UseWindGravity());
+                    it->UseCentralPivot(), it->UseWindGravity()
+                );
                 glUniform3f(
                     glGetUniformLocation(program, "windAmplitudes"), it->GetWindXAmplitude(), it->GetWindYAmplitude(),
-                    it->GetWindZAmplitude());
+                    it->GetWindZAmplitude()
+                );
                 glUniform4f(
-                    glGetUniformLocation(program, "windFrequency"), it->GetWindXFrequency(),
-                    it->GetWindYFrequency(), it->GetWindZFrequency(), it->GetWindTimeScale());
+                    glGetUniformLocation(program, "windFrequency"), it->GetWindXFrequency(), it->GetWindYFrequency(),
+                    it->GetWindZFrequency(), it->GetWindTimeScale()
+                );
             }
         }
 
@@ -348,10 +351,14 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
                 it->IsAlpha() == (component->GetRenderMode() == 2) &&
                 material->IsDoubleSided() == it->IsDoubleSided() && material->DoApplyWind() == it->DoApplyWind() &&
                 Equal(material->GetVCoord0(), it->GetVCoord0()) && Equal(material->GetVCoord1(), it->GetVCoord1()) &&
-                material->UseCentralPivot() == it->UseCentralPivot() && material->UseWindGravity() == it->UseWindGravity() &&
-                Equal(material->GetWindXAmplitude(), it->GetWindXAmplitude()) && Equal(material->GetWindYAmplitude(), it->GetWindYAmplitude()) &&
-                Equal(material->GetWindZAmplitude(), it->GetWindZAmplitude()) && Equal(material->GetWindXFrequency(), it->GetWindXFrequency()) &&
-                Equal(material->GetWindYFrequency(), it->GetWindYFrequency()) && Equal(material->GetWindZFrequency(), it->GetWindZFrequency()) &&
+                material->UseCentralPivot() == it->UseCentralPivot() &&
+                material->UseWindGravity() == it->UseWindGravity() &&
+                Equal(material->GetWindXAmplitude(), it->GetWindXAmplitude()) &&
+                Equal(material->GetWindYAmplitude(), it->GetWindYAmplitude()) &&
+                Equal(material->GetWindZAmplitude(), it->GetWindZAmplitude()) &&
+                Equal(material->GetWindXFrequency(), it->GetWindXFrequency()) &&
+                Equal(material->GetWindYFrequency(), it->GetWindYFrequency()) &&
+                Equal(material->GetWindZFrequency(), it->GetWindZFrequency()) &&
                 Equal(material->GetWindTimeScale(), it->GetWindTimeScale()))
             {
                 return it;

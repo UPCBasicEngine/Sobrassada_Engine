@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "Resource.h"
 #include "Globals.h"
+#include "Resource.h"
 
 #include "Math/float3.h"
 #include "Math/float4.h"
@@ -98,17 +98,17 @@ class ResourceMaterial : public Resource
     bool doubleSided      = false;
     bool hasNormal        = false;
     bool applyWind        = false;
-    float vCoord0 = 0.0f;
-    float vCoord1 = 1.0f;
-    bool useCentralPivot = false;
-    bool useWindGravity          = false;
-    float windXAmplitude = 1.0f;
-    float windYAmplitude = 1.0f;
-    float windZAmplitude = 1.0f;
-    float windXFrequency = 1.0f;
-    float windYFrequency = 1.0f;
-    float windZFrequency = 1.0f;
-    float windTimeScale = 1.0f;
+    float vCoord0         = 0.0f;
+    float vCoord1         = 1.0f;
+    bool useCentralPivot  = false;
+    bool useWindGravity   = false;
+    float windXAmplitude  = 1.0f;
+    float windYAmplitude  = 1.0f;
+    float windZAmplitude  = 1.0f;
+    float windXFrequency  = 1.0f;
+    float windYFrequency  = 1.0f;
+    float windZFrequency  = 1.0f;
+    float windTimeScale   = 1.0f;
     UID defaultTextureUID = INVALID_UID;
 
     bool wasUpdated       = false;

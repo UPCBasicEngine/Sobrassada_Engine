@@ -70,7 +70,6 @@ void ResourceMaterial::OnEditorUpdate()
         ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 10.f);
         ImGui::SliderFloat("Gust frequency (1/s)", &globalWindConfig->GetGustFrequencyRef(), .3f, 10.f);
         ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), 0.0f, 20.f);
-
     }
 
     if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
@@ -380,8 +379,6 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
 {
     // Prioitize updated values saved in meta. If they are missing, fall back on the ones in the original material
 
-
-
     if (importOptions.HasMember("defaultTextureUID") && importOptions["defaultTextureUID"].IsUint64())
         defaultTextureUID = importOptions["defaultTextureUID"].GetUint64();
     else defaultTextureUID = INVALID_UID;
@@ -633,6 +630,6 @@ void ResourceMaterial::FreeMaterials() const
 void ResourceMaterial::SetDiffColor(const float4& newColor)
 {
     material.diffColor = newColor;
-    //SaveToMeta();
+    // SaveToMeta();
     App->GetSceneModule()->GetScene()->UpdateAllMaterialInstances(uid);
 }

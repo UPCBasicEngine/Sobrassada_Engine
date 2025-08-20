@@ -3,9 +3,9 @@
 #include "Globals.h"
 
 #include "Math/float4x4.h"
+#include <Math/float2.h>
 #include <unordered_map>
 #include <vector>
-#include <Math/float2.h>
 
 class MeshComponent;
 class ResourceMesh;
@@ -75,24 +75,23 @@ class GeometryBatch
     std::unordered_map<const ResourceMesh*, std::size_t> uniqueMeshesMap;
     std::vector<AccMeshCount> uniqueMeshesCount;
 
-    bool updatedOnce           = false;
-    GLsync gSync[2]            = {nullptr, nullptr};
-    int currentBufferIndex     = 0;
+    bool updatedOnce                    = false;
+    GLsync gSync[2]                     = {nullptr, nullptr};
+    int currentBufferIndex              = 0;
 
-    GLuint models[2]           = {0, 0};
-    float4x4* ptrModels[2]     = {nullptr, nullptr};
-    std::size_t modelsSize     = 0;
+    GLuint models[2]                    = {0, 0};
+    float4x4* ptrModels[2]              = {nullptr, nullptr};
+    std::size_t modelsSize              = 0;
 
-    
-    GLuint deltaWindDirections[2]           = {0, 0};
-    float4* ptrDeltaWindDirections[2]     = {nullptr, nullptr};
-    std::size_t deltaWindDirectionsSize     = 0;
+    GLuint deltaWindDirections[2]       = {0, 0};
+    float4* ptrDeltaWindDirections[2]   = {nullptr, nullptr};
+    std::size_t deltaWindDirectionsSize = 0;
 
-    GLuint bones[2]            = {0, 0};
-    GLuint bonesIndex          = 0;
-    float4x4* ptrBones[2]      = {nullptr, nullptr};
-    std::size_t bonesSize      = 0;
-    std::size_t bonesIndexSize = 0;
+    GLuint bones[2]                     = {0, 0};
+    GLuint bonesIndex                   = 0;
+    float4x4* ptrBones[2]               = {nullptr, nullptr};
+    std::size_t bonesSize               = 0;
+    std::size_t bonesIndexSize          = 0;
     std::vector<unsigned int> bonesCount;
 
     unsigned int totalVertexCount = 0;
@@ -113,15 +112,15 @@ class GeometryBatch
     bool isAlpha                  = false;
     bool isDoubleSided            = false;
     bool doApplyWind              = false;
-    float vCoord0 = 0.0f;
-    float vCoord1 = 1.0f;
-    bool useCentralPivot = false;
-    bool useWindGravity          = false;
-    float windXAmplitude = 1.0f;
-    float windYAmplitude = 1.0f;
-    float windZAmplitude = 1.0f;
-    float windXFrequency = 1.0f;
-    float windYFrequency = 1.0f;
-    float windZFrequency = 1.0f;
-    float windTimeScale = 1.0f;
+    float vCoord0                 = 0.0f;
+    float vCoord1                 = 1.0f;
+    bool useCentralPivot          = false;
+    bool useWindGravity           = false;
+    float windXAmplitude          = 1.0f;
+    float windYAmplitude          = 1.0f;
+    float windZAmplitude          = 1.0f;
+    float windXFrequency          = 1.0f;
+    float windYFrequency          = 1.0f;
+    float windZFrequency          = 1.0f;
+    float windTimeScale           = 1.0f;
 };

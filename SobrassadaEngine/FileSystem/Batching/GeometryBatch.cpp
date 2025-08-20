@@ -5,8 +5,8 @@
 #include "Mesh.h"
 #include "ResourceMaterial.h"
 #include "ResourceMesh.h"
-#include "WindConfig.h"
 #include "Standalone/MeshComponent.h"
+#include "WindConfig.h"
 
 #include "glew.h"
 
@@ -27,26 +27,26 @@ struct Command
 GeometryBatch::GeometryBatch(const MeshComponent* component)
     : totalVertexCount(0), totalIndexCount(0), currentBufferIndex(0)
 {
-    mode           = component->GetResourceMesh()->GetMode();
-    isSpecular     = component->GetResourceMaterial()->GetIsSpecular();
-    isMetallic     = component->GetResourceMaterial()->GetIsMetallicRoughness();
-    hasBones       = component->GetHasBones();
-    isNavmeshValid = component->GetParent()->IsNavMeshValid();
-    isAlpha        = component->GetRenderMode() == 2;
-    isDoubleSided  = component->GetResourceMaterial()->IsDoubleSided();
-    doApplyWind    = component->GetResourceMaterial()->DoApplyWind();
-    vCoord0 = component->GetResourceMaterial()->GetVCoord0();
-    vCoord1= component->GetResourceMaterial()->GetVCoord1();
+    mode            = component->GetResourceMesh()->GetMode();
+    isSpecular      = component->GetResourceMaterial()->GetIsSpecular();
+    isMetallic      = component->GetResourceMaterial()->GetIsMetallicRoughness();
+    hasBones        = component->GetHasBones();
+    isNavmeshValid  = component->GetParent()->IsNavMeshValid();
+    isAlpha         = component->GetRenderMode() == 2;
+    isDoubleSided   = component->GetResourceMaterial()->IsDoubleSided();
+    doApplyWind     = component->GetResourceMaterial()->DoApplyWind();
+    vCoord0         = component->GetResourceMaterial()->GetVCoord0();
+    vCoord1         = component->GetResourceMaterial()->GetVCoord1();
     useCentralPivot = component->GetResourceMaterial()->UseCentralPivot();
-    useWindGravity = component->GetResourceMaterial()->UseWindGravity();
-    windXAmplitude = component->GetResourceMaterial()->GetWindXAmplitude();
-    windYAmplitude = component->GetResourceMaterial()->GetWindYAmplitude();
-    windZAmplitude = component->GetResourceMaterial()->GetWindZAmplitude();
-    windXFrequency = component->GetResourceMaterial()->GetWindXFrequency();
-    windYFrequency = component->GetResourceMaterial()->GetWindYFrequency();
-    windZFrequency = component->GetResourceMaterial()->GetWindZFrequency();
-    windTimeScale = component->GetResourceMaterial()->GetWindTimeScale();
-    
+    useWindGravity  = component->GetResourceMaterial()->UseWindGravity();
+    windXAmplitude  = component->GetResourceMaterial()->GetWindXAmplitude();
+    windYAmplitude  = component->GetResourceMaterial()->GetWindYAmplitude();
+    windZAmplitude  = component->GetResourceMaterial()->GetWindZAmplitude();
+    windXFrequency  = component->GetResourceMaterial()->GetWindXFrequency();
+    windYFrequency  = component->GetResourceMaterial()->GetWindYFrequency();
+    windZFrequency  = component->GetResourceMaterial()->GetWindZFrequency();
+    windTimeScale   = component->GetResourceMaterial()->GetWindTimeScale();
+
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);
@@ -193,10 +193,10 @@ void GeometryBatch::LoadData()
 
     glBindVertexArray(0);
 
-    modelsSize             = totalModels.size() * sizeof(float4x4);
-    deltaWindDirectionsSize             = totalModels.size() * sizeof(float4);
-    
-    const GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
+    modelsSize              = totalModels.size() * sizeof(float4x4);
+    deltaWindDirectionsSize = totalModels.size() * sizeof(float4);
+
+    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
     for (int i = 0; i < 2; i++)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
@@ -209,19 +209,19 @@ void GeometryBatch::LoadData()
             GLOG("Error mapping ssbo model %d", i);
             return;
         }
-        
+
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, deltaWindDirections[i]);
 
         glBufferStorage(GL_SHADER_STORAGE_BUFFER, deltaWindDirectionsSize, nullptr, flags);
-        ptrDeltaWindDirections[i] = (float4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
-            deltaWindDirectionsSize, flags);
+        ptrDeltaWindDirections[i] =
+            (float4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, deltaWindDirectionsSize, flags);
 
         if (ptrDeltaWindDirections[i] == nullptr)
         {
             GLOG("Error mapping delta wind directions %d", i);
             return;
         }
-        
+
         if (!hasBones) continue;
 
         bonesSize = accBonesCount * sizeof(float4x4);
@@ -388,20 +388,21 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentBuffer);
     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10, currentBuffer, 0, modelsSize);
 
-    if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig(); windConfig->GetApplyWindGlobally() && doApplyWind)
+    if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+        windConfig->GetApplyWindGlobally() && doApplyWind)
     {
         const GLuint nextWindBuffer    = deltaWindDirections[nextBufferIndex];
         const GLuint currentWindBuffer = deltaWindDirections[currentBufferIndex];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextWindBuffer);
-        
+
         Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
         for (const MeshComponent* component : meshesToRender)
         {
             Quat deltaWindDirection = windDirection * Quat(component->GetCombinedMatrix().RotatePart().Transposed());
-            const std::size_t index           = componentsMap[component];
-            ptrDeltaWindDirections[nextBufferIndex][index] = float4(deltaWindDirection.x, deltaWindDirection.y,
-                deltaWindDirection.z, deltaWindDirection.w);
+            const std::size_t index = componentsMap[component];
+            ptrDeltaWindDirections[nextBufferIndex][index] =
+                float4(deltaWindDirection.x, deltaWindDirection.y, deltaWindDirection.z, deltaWindDirection.w);
         }
         glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
