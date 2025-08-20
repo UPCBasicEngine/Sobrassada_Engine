@@ -18,7 +18,6 @@ MirageBossDash::MirageBossDash(GameObject* parent)
     : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
-    fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
 }
 
