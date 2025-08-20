@@ -49,57 +49,100 @@ bool Archer::Init()
         speed = agentAI->GetSpeed();
     }
 
+    GLOG("=== ARCHER INIT START ===");
+    GLOG("Archer: %s", parent->GetName().c_str());
+    GLOG("Static: %s, Multiple Shoots: %s", isStatic ? "YES" : "NO", hasMultipleShoots ? "YES" : "NO");
+
     const GameObject* root           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent());
     const std::vector<UID>& siblings = root->GetChildren();
 
-    
-    if (hasMultipleShoots)
+    GLOG("Parent: %s, Children: %d", root->GetName().c_str(), siblings.size());
+
+    // BUSCAR TODAS las flechas (tanto para single como multiple)
+    std::vector<GameObject*> allArrows;
+
+    for (UID objectUID : siblings)
     {
-        for (UID objectUID : siblings)
+        GameObject* obj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
+        if (obj != parent)
         {
-            GameObject* obj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
-            if (obj != parent)
+            std::string objName = obj->GetName();
+            if (objName.find("Arrow_") != std::string::npos)
             {
-                std::string objName = obj->GetName();
-                if (objName.find("Arrow_") != std::string::npos)
+                GLOG("Found arrow: %s", objName.c_str());
+
+                ScriptComponent* scriptComp = obj->GetComponent<ScriptComponent*>();
+                if (scriptComp)
                 {
-                    ScriptComponent* scriptComp = obj->GetComponent<ScriptComponent*>();
-                    if (scriptComp)
+                    Projectile* projectile = scriptComp->GetScriptByType<Projectile>();
+                    if (projectile)
                     {
-                        Projectile* projectile = scriptComp->GetScriptByType<Projectile>();
-                        if (projectile)
-                        {
-                            arrowPool.push_back(projectile);
-                            obj->SetEnabledRecursive(false);
-                        }
+                        allArrows.push_back(obj);
+                        arrowPool.push_back(projectile);
+
+                        GLOG("Arrow added to pool: %s (Total: %d)", objName.c_str(), arrowPool.size());
                     }
                 }
             }
         }
-        GLOG("Arrow pool initialized with %d arrows", arrowPool.size());
+    }
+
+    GLOG("Total arrows found: %d", allArrows.size());
+
+    // CONFIGURAR según el tipo de arquero
+    if (hasMultipleShoots)
+    {
+        GLOG("=== MULTIPLE SHOOTS ARCHER ===");
+        GLOG("Will use %d arrows for overshooting", numberOfShoots);
+
+        // Para múltiples disparos: DESACTIVAR TODAS las flechas inicialmente
+        for (GameObject* arrowObj : allArrows)
+        {
+            arrowObj->SetEnabledRecursive(false);
+            GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());
+        }
     }
     else
     {
-       
-        GameObject* arrowObj = nullptr;
-        for (UID objectUID : siblings)
+        GLOG("=== SINGLE SHOOT ARCHER ===");
+
+        // Para disparo único: usar la primera flecha, desactivar el resto
+        if (!allArrows.empty())
         {
-            if (objectUID != parent->GetUID())
+            // La primera flecha es para disparo único
+            GameObject* singleArrowObj = allArrows[0];
+            arrow                      = arrowPool[0];
+
+            GLOG("Single arrow assigned: %s", singleArrowObj->GetName().c_str());
+
+            // DESACTIVAR TODAS las flechas (incluyendo la del disparo único)
+            for (GameObject* arrowObj : allArrows)
             {
-                arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
-                break; 
+                arrowObj->SetEnabledRecursive(false);
+                GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());
             }
         }
-
-        if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
+        else
         {
-            arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
-            if (!arrow) GLOG("[WARNING] No arrow found in archer");
+            GLOG("[WARNING] No arrows found for single shoot archer");
         }
     }
 
+    // VERIFICAR ESTADO FINAL
+    GLOG("=== FINAL ARROW STATES ===");
+    for (int i = 0; i < arrowPool.size(); i++)
+    {
+        GameObject* arrowObj = arrowPool[i]->GetParent();
+        GLOG("Arrow[%d]: %s, Enabled: %s", i, arrowObj->GetName().c_str(), arrowObj->IsEnabled() ? "YES" : "NO");
+    }
+
+    GLOG("=== ARCHER INIT COMPLETE ===");
     return true;
-}
+ }
+
+ 
+
+
 
 void Archer::Update(float deltaTime)
 {
@@ -213,7 +256,7 @@ void Archer::PerformAttack()
 void Archer::OverShooting(float deltaTime)
 {
 
-    if (!weaponCollider) return;
+   if (!weaponCollider) return;
 
     if (!isAttacking)
     {
@@ -222,14 +265,16 @@ void Archer::OverShooting(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
 
-        // Reset machine gun variables
+      
         currentShot        = 0;
         shotTimer          = 0.0f;
         hasStartedShooting = false;
+        currentArrowIndex  = 0; 
+
+        GLOG("OVERSHOOTING STARTED - Pool: %d, Target: %d", arrowPool.size(), numberOfShoots);
     }
     else
     {
-
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
         if (!hasStartedShooting && attackTimer >= attackHitboxDelay)
@@ -247,29 +292,65 @@ void Archer::OverShooting(float deltaTime)
 
             if (shotTimer >= shotDelay)
             {
+                if (arrowPool.empty())
+                {
+                    GLOG("[ERROR] Arrow pool is empty!");
+                    isAttacking        = false;
+                    hasStartedShooting = false;
+                    ChangeState();
+                    return;
+                }
 
+               
                 float3 baseDirection = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
                 baseDirection.Normalize();
 
-                float spreadAngle     = 10.0f * (3.14159f / 180.0f);
-                float randomAngle     = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * spreadAngle;
+                float spreadAngle           = 10.0f * (3.14159f / 180.0f);
+                float randomAngle           = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * spreadAngle;
 
-                float3 shootDirection = baseDirection;
-                float cosA            = std::cos(randomAngle);
-                float sinA            = std::sin(randomAngle);
-                float x               = shootDirection.x * cosA - shootDirection.z * sinA;
-                float z               = shootDirection.x * sinA + shootDirection.z * cosA;
-                shootDirection.x      = x;
-                shootDirection.z      = z;
+                float3 shootDirection       = baseDirection;
+                float cosA                  = std::cos(randomAngle);
+                float sinA                  = std::sin(randomAngle);
+                float x                     = shootDirection.x * cosA - shootDirection.z * sinA;
+                float z                     = shootDirection.x * sinA + shootDirection.z * cosA;
+                shootDirection.x            = x;
+                shootDirection.z            = z;
 
-                if (!arrowPool.empty())
+                float3 arrowPos             = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
+
+                // Obtener la flecha actual
+                Projectile* currentArrow    = arrowPool[currentArrowIndex];
+                GameObject* arrowGameObject = currentArrow->GetParent();
+
+                GLOG(
+                    "FIRING ARROW %d - Index: %d, Arrow: %s", currentShot + 1, currentArrowIndex,
+                    arrowGameObject ? arrowGameObject->GetName().c_str() : "NULL"
+                );
+
+                if (arrowGameObject)
                 {
-                    Projectile* currentArrow = arrowPool[currentArrowIndex];
-                    currentArrow->Shoot(parent->GetPosition(), shootDirection);
-                    currentArrowIndex = (currentArrowIndex + 1) % arrowPool.size();
+                  
+                   
+                    arrowGameObject->SetEnabled(true);
+                    arrowGameObject->SetEnabledRecursive(true);
+
+                    bool isEnabled = arrowGameObject->IsEnabled();
+                    GLOG("Arrow activation result: %s", isEnabled ? "SUCCESS" : "FAILED");
+
+                    currentArrow->Shoot(arrowPos, shootDirection);
+                    GLOG("Arrow shot executed!");
                 }
-               
-                shotTimer = 0.0f;
+                else
+                {
+                    GLOG("[ERROR] Arrow GameObject is NULL!");
+                }
+
+             
+                currentShot++;
+                currentArrowIndex = (currentArrowIndex + 1) % arrowPool.size();
+                shotTimer         = 0.0f;
+
+                GLOG("Shot %d/%d COMPLETED - Next arrow index: %d", currentShot, numberOfShoots, currentArrowIndex);
             }
         }
 
@@ -278,7 +359,11 @@ void Archer::OverShooting(float deltaTime)
 
         if (allShotsFired || timeExpired)
         {
-            GLOG("OVERSHOOTING FINISHED - Machine gun sequence complete!");
+            GLOG(
+                "OVERSHOOTING FINISHED - Shots fired: %d/%d, Time expired: %s", currentShot, numberOfShoots,
+                timeExpired ? "YES" : "NO"
+            );
+
             hasShot            = false;
             isAttacking        = false;
             hasStartedShooting = false;
@@ -505,6 +590,8 @@ void Archer::Attack(float deltaTime)
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
+
+        GLOG("SINGLE ATTACK STARTED");
     }
     else
     {
@@ -512,14 +599,39 @@ void Archer::Attack(float deltaTime)
 
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
-            hasShot          = true;
+            hasShot = true;
+
+            if (!arrow)
+            {
+                GLOG("[ERROR] No arrow for single attack!");
+                return;
+            }
+
             float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
             direction.Normalize();
-            arrow->Shoot(parent->GetPosition(), direction);
+            float3 arrowPos      = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
+
+            // ACTIVAR la flecha ANTES de disparar (igual que en OverShooting)
+            GameObject* arrowObj = arrow->GetParent();
+            if (arrowObj)
+            {
+                GLOG("Single arrow before activation - Enabled: %s", arrowObj->IsEnabled() ? "YES" : "NO");
+
+                arrowObj->SetEnabled(true);
+                arrowObj->SetEnabledRecursive(true);
+
+                bool isEnabled = arrowObj->IsEnabled();
+                GLOG("Single arrow activation result: %s", isEnabled ? "SUCCESS" : "FAILED");
+            }
+
+            GLOG("SINGLE ARROW FIRING");
+            arrow->Shoot(arrowPos, direction);
+            GLOG("SINGLE ARROW SHOT COMPLETED");
         }
 
         if (attackTimer >= attackDuration)
         {
+            GLOG("SINGLE ATTACK FINISHED");
             hasShot       = false;
             isAttacking   = false;
             attackCdTimer = attackCooldown;

@@ -34,13 +34,13 @@ void Projectile::Update(float deltaTime)
 
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
-    // GLOG("Shoot to dir: %f %f %f", direction.x, direction.y, direction.z);
+   
     startPos        = origin;
     this->direction = direction;
     frames          = 0;
     parent->SetEnabledRecursive(true);
 
-    // Rotate spear object
+   
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
     const Quat rotation      = Quat::LookAt(float3::unitZ, direction, float3::unitY, float3::unitY);
     const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
