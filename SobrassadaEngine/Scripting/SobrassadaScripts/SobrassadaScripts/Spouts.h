@@ -27,7 +27,8 @@ class Spouts : public Script
     float activationRange                   = 10.0f;
     int damage                              = 1;
     float chargingDuration                  = 1.0f;
-    float chargingTimer                     = 0.0f;
+    float chargingTimer                     = 0.01f;
+    float spoutWaterTimer                   = 0.01f;
     float rotationSpeedWhiteWaves           = 90.0f;
     float minScaleTornado                   = 0.1f;
     float maxScaleTornado                   = 12.0f;
