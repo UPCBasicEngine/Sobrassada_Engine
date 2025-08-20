@@ -110,6 +110,7 @@ void Soldier::OnDeath()
     if (animComponent) animComponent->UseTrigger("death");
     agentAI->PauseMovement();
     currentState = SoldierStates::DEATH;
+    playerScript->RemoveEnemy();
 }
 
 void Soldier::OnDamageTaken(int amount)
@@ -170,6 +171,11 @@ void Soldier::HandleState(float deltaTime)
         }
         break;
     case SoldierStates::CHEERING:
+        if (playerScript->GetEnemiesCount() < 2)
+        {
+            agentAI->ResetSpeed();
+            ChangeState();
+        }
         break;
     default:
         GLOG("No state provided to Soldier");

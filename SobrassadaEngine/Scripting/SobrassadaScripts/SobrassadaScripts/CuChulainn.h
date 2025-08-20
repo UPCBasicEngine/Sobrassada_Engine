@@ -57,7 +57,7 @@ class CuChulainn : public Character
     void SetHealth(int health) { reservedHealth = health; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     void AddEnemy() { enemiesCont++; }
-    void RemoveEnemy() { enemiesCont--; }
+    void RemoveEnemy() { if(enemiesCont != 0) enemiesCont--; }
     
   private:
     void OnDeath() override;

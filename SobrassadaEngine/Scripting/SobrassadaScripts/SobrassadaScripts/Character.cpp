@@ -137,7 +137,8 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         // Special attack check
         CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
         if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
-            TakeDamage(playerScript->GetUltimateDamage());
+            
+            (playerScript->GetUltimateDamage());
     }
 
     if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
@@ -214,11 +215,10 @@ void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal
         {
             SetOnWaiting();
         }
-        else
-        {
-            playerScript->AddEnemy();
-            GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
-        }
+
+        playerScript->AddEnemy();
+        GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+
         
     }
 }
