@@ -245,7 +245,9 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
+
+        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr &&
+            mesh->GetRenderMode() != 1)
             meshesToRender.push_back(mesh);
     }
 
@@ -279,7 +281,7 @@ void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRend
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
+        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr)
         {
             if (gameObject->IsNavMeshValid()) navMeshesToRender.push_back(mesh);
             else nonNavMeshesToRender.push_back(mesh);
@@ -465,8 +467,8 @@ void RenderPass::ShadowMapPassRender(
     for (const auto& gameObject : shadowObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 &&
-            mesh->GetProduceShadows())
+        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr &&
+            mesh->GetRenderMode() != 1 && mesh->GetProduceShadows())
             meshesToRender.push_back(mesh);
     }
 
@@ -870,7 +872,8 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
             {
                 if (gameObject->IsNavMeshValid()) navmeshesToRender.push_back(mesh);
                 else nonnavmeshesToRender.push_back(mesh);
@@ -894,7 +897,8 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
             {
                 if (mesh->GetResourceMaterial() != nullptr && mesh->GetResourceMaterial()->DoApplyWind())
                     vertexOffsetMeshesToRender.push_back(mesh);

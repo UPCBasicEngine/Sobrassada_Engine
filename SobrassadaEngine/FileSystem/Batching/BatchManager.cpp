@@ -15,9 +15,9 @@
 #include "Standalone/MeshComponent.h"
 #include "WindConfig.h"
 
+#include "Math/Quat.h"
 #include "Math/float3.h"
 #include "glew.h"
-#include "Math/Quat.h"
 #include <algorithm>
 #include <chrono>
 #ifdef OPTICK
@@ -97,7 +97,7 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         for (MeshComponent* mesh : meshesToRender)
         {
             GameObject* owner = mesh->GetParent();
-            if (!owner || !owner->IsGloballyEnabled()) continue;
+            if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
             if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
         }
@@ -185,7 +185,7 @@ void BatchManager::RenderTransparent(
     for (MeshComponent* mesh : meshesToRender)
     {
         GameObject* owner = mesh->GetParent();
-        if (!owner || !owner->IsGloballyEnabled()) continue;
+        if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
         batchMeshes.push_back(mesh);
     }
@@ -282,7 +282,7 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
         for (MeshComponent* mesh : meshesToRender)
         {
             GameObject* owner = mesh->GetParent();
-            if (!owner || !owner->IsGloballyEnabled()) continue;
+            if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
             if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
         }

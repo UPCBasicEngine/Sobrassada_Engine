@@ -51,6 +51,7 @@ class SOBRASADA_API_ENGINE Scene
     void OverridePrefabs(UID prefabUID);
 
     update_status Update(float deltaTime);
+    update_status PostUpdate(float deltaTime);
     update_status Render(float deltaTime);
     update_status RenderEditor(float deltaTime);
 
@@ -146,6 +147,9 @@ class SOBRASADA_API_ENGINE Scene
 
     void UpdateAllMaterialInstances(const UID materialUID);
 
+    void QueueGameObjectDelete(UID uid);
+    void FlushPendingDeletes();
+
     bool isSceneLoaded = false;
 
   private:
@@ -199,4 +203,6 @@ class SOBRASADA_API_ENGINE Scene
     std::map<HashString, std::vector<GameObject*>> tags;
 
     RenderPass* renderPass = nullptr;
+
+     std::vector<UID> pendingDeletes;
 };

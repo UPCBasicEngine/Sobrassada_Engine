@@ -61,6 +61,8 @@ class CuChulainn : public Character
     void OnEnemyHit();
     void OnEnemyDefeated();
 
+    void ActivateAbility(std::string& abilityName);
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -122,6 +124,7 @@ class CuChulainn : public Character
     float dashTimer                    = 0.0f;
     bool desiredDash                   = false;
     float dashBufferTimer              = 0.0f;
+    bool dashUnlocked = false;
 
     // Basic attack
     std::string meleeVfxName           = "SpearVFX";
@@ -170,6 +173,7 @@ class CuChulainn : public Character
     float ultimateHitboxDelay          = 0.0f;
     float ultimateHitboxDuration       = 0.0f;
     float ultimateAnimationDelay       = 0.0f;
+    bool ultimateUnlocked              = false;
 
     // Riastrad
     GameObject* riastradBar            = nullptr;
@@ -201,7 +205,7 @@ class CuChulainn : public Character
     GameObject* riastradBlur           = nullptr;
     GameObject* riastradHalo           = nullptr;
     GameObject* riastradSphere         = nullptr;
-    GameObject* riastradCrack         = nullptr;
+    GameObject* riastradCrack          = nullptr;
     GameObject* riastradWaring         = nullptr;
     GameObject* riastradSmoke1         = nullptr;
     GameObject* riastradSmoke2         = nullptr;
@@ -239,9 +243,11 @@ class CuChulainn : public Character
 
     // Heal
     bool isHealing                         = false;
-    std::string healVisualName             = "";
-    GameObject* healVisual                 = nullptr;
+    std::string healVfxName                = "HealVfx";
+    std::string healParticlesName          = "HealParticles";
     std::string healKnockbackName          = "Heal Knockback";
+    GameObject* healVfx                    = nullptr;
+    GameObject* healParticles              = nullptr;
     GameObject* healKnockback              = nullptr;
     float healTimer                        = 0.0f;
     float healKnockbackDelay               = 0.0f;

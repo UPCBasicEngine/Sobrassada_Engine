@@ -31,6 +31,9 @@
     <Filter Include="ShaderScripts">
       <UniqueIdentifier>{d1d723a4-b324-40db-b30d-8664c18d659a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ShaderScripts\HealVFX">
+      <UniqueIdentifier>{065672c1-b0b3-42a7-a7a2-a6db5e08f08a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Characters\Boss">
       <UniqueIdentifier>{93f0e42b-2afb-4e4c-8428-f3482a97d73c}</UniqueIdentifier>
     </Filter>
@@ -159,6 +162,12 @@
     </ClInclude>
     <ClInclude Include="Destructible.h">
       <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="HealVFXGround.h">
+      <Filter>ShaderScripts\HealVFX</Filter>
+    </ClInclude>
+    <ClInclude Include="MiniFireball.h">
+      <Filter>Environment\Traps</Filter>
     </ClInclude>
     <ClInclude Include="BossMirage.h">
       <Filter>Characters\Boss</Filter>
@@ -866,6 +875,12 @@
     </ClCompile>
     <ClCompile Include="SwitchScriptTest.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="HealVFXGround.cpp">
+      <Filter>ShaderScripts\HealVFX</Filter>
+    </ClCompile>
+    <ClCompile Include="MiniFireball.cpp">
+      <Filter>Environment\Traps</Filter>
     </ClCompile>
     <ClCompile Include="BossMirage.cpp">
       <Filter>Characters\Boss</Filter>

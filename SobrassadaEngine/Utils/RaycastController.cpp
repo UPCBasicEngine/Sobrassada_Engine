@@ -47,6 +47,7 @@ namespace RaycastController
             if (meshComponent != nullptr)
             {
                 const ResourceMesh* resourceMesh = meshComponent->GetResourceMesh();
+                if (!resourceMesh) continue;  
 
                 float4x4 globalTransform         = meshComponent->GetCombinedMatrix();
                 globalTransform.Inverse();
@@ -54,25 +55,30 @@ namespace RaycastController
 
                 const std::vector<unsigned int>& indices = resourceMesh->GetIndices();
                 const std::vector<Vertex>& vertices      = resourceMesh->GetLocalVertices();
+                if (indices.size() < 3 || vertices.empty())
+                    continue;
 
-                for (int vertexIndex = 2; vertexIndex < indices.size(); vertexIndex += 3)
+                for (size_t i = 2; i < indices.size(); i += 3) 
                 {
-                    float3 firstVertex  = vertices[indices[vertexIndex - 2]].position;
-                    float3 secondVertex = vertices[indices[vertexIndex - 1]].position;
-                    float3 thirdVertex  = vertices[indices[vertexIndex]].position;
+                    unsigned int indexA = indices[i - 2];
+                    unsigned int indexB = indices[i - 1];
+                    unsigned int indexC = indices[i];
+
+                    if (indexA >= vertices.size() || indexB >= vertices.size() || indexC >= vertices.size())
+                        continue; 
+
+                    const float3& firstVertex  = vertices[indexA].position;
+                    const float3& secondVertex = vertices[indexB].position;
+                    const float3& thirdVertex  = vertices[indexC].position;
 
                     Triangle currentTriangle(firstVertex, secondVertex, thirdVertex);
 
                     float distance = std::numeric_limits<float>::infinity();
                     float3 hitPoint;
-
-                    if (localRay.Intersects(currentTriangle, &distance, &hitPoint))
+                    if (localRay.Intersects(currentTriangle, &distance, &hitPoint) && distance < closestDistance)
                     {
-                        if (distance < closestDistance)
-                        {
-                            closestDistance    = distance;
-                            selectedGameObject = gameObject;
-                        }
+                        closestDistance    = distance;
+                        selectedGameObject = gameObject;
                     }
                 }
             }

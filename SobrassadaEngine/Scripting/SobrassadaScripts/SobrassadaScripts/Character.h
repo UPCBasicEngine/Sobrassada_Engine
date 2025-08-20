@@ -25,6 +25,7 @@ enum class CharacterType
     Archer,
     Banshee,
     Destructible,
+    Changeling,
     Boss
 };
 

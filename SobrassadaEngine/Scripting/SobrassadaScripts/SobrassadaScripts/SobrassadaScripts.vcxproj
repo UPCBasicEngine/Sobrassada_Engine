@@ -483,7 +483,9 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
+    <ClInclude Include="HealVFXGround.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
+    <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="Mirage.h" />
     <ClInclude Include="MirageBossDash.h" />
     <ClInclude Include="MoveGOInSpline.h" />
@@ -2058,7 +2060,9 @@
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
+    <ClCompile Include="HealVFXGround.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
+    <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="Mirage.cpp" />
     <ClCompile Include="MirageBossDash.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
