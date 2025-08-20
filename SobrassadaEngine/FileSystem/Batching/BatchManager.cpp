@@ -20,6 +20,7 @@
 #include "glew.h"
 #include <algorithm>
 #include <chrono>
+#include <Math/MathFunc.h>
 #ifdef OPTICK
 #include "optick.h"
 #endif
@@ -90,7 +91,7 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
-
+    
     for (GeometryBatch* it : opaqueBatches)
     {
         std::vector<MeshComponent*> batchMeshes;
@@ -134,7 +135,8 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         else glUniform1i(glGetUniformLocation(program, "isAlpha"), 0);
 
         if (it->IsDoubleSided()) glDisable(GL_CULL_FACE);
-
+        
+        //GLOG("%s", it->UseCentralPivot() ? "Pivot" : "No pivot")
         if (it->DoApplyWind())
         {
             if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
@@ -344,7 +346,13 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
                 it->GetHasBones() == component->GetHasBones() &&
                 it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid() &&
                 it->IsAlpha() == (component->GetRenderMode() == 2) &&
-                material->IsDoubleSided() == it->IsDoubleSided() && material->DoApplyWind() == it->DoApplyWind())
+                material->IsDoubleSided() == it->IsDoubleSided() && material->DoApplyWind() == it->DoApplyWind() &&
+                Equal(material->GetVCoord0(), it->GetVCoord0()) && Equal(material->GetVCoord1(), it->GetVCoord1()) &&
+                material->UseCentralPivot() == it->UseCentralPivot() && material->UseWindGravity() == it->UseWindGravity() &&
+                Equal(material->GetWindXAmplitude(), it->GetWindXAmplitude()) && Equal(material->GetWindYAmplitude(), it->GetWindYAmplitude()) &&
+                Equal(material->GetWindZAmplitude(), it->GetWindZAmplitude()) && Equal(material->GetWindXFrequency(), it->GetWindXFrequency()) &&
+                Equal(material->GetWindYFrequency(), it->GetWindYFrequency()) && Equal(material->GetWindZFrequency(), it->GetWindZFrequency()) &&
+                Equal(material->GetWindTimeScale(), it->GetWindTimeScale()))
             {
                 return it;
             }
