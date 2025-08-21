@@ -10,7 +10,6 @@
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
 #include "Standalone/AIAgentComponent.h"
-#include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
@@ -21,7 +20,10 @@
 Changeling::Changeling(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Changeling)
 {
-    fields.emplace_back("Dash trail mesh", InspectorField::FieldType::InputText, &dashTrailMeshName);
+    fields.emplace_back("Dash trail object", InspectorField::FieldType::InputText, &dashTrailObjectName);
+    fields.emplace_back("Dash trail start mesh", InspectorField::FieldType::InputText, &dashTrailStartMeshName);
+    fields.emplace_back("Dash trail mid mesh", InspectorField::FieldType::InputText, &dashTrailMidMeshName);
+    fields.emplace_back("Dash trail end mesh", InspectorField::FieldType::InputText, &dashTrailEndMeshName);
     fields.emplace_back("Dash trail collision", InspectorField::FieldType::InputText, &dashTrailCollisionName);
 
     fields.emplace_back(
@@ -92,7 +94,7 @@ bool Changeling::Init()
     speed = agentAI->GetSpeed();
 
     for (auto dashTrailMeshObject : dashTrailMeshObjects)
-        dashTrailMeshObject->SetEnabled(false);
+        dashTrailMeshObject.dashTrailObject->SetEnabled(false);
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
         dashTrailColliderObject->SetEnabled(false);
 
@@ -399,7 +401,7 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         Character::Attack(deltaTime);
 
         weaponCollider->SetEnabled(true);
-        dashTrailMeshObjects[0]->SetEnabled(true);
+        dashTrailMeshObjects[0].dashTrailObject->SetEnabled(true);
         dashTrailColliderObjects[0]->SetEnabled(true);
         dashIndex = 0;
         if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
@@ -435,10 +437,18 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
     {
         const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * (distanceFromDashStart / 2.f)) -
                                        parentGO->GetGlobalTransform().TranslatePart();
-        const Quat lerpRotation = Quat(dashStart.RotatePart());
+        const Quat lerpRotation = Quat(dashStart.RotatePart()) * Quat::FromEulerXYZ(0, PI / 2.f, 0);
 
-        dashTrailMeshObjects[dashIndex]->SetLocalTransform(
-            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, .4f, distanceFromDashStart))
+        dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(
+        float4x4::FromTRS((dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
+                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation, float3(1, 1, 1))
+        );
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
+            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(distanceFromDashStart, 1, 1))
+        );
+        dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(
+            float4x4::FromTRS(dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
+                lerpRotation, float3(1, 1, 1))
         );
         dashTrailColliderObjects[dashIndex]->SetLocalTransform(
             float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, 1))
@@ -458,7 +468,7 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
         agentAI->ResetSpeed();
         agentAI->SetSpeed(dashSpeed, 1000000);
         agentAI->SetPathNavigation(dashTarget);
-        dashTrailMeshObjects[dashIndex]->SetEnabled(true);
+        dashTrailMeshObjects[dashIndex].dashTrailObject->SetEnabled(true);
         dashTrailColliderObjects[dashIndex]->SetEnabled(true);
 
         animComponent->UseTrigger("Trigger_Dash");
@@ -476,7 +486,7 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
     if (stateTimer < 0.f)
     {
         for (auto dashTrailMeshObject : dashTrailMeshObjects)
-            dashTrailMeshObject->SetEnabled(false);
+            dashTrailMeshObject.dashTrailObject->SetEnabled(false);
 
         for (auto dashTrailColliderObject : dashTrailColliderObjects)
             dashTrailColliderObject->SetEnabled(false);
@@ -522,10 +532,18 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
     {
         const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * (distanceFromDashStart / 2.f)) -
                                        parentGO->GetGlobalTransform().TranslatePart();
-        const Quat lerpRotation = Quat(dashStart.RotatePart());
+        const Quat lerpRotation = Quat(dashStart.RotatePart()) * Quat::FromEulerXYZ(0, 90, 0);
 
-        dashTrailMeshObjects[dashIndex]->SetLocalTransform(
-            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, .4f, distanceFromDashStart))
+        dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(
+        float4x4::FromTRS((dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
+                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation, float3(1, 1, 1))
+        );
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
+            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, distanceFromDashStart))
+        );
+        dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(
+            float4x4::FromTRS(dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
+                lerpRotation, float3(1, 1, 1))
         );
         dashTrailColliderObjects[dashIndex]->SetLocalTransform(
             float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, 1))
@@ -635,7 +653,7 @@ bool Changeling::ST_Damaged()
     agentAI->SetSpeed(0, 10);
 
     for (auto dashTrailMeshObject : dashTrailMeshObjects)
-        dashTrailMeshObject->SetEnabled(false);
+        dashTrailMeshObject.dashTrailObject->SetEnabled(false);
 
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
         dashTrailColliderObject->SetEnabled(false);
@@ -797,9 +815,51 @@ void Changeling::ValidateSetup()
             return;
         }
 
-        if (child->GetName() == dashTrailMeshName)
+        if (child->GetName() == dashTrailObjectName)
         {
-            dashTrailMeshObjects.emplace_back(child);
+            ChangelingDashTrailContainer container = ChangelingDashTrailContainer();
+            container.dashTrailObject = child;
+
+            for (const UID dashTrailChildUID : child->GetChildren())
+            {
+                GameObject* dashTrailChild = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(dashTrailChildUID);
+                if (dashTrailChild == nullptr)
+                {
+                    isSetupCorrectly = false;
+                    GLOG("[ERROR] Dash trail game object is nullptr")
+                    return;
+                }
+
+                if (dashTrailChild->GetName() == dashTrailStartMeshName)
+                    container.dashTrailStartChildMeshObject = dashTrailChild;
+                else if (dashTrailChild->GetName() == dashTrailMidMeshName)
+                    container.dashTrailMidChildMeshObject = dashTrailChild;
+                else if (dashTrailChild->GetName() == dashTrailEndMeshName)
+                    container.dashTrailEndChildMeshObject = dashTrailChild;
+            }
+
+            if (container.dashTrailStartChildMeshObject == nullptr)
+            {
+                isSetupCorrectly = false;
+                GLOG("[ERROR] Dash trail start child game object is nullptr")
+                return;
+            }
+
+            if (container.dashTrailMidChildMeshObject == nullptr)
+            {
+                isSetupCorrectly = false;
+                GLOG("[ERROR] Dash trail mid child game object is nullptr")
+                return;
+            }
+
+            if (container.dashTrailEndChildMeshObject == nullptr)
+            {
+                isSetupCorrectly = false;
+                GLOG("[ERROR] Dash trail end child game object is nullptr")
+                return;
+            }
+            
+            dashTrailMeshObjects.emplace_back(container);
         }
         else if (child->GetName() == dashTrailCollisionName)
         {

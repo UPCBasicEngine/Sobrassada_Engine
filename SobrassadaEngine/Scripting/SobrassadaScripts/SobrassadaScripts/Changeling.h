@@ -16,6 +16,14 @@ enum class ChangelingVersions
     BLOCK,
 };
 
+struct ChangelingDashTrailContainer
+{
+    GameObject* dashTrailObject = nullptr;
+    GameObject* dashTrailMidChildMeshObject = nullptr;
+    GameObject* dashTrailStartChildMeshObject = nullptr;
+    GameObject* dashTrailEndChildMeshObject = nullptr;
+};
+
 enum class ChangelingStates
 {
     NONE                    = 0,
@@ -104,10 +112,13 @@ class Changeling : public Character
     float dashSpeed               = 15.0f;
     float minDashDistance         = 1;
 
-    std::string dashTrailMeshName;
+    std::string dashTrailObjectName = "DashTrailObject";
+    std::string dashTrailStartMeshName = "DashTrailStartMesh";
+    std::string dashTrailMidMeshName = "DashTrailMidMesh";
+    std::string dashTrailEndMeshName = "DashTrailEndMesh";
     std::string dashTrailCollisionName;
 
-    std::vector<GameObject*> dashTrailMeshObjects;
+    std::vector<ChangelingDashTrailContainer> dashTrailMeshObjects;
     std::vector<GameObject*> dashTrailColliderObjects;
     std::vector<CubeColliderComponent*> dashAreaColliders;
 
