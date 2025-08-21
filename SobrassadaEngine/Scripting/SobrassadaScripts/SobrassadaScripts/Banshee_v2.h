@@ -21,10 +21,11 @@ enum class Banshee_v2_States : int
     Hit,
     Dead,
     TeleportOrigin,
+    SlowArea,
 };
 
-constexpr const char* Banshee_v2_StateStrings[] = {"Idle", "Search", "Chase",         "Attack",
-                                                   "Hit",  "Dead",   "TeleportOrigin"};
+constexpr const char* Banshee_v2_StateStrings[] = {"Idle", "Search", "Chase",          "Attack",
+                                                   "Hit",  "Dead",   "TeleportOrigin", "SlowArea"};
 
 class Banshee_v2 : public Character
 {
@@ -36,6 +37,9 @@ class Banshee_v2 : public Character
     void Update(float deltaTime) override;
 
     void OnPlayerExitLocation() override;
+
+    Banshee_v2_States GetState() const { return currentState; }
+    int GetSlowAreaDamage() const { return slowAreaDamage; }
 
   private:
     void OnDeath() override;
@@ -51,6 +55,7 @@ class Banshee_v2 : public Character
     void GoToAttackPosition();
     void TeleportToOrigin();
     void HandleDeath();
+    void SlowArea(float deltaTime);
 
   private:
     float2 invisibleTimeRange      = float2::zero;
@@ -78,9 +83,16 @@ class Banshee_v2 : public Character
     AnimationComponent* shoutStartAnim = nullptr;
     AnimationComponent* shoutBaseAnim  = nullptr;
 
+    GameObject* slowAreaGO             = nullptr;
+    GameObject* slowAreaWarningGO      = nullptr;
+    int slowAreaDamage                 = 1;
+    float slowAreaWaringDuration       = 1.f;
+    float elapsedSlowAreaWaring        = 0.f;
+    float slowAreaWaringMaxScale       = 5.f;
+
     std::vector<ShaderScriptComponent*> shoutStartShaderComponents;
     std::vector<ShaderScriptComponent*> shoutBaseShaderComponents;
-    
+
     std::vector<MeshComponent*> shoutStartMeshComponents;
     std::vector<MeshComponent*> shoutBaseMeshComponents;
 };

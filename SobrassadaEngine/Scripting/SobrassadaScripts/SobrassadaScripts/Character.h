@@ -46,6 +46,8 @@ class Character : public Script
     void Restart();
     bool IsDead() const { return isDead; };
 
+    CharacterType GetCharacterType() const { return type; }
+
   protected:
     virtual void Attack(float deltaTime);
     virtual void UpdateTimers(float deltaTime);
