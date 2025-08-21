@@ -401,8 +401,13 @@ void Banshee_v2::ChasePlayer()
     if (animComponent) animComponent->UseTrigger("Chase");
     // if (animComponent && animComponent->GetCurrentStateName() != HashString("Idle"))
     // animComponent->UseTrigger("Chase");
-    // if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = Banshee_v2_States::Attack;
-    if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = Banshee_v2_States::SlowArea;
+    if (CheckDistanceWithPlayer() <= PlayerDistances::Close)
+    {
+        float attackToPerform = normalizedDist(rng);
+
+        if (attackToPerform < 0.5f) currentState = Banshee_v2_States::Attack;
+        else currentState = Banshee_v2_States::SlowArea;
+    }
     else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
         currentState = Banshee_v2_States::Search;
 }
@@ -558,10 +563,8 @@ void Banshee_v2::ChangeState()
     {
         float attackToPerform = normalizedDist(rng);
 
-        // if (attackToPerform < 0.5f) currentState = Banshee_v2_States::Attack;
-        // else currentState = Banshee_v2_States::SlowArea;
-
-        currentState          = Banshee_v2_States::SlowArea;
+        if (attackToPerform < 0.5f) currentState = Banshee_v2_States::Attack;
+        else currentState = Banshee_v2_States::SlowArea;
     }
     else if (distance <= rangeAIChase) currentState = Banshee_v2_States::Chase;
     else currentState = Banshee_v2_States::Search;
