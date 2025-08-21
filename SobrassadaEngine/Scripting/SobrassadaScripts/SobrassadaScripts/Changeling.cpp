@@ -537,6 +537,9 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq)
 {
+    if (weaponCollider->GetEnabled())
+        weaponCollider->SetEnabled(false);
+    
     if (animComponent && animComponent->IsFinished())
     {
         stateTimer = biteAttackCooldown;
