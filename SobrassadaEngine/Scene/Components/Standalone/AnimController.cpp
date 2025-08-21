@@ -116,7 +116,7 @@ update_status AnimController::Update(float deltaTime)
     return UPDATE_CONTINUE;
 }
 
-void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat& rot)
+void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat& rot, float3& scale)
 {
     if (!playAnimation || resource == INVALID_UID || currentAnimation == nullptr) return;
 
@@ -142,6 +142,11 @@ void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat&
         {
             GetChannelRotation(animChannel, rot, currentTime);
         }
+
+        if (animChannel->numScales > 0)
+        {
+            GetChannelScale(animChannel, scale, currentTime);
+        }
     }
     else
     {
@@ -155,8 +160,9 @@ void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat&
             return; // Don't modify pos/rot if no channel exists in either animation
         }
 
-        float3 animPos = float3(pos);
-        Quat animQuat  = Quat(rot);
+        float3 animPos   = float3(pos);
+        Quat animQuat    = Quat(rot);
+        float3 animScale = float3(scale);
 
         // Only get transforms from animation channels if they exist
         if (animChannel)
@@ -169,10 +175,15 @@ void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat&
             {
                 GetChannelRotation(animChannel, animQuat, currentTime);
             }
+            if (animChannel->numScales > 0)
+            {
+                GetChannelScale(animChannel, animScale, currentTime);
+            }
         }
 
-        float3 targetAnimPos = float3(pos);
-        Quat targetAnimQuat  = Quat(rot);
+        float3 targetAnimPos   = float3(pos);
+        Quat targetAnimQuat    = Quat(rot);
+        float3 targetAnimScale = float3(scale);
 
         // Only get transforms from target animation channels if they exist
         if (targetAnimChannel)
@@ -185,6 +196,11 @@ void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat&
             {
                 GetChannelRotation(targetAnimChannel, targetAnimQuat, currentTargetTime);
             }
+
+            if (targetAnimChannel->numScales > 0)
+            {
+                GetChannelScale(targetAnimChannel, targetAnimScale, currentTime);
+            }
         }
 
         // Blend the animations
@@ -192,6 +208,8 @@ void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat&
                             (targetAnimChannel && targetAnimChannel->numPositions > 0);
         bool hasRotations = (animChannel && animChannel->numRotations > 0) ||
                             (targetAnimChannel && targetAnimChannel->numRotations > 0);
+        bool hasScale =
+            (animChannel && animChannel->numScales > 0) || (targetAnimChannel && targetAnimChannel->numScales > 0);
 
         // Only blend if there's actual data to blend
         if (hasPositions)
@@ -201,6 +219,10 @@ void AnimController::GetTransform(const HashString& nodeName, float3& pos, Quat&
         if (hasRotations)
         {
             rot = Quat::Slerp(animQuat, targetAnimQuat, weight);
+        }
+        if (hasScale)
+        {
+            scale = animScale.Lerp(targetAnimScale, weight);
         }
     }
 }
@@ -295,6 +317,44 @@ void AnimController::GetChannelRotation(Channel* animChannel, Quat& rot, const f
                 lambda                = (lambda < 0) ? 0 : (lambda > 1) ? 1 : lambda;
 
                 rot = Interpolate(animChannel->rotations[prevIndex], animChannel->rotations[nextIndex], lambda);
+            }
+        }
+    }
+}
+
+void AnimController::GetChannelScale(Channel* animChannel, float3& scale, float time) const
+{
+    if (animChannel->numPositions > 0)
+    {
+        if (animChannel->numPositions == 1)
+        {
+            scale = animChannel->scales[0];
+        }
+        else
+        {
+            size_t nextIndex = FindChannelIndex(animChannel->scaleTimeStamps, time);
+
+            size_t prevIndex = (nextIndex > 0) ? nextIndex - 1 : 0;
+
+            if (nextIndex >= animChannel->numScales)
+            {
+                scale = animChannel->scales[animChannel->numScales - 1];
+            }
+            else if (nextIndex == 0)
+            {
+                scale = animChannel->scales[0];
+            }
+            else
+            {
+                const float startTime = animChannel->scaleTimeStamps[prevIndex];
+                const float endTime   = animChannel->scaleTimeStamps[nextIndex];
+                const float timeDiff  = endTime - startTime;
+
+                float lambda          = (timeDiff > 0.0001f) ? (time - startTime) / timeDiff : 0.0f;
+
+                lambda                = (lambda < 0) ? 0 : (lambda > 1) ? 1 : lambda;
+
+                scale = float3::Lerp(animChannel->scales[prevIndex], animChannel->scales[nextIndex], lambda);
             }
         }
     }
