@@ -15,6 +15,8 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
+#include "imgui_curve_editor.h"
+
 Banshee_v2::Banshee_v2(GameObject* parent)
     : Character(
           parent,
@@ -45,6 +47,19 @@ Banshee_v2::Banshee_v2(GameObject* parent)
     fields.push_back(
         {"Slow Area Warning Max Scale", InspectorField::FieldType::Float, &slowAreaWaringMaxScale, 0.f, 10.f}
     );
+
+    for (int i = 0; i < maxScriptCurvePoints; ++i)
+    {
+        curveEditorPoints[i].x = (float)i / 10.f;
+        curveEditorPoints[i].y = (float)i / 10.f;
+    }
+
+    curveEditorPoints[maxScriptCurvePoints].x = 0.f;
+    curveEditorPoints[maxScriptCurvePoints].y = 1.f;
+
+    curveEditorPoints[0].x                    = ImGui::CurveTerminator;
+
+    fields.push_back({"Cruve Editor", InspectorField::FieldType::CurveEditor, &curveEditorPoints, 0.f, 10.f});
 }
 
 bool Banshee_v2::Init()
@@ -674,7 +689,10 @@ void Banshee_v2::SlowArea(float deltaTime)
             slowAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
 
             float interpolationValue = min(elapsedSlowAreaWaring / slowAreaWaringDuration, 1.f);
-            float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+
+            // float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+            float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
+
             scale                    = float3(finalScale, 1.f, finalScale);
 
             float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);

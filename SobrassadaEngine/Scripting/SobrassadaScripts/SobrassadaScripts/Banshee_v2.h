@@ -3,6 +3,7 @@
 #include "Character.h"
 
 #include "Math/float2.h"
+#include "imgui.h"
 #include <random>
 #include <vector>
 
@@ -95,4 +96,6 @@ class Banshee_v2 : public Character
 
     std::vector<MeshComponent*> shoutStartMeshComponents;
     std::vector<MeshComponent*> shoutBaseMeshComponents;
+
+    ImVec2 curveEditorPoints[StoreScriptCurvePoints];
 };
