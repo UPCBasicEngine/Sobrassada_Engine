@@ -480,8 +480,9 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
 {
     if (animComponent && animComponent->IsFinished())
     {
-        const bool bUseAnimation1 = rand() % 2;
-        animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Scream" : "Trigger_Scream2");
+        const int bUseAnimation1 = rand() % 5;
+        animComponent->UseTrigger(bUseAnimation1 == 0 ? "Trigger_Scream" :
+            bUseAnimation1 == 1 ? "Trigger_Scream2" : "Trigger_VisibleIdle");
     }
     if (stateTimer < 0.f)
     {
@@ -532,14 +533,14 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
     {
         const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * (distanceFromDashStart / 2.f)) -
                                        parentGO->GetGlobalTransform().TranslatePart();
-        const Quat lerpRotation = Quat(dashStart.RotatePart()) * Quat::FromEulerXYZ(0, 90, 0);
+        const Quat lerpRotation = Quat(dashStart.RotatePart()) * Quat::FromEulerXYZ(0, PI / 2.f, 0);
 
         dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(
         float4x4::FromTRS((dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
                                    parentGO->GetGlobalTransform().TranslatePart(), lerpRotation, float3(1, 1, 1))
         );
         dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
-            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, distanceFromDashStart))
+            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(distanceFromDashStart, 1, 1))
         );
         dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(
             float4x4::FromTRS(dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
