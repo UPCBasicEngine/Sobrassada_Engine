@@ -30,8 +30,8 @@ class MovingUVClipErode : public Script
     float2 uvOffset          = float2(0, 0);
     bool isAlphaDiscard      = false;
 
-    float erosionLevel       = 0.0f;  // [-1..1] Alpha = TexA - erosionLevel
-    float edgeFeather        = 0.05f; // fade side to clip
+    float erosionLevel       = 0.0f;  
+    float edgeFeather        = 0.05f; 
     bool clipTo01            = true; 
     float2 clipMin           = float2(0, 0);
     float2 clipMax           = float2(1, 1);
