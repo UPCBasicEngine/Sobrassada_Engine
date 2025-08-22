@@ -7,6 +7,8 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Interpolation.h"
+#include "ResourceMaterial.h"
+#include "ResourcesModule.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -48,6 +50,7 @@ Banshee_v2::Banshee_v2(GameObject* parent)
         {"Slow Area Warning Max Scale", InspectorField::FieldType::Float, &slowAreaWaringMaxScale, 0.f, 10.f}
     );
 
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Teleport warning size curve"});
     for (int i = 0; i < maxScriptCurvePoints; ++i)
     {
         curveEditorPoints[i].x = (float)i / 10.f;
@@ -59,7 +62,7 @@ Banshee_v2::Banshee_v2(GameObject* parent)
 
     curveEditorPoints[0].x                    = ImGui::CurveTerminator;
 
-    fields.push_back({"Cruve Editor", InspectorField::FieldType::CurveEditor, &curveEditorPoints, 0.f, 10.f});
+    fields.push_back({"Teleport warning Size", InspectorField::FieldType::CurveEditor, &curveEditorPoints, 0.f, 10.f});
 }
 
 bool Banshee_v2::Init()
@@ -162,6 +165,25 @@ bool Banshee_v2::Init()
                 float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
             slowAreaWarningGO->SetLocalTransform(starTransform);
             slowAreaWarningGO->SetEnabled(false);
+        }
+        else if (currentGO->GetName() == "TeleportWarning")
+        {
+            teleportWarningGO = currentGO;
+            teleportWarningGO->SetEnabled(false);
+
+            MeshComponent* mesh = teleportWarningGO->GetComponent<MeshComponent*>();
+            if (mesh)
+            {
+                const ResourceMaterial* constMat = mesh->GetResourceMaterial();
+                if (constMat)
+                {
+                    teleportWarningMaterial = dynamic_cast<ResourceMaterial*>(
+                        AppEngine->GetResourcesModule()->RequestResource(constMat->GetUID())
+                    );
+
+                    defaultWarningColor = teleportWarningMaterial->GetMaterial().diffColor;
+                }
+            }
         }
     }
 
@@ -430,18 +452,47 @@ void Banshee_v2::Attack(float deltaTime)
     }
     else
     {
-        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished())
+        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished() &&
+            !isInvisible)
         {
             currentInvisibleTime = invisibleDist(rng);
             isInvisible          = true;
             mesh->SetEnabled(false);
+
+            GoToAttackPosition();
+
+            teleportWarningGO->SetEnabled(true);
+            teleportWarningMaterial->SetDiffColor(float4(1.f, 0.f, 0.f, 1.f));
         }
-        if (attackTimer < currentInvisibleTime) return;
+        if (attackTimer < currentInvisibleTime)
+        {
+            // SCALING WARNING OVER TIME
+            float3 translation, scale;
+            Quat rotation;
+
+            teleportWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+
+            float interpolationValue = min(attackTimer / currentInvisibleTime, 1.f);
+
+            // float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+            float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
+
+            scale                    = float3(finalScale, 1.f, finalScale);
+
+            float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
+            teleportWarningGO->SetLocalTransform(starTransform);
+
+            return;
+        }
 
         if (isInvisible)
         {
+            teleportWarningMaterial->SetDiffColor(defaultWarningColor);
+            teleportWarningGO->SetEnabled(false);
+
             // Tp to player and enable
-            GoToAttackPosition();
+            // GoToAttackPosition();
+
             mesh->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
@@ -617,7 +668,7 @@ void Banshee_v2::GoToAttackPosition()
     const float3 position(cosf(angle) * r + playerPos.x, playerPos.y, sinf(angle) * r + playerPos.z);
 
     agentAI->SetPosition(position);
-    agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
+    // agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
 void Banshee_v2::TeleportToOrigin()
@@ -661,18 +712,47 @@ void Banshee_v2::SlowArea(float deltaTime)
     }
     else
     {
-        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished())
+        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished() &&
+            !isInvisible)
         {
             currentInvisibleTime = invisibleDist(rng);
             isInvisible          = true;
+
             mesh->SetEnabled(false);
+            GoToAttackPosition();
+
+            teleportWarningMaterial->SetDiffColor(float4(0.f, 0.f, 1.f, 1.f));
+            teleportWarningGO->SetEnabled(true);
         }
-        if (attackTimer < currentInvisibleTime) return;
+        if (attackTimer < currentInvisibleTime)
+        {
+            // SCALING WARNING OVER TIME
+            float3 translation, scale;
+            Quat rotation;
+
+            teleportWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+
+            float interpolationValue = min(attackTimer / currentInvisibleTime, 1.f);
+
+            // float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+            float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
+
+            scale                    = float3(finalScale, 1.f, finalScale);
+
+            float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
+            teleportWarningGO->SetLocalTransform(starTransform);
+
+            return;
+        }
 
         if (isInvisible)
         {
+            teleportWarningMaterial->SetDiffColor(defaultWarningColor);
+            teleportWarningGO->SetEnabled(false);
+
             // Tp to player and enable
-            GoToAttackPosition();
+            // GoToAttackPosition();
+
             mesh->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
@@ -693,8 +773,9 @@ void Banshee_v2::SlowArea(float deltaTime)
 
             float interpolationValue = min(elapsedSlowAreaWaring / slowAreaWaringDuration, 1.f);
 
-            // float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
-            float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
+            float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+            // float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints,
+            // curveEditorPoints);
 
             scale                    = float3(finalScale, 1.f, finalScale);
 

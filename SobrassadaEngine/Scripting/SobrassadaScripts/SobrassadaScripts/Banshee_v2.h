@@ -3,6 +3,7 @@
 #include "Character.h"
 
 #include "Math/float2.h"
+#include "Math/float4.h"
 #include "imgui.h"
 #include <random>
 #include <vector>
@@ -12,6 +13,7 @@ class MeshComponent;
 class AIAgentComponent;
 class SphereColliderComponent;
 class ShaderScriptComponent;
+class ResourceMaterial;
 
 enum class Banshee_v2_States : int
 {
@@ -98,4 +100,8 @@ class Banshee_v2 : public Character
     std::vector<MeshComponent*> shoutBaseMeshComponents;
 
     ImVec2 curveEditorPoints[StoreScriptCurvePoints];
+
+    GameObject* teleportWarningGO             = nullptr;
+    ResourceMaterial* teleportWarningMaterial = nullptr;
+    float4 defaultWarningColor                = float4::one;
 };
