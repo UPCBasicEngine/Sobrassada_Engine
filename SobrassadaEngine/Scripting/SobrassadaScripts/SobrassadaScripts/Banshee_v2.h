@@ -87,6 +87,7 @@ class Banshee_v2 : public Character
     AnimationComponent* shoutBaseAnim  = nullptr;
 
     GameObject* slowAreaGO             = nullptr;
+    GameObject* slowAreaInGO           = nullptr;
     GameObject* slowAreaWarningGO      = nullptr;
     int slowAreaDamage                 = 1;
     float slowAreaWaringDuration       = 1.f;

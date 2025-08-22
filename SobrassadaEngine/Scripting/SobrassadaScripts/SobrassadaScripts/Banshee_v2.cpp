@@ -153,6 +153,11 @@ bool Banshee_v2::Init()
             slowAreaGO = currentGO;
             slowAreaGO->SetEnabled(false);
         }
+        else if (currentGO->GetName() == "SlowAreaIn")
+        {
+            slowAreaInGO = currentGO;
+            slowAreaInGO->SetEnabled(false);
+        }
         else if (currentGO->GetName() == "SlowAreaWarning")
         {
             slowAreaWarningGO = currentGO;
@@ -376,6 +381,7 @@ void Banshee_v2::TakeDamage(int amount)
         currentState = Banshee_v2_States::Hit;
 
         slowAreaGO->SetEnabled(false);
+        slowAreaInGO->SetEnabled(false);
 
         float3 translation, scale;
         Quat rotation;
@@ -462,7 +468,7 @@ void Banshee_v2::Attack(float deltaTime)
             GoToAttackPosition();
 
             teleportWarningGO->SetEnabled(true);
-            teleportWarningMaterial->SetDiffColor(float4(0.89f, 0.243, 0.243f, 1.f));
+            teleportWarningMaterial->SetDiffColor(float4(0.89f, 0.243f, 0.243f, 1.f));
         }
         if (attackTimer < currentInvisibleTime)
         {
@@ -760,6 +766,7 @@ void Banshee_v2::SlowArea(float deltaTime)
 
             elapsedSlowAreaWaring = 0.f;
             slowAreaWarningGO->SetEnabled(true);
+            slowAreaGO->SetEnabled(true);
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
         {
@@ -798,12 +805,13 @@ void Banshee_v2::SlowArea(float deltaTime)
             slowAreaWarningGO->SetEnabled(false);
 
             animComponent->UseTrigger("SlowArea");
-            slowAreaGO->SetEnabled(true);
+            slowAreaInGO->SetEnabled(true);
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("SlowArea") && animComponent->IsFinished())
         {
             slowAreaGO->SetEnabled(false);
+            slowAreaInGO->SetEnabled(false);
             animComponent->UseTrigger("ScreamOut");
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
