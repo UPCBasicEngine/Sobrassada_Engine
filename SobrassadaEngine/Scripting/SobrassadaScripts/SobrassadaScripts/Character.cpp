@@ -9,10 +9,11 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "MagicBarrier.h"
 #include "Mushroom.h"
-#include "Spouts.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
+#include "Spouts.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
@@ -327,6 +328,8 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
+
+    if (associatedBarrier != nullptr) associatedBarrier->EnemyDied();
 }
 
 void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)
