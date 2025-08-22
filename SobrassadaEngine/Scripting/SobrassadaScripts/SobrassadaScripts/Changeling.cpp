@@ -450,18 +450,18 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
     {
         const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * (distanceFromDashStart / 2.f)) -
                                        parentGO->GetGlobalTransform().TranslatePart();
-        const Quat lerpRotation = Quat(dashStart.RotatePart()) * Quat::FromEulerXYZ(0, PI / 2.f, 0);
+        const Quat lerpRotation = Quat(dashStart.RotatePart());
 
         dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(
         float4x4::FromTRS((dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
-                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation, float3(1, 1, 1))
+                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
         );
         dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
-            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(distanceFromDashStart, 1, 1))
+            float4x4::FromTRS(lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1))
         );
         dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(
             float4x4::FromTRS(dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
-                lerpRotation, float3(1, 1, 1))
+                lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
         );
         dashTrailColliderObjects[dashIndex]->SetLocalTransform(
             float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, 1))
@@ -546,18 +546,18 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
     {
         const float3 lerpTranslation = (dashStart.TranslatePart() + dashDirection * (distanceFromDashStart / 2.f)) -
                                        parentGO->GetGlobalTransform().TranslatePart();
-        const Quat lerpRotation = Quat(dashStart.RotatePart()) * Quat::FromEulerXYZ(0, PI / 2.f, 0);
+        const Quat lerpRotation = Quat(dashStart.RotatePart());
 
         dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(
         float4x4::FromTRS((dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
-                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation, float3(1, 1, 1))
+                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
         );
         dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
-            float4x4::FromTRS(lerpTranslation, lerpRotation, float3(distanceFromDashStart, 1, 1))
+            float4x4::FromTRS(lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1))
         );
         dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(
             float4x4::FromTRS(dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
-                lerpRotation, float3(1, 1, 1))
+                lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
         );
         dashTrailColliderObjects[dashIndex]->SetLocalTransform(
             float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, 1))
@@ -589,7 +589,7 @@ void Changeling::UpdateBiteAttackCooldownState(float deltaTime, float distanceTo
 
 void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq)
 {
-    if (distanceToPlayerSq <= biteAttackRadius * biteAttackRadius * 1.5f)
+    if (distanceToPlayerSq <= 3)
     {
         finalAttackObject->SetLocalPosition(parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart());
         finalAttackObject->SetEnabled(true);
