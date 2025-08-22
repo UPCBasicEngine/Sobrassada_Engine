@@ -10,9 +10,11 @@
 #include "MagicBarrier.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
+#include "Wwise_IDs.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
@@ -143,6 +145,7 @@ void Changeling::OnDeath()
 {
     isDead = false; // TODO To keep getting updates until the death animation is finished
     if (animComponent) animComponent->UseTrigger("Trigger_Die");
+    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DEATH);
     agentAI->SetSpeed(0, 10);
     currentState = ChangelingStates::DYING;
 }
@@ -308,6 +311,7 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
         {
             agentAI->SetSpeed(0.0f, 10.0f);
             if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
+            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
             currentState = ChangelingStates::DIG_DOWN_TRANSITION;
         }
     }
@@ -317,6 +321,7 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
     if (ST_StartChase(deltaTime, distanceToPlayerSq)) return;
 
     if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
+    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
     currentState = ChangelingStates::DIG_DOWN_TRANSITION;
 }
 
@@ -332,6 +337,7 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
         {
             agentAI->SetSpeed(0.0f, 10.0f);
             if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
+            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
             currentState = ChangelingStates::DIG_DOWN_TRANSITION;
         }
     }
@@ -420,6 +426,7 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
             animComponent->UseTrigger("Trigger_Dash");
+            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
             agentAI->SetSpeed(dashSpeed, 1000000);
             agentAI->SetPathNavigation(dashTarget);
             currentState = ChangelingStates::DASH_CHAIN_ATTACK;
@@ -428,6 +435,7 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         {
             ST_AimNextDashAttack(deltaTime, distanceToPlayerSq);
             animComponent->UseTrigger("Trigger_Dash");
+            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
             currentState = ChangelingStates::DASH_ATTACK;
         }
     }
@@ -485,6 +493,7 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
         dashTrailColliderObjects[dashIndex]->SetEnabled(true);
 
         animComponent->UseTrigger("Trigger_Dash");
+        if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
         currentState = bNextDashUninterrupted ? ChangelingStates::DASH_CHAIN_ATTACK : ChangelingStates::DASH_ATTACK;
     }
 }
@@ -635,6 +644,7 @@ bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
         vfxDigUpHoleObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
         characterCollider->SetEnabled(true);
         if (animComponent) animComponent->UseTrigger("Trigger_BuryUp");
+        if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYUP);
         currentState = ChangelingStates::DIG_UP_TRANSITION;
     }
 
@@ -697,6 +707,7 @@ bool Changeling::ST_Damaged()
         if (!animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Hit" : "Trigger_Hit2"))
             animComponent->UseTrigger("Trigger_HitUnderground");
     }
+    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_HURT);
 
     return true;
 }
@@ -804,6 +815,8 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     weaponCollider->SetEnabled(true);
 
     Character::Attack(deltaTime);
+
+    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_ATTACK);
 
     return true;
 }
