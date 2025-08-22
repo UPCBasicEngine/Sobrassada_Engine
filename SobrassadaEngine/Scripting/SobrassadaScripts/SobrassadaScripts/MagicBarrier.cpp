@@ -17,8 +17,10 @@ bool MagicBarrier::Init()
 {
     areaTag = HashString(areaTagString);
 
+    GLOG("%s", areaTagString.c_str())
     if (const auto taggedGameObjects = AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(areaTag))
     {
+        GLOG("Size: %d", taggedGameObjects->size())
         for (GameObject* currentGameObject : *taggedGameObjects)
         {
             if (ScriptComponent* script = currentGameObject->GetComponent<ScriptComponent*>())

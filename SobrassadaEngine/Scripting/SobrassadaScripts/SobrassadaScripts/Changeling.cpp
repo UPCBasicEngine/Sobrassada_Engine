@@ -7,12 +7,14 @@
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "Globals.h"
+#include "MagicBarrier.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 
 #include <Math/MathFunc.h>
 #include <Math/Quat.h>
@@ -25,6 +27,7 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Dash trail mid mesh", InspectorField::FieldType::InputText, &dashTrailMidMeshName);
     fields.emplace_back("Dash trail end mesh", InspectorField::FieldType::InputText, &dashTrailEndMeshName);
     fields.emplace_back("Dash trail collision", InspectorField::FieldType::InputText, &dashTrailCollisionName);
+    fields.emplace_back("Final attack collision", InspectorField::FieldType::InputText, &finalAttackColliderName);
 
     fields.emplace_back(
         "Abs spotted reaction time", InspectorField::FieldType::Float, &absoluteSpottedReactionTime, 0.1f, 10.0f
@@ -41,6 +44,10 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back(
         "Swap states chance per second (Only with version 0)", InspectorField::FieldType::Float,
         &swapStateChancePerSecond, 0.001f, 1.0f
+    );
+    fields.emplace_back(
+        "Max enemies left for final attack", InspectorField::FieldType::Int,
+        &maxEnemiesLeftForFinalAttack, 0, 40
     );
 
     // Herbert specific (Index 1)
@@ -97,7 +104,8 @@ bool Changeling::Init()
         dashTrailMeshObject.dashTrailObject->SetEnabled(false);
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
         dashTrailColliderObject->SetEnabled(false);
-
+    finalAttackObject->SetEnabled(false);
+    
     isAttacking   = false;
     attackCdTimer = attackCooldown;
     agentAI->ResetSpeed();
@@ -288,6 +296,8 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 
 void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq)
 {
+    if (ST_FinalAttack(deltaTime, distanceToPlayerSq)) return;
+    
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
         randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
@@ -579,6 +589,19 @@ void Changeling::UpdateBiteAttackCooldownState(float deltaTime, float distanceTo
 
 void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq)
 {
+    if (distanceToPlayerSq <= biteAttackRadius * biteAttackRadius)
+    {
+        agentAI->SetSpeed(0.0f, 10.0f);
+        finalAttackObject->SetLocalPosition(parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart());
+        finalAttackObject->SetEnabled(true);
+        if (animComponent) animComponent->UseTrigger("Trigger_Die");
+        currentState = ChangelingStates::DYING;
+    }
+    else
+    {
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        agentAI->SetPathNavigation(character->GetLastPosition());
+    }
 }
 
 void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
@@ -593,6 +616,8 @@ void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
 
 void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
 {
+    if (finalAttackObject->IsEnabled()) finalAttackObject->SetEnabled(false);
+    
     if (animComponent && animComponent->IsFinished())
     {
         isDead = true;
@@ -602,10 +627,11 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
 
 bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
 {
+    const bool initFinalAttack = associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
     // Check preconditions
-    if (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK) return false;
-    if (currentState != ChangelingStates::IDLE_BURIED) return false;
-    if (!spottedLocation.IsFinite()) return false;
+    if (!initFinalAttack && (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK)) return false;
+    if (!initFinalAttack && currentState != ChangelingStates::IDLE_BURIED) return false;
+    if (!initFinalAttack && !spottedLocation.IsFinite()) return false;
 
     // Implement state transition
     if (stateTimer <= 0.f)
@@ -791,6 +817,20 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
 
 bool Changeling::ST_FinalAttack(float deltaTime, float distanceToPlayerSq)
 {
+    // Check preconditions
+    if (associatedBarrier == nullptr || associatedBarrier->GetEnemiesInArea() > maxEnemiesLeftForFinalAttack) return false;
+    if (currentState != ChangelingStates::IDLE_VISIBLE) return false;
+    
+    // Implement state transition
+    const bool bUseAnimation1 = rand() % 2;
+    if (animComponent) animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Run" : "Trigger_Run2");
+
+    agentAI->ResetSpeed();
+    agentAI->SetSpeed(chaseSpeed, chaseAcceleration);
+
+    currentState = ChangelingStates::FINAL_ATTACK;
+
+    return true;
 }
 
 void Changeling::ValidateSetup()
@@ -882,7 +922,18 @@ void Changeling::ValidateSetup()
         else if (child->GetName() == dashTrailCollisionName)
         {
             dashTrailColliderObjects.emplace_back(child);
+        } else if (child->GetName() == finalAttackColliderName)
+        {
+            finalAttackObject = child;
+            finalAttackCollider = child->GetComponent<SphereColliderComponent*>();
         }
+    }
+
+    if (finalAttackCollider == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Final attack object or collider are nullptr")
+        return;
     }
 
     if (userSelectedVersion == 0 || userSelectedVersion == 3)

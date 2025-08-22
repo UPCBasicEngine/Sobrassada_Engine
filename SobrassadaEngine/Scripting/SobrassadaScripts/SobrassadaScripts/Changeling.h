@@ -3,6 +3,7 @@
 #include "Character.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 
+class SphereColliderComponent;
 class AudioSourceComponent;
 class GameObject;
 class AIAgentComponent;
@@ -120,11 +121,14 @@ class Changeling : public Character
     std::string dashTrailStartMeshName = "DashTrailStartMesh";
     std::string dashTrailMidMeshName = "DashTrailMidMesh";
     std::string dashTrailEndMeshName = "DashTrailEndMesh";
-    std::string dashTrailCollisionName;
+    std::string dashTrailCollisionName = "DashTrailCollision";
+    std::string finalAttackColliderName = "FinalAttackObject";
 
     std::vector<ChangelingDashTrailContainer> dashTrailMeshObjects;
     std::vector<GameObject*> dashTrailColliderObjects;
     std::vector<CubeColliderComponent*> dashAreaColliders;
+    GameObject* finalAttackObject;
+    SphereColliderComponent* finalAttackCollider;
 
     float stateTimer                  = 0.f;
 
@@ -139,6 +143,7 @@ class Changeling : public Character
     float swapStateChancePerSecond    = 0.05f;
     ChangelingVersions randomVersion =
         ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
+    int maxEnemiesLeftForFinalAttack = 0;
 
     // Default specific
     float chaseSpeed                       = 1.0f;
