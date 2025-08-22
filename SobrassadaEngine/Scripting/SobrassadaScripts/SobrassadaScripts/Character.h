@@ -85,6 +85,7 @@ class Character : public Script
     float range                                 = 0.0f;
     float attackTimer                           = 0.0f;
     bool isAttacking                            = false;
+    bool isInCountRange                         = false;
     float attackHitboxDelay                     = 0.0f;
     float attackHitboxDuration                  = 0.0f;
 

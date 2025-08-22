@@ -242,7 +242,7 @@ void Soldier::ChaseAI()
 
 void Soldier::SearchForPlayer()
 {
-    GLOG("Searching for player");
+    //GLOG("Searching for player");
     // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
     if (!isSearching)
     {
@@ -352,6 +352,7 @@ void Soldier::Attack(float deltaTime)
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             ChangeState();
+
         }
     }
 }

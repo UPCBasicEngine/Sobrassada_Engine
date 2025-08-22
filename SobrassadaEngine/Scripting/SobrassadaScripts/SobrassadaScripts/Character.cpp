@@ -116,7 +116,6 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
     SphereColliderComponent* otherWeaponShpere = otherObject->GetComponent<SphereColliderComponent*>();
     ScriptComponent* otherScript               = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
 
-
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
 
@@ -136,9 +135,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
     {
         // Special attack check
         CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
-        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
-            
-            (playerScript->GetUltimateDamage());
+        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE) (playerScript->GetUltimateDamage());
     }
 
     if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
@@ -194,8 +191,12 @@ void Character::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
 
     if (enemyScript)
     {
-        playerScript->RemoveEnemy();
-        GLOG("Enemy out. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+        if (isInCountRange)
+        {
+            isInCountRange = false;
+            playerScript->RemoveEnemy();
+            GLOG("Enemy out. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+        }
     }
 }
 
@@ -215,14 +216,14 @@ void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal
         {
             SetOnWaiting();
         }
-
-        playerScript->AddEnemy();
-        GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
-
-        
+        else
+        {
+            isInCountRange = true;
+            playerScript->AddEnemy();
+            GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+        }
     }
 }
-
 
 void Character::Attack(float deltaTime)
 {
