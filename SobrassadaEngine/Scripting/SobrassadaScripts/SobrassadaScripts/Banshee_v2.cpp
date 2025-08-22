@@ -232,6 +232,10 @@ void Banshee_v2::OnPlayerExitLocation()
         break;
     case Banshee_v2_States::Attack:
     {
+        isInvisible = false;
+        mesh->SetEnabled(true);
+        characterCollider->SetEnabled(true);
+
         for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
         {
             shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
@@ -253,6 +257,40 @@ void Banshee_v2::OnPlayerExitLocation()
         }
 
         weapon->SetEnabled(false);
+
+        shoutStartAnim->UseTrigger("Reset");
+        shoutStartAnim->GetParent()->SetEnabled(false);
+
+        shoutBaseAnim->GetParent()->SetEnabled(false);
+
+        teleportWarningGO->SetEnabled(false);
+
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->ResetAngularSpeed();
+        agentAI->SetLookForward(true);
+
+        break;
+    }
+    case Banshee_v2_States::SlowArea:
+    {
+        isInvisible = false;
+        mesh->SetEnabled(true);
+        characterCollider->SetEnabled(true);
+
+        slowAreaGO->SetEnabled(false);
+        slowAreaInGO->SetEnabled(false);
+
+        float3 translation, scale;
+        Quat rotation;
+
+        slowAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+        float4x4 starTransform =
+            float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+        slowAreaWarningGO->SetLocalTransform(starTransform);
+        slowAreaWarningGO->SetEnabled(false);
+
+        teleportWarningGO->SetEnabled(false);
 
         isAttacking = false;
         agentAI->ResetSpeed();
@@ -464,6 +502,7 @@ void Banshee_v2::Attack(float deltaTime)
             currentInvisibleTime = invisibleDist(rng);
             isInvisible          = true;
             mesh->SetEnabled(false);
+            characterCollider->SetEnabled(false);
 
             GoToAttackPosition();
 
@@ -500,6 +539,7 @@ void Banshee_v2::Attack(float deltaTime)
             // GoToAttackPosition();
 
             mesh->SetEnabled(true);
+            characterCollider->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
@@ -725,6 +765,7 @@ void Banshee_v2::SlowArea(float deltaTime)
             isInvisible          = true;
 
             mesh->SetEnabled(false);
+            characterCollider->SetEnabled(false);
             GoToAttackPosition();
 
             teleportWarningMaterial->SetDiffColor(float4(0.243f, 0.369f, 0.89f, 1.f));
@@ -756,10 +797,8 @@ void Banshee_v2::SlowArea(float deltaTime)
             teleportWarningMaterial->SetDiffColor(defaultWarningColor);
             teleportWarningGO->SetEnabled(false);
 
-            // Tp to player and enable
-            // GoToAttackPosition();
-
             mesh->SetEnabled(true);
+            characterCollider->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
