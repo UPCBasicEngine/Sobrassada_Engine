@@ -1157,7 +1157,8 @@ void CuChulainn::UpdateUltimateVfx()
     {
         ultimateBlur->SetEnabled(true);
         ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
-        ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
+            ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (ultimateBrust)
     {
@@ -1175,19 +1176,22 @@ void CuChulainn::UpdateUltimateVfx()
     {
         ultimateHalo->SetEnabled(true);
         ultimateHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
-        ultimateHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        if (ultimateHalo->GetComponent<ShaderScriptComponent*>())
+            ultimateHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (ultimateSmoke)
     {
         ultimateSmoke->SetEnabled(true);
         ultimateSmoke->GetComponent<MeshComponent*>()->SetEnabled(false);
-        ultimateSmoke->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        if (ultimateSmoke->GetComponent<ShaderScriptComponent*>())
+            ultimateSmoke->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (ultimateSphere)
     {
         ultimateSphere->SetEnabled(true);
         ultimateSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
-        ultimateSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        if (ultimateSphere->GetComponent<ShaderScriptComponent*>())
+            ultimateSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (ultimateWarning)
     {
