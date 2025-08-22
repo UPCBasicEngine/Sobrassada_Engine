@@ -674,7 +674,7 @@ void Banshee_v2::GoToAttackPosition()
     const float3 position(cosf(angle) * r + playerPos.x, playerPos.y, sinf(angle) * r + playerPos.z);
 
     agentAI->SetPosition(position);
-    // agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
+    agentAI->LookAtMovement(character->GetLastPosition(), 1.0f);
 }
 
 void Banshee_v2::TeleportToOrigin()
