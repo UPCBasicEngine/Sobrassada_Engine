@@ -26,6 +26,8 @@ enum class CharacterStates
     CHARGED_ATTACK,
     TAKE_MUSHROOM,
     HEAL,
+    TRANSFORM,
+    HURT
 };
 
 class CuChulainn : public Character
@@ -59,6 +61,8 @@ class CuChulainn : public Character
     void OnEnemyHit();
     void OnEnemyDefeated();
 
+    void ActivateAbility(std::string& abilityName);
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -83,15 +87,19 @@ class CuChulainn : public Character
     void LookAtLeftStick();
     void CheckIsFalling();
 
+    void EnableRiastradVfx();
     void UseMushroom();
     void ThrowSpear();
     void UltimateAttack();
+    void UpdateUltimateVfx();
     void Dash();
     void Aim(float deltaTime);
     void Move();
     void ChargeAttack();
     void ToggleRiastrad();
     void AddRiastrad(int amount);
+    void StartCurse();
+    void EndCurse();
 
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
@@ -99,16 +107,17 @@ class CuChulainn : public Character
   private:
     CharacterStates state              = CharacterStates::IDLE;
 
-    std::string cameraName             = "";
+    std::string cameraName             = "Camera Pivot";
     GameObject* cameraObject           = nullptr;
     CameraMovement* camera             = nullptr;
 
-    std::string spearName              = "";
+    std::string spearName              = "SpearProjectile";
     Projectile* spear                  = nullptr;
 
     float defaultSpeed                 = 7.0f;
     float inputBuffer                  = 0.5f;
 
+    // Dash
     float3 lastDashStartPos            = float3::zero;
     bool isDashing                     = false;
     bool wasDashing                    = false;
@@ -116,9 +125,11 @@ class CuChulainn : public Character
     float dashTimer                    = 0.0f;
     bool desiredDash                   = false;
     float dashBufferTimer              = 0.0f;
+    bool dashUnlocked = false;
 
-    std::string meleeVfxName           = "";
-    std::string meleeTrailName         = "";
+    // Basic attack
+    std::string meleeVfxName           = "SpearVFX";
+    std::string meleeTrailName         = "SpearMeleeTrail";
     GameObject* meleeVfxObject         = nullptr;
     GameObject* meleeTrailObject       = nullptr;
     bool desiredAttack                 = false;
@@ -126,7 +137,8 @@ class CuChulainn : public Character
     int comboCounter                   = -1;
     float comboBufferTimer             = 0.0f;
 
-    std::string chargedAttackName      = "";
+    // CHarged attack
+    std::string chargedAttackName      = "Charged";
     GameObject* chargedAttackCollider  = nullptr;
     bool isChargingAttack              = false;
     float chargeTimer                  = 0.0f;
@@ -147,11 +159,32 @@ class CuChulainn : public Character
     float deathTimer                   = 0.5f;
     float aimTimer                     = 0.0f;
 
-    std::string aimShadowName          = "";
+    std::string aimShadowName          = "AimShadow";
     GameObject* aimShadowObject        = nullptr;
 
-    std::string ultimateName           = "";
+    // Ultimate
+    std::string ultimateName           = "ultimate_mc_all";
+    std::string ultimateGlowName       = "ulti_glow";
+    std::string ultimateBlurName       = "mesh_blur";
+    std::string ultimateBrustName       = "mesh_brust";
+    std::string ultimateCrack1Name       = "mesh_crack1";
+    std::string ultimateCrack2Name       = "mesh_crack2";
+    std::string ultimateHaloName       = "mesh_halo";
+    std::string ultimateSmokeName       = "mesh_outer_smoke";
+    std::string ultimateSphereName       = "mesh_sphere_glow";
+    std::string ultimateWarningName       = "mesh_warning";
+    std::string ultimateSpikesName       = "spike";
     GameObject* ultimateObject         = nullptr;
+    GameObject* ultimateGlow          = nullptr;
+    GameObject* ultimateBlur          = nullptr;
+    GameObject* ultimateBrust         = nullptr;
+    GameObject* ultimateCrack1        = nullptr;
+    GameObject* ultimateCrack2        = nullptr;
+    GameObject* ultimateHalo          = nullptr;
+    GameObject* ultimateSmoke         = nullptr;
+    GameObject* ultimateSphere        = nullptr;
+    GameObject* ultimateWarning       = nullptr;
+    GameObject* ultimateSpikes            = nullptr;
     bool desiredUltimate               = false;
     int ultimateDamage                 = 0;
     float ultimateTimer                = 0.0f;
@@ -161,12 +194,16 @@ class CuChulainn : public Character
     float ultimateHitboxDelay          = 0.0f;
     float ultimateHitboxDuration       = 0.0f;
     float ultimateAnimationDelay       = 0.0f;
+    bool ultimateUnlocked              = false;
 
+    // Riastrad
     GameObject* riastradBar            = nullptr;
     int riastradMeter                  = 0;
     bool isRiastrad                    = false;
     bool desiredTransform              = false;
     float transformBufferTimer         = 0.0f;
+    float transformTimer               = 0.0f;
+    float transformVfxDelay            = 0.35f;
     float riastradTimer                = 0.0f;
     float riastradDuration             = 5.0f;
     float riastradMovementSpeed        = 12.0f;
@@ -174,6 +211,26 @@ class CuChulainn : public Character
     int riastradOnDamageTaken          = 2;
     int riastradOnHit                  = 5;
     int riastradOnEnemyDeath           = 5;
+    std::string riastradVfxName        = "riastrad_all";
+    std::string riastradBurstName      = "mesh_brust";
+    std::string riastradBlurName       = "mesh_blur";
+    std::string riastradHaloName       = "mesh_halo";
+    std::string riastradSphereName     = "mesh_sphere_glow";
+    std::string riastradCrackName      = "mesh_crack";
+    std::string riastradWaringName     = "mesh_warning";
+    std::string riastradSmoke1Name     = "mesh_smoke_a";
+    std::string riastradSmoke2Name     = "mesh_smoke_a.001";
+    std::string riastradSmoke3Name     = "mesh_smoke_a.002";
+    GameObject* riastradVfx            = nullptr;
+    GameObject* riastradBurst          = nullptr;
+    GameObject* riastradBlur           = nullptr;
+    GameObject* riastradHalo           = nullptr;
+    GameObject* riastradSphere         = nullptr;
+    GameObject* riastradCrack          = nullptr;
+    GameObject* riastradWaring         = nullptr;
+    GameObject* riastradSmoke1         = nullptr;
+    GameObject* riastradSmoke2         = nullptr;
+    GameObject* riastradSmoke3         = nullptr;
 
     float3 spawnPos                    = float3::zero;
     AudioSourceComponent* audio        = nullptr;
@@ -197,23 +254,39 @@ class CuChulainn : public Character
     float takeMushroomCdTimer              = 0.0f;
     float takeMushroomCd                   = 0.0f;
 
-    std::string dashTrailName              = "";
+    std::string dashTrailName              = "DashTrail";
     GameObject* dashTrail                  = nullptr;
-    std::string dashDecalName              = "";
+    std::string dashDecalName              = "DashDecal";
     GameObject* dashDecal                  = nullptr;
 
     float dashDecalTimer                   = 5.0f;
     float dashDecalBufferTimer             = 0.0f;
 
+    // Heal
     bool isHealing                         = false;
-    std::string healVisualName             = "";
-    GameObject* healVisual                 = nullptr;
+    std::string healVfxName                = "HealVfx";
+    std::string healParticlesName          = "HealParticles";
+    std::string healKnockbackName          = "Heal Knockback";
+    GameObject* healVfx                    = nullptr;
+    GameObject* healParticles              = nullptr;
+    GameObject* healKnockback              = nullptr;
+    float healTimer                        = 0.0f;
+    float healKnockbackDelay               = 0.0f;
+
+    // Curse
+    bool isCursed                          = false;
+    float curseSpeed                       = 4.0f;
+    float curseDuration                    = 5.0f;
+    float curseTimer                       = 0.0f;
+    UID playerMaterial                     = 0;
 
     // Images UIDs
     UID dashFillImage                      = 0;
     UID dashEmptyImage                     = 0;
     UID ultimateFillImage                  = 0;
     UID ultimateEmptyImage                 = 0;
+
+    float epicTimer                        = 0.0f;
 };
 
 extern CharacterControllerComponent* character;

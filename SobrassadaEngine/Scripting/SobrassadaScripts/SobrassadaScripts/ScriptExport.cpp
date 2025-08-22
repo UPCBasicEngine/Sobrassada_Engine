@@ -11,11 +11,13 @@
 #include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
+#include "MiniFireball.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
 #include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
+#include "HealVFXGround.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MoveGOInSpline.h"
@@ -29,6 +31,7 @@
 #include "Soldier.h"
 #include "SpawnPoint.h"
 #include "SpawnUI.h"
+#include "Spouts.h"
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
@@ -65,6 +68,7 @@ constexpr const char* scripts[] = {
     "Banshee",
     "TileFloatScript",
     "FireballTrap",
+    "MiniFireball",
     "Archer",
     "Changeling",
     "ChangeSceneScript",
@@ -75,11 +79,15 @@ constexpr const char* scripts[] = {
     "EnemySpawnerScript",
     "GameOverScript",
     "PlayerLocationScript",
+    "Spouts",
     "SwitchScriptTest",
     "Destructible"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight", "MovingUVTransparent"};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
+                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
+                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
+                                         "HealSpikesUp"};
 
 Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -115,10 +123,12 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
     if (scriptType == "FireballTrap") return new FireballTrap(parent);
+    if (scriptType == "MiniFireball") return new MiniFireball(parent);
     if (scriptType == "Mushroom") return new Mushroom(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "EnemySpawnerScript") return new EnemySpawnerScript(parent);
     if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
+    if (scriptType == "Spouts") return new Spouts(parent);
     if (scriptType == "Destructible") return new Destructible(parent);
 
     /* Utils */
@@ -133,6 +143,47 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "HealGroundHalo")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundHalo.glsl"
+        );
+
+    if (scriptType == "HealVerticalPlanes")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_VerticalPlanes.glsl"
+        );
+
+    if (scriptType == "HealSpikesBurst")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesBurst.glsl"
+        );
+
+    if (scriptType == "HealGroundSpikesLight")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundSpikesLight.glsl"
+        );
+
+    if (scriptType == "HealGroundSpikesDark")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundSpikesDark.glsl"
+        );
+
+    if (scriptType == "HealLightBurst")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_LightBurst.glsl"
+        );
+
+    if (scriptType == "HealSpikesUp")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesUp.glsl"
+        );
 
     return nullptr;
 }

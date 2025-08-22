@@ -8,6 +8,7 @@
 #include "Components/Standalone/MeshComponent.h"
 #include "GBuffer.h"
 #include "GameObject.h"
+#include "GeometryBatch.h"
 #include "Mesh.h"
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
@@ -59,13 +60,23 @@ bool MovingUVPostScript::Init()
                 GL_STATIC_DRAW
             );
 
-            // VERTICES
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
-            // UV'S
             glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+            glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+            glEnableVertexAttribArray(3);
+            glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+
+            glEnableVertexAttribArray(4);
+            glVertexAttribIPointer(4, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, joint));
+
+            glEnableVertexAttribArray(5);
+            glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferData(
@@ -83,7 +94,11 @@ bool MovingUVPostScript::Init()
         {
             texture = rmat->GetDiffuseColorID();
         }
+
+        meshComp->SetEnabled(false);
+        meshComp->SetUpdateShaderStorage(true);
     }
+
     uvOffset = uvOffsetStart;
 
     return true;
@@ -98,7 +113,7 @@ void MovingUVPostScript::Update(float deltaTime)
 
 void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && texture && meshComp)
+    if (shaderProgram && indexCount > 0 && texture && meshComp && meshComp->GetBatch())
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
@@ -121,6 +136,10 @@ void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
         glUniform2fv(3, 1, &uvOffset[0]);
+        glUniform1i(9, meshComp->GetHasBones());
+        glUniform1ui(10, meshComp->GetBoneIndexOffset());
+
+        meshComp->GetBatch()->BindBonesBuffer();
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -128,6 +147,8 @@ void MovingUVPostScript::Render(float deltaTime, CameraComponent* cameraComp)
         glBindVertexArray(vao);
 
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+
+        meshComp->GetBatch()->UnbindBonesBuffer();
 
         glBindVertexArray(0);
     }

@@ -13,6 +13,8 @@ in vec2 uv;
 in vec3 normal;
 in vec4 tangent;
 
+
+
 out vec4 fragColor;
 
 struct DirectionalLight

@@ -11,6 +11,7 @@
 class ResourceAnimation;
 class AnimController;
 class GameObject;
+class AnimationTrigger;
 
 class SOBRASADA_API_ENGINE AnimationComponent : public Component
 {
@@ -26,12 +27,13 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     void RenderEditorInspector() override;
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
 
-    void OnPlay(bool isTransition);
+    void OnPlay(bool isTransition, bool loop = true);
     void OnStop();
     void OnPause();
     void OnResume();
     void AddAnimation(UID resource);
     bool UseTrigger(const std::string& triggerName);
+    
 
     UID GetAnimationResource() const { return resource; }
     const HashString& GetCurrentStateName() const { return currentState->name; }
@@ -39,6 +41,8 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     AnimController* GetAnimationController() { return animController; }
     ResourceStateMachine* GetResourceStateMachine() const { return resourceStateMachine; }
     const std::unordered_map<HashString, GameObject*>& GetBoneMapping() const { return boneMapping; }
+    void SetActiveTriggers(const std::vector<StateTrigger>& vec, float startNorm);
+
     bool IsPlaying() const;
     bool IsFinished() const;
 
@@ -57,8 +61,10 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
 
     std::unordered_map<HashString, GameObject*> boneMapping;
     std::map<std::string, float4x4> bindPoseTransforms;
+    std::vector<StateTrigger> activeTriggers;
 
-    
+
+    float lastTime          = 0.0f;
     float animationDuration = 0.0f;
     bool playing            = false;
     float currentTime       = 0.0f;

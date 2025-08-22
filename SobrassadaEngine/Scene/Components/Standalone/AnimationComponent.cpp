@@ -1,11 +1,14 @@
 #include "AnimationComponent.h"
 
 #include "AnimController.h"
+#include "Animation/AnimationTrigger.h"
 #include "Application.h"
+#include "AudioModule.h"
 #include "CameraModule.h"
 #include "EditorUIModule.h"
 #include "FileSystem.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "HashString.h"
 #include "LibraryModule.h"
 #include "ProjectModule.h"
@@ -27,7 +30,7 @@
 AnimationComponent::AnimationComponent(const UID uid, GameObject* parent)
     : Component(uid, parent, "Animation", COMPONENT_ANIMATION)
 {
-    animController = new AnimController();
+    animController     = new AnimController();
 
     localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
 }
@@ -62,7 +65,6 @@ AnimationComponent::AnimationComponent(const rapidjson::Value& initialState, Gam
 
 AnimationComponent::~AnimationComponent()
 {
-
     delete animController;
     App->GetResourcesModule()->ReleaseResource(currentAnimResource);
 }
@@ -73,7 +75,7 @@ void AnimationComponent::Init()
     currentAnimName     = App->GetLibraryModule()->GetResourceName(resource);
 }
 
-void AnimationComponent::OnPlay(bool isTransition)
+void AnimationComponent::OnPlay(bool isTransition, bool loop)
 {
     playing                 = true;
     unsigned transitionTime = 0;
@@ -97,19 +99,48 @@ void AnimationComponent::OnPlay(bool isTransition)
                         if (clip.clipName == currentState->clipName)
                         {
                             if (isTransition && transitionTime > 0)
+                            {
                                 animController->SetTargetAnimationResource(
                                     clip.animationResourceUID, transitionTime, clip.loop, clip.animationSpeed
                                 );
+                            }
                             else animController->Play(clip.animationResourceUID, clip.loop, clip.animationSpeed);
-                            resource = clip.animationResourceUID;
-                        }
 
-                        
+                            if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
+
+                            currentAnimResource = dynamic_cast<ResourceAnimation*>(
+                                App->GetResourcesModule()->RequestResource(clip.animationResourceUID)
+                            );
+
+                            if (currentAnimResource) currentAnimResource->AddReference();
+
+                            resource = clip.animationResourceUID;
+
+                            SetBoneMapping();
+
+                            float clipLen = currentAnimResource->GetDuration();
+                            if (clipLen <= 0.f) clipLen = 1.f;
+
+                            float startSec  = animController->GetTime();
+                            float startNorm = (clipLen > 0.f) ? (startSec / clipLen) : 0.f;
+                            SetActiveTriggers(currentState->triggers, startNorm);
+                        }
                     }
                 }
             }
         }
-        else animController->Play(resource, true, defaultTime);
+        else
+        {
+            if (currentAnimResource) App->GetResourcesModule()->ReleaseResource(currentAnimResource);
+
+            animController->Play(resource, loop, defaultTime);
+            activeTriggers.clear();
+
+            currentAnimResource = animController->GetCurrentAnimation();
+            if (currentAnimResource) currentAnimResource->AddReference();
+
+            SetBoneMapping();
+        }
     }
 }
 
@@ -393,12 +424,38 @@ void AnimationComponent::Update(float deltaTime)
         if (!IsEffectivelyEnabled()) return;
         if (!animController->IsPlaying()) return;
 
-        if (boneMapping.empty())
-        {
-            SetBoneMapping();
-        }
+        float clipLen = currentAnimResource->GetDuration();
+        if (clipLen <= 0.f) clipLen = 1.f;
 
-        animController->Update(deltaTime);
+        float prevSec  = animController->GetTime();
+        float prevNorm = prevSec / clipLen;
+
+        // If in game, update animations with game timer so they are paused
+        float currentDelta =
+            App->GetSceneModule()->GetInPlayMode() ? App->GetGameTimer()->GetDeltaTime() / 1000.0f : deltaTime;
+        animController->Update(currentDelta);
+
+        float currSec  = animController->GetTime();
+        float currNorm = currSec / clipLen;
+        bool looped    = currNorm < prevNorm;
+
+        if (!activeTriggers.empty())
+        {
+            for (StateTrigger& trg : activeTriggers)
+            {
+                if (trg.consumed && !looped) continue;
+
+                bool crossed = (!trg.consumed && prevNorm < trg.keyTimeNorm && currNorm >= trg.keyTimeNorm) ||
+                               (looped && currNorm >= trg.keyTimeNorm);
+
+                if (crossed && trg.type == TriggerType::SOUND)
+                {
+                    App->GetAudioModule()->EmitEvent(trg.eventName, parent->GetUID());
+                    trg.consumed = true;
+                }
+                if (looped && trg.repeatOnLoop) trg.consumed = false;
+            }
+        }
 
         std::set<GameObject*> modifiedBones;
 
@@ -406,7 +463,7 @@ void AnimationComponent::Update(float deltaTime)
         {
             const HashString& boneName = channel;
 
-            auto boneIt = boneMapping.find(boneName);
+            auto boneIt                = boneMapping.find(boneName);
 
             if (boneIt != boneMapping.end())
             {
@@ -422,7 +479,7 @@ void AnimationComponent::Update(float deltaTime)
                 // Pass CURRENT values to GetTransform - it will only modify them
                 // if the animation has data for that channel type
 
-                animController->GetTransform(boneName, position, rotation);
+                animController->GetTransform(boneName, position, rotation, scale);
                 rotation.Normalize();
 
                 float4x4 transformMatrix = float4x4::FromTRS(position, rotation, scale);
@@ -464,6 +521,14 @@ void AnimationComponent::AddAnimation(UID animationUID)
         resource            = animationUID;
         SetBoneMapping();
     }
+}
+
+void AnimationComponent::SetActiveTriggers(const std::vector<StateTrigger>& vec, float startNorm)
+{
+    activeTriggers = vec;
+
+    for (auto& trg : activeTriggers)
+        trg.consumed = false;
 }
 
 bool AnimationComponent::IsPlaying() const

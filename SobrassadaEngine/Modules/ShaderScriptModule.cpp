@@ -46,6 +46,9 @@ void ShaderScriptModule::AddShaderScript(
     case ShaderScriptType::POST_LIGHTING_PASS:
         postLightingComponents.push_back({component, scriptIndex});
         break;
+    case ShaderScriptType::POST_EFFECTS_PASS:
+        postEffectsComponents.push_back({component, scriptIndex});
+        break;
     default:
         break;
     }
@@ -67,6 +70,9 @@ void ShaderScriptModule::ShaderScriptTypeChange(
         break;
     case ShaderScriptType::POST_LIGHTING_PASS:
         originalVector = &postLightingComponents;
+        break;
+    case ShaderScriptType::POST_EFFECTS_PASS:
+        originalVector = &postEffectsComponents;
         break;
     default:
         return;
@@ -99,6 +105,9 @@ void ShaderScriptModule::ShaderScriptTypeChange(
             break;
         case ShaderScriptType::POST_LIGHTING_PASS:
             destinationVector = &postLightingComponents;
+            break;
+        case ShaderScriptType::POST_EFFECTS_PASS:
+            destinationVector = &postEffectsComponents;
             break;
         default:
             return;
@@ -157,6 +166,21 @@ void ShaderScriptModule::ComponentDeleted(ShaderScriptComponent* component)
     }
 
     iteratorsToRemove.clear();
+
+    for (auto iterator = postEffectsComponents.begin(); iterator != postEffectsComponents.end(); ++iterator)
+    {
+        if (iterator->first == component)
+        {
+            iteratorsToRemove.push_back(iterator);
+        }
+    }
+
+    for (auto& iterator : iteratorsToRemove)
+    {
+        postEffectsComponents.erase(iterator);
+    }
+
+    iteratorsToRemove.clear();
 }
 
 void ShaderScriptModule::ComponentDeletedScript(ShaderScriptComponent* component)
@@ -177,6 +201,9 @@ void ShaderScriptModule::ComponentDeletedScript(ShaderScriptComponent* component
             break;
         case ShaderScriptType::POST_LIGHTING_PASS:
             postLightingComponents.push_back({component, i});
+            break;
+        case ShaderScriptType::POST_EFFECTS_PASS:
+            postEffectsComponents.push_back({component, i});
             break;
         default:
             break;
@@ -264,6 +291,14 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
 void ShaderScriptModule::RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera)
 {
     for (auto& shaderPair : postLightingComponents)
+    {
+        shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
+    }
+}
+
+void ShaderScriptModule::RenderPostEffectsPassShaders(float deltaTime, CameraComponent* camera)
+{
+    for (auto& shaderPair : postEffectsComponents)
     {
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }

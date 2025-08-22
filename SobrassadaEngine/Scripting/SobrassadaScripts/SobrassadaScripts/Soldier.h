@@ -11,7 +11,9 @@ enum class SoldierStates
     SEARCH,
     PATROL,
     CHASE,
-    BASIC_ATTACK
+    BASIC_ATTACK,
+    DEATH,
+    PLAYER_DETECTION
 };
 
 class Soldier : public Character
@@ -36,7 +38,7 @@ class Soldier : public Character
     void ApplyKnockback();
 
     void ChangeState();
-    void PatrolAI();
+    void PatrolAI(float deltaTime);
     void ChaseAI();
     void SearchForPlayer();
     const char* ManageAttackAnimations();
@@ -52,10 +54,13 @@ class Soldier : public Character
     float knockbackTimer             = 0.0f;
     float3 knockbackDirection        = float3::zero;
     bool isKnockback                 = false;
+    bool isStrongKnockback           = false;
     int consecutiveAttack            = 0;
     int consecutiveThrust            = 0;
     float secondAttackDelay          = 0.6f;
     const char* currentAttackTrigger = nullptr;
     float originalAttackDuration     = 0.0f;
     float originalAttackHitboxDelay  = 0.0f;
+    float deathTimer                 = 0.0f;
+    float chaseSpeed                = 2.0f;
 };

@@ -7,17 +7,17 @@
 #include "LibraryModule.h"
 #include "ProjectModule.h"
 #include "ResourceTexture.h"
-#include "TextureImporter.h"
-#include "SceneModule.h"
 #include "Scene.h"
+#include "SceneModule.h"
+#include "TextureImporter.h"
+#include "WindConfig.h"
 
 #include "glew.h"
 #include "imgui.h"
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 
-ResourceMaterial::ResourceMaterial(UID uid, const std::string& name)
-    : Resource(uid, name, ResourceType::Material)
+ResourceMaterial::ResourceMaterial(UID uid, const std::string& name) : Resource(uid, name, ResourceType::Material)
 {
 }
 
@@ -30,7 +30,35 @@ void ResourceMaterial::OnEditorUpdate()
 {
     bool updated  = false;
 
-    ImGui::Checkbox("Double Sided", &doubleSided);
+    updated      |= ImGui::Checkbox("Double Sided", &doubleSided);
+    updated      |= ImGui::Checkbox("Apply wind", &applyWind);
+
+    if (applyWind)
+    {
+        WindConfig* globalWindConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+        if (!globalWindConfig->GetApplyWindGlobally())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImVec4(1.f, 0.f, 0.f, 1.0f)));
+            ImGui::Text("Global wind disabled, movement will not show!");
+            ImGui::PopStyleColor();
+        }
+        else
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImVec4(0.f, 1.f, 0.f, 1.0f)));
+            ImGui::Text("Global wind active, movement will show");
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::Checkbox("Apply wind globally", &globalWindConfig->GetApplyWindGloballyRef());
+        ImGui::SliderFloat(
+            "Wind direction (Angle around y axis)", &globalWindConfig->GetWindDirectionRef(), 0.f, 360.f
+        );
+        ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 10.f);
+        ImGui::SliderFloat("Gust frequency (1/s)", &globalWindConfig->GetGustFrequencyRef(), .3f, 10.f);
+        ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), 0.0f, 20.f);
+
+    }
+
     if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
 
     if (diffuseTexture.textureID != 0)
@@ -72,7 +100,6 @@ void ResourceMaterial::OnEditorUpdate()
 
     ImGui::SliderFloat("Alpha", &material.diffColor.w, 0.0f, 1.0f);
     if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
-
 
     if (specularTexture.textureID != 0)
     {
@@ -280,6 +307,7 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("isTransparent", isTransparent, allocator);
                 importOptions.AddMember("isAlphaDiscard", isAlpha, allocator);
                 importOptions.AddMember("isDoubleSided", doubleSided, allocator);
+                importOptions.AddMember("applyWind", applyWind, allocator);
 
                 if (doc.HasMember("importOptions")) doc["importOptions"] = importOptions;
                 else doc.AddMember("importOptions", importOptions, allocator);
@@ -327,6 +355,8 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
 {
     // Prioitize updated values saved in meta. If they are missing, fall back on the ones in the original material
 
+
+
     if (importOptions.HasMember("defaultTextureUID") && importOptions["defaultTextureUID"].IsUint64())
         defaultTextureUID = importOptions["defaultTextureUID"].GetUint64();
     else defaultTextureUID = INVALID_UID;
@@ -363,6 +393,10 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     if (importOptions.HasMember("isDoubleSided") && importOptions["isDoubleSided"].IsBool())
         doubleSided = importOptions["isDoubleSided"].GetBool();
     else doubleSided = false;
+
+    if (importOptions.HasMember("applyWind") && importOptions["applyWind"].IsBool())
+        applyWind = importOptions["applyWind"].GetBool();
+    else applyWind = false;
 
     material.specColor           = mat.GetSpecularFactor();
     material.shininess           = mat.GetGlossinessFactor();
@@ -525,4 +559,11 @@ void ResourceMaterial::FreeMaterials() const
         glMakeTextureHandleNonResidentARB(material.emmisiveTex);
         glDeleteTextures(1, &emmisiveTexture.textureID);
     }
+}
+
+void ResourceMaterial::SetDiffColor(const float4& newColor)
+{
+    material.diffColor = newColor;
+    //SaveToMeta();
+    App->GetSceneModule()->GetScene()->UpdateAllMaterialInstances(uid);
 }
