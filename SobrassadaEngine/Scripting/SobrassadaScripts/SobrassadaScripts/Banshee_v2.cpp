@@ -462,7 +462,7 @@ void Banshee_v2::Attack(float deltaTime)
             GoToAttackPosition();
 
             teleportWarningGO->SetEnabled(true);
-            teleportWarningMaterial->SetDiffColor(float4(1.f, 0.f, 0.f, 1.f));
+            teleportWarningMaterial->SetDiffColor(float4(0.89f, 0.243, 0.243f, 1.f));
         }
         if (attackTimer < currentInvisibleTime)
         {
@@ -721,7 +721,7 @@ void Banshee_v2::SlowArea(float deltaTime)
             mesh->SetEnabled(false);
             GoToAttackPosition();
 
-            teleportWarningMaterial->SetDiffColor(float4(0.f, 0.f, 1.f, 1.f));
+            teleportWarningMaterial->SetDiffColor(float4(0.243f, 0.369f, 0.89f, 1.f));
             teleportWarningGO->SetEnabled(true);
         }
         if (attackTimer < currentInvisibleTime)
