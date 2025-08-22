@@ -12,6 +12,7 @@
 #include "MovingUVTransparent.h"
 #include "Projectile.h"
 #include "RaycastController.h"
+#include "ResourceAnimation.h"
 #include "ResourceMaterial.h"
 #include "ResourceStateMachine.h"
 #include "ResourcesModule.h"
@@ -28,6 +29,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "ParticleSystemComponent.h"
+#include "Standalone/AnimController.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -277,6 +279,65 @@ bool CuChulainn::Init()
 
     if (!riastradBar) GLOG("[WARNING] CuChulainn: No riastard bar gameObject found");
 
+    //Ultimate
+    ultimateGlow =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
+    if (!ultimateGlow) GLOG("[WARNING] No ultimate Glow VFX found for CuChulain")
+    else ultimateGlow->SetEnabled(false);
+
+    ultimateBlur =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateBlurName);
+    if (!ultimateBlur) GLOG("[WARNING] No ultimate Blur VFX found for CuChulain")
+    else ultimateBlur->SetEnabled(false);
+
+    ultimateBrust = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateBrustName
+    );
+    if (!ultimateBrust) GLOG("[WARNING] No ultimate Brust VFX found for CuChulain")
+    else ultimateBrust->SetEnabled(false);
+
+    ultimateCrack1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateCrack1Name
+    );
+    if (!ultimateCrack1) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
+    else ultimateCrack1->SetEnabled(false);
+
+    ultimateCrack2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateCrack2Name
+    );
+    if (!ultimateCrack2) GLOG("[WARNING] No ultimate Crack2 VFX found for CuChulain")
+    else ultimateCrack2->SetEnabled(false);
+
+    ultimateHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateHaloName
+    );
+    if (!ultimateHalo) GLOG("[WARNING] No ultimate Halo VFX found for CuChulain")
+    else ultimateHalo->SetEnabled(false);
+
+    ultimateSmoke = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSmokeName
+    );
+    if (!ultimateSmoke) GLOG("[WARNING] No ultimate Smoke VFX found for CuChulain")
+    else ultimateSmoke->SetEnabled(false);
+
+    ultimateSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSphereName
+    );
+    if (!ultimateSphere) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateSphere->SetEnabled(false);
+    
+    ultimateWarning = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateWarningName
+    );
+    if (!ultimateWarning) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateWarning->SetEnabled(false);
+
+    ultimateSpikes = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSpikesName
+    );
+    if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateSpikes->SetEnabled(false);
+
     state = CharacterStates::IDLE;
 
     return true;
@@ -427,7 +488,19 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+            {
+                //if (ultimateGlow) 
+                //    ultimateGlow->SetEnabled(false);
+                //if (ultimateBlur) ultimateBlur->SetEnabled(false);
+                //if (ultimateBrust) ultimateBrust->SetEnabled(false);
+                //if (ultimateCrack1) ultimateCrack1->SetEnabled(false);
+                //if (ultimateCrack2) ultimateCrack2->SetEnabled(false);
+                //if (ultimateHalo) ultimateHalo->SetEnabled(false);
+                //if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
+                //if (ultimateSphere) ultimateSphere->SetEnabled(false);
+                //if (ultimateWarning) ultimateWarning->SetEnabled(false);
                 return;
+            }
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
             if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
             if (state == CharacterStates::TRANSFORM)
@@ -626,7 +699,7 @@ bool CuChulainn::CanUltimate() const
 
 bool CuChulainn::CanTakeMushroom() const
 {
-    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && state != CharacterStates::AIM &&
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL &&
            state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
@@ -949,8 +1022,7 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
-                 attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -970,23 +1042,44 @@ void CuChulainn::PerformAttack()
 
         if (!ultimateObject->IsEnabled() && ultimateTimer >= currentAnimationDelay)
         {
-            ultimateObject->SetEnabled(true);
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
-            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
-        }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
-                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
-        {
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
-        }
-        else if (ultimateObject->IsEnabled() &&
-                 ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
-        {
-            ultimateObject->SetEnabled(false);
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
-            ultimateTimer = 0.f;
-            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->GetAnimationController()->SetTime(0.0f);
+            ultimateObject->SetEnabled(true);
+            ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+
+            UpdateUltimateVfx();
+        }
+        else if (ultimateObject->IsEnabled())
+        {
+            if (ultimateSpikes) //Control spikes animation appearance
+            {
+                AnimationComponent* ac = ultimateObject->GetComponent<AnimationComponent*>();
+                if (ac && ac->GetCurrentAnimation())
+                {
+                    const float dur  = ac->GetCurrentAnimation()->GetDuration();
+                    const float t    = ac->GetAnimationController()->GetTime();
+                    const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
+
+                    ultimateSpikes->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack1) ultimateCrack1->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack2) ultimateCrack2->SetEnabled(norm >= 0.15f);
+                }
+            }
+            if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
+                ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+            {
+                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
+            }
+            else if (ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+            {
+                ultimateObject->SetEnabled(false);
+                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+                ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+                ultimateTimer = 0.f;
+                if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            }
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -1056,6 +1149,54 @@ void CuChulainn::UltimateAttack()
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
     if (animComponent) animComponent->UseTrigger("Ultimate");
+}
+
+void CuChulainn::UpdateUltimateVfx()
+{
+    if (ultimateBlur)
+    {
+        ultimateBlur->SetEnabled(true);
+        ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
+            ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateBrust)
+    {
+        ultimateBrust->SetEnabled(true);
+    }
+    if (ultimateCrack1)
+    {
+        ultimateCrack1->SetEnabled(true);
+    }
+    if (ultimateCrack2)
+    {
+        ultimateCrack2->SetEnabled(true);
+    }
+    if (ultimateHalo)
+    {
+        ultimateHalo->SetEnabled(true);
+        ultimateHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateHalo->GetComponent<ShaderScriptComponent*>())
+            ultimateHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateSmoke)
+    {
+        ultimateSmoke->SetEnabled(true);
+        ultimateSmoke->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateSmoke->GetComponent<ShaderScriptComponent*>())
+            ultimateSmoke->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateSphere)
+    {
+        ultimateSphere->SetEnabled(true);
+        ultimateSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateSphere->GetComponent<ShaderScriptComponent*>())
+            ultimateSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateWarning)
+    {
+        ultimateWarning->SetEnabled(true);
+    }
 }
 
 void CuChulainn::Aim(float deltaTime)
