@@ -154,10 +154,11 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 {
                     playerScript->StartCurse();
                     TakeDamage(bansheeScript->GetSlowAreaDamage());
+                    return;
                 }
             }
 
-            else TakeDamage(enemyScript->attackDamage);
+            TakeDamage(enemyScript->attackDamage);
         }
     }
     else if (otherScript && otherWeaponShpere && otherWeaponShpere->GetEnabled())
