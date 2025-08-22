@@ -58,7 +58,7 @@ bool Archer::Init()
 
     GLOG("Parent: %s, Children: %d", root->GetName().c_str(), siblings.size());
 
-    // BUSCAR TODAS las flechas (tanto para single como multiple)
+   
     std::vector<GameObject*> allArrows;
 
     for (UID objectUID : siblings)
@@ -89,13 +89,13 @@ bool Archer::Init()
 
     GLOG("Total arrows found: %d", allArrows.size());
 
-    // CONFIGURAR según el tipo de arquero
+    
     if (hasMultipleShoots)
     {
         GLOG("=== MULTIPLE SHOOTS ARCHER ===");
-        GLOG("Will use %d arrows for overshooting", numberOfShoots);
+      
 
-        // Para múltiples disparos: DESACTIVAR TODAS las flechas inicialmente
+      
         for (GameObject* arrowObj : allArrows)
         {
             arrowObj->SetEnabledRecursive(false);
@@ -106,16 +106,15 @@ bool Archer::Init()
     {
         GLOG("=== SINGLE SHOOT ARCHER ===");
 
-        // Para disparo único: usar la primera flecha, desactivar el resto
+     
         if (!allArrows.empty())
         {
-            // La primera flecha es para disparo único
+          
             GameObject* singleArrowObj = allArrows[0];
             arrow                      = arrowPool[0];
 
             GLOG("Single arrow assigned: %s", singleArrowObj->GetName().c_str());
 
-            // DESACTIVAR TODAS las flechas (incluyendo la del disparo único)
             for (GameObject* arrowObj : allArrows)
             {
                 arrowObj->SetEnabledRecursive(false);
@@ -128,7 +127,7 @@ bool Archer::Init()
         }
     }
 
-    // VERIFICAR ESTADO FINAL
+  
     GLOG("=== FINAL ARROW STATES ===");
     for (int i = 0; i < arrowPool.size(); i++)
     {
@@ -318,7 +317,7 @@ void Archer::OverShooting(float deltaTime)
 
                 float3 arrowPos             = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
 
-                // Obtener la flecha actual
+               
                 Projectile* currentArrow    = arrowPool[currentArrowIndex];
                 GameObject* arrowGameObject = currentArrow->GetParent();
 
@@ -433,7 +432,7 @@ void Archer::PatrolAI()
 {
     if (isStatic)
     {
-        currentState = ArcherStates::SEARCH;
+        currentState = ArcherStates::AIM;
         return;
     }
 
@@ -611,7 +610,7 @@ void Archer::Attack(float deltaTime)
             direction.Normalize();
             float3 arrowPos      = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
 
-            // ACTIVAR la flecha ANTES de disparar (igual que en OverShooting)
+            
             GameObject* arrowObj = arrow->GetParent();
             if (arrowObj)
             {
@@ -667,7 +666,7 @@ void Archer::ChangeState()
         {
             if (distance <= rangeAIAttack && attackCdTimer <= 0.0f) currentState = ArcherStates::AIM;
             else if (distance <= rangeAIAttack && attackCdTimer > 0.0f) currentState = ArcherStates::SEARCH;
-            else currentState = ArcherStates::SEARCH;
+            else currentState = ArcherStates::AIM;
         }
         else
         {
