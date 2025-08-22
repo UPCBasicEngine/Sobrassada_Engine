@@ -5,6 +5,7 @@
 
 #include <vector>
 
+class MagicBarrier;
 class GameObject;
 class CharacterControllerComponent;
 class AnimationComponent;
@@ -45,6 +46,8 @@ class Character : public Script
     virtual void TakeDamage(int amount);
     void Restart();
     bool IsDead() const { return isDead; };
+
+    void SetAssociatedBarrier(MagicBarrier* newAssociatedBarrier) { associatedBarrier = newAssociatedBarrier; }
 
   protected:
     virtual void Attack(float deltaTime);
@@ -106,4 +109,7 @@ class Character : public Script
     float searchTimer       = 0.0f;
     float searchDuration    = 5.0f;
     bool isSearching        = false;
+
+    // Level
+    MagicBarrier* associatedBarrier = nullptr;
 };

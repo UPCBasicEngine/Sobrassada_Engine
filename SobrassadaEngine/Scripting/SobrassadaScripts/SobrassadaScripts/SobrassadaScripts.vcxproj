@@ -482,6 +482,7 @@
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="HealVFXGround.h" />
+    <ClInclude Include="MagicBarrier.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="MoveGOInSpline.h" />
@@ -2055,6 +2056,7 @@
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
+    <ClCompile Include="MagicBarrier.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
