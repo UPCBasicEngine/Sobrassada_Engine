@@ -569,9 +569,6 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq)
 {
-    if (weaponCollider->GetEnabled())
-        weaponCollider->SetEnabled(false);
-    
     if (animComponent && animComponent->IsFinished())
     {
         stateTimer = biteAttackCooldown;
@@ -591,8 +588,8 @@ void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerS
 {
     if (distanceToPlayerSq <= 3)
     {
-        finalAttackObject->SetLocalPosition(parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart());
         finalAttackObject->SetEnabled(true);
+        finalAttackObject->SetLocalPosition(parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart());
         Die();
     }
     else
@@ -614,8 +611,6 @@ void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
 
 void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
 {
-    if (finalAttackObject->IsEnabled()) finalAttackObject->SetEnabled(false);
-    
     if (animComponent && animComponent->IsFinished())
     {
         isDead = true;
