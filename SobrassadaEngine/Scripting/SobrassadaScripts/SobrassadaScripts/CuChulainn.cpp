@@ -23,6 +23,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
+#include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -31,8 +32,6 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
-#include "ParticleSystemComponent.h"
-#include "Standalone/AnimController.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -205,47 +204,70 @@ bool CuChulainn::Init()
     if (!healParticles) GLOG("[WARNING] No heal visual found for CuChulain")
     else healParticles->SetEnabled(false);
 
+    // Riastrad VFX
     riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
     if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
-    //else riastradVfx->SetEnabled(false);
 
-    riastradBurst = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBurstName);
+    riastradBurst = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradBurstName
+    );
     if (!riastradBurst) GLOG("[WARNING] No riastrad Burst VFX found for CuChulain")
     else riastradBurst->SetEnabled(false);
 
-    riastradBlur = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBlurName);
+    riastradBlur = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradBlurName
+    );
     if (!riastradBlur) GLOG("[WARNING] No riastrad Blur VFX found for CuChulain")
     else riastradBlur->SetEnabled(false);
 
-    riastradHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradHaloName);
+    riastradHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradHaloName
+    );
     if (!riastradHalo) GLOG("[WARNING] No riastrad Halo VFX found for CuChulain")
     else riastradHalo->SetEnabled(false);
 
-    riastradSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSphereName);
+    riastradSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSphereName
+    );
     if (!riastradSphere) GLOG("[WARNING] No riastrad Sphere VFX found for CuChulain")
     else riastradSphere->SetEnabled(false);
 
-    riastradCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradCrackName);
+    riastradCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradCrackName
+    );
     if (!riastradCrack) GLOG("[WARNING] No riastrad Crack VFX found for CuChulain")
     else riastradCrack->SetEnabled(false);
 
-    riastradWaring = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradWaringName);
+    riastradWaring = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradWaringName
+    );
     if (!riastradWaring) GLOG("[WARNING] No riastrad Warning VFX found for CuChulain")
     else riastradWaring->SetEnabled(false);
 
-    riastradSmoke1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke1Name);
+    riastradSmoke1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSmoke1Name
+    );
+    ;
     if (!riastradSmoke1) GLOG("[WARNING] No riastrad Smoke 1 VFX found for CuChulain")
     else riastradSmoke1->SetEnabled(false);
 
-    riastradSmoke2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke2Name);
+    riastradSmoke2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSmoke2Name
+    );
+    ;
     if (!riastradSmoke2) GLOG("[WARNING] No riastrad Smoke 2 VFX found for CuChulain")
     else riastradSmoke2->SetEnabled(false);
 
-    riastradSmoke3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke3Name);
+    riastradSmoke3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSmoke3Name
+    );
+    ;
     if (!riastradSmoke3) GLOG("[WARNING] No riastrad Smoke 3 VFX found for CuChulain")
     else riastradSmoke3->SetEnabled(false);
 
-    riastradStars = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradStarsName);
+    riastradStars = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradStarsName
+    );
     if (!riastradStars) GLOG("[WARNING] No riastrad Stars VFX found for CuChulain")
     else riastradStars->SetEnabled(false);
 
@@ -290,7 +312,7 @@ bool CuChulainn::Init()
 
     if (!riastradBar) GLOG("[WARNING] CuChulainn: No riastard bar gameObject found");
 
-    //Ultimate
+    // Ultimate
     ultimateGlow =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
     if (!ultimateGlow) GLOG("[WARNING] No ultimate Glow VFX found for CuChulain")
@@ -319,9 +341,8 @@ bool CuChulainn::Init()
     if (!ultimateCrack2) GLOG("[WARNING] No ultimate Crack2 VFX found for CuChulain")
     else ultimateCrack2->SetEnabled(false);
 
-    ultimateHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        ultimateName, ultimateHaloName
-    );
+    ultimateHalo =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateHaloName);
     if (!ultimateHalo) GLOG("[WARNING] No ultimate Halo VFX found for CuChulain")
     else ultimateHalo->SetEnabled(false);
 
@@ -336,7 +357,7 @@ bool CuChulainn::Init()
     );
     if (!ultimateSphere) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
     else ultimateSphere->SetEnabled(false);
-    
+
     ultimateWarning = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
         ultimateName, ultimateWarningName
     );
@@ -500,16 +521,16 @@ void CuChulainn::HandleState(float deltaTime)
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
             {
-                //if (ultimateGlow) 
-                //    ultimateGlow->SetEnabled(false);
-                //if (ultimateBlur) ultimateBlur->SetEnabled(false);
-                //if (ultimateBrust) ultimateBrust->SetEnabled(false);
-                //if (ultimateCrack1) ultimateCrack1->SetEnabled(false);
-                //if (ultimateCrack2) ultimateCrack2->SetEnabled(false);
-                //if (ultimateHalo) ultimateHalo->SetEnabled(false);
-                //if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
-                //if (ultimateSphere) ultimateSphere->SetEnabled(false);
-                //if (ultimateWarning) ultimateWarning->SetEnabled(false);
+                // if (ultimateGlow)
+                //     ultimateGlow->SetEnabled(false);
+                // if (ultimateBlur) ultimateBlur->SetEnabled(false);
+                // if (ultimateBrust) ultimateBrust->SetEnabled(false);
+                // if (ultimateCrack1) ultimateCrack1->SetEnabled(false);
+                // if (ultimateCrack2) ultimateCrack2->SetEnabled(false);
+                // if (ultimateHalo) ultimateHalo->SetEnabled(false);
+                // if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
+                // if (ultimateSphere) ultimateSphere->SetEnabled(false);
+                // if (ultimateWarning) ultimateWarning->SetEnabled(false);
                 return;
             }
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
@@ -1029,7 +1050,8 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -1060,7 +1082,7 @@ void CuChulainn::PerformAttack()
         }
         else if (ultimateObject->IsEnabled())
         {
-            if (ultimateSpikes) //Control spikes animation appearance
+            if (ultimateSpikes) // Control spikes animation appearance
             {
                 AnimationComponent* ac = ultimateObject->GetComponent<AnimationComponent*>();
                 if (ac && ac->GetCurrentAnimation())
@@ -1468,20 +1490,20 @@ void CuChulainn::EnableRiastradVfx()
     if (riastradSmoke1)
     {
         riastradSmoke1->SetEnabled(true);
-        //riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
-        //riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        // riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
+        // riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (riastradSmoke2)
     {
         riastradSmoke2->SetEnabled(true);
-       // riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
-       // riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        // riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
+        // riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (riastradSmoke3)
     {
         riastradSmoke3->SetEnabled(true);
-       //riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
-       //riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        // riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
+        // riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (riastradSphere)
     {
@@ -1492,8 +1514,8 @@ void CuChulainn::EnableRiastradVfx()
     if (riastradHalo)
     {
         riastradHalo->SetEnabled(true);
-        //riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
-        //riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        // riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
+        // riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (riastradCrack) riastradCrack->SetEnabled(true);
     if (riastradWaring) riastradWaring->SetEnabled(true);
