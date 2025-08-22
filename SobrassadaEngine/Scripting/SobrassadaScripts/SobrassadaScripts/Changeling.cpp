@@ -589,13 +589,11 @@ void Changeling::UpdateBiteAttackCooldownState(float deltaTime, float distanceTo
 
 void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq)
 {
-    if (distanceToPlayerSq <= biteAttackRadius * biteAttackRadius)
+    if (distanceToPlayerSq <= biteAttackRadius * biteAttackRadius * 1.5f)
     {
-        agentAI->SetSpeed(0.0f, 10.0f);
         finalAttackObject->SetLocalPosition(parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart());
         finalAttackObject->SetEnabled(true);
-        if (animComponent) animComponent->UseTrigger("Trigger_Die");
-        currentState = ChangelingStates::DYING;
+        Die();
     }
     else
     {
