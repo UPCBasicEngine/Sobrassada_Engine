@@ -41,8 +41,9 @@ enum class ChangelingStates
     DASH_CHAIN_ATTACK       = 12,
     BITE_ATTACK             = 13,
     BITE_ATTACK_COOLDOWN    = 14,
-    DAMAGED                 = 15,
-    DYING                   = 16,
+    FINAL_ATTACK            = 15,
+    DAMAGED                 = 16,
+    DYING                   = 17,
 };
 
 class Changeling : public Character
@@ -76,6 +77,7 @@ class Changeling : public Character
     void UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackCooldownState(float deltaTime, float distanceToPlayerSq);
+    void UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
 
@@ -88,6 +90,7 @@ class Changeling : public Character
     bool ST_AimNextDashChainAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_AimNextDashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
+    bool ST_FinalAttack(float deltaTime, float distanceToPlayerSq);
 
   private:
     void ValidateSetup();
@@ -103,6 +106,7 @@ class Changeling : public Character
 
     AIAgentComponent* agentAI     = nullptr;
     ChangelingStates currentState = ChangelingStates::NONE;
+    ChangelingStates stateAfterDamaged = ChangelingStates::NONE;
 
     GameObject* parentGO          = nullptr;
 

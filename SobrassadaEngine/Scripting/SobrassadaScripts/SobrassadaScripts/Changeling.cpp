@@ -203,6 +203,9 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::BITE_ATTACK_COOLDOWN:
         UpdateBiteAttackCooldownState(deltaTime, distanceToPlayerSq);
         break;
+    case ChangelingStates::FINAL_ATTACK:
+        UpdateFinalAttackState(deltaTime, distanceToPlayerSq);
+        break;
     case ChangelingStates::DAMAGED:
         UpdateDamagedState(deltaTime, distanceToPlayerSq);
         break;
@@ -574,12 +577,17 @@ void Changeling::UpdateBiteAttackCooldownState(float deltaTime, float distanceTo
     if (stateTimer < 0.f && !ST_BiteAttack(deltaTime, distanceToPlayerSq)) currentState = ChangelingStates::IDLE_BURIED;
 }
 
+void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq)
+{
+}
+
 void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
 {
     if (animComponent && animComponent->IsFinished())
     {
-        currentState = ChangelingStates::IDLE_VISIBLE;
-        animComponent->UseTrigger("Trigger_VisibleIdle");
+        currentState = stateAfterDamaged;
+        stateAfterDamaged = ChangelingStates::NONE;
+        if (animComponent && !animComponent->UseTrigger("Trigger_VisibleIdle")) animComponent->UseTrigger("Trigger_BurriedIdle");
     }
 }
 
@@ -648,6 +656,11 @@ bool Changeling::ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq)
 
 bool Changeling::ST_Damaged()
 {
+    if (currentState == ChangelingStates::PEEK || currentState == ChangelingStates::BITE_ATTACK)
+        stateAfterDamaged = ChangelingStates::IDLE_BURIED;
+    else
+        stateAfterDamaged = ChangelingStates::IDLE_VISIBLE;
+    
     currentState = ChangelingStates::DAMAGED;
 
     agentAI->ResetSpeed();
@@ -774,6 +787,10 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     Character::Attack(deltaTime);
 
     return true;
+}
+
+bool Changeling::ST_FinalAttack(float deltaTime, float distanceToPlayerSq)
+{
 }
 
 void Changeling::ValidateSetup()
