@@ -31,6 +31,7 @@ enum class BossStates
     Mirage,
     ChangePhase,
     WaterSpouts,
+    ShieldBlast,
 };
 
 enum class BossActions
@@ -38,22 +39,22 @@ enum class BossActions
     Idle,
     Taunt,
     Chase,
-    Combo1,
+    Combo1, // ShieldStrikes
     Combo2,
     Combo3,
-    Prepare,
+    Prepare, // OverheadStrike
     Jump,
     Dash,
     Land,
     Attack,
     Recover,
     Waiting,
-    Start,
+    Start, // Mirage
     Charge,
     End,
-    ChangeStart,
-    ChangeCharge,
     WaterSpouts,
+    Load, // ShieldBlast
+    Shoot,
 };
 
 class Boss : public Character
@@ -97,6 +98,8 @@ class Boss : public Character
     void Mirage();
     void ChangePhase();
     void ResetValues(bool isForMirage = false);
+
+    void ShieldBlast(float deltaTime);
 
     const char* GetStateName() const;
     const char* GetActionName() const;

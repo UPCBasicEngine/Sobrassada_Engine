@@ -152,12 +152,10 @@ void Boss::HandleState(float deltaTime)
         break;
 
     case BossStates::Mirage:
-        ResetValues(true);
         Mirage();
         break;
 
     case BossStates::ChangePhase:
-        ResetValues(false);
         ChangePhase();
         break;
 
@@ -197,6 +195,7 @@ void Boss::ChooseNextState()
     }
 }
 
+// Phase1: ShieldStrikes, OverheadStrike & Mirage
 void Boss::ChooseNextStateFirstPhase()
 {
     int shieldStrikesRate  = -1;
@@ -240,7 +239,6 @@ void Boss::ChooseNextStateFirstPhase()
         else doIdle = true;
         break;
     }
-    // shieldStrikesRate = -1;
 
     int num = uniformDist(rng);
     if (doTaunt)
@@ -264,10 +262,75 @@ void Boss::ChooseNextStateFirstPhase()
     }
 }
 
+// Phase2: ShieldStrikes, ShieldBlast, Mirage & WaterSpouts
 void Boss::ChooseNextStateSecondPhase()
 {
+    int shieldStrikesRate = -1;
+    int shieldBlastRate   = -1;
+    int waterSpoutsRate   = -1;
+
+    // Set states ratio depending on distance
+    switch (CheckDistance())
+    {
+    case BossDistance::Close:
+        shieldStrikesRate = 100;
+        break;
+
+    case BossDistance::Near:
+        shieldStrikesRate = 80;
+        shieldBlastRate   = 100;
+        break;
+
+    case BossDistance::Medium:
+        shieldStrikesRate = 60;
+        shieldBlastRate   = 100;
+        break;
+
+    case BossDistance::Distant:
+        shieldStrikesRate = 50;
+        shieldBlastRate   = 100;
+        break;
+
+    case BossDistance::Far:
+        shieldStrikesRate = 35;
+        shieldBlastRate   = 100;
+        break;
+
+    case BossDistance::Farther:
+        shieldStrikesRate = 20;
+        shieldBlastRate   = 100;
+        break;
+
+    case BossDistance::Extreme:
+        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+        if (distance <= maxDetectionRange) doTaunt = true;
+        else doIdle = true;
+        break;
+    }
+
+    int num = uniformDist(rng);
+    if (doTaunt)
+    {
+        currentState = BossStates::Taunt;
+    }
+    else if (doIdle)
+    {
+        currentState = BossStates::Idle;
+    }
+    else
+    {
+        if (num <= shieldStrikesRate)
+        {
+            currentState = BossStates::ShieldStrikes;
+        }
+        else if (num <= shieldBlastRate)
+        {
+            currentState = BossStates::OverheadStrike;
+        }
+    }
 }
 
+// Phase3: (ALL) ShieldStrikes, OverheadStrike, ShieldBlast, Mirage & WaterSpouts
 void Boss::ChooseNextStateThirdPhase()
 {
 }
@@ -294,7 +357,7 @@ void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
-
+        ResetValues(true);
         stateEnter    = false;
         doTaunt       = false;
         currentAction = BossActions::Taunt;
@@ -435,7 +498,7 @@ void Boss::ShieldStrikes(float deltaTime)
 
 void Boss::OverheadStrike(float deltaTime)
 {
-    if (!closeArea || !bigArea) return;
+    if (!closeArea || !bigArea) return; // TODO: vfx
 
     if (stateEnter)
     {
@@ -817,14 +880,69 @@ void Boss::ResetValues(bool isForMirage)
     bigArea->SetEnabled(false);
 }
 
+void Boss::ShieldBlast(float deltaTime)
+{
+    if (!weaponCollider) return; // TODO: collider & vfx
+
+    if (stateEnter)
+    {
+        stateEnter        = false;
+        actionTriggerDone = false;
+        currentAction     = BossActions::Load;
+    }
+
+    switch (currentAction)
+    {
+    case BossActions::Load:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            animComponent->UseTrigger("BlastCharge");
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossActions::Shoot;
+            actionTriggerDone = false;
+        }
+        break;
+
+    case BossActions::Shoot:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            animComponent->UseTrigger("BlastHit");
+        }
+
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            actionTriggerDone = false;
+            ChooseNextState();
+        }
+        break;
+
+    default:
+        GLOG("Error: ShieldBlast")
+        break;
+    }
+}
+
 void Boss::ChangePhase()
 {
     if (stateEnter)
     {
+        ResetValues(false);
         stateEnter = false;
         phase++;
         // TODO: anim changePhase
+        currentAction = BossActions::Taunt;
+
+        if (animComponent) animComponent->UseTrigger("Taunt");
     }
+
+    if (animComponent && animComponent->IsFinished()) ChooseNextState();
 }
 
 const char* Boss::GetStateName() const
@@ -911,12 +1029,6 @@ const char* Boss::GetActionName() const
 
     case BossActions::End:
         return "End";
-
-    case BossActions::ChangeStart:
-        return "ChangeStart";
-
-    case BossActions::ChangeCharge:
-        return "ChangeCharge";
 
     case BossActions::WaterSpouts:
         return "WaterSpouts";
