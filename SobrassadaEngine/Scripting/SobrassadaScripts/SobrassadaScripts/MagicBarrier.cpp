@@ -8,8 +8,8 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 
-
-MagicBarrier::MagicBarrier(GameObject* parent) : Script(parent) {
+MagicBarrier::MagicBarrier(GameObject* parent) : Script(parent)
+{
     fields.emplace_back("Area tag", InspectorField::FieldType::InputText, &areaTagString);
 }
 

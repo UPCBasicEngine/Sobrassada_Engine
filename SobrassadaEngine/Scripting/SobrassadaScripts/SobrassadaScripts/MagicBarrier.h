@@ -16,9 +16,8 @@ class MagicBarrier : public Script
     void EnemyDied();
 
     int GetEnemiesInArea() const { return enemiesInArea; }
-    
-private:
 
+  private:
     std::string areaTagString;
     HashString areaTag;
     int enemiesInArea = 0;

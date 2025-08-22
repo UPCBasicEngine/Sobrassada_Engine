@@ -166,6 +166,9 @@
     <ClInclude Include="MiniFireball.h">
       <Filter>Environment\Traps</Filter>
     </ClInclude>
+    <ClInclude Include="MagicBarrier.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -866,6 +869,9 @@
     </ClCompile>
     <ClCompile Include="MiniFireball.cpp">
       <Filter>Environment\Traps</Filter>
+    </ClCompile>
+    <ClCompile Include="MagicBarrier.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
