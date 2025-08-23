@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Resource.h"
+#include "Globals.h"
 
 #include "Math/float3.h"
 #include "Math/float4.h"
@@ -58,6 +59,7 @@ class ResourceMaterial : public Resource
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlphaDiscard() const { return isAlpha; }
     const bool IsDoubleSided() const { return doubleSided; }
+    bool DoApplyWind() const { return applyWind; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
     int GetDiffuseWidth() const { return diffuseTexture.width; }
@@ -69,6 +71,8 @@ class ResourceMaterial : public Resource
     unsigned int GetEmissiveTextureID() const { return emmisiveTexture.textureID; }
     unsigned int GetOcclusionTextureID() const { return occlusionTexture.textureID; }
 
+    SOBRASADA_API_ENGINE void SetDiffColor(const float4& newColor);
+
   private:
     TextureInfo diffuseTexture;
     TextureInfo specularTexture;
@@ -77,11 +81,12 @@ class ResourceMaterial : public Resource
     TextureInfo emmisiveTexture;
     TextureInfo occlusionTexture;
 
-    MaterialGPU material;
+    MaterialGPU material  = {};
     bool isTransparent    = false;
     bool isAlpha          = false;
     bool doubleSided      = false;
     bool hasNormal        = false;
+    bool applyWind        = false;
     UID defaultTextureUID = INVALID_UID;
 
     bool wasUpdated       = false;

@@ -471,6 +471,7 @@
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
     <ClInclude Include="ChangeSceneScript.h" />
+    <ClInclude Include="Destructible.h" />
     <ClInclude Include="EnemySpawnerScript.h" />
     <ClInclude Include="ExitGameScript.h" />
     <ClInclude Include="Character.h" />
@@ -480,7 +481,9 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
+    <ClInclude Include="HealVFXGround.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
+    <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -499,6 +502,7 @@
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="SpawnUI.h" />
+    <ClInclude Include="Spouts.h" />
     <ClInclude Include="SwitchScriptTest.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
@@ -2042,6 +2046,7 @@
     <ClCompile Include="ChangeSceneScript.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="CuChulainn.cpp" />
+    <ClCompile Include="Destructible.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EnemySpawnerScript.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />
@@ -2049,7 +2054,9 @@
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
+    <ClCompile Include="HealVFXGround.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
+    <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
@@ -2081,6 +2088,7 @@
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />
     <ClCompile Include="SpawnUI.cpp" />
+    <ClCompile Include="Spouts.cpp" />
     <ClCompile Include="SwitchScriptTest.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />

@@ -9,18 +9,27 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "InputModule.h"
+#include "MovingUVTransparent.h"
 #include "Projectile.h"
+#include "RaycastController.h"
+#include "ResourceAnimation.h"
+#include "ResourceMaterial.h"
 #include "ResourceStateMachine.h"
+#include "ResourcesModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
+#include "ParticleSystemComponent.h"
+#include "Standalone/AnimController.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -34,15 +43,20 @@ CuChulainn::CuChulainn(GameObject* parent)
 {
     currentHealth = 3; // mainChar starts low hp
 
-    // TODO: Replace target names by gameObjects when overriding prefabs doesn't break the link
     fields.push_back({InspectorField::FieldType::Spacing, nullptr});
     fields.push_back({InspectorField::FieldType::Text, (void*)"CuChulainn parameters"});
     fields.push_back({"God Mode", InspectorField::FieldType::Bool, &godMode});
     fields.push_back({"Default speed", InspectorField::FieldType::Float, &defaultSpeed, 0.0f, 10.0f});
+    fields.push_back({"Step time", InspectorField::FieldType::Float, &stepTime, 0.0f, 1.0f});
     fields.push_back({"Camera Object Name", InspectorField::FieldType::InputText, &cameraName});
     fields.push_back({"Spear Projectile Name", InspectorField::FieldType::InputText, &spearName});
     fields.push_back({"Range attack cooldown", InspectorField::FieldType::Float, &throwCooldown, 0.0f, 2.0f});
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
+
+    // Unlocked abilities
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
+    fields.push_back({"Dash unlocked", InspectorField::FieldType::Bool, &dashUnlocked});
+    fields.push_back({"Ultimate unlocked", InspectorField::FieldType::Bool, &ultimateUnlocked});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ultimate parameters"});
     fields.push_back({"Ultimate object", InspectorField::FieldType::InputText, &ultimateName});
@@ -65,12 +79,20 @@ CuChulainn::CuChulainn(GameObject* parent)
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
 
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
+    fields.push_back({"Curse duration", InspectorField::FieldType::Float, &curseDuration, 0.0f, 100.0f});
+    fields.push_back({"Curse speed", InspectorField::FieldType::Float, &curseSpeed, 0.0f, 100.0f});
+    fields.push_back({"Player material", InspectorField::FieldType::Resource, &playerMaterial});
+
     fields.push_back({InspectorField::FieldType::Text, (void*)"Healing"});
     fields.push_back({"Take mushroom cooldown", InspectorField::FieldType::Float, &takeMushroomCd, 0.0f, 5.0f});
     fields.push_back({"Mushroom healing", InspectorField::FieldType::Int, &mushroomHeal, 0.0f, 5.0f});
+    fields.push_back({"Heal knockback object", InspectorField::FieldType::InputText, &healKnockbackName});
+    fields.push_back({"Heal knockback delay", InspectorField::FieldType::Float, &healKnockbackDelay});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Riastrad parameters"});
-    fields.push_back({"Riastrad Bar object", InspectorField::FieldType::GameObject, &riastradBar});
+    // fields.push_back({"Riastrad Bar object", InspectorField::FieldType::GameObject, &riastradBar}); // TODO: Fix
+    // GameObject field breaks the loading of the ones after
     fields.push_back({"Riastrad duration", InspectorField::FieldType::Float, &riastradDuration, 0.0f, 100.0f});
     fields.push_back({"Riastrad movement speed", InspectorField::FieldType::Float, &riastradMovementSpeed, 0.0f, 20.0f}
     );
@@ -80,22 +102,34 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Riastrad on damage taken", InspectorField::FieldType::Int, &riastradOnDamageTaken, 0, 100});
     fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
     fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
+    fields.push_back({"Transform VFX Delay", InspectorField::FieldType::Float, &transformVfxDelay, 0.0f, 20.0f});
+    fields.push_back({"Riastrad VFX burst", InspectorField::FieldType::InputText, &riastradBurstName});
+    fields.push_back({"Riastrad VFX blur", InspectorField::FieldType::InputText, &riastradBlurName});
+    fields.push_back({"Riastrad VFX halo", InspectorField::FieldType::InputText, &riastradHaloName});
+    fields.push_back({"Riastrad VFX sphere", InspectorField::FieldType::InputText, &riastradSphereName});
+    fields.push_back({"Riastrad VFX crack", InspectorField::FieldType::InputText, &riastradCrackName});
+    fields.push_back({"Riastrad VFX waring", InspectorField::FieldType::InputText, &riastradWaringName});
+    fields.push_back({"Riastrad VFX smoke 1", InspectorField::FieldType::InputText, &riastradSmoke1Name});
+    fields.push_back({"Riastrad VFX smoke 2", InspectorField::FieldType::InputText, &riastradSmoke2Name});
+    fields.push_back({"Riastrad VFX smoke 3", InspectorField::FieldType::InputText, &riastradSmoke3Name});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
-
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
-    fields.push_back({"Heal visual object", InspectorField::FieldType::InputText, &healVisualName});
+    fields.push_back({"Heal vfx object", InspectorField::FieldType::InputText, &healVfxName});
+    fields.push_back({"Heal particles object", InspectorField::FieldType::InputText, &healParticlesName});
+    fields.push_back({"Riastrad VFX object", InspectorField::FieldType::InputText, &riastradVfxName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"HUD textures"});
     fields.push_back({"Dash filled icon", InspectorField::FieldType::Resource, &dashFillImage});
     fields.push_back({"Dash empty icon", InspectorField::FieldType::Resource, &dashEmptyImage});
     fields.push_back({"Ultimate filled icon", InspectorField::FieldType::Resource, &ultimateFillImage});
     fields.push_back({"Ultimate empty icon", InspectorField::FieldType::Resource, &ultimateEmptyImage});
+
 }
 
 bool CuChulainn::Init()
@@ -162,8 +196,12 @@ bool CuChulainn::Init()
     }
 
     chargedAttackCollider = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargedAttackName);
-    if (!chargedAttackCollider) GLOG("[WARNING] No ultimate found for CuChualin")
+    if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
+
+    healKnockback = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healKnockbackName);
+    if (!healKnockback) GLOG("[WARNING] No heal knockback found for CuChualin")
+    else healKnockback->SetEnabled(false);
 
     ultimateObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateName);
     if (!ultimateObject) GLOG("[WARNING] No ultimate found for CuChulain")
@@ -189,14 +227,116 @@ bool CuChulainn::Init()
     if (!dashDecal) GLOG("[WARNING] No dash decal found for CuChulain")
     else dashDecal->SetEnabled(false);
 
-    healVisual = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healVisualName);
-    if (!healVisual) GLOG("[WARNING] No heal visual found for CuChulain")
-    else healVisual->SetEnabled(false);
+    healVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healVfxName);
+    if (!healVfx) GLOG("[WARNING] No heal visual found for CuChulain")
+    else healVfx->SetEnabled(false);
+
+    healParticles = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healParticlesName);
+    if (!healParticles) GLOG("[WARNING] No heal visual found for CuChulain")
+    else healParticles->SetEnabled(false);
+
+    riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
+    if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
+
+    riastradBurst = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBurstName);
+    if (!riastradBurst) GLOG("[WARNING] No riastrad Burst VFX found for CuChulain")
+    else riastradBurst->SetEnabled(false);
+
+    riastradBlur = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBlurName);
+    if (!riastradBlur) GLOG("[WARNING] No riastrad Blur VFX found for CuChulain")
+    else riastradBlur->SetEnabled(false);
+
+    riastradHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradHaloName);
+    if (!riastradHalo) GLOG("[WARNING] No riastrad Halo VFX found for CuChulain")
+    else riastradHalo->SetEnabled(false);
+
+    riastradSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSphereName);
+    if (!riastradSphere) GLOG("[WARNING] No riastrad Sphere VFX found for CuChulain")
+    else riastradSphere->SetEnabled(false);
+
+    riastradCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradCrackName);
+    if (!riastradCrack) GLOG("[WARNING] No riastrad Crack VFX found for CuChulain")
+    else riastradCrack->SetEnabled(false);
+
+    riastradWaring = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradWaringName);
+    if (!riastradWaring) GLOG("[WARNING] No riastrad Warning VFX found for CuChulain")
+    else riastradWaring->SetEnabled(false);
+
+    riastradSmoke1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke1Name);
+    if (!riastradSmoke1) GLOG("[WARNING] No riastrad Smoke 1 VFX found for CuChulain")
+    else riastradSmoke1->SetEnabled(false);
+
+    riastradSmoke2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke2Name);
+    if (!riastradSmoke2) GLOG("[WARNING] No riastrad Smoke 2 VFX found for CuChulain")
+    else riastradSmoke2->SetEnabled(false);
+
+    riastradSmoke3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradSmoke3Name);
+    if (!riastradSmoke3) GLOG("[WARNING] No riastrad Smoke 3 VFX found for CuChulain")
+    else riastradSmoke3->SetEnabled(false);
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
     if (!riastradBar) GLOG("[WARNING] CuChulainn: No riastard bar gameObject found");
+
+    //Ultimate
+    ultimateGlow =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
+    if (!ultimateGlow) GLOG("[WARNING] No ultimate Glow VFX found for CuChulain")
+    else ultimateGlow->SetEnabled(false);
+
+    ultimateBlur =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateBlurName);
+    if (!ultimateBlur) GLOG("[WARNING] No ultimate Blur VFX found for CuChulain")
+    else ultimateBlur->SetEnabled(false);
+
+    ultimateBrust = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateBrustName
+    );
+    if (!ultimateBrust) GLOG("[WARNING] No ultimate Brust VFX found for CuChulain")
+    else ultimateBrust->SetEnabled(false);
+
+    ultimateCrack1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateCrack1Name
+    );
+    if (!ultimateCrack1) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
+    else ultimateCrack1->SetEnabled(false);
+
+    ultimateCrack2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateCrack2Name
+    );
+    if (!ultimateCrack2) GLOG("[WARNING] No ultimate Crack2 VFX found for CuChulain")
+    else ultimateCrack2->SetEnabled(false);
+
+    ultimateHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateHaloName
+    );
+    if (!ultimateHalo) GLOG("[WARNING] No ultimate Halo VFX found for CuChulain")
+    else ultimateHalo->SetEnabled(false);
+
+    ultimateSmoke = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSmokeName
+    );
+    if (!ultimateSmoke) GLOG("[WARNING] No ultimate Smoke VFX found for CuChulain")
+    else ultimateSmoke->SetEnabled(false);
+
+    ultimateSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSphereName
+    );
+    if (!ultimateSphere) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateSphere->SetEnabled(false);
+    
+    ultimateWarning = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateWarningName
+    );
+    if (!ultimateWarning) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateWarning->SetEnabled(false);
+
+    ultimateSpikes = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSpikesName
+    );
+    if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateSpikes->SetEnabled(false);
 
     state = CharacterStates::IDLE;
 
@@ -216,7 +356,24 @@ void CuChulainn::Update(float deltaTime)
     if (character->GetInputDown()) GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
+
+    if (state == CharacterStates::HEAL && healTimer > healKnockbackDelay && !healKnockback->IsEnabled())
+    {
+        if (healKnockback) healKnockback->SetEnabled(true);
+        if (healParticles)
+        {
+            healParticles->SetEnabled(true);
+            healParticles->GetComponent<ParticleSystemComponent*>()->SpawnAllInstances();
+        }
+    }
+
+    if (state == CharacterStates::TRANSFORM && transformTimer > transformVfxDelay && !riastradCrack->IsEnabled())
+    {
+        EnableRiastradVfx();
+    }
     CheckIsFalling();
+
+    if (!isDashing && dashTrail && dashTrail->IsEnabled()) dashTrail->SetEnabled(false);
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
@@ -263,16 +420,21 @@ void CuChulainn::OnDamageTaken(int amount)
     UpdateHealthBarUI();
     if (camera) camera->StartShake(0.2f, 0.2f);
 
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
-    if (state == CharacterStates::CHARGING)
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
     {
-        character->EnableMovement(true);
-        state = CharacterStates::IDLE;
-        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::HURT;
+        if (animComponent)
+        {
+            animComponent->UseTrigger("Hurt");
+            character->EnableMovement(false);
+        }
     }
-    // TODO: play CuChulainn take damage sound
-    // TODO: fill riastrad bar dinamically
+
+    // TODO: Test if hitstop when hit feels nice
+    // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
 }
 
 void CuChulainn::OnHealed(int amount)
@@ -292,9 +454,6 @@ void CuChulainn::HandleState(float deltaTime)
         aimTimer = 0.0f;
     }
 
-    if (!isDashing && dashTrail) dashTrail->SetEnabled(false);
-    if (!isHealing && healVisual) healVisual->SetEnabled(false);
-
     UpdateDashCooldownUI();
     UpdateUltimateCooldownUI();
 
@@ -308,7 +467,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
              state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL)
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
         Move();
 
     // When finished animation, go back to idle state
@@ -327,9 +486,41 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
             if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+            {
+                //if (ultimateGlow) 
+                //    ultimateGlow->SetEnabled(false);
+                //if (ultimateBlur) ultimateBlur->SetEnabled(false);
+                //if (ultimateBrust) ultimateBrust->SetEnabled(false);
+                //if (ultimateCrack1) ultimateCrack1->SetEnabled(false);
+                //if (ultimateCrack2) ultimateCrack2->SetEnabled(false);
+                //if (ultimateHalo) ultimateHalo->SetEnabled(false);
+                //if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
+                //if (ultimateSphere) ultimateSphere->SetEnabled(false);
+                //if (ultimateWarning) ultimateWarning->SetEnabled(false);
                 return;
+            }
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
+            if (state == CharacterStates::TRANSFORM)
+            {
+                transformTimer = 0.0f;
+                chargedAttackCollider->SetEnabled(false);
+                riastradVfx->GetComponent<AnimationComponent*>()->OnStop();
+                AppEngine->GetGameTimer()->SetTimeScale(1.0f);
+
+                // StopVFX
+                if (riastradBlur) riastradBlur->SetEnabled(false);
+                if (riastradBurst) riastradBurst->SetEnabled(false);
+                if (riastradHalo) riastradHalo->SetEnabled(false);
+                if (riastradSphere) riastradSphere->SetEnabled(false);
+                if (riastradCrack) riastradCrack->SetEnabled(false);
+                if (riastradWaring) riastradWaring->SetEnabled(false);
+                if (riastradSmoke1) riastradSmoke1->SetEnabled(false);
+                if (riastradSmoke2) riastradSmoke2->SetEnabled(false);
+                if (riastradSmoke3) riastradSmoke3->SetEnabled(false);
+            }
             state = CharacterStates::IDLE;
             animComponent->UseTrigger("Idle");
         }
@@ -394,7 +585,7 @@ void CuChulainn::GetInputs()
         {
             desiredTransform     = true;
             transformBufferTimer = inputBuffer;
-        } 
+        }
     }
 
     // Dash
@@ -463,14 +654,21 @@ void CuChulainn::GetInputs()
         AddRiastrad(100);
         GLOG("Fill riastrad")
     }
+    if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
+    {
+        StartCurse();
+    }
 }
 
 bool CuChulainn::CanDash() const
 {
+    if (!dashUnlocked) return false; //When tutorial map is correctly fixed, put this to make progression
+
     bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
                    state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                    state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                   state != CharacterStates::HEAL;
+                   state != CharacterStates::HEAL && !isCursed && state != CharacterStates::TRANSFORM &&
+                   state != CharacterStates::HURT;
 
     if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer > 0.0f;
 
@@ -483,7 +681,7 @@ bool CuChulainn::CanAttack() const
            state != CharacterStates::RESPAWN && comboCounter <= 1 && attackCdTimer <= 0.0f &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
            state != CharacterStates::CHARGING && state != CharacterStates::TAKE_MUSHROOM &&
-           state != CharacterStates::HEAL;
+           state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 }
 
 bool CuChulainn::CanUltimate() const
@@ -491,7 +689,8 @@ bool CuChulainn::CanUltimate() const
     bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
                        state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
                        state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL;
+                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM &&
+                       state != CharacterStates::HURT;
 
     if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer > 0.0f;
 
@@ -500,9 +699,10 @@ bool CuChulainn::CanUltimate() const
 
 bool CuChulainn::CanTakeMushroom() const
 {
-    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && state != CharacterStates::AIM &&
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL;
+           state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL &&
+           state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 }
 
 bool CuChulainn::CanHeal() const
@@ -511,7 +711,7 @@ bool CuChulainn::CanHeal() const
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
-           !isHealing;
+           !isHealing && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 }
 
 bool CuChulainn::CanAim() const
@@ -519,7 +719,8 @@ bool CuChulainn::CanAim() const
     return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
            state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
+           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
+           state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 }
 
 bool CuChulainn::CanChargeAttack() const
@@ -527,7 +728,8 @@ bool CuChulainn::CanChargeAttack() const
     bool canChargeAttack = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
                            state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                            state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK &&
-                           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL;
+                           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
+                           state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 
     if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer > 0.0f;
 
@@ -539,11 +741,11 @@ bool CuChulainn::CanTransform() const
     bool canTransform = false;
     if (!isRiastrad)
     {
-        canTransform = riastradMeter == 100 && state != CharacterStates::DASH && !isAttacking &&
-                       state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
-                       state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
-                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL;
+        canTransform =
+            riastradMeter == 100 && state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+            state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
+            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+            state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 
         if (canTransform && state == CharacterStates::BASIC_ATTACK) canTransform = comboBufferTimer > 0.0f;
     }
@@ -553,7 +755,7 @@ bool CuChulainn::CanTransform() const
                        state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
                        state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
                        state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL;
+                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
     }
 
     return canTransform;
@@ -563,6 +765,16 @@ void CuChulainn::UpdateTimers(float deltaTime)
 {
     weaponCollider->SetEnabled(false);
     Character::UpdateTimers(deltaTime);
+
+    if (AppEngine->GetGameTimer()->GetTimeScale() == 0.0f)
+    {
+        epicTimer += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
+        if (epicTimer > 0.1f)
+        {
+            epicTimer = 0.0f;
+            AppEngine->GetGameTimer()->SetTimeScale(1.0f);
+        }
+    }
 
     // Dash
     dashTimer -= deltaTime;
@@ -668,9 +880,18 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (riastradTimer <= 0.0f) desiredTransform = true;
     }
 
+    if (isCursed)
+    {
+        curseTimer -= deltaTime;
+        if (curseTimer <= 0) EndCurse();
+    }
+
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
     if (state == CharacterStates::IDLE) idleTimer += deltaTime;
+    if (state == CharacterStates::RUN) runTimer += deltaTime;
+    if (state == CharacterStates::HEAL) healTimer += deltaTime;
+    if (state == CharacterStates::TRANSFORM) transformTimer += deltaTime;
 
     if (state == CharacterStates::DASH) isInvulnerable = true;
 
@@ -733,7 +954,7 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    if (audio) audio->EmitEvent(AK::EVENTS::ICE_BLAST);
+    // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
     animComponent->OnResume();
     aimTimer   = 0.0f;
 
@@ -770,6 +991,9 @@ void CuChulainn::Dash()
     LookAtLeftStick();
     character->StartDash();
     isDashing = true;
+
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
     if (dashDecal)
@@ -798,8 +1022,7 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
-                 attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -819,23 +1042,44 @@ void CuChulainn::PerformAttack()
 
         if (!ultimateObject->IsEnabled() && ultimateTimer >= currentAnimationDelay)
         {
-            ultimateObject->SetEnabled(true);
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
-            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
-        }
-        else if (ultimateObject->IsEnabled() && ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
-                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
-        {
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
-        }
-        else if (ultimateObject->IsEnabled() &&
-                 ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
-        {
-            ultimateObject->SetEnabled(false);
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
-            ultimateTimer = 0.f;
-            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->GetAnimationController()->SetTime(0.0f);
+            ultimateObject->SetEnabled(true);
+            ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
+            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+
+            UpdateUltimateVfx();
+        }
+        else if (ultimateObject->IsEnabled())
+        {
+            if (ultimateSpikes) //Control spikes animation appearance
+            {
+                AnimationComponent* ac = ultimateObject->GetComponent<AnimationComponent*>();
+                if (ac && ac->GetCurrentAnimation())
+                {
+                    const float dur  = ac->GetCurrentAnimation()->GetDuration();
+                    const float t    = ac->GetAnimationController()->GetTime();
+                    const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
+
+                    ultimateSpikes->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack1) ultimateCrack1->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack2) ultimateCrack2->SetEnabled(norm >= 0.15f);
+                }
+            }
+            if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
+                ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+            {
+                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
+            }
+            else if (ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+            {
+                ultimateObject->SetEnabled(false);
+                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+                ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+                ultimateTimer = 0.f;
+                if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            }
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -869,6 +1113,7 @@ void CuChulainn::Attack(float deltaTime)
         camera->EnableAimOffset(false);
     }
 
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
@@ -897,12 +1142,61 @@ void CuChulainn::UltimateAttack()
     }
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
-    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     ultimateTimer   = 0.0f;
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
 
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
     if (animComponent) animComponent->UseTrigger("Ultimate");
+}
+
+void CuChulainn::UpdateUltimateVfx()
+{
+    if (ultimateBlur)
+    {
+        ultimateBlur->SetEnabled(true);
+        ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
+            ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateBrust)
+    {
+        ultimateBrust->SetEnabled(true);
+    }
+    if (ultimateCrack1)
+    {
+        ultimateCrack1->SetEnabled(true);
+    }
+    if (ultimateCrack2)
+    {
+        ultimateCrack2->SetEnabled(true);
+    }
+    if (ultimateHalo)
+    {
+        ultimateHalo->SetEnabled(true);
+        ultimateHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateHalo->GetComponent<ShaderScriptComponent*>())
+            ultimateHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateSmoke)
+    {
+        ultimateSmoke->SetEnabled(true);
+        ultimateSmoke->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateSmoke->GetComponent<ShaderScriptComponent*>())
+            ultimateSmoke->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateSphere)
+    {
+        ultimateSphere->SetEnabled(true);
+        ultimateSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
+        if (ultimateSphere->GetComponent<ShaderScriptComponent*>())
+            ultimateSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (ultimateWarning)
+    {
+        ultimateWarning->SetEnabled(true);
+    }
 }
 
 void CuChulainn::Aim(float deltaTime)
@@ -932,8 +1226,35 @@ void CuChulainn::Move()
     character->EnableMovement(true);
     if (character->GetSpeed() > 0.5f)
     {
-        if (state != CharacterStates::RUN && animComponent) animComponent->UseTrigger("Walk");
-        state = CharacterStates::RUN;
+        if (state != CharacterStates::RUN)
+        {
+            state    = CharacterStates::RUN;
+            runTimer = 0.0f;
+            if (animComponent) animComponent->UseTrigger("Walk");
+        }
+
+        if (runTimer > stepTime && audio)
+        {
+            // TODO: Cast a ray to see the material below (probably through tags, maybe colliders)
+            LineSegment ray(
+                parent->GetGlobalTransform().TranslatePart(),
+                parent->GetGlobalTransform().TranslatePart() - float3::unitY
+            );
+            GameObject* object =
+                RaycastController::GetRayIntersectionTrees(ray, AppEngine->GetSceneModule()->GetScene()->GetOctree());
+
+            if (object)
+            {
+                // Default to grass steps
+                AkUniqueID eventId = AK::EVENTS::PLAY_SFX_STEPS_GRASS;
+                if (object->HasTag(HashString("Wood"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_WOOD;
+                else if (object->HasTag(HashString("Rock"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_ROCK;
+
+                if (audio) audio->EmitEvent(eventId);
+            }
+
+            runTimer = 0.0f;
+        }
     }
     else
     {
@@ -1016,9 +1337,29 @@ void CuChulainn::UseMushroom()
     character->EnableMovement(false);
     isHealing = true;
 
-    if (healVisual) healVisual->SetEnabled(true);
+    if (healVfx)
+    {
+        healVfx->SetEnabled(true);
+        healVfx->SetLocalPosition(parent->GetLocalTransform().TranslatePart());
+        Scene* scene = AppEngine->GetSceneModule()->GetScene();
+        for (UID child : healVfx->GetChildren())
+        {
+            GameObject* currentChild = scene->GetGameObjectByUID(child);
+            MeshComponent* mesh      = currentChild->GetComponent<MeshComponent*>();
+            if (mesh) mesh->SetEnabled(false);
+            ShaderScriptComponent* shaderScript = currentChild->GetComponent<ShaderScriptComponent*>();
+            if (shaderScript)
+            {
+                for (Script* script : shaderScript->GetScriptInstances())
+                {
+                    script->Reset();
+                }
+            }
+        }
+    }
 
     Heal(mushroomHeal);
+    healTimer = 0.0f;
 
     // UpdateMushroomsUI();
 }
@@ -1083,6 +1424,8 @@ void CuChulainn::ToggleRiastrad()
 
     if (!isRiastrad)
     {
+        EndCurse();
+
         // Start Riastrad
         AddRiastrad(-100);
         isRiastrad    = true;
@@ -1091,6 +1434,11 @@ void CuChulainn::ToggleRiastrad()
         character->SetMaxSpeed(riastradMovementSpeed);
         Heal(maxHealth);
 
+        state = CharacterStates::TRANSFORM;
+        character->EnableMovement(false);
+        // AppEngine->GetGameTimer()->SetTimeScale(0.5f);
+
+        if (animComponent) animComponent->UseTrigger("Transform");
         for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
         {
             clip.animationSpeed *= riastradAnimationsSpeedRatio;
@@ -1102,6 +1450,85 @@ void CuChulainn::ToggleRiastrad()
         isRiastrad = false;
         animComponent->GetResourceStateMachine()->ResetClipsSpeed();
         character->SetMaxSpeed(defaultSpeed);
+
+        // TODO: Remove when VFX
+        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+        if (res)
+        {
+            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+            float4 newColor       = mat->GetMaterial().diffColor;
+            newColor              = float4::one;
+            mat->SetDiffColor(newColor);
+        }
+    }
+}
+
+void CuChulainn::EnableRiastradVfx()
+{
+    AppEngine->GetGameTimer()->SetTimeScale(0.5f);
+
+    // Reuse charge attack collider (If needed different size, create another)
+    chargedAttackCollider->SetEnabled(true);
+
+    // TODO: Remove when VFX. For now it turns red
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor.y            = 0.0f;
+        newColor.z            = 0.0f;
+        mat->SetDiffColor(newColor);
+    }
+
+    // Stomp VFX
+    if (riastradVfx)
+    {
+        riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(true);
+    }
+    if (riastradSmoke1)
+    {
+        riastradSmoke1->SetEnabled(true);
+        riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (riastradSmoke2)
+    {
+        riastradSmoke2->SetEnabled(true);
+        riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (riastradSmoke3)
+    {
+        riastradSmoke3->SetEnabled(true);
+        riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (riastradSphere)
+    {
+        riastradSphere->SetEnabled(true);
+        riastradSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (riastradHalo)
+    {
+        riastradHalo->SetEnabled(true);
+        riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (riastradCrack) riastradCrack->SetEnabled(true);
+    if (riastradWaring) riastradWaring->SetEnabled(true);
+    if (riastradBurst)
+    {
+        riastradBurst->SetEnabled(true);
+        riastradBurst->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradBurst->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+    if (riastradBlur)
+    {
+        riastradBlur->SetEnabled(true);
+        riastradBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
 }
 
@@ -1125,6 +1552,47 @@ void CuChulainn::OnEnemyHit()
 void CuChulainn::OnEnemyDefeated()
 {
     AddRiastrad(riastradOnEnemyDeath);
+}
+
+void CuChulainn::ActivateAbility(std::string& abilityName)
+{
+    std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
+
+    if (abilityName == "dash") dashUnlocked = true;
+    else if (abilityName == "ultimate") ultimateUnlocked = true;
+}
+void CuChulainn::StartCurse()
+{
+    // TODO: Remove when VFX
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor.y            = 0.0f;
+        newColor.x            = 0.6f;
+        mat->SetDiffColor(newColor);
+    }
+
+    isCursed = true;
+    character->SetMaxSpeed(curseSpeed);
+    curseTimer = curseDuration;
+}
+
+void CuChulainn::EndCurse()
+{
+    // TODO: Remove when VFX
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor              = float4::one;
+        mat->SetDiffColor(newColor);
+    }
+
+    isCursed = false;
+    character->SetMaxSpeed(defaultSpeed);
 }
 
 const std::string CuChulainn::GetLogicStateName()
@@ -1169,6 +1637,9 @@ const std::string CuChulainn::GetLogicStateName()
         break;
     case CharacterStates::HEAL:
         return "Healing";
+        break;
+    case CharacterStates::TRANSFORM:
+        return "Transform";
         break;
     default:
         return "MISSING!";

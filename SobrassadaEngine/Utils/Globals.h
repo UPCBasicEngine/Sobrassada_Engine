@@ -144,6 +144,7 @@ constexpr const char* DECAL_VERTEX_SHADER_PATH       = "./EngineDefaults/Shader/
 constexpr const char* SHADOWMAP_VERTEX_SHADER_PATH   = "./EngineDefaults/Shader/Vertex/ShadowMapVertex.glsl";
 constexpr const char* SPRITESHEET_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/Vertex/SpritesheetVertex.glsl";
 constexpr const char* PARTICLESYSTEM_VERTEX_SHADER_PATH = "./EngineDefaults/Shader/Vertex/ParticleSystemVertex.glsl";
+constexpr const char* SSAO_VERTEX_SHADER_PATH        = "./EngineDefaults/Shader/Vertex/SsaoVertex.glsl";
 
 // Fragment Shaders
 constexpr const char* UNLIT_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UnlitFragmentShader.glsl";
@@ -152,6 +153,8 @@ constexpr const char* SPECULAR_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/
 constexpr const char* METALLIC_FRAGMENT_SHADER_PATH  = "./EngineDefaults/Shader/Fragment/BRDFCookTorranceShader.glsl";
 constexpr const char* METALLIC_IBL_FRAGMENT_SHADER_PATH = "./EngineDefaults/Shader/Fragment/IBLShader.glsl";
 constexpr const char* UIWIDGET_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/UIWidgetFragment.glsl";
+constexpr const char* SSAO_DEBUG_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/SsaoDebugShader.glsl";
+
 constexpr const char* IRRADIANCE_FRAGMENT_SHADER_PATH =
     "./EngineDefaults/Shader/Fragment/IrradianceCubemapFragment.glsl";
 constexpr const char* PREFILTERED_FRAGMENT_SHADER_PATH =
@@ -173,6 +176,8 @@ constexpr const char* TRAIL_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Sha
 constexpr const char* DECAL_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/DecalFragment.glsl";
 constexpr const char* SPRITESHEET_FRAGMENT_SHADER_PATH   = "./EngineDefaults/Shader/Fragment/SpritesheetFragment.glsl";
 constexpr const char* PARTICLESYSTEM_FRAGMENT_SHADER_PATH = "./EngineDefaults/Shader/Fragment/ParticleSystemFragment.glsl";
+constexpr const char* SSAO_LOW_FRAGMENT_SHADER_PATH      = "./EngineDefaults/Shader/Fragment/SsaoLowFragment.glsl";
+constexpr const char* SSAO_BLUR_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/SsaoBlurFragment.glsl";
 
 // Compute Shaders
 constexpr const char* SHADOW_DEPTH_COMPUTE_SHADER_PATH  = "./EngineDefaults/Shader/Compute/ShadowMapDepthCompute.glsl";
@@ -207,6 +212,9 @@ constexpr float DEGREE_RAD_CONV                                  = PI / 180.f;
 
 constexpr float MINIMUM_TREE_LEAF_SIZE                           = 5.f;
 constexpr int PALETTE_SIZE                                       = 64;
+
+constexpr int SSAO_KERNEL_SIZE_LOW                               = 16;
+constexpr int SSAO_KERNEL_SIZE_MID                               = 32;
 
 inline UID GenerateUID()
 {

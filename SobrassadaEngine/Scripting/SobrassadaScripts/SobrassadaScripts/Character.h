@@ -23,7 +23,9 @@ enum class CharacterType
     CuChulainn,
     Soldier,
     Archer,
-    Banshee
+    Banshee,
+    Destructible,
+    Changeling
 };
 
 class Character : public Script
@@ -38,6 +40,7 @@ class Character : public Script
     virtual bool Init() override;
     virtual void Update(float deltaTime) override;
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
+    void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
     virtual void TakeDamage(int amount);
     void Restart();
@@ -51,6 +54,7 @@ class Character : public Script
     PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
     void RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color);
+    virtual void Die();
 
   private:
     virtual void HandleState(float deltaTime) {};
@@ -59,7 +63,6 @@ class Character : public Script
     virtual void OnHealed(int amount) {};
     virtual void PerformAttack() {};
     virtual void ShouldAttackTarget() {};
-    virtual void Die();
 
   protected:
     AnimationComponent* animComponent           = nullptr;
@@ -84,14 +87,14 @@ class Character : public Script
     float attackHitboxDuration                  = 0.0f;
 
     float invulnerabilityTimer                  = 0.0f;
-    const float invulnerableDuration            = 0.4f;
+    const float invulnerableDuration            = 0.2f;
 
     bool desiredHeal                            = false;
     float healCooldown                          = 1.0f;
     float healCdTimer                           = 0.0f;
 
     CharacterType type                          = CharacterType::None;
-    HashString stateName;
+    HashString stateName                        = HashString("");
 
     // AI
     float rangeAIChase      = 0.0f;

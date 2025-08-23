@@ -8,6 +8,7 @@
 #include "Components/Standalone/MeshComponent.h"
 #include "GBuffer.h"
 #include "GameObject.h"
+#include "GeometryBatch.h"
 #include "LightsConfig.h"
 #include "Mesh.h"
 #include "OpenGLModule.h"
@@ -22,8 +23,10 @@
 
 MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed});
+    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
     fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
+    fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
+    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
 }
 
 MovingUVTransparent::~MovingUVTransparent()
@@ -74,6 +77,12 @@ bool MovingUVTransparent::Init()
             glEnableVertexAttribArray(3);
             glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
 
+            glEnableVertexAttribArray(4);
+            glVertexAttribIPointer(4, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, joint));
+
+            glEnableVertexAttribArray(5);
+            glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
+
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferData(
                 GL_ELEMENT_ARRAY_BUFFER, rmesh->GetIndices().size() * sizeof(unsigned int), rmesh->GetIndices().data(),
@@ -97,8 +106,9 @@ bool MovingUVTransparent::Init()
         }
 
         meshComp->SetEnabled(false);
+        meshComp->SetUpdateShaderStorage(true);
     }
-
+    uvOffset = uvOffsetStart;
     return true;
 }
 
@@ -111,7 +121,7 @@ void MovingUVTransparent::Update(float deltaTime)
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && meshComp)
+    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
@@ -136,11 +146,16 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
         glUniform2fv(3, 1, &uvOffset[0]);
+        glUniform1i(9, meshComp->GetHasBones());
+        glUniform1ui(10, meshComp->GetBoneIndexOffset());
 
         glUniform1i(4, 0);
         glUniform1i(5, isAlphaDiscard);
 
         glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
+
+        GeometryBatch* batch = meshComp->GetBatch();
+        if (batch) batch->BindBonesBuffer();
 
         float3 cameraPos = float3::zero;
         if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
@@ -150,8 +165,17 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(vao);
 
+        if (isDoubleSided) glDisable(GL_CULL_FACE);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+        if (isDoubleSided) glEnable(GL_CULL_FACE);
+
+        if (batch) batch->BindBonesBuffer();
 
         glBindVertexArray(0);
     }
+}
+
+void MovingUVTransparent::Reset()
+{
+    uvOffset = uvOffsetStart;
 }

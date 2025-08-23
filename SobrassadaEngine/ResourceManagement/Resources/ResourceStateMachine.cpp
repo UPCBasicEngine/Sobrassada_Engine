@@ -268,10 +268,10 @@ void ResourceStateMachine::SetClipSpeed(const std::string& name,float speed)
     
 }
 
-const State* ResourceStateMachine::GetState(const std::string& name) const
+State* ResourceStateMachine::GetState(const std::string& name)
 {
     HashString hashName(name);
-    for (const auto& state : states)
+    for (State& state : states)
     {
         if (state.name == hashName) return &state;
     }
@@ -334,4 +334,9 @@ void ResourceStateMachine::ResetClipsSpeed()
     {
         clips[i].animationSpeed = clipsDefaultSpeed[i];
     }
+}
+
+void ResourceStateMachine::RemoveAllClips()
+{
+    clips.clear();
 }

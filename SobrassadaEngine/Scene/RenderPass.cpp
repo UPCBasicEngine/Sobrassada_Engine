@@ -17,11 +17,16 @@
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
+#include "SSAO.h"
 
 #ifdef OPTICK
 #include "optick.h"
 #endif
 
+#include "EngineTimer.h"
+#include "WindConfig.h"
+
+#include "Math/Quat.h"
 #include <glew.h>
 
 RenderPass::RenderPass()
@@ -144,6 +149,7 @@ void RenderPass::RenderScene(
     Framebuffer* framebuff, const std::vector<GameObject*> objectsToRender, CameraComponent* camera
 )
 {
+    ssao        = App->GetOpenGLModule()->GetSsao();
     gbuffer     = App->GetOpenGLModule()->GetGBuffer();
     framebuffer = framebuff;
     width       = framebuffer->GetTextureWidth();
@@ -189,7 +195,20 @@ void RenderPass::RenderScene(
         RenderShadowMapDebug();
         return;
     }
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_SSAO)))
+    {
+        RenderSsaoDebug(ssao, camera, framebuffer);
+        return;
+    }
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
+    SsaoPassRender(camera, gbuffer, ssao);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Blur Pass");
+    SsaoBlurPassRender(ssao);
+    glPopDebugGroup();
+     
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -226,7 +245,9 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1)
+
+        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr &&
+            mesh->GetRenderMode() != 1)
             meshesToRender.push_back(mesh);
     }
 
@@ -260,7 +281,7 @@ void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRend
     for (const auto& gameObject : objectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr)
+        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr)
         {
             if (gameObject->IsNavMeshValid()) navMeshesToRender.push_back(mesh);
             else nonNavMeshesToRender.push_back(mesh);
@@ -446,8 +467,8 @@ void RenderPass::ShadowMapPassRender(
     for (const auto& gameObject : shadowObjectsToRender)
     {
         MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-        if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 &&
-            mesh->GetProduceShadows())
+        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr &&
+            mesh->GetRenderMode() != 1 && mesh->GetProduceShadows())
             meshesToRender.push_back(mesh);
     }
 
@@ -459,6 +480,85 @@ void RenderPass::ShadowMapPassRender(
     batchManager->RenderShadowMap(meshesToRender, ubo);
 
     glDeleteBuffers(1, &ubo);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const
+{
+
+    ssao->Bind();
+    const unsigned int program = App->GetShaderModule()->GetSsaoProgram();
+
+    glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
+    glUniform1i(glGetUniformLocation(program, "gPositions"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
+    glUniform1i(glGetUniformLocation(program, "gNormals"), 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+    glUniform1i(glGetUniformLocation(program, "gDepth"), 2);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
+    glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
+
+    glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
+
+    glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
+    glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
+    glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
+    unsigned int cameraUBO;
+    if (camera == nullptr)
+    {
+        cameraUBO = App->GetCameraModule()->GetUbo();
+    }
+    else
+    {
+        cameraUBO = camera->GetUbo();
+    }
+
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    ssao->Unbind();
+}
+
+void RenderPass::SsaoBlurPassRender(SSAO* ssao)
+{
+    const GLuint blurShader = App->GetShaderModule()->GetSsaoBlurProgram();
+
+    glUseProgram(blurShader);
+
+    for (int i = 0; i < 2; ++i)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, ssao->GetBlurFBO(i));
+        glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        bool horizontal = (i == 0);
+
+        glUniform1i(glGetUniformLocation(blurShader, "horizontal"), horizontal);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, i == 0 ? ssao->GetSSAOTexture() : ssao->GetBlurTexture(0));
+        glUniform1i(glGetUniformLocation(blurShader, "ssaoInput"), 0);
+
+        App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -705,6 +805,9 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, gbuffer->emissiveTexture);
 
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetBlurTexture(1));
+
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
     unsigned int lightingPassProgram = App->GetShaderModule()->GetLightingPassProgram();
@@ -727,7 +830,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
 
-    //Light Culling
+    // Light Culling
     glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
     glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
@@ -746,9 +849,10 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 {
     Bind();
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
+    BatchManager* batchManager    = App->GetResourcesModule()->GetBatchManager();
 
-    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
+    const unsigned int program    = App->GetShaderModule()->GetTransparentPassProgram();
+    const unsigned int wPOProgram = App->GetShaderModule()->GetTransparentVPOPassProgram();
 
     glUseProgram(program);
 
@@ -768,7 +872,8 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
             {
                 if (gameObject->IsNavMeshValid()) navmeshesToRender.push_back(mesh);
                 else nonnavmeshesToRender.push_back(mesh);
@@ -776,23 +881,29 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         }
 
         glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
-        batchManager->RenderTransparent(navmeshesToRender, camera);
+        batchManager->RenderTransparent(navmeshesToRender, program, camera);
         glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        batchManager->RenderTransparent(nonnavmeshesToRender, camera);
+        batchManager->RenderTransparent(nonnavmeshesToRender, program, camera);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
 
     else
     {
         std::vector<MeshComponent*> meshesToRender;
+        std::vector<MeshComponent*> vertexOffsetMeshesToRender;
         std::vector<TrailComponent*> trailsToRender;
 
         for (const auto& gameObject : objectsToRender)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && mesh->GetEnabled() && mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
-                meshesToRender.push_back(mesh);
+            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+            {
+                if (mesh->GetResourceMaterial() != nullptr && mesh->GetResourceMaterial()->DoApplyWind())
+                    vertexOffsetMeshesToRender.push_back(mesh);
+                else meshesToRender.push_back(mesh);
+            }
 
             TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
             if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
@@ -802,13 +913,35 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         {
             glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
             App->GetOpenGLModule()->SetRenderWireframe(true);
-            batchManager->RenderTransparent(meshesToRender, camera);
+            batchManager->RenderTransparent(meshesToRender, program, camera);
             App->GetOpenGLModule()->SetRenderWireframe(false);
         }
         else
         {
             glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
-            batchManager->RenderTransparent(meshesToRender, camera);
+
+            batchManager->RenderTransparent(meshesToRender, program, camera);
+
+            glUseProgram(wPOProgram);
+
+            glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
+            glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+
+            WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+            if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
+            {
+                const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+                glUniform4f(
+                    glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x, windDirection.y,
+                    windDirection.z, windDirection.w
+                );
+                glUniform4f(
+                    glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
+                    windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
+                    windConfig->GetGustSpeed()
+                );
+            }
+            batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -845,7 +978,7 @@ void RenderPass::RenderGBufferDebug(GBuffer* gbuffer) const
     const unsigned int program = App->GetShaderModule()->GetQuadProgram();
     glUseProgram(program);
 
-    GLint loc = glGetUniformLocation(program, "u_Texture");
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
     // Top-left: Diffuse
@@ -879,7 +1012,7 @@ void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) con
     const unsigned int program = App->GetShaderModule()->GetLinearDepthProgram();
     glUseProgram(program);
 
-    GLint loc = glGetUniformLocation(program, "u_Texture");
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
     glActiveTexture(GL_TEXTURE0);
@@ -903,6 +1036,24 @@ void RenderPass::RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) con
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
+void RenderPass::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer) const
+{
+    framebuffer->Bind();
+
+    glViewport(0, 0, width, height);
+
+    unsigned int program = App->GetShaderModule()->GetSsaoDebugProgram();
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ssao->GetBlurTexture(1));
+
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
+    glUniform1i(loc, 0);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
 void RenderPass::RenderShadowMapDebug() const
 {
     Bind();
@@ -910,7 +1061,7 @@ void RenderPass::RenderShadowMapDebug() const
     const unsigned int program = App->GetShaderModule()->GetDepthProgram();
     glUseProgram(program);
 
-    GLint loc = glGetUniformLocation(program, "u_Texture");
+    unsigned int loc = glGetUniformLocation(program, "u_Texture");
     glUniform1i(loc, 0);
 
     glActiveTexture(GL_TEXTURE0);

@@ -1,18 +1,40 @@
 #pragma once
 
 #include "Character.h"
-#include "Math/float4x4.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
 
+class AudioSourceComponent;
 class GameObject;
 class AIAgentComponent;
 class Projectile;
 
+enum class ChangelingVersions
+{
+    RANDOM,
+    DEFAULT,
+    SNEAK,
+    BLOCK,
+};
+
 enum class ChangelingStates
 {
-    NONE,
-    PATROL,
-    CHASE,
-    BASIC_ATTACK
+    NONE                    = 0,
+    IDLE_BURIED             = 1,
+    PEEK                    = 2,
+    DIG_UP_TRANSITION       = 3,
+    DIG_DOWN_TRANSITION     = 4,
+    IDLE_VISIBLE            = 5,
+    CHASE                   = 6,
+    BURIED_CHASE            = 7,
+    DASH_ATTACK_PREPARATION = 8,
+    DASH_ATTACK             = 9,
+    DASH_ATTACK_WIGGLE      = 10,
+    DASH_ATTACK_COOLDOWN    = 11,
+    DASH_CHAIN_ATTACK       = 12,
+    BITE_ATTACK             = 13,
+    BITE_ATTACK_COOLDOWN    = 14,
+    DAMAGED                 = 15,
+    DYING                   = 16,
 };
 
 class Changeling : public Character
@@ -32,37 +54,105 @@ class Changeling : public Character
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
-    void Attack(float deltaTime) override;
+    void UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq);
+    void UpdatePeekState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq);
+    void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq);
+    void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
+    void UpdateBuriedChaseState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDashAttackState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDashAttackWiggleState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDashAttackCooldownState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq);
+    void UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq);
+    void UpdateBiteAttackCooldownState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
+    void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
 
-    void PatrolAI();
-    void ChaseAI();
+    bool ST_BuryUp(float deltaTime, float distanceToPlayerSq);
+    bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
+    bool ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq);
+    bool ST_Damaged();
+    bool ST_Peek(float deltaTime, float distanceToPlayerSq);
+    bool ST_DashAttack(float deltaTime, float distanceToPlayerSq);
+    bool ST_AimNextDashChainAttack(float deltaTime, float distanceToPlayerSq);
+    bool ST_AimNextDashAttack(float deltaTime, float distanceToPlayerSq);
+    bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
 
   private:
-    float3 GetDashEndPoint() const;
+    void ValidateSetup();
+    void RenderDebugVisuals();
+
+    // Returns true only if the pooka did not dash against a wall
+    bool CalculateDashTargetPoint(const float3& aimingPoint, float3& targetPoint);
+
+    bool ShouldSwapStatesOnRandomVersion(const float deltaTime) const;
+    void CalculateAimPoint(float3& outTargetPoint);
+
+    bool isSetupCorrectly         = false;
 
     AIAgentComponent* agentAI     = nullptr;
     ChangelingStates currentState = ChangelingStates::NONE;
 
-    bool isDashing                = false;
-    float3 dashDirection          = float3::zero; // Vector dirección normalizado
-    float3 dashTarget             = float3::zero; // Posición objetivo
+    GameObject* parentGO          = nullptr;
+
+    float4x4 dashStart            = float4x4::identity;
+    float3 dashDirection          = float3::zero;
+    float3 dashTarget             = float3::zero;
     float dashSpeed               = 15.0f;
-    float dashDistance            = 10.0f;
+    float minDashDistance         = 1;
 
-    std::string pathName         = "";
+    std::string dashTrailMeshName;
+    std::string dashTrailCollisionName;
 
-    float3 patrolPoint            = float3::zero;
-    bool hasShot                  = false;
+    std::vector<GameObject*> dashTrailMeshObjects;
+    std::vector<GameObject*> dashTrailColliderObjects;
+    std::vector<CubeColliderComponent*> dashAreaColliders;
 
-    GameObject* pathObj     = nullptr; 
+    float stateTimer                  = 0.f;
 
-    float3 lastTrailPos           = float3::zero;
-    float trailSegmentSpacing     = 1.0f; 
-    std::string trailPrefabName   = "DashTrailSegment";
-    float4x4 localTransform      = float4x4::identity;
+    float absoluteSpottedReactionTime = 1.f;
+    float biteAttackRadius            = .5f;
+    float biteAttackCooldown          = 2.f;
+    float activeDashRange             = 0.f;
+    bool bNextDashUninterrupted       = false;
 
-    float3 startPos;
-    float3 endPos;
+    int userSelectedVersion           = 0;
+    ChangelingVersions version        = ChangelingVersions::RANDOM;
+    float swapStateChancePerSecond    = 0.05f;
+    ChangelingVersions randomVersion =
+        ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
 
-    float3 dashEndPoint = float3::zero; 
+    // Default specific
+    float chaseSpeed                       = 1.0f;
+    float chaseAcceleration                = 4.0f;
+
+    // Sneak specific
+    float maxSneakAngleDegrees             = 45.0f;
+    float minSneakSpeed                    = 0.25f;
+    float maxSneakSpeed                    = 1.0f;
+    float distanceToPlayerForMaxSneakSpeed = 0.0f;
+    float sneakAcceleration                = 4.0f;
+    float peekChancePerSecond              = 0.1f;
+    float3 spottedLocation                 = float3::nan;
+    float3 spottedViewingDirection         = float3::nan;
+
+    // Block specific
+    bool dashRight                         = false;
+    unsigned short dashIndex               = 0;
+    float dashAngleDegrees                 = 40.0f;
+    float timeBetweenDashes                = 2.f;
+
+    // VFX
+    // Dig up
+    std::string vfxDigUpRocksName           = "VFX_DigUpRocks";
+    GameObject* vfxDigUpRocksObject         = nullptr;
+    
+    std::string vfxDigUpHoleName           = "VFX_DigUpHole";
+    GameObject* vfxDigUpHoleObject         = nullptr;
+
+    // Audio
+    AudioSourceComponent* audioComp        = nullptr;
 };

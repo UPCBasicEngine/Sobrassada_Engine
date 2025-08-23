@@ -17,7 +17,7 @@ class AnimController
     void Pause() { playAnimation = false; }
     void Resume() { playAnimation = true; }
 
-    void GetTransform(const HashString& nodeName, float3& pos, Quat& rot);
+    void GetTransform(const HashString& nodeName, float3& pos, Quat& rot, float3& scale);
 
     ResourceAnimation* GetCurrentAnimation() const { return currentAnimation; }
     float GetTime() const { return currentTime; }
@@ -32,6 +32,7 @@ class AnimController
   private:
     void GetChannelPosition(const Channel* animChannel, float3& pos, float time) const;
     void GetChannelRotation(Channel* animChannel, Quat& rot, float time);
+    void GetChannelScale(Channel* animChannel, float3& scale, float time) const;
    
     void SetAnimationResource(ResourceAnimation* anim) { currentAnimation = anim; }
 

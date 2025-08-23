@@ -145,6 +145,8 @@ update_status SceneModule::PostUpdate(float deltaTime)
             loadedScene->GetGameObjectRootUID() != loadedScene->GetSelectedGameObjectUID())
             HandleObjectDeletion();
 
+        loadedScene->FlushPendingDeletes();
+
         // CHECKING FOR UPDATED STATIC AND DYNAMIC OBJECTS
         GizmoDragState currentGizmoState = App->GetEditorUIModule()->GetImGuizmoDragState();
         if (currentGizmoState == GizmoDragState::RELEASED || currentGizmoState == GizmoDragState::IDLE)

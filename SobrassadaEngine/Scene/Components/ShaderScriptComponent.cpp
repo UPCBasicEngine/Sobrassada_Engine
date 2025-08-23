@@ -232,7 +232,7 @@ void ShaderScriptComponent::Render(float deltaTime, CameraComponent* camera)
 
 void ShaderScriptComponent::RenderScript(float deltaTime, CameraComponent* camera, int scriptIndex)
 {
-    if (!enabled || scriptIndex >= scriptInstances.size()) return;
+    if (!IsEffectivelyEnabled() || scriptIndex >= scriptInstances.size()) return;
 
     float gameTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f; // seconds
 
@@ -409,6 +409,23 @@ void ShaderScriptComponent::DeleteAllScripts()
     shaderScriptRenderType.clear();
 
     App->GetShaderScriptModule()->ComponentDeleted(this);
+}
+
+void ShaderScriptComponent::ResetInitializationFlags()
+{
+    std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
+}
+
+void ShaderScriptComponent::ResetScript(const std::string& scriptName)
+{
+    for (int i = 0; i < scriptNames.size(); ++i)
+    {
+        if (scriptName == scriptNames[i])
+        {
+            scriptInstances[i]->Reset();
+            return;
+        }
+    }
 }
 
 void ShaderScriptComponent::SetComponentEnabled(bool value)

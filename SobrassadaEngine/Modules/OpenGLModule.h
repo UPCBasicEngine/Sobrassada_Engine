@@ -4,6 +4,7 @@
 
 class Framebuffer;
 class GBuffer;
+class SSAO;
 typedef unsigned int GLenum;
 typedef int GLsizei;
 typedef int GLint;
@@ -20,7 +21,7 @@ class OpenGLModule : public Module
     update_status PostUpdate(float deltaTime) override;
     bool ShutDown() override;
 
-    void DrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
+    SOBRASADA_API_ENGINE void DrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
     void DrawArrays(GLenum mode, GLint first, GLsizei count);
 
     void AddTrianglesPerSecond(float meshTrianglesPerSecond) { trianglesPerSecond += meshTrianglesPerSecond; }
@@ -33,6 +34,7 @@ class OpenGLModule : public Module
     float GetClearBlue() const { return clearColorBlue; }
     Framebuffer* GetFramebuffer() const { return framebuffer; }
     GBuffer* GetGBuffer() const { return gBuffer; }
+    SSAO* GetSsao() const { return ssao; }
     int GetDrawCallsCount() const { return drawCallsCount; }
     float GetTrianglesPerSecond() const { return trianglesPerSecond; }
     int GetVerticesCount() const { return verticesCount; }
@@ -50,6 +52,7 @@ class OpenGLModule : public Module
     void* context            = nullptr;
     Framebuffer* framebuffer = nullptr;
     GBuffer* gBuffer         = nullptr;
+    SSAO* ssao               = nullptr;
     float clearColorRed      = DEFAULT_GL_CLEAR_COLOR_RED;
     float clearColorGreen    = DEFAULT_GL_CLEAR_COLOR_GREEN;
     float clearColorBlue     = DEFAULT_GL_CLEAR_COLOR_BLUE;

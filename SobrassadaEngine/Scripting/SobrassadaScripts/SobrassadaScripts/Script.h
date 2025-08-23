@@ -73,6 +73,7 @@ class Script
     virtual void OnPlayerExitLocation() {};
     virtual void OnPlayerEnterLocation() {};
     virtual void OnDestroy() {};
+    virtual void Reset() {};
 
     virtual void Render(float deltaTime, CameraComponent* camera) {};
 

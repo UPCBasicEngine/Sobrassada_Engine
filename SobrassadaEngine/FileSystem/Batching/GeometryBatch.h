@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Globals.h"
+
 #include "Math/float4x4.h"
 #include <unordered_map>
 #include <vector>
@@ -37,9 +39,13 @@ class GeometryBatch
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlpha() const { return isAlpha; }
     const bool IsDoubleSided() const { return isDoubleSided; }
+    const bool DoApplyWind() const { return doApplyWind; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
+
+    void SOBRASADA_API_ENGINE BindBonesBuffer();
+    void SOBRASADA_API_ENGINE UnbindBonesBuffer();
 
   private:
     void LockBuffer();
@@ -89,4 +95,5 @@ class GeometryBatch
     bool isTransparent            = false;
     bool isAlpha                  = false;
     bool isDoubleSided            = false;
+    bool doApplyWind              = false;
 };
