@@ -99,7 +99,6 @@ void Character::Update(float deltaTime)
     if (animComponent && stateName != animComponent->GetCurrentStateName())
     {
         stateName = animComponent->GetCurrentStateName();
-        // GLOG("Current state: %s", stateName.GetString().c_str());
     }
 
     HandleState(deltaTime);
