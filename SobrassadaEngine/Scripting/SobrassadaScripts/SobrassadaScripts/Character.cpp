@@ -182,7 +182,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
 
 void Character::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
 {
-    ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+   /* ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
     Character* enemyScript       = nullptr;
     if (otherScript)
     {
@@ -197,32 +197,32 @@ void Character::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
             playerScript->RemoveEnemy();
             GLOG("Enemy out. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
         }
-    }
+    }*/
 }
 
 void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
 {
-    // Verifica si el objeto es realmente un enemigo
-    ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
-    Character* enemyScript       = nullptr;
-    if (otherScript)
-    {
-        enemyScript = otherScript->GetScriptByType<Character>();
-    }
+    //// Verifica si el objeto es realmente un enemigo
+    //ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+    //Character* enemyScript       = nullptr;
+    //if (otherScript)
+    //{
+    //    enemyScript = otherScript->GetScriptByType<Character>();
+    //}
 
-    if (enemyScript)
-    {
-        if (playerScript->GetEnemiesCount() >= 2)
-        {
-            SetOnWaiting();
-        }
-        else
-        {
-            isInCountRange = true;
-            playerScript->AddEnemy();
-            GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
-        }
-    }
+    //if (enemyScript)
+    //{
+    //    if (playerScript->GetEnemiesCount() >= 2)
+    //    {
+    //        SetOnWaiting();
+    //    }
+    //    else
+    //    {
+    //        isInCountRange = true;
+    //        playerScript->AddEnemy();
+    //        GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+    //    }
+    //}
 }
 
 void Character::Attack(float deltaTime)

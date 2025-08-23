@@ -57,8 +57,12 @@ class CuChulainn : public Character
     void SetHealth(int health) { reservedHealth = health; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
     void AddEnemy() { enemiesCont++; }
-    void RemoveEnemy() { if(enemiesCont != 0) enemiesCont--; }
-    
+    void RemoveEnemy()
+    {
+        if (enemiesCont != 0) enemiesCont--;
+        GLOG("Enemy out. Total unique enemies colliding: %zu",  enemiesCont);
+    }
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -68,7 +72,7 @@ class CuChulainn : public Character
     void TakeDamage(int amount) override;
     void UpdateTimers(float deltaTime) override;
     void Attack(float deltaTime) override;
-    //void OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer) override;
+    // void OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer) override;
 
     bool CanHeal() const;
     bool CanDash() const;
@@ -96,7 +100,7 @@ class CuChulainn : public Character
 
   private:
     CharacterStates state             = CharacterStates::IDLE;
-    
+
     int enemiesCont                   = 0;
     std::string cameraName            = "";
     GameObject* cameraObject          = nullptr;
