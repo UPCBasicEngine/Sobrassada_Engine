@@ -5,6 +5,7 @@
 #include "Character.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
+#include "CuChulainn.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include "Math/Quat.h"
@@ -53,9 +54,9 @@ void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNorm
 
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
-    if (script && script->GetScriptByType<Character>()) return;
+  if (script && script->GetScriptByType<Character>()) return;
 
-    parent->SetEnabled(false);
+      parent->SetEnabled(false);
 }
 
 void Projectile::Move(float deltaTime)

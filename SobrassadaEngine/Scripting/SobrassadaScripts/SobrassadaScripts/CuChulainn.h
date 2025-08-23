@@ -62,6 +62,7 @@ class CuChulainn : public Character
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string& abilityName);
+  
 
   private:
     void OnDeath() override;
@@ -72,6 +73,7 @@ class CuChulainn : public Character
     void TakeDamage(int amount) override;
     void UpdateTimers(float deltaTime) override;
     void Attack(float deltaTime) override;
+   
 
     bool CanHeal() const;
     bool CanDash() const;
@@ -103,6 +105,8 @@ class CuChulainn : public Character
 
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
+
+    
 
   private:
     CharacterStates state              = CharacterStates::IDLE;
@@ -137,7 +141,14 @@ class CuChulainn : public Character
     int comboCounter                   = -1;
     float comboBufferTimer             = 0.0f;
 
-    // CHarged attack
+    //Arrow Hit VFX 
+    GameObject* arrowHitVfxObject         = nullptr;
+    std::string arrowHitVfxName           = "";
+    float arrowHitVfxDuration             = 0.2f;
+    float arrowHitVfxTimer                = 0.0f;
+    bool arrowVfxIsActive                 = false;
+
+  
     std::string chargedAttackName      = "Charged";
     GameObject* chargedAttackCollider  = nullptr;
     bool isChargingAttack              = false;

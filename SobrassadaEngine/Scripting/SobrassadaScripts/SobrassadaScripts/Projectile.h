@@ -34,4 +34,6 @@ class Projectile : public Script
 
     int damage                      = 1;
     float frames                    = 0.0f;
+
+    bool hasHitTarget                  = false;
 };
