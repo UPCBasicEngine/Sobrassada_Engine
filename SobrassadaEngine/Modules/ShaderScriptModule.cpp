@@ -8,6 +8,7 @@
 #include "Gbuffer.h"
 #include "OpenGLModule.h"
 #include "Scene/Components/ShaderScriptComponent.h"
+#include "Standalone/UI/Transform2DComponent.h"
 
 #include "glew.h"
 
@@ -333,8 +334,23 @@ void ShaderScriptModule::RenderPostEffectsPassShaders(float deltaTime, CameraCom
 
 void ShaderScriptModule::RenderUiPassShaders(float deltaTime)
 {
+    std::vector<std::pair<int, std::pair<ShaderScriptComponent*, unsigned int>>> orderedUIShaders;
+
+    // Sort the UI Shader Scripts by their order in canvas
     for (auto& shaderPair : uiComponents)
     {
-        shaderPair.first->RenderScript(deltaTime, nullptr, shaderPair.second);
+        int idx                           = 0;
+
+        Transform2DComponent* transform2d = shaderPair.first->GetParent()->GetComponent<Transform2DComponent*>();
+        if (transform2d) idx = transform2d->orderInCanvas;
+
+        orderedUIShaders.emplace_back(idx, shaderPair);
+    }
+
+    std::sort(orderedUIShaders.begin(), orderedUIShaders.end(), [](auto& a, auto& b) { return a.first < b.first; });
+
+    for (const auto& shader : orderedUIShaders)
+    {
+        shader.second.first->RenderScript(deltaTime, nullptr, shader.second.second);
     }
 }
