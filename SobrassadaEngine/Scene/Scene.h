@@ -97,6 +97,7 @@ class SOBRASADA_API_ENGINE Scene
 
     GameObject* GetGameObjectByUID(UID gameObjectUID); // TODO: Change when filesystem defined
     GameObject* GetGameObjectByName(const std::string& name);
+    GameObject* GetGameObjectByParentNameAndTargetName(const std::string& parentName, const std::string& targetName);
 
     LightsConfig* GetLightsConfig() const { return lightsConfig; }
     WindConfig* GetWindsConfig() const { return windConfig; }
