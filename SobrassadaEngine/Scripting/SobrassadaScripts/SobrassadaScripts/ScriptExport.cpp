@@ -1,35 +1,46 @@
 #include "pch.h"
 
 #include "Archer.h"
-#include "Changeling.h"
 #include "Banshee.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "ChangeSceneScript.h"
+#include "Changeling.h"
 #include "CuChulainn.h"
+#include "Destructible.h"
+#include "EnemySpawnerScript.h"
 #include "ExitGameScript.h"
 #include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
+#include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
+#include "HealVFXGround.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
+#include "MiniFireball.h"
 #include "MoveGOInSpline.h"
 #include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
 #include "PauseMenuScript.h"
+#include "PlayerLocationScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
 #include "SpawnUI.h"
+#include "Spouts.h"
+#include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "EnemySpawnerScript.h"
-#include "GameOverScript.h"
-#include "PlayerLocationScript.h"
+
+#include "AbilityIconFill.h"
+#include "BarFill.h"
+#include "MovingUVLight.h"
+#include "MovingUVPostScript.h"
+#include "MovingUVTransparent.h"
 
 #include <string>
 
@@ -59,6 +70,7 @@ constexpr const char* scripts[] = {
     "Banshee",
     "TileFloatScript",
     "FireballTrap",
+    "MiniFireball",
     "Archer",
     "Changeling",
     "ChangeSceneScript",
@@ -68,10 +80,19 @@ constexpr const char* scripts[] = {
     "Mushroom",
     "EnemySpawnerScript",
     "GameOverScript",
-    "PlayerLocationScript"
+    "PlayerLocationScript",
+    "Spouts",
+    "SwitchScriptTest",
+    "Destructible"
 };
 
-Application* AppEngine = nullptr;
+constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
+                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
+                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
+                                         "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
+                                         "AbilityIconFill"};
+
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -105,10 +126,13 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
     if (scriptType == "FireballTrap") return new FireballTrap(parent);
+    if (scriptType == "MiniFireball") return new MiniFireball(parent);
     if (scriptType == "Mushroom") return new Mushroom(parent);
     if (scriptType == "SpawnPoint") return new SpawnPoint(parent);
     if (scriptType == "EnemySpawnerScript") return new EnemySpawnerScript(parent);
     if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
+    if (scriptType == "Spouts") return new Spouts(parent);
+    if (scriptType == "Destructible") return new Destructible(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
@@ -116,6 +140,58 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "ChangeSceneScript") return new ChangeSceneScript(parent);
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
+    if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
+
+    /* Render Scripts */
+    if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
+    if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
+    if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "RiastradBarFill")
+        return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
+    if (scriptType == "HealthBarFill")
+        return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_HealthBarFill.glsl");
+    if (scriptType == "AbilityIconFill") return new AbilityIconFill(parent);
+    if (scriptType == "HealGroundHalo")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundHalo.glsl"
+        );
+
+    if (scriptType == "HealVerticalPlanes")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_VerticalPlanes.glsl"
+        );
+
+    if (scriptType == "HealSpikesBurst")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesBurst.glsl"
+        );
+
+    if (scriptType == "HealGroundSpikesLight")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundSpikesLight.glsl"
+        );
+
+    if (scriptType == "HealGroundSpikesDark")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_GroundSpikesDark.glsl"
+        );
+
+    if (scriptType == "HealLightBurst")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_LightBurst.glsl"
+        );
+
+    if (scriptType == "HealSpikesUp")
+        return new HealVFXGround(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesUp.glsl"
+        );
 
     return nullptr;
 }
@@ -147,6 +223,29 @@ extern "C" SOBRASSADA_API const int GetScriptIndexByName(const std::string& scri
     for (int i = 0; i < GetScriptCount(); ++i)
     {
         if (scriptString == scripts[i])
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
+extern "C" SOBRASSADA_API const int GetShaderScriptCount()
+{
+    return sizeof(shaderScripts) / sizeof(shaderScripts[0]);
+}
+
+extern "C" SOBRASSADA_API const char* GetShaderScriptName(const int index)
+{
+    if (index < 0 || index >= GetShaderScriptCount()) return nullptr;
+    return shaderScripts[index];
+}
+
+extern "C" SOBRASSADA_API const int GetShaderScriptIndexByName(const std::string& scriptString)
+{
+    for (int i = 0; i < GetScriptCount(); ++i)
+    {
+        if (scriptString == shaderScripts[i])
         {
             return i;
         }

@@ -81,7 +81,7 @@ void ImageComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
 {
     Component::Save(targetState, allocator);
 
-    targetState.AddMember("TextureUID", texture->GetUID(), allocator);
+    if (texture) targetState.AddMember("TextureUID", texture->GetUID(), allocator);
 
     rapidjson::Value valColor(rapidjson::kArrayType);
     valColor.PushBack(color.x, allocator);
@@ -130,7 +130,7 @@ void ImageComponent::RenderEditorInspector()
 
     ImGui::Text("Source texture: ");
     ImGui::SameLine();
-    ImGui::Text(texture->GetName().c_str());
+    if (texture) ImGui::Text(texture->GetName().c_str());
 
     if (ImGui::Button("Select texture"))
     {
@@ -225,6 +225,7 @@ void ImageComponent::InitBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    if (!texture) return;
     bindlessUID = glGetTextureHandleARB(texture->GetTextureID());
     glMakeTextureHandleResidentARB(bindlessUID);
 }

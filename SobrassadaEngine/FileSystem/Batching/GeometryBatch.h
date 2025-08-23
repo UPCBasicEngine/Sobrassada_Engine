@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Globals.h"
+
 #include "Math/float4x4.h"
+#include <Math/float2.h>
 #include <unordered_map>
 #include <vector>
 
@@ -37,9 +40,24 @@ class GeometryBatch
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlpha() const { return isAlpha; }
     const bool IsDoubleSided() const { return isDoubleSided; }
+    const bool DoApplyWind() const { return doApplyWind; }
+    const float GetVCoord0() const { return vCoord0; }
+    const float GetVCoord1() const { return vCoord1; }
+    const bool UseCentralPivot() const { return useCentralPivot; }
+    const bool UseWindGravity() const { return useWindGravity; }
+    const float GetWindXAmplitude() const { return windXAmplitude; }
+    const float GetWindYAmplitude() const { return windYAmplitude; }
+    const float GetWindZAmplitude() const { return windZAmplitude; }
+    const float GetWindXFrequency() const { return windXFrequency; }
+    const float GetWindYFrequency() const { return windYFrequency; }
+    const float GetWindZFrequency() const { return windZFrequency; }
+    const float GetWindTimeScale() const { return windTimeScale; }
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
+
+    void SOBRASADA_API_ENGINE BindBonesBuffer();
+    void SOBRASADA_API_ENGINE UnbindBonesBuffer();
 
   private:
     void LockBuffer();
@@ -57,19 +75,23 @@ class GeometryBatch
     std::unordered_map<const ResourceMesh*, std::size_t> uniqueMeshesMap;
     std::vector<AccMeshCount> uniqueMeshesCount;
 
-    bool updatedOnce           = false;
-    GLsync gSync[2]            = {nullptr, nullptr};
-    int currentBufferIndex     = 0;
+    bool updatedOnce                    = false;
+    GLsync gSync[2]                     = {nullptr, nullptr};
+    int currentBufferIndex              = 0;
 
-    GLuint models[2]           = {0, 0};
-    float4x4* ptrModels[2]     = {nullptr, nullptr};
-    std::size_t modelsSize     = 0;
+    GLuint models[2]                    = {0, 0};
+    float4x4* ptrModels[2]              = {nullptr, nullptr};
+    std::size_t modelsSize              = 0;
 
-    GLuint bones[2]            = {0, 0};
-    GLuint bonesIndex          = 0;
-    float4x4* ptrBones[2]      = {nullptr, nullptr};
-    std::size_t bonesSize      = 0;
-    std::size_t bonesIndexSize = 0;
+    GLuint deltaWindDirections[2]       = {0, 0};
+    float4* ptrDeltaWindDirections[2]   = {nullptr, nullptr};
+    std::size_t deltaWindDirectionsSize = 0;
+
+    GLuint bones[2]                     = {0, 0};
+    GLuint bonesIndex                   = 0;
+    float4x4* ptrBones[2]               = {nullptr, nullptr};
+    std::size_t bonesSize               = 0;
+    std::size_t bonesIndexSize          = 0;
     std::vector<unsigned int> bonesCount;
 
     unsigned int totalVertexCount = 0;
@@ -89,4 +111,16 @@ class GeometryBatch
     bool isTransparent            = false;
     bool isAlpha                  = false;
     bool isDoubleSided            = false;
+    bool doApplyWind              = false;
+    float vCoord0                 = 0.0f;
+    float vCoord1                 = 1.0f;
+    bool useCentralPivot          = false;
+    bool useWindGravity           = false;
+    float windXAmplitude          = 1.0f;
+    float windYAmplitude          = 1.0f;
+    float windZAmplitude          = 1.0f;
+    float windXFrequency          = 1.0f;
+    float windYFrequency          = 1.0f;
+    float windZFrequency          = 1.0f;
+    float windTimeScale           = 1.0f;
 };

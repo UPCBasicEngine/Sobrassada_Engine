@@ -236,11 +236,6 @@ void CubeColliderComponent::Update(float deltaTime)
     }
 }
 
-void CubeColliderComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
-}
-
 void CubeColliderComponent::RenderDebug(float deltaTime)
 {
 }
@@ -251,6 +246,11 @@ void CubeColliderComponent::ParentUpdated()
 
     if (fitToSize) CalculateCollider();
 
+    App->GetPhysicsModule()->UpdateCubeRigidBody(this);
+}
+
+void CubeColliderComponent::UpdateCollider()
+{
     App->GetPhysicsModule()->UpdateCubeRigidBody(this);
 }
 

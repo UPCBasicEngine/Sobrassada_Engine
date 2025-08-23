@@ -33,7 +33,6 @@ class CanvasComponent : public Component
     void Clone(const Component* other) override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override {};
     void RenderDebug(float deltaTime) override;
     void RenderDebug(float deltaTime, const float3& color);
     void RenderUI();
@@ -49,8 +48,8 @@ class CanvasComponent : public Component
     bool IsInWorldSpace() const;
     void UpdateBoundingBox();
     void ChangeRenderMode(CanvasRenderMode newMode);
-    float GetWidth() const;
-    float GetHeight() const;
+    SOBRASADA_API_ENGINE float GetWidth() const;
+    SOBRASADA_API_ENGINE float GetHeight() const;
 
     float GetScreenScale() const;
 

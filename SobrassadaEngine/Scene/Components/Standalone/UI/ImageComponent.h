@@ -17,15 +17,17 @@ class ImageComponent : public Component
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override;
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override {};
     void RenderDebug(float deltaTime) override;
     void RenderEditorInspector() override;
 
     void RenderUI(const float4x4& view, const float4x4& proj) const;
     void RemoveTransform() { transform2D = nullptr; }
     void SetColor(const float3& newColor) { color = newColor; }
-    void SOBRASADA_API_ENGINE ChangeTexture(const UID textureUID);
-
+    SOBRASADA_API_ENGINE void ChangeTexture(const UID textureUID);
+    SOBRASADA_API_ENGINE Transform2DComponent* GetTransform2D() const { return transform2D; }
+    SOBRASADA_API_ENGINE const float3& GetColor() const { return color; }
+    SOBRASADA_API_ENGINE const ResourceTexture* GetTexture() const { return texture; }
+    SOBRASADA_API_ENGINE const UID GetTextureUID() const { return bindlessUID; }
 
   private:
     void InitBuffers();

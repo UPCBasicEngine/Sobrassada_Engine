@@ -15,7 +15,6 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     void Clone(const Component* other) override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override {};
     void RenderEditorInspector() override;
     virtual void RenderDebug(float deltaTime) {};
 
@@ -40,6 +39,8 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     void UpdateEventsNames();
     void StopAudio() const;
     void StopAllAudio() const;
+
+    const std::string& GetEventName() const { return defaultEventName; }
 
   private:
     void SetInitValues();

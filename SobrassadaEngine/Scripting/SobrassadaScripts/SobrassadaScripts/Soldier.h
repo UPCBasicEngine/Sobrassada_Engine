@@ -32,7 +32,6 @@ class Soldier : public Character
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
-    void SetOnWaiting() override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
@@ -43,6 +42,7 @@ class Soldier : public Character
     void PatrolAI(float deltaTime);
     void ChaseAI();
     void SearchForPlayer();
+    void SetOnWaiting();
     const char* ManageAttackAnimations();
 
   private:
@@ -56,6 +56,7 @@ class Soldier : public Character
     float knockbackTimer             = 0.0f;
     float3 knockbackDirection        = float3::zero;
     bool isKnockback                 = false;
+    bool isStrongKnockback           = false;
     int consecutiveAttack            = 0;
     int consecutiveThrust            = 0;
     float secondAttackDelay          = 0.6f;

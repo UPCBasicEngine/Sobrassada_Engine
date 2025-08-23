@@ -36,10 +36,11 @@ enum ComponentType : int
     COMPONENT_AUDIO_LISTENER,
     COMPONENT_CANVAS_SCALER,
     COMPONENT_BILLBOARD,
-	COMPONENT_SPLINE,    
+    COMPONENT_SPLINE,
     COMPONENT_DECAL,
     COMPONENT_TRAIL,
     COMPONENT_PARTICLE_SYSTEM,
+    COMPONENT_SHADER_SCRIPT,
 };
 
 enum class ColliderType : uint8_t
@@ -73,6 +74,18 @@ typedef Delegate<void, GameObject*, ColliderLayer> CollisionExitDelegate;
 constexpr const char* ResourceTypeStrings[] = {"Material", "Texture"};
 constexpr int ResourceTypeStringsSize       = sizeof(ResourceTypeStrings) / sizeof(char*);
 
+enum class ShaderScriptType : int
+{
+    NONE = -1,
+    GEOMERTY_PASS,
+    TRANSPARENT_PASS,
+    POST_LIGHTING_PASS,
+    POST_EFFECTS_PASS
+};
+
+constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting", "Post effects"};
+constexpr int ShaderScriptTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
+
 class ComponentUtils
 {
   public:
@@ -83,11 +96,13 @@ class ComponentUtils
 
 #define COMPONENTS                                                                                                     \
     MeshComponent*, PointLightComponent*, SpotLightComponent*, DirectionalLightComponent*,                             \
-        CharacterControllerComponent*, Transform2DComponent*, CanvasComponent*,         \
-        UILabelComponent*, CameraComponent*, ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*,       \
-        CapsuleColliderComponent*, AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*,          \
-        AudioSourceComponent*, AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, DecalComponent*, TrailComponent*, ParticleSystemComponent*
+        CharacterControllerComponent*, Transform2DComponent*, CanvasComponent*, UILabelComponent*, CameraComponent*,   \
+        ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*, CapsuleColliderComponent*,                 \
+        AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*, AudioSourceComponent*,              \
+        AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, DecalComponent*,       \
+        TrailComponent*, ParticleSystemComponent*, ShaderScriptComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,    \
+        nullptr, nullptr

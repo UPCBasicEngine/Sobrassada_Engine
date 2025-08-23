@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
+#include "EngineTimer.h"
 #include "GameObject.h"
 #include "GeometryBatch.h"
 #include "OpenGLModule.h"
@@ -12,9 +13,12 @@
 #include "SceneModule.h"
 #include "ShaderModule.h"
 #include "Standalone/MeshComponent.h"
+#include "WindConfig.h"
 
+#include "Math/Quat.h"
 #include "Math/float3.h"
 #include "glew.h"
+#include <Math/MathFunc.h>
 #include <algorithm>
 #include <chrono>
 #ifdef OPTICK
@@ -94,17 +98,27 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         for (MeshComponent* mesh : meshesToRender)
         {
             GameObject* owner = mesh->GetParent();
-            if (!owner || !owner->IsGloballyEnabled()) continue;
+            if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
             if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
         }
 
         if (batchMeshes.empty()) continue;
 
-        const unsigned int program = it->GetIsSpecular() ? App->GetShaderModule()->GetSpecularGeometryPassProgram()
-                                                         : App->GetShaderModule()->GetMetallicGeometryPassProgram();
+        unsigned int program;
 
-        const auto start           = std::chrono::high_resolution_clock::now();
+        if (it->GetIsSpecular())
+        {
+            program = it->DoApplyWind() ? App->GetShaderModule()->GetSpecularGeometryVPOPassProgram()
+                                        : App->GetShaderModule()->GetSpecularGeometryPassProgram();
+        }
+        else
+        {
+            program = it->DoApplyWind() ? App->GetShaderModule()->GetMetallicGeometryVPOPassProgram()
+                                        : App->GetShaderModule()->GetMetallicGeometryPassProgram();
+        }
+
+        const auto start = std::chrono::high_resolution_clock::now();
 
         glUseProgram(program);
 
@@ -122,6 +136,32 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
 
         if (it->IsDoubleSided()) glDisable(GL_CULL_FACE);
 
+        // GLOG("%s", it->UseCentralPivot() ? "Pivot" : "No pivot")
+        if (it->DoApplyWind())
+        {
+            if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+                windConfig->GetApplyWindGlobally())
+            {
+                glUniform4f(
+                    glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),
+                    windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
+                    windConfig->GetGustSpeed()
+                );
+                glUniform4f(
+                    glGetUniformLocation(program, "windUVParameters"), it->GetVCoord0(), it->GetVCoord1(),
+                    it->UseCentralPivot(), it->UseWindGravity()
+                );
+                glUniform3f(
+                    glGetUniformLocation(program, "windAmplitudes"), it->GetWindXAmplitude(), it->GetWindYAmplitude(),
+                    it->GetWindZAmplitude()
+                );
+                glUniform4f(
+                    glGetUniformLocation(program, "windFrequency"), it->GetWindXFrequency(), it->GetWindYFrequency(),
+                    it->GetWindZFrequency(), it->GetWindTimeScale()
+                );
+            }
+        }
+
         it->ResetUpdatedOnce();
         it->Render(batchMeshes);
 
@@ -138,7 +178,9 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
     }
 }
 
-void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera)
+void BatchManager::RenderTransparent(
+    const std::vector<MeshComponent*>& meshesToRender, const unsigned int program, CameraComponent* camera
+)
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("BatchManager::RenderTransparent", Optick::Category::Rendering)
@@ -152,7 +194,7 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
     for (MeshComponent* mesh : meshesToRender)
     {
         GameObject* owner = mesh->GetParent();
-        if (!owner || !owner->IsGloballyEnabled()) continue;
+        if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
         batchMeshes.push_back(mesh);
     }
@@ -186,9 +228,7 @@ void BatchManager::RenderTransparent(const std::vector<MeshComponent*>& meshesTo
         }
     );
 
-    const unsigned int program = App->GetShaderModule()->GetTransparentPassProgram();
-
-    const auto start           = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
 
     glUseProgram(program);
 
@@ -251,7 +291,7 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
         for (MeshComponent* mesh : meshesToRender)
         {
             GameObject* owner = mesh->GetParent();
-            if (!owner || !owner->IsGloballyEnabled()) continue;
+            if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
             if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
         }
@@ -308,7 +348,18 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
             if (it->GetMode() == mesh->GetMode() && it->GetIsMetallic() == material->GetIsMetallicRoughness() &&
                 it->GetHasBones() == component->GetHasBones() &&
                 it->IsNavmeshValid() == component->GetParent()->IsNavMeshValid() &&
-                it->IsAlpha() == (component->GetRenderMode() == 2) && material->IsDoubleSided() == it->IsDoubleSided())
+                it->IsAlpha() == (component->GetRenderMode() == 2) &&
+                material->IsDoubleSided() == it->IsDoubleSided() && material->DoApplyWind() == it->DoApplyWind() &&
+                Equal(material->GetVCoord0(), it->GetVCoord0()) && Equal(material->GetVCoord1(), it->GetVCoord1()) &&
+                material->UseCentralPivot() == it->UseCentralPivot() &&
+                material->UseWindGravity() == it->UseWindGravity() &&
+                Equal(material->GetWindXAmplitude(), it->GetWindXAmplitude()) &&
+                Equal(material->GetWindYAmplitude(), it->GetWindYAmplitude()) &&
+                Equal(material->GetWindZAmplitude(), it->GetWindZAmplitude()) &&
+                Equal(material->GetWindXFrequency(), it->GetWindXFrequency()) &&
+                Equal(material->GetWindYFrequency(), it->GetWindYFrequency()) &&
+                Equal(material->GetWindZFrequency(), it->GetWindZFrequency()) &&
+                Equal(material->GetWindTimeScale(), it->GetWindTimeScale()))
             {
                 return it;
             }

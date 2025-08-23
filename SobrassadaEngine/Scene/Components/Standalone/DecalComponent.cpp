@@ -59,9 +59,6 @@ void DecalComponent::Update(float deltaTime)
 {
 }
 
-void DecalComponent::Render(float deltaTime)
-{
-}
 
 void DecalComponent::RenderDebug(float deltaTime)
 {

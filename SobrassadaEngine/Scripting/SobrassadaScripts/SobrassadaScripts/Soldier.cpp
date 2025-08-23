@@ -73,10 +73,13 @@ void Soldier::Update(float deltaTime)
     if (isKnockback)
     {
         knockbackTimer -= deltaTime;
-        agentAI->MoveTo(knockbackForce, knockbackDirection);
+
+        const float appliedForce  = isStrongKnockback ? knockbackForce * 2 : knockbackForce;  
+        agentAI->MoveTo(appliedForce, knockbackDirection);
         if (knockbackTimer <= 0.0f)
         {
             isKnockback = false;
+            isStrongKnockback = false;
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
             ChangeState();
@@ -136,10 +139,15 @@ void Soldier::OnDamageTaken(int amount)
     }
     isKnockback    = true;
     knockbackTimer = knockbackTime;
+
+    isStrongKnockback =
+        (playerScript &&
+         (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM));
+    
     ApplyKnockback();
-    // HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
-    // std::string animState               = animStateFromPlayer.GetString();
-    // GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
+    //HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
+    //std::string animState               = animStateFromPlayer.GetString();
+    //GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
 }
 
@@ -208,6 +216,7 @@ void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
+
 
     if (!playerScript->IsDead())
     {
@@ -367,7 +376,7 @@ void Soldier::ChangeState()
 {
     if (playerScript->IsDead())
     {
-        currentState = SoldierStates::PATROL;
+        currentState = SoldierStates::DEATH;
         return;
     }
 
@@ -409,8 +418,10 @@ void Soldier::ChangeState()
 
 void Soldier::ApplyKnockback()
 {
-    float3 myPos         = parent->GetGlobalTransform().TranslatePart();
-    knockbackDirection   = character->GetFrontDirection();
+    const float3 myPos         = parent->GetGlobalTransform().TranslatePart();
+    const float3 origin        = character ? character->GetLastPosition() : float3::zero;
+
+    knockbackDirection   = myPos - origin;
     knockbackDirection.y = 0.0f;
     if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
     knockbackDirection.Normalize();

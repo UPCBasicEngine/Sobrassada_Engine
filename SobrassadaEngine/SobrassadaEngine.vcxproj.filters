@@ -606,6 +606,18 @@
     <ClCompile Include="Scene\RenderPass.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\Animation\AnimationTrigger.cpp">
+      <Filter>Scene\Components\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Components\ShaderScriptComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ShaderScriptModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\SSAO.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -700,6 +712,9 @@
     </Filter>
     <Filter Include="Utils\Particles\Addons">
       <UniqueIdentifier>{b61b72e4-b030-4d7f-8e61-f2b2c64a7f8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Components\Animation">
+      <UniqueIdentifier>{a0810293-63e6-4116-a394-ba28c9103b80}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1190,8 +1205,21 @@
     <ClInclude Include="Utils\Particles\AreaAddon.h">
       <Filter>Utils\Particles\Addons</Filter>
     </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\Animation\AnimationTrigger.h">
+      <Filter>Scene\Components\Animation</Filter>
+    </ClInclude>
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h">
       <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Components\ShaderScriptComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\ShaderScriptModule.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="resourceIcon.h" />
+    <ClInclude Include="Utils\SSAO.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1211,5 +1239,11 @@
     <None Include="Libs\Wwise\samples\SoundEngine\Common\AkFilePackageLowLevelIO.inl">
       <Filter>External\Wwise</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SobrassadaEngine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Game\1-416023b1.ico" />
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 #include "DebugDrawModule.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
+#include "SSAO.h"
 #include "GameObject.h"
 #include "InputModule.h"
 #include "OpenGLModule.h"
@@ -354,6 +355,9 @@ void CameraComponent::RenderCameraPreview(float deltaTime)
         App->GetOpenGLModule()->GetGBuffer()->Resize(previewWidth, previewHeight);
         App->GetOpenGLModule()->GetGBuffer()->CheckResize();
 
+        App->GetOpenGLModule()->GetSsao()->Resize(previewWidth, previewHeight);
+        App->GetOpenGLModule()->GetSsao()->CheckResize();
+
         glViewport(0, 0, previewWidth, previewHeight);
 
         previewFramebuffer->Bind();
@@ -363,6 +367,9 @@ void CameraComponent::RenderCameraPreview(float deltaTime)
 
         App->GetOpenGLModule()->GetGBuffer()->Resize(mainFramebufferWidth, mainFramebufferHeight);
         App->GetOpenGLModule()->GetGBuffer()->CheckResize();
+
+        App->GetOpenGLModule()->GetSsao()->Resize(mainFramebufferWidth, mainFramebufferHeight);
+        App->GetOpenGLModule()->GetSsao()->CheckResize();
 
         App->GetOpenGLModule()->GetFramebuffer()->Bind();
 
@@ -462,11 +469,6 @@ const float3 CameraComponent::ScreenPointToXZ(const float y)
     const float t         = (y - ray.pos.y) / ray.dir.y;
     const float3 worldPos = ray.pos + ray.dir * t;
     return worldPos;
-}
-
-void CameraComponent::Render(float deltaTime)
-{
-    if (!IsEffectivelyEnabled()) return;
 }
 
 void CameraComponent::RenderDebug(float deltaTime)

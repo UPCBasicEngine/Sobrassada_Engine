@@ -64,3 +64,13 @@ void GameOverScript::PauseGame()
 {
     if (auto* t = AppEngine->GetGameTimer()) t->TogglePause();
 }
+
+void GameOverScript::Close()
+{
+    if (cachedTarget) cachedTarget->SetEnabledRecursive(false);
+
+    GameTimer* timer = AppEngine->GetGameTimer();
+    if (timer && timer->IsPaused()) timer->TogglePause();
+
+    gameOverShown = false;
+}

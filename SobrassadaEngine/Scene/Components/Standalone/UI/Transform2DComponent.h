@@ -21,7 +21,6 @@ class Transform2DComponent : public Component
     void Clone(const Component* other) override;
 
     void Update(float deltaTime) override {};
-    void Render(float deltaTime) override {};
     void RenderDebug(float deltaTime) override {};
     void RenderEditorInspector() override;
 
@@ -34,13 +33,13 @@ class Transform2DComponent : public Component
     void GetCanvas();
     void AdaptToParentChanges();
 
-    float2 GetRenderingPosition() const;
+    SOBRASADA_API_ENGINE float2 GetRenderingPosition() const;
     float2 GetGlobalPosition() const;
     float2 GetCenterPosition() const;
     void AddChildTransform(Transform2DComponent* newChild) { childTransforms.push_back(newChild); }
     void RemoveChild(Transform2DComponent* child);
     void RemoveParent() { parentTransform = nullptr; }
-    CanvasComponent* GetParentCanvas() const { return parentCanvas; }
+    SOBRASADA_API_ENGINE CanvasComponent* GetParentCanvas() const { return parentCanvas; }
     float2 GetScaledSize() const;
 
   private:
@@ -65,6 +64,8 @@ class Transform2DComponent : public Component
     float2 pivot;
     float2 anchorsX;
     float2 anchorsY;
+
+    int orderInCanvas = 0;
 
   private:
     CanvasComponent* parentCanvas                      = nullptr;

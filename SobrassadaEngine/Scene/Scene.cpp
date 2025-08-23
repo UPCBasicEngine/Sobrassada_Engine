@@ -7,6 +7,7 @@
 #include "CameraModule.h"
 #include "Component.h"
 #include "ComponentUtils.h"
+#include "Components/ShaderScriptComponent.h"
 #include "DebugDrawModule.h"
 #include "EditorUIModule.h"
 #include "Framebuffer.h"
@@ -32,9 +33,11 @@
 #include "ResourceModel.h"
 #include "ResourcePrefab.h"
 #include "ResourcesModule.h"
+#include "SSAO.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
+#include "ShaderScriptModule.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
@@ -57,7 +60,6 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
-#include <unordered_map>
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -69,7 +71,11 @@
 #include "optick.h"
 #endif
 
+#include "WindConfig.h"
+
 #include <set>
+#include <unordered_set>
+#include <unordered_map>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
 {
@@ -81,6 +87,7 @@ Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
     gameObjectsContainer.insert({sceneGameObject->GetUID(), sceneGameObject});
 
     lightsConfig = new LightsConfig();
+    windConfig = new WindConfig();
     renderPass   = new RenderPass();
 }
 
@@ -126,6 +133,13 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         lightsConfig->LoadData(initialState["Lights Config"]);
     }
 
+    // Deserialize Wind Config
+    windConfig = new WindConfig();
+    if (initialState.HasMember("Wind Config") && initialState["Wind Config"].IsObject())
+    {
+        windConfig->LoadData(initialState["Wind Config"]);
+    }
+
     renderPass = new RenderPass();
 
     if (initialState.HasMember("tags") && initialState.HasMember("tagsGO"))
@@ -167,11 +181,13 @@ Scene::~Scene()
 
     App->GetPathfinderModule()->ClearNavMesh();
     delete lightsConfig;
+    delete windConfig;
     delete sceneOctree;
     delete dynamicTree;
     delete renderPass;
 
     lightsConfig = nullptr;
+    windConfig = nullptr;
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
 
@@ -308,6 +324,11 @@ void Scene::Save(
 
     else GLOG("Light Config not found");
 
+    // Serialize Wind Config
+    rapidjson::Value wind(rapidjson::kObjectType);
+    windConfig->SaveData(wind, allocator);
+    targetState.AddMember("Wind Config", wind, allocator);
+
     // TODO Convert to parameter which can be set later manually instead of saving a scene as default "on scene
     // save"
     if (saveMode != SaveMode::SavePlayMode) App->GetProjectModule()->SetAsStartupScene(sceneName);
@@ -324,12 +345,12 @@ update_status Scene::Update(float deltaTime)
         {
             ScriptComponent* script = gameObject.second->GetComponent<ScriptComponent*>();
             if (script) script->InitScriptInstances();
+
+            ShaderScriptComponent* shaderScript = gameObject.second->GetComponent<ShaderScriptComponent*>();
+            if (shaderScript) shaderScript->InitScriptInstances();
         }
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
-
-    // for (auto& gameObject : gameObjectsContainer)
-    //     gameObject.second->UpdateComponents(deltaTime);
 
     for (auto gameObject : toUpdateGameObjects)
         gameObject->UpdateComponents(deltaTime);
@@ -360,15 +381,10 @@ update_status Scene::Render(float deltaTime)
 void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 {
     GBuffer* gbuffer         = App->GetOpenGLModule()->GetGBuffer();
+    SSAO* ssao               = App->GetOpenGLModule()->GetSsao();
     Framebuffer* framebuffer = App->GetSceneModule()->GetInPlayMode() ? App->GetOpenGLModule()->GetFramebuffer()
                              : camera != nullptr                      ? camera->GetFramebuffer()
                                                                       : App->GetOpenGLModule()->GetFramebuffer();
-
-    // FrustumPlanes frustumPlanes;
-    // if (camera == nullptr) frustumPlanes = App->GetCameraModule()->GetFrustrumPlanes();
-    // else frustumPlanes = camera->GetFrustrumPlanes();
-    // std::vector<GameObject*> objectsToRender;
-    // CheckObjectsInFrustum(objectsToRender, frustumPlanes);
 
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
@@ -377,22 +393,13 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera);
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render", Optick::Category::Rendering)
+    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
 #endif
-    for (const auto& gameObject : toUpdateGameObjects)
-    {
-        if (gameObject != nullptr)
-        {
-            gameObject->Render(deltaTime);
-        }
-    }
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
+    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
+    glPopDebugGroup();
 
 #ifndef GAME
-    // for (const auto& gameObject : gameObjectsContainer)
-    //{
-    //     gameObject.second->DrawGizmos();
-    // }
-
     for (const auto& gameObject : toUpdateGameObjects)
     {
         gameObject->DrawGizmos();
@@ -425,6 +432,10 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
     App->GetParticleModule()->RenderParticles();
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
+    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 }
 
@@ -621,6 +632,7 @@ void Scene::RenderSceneToFrameBuffer()
         App->GetCameraModule()->SetAspectRatio(aspectRatio);
         framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
         App->GetOpenGLModule()->GetGBuffer()->Resize((int)windowSize.x, (int)windowSize.y);
+        App->GetOpenGLModule()->GetSsao()->Resize((int)windowSize.x, (int)windowSize.y);
     }
 
     ImVec2 windowPosition     = ImGui::GetWindowPos();
@@ -1023,6 +1035,18 @@ void Scene::ClearObjectsToUpdate()
     toUpdateGameObjects.clear();
 }
 
+void Scene::UpdateAllMaterialInstances(const UID materialUID)
+{
+    for (const auto& object : gameObjectsContainer)
+    {
+        MeshComponent* mesh = object.second->GetComponent<MeshComponent*>();
+        if (mesh && mesh->GetResourceMaterial()->GetUID() == materialUID)
+        {
+            mesh->BatchEditorMode();
+        }
+    }
+}
+
 void Scene::CreateStaticSpatialDataStruct()
 {
     // PARAMETRIZED IN FUTURE
@@ -1123,7 +1147,46 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
         if (obj.second->GetName() == name) return obj.second;
     }
 
-    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    return nullptr;
+}
+
+//Loops in the Parent Tree node and try to find targetName GO
+GameObject* Scene::GetGameObjectByParentNameAndTargetName(const std::string& parentName, const std::string& targetName)
+{
+    // TODO: Replace gameObject name to a HashString, I've seen it is also compared in some scripts and would improve
+    // performance
+
+    GameObject* parentGO = GetGameObjectByName(parentName);
+    if (!parentGO) return nullptr;
+
+    std::vector<UID> stack;
+    const auto& childrenVectorUID = parentGO->GetChildren();
+    stack.insert(stack.end(), childrenVectorUID.begin(), childrenVectorUID.end());
+
+    std::unordered_set<UID> visited;
+    visited.reserve(stack.size() * 2 + 16);
+
+    while (!stack.empty())
+    {
+        UID uid = stack.back();
+        stack.pop_back();
+
+        if (!visited.insert(uid).second) continue;
+
+        GameObject* cGO = GetGameObjectByUID(uid);
+        if (!cGO) continue;
+
+        if (cGO->GetName() == targetName) return cGO;
+
+        const auto& kids = cGO->GetChildren();
+        for (auto it = kids.rbegin(); it != kids.rend(); ++it)
+        {
+            if (!visited.count(*it)) stack.push_back(*it);
+        }
+    }
+
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }
 
@@ -1684,6 +1747,17 @@ void Scene::OverridePrefabs(const UID prefabUID)
     }
     if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
     App->GetResourcesModule()->ReleaseResource(prefab);
+}
+
+void Scene::QueueGameObjectDelete(UID uid)
+{
+    if (uid != INVALID_UID) pendingDeletes.push_back(uid);
+}
+void Scene::FlushPendingDeletes()
+{
+    for (UID id : pendingDeletes)
+        RemoveGameObjectHierarchy(id);
+    pendingDeletes.clear();
 }
 
 template <typename T> std::vector<T> Scene::GetEnabledComponentsOfType() const

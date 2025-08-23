@@ -8,6 +8,7 @@ layout(location = 0)out vec4 gDiffuse;
 layout(location = 1)out vec4 gSpecular;
 layout(location = 2)out vec4 gPosition;
 layout(location = 3)out vec4 gNormal;
+layout(location = 4)out vec4 gEmissive;
 
 in vec3 pos;
 in vec2 uv0;
@@ -30,6 +31,8 @@ struct Material
     int hasSpecular;
     int hasMetallic;
     uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    uvec2 padding;
 };
 
 uniform bool isWireframe;
@@ -58,7 +61,8 @@ void main()
         if(alpha < 0.1) discard;
     }
 
-    gDiffuse = vec4(pow(texColor.rgb, vec3(2.2f)), alpha);
+    vec3 baseColor = materials[instance_index].diffColor.rgb * texColor.rgb;
+    gDiffuse = vec4(pow(baseColor, vec3(2.2f)), alpha);
     if(mat.hasMetallic == 1) gSpecular = vec4(pow(texture(sampler2D(mat.metallicTex), uv0), vec4(2.2)));
     else gSpecular = vec4(1);
     gPosition = vec4(pos, 1);
@@ -76,4 +80,6 @@ void main()
         N = normalize(final_normal);
     }
     gNormal = vec4(N,0);
+    vec3 emissiveColor = pow(texture(sampler2D(mat.emmisiveTex), uv0).rgb, vec3(2.2f));
+    gEmissive = vec4(emissiveColor, 1.0);
 }

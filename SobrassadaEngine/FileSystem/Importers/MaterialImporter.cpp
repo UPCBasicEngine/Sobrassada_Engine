@@ -171,6 +171,17 @@ UID MaterialImporter::ImportMaterial(
         }
     }
 
+    if (gltfMaterial.emissiveTexture.index >= 0)
+    {
+        int texIndex  = gltfMaterial.emissiveTexture.index;
+
+        UID emissiveUID = HandleTextureImport(path + model.images[model.textures[texIndex].source].uri, targetFilePath);
+        if (emissiveUID != INVALID_UID)
+        {
+            material.SetEmissiveTexture(emissiveUID);
+        }
+    }
+
     material.SetAlphaDiscard(isAlphaDiscard);
     material.SetTransparent(isTransparent);
     material.SetDoubleSide(isDoubleSided);
@@ -199,7 +210,8 @@ UID MaterialImporter::ImportMaterial(
 
         std::string assetPath = ASSETS_PATH + FileSystem::GetFileNameWithExtension(sourceFilePath);
         MetaMaterial meta(
-            finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID, isTransparent, isDoubleSided, isAlphaDiscard
+            finalMaterialUID, assetPath, tmpNameString, useOcclusion, defaultTextureUID, isTransparent, isDoubleSided,
+            isAlphaDiscard
         );
         meta.Save(materialName, assetPath);
     }
@@ -258,9 +270,9 @@ ResourceMaterial* MaterialImporter::LoadMaterial(UID materialUID)
     // Create Mesh
     Material mat               = *reinterpret_cast<Material*>(cursor);
 
-    ResourceMaterial* material = new ResourceMaterial(materialUID, name, importOptions);
+    ResourceMaterial* material = new ResourceMaterial(materialUID, name);
 
-    material->LoadMaterialData(mat);
+    material->LoadMaterialData(mat, importOptions);
 
     delete[] buffer;
 

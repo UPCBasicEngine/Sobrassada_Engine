@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "Globals.h"
 #include "Resource.h"
 
 #include "Math/float3.h"
@@ -30,16 +31,18 @@ struct MaterialGPU
     int hasSpecular       = 0;
     int hasMetallic       = 0;
     uint64_t emmisiveTex  = 0; // Right now works as padding TODO: put emmissive
+    uint64_t occlusionTex = 0;
+    uint64_t padding      = 0;
 };
 
 class ResourceMaterial : public Resource
 {
   public:
-    ResourceMaterial(UID uid, const std::string& name, const rapidjson::Value& importOptions);
+    ResourceMaterial(UID uid, const std::string& name);
     ~ResourceMaterial() override;
 
-    bool OnEditorUpdate();
-    void LoadMaterialData(Material mat);
+    void OnEditorUpdate();
+    void LoadMaterialData(const Material& mat, const rapidjson::Value& importOptions);
     void FreeMaterials() const;
 
     UID ChangeTexture(UID newTexture, TextureInfo& textureToChange, UID textureGPU);
@@ -56,21 +59,57 @@ class ResourceMaterial : public Resource
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlphaDiscard() const { return isAlpha; }
     const bool IsDoubleSided() const { return doubleSided; }
+    bool DoApplyWind() const { return applyWind; }
+    const float GetVCoord0() const { return vCoord0; }
+    const float GetVCoord1() const { return vCoord1; }
+    const bool UseCentralPivot() const { return useCentralPivot; }
+    const bool UseWindGravity() const { return useWindGravity; }
+    const float GetWindXAmplitude() const { return windXAmplitude; }
+    const float GetWindYAmplitude() const { return windYAmplitude; }
+    const float GetWindZAmplitude() const { return windZAmplitude; }
+    const float GetWindXFrequency() const { return windXFrequency; }
+    const float GetWindYFrequency() const { return windYFrequency; }
+    const float GetWindZFrequency() const { return windZFrequency; }
+    const float GetWindTimeScale() const { return windTimeScale; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
     int GetDiffuseWidth() const { return diffuseTexture.width; }
     int GetDiffuseHeight() const { return diffuseTexture.height; }
+
+    unsigned int GetSpecularTextureID() const { return specularTexture.textureID; }
+    unsigned int GetMetallicTextureID() const { return metallicTexture.textureID; }
+    unsigned int GetNormalTextureID() const { return normalTexture.textureID; }
+    unsigned int GetEmissiveTextureID() const { return emmisiveTexture.textureID; }
+    unsigned int GetOcclusionTextureID() const { return occlusionTexture.textureID; }
+
+    SOBRASADA_API_ENGINE void SetDiffColor(const float4& newColor);
 
   private:
     TextureInfo diffuseTexture;
     TextureInfo specularTexture;
     TextureInfo metallicTexture;
     TextureInfo normalTexture;
+    TextureInfo emmisiveTexture;
+    TextureInfo occlusionTexture;
 
-    MaterialGPU material;
+    MaterialGPU material  = {};
     bool isTransparent    = false;
     bool isAlpha          = false;
     bool doubleSided      = false;
     bool hasNormal        = false;
+    bool applyWind        = false;
+    float vCoord0         = 0.0f;
+    float vCoord1         = 1.0f;
+    bool useCentralPivot  = false;
+    bool useWindGravity   = false;
+    float windXAmplitude  = 1.0f;
+    float windYAmplitude  = 1.0f;
+    float windZAmplitude  = 1.0f;
+    float windXFrequency  = 1.0f;
+    float windYFrequency  = 1.0f;
+    float windZFrequency  = 1.0f;
+    float windTimeScale   = 1.0f;
     UID defaultTextureUID = INVALID_UID;
+
+    bool wasUpdated       = false;
 };

@@ -27,7 +27,6 @@ class MeshComponent : public Component
     void RenderEditorInspector() override;
 
     void Update(float deltaTime) override;
-    void Render(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
 
     void InitSkin();
@@ -49,6 +48,10 @@ class MeshComponent : public Component
     GeometryBatch* GetBatch() const { return batch; }
     int GetRenderMode() const { return renderMode; }
     bool GetProduceShadows() const { return produceShadows; }
+    bool GetBatchWasEnabled() { return batchWasEnabled; }
+
+    unsigned int GetBoneIndexOffset() const { return boneIndexOffset; }
+    bool GetUpdateShaderStorage() const { return updateShaderStorage; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
     {
@@ -62,6 +65,17 @@ class MeshComponent : public Component
         this->skinIndex = newIndex;
         hasBones        = true;
     }
+    void SetBatchWasEnabled() { batchWasEnabled = true; }
+
+    void SetEnabled(bool newEnabled) override
+    {
+        Component::SetEnabled(newEnabled);
+
+        batchWasEnabled = false;
+    }
+
+    void SetBoneIndexOffset(unsigned int newIndexOffset) { boneIndexOffset = newIndexOffset; }
+    void SetUpdateShaderStorage(bool newUpdate) { updateShaderStorage = newUpdate; }
 
   private:
     std::string currentMeshName       = "Not selected";
@@ -74,17 +88,22 @@ class MeshComponent : public Component
     std::vector<UID> bonesUIDs;
     std::vector<GameObject*> bones;
     std::vector<float4x4> bindMatrices;
-    bool hasBones           = false;
+    bool hasBones                = false;
 
-    UID modelUID            = INVALID_UID;
-    int skinIndex           = -1;
+    UID modelUID                 = INVALID_UID;
+    int skinIndex                = -1;
 
-    float4x4 combinedMatrix = float4x4::identity;
+    float4x4 combinedMatrix      = float4x4::identity;
 
-    GeometryBatch* batch    = nullptr;
-    bool uniqueBatch        = false;
+    GeometryBatch* batch         = nullptr;
+    bool uniqueBatch             = false;
 
-    int renderMode   = 0; //0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
+    int renderMode               = 0; // 0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
 
-    bool produceShadows     = true;
+    bool produceShadows          = true;
+
+    bool batchWasEnabled         = false;
+
+    unsigned int boneIndexOffset = 0;
+    bool updateShaderStorage     = false;
 };

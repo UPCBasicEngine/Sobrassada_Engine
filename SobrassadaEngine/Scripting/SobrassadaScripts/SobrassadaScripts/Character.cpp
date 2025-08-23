@@ -10,6 +10,7 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Mushroom.h"
+#include "Spouts.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -97,7 +98,6 @@ void Character::Update(float deltaTime)
     if (animComponent && stateName != animComponent->GetCurrentStateName())
     {
         stateName = animComponent->GetCurrentStateName();
-        // GLOG("Current state: %s", stateName.GetString().c_str());
     }
 
     HandleState(deltaTime);
@@ -105,6 +105,23 @@ void Character::Update(float deltaTime)
 }
 
 void Character::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+{
+    ScriptComponent* otherScript = otherObject->GetComponent<ScriptComponent*>();
+    if (otherScript)
+    {
+        // Mushroom check
+        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
+        if (mushroomScript)
+        {
+            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
+            {
+                if (playerScript->TakeMushroom()) mushroomScript->Disable();
+            }
+        }
+    }
+}
+
+void Character::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     // cube collider should be only if is enabled here already checked by OnCollision of cubeColliderComponent
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
@@ -118,11 +135,6 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
 
     if (otherScript && otherWeapon && otherWeapon->GetEnabled())
     {
-
-        // Charged attack check
-        if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
-            TakeDamage(playerScript->GetChargedAttackDamage());
-
         // Standard attack check
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         if (enemyScript)
@@ -135,7 +147,17 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
     {
         // Special attack check
         CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
-        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE) (playerScript->GetUltimateDamage());
+        if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
+            TakeDamage(playerScript->GetUltimateDamage());
+
+        // Charged attack check
+        if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
+            TakeDamage(playerScript->GetChargedAttackDamage());
+
+        // Heal & Riastrad knockback check
+        if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
+                             playerScript->GetState() == CharacterStates::TRANSFORM))
+            TakeDamage(0);
     }
 
     if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
@@ -168,6 +190,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             }
         }
 
+        /*
         // Mushroom check
         Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
         if (mushroomScript)
@@ -176,53 +199,14 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             {
                 if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
-        }
-    }
-}
+        }*/
 
-void Character::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
-{
-   /* ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
-    Character* enemyScript       = nullptr;
-    if (otherScript)
-    {
-        enemyScript = otherScript->GetScriptByType<Character>();
-    }
-
-    if (enemyScript)
-    {
-        if (isInCountRange)
+        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+        if (spoutsScript)
         {
-            isInCountRange = false;
-            playerScript->RemoveEnemy();
-            GLOG("Enemy out. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+            TakeDamage(spoutsScript->GetDamage());
         }
-    }*/
-}
-
-void Character::OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer)
-{
-    //// Verifica si el objeto es realmente un enemigo
-    //ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
-    //Character* enemyScript       = nullptr;
-    //if (otherScript)
-    //{
-    //    enemyScript = otherScript->GetScriptByType<Character>();
-    //}
-
-    //if (enemyScript)
-    //{
-    //    if (playerScript->GetEnemiesCount() >= 2)
-    //    {
-    //        SetOnWaiting();
-    //    }
-    //    else
-    //    {
-    //        isInCountRange = true;
-    //        playerScript->AddEnemy();
-    //        GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
-    //    }
-    //}
+    }
 }
 
 void Character::Attack(float deltaTime)
@@ -265,6 +249,9 @@ void Character::TakeDamage(int amount)
     invulnerabilityTimer  = invulnerableDuration;
 
     OnDamageTaken(amount);
+
+    if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
+
     if (currentHealth <= 0) Die();
 }
 
@@ -325,6 +312,8 @@ void Character::Die()
     // GLOG("%s dead", parent->GetName().c_str());
     isDead = true;
     OnDeath();
+
+    if (type != CharacterType::CuChulainn) playerScript->OnEnemyDefeated();
 
     if (characterCollider)
     {
