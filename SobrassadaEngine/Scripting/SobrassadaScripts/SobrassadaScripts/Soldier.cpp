@@ -184,6 +184,7 @@ void Soldier::HandleState(float deltaTime)
         }
         break;
     case SoldierStates::CHEERING:
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         if (playerScript->GetEnemiesCount() < maxEnemiesNearby)
         {
             agentAI->ResetSpeed();
@@ -356,7 +357,7 @@ void Soldier::Attack(float deltaTime)
             agentAI->ResumeMovement();
             isAttacking   = false;
             attackCdTimer = attackCooldown;
-            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(false); 
             ChangeState();
         }
     }
