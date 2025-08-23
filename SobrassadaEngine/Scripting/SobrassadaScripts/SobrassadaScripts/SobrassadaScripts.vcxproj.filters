@@ -166,6 +166,12 @@
     <ClInclude Include="MiniFireball.h">
       <Filter>Environment\Traps</Filter>
     </ClInclude>
+    <ClInclude Include="BarFill.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="AbilityIconFill.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -866,6 +872,12 @@
     </ClCompile>
     <ClCompile Include="MiniFireball.cpp">
       <Filter>Environment\Traps</Filter>
+    </ClCompile>
+    <ClCompile Include="BarFill.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="AbilityIconFill.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
