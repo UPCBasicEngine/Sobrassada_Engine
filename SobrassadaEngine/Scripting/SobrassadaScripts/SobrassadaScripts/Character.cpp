@@ -119,6 +119,12 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
                 if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
         }
+
+        Projectile* arrowProj = otherScript->GetScriptByType<Projectile>();
+        if (arrowProj)
+        {
+            arrowProj->Hit(otherObject);
+        }
     }
 }
 
@@ -173,6 +179,14 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
+            
+            if (type == CharacterType::CuChulainn)
+            {
+                CuChulainn* player = static_cast<CuChulainn*>(this);
+                player->OnArrowHit();
+            
+            }
+
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
@@ -252,6 +266,7 @@ void Character::TakeDamage(int amount)
     OnDamageTaken(amount);
 
     if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
+   
 
     if (currentHealth <= 0) Die();
 }

@@ -443,6 +443,9 @@ void CuChulainn::OnDeath()
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
     if (animComponent) animComponent->UseTrigger("Death");
+   
+     
+    
 }
 
 void CuChulainn::OnDamageTaken(int amount)
@@ -453,27 +456,30 @@ void CuChulainn::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
    
+    
+     if (arrowVfxIsActive && !arrowHitVfxObject->IsEnabled())
+    {
+        GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
 
+        arrowHitVfxObject->SetEnabled(true);
+
+        ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
+        if (particleSystem)
+        {
+            particleSystem->SpawnAllInstances();
+            GLOG("Arrow VFX particles spawned");
+        }
+    }
     if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
     {
         state = CharacterStates::HURT;
         if (animComponent)
         {
             animComponent->UseTrigger("Hurt");
-            character->EnableMovement(false);
+            //character->EnableMovement(false);
            
         }
-        arrowVfxIsActive = true;
-        if (arrowVfxIsActive)
-        {
-            arrowHitVfxObject->SetEnabled(true);
-            arrowHitVfxTimer                        = 0.0f;
-            ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
-            if (particleSystem)
-            {
-                particleSystem->SpawnAllInstances();
-            }
-        }
+      
         
     }
 
@@ -829,7 +835,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (dashBufferTimer < 0.0f) desiredDash = false;
     }
 
-    if (arrowVfxIsActive)
+    if (arrowVfxIsActive && arrowHitVfxObject->IsEnabled())
     {
         arrowHitVfxTimer += deltaTime;
         if (arrowHitVfxTimer >= arrowHitVfxDuration)
@@ -1618,6 +1624,12 @@ void CuChulainn::ActivateAbility(std::string& abilityName)
 
     if (abilityName == "dash") dashUnlocked = true;
     else if (abilityName == "ultimate") ultimateUnlocked = true;
+}
+
+void CuChulainn::OnArrowHit()
+{
+    arrowVfxIsActive = true;
+   
 }
 
 void CuChulainn::StartCurse()

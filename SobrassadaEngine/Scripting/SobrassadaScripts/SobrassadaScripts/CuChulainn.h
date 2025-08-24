@@ -62,6 +62,7 @@ class CuChulainn : public Character
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string& abilityName);
+    void OnArrowHit();
   
 
   private:

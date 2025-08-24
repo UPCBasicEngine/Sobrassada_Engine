@@ -24,6 +24,7 @@ Archer::Archer(GameObject* parent)
     fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
     fields.push_back({"Escape Range", InspectorField::FieldType::Float, &rangeEscape, 0.0f, 10.0f});
     fields.push_back({"Aim Duration", InspectorField::FieldType::Float, &aimDuration, 0.0f, 5.0f});
+    fields.push_back({"Shot Delay Duration", InspectorField::FieldType::Float, &shotDelay, 0.0f, 1.0f});
     fields.push_back({"Has Multiple Shoots ", InspectorField::FieldType::Bool, &hasMultipleShoots});
     fields.push_back({"Number of Shoots", InspectorField::FieldType::Int, &numberOfShoots, 1, 5});
     fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
@@ -441,7 +442,7 @@ void Archer::PatrolAI()
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
-    if (!playerScript->IsDead())
+    if (!playerScript->IsDead() && playerScript->GetState() != CharacterStates::RESPAWN)
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
             currentState = ArcherStates::CHASE;
@@ -649,7 +650,7 @@ void Archer::ChangeState()
 {
     if (isDead) return;
 
-    if (playerScript->IsDead())
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
     {
         GLOG("PLAYER IS DEAD - GOING TO PATROL");
         currentState = ArcherStates::PATROL;

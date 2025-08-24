@@ -20,6 +20,7 @@ class Projectile : public Script
 
     int GetDamage() const { return damage; }
     GameObject* GetParent() const { return parent; }
+    void Hit(GameObject* otherObject);
   private:
     void Move(float deltaTime);
 

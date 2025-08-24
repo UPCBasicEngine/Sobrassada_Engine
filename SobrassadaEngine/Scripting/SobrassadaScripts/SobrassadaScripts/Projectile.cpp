@@ -59,6 +59,16 @@ void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNorm
       parent->SetEnabled(false);
 }
 
+void Projectile::Hit(GameObject* otherObject)
+{
+    ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
+    if (script && script->GetScriptByType<CuChulainn>())
+    {
+        CuChulainn* player = script->GetScriptByType<CuChulainn>();
+        player->OnArrowHit();
+    }
+}
+
 void Projectile::Move(float deltaTime)
 {
     // Let 20 frames pass before enabling the collider, so it doesn't collide with the previous collided element.
