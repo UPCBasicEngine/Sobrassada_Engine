@@ -250,4 +250,6 @@ class EditorUIModule : public Module
     ImGuiContext* context;
 
     StateMachineEditor* stateMachineEditor = nullptr;
+
+    int curveEditorIndex                   = -1;
 };

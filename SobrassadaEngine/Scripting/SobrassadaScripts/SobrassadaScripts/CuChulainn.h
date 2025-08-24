@@ -62,6 +62,7 @@ class CuChulainn : public Character
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string& abilityName);
+    void StartCurse();
 
   private:
     void OnDeath() override;
@@ -98,7 +99,6 @@ class CuChulainn : public Character
     void ChargeAttack();
     void ToggleRiastrad();
     void AddRiastrad(int amount);
-    void StartCurse();
     void EndCurse();
 
     void SetPosition(const float3& position);

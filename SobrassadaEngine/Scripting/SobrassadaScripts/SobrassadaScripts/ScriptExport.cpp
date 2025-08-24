@@ -17,6 +17,7 @@
 #include "Globals.h"
 #include "GodMode.h"
 #include "HealVFXGround.h"
+#include "MagicBarrier.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MiniFireball.h"
@@ -35,6 +36,7 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "Banshee_v2.h"
 
 #include "AbilityIconFill.h"
 #include "BarFill.h"
@@ -84,7 +86,9 @@ constexpr const char* scripts[] = {
     "PlayerLocationScript",
     "Spouts",
     "SwitchScriptTest",
-    "Destructible"
+    "Destructible",
+    "MagicBarrier",
+    "Banshee_v2"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -123,6 +127,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Banshee") return new Banshee(parent);
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
+    if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
@@ -134,6 +139,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
     if (scriptType == "Spouts") return new Spouts(parent);
     if (scriptType == "Destructible") return new Destructible(parent);
+    if (scriptType == "MagicBarrier") return new MagicBarrier(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
