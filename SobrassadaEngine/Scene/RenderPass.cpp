@@ -751,6 +751,8 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 {
     Bind();
 
+    glDisable(GL_BLEND);
+
     // SKYBOX
     if (!App->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_WIREFRAME))
     {
@@ -838,6 +840,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisable(GL_STENCIL_TEST);
+    glEnable(GL_BLEND);
 
     // COPYING DEPTH BUFFER FROM GBUFFER TO RENDER FRAMEBUFFER
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer->gBufferObject);
