@@ -255,6 +255,21 @@ void Archer::PerformAttack()
 
 void Archer::OverShooting(float deltaTime)
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        hasShot            = false;
+        isAttacking        = false;
+        hasStartedShooting = false;
+        currentShot        = 0;
+        shotTimer          = 0.0f;
+        attackCdTimer      = attackCooldown;
+        agentAI->ResetSpeed();
+        agentAI->SetLookForward(true);
+        isAiming     = false;
+        aimTimer     = 0.0f;
+        currentState = ArcherStates::PATROL;
+        return;
+    }
 
    if (!weaponCollider) return;
 
@@ -474,6 +489,12 @@ void Archer::ApplyKnockback()
 
 void Archer::ChaseAI()
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        currentState = ArcherStates::PATROL;
+        return;
+    }
+
     if (animComponent) animComponent->UseTrigger("run");
 
     if (character != nullptr)
@@ -514,6 +535,13 @@ void Archer::SearchForPlayer()
     }
     else
     {
+        if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+        {
+            isSearching  = false;
+            currentState = ArcherStates::PATROL;
+            agentAI->ResetSpeed();
+            return;
+        }
         if (!isSearching)
         {
             animComponent->UseTrigger("idle");
@@ -539,6 +567,15 @@ void Archer::SearchForPlayer()
 
 void Archer::Aim(float deltaTime)
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        isAiming = false;
+        aimTimer = 0.0f;
+        agentAI->SetLookForward(true);
+        agentAI->ResetSpeed();
+        currentState = ArcherStates::PATROL;
+        return;
+    }
 
     float distance = GetDistanceFromPlayer();
     if (!weaponCollider) return;
@@ -581,6 +618,18 @@ void Archer::Aim(float deltaTime)
 
 void Archer::Attack(float deltaTime)
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        hasShot     = false;
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->SetLookForward(true);
+        isAiming     = false;
+        aimTimer     = 0.0f;
+        currentState = ArcherStates::PATROL;
+        return;
+    }
+
     float distance = GetDistanceFromPlayer();
     if (!weaponCollider) return;
 
