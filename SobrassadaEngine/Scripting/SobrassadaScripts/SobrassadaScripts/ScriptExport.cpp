@@ -17,6 +17,7 @@
 #include "Globals.h"
 #include "GodMode.h"
 #include "HealVFXGround.h"
+#include "MagicBarrier.h"
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MiniFireball.h"
@@ -83,7 +84,8 @@ constexpr const char* scripts[] = {
     "PlayerLocationScript",
     "Spouts",
     "SwitchScriptTest",
-    "Destructible"
+    "Destructible",
+    "MagicBarrier"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
@@ -133,6 +135,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "PlayerLocationScript") return new PlayerLocationScript(parent);
     if (scriptType == "Spouts") return new Spouts(parent);
     if (scriptType == "Destructible") return new Destructible(parent);
+    if (scriptType == "MagicBarrier") return new MagicBarrier(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);

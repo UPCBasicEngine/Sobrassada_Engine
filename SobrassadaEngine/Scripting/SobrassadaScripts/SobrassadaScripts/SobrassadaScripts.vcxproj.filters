@@ -172,6 +172,9 @@
     <ClInclude Include="AbilityIconFill.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="MagicBarrier.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -878,6 +881,9 @@
     </ClCompile>
     <ClCompile Include="AbilityIconFill.cpp">
       <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="MagicBarrier.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
