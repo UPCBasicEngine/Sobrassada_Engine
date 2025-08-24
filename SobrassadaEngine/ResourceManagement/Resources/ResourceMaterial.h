@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "Resource.h"
 #include "Globals.h"
+#include "Resource.h"
 
 #include "Math/float3.h"
 #include "Math/float4.h"
@@ -60,6 +60,17 @@ class ResourceMaterial : public Resource
     const bool IsAlphaDiscard() const { return isAlpha; }
     const bool IsDoubleSided() const { return doubleSided; }
     bool DoApplyWind() const { return applyWind; }
+    const float GetVCoord0() const { return vCoord0; }
+    const float GetVCoord1() const { return vCoord1; }
+    const bool UseCentralPivot() const { return useCentralPivot; }
+    const bool UseWindGravity() const { return useWindGravity; }
+    const float GetWindXAmplitude() const { return windXAmplitude; }
+    const float GetWindYAmplitude() const { return windYAmplitude; }
+    const float GetWindZAmplitude() const { return windZAmplitude; }
+    const float GetWindXFrequency() const { return windXFrequency; }
+    const float GetWindYFrequency() const { return windYFrequency; }
+    const float GetWindZFrequency() const { return windZFrequency; }
+    const float GetWindTimeScale() const { return windTimeScale; }
 
     unsigned int GetDiffuseColorID() const { return diffuseTexture.textureID; }
     int GetDiffuseWidth() const { return diffuseTexture.width; }
@@ -87,6 +98,17 @@ class ResourceMaterial : public Resource
     bool doubleSided      = false;
     bool hasNormal        = false;
     bool applyWind        = false;
+    float vCoord0         = 0.0f;
+    float vCoord1         = 1.0f;
+    bool useCentralPivot  = false;
+    bool useWindGravity   = false;
+    float windXAmplitude  = 1.0f;
+    float windYAmplitude  = 1.0f;
+    float windZAmplitude  = 1.0f;
+    float windXFrequency  = 1.0f;
+    float windYFrequency  = 1.0f;
+    float windZFrequency  = 1.0f;
+    float windTimeScale   = 1.0f;
     UID defaultTextureUID = INVALID_UID;
 
     bool wasUpdated       = false;

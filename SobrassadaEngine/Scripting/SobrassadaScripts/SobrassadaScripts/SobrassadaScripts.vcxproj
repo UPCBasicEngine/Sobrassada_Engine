@@ -465,6 +465,7 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="ButtonScript.h" />
@@ -505,6 +506,7 @@
     <ClInclude Include="SpawnUI.h" />
     <ClInclude Include="Spouts.h" />
     <ClInclude Include="SwitchScriptTest.h" />
+    <ClInclude Include="BarFill.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="Wwise_IDs.h" />
@@ -2039,6 +2041,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Game|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile Game|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
@@ -2092,6 +2095,7 @@
     <ClCompile Include="SpawnUI.cpp" />
     <ClCompile Include="Spouts.cpp" />
     <ClCompile Include="SwitchScriptTest.cpp" />
+    <ClCompile Include="BarFill.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="TileFloatScript.cpp" />
