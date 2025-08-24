@@ -11,6 +11,7 @@ class AudioSourceComponent;
 class ImageComponent;
 class BarFill;
 class AbilityIconFill;
+class DamageMask;
 
 enum class CharacterStates
 {
@@ -277,6 +278,9 @@ class CuChulainn : public Character
     GameObject* healKnockback          = nullptr;
     float healTimer                    = 0.0f;
     float healKnockbackDelay           = 0.0f;
+
+    std::string damageMaskName         = "DamageMask";
+    DamageMask* damageMask             = nullptr;
 
     // Curse
     bool isCursed                      = false;
