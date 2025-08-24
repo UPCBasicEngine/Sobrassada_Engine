@@ -10,6 +10,7 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "MagicBarrier.h"
 #include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
@@ -99,7 +100,6 @@ void Character::Update(float deltaTime)
     if (animComponent && stateName != animComponent->GetCurrentStateName())
     {
         stateName = animComponent->GetCurrentStateName();
-        // GLOG("Current state: %s", stateName.GetString().c_str());
     }
 
     HandleState(deltaTime);
@@ -344,6 +344,8 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
+
+    if (associatedBarrier != nullptr) associatedBarrier->EnemyDied();
 }
 
 void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)
