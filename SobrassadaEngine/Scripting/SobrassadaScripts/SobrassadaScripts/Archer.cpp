@@ -511,7 +511,7 @@ void Archer::SearchForPlayer()
     if (isStatic)
     {
 
-        if (animComponent) animComponent->UseTrigger("idle");
+        if (animComponent) animComponent->UseTrigger("aim");
 
         float distance = GetDistanceFromPlayer();
         if (distance <= maxDetectionRange)
