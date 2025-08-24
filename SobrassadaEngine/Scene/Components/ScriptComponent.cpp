@@ -14,8 +14,8 @@
 #include "Math/float2.h"
 #include "Math/float3.h"
 #include "PhysicsModule.h"
-#include <debug_draw.hpp>
 #include "ShaderScriptComponent.h"
+#include <debug_draw.hpp>
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
@@ -150,6 +150,21 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
                 scriptData.AddMember(name, *(UID*)field.data, allocator);
                 break;
             }
+            case InspectorField::FieldType::CurveEditor:
+            {
+                ImVec2* vec = (ImVec2*)field.data;
+
+                rapidjson::Value arr(rapidjson::kArrayType);
+                for (int i = 0; i < StoreScriptCurvePoints; ++i)
+                {
+                    arr.PushBack(vec[i].x, allocator);
+                    arr.PushBack(vec[i].y, allocator);
+                }
+
+                scriptData.AddMember(name, arr, allocator);
+
+                break;
+            }
             }
         }
 
@@ -208,7 +223,6 @@ void ScriptComponent::ResetInitializationFlags()
 {
     std::fill(scriptInitialized.begin(), scriptInitialized.end(), false);
 }
-
 
 void ScriptComponent::Render(float deltaTime, CameraComponent* camera)
 {

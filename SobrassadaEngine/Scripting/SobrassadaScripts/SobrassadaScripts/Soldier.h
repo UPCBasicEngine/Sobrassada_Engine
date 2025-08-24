@@ -54,6 +54,7 @@ class Soldier : public Character
     float knockbackTimer             = 0.0f;
     float3 knockbackDirection        = float3::zero;
     bool isKnockback                 = false;
+    bool isStrongKnockback           = false;
     int consecutiveAttack            = 0;
     int consecutiveThrust            = 0;
     float secondAttackDelay          = 0.6f;

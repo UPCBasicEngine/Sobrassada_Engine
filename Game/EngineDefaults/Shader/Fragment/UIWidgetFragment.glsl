@@ -13,6 +13,8 @@ void main()
 {
     vec4 sampled = texture(sampler2D(fontTexture), uv0);
 
+    if (sampled.a < 0.05) discard;
+
     switch(widgetType) {
         // LABEL
         case 0:    

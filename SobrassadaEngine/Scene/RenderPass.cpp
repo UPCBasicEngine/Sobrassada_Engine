@@ -11,13 +11,13 @@
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
+#include "SSAO.h"
 #include "ShaderModule.h"
 #include "ShaderScriptModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
-#include "SSAO.h"
 
 #ifdef OPTICK
 #include "optick.h"
@@ -208,7 +208,7 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Blur Pass");
     SsaoBlurPassRender(ssao);
     glPopDebugGroup();
-     
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -751,6 +751,8 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 {
     Bind();
 
+    glDisable(GL_BLEND);
+
     // SKYBOX
     if (!App->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_WIREFRAME))
     {
@@ -838,6 +840,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisable(GL_STENCIL_TEST);
+    glEnable(GL_BLEND);
 
     // COPYING DEPTH BUFFER FROM GBUFFER TO RENDER FRAMEBUFFER
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer->gBufferObject);

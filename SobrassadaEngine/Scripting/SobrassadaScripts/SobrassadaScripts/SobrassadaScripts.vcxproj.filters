@@ -166,8 +166,23 @@
     <ClInclude Include="MiniFireball.h">
       <Filter>Environment\Traps</Filter>
     </ClInclude>
+    <ClInclude Include="BarFill.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="AbilityIconFill.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="DamageMask.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
     <ClInclude Include="MagicBarrier.h">
       <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="Banshee_v2.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_curve_editor.h">
+      <Filter>External</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -870,8 +885,23 @@
     <ClCompile Include="MiniFireball.cpp">
       <Filter>Environment\Traps</Filter>
     </ClCompile>
+    <ClCompile Include="BarFill.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="AbilityIconFill.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="DamageMask.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
     <ClCompile Include="MagicBarrier.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Banshee_v2.cpp">
+      <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_curve_editor.cpp">
+      <Filter>External</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
