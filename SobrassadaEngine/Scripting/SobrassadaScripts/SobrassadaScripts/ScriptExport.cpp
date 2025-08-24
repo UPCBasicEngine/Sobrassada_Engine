@@ -1,7 +1,9 @@
 #include "pch.h"
 
 #include "Archer.h"
+#include "AttackVfx.h"
 #include "Banshee.h"
+#include "Banshee_v2.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "ChangeSceneScript.h"
@@ -36,7 +38,6 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "Banshee_v2.h"
 
 #include "AbilityIconFill.h"
 #include "BarFill.h"
@@ -87,7 +88,8 @@ constexpr const char* scripts[] = {
     "SwitchScriptTest",
     "Destructible",
     "MagicBarrier",
-    "Banshee_v2"
+    "Banshee_v2",
+    "AttackVfx"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
@@ -127,6 +129,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
+    if (scriptType == "AttackVfx") return new AttackVfx(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
