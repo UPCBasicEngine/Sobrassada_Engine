@@ -7,6 +7,7 @@
 #include "CameraMovement.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DamageMask.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
@@ -128,6 +129,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Heal vfx object", InspectorField::FieldType::InputText, &healVfxName});
     fields.push_back({"Heal particles object", InspectorField::FieldType::InputText, &healParticlesName});
     fields.push_back({"Riastrad VFX object", InspectorField::FieldType::InputText, &riastradVfxName});
+    fields.push_back({"Damage Mask", InspectorField::FieldType::InputText, &damageMaskName});
 }
 
 bool CuChulainn::Init()
@@ -290,6 +292,18 @@ bool CuChulainn::Init()
         }
     }
     if (!healthBar) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
+
+    GameObject* damageMaskObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(damageMaskName);
+    if (damageMaskObj)
+    {
+        ShaderScriptComponent* shaderScript = damageMaskObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript)
+        {
+            damageMask = shaderScript->GetScriptByType<DamageMask>();
+            damageMask->SetLife(static_cast<float>(currentHealth));
+        }
+    }
+    if (!damageMask) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
 
     GameObject* dashIconObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashIconName);
     if (dashIconObj)
@@ -458,6 +472,12 @@ void CuChulainn::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
+    if (damageMask)
+    {
+        damageMask->SetLife(static_cast<float>(currentHealth));
+        damageMask->OnHit();
+    }
+
     if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
         state == CharacterStates::HEAL)
     {
@@ -477,6 +497,7 @@ void CuChulainn::OnHealed(int amount)
 {
     // TODO: play CuChulainn recover sound
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 }
 
 void CuChulainn::HandleState(float deltaTime)
@@ -1316,6 +1337,7 @@ void CuChulainn::Respawn()
     state         = CharacterStates::RESPAWN;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");

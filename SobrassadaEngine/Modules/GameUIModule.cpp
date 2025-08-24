@@ -10,6 +10,7 @@
 #include "SceneModule.h"
 #include "WindowModule.h"
 #include "TextManager.h"
+#include "ShaderScriptModule.h"
 
 #include "MathGeoLib.h"
 #include "glew.h"
@@ -80,6 +81,10 @@ update_status GameUIModule::Render(float deltaTime)
     {
         canvas->RenderUI();
     }
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Custom UI Shaders Pass");
+    App->GetShaderScriptModule()->RenderUiPassShaders(deltaTime);
+    glPopDebugGroup();
 
     return UPDATE_CONTINUE;
 }

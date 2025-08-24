@@ -40,6 +40,7 @@
 
 #include "AbilityIconFill.h"
 #include "BarFill.h"
+#include "DamageMask.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
@@ -90,13 +91,13 @@ constexpr const char* scripts[] = {
     "Banshee_v2"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
-                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
-                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
-                                         "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
-                                         "AbilityIconFill"};
+constexpr const char* shaderScripts[] = {
+    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
+    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
+    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask"
+};
 
-Application* AppEngine                = nullptr;
+Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -152,6 +153,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "DamageMask") return new DamageMask(parent);
     if (scriptType == "RiastradBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
     if (scriptType == "HealthBarFill")
