@@ -48,8 +48,8 @@ class CanvasComponent : public Component
     bool IsInWorldSpace() const;
     void UpdateBoundingBox();
     void ChangeRenderMode(CanvasRenderMode newMode);
-    float GetWidth() const;
-    float GetHeight() const;
+    SOBRASADA_API_ENGINE float GetWidth() const;
+    SOBRASADA_API_ENGINE float GetHeight() const;
 
     float GetScreenScale() const;
 
