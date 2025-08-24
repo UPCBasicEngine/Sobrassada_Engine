@@ -47,6 +47,8 @@ class Character : public Script
     void Restart();
     bool IsDead() const { return isDead; };
 
+    CharacterType GetCharacterType() const { return type; }
+
     void SetAssociatedBarrier(MagicBarrier* newAssociatedBarrier) { associatedBarrier = newAssociatedBarrier; }
 
   protected:

@@ -175,6 +175,12 @@
     <ClInclude Include="MagicBarrier.h">
       <Filter>Environment</Filter>
     </ClInclude>
+    <ClInclude Include="Banshee_v2.h">
+      <Filter>Characters\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_curve_editor.h">
+      <Filter>External</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -884,6 +890,12 @@
     </ClCompile>
     <ClCompile Include="MagicBarrier.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Banshee_v2.cpp">
+      <Filter>Characters\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_curve_editor.cpp">
+      <Filter>External</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

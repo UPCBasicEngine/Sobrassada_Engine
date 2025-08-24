@@ -468,6 +468,7 @@
     <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
     <ClInclude Include="Banshee.h" />
+    <ClInclude Include="Banshee_v2.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
@@ -484,6 +485,7 @@
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="HealVFXGround.h" />
     <ClInclude Include="MagicBarrier.h" />
+    <ClInclude Include="imgui_curve_editor.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="MoveGOInSpline.h" />
@@ -2044,6 +2046,7 @@
     <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Banshee.cpp" />
+    <ClCompile Include="Banshee_v2.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Changeling.cpp" />
@@ -2060,6 +2063,7 @@
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
     <ClCompile Include="MagicBarrier.cpp" />
+    <ClCompile Include="imgui_curve_editor.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
