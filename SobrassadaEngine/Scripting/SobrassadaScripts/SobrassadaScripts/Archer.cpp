@@ -147,11 +147,7 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
-    if (!canEscape)
-    {
-        escapeUsedTimer += deltaTime;
-        if (escapeUsedTimer >= ESCAPE_COOLDOWN) canEscape = true;
-    }
+
     if (isKnockback)
     {
         float3 currentPos = parent->GetGlobalTransform().TranslatePart();
@@ -703,8 +699,6 @@ void Archer::ChangeState()
     {
         GLOG("PLAYER IS DEAD - GOING TO PATROL");
         currentState = ArcherStates::PATROL;
-        escapeCount  = 0;
-        canEscape    = true;
         return;
     }
 
@@ -726,13 +720,9 @@ void Archer::ChangeState()
     }
     else
     {
-        if (distance <= rangeEscape && canEscape && escapeCount < MAX_ESCAPES)
+        if (distance <= rangeEscape)
         {
             currentState = ArcherStates::ESCAPE;
-            escapeCount++;
-            GLOG("ESCAPE COUNT %d: ", escapeCount);
-            canEscape       = false;
-            escapeUsedTimer = 0.0f;
         }
         else if (distance <= rangeAIAttack) currentState = ArcherStates::AIM;
         else if (distance >= rangeAIChase) currentState = ArcherStates::CHASE;
