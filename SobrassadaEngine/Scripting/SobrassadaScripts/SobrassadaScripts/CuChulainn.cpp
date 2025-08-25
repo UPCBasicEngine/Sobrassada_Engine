@@ -2,6 +2,7 @@
 
 #include "AbilityIconFill.h"
 #include "Application.h"
+#include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
 #include "CameraComponent.h"
 #include "CameraMovement.h"
@@ -56,6 +57,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
     fields.push_back({"Dash Icon Name", InspectorField::FieldType::InputText, &dashIconName});
     fields.push_back({"Health Bar Name", InspectorField::FieldType::InputText, &healthBarName});
+    fields.push_back({"Melee VFX delay", InspectorField::FieldType::Float, &meleeVfxDelay, 0.0f, 1.0f});
 
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
@@ -187,6 +189,14 @@ bool CuChulainn::Init()
     meleeVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeVfxName);
     if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
     else meleeVfxObject->SetEnabled(false);
+
+    attackVfxHorizontal = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontalName);
+    if (!attackVfxHorizontal) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
+    else attackVfxHorizontal->SetEnabled(false);
+
+    attackVfxVertical = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVerticalName);
+    if (!attackVfxVertical) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
+    else attackVfxVertical->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
@@ -511,6 +521,8 @@ void CuChulainn::HandleState(float deltaTime)
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
             if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+            if (attackVfxHorizontal) attackVfxHorizontal->SetEnabled(false);
+            if (attackVfxVertical) attackVfxVertical->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -1041,9 +1053,30 @@ void CuChulainn::PerformAttack()
 {
     if (isAttacking && state == CharacterStates::BASIC_ATTACK)
     {
+        float currentVfxDelay    = isRiastrad ? meleeVfxDelay / riastradAnimationsSpeedRatio : meleeVfxDelay;
         float currentHitboxDelay = isRiastrad ? attackHitboxDelay / riastradAnimationsSpeedRatio : attackHitboxDelay;
         float currentHitboxDuration =
             isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
+
+        if (attackTimer > currentVfxDelay)
+        {
+            if (attackVfxHorizontal && !attackVfxHorizontal->IsEnabled())
+            {
+                attackVfxHorizontal->SetEnabled(true);
+                attackVfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
+                attackVfxHorizontal->GetComponent<ShaderScriptComponent*>()
+                    ->GetScriptByType<AttackVfxSpritesheet>()
+                    ->Reset();
+            }
+            if (attackVfxVertical && !attackVfxVertical->IsEnabled())
+            {
+                attackVfxVertical->SetEnabled(true);
+                attackVfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
+                attackVfxVertical->GetComponent<ShaderScriptComponent*>()
+                    ->GetScriptByType<AttackVfxSpritesheet>()
+                    ->Reset();
+            }
+        }
 
         if (attackTimer < currentHitboxDelay)
         {

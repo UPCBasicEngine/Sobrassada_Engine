@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "Archer.h"
-#include "AttackVfx.h"
 #include "Banshee.h"
 #include "Banshee_v2.h"
 #include "ButtonScript.h"
@@ -40,6 +39,7 @@
 #include "VSyncToggleScript.h"
 
 #include "AbilityIconFill.h"
+#include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
@@ -89,14 +89,13 @@ constexpr const char* scripts[] = {
     "Destructible",
     "MagicBarrier",
     "Banshee_v2",
-    "AttackVfx"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
                                          "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
                                          "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
                                          "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
-                                         "AbilityIconFill"};
+                                         "AbilityIconFill",       "AttackVfxSpritesheet"};
 
 Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -129,7 +128,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
-    if (scriptType == "AttackVfx") return new AttackVfx(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
@@ -155,6 +153,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "AttackVfxSpritesheet") return new AttackVfxSpritesheet(parent);
     if (scriptType == "RiastradBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
     if (scriptType == "HealthBarFill")

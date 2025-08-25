@@ -181,8 +181,8 @@
     <ClInclude Include="imgui_curve_editor.h">
       <Filter>External</Filter>
     </ClInclude>
-    <ClInclude Include="AttackVfx.h">
-      <Filter>Characters</Filter>
+    <ClInclude Include="AttackVfxSpritesheet.h">
+      <Filter>ShaderScripts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -900,8 +900,8 @@
     <ClCompile Include="imgui_curve_editor.cpp">
       <Filter>External</Filter>
     </ClCompile>
-    <ClCompile Include="AttackVfx.cpp">
-      <Filter>Characters</Filter>
+    <ClCompile Include="AttackVfxSpritesheet.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
