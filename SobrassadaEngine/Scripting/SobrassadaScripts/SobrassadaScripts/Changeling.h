@@ -128,7 +128,7 @@ class Changeling : public Character
     std::vector<GameObject*> dashTrailColliderObjects;
     std::vector<CubeColliderComponent*> dashAreaColliders;
     GameObject* finalAttackObject;
-    SphereColliderComponent* finalAttackCollider;
+    CapsuleColliderComponent* finalAttackCollider;
 
     float stateTimer                  = 0.f;
 

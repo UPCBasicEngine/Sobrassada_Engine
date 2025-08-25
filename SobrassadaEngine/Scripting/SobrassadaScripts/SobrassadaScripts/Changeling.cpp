@@ -648,7 +648,8 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
     if (animComponent && animComponent->IsFinished())
     {
         isDead = true;
-        parent->SetEnabled(false);
+        finalAttackCollider->DeleteRigidBody();
+        parentGO->SetEnabled(false);
     }
 }
 
@@ -959,7 +960,7 @@ void Changeling::ValidateSetup()
         else if (child->GetName() == finalAttackColliderName)
         {
             finalAttackObject   = child;
-            finalAttackCollider = child->GetComponent<SphereColliderComponent*>();
+            finalAttackCollider = child->GetComponent<CapsuleColliderComponent*>();
         }
     }
 
