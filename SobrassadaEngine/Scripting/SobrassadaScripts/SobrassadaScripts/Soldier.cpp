@@ -351,7 +351,7 @@ void Soldier::Attack(float deltaTime)
 
             if (animComponent && !animComponent->IsFinished() && thrustAdvance)
             {
-                agentAI->PauseMovement();
+                /*agentAI->PauseMovement();*/
                 float thrustSpeed = 2.0f;
                 float3 forward    = parent->GetGlobalTransform().WorldZ();
                 forward.y         = parent->GetGlobalTransform().WorldY().y;
@@ -364,6 +364,7 @@ void Soldier::Attack(float deltaTime)
         if (attackTimer >= attackDuration)
         {
             agentAI->ResumeMovement();
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             if (meleeTrailObject) meleeTrailObject->SetEnabled(false); 
