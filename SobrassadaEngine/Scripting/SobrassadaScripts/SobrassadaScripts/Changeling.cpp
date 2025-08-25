@@ -144,8 +144,20 @@ void Changeling::OnPlayerEnterLocation()
 void Changeling::OnDeath()
 {
     isDead = false; // TODO To keep getting updates until the death animation is finished
+    for (auto dashTrailMeshObject : dashTrailMeshObjects)
+        dashTrailMeshObject.dashTrailObject->SetEnabled(false);
+
+    for (auto dashTrailColliderObject : dashTrailColliderObjects)
+    {
+        CubeColliderComponent* collider = dashTrailColliderObject->GetComponent<CubeColliderComponent*>();
+        if (collider != nullptr)
+            collider->DeleteRigidBody();
+        dashTrailColliderObject->SetEnabled(false);
+    }
+
+    if (animComponent) animComponent->UseTrigger("Trigger_VisibleIdle");
     if (animComponent) animComponent->UseTrigger("Trigger_Die");
-    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DEATH);
+    audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DEATH);
     agentAI->SetSpeed(0, 10);
     currentState = ChangelingStates::DYING;
 }
@@ -292,6 +304,7 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
             spottedLocation         = float3::nan;
             spottedViewingDirection = float3::nan;
         }
+        characterCollider->SetEnabled(false);
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
     }
@@ -423,10 +436,10 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         dashTrailMeshObjects[0].dashTrailObject->SetEnabled(true);
         dashTrailColliderObjects[0]->SetEnabled(true);
         dashIndex = 0;
+        animComponent->UseTrigger("Trigger_Dash");
+        audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
         if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
-            animComponent->UseTrigger("Trigger_Dash");
-            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
             agentAI->SetSpeed(dashSpeed, 1000000);
             agentAI->SetPathNavigation(dashTarget);
             currentState = ChangelingStates::DASH_CHAIN_ATTACK;
@@ -434,8 +447,6 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         else
         {
             ST_AimNextDashAttack(deltaTime, distanceToPlayerSq);
-            animComponent->UseTrigger("Trigger_Dash");
-            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
             currentState = ChangelingStates::DASH_ATTACK;
         }
     }
@@ -614,7 +625,22 @@ void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
     {
         currentState = stateAfterDamaged;
         stateAfterDamaged = ChangelingStates::NONE;
-        if (animComponent && !animComponent->UseTrigger("Trigger_VisibleIdle")) animComponent->UseTrigger("Trigger_BurriedIdle");
+        
+        if (currentState == ChangelingStates::IDLE_BURIED)
+        {
+            characterCollider->SetEnabled(false);
+            if (animComponent) animComponent->UseTrigger("Trigger_BurriedIdle");
+        }
+        else // currentState == IDLE_VISIBLE
+        {
+            for (auto dashTrailMeshObject : dashTrailMeshObjects)
+                dashTrailMeshObject.dashTrailObject->SetEnabled(false);
+
+            for (auto dashTrailColliderObject : dashTrailColliderObjects)
+                dashTrailColliderObject->SetEnabled(false);
+
+            if (animComponent) animComponent->UseTrigger("Trigger_VisibleIdle");
+        }
     }
 }
 
@@ -685,29 +711,28 @@ bool Changeling::ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq)
 
 bool Changeling::ST_Damaged()
 {
-    if (currentState == ChangelingStates::PEEK || currentState == ChangelingStates::BITE_ATTACK)
-        stateAfterDamaged = ChangelingStates::IDLE_BURIED;
-    else
-        stateAfterDamaged = ChangelingStates::IDLE_VISIBLE;
-    
-    currentState = ChangelingStates::DAMAGED;
-
-    agentAI->ResetSpeed();
-    agentAI->SetSpeed(0, 10);
-
-    for (auto dashTrailMeshObject : dashTrailMeshObjects)
-        dashTrailMeshObject.dashTrailObject->SetEnabled(false);
-
-    for (auto dashTrailColliderObject : dashTrailColliderObjects)
-        dashTrailColliderObject->SetEnabled(false);
-
-    if (animComponent)
+    if (currentState != ChangelingStates::DAMAGED)
     {
-        const bool bUseAnimation1 = rand() % 2;
-        if (!animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Hit" : "Trigger_Hit2"))
-            animComponent->UseTrigger("Trigger_HitUnderground");
+        if (currentState == ChangelingStates::PEEK || currentState == ChangelingStates::BITE_ATTACK)
+            stateAfterDamaged = ChangelingStates::IDLE_BURIED;
+        else
+            stateAfterDamaged = ChangelingStates::IDLE_VISIBLE;
+
+        currentState = ChangelingStates::DAMAGED;
+
+        agentAI->ResetSpeed();
+        agentAI->SetSpeed(0, 10);
+
+        weaponCollider->SetEnabled(false);
+    
+        if (animComponent)
+        {
+            const bool bUseAnimation1 = rand() % 2;
+            if (!animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Hit" : "Trigger_Hit2"))
+                animComponent->UseTrigger("Trigger_HitUnderground");
+        }
     }
-    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_HURT);
+    audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_HURT);
 
     return true;
 }
