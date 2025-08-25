@@ -11,6 +11,7 @@ class AudioSourceComponent;
 class ImageComponent;
 class BarFill;
 class AbilityIconFill;
+class DamageMask;
 
 enum class CharacterStates
 {
@@ -52,15 +53,23 @@ class CuChulainn : public Character
     int GetChargedAttackDamage() const { return chargedAttackDamage; }
     int GetMushrooms() const { return mushrooms; }
     bool GetDesiredTakeMushroom() const { return desiredTakeMushroom; }
+    int GetEnemiesCount() const { return enemiesCont; }
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { reservedHealth = health; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
+    void AddEnemy() { enemiesCont++; }
+    void RemoveEnemy()
+    {
+        if (enemiesCont != 0) enemiesCont--;
+        GLOG("Enemy out. Total unique enemies colliding: %zu",  enemiesCont);
+    }
     void OnEnemyHit();
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string& abilityName);
+    void StartCurse();
 
   private:
     void OnDeath() override;
@@ -71,6 +80,7 @@ class CuChulainn : public Character
     void TakeDamage(int amount) override;
     void UpdateTimers(float deltaTime) override;
     void Attack(float deltaTime) override;
+    // void OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer) override;
 
     bool CanHeal() const;
     bool CanDash() const;
@@ -97,7 +107,6 @@ class CuChulainn : public Character
     void ChargeAttack();
     void ToggleRiastrad();
     void AddRiastrad(int amount);
-    void StartCurse();
     void EndCurse();
 
     void SetPosition(const float3& position);
@@ -106,6 +115,7 @@ class CuChulainn : public Character
   private:
     CharacterStates state              = CharacterStates::IDLE;
 
+    int enemiesCont                   = 0;
     std::string cameraName             = "Camera Pivot";
     GameObject* cameraObject           = nullptr;
     CameraMovement* camera             = nullptr;
@@ -277,6 +287,9 @@ class CuChulainn : public Character
     GameObject* healKnockback          = nullptr;
     float healTimer                    = 0.0f;
     float healKnockbackDelay           = 0.0f;
+
+    std::string damageMaskName         = "DamageMask";
+    DamageMask* damageMask             = nullptr;
 
     // Curse
     bool isCursed                      = false;
