@@ -53,11 +53,18 @@ class CuChulainn : public Character
     int GetChargedAttackDamage() const { return chargedAttackDamage; }
     int GetMushrooms() const { return mushrooms; }
     bool GetDesiredTakeMushroom() const { return desiredTakeMushroom; }
+    int GetEnemiesCount() const { return enemiesCont; }
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { reservedHealth = health; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
+    void AddEnemy() { enemiesCont++; }
+    void RemoveEnemy()
+    {
+        if (enemiesCont != 0) enemiesCont--;
+        GLOG("Enemy out. Total unique enemies colliding: %zu",  enemiesCont);
+    }
     void OnEnemyHit();
     void OnEnemyDefeated();
 
@@ -73,6 +80,7 @@ class CuChulainn : public Character
     void TakeDamage(int amount) override;
     void UpdateTimers(float deltaTime) override;
     void Attack(float deltaTime) override;
+    // void OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer) override;
 
     bool CanHeal() const;
     bool CanDash() const;
@@ -107,6 +115,7 @@ class CuChulainn : public Character
   private:
     CharacterStates state              = CharacterStates::IDLE;
 
+    int enemiesCont                   = 0;
     std::string cameraName             = "Camera Pivot";
     GameObject* cameraObject           = nullptr;
     CameraMovement* camera             = nullptr;
