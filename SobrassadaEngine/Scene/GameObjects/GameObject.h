@@ -174,6 +174,8 @@ class SOBRASADA_API_ENGINE GameObject
 
     void UpdateFromReference(GameObject* reference);
 
+    GameObject* GetChildGameObjectByName(const std::string& name);
+
   private:
     void DrawNodes() const;
     void OnDrawConnectionsToggle();

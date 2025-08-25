@@ -580,6 +580,7 @@ void CuChulainn::HandleState(float deltaTime)
     }
 }
 
+
 void CuChulainn::GetInputs()
 {
     if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
