@@ -180,7 +180,7 @@
     </ClInclude>
     <ClInclude Include="MirageBossDash.h">
       <Filter>Characters\Boss</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="BarFill.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
@@ -899,7 +899,7 @@
     </ClCompile>
     <ClCompile Include="MirageBossDash.cpp">
       <Filter>Characters\Boss</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="BarFill.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
