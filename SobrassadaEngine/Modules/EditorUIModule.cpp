@@ -31,6 +31,7 @@
 #include "SDL.h"
 #include "glew.h"
 #include "imgui.h"
+#include "imgui_curve_editor.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_internal.h"
@@ -1045,6 +1046,41 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
             }
 
             break;
+        }
+        case InspectorField::FieldType::CurveEditor:
+        {
+            ImVec2* curveEditorPoints = (ImVec2*)field.data;
+            ImGui::Spacing();
+
+            ImGui::Curve(
+                "Script Curve", ImVec2(400, 100), maxScriptCurvePoints, curveEditorPoints, &curveEditorIndex,
+                ImVec2(0.f, curveEditorPoints[maxScriptCurvePoints].x),
+                ImVec2(1.f, curveEditorPoints[maxScriptCurvePoints].y)
+            );
+
+            float2 curveEditorRange =
+                float2(curveEditorPoints[maxScriptCurvePoints].x, curveEditorPoints[maxScriptCurvePoints].y);
+
+            if (ImGui::InputFloat2("Combined Size", &curveEditorRange[0]))
+            {
+                if (curveEditorRange.x < 0) curveEditorRange.x = 0;
+                if (curveEditorRange.y < 0) curveEditorRange.y = 0;
+
+                curveEditorPoints[maxScriptCurvePoints].x = curveEditorRange.x;
+                curveEditorPoints[maxScriptCurvePoints].y = curveEditorRange.y;
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Reset Points"))
+            {
+                for (int i = 0; i < maxScriptCurvePoints; ++i)
+                {
+                    curveEditorPoints[i].x = (float)i / 10.f;
+                    curveEditorPoints[i].y = (float)i / 10.f;
+                }
+
+                curveEditorPoints[0].x = ImGui::CurveTerminator;
+            }
         }
         }
     }

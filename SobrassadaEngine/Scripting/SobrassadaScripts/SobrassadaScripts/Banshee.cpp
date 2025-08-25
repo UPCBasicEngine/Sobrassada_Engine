@@ -6,6 +6,7 @@
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "Interpolation.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -89,13 +90,13 @@ bool Banshee::Init()
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
 
-            // Take mesh aurora and enable disable when necessary
+            // Take warning star mesh and control mesh scale over time for anim
             std::vector<MeshComponent*> shoutStartMeshes =
                 currentGO->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
 
             for (MeshComponent* currentMesh : shoutStartMeshes)
             {
-                if (currentMesh->GetParent()->GetName() == "mesh_warningStar")
+                if (currentMesh->GetParent()->GetName() == "WarningStar")
                 {
                     meshWarningStar = currentMesh;
                     meshWarningStar->SetEnabled(false);
@@ -298,9 +299,24 @@ void Banshee::Attack(float deltaTime)
         {
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
+            float3 translation, scale;
+            Quat rotation;
+
+            meshWarningStar->GetParent()->GetLocalTransform().Decompose(translation, rotation, scale);
+
+            float interpolationValue = min(elapsedWarning / warningDuration, 1.f);
+
+            float finalScale         = Interpolation::Lerp(1.f, 0.f, interpolationValue);
+            scale                    = float3(finalScale, 1.f, finalScale);
+
+            float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
+            meshWarningStar->GetParent()->SetLocalTransform(starTransform);
+
             if (elapsedWarning < warningDuration) elapsedWarning += deltaTime;
             else
             {
+                float4x4 starTransform = float4x4::FromTRS(translation, rotation, float3::one);
+                meshWarningStar->GetParent()->SetLocalTransform(starTransform);
                 if (meshWarningStar) meshWarningStar->SetEnabled(false);
 
                 for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
