@@ -19,10 +19,10 @@ enum class ChangelingVersions
 
 struct ChangelingDashTrailContainer
 {
-    GameObject* dashTrailObject = nullptr;
-    GameObject* dashTrailMidChildMeshObject = nullptr;
+    GameObject* dashTrailObject               = nullptr;
+    GameObject* dashTrailMidChildMeshObject   = nullptr;
     GameObject* dashTrailStartChildMeshObject = nullptr;
-    GameObject* dashTrailEndChildMeshObject = nullptr;
+    GameObject* dashTrailEndChildMeshObject   = nullptr;
 };
 
 enum class ChangelingStates
@@ -103,25 +103,25 @@ class Changeling : public Character
     bool ShouldSwapStatesOnRandomVersion(const float deltaTime) const;
     void CalculateAimPoint(float3& outTargetPoint);
 
-    bool isSetupCorrectly         = false;
+    bool isSetupCorrectly               = false;
 
-    AIAgentComponent* agentAI     = nullptr;
-    ChangelingStates currentState = ChangelingStates::NONE;
-    ChangelingStates stateAfterDamaged = ChangelingStates::NONE;
+    AIAgentComponent* agentAI           = nullptr;
+    ChangelingStates currentState       = ChangelingStates::NONE;
+    ChangelingStates stateAfterDamaged  = ChangelingStates::NONE;
 
-    GameObject* parentGO          = nullptr;
+    GameObject* parentGO                = nullptr;
 
-    float4x4 dashStart            = float4x4::identity;
-    float3 dashDirection          = float3::zero;
-    float3 dashTarget             = float3::zero;
-    float dashSpeed               = 15.0f;
-    float minDashDistance         = 1;
+    float4x4 dashStart                  = float4x4::identity;
+    float3 dashDirection                = float3::zero;
+    float3 dashTarget                   = float3::zero;
+    float dashSpeed                     = 15.0f;
+    float minDashDistance               = 1;
 
-    std::string dashTrailObjectName = "DashTrailObject";
-    std::string dashTrailStartMeshName = "DashTrailStartMesh";
-    std::string dashTrailMidMeshName = "DashTrailMidMesh";
-    std::string dashTrailEndMeshName = "DashTrailEndMesh";
-    std::string dashTrailCollisionName = "DashTrailCollision";
+    std::string dashTrailObjectName     = "DashTrailObject";
+    std::string dashTrailStartMeshName  = "DashTrailStartMesh";
+    std::string dashTrailMidMeshName    = "DashTrailMidMesh";
+    std::string dashTrailEndMeshName    = "DashTrailEndMesh";
+    std::string dashTrailCollisionName  = "DashTrailCollision";
     std::string finalAttackColliderName = "FinalAttackObject";
 
     std::vector<ChangelingDashTrailContainer> dashTrailMeshObjects;
@@ -143,7 +143,7 @@ class Changeling : public Character
     float swapStateChancePerSecond    = 0.05f;
     ChangelingVersions randomVersion =
         ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
-    int maxEnemiesLeftForFinalAttack = 0;
+    int maxEnemiesLeftForFinalAttack       = 0;
 
     // Default specific
     float chaseSpeed                       = 1.0f;
@@ -167,9 +167,9 @@ class Changeling : public Character
 
     // VFX
     // Dig up
-    std::string vfxDigUpRocksName           = "VFX_DigUpRocks";
-    GameObject* vfxDigUpRocksObject         = nullptr;
-    
+    std::string vfxDigUpRocksName          = "VFX_DigUpRocks";
+    GameObject* vfxDigUpRocksObject        = nullptr;
+
     std::string vfxDigUpHoleName           = "VFX_DigUpHole";
     GameObject* vfxDigUpHoleObject         = nullptr;
 

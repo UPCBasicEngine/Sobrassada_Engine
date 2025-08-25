@@ -10,13 +10,13 @@
 #include "MagicBarrier.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
-#include "Wwise_IDs.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
-#include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Wwise_IDs.h"
 
 #include <Math/MathFunc.h>
 #include <Math/Quat.h>
@@ -48,8 +48,7 @@ Changeling::Changeling(GameObject* parent)
         &swapStateChancePerSecond, 0.001f, 1.0f
     );
     fields.emplace_back(
-        "Max enemies left for final attack", InspectorField::FieldType::Int,
-        &maxEnemiesLeftForFinalAttack, 0, 40
+        "Max enemies left for final attack", InspectorField::FieldType::Int, &maxEnemiesLeftForFinalAttack, 0, 40
     );
 
     // Herbert specific (Index 1)
@@ -107,7 +106,7 @@ bool Changeling::Init()
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
         dashTrailColliderObject->SetEnabled(false);
     finalAttackObject->SetEnabled(false);
-    
+
     isAttacking   = false;
     attackCdTimer = attackCooldown;
     agentAI->ResetSpeed();
@@ -130,15 +129,12 @@ void Changeling::Update(float deltaTime)
 
 void Changeling::OnPlayerExitLocation()
 {
-    // TODO
-
-    // const HashString& playerLocationTag = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-    // bool isPlayerInLocation = parent->HasTag(playerLocationTag);
+    // If updated in the visible range, the pooka will automatically burry and return to idle when the player
+    // is no longer visible
 }
 
 void Changeling::OnPlayerEnterLocation()
 {
-    // TODO
 }
 
 void Changeling::OnDeath()
@@ -150,8 +146,7 @@ void Changeling::OnDeath()
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
     {
         CubeColliderComponent* collider = dashTrailColliderObject->GetComponent<CubeColliderComponent*>();
-        if (collider != nullptr)
-            collider->DeleteRigidBody();
+        if (collider != nullptr) collider->DeleteRigidBody();
         dashTrailColliderObject->SetEnabled(false);
     }
 
@@ -169,10 +164,7 @@ void Changeling::OnDamageTaken(int amount)
 
 void Changeling::PerformAttack()
 {
-    // TODO: play basicAttack sound
-    // TODO: make interaction with hitboxes with the character
-    // TODO: activate and disable the box collider located on one on the gameobjects weapon
-    // TODO: trails, particles and animation
+    // TODO: deactivate the collision box to avoid multi damage?
 }
 
 void Changeling::HandleState(float deltaTime)
@@ -313,7 +305,7 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq)
 {
     if (ST_FinalAttack(deltaTime, distanceToPlayerSq)) return;
-    
+
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
         randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
@@ -471,17 +463,18 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
                                        parentGO->GetGlobalTransform().TranslatePart();
         const Quat lerpRotation = Quat(dashStart.RotatePart());
 
-        dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(
-        float4x4::FromTRS((dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
-                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
-        );
-        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
-            float4x4::FromTRS(lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1))
-        );
-        dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(
-            float4x4::FromTRS(dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
-                lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
-        );
+        dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(float4x4::FromTRS(
+            (dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
+                parentGO->GetGlobalTransform().TranslatePart(),
+            lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
+        ));
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(float4x4::FromTRS(
+            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1)
+        ));
+        dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(float4x4::FromTRS(
+            dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
+            lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
+        ));
         dashTrailColliderObjects[dashIndex]->SetLocalTransform(
             float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, 1))
         );
@@ -514,8 +507,11 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
     if (animComponent && animComponent->IsFinished())
     {
         const int bUseAnimation1 = rand() % 5;
-        animComponent->UseTrigger(bUseAnimation1 == 0 ? "Trigger_Scream" :
-            bUseAnimation1 == 1 ? "Trigger_Scream2" : "Trigger_VisibleIdle");
+        animComponent->UseTrigger(
+            bUseAnimation1 == 0   ? "Trigger_Scream"
+            : bUseAnimation1 == 1 ? "Trigger_Scream2"
+                                  : "Trigger_VisibleIdle"
+        );
     }
     if (stateTimer < 0.f)
     {
@@ -568,17 +564,18 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
                                        parentGO->GetGlobalTransform().TranslatePart();
         const Quat lerpRotation = Quat(dashStart.RotatePart());
 
-        dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(
-        float4x4::FromTRS((dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
-                                   parentGO->GetGlobalTransform().TranslatePart(), lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
-        );
-        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
-            float4x4::FromTRS(lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1))
-        );
-        dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(
-            float4x4::FromTRS(dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
-                lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
-        );
+        dashTrailMeshObjects[dashIndex].dashTrailStartChildMeshObject->SetLocalTransform(float4x4::FromTRS(
+            (dashStart.TranslatePart() + dashDirection * distanceFromDashStart) -
+                parentGO->GetGlobalTransform().TranslatePart(),
+            lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
+        ));
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(float4x4::FromTRS(
+            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1)
+        ));
+        dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(float4x4::FromTRS(
+            dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
+            lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
+        ));
         dashTrailColliderObjects[dashIndex]->SetLocalTransform(
             float4x4::FromTRS(lerpTranslation, lerpRotation, float3(1, 1, 1))
         );
@@ -609,7 +606,9 @@ void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerS
     if (distanceToPlayerSq <= 3)
     {
         finalAttackObject->SetEnabled(true);
-        finalAttackObject->SetLocalPosition(parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart());
+        finalAttackObject->SetLocalPosition(
+            parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart()
+        );
         Die();
     }
     else
@@ -623,9 +622,9 @@ void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
 {
     if (animComponent && animComponent->IsFinished())
     {
-        currentState = stateAfterDamaged;
+        currentState      = stateAfterDamaged;
         stateAfterDamaged = ChangelingStates::NONE;
-        
+
         if (currentState == ChangelingStates::IDLE_BURIED)
         {
             characterCollider->SetEnabled(false);
@@ -655,9 +654,11 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
 
 bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
 {
-    const bool initFinalAttack = associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
+    const bool initFinalAttack =
+        associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
     // Check preconditions
-    if (!initFinalAttack && (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK)) return false;
+    if (!initFinalAttack && (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK))
+        return false;
     if (!initFinalAttack && currentState != ChangelingStates::IDLE_BURIED) return false;
     if (!initFinalAttack && !spottedLocation.IsFinite()) return false;
 
@@ -715,8 +716,7 @@ bool Changeling::ST_Damaged()
     {
         if (currentState == ChangelingStates::PEEK || currentState == ChangelingStates::BITE_ATTACK)
             stateAfterDamaged = ChangelingStates::IDLE_BURIED;
-        else
-            stateAfterDamaged = ChangelingStates::IDLE_VISIBLE;
+        else stateAfterDamaged = ChangelingStates::IDLE_VISIBLE;
 
         currentState = ChangelingStates::DAMAGED;
 
@@ -724,7 +724,7 @@ bool Changeling::ST_Damaged()
         agentAI->SetSpeed(0, 10);
 
         weaponCollider->SetEnabled(false);
-    
+
         if (animComponent)
         {
             const bool bUseAnimation1 = rand() % 2;
@@ -849,9 +849,10 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
 bool Changeling::ST_FinalAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (associatedBarrier == nullptr || associatedBarrier->GetEnemiesInArea() > maxEnemiesLeftForFinalAttack) return false;
+    if (associatedBarrier == nullptr || associatedBarrier->GetEnemiesInArea() > maxEnemiesLeftForFinalAttack)
+        return false;
     if (currentState != ChangelingStates::IDLE_VISIBLE) return false;
-    
+
     // Implement state transition
     const bool bUseAnimation1 = rand() % 2;
     if (animComponent) animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Run" : "Trigger_Run2");
@@ -907,11 +908,12 @@ void Changeling::ValidateSetup()
         if (child->GetName() == dashTrailObjectName)
         {
             ChangelingDashTrailContainer container = ChangelingDashTrailContainer();
-            container.dashTrailObject = child;
+            container.dashTrailObject              = child;
 
             for (const UID dashTrailChildUID : child->GetChildren())
             {
-                GameObject* dashTrailChild = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(dashTrailChildUID);
+                GameObject* dashTrailChild =
+                    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(dashTrailChildUID);
                 if (dashTrailChild == nullptr)
                 {
                     isSetupCorrectly = false;
@@ -947,15 +949,16 @@ void Changeling::ValidateSetup()
                 GLOG("[ERROR] Dash trail end child game object is nullptr")
                 return;
             }
-            
+
             dashTrailMeshObjects.emplace_back(container);
         }
         else if (child->GetName() == dashTrailCollisionName)
         {
             dashTrailColliderObjects.emplace_back(child);
-        } else if (child->GetName() == finalAttackColliderName)
+        }
+        else if (child->GetName() == finalAttackColliderName)
         {
-            finalAttackObject = child;
+            finalAttackObject   = child;
             finalAttackCollider = child->GetComponent<SphereColliderComponent*>();
         }
     }
@@ -1013,8 +1016,8 @@ void Changeling::ValidateSetup()
         dashAreaColliders.emplace_back(cCComponent);
     }
 
-    //VFX validation
-    
+    // VFX validation
+
     // Validate children game objects
     for (const UID childUID : parent->GetChildren())
     {
