@@ -7,41 +7,41 @@
 #include "Math/float4x4.h"
 #include "PrefabManager.h"
 #include "ResourcePrefab.h"
+#include "ResourcesModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "Standalone/AIAgentComponent.h"
 
 EnemySpawnerScript::EnemySpawnerScript(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Prefab UID", InspectorField::FieldType::InputText, &prefabUIDStr});
+    fields.push_back({"Prefab UID", InspectorField::FieldType::Resource, &prefabUID});
     fields.push_back({"Location Tag", InspectorField::FieldType::InputText, &locationTagString});
     fields.push_back({"Spawn Once", InspectorField::FieldType::Bool, &spawnOnce});
     fields.push_back({"Enemies to Spawn", InspectorField::FieldType::Int, &spawnAmount});
 }
 
+EnemySpawnerScript::~EnemySpawnerScript()
+{
+}
+
 bool EnemySpawnerScript::Init()
 {
+    prefab      = PrefabManager::LoadPrefab(prefabUID);
+    locationTag = HashString(locationTagString);
 
-    if (!prefabUIDStr.empty()) prefabUID = std::stoull(prefabUIDStr);
-    prefab = PrefabManager::LoadPrefab(prefabUID);
-
-    locationTag            = HashString(locationTagString);
-
+    if (!prefab) GLOG("[EnemYSpawner - WARNING] No prefab found by uid");
     return true;
 }
 
-void EnemySpawnerScript::Update(float deltatime)
+void EnemySpawnerScript::OnDestroy()
 {
-    wasOverlapping   = isOverlappingNow; // remember state of current frame
-    isOverlappingNow = false;            // will be set again by OnCollision()
+    delete prefab;
 }
 
-void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, ColliderLayer layer)
+void EnemySpawnerScript::OnCollisionEnter(GameObject* other, const float3 normal, ColliderLayer layer)
 {
-    isOverlappingNow = true;
 
     if (spawnOnce && spawned) return;
-    if (wasOverlapping) return;
     if (!prefab) return;
 
     Scene* scene           = AppEngine->GetSceneModule()->GetScene();
@@ -63,26 +63,4 @@ void EnemySpawnerScript::OnCollision(GameObject* other, const float3 normal, Col
     }
 
     if (spawnOnce) spawned = true;
-}
-
-
-
-
-void EnemySpawnerScript::Save(rapidjson::Value& tgt, rapidjson::Document::AllocatorType& al)
-{
-    if (!prefabUIDStr.empty()) prefabUID = std::stoull(prefabUIDStr);
-    tgt.AddMember("PrefabUID", static_cast<uint64_t>(prefabUID), al);
-    tgt.AddMember("SpawnOnce", spawnOnce, al);
-    tgt.AddMember("SpawnAmount", spawnAmount, al);
-}
-
-void EnemySpawnerScript::Load(const rapidjson::Value& src)
-{
-    if (src.HasMember("PrefabUID"))
-    {
-        prefabUID    = src["PrefabUID"].GetUint64();
-        prefabUIDStr = std::to_string(prefabUID);
-    }
-    if (src.HasMember("SpawnOnce")) spawnOnce = src["SpawnOnce"].GetBool();
-    if (src.HasMember("SpawnAmount")) spawnAmount = src["SpawnAmount"].GetInt();
 }
