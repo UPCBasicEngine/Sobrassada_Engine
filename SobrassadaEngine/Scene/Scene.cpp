@@ -60,6 +60,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/VideoComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -390,14 +391,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
 
-    renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera);
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
-#endif
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
-    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
-    glPopDebugGroup();
+    renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera, deltaTime);
 
 #ifndef GAME
     for (const auto& gameObject : toUpdateGameObjects)
@@ -420,23 +414,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         for (int i = 0; i < 12; ++i)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render_Billboards", Optick::Category::Rendering)
-#endif
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
-    glEnable(GL_BLEND);
-    App->GetBillboardModule()->RenderBillboards();
-    glDisable(GL_BLEND);
-    glPopDebugGroup();
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
-    App->GetParticleModule()->RenderParticles();
-    glPopDebugGroup();
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
-    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
-    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)

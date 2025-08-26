@@ -41,6 +41,7 @@ class SplineComponent;
 class TrailComponent;
 class DecalComponent;
 class ParticleSystemComponent;
+class VideoComponent;
 class ShaderScriptComponent;
 
 enum MobilitySettings

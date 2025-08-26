@@ -16,7 +16,7 @@ class RenderPass
     RenderPass();
     ~RenderPass();
 
-    void RenderScene(Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera);
+    void RenderScene(Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera, float deltaTime);
 
   private:
     void Bind() const;
