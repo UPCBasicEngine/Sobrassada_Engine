@@ -1507,3 +1507,32 @@ void GameObject::SetEnabledRecursive(bool value)
         if (auto* child = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID))
             child->SetEnabledRecursive(value);
 }
+
+GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
+{
+    std::stack<UID> nodesToVisit;
+    for (UID childUID : children)
+    {
+        nodesToVisit.push(childUID);
+    }
+
+    while (!nodesToVisit.empty())
+    {
+        UID currentUID = nodesToVisit.top();
+        nodesToVisit.pop();
+
+        GameObject* current = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
+        if (!current) continue;
+
+        //GLOG("GameObject %s", current->GetName().c_str());
+        if (current->GetName() == name) return current;
+
+        for (UID grandChildUID : current->children)
+        {
+            nodesToVisit.push(grandChildUID);
+        }
+    }
+
+    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    return nullptr;
+}

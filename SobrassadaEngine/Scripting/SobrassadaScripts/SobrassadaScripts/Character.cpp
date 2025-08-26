@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "Banshee_v2.h"
 #include "CameraComponent.h"
 #include "Character.h"
 #include "CuChulainn.h"
@@ -9,10 +10,11 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "MagicBarrier.h"
 #include "Mushroom.h"
-#include "Spouts.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
+#include "Spouts.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
@@ -98,7 +100,6 @@ void Character::Update(float deltaTime)
     if (animComponent && stateName != animComponent->GetCurrentStateName())
     {
         stateName = animComponent->GetCurrentStateName();
-        // GLOG("Current state: %s", stateName.GetString().c_str());
     }
 
     HandleState(deltaTime);
@@ -134,13 +135,29 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
     SphereColliderComponent* otherWeaponShpere = otherObject->GetComponent<SphereColliderComponent*>();
     ScriptComponent* otherScript               = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
 
-    if (otherScript && otherWeapon && otherWeapon->GetEnabled())
+    if (otherScript &&
+        ((otherWeapon && otherWeapon->GetEnabled()) || (otherWeaponShpere && otherWeaponShpere->GetEnabled())))
     {
         // Standard attack check
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         if (enemyScript)
         {
             if (!enemyScript->isAttacking) return;
+
+            // Banshee slow area
+            if (enemyScript->GetCharacterType() == CharacterType::Banshee)
+            {
+                CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
+                Banshee_v2* bansheeScript = otherScript->GetScriptByType<Banshee_v2>();
+
+                if (playerScript && bansheeScript->GetState() == Banshee_v2_States::SlowArea)
+                {
+                    playerScript->StartCurse();
+                    TakeDamage(bansheeScript->GetSlowAreaDamage());
+                    return;
+                }
+            }
+
             TakeDamage(enemyScript->attackDamage);
         }
     }
@@ -327,6 +344,8 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
+
+    if (associatedBarrier != nullptr) associatedBarrier->EnemyDied();
 }
 
 void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)

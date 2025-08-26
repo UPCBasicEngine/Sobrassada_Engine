@@ -75,6 +75,7 @@
 #include "WindConfig.h"
 
 #include <set>
+#include <unordered_set>
 #include <unordered_map>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
@@ -1121,6 +1122,45 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
     for (const auto& obj : gameObjectsContainer)
     {
         if (obj.second->GetName() == name) return obj.second;
+    }
+
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    return nullptr;
+}
+
+//Loops in the Parent Tree node and try to find targetName GO
+GameObject* Scene::GetGameObjectByParentNameAndTargetName(const std::string& parentName, const std::string& targetName)
+{
+    // TODO: Replace gameObject name to a HashString, I've seen it is also compared in some scripts and would improve
+    // performance
+
+    GameObject* parentGO = GetGameObjectByName(parentName);
+    if (!parentGO) return nullptr;
+
+    std::vector<UID> stack;
+    const auto& childrenVectorUID = parentGO->GetChildren();
+    stack.insert(stack.end(), childrenVectorUID.begin(), childrenVectorUID.end());
+
+    std::unordered_set<UID> visited;
+    visited.reserve(stack.size() * 2 + 16);
+
+    while (!stack.empty())
+    {
+        UID uid = stack.back();
+        stack.pop_back();
+
+        if (!visited.insert(uid).second) continue;
+
+        GameObject* cGO = GetGameObjectByUID(uid);
+        if (!cGO) continue;
+
+        if (cGO->GetName() == targetName) return cGO;
+
+        const auto& kids = cGO->GetChildren();
+        for (auto it = kids.rbegin(); it != kids.rend(); ++it)
+        {
+            if (!visited.count(*it)) stack.push_back(*it);
+        }
     }
 
     // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
