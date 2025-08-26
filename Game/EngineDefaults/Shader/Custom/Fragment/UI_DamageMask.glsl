@@ -37,5 +37,7 @@ void main()
     vec4 col = vec4(inputColor, 1.0f);
 
     col.a = edge * strength;
-    outColor = col;        
+
+    if (col.a < 0.05f) discard;
+    else outColor = col;        
 }

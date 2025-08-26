@@ -395,7 +395,9 @@ void AIAgentComponent::SetAngularSpeed(const float newAngular)
 
 void AIAgentComponent::ResetSpeed()
 {
-    dtCrowdAgent* agent           = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    dtCrowdAgent* agent = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    if (!agent) return;
+
     currentSpeed                  = defaultSpeed;
     currentAcceleration           = defaultAcceleration;
     agent->params.maxSpeed        = defaultSpeed;
