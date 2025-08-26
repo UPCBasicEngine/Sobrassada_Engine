@@ -13,7 +13,8 @@ enum class SoldierStates
     CHASE,
     BASIC_ATTACK,
     DEATH,
-    PLAYER_DETECTION
+    PLAYER_DETECTION,
+    CHEERING
 };
 
 class Soldier : public Character
@@ -41,6 +42,7 @@ class Soldier : public Character
     void PatrolAI(float deltaTime);
     void ChaseAI();
     void SearchForPlayer();
+    void SetOnWaiting();
     const char* ManageAttackAnimations();
 
   private:
@@ -54,6 +56,7 @@ class Soldier : public Character
     float knockbackTimer             = 0.0f;
     float3 knockbackDirection        = float3::zero;
     bool isKnockback                 = false;
+    bool isStrongKnockback           = false;
     int consecutiveAttack            = 0;
     int consecutiveThrust            = 0;
     float secondAttackDelay          = 0.6f;
@@ -61,5 +64,11 @@ class Soldier : public Character
     float originalAttackDuration     = 0.0f;
     float originalAttackHitboxDelay  = 0.0f;
     float deathTimer                 = 0.0f;
-    float chaseSpeed                = 2.0f;
+    float chaseSpeed                 = 2.0f;
+    bool thrustAdvance               = false;
+    bool countedInPlayerEnemies      = false;
+    float cheeringDistance           = 5.0f;
+    int maxEnemiesNearby   = 3;
+    std::string meleeTrailName       = "";
+    GameObject* meleeTrailObject     = nullptr;
 };

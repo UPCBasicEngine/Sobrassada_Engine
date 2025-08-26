@@ -8,6 +8,7 @@
 #include "Math/float2.h"
 #include "Math/float3.h"
 #include "Math/float4.h"
+#include "imgui.h"
 
 void Script::Inspector()
 {
@@ -89,6 +90,17 @@ void Script::Load(const rapidjson::Value& initialState)
                 *(UID*)field.data = value.GetUint64();
             }
             break;
+        case InspectorField::FieldType::CurveEditor:
+            if (value.IsArray() && value.Size() == StoreScriptCurvePoints * 2)
+            {
+                ImVec2* pointsArray = (ImVec2*)field.data;
+
+                for (int i = 0; i < StoreScriptCurvePoints; ++i)
+                {
+                    pointsArray[i] = ImVec2(value[2 * i].GetFloat(), value[2 * i + 1].GetFloat());
+                }
+            }
+            break;
         }
     }
 }
@@ -140,6 +152,18 @@ void Script::CloneFields(const std::vector<InspectorField>& otherFields)
         case InspectorField::FieldType::Resource:
         {
             *(UID*)fields[i].data = *(UID*)otherFields[i].data;
+            break;
+        }
+        case InspectorField::FieldType::CurveEditor:
+        {
+            ImVec2* otherPoints = (ImVec2*)otherFields[i].data;
+            ImVec2* curvePoints = (ImVec2*)fields[i].data;
+
+            for (int i = 0; i < StoreScriptCurvePoints; ++i)
+            {
+                curvePoints[i] = otherPoints[i];
+            }
+
             break;
         }
         }

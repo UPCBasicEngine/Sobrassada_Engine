@@ -35,6 +35,20 @@ void ResourceMaterial::OnEditorUpdate()
 
     if (applyWind)
     {
+        ImGui::Text("Material wind settings");
+        updated |= ImGui::SliderFloat("UV 0 border", &vCoord0, 0, vCoord1 - 0.01f);
+        updated |= ImGui::SliderFloat("UV 1 border", &vCoord1, vCoord0 + 0.01f, 1);
+        updated |= ImGui::Checkbox("Use central pivot", &useCentralPivot);
+        updated |= ImGui::Checkbox("Wind gravity", &useWindGravity);
+        updated |= ImGui::SliderFloat("X amplitude", &windXAmplitude, 0, 2);
+        updated |= ImGui::SliderFloat("Y amplitude", &windYAmplitude, 0, 2);
+        updated |= ImGui::SliderFloat("Z amplitude", &windZAmplitude, 0, 2);
+        updated |= ImGui::SliderFloat("X frequency", &windXFrequency, 0, 5);
+        updated |= ImGui::SliderFloat("Y frequency", &windYFrequency, 0, 5);
+        updated |= ImGui::SliderFloat("Z frequency", &windZFrequency, 0, 5);
+        updated |= ImGui::SliderFloat("Time scale", &windTimeScale, 0, 10);
+
+        ImGui::Text("Global wind settings");
         WindConfig* globalWindConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
         if (!globalWindConfig->GetApplyWindGlobally())
         {
@@ -56,7 +70,6 @@ void ResourceMaterial::OnEditorUpdate()
         ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 10.f);
         ImGui::SliderFloat("Gust frequency (1/s)", &globalWindConfig->GetGustFrequencyRef(), .3f, 10.f);
         ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), 0.0f, 20.f);
-
     }
 
     if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
@@ -308,6 +321,17 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("isAlphaDiscard", isAlpha, allocator);
                 importOptions.AddMember("isDoubleSided", doubleSided, allocator);
                 importOptions.AddMember("applyWind", applyWind, allocator);
+                importOptions.AddMember("vCoord0", vCoord0, allocator);
+                importOptions.AddMember("vCoord1", vCoord1, allocator);
+                importOptions.AddMember("useCentralPivot", useCentralPivot, allocator);
+                importOptions.AddMember("useWindGravity", useWindGravity, allocator);
+                importOptions.AddMember("windXAmplitude", windXAmplitude, allocator);
+                importOptions.AddMember("windYAmplitude", windYAmplitude, allocator);
+                importOptions.AddMember("windZAmplitude", windZAmplitude, allocator);
+                importOptions.AddMember("windXFrequency", windXFrequency, allocator);
+                importOptions.AddMember("windYFrequency", windYFrequency, allocator);
+                importOptions.AddMember("windZFrequency", windZFrequency, allocator);
+                importOptions.AddMember("windTimeScale", windTimeScale, allocator);
 
                 if (doc.HasMember("importOptions")) doc["importOptions"] = importOptions;
                 else doc.AddMember("importOptions", importOptions, allocator);
@@ -355,8 +379,6 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
 {
     // Prioitize updated values saved in meta. If they are missing, fall back on the ones in the original material
 
-
-
     if (importOptions.HasMember("defaultTextureUID") && importOptions["defaultTextureUID"].IsUint64())
         defaultTextureUID = importOptions["defaultTextureUID"].GetUint64();
     else defaultTextureUID = INVALID_UID;
@@ -397,6 +419,50 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     if (importOptions.HasMember("applyWind") && importOptions["applyWind"].IsBool())
         applyWind = importOptions["applyWind"].GetBool();
     else applyWind = false;
+
+    if (importOptions.HasMember("vCoord0") && importOptions["vCoord0"].IsFloat())
+        vCoord0 = importOptions["vCoord0"].GetFloat();
+    else vCoord0 = 0.0f;
+
+    if (importOptions.HasMember("vCoord1") && importOptions["vCoord1"].IsFloat())
+        vCoord1 = importOptions["vCoord1"].GetFloat();
+    else vCoord1 = 1.0f;
+
+    if (importOptions.HasMember("useCentralPivot") && importOptions["useCentralPivot"].IsBool())
+        useCentralPivot = importOptions["useCentralPivot"].GetBool();
+    else useCentralPivot = false;
+
+    if (importOptions.HasMember("useWindGravity") && importOptions["useWindGravity"].IsBool())
+        useWindGravity = importOptions["useWindGravity"].GetBool();
+    else useWindGravity = false;
+
+    if (importOptions.HasMember("windXAmplitude") && importOptions["windXAmplitude"].IsFloat())
+        windXAmplitude = importOptions["windXAmplitude"].GetFloat();
+    else windXAmplitude = 1.0f;
+
+    if (importOptions.HasMember("windYAmplitude") && importOptions["windYAmplitude"].IsFloat())
+        windYAmplitude = importOptions["windYAmplitude"].GetFloat();
+    else windYAmplitude = 1.0f;
+
+    if (importOptions.HasMember("windZAmplitude") && importOptions["windZAmplitude"].IsFloat())
+        windZAmplitude = importOptions["windZAmplitude"].GetFloat();
+    else windZAmplitude = 1.0f;
+
+    if (importOptions.HasMember("windXFrequency") && importOptions["windXFrequency"].IsFloat())
+        windXFrequency = importOptions["windXFrequency"].GetFloat();
+    else windXFrequency = 1.0f;
+
+    if (importOptions.HasMember("windYFrequency") && importOptions["windYFrequency"].IsFloat())
+        windYFrequency = importOptions["windYFrequency"].GetFloat();
+    else windYFrequency = 1.0f;
+
+    if (importOptions.HasMember("windZFrequency") && importOptions["windZFrequency"].IsFloat())
+        windZFrequency = importOptions["windZFrequency"].GetFloat();
+    else windZFrequency = 1.0f;
+
+    if (importOptions.HasMember("windTimeScale") && importOptions["windTimeScale"].IsFloat())
+        windTimeScale = importOptions["windTimeScale"].GetFloat();
+    else windTimeScale = 1.0f;
 
     material.specColor           = mat.GetSpecularFactor();
     material.shininess           = mat.GetGlossinessFactor();
@@ -564,6 +630,6 @@ void ResourceMaterial::FreeMaterials() const
 void ResourceMaterial::SetDiffColor(const float4& newColor)
 {
     material.diffColor = newColor;
-    //SaveToMeta();
+    // SaveToMeta();
     App->GetSceneModule()->GetScene()->UpdateAllMaterialInstances(uid);
 }
