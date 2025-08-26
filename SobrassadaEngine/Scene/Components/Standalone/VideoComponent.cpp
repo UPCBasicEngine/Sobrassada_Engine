@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "ResourceTexture.h"
 #include "ShaderModule.h"
+#include "ProjectModule.h"
 #include "imgui.h"
 #include <glew.h>
 
@@ -117,7 +118,7 @@ void VideoComponent::Clone(const Component* other)
         }
 
         UID videoTextureUID = GenerateUID();
-        videoTexture = new ResourceTexture(videoTextureUID, "VideoTexture");
+        videoTexture        = new ResourceTexture(videoTextureUID, "VideoTexture");
     }
 }
 
@@ -164,8 +165,8 @@ void VideoComponent::RenderEditorInspector()
 
     if (ImGui::Button("Stop"))
     {
-        timeSinceLastFrame  = 0.0f;
-        isPlaying = false;
+        timeSinceLastFrame = 0.0f;
+        isPlaying          = false;
     }
 }
 
@@ -175,7 +176,8 @@ void VideoComponent::ParentUpdated()
 
 bool VideoComponent::InitVideo()
 {
-    const std::string path = VIDEOS_ASSETS_PATH + std::string(videoName) + VIDEOS_EXTENSION;
+    const std::string path = App->GetProjectModule()->GetLoadedProjectPath() + VIDEOS_ASSETS_PATH +
+                             std::string(videoName) + VIDEOS_EXTENSION;
     if (avformat_open_input(&formatCtx, path.c_str(), nullptr, nullptr) != 0) return false;
     if (avformat_find_stream_info(formatCtx, nullptr) < 0) return false;
 
@@ -224,9 +226,9 @@ bool VideoComponent::InitVideo()
     videoTexture->SetTextureID(texID);
 
     AVRational timeBase = formatCtx->streams[videoStreamIndex]->time_base;
-    //frameDelay          = av_q2d(timeBase) * formatCtx->streams[videoStreamIndex]->avg_frame_rate.den;
+    // frameDelay          = av_q2d(timeBase) * formatCtx->streams[videoStreamIndex]->avg_frame_rate.den;
 
-    frameDelay       = 1.0 / av_q2d(formatCtx->streams[videoStreamIndex]->avg_frame_rate);
+    frameDelay          = 1.0 / av_q2d(formatCtx->streams[videoStreamIndex]->avg_frame_rate);
 
     timeSinceLastFrame  = 0.0f;
     isPlaying           = true;
@@ -267,41 +269,48 @@ bool VideoComponent::UpdateFrame()
 
 void VideoComponent::ClearVideo()
 {
-    if (packet) {
+    if (packet)
+    {
         av_packet_free(&packet);
         packet = nullptr;
     }
-    if (frame) {
+    if (frame)
+    {
         av_frame_free(&frame);
         frame = nullptr;
     }
-    if (rgbFrame) {
+    if (rgbFrame)
+    {
         av_free(frameBuffer);
         av_frame_free(&rgbFrame);
-        rgbFrame = nullptr;
+        rgbFrame    = nullptr;
         frameBuffer = nullptr;
     }
-    if (codecCtx) {
+    if (codecCtx)
+    {
         avcodec_free_context(&codecCtx);
         codecCtx = nullptr;
     }
-    if (formatCtx) {
+    if (formatCtx)
+    {
         avformat_close_input(&formatCtx);
         formatCtx = nullptr;
     }
-    if (swsCtx) {
+    if (swsCtx)
+    {
         sws_freeContext(swsCtx);
         swsCtx = nullptr;
     }
 
-    videoStreamIndex = -1;
-    isPlaying = false;
+    videoStreamIndex   = -1;
+    isPlaying          = false;
     timeSinceLastFrame = 0.0f;
 }
 
 void VideoComponent::Play()
 {
-    if (formatCtx || codecCtx || frame || rgbFrame || packet || swsCtx) {
+    if (formatCtx || codecCtx || frame || rgbFrame || packet || swsCtx)
+    {
         ClearVideo();
     }
 
