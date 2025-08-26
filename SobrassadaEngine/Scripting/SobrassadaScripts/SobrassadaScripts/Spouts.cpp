@@ -12,6 +12,7 @@
 
 Spouts::Spouts(GameObject* parent) : Script(parent)
 {
+    fields.push_back({"Enable Rune", InspectorField::FieldType::Bool, &enableRune});
     fields.push_back({"Activation Range", InspectorField::FieldType::Float, &activationRange, 0.0f, 100.0f});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &damage, 0, 5});
     fields.push_back({"Charging Duration", InspectorField::FieldType::Float, &chargingDuration, 0.01f, 10.0f});
@@ -35,9 +36,10 @@ bool Spouts::Init()
     whiteWaves           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
     tornadoWater         = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[1]);
     blueWaves            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[2]);
-    explosion            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
-    waterMesh            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
+    waterMesh            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
+    explosion            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
     particleGO           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[5]);
+    rune                 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[6]);
 
     damageCollider       = parent->GetComponent<SphereColliderComponent*>();
 
@@ -61,11 +63,14 @@ void Spouts::Update(float deltaTime)
     {
         if (character == nullptr) return;
 
+        if (enableRune) rune->SetEnabled(true);
+
         damageCollider->SetEnabled(false);
         float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
         if (distance <= activationRange)
         {
             activationState = ACTIVATION_STATE::CHARGING;
+            rune->SetEnabled(false);
             tornadoWater->SetEnabled(true);
             chargingTimer = 0.0f;
         }
@@ -104,13 +109,14 @@ void Spouts::Update(float deltaTime)
         shaderWaterMesh->SetEnabled(false);
         whiteWaves->SetEnabled(true);
         blueWaves->SetEnabled(true);
+
+        whiteWavesScript->SetScriptEnabled("MovingUVTransparent", true);
+        shaderwhiteWavesMesh->SetEnabled(false);
+
         explosion->SetEnabled(true);
 
         explosionScript->SetScriptEnabled("MovingUVTransparent", true);
         shaderExplosionMesh->SetEnabled(false);
-
-        whiteWavesScript->SetScriptEnabled("MovingUVTransparent", true);
-        shaderwhiteWavesMesh->SetEnabled(false);
 
         particles->Init();
 

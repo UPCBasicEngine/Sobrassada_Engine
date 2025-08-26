@@ -24,6 +24,7 @@ class Spouts : public Script
     int GetDamage() { return damage; }
 
   private:
+    bool enableRune                         = false;
     float activationRange                   = 10.0f;
     int damage                              = 1;
     float chargingDuration                  = 1.0f;
@@ -44,6 +45,7 @@ class Spouts : public Script
     GameObject* explosion                   = nullptr;
     GameObject* waterMesh                   = nullptr;
     GameObject* particleGO                  = nullptr;
+    GameObject* rune                        = nullptr;
 
     ShaderScriptComponent* whiteWavesScript = nullptr;
     MeshComponent* shaderwhiteWavesMesh     = nullptr;
