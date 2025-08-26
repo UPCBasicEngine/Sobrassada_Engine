@@ -150,7 +150,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
                 Banshee_v2* bansheeScript = otherScript->GetScriptByType<Banshee_v2>();
 
-                if (playerScript && bansheeScript->GetState() == Banshee_v2_States::SlowArea)
+                if (playerScript && bansheeScript && bansheeScript->GetState() == Banshee_v2_States::SlowArea)
                 {
                     playerScript->StartCurse();
                     TakeDamage(bansheeScript->GetSlowAreaDamage());
@@ -178,9 +178,11 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
             TakeDamage(0);
     }
 
-    if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
+    CubeColliderComponent* otherWeaponCube = otherObject->GetComponent<CubeColliderComponent*>();
+    if (type == CharacterType::CuChulainn && otherWeaponCube && otherWeaponCube->GetEnabled() &&
+        otherObject->GetName() == "DashTrailCollision")
     {
-        TakeDamage(1);
+        playerScript->StartCurse();
     }
 
     otherScript = otherObject->GetComponent<ScriptComponent*>();
