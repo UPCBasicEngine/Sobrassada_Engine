@@ -43,6 +43,9 @@ class TrailComponent : public Component
 
     void UpdateTexture(UID newTextureUID);
     void RecalculateAABB();
+    
+ private:
+    void ClearTrail();
 
   private:
     std::deque<TrailPoint> points;
