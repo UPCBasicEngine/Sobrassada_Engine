@@ -30,6 +30,9 @@ class MirageBossDash : public Character
 
     bool Init() override;
     void Update(float deltaTime) override;
+    void setState(BossDashStates state) { currentState = state; }
+    void setAction(BossDashActions action) { currentAction = action; }
+    void setStateBool(bool state) { stateEnter = state; }
 
   private:
     void HandleState(float deltaTime) override;

@@ -3,7 +3,9 @@
 #include "Application.h"
 #include "GameObject.h"
 #include "SceneModule.h"
+#include "ScriptComponent.h"
 #include "Standalone\MeshComponent.h"
+#include "MirageBossDash.h"
 
 
 Mirage::Mirage(GameObject* parent) : Script(parent)
@@ -27,6 +29,11 @@ bool Mirage::Init()
 
     GameObject* firstChild    = scene->GetGameObjectByUID(children[0]);
     endPoint                  = &firstChild->GetLocalTransform();
+
+    ScriptComponent* scriptComp = firstChild->GetComponent<ScriptComponent*>();
+
+    bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
+
     return true;
 }
 
@@ -39,12 +46,11 @@ void Mirage::Update(float deltaTime)
         state      = MirageState::Warning;
         stateTimer = 0.0f;
         GLOG("Calling gameobject");
-        
+
         if (meshComponent && mirageWarningImage != 0)
         {
-            //meshComponent->AddMaterial(mirageWarningImage, false);
+            // meshComponent->AddMaterial(mirageWarningImage, false);
         }
-        
 
         break;
     }
@@ -52,17 +58,24 @@ void Mirage::Update(float deltaTime)
     case MirageState::Warning:
     {
         stateTimer += deltaTime;
-         GLOG("Activating gameobject");
-        
+        GLOG("Activating gameobject");
+
         if (meshComponent && mirageWarningImage != 0)
         {
-           // meshComponent->AddMaterial(mirageDamageImage, false);
+            // meshComponent->AddMaterial(mirageDamageImage, false);
         }
-        
+
         if (stateTimer >= warningDelay)
         {
             state      = MirageState::Damaging;
             stateTimer = 0.0f;
+
+            if (bossDash)
+            {
+                bossDash->setState(BossDashStates::OverheadStrike);
+                bossDash->setAction(BossDashActions::Dash);
+                bossDash->setStateBool(true);
+            }
         }
         break;
     }

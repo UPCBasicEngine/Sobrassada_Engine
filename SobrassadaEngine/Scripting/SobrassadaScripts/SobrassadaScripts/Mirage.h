@@ -3,6 +3,7 @@
 #include "Script.h"
 
 class MeshComponent;
+class MirageBossDash;
 
 enum class MirageState
 {
@@ -29,5 +30,6 @@ class Mirage : public Script
     float stateTimer             = 0.0f;
     int weightOrder              = 0;
 
-    const float4x4* endPoint         = nullptr;
+    const float4x4* endPoint     = nullptr;
+    MirageBossDash* bossDash     = nullptr;
 };
