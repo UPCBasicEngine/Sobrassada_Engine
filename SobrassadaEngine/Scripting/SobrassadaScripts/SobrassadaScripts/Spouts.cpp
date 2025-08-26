@@ -7,8 +7,10 @@
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Spouts.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Wwise_IDs.h"
 
 Spouts::Spouts(GameObject* parent) : Script(parent)
 {
@@ -53,6 +55,7 @@ bool Spouts::Init()
     whiteWavesScript     = whiteWaves->GetComponent<ShaderScriptComponent*>();
 
     particles            = particleGO->GetComponent<ParticleSystemComponent*>();
+    audio                = parent->GetComponent<AudioSourceComponent*>();
 
     return true;
 }
@@ -69,6 +72,7 @@ void Spouts::Update(float deltaTime)
         float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
         if (distance <= activationRange)
         {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
             activationState = ACTIVATION_STATE::CHARGING;
             rune->SetEnabled(false);
             tornadoWater->SetEnabled(true);

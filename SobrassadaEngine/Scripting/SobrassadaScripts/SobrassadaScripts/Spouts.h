@@ -6,6 +6,7 @@ class ShaderScriptComponent;
 class MeshComponent;
 class SphereColliderComponent;
 class ParticleSystemComponent;
+class AudioSourceComponent;
 
 class Spouts : public Script
 {
@@ -59,5 +60,6 @@ class Spouts : public Script
     SphereColliderComponent* damageCollider = nullptr;
     ParticleSystemComponent* particles      = nullptr;
 
+    AudioSourceComponent* audio             = nullptr;
     ACTIVATION_STATE activationState        = SLEEPING;
 };
