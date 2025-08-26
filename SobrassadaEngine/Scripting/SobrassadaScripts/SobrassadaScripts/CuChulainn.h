@@ -53,6 +53,9 @@ class CuChulainn : public Character
     int GetChargedAttackDamage() const { return chargedAttackDamage; }
     int GetMushrooms() const { return mushrooms; }
     bool GetDesiredTakeMushroom() const { return desiredTakeMushroom; }
+    int GetRiastradMeter() const { return riastradMeter; }
+    bool IsDashUnlocked() const { return dashUnlocked; }
+    bool IsUltimateUnlocked() const { return ultimateUnlocked; }
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
