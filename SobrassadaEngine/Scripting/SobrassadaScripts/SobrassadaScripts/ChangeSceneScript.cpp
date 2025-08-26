@@ -51,6 +51,7 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collis
                 if (doc.HasMember("Scene") && doc["Scene"].IsObject())
                 {
                     sceneModule->LoadScene(doc["Scene"], false);
+                    //Read data from external JSON file
                     sceneModule->SwitchPlayMode(true);
 
                     GLOG("Scene change successful!");
