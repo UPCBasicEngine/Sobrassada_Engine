@@ -183,9 +183,11 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
     }
 
-    if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
+    CubeColliderComponent* otherWeaponCube = otherObject->GetComponent<CubeColliderComponent*>();
+    if (type == CharacterType::CuChulainn && otherWeaponCube && otherWeaponCube->GetEnabled() &&
+        otherObject->GetName() == "DashTrailCollision")
     {
-        TakeDamage(1);
+        playerScript->StartCurse();
     }
 
     otherScript = otherObject->GetComponent<ScriptComponent*>();
