@@ -41,6 +41,7 @@ enum ComponentType : int
     COMPONENT_TRAIL,
     COMPONENT_PARTICLE_SYSTEM,
     COMPONENT_SHADER_SCRIPT,
+    COMPONENT_VIDEO,
 };
 
 enum class ColliderType : uint8_t
@@ -101,9 +102,9 @@ class ComponentUtils
         ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*, CapsuleColliderComponent*,                 \
         AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*, AudioSourceComponent*,              \
         AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, DecalComponent*,       \
-        TrailComponent*, ParticleSystemComponent*, ShaderScriptComponent*
+        TrailComponent*, ParticleSystemComponent*, ShaderScriptComponent*, VideoComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,    \
-        nullptr, nullptr
+        nullptr, nullptr, nullptr

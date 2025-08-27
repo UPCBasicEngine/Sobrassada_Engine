@@ -48,8 +48,6 @@ bool Soldier::Init()
     originalAttackDuration    = attackDuration;
     originalAttackHitboxDelay = attackHitboxDelay;
 
-    
-
     meleeTrailObject          = parent->GetChildGameObjectByName(meleeTrailName);
     if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for melee attack in Soldier")
     else
@@ -72,13 +70,13 @@ void Soldier::Update(float deltaTime)
 
     if (isKnockback)
     {
-        knockbackTimer -= deltaTime;
+        knockbackTimer           -= deltaTime;
 
-        const float appliedForce  = isStrongKnockback ? knockbackForce * 2 : knockbackForce;  
+        const float appliedForce  = isStrongKnockback ? knockbackForce * 2 : knockbackForce;
         agentAI->MoveTo(appliedForce, knockbackDirection);
         if (knockbackTimer <= 0.0f)
         {
-            isKnockback = false;
+            isKnockback       = false;
             isStrongKnockback = false;
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
@@ -113,7 +111,7 @@ void Soldier::OnPlayerExitLocation()
 void Soldier::OnPlayerEnterLocation()
 {
     currentState = SoldierStates::PATROL;
-    agentAI->SetPathNavigation(startPos);
+    if (agentAI) agentAI->SetPathNavigation(startPos);
     reachedPatrolPoint = false;
 }
 
@@ -143,11 +141,11 @@ void Soldier::OnDamageTaken(int amount)
     isStrongKnockback =
         (playerScript &&
          (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM));
-    
+
     ApplyKnockback();
-    //HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
-    //std::string animState               = animStateFromPlayer.GetString();
-    //GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
+    // HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
+    // std::string animState               = animStateFromPlayer.GetString();
+    // GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
 }
 
@@ -216,7 +214,6 @@ void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
-
 
     if (!playerScript->IsDead())
     {
@@ -367,7 +364,7 @@ void Soldier::Attack(float deltaTime)
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
             isAttacking   = false;
             attackCdTimer = attackCooldown;
-            if (meleeTrailObject) meleeTrailObject->SetEnabled(false); 
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
             ChangeState();
         }
     }
@@ -419,8 +416,8 @@ void Soldier::ChangeState()
 
 void Soldier::ApplyKnockback()
 {
-    const float3 myPos         = parent->GetGlobalTransform().TranslatePart();
-    const float3 origin        = character ? character->GetLastPosition() : float3::zero;
+    const float3 myPos   = parent->GetGlobalTransform().TranslatePart();
+    const float3 origin  = character ? character->GetLastPosition() : float3::zero;
 
     knockbackDirection   = myPos - origin;
     knockbackDirection.y = 0.0f;
