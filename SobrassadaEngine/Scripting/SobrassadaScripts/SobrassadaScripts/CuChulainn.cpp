@@ -1605,6 +1605,25 @@ void CuChulainn::StartCurse()
     curseTimer = curseDuration;
 }
 
+void CuChulainn::ApplySavedState(
+    int currentHp, int maxHp, int riastradValue, bool isDashUnlocked, bool isUltimateUnlocked
+)
+{
+    SetMaxHealth(maxHp);
+    SetCurrentHealth(min(currentHp, maxHp));
+
+    reservedHealth = currentHealth;
+
+    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
+
+    riastradMeter = 0;
+    AddRiastrad(riastradValue);
+
+    if (isDashUnlocked) ActivateAbility("dash");
+    if (isUltimateUnlocked) ActivateAbility("ultimate");
+}
+
 void CuChulainn::EndCurse()
 {
     // TODO: Remove when VFX

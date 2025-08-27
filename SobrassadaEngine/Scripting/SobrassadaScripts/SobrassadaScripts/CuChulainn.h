@@ -66,6 +66,7 @@ class CuChulainn : public Character
 
     void ActivateAbility(std::string& abilityName);
     void StartCurse();
+    void ApplySavedState(int currentHealth, int maxHealth, int riastradValue, bool isDashUnlocked, bool isUltimateUnlocked);
 
   private:
     void OnDeath() override;

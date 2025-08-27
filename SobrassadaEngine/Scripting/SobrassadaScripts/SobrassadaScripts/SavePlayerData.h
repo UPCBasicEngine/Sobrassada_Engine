@@ -1,0 +1,17 @@
+#pragma once
+#include "rapidjson/document.h"
+
+struct PlayerState
+{
+    int currentHealth     = 0;
+    int maxHealth         = 0;
+    int riastrad          = 0;
+    bool dashUnlocked     = false;
+    bool ultimateUnlocked = false;
+};
+
+namespace SavePlayerData
+{
+    void Save(rapidjson::Value& targetState,rapidjson::Document::AllocatorType& allocator, const PlayerState& playerState);
+    void Load(const rapidjson::Value& source, PlayerState& playerState);
+} // namespace SavePlayerData
