@@ -48,7 +48,7 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
              // searches for active objects with a mirage script, adds gameobject references to activate them later
              for (const auto& [uid, gameObject] : gameObjects)
              {
-                 if (!gameObject || gameObject->IsEnabled()) continue;
+                 if (!gameObject) continue;
 
                  ScriptComponent* scriptComp = gameObject->GetComponent<ScriptComponent*>();
 
