@@ -24,13 +24,20 @@ Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Jump Duration", InspectorField::FieldType::Float, &jumpDuration, 0.0f, 2.0f});
     fields.push_back({"Fall Duration", InspectorField::FieldType::Float, &fallDuration, 0.0f, 2.0f});
     fields.push_back({"Close Area Damage", InspectorField::FieldType::Int, &closeAreaDamage, 0, 5});
+
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
     fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
     fields.push_back({"Close Area", InspectorField::FieldType::InputText, &closeAreaName});
     fields.push_back({"Big Area", InspectorField::FieldType::InputText, &bigAreaName});
+
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Dash", InspectorField::FieldType::InputText, &dashVFXName});
     fields.push_back({"Area Overhead", InspectorField::FieldType::InputText, &areaOverheadVFXName});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Particle"});
+    fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
+    fields.push_back({"Smoke", InspectorField::FieldType::InputText, &smokeParticleName});
+    fields.push_back({"Charge Shield", InspectorField::FieldType::InputText, &chargeShieldParticleName});
 }
 
 bool Boss::Init()
@@ -72,6 +79,18 @@ bool Boss::Init()
     areaOverheadVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(areaOverheadVFXName);
     if (areaOverheadVFX) areaOverheadVFX->SetEnabled(false);
     else GLOG("Area overhead VFX not found for ferdiad");
+
+    atomParticle = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
+    if (atomParticle) atomParticle->SetEnabled(false);
+    else GLOG("Atom particle not found for ferdiad");
+
+    smokeParticle = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(smokeParticleName);
+    if (smokeParticle) smokeParticle->SetEnabled(false);
+    else GLOG("Smoke particle not found for ferdiad");
+
+    chargeShieldParticle = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargeShieldParticleName);
+    if (chargeShieldParticle) chargeShieldParticle->SetEnabled(false);
+    else GLOG("Smoke particle not found for ferdiad");
 
     GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("arena");
     if (arenaGO)
@@ -249,8 +268,9 @@ void Boss::ChooseNextStateFirstPhase()
         else doIdle = true;
         break;
     }
+    shieldStrikesRate = -1;
 
-    int num = uniformDist(rng);
+    int num           = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -602,12 +622,21 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
+
+            if (animComponent) animComponent->UseTrigger("Attack");
+
             agentAI->SetFreeMove(false);
             agentAI->PauseMovement();
+
+            //AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
+            //areaOverheadVFX->GetChildren().at(0);
+
+            atomParticle->SetEnabled(true);
+            smokeParticle->SetEnabled(true);
+
             attackHitboxDelay    = 0.7f;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
-            if (animComponent) animComponent->UseTrigger("Attack");
         }
 
         DamageAreaLogic();
@@ -623,7 +652,10 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
+
             if (animComponent) animComponent->UseTrigger("Recover");
+
+            chargeShieldParticle->SetEnabled(false);
         }
 
         DamageAreaLogic();
@@ -756,6 +788,10 @@ void Boss::DamageAreaLogic()
         attackTimer <= attackHitboxDelay + attackHitboxDuration)
     {
         closeArea->SetEnabled(true);
+
+        atomParticle->SetEnabled(false);
+        smokeParticle->SetEnabled(false);
+        chargeShieldParticle->SetEnabled(true);
     }
     else if (closeArea->IsEnabled() && bigArea->IsEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
     {

@@ -153,8 +153,17 @@ class Boss : public Character
     // VFX
     std::string dashVFXName              = "";
     GameObject* dashVFX                  = nullptr;
+
     std::string areaOverheadVFXName      = "";
     GameObject* areaOverheadVFX          = nullptr;
+
+    // Particle
+    std::string atomParticleName         = "";
+    GameObject* atomParticle             = nullptr;
+    std::string smokeParticleName        = "";
+    GameObject* smokeParticle            = nullptr;
+    std::string chargeShieldParticleName = "";
+    GameObject* chargeShieldParticle     = nullptr;
 
     // Inspector values
     int closeAreaDamage                  = 2;
