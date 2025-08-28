@@ -1,5 +1,6 @@
 #pragma once
 #include "rapidjson/document.h"
+#include <string>
 
 struct PlayerState
 {
@@ -14,4 +15,9 @@ namespace SavePlayerData
 {
     void Save(rapidjson::Value& targetState,rapidjson::Document::AllocatorType& allocator, const PlayerState& playerState);
     void Load(const rapidjson::Value& source, PlayerState& playerState);
+
+    bool EnsureParentDir(const std::string& filePath);
+    std::string MakeSavePath(const std::string& projectPath) const{ return projectPath + "/Saves/player_state.json"; }
+    bool SavePlayerToFile(const PlayerState& playerState, const std::string& filePath);
+    bool LoadPlayerFromFile(PlayerState& playerState, const std::string& filePath);
 } // namespace SavePlayerData

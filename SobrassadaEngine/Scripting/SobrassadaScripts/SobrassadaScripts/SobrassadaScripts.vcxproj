@@ -504,6 +504,7 @@
     <ClInclude Include="MovingUVPostScript.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RotateGameObject.h" />
+    <ClInclude Include="SavePlayerData.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="SpawnUI.h" />
@@ -2095,6 +2096,7 @@
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="MovingUVPostScript.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />
+    <ClCompile Include="SavePlayerData.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />

@@ -184,6 +184,9 @@
     <ClInclude Include="imgui_curve_editor.h">
       <Filter>External</Filter>
     </ClInclude>
+    <ClInclude Include="SavePlayerData.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -902,6 +905,9 @@
     </ClCompile>
     <ClCompile Include="imgui_curve_editor.cpp">
       <Filter>External</Filter>
+    </ClCompile>
+    <ClCompile Include="SavePlayerData.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
