@@ -5,6 +5,7 @@
 #include "Character.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
+#include "WallCollision.h"
 #include "CuChulainn.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
@@ -25,11 +26,28 @@ bool Projectile::Init()
         GLOG("[WARNING: Projectile Init()] Couldn't find the collider component");
         return false;
     }
+
+    GLOG("PROJECTILE INIT DEBUG");
     return true;
 }
 
 void Projectile::Update(float deltaTime)
 {
+    if (isStuckInWall)
+    {
+        stuckTimer += deltaTime;
+
+        // Si ha pasado el tiempo suficiente, desaparecer
+        if (stuckTimer >= stuckDuration)
+        {
+            parent->SetEnabled(false);
+            // Resetear estado para la próxima vez que se use
+            isStuckInWall = false;
+            stuckTimer    = 0.0f;
+        }
+        return; // No ejecutar Move() mientras está trabada
+    }
+
     Move(deltaTime);
 }
 
@@ -55,8 +73,32 @@ void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNorm
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
   if (script && script->GetScriptByType<Character>()) return;
+    
 
-      parent->SetEnabled(false);
+ if (otherObject->HasTag(wallTag) && script->GetScriptByType<WallCollision>())
+  {
+      GLOG("WALL WALL WALL WALL");
+      isStuckInWall = true;
+      stuckTimer    = 0.0f;
+
+      // Opcional: Deshabilitar el collider para evitar más colisiones
+      if (collider) collider->SetEnabled(false);
+
+      GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
+      return; // IMPORTANTE: return aquí para no ejecutar la línea siguiente
+  }
+  parent->SetEnabled(false);
+}
+
+void Projectile::OnWallHit()
+{
+    GLOG("Projectile hit wall - activating stuck state");
+
+    isStuckInWall = true;
+    stuckTimer    = 0.0f;
+
+   
+    GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
 }
 
 void Projectile::Hit(GameObject* otherObject)

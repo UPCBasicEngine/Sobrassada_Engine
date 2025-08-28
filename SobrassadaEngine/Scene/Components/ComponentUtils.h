@@ -62,11 +62,12 @@ enum class ColliderLayer : uint8_t
     ENEMY,
     PLAYER,
     PLAYER_PROJECTILE,
-    ENEMY_PROJECTILE
+    ENEMY_PROJECTILE,
+    WALL
 };
 
-constexpr const char* ColliderLayerStrings[] = {"World Objects", "Triggers",          "Enemies",
-                                                "Player",        "Player projectile", "Enemy projectile"};
+constexpr const char* ColliderLayerStrings[] = {"World Objects", "Triggers",          "Enemies", "Player",
+                                                "Player projectile", "Enemy projectile", "Wall"};
 
 typedef Delegate<void, GameObject*, float3, ColliderLayer> CollisionDelegate;
 typedef Delegate<void, GameObject*, ColliderLayer> CollisionExitDelegate;

@@ -40,8 +40,8 @@ bool Archer::Init()
     agentAI = parent->GetComponent<AIAgentComponent*>();
     if (agentAI == nullptr)
     {
-        GLOG("AIAgent component not found for Archer");
-        return false;
+      /*  GLOG("AIAgent component not found for Archer");
+        return false;*/
     }
     else
     {
@@ -50,14 +50,14 @@ bool Archer::Init()
         speed = agentAI->GetSpeed();
     }
 
-    GLOG("=== ARCHER INIT START ===");
+   /* GLOG("=== ARCHER INIT START ===");
     GLOG("Archer: %s", parent->GetName().c_str());
-    GLOG("Static: %s, Multiple Shoots: %s", isStatic ? "YES" : "NO", hasMultipleShoots ? "YES" : "NO");
+    GLOG("Static: %s, Multiple Shoots: %s", isStatic ? "YES" : "NO", hasMultipleShoots ? "YES" : "NO");*/
 
     const GameObject* root           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent());
     const std::vector<UID>& siblings = root->GetChildren();
 
-    GLOG("Parent: %s, Children: %d", root->GetName().c_str(), siblings.size());
+   /* GLOG("Parent: %s, Children: %d", root->GetName().c_str(), siblings.size());*/
 
    
     std::vector<GameObject*> allArrows;
@@ -70,7 +70,7 @@ bool Archer::Init()
             std::string objName = obj->GetName();
             if (objName.find("Arrow_") != std::string::npos)
             {
-                GLOG("Found arrow: %s", objName.c_str());
+             /*   GLOG("Found arrow: %s", objName.c_str());*/
 
                 ScriptComponent* scriptComp = obj->GetComponent<ScriptComponent*>();
                 if (scriptComp)
@@ -81,31 +81,31 @@ bool Archer::Init()
                         allArrows.push_back(obj);
                         arrowPool.push_back(projectile);
 
-                        GLOG("Arrow added to pool: %s (Total: %d)", objName.c_str(), arrowPool.size());
+                       /* GLOG("Arrow added to pool: %s (Total: %d)", objName.c_str(), arrowPool.size());*/
                     }
                 }
             }
         }
     }
 
-    GLOG("Total arrows found: %d", allArrows.size());
+  /*  GLOG("Total arrows found: %d", allArrows.size());*/
 
     
     if (hasMultipleShoots)
     {
-        GLOG("=== MULTIPLE SHOOTS ARCHER ===");
+     /*   GLOG("=== MULTIPLE SHOOTS ARCHER ===");*/
       
 
       
         for (GameObject* arrowObj : allArrows)
         {
             arrowObj->SetEnabledRecursive(false);
-            GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());
+           /* GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());*/
         }
     }
     else
     {
-        GLOG("=== SINGLE SHOOT ARCHER ===");
+       /* GLOG("=== SINGLE SHOOT ARCHER ===");*/
 
      
         if (!allArrows.empty())
@@ -114,29 +114,29 @@ bool Archer::Init()
             GameObject* singleArrowObj = allArrows[0];
             arrow                      = arrowPool[0];
 
-            GLOG("Single arrow assigned: %s", singleArrowObj->GetName().c_str());
+         /*   GLOG("Single arrow assigned: %s", singleArrowObj->GetName().c_str());*/
 
             for (GameObject* arrowObj : allArrows)
             {
                 arrowObj->SetEnabledRecursive(false);
-                GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());
+            /*    GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());*/
             }
         }
         else
         {
-            GLOG("[WARNING] No arrows found for single shoot archer");
+           /* GLOG("[WARNING] No arrows found for single shoot archer");*/
         }
     }
 
   
-    GLOG("=== FINAL ARROW STATES ===");
+   /* GLOG("=== FINAL ARROW STATES ===");*/
     for (int i = 0; i < arrowPool.size(); i++)
     {
         GameObject* arrowObj = arrowPool[i]->GetParent();
-        GLOG("Arrow[%d]: %s, Enabled: %s", i, arrowObj->GetName().c_str(), arrowObj->IsEnabled() ? "YES" : "NO");
+      /*  GLOG("Arrow[%d]: %s, Enabled: %s", i, arrowObj->GetName().c_str(), arrowObj->IsEnabled() ? "YES" : "NO");*/
     }
 
-    GLOG("=== ARCHER INIT COMPLETE ===");
+  /*  GLOG("=== ARCHER INIT COMPLETE ===");*/
     return true;
  }
 
@@ -313,12 +313,12 @@ void Archer::OverShooting(float deltaTime)
                 }
 
                
-                float3 baseDirection = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
-                baseDirection.Normalize();
+                float3 predictedTarget = CalculatePredictiveTarget();
+                float3 baseDirection   = (predictedTarget - parent->GetGlobalTransform().TranslatePart()).Normalized();
 
-                float spreadAngle           = 10.0f * (3.14159f / 180.0f);
-                float randomAngle           = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * spreadAngle;
-
+                // Apply spread to the predicted direction
+                float spreadAngle      = 10.0f * (3.14159f / 180.0f);
+                float randomAngle      = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * spreadAngle;
                 float3 shootDirection       = baseDirection;
                 float cosA                  = std::cos(randomAngle);
                 float sinA                  = std::sin(randomAngle);
@@ -591,7 +591,8 @@ void Archer::Aim(float deltaTime)
 
         if (character)
         {
-            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+            float3 predictedTarget = CalculatePredictiveTarget();
+            agentAI->LookAtMovement(predictedTarget, deltaTime);
         }
 
         if (aimTimer >= aimDuration)
@@ -610,6 +611,37 @@ void Archer::Aim(float deltaTime)
             }
         }
     }
+}
+
+float3 Archer::CalculatePredictiveTarget()
+{
+    if (!character) return float3::zero;
+
+    float3 playerPos      = character->GetLastPosition();
+    float3 playerVelocity = character->GetVelocity(); // Now available!
+
+    // Only predict if player is actually moving
+    if (!character->IsMoving())
+    {
+        return playerPos; // Shoot at current position if stationary
+    }
+
+    // Calculate time for arrow to reach player
+    float arrowSpeed       = 15.0f; // Match your projectile speed
+    float distanceToPlayer = (playerPos - parent->GetGlobalTransform().TranslatePart()).Length();
+    float timeToReach      = distanceToPlayer / arrowSpeed;
+
+    // Predict where player will be
+    float3 predictedPos    = character->GetPredictedPosition(timeToReach);
+
+    // Add some randomness to make it not perfect
+    float accuracy         = 0.85f; // 85% accuracy
+    float3 inaccuracy      = float3(
+        (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f * (1.0f - accuracy), 0.0f,
+        (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f * (1.0f - accuracy)
+    );
+
+    return predictedPos + inaccuracy;
 }
 
 void Archer::Attack(float deltaTime)
@@ -640,38 +672,27 @@ void Archer::Attack(float deltaTime)
     }
     else
     {
-        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        float3 predictedTarget = CalculatePredictiveTarget();
+        agentAI->LookAtMovement(predictedTarget, deltaTime);
 
-        if (!hasShot && attackTimer >= attackHitboxDelay)
+       if (!hasShot && attackTimer >= attackHitboxDelay)
         {
             hasShot = true;
+            if (!arrow) return;
 
-            if (!arrow)
-            {
-                GLOG("[ERROR] No arrow for single attack!");
-                return;
-            }
+            // USE PREDICTIVE TARGETING HERE
+            float3 predictedTarget = CalculatePredictiveTarget();
+            float3 direction       = (predictedTarget - parent->GetGlobalTransform().TranslatePart()).Normalized();
+            float3 arrowPos        = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
 
-            float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
-            direction.Normalize();
-            float3 arrowPos      = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
-
-            
-            GameObject* arrowObj = arrow->GetParent();
+            // Rest of arrow firing code...
+            GameObject* arrowObj   = arrow->GetParent();
             if (arrowObj)
             {
-                GLOG("Single arrow before activation - Enabled: %s", arrowObj->IsEnabled() ? "YES" : "NO");
-
                 arrowObj->SetEnabled(true);
                 arrowObj->SetEnabledRecursive(true);
-
-                bool isEnabled = arrowObj->IsEnabled();
-                GLOG("Single arrow activation result: %s", isEnabled ? "SUCCESS" : "FAILED");
+                arrow->Shoot(arrowPos, direction);
             }
-
-            GLOG("SINGLE ARROW FIRING");
-            arrow->Shoot(arrowPos, direction);
-            GLOG("SINGLE ARROW SHOT COMPLETED");
         }
 
         if (attackTimer >= attackDuration)

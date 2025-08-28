@@ -40,6 +40,7 @@ class Archer : public Character
     void Attack(float deltaTime) override;
     void Escape(float deltaTime);
     void Aim(float deltaTime);
+    float3 CalculatePredictiveTarget();
 
     void ChangeState();
     void PatrolAI();

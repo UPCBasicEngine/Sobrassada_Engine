@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Script.h"
-
+#include "HashString.h"
 #include "Math/float3.h"
 
 class CapsuleColliderComponent;
@@ -17,6 +17,7 @@ class Projectile : public Script
 
     void Shoot(const float3& origin, const float3& direction);
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
+    void OnWallHit();
 
     int GetDamage() const { return damage; }
     GameObject* GetParent() const { return parent; }
@@ -37,4 +38,9 @@ class Projectile : public Script
     float frames                    = 0.0f;
 
     bool hasHitTarget                  = false;
+
+     bool isStuckInWall                 = false;
+    float stuckTimer                   = 0.0f;
+    float stuckDuration                = 0.35f;
+    HashString wallTag;
 };
