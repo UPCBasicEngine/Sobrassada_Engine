@@ -2,10 +2,10 @@
 #include "Mirage.h"
 #include "Application.h"
 #include "GameObject.h"
+#include "MirageBossDash.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone\MeshComponent.h"
-#include "MirageBossDash.h"
 
 
 Mirage::Mirage(GameObject* parent) : Script(parent)
@@ -21,18 +21,21 @@ Mirage::Mirage(GameObject* parent) : Script(parent)
 
 bool Mirage::Init()
 {
-    Scene* scene              = AppEngine->GetSceneModule()->GetScene();
-    state                     = MirageState::Sleeping;
-    stateTimer                = 0.0f;
-    meshComponent             = parent->GetComponent<MeshComponent*>();
-    std::vector<UID> children = parent->GetChildren();
+    Scene* scene = AppEngine->GetSceneModule()->GetScene();
+    GLOG("MIRAGE DETECTED");
+    state                       = MirageState::Sleeping;
+    stateTimer                  = 0.0f;
+    meshComponent               = parent->GetComponent<MeshComponent*>();
+    std::vector<UID> children   = parent->GetChildren();
 
-    GameObject* firstChild    = scene->GetGameObjectByUID(children[0]);
-    endPoint                  = &firstChild->GetLocalTransform();
+    GameObject* firstChild      = scene->GetGameObjectByUID(children[1]);
+    endPoint                    = &firstChild->GetLocalTransform();
 
     ScriptComponent* scriptComp = firstChild->GetComponent<ScriptComponent*>();
 
     bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
+
+    parent->SetEnabled(false);
 
     return true;
 }
@@ -43,6 +46,7 @@ void Mirage::Update(float deltaTime)
     {
     case MirageState::Sleeping:
     {
+        parent->SetEnabled(true);
         state      = MirageState::Warning;
         stateTimer = 0.0f;
         GLOG("Calling gameobject");
@@ -83,7 +87,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
-        // GLOG("DISABLING");
+        GLOG("DISABLING");
         if (stateTimer >= damageDuration)
         {
 

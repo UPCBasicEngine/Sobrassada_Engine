@@ -1084,7 +1084,7 @@ void Boss::Mirage()
 
         mirageActivated = true;
         stateEnter      = false;
-        agentAI->PauseMovement();
+        agentAI->PauseMovement();   
         currentAction = BossActions::Start;
         bossMirageScript->StartSequence(phase);
     }
