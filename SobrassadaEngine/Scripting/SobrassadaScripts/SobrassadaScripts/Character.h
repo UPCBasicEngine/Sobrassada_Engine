@@ -51,10 +51,7 @@ class Character : public Script
     int GetMaxHealth() const { return maxHealth; }
     int GetCurrentHealth() const { return currentHealth; }
 
-
     void SetAssociatedBarrier(MagicBarrier* newAssociatedBarrier) { associatedBarrier = newAssociatedBarrier; }
-    void SetMaxHealth(int healthValue);
-    void SetCurrentHealth(int healthValue);
 
   protected:
     virtual void Attack(float deltaTime);

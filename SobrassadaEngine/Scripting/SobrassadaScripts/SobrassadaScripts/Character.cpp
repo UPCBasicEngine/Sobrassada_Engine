@@ -227,17 +227,6 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
     }
 }
 
-void Character::SetMaxHealth(int healthValue)
-{
-    maxHealth = healthValue;
-    if (currentHealth > maxHealth) currentHealth = maxHealth;
-}
-
-void Character::SetCurrentHealth(int healthValue)
-{
-    currentHealth = max(0, healthValue);
-}
-
 void Character::Attack(float deltaTime)
 {
     isAttacking = true;

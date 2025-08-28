@@ -2,6 +2,7 @@
 
 #include "Character.h"
 #include "Globals.h"
+#include "SavePlayerData.h"
 
 class GameObject;
 class CharacterControllerComponent;
@@ -66,8 +67,10 @@ class CuChulainn : public Character
 
     void ActivateAbility(std::string& abilityName);
     void StartCurse();
-    void ApplySavedState(int currentHealth, int maxHealth, int riastradValue, bool isDashUnlocked, bool isUltimateUnlocked);
-
+    
+    void ExportState(PlayerState& playerState) const;
+    void ApplySavedState(const PlayerState& playerState);
+    
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;

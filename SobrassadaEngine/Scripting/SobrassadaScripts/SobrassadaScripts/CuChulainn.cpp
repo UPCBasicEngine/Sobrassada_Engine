@@ -1605,23 +1605,29 @@ void CuChulainn::StartCurse()
     curseTimer = curseDuration;
 }
 
-void CuChulainn::ApplySavedState(
-    int currentHp, int maxHp, int riastradValue, bool isDashUnlocked, bool isUltimateUnlocked
-)
+void CuChulainn::ExportState(PlayerState& playerState) const
 {
-    SetMaxHealth(maxHp);
-    SetCurrentHealth(min(currentHp, maxHp));
+    playerState.currentHealth = currentHealth;
+    playerState.maxHealth     = maxHealth;
+    playerState.riastrad      = riastradMeter;
+    playerState.dashUnlocked  = dashUnlocked;
+    playerState.ultimateUnlocked = ultimateUnlocked;
+}
 
+void CuChulainn::ApplySavedState(const PlayerState& playerState)
+{
+    maxHealth = max(5, playerState.maxHealth);
+    currentHealth = std::clamp(playerState.currentHealth, 1, maxHealth);
     reservedHealth = currentHealth;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 
     riastradMeter = 0;
-    AddRiastrad(riastradValue);
-
-    if (isDashUnlocked) ActivateAbility("dash");
-    if (isUltimateUnlocked) ActivateAbility("ultimate");
+    AddRiastrad(std::clamp(playerState.riastrad, 0, 100);
+    
+    if (playerState.dashUnlocked) ActivateAbility("dash");
+    if (playerState.ultimateUnlocked) ActivateAbility("ultimate");
 }
 
 void CuChulainn::EndCurse()
