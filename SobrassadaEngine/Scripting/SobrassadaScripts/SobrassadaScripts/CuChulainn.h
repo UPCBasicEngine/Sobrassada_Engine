@@ -69,6 +69,8 @@ class CuChulainn : public Character
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string& abilityName);
+    void OnArrowHit();
+  
     void StartCurse();
 
   private:
@@ -112,6 +114,8 @@ class CuChulainn : public Character
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
 
+    
+
   private:
     CharacterStates state              = CharacterStates::IDLE;
 
@@ -151,6 +155,14 @@ class CuChulainn : public Character
     int comboCounter                   = -1;
     float comboBufferTimer             = 0.0f;
 
+    //Arrow Hit VFX 
+    GameObject* arrowHitVfxObject         = nullptr;
+    std::string arrowHitVfxName           = "";
+    float arrowHitVfxDuration             = 0.2f;
+    float arrowHitVfxTimer                = 0.0f;
+    bool arrowVfxIsActive                 = false;
+
+  
     // Charged attack
     std::string chargedAttackName      = "Charged";
     GameObject* chargedAttackCollider  = nullptr;

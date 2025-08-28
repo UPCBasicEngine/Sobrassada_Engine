@@ -5,6 +5,7 @@
 #include "Character.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
+#include "CuChulainn.h"
 #include "CameraComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
@@ -57,7 +58,7 @@ void Projectile::Update(float deltaTime)
 
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
-    // GLOG("Shoot to dir: %f %f %f", direction.x, direction.y, direction.z);
+   
     startPos        = origin;
     this->direction = direction;
     frames          = 0;
@@ -77,9 +78,19 @@ void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNorm
 
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
-    if (script && script->GetScriptByType<Character>()) return;
+  if (script && script->GetScriptByType<Character>()) return;
 
-    parent->SetEnabled(false);
+      parent->SetEnabled(false);
+}
+
+void Projectile::Hit(GameObject* otherObject)
+{
+    ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
+    if (script && script->GetScriptByType<CuChulainn>())
+    {
+        CuChulainn* player = script->GetScriptByType<CuChulainn>();
+        player->OnArrowHit();
+    }
 }
 
 void Projectile::Move(float deltaTime)

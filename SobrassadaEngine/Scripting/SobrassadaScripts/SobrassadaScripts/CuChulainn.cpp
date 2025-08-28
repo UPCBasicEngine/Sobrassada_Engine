@@ -23,6 +23,7 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "ParticleSystemComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
@@ -123,6 +124,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
+    fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
+    fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
+
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
@@ -189,6 +193,10 @@ bool CuChulainn::Init()
     meleeVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(meleeVfxName);
     if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
     else meleeVfxObject->SetEnabled(false);
+
+     arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
+    if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
+     else arrowHitVfxObject->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
@@ -384,6 +392,28 @@ bool CuChulainn::Init()
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
     else ultimateSpikes->SetEnabled(false);
 
+     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
+    if (playerCollider)
+    {
+        GLOG("=== PLAYER COLLIDER INFO ===");
+        GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
+       
+        GLOG("Player name: %s", parent->GetName().c_str());
+
+        // Verificar tags
+        if (parent->HasTag(HashString("Player")))
+        {
+            GLOG("Player has 'Player' tag: YES");
+        }
+        else
+        {
+            GLOG("Player has 'Player' tag: NO - THIS IS A PROBLEM!");
+        }
+    }
+    else
+    {
+        GLOG("[ERROR] Player has no CapsuleColliderComponent!");
+    }
     state = CharacterStates::IDLE;
 
     return true;
@@ -460,6 +490,9 @@ void CuChulainn::OnDeath()
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
     if (animComponent) animComponent->UseTrigger("Death");
+   
+     
+    
 }
 
 void CuChulainn::OnDamageTaken(int amount)
@@ -471,7 +504,22 @@ void CuChulainn::OnDamageTaken(int amount)
 
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
+   
+    
+     if (arrowVfxIsActive && !arrowHitVfxObject->IsEnabled())
+    {
+        GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
 
+        arrowHitVfxObject->SetEnabled(true);
+
+        ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
+        if (particleSystem)
+        {
+            particleSystem->SpawnAllInstances();
+            GLOG("Arrow VFX particles spawned");
+        }
+    }
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
     if (damageMask)
     {
         damageMask->SetLife(static_cast<float>(currentHealth));
@@ -485,8 +533,11 @@ void CuChulainn::OnDamageTaken(int amount)
         if (animComponent)
         {
             animComponent->UseTrigger("Hurt");
-            character->EnableMovement(false);
+            //character->EnableMovement(false);
+           
         }
+      
+        
     }
 
     // TODO: Test if hitstop when hit feels nice
@@ -833,6 +884,18 @@ void CuChulainn::UpdateTimers(float deltaTime)
     {
         dashBufferTimer -= deltaTime;
         if (dashBufferTimer < 0.0f) desiredDash = false;
+    }
+
+    if (arrowVfxIsActive && arrowHitVfxObject->IsEnabled())
+    {
+        arrowHitVfxTimer += deltaTime;
+        if (arrowHitVfxTimer >= arrowHitVfxDuration)
+        {
+            arrowHitVfxObject->SetEnabled(false);
+            arrowHitVfxTimer = 0.0f;
+            arrowVfxIsActive = false;
+           
+        }
     }
 
     // Dash decal
@@ -1349,6 +1412,8 @@ void CuChulainn::TakeDamage(int amount)
 {
     if (godMode || isRiastrad || state == CharacterStates::ULTIMATE) return;
     Character::TakeDamage(amount);
+  
+   
 }
 
 bool CuChulainn::TakeMushroom()
@@ -1588,6 +1653,13 @@ void CuChulainn::ActivateAbility(std::string& abilityName)
     if (abilityName == "dash") dashUnlocked = true;
     else if (abilityName == "ultimate") ultimateUnlocked = true;
 }
+
+void CuChulainn::OnArrowHit()
+{
+    arrowVfxIsActive = true;
+   
+}
+
 void CuChulainn::StartCurse()
 {
     // TODO: Remove when VFX
@@ -1673,3 +1745,5 @@ const std::string CuChulainn::GetLogicStateName()
         break;
     }
 }
+
+
