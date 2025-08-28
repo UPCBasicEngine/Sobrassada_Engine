@@ -159,8 +159,6 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 }
             }
 
-            TakeDamage(enemyScript->attackDamage);
-
             Boss* bossScript = otherScript->GetScriptByType<Boss>();
             if (bossScript && bossScript->GetCloseArea() == otherObject) TakeDamage(bossScript->GetCloseAreaDamage());
             else TakeDamage(enemyScript->attackDamage);

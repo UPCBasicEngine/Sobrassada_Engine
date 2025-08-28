@@ -152,7 +152,7 @@ class Boss : public Character
     GameObject* closeArea                            = nullptr;
     std::string bigAreaName                          = "";
     GameObject* bigArea                              = nullptr;
-    float bigAreaHitboxDelay                         = 1.5f;
+    float bigAreaHitboxDelay                         = 1.3f;
 
     // VFX
     std::string overheadPrepareVFXName               = "";
@@ -184,9 +184,9 @@ class Boss : public Character
 
     // Particle
     std::string atomParticleName                     = "";
-    GameObject* atomParticle                         = nullptr;
+    ParticleSystemComponent* atomParticle            = nullptr;
     std::string smokeParticleName                    = "";
-    GameObject* smokeParticle                        = nullptr;
+    ParticleSystemComponent* smokeParticle           = nullptr;
     std::string chargeShieldParticleName             = "";
     ParticleSystemComponent* chargeShieldParticle    = nullptr;
 

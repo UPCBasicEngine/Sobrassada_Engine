@@ -281,23 +281,33 @@ bool Boss::Init()
     }
     else GLOG("Overhead attack VFX not found for ferdiad");
 
-    atomParticle = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
-    if (atomParticle) atomParticle->SetEnabled(false);
-    else GLOG("Atom particle not found for ferdiad");
+    GameObject* atomObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
+    if (atomObject)
+    {
+        atomParticle = atomObject->GetComponent<ParticleSystemComponent*>();
+        if (atomParticle) atomParticle->StopInstances();
+        else GLOG("Particle component atom not found for ferdiad");
+    }
+    else GLOG("Atom particle object not found for ferdiad");
 
-    smokeParticle = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(smokeParticleName);
-    if (smokeParticle) smokeParticle->SetEnabled(false);
-    else GLOG("Smoke particle not found for ferdiad");
+    GameObject* smokeObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(smokeParticleName);
+    if (smokeObject)
+    {
+        smokeParticle = smokeObject->GetComponent<ParticleSystemComponent*>();
+        if (smokeParticle) smokeParticle->StopInstances();
+        else GLOG("Particle component smoke not found for ferdiad");
+    }
+    else GLOG("Smoke particle object not found for ferdiad");
 
     GameObject* chargeShieldObject =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargeShieldParticleName);
     if (chargeShieldObject)
     {
         chargeShieldParticle = chargeShieldObject->GetComponent<ParticleSystemComponent*>();
-        if (chargeShieldParticle) chargeShieldParticle->SetEnabled(false);
+        if (chargeShieldParticle) chargeShieldParticle->StopInstances();
         else GLOG("Particle component charge shield not found for ferdiad");
     }
-    else GLOG("Charge shield particle not found for ferdiad");
+    else GLOG("Charge shield particle object not found for ferdiad");
 
     GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("arena");
     if (arenaGO)
@@ -319,6 +329,7 @@ bool Boss::Init()
 void Boss::Update(float deltaTime)
 {
     if (agentAI == nullptr || isDead) return;
+
     Character::Update(deltaTime);
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
@@ -764,11 +775,11 @@ void Boss::OverheadStrike(float deltaTime)
             currentAction     = BossActions::Jump;
             actionTriggerDone = false;
 
-            runesScript->SetEnabled(false);
-            runesLightsScript->SetEnabled(false);
             runesUV->SetPaused(false);
             runesUV->Reset();
             runesLightsUV->Reset();
+            runesScript->SetEnabled(false);
+            runesLightsScript->SetEnabled(false);
         }
         break;
 
@@ -845,6 +856,8 @@ void Boss::OverheadStrike(float deltaTime)
         {
             currentAction     = BossActions::Attack;
             actionTriggerDone = false;
+
+            attackLightingsScript->SetEnabled(true);
         }
         break;
 
@@ -859,10 +872,13 @@ void Boss::OverheadStrike(float deltaTime)
             agentAI->PauseMovement();
 
             attackHitboxDelay    = 0.7f;
-            attackHitboxDuration = 2.0f;
+            attackHitboxDuration = 1.5f;
             Character::Attack(deltaTime);
 
             attackEnergyScript->SetEnabled(true);
+
+            atomParticle->Init();
+            smokeParticle->Init();
         }
 
         DamageAreaLogic();
@@ -1009,49 +1025,77 @@ void Boss::Fall(float deltaTime)
 
 void Boss::DamageAreaLogic()
 {
-    if (attackTimer <= 0.25f)
+    // --- PRE HITTING GROUND ---
+    if (attackTimer < attackHitboxDelay && attackEnergyScript->GetEnabled())
     {
-        attackEnergyUV->SetPaused(true);
-        attackLightingsScript->SetEnabled(true);
+        if (attackTimer >= 0.3f)
+        {
+            attackEnergyUV->SetPaused(true);
+        }
 
-        // atomParticle->SetEnabled(true);
-        // smokeParticle->SetEnabled(true);
+        if (attackTimer >= 0.4f)
+        {
+            atomParticle->StopInstances();
+            smokeParticle->StopInstances();
+
+            attackEnergyScript->SetEnabled(false);
+            attackLightingsScript->SetEnabled(false);
+        }
+
+        if (attackTimer >= 0.6f)
+        {
+            chargeShieldParticle->Init();
+        }
     }
-    else if (attackTimer >= 0.4f)
+
+    // --- IMPACT / HITBOX ACTIVE ---
+    bool insideHitboxWindow =
+        (attackTimer >= attackHitboxDelay && attackTimer <= attackHitboxDelay + attackHitboxDuration);
+
+    if (insideHitboxWindow)
     {
-        attackEnergyScript->SetEnabled(false);
-        attackLightingsScript->SetEnabled(false);
-        atomParticle->SetEnabled(false);
-        smokeParticle->SetEnabled(false);
+        if (!closeArea->IsEnabled())
+        {
+            closeArea->SetEnabled(true);
+
+            attackExplosionScript->SetEnabled(true);
+            smallExpansionScript->SetEnabled(true);
+        }
+
+        if (attackTimer >= attackHitboxDelay + 0.2f) attackExplosionScript->SetEnabled(false);
+
+        if (!bigExpansionScript->GetEnabled() && attackTimer >= bigAreaHitboxDelay - 0.1f)
+        {
+            bigExpansionScript->SetEnabled(true);
+        }
+
+        if (!bigArea->IsEnabled() && attackTimer >= bigAreaHitboxDelay)
+        {
+            bigArea->SetEnabled(true);
+
+            smallExpansionScript->SetEnabled(false);
+        }
     }
 
-    // Enable hitbox when animation hits
-    if (!closeArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
-        attackTimer <= attackHitboxDelay + attackHitboxDuration)
-    {
-        closeArea->SetEnabled(true);
-
-        chargeShieldParticle->SetEnabled(true);
-        chargeShieldParticle->Init();
-    }
-    else if (closeArea->IsEnabled() && bigArea->IsEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
+    // --- END OF ATTACK ---
+    if (closeArea->IsEnabled() && bigArea->IsEnabled() && attackTimer > attackHitboxDelay + attackHitboxDuration)
     {
         closeArea->SetEnabled(false);
         bigArea->SetEnabled(false);
+        bigExpansionScript->SetEnabled(false);
+
         agentAI->ResumeMovement();
         StopAttacking();
 
-        attackEnergyUV->Reset();
         attackEnergyUV->SetPaused(false);
+        attackEnergyUV->Reset();
         attackLightingsUV->Reset();
 
-        ChooseNextState();
-    }
+        attackExplosionUV->Reset();
+        smallExpansionUV->Reset();
+        bigExpansionUV->Reset();
 
-    if (!bigArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
-        attackTimer <= attackHitboxDelay + attackHitboxDuration && attackTimer >= bigAreaHitboxDelay)
-    {
-        bigArea->SetEnabled(true);
+        ChooseNextState();
     }
 }
 
@@ -1084,7 +1128,7 @@ void Boss::Mirage()
 
         mirageActivated = true;
         stateEnter      = false;
-        agentAI->PauseMovement();   
+        agentAI->PauseMovement();
         currentAction = BossActions::Start;
         bossMirageScript->StartSequence(phase);
     }
