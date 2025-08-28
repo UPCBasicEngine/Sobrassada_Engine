@@ -9,11 +9,15 @@
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "Globals.h"
+#include "MovingUVTransparent.h"
+#include "ParticleSystemComponent.h"
 #include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
@@ -31,8 +35,9 @@ Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Big Area", InspectorField::FieldType::InputText, &bigAreaName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
-    fields.push_back({"Dash", InspectorField::FieldType::InputText, &dashVFXName});
-    fields.push_back({"Area Overhead", InspectorField::FieldType::InputText, &areaOverheadVFXName});
+    fields.push_back({"Overhead Prepare", InspectorField::FieldType::InputText, &overheadPrepareVFXName});
+    fields.push_back({"Overhead Dash", InspectorField::FieldType::InputText, &overheadDashVFXName});
+    fields.push_back({"Overhead Attack", InspectorField::FieldType::InputText, &overheadAttackVFXName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Particle"});
     fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
@@ -72,13 +77,209 @@ bool Boss::Init()
     if (bigArea) bigArea->SetEnabled(false);
     else GLOG("Not big area object found for ferdiad");
 
-    dashVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashVFXName);
-    if (dashVFX) dashVFX->SetEnabled(false);
-    else GLOG("Dash VFX not found for ferdiad");
+    GameObject* overheadPrepareVFX =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadPrepareVFXName);
+    if (overheadPrepareVFX)
+    {
+        GameObject* runesLightsObject = overheadPrepareVFX->GetChildGameObjectByName("Cyl_Charger_Lights");
+        if (runesLightsObject)
+        {
+            MeshComponent* runesLightsMesh = runesLightsObject->GetComponent<MeshComponent*>();
+            if (runesLightsMesh) runesLightsMesh->SetEnabled(false);
+            else GLOG("Runes lights mesh not found for ferdiad");
 
-    areaOverheadVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(areaOverheadVFXName);
-    if (areaOverheadVFX) areaOverheadVFX->SetEnabled(false);
-    else GLOG("Area overhead VFX not found for ferdiad");
+            runesLightsScript = runesLightsObject->GetComponent<ShaderScriptComponent*>();
+            if (runesLightsScript)
+            {
+                runesLightsScript->SetEnabled(false);
+
+                runesLightsUV = runesLightsScript->GetScriptByType<MovingUVTransparent>();
+                if (!runesLightsUV) GLOG("Runes lights script incorrect for ferdiad");
+            }
+            else GLOG("Runes lights script not found for ferdiad");
+        }
+
+        GameObject* runesObject = overheadPrepareVFX->GetChildGameObjectByName("Cyl_Charger");
+        if (runesObject)
+        {
+            MeshComponent* runesMesh = runesObject->GetComponent<MeshComponent*>();
+            if (runesMesh) runesMesh->SetEnabled(false);
+            else GLOG("Runes mesh not found for ferdiad");
+
+            runesScript = runesObject->GetComponent<ShaderScriptComponent*>();
+            if (runesScript)
+            {
+                runesScript->SetEnabled(false);
+
+                runesUV = runesScript->GetScriptByType<MovingUVTransparent>();
+                if (!runesUV) GLOG("Runes script incorrect for ferdiad");
+            }
+            else GLOG("Runes shader script not found for ferdiad");
+        }
+        else GLOG("Runes VFX not found for ferdiad");
+    }
+    else GLOG("Overhead prepare VFX not found for ferdiad");
+
+    GameObject* overheadDashVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadDashVFXName);
+    if (overheadDashVFX)
+    {
+        GameObject* dashGroundObject = overheadDashVFX->GetChildGameObjectByName("Dash_Energy_Ground");
+        if (dashGroundObject)
+        {
+            dashGroundMesh = dashGroundObject->GetComponent<MeshComponent*>();
+            if (dashGroundMesh) dashGroundMesh->SetEnabled(false);
+            else GLOG("Dash ground mesh not found for ferdiad");
+        }
+        else GLOG("Dash ground VFX not found for ferdiad");
+
+        GameObject* dashEnergyObject = overheadDashVFX->GetChildGameObjectByName("Dash_Energy");
+        if (dashEnergyObject)
+        {
+            dashEnergyMesh = dashEnergyObject->GetComponent<MeshComponent*>();
+            if (dashEnergyMesh) dashEnergyMesh->SetEnabled(false);
+            else GLOG("Dash energy mesh not found for ferdiad");
+        }
+        else GLOG("Dash energy VFX not found for ferdiad");
+
+        GameObject* dashLightsShieldObject = overheadDashVFX->GetChildGameObjectByName("Lights_Shield");
+        if (dashLightsShieldObject)
+        {
+            MeshComponent* dashLightsShieldMesh = dashLightsShieldObject->GetComponent<MeshComponent*>();
+            if (dashLightsShieldMesh) dashLightsShieldMesh->SetEnabled(false);
+            else GLOG("Dash lights shield mesh not found for ferdiad");
+
+            dashLightsShieldScript = dashLightsShieldObject->GetComponent<ShaderScriptComponent*>();
+            if (dashLightsShieldScript)
+            {
+                dashLightsShieldScript->SetEnabled(false);
+
+                dashLightsShieldUV = dashLightsShieldScript->GetScriptByType<MovingUVTransparent>();
+                if (!dashLightsShieldUV) GLOG("Dash lights shield script incorrect for ferdiad");
+            }
+            else GLOG("Dash lights shield script not found for ferdiad");
+        }
+        else GLOG("Dash lights shield VFX not found for ferdiad");
+
+        GameObject* dashShieldExpansion = overheadDashVFX->GetChildGameObjectByName("Shield_Expansion");
+        if (dashShieldExpansion)
+        {
+            MeshComponent* dashShieldExpansionMesh = dashShieldExpansion->GetComponent<MeshComponent*>();
+            if (dashShieldExpansionMesh) dashShieldExpansionMesh->SetEnabled(false);
+            else GLOG("Dash shield expansion mesh not found for ferdiad");
+
+            dashShieldExpansionScript = dashShieldExpansion->GetComponent<ShaderScriptComponent*>();
+            if (dashShieldExpansionScript)
+            {
+                dashShieldExpansionScript->SetEnabled(false);
+
+                dashShieldExpansionUV = dashShieldExpansionScript->GetScriptByType<MovingUVTransparent>();
+                if (!dashShieldExpansionUV) GLOG("Dash shield expansion script incorrect for ferdiad");
+            }
+            else GLOG("Dash shield expansion script not found for ferdiad");
+        }
+        else GLOG("Dash lights shield VFX not found for ferdiad");
+    }
+    else GLOG("Overhead dash VFX not found for ferdiad");
+
+    GameObject* overheadAttackVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadAttackVFXName);
+    if (overheadAttackVFX)
+    {
+        GameObject* attackExplosionObject = overheadAttackVFX->GetChildGameObjectByName("Cyl_Explosion");
+        if (attackExplosionObject)
+        {
+            MeshComponent* attackExplosionMesh = attackExplosionObject->GetComponent<MeshComponent*>();
+            if (attackExplosionMesh) attackExplosionMesh->SetEnabled(false);
+            else GLOG("Attack explosion mesh not found for ferdiad");
+
+            attackExplosionScript = attackExplosionObject->GetComponent<ShaderScriptComponent*>();
+            if (attackExplosionScript)
+            {
+                attackExplosionScript->SetEnabled(false);
+
+                attackExplosionUV = attackExplosionScript->GetScriptByType<MovingUVTransparent>();
+                if (!attackExplosionUV) GLOG("Attack explosion script incorrect for ferdiad");
+            }
+            else GLOG("Attack explosion script not found for ferdiad");
+        }
+        else GLOG("Attack explosion VFX not found for ferdiad");
+
+        GameObject* attackLightingsObject = overheadAttackVFX->GetChildGameObjectByName("Lightings");
+        if (attackLightingsObject)
+        {
+            MeshComponent* attackLightingsMesh = attackLightingsObject->GetComponent<MeshComponent*>();
+            if (attackLightingsMesh) attackLightingsMesh->SetEnabled(false);
+            else GLOG("Attack lightings mesh not found for ferdiad");
+
+            attackLightingsScript = attackLightingsObject->GetComponent<ShaderScriptComponent*>();
+            if (attackLightingsScript)
+            {
+                attackLightingsScript->SetEnabled(false);
+
+                attackLightingsUV = attackLightingsScript->GetScriptByType<MovingUVTransparent>();
+                if (!attackLightingsUV) GLOG("Attack lightings script incorrect for ferdiad");
+            }
+            else GLOG("Attack lightings script not found for ferdiad");
+        }
+        else GLOG("Attack lightings VFX not found for ferdiad");
+
+        GameObject* attackEnergyObject = overheadAttackVFX->GetChildGameObjectByName("Cyl_Energy");
+        if (attackEnergyObject)
+        {
+            MeshComponent* attackEnergyMesh = attackEnergyObject->GetComponent<MeshComponent*>();
+            if (attackEnergyMesh) attackEnergyMesh->SetEnabled(false);
+            else GLOG("Attack energy mesh not found for ferdiad");
+
+            attackEnergyScript = attackEnergyObject->GetComponent<ShaderScriptComponent*>();
+            if (attackEnergyScript)
+            {
+                attackEnergyScript->SetEnabled(false);
+
+                attackEnergyUV = attackEnergyScript->GetScriptByType<MovingUVTransparent>();
+                if (!attackEnergyUV) GLOG("Attack energy script incorrect for ferdiad");
+            }
+            else GLOG("Attack energy script not found for ferdiad");
+        }
+        else GLOG("Attack energy VFX not found for ferdiad");
+
+        GameObject* bigExpansionObject = overheadAttackVFX->GetChildGameObjectByName("Expansion_B");
+        if (bigExpansionObject)
+        {
+            MeshComponent* bigExpansionMesh = bigExpansionObject->GetComponent<MeshComponent*>();
+            if (bigExpansionMesh) bigExpansionMesh->SetEnabled(false);
+            else GLOG("Big expansion mesh not found for ferdiad");
+
+            bigExpansionScript = bigExpansionObject->GetComponent<ShaderScriptComponent*>();
+            if (bigExpansionScript)
+            {
+                bigExpansionScript->SetEnabled(false);
+
+                bigExpansionUV = bigExpansionScript->GetScriptByType<MovingUVTransparent>();
+                if (!bigExpansionUV) GLOG("Big expansion script incorrect for ferdiad");
+            }
+            else GLOG("Big expansion script not found for ferdiad");
+        }
+        else GLOG("Big expansion VFX not found for ferdiad");
+
+        GameObject* smallExpansionObject = overheadAttackVFX->GetChildGameObjectByName("Expansion_S");
+        if (smallExpansionObject)
+        {
+            MeshComponent* smallExpansionMesh = smallExpansionObject->GetComponent<MeshComponent*>();
+            if (smallExpansionMesh) smallExpansionMesh->SetEnabled(false);
+            else GLOG("Small expansion mesh not found for ferdiad");
+
+            smallExpansionScript = smallExpansionObject->GetComponent<ShaderScriptComponent*>();
+            if (smallExpansionScript)
+            {
+                smallExpansionScript->SetEnabled(false);
+
+                smallExpansionUV = smallExpansionScript->GetScriptByType<MovingUVTransparent>();
+                if (!smallExpansionUV) GLOG("Small expansion script incorrect for ferdiad");
+            }
+            else GLOG("Small expansion script not found for ferdiad");
+        }
+        else GLOG("Small expansion VFX not found for ferdiad");
+    }
+    else GLOG("Overhead attack VFX not found for ferdiad");
 
     atomParticle = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
     if (atomParticle) atomParticle->SetEnabled(false);
@@ -88,9 +289,15 @@ bool Boss::Init()
     if (smokeParticle) smokeParticle->SetEnabled(false);
     else GLOG("Smoke particle not found for ferdiad");
 
-    chargeShieldParticle = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargeShieldParticleName);
-    if (chargeShieldParticle) chargeShieldParticle->SetEnabled(false);
-    else GLOG("Smoke particle not found for ferdiad");
+    GameObject* chargeShieldObject =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargeShieldParticleName);
+    if (chargeShieldObject)
+    {
+        chargeShieldParticle = chargeShieldObject->GetComponent<ParticleSystemComponent*>();
+        if (chargeShieldParticle) chargeShieldParticle->SetEnabled(false);
+        else GLOG("Particle component charge shield not found for ferdiad");
+    }
+    else GLOG("Charge shield particle not found for ferdiad");
 
     GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("arena");
     if (arenaGO)
@@ -528,7 +735,7 @@ void Boss::ShieldStrikes(float deltaTime)
 
 void Boss::OverheadStrike(float deltaTime)
 {
-    if (!closeArea || !bigArea) return; // TODO: vfx
+    if (!runesScript || !runesLightsScript || !runesUV) return; // TODO: vfx
 
     if (stateEnter)
     {
@@ -542,9 +749,13 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::Prepare:
         if (!actionTriggerDone)
         {
-            if (animComponent) animComponent->UseTrigger("Prepare");
             actionTriggerDone = true;
+            if (animComponent) animComponent->UseTrigger("Prepare");
+
+            runesScript->SetEnabled(true);
+            runesLightsScript->SetEnabled(true);
         }
+        else runesUV->SetPaused(true);
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
@@ -552,6 +763,12 @@ void Boss::OverheadStrike(float deltaTime)
         {
             currentAction     = BossActions::Jump;
             actionTriggerDone = false;
+
+            runesScript->SetEnabled(false);
+            runesLightsScript->SetEnabled(false);
+            runesUV->SetPaused(false);
+            runesUV->Reset();
+            runesLightsUV->Reset();
         }
         break;
 
@@ -559,9 +776,10 @@ void Boss::OverheadStrike(float deltaTime)
     {
         if (!actionTriggerDone)
         {
-            agentAI->SetFreeMove(true);
-            if (animComponent) animComponent->UseTrigger("Jump");
             actionTriggerDone = true;
+            if (animComponent) animComponent->UseTrigger("Jump");
+
+            agentAI->SetFreeMove(true);
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
@@ -580,10 +798,15 @@ void Boss::OverheadStrike(float deltaTime)
         {
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Dash");
-            dashVFX->SetEnabled(true);
+
             StartDash();
             Attack(deltaTime);
             weaponCollider->SetEnabled(true);
+
+            dashGroundMesh->SetEnabled(true);
+            dashEnergyMesh->SetEnabled(true);
+            dashLightsShieldScript->SetEnabled(true);
+            dashShieldExpansionScript->SetEnabled(true);
         }
 
         bool finished = false;
@@ -595,11 +818,18 @@ void Boss::OverheadStrike(float deltaTime)
 
         if (finished)
         {
-            weaponCollider->SetEnabled(false);
-            StopAttacking();
-            dashVFX->SetEnabled(false);
             currentAction     = BossActions::Land;
             actionTriggerDone = false;
+
+            weaponCollider->SetEnabled(false);
+            StopAttacking();
+
+            dashGroundMesh->SetEnabled(false);
+            dashEnergyMesh->SetEnabled(false);
+            dashLightsShieldScript->SetEnabled(false);
+            dashShieldExpansionScript->SetEnabled(false);
+            dashLightsShieldUV->Reset();
+            dashShieldExpansionUV->Reset();
         }
         break;
     }
@@ -628,15 +858,11 @@ void Boss::OverheadStrike(float deltaTime)
             agentAI->SetFreeMove(false);
             agentAI->PauseMovement();
 
-            //AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
-            //areaOverheadVFX->GetChildren().at(0);
-
-            atomParticle->SetEnabled(true);
-            smokeParticle->SetEnabled(true);
-
             attackHitboxDelay    = 0.7f;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
+
+            attackEnergyScript->SetEnabled(true);
         }
 
         DamageAreaLogic();
@@ -645,6 +871,8 @@ void Boss::OverheadStrike(float deltaTime)
         {
             actionTriggerDone = false;
             currentAction     = BossActions::Recover;
+
+            chargeShieldParticle->StopInstances();
         }
         break;
 
@@ -654,8 +882,6 @@ void Boss::OverheadStrike(float deltaTime)
             actionTriggerDone = true;
 
             if (animComponent) animComponent->UseTrigger("Recover");
-
-            chargeShieldParticle->SetEnabled(false);
         }
 
         DamageAreaLogic();
@@ -783,15 +1009,30 @@ void Boss::Fall(float deltaTime)
 
 void Boss::DamageAreaLogic()
 {
+    if (attackTimer <= 0.25f)
+    {
+        attackEnergyUV->SetPaused(true);
+        attackLightingsScript->SetEnabled(true);
+
+        // atomParticle->SetEnabled(true);
+        // smokeParticle->SetEnabled(true);
+    }
+    else if (attackTimer >= 0.4f)
+    {
+        attackEnergyScript->SetEnabled(false);
+        attackLightingsScript->SetEnabled(false);
+        atomParticle->SetEnabled(false);
+        smokeParticle->SetEnabled(false);
+    }
+
     // Enable hitbox when animation hits
     if (!closeArea->IsEnabled() && attackTimer >= attackHitboxDelay &&
         attackTimer <= attackHitboxDelay + attackHitboxDuration)
     {
         closeArea->SetEnabled(true);
 
-        atomParticle->SetEnabled(false);
-        smokeParticle->SetEnabled(false);
         chargeShieldParticle->SetEnabled(true);
+        chargeShieldParticle->Init();
     }
     else if (closeArea->IsEnabled() && bigArea->IsEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
     {
@@ -799,6 +1040,10 @@ void Boss::DamageAreaLogic()
         bigArea->SetEnabled(false);
         agentAI->ResumeMovement();
         StopAttacking();
+
+        attackEnergyUV->Reset();
+        attackEnergyUV->SetPaused(false);
+        attackLightingsUV->Reset();
 
         ChooseNextState();
     }

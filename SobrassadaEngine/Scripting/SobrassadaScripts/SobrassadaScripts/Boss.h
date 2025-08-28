@@ -9,6 +9,10 @@ class GameObject;
 class AIAgentComponent;
 class BossMirage;
 class ImageComponent;
+class ShaderScriptComponent;
+class MovingUVTransparent;
+class MeshComponent;
+class ParticleSystemComponent;
 
 enum class BossDistance
 {
@@ -143,37 +147,58 @@ class Boss : public Character
     std::uniform_int_distribution<int> uniformDist;
 
     // Colliders
-    std::string shieldName               = "";
-    std::string closeAreaName            = "";
-    GameObject* closeArea                = nullptr;
-    std::string bigAreaName              = "";
-    GameObject* bigArea                  = nullptr;
-    float bigAreaHitboxDelay             = 1.5f;
+    std::string shieldName                           = "";
+    std::string closeAreaName                        = "";
+    GameObject* closeArea                            = nullptr;
+    std::string bigAreaName                          = "";
+    GameObject* bigArea                              = nullptr;
+    float bigAreaHitboxDelay                         = 1.5f;
 
     // VFX
-    std::string dashVFXName              = "";
-    GameObject* dashVFX                  = nullptr;
+    std::string overheadPrepareVFXName               = "";
+    ShaderScriptComponent* runesScript               = nullptr;
+    MovingUVTransparent* runesUV                     = nullptr;
+    ShaderScriptComponent* runesLightsScript         = nullptr;
+    MovingUVTransparent* runesLightsUV               = nullptr;
 
-    std::string areaOverheadVFXName      = "";
-    GameObject* areaOverheadVFX          = nullptr;
+    std::string overheadDashVFXName                  = "";
+    MeshComponent* dashGroundMesh                    = nullptr;
+    MeshComponent* dashEnergyMesh                    = nullptr;
+    ShaderScriptComponent* dashLightsShieldScript    = nullptr;
+    MovingUVTransparent* dashLightsShieldUV          = nullptr;
+    ShaderScriptComponent* dashShieldExpansionScript = nullptr;
+    MovingUVTransparent* dashShieldExpansionUV       = nullptr;
+
+    std::string overheadAttackVFXName                = "";
+    ShaderScriptComponent* attackLightingsScript     = nullptr;
+    MovingUVTransparent* attackLightingsUV           = nullptr;
+    ShaderScriptComponent* attackEnergyScript        = nullptr;
+    MovingUVTransparent* attackEnergyUV              = nullptr;
+
+    ShaderScriptComponent* attackExplosionScript     = nullptr;
+    MovingUVTransparent* attackExplosionUV           = nullptr;
+    ShaderScriptComponent* bigExpansionScript        = nullptr;
+    MovingUVTransparent* bigExpansionUV              = nullptr;
+    ShaderScriptComponent* smallExpansionScript      = nullptr;
+    MovingUVTransparent* smallExpansionUV            = nullptr;
 
     // Particle
-    std::string atomParticleName         = "";
-    GameObject* atomParticle             = nullptr;
-    std::string smokeParticleName        = "";
-    GameObject* smokeParticle            = nullptr;
-    std::string chargeShieldParticleName = "";
-    GameObject* chargeShieldParticle     = nullptr;
+    std::string atomParticleName                     = "";
+    GameObject* atomParticle                         = nullptr;
+    std::string smokeParticleName                    = "";
+    GameObject* smokeParticle                        = nullptr;
+    std::string chargeShieldParticleName             = "";
+    ParticleSystemComponent* chargeShieldParticle    = nullptr;
 
     // Inspector values
-    int closeAreaDamage                  = 2;
-    float dashDuration                   = 0.5f;
-    float heightJump                     = 4.0f;
-    float jumpDuration                   = 0.2f;
-    float fallDuration                   = 0.2f;
+    int closeAreaDamage                              = 2;
+    float dashDuration                               = 0.5f;
+    float heightJump                                 = 4.0f;
+    float jumpDuration                               = 0.2f;
+    float fallDuration                               = 0.2f;
 
     // Health UI
-    ImageComponent* healthImageComponent = nullptr;
+    ImageComponent* healthImageComponent             = nullptr;
     UID healthBarImage;
 
     // Mirage

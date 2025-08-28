@@ -27,7 +27,7 @@ class ParticleSystemComponent : public Component
     void RenderEditorInspector() override;
 
     void ReloadEmitterInstances(const std::vector<std::pair<HashString, ParticleEmitter*>>& emitters);
-    void StopInstances();
+    SOBRASADA_API_ENGINE void StopInstances();
 
     const HashString& GetParticleSystemTag() const { return particleSystemTag; };
 
@@ -41,6 +41,7 @@ class ParticleSystemComponent : public Component
 
   private:
     void CreateLocalAABB();
+
   private:
     char newParticleTagName[64]     = "";
     char newEmitterTagName[64]      = "";
