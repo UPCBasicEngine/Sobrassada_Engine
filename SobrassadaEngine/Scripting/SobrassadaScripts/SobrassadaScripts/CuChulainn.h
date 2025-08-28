@@ -65,7 +65,7 @@ class CuChulainn : public Character
     void OnEnemyHit();
     void OnEnemyDefeated();
 
-    void ActivateAbility(std::string& abilityName);
+    void ActivateAbility(std::string abilityName);
     void StartCurse();
     
     void ExportState(PlayerState& playerState) const;

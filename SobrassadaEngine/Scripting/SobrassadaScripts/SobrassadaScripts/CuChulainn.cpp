@@ -1580,7 +1580,7 @@ void CuChulainn::OnEnemyDefeated()
     AddRiastrad(riastradOnEnemyDeath);
 }
 
-void CuChulainn::ActivateAbility(std::string& abilityName)
+void CuChulainn::ActivateAbility(std::string abilityName)
 {
     std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
 
@@ -1624,10 +1624,10 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 
     riastradMeter = 0;
-    AddRiastrad(std::clamp(playerState.riastrad, 0, 100);
+    AddRiastrad(std::clamp(playerState.riastrad, 0, 100));
     
-    if (playerState.dashUnlocked) ActivateAbility("dash");
-    if (playerState.ultimateUnlocked) ActivateAbility("ultimate");
+    if (playerState.dashUnlocked) ActivateAbility(static_cast<std::string>("dash"));
+    if (playerState.ultimateUnlocked) ActivateAbility(static_cast<std::string>("ultimate"));
 }
 
 void CuChulainn::EndCurse()

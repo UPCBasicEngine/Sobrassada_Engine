@@ -17,7 +17,7 @@ namespace SavePlayerData
     void Load(const rapidjson::Value& source, PlayerState& playerState);
 
     bool EnsureParentDir(const std::string& filePath);
-    std::string MakeSavePath(const std::string& projectPath) const{ return projectPath + "/Saves/player_state.json"; }
+    std::string MakeSavePath(const std::string& projectPath);
     bool SavePlayerToFile(const PlayerState& playerState, const std::string& filePath);
     bool LoadPlayerFromFile(PlayerState& playerState, const std::string& filePath);
 } // namespace SavePlayerData
