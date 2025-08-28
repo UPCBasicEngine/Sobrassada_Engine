@@ -606,6 +606,9 @@
     <ClCompile Include="Scene\RenderPass.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Components\Standalone\VideoComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
     <ClCompile Include="Scene\Components\Standalone\Animation\AnimationTrigger.cpp">
       <Filter>Scene\Components\Animation</Filter>
     </ClCompile>
@@ -1218,6 +1221,9 @@
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="resourceIcon.h" />
+    <ClInclude Include="Scene\Components\Standalone\VideoComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
     <ClInclude Include="Utils\SSAO.h">
       <Filter>Utils</Filter>
     </ClInclude>
