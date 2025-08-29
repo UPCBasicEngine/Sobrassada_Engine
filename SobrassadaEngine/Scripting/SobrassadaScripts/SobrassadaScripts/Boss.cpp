@@ -887,8 +887,6 @@ void Boss::OverheadStrike(float deltaTime)
         {
             actionTriggerDone = false;
             currentAction     = BossActions::Recover;
-
-            chargeShieldParticle->StopInstances();
         }
         break;
 
@@ -1041,11 +1039,11 @@ void Boss::DamageAreaLogic()
             attackEnergyScript->SetEnabled(false);
             attackLightingsScript->SetEnabled(false);
         }
+    }
 
-        if (attackTimer >= 0.6f)
-        {
-            chargeShieldParticle->Init();
-        }
+    if (attackTimer >= 0.6f && attackTimer <= attackHitboxDelay)
+    {
+        chargeShieldParticle->Init();
     }
 
     // --- IMPACT / HITBOX ACTIVE ---
@@ -1062,11 +1060,15 @@ void Boss::DamageAreaLogic()
             smallExpansionScript->SetEnabled(true);
         }
 
-        if (attackTimer >= attackHitboxDelay + 0.2f) attackExplosionScript->SetEnabled(false);
+        if (attackTimer >= attackHitboxDelay + 0.2f)
+        {
+            attackExplosionScript->SetEnabled(false);
+        }
 
         if (!bigExpansionScript->GetEnabled() && attackTimer >= bigAreaHitboxDelay - 0.1f)
         {
             bigExpansionScript->SetEnabled(true);
+            chargeShieldParticle->StopInstances();
         }
 
         if (!bigArea->IsEnabled() && attackTimer >= bigAreaHitboxDelay)
