@@ -33,6 +33,7 @@ class MirageBossDash : public Character
     void setState(BossDashStates state) { currentState = state; }
     void setAction(BossDashActions action) { currentAction = action; }
     void setStateBool(bool state) { stateEnter = state; }
+    void setEndPoint(float3 endPoint) { dashEnd = endPoint; }
 
   private:
     void HandleState(float deltaTime) override;
@@ -50,19 +51,18 @@ class MirageBossDash : public Character
     BossDashStates currentState   = BossDashStates::Idle;
     BossDashActions currentAction = BossDashActions::Idle;
 
-    bool stateEnter           = true;
-    bool doIdle               = false;
-    bool actionTriggerDone    = false;
+    bool stateEnter               = true;
+    bool doIdle                   = false;
+    bool actionTriggerDone        = false;
 
     // Dash
-    bool isDashing            = false;
-    float dashSpeed           = 0.0f;
-    float dashTimeRemaining   = 0.0f;
-    float dashDistance        = 0.0f;
+    bool isDashing                = false;
+    float dashSpeed               = 0.0f;
+    float dashTimeRemaining       = 0.0f;
+    float dashDistance            = 0.0f;
     float3 dashEnd;
-    float3 dashDirection      = float3::zero;
-    float3 dashStartPosLocal  = float3::zero;
+    float3 dashDirection     = float3::zero;
+    float3 dashStartPosLocal = float3::zero;
 
-    float dashDuration        = 0.5f;
-
+    float dashDuration       = 0.5f;
 };
