@@ -63,25 +63,6 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collis
                     sceneModule->SwitchPlayMode(true);
 
                     GLOG("Scene change successful!");
-
-                    //Recover player data from JSON
-                    Scene* newScene = sceneModule->GetScene();
-                    if (!newScene) return;
-
-                    GameObject* newPlayer = newScene->GetGameObjectByName(tempPlayerName);
-                    if (!newPlayer) return;
-
-                    ScriptComponent* newScriptComp = newPlayer->GetComponent<ScriptComponent*>();
-                    if (!newScriptComp) return;
-
-                    CuChulainn* newCuchulainn = newScriptComp->GetScriptByType<CuChulainn>();
-                    if (!newCuchulainn) return;
-
-                    PlayerState loadedPlayerState;
-                    if (!SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) 
-                        return;
-
-                    newCuchulainn->ApplySavedState(loadedPlayerState);
                 }
             }
 

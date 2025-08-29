@@ -15,6 +15,7 @@
 #include "MovingUVTransparent.h"
 #include "ParticleSystemComponent.h"
 #include "Projectile.h"
+#include "ProjectModule.h"
 #include "RaycastController.h"
 #include "ResourceAnimation.h"
 #include "ResourceMaterial.h"
@@ -385,6 +386,14 @@ bool CuChulainn::Init()
     else ultimateSpikes->SetEnabled(false);
 
     state = CharacterStates::IDLE;
+
+    //Apply saved changes between scenes
+    const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
+    const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
+
+    PlayerState loadedPlayerState;
+    if (SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) 
+        ApplySavedState(loadedPlayerState);
 
     return true;
 }
@@ -1625,7 +1634,7 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 
     riastradMeter = 0;
-    AddRiastrad(std::clamp(playerState.riastrad, 0, 100));
+    AddRiastrad(playerState.riastrad);
     
     mushrooms = playerState.mushrooms;
 
