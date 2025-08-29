@@ -1610,6 +1610,7 @@ void CuChulainn::ExportState(PlayerState& playerState) const
     playerState.currentHealth = currentHealth;
     playerState.maxHealth     = maxHealth;
     playerState.riastrad      = riastradMeter;
+    playerState.mushrooms        = mushrooms;
     playerState.dashUnlocked  = dashUnlocked;
     playerState.ultimateUnlocked = ultimateUnlocked;
 }
@@ -1626,6 +1627,8 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
     riastradMeter = 0;
     AddRiastrad(std::clamp(playerState.riastrad, 0, 100));
     
+    mushrooms = playerState.mushrooms;
+
     if (playerState.dashUnlocked) ActivateAbility(static_cast<std::string>("dash"));
     if (playerState.ultimateUnlocked) ActivateAbility(static_cast<std::string>("ultimate"));
 }

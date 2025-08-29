@@ -20,6 +20,7 @@ namespace SavePlayerData
         targetState.AddMember("currentHealth", playerState.currentHealth, allocator);
         targetState.AddMember("maxHealth", playerState.maxHealth, allocator);
         targetState.AddMember("riastrad", playerState.riastrad, allocator);
+        targetState.AddMember("mushrooms", playerState.mushrooms, allocator);
         targetState.AddMember("dashUnlocked", playerState.dashUnlocked, allocator);
         targetState.AddMember("ultimateUnlocked", playerState.ultimateUnlocked, allocator);
     }
@@ -32,6 +33,8 @@ namespace SavePlayerData
             playerState.maxHealth = source["maxHealth"].GetInt();
         if (source.HasMember("riastrad") && source["riastrad"].IsInt())
             playerState.riastrad = source["riastrad"].GetInt();
+        if (source.HasMember("mushrooms") && source["mushrooms"].IsInt())
+            playerState.mushrooms = source["mushrooms"].GetInt();
         if (source.HasMember("dashUnlocked") && source["dashUnlocked"].IsBool())
             playerState.dashUnlocked = source["dashUnlocked"].GetBool();
         if (source.HasMember("ultimateUnlocked") && source["ultimateUnlocked"].IsBool())

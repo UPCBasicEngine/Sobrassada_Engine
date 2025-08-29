@@ -7,6 +7,7 @@ struct PlayerState
     int currentHealth     = 0;
     int maxHealth         = 0;
     int riastrad          = 0;
+    int mushrooms         = 0;
     bool dashUnlocked     = false;
     bool ultimateUnlocked = false;
 };
