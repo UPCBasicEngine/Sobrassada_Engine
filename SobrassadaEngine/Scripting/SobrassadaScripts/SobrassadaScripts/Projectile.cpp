@@ -1,5 +1,4 @@
 #include "pch.h"
-
 #include "Projectile.h"
 
 #include "Character.h"
@@ -9,7 +8,23 @@
 #include "CuChulainn.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-#include "Math/Quat.h"
+
+static bool IsInsideCameraView(const float3& worldPosition, float screenEdgeMargin = 0.05f)
+{
+    Scene* scene                = AppEngine->GetSceneModule()->GetScene();
+    CameraComponent* mainCamera = scene ? scene->GetMainCamera() : nullptr;
+    if (!mainCamera) return true;
+    const float4x4 view       = mainCamera->GetViewMatrix();
+    const float4x4 projection = mainCamera->GetProjectionMatrix();
+    const float4 clip         = projection * view * float4(worldPosition, 1.0f);
+    if (fabsf(clip.w) < 0.0001f) return true;
+    const float3 normalized = float3(clip.x, clip.y, clip.z) / clip.w;
+    const float limit       = 1.0f + screenEdgeMargin;
+    const bool insideX      = (normalized.x >= -limit) && (normalized.x <= limit);
+    const bool insideY      = (normalized.y >= -limit) && (normalized.y <= limit);
+    const bool insideZ      = (normalized.z >= -1.0f - screenEdgeMargin) && (normalized.z <= 1.0f + screenEdgeMargin);
+    return insideX && insideY && insideZ;
+}
 
 Projectile::Projectile(GameObject* parent) : Script(parent)
 {
@@ -41,35 +56,53 @@ void Projectile::Update(float deltaTime)
         if (stuckTimer >= stuckDuration)
         {
             parent->SetEnabled(false);
-            // Resetear estado para la próxima vez que se use
+            // Resetear estado para la prï¿½xima vez que se use
             isStuckInWall = false;
             stuckTimer    = 0.0f;
         }
-        return; // No ejecutar Move() mientras está trabada
+        return; // No ejecutar Move() mientras estï¿½ trabada
     }
 
-    Move(deltaTime);
+   
+    if (isActive)
+    {
+        Move(deltaTime);
+    }
 }
 
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
-   
-    startPos        = origin;
-    this->direction = direction;
-    frames          = 0;
-    parent->SetEnabledRecursive(true);
+    // FIRST: Disable the arrow completely to prevent visual artifacts
+    parent->SetEnabled(false);
+    parent->SetEnabledRecursive(false);
 
-   
+    // SECOND: Set up the projectile state
+    startPos                 = origin;
+    this->direction          = direction;
+    frames                   = 0;
+    isActive                 = true;
+
+    // THIRD: Position and rotate the arrow while it's disabled
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
     const Quat rotation      = Quat::LookAt(float3::unitZ, direction, float3::unitY, float3::unitY);
     const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
     parent->SetLocalTransform(transform);
+
+    // FOURTH: Disable collider initially (will be enabled after frame delay)
+    if (collider)
+    {
+        collider->SetEnabled(false);
+    }
+
+    // FIFTH: Enable the arrow after positioning is complete
+    parent->SetEnabled(true);
+    parent->SetEnabledRecursive(true);
+
+    GLOG("Arrow shot initialized at position: (%.2f, %.2f, %.2f)", origin.x, origin.y, origin.z);
 }
 
 void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
-    //GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
-
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
   if (script && script->GetScriptByType<Character>()) return;
@@ -81,11 +114,11 @@ void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNorm
       isStuckInWall = true;
       stuckTimer    = 0.0f;
 
-      // Opcional: Deshabilitar el collider para evitar más colisiones
+      // Opcional: Deshabilitar el collider para evitar mï¿½s colisiones
       if (collider) collider->SetEnabled(false);
 
       GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
-      return; // IMPORTANTE: return aquí para no ejecutar la línea siguiente
+      return; // IMPORTANTE: return aquï¿½ para no ejecutar la lï¿½nea siguiente
   }
   parent->SetEnabled(false);
 }
@@ -99,6 +132,10 @@ void Projectile::OnWallHit()
 
    
     GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
+    if (script && script->GetScriptByType<Character>()) return;
+
+    // Stop the projectile and disable it
+    StopProjectile();
 }
 
 void Projectile::Hit(GameObject* otherObject)
@@ -111,19 +148,39 @@ void Projectile::Hit(GameObject* otherObject)
     }
 }
 
+void Projectile::StopProjectile()
+{
+    isActive = false;
+    parent->SetEnabled(false);
+
+    if (collider)
+    {
+        collider->SetEnabled(false);
+    }
+
+    GLOG("Projectile stopped and disabled");
+}
+
 void Projectile::Move(float deltaTime)
 {
-    // Let 20 frames pass before enabling the collider, so it doesn't collide with the previous collided element.
-    // TODO: Try to change this
+    if (!isActive) return;
+
+    // Let 20 frames pass before enabling the collider, so it doesn't collide with the shooter
     frames += 1;
-    if (frames > 20 && collider && !collider->GetEnabled()) collider->SetEnabled(true);
+    if (frames > 20 && collider && !collider->GetEnabled())
+    {
+        collider->SetEnabled(true);
+    }
 
     float3 currentPos  = parent->GetPosition();
     currentPos        += direction * speed * deltaTime;
     parent->SetLocalPosition(currentPos);
 
-    if (currentPos.Distance(startPos) > range)
+    const float3 worldPos = parent->GetGlobalTransform().TranslatePart();
+
+    // Check if projectile should be stopped (out of range or camera view)
+    if (currentPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.11f))
     {
-        parent->SetEnabled(false);
+        StopProjectile();
     }
 }

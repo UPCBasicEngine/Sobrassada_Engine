@@ -24,6 +24,7 @@ class Projectile : public Script
     void Hit(GameObject* otherObject);
   private:
     void Move(float deltaTime);
+    void StopProjectile();
 
   private:
     CapsuleColliderComponent* collider = nullptr;
@@ -43,4 +44,6 @@ class Projectile : public Script
     float stuckTimer                   = 0.0f;
     float stuckDuration                = 0.35f;
     HashString wallTag;
+    
+    bool isActive                      = false; 
 };
