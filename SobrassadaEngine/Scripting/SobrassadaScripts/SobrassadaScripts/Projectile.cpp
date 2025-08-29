@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Projectile.h"
-
+#include "CameraComponent.h"
 #include "Character.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
