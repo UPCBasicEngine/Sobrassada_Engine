@@ -1,13 +1,13 @@
 #include "pch.h"
 
 #include "Application.h"
-#include "MirageBossDash.h"
 #include "CameraComponent.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "Globals.h"
+#include "MirageBossDash.h"
 #include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -24,7 +24,7 @@ MirageBossDash::MirageBossDash(GameObject* parent)
 bool MirageBossDash::Init()
 {
     Character::Init();
-
+    dashEnd = parent->GetChildGameObjectByName("EndPoint")->GetLocalTransform().TranslatePart();
     return true;
 }
 
@@ -50,7 +50,6 @@ void MirageBossDash::Update(float deltaTime)
 
 void MirageBossDash::HandleState(float deltaTime)
 {
-  
 
     switch (currentState)
     {
@@ -63,7 +62,6 @@ void MirageBossDash::HandleState(float deltaTime)
         break;
     }
 }
-
 
 void MirageBossDash::Idle()
 {
@@ -110,15 +108,15 @@ void MirageBossDash::OverheadStrike(float deltaTime)
 
 void MirageBossDash::StartDash()
 {
-    isDashing        = true;
+    isDashing      = true;
 
-    float3 bossPos   = parent->GetGlobalTransform().TranslatePart();
+    float3 bossPos = parent->GetGlobalTransform().TranslatePart();
 
-    bossPos.y        = 0.0f;
+    bossPos.y      = 0.0f;
     dashEnd.y      = 0.0f;
 
-    dashDistance     = (dashEnd - bossPos).Length();
-    dashDirection    = (dashEnd - bossPos).Normalized();
+    dashDistance   = (dashEnd - bossPos).Length();
+    dashDirection  = (dashEnd - bossPos).Normalized();
 
     GLOG("Distance: %.2f", dashDistance);
     GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
@@ -145,6 +143,8 @@ void MirageBossDash::Dash(float deltaTime)
     float3 newPos           = dashStartPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z);
     newPos.y                = originalY;
 
+    GLOG("Dash pos: %.2f %.2f %.2f", newPos.x, newPos.y, newPos.z);
+
     parent->SetLocalPosition(newPos);
 
     if (dashTimeRemaining <= 0.0f)
@@ -153,7 +153,6 @@ void MirageBossDash::Dash(float deltaTime)
         parent->SetLocalPosition(dashStartPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z));
     }
 }
-
 
 const char* MirageBossDash::GetStateName() const
 {
