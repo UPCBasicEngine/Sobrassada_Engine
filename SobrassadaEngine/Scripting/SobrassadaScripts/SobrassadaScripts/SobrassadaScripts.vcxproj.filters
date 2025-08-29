@@ -187,6 +187,9 @@
     <ClInclude Include="SavePlayerData.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="GameSession.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -907,6 +910,9 @@
       <Filter>External</Filter>
     </ClCompile>
     <ClCompile Include="SavePlayerData.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="GameSession.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>

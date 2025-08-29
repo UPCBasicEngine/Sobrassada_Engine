@@ -484,6 +484,7 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
+    <ClInclude Include="GameSession.h" />
     <ClInclude Include="HealVFXGround.h" />
     <ClInclude Include="MagicBarrier.h" />
     <ClInclude Include="imgui_curve_editor.h" />
@@ -2064,6 +2065,7 @@
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
+    <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
     <ClCompile Include="MagicBarrier.cpp" />
     <ClCompile Include="imgui_curve_editor.cpp" />

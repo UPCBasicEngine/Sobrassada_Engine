@@ -10,6 +10,7 @@
 #include "DamageMask.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameSession.h"
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
@@ -391,9 +392,16 @@ bool CuChulainn::Init()
     const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
     const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
 
-    PlayerState loadedPlayerState;
-    if (SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) 
-        ApplySavedState(loadedPlayerState);
+    if (gNewGame)
+    {
+        gNewGame = false;
+        //Can be added deleting save file
+    }else
+    {
+        PlayerState loadedPlayerState;
+        if (SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) ApplySavedState(loadedPlayerState);
+        
+    }
 
     return true;
 }
