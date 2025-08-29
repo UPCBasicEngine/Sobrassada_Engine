@@ -57,15 +57,24 @@ class CuChulainn : public Character
     int GetRiastradMeter() const { return riastradMeter; }
     bool IsDashUnlocked() const { return dashUnlocked; }
     bool IsUltimateUnlocked() const { return ultimateUnlocked; }
+    int GetEnemiesCount() const { return enemiesCont; }
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { reservedHealth = health; }
     void SetInvulnearble(bool invulnerable) { isInvulnerable = invulnerable; }
+    void AddEnemy() { enemiesCont++; }
+    void RemoveEnemy()
+    {
+        if (enemiesCont != 0) enemiesCont--;
+        GLOG("Enemy out. Total unique enemies colliding: %zu",  enemiesCont);
+    }
     void OnEnemyHit();
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string abilityName);
+    void OnArrowHit();
+  
     void StartCurse();
     
     void ExportState(PlayerState& playerState) const;
@@ -80,6 +89,7 @@ class CuChulainn : public Character
     void TakeDamage(int amount) override;
     void UpdateTimers(float deltaTime) override;
     void Attack(float deltaTime) override;
+    // void OnCollisionEnter(GameObject* otherObject, float3 collisionNormal, ColliderLayer layer) override;
 
     bool CanHeal() const;
     bool CanDash() const;
@@ -111,9 +121,12 @@ class CuChulainn : public Character
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
 
+    
+
   private:
     CharacterStates state              = CharacterStates::IDLE;
 
+    int enemiesCont                   = 0;
     std::string cameraName             = "Camera Pivot";
     GameObject* cameraObject           = nullptr;
     CameraMovement* camera             = nullptr;
@@ -149,6 +162,14 @@ class CuChulainn : public Character
     int comboCounter                   = -1;
     float comboBufferTimer             = 0.0f;
 
+    //Arrow Hit VFX 
+    GameObject* arrowHitVfxObject         = nullptr;
+    std::string arrowHitVfxName           = "";
+    float arrowHitVfxDuration             = 0.2f;
+    float arrowHitVfxTimer                = 0.0f;
+    bool arrowVfxIsActive                 = false;
+
+  
     // Charged attack
     std::string chargedAttackName      = "Charged";
     GameObject* chargedAttackCollider  = nullptr;

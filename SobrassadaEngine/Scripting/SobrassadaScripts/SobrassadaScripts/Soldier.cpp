@@ -23,6 +23,9 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
     fields.push_back({"Second Attack Delay", InspectorField::FieldType::Float, &secondAttackDelay, 0.0f, 1.0f});
     fields.push_back({"Chase Speed", InspectorField::FieldType::Float, &chaseSpeed, 0.0f, 10.0f});
+    fields.push_back({"Cheering distance", InspectorField::FieldType::Float, &cheeringDistance, 0.0f, 10.0f});
+    fields.push_back({"Max number of enemies nearby", InspectorField::FieldType::Int, &maxEnemiesNearby, 0, 10});
+    fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
 }
 
 bool Soldier::Init()
@@ -42,9 +45,16 @@ bool Soldier::Init()
         speed = agentAI->GetSpeed();
     }
 
-    
     originalAttackDuration    = attackDuration;
     originalAttackHitboxDelay = attackHitboxDelay;
+
+    meleeTrailObject          = parent->GetChildGameObjectByName(meleeTrailName);
+    if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for melee attack in Soldier")
+    else
+    {
+        GLOG("Melee trail found for melee attack in Soldier")
+        meleeTrailObject->SetEnabled(false);
+    }
 
     return true;
 }
@@ -60,13 +70,13 @@ void Soldier::Update(float deltaTime)
 
     if (isKnockback)
     {
-        knockbackTimer -= deltaTime;
+        knockbackTimer           -= deltaTime;
 
-        const float appliedForce  = isStrongKnockback ? knockbackForce * 2 : knockbackForce;  
+        const float appliedForce  = isStrongKnockback ? knockbackForce * 2 : knockbackForce;
         agentAI->MoveTo(appliedForce, knockbackDirection);
         if (knockbackTimer <= 0.0f)
         {
-            isKnockback = false;
+            isKnockback       = false;
             isStrongKnockback = false;
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
@@ -101,7 +111,7 @@ void Soldier::OnPlayerExitLocation()
 void Soldier::OnPlayerEnterLocation()
 {
     currentState = SoldierStates::PATROL;
-    agentAI->SetPathNavigation(startPos);
+    if (agentAI) agentAI->SetPathNavigation(startPos);
     reachedPatrolPoint = false;
 }
 
@@ -113,6 +123,8 @@ void Soldier::OnDeath()
     if (animComponent) animComponent->UseTrigger("death");
     agentAI->PauseMovement();
     currentState = SoldierStates::DEATH;
+    playerScript->RemoveEnemy();
+    countedInPlayerEnemies = false;
 }
 
 void Soldier::OnDamageTaken(int amount)
@@ -129,11 +141,11 @@ void Soldier::OnDamageTaken(int amount)
     isStrongKnockback =
         (playerScript &&
          (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM));
-    
+
     ApplyKnockback();
-    //HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
-    //std::string animState               = animStateFromPlayer.GetString();
-    //GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
+    // HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
+    // std::string animState               = animStateFromPlayer.GetString();
+    // GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
 }
 
@@ -174,7 +186,15 @@ void Soldier::HandleState(float deltaTime)
         animComponent->UseTrigger("detectPlayer");
         if (animComponent->IsFinished())
         {
-            currentState = SoldierStates::CHASE;  
+            currentState = SoldierStates::CHASE;
+        }
+        break;
+    case SoldierStates::CHEERING:
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        if (playerScript->GetEnemiesCount() < maxEnemiesNearby)
+        {
+            agentAI->ResetSpeed();
+            ChangeState();
         }
         break;
     default:
@@ -195,7 +215,6 @@ void Soldier::PatrolAI(float deltaTime)
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
-
     if (!playerScript->IsDead())
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
@@ -215,7 +234,6 @@ void Soldier::PatrolAI(float deltaTime)
             valid = agentAI->SetPathNavigation(startPos);
             agentAI->LookAtMovement(startPos, deltaTime);
         }
-
     }
     else
     {
@@ -226,8 +244,6 @@ void Soldier::PatrolAI(float deltaTime)
             agentAI->LookAtMovement(patrolPoint, deltaTime);
         }
     }
-
-    
 }
 
 void Soldier::ChaseAI()
@@ -242,12 +258,12 @@ void Soldier::ChaseAI()
 
 void Soldier::SearchForPlayer()
 {
-    GLOG("Searching for player");
-    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
+    // GLOG("Searching for player");
+    //  Stands still for a few seconds, if player gets close again chases, if not returns to patrol
     if (!isSearching)
     {
         // TODO: Would be nice to be a "search" animation instead of idle
-        animComponent->UseTrigger("idle");
+        animComponent->UseTrigger("detectPlayer");
         isSearching = true;
         searchTimer = searchDuration;
         agentAI->SetSpeed(0.0f, 10.0f);
@@ -261,7 +277,7 @@ void Soldier::SearchForPlayer()
     }
     else if (searchTimer <= 0.0f)
     {
-        isSearching  = false;
+        isSearching = false;
         agentAI->SetSpeed(chaseSpeed, 8.0);
         GLOG("Speed set to %f", chaseSpeed);
         currentState = SoldierStates::PATROL;
@@ -278,12 +294,12 @@ void Soldier::Attack(float deltaTime)
         if (animComponent)
         {
             attackHitboxDelay    = originalAttackHitboxDelay;
-            currentAttackTrigger   = ManageAttackAnimations();
+            currentAttackTrigger = ManageAttackAnimations();
 
             if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
             {
                 attackHitboxDelay += 0.4f;
-                attackDuration = attackHitboxDelay + 2 * attackHitboxDuration + secondAttackDelay + 0.1f;
+                attackDuration     = attackHitboxDelay + 2 * attackHitboxDuration + secondAttackDelay + 0.1f;
             }
             else
             {
@@ -292,9 +308,12 @@ void Soldier::Attack(float deltaTime)
         }
         Character::Attack(deltaTime);
         agentAI->PauseMovement();
+        thrustAdvance = false;
     }
     else
     {
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+        agentAI->ResumeMovement();
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         // Doble attack
         if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
@@ -319,19 +338,33 @@ void Soldier::Attack(float deltaTime)
                 attackTimer <= attackHitboxDelay + attackHitboxDuration)
             {
                 weaponCollider->SetEnabled(true);
+
+                thrustAdvance = true;
             }
             else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
             {
                 weaponCollider->SetEnabled(false);
+            }
+
+            if (animComponent && !animComponent->IsFinished() && thrustAdvance)
+            {
+                /*agentAI->PauseMovement();*/
+                float thrustSpeed = 2.0f;
+                float3 forward    = parent->GetGlobalTransform().WorldZ();
+                forward.y         = parent->GetGlobalTransform().WorldY().y;
+                forward.Normalize();
+                agentAI->SetPosition(parent->GetGlobalTransform().TranslatePart() + forward * thrustSpeed * deltaTime);
             }
         }
 
         // Reset attack state
         if (attackTimer >= attackDuration)
         {
+            agentAI->ResumeMovement();
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
             isAttacking   = false;
             attackCdTimer = attackCooldown;
-            agentAI->ResumeMovement();
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
             ChangeState();
         }
     }
@@ -346,6 +379,36 @@ void Soldier::ChangeState()
     }
 
     const float distance = GetDistanceFromPlayer();
+
+    if (distance <= cheeringDistance)
+    {
+        if (playerScript->GetEnemiesCount() >= maxEnemiesNearby)
+        {
+            if (!countedInPlayerEnemies)
+            {
+                SetOnWaiting();
+                return;
+            }
+        }
+        else
+        {
+            if (!countedInPlayerEnemies)
+            {
+                playerScript->AddEnemy();
+                countedInPlayerEnemies = true;
+                GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+            }
+        }
+    }
+    else
+    {
+        if (countedInPlayerEnemies)
+        {
+            playerScript->RemoveEnemy();
+            countedInPlayerEnemies = false;
+        }
+    }
+
     if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
     else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
@@ -353,8 +416,8 @@ void Soldier::ChangeState()
 
 void Soldier::ApplyKnockback()
 {
-    const float3 myPos         = parent->GetGlobalTransform().TranslatePart();
-    const float3 origin        = character ? character->GetLastPosition() : float3::zero;
+    const float3 myPos   = parent->GetGlobalTransform().TranslatePart();
+    const float3 origin  = character ? character->GetLastPosition() : float3::zero;
 
     knockbackDirection   = myPos - origin;
     knockbackDirection.y = 0.0f;
@@ -367,13 +430,13 @@ const char* Soldier::ManageAttackAnimations()
     const char* attackTrigger = nullptr;
     if (consecutiveAttack >= 2)
     {
-        attackTrigger = "thrust";
+        attackTrigger     = "thrust";
         consecutiveThrust = 1;
         consecutiveAttack = 0;
     }
     else if (consecutiveThrust >= 2)
     {
-        attackTrigger = "attack";
+        attackTrigger     = "attack";
         consecutiveAttack = 1;
         consecutiveThrust = 0;
     }
@@ -401,4 +464,12 @@ const char* Soldier::ManageAttackAnimations()
     animComponent->UseTrigger(attackTrigger);
 
     return attackTrigger;
+}
+
+void Soldier::SetOnWaiting()
+{
+    GLOG("Soldier %s is waiting", parent->GetName().c_str());
+    currentState = SoldierStates::CHEERING;
+    agentAI->SetSpeed(0.0f, 10.0f);
+    if (animComponent) animComponent->UseTrigger("idle");
 }

@@ -41,6 +41,7 @@ class SplineComponent;
 class TrailComponent;
 class DecalComponent;
 class ParticleSystemComponent;
+class VideoComponent;
 class ShaderScriptComponent;
 
 enum MobilitySettings
@@ -173,6 +174,8 @@ class SOBRASADA_API_ENGINE GameObject
     void SetJustLocalTransform(const float4x4& newTransform);
 
     void UpdateFromReference(GameObject* reference);
+
+    GameObject* GetChildGameObjectByName(const std::string& name);
 
   private:
     void DrawNodes() const;

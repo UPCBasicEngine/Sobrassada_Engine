@@ -4,6 +4,7 @@
 #include "Script.h"
 
 #include <vector>
+#include <unordered_set>
 
 class MagicBarrier;
 class GameObject;
@@ -76,6 +77,7 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
+    
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;
@@ -90,6 +92,7 @@ class Character : public Script
     float range                                 = 0.0f;
     float attackTimer                           = 0.0f;
     bool isAttacking                            = false;
+    bool isInCountRange                         = false;
     float attackHitboxDelay                     = 0.0f;
     float attackHitboxDuration                  = 0.0f;
 
