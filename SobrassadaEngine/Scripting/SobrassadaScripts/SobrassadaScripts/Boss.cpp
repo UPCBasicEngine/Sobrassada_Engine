@@ -746,7 +746,7 @@ void Boss::ShieldStrikes(float deltaTime)
 
 void Boss::OverheadStrike(float deltaTime)
 {
-    if (!runesScript || !runesLightsScript || !runesUV) return; // TODO: vfx
+    if (!closeArea || !bigArea) ChooseNextState();
 
     if (stateEnter)
     {
@@ -763,8 +763,8 @@ void Boss::OverheadStrike(float deltaTime)
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Prepare");
 
-            runesScript->SetEnabled(true);
-            runesLightsScript->SetEnabled(true);
+            if (runesScript) runesScript->SetEnabled(true);
+            if (runesLightsScript) runesLightsScript->SetEnabled(true);
         }
         else runesUV->SetPaused(true);
 
@@ -775,11 +775,14 @@ void Boss::OverheadStrike(float deltaTime)
             currentAction     = BossActions::Jump;
             actionTriggerDone = false;
 
-            runesUV->SetPaused(false);
-            runesUV->Reset();
-            runesLightsUV->Reset();
-            runesScript->SetEnabled(false);
-            runesLightsScript->SetEnabled(false);
+            if (runesUV)
+            {
+                runesUV->SetPaused(false);
+                runesUV->Reset();
+            }
+            if (runesLightsUV) runesLightsUV->Reset();
+            if (runesScript) runesScript->SetEnabled(false);
+            if (runesLightsScript) runesLightsScript->SetEnabled(false);
         }
         break;
 
@@ -812,12 +815,12 @@ void Boss::OverheadStrike(float deltaTime)
 
             StartDash();
             Attack(deltaTime);
-            weaponCollider->SetEnabled(true);
+            if (weaponCollider) weaponCollider->SetEnabled(true);
 
-            dashGroundMesh->SetEnabled(true);
-            dashEnergyMesh->SetEnabled(true);
-            dashLightsShieldScript->SetEnabled(true);
-            dashShieldExpansionScript->SetEnabled(true);
+            if (dashGroundMesh) dashGroundMesh->SetEnabled(true);
+            if (dashEnergyMesh) dashEnergyMesh->SetEnabled(true);
+            if (dashLightsShieldScript) dashLightsShieldScript->SetEnabled(true);
+            if (dashShieldExpansionScript) dashShieldExpansionScript->SetEnabled(true);
         }
 
         bool finished = false;
@@ -832,15 +835,15 @@ void Boss::OverheadStrike(float deltaTime)
             currentAction     = BossActions::Land;
             actionTriggerDone = false;
 
-            weaponCollider->SetEnabled(false);
+            if (weaponCollider) weaponCollider->SetEnabled(false);
             StopAttacking();
 
-            dashGroundMesh->SetEnabled(false);
-            dashEnergyMesh->SetEnabled(false);
-            dashLightsShieldScript->SetEnabled(false);
-            dashShieldExpansionScript->SetEnabled(false);
-            dashLightsShieldUV->Reset();
-            dashShieldExpansionUV->Reset();
+            if (dashGroundMesh) dashGroundMesh->SetEnabled(false);
+            if (dashEnergyMesh) dashEnergyMesh->SetEnabled(false);
+            if (dashLightsShieldScript) dashLightsShieldScript->SetEnabled(false);
+            if (dashShieldExpansionScript) dashShieldExpansionScript->SetEnabled(false);
+            if (dashLightsShieldUV) dashLightsShieldUV->Reset();
+            if (dashShieldExpansionUV) dashShieldExpansionUV->Reset();
         }
         break;
     }
@@ -857,7 +860,7 @@ void Boss::OverheadStrike(float deltaTime)
             currentAction     = BossActions::Attack;
             actionTriggerDone = false;
 
-            attackLightingsScript->SetEnabled(true);
+            if (attackLightingsScript) attackLightingsScript->SetEnabled(true);
         }
         break;
 
@@ -875,10 +878,10 @@ void Boss::OverheadStrike(float deltaTime)
             attackHitboxDuration = 1.5f;
             Character::Attack(deltaTime);
 
-            attackEnergyScript->SetEnabled(true);
+            if (attackEnergyScript) attackEnergyScript->SetEnabled(true);
 
-            atomParticle->Init();
-            smokeParticle->Init();
+            if (atomParticle) atomParticle->Init();
+            if (smokeParticle) smokeParticle->Init();
         }
 
         DamageAreaLogic();
@@ -1028,22 +1031,22 @@ void Boss::DamageAreaLogic()
     {
         if (attackTimer >= 0.3f)
         {
-            attackEnergyUV->SetPaused(true);
+            if (attackEnergyUV) attackEnergyUV->SetPaused(true);
         }
 
         if (attackTimer >= 0.4f)
         {
-            atomParticle->StopInstances();
-            smokeParticle->StopInstances();
+            if (atomParticle) atomParticle->StopInstances();
+            if (smokeParticle) smokeParticle->StopInstances();
 
-            attackEnergyScript->SetEnabled(false);
-            attackLightingsScript->SetEnabled(false);
+            if (attackEnergyScript) attackEnergyScript->SetEnabled(false);
+            if (attackLightingsScript) attackLightingsScript->SetEnabled(false);
         }
     }
 
     if (attackTimer >= 0.6f && attackTimer <= attackHitboxDelay)
     {
-        chargeShieldParticle->Init();
+        if (chargeShieldParticle) chargeShieldParticle->Init();
     }
 
     // --- IMPACT / HITBOX ACTIVE ---
@@ -1056,26 +1059,26 @@ void Boss::DamageAreaLogic()
         {
             closeArea->SetEnabled(true);
 
-            attackExplosionScript->SetEnabled(true);
-            smallExpansionScript->SetEnabled(true);
+            if (attackExplosionScript) attackExplosionScript->SetEnabled(true);
+            if (smallExpansionScript) smallExpansionScript->SetEnabled(true);
         }
 
         if (attackTimer >= attackHitboxDelay + 0.2f)
         {
-            attackExplosionScript->SetEnabled(false);
+            if (attackExplosionScript) attackExplosionScript->SetEnabled(false);
         }
 
         if (!bigExpansionScript->GetEnabled() && attackTimer >= bigAreaHitboxDelay - 0.1f)
         {
-            bigExpansionScript->SetEnabled(true);
-            chargeShieldParticle->StopInstances();
+            if (bigExpansionScript) bigExpansionScript->SetEnabled(true);
+            if (chargeShieldParticle) chargeShieldParticle->StopInstances();
         }
 
         if (!bigArea->IsEnabled() && attackTimer >= bigAreaHitboxDelay)
         {
             bigArea->SetEnabled(true);
 
-            smallExpansionScript->SetEnabled(false);
+            if (smallExpansionScript) smallExpansionScript->SetEnabled(false);
         }
     }
 
@@ -1084,18 +1087,21 @@ void Boss::DamageAreaLogic()
     {
         closeArea->SetEnabled(false);
         bigArea->SetEnabled(false);
-        bigExpansionScript->SetEnabled(false);
+        if (bigExpansionScript) bigExpansionScript->SetEnabled(false);
 
         agentAI->ResumeMovement();
         StopAttacking();
 
-        attackEnergyUV->SetPaused(false);
-        attackEnergyUV->Reset();
-        attackLightingsUV->Reset();
+        if (attackEnergyUV)
+        {
+            attackEnergyUV->SetPaused(false);
+            attackEnergyUV->Reset();
+        }
+        if (attackLightingsUV) attackLightingsUV->Reset();
 
-        attackExplosionUV->Reset();
-        smallExpansionUV->Reset();
-        bigExpansionUV->Reset();
+        if (attackExplosionUV) attackExplosionUV->Reset();
+        if (smallExpansionUV) smallExpansionUV->Reset();
+        if (bigExpansionUV) bigExpansionUV->Reset();
 
         ChooseNextState();
     }
