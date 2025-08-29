@@ -52,6 +52,7 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collis
             SavePlayerData::SavePlayerToFile(playerState, savePath);
 
             SceneModule* sceneModule = AppEngine->GetSceneModule();
+            std::string tempPlayerName = playerName;
 
             rapidjson::Document doc;
             if (FileSystem::LoadJSON(fullScenePath.c_str(), doc))
@@ -67,7 +68,7 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collis
                     Scene* newScene = sceneModule->GetScene();
                     if (!newScene) return;
 
-                    GameObject* newPlayer = newScene->GetGameObjectByName(playerName);
+                    GameObject* newPlayer = newScene->GetGameObjectByName(tempPlayerName);
                     if (!newPlayer) return;
 
                     ScriptComponent* newScriptComp = newPlayer->GetComponent<ScriptComponent*>();
@@ -77,7 +78,8 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collis
                     if (!newCuchulainn) return;
 
                     PlayerState loadedPlayerState;
-                    if (!SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) return;
+                    if (!SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) 
+                        return;
 
                     newCuchulainn->ApplySavedState(loadedPlayerState);
                 }
