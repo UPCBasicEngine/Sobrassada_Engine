@@ -425,7 +425,7 @@ bool CuChulainn::Init()
     if (gNewGame)
     {
         gNewGame = false;
-        //Can be added deleting save file
+        SavePlayerData::DeleteSaveFile(savePath);
     }else
     {
         PlayerState loadedPlayerState;

@@ -16,7 +16,8 @@ namespace SavePlayerData
 {
     void Save(rapidjson::Value& targetState,rapidjson::Document::AllocatorType& allocator, const PlayerState& playerState);
     void Load(const rapidjson::Value& source, PlayerState& playerState);
-
+    bool DeleteSaveFile(const std::string& filePath);
+    
     bool EnsureParentDir(const std::string& filePath);
     std::string MakeSavePath(const std::string& projectPath);
     bool SavePlayerToFile(const PlayerState& playerState, const std::string& filePath);

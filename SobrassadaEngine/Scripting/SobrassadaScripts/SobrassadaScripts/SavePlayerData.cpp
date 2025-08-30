@@ -41,6 +41,12 @@ namespace SavePlayerData
             playerState.ultimateUnlocked = source["ultimateUnlocked"].GetBool();
     }
 
+    bool DeleteSaveFile(const std::string& filePath)
+    {
+        std::error_code ec;
+        return std::filesystem::remove(filePath, ec);
+    }
+
     bool EnsureParentDir(const std::string& filePath)
     {
         std::filesystem::path p(filePath);
