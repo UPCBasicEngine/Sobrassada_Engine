@@ -458,7 +458,7 @@ void Boss::UpdateTimers(float deltaTime)
 {
     Character::UpdateTimers(deltaTime);
 
-    if (currentState == BossStates::Mirage) isInvulnerable = true;
+    if (currentState == BossStates::Mirage || currentState == BossStates::ChangePhase) isInvulnerable = true;
 }
 
 void Boss::ChooseNextState()
@@ -514,25 +514,23 @@ void Boss::ChooseNextStateFirstPhase()
         break;
 
     case BossDistance::Far:
-        shieldStrikesRate  = 35;
+        shieldStrikesRate  = 30;
         overheadStrikeRate = 100;
         break;
 
     case BossDistance::Farther:
-        shieldStrikesRate  = 20;
+        shieldStrikesRate  = 15;
         overheadStrikeRate = 100;
         break;
 
     case BossDistance::Extreme:
         float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
-        GLOG("Distance %.2f", distance);
         if (distance <= maxDetectionRange) doTaunt = true;
         else doIdle = true;
         break;
     }
-    shieldStrikesRate = -1;
 
-    int num           = uniformDist(rng);
+    int num = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -599,9 +597,8 @@ void Boss::ChooseNextStateSecondPhase()
         else doIdle = true;
         break;
     }
-    shieldStrikesRate = -1;
 
-    int num           = uniformDist(rng);
+    int num = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -635,32 +632,32 @@ void Boss::ChooseNextStateThirdPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate = 95;
-        waterSpoutsRate   = 100;
+        shieldStrikesRate  = 95;
+        overheadStrikeRate = 100;
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 60;
-        waterSpoutsRate   = 80;
-        shieldBlastRate   = 100;
+        shieldStrikesRate  = 60;
+        overheadStrikeRate = 90;
+        shieldBlastRate    = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate  = 25;
-        overheadStrikeRate = 50;
-        waterSpoutsRate    = 75;
+        shieldStrikesRate  = 30;
+        overheadStrikeRate = 70;
         shieldBlastRate    = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate  = 15;
-        overheadStrikeRate = 60;
-        waterSpoutsRate    = 75;
+        shieldStrikesRate  = 20;
+        overheadStrikeRate = 55;
         shieldBlastRate    = 100;
         break;
 
     case BossDistance::Far:
-        shieldBlastRate = 100;
+        shieldBlastRate    = 10;
+        overheadStrikeRate = 40;
+        shieldBlastRate    = 100;
         break;
 
     case BossDistance::Farther:
@@ -689,6 +686,10 @@ void Boss::ChooseNextStateThirdPhase()
         if (num <= shieldStrikesRate)
         {
             currentState = BossStates::ShieldStrikes;
+        }
+        else if (num <= overheadStrikeRate)
+        {
+            currentState = BossStates::OverheadStrike;
         }
         else if (num <= shieldBlastRate)
         {
