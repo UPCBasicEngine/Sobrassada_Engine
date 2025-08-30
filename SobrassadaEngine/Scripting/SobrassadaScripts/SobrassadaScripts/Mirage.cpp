@@ -27,11 +27,11 @@ bool Mirage::Init()
     meshComponent               = parent->GetComponent<MeshComponent*>();
     std::vector<UID> children   = parent->GetChildren();
 
-    GameObject* secondChild     = scene->GetGameObjectByUID(children[0]);
+    //GameObject* secondChild     = scene->GetGameObjectByUID(children[0]);
 
-    ScriptComponent* scriptComp = secondChild->GetComponent<ScriptComponent*>();
+    //ScriptComponent* scriptComp = secondChild->GetComponent<ScriptComponent*>();
 
-    bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
+    //bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
 
     parent->SetEnabled(false);
 

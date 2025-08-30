@@ -13,6 +13,7 @@ class ShaderScriptComponent;
 class MovingUVTransparent;
 class MeshComponent;
 class ParticleSystemComponent;
+class CapsuleColliderComponent;
 
 enum class BossDistance
 {
@@ -58,6 +59,7 @@ enum class BossActions
     End,
     WaterSpouts,
     Load, // ShieldBlast
+    PreShoot,
     Shoot,
 };
 
@@ -153,6 +155,8 @@ class Boss : public Character
     std::string bigAreaName                          = "";
     GameObject* bigArea                              = nullptr;
     float bigAreaHitboxDelay                         = 1.3f;
+    CapsuleColliderComponent* blastArea              = nullptr;
+    float blastHitboxDelay                           = 1.3f;
 
     // VFX
     std::string overheadPrepareVFXName               = "";
@@ -181,6 +185,11 @@ class Boss : public Character
     MovingUVTransparent* bigExpansionUV              = nullptr;
     ShaderScriptComponent* smallExpansionScript      = nullptr;
     MovingUVTransparent* smallExpansionUV            = nullptr;
+
+    std::string shieldBlastVFXName                   = "";
+    MeshComponent* blastPreHitMesh                   = nullptr;
+    ShaderScriptComponent* blastHitScript            = nullptr;
+    MovingUVTransparent* blastHitUV                  = nullptr;
 
     // Particle
     std::string atomParticleName                     = "";

@@ -39,6 +39,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Overhead Prepare", InspectorField::FieldType::InputText, &overheadPrepareVFXName});
     fields.push_back({"Overhead Dash", InspectorField::FieldType::InputText, &overheadDashVFXName});
     fields.push_back({"Overhead Attack", InspectorField::FieldType::InputText, &overheadAttackVFXName});
+    fields.push_back({"Shield Blast", InspectorField::FieldType::InputText, &shieldBlastVFXName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Particle"});
     fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
@@ -281,6 +282,43 @@ bool Boss::Init()
         else GLOG("Small expansion VFX not found for ferdiad");
     }
     else GLOG("Overhead attack VFX not found for ferdiad");
+
+    GameObject* shieldBlastVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldBlastVFXName);
+    if (shieldBlastVFX)
+    {
+        GameObject* blastPreHitObject = shieldBlastVFX->GetChildGameObjectByName("BlastShield_1");
+        if (blastPreHitObject)
+        {
+            blastPreHitMesh = blastPreHitObject->GetComponent<MeshComponent*>();
+            if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
+            else GLOG("Blast pre hit mesh not found for ferdiad");
+        }
+        else GLOG("Blast pre hit VFX not found for ferdiad");
+
+        GameObject* blastHitObject = shieldBlastVFX->GetChildGameObjectByName("BlastShield_2");
+        if (blastHitObject)
+        {
+            MeshComponent* blastHitMesh = blastHitObject->GetComponent<MeshComponent*>();
+            if (blastHitMesh) blastHitMesh->SetEnabled(false);
+            else GLOG("Blast hit mesh not found for ferdiad");
+
+            blastHitScript = blastHitObject->GetComponent<ShaderScriptComponent*>();
+            if (blastHitScript)
+            {
+                blastHitScript->SetEnabled(false);
+
+                blastHitUV = blastHitScript->GetScriptByType<MovingUVTransparent>();
+                if (!blastHitUV) GLOG("Blast hit script incorrect for ferdiad");
+            }
+            else GLOG("Blast hit script not found for ferdiad");
+
+            blastArea = blastHitObject->GetComponent<CapsuleColliderComponent*>();
+            if (blastArea) blastArea->SetEnabled(false);
+            else GLOG("Not blast area object found for ferdiad");
+        }
+        else GLOG("Blast hit VFX not found for ferdiad");
+    }
+    else GLOG("Shield blast VFX not found for ferdiad");
 
     GameObject* atomObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
     if (atomObject)
@@ -1334,6 +1372,13 @@ void Boss::ResetValues(bool isForMirage)
     if (atomParticle) atomParticle->StopInstances();
     if (smokeParticle) smokeParticle->StopInstances();
     if (chargeShieldParticle) chargeShieldParticle->StopInstances();
+
+    if (blastArea) blastArea->SetEnabled(false);
+    if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
+    if (blastHitScript) blastHitScript->SetEnabled(false);
+    if (blastHitUV) blastHitUV->Reset();
+
+    agentAI->ResetAngularSpeed();
 }
 
 void Boss::ShieldBlast(float deltaTime)
@@ -1354,10 +1399,37 @@ void Boss::ShieldBlast(float deltaTime)
             animComponent->UseTrigger("BlastCharge");
         }
 
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
         if (animComponent && animComponent->IsFinished())
         {
-            currentAction     = BossActions::Shoot;
             actionTriggerDone = false;
+            currentAction     = BossActions::PreShoot;
+        }
+        break;
+
+    case BossActions::PreShoot:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            animComponent->UseTrigger("BlastHit");
+
+            attackHitboxDelay    = blastHitboxDelay;
+            attackHitboxDuration = 2.0f;
+            Character::Attack(deltaTime);
+            agentAI->SetAngularSpeed(1.0f);
+        }
+
+        if (attackTimer >= 0.3f && blastPreHitMesh && !blastPreHitMesh->GetEnabled()) blastPreHitMesh->SetEnabled(true);
+
+        if (attackTimer >= 0.5f) animComponent->OnPause();
+
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+        if (attackTimer >= attackHitboxDelay)
+        {
+            actionTriggerDone = false;
+            currentAction     = BossActions::Shoot;
         }
         break;
 
@@ -1365,13 +1437,24 @@ void Boss::ShieldBlast(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
-            animComponent->UseTrigger("BlastHit");
+
+            if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
+            if (blastArea) blastArea->SetEnabled(true);
+            if (blastHitScript) blastHitScript->SetEnabled(true);
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
+        if (attackTimer >= attackHitboxDelay + attackHitboxDuration) animComponent->OnResume();
+
         if (animComponent && animComponent->IsFinished())
         {
+            if (blastArea) blastArea->SetEnabled(false);
+            if (blastHitScript) blastHitScript->SetEnabled(false);
+            if (blastHitUV) blastHitUV->Reset();
+
+            agentAI->ResetAngularSpeed();
+
             actionTriggerDone = false;
             ChooseNextState();
         }
@@ -1492,6 +1575,9 @@ const char* Boss::GetActionName() const
 
     case BossActions::Load:
         return "Load";
+
+    case BossActions::PreShoot:
+        return "PreShoot";
 
     case BossActions::Shoot:
         return "Shoot";
