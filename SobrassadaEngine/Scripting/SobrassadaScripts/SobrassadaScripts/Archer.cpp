@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 
 #include "Application.h"
 #include "Archer.h"
@@ -23,50 +23,162 @@ Archer::Archer(GameObject* parent)
     fields.push_back({"AI Patrol Point", InspectorField::FieldType::Vec3, &patrolPoint, -1000.0f, 1000.0f});
     fields.push_back({"Arrow Projectile Name", InspectorField::FieldType::InputText, &arrowName});
     fields.push_back({"Escape Range", InspectorField::FieldType::Float, &rangeEscape, 0.0f, 10.0f});
+    fields.push_back({"Aim Duration", InspectorField::FieldType::Float, &aimDuration, 0.0f, 5.0f});
+    fields.push_back({"Shot Delay Duration", InspectorField::FieldType::Float, &shotDelay, 0.0f, 1.0f});
+    fields.push_back({"Has Multiple Shoots ", InspectorField::FieldType::Bool, &hasMultipleShoots});
+    fields.push_back({"Number of Shoots", InspectorField::FieldType::Int, &numberOfShoots, 1, 5});
+    fields.push_back({"Knockback Time", InspectorField::FieldType::Float, &knockbackTime, 0.0f, 1.0f});
+    fields.push_back({"Knockback Force", InspectorField::FieldType::Float, &knockbackForce, 0.0f, 20.0f});
+    fields.push_back({"Is Static ", InspectorField::FieldType::Bool, &isStatic});
 }
 
 bool Archer::Init()
 {
-    // GLOG("Initiating Soldier");
-
     currentState = ArcherStates::PATROL;
-
     Character::Init();
 
     agentAI = parent->GetComponent<AIAgentComponent*>();
-    if (agentAI == nullptr) GLOG("AIAgent component not found for Archer")
+    if (agentAI == nullptr)
+    {
+        GLOG("AIAgent component not found for Archer");
+        return false;
+    }
     else
     {
         agentAI->RecreateAgent();
-        agentAI->SetLookForward(true);
+        agentAI->SetLookForward(false);
         speed = agentAI->GetSpeed();
     }
 
-    // Get the arrow. This assumes the archer has only one sibling, which is the arrow. If it has more probably will
-    // keep working as long as the arrow is the second gameObject
+    GLOG("=== ARCHER INIT START ===");
+    GLOG("Archer: %s", parent->GetName().c_str());
+    GLOG("Static: %s, Multiple Shoots: %s", isStatic ? "YES" : "NO", hasMultipleShoots ? "YES" : "NO");
+
     const GameObject* root           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent());
     const std::vector<UID>& siblings = root->GetChildren();
-    GameObject* arrowObj             = nullptr;
+
+    GLOG("Parent: %s, Children: %d", root->GetName().c_str(), siblings.size());
+
+   
+    std::vector<GameObject*> allArrows;
+
     for (UID objectUID : siblings)
     {
-        if (objectUID != parent->GetUID())
-            arrowObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
+        GameObject* obj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(objectUID);
+        if (obj != parent)
+        {
+            std::string objName = obj->GetName();
+            if (objName.find("Arrow_") != std::string::npos)
+            {
+                GLOG("Found arrow: %s", objName.c_str());
+
+                ScriptComponent* scriptComp = obj->GetComponent<ScriptComponent*>();
+                if (scriptComp)
+                {
+                    Projectile* projectile = scriptComp->GetScriptByType<Projectile>();
+                    if (projectile)
+                    {
+                        allArrows.push_back(obj);
+                        arrowPool.push_back(projectile);
+
+                        GLOG("Arrow added to pool: %s (Total: %d)", objName.c_str(), arrowPool.size());
+                    }
+                }
+            }
+        }
     }
 
-    if (arrowObj && arrowObj->GetComponent<ScriptComponent*>())
+    GLOG("Total arrows found: %d", allArrows.size());
+
+    
+    if (hasMultipleShoots)
     {
-        arrow = arrowObj->GetComponent<ScriptComponent*>()->GetScriptByType<Projectile>();
-        if (!arrow) GLOG("[WARNING] No arrow found in archer");
+        GLOG("=== MULTIPLE SHOOTS ARCHER ===");
+      
+
+      
+        for (GameObject* arrowObj : allArrows)
+        {
+            arrowObj->SetEnabledRecursive(false);
+            GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());
+        }
+    }
+    else
+    {
+        GLOG("=== SINGLE SHOOT ARCHER ===");
+
+     
+        if (!allArrows.empty())
+        {
+          
+            GameObject* singleArrowObj = allArrows[0];
+            arrow                      = arrowPool[0];
+
+            GLOG("Single arrow assigned: %s", singleArrowObj->GetName().c_str());
+
+            for (GameObject* arrowObj : allArrows)
+            {
+                arrowObj->SetEnabledRecursive(false);
+                GLOG("Disabled arrow: %s", arrowObj->GetName().c_str());
+            }
+        }
+        else
+        {
+            GLOG("[WARNING] No arrows found for single shoot archer");
+        }
     }
 
+  
+    GLOG("=== FINAL ARROW STATES ===");
+    for (int i = 0; i < arrowPool.size(); i++)
+    {
+        GameObject* arrowObj = arrowPool[i]->GetParent();
+        GLOG("Arrow[%d]: %s, Enabled: %s", i, arrowObj->GetName().c_str(), arrowObj->IsEnabled() ? "YES" : "NO");
+    }
+
+    GLOG("=== ARCHER INIT COMPLETE ===");
     return true;
-}
+ }
+
+ 
+
+
 
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+
+    if (isKnockback)
+    {
+        float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+      
+        knockbackTimer     -= deltaTime;
+
+        float3 movement     = knockbackDirection * knockbackForce * deltaTime;
+        float4x4 transform  = parent->GetGlobalTransform();
+        transform.SetTranslatePart(currentPos + movement);
+        parent->SetLocalTransform(transform);
+
+        if (knockbackTimer <= 0.0f)
+        {
+            isKnockback = false;
+            agentAI->ResetSpeed();
+            agentAI->ResetAngularSpeed();
+            ChangeState();
+        }
+        return;
+    }
     Character::Update(deltaTime);
 
+    if (isDead)
+    {
+   
+        if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
+        {
+            GLOG("DEATH ANIMATION FINISHED - DISABLING OBJECT");
+            parent->SetEnabled(false);
+        }
+    }
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
         const std::string life      = "Health: " + std::to_string(currentHealth);
@@ -96,27 +208,191 @@ void Archer::OnPlayerEnterLocation()
 void Archer::OnDeath()
 {
     // TODO: include death sound for the character
+    isAttacking  = false;
+    currentState = ArcherStates::DEATH;
+
+    if (animComponent)
+    {
+        GLOG("TRIGGERING die ANIMATION");
+        animComponent->UseTrigger("die");
+    }
+
     // TODO: animation and particles
-    parent->SetEnabled(false);
 }
 
 void Archer::OnDamageTaken(int amount)
 {
+    isAttacking = false;
+    attackTimer = 0.0f;
+    isAiming    = false;
+    aimTimer    = 0.0f;
+
+    if (weaponCollider && weaponCollider->GetEnabled())
+    {
+        weaponCollider->SetEnabled(false);
+    }
+
+    isKnockback    = true;
+    knockbackTimer = knockbackTime;
+    ApplyKnockback();
+
+    if (animComponent) animComponent->UseTrigger("damageSmall");
+
     // TODO: play soldier take damage sound
     // TODO: particles? and animation
 }
 
 void Archer::PerformAttack()
 {
-    // TODO: play basicAttack sound
-    // TODO: make interaction with hitboxes with the character
+
     // TODO: activate and disable the box collider located on one on the gameobjects weapon
     // TODO: trails, particles and animation
 }
 
+void Archer::OverShooting(float deltaTime)
+{
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        hasShot            = false;
+        isAttacking        = false;
+        hasStartedShooting = false;
+        currentShot        = 0;
+        shotTimer          = 0.0f;
+        attackCdTimer      = attackCooldown;
+        agentAI->ResetSpeed();
+        agentAI->SetLookForward(true);
+        isAiming     = false;
+        aimTimer     = 0.0f;
+        currentState = ArcherStates::PATROL;
+        return;
+    }
+
+   if (!weaponCollider) return;
+
+    if (!isAttacking)
+    {
+        agentAI->SetLookForward(false);
+        if (animComponent) animComponent->UseTrigger("overdraw");
+        Character::Attack(deltaTime);
+        agentAI->SetSpeed(0.0f, 0.0f);
+
+      
+        currentShot        = 0;
+        shotTimer          = 0.0f;
+        hasStartedShooting = false;
+        currentArrowIndex  = 0; 
+
+        GLOG("OVERSHOOTING STARTED - Pool: %d, Target: %d", arrowPool.size(), numberOfShoots);
+    }
+    else
+    {
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+        if (!hasStartedShooting && attackTimer >= attackHitboxDelay)
+        {
+            hasStartedShooting = true;
+            currentShot        = 0;
+            shotTimer          = 0.0f;
+            GLOG("OVERSHOOTING - MACHINE GUN SEQUENCE STARTED!");
+        }
+
+        if (hasStartedShooting && currentShot < numberOfShoots)
+        {
+            shotTimer += deltaTime;
+            GLOG("MACHINE GUN - Shot %d/%d, Timer: %.2f/%.2f", currentShot + 1, numberOfShoots, shotTimer, shotDelay);
+
+            if (shotTimer >= shotDelay)
+            {
+                if (arrowPool.empty())
+                {
+                    GLOG("[ERROR] Arrow pool is empty!");
+                    isAttacking        = false;
+                    hasStartedShooting = false;
+                    ChangeState();
+                    return;
+                }
+
+               
+                float3 baseDirection = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
+                baseDirection.Normalize();
+
+                float spreadAngle           = 10.0f * (3.14159f / 180.0f);
+                float randomAngle           = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * spreadAngle;
+
+                float3 shootDirection       = baseDirection;
+                float cosA                  = std::cos(randomAngle);
+                float sinA                  = std::sin(randomAngle);
+                float x                     = shootDirection.x * cosA - shootDirection.z * sinA;
+                float z                     = shootDirection.x * sinA + shootDirection.z * cosA;
+                shootDirection.x            = x;
+                shootDirection.z            = z;
+
+                float3 arrowPos             = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
+
+               
+                Projectile* currentArrow    = arrowPool[currentArrowIndex];
+                GameObject* arrowGameObject = currentArrow->GetParent();
+
+                GLOG(
+                    "FIRING ARROW %d - Index: %d, Arrow: %s", currentShot + 1, currentArrowIndex,
+                    arrowGameObject ? arrowGameObject->GetName().c_str() : "NULL"
+                );
+
+                if (arrowGameObject)
+                {
+                  
+                   
+                    arrowGameObject->SetEnabled(true);
+                    arrowGameObject->SetEnabledRecursive(true);
+
+                    bool isEnabled = arrowGameObject->IsEnabled();
+                    GLOG("Arrow activation result: %s", isEnabled ? "SUCCESS" : "FAILED");
+
+                    currentArrow->Shoot(arrowPos, shootDirection);
+                    GLOG("Arrow shot executed!");
+                }
+                else
+                {
+                    GLOG("[ERROR] Arrow GameObject is NULL!");
+                }
+
+             
+                currentShot++;
+                currentArrowIndex = (currentArrowIndex + 1) % arrowPool.size();
+                shotTimer         = 0.0f;
+
+                GLOG("Shot %d/%d COMPLETED - Next arrow index: %d", currentShot, numberOfShoots, currentArrowIndex);
+            }
+        }
+
+        bool allShotsFired = (currentShot >= numberOfShoots);
+        bool timeExpired   = (attackTimer >= attackDuration);
+
+        if (allShotsFired || timeExpired)
+        {
+            GLOG(
+                "OVERSHOOTING FINISHED - Shots fired: %d/%d, Time expired: %s", currentShot, numberOfShoots,
+                timeExpired ? "YES" : "NO"
+            );
+
+            hasShot            = false;
+            isAttacking        = false;
+            hasStartedShooting = false;
+            currentShot        = 0;
+            shotTimer          = 0.0f;
+            attackCdTimer      = attackCooldown;
+            agentAI->ResetSpeed();
+            agentAI->SetLookForward(true);
+            isAiming = false;
+            aimTimer = 0.0f;
+
+            ChangeState();
+            return;
+        }
+    }
+}
 void Archer::HandleState(float deltaTime)
 {
-    // if (!animComponent) return;
 
     switch (currentState)
     {
@@ -124,18 +400,34 @@ void Archer::HandleState(float deltaTime)
         SearchForPlayer();
         break;
     case ArcherStates::PATROL:
-        // TODO: Patrol animation
         PatrolAI();
         break;
     case ArcherStates::CHASE:
         ChaseAI();
         break;
+    case ArcherStates::AIM:
+        Aim(deltaTime);
+        break;
     case ArcherStates::BASIC_ATTACK:
-        if (attackCdTimer <= 0) Attack(deltaTime);
+        Attack(deltaTime);
+        break;
+    case ArcherStates::OVERSHOOTING:
+        OverShooting(deltaTime);
         break;
     case ArcherStates::ESCAPE:
         Escape(deltaTime);
         break;
+    case ArcherStates::DEATH:
+
+        deathTimer += deltaTime;
+
+        if (deathTimer >= DEATH_DURATION)
+        {
+            parent->SetEnabled(false);
+            return;
+        }
+        break;
+
     default:
         GLOG("No state provided to Archer");
         currentState = ArcherStates::PATROL;
@@ -144,24 +436,29 @@ void Archer::HandleState(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
-        // GLOG("FINISH ANIM");
-        animComponent->UseTrigger("idle");
+        // animComponent->UseTrigger("idle");
     }
 }
 
 void Archer::PatrolAI()
 {
-    if (animComponent) animComponent->UseTrigger("run");
+    if (isStatic)
+    {
+        currentState = ArcherStates::AIM;
+        return;
+    }
+
+    if (animComponent) animComponent->UseTrigger("idle");
 
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     bool playerInLocation            = parent->HasTag(playerLocation);
 
-    if (!playerScript->IsDead())
+    if (!playerScript->IsDead() && playerScript->GetState() != CharacterStates::RESPAWN)
     {
         if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
             currentState = ArcherStates::CHASE;
         else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
-            currentState = ArcherStates::BASIC_ATTACK;
+            currentState = ArcherStates::AIM;
     }
 
     bool valid = false;
@@ -177,8 +474,23 @@ void Archer::PatrolAI()
     }
 }
 
+void Archer::ApplyKnockback()
+{
+    float3 myPos         = parent->GetGlobalTransform().TranslatePart();
+    knockbackDirection   = character->GetFrontDirection();
+    knockbackDirection.y = 0.0f;
+    if (knockbackDirection.LengthSq() < 0.001f) knockbackDirection = float3::unitZ;
+    knockbackDirection.Normalize();
+}
+
 void Archer::ChaseAI()
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        currentState = ArcherStates::PATROL;
+        return;
+    }
+
     if (animComponent) animComponent->UseTrigger("run");
 
     if (character != nullptr)
@@ -191,32 +503,130 @@ void Archer::ChaseAI()
 
 void Archer::SearchForPlayer()
 {
-    // Stands still for a few seconds, if player gets close again chases, if not returns to patrol
-    if (!isSearching)
+
+    if (isStatic)
     {
-        // TODO: Would be nice to be a "search" animation instead of idle
-        animComponent->UseTrigger("idle");
-        isSearching = true;
-        searchTimer = searchDuration;
-        agentAI->SetSpeed(0.0f, 0.0f);
+
+        if (animComponent) animComponent->UseTrigger("aim");
+
+        float distance = GetDistanceFromPlayer();
+        if (distance <= maxDetectionRange)
+        {
+            if (character && agentAI)
+            {
+                agentAI->SetSpeed(0.0f, 0.0f);
+                agentAI->LookAtMovement(character->GetLastPosition(), 0.016f);
+            }
+
+            if (distance <= rangeAIAttack && attackCdTimer <= 0.0f)
+            {
+
+                currentState = ArcherStates::AIM;
+            }
+        }
+        else
+        {
+            if (agentAI) agentAI->SetSpeed(0.0f, 0.0f);
+        }
+    }
+    else
+    {
+        if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+        {
+            isSearching  = false;
+            currentState = ArcherStates::PATROL;
+            agentAI->ResetSpeed();
+            return;
+        }
+        if (!isSearching)
+        {
+            animComponent->UseTrigger("idle");
+            isSearching = true;
+            searchTimer = searchDuration;
+            agentAI->SetSpeed(0.0f, 0.0f);
+        }
+
+        if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+        {
+            isSearching = false;
+            agentAI->ResetSpeed();
+            currentState = ArcherStates::CHASE;
+        }
+        else if (searchTimer <= 0.0f)
+        {
+            isSearching  = false;
+            currentState = ArcherStates::PATROL;
+            agentAI->ResetSpeed();
+        }
+    }
+}
+
+void Archer::Aim(float deltaTime)
+{
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        isAiming = false;
+        aimTimer = 0.0f;
+        agentAI->SetLookForward(true);
+        agentAI->ResetSpeed();
+        currentState = ArcherStates::PATROL;
+        return;
     }
 
-    if (GetDistanceFromPlayer() < maxDetectionRange - 0.5f)
+    float distance = GetDistanceFromPlayer();
+    if (!weaponCollider) return;
+
+    if (!isAiming)
     {
-        isSearching = false;
-        agentAI->ResetSpeed();
-        currentState = ArcherStates::CHASE;
+        agentAI->SetLookForward(false);
+        if (animComponent) animComponent->UseTrigger("aim");
+
+        isAiming = true;
+        aimTimer = 0.0f;
+        // agentAI->SetSpeed(0.0f, 0.0f);
     }
-    else if (searchTimer <= 0.0f)
+    else
     {
-        isSearching  = false;
-        currentState = ArcherStates::PATROL;
-        agentAI->ResetSpeed();
+        aimTimer += deltaTime;
+
+        if (character)
+        {
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+        }
+
+        if (aimTimer >= aimDuration)
+        {
+            isAiming = false;
+            aimTimer = 0.0f;
+
+            if (hasMultipleShoots)
+            {
+                currentState = ArcherStates::OVERSHOOTING;
+            }
+            else
+            {
+
+                currentState = ArcherStates::BASIC_ATTACK;
+            }
+        }
     }
 }
 
 void Archer::Attack(float deltaTime)
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        hasShot     = false;
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->SetLookForward(true);
+        isAiming     = false;
+        aimTimer     = 0.0f;
+        currentState = ArcherStates::PATROL;
+        return;
+    }
+
+    float distance = GetDistanceFromPlayer();
     if (!weaponCollider) return;
 
     if (!isAttacking)
@@ -225,27 +635,56 @@ void Archer::Attack(float deltaTime)
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
+
+        GLOG("SINGLE ATTACK STARTED");
     }
     else
     {
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-        // Enable hitbox when animation hits
+
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
-            hasShot          = true;
+            hasShot = true;
+
+            if (!arrow)
+            {
+                GLOG("[ERROR] No arrow for single attack!");
+                return;
+            }
+
             float3 direction = character->GetLastPosition() - parent->GetGlobalTransform().TranslatePart();
             direction.Normalize();
-            arrow->Shoot(parent->GetPosition(), direction);
+            float3 arrowPos      = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
+
+            
+            GameObject* arrowObj = arrow->GetParent();
+            if (arrowObj)
+            {
+                GLOG("Single arrow before activation - Enabled: %s", arrowObj->IsEnabled() ? "YES" : "NO");
+
+                arrowObj->SetEnabled(true);
+                arrowObj->SetEnabledRecursive(true);
+
+                bool isEnabled = arrowObj->IsEnabled();
+                GLOG("Single arrow activation result: %s", isEnabled ? "SUCCESS" : "FAILED");
+            }
+
+            GLOG("SINGLE ARROW FIRING");
+            arrow->Shoot(arrowPos, direction);
+            GLOG("SINGLE ARROW SHOT COMPLETED");
         }
 
-        // Reset attack state
         if (attackTimer >= attackDuration)
         {
+            GLOG("SINGLE ATTACK FINISHED");
             hasShot       = false;
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             agentAI->ResetSpeed();
             agentAI->SetLookForward(true);
+
+            isAiming = false;
+            aimTimer = 0.0f;
 
             ChangeState();
         }
@@ -254,22 +693,47 @@ void Archer::Attack(float deltaTime)
 
 void Archer::ChangeState()
 {
-    if (playerScript->IsDead())
+    if (isDead) return;
+
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
     {
+        GLOG("PLAYER IS DEAD - GOING TO PATROL");
         currentState = ArcherStates::PATROL;
         return;
     }
 
     const float distance = GetDistanceFromPlayer();
-    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) < rangeEscape)
-        currentState = ArcherStates::ESCAPE;
-    else if (distance <= rangeAIAttack) currentState = ArcherStates::BASIC_ATTACK;
-    else if (distance <= rangeAIChase) currentState = ArcherStates::CHASE;
-    else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
+
+    if (isStatic)
+    {
+        if (distance <= maxDetectionRange)
+        {
+            if (distance <= rangeAIAttack && attackCdTimer <= 0.0f) currentState = ArcherStates::AIM;
+            else if (distance <= rangeAIAttack && attackCdTimer > 0.0f) currentState = ArcherStates::SEARCH;
+            else currentState = ArcherStates::AIM;
+        }
+        else
+        {
+            GLOG("STATIC ARCHER - NO PLAYER IN RANGE, IDLE");
+            currentState = ArcherStates::SEARCH;
+        }
+    }
+    else
+    {
+        if (distance <= rangeEscape)
+        {
+            currentState = ArcherStates::ESCAPE;
+        }
+        else if (distance <= rangeAIAttack) currentState = ArcherStates::AIM;
+        else if (distance >= rangeAIChase) currentState = ArcherStates::CHASE;
+        else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
+        else currentState = ArcherStates::PATROL;
+    }
 }
 
 void Archer::Escape(float deltaTime)
 {
+    GLOG("ESCAPE STATE");
     if (!agentAI || !character) return;
 
     float3 archerPos        = parent->GetGlobalTransform().TranslatePart();
@@ -293,8 +757,8 @@ void Archer::Escape(float deltaTime)
                 if (animComponent) animComponent->UseTrigger("run");
                 if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
                 {
-                    currentState    = ArcherStates::BASIC_ATTACK;
                     hasEscapeTarget = false;
+                    ChangeState();
                 }
                 return;
             }
@@ -355,8 +819,8 @@ void Archer::Escape(float deltaTime)
 
     if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
     {
-        currentState    = ArcherStates::BASIC_ATTACK;
         hasEscapeTarget = false;
         agentAI->ResetSpeed();
+        ChangeState();
     }
 }
