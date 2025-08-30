@@ -1475,12 +1475,20 @@ void Boss::ChangePhase()
         stateEnter = false;
         phase++;
 
+        agentAI->PauseMovement();
+
         // TODO: anim changePhase
         currentAction = BossActions::Taunt;
         if (animComponent) animComponent->UseTrigger("Taunt");
     }
 
-    if (animComponent && animComponent->IsFinished()) ChooseNextState();
+    if (animComponent && animComponent->IsFinished())
+    {
+        GLOG("ChangePhase Finished")
+        agentAI->ResumeMovement();
+
+        ChooseNextState();
+    }
 }
 
 const char* Boss::GetStateName() const
