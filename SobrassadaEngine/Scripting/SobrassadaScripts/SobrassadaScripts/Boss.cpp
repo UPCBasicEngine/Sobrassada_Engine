@@ -23,10 +23,11 @@
 Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
+    fields.push_back({"Phase Start", InspectorField::FieldType::Int, &phase, 1, 3});
     fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
-    fields.push_back({"Height Jump", InspectorField::FieldType::Float, &heightJump, 0.0f, 5.0f});
+    /*fields.push_back({"Height Jump", InspectorField::FieldType::Float, &heightJump, 0.0f, 5.0f});
     fields.push_back({"Jump Duration", InspectorField::FieldType::Float, &jumpDuration, 0.0f, 2.0f});
-    fields.push_back({"Fall Duration", InspectorField::FieldType::Float, &fallDuration, 0.0f, 2.0f});
+    fields.push_back({"Fall Duration", InspectorField::FieldType::Float, &fallDuration, 0.0f, 2.0f});*/
     fields.push_back({"Close Area Damage", InspectorField::FieldType::Int, &closeAreaDamage, 0, 5});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
@@ -406,6 +407,10 @@ void Boss::HandleState(float deltaTime)
         ChangePhase();
         break;
 
+    case BossStates::ShieldBlast:
+        ShieldBlast(deltaTime);
+        break;
+
     case BossStates::WaterSpouts:
         break;
     }
@@ -482,6 +487,7 @@ void Boss::ChooseNextStateFirstPhase()
 
     case BossDistance::Extreme:
         float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+        GLOG("Distance %.2f", distance);
         if (distance <= maxDetectionRange) doTaunt = true;
         else doIdle = true;
         break;
@@ -525,27 +531,102 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 80;
+        shieldStrikesRate = 85;
         shieldBlastRate   = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate = 60;
+        shieldStrikesRate = 55;
         shieldBlastRate   = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate = 50;
+        shieldStrikesRate = 40;
         shieldBlastRate   = 100;
         break;
 
     case BossDistance::Far:
-        shieldStrikesRate = 35;
+        shieldStrikesRate = 20;
         shieldBlastRate   = 100;
         break;
 
     case BossDistance::Farther:
-        shieldStrikesRate = 20;
+        shieldStrikesRate = 10;
+        shieldBlastRate   = 100;
+        break;
+
+    case BossDistance::Extreme:
+        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+        if (distance <= maxDetectionRange) doTaunt = true;
+        else doIdle = true;
+        break;
+    }
+    shieldStrikesRate = -1;
+
+    int num           = uniformDist(rng);
+    if (doTaunt)
+    {
+        currentState = BossStates::Taunt;
+    }
+    else if (doIdle)
+    {
+        currentState = BossStates::Idle;
+    }
+    else
+    {
+        if (num <= shieldStrikesRate)
+        {
+            currentState = BossStates::ShieldStrikes;
+        }
+        else if (num <= shieldBlastRate)
+        {
+            currentState = BossStates::ShieldBlast;
+        }
+    }
+}
+
+// Phase3: (ALL) ShieldStrikes, OverheadStrike, ShieldBlast, Mirage & WaterSpouts
+void Boss::ChooseNextStateThirdPhase()
+{
+    int shieldStrikesRate  = -1;
+    int overheadStrikeRate = -1;
+    int shieldBlastRate    = -1;
+    int waterSpoutsRate    = -1;
+
+    // Set states ratio depending on distance
+    switch (CheckDistance())
+    {
+    case BossDistance::Close:
+        shieldStrikesRate = 95;
+        waterSpoutsRate   = 100;
+        break;
+
+    case BossDistance::Near:
+        shieldStrikesRate = 60;
+        waterSpoutsRate   = 80;
+        shieldBlastRate   = 100;
+        break;
+
+    case BossDistance::Medium:
+        shieldStrikesRate  = 25;
+        overheadStrikeRate = 50;
+        waterSpoutsRate    = 75;
+        shieldBlastRate    = 100;
+        break;
+
+    case BossDistance::Distant:
+        shieldStrikesRate  = 15;
+        overheadStrikeRate = 60;
+        waterSpoutsRate    = 75;
+        shieldBlastRate    = 100;
+        break;
+
+    case BossDistance::Far:
+        shieldBlastRate = 100;
+        break;
+
+    case BossDistance::Farther:
+        shieldStrikesRate = 10;
         shieldBlastRate   = 100;
         break;
 
@@ -573,14 +654,9 @@ void Boss::ChooseNextStateSecondPhase()
         }
         else if (num <= shieldBlastRate)
         {
-            currentState = BossStates::OverheadStrike;
+            currentState = BossStates::ShieldBlast;
         }
     }
-}
-
-// Phase3: (ALL) ShieldStrikes, OverheadStrike, ShieldBlast, Mirage & WaterSpouts
-void Boss::ChooseNextStateThirdPhase()
-{
 }
 
 void Boss::Idle()
@@ -1134,6 +1210,7 @@ void Boss::Mirage()
     {
         GLOG("[BOSS] - Mirage");
 
+        ResetValues(true);
         mirageActivated = true;
         stateEnter      = false;
         agentAI->PauseMovement();
@@ -1222,15 +1299,45 @@ void Boss::ResetValues(bool isForMirage)
 
     if (!isForMirage) mirageActivated = false;
 
-    weaponCollider->SetEnabled(false);
-    closeArea->SetEnabled(false);
-    bigArea->SetEnabled(false);
+    if (weaponCollider) weaponCollider->SetEnabled(false);
+    if (closeArea) closeArea->SetEnabled(false);
+    if (bigArea) bigArea->SetEnabled(false);
+
+    if (runesScript) runesScript->SetEnabled(false);
+    if (runesUV)
+    {
+        runesUV->SetPaused(false);
+        runesUV->Reset();
+    }
+    if (runesLightsScript) runesLightsScript->SetEnabled(false);
+    if (runesLightsUV) runesLightsUV->Reset();
+    if (dashGroundMesh) dashGroundMesh->SetEnabled(false);
+    if (dashEnergyMesh) dashEnergyMesh->SetEnabled(false);
+    if (dashLightsShieldScript) dashLightsShieldScript->SetEnabled(false);
+    if (dashLightsShieldUV) dashLightsShieldUV->Reset();
+    if (dashShieldExpansionScript) dashShieldExpansionScript->SetEnabled(false);
+    if (dashShieldExpansionUV) dashShieldExpansionUV->Reset();
+    if (attackLightingsScript) attackLightingsScript->SetEnabled(false);
+    if (attackLightingsUV) attackLightingsUV->Reset();
+    if (attackEnergyScript) attackEnergyScript->SetEnabled(false);
+    if (attackEnergyUV)
+    {
+        attackEnergyUV->SetPaused(false);
+        attackEnergyUV->Reset();
+    }
+    if (attackExplosionScript) attackExplosionScript->SetEnabled(false);
+    if (attackExplosionUV) attackExplosionUV->Reset();
+    if (bigExpansionScript) bigExpansionScript->SetEnabled(false);
+    if (bigExpansionUV) bigExpansionUV->Reset();
+    if (smallExpansionScript) smallExpansionScript->SetEnabled(false);
+    if (smallExpansionUV) smallExpansionUV->Reset();
+    if (atomParticle) atomParticle->StopInstances();
+    if (smokeParticle) smokeParticle->StopInstances();
+    if (chargeShieldParticle) chargeShieldParticle->StopInstances();
 }
 
 void Boss::ShieldBlast(float deltaTime)
 {
-    if (!weaponCollider) return; // TODO: collider & vfx
-
     if (stateEnter)
     {
         stateEnter        = false;
@@ -1283,9 +1390,9 @@ void Boss::ChangePhase()
         ResetValues(false);
         stateEnter = false;
         phase++;
+
         // TODO: anim changePhase
         currentAction = BossActions::Taunt;
-
         if (animComponent) animComponent->UseTrigger("Taunt");
     }
 
@@ -1319,6 +1426,9 @@ const char* Boss::GetStateName() const
 
     case BossStates::WaterSpouts:
         return "WaterSpouts";
+
+    case BossStates::ShieldBlast:
+        return "ShieldBlast";
 
     default:
         return "ERROR: NO STATE";
@@ -1379,6 +1489,12 @@ const char* Boss::GetActionName() const
 
     case BossActions::WaterSpouts:
         return "WaterSpouts";
+
+    case BossActions::Load:
+        return "Load";
+
+    case BossActions::Shoot:
+        return "Shoot";
 
     default:
         return "ERROR: NO ACTION";

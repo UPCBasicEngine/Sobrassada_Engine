@@ -17,12 +17,12 @@ class ParticleSystemComponent;
 enum class BossDistance
 {
     Close,   // 3m
-    Near,    // 5m
-    Medium,  // 7.5m
-    Distant, // 10m
-    Far,     // 12.5m
-    Farther, // 15m
-    Extreme  // 20m
+    Near,    // 4m
+    Medium,  // 6.5m
+    Distant, // 8.5m
+    Far,     // 10m
+    Farther, // 13m
+    Extreme  // 15m
 };
 
 enum class BossStates
