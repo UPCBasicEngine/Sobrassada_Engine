@@ -7,6 +7,7 @@
 #include "ScriptComponent.h"
 #include "Standalone\MeshComponent.h"
 
+
 Mirage::Mirage(GameObject* parent) : Script(parent)
 {
 
@@ -27,11 +28,16 @@ bool Mirage::Init()
     meshComponent               = parent->GetComponent<MeshComponent*>();
     std::vector<UID> children   = parent->GetChildren();
 
-    GameObject* firstChild     = scene->GetGameObjectByUID(children[0]);
+    GameObject* firstChild      = scene->GetGameObjectByUID(children[0]);
 
     ScriptComponent* scriptComp = firstChild->GetComponent<ScriptComponent*>();
 
+    GameObject* secondChild     = scene->GetGameObjectByUID(children[1]);
+
     bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
+    endPoint                    = secondChild->GetLocalTransform().TranslatePart();
+    GLOG("Mirage endpoint at %f,%f,%f", endPoint.x, endPoint.y, endPoint.z);
+    bossDash->setEndPoint(endPoint);
 
     parent->SetEnabled(false);
 

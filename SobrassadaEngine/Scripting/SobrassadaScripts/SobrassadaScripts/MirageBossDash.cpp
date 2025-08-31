@@ -23,7 +23,6 @@ MirageBossDash::MirageBossDash(GameObject* parent)
 bool MirageBossDash::Init()
 {
     Character::Init();
-    dashEnd = parent->GetChildGameObjectByName("EndPoint")->GetLocalTransform().TranslatePart();
     return true;
 }
 
@@ -121,7 +120,7 @@ void MirageBossDash::StartDash()
 {
     isDashing      = true;
 
-    float3 bossPos = parent->GetGlobalTransform().TranslatePart();
+    float3 bossPos = parent->GetLocalTransform().TranslatePart();
 
     bossPos.y      = 0.0f;
     dashEnd.y      = 0.0f;
@@ -132,7 +131,7 @@ void MirageBossDash::StartDash()
     GLOG("Distance: %.2f", dashDistance);
     GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
 
-    dashSpeed         = dashDistance / 4*dashDuration;
+    dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
 
     dashStartPosLocal = parent->GetLocalTransform().TranslatePart();
