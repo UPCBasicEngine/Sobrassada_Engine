@@ -5,7 +5,6 @@
 #include "Mirage.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
-#include "Mirage.h"
 
 
 
