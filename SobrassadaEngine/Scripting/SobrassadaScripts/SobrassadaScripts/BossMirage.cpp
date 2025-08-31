@@ -5,9 +5,13 @@
 #include "Mirage.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Mirage.h"
+
+
 
 BossMirage::BossMirage(GameObject* parent) : Script(parent)
 {
+    std::vector<Mirage*> foundMirages;
     fields.push_back({"Current Sequence", InspectorField::FieldType::Int, &currentSequence, 1, 3});
     fields.push_back(
         {"Trigger Sequence",
@@ -43,6 +47,7 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
 
              const auto& gameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
 
+             // searches for active objects with a mirage script, adds gameobject references to activate them later
              for (const auto& [uid, gameObject] : gameObjects)
              {
                  if (!gameObject) continue;
@@ -63,6 +68,7 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
 // CAREFUL!!! Searches for gameobjects with a specific name
 bool BossMirage::Init()
 {
+
     Scene* scene            = AppEngine->GetSceneModule()->GetScene();
 
     sequence1.mirageObjects = GetMirageChildren(scene, "Sequence1");
@@ -91,9 +97,10 @@ bool BossMirage::Init()
 
 void BossMirage::Update(float deltaTime)
 {
-    if (state == SequenceState::PlayingSequence && sequence)
     {
-        timeSinceLastActivation += deltaTime;
+        if (state == SequenceState::PlayingSequence && sequence)
+        {
+            timeSinceLastActivation += deltaTime;
 
         if (timeSinceLastActivation >= sequence->delayBetweenZones)
         {
@@ -109,7 +116,8 @@ void BossMirage::Update(float deltaTime)
 
                 // Move to next weight order
                 ++currentWeightOrder;
-                timeSinceLastActivation = 0.f;
+                    timeSinceLastActivation = 0.f;
+                }
             }
             else
             {
@@ -146,13 +154,17 @@ void BossMirage::StartSequence(int sequenceNum)
 std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::string& parentName)
 {
     std::vector<GameObject*> result;
+
     const auto& gameObjects = scene->GetAllGameObjects();
 
     for (const auto& [uid, go] : gameObjects)
     {
         if (!go || go->GetName() != parentName) continue;
 
+        GLOG("Found parent object: %s", parentName.c_str());
+
         const auto& childrenUIDs = go->GetChildren();
+
         for (UID childUID : childrenUIDs)
         {
             auto it = gameObjects.find(childUID);
@@ -166,6 +178,7 @@ std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::
                 GLOG("Checking child: %s | Active: %s", child->GetName().c_str(), child->IsEnabled() ? "Yes" : "No");
             }
         }
+
         break; // found the correct parent object
     }
 

@@ -168,8 +168,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
-                                  playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -188,6 +187,17 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 return;
             }
         }
+        else if (enemyScript->GetCharacterType() == CharacterType::Boss)
+        {
+            Boss* bossScript = otherScript->GetScriptByType<Boss>();
+            if (bossScript)
+            {
+                if (bossScript->GetCloseArea() &&
+                    otherWeaponShpere == bossScript->GetCloseArea()->GetComponent<SphereColliderComponent*>())
+                    TakeDamage(bossScript->GetCloseAreaDamage());
+                else TakeDamage(enemyScript->attackDamage);
+            }
+        }
     }
 
     CubeColliderComponent* otherWeaponCube = otherObject->GetComponent<CubeColliderComponent*>();
@@ -204,12 +214,11 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
-            
+
             if (type == CharacterType::CuChulainn)
             {
                 CuChulainn* player = static_cast<CuChulainn*>(this);
                 player->OnArrowHit();
-            
             }
 
             TakeDamage(projectile->GetDamage());
@@ -291,7 +300,6 @@ void Character::TakeDamage(int amount)
     OnDamageTaken(amount);
 
     if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
-   
 
     if (currentHealth <= 0) Die();
 }

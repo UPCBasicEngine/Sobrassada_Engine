@@ -1,4 +1,5 @@
 #include "pch.h"
+
 #include "Application.h"
 #include "CameraComponent.h"
 #include "Component.h"
@@ -23,6 +24,7 @@ MirageBossDash::MirageBossDash(GameObject* parent)
 bool MirageBossDash::Init()
 {
     Character::Init();
+    dashEnd = parent->GetChildGameObjectByName("EndPoint")->GetLocalTransform().TranslatePart();
     return true;
 }
 
@@ -76,6 +78,7 @@ void MirageBossDash::Idle()
 
 void MirageBossDash::OverheadStrike(float deltaTime)
 {
+
     if (stateEnter)
     {
         stateEnter        = false;
@@ -112,6 +115,7 @@ void MirageBossDash::OverheadStrike(float deltaTime)
             currentAction     = BossDashActions::Idle;
             actionTriggerDone = false;
         }
+
         break;
     }
 }
