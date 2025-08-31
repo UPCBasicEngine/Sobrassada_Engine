@@ -91,7 +91,6 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
-        GLOG("DISABLING");
         if (stateTimer >= damageDuration)
         {
 
