@@ -17,6 +17,7 @@ class Mirage : public Script
     Mirage(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
+    int getOrder() { return weightOrder; }
 
   protected:
     MirageState state            = MirageState::Sleeping;

@@ -1,13 +1,15 @@
 #pragma once
 
 #include "Script.h"
+#include <map>
 
 class Scene;
 
 struct AttackSequence
 {
     std::vector<GameObject*> mirageObjects;
-    float delayBetweenZones = 1.0f;
+    std::map<int, std::vector<GameObject*>> waves;
+    float delayBetweenZones = 2.0f;
 };
 
 struct SequenceTrigger
@@ -41,4 +43,5 @@ class BossMirage : public Script
     AttackSequence* sequence      = nullptr;
     size_t currentMirageIndex     = 0;
     float timeSinceLastActivation = 0.0f;
+    int currentWeightOrder        = 1;
 };

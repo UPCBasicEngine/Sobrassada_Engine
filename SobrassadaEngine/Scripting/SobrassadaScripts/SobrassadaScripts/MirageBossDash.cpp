@@ -87,7 +87,7 @@ void MirageBossDash::OverheadStrike(float deltaTime)
     switch (currentAction)
     {
     case BossDashActions::Prepare:
-       if (!actionTriggerDone)
+        if (!actionTriggerDone)
         {
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Prepare");
@@ -132,7 +132,7 @@ void MirageBossDash::StartDash()
     GLOG("Distance: %.2f", dashDistance);
     GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
 
-    dashSpeed         = dashDistance / dashDuration;
+    dashSpeed         = dashDistance / 4*dashDuration;
     dashTimeRemaining = dashDuration;
 
     dashStartPosLocal = parent->GetLocalTransform().TranslatePart();

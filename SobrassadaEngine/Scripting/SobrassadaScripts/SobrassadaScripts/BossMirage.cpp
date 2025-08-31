@@ -2,15 +2,12 @@
 #include "BossMirage.h"
 #include "Application.h"
 #include "GameObject.h"
+#include "Mirage.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
-#include "Mirage.h"
-
-
 
 BossMirage::BossMirage(GameObject* parent) : Script(parent)
 {
-    std::vector<Mirage*> foundMirages;
     fields.push_back({"Current Sequence", InspectorField::FieldType::Int, &currentSequence, 1, 3});
     fields.push_back(
         {"Trigger Sequence",
@@ -42,58 +39,81 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
              }
 
              targetSequence->mirageObjects.clear();
+             targetSequence->waves.clear();
 
              const auto& gameObjects = AppEngine->GetSceneModule()->GetScene()->GetAllGameObjects();
 
-             // searches for active objects with a mirage script, adds gameobject references to activate them later
              for (const auto& [uid, gameObject] : gameObjects)
              {
                  if (!gameObject) continue;
 
                  ScriptComponent* scriptComp = gameObject->GetComponent<ScriptComponent*>();
+                 Mirage* mirage              = scriptComp ? scriptComp->GetScriptByType<Mirage>() : nullptr;
 
-                 if (scriptComp && scriptComp->GetScriptByType<Mirage>())
+                 if (mirage)
                  {
                      targetSequence->mirageObjects.push_back(gameObject);
+                     targetSequence->waves[mirage->getOrder()].push_back(gameObject);
                  }
              }
          }}
     );
 }
+
 // CAREFUL!!! Searches for gameobjects with a specific name
 bool BossMirage::Init()
 {
-
     Scene* scene            = AppEngine->GetSceneModule()->GetScene();
 
     sequence1.mirageObjects = GetMirageChildren(scene, "Sequence1");
     sequence2.mirageObjects = GetMirageChildren(scene, "Sequence2");
     sequence3.mirageObjects = GetMirageChildren(scene, "Sequence3");
 
+    // Build wave maps
+    auto buildWaves         = [](AttackSequence& seq)
+    {
+        seq.waves.clear();
+        for (GameObject* go : seq.mirageObjects)
+        {
+            if (!go) continue;
+            ScriptComponent* sc = go->GetComponent<ScriptComponent*>();
+            Mirage* mirage      = sc ? sc->GetScriptByType<Mirage>() : nullptr;
+            if (mirage) seq.waves[mirage->getOrder()].push_back(go);
+        }
+    };
+
+    buildWaves(sequence1);
+    buildWaves(sequence2);
+    buildWaves(sequence3);
+
     return true;
 }
 
 void BossMirage::Update(float deltaTime)
 {
+    if (state == SequenceState::PlayingSequence && sequence)
     {
-        if (state == SequenceState::PlayingSequence && sequence)
-        {
-            timeSinceLastActivation += deltaTime;
+        timeSinceLastActivation += deltaTime;
 
-            if (currentMirageIndex < sequence->mirageObjects.size())
+        if (timeSinceLastActivation >= sequence->delayBetweenZones)
+        {
+            auto it = sequence->waves.find(currentWeightOrder);
+            if (it != sequence->waves.end())
             {
-                if (timeSinceLastActivation >= sequence->delayBetweenZones)
+                // Activate all mirages with this weightOrder at once
+                for (GameObject* mirage : it->second)
                 {
-                    GameObject* mirage = sequence->mirageObjects[currentMirageIndex];
-                    GLOG("Now playing mirage %d", currentMirageIndex);
-                    if (mirage) mirage->SetEnabled(true); // triggers the Mirage logic
-                    currentMirageIndex++;
-                    timeSinceLastActivation = 0.f;
+                    GLOG("Now playing mirage (weight %d): %s", currentWeightOrder, mirage->GetName().c_str());
+                    if (mirage) mirage->SetEnabled(true);
                 }
+
+                // Move to next weight order
+                ++currentWeightOrder;
+                timeSinceLastActivation = 0.f;
             }
             else
             {
-                // Sequence complete
+                // No more waves
                 state = SequenceState::Idle;
             }
         }
@@ -117,32 +137,28 @@ void BossMirage::StartSequence(int sequenceNum)
         return;
     }
 
-    currentMirageIndex      = 0;
+    currentWeightOrder      = 1; // start at lowest order
     timeSinceLastActivation = 0.0f;
     state                   = SequenceState::PlayingSequence;
 }
-//SEQUENCE PARENT NEEDS TO BE ENABLED
+
+// SEQUENCE PARENT NEEDS TO BE ENABLED
 std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::string& parentName)
 {
     std::vector<GameObject*> result;
-
     const auto& gameObjects = scene->GetAllGameObjects();
 
     for (const auto& [uid, go] : gameObjects)
     {
         if (!go || go->GetName() != parentName) continue;
 
-        GLOG("Found parent object: %s", parentName.c_str());
-
         const auto& childrenUIDs = go->GetChildren();
-
         for (UID childUID : childrenUIDs)
         {
             auto it = gameObjects.find(childUID);
             if (it == gameObjects.end()) continue;
 
-            GameObject* child = it->second;
-
+            GameObject* child           = it->second;
             ScriptComponent* scriptComp = child->GetComponent<ScriptComponent*>();
             if (scriptComp && scriptComp->GetScriptByType<Mirage>())
             {
@@ -150,7 +166,6 @@ std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::
                 GLOG("Checking child: %s | Active: %s", child->GetName().c_str(), child->IsEnabled() ? "Yes" : "No");
             }
         }
-
         break; // found the correct parent object
     }
 
