@@ -31,7 +31,9 @@ class AttackVfxSpritesheet : public Script
     float updateRate            = 1.0f;
     float timer                 = 0.0f;
 
+    bool isRowMajor             = false;
     float cellHeight            = 0.1f;
+    float cellWidth             = 0.1f;
     float4 uvRange              = float4::zero;
 
     MeshComponent* meshComp     = nullptr;

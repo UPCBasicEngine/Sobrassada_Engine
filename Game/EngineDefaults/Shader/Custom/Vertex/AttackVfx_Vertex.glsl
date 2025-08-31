@@ -23,7 +23,7 @@ out vec2 uv;
 
 void main()
 {
-    uv = vec2(vertexUV.x, mix(uvRange.z, uvRange.w, vertexUV.y));
+    uv = vec2(mix(uvRange.x, uvRange.y, vertexUV.x), mix(uvRange.z, uvRange.w, vertexUV.y));
     vec3 pos = vec3(model * vec4(vertexPosition, 1.0));
 
     if (hasBones) 

@@ -23,8 +23,10 @@
 
 AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
 {
+    fields.push_back({"Cell width", InspectorField::FieldType::Float, &cellWidth, 0.f, 10000.f});
     fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 1000.f});
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
+    fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 }
@@ -105,7 +107,7 @@ bool AttackVfxSpritesheet::Init()
         glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
         uvRange.x = 0.0f;
-        uvRange.y = 1.0f;
+        uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
         uvRange.z = 0.0f;
         uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
     }
@@ -115,12 +117,41 @@ bool AttackVfxSpritesheet::Init()
 void AttackVfxSpritesheet::Update(float deltaTime)
 {
     timer += deltaTime;
-    if (timer > updateRate)
+    if (timer < updateRate) return;
+
+    if (isRowMajor)
     {
-        uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        timer      = 0.0f;
+        if (uvRange.y >= 1.0f)
+        {
+            uvRange.x  = 0.0f;
+            uvRange.y  = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+
+            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+        }
+        else
+        {
+            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+        }
     }
+    else
+    {
+        if (uvRange.w >= 1.0f)
+        {
+            uvRange.z  = 0.0f;
+            uvRange.w  = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+
+            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+        }
+        else
+        {
+            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+        }
+    }
+    timer = 0.0f;
 }
 
 void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
@@ -178,7 +209,7 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 void AttackVfxSpritesheet::Reset()
 {
     uvRange.x = 0.0f;
-    uvRange.y = 1.0f;
+    uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
     uvRange.z = 0.0f;
     uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
 }
