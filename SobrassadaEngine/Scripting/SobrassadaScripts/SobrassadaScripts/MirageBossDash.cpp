@@ -1,5 +1,4 @@
 #include "pch.h"
-
 #include "Application.h"
 #include "CameraComponent.h"
 #include "Component.h"
@@ -78,15 +77,27 @@ void MirageBossDash::Idle()
 
 void MirageBossDash::OverheadStrike(float deltaTime)
 {
-
     if (stateEnter)
     {
         stateEnter        = false;
         actionTriggerDone = false;
+        currentAction     = BossDashActions::Prepare; // instead of directly Dash
     }
 
     switch (currentAction)
     {
+    case BossDashActions::Prepare:
+       if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            if (animComponent) animComponent->UseTrigger("Prepare");
+        }
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossDashActions::Dash;
+            actionTriggerDone = false;
+        }
+        break;
 
     case BossDashActions::Dash:
         if (!actionTriggerDone)
@@ -99,9 +110,9 @@ void MirageBossDash::OverheadStrike(float deltaTime)
         if (isDashing) Dash(deltaTime);
         else
         {
+            currentAction     = BossDashActions::Idle;
             actionTriggerDone = false;
         }
-
         break;
     }
 }
