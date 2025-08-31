@@ -10,11 +10,13 @@
 #include "DamageMask.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameSession.h"
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
 #include "ParticleSystemComponent.h"
 #include "Projectile.h"
+#include "ProjectModule.h"
 #include "RaycastController.h"
 #include "ResourceAnimation.h"
 #include "ResourceMaterial.h"
@@ -415,6 +417,21 @@ bool CuChulainn::Init()
         GLOG("[ERROR] Player has no CapsuleColliderComponent!");
     }
     state = CharacterStates::IDLE;
+
+    //Apply saved changes between scenes
+    const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
+    const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
+
+    if (gNewGame)
+    {
+        gNewGame = false;
+        SavePlayerData::DeleteSaveFile(savePath);
+    }else
+    {
+        PlayerState loadedPlayerState;
+        if (SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) ApplySavedState(loadedPlayerState);
+        
+    }
 
     return true;
 }
@@ -1646,7 +1663,7 @@ void CuChulainn::OnEnemyDefeated()
     AddRiastrad(riastradOnEnemyDeath);
 }
 
-void CuChulainn::ActivateAbility(std::string& abilityName)
+void CuChulainn::ActivateAbility(std::string abilityName)
 {
     std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
 
@@ -1676,6 +1693,34 @@ void CuChulainn::StartCurse()
     isCursed = true;
     character->SetMaxSpeed(curseSpeed);
     curseTimer = curseDuration;
+}
+
+void CuChulainn::ExportState(PlayerState& playerState) const
+{
+    playerState.currentHealth = currentHealth;
+    playerState.maxHealth     = maxHealth;
+    playerState.riastrad      = riastradMeter;
+    playerState.mushrooms        = mushrooms;
+    playerState.dashUnlocked  = dashUnlocked;
+    playerState.ultimateUnlocked = ultimateUnlocked;
+}
+
+void CuChulainn::ApplySavedState(const PlayerState& playerState)
+{
+    maxHealth = max(5, playerState.maxHealth);
+    currentHealth = std::clamp(playerState.currentHealth, 1, maxHealth);
+    reservedHealth = currentHealth;
+
+    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
+
+    riastradMeter = 0;
+    AddRiastrad(playerState.riastrad);
+    
+    mushrooms = playerState.mushrooms;
+
+    if (playerState.dashUnlocked) ActivateAbility(static_cast<std::string>("dash"));
+    if (playerState.ultimateUnlocked) ActivateAbility(static_cast<std::string>("ultimate"));
 }
 
 void CuChulainn::EndCurse()
