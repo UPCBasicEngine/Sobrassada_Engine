@@ -2,6 +2,7 @@
 
 #include "Archer.h"
 #include "Banshee.h"
+#include "Boss.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "ChangeSceneScript.h"
@@ -44,6 +45,11 @@
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
+#include "VSyncToggleScript.h"
+
+#include "BossMirage.h"
+#include "Mirage.h"
+#include "MirageBossDash.h"
 
 #include <string>
 
@@ -88,7 +94,12 @@ constexpr const char* scripts[] = {
     "SwitchScriptTest",
     "Destructible",
     "MagicBarrier",
-    "Banshee_v2"
+    "Banshee_v2",
+    "Destructible",
+    "Mirage",
+    "BossMirage",
+    "Boss",
+    "MirageBossDash"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -128,6 +139,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
+    if (scriptType == "Boss") return new Boss(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
@@ -200,6 +212,11 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
             parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
             "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesUp.glsl"
         );
+
+    /*Boss*/
+    if (scriptType == "Mirage") return new Mirage(parent);
+    if (scriptType == "BossMirage") return new BossMirage(parent);
+    if (scriptType == "MirageBossDash") return new MirageBossDash(parent);
 
     return nullptr;
 }

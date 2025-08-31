@@ -469,6 +469,8 @@
     <ClInclude Include="Archer.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
+    <ClInclude Include="BossMirage.h" />
+    <ClInclude Include="Boss.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
@@ -490,6 +492,8 @@
     <ClInclude Include="imgui_curve_editor.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MiniFireball.h" />
+    <ClInclude Include="Mirage.h" />
+    <ClInclude Include="MirageBossDash.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -2050,6 +2054,8 @@
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />
+    <ClCompile Include="BossMirage.cpp" />
+    <ClCompile Include="Boss.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Changeling.cpp" />
@@ -2071,6 +2077,8 @@
     <ClCompile Include="imgui_curve_editor.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MiniFireball.cpp" />
+    <ClCompile Include="Mirage.cpp" />
+    <ClCompile Include="MirageBossDash.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
