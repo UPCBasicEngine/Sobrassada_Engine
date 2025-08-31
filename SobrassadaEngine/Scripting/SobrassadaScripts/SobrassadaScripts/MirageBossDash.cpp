@@ -161,6 +161,7 @@ void MirageBossDash::Dash(float deltaTime)
     {
         isDashing = false;
         parent->SetLocalPosition(dashStartPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z));
+        parent->SetEnabled(false);
     }
 }
 
