@@ -115,9 +115,12 @@ bool MovingUVTransparent::Init()
 
 void MovingUVTransparent::Update(float deltaTime)
 {
-    float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y;
+    if (!isPaused)
+    {
+        float newOffset  = deltaTime * animationSpeed;
+        uvOffset.x      += newOffset * uvOffsetDirection.x;
+        uvOffset.y      += newOffset * uvOffsetDirection.y;
+    }
 }
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)

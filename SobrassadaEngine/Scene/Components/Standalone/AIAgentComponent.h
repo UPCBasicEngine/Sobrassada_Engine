@@ -46,6 +46,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void ResetSpeed();
     void ResetAngularSpeed();
     void MoveTo(float distance, float3 rotateDirection);
+    void SetFreeMove(bool freeMove) { freeMovement = freeMove; }
 
   private:
     float defaultSpeed           = 0.0f;
@@ -70,4 +71,6 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
 
     bool lookForward             = false;
     float3 previousPos           = float3::zero;
+
+    bool freeMovement            = false;
 };

@@ -116,10 +116,15 @@ void AIAgentComponent::Update(float deltaTime)
     float3 position, scale;
     Quat rotation;
 
-    parent->GetLocalTransform().Decompose(position, rotation, scale);
-    parent->SetLocalTransform(
-        float4x4::FromTRS(newPos - parent->GetParentGlobalTransform().TranslatePart(), rotation, scale)
-    );
+    if (!freeMovement)
+    {
+        parent->GetLocalTransform().Decompose(position, rotation, scale);
+        parent->SetLocalTransform(
+            float4x4::FromTRS(newPos - parent->GetParentGlobalTransform().TranslatePart(), rotation, scale)
+        );
+
+        parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
+    }
 
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
     dtNavMesh* dtNav     = nullptr;
