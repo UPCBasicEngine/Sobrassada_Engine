@@ -1337,6 +1337,8 @@ void Boss::ResetValues(bool isForMirage)
     fallTimeRemaining      = 0.0f;
     fallStartPosLocal      = float3::zero;
 
+    animComponent->OnResume();
+
     if (!isForMirage) mirageActivated = false;
 
     if (weaponCollider) weaponCollider->SetEnabled(false);
