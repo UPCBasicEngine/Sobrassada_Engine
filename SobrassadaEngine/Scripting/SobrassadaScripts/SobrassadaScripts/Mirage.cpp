@@ -7,6 +7,7 @@
 #include "ScriptComponent.h"
 #include "Standalone\MeshComponent.h"
 
+
 Mirage::Mirage(GameObject* parent) : Script(parent)
 {
 
@@ -27,11 +28,16 @@ bool Mirage::Init()
     meshComponent               = parent->GetComponent<MeshComponent*>();
     std::vector<UID> children   = parent->GetChildren();
 
-    //GameObject* secondChild     = scene->GetGameObjectByUID(children[0]);
+    GameObject* firstChild      = scene->GetGameObjectByUID(children[0]);
 
-    //ScriptComponent* scriptComp = secondChild->GetComponent<ScriptComponent*>();
+    ScriptComponent* scriptComp = firstChild->GetComponent<ScriptComponent*>();
 
-    //bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
+    GameObject* secondChild     = scene->GetGameObjectByUID(children[1]);
+
+    bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
+    endPoint                    = secondChild->GetLocalTransform().TranslatePart();
+    GLOG("Mirage endpoint at %f,%f,%f", endPoint.x, endPoint.y, endPoint.z);
+    bossDash->setEndPoint(endPoint);
 
     parent->SetEnabled(false);
 
@@ -75,7 +81,7 @@ void Mirage::Update(float deltaTime)
             if (bossDash)
             {
                 bossDash->setState(BossDashStates::OverheadStrike);
-                bossDash->setAction(BossDashActions::Dash);
+                bossDash->setAction(BossDashActions::Prepare);
                 bossDash->setStateBool(true);
             }
         }
@@ -85,7 +91,6 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
-        GLOG("DISABLING");
         if (stateTimer >= damageDuration)
         {
 

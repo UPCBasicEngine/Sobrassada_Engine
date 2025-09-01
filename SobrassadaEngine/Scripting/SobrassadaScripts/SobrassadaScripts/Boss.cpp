@@ -750,6 +750,7 @@ void Boss::ShieldStrikes(float deltaTime)
     case BossActions::Chase:
         if (!actionTriggerDone)
         {
+            agentAI->ResumeMovement(); 
             animComponent->UseTrigger("Run");
             actionTriggerDone = true;
         }
