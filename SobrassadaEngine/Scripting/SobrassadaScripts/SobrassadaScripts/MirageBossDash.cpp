@@ -105,6 +105,7 @@ void MirageBossDash::OverheadStrike(float deltaTime)
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Dash");
             StartDash();
+            Attack(deltaTime);
         }
 
         if (isDashing) Dash(deltaTime);
