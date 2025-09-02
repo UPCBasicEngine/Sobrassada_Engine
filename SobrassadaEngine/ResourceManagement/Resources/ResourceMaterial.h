@@ -18,21 +18,22 @@ struct TextureInfo
 
 struct MaterialGPU
 {
-    float4 diffColor      = {1.0f, 0.0f, 0.0f, 1.0f};
-    float3 specColor      = {1.0f, 0.0f, 0.0f};
-    float shininess       = 500.0f;
-    bool shininessInAlpha = false;
-    float metallicFactor  = 1.0f;
-    float roughnessFactor = 1.0f;
-    uint64_t diffuseTex   = 0;
-    uint64_t specularTex  = 0;
-    uint64_t metallicTex  = 0;
-    uint64_t normalTex    = 0;
-    int hasSpecular       = 0;
-    int hasMetallic       = 0;
-    uint64_t emmisiveTex  = 0; // Right now works as padding TODO: put emmissive
-    uint64_t occlusionTex = 0;
-    uint64_t padding      = 0;
+    float4 diffColor        = {1.0f, 0.0f, 0.0f, 1.0f};
+    float3 specColor        = {1.0f, 0.0f, 0.0f};
+    float shininess         = 500.0f;
+    bool shininessInAlpha   = false;
+    float metallicFactor    = 1.0f;
+    float roughnessFactor   = 1.0f;
+    uint64_t diffuseTex     = 0;
+    uint64_t specularTex    = 0;
+    uint64_t metallicTex    = 0;
+    uint64_t normalTex      = 0;
+    int hasSpecular         = 0;
+    int hasMetallic         = 0;
+    uint64_t emmisiveTex    = 0;
+    uint64_t occlusionTex   = 0;
+    float emissiveIntensity = 1.0f;
+    float padding           = 0;
 };
 
 class ResourceMaterial : public Resource

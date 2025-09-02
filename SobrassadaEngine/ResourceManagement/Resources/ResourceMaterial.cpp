@@ -237,6 +237,7 @@ void ResourceMaterial::OnEditorUpdate()
         {
             ImGui::SetTooltip("Texture Dimensions: %d, %d", emmisiveTexture.width, emmisiveTexture.height);
         }
+        updated |= ImGui::SliderFloat("Emissive Intensity", &material.emissiveIntensity, 0.0f, 1.0f);
         // TODO: commented all select buttons until save data to meta is implemented
         /*ImGui::SameLine();
         if (ImGui::Button("Select Emissive Texture"))
@@ -320,6 +321,7 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("isTransparent", isTransparent, allocator);
                 importOptions.AddMember("isAlphaDiscard", isAlpha, allocator);
                 importOptions.AddMember("isDoubleSided", doubleSided, allocator);
+                importOptions.AddMember("emissiveIntensity", material.emissiveIntensity, allocator);
                 importOptions.AddMember("applyWind", applyWind, allocator);
                 importOptions.AddMember("vCoord0", vCoord0, allocator);
                 importOptions.AddMember("vCoord1", vCoord1, allocator);
@@ -427,6 +429,10 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     if (importOptions.HasMember("vCoord1") && importOptions["vCoord1"].IsFloat())
         vCoord1 = importOptions["vCoord1"].GetFloat();
     else vCoord1 = 1.0f;
+
+    if (importOptions.HasMember("emissiveIntensity") && importOptions["emissiveIntensity"].IsFloat())
+        material.emissiveIntensity = importOptions["emissiveIntensity"].GetFloat();
+    else material.emissiveIntensity = 1.0f;
 
     if (importOptions.HasMember("useCentralPivot") && importOptions["useCentralPivot"].IsBool())
         useCentralPivot = importOptions["useCentralPivot"].GetBool();
