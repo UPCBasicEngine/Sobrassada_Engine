@@ -102,7 +102,9 @@ class Banshee_v2 : public Character
 
     ImVec2 curveEditorPoints[StoreScriptCurvePoints];
 
-    GameObject* teleportWarningGO             = nullptr;
-    ResourceMaterial* teleportWarningMaterial = nullptr;
-    float4 defaultWarningColor                = float4::one;
+    GameObject* teleportWarningScreamGO             = nullptr;
+    GameObject* teleportWarningSlowGO               = nullptr;
+    ResourceMaterial* teleportWarningScreamMaterial = nullptr;
+    ResourceMaterial* teleportWarningSlowMaterial   = nullptr;
+    float4 defaultWarningColor                      = float4::one;
 };
