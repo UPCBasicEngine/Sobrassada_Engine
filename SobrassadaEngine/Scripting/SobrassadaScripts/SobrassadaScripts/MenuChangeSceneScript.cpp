@@ -7,6 +7,7 @@
 #include "MenuChangeSceneScript.h"
 #include "ProjectModule.h"
 #include "SceneModule.h"
+#include "GameSession.h"
 
 MenuChangeSceneScript::MenuChangeSceneScript(GameObject* parent) : Script(parent)
 {
@@ -38,6 +39,8 @@ void MenuChangeSceneScript::Update(float deltaTime)
         gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
     {
         sceneLoaded = true;
+        if (targetSceneName == "SCENE_Tutorial") gNewGame = true;
+
         AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
     }
 }

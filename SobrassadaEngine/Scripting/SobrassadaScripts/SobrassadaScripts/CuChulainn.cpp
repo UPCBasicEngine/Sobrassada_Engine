@@ -8,12 +8,15 @@
 #include "CameraMovement.h"
 #include "Component.h"
 #include "CuChulainn.h"
+#include "DamageMask.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameSession.h"
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
 #include "ParticleSystemComponent.h"
+#include "ProjectModule.h"
 #include "Projectile.h"
 #include "RaycastController.h"
 #include "ResourceAnimation.h"
@@ -130,12 +133,16 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Melee VFX Vertical 2", InspectorField::FieldType::InputText, &attackVfxVertical2Name});
     fields.push_back({"Melee VFX Horizontal 3", InspectorField::FieldType::InputText, &attackVfxHorizontal3Name});
     fields.push_back({"Attack VFX Vertical 3", InspectorField::FieldType::InputText, &attackVfxVertical3Name});
+    fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
+    fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
+
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
     fields.push_back({"Heal vfx object", InspectorField::FieldType::InputText, &healVfxName});
     fields.push_back({"Heal particles object", InspectorField::FieldType::InputText, &healParticlesName});
     fields.push_back({"Riastrad VFX object", InspectorField::FieldType::InputText, &riastradVfxName});
+    fields.push_back({"Damage Mask", InspectorField::FieldType::InputText, &damageMaskName});
 }
 
 bool CuChulainn::Init()
@@ -219,6 +226,9 @@ bool CuChulainn::Init()
     attackVfxVertical3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical3Name);
     if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
     else attackVfxVertical3->SetEnabled(false);
+    arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
+    if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
+    else arrowHitVfxObject->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
@@ -323,6 +333,18 @@ bool CuChulainn::Init()
     }
     if (!healthBar) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
 
+    GameObject* damageMaskObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(damageMaskName);
+    if (damageMaskObj)
+    {
+        ShaderScriptComponent* shaderScript = damageMaskObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript)
+        {
+            damageMask = shaderScript->GetScriptByType<DamageMask>();
+            damageMask->SetLife(static_cast<float>(currentHealth));
+        }
+    }
+    if (!damageMask) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
+
     GameObject* dashIconObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashIconName);
     if (dashIconObj)
     {
@@ -402,7 +424,44 @@ bool CuChulainn::Init()
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
     else ultimateSpikes->SetEnabled(false);
 
-    state = CharacterStates::IDLE;
+    CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
+    if (playerCollider)
+    {
+        GLOG("=== PLAYER COLLIDER INFO ===");
+        GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
+
+        GLOG("Player name: %s", parent->GetName().c_str());
+
+        // Verificar tags
+        if (parent->HasTag(HashString("Player")))
+        {
+            GLOG("Player has 'Player' tag: YES");
+        }
+        else
+        {
+            GLOG("Player has 'Player' tag: NO - THIS IS A PROBLEM!");
+        }
+    }
+    else
+    {
+        GLOG("[ERROR] Player has no CapsuleColliderComponent!");
+    }
+    state                         = CharacterStates::IDLE;
+
+    // Apply saved changes between scenes
+    const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
+    const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
+
+    if (gNewGame)
+    {
+        gNewGame = false;
+        SavePlayerData::DeleteSaveFile(savePath);
+    }
+    else
+    {
+        PlayerState loadedPlayerState;
+        if (SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) ApplySavedState(loadedPlayerState);
+    }
 
     return true;
 }
@@ -490,6 +549,26 @@ void CuChulainn::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
+    if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
+    {
+        GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
+
+        arrowHitVfxObject->SetEnabled(true);
+
+        ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
+        if (particleSystem)
+        {
+            particleSystem->SpawnAllInstances();
+            GLOG("Arrow VFX particles spawned");
+        }
+    }
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
+        if (damageMask)
+        {
+            damageMask->SetLife(static_cast<float>(currentHealth));
+            damageMask->OnHit();
+        }
+
     if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
         state == CharacterStates::HEAL)
     {
@@ -497,7 +576,7 @@ void CuChulainn::OnDamageTaken(int amount)
         if (animComponent)
         {
             animComponent->UseTrigger("Hurt");
-            character->EnableMovement(false);
+            // character->EnableMovement(false);
         }
     }
 
@@ -509,6 +588,7 @@ void CuChulainn::OnHealed(int amount)
 {
     // TODO: play CuChulainn recover sound
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 }
 
 void CuChulainn::HandleState(float deltaTime)
@@ -528,10 +608,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
-             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
         Move();
 
     // When finished animation, go back to idle state
@@ -851,6 +928,17 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (dashBufferTimer < 0.0f) desiredDash = false;
     }
 
+    if (arrowVfxIsActive && arrowHitVfxObject && arrowHitVfxObject->IsEnabled())
+    {
+        arrowHitVfxTimer += deltaTime;
+        if (arrowHitVfxTimer >= arrowHitVfxDuration)
+        {
+            arrowHitVfxObject->SetEnabled(false);
+            arrowHitVfxTimer = 0.0f;
+            arrowVfxIsActive = false;
+        }
+    }
+
     // Dash decal
     dashDecalBufferTimer -= deltaTime;
     if (dashDecalBufferTimer < 0.0f)
@@ -959,7 +1047,8 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (state == CharacterStates::HEAL) healTimer += deltaTime;
     if (state == CharacterStates::TRANSFORM) transformTimer += deltaTime;
 
-    if (state == CharacterStates::DASH) isInvulnerable = true;
+    if (state == CharacterStates::DASH || state == CharacterStates::HURT || state == CharacterStates::RESPAWN)
+        isInvulnerable = true;
 
     isDashing = state == CharacterStates::DASH ? true : false;
     isHealing = state == CharacterStates::HEAL ? true : false;
@@ -1122,8 +1211,7 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
-                 attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -1388,6 +1476,7 @@ void CuChulainn::Respawn()
     state         = CharacterStates::RESPAWN;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
@@ -1630,13 +1719,19 @@ void CuChulainn::OnEnemyDefeated()
     AddRiastrad(riastradOnEnemyDeath);
 }
 
-void CuChulainn::ActivateAbility(std::string& abilityName)
+void CuChulainn::ActivateAbility(std::string abilityName)
 {
     std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
 
     if (abilityName == "dash") dashUnlocked = true;
     else if (abilityName == "ultimate") ultimateUnlocked = true;
 }
+
+void CuChulainn::OnArrowHit()
+{
+    arrowVfxIsActive = true;
+}
+
 void CuChulainn::StartCurse()
 {
     // TODO: Remove when VFX
@@ -1653,6 +1748,34 @@ void CuChulainn::StartCurse()
     isCursed = true;
     character->SetMaxSpeed(curseSpeed);
     curseTimer = curseDuration;
+}
+
+void CuChulainn::ExportState(PlayerState& playerState) const
+{
+    playerState.currentHealth    = currentHealth;
+    playerState.maxHealth        = maxHealth;
+    playerState.riastrad         = riastradMeter;
+    playerState.mushrooms        = mushrooms;
+    playerState.dashUnlocked     = dashUnlocked;
+    playerState.ultimateUnlocked = ultimateUnlocked;
+}
+
+void CuChulainn::ApplySavedState(const PlayerState& playerState)
+{
+    maxHealth      = max(5, playerState.maxHealth);
+    currentHealth  = std::clamp(playerState.currentHealth, 1, maxHealth);
+    reservedHealth = currentHealth;
+
+    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
+
+    riastradMeter = 0;
+    AddRiastrad(playerState.riastrad);
+
+    mushrooms = playerState.mushrooms;
+
+    if (playerState.dashUnlocked) ActivateAbility(static_cast<std::string>("dash"));
+    if (playerState.ultimateUnlocked) ActivateAbility(static_cast<std::string>("ultimate"));
 }
 
 void CuChulainn::EndCurse()

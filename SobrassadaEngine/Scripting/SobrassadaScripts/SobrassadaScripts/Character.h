@@ -4,6 +4,7 @@
 #include "Script.h"
 
 #include <vector>
+#include <unordered_set>
 
 class MagicBarrier;
 class GameObject;
@@ -26,7 +27,8 @@ enum class CharacterType
     Archer,
     Banshee,
     Destructible,
-    Changeling
+    Changeling,
+    Boss
 };
 
 class Character : public Script
@@ -48,6 +50,8 @@ class Character : public Script
     bool IsDead() const { return isDead; };
 
     CharacterType GetCharacterType() const { return type; }
+    int GetMaxHealth() const { return maxHealth; }
+    int GetCurrentHealth() const { return currentHealth; }
 
     void SetAssociatedBarrier(MagicBarrier* newAssociatedBarrier) { associatedBarrier = newAssociatedBarrier; }
 
@@ -74,6 +78,7 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
+    
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;
@@ -88,6 +93,7 @@ class Character : public Script
     float range                                 = 0.0f;
     float attackTimer                           = 0.0f;
     bool isAttacking                            = false;
+    bool isInCountRange                         = false;
     float attackHitboxDelay                     = 0.0f;
     float attackHitboxDuration                  = 0.0f;
 

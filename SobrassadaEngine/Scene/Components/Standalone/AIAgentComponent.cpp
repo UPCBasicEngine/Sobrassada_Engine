@@ -10,7 +10,6 @@
 #include "ResourceNavmesh.h"
 #include "SceneModule.h"
 #include "Standalone/CharacterControllerComponent.h"
-#include "DetourNavMeshQuery.h"
 
 #include "DetourCrowd.h"
 #include "Math/Quat.h"
@@ -112,15 +111,20 @@ void AIAgentComponent::Update(float deltaTime)
     else newPos = float3(ag->npos[0], ag->npos[1], ag->npos[2]);
 
     // float4x4 transform = parent->GetLocalTransform();
-    //parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
+    // parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
 
     float3 position, scale;
     Quat rotation;
 
-    parent->GetLocalTransform().Decompose(position, rotation, scale);
-    parent->SetLocalTransform(
-        float4x4::FromTRS(newPos - parent->GetParentGlobalTransform().TranslatePart(), rotation, scale)
-    );
+    if (!freeMovement)
+    {
+        parent->GetLocalTransform().Decompose(position, rotation, scale);
+        parent->SetLocalTransform(
+            float4x4::FromTRS(newPos - parent->GetParentGlobalTransform().TranslatePart(), rotation, scale)
+        );
+
+        parent->SetLocalPosition(newPos - parent->GetParentGlobalTransform().TranslatePart()); // Change parent position
+    }
 
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
     dtNavMesh* dtNav     = nullptr;
@@ -391,7 +395,9 @@ void AIAgentComponent::SetAngularSpeed(const float newAngular)
 
 void AIAgentComponent::ResetSpeed()
 {
-    dtCrowdAgent* agent           = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    dtCrowdAgent* agent = App->GetPathfinderModule()->GetCrowd()->getEditableAgent(agentId);
+    if (!agent) return;
+
     currentSpeed                  = defaultSpeed;
     currentAcceleration           = defaultAcceleration;
     agent->params.maxSpeed        = defaultSpeed;
@@ -421,11 +427,12 @@ void AIAgentComponent::SetPosition(const float3& newPos)
     agent->npos[1]      = nearestPoint[1];
     agent->npos[2]      = nearestPoint[2];
 
-    //parent->SetLocalPosition(
-    //    float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]) - parent->GetParentGlobalTransform().TranslatePart()
+    // parent->SetLocalPosition(
+    //     float3(nearestPoint[0], nearestPoint[1], nearestPoint[2]) -
+    //     parent->GetParentGlobalTransform().TranslatePart()
     //);
 
-    float3 position,scale;
+    float3 position, scale;
     Quat rotation;
 
     parent->GetLocalTransform().Decompose(position, rotation, scale);

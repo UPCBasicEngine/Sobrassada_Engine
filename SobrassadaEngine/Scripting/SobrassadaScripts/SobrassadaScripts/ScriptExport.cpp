@@ -3,6 +3,7 @@
 #include "Archer.h"
 #include "Banshee.h"
 #include "Banshee_v2.h"
+#include "Boss.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
 #include "ChangeSceneScript.h"
@@ -41,9 +42,15 @@
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
+#include "DamageMask.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
+#include "VSyncToggleScript.h"
+
+#include "BossMirage.h"
+#include "Mirage.h"
+#include "MirageBossDash.h"
 
 #include <string>
 
@@ -89,15 +96,20 @@ constexpr const char* scripts[] = {
     "Destructible",
     "MagicBarrier",
     "Banshee_v2",
+    "Destructible",
+    "Mirage",
+    "BossMirage",
+    "Boss",
+    "MirageBossDash"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
-                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
-                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
-                                         "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
-                                         "AbilityIconFill",       "AttackVfxSpritesheet"};
+constexpr const char* shaderScripts[] = {
+    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
+    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
+    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet"
+};
 
-Application* AppEngine                = nullptr;
+Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -128,6 +140,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
+    if (scriptType == "Boss") return new Boss(parent);
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
@@ -154,6 +167,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
     if (scriptType == "AttackVfxSpritesheet") return new AttackVfxSpritesheet(parent);
+    if (scriptType == "DamageMask") return new DamageMask(parent);
     if (scriptType == "RiastradBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
     if (scriptType == "HealthBarFill")
@@ -200,6 +214,11 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
             parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
             "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesUp.glsl"
         );
+
+    /*Boss*/
+    if (scriptType == "Mirage") return new Mirage(parent);
+    if (scriptType == "BossMirage") return new BossMirage(parent);
+    if (scriptType == "MirageBossDash") return new MirageBossDash(parent);
 
     return nullptr;
 }
