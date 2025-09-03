@@ -124,6 +124,12 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
+    fields.push_back({"Melee VFX Horizontal 1", InspectorField::FieldType::InputText, &attackVfxHorizontal1Name});
+    fields.push_back({"Melee VFX Vertical 1", InspectorField::FieldType::InputText, &attackVfxVertical1Name});
+    fields.push_back({"Melee VFX Horizontal 2", InspectorField::FieldType::InputText, &attackVfxHorizontal2Name});
+    fields.push_back({"Melee VFX Vertical 2", InspectorField::FieldType::InputText, &attackVfxVertical2Name});
+    fields.push_back({"Melee VFX Horizontal 3", InspectorField::FieldType::InputText, &attackVfxHorizontal3Name});
+    fields.push_back({"Attack VFX Vertical 3", InspectorField::FieldType::InputText, &attackVfxVertical3Name});
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
     fields.push_back({"Dash decal disappear", InspectorField::FieldType::Float, &dashDecalTimer, 0.0f, 20.0f});
@@ -190,13 +196,29 @@ bool CuChulainn::Init()
     if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
     else meleeVfxObject->SetEnabled(false);
 
-    attackVfxHorizontal = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontalName);
-    if (!attackVfxHorizontal) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
-    else attackVfxHorizontal->SetEnabled(false);
+    attackVfxHorizontal1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal1Name);
+    if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
+    else attackVfxHorizontal1->SetEnabled(false);
 
-    attackVfxVertical = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVerticalName);
-    if (!attackVfxVertical) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
-    else attackVfxVertical->SetEnabled(false);
+    attackVfxVertical1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical1Name);
+    if (!attackVfxVertical1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
+    else attackVfxVertical1->SetEnabled(false);
+
+    attackVfxHorizontal2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal2Name);
+    if (!attackVfxHorizontal2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
+    else attackVfxHorizontal2->SetEnabled(false);
+
+    attackVfxVertical2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical2Name);
+    if (!attackVfxVertical2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
+    else attackVfxVertical2->SetEnabled(false);
+
+    attackVfxHorizontal3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal3Name);
+    if (!attackVfxHorizontal3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
+    else attackVfxHorizontal3->SetEnabled(false);
+
+    attackVfxVertical3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical3Name);
+    if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
+    else attackVfxVertical3->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
@@ -521,8 +543,12 @@ void CuChulainn::HandleState(float deltaTime)
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
             if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
-            if (attackVfxHorizontal) attackVfxHorizontal->SetEnabled(false);
-            if (attackVfxVertical) attackVfxVertical->SetEnabled(false);
+            if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
+            if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
+            if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
+            if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
+            if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
+            if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -1060,21 +1086,34 @@ void CuChulainn::PerformAttack()
 
         if (attackTimer > currentVfxDelay)
         {
-            if (attackVfxHorizontal && !attackVfxHorizontal->IsEnabled())
+            GameObject* vfxHorizontal = nullptr;
+            GameObject* vfxVertical   = nullptr;
+            switch (comboCounter)
             {
-                attackVfxHorizontal->SetEnabled(true);
-                attackVfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
-                attackVfxHorizontal->GetComponent<ShaderScriptComponent*>()
-                    ->GetScriptByType<AttackVfxSpritesheet>()
-                    ->Reset();
+            case 0:
+                vfxHorizontal = attackVfxHorizontal1;
+                vfxVertical   = attackVfxVertical1;
+                break;
+            case 1:
+                vfxHorizontal = attackVfxHorizontal2;
+                vfxVertical   = attackVfxVertical2;
+                break;
+            case 2:
+                vfxVertical = attackVfxVertical3;
+                break;
             }
-            if (attackVfxVertical && !attackVfxVertical->IsEnabled())
+
+            if (vfxHorizontal && !vfxHorizontal->IsEnabled())
             {
-                attackVfxVertical->SetEnabled(true);
-                attackVfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
-                attackVfxVertical->GetComponent<ShaderScriptComponent*>()
-                    ->GetScriptByType<AttackVfxSpritesheet>()
-                    ->Reset();
+                vfxHorizontal->SetEnabled(true);
+                vfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
+                vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            }
+            if (vfxVertical && !vfxVertical->IsEnabled())
+            {
+                vfxVertical->SetEnabled(true);
+                vfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
+                vfxVertical->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             }
         }
 
