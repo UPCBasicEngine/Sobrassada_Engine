@@ -147,6 +147,7 @@ void Soldier::OnDamageTaken(int amount)
     // std::string animState               = animStateFromPlayer.GetString();
     // GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
 }
 
 void Soldier::PerformAttack()
