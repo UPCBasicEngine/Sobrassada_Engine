@@ -2,6 +2,7 @@
 
 #include "Archer.h"
 #include "Banshee.h"
+#include "Banshee_v2.h"
 #include "Boss.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
@@ -37,7 +38,6 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "Banshee_v2.h"
 
 #include "AbilityIconFill.h"
 #include "BarFill.h"
@@ -103,17 +103,13 @@ constexpr const char* scripts[] = {
     "MirageBossDash"
 };
 
-constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
-    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask"
-};
 constexpr const char* shaderScripts[] = {"MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",
-                                         "MovingUVClipErode",  "HealGroundHalo",        "HealVerticalPlanes",
+                                         "MovingUVClipErode",  " HealGroundHalo ",      " HealVerticalPlanes ",
                                          "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark",
-                                         "HealLightBurst",     "HealSpikesUp"};
+                                         "HealLightBurst",     "HealSpikesUp",          "RiastradBarFill",
+                                         "HealthBarFill",      "AbilityIconFill",       "DamageMask"};
 
-Application* AppEngine = nullptr;
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
