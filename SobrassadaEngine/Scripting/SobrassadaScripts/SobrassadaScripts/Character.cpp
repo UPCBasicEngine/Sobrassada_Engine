@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "AttackVfxSpritesheet.h"
 #include "Banshee_v2.h"
 #include "Boss.h"
 #include "CameraComponent.h"
@@ -15,9 +16,11 @@
 #include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Spouts.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
@@ -54,6 +57,8 @@ Character::Character(
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
+        fields.push_back({"On Hit VFX 1", InspectorField::FieldType::InputText, &onHitVfx1Name});
+        fields.push_back({"On Hit VFX 2", InspectorField::FieldType::InputText, &onHitVfx2Name});
     }
 }
 
@@ -84,6 +89,17 @@ bool Character::Init()
         weapon = weaponCollider->GetParent();
         if (!weapon) GLOG("Weapon game object not found")
         else weaponCollider->SetEnabled(false);
+    }
+
+    if (type != CharacterType::CuChulainn)
+    {
+        onHitVfx1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(onHitVfx1Name);
+        if (!onHitVfx1) GLOG("[WARNING] No on hit VFX found for enemy")
+        else onHitVfx1->SetEnabled(false);
+
+        onHitVfx2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(onHitVfx2Name);
+        if (!onHitVfx2) GLOG("[WARNING] No on hit VFX found for enemy")
+        else onHitVfx2->SetEnabled(false);
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -173,7 +189,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
+                                  playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -280,6 +297,20 @@ void Character::UpdateTimers(float deltaTime)
 
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
+
+
+    if (type != CharacterType::CuChulainn)
+    {
+        GLOG("onHitVfxTimer: %f", onHitVfxTimer)
+        onHitVfxTimer -= deltaTime;
+
+        if (onHitVfxTimer < 0.0f)
+        {
+            // onHitVfxTimer = 0.0f;
+            onHitVfx1->SetEnabled(false);
+            onHitVfx2->SetEnabled(false);
+        }
+    }
 }
 
 void Character::TakeDamage(int amount)
@@ -293,7 +324,23 @@ void Character::TakeDamage(int amount)
 
     OnDamageTaken(amount);
 
-    if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
+    if (type != CharacterType::CuChulainn)
+    {
+        playerScript->OnEnemyHit();
+
+        onHitVfx1->SetEnabled(true);
+        onHitVfx1->GetComponent<MeshComponent*>()->SetEnabled(false);
+        onHitVfx1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
+        onHitVfx2->SetEnabled(true);
+        onHitVfx2->GetComponent<MeshComponent*>()->SetEnabled(false);
+        onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
+        GLOG("ENABLEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+
+        const float onHitVfxDuration = 0.1f;
+        onHitVfxTimer                = onHitVfxDuration;
+    }
 
     if (currentHealth <= 0) Die();
 }

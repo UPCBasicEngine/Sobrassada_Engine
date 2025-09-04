@@ -3,8 +3,8 @@
 #include "HashString.h"
 #include "Script.h"
 
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 class MagicBarrier;
 class GameObject;
@@ -78,7 +78,6 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
-    
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;
@@ -117,6 +116,12 @@ class Character : public Script
     float searchTimer                           = 0.0f;
     float searchDuration                        = 5.0f;
     bool isSearching                            = false;
+
+    float onHitVfxTimer                         = 0.0;
+    std::string onHitVfx1Name                   = "OnHitVFX1";
+    std::string onHitVfx2Name                   = "OnHitVFX2";
+    GameObject* onHitVfx1                       = nullptr;
+    GameObject* onHitVfx2                       = nullptr;
 
     // Level
     MagicBarrier* associatedBarrier             = nullptr;
