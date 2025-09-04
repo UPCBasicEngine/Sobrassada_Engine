@@ -94,6 +94,9 @@ class Banshee_v2 : public Character
     float elapsedSlowAreaWaring        = 0.f;
     float slowAreaWaringMaxScale       = 5.f;
 
+    float elapsedSlowArea              = 0.f;
+    float slowAreaDuration             = 1.f;
+
     std::vector<ShaderScriptComponent*> shoutStartShaderComponents;
     std::vector<ShaderScriptComponent*> shoutBaseShaderComponents;
 
@@ -102,9 +105,9 @@ class Banshee_v2 : public Character
 
     ImVec2 curveEditorPoints[StoreScriptCurvePoints];
 
-    GameObject* teleportWarningScreamGO             = nullptr;
-    GameObject* teleportWarningSlowGO               = nullptr;
+    GameObject* teleportWarningScreamGO = nullptr;
+    GameObject* teleportWarningSlowGO   = nullptr;
 
-    const float4 screamWarningColor                 = float4(0.89f, 0.243f, 0.243f, 1.f);
-    const float4 slowWarningColor                   = float4(0.243f, 0.369f, 0.89f, 1.f);
+    const float4 screamWarningColor     = float4(0.89f, 0.243f, 0.243f, 1.f);
+    const float4 slowWarningColor       = float4(0.243f, 0.369f, 0.89f, 1.f);
 };

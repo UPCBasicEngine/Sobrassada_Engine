@@ -49,6 +49,7 @@ Banshee_v2::Banshee_v2(GameObject* parent)
     fields.push_back(
         {"Slow Area Warning Max Scale", InspectorField::FieldType::Float, &slowAreaWaringMaxScale, 0.f, 10.f}
     );
+    fields.push_back({"Slow area duration", InspectorField::FieldType::Float, &slowAreaDuration, 0.f, 10.f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Teleport warning size curve"});
     for (int i = 0; i < maxScriptCurvePoints; ++i)
@@ -537,7 +538,6 @@ void Banshee_v2::Attack(float deltaTime)
 
             float interpolationValue = min(attackTimer / currentInvisibleTime, 1.f);
 
-            // float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
             float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
 
             scale                    = float3(finalScale, 1.f, finalScale);
@@ -594,7 +594,6 @@ void Banshee_v2::Attack(float deltaTime)
             animComponent->UseTrigger("Scream");
 
             weapon->SetEnabled(true);
-
             // SHOUT START DISABLE
             for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
             {
@@ -622,6 +621,8 @@ void Banshee_v2::Attack(float deltaTime)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
             }
+
+            elapsedMainScream = 0.f;
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("Scream") && elapsedMainScream < mainScreamDuration)
@@ -797,7 +798,6 @@ void Banshee_v2::SlowArea(float deltaTime)
 
             float interpolationValue = min(attackTimer / currentInvisibleTime, 1.f);
 
-            // float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
             float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
 
             scale                    = float3(finalScale, 1.f, finalScale);
@@ -835,8 +835,6 @@ void Banshee_v2::SlowArea(float deltaTime)
             float interpolationValue = min(elapsedSlowAreaWaring / slowAreaWaringDuration, 1.f);
 
             float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
-            // float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints,
-            // curveEditorPoints);
 
             scale                    = float3(finalScale, 1.f, finalScale);
 
@@ -860,9 +858,13 @@ void Banshee_v2::SlowArea(float deltaTime)
 
             animComponent->UseTrigger("SlowArea");
             slowAreaInGO->SetEnabled(true);
-        }
 
-        else if (animComponent->GetCurrentStateName() == HashString("SlowArea") && animComponent->IsFinished())
+            elapsedSlowArea = 0.f;
+        }
+        else if (animComponent->GetCurrentStateName() == HashString("SlowArea") && elapsedSlowArea < slowAreaDuration)
+            elapsedSlowArea += deltaTime;
+
+        else if (animComponent->GetCurrentStateName() == HashString("SlowArea") && elapsedSlowArea >= slowAreaDuration)
         {
             slowAreaGO->SetEnabled(false);
             slowAreaInGO->SetEnabled(false);
