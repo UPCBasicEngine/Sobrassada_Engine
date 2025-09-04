@@ -182,11 +182,11 @@ bool Banshee_v2::Init()
                 const ResourceMaterial* constMat = mesh->GetResourceMaterial();
                 if (constMat)
                 {
-                    teleportWarningScreamMaterial = dynamic_cast<ResourceMaterial*>(
+                    ResourceMaterial* teleportWarningScreamMaterial = dynamic_cast<ResourceMaterial*>(
                         AppEngine->GetResourcesModule()->RequestResource(constMat->GetUID())
                     );
 
-                    defaultWarningColor = teleportWarningScreamMaterial->GetMaterial().diffColor;
+                    teleportWarningScreamMaterial->SetDiffColor(screamWarningColor);
                 }
             }
         }
@@ -195,17 +195,17 @@ bool Banshee_v2::Init()
             teleportWarningSlowGO = currentGO;
             teleportWarningSlowGO->SetEnabled(false);
 
-             MeshComponent* mesh = teleportWarningSlowGO->GetComponent<MeshComponent*>();
+            MeshComponent* mesh = teleportWarningSlowGO->GetComponent<MeshComponent*>();
             if (mesh)
             {
                 const ResourceMaterial* constMat = mesh->GetResourceMaterial();
                 if (constMat)
                 {
-                    teleportWarningSlowMaterial = dynamic_cast<ResourceMaterial*>(
+                    ResourceMaterial* teleportWarningSlowMaterial = dynamic_cast<ResourceMaterial*>(
                         AppEngine->GetResourcesModule()->RequestResource(constMat->GetUID())
                     );
 
-                    defaultWarningColor = teleportWarningSlowMaterial->GetMaterial().diffColor;
+                    teleportWarningSlowMaterial->SetDiffColor(slowWarningColor);
                 }
             }
         }
@@ -309,7 +309,7 @@ void Banshee_v2::OnPlayerExitLocation()
         slowAreaWarningGO->SetLocalTransform(starTransform);
         slowAreaWarningGO->SetEnabled(false);
 
-        teleportWarningScreamGO->SetEnabled(false);
+        teleportWarningSlowGO->SetEnabled(false);
 
         isAttacking = false;
         agentAI->ResetSpeed();
@@ -526,7 +526,6 @@ void Banshee_v2::Attack(float deltaTime)
             GoToAttackPosition();
 
             teleportWarningScreamGO->SetEnabled(true);
-            teleportWarningScreamMaterial->SetDiffColor(float4(0.89f, 0.243f, 0.243f, 1.f));
         }
         if (attackTimer < currentInvisibleTime)
         {
@@ -551,7 +550,6 @@ void Banshee_v2::Attack(float deltaTime)
 
         if (isInvisible)
         {
-            teleportWarningScreamMaterial->SetDiffColor(defaultWarningColor);
             teleportWarningScreamGO->SetEnabled(false);
 
             // Tp to player and enable
@@ -787,8 +785,7 @@ void Banshee_v2::SlowArea(float deltaTime)
             characterCollider->SetEnabled(false);
             GoToAttackPosition();
 
-            teleportWarningScreamMaterial->SetDiffColor(float4(0.243f, 0.369f, 0.89f, 1.f));
-            teleportWarningScreamGO->SetEnabled(true);
+            teleportWarningSlowGO->SetEnabled(true);
         }
         if (attackTimer < currentInvisibleTime)
         {
@@ -796,7 +793,7 @@ void Banshee_v2::SlowArea(float deltaTime)
             float3 translation, scale;
             Quat rotation;
 
-            teleportWarningScreamGO->GetLocalTransform().Decompose(translation, rotation, scale);
+            teleportWarningSlowGO->GetLocalTransform().Decompose(translation, rotation, scale);
 
             float interpolationValue = min(attackTimer / currentInvisibleTime, 1.f);
 
@@ -806,15 +803,14 @@ void Banshee_v2::SlowArea(float deltaTime)
             scale                    = float3(finalScale, 1.f, finalScale);
 
             float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
-            teleportWarningScreamGO->SetLocalTransform(starTransform);
+            teleportWarningSlowGO->SetLocalTransform(starTransform);
 
             return;
         }
 
         if (isInvisible)
         {
-            teleportWarningScreamMaterial->SetDiffColor(defaultWarningColor);
-            teleportWarningScreamGO->SetEnabled(false);
+            teleportWarningSlowGO->SetEnabled(false);
 
             mesh->SetEnabled(true);
             characterCollider->SetEnabled(true);

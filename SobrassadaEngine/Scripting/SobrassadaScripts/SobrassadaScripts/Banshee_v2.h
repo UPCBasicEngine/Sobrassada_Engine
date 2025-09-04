@@ -104,7 +104,7 @@ class Banshee_v2 : public Character
 
     GameObject* teleportWarningScreamGO             = nullptr;
     GameObject* teleportWarningSlowGO               = nullptr;
-    ResourceMaterial* teleportWarningScreamMaterial = nullptr;
-    ResourceMaterial* teleportWarningSlowMaterial   = nullptr;
-    float4 defaultWarningColor                      = float4::one;
+
+    const float4 screamWarningColor                 = float4(0.89f, 0.243f, 0.243f, 1.f);
+    const float4 slowWarningColor                   = float4(0.243f, 0.369f, 0.89f, 1.f);
 };
