@@ -60,6 +60,7 @@
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
+#include "Standalone/VideoComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -74,6 +75,7 @@
 #include "WindConfig.h"
 
 #include <set>
+#include <unordered_set>
 #include <unordered_map>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
@@ -389,14 +391,7 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
     OPTICK_CATEGORY("Scene::MeshesToRender", Optick::Category::GameLogic)
 #endif
 
-    renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera);
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
-#endif
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
-    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
-    glPopDebugGroup();
+    renderPass->RenderScene(framebuffer, toUpdateGameObjects, camera, deltaTime);
 
 #ifndef GAME
     for (const auto& gameObject : toUpdateGameObjects)
@@ -419,23 +414,6 @@ void Scene::RenderScene(float deltaTime, CameraComponent* camera)
         for (int i = 0; i < 12; ++i)
             debugDraw->DrawLineSegment(aabb.Edge(i), float3(1.f, 1.0f, 0.5f));
     }
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render_Billboards", Optick::Category::Rendering)
-#endif
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
-    glEnable(GL_BLEND);
-    App->GetBillboardModule()->RenderBillboards();
-    glDisable(GL_BLEND);
-    glPopDebugGroup();
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
-    App->GetParticleModule()->RenderParticles();
-    glPopDebugGroup();
-
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
-    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
-    glPopDebugGroup();
 }
 
 update_status Scene::RenderEditor(float deltaTime)
@@ -1144,6 +1122,45 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
     for (const auto& obj : gameObjectsContainer)
     {
         if (obj.second->GetName() == name) return obj.second;
+    }
+
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    return nullptr;
+}
+
+//Loops in the Parent Tree node and try to find targetName GO
+GameObject* Scene::GetGameObjectByParentNameAndTargetName(const std::string& parentName, const std::string& targetName)
+{
+    // TODO: Replace gameObject name to a HashString, I've seen it is also compared in some scripts and would improve
+    // performance
+
+    GameObject* parentGO = GetGameObjectByName(parentName);
+    if (!parentGO) return nullptr;
+
+    std::vector<UID> stack;
+    const auto& childrenVectorUID = parentGO->GetChildren();
+    stack.insert(stack.end(), childrenVectorUID.begin(), childrenVectorUID.end());
+
+    std::unordered_set<UID> visited;
+    visited.reserve(stack.size() * 2 + 16);
+
+    while (!stack.empty())
+    {
+        UID uid = stack.back();
+        stack.pop_back();
+
+        if (!visited.insert(uid).second) continue;
+
+        GameObject* cGO = GetGameObjectByUID(uid);
+        if (!cGO) continue;
+
+        if (cGO->GetName() == targetName) return cGO;
+
+        const auto& kids = cGO->GetChildren();
+        for (auto it = kids.rbegin(); it != kids.rend(); ++it)
+        {
+            if (!visited.count(*it)) stack.push_back(*it);
+        }
     }
 
     // GLOG("[WARNING] No gameObject found with name %s", name.c_str());

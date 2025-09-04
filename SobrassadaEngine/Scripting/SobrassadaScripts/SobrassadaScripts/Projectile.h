@@ -19,7 +19,8 @@ class Projectile : public Script
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
     int GetDamage() const { return damage; }
-
+    GameObject* GetParent() const { return parent; }
+    void Hit(GameObject* otherObject);
   private:
     void Move(float deltaTime);
 
@@ -34,4 +35,6 @@ class Projectile : public Script
 
     int damage                      = 1;
     float frames                    = 0.0f;
+
+    bool hasHitTarget                  = false;
 };

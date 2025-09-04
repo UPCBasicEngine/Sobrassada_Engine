@@ -86,6 +86,7 @@ void ParticleSystemModule::RenderParticles()
         emitter.second->RenderParticles(VP, rightVector, upVector);
     }
 
+    glBlendFunc(GL_ONE, GL_ZERO);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }

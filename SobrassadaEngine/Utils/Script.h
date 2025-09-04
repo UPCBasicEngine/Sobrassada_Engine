@@ -7,6 +7,11 @@
 #include "rapidjson/document.h"
 #include <functional>
 
+constexpr int maxScriptCurvePoints = 10;
+
+// USE LAST VEC2 TO STORE THE RANGE OF THE CURVE EDITOR
+constexpr int StoreScriptCurvePoints = maxScriptCurvePoints + 1;
+
 class GameObject;
 class CameraComponent;
 
@@ -26,7 +31,8 @@ struct InspectorField
         GameObject,
         Button,
         Resource,
-        Spacing
+        Spacing,
+        CurveEditor
     };
 
     std::string name;

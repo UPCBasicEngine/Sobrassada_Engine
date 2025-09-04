@@ -4,7 +4,9 @@
 #include "Script.h"
 
 #include <vector>
+#include <unordered_set>
 
+class MagicBarrier;
 class GameObject;
 class CharacterControllerComponent;
 class AnimationComponent;
@@ -25,7 +27,8 @@ enum class CharacterType
     Archer,
     Banshee,
     Destructible,
-    Changeling
+    Changeling,
+    Boss
 };
 
 class Character : public Script
@@ -45,6 +48,12 @@ class Character : public Script
     virtual void TakeDamage(int amount);
     void Restart();
     bool IsDead() const { return isDead; };
+
+    CharacterType GetCharacterType() const { return type; }
+    int GetMaxHealth() const { return maxHealth; }
+    int GetCurrentHealth() const { return currentHealth; }
+
+    void SetAssociatedBarrier(MagicBarrier* newAssociatedBarrier) { associatedBarrier = newAssociatedBarrier; }
 
   protected:
     virtual void Attack(float deltaTime);
@@ -69,6 +78,7 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
+    
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;
@@ -83,6 +93,7 @@ class Character : public Script
     float range                                 = 0.0f;
     float attackTimer                           = 0.0f;
     bool isAttacking                            = false;
+    bool isInCountRange                         = false;
     float attackHitboxDelay                     = 0.0f;
     float attackHitboxDuration                  = 0.0f;
 
@@ -97,13 +108,16 @@ class Character : public Script
     HashString stateName                        = HashString("");
 
     // AI
-    float rangeAIChase      = 0.0f;
-    float rangeAIAttack     = 0.0f;
-    float maxDetectionRange = 0.0f;
-    bool reachedPatrolPoint = false;
-    float3 startPos         = float3::zero;
+    float rangeAIChase                          = 0.0f;
+    float rangeAIAttack                         = 0.0f;
+    float maxDetectionRange                     = 0.0f;
+    bool reachedPatrolPoint                     = false;
+    float3 startPos                             = float3::zero;
 
-    float searchTimer       = 0.0f;
-    float searchDuration    = 5.0f;
-    bool isSearching        = false;
+    float searchTimer                           = 0.0f;
+    float searchDuration                        = 5.0f;
+    bool isSearching                            = false;
+
+    // Level
+    MagicBarrier* associatedBarrier             = nullptr;
 };

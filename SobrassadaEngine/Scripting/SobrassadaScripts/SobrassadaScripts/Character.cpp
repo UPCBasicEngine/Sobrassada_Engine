@@ -1,6 +1,8 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "Banshee_v2.h"
+#include "Boss.h"
 #include "CameraComponent.h"
 #include "Character.h"
 #include "CuChulainn.h"
@@ -9,10 +11,11 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "GameTimer.h"
+#include "MagicBarrier.h"
 #include "Mushroom.h"
-#include "Spouts.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
+#include "Spouts.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
@@ -98,7 +101,6 @@ void Character::Update(float deltaTime)
     if (animComponent && stateName != animComponent->GetCurrentStateName())
     {
         stateName = animComponent->GetCurrentStateName();
-        // GLOG("Current state: %s", stateName.GetString().c_str());
     }
 
     HandleState(deltaTime);
@@ -119,6 +121,17 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
                 if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
         }
+
+        Projectile* arrowProj = otherScript->GetScriptByType<Projectile>();
+        if (arrowProj)
+        {
+            arrowProj->Hit(otherObject);
+        }
+    }
+
+    if (HashString(otherObject->GetName()) == HashString("BlastShield_2"))
+    {
+        TakeDamage(1);
     }
 }
 
@@ -141,6 +154,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         if (enemyScript)
         {
             if (!enemyScript->isAttacking) return;
+
             TakeDamage(enemyScript->attackDamage);
         }
     }
@@ -149,21 +163,53 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         // Special attack check
         CuChulainn* playerScript = otherScript->GetScriptByType<CuChulainn>();
         if (playerScript && playerScript->GetState() == CharacterStates::ULTIMATE)
+        {
             TakeDamage(playerScript->GetUltimateDamage());
-
+        }
         // Charged attack check
-        if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
+        else if (playerScript && playerScript->GetState() == CharacterStates::CHARGED_ATTACK)
+        {
             TakeDamage(playerScript->GetChargedAttackDamage());
+        }
 
         // Heal & Riastrad knockback check
-        if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
-                             playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
+        {
             TakeDamage(0);
+        }
+
+        Character* enemyScript = otherScript->GetScriptByType<Character>();
+        // Banshee slow area
+        if (enemyScript->GetCharacterType() == CharacterType::Banshee)
+        {
+            CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
+            Banshee_v2* bansheeScript = otherScript->GetScriptByType<Banshee_v2>();
+
+            if (playerScript && bansheeScript && bansheeScript->GetState() == Banshee_v2_States::SlowArea)
+            {
+                playerScript->StartCurse();
+                TakeDamage(bansheeScript->GetSlowAreaDamage());
+                return;
+            }
+        }
+        else if (enemyScript->GetCharacterType() == CharacterType::Boss)
+        {
+            Boss* bossScript = otherScript->GetScriptByType<Boss>();
+            if (bossScript)
+            {
+                if (bossScript->GetCloseArea() &&
+                    otherWeaponShpere == bossScript->GetCloseArea()->GetComponent<SphereColliderComponent*>())
+                    TakeDamage(bossScript->GetCloseAreaDamage());
+                else TakeDamage(enemyScript->attackDamage);
+            }
+        }
     }
 
-    if (otherWeapon && otherWeapon->GetEnabled() && otherObject->GetName() == "DarkPath")
+    CubeColliderComponent* otherWeaponCube = otherObject->GetComponent<CubeColliderComponent*>();
+    if (type == CharacterType::CuChulainn && otherWeaponCube && otherWeaponCube->GetEnabled() &&
+        otherObject->GetName() == "DashTrailCollision")
     {
-        TakeDamage(1);
+        playerScript->StartCurse();
     }
 
     otherScript = otherObject->GetComponent<ScriptComponent*>();
@@ -173,6 +219,13 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
+
+            if (type == CharacterType::CuChulainn)
+            {
+                CuChulainn* player = static_cast<CuChulainn*>(this);
+                player->OnArrowHit();
+            }
+
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
@@ -190,17 +243,6 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 damageCollider->SetEnabled(false);
             }
         }
-
-        /*
-        // Mushroom check
-        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
-        if (mushroomScript)
-        {
-            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
-            {
-                if (playerScript->TakeMushroom()) mushroomScript->Disable();
-            }
-        }*/
 
         Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
         if (spoutsScript)
@@ -327,6 +369,8 @@ void Character::Die()
         weaponCollider->DeleteRigidBody();
         weaponCollider->SetEnabled(false);
     }
+
+    if (associatedBarrier != nullptr) associatedBarrier->EnemyDied();
 }
 
 void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)

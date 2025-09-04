@@ -41,6 +41,7 @@ enum ComponentType : int
     COMPONENT_TRAIL,
     COMPONENT_PARTICLE_SYSTEM,
     COMPONENT_SHADER_SCRIPT,
+    COMPONENT_VIDEO,
 };
 
 enum class ColliderType : uint8_t
@@ -80,10 +81,11 @@ enum class ShaderScriptType : int
     GEOMERTY_PASS,
     TRANSPARENT_PASS,
     POST_LIGHTING_PASS,
-    POST_EFFECTS_PASS
+    POST_EFFECTS_PASS,
+    UI_PASS
 };
 
-constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting", "Post effects"};
+constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting", "Post effects", "UI"};
 constexpr int ShaderScriptTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
 
 class ComponentUtils
@@ -100,9 +102,9 @@ class ComponentUtils
         ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*, CapsuleColliderComponent*,                 \
         AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*, AudioSourceComponent*,              \
         AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, DecalComponent*,       \
-        TrailComponent*, ParticleSystemComponent*, ShaderScriptComponent*
+        TrailComponent*, ParticleSystemComponent*, ShaderScriptComponent*, VideoComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,    \
-        nullptr, nullptr
+        nullptr, nullptr, nullptr

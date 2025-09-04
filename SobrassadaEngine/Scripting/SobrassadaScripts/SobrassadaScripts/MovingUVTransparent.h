@@ -18,6 +18,9 @@ class MovingUVTransparent : public Script
 
     void Reset() override;
 
+    bool IsPaused() const { return isPaused; }
+    void SetPaused(bool newValue) { isPaused = newValue; }
+
   private:
     unsigned int shaderProgram  = 0;
 
@@ -26,8 +29,9 @@ class MovingUVTransparent : public Script
     unsigned int ebo            = 0;
     unsigned int materialBuffer = 0;
 
-    bool isAlphaDiscard          = false;
-    bool isDoubleSided           = false;
+    bool isAlphaDiscard         = false;
+    bool isDoubleSided          = false;
+    bool isPaused               = false;
 
     unsigned int indexCount     = 0;
 

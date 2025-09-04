@@ -13,9 +13,8 @@ namespace AK
 {
     namespace EVENTS
     {
-        static const AkUniqueID PLAY_BURNINGCITY = 3779517962U;
+        static const AkUniqueID PLAY_FIRST_THEME = 1086074370U;
         static const AkUniqueID PLAY_FOREST = 207755397U;
-        static const AkUniqueID PLAY_MAINMENU = 3738780720U;
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
         static const AkUniqueID PLAY_SFX_BUTTON_01 = 920741356U;
         static const AkUniqueID PLAY_SFX_BUTTON_02 = 920741359U;
@@ -31,6 +30,12 @@ namespace AK
         static const AkUniqueID PLAY_SFX_MC_HURT = 2204804306U;
         static const AkUniqueID PLAY_SFX_MC_NORMALATTACK_01 = 2177541458U;
         static const AkUniqueID PLAY_SFX_MC_ULTIMATEATTACK = 1030865972U;
+        static const AkUniqueID PLAY_SFX_POOKA_ATTACK = 2845739403U;
+        static const AkUniqueID PLAY_SFX_POOKA_BURYDOWN = 3129736499U;
+        static const AkUniqueID PLAY_SFX_POOKA_BURYUP = 3198435252U;
+        static const AkUniqueID PLAY_SFX_POOKA_DASH = 2385944011U;
+        static const AkUniqueID PLAY_SFX_POOKA_DEATH = 4271776059U;
+        static const AkUniqueID PLAY_SFX_POOKA_HURT = 1906970548U;
         static const AkUniqueID PLAY_SFX_SOLDIER_ATTACK = 3285336459U;
         static const AkUniqueID PLAY_SFX_STEPS_GRASS = 879946080U;
         static const AkUniqueID PLAY_SFX_STEPS_ROCK = 2099665009U;
@@ -38,11 +43,11 @@ namespace AK
         static const AkUniqueID PLAY_SFX_TREEOFLIFE_02 = 3055317224U;
         static const AkUniqueID PLAY_SFX_TREEOFLIFE_03 = 3055317225U;
         static const AkUniqueID PLAY_SFX_WATER_01 = 3212841747U;
+        static const AkUniqueID PLAY_SFX_WATER_SPOUTS = 278128852U;
         static const AkUniqueID PLAY_SFX_WATERFALL_01 = 1233267134U;
         static const AkUniqueID PLAY_SFX_WATERFALL_02 = 1233267133U;
         static const AkUniqueID PLAY_SFX_WIND_01 = 4018713014U;
         static const AkUniqueID PLAY_SFX_WIND_02 = 4018713013U;
-        static const AkUniqueID PLAY_TEMPLETRACK = 2635547058U;
         static const AkUniqueID PLAY_TORCH = 2025845440U;
     } // namespace EVENTS
 

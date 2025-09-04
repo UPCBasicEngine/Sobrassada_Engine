@@ -25,8 +25,9 @@ MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
     fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
-    fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
     fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
+
+    fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
 }
 
 MovingUVTransparent::~MovingUVTransparent()
@@ -114,9 +115,12 @@ bool MovingUVTransparent::Init()
 
 void MovingUVTransparent::Update(float deltaTime)
 {
-    float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y;
+    if (!isPaused)
+    {
+        float newOffset  = deltaTime * animationSpeed;
+        uvOffset.x      += newOffset * uvOffsetDirection.x;
+        uvOffset.y      += newOffset * uvOffsetDirection.y;
+    }
 }
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
@@ -170,7 +174,7 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
         if (isDoubleSided) glEnable(GL_CULL_FACE);
 
-        if (batch) batch->BindBonesBuffer();
+        if (batch) batch->UnbindBonesBuffer();
 
         glBindVertexArray(0);
     }

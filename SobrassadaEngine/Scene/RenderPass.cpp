@@ -1,6 +1,7 @@
 #include "RenderPass.h"
 #include "Application.h"
 #include "BatchManager.h"
+#include "BillboardModule.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
 #include "DebugDrawModule.h"
@@ -9,15 +10,18 @@
 #include "GameObject.h"
 #include "LightsConfig.h"
 #include "OpenGLModule.h"
+#include "ParticleSystemModule.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
+#include "SSAO.h"
 #include "ShaderModule.h"
 #include "ShaderScriptModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
-#include "SSAO.h"
+
+#include "Standalone/VideoComponent.h"
 
 #ifdef OPTICK
 #include "optick.h"
@@ -146,7 +150,7 @@ void RenderPass::CopyDepthStencil() const
 }
 
 void RenderPass::RenderScene(
-    Framebuffer* framebuff, const std::vector<GameObject*> objectsToRender, CameraComponent* camera
+    Framebuffer* framebuff, const std::vector<GameObject*> objectsToRender, CameraComponent* camera, float deltaTime
 )
 {
     ssao        = App->GetOpenGLModule()->GetSsao();
@@ -157,6 +161,50 @@ void RenderPass::RenderScene(
     glViewport(0, 0, width, height);
 
     glEnable(GL_STENCIL_TEST);
+
+    std::vector<VideoComponent*> videosToRender;
+
+    for (const auto& gameObject : objectsToRender)
+    {
+        VideoComponent* video = gameObject->GetComponent<VideoComponent*>();
+        if (video != nullptr && video->IsEffectivelyEnabled() && video->IsPlaying()) videosToRender.push_back(video);
+    }
+
+    if (videosToRender.size() != 0)
+    {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Video Pass");
+        gbuffer->Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+
+        glDisable(GL_BLEND);
+
+        for (const auto& video : videosToRender)
+        {
+            video->Render(0.0f, camera);
+        }
+
+        glEnable(GL_BLEND);
+
+        gbuffer->Unbind();
+
+        Bind();
+
+        const unsigned int program = App->GetShaderModule()->GetQuadProgram();
+        glUseProgram(program);
+
+        unsigned int loc = glGetUniformLocation(program, "u_Texture");
+        glUniform1i(loc, 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glPopDebugGroup();
+        return;
+    }
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
@@ -208,7 +256,7 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Blur Pass");
     SsaoBlurPassRender(ssao);
     glPopDebugGroup();
-     
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
@@ -226,6 +274,30 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Custom Shader Pass");
     App->GetShaderScriptModule()->RenderTransparentPassShaders(0.f, camera);
+    glPopDebugGroup();
+
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
+#endif
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
+    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
+    glPopDebugGroup();
+
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::GameObject::Render_Billboards", Optick::Category::Rendering)
+#endif
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
+    glEnable(GL_BLEND);
+    App->GetBillboardModule()->RenderBillboards();
+    glDisable(GL_BLEND);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Particles Pass");
+    App->GetParticleModule()->RenderParticles();
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
+    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 }
 
@@ -751,6 +823,8 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 {
     Bind();
 
+    glDisable(GL_BLEND);
+
     // SKYBOX
     if (!App->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_WIREFRAME))
     {
@@ -838,6 +912,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisable(GL_STENCIL_TEST);
+    glEnable(GL_BLEND);
 
     // COPYING DEPTH BUFFER FROM GBUFFER TO RENDER FRAMEBUFFER
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer->gBufferObject);

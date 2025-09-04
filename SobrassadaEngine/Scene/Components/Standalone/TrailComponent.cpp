@@ -184,6 +184,14 @@ void TrailComponent::Clone(const Component* other)
 
 void TrailComponent::Update(float deltaTime)
 {
+    const bool nowEnabled = IsEffectivelyEnabled();
+
+    if (nowEnabled && !wasEnabled)
+    {
+        ClearTrail();
+    }
+    wasEnabled = nowEnabled;
+
     vertices.clear();
     indices.clear();
 
@@ -199,9 +207,16 @@ void TrailComponent::Update(float deltaTime)
     else cameraPos = App->GetCameraModule()->GetCameraPosition();
 
     const float3 position = parent->GetGlobalTransform().TranslatePart();
-    const float3 lastPos  = points.empty() ? float3::zero : points.back().position;
+    float3 lastPos  = points.empty() ? float3::zero : points.back().position;
 
     if (!spline) spline = parent->GetComponent<SplineComponent*>();
+
+    const float teleportDist = 2.0f;
+    if (nowEnabled && !points.empty() && (position - lastPos).LengthSq() > teleportDist * teleportDist)
+    {
+        ClearTrail();
+        lastPos = float3::zero; // tras limpiar, no compares contra el punto antiguo
+    }
 
     if (IsEffectivelyEnabled() && (points.empty() || (position - lastPos).LengthSq() >= minDistance * minDistance))
     {
@@ -432,4 +447,13 @@ void TrailComponent::RecalculateAABB()
 
     localComponentAABB          = AABB(localMin.Min(localMax), localMin.Max(localMax));
     parent->OnAABBUpdated();
+}
+
+void TrailComponent::ClearTrail()
+{
+    points.clear();
+    vertices.clear();
+    indices.clear();
+    if (spline) spline->ClearPoints();
+    RecalculateAABB();
 }
