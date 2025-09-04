@@ -60,14 +60,19 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
 {
    
     startPos        = origin;
-    this->direction = direction;
+    this->direction = direction.Normalized();
     frames          = 0;
+    if (collider) collider->SetEnabled(false);
     
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
-    const Quat rotation      = Quat::LookAt(float3::unitZ, direction, float3::unitY, float3::unitY);
+    const Quat rotation      = Quat::LookAt(float3::unitZ, this->direction, float3::unitY, float3::unitY);
     const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
-    parent->SetLocalTransform(transform);
+    
+    const float4x4 parentWS  = parent->GetParentGlobalTransform();
+    const float4x4 localTRS  = parentWS.Inverted() * transform;
+    
+    parent->SetLocalTransform(localTRS);
 
     parent->SetEnabledRecursive(true);
 }
@@ -100,13 +105,15 @@ void Projectile::Move(float deltaTime)
     frames += 1;
     if (frames > 20 && collider && !collider->GetEnabled()) collider->SetEnabled(true);
 
-    float3 currentPos  = parent->GetPosition();
-    currentPos        += direction * speed * deltaTime;
-    parent->SetLocalPosition(currentPos);
+    //float3 currentPos  = parent->GetPosition();
+    //currentPos        += direction * speed * deltaTime;
+    
 
-    const float3 worldPos = parent->GetGlobalTransform().TranslatePart();
+    const float3 worldPos = parent->GetGlobalTransform().TranslatePart() + direction * speed * deltaTime;
 
-    if (currentPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.11f))
+    parent->SetLocalPosition(worldPos - parent->GetParentGlobalTransform().TranslatePart());
+
+    if (worldPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.11f))
     {
         parent->SetEnabled(false);
     }
