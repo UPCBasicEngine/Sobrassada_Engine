@@ -151,9 +151,9 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                     glGetUniformLocation(program, "windUVParameters"), it->GetVCoord0(), it->GetVCoord1(),
                     it->UseCentralPivot(), it->UseWindGravity()
                 );
-                glUniform3f(
+                glUniform4f(
                     glGetUniformLocation(program, "windAmplitudes"), it->GetWindXAmplitude(), it->GetWindYAmplitude(),
-                    it->GetWindZAmplitude()
+                    it->GetWindZAmplitude(), it->UseConstantMovement()
                 );
                 glUniform4f(
                     glGetUniformLocation(program, "windFrequency"), it->GetWindXFrequency(), it->GetWindYFrequency(),
@@ -353,6 +353,7 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
                 Equal(material->GetVCoord0(), it->GetVCoord0()) && Equal(material->GetVCoord1(), it->GetVCoord1()) &&
                 material->UseCentralPivot() == it->UseCentralPivot() &&
                 material->UseWindGravity() == it->UseWindGravity() &&
+                material->UseConstantMovement() == it->UseConstantMovement() &&
                 Equal(material->GetWindXAmplitude(), it->GetWindXAmplitude()) &&
                 Equal(material->GetWindYAmplitude(), it->GetWindYAmplitude()) &&
                 Equal(material->GetWindZAmplitude(), it->GetWindZAmplitude()) &&

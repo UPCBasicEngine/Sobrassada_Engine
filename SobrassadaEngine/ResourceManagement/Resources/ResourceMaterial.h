@@ -64,6 +64,7 @@ class ResourceMaterial : public Resource
     const float GetVCoord1() const { return vCoord1; }
     const bool UseCentralPivot() const { return useCentralPivot; }
     const bool UseWindGravity() const { return useWindGravity; }
+    const bool UseConstantMovement() const { return useConstantMovement; }
     const float GetWindXAmplitude() const { return windXAmplitude; }
     const float GetWindYAmplitude() const { return windYAmplitude; }
     const float GetWindZAmplitude() const { return windZAmplitude; }
@@ -92,24 +93,25 @@ class ResourceMaterial : public Resource
     TextureInfo emmisiveTexture;
     TextureInfo occlusionTexture;
 
-    MaterialGPU material  = {};
-    bool isTransparent    = false;
-    bool isAlpha          = false;
-    bool doubleSided      = false;
-    bool hasNormal        = false;
-    bool applyWind        = false;
-    float vCoord0         = 0.0f;
-    float vCoord1         = 1.0f;
-    bool useCentralPivot  = false;
-    bool useWindGravity   = false;
-    float windXAmplitude  = 1.0f;
-    float windYAmplitude  = 1.0f;
-    float windZAmplitude  = 1.0f;
-    float windXFrequency  = 1.0f;
-    float windYFrequency  = 1.0f;
-    float windZFrequency  = 1.0f;
-    float windTimeScale   = 1.0f;
-    UID defaultTextureUID = INVALID_UID;
+    MaterialGPU material        = {};
+    bool isTransparent          = false;
+    bool isAlpha                = false;
+    bool doubleSided            = false;
+    bool hasNormal              = false;
+    bool applyWind              = false;
+    float vCoord0               = 0.0f;
+    float vCoord1               = 1.0f;
+    bool useCentralPivot        = false;
+    bool useWindGravity         = false;
+    bool useConstantMovement    = false;
+    float windXAmplitude        = 1.0f;
+    float windYAmplitude        = 1.0f;
+    float windZAmplitude        = 1.0f;
+    float windXFrequency        = 1.0f;
+    float windYFrequency        = 1.0f;
+    float windZFrequency        = 1.0f;
+    float windTimeScale         = 1.0f;
+    UID defaultTextureUID       = INVALID_UID;
 
-    bool wasUpdated       = false;
+    bool wasUpdated             = false;
 };
