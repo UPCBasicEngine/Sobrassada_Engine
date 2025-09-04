@@ -356,7 +356,7 @@ void Banshee_v2::HandleState(float deltaTime)
         break;
 
     case Banshee_v2_States::Attack:
-        if (attackCdTimer <= 0) Attack(deltaTime);
+        Attack(deltaTime);
         break;
 
     case Banshee_v2_States::Hit:
@@ -485,8 +485,6 @@ void Banshee_v2::ChasePlayer()
 
     hasMoved = true;
     if (animComponent) animComponent->UseTrigger("Chase");
-    // if (animComponent && animComponent->GetCurrentStateName() != HashString("Idle"))
-    // animComponent->UseTrigger("Chase");
     if (CheckDistanceWithPlayer() <= PlayerDistances::Close)
     {
         float attackToPerform = normalizedDist(rng);
@@ -821,6 +819,8 @@ void Banshee_v2::SlowArea(float deltaTime)
             elapsedSlowAreaWaring = 0.f;
             slowAreaWarningGO->SetEnabled(true);
             slowAreaGO->SetEnabled(true);
+
+            UpdateLastPlayerPosition();
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
         {
@@ -842,6 +842,8 @@ void Banshee_v2::SlowArea(float deltaTime)
             slowAreaWarningGO->SetLocalTransform(starTransform);
 
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+            MoveSlowAreaToPlayer();
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
@@ -881,4 +883,37 @@ void Banshee_v2::SlowArea(float deltaTime)
             agentAI->SetLookForward(true);
         }
     }
+}
+
+void Banshee_v2::MoveSlowAreaToPlayer()
+{
+    if (!character) return;
+
+    float3 translate, scale;
+    Quat rotation;
+
+    float4x4 parentInvertedGlobal = parent->GetGlobalTransform().Inverted();
+
+    slowAreaGO->GetGlobalTransform().Decompose(translate, rotation, scale);
+    float4x4 newGlobalTransform = float4x4::FromTRS(lastPlayerPosition, rotation, scale);
+    slowAreaGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+
+    slowAreaInGO->GetGlobalTransform().Decompose(translate, rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(lastPlayerPosition, rotation, scale);
+    slowAreaInGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+
+    slowAreaWarningGO->GetGlobalTransform().Decompose(translate, rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(lastPlayerPosition, rotation, scale);
+    slowAreaWarningGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+}
+
+void Banshee_v2::UpdateLastPlayerPosition()
+{
+    if (!character)
+    {
+        lastPlayerPosition = parent->GetGlobalTransform().TranslatePart();
+        return;
+    }
+
+    lastPlayerPosition = character->GetLastPosition();
 }

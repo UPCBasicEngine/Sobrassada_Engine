@@ -59,6 +59,8 @@ class Banshee_v2 : public Character
     void TeleportToOrigin();
     void HandleDeath();
     void SlowArea(float deltaTime);
+    void MoveSlowAreaToPlayer();
+    void UpdateLastPlayerPosition();
 
   private:
     float2 invisibleTimeRange      = float2::zero;
@@ -110,4 +112,6 @@ class Banshee_v2 : public Character
 
     const float4 screamWarningColor     = float4(0.89f, 0.243f, 0.243f, 1.f);
     const float4 slowWarningColor       = float4(0.243f, 0.369f, 0.89f, 1.f);
+
+    float3 lastPlayerPosition           = float3::zero;
 };
