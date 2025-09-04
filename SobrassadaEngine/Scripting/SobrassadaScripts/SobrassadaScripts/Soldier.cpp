@@ -375,7 +375,7 @@ void Soldier::ChangeState()
 {
     if (playerScript->IsDead())
     {
-        currentState = SoldierStates::DEATH;
+        currentState = SoldierStates::PATROL;
         return;
     }
 
