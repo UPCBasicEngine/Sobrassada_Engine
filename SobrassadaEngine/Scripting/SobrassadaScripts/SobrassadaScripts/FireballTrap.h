@@ -2,6 +2,8 @@
 
 #include "Script.h"
 #include <array>
+#include <unordered_map>
+#include <vector>
 
 class GameObject;
 class MeshComponent;
@@ -44,8 +46,14 @@ class FireballTrap : public Script
     float3 RandomSpawnPoint() const;
     CameraMovement* FindShakeCamera() const;
     void SetupInspectorFields();
+    void OnBigBallHitPlayer() { bigBallHitPlayerThisAttack = true; }
 
   private:
+    std::unordered_map<GameObject*, std::vector<GameObject*>> vfxPools; // key = prefab*
+
+    GameObject* AcquireFromPool(GameObject* prefab);
+    void ReleaseToPool(GameObject* inst);
+
     struct TimedVFX
     {
         GameObject* go = nullptr;
@@ -87,26 +95,26 @@ class FireballTrap : public Script
     FireballTrapSettings cfg;
 
     // State Machine
-    ACTIVATION_STATE activationState        = ACTIVATION_STATE::SLEEPING;
-    float randomAttackTime                  = 0.f; // seconds until next shot
-    float activatedTime                     = 0.f;
-    float impactElapsed                     = 0.f; // burning timer after impact
-    float dropElapsed                       = 0.f; // time since fireball spawned
+    ACTIVATION_STATE activationState            = ACTIVATION_STATE::SLEEPING;
+    float randomAttackTime                      = 0.f; // seconds until next shot
+    float activatedTime                         = 0.f;
+    float impactElapsed                         = 0.f; // burning timer after impact
+    float dropElapsed                           = 0.f; // time since fireball spawned
 
     // Scene references
-    MeshComponent* groundMesh               = nullptr;
+    MeshComponent* groundMesh                   = nullptr;
     SphereColliderComponent* damageAreaCollider = nullptr;
-    GameObject* fireball                    = nullptr;
-    GameObject* fireballShadow              = nullptr;
-    CameraMovement* shakeCam                = nullptr;
-    CubeColliderComponent* spawnZone        = nullptr;
+    GameObject* fireball                        = nullptr;
+    GameObject* fireballShadow                  = nullptr;
+    CameraMovement* shakeCam                    = nullptr;
+    CubeColliderComponent* spawnZone            = nullptr;
 
     // Minis and decals
-    GameObject* miniPrototype               = nullptr;
-    GameObject* impactPrefab                = nullptr;
-    GameObject* currentDecal                = nullptr;
-    uint32_t miniCount                      = 4; // how many minis
-    float miniLifeTime                      = 2.f;
+    GameObject* miniPrototype                   = nullptr;
+    GameObject* impactPrefab                    = nullptr;
+    GameObject* currentDecal                    = nullptr;
+    uint32_t miniCount                          = 4; // how many minis
+    float miniLifeTime                          = 2.f;
 
     // Mini params
     struct MiniInstance
@@ -144,11 +152,11 @@ class FireballTrap : public Script
     GameObject* vfxLightImpactPrefab   = nullptr;
     GameObject* vfxFireImpactPrefab    = nullptr;
     GameObject* vfxBombGroundPrefab    = nullptr;
-    GameObject* vfxBlackStainPrefab    = nullptr; 
+    GameObject* vfxBlackStainPrefab    = nullptr;
 
     // Delays VFX
-    float vfxMainLightDelay            = 0.00f; 
-    float vfxLightImpactDelay          = 0.00f; 
+    float vfxMainLightDelay            = 0.00f;
+    float vfxLightImpactDelay          = 0.00f;
     float vfxFireImpactDelay           = 0.15f;
     float vfxBombGroundDelay           = 0.35f;
     float vfxBlackStainDelay           = 0.70f;
@@ -163,8 +171,8 @@ class FireballTrap : public Script
     // Indicator (where will fall)
     GameObject* vfxIndicatorPrefab     = nullptr; // prefall indicator VFX
 
-    float3 impactLocalPos           = float3::zero; // XY of impact relative to base
-    float3 fireballVelocity                = float3::zero;
+    float3 impactLocalPos              = float3::zero; // XY of impact relative to base
+    float3 fireballVelocity            = float3::zero;
     float3 shadowBaseScale             = float3::one;
     float3 lastImpactWorld             = float3::zero;
     float vfxIndicatorWorldRadius      = 0.6f;
@@ -173,4 +181,6 @@ class FireballTrap : public Script
     GameObject* miniIndicatorVfxPrefab = nullptr; // prefall indicator for minis
     float miniIndicatorVfxScale        = 0.4f;    // world radius/scale of the indicator
     std::vector<float> plannedMiniAngles;
+
+    bool bigBallHitPlayerThisAttack = false;
 };

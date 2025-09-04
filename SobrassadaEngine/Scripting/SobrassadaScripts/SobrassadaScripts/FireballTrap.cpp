@@ -250,18 +250,20 @@ void FireballTrap::Update(float deltaTime)
 void FireballTrap::StartAttack()
 {
     // Random impact position inside spawn zone
-    lastImpactWorld     = RandomSpawnPoint();
-    impactLocalPos      = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
-    impactLocalPos.y    = 0.f;
+    lastImpactWorld            = RandomSpawnPoint();
+    impactLocalPos             = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
+    impactLocalPos.y           = 0.f;
+
+    bigBallHitPlayerThisAttack = false;
 
     // Launch direction
-    const float yawRad  = cfg.launchYawDeg * DEGREE_RAD_CONV;
-    const float3 dirXZ  = float3(cosf(yawRad), 0.f, sinf(yawRad)).Normalized();
+    const float yawRad         = cfg.launchYawDeg * DEGREE_RAD_CONV;
+    const float3 dirXZ         = float3(cosf(yawRad), 0.f, sinf(yawRad)).Normalized();
 
     // Spawn position
-    const float launchR = RandomRange(0.5f * cfg.maxLaunchRadius, cfg.maxLaunchRadius);
-    float3 spawnLocal   = impactLocalPos + dirXZ * launchR;
-    spawnLocal.y        = cfg.fallingHeight;
+    const float launchR        = RandomRange(0.5f * cfg.maxLaunchRadius, cfg.maxLaunchRadius);
+    float3 spawnLocal          = impactLocalPos + dirXZ * launchR;
+    spawnLocal.y               = cfg.fallingHeight;
 
     fireball->SetLocalPosition(spawnLocal);
     fireball->SetEnabled(true);
@@ -351,32 +353,34 @@ void FireballTrap::HandleImpact()
         damageAreaCollider->SetEnabled(true);
     }
 
-    plannedMiniAngles.clear();
-
-    const float stepAng     = TAU / float(std::max(1u, miniCount));
-
-    // Physics to compute time-to-ground for minis (so indicator lives until landing)
-    const float startHeight = cfg.miniStartHeight;
-    const float vUp         = cfg.miniUpSpeed;
-    const float g           = cfg.gravity;
-    // time until y<=0 starting at startHeight with upward velocity vUp
-    const float tFall       = (vUp + sqrtf(std::max(0.f, vUp * vUp + 2.f * g * startHeight))) / g;
-
-    for (uint32_t i = 0; i < miniCount; ++i)
+    if (!bigBallHitPlayerThisAttack)
     {
-        const float ang = i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER);
-        plannedMiniAngles.push_back(ang);
+        plannedMiniAngles.clear();
 
-        if (miniIndicatorVfxPrefab)
+        const float stepAng     = TAU / float(std::max(1u, miniCount));
+
+        // Physics to compute time-to-ground for minis indicator lives until landing
+        const float startHeight = cfg.miniStartHeight;
+        const float vUp         = cfg.miniUpSpeed;
+        const float g           = cfg.gravity;
+        const float tFall       = (vUp + sqrtf(std::max(0.f, vUp * vUp + 2.f * g * startHeight))) / g;
+
+        for (uint32_t i = 0; i < miniCount; ++i)
         {
-            const float3 dirXZ = float3(cosf(ang), 0.f, sinf(ang));
-            const float3 pos   = impactLocalPos + dirXZ * cfg.miniLandingRadius;
+            const float ang = i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER);
+            plannedMiniAngles.push_back(ang);
 
-            ScheduleVfx(miniIndicatorVfxPrefab, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
+            if (miniIndicatorVfxPrefab)
+            {
+                const float3 dirXZ = float3(cosf(ang), 0.f, sinf(ang));
+                const float3 pos   = impactLocalPos + dirXZ * cfg.miniLandingRadius;
+
+                ScheduleVfx(miniIndicatorVfxPrefab, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
+            }
         }
-    }
 
-    SpawnMiniCluster();
+        SpawnMiniCluster();
+    }
 
     if (shakeCam)
     {
@@ -411,7 +415,45 @@ void FireballTrap::UpdateFireball(float deltaTime)
     float3 pos          = fireball->GetLocalTransform().TranslatePart() + fireballVelocity * deltaTime;
     fireball->SetLocalPosition(pos);
 
-    // Shadow scaling
+    if (!bigBallHitPlayerThisAttack)
+    {
+        const float3 fireballWorld = parent->GetGlobalTransform().MulPos(pos);
+        const float3 playerWorld   = character->GetLastPosition();
+
+        const float dx             = fireballWorld.x - playerWorld.x;
+        const float dz             = fireballWorld.z - playerWorld.z;
+        const float distSqXZ       = dx * dx + dz * dz;
+
+        float ballR                = 0.5f;
+        if (auto* bc = fireball->GetComponent<SphereColliderComponent*>())
+        {
+            const float s = std::max(std::max(fireball->GetScale().x, fireball->GetScale().y), fireball->GetScale().z);
+            ballR         = bc->radius * s;
+        }
+
+        const float playerR = 0.6f;
+        const float margin  = 0.2f;
+        const float hitR    = ballR + playerR + margin;
+
+        if (distSqXZ <= hitR * hitR)
+        {
+            bigBallHitPlayerThisAttack = true;
+
+            if (vfxIndicatorPrefab)
+            {
+                for (auto& e : scheduledVfx)
+                {
+                    if (e.prefab == vfxIndicatorPrefab && e.instance)
+                    {
+                        ReleaseToPool(e.instance);
+                        e.instance  = nullptr;
+                        e.triggered = true;
+                    }
+                }
+            }
+        }
+    }
+
     if (fireballShadow)
     {
         const float shadowScaleInterpolation = 1.f - std::clamp(pos.y / cfg.fallingHeight, 0.f, 1.f);
@@ -420,12 +462,11 @@ void FireballTrap::UpdateFireball(float deltaTime)
         fireballShadow->SetLocalTransform(float4x4::FromTRS(shadowPos, float3x3::identity, scaleNow));
     }
 
-    // Impact
     if (pos.y <= 0.f)
     {
         HandleImpact();
     }
-    else // spin while falling
+    else
     {
         const float4x4 spin =
             float4x4::RotateX(cfg.rotationSpeed * deltaTime) * float4x4::RotateY(cfg.rotationSpeed * deltaTime);
@@ -568,6 +609,33 @@ void FireballTrap::ScheduleVfx(GameObject* prefab, float delay, float life, cons
     scheduledVfx.push_back({prefab, delay, life, pos, scale});
 }
 
+GameObject* FireballTrap::AcquireFromPool(GameObject* prefab)
+{
+    if (!prefab) return nullptr;
+
+    auto& pool = vfxPools[prefab];
+
+    for (GameObject* go : pool)
+    {
+        if (go && !go->IsEnabled()) return go;
+    }
+
+    GameObject* inst = new GameObject(parent->GetUID(), prefab);
+    inst->SetEnabled(false);
+    parent->AddChildren(inst->GetUID());
+    AppEngine->GetSceneModule()->GetScene()->AddGameObject(inst->GetUID(), inst);
+
+    pool.push_back(inst);
+    return inst;
+}
+
+void FireballTrap::ReleaseToPool(GameObject* inst)
+{
+    if (!inst) return;
+    if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>()) ssc->SetScriptEnabled("MovingUVClipErode", false);
+    inst->SetEnabled(false);
+}
+
 void FireballTrap::UpdateScheduledVfx(float dt)
 {
     vfxSchedClock += dt;
@@ -579,19 +647,15 @@ void FireballTrap::UpdateScheduledVfx(float dt)
         // Trigger when delay elapsed
         if (!e.triggered && vfxSchedClock >= e.delay)
         {
-            GameObject* inst = new GameObject(parent->GetUID(), e.prefab);
-
-            parent->AddChildren(inst->GetUID());
-            AppEngine->GetSceneModule()->GetScene()->AddGameObject(inst->GetUID(), inst);
+            GameObject* inst = AcquireFromPool(e.prefab);
+            if (!inst) continue;
 
             const float3 parentS = parent->GetScale();
             const float3 localS  = SafeDiv(e.localScale, parentS);
-
-            // TRS local
             const float4x4 tf    = float4x4::FromTRS(e.localPos, float3x3::identity, localS);
 
-            inst->SetEnabled(true);
             inst->SetLocalTransform(tf);
+            inst->SetEnabled(true);
 
             if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>())
             {
@@ -611,8 +675,8 @@ void FireballTrap::UpdateScheduledVfx(float dt)
             e.timer += dt;
             if (e.timer >= e.life)
             {
-                RecycleGO(e.instance);
-                e.instance = nullptr; // keep triggered=true to avoid retrigger
+                ReleaseToPool(e.instance); 
+                e.instance = nullptr;      
             }
         }
     }
@@ -631,7 +695,7 @@ void FireballTrap::ClearScheduledVfx()
 {
     for (auto& e : scheduledVfx)
     {
-        if (e.instance) RecycleGO(e.instance);
+        if (e.instance) ReleaseToPool(e.instance);
         e.instance  = nullptr;
         e.triggered = true;
     }
