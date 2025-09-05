@@ -499,6 +499,7 @@
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
     <ClInclude Include="MovingUVTransparent.h" />
+    <ClInclude Include="MovingUVClipErode.h" />
     <ClInclude Include="Mushroom.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
@@ -2085,6 +2086,7 @@
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
     <ClCompile Include="MovingUVTransparent.cpp" />
+    <ClCompile Include="MovingUVClipErode.cpp" />
     <ClCompile Include="Mushroom.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
