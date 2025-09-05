@@ -34,6 +34,9 @@
     <Filter Include="ShaderScripts\HealVFX">
       <UniqueIdentifier>{065672c1-b0b3-42a7-a7a2-a6db5e08f08a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Characters\Boss">
+      <UniqueIdentifier>{93f0e42b-2afb-4e4c-8428-f3482a97d73c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
@@ -166,6 +169,21 @@
     <ClInclude Include="MiniFireball.h">
       <Filter>Environment\Traps</Filter>
     </ClInclude>
+    <ClInclude Include="MovingUVClipErode.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="BossMirage.h">
+      <Filter>Characters\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="Boss.h">
+      <Filter>Characters\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="Mirage.h">
+      <Filter>Characters\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="MirageBossDash.h">
+      <Filter>Characters\Boss</Filter>
+    </ClInclude>
     <ClInclude Include="BarFill.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
@@ -183,6 +201,15 @@
     </ClInclude>
     <ClInclude Include="imgui_curve_editor.h">
       <Filter>External</Filter>
+    </ClInclude>
+    <ClInclude Include="AttackVfxSpritesheet.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="SavePlayerData.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="GameSession.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -885,6 +912,21 @@
     <ClCompile Include="MiniFireball.cpp">
       <Filter>Environment\Traps</Filter>
     </ClCompile>
+    <ClCompile Include="MovingUVClipErode.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="BossMirage.cpp">
+      <Filter>Characters\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="Boss.cpp">
+      <Filter>Characters\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="Mirage.cpp">
+      <Filter>Characters\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="MirageBossDash.cpp">
+      <Filter>Characters\Boss</Filter>
+    </ClCompile>
     <ClCompile Include="BarFill.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
@@ -902,6 +944,15 @@
     </ClCompile>
     <ClCompile Include="imgui_curve_editor.cpp">
       <Filter>External</Filter>
+    </ClCompile>
+    <ClCompile Include="AttackVfxSpritesheet.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="SavePlayerData.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="GameSession.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

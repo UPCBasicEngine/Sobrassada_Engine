@@ -10,6 +10,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
+#include "SavePlayerData.h"
 
 ChangeSceneScript::ChangeSceneScript(GameObject* parent) : Script(parent)
 {
@@ -43,7 +44,15 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collis
         {
             GLOG("Processing scene change request to: %s", targetSceneName);
 
+            const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
+            const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
+
+            PlayerState playerState;
+            playerScript->ExportState(playerState);
+            SavePlayerData::SavePlayerToFile(playerState, savePath);
+
             SceneModule* sceneModule = AppEngine->GetSceneModule();
+            std::string tempPlayerName = playerName;
 
             rapidjson::Document doc;
             if (FileSystem::LoadJSON(fullScenePath.c_str(), doc))

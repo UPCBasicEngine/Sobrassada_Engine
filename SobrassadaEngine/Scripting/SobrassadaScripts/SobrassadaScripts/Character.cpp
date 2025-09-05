@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "Banshee_v2.h"
+#include "Boss.h"
 #include "CameraComponent.h"
 #include "Character.h"
 #include "CuChulainn.h"
@@ -120,6 +121,17 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
                 if (playerScript->TakeMushroom()) mushroomScript->Disable();
             }
         }
+
+        Projectile* arrowProj = otherScript->GetScriptByType<Projectile>();
+        if (arrowProj)
+        {
+            arrowProj->Hit(otherObject);
+        }
+    }
+
+    if (HashString(otherObject->GetName()) == HashString("BlastShield_2"))
+    {
+        TakeDamage(1);
     }
 }
 
@@ -161,15 +173,14 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
-                                  playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
 
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         // Banshee slow area
-        if (enemyScript->GetCharacterType() == CharacterType::Banshee)
+        if (enemyScript && enemyScript->GetCharacterType() == CharacterType::Banshee)
         {
             CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
             Banshee_v2* bansheeScript = otherScript->GetScriptByType<Banshee_v2>();
@@ -179,6 +190,17 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 playerScript->StartCurse();
                 TakeDamage(bansheeScript->GetSlowAreaDamage());
                 return;
+            }
+        }
+        else if (enemyScript && enemyScript->GetCharacterType() == CharacterType::Boss)
+        {
+            Boss* bossScript = otherScript->GetScriptByType<Boss>();
+            if (bossScript)
+            {
+                if (bossScript->GetCloseArea() &&
+                    otherWeaponShpere == bossScript->GetCloseArea()->GetComponent<SphereColliderComponent*>())
+                    TakeDamage(bossScript->GetCloseAreaDamage());
+                else TakeDamage(enemyScript->attackDamage);
             }
         }
     }
@@ -197,6 +219,13 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
+
+            if (type == CharacterType::CuChulainn)
+            {
+                CuChulainn* player = static_cast<CuChulainn*>(this);
+                player->OnArrowHit();
+            }
+
             TakeDamage(projectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
@@ -214,17 +243,6 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 damageCollider->SetEnabled(false);
             }
         }
-
-        /*
-        // Mushroom check
-        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
-        if (mushroomScript)
-        {
-            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
-            {
-                if (playerScript->TakeMushroom()) mushroomScript->Disable();
-            }
-        }*/
 
         Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
         if (spoutsScript)

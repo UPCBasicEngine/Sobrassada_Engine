@@ -467,8 +467,11 @@
   <ItemGroup>
     <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
+    <ClInclude Include="AttackVfxSpritesheet.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
+    <ClInclude Include="BossMirage.h" />
+    <ClInclude Include="Boss.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
@@ -484,15 +487,19 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
+    <ClInclude Include="GameSession.h" />
     <ClInclude Include="HealVFXGround.h" />
     <ClInclude Include="MagicBarrier.h" />
     <ClInclude Include="imgui_curve_editor.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
     <ClInclude Include="MiniFireball.h" />
+    <ClInclude Include="Mirage.h" />
+    <ClInclude Include="MirageBossDash.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
     <ClInclude Include="MovingUVTransparent.h" />
+    <ClInclude Include="MovingUVClipErode.h" />
     <ClInclude Include="Mushroom.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
@@ -504,6 +511,7 @@
     <ClInclude Include="MovingUVPostScript.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RotateGameObject.h" />
+    <ClInclude Include="SavePlayerData.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="SpawnUI.h" />
@@ -2046,8 +2054,11 @@
     </ClCompile>
     <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
+    <ClCompile Include="AttackVfxSpritesheet.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />
+    <ClCompile Include="BossMirage.cpp" />
+    <ClCompile Include="Boss.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Changeling.cpp" />
@@ -2063,15 +2074,19 @@
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
+    <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
     <ClCompile Include="MagicBarrier.cpp" />
     <ClCompile Include="imgui_curve_editor.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />
     <ClCompile Include="MiniFireball.cpp" />
+    <ClCompile Include="Mirage.cpp" />
+    <ClCompile Include="MirageBossDash.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
     <ClCompile Include="MovingUVTransparent.cpp" />
+    <ClCompile Include="MovingUVClipErode.cpp" />
     <ClCompile Include="Mushroom.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
@@ -2095,6 +2110,7 @@
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="MovingUVPostScript.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />
+    <ClCompile Include="SavePlayerData.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />

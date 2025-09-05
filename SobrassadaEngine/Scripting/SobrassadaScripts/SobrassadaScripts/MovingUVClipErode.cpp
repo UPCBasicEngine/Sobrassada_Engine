@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "MovingUVTransparent.h"
+#include "MovingUVClipErode.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -21,16 +21,20 @@
 #include "Math/float3.h"
 #include "glew.h"
 
-MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
+MovingUVClipErode::MovingUVClipErode(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
     fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
-    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
-
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
+    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
+    fields.push_back({"Erosion Level", InspectorField::FieldType::Float, &erosionLevel, -1.0f, 1.0f});
+    fields.push_back({"Edge Feather", InspectorField::FieldType::Float, &edgeFeather, 0.0f, 0.25f});
+    fields.push_back({"Clip Min UV", InspectorField::FieldType::Vec2, &clipMin, -10.f, 10.f});
+    fields.push_back({"Clip Max UV", InspectorField::FieldType::Vec2, &clipMax, -10.f, 10.f});
 }
 
-MovingUVTransparent::~MovingUVTransparent()
+
+MovingUVClipErode::~MovingUVClipErode()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
@@ -38,19 +42,17 @@ MovingUVTransparent::~MovingUVTransparent()
     glDeleteBuffers(1, &materialBuffer);
 }
 
-bool MovingUVTransparent::Init()
+bool MovingUVClipErode::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
         "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
-        "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Transparent_Fragment.glsl"
+        "./EngineDefaults/Shader/Custom/Fragment/MovingUV_ClipErode_Fragment.glsl"
     );
 
     meshComp = parent->GetComponent<MeshComponent*>();
-
     if (meshComp)
     {
         const ResourceMesh* rmesh = meshComp->GetResourceMesh();
-
         if (rmesh)
         {
             glGenVertexArrays(1, &vao);
@@ -99,7 +101,6 @@ bool MovingUVTransparent::Init()
         if (rmat)
         {
             isAlphaDiscard  = rmat->IsAlphaDiscard();
-
             MaterialGPU mat = rmat->GetMaterial();
 
             glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
@@ -109,78 +110,79 @@ bool MovingUVTransparent::Init()
         meshComp->SetEnabled(false);
         meshComp->SetUpdateShaderStorage(true);
     }
+
     uvOffset = uvOffsetStart;
     return true;
 }
 
-void MovingUVTransparent::Update(float deltaTime)
+void MovingUVClipErode::Update(float dt)
 {
-    if (!isPaused)
-    {
-        float newOffset  = deltaTime * animationSpeed;
-        uvOffset.x      += newOffset * uvOffsetDirection.x;
-        uvOffset.y      += newOffset * uvOffsetDirection.y;
-    }
+    const float o  = dt * animationSpeed;
+    uvOffset.x    += o * uvOffsetDirection.x;
+    uvOffset.y    += o * uvOffsetDirection.y;
 }
 
-void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
+void MovingUVClipErode::Render(float dt, CameraComponent* cameraComp)
 {
     if (!(shaderProgram && indexCount > 0 && meshComp)) return;
-    if (meshComp->GetHasBones() && !meshComp->GetBatch()) return;
+
+    float4x4 proj, view, model = meshComp->GetCombinedMatrix();
+    if (cameraComp)
     {
-        float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
-
-        basicModelMatrix = meshComp->GetCombinedMatrix();
-
-        if (cameraComp)
-        {
-            projectionMatrix = cameraComp->GetProjectionMatrix();
-            viewMatrix       = cameraComp->GetViewMatrix();
-        }
-        else
-        {
-            projectionMatrix = AppEngine->GetCameraModule()->GetProjectionMatrix();
-            viewMatrix       = AppEngine->GetCameraModule()->GetViewMatrix();
-        }
-
-        AppEngine->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
-
-        glUseProgram(shaderProgram);
-
-        glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
-        glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
-        glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
-        glUniform2fv(3, 1, &uvOffset[0]);
-        glUniform1i(9, meshComp->GetHasBones());
-        glUniform1ui(10, meshComp->GetBoneIndexOffset());
-
-        glUniform1i(4, 0);
-        glUniform1i(5, isAlphaDiscard);
-
-        glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-
-        GeometryBatch* batch = meshComp->GetBatch();
-        if (batch) batch->BindBonesBuffer();
-
-        float3 cameraPos = float3::zero;
-        if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
-        else cameraPos = cameraComp->GetCameraPosition();
-
-        glUniform3fv(6, 1, &cameraPos[0]);
-
-        glBindVertexArray(vao);
-
-        if (isDoubleSided) glDisable(GL_CULL_FACE);
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-        if (isDoubleSided) glEnable(GL_CULL_FACE);
-
-        if (batch) batch->UnbindBonesBuffer();
-
-        glBindVertexArray(0);
+        proj = cameraComp->GetProjectionMatrix();
+        view = cameraComp->GetViewMatrix();
     }
+    else
+    {
+        proj = AppEngine->GetCameraModule()->GetProjectionMatrix();
+        view = AppEngine->GetCameraModule()->GetViewMatrix();
+    }
+
+    AppEngine->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
+
+    glUseProgram(shaderProgram);
+
+    glUniformMatrix4fv(0, 1, GL_TRUE, &proj[0][0]);
+    glUniformMatrix4fv(1, 1, GL_TRUE, &view[0][0]);
+    glUniformMatrix4fv(2, 1, GL_TRUE, &model[0][0]);
+
+    glUniform2fv(3, 1, &uvOffset[0]); // uUVOffset
+    glUniform1i(4, 0);                // uMainTex sampler unit 0
+    glUniform1i(5, isAlphaDiscard);   // uAlphaDiscard
+
+    glUniform1i(9, meshComp->GetHasBones());
+    glUniform1ui(10, meshComp->GetBoneIndexOffset());
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
+
+    GeometryBatch* batch = meshComp->GetBatch();
+    if (batch) batch->BindBonesBuffer();
+
+    float3 cameraPos = cameraComp ? cameraComp->GetCameraPosition() : AppEngine->GetCameraModule()->GetCameraPosition();
+    glUniform3fv(6, 1, &cameraPos[0]);
+    glUniform1f(7, erosionLevel); // uErode
+    glUniform1f(8, edgeFeather);  // uEdgeFeather
+    if (clipTo01)
+    {
+        float2 min01(0.f, 0.f), max01(1.f, 1.f);
+        glUniform2fv(11, 1, &min01[0]); // uClipMin
+        glUniform2fv(12, 1, &max01[0]); // uClipMax
+    }
+    else
+    {
+        glUniform2fv(11, 1, &clipMin[0]); // uClipMin
+        glUniform2fv(12, 1, &clipMax[0]); // uClipMax
+    }
+
+    glBindVertexArray(vao);
+    if (isDoubleSided) glDisable(GL_CULL_FACE);
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+    if (isDoubleSided) glEnable(GL_CULL_FACE);
+    if (batch) batch->BindBonesBuffer();
+    glBindVertexArray(0);
 }
 
-void MovingUVTransparent::Reset()
+void MovingUVClipErode::Reset()
 {
     uvOffset = uvOffsetStart;
 }
