@@ -964,7 +964,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         {
             weapon->SetEnabled(true);
             resetWeapon = false;
-            GameObject* spearCharacter = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameGOMesh);
+            GameObject* spearCharacter = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameMesh);
             spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(true);
         }
         throwTimer = 0.0f;
@@ -1120,7 +1120,7 @@ void CuChulainn::ThrowSpear()
     {
         weapon->SetEnabled(false);
         resetWeapon = true;
-        GameObject* spearCharacter = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameGOMesh);
+        GameObject* spearCharacter = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameMesh);
         spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(false);
     }
     if (aimShadowObject) aimShadowObject->SetEnabled(false);
