@@ -61,6 +61,10 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash Icon Name", InspectorField::FieldType::InputText, &dashIconName});
     fields.push_back({"Health Bar Name", InspectorField::FieldType::InputText, &healthBarName});
     fields.push_back({"Melee VFX delay", InspectorField::FieldType::Float, &meleeVfxDelay, 0.0f, 1.0f});
+    fields.push_back({"Time Stop on hit duration", InspectorField::FieldType::Float, &hitTimeStopDuration, 0.0f, 1.0f});
+    fields.push_back(
+        {"Time Stop on death duration", InspectorField::FieldType::Float, &deathTimeStopDuration, 0.0f, 1.0f}
+    );
 
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
@@ -608,7 +612,10 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
         Move();
 
     // When finished animation, go back to idle state
@@ -1037,8 +1044,11 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (isCursed)
     {
         curseTimer -= deltaTime;
-        if (curseTimer <= 0) EndCurse();
+        if (curseTimer <= 0.0f) EndCurse();
     }
+
+    timeStopTimer -= AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
+    if (timeStopTimer <= 0.0f) AppEngine->GetGameTimer()->SetTimeScale(1.0f);
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
@@ -1211,7 +1221,8 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -1711,11 +1722,15 @@ void CuChulainn::AddRiastrad(int amount)
 
 void CuChulainn::OnEnemyHit()
 {
+    AppEngine->GetGameTimer()->SetTimeScale(0.0f);
+    timeStopTimer = hitTimeStopDuration;
     AddRiastrad(riastradOnHit);
 }
 
 void CuChulainn::OnEnemyDefeated()
 {
+    AppEngine->GetGameTimer()->SetTimeScale(0.0f);
+    timeStopTimer = deathTimeStopDuration;
     AddRiastrad(riastradOnEnemyDeath);
 }
 

@@ -67,19 +67,19 @@ class CuChulainn : public Character
     void RemoveEnemy()
     {
         if (enemiesCont != 0) enemiesCont--;
-        GLOG("Enemy out. Total unique enemies colliding: %zu",  enemiesCont);
+        GLOG("Enemy out. Total unique enemies colliding: %zu", enemiesCont);
     }
     void OnEnemyHit();
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string abilityName);
     void OnArrowHit();
-  
+
     void StartCurse();
-    
+
     void ExportState(PlayerState& playerState) const;
     void ApplySavedState(const PlayerState& playerState);
-    
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -121,15 +121,13 @@ class CuChulainn : public Character
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
 
-    
-
   private:
     CharacterStates state                = CharacterStates::IDLE;
 
-    int enemiesCont                   = 0;
-    std::string cameraName             = "Camera Pivot";
-    GameObject* cameraObject           = nullptr;
-    CameraMovement* camera             = nullptr;
+    int enemiesCont                      = 0;
+    std::string cameraName               = "Camera Pivot";
+    GameObject* cameraObject             = nullptr;
+    CameraMovement* camera               = nullptr;
 
     std::string spearName                = "SpearProjectile";
     Projectile* spear                    = nullptr;
@@ -175,14 +173,13 @@ class CuChulainn : public Character
     float comboBufferTimer               = 0.0f;
     float meleeVfxDelay                  = 0.1f;
 
-    //Arrow Hit VFX 
-    GameObject* arrowHitVfxObject         = nullptr;
-    std::string arrowHitVfxName           = "";
-    float arrowHitVfxDuration             = 0.2f;
-    float arrowHitVfxTimer                = 0.0f;
-    bool arrowVfxIsActive                 = false;
+    // Arrow Hit VFX
+    GameObject* arrowHitVfxObject        = nullptr;
+    std::string arrowHitVfxName          = "";
+    float arrowHitVfxDuration            = 0.2f;
+    float arrowHitVfxTimer               = 0.0f;
+    bool arrowVfxIsActive                = false;
 
-  
     // Charged attack
     std::string chargedAttackName        = "Charged";
     GameObject* chargedAttackCollider    = nullptr;
@@ -320,8 +317,8 @@ class CuChulainn : public Character
     float healTimer                      = 0.0f;
     float healKnockbackDelay             = 0.0f;
 
-    std::string damageMaskName         = "DamageMask";
-    DamageMask* damageMask             = nullptr;
+    std::string damageMaskName           = "DamageMask";
+    DamageMask* damageMask               = nullptr;
 
     // Curse
     bool isCursed                        = false;
@@ -329,6 +326,10 @@ class CuChulainn : public Character
     float curseDuration                  = 5.0f;
     float curseTimer                     = 0.0f;
     UID playerMaterial                   = 0;
+
+    float timeStopTimer                  = 0.0f;
+    float hitTimeStopDuration            = 0.05f;
+    float deathTimeStopDuration          = 0.1f;
 };
 
 extern CharacterControllerComponent* character;

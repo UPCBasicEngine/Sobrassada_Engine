@@ -208,6 +208,9 @@
     <ClInclude Include="GameSession.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="ColorChange.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -947,6 +950,9 @@
     </ClCompile>
     <ClCompile Include="GameSession.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorChange.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -82,6 +82,7 @@ void Soldier::Update(float deltaTime)
             agentAI->ResetAngularSpeed();
             ChangeState();
         }
+        Character::UpdateTimers(deltaTime);
         return;
     }
 

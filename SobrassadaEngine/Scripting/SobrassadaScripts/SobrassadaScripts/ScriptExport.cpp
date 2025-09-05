@@ -41,6 +41,7 @@
 
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
+#include "ColorChange.h"
 #include "BarFill.h"
 #include "DamageMask.h"
 #include "MovingUVLight.h"
@@ -105,8 +106,8 @@ constexpr const char* scripts[] = {
 
 constexpr const char* shaderScripts[] = {
     "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
-    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet"
+    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",    "RiastradBarFill",       "HealthBarFill",
+    "AbilityIconFill",    "DamageMask",      "AttackVfxSpritesheet",  "ColorChange"
 };
 
 Application* AppEngine = nullptr;
@@ -168,6 +169,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
     if (scriptType == "AttackVfxSpritesheet") return new AttackVfxSpritesheet(parent);
     if (scriptType == "DamageMask") return new DamageMask(parent);
+    if (scriptType == "ColorChange") return new ColorChange(parent);
     if (scriptType == "RiastradBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
     if (scriptType == "HealthBarFill")

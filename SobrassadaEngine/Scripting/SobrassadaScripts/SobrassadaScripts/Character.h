@@ -11,6 +11,8 @@ class GameObject;
 class CharacterControllerComponent;
 class AnimationComponent;
 class CapsuleColliderComponent;
+class ShaderScriptComponent;
+class MeshComponent;
 
 enum class PlayerDistances
 {
@@ -117,6 +119,8 @@ class Character : public Script
     float searchDuration                        = 5.0f;
     bool isSearching                            = false;
 
+    // Hit VFX
+    float onHitVfxDuration                      = 0.1f;
     float onHitVfxTimer                         = 0.0;
     std::string onHitPivotName                  = "OnHitPivot";
     std::string onHitVfx1Name                   = "OnHitVfx1";
@@ -124,6 +128,9 @@ class Character : public Script
     GameObject* onHitPivot                      = nullptr;
     GameObject* onHitVfx1                       = nullptr;
     GameObject* onHitVfx2                       = nullptr;
+
+    MeshComponent* mesh                         = nullptr;
+    ShaderScriptComponent* colorChange          = nullptr;
 
     // Level
     MagicBarrier* associatedBarrier             = nullptr;

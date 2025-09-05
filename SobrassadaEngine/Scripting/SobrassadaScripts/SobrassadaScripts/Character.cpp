@@ -6,6 +6,7 @@
 #include "Boss.h"
 #include "CameraComponent.h"
 #include "Character.h"
+#include "ColorChange.h"
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
 #include "EditorUIModule.h"
@@ -59,6 +60,7 @@ Character::Character(
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
+        fields.push_back({"On Hit VFX Duration", InspectorField::FieldType::Float, &onHitVfxDuration, 0.0f, 1.0f});
         fields.push_back({"On Hit Pivot Name", InspectorField::FieldType::InputText, &onHitPivotName});
         fields.push_back({"On Hit VFX 1", InspectorField::FieldType::InputText, &onHitVfx1Name});
         fields.push_back({"On Hit VFX 2", InspectorField::FieldType::InputText, &onHitVfx2Name});
@@ -97,15 +99,20 @@ bool Character::Init()
     if (type != CharacterType::CuChulainn)
     {
         onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
-        if (!onHitPivot) GLOG("[WARNING] No on hit Pivot found for enemy")
+        if (!onHitPivot) GLOG("[WARNING - %s] No on hit Pivot found for enemy", parent->GetName())
 
         onHitVfx1 = parent->GetChildGameObjectByName(onHitVfx1Name);
-        if (!onHitVfx1) GLOG("[WARNING] No on hit VFX found for enemy")
+        if (!onHitVfx1) GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName())
         else onHitVfx1->SetEnabled(false);
 
-        onHitVfx2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(onHitVfx2Name);
-        if (!onHitVfx2) GLOG("[WARNING] No on hit VFX found for enemy")
+        onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
+        if (!onHitVfx2) GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName())
         else onHitVfx2->SetEnabled(false);
+
+        colorChange = parent->GetComponentChild<ShaderScriptComponent*>(AppEngine);
+        mesh        = colorChange->GetParent()->GetComponent<MeshComponent*>();
+        if (!colorChange) GLOG("[WARNING - %s] No color change shader found in children", parent->GetName())
+        mesh->SetEnabled(true);
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -308,11 +315,15 @@ void Character::UpdateTimers(float deltaTime)
     {
         onHitVfxTimer -= deltaTime;
 
+        // Do this in the next frame after enabling the mesh to avoid popping
+        if (mesh->GetEnabled() && colorChange->GetEnabled()) colorChange->SetEnabled(false);
+
         if (onHitVfxTimer < 0.0f)
         {
-            onHitVfxTimer = 0.0f;
-            if (onHitVfx1) onHitVfx1->SetEnabled(false);
-            if (onHitVfx2) onHitVfx2->SetEnabled(false);
+            if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
+            if (onHitVfx2 && onHitVfx2->IsEnabled()) onHitVfx2->SetEnabled(false);
+
+            if (!mesh->GetEnabled()) mesh->SetEnabled(true);
         }
     }
 }
@@ -366,8 +377,13 @@ void Character::TakeDamage(int amount)
             onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
         }
 
-        const float onHitVfxDuration = 0.1f;
-        onHitVfxTimer                = onHitVfxDuration;
+        if (colorChange)
+        {
+            mesh->SetEnabled(false);
+            colorChange->SetEnabled(true);
+        }
+
+        onHitVfxTimer = onHitVfxDuration;
     }
 
     if (currentHealth <= 0) Die();

@@ -476,6 +476,7 @@
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
     <ClInclude Include="ChangeSceneScript.h" />
+    <ClInclude Include="ColorChange.h" />
     <ClInclude Include="DamageMask.h" />
     <ClInclude Include="Destructible.h" />
     <ClInclude Include="EnemySpawnerScript.h" />
@@ -2063,6 +2064,7 @@
     <ClCompile Include="Changeling.cpp" />
     <ClCompile Include="ChangeSceneScript.cpp" />
     <ClCompile Include="Character.cpp" />
+    <ClCompile Include="ColorChange.cpp" />
     <ClCompile Include="CuChulainn.cpp" />
     <ClCompile Include="DamageMask.cpp" />
     <ClCompile Include="Destructible.cpp" />
