@@ -415,7 +415,6 @@ void Banshee_v2::TakeDamage(int amount)
 
         shoutStartAnim->GetParent()->SetEnabled(false);
 
-
         for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
         {
             shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
@@ -430,6 +429,7 @@ void Banshee_v2::TakeDamage(int amount)
 
         shoutBaseAnim->GetParent()->SetEnabled(false);
 
+        slowAreaGO->SetEnabled(false);
 
         isAttacking = false;
         agentAI->ResetSpeed();
@@ -583,6 +583,9 @@ void Banshee_v2::Attack(float deltaTime)
             shoutStartAnim->UseTrigger("Reset");
             shoutStartAnim->OnPlay(false);
 
+            slowAreaGO->SetEnabled(true);
+            slowAreaGO->SetLocalPosition(float3::zero);
+
             elapsedWarning = 0.f;
         }
 
@@ -663,6 +666,8 @@ void Banshee_v2::Attack(float deltaTime)
             }
 
             shoutBaseAnim->GetParent()->SetEnabled(false);
+
+            slowAreaGO->SetEnabled(false);
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
         {
