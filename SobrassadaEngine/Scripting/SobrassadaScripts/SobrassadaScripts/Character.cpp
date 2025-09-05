@@ -13,6 +13,7 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "MagicBarrier.h"
+#include "Math/Quat.h"
 #include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
@@ -25,6 +26,7 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "WindowModule.h"
+#include <math.h>
 
 #include <string>
 
@@ -57,6 +59,7 @@ Character::Character(
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
+        fields.push_back({"On Hit Pivot Name", InspectorField::FieldType::InputText, &onHitPivotName});
         fields.push_back({"On Hit VFX 1", InspectorField::FieldType::InputText, &onHitVfx1Name});
         fields.push_back({"On Hit VFX 2", InspectorField::FieldType::InputText, &onHitVfx2Name});
     }
@@ -93,7 +96,10 @@ bool Character::Init()
 
     if (type != CharacterType::CuChulainn)
     {
-        onHitVfx1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(onHitVfx1Name);
+        onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
+        if (!onHitPivot) GLOG("[WARNING] No on hit Pivot found for enemy")
+
+        onHitVfx1 = parent->GetChildGameObjectByName(onHitVfx1Name);
         if (!onHitVfx1) GLOG("[WARNING] No on hit VFX found for enemy")
         else onHitVfx1->SetEnabled(false);
 
@@ -298,17 +304,15 @@ void Character::UpdateTimers(float deltaTime)
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
 
-
     if (type != CharacterType::CuChulainn)
     {
-        GLOG("onHitVfxTimer: %f", onHitVfxTimer)
         onHitVfxTimer -= deltaTime;
 
         if (onHitVfxTimer < 0.0f)
         {
-            // onHitVfxTimer = 0.0f;
-            onHitVfx1->SetEnabled(false);
-            onHitVfx2->SetEnabled(false);
+            onHitVfxTimer = 0.0f;
+            if (onHitVfx1) onHitVfx1->SetEnabled(false);
+            if (onHitVfx2) onHitVfx2->SetEnabled(false);
         }
     }
 }
@@ -328,15 +332,39 @@ void Character::TakeDamage(int amount)
     {
         playerScript->OnEnemyHit();
 
-        onHitVfx1->SetEnabled(true);
-        onHitVfx1->GetComponent<MeshComponent*>()->SetEnabled(false);
-        onHitVfx1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        if (onHitPivot)
+        {
+            float3 pivotPos  = onHitPivot->GetGlobalTransform().TranslatePart();
+            float3 targetPos = character->GetParent()->GetGlobalTransform().TranslatePart();
 
-        onHitVfx2->SetEnabled(true);
-        onHitVfx2->GetComponent<MeshComponent*>()->SetEnabled(false);
-        onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            float3 dirWorld  = targetPos - pivotPos;
+            dirWorld.y       = 0.0f;
+            dirWorld.Normalize();
 
-        GLOG("ENABLEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+            float4x4 parentWorld = onHitPivot->GetParentGlobalTransform();
+            float3 dirLocal      = parentWorld.Inverted().TransformDir(dirWorld);
+
+            float localYaw       = atan2(dirLocal.x, dirLocal.z);
+            Quat yawRot          = Quat::RotateY(localYaw);
+
+            float4x4 local       = onHitPivot->GetLocalTransform();
+            float4x4 newLocal    = float4x4::FromTRS(local.TranslatePart(), yawRot, local.GetScale());
+            onHitPivot->SetLocalTransform(newLocal);
+        }
+
+        if (onHitVfx1)
+        {
+            onHitVfx1->SetEnabled(true);
+            onHitVfx1->GetComponent<MeshComponent*>()->SetEnabled(false);
+            onHitVfx1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+
+        if (onHitVfx2)
+        {
+            onHitVfx2->SetEnabled(true);
+            onHitVfx2->GetComponent<MeshComponent*>()->SetEnabled(false);
+            onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
 
         const float onHitVfxDuration = 0.1f;
         onHitVfxTimer                = onHitVfxDuration;

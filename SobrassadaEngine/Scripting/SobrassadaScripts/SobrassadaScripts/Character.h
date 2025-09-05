@@ -118,8 +118,10 @@ class Character : public Script
     bool isSearching                            = false;
 
     float onHitVfxTimer                         = 0.0;
-    std::string onHitVfx1Name                   = "OnHitVFX1";
-    std::string onHitVfx2Name                   = "OnHitVFX2";
+    std::string onHitPivotName                  = "OnHitPivot";
+    std::string onHitVfx1Name                   = "OnHitVfx1";
+    std::string onHitVfx2Name                   = "OnHitVfx2";
+    GameObject* onHitPivot                      = nullptr;
     GameObject* onHitVfx1                       = nullptr;
     GameObject* onHitVfx2                       = nullptr;
 
