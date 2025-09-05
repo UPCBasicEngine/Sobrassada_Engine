@@ -214,7 +214,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
 
         Character* enemyScript = otherScript->GetScriptByType<Character>();
         // Banshee slow area
-        if (enemyScript->GetCharacterType() == CharacterType::Banshee)
+        if (enemyScript && enemyScript->GetCharacterType() == CharacterType::Banshee)
         {
             CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
             Banshee_v2* bansheeScript = otherScript->GetScriptByType<Banshee_v2>();
@@ -226,7 +226,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 return;
             }
         }
-        else if (enemyScript->GetCharacterType() == CharacterType::Boss)
+        else if (enemyScript && enemyScript->GetCharacterType() == CharacterType::Boss)
         {
             Boss* bossScript = otherScript->GetScriptByType<Boss>();
             if (bossScript)

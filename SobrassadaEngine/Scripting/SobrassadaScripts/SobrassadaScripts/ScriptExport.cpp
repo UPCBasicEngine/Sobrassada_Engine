@@ -44,6 +44,7 @@
 #include "ColorChange.h"
 #include "BarFill.h"
 #include "DamageMask.h"
+#include "MovingUVClipErode.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
@@ -106,11 +107,11 @@ constexpr const char* scripts[] = {
 
 constexpr const char* shaderScripts[] = {
     "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
-    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",    "RiastradBarFill",       "HealthBarFill",
-    "AbilityIconFill",    "DamageMask",      "AttackVfxSpritesheet",  "ColorChange"
+    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
+    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet", "MovingUVClipErode",  "ColorChange"
 };
 
-Application* AppEngine = nullptr;
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -175,6 +176,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "HealthBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_HealthBarFill.glsl");
     if (scriptType == "AbilityIconFill") return new AbilityIconFill(parent);
+    if (scriptType == "MovingUVClipErode") return new MovingUVClipErode(parent);
     if (scriptType == "HealGroundHalo")
         return new HealVFXGround(
             parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",
