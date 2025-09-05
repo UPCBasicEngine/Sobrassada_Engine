@@ -132,6 +132,7 @@ class CuChulainn : public Character
     CameraMovement* camera             = nullptr;
 
     std::string spearName                = "SpearProjectile";
+    std::string spearNameMesh             = "WP_Spear_Cu_Chu";
     Projectile* spear                    = nullptr;
 
     float defaultSpeed                   = 7.0f;
