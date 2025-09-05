@@ -397,33 +397,47 @@ void Banshee_v2::TakeDamage(int amount)
     {
     case Banshee_v2_States::Attack:
 
-        if (animComponent->GetCurrentStateName() == HashString("ScreamIn") ||
-            animComponent->GetCurrentStateName() == HashString("Teleport"))
+    {
+        animComponent->UseTrigger("Hit");
+        currentState = Banshee_v2_States::Hit;
+
+        shoutStartAnim->UseTrigger("Reset");
+
+        for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
         {
-            animComponent->UseTrigger("Hit");
-            currentState = Banshee_v2_States::Hit;
-
-            shoutStartAnim->UseTrigger("Reset");
-
-            for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-            }
-
-            for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-            {
-                shaderComponent->ResetScript("MovingUVTransparent");
-            }
-
-            shoutStartAnim->GetParent()->SetEnabled(false);
-
-            isAttacking = false;
-            agentAI->ResetSpeed();
-            agentAI->ResetAngularSpeed();
-            agentAI->SetLookForward(true);
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
         }
 
-        break;
+        for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        shoutStartAnim->GetParent()->SetEnabled(false);
+
+
+        for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        weapon->SetEnabled(false);
+
+        shoutBaseAnim->GetParent()->SetEnabled(false);
+
+
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->ResetAngularSpeed();
+        agentAI->SetLookForward(true);
+    }
+
+    break;
     case Banshee_v2_States::Hit:
         if (animComponent->GetCurrentStateName() == HashString("Hit") && animComponent->IsFinished())
         {
