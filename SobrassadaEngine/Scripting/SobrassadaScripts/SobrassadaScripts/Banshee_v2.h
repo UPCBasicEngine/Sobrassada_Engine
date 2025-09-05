@@ -14,6 +14,7 @@ class AIAgentComponent;
 class SphereColliderComponent;
 class ShaderScriptComponent;
 class ResourceMaterial;
+class ParticleSystemComponent;
 
 enum class Banshee_v2_States : int
 {
@@ -114,4 +115,6 @@ class Banshee_v2 : public Character
     const float4 slowWarningColor       = float4(0.243f, 0.369f, 0.89f, 1.f);
 
     float3 lastPlayerPosition           = float3::zero;
+
+    ParticleSystemComponent* hitParticleSystem = nullptr;
 };

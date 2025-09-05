@@ -7,6 +7,7 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Interpolation.h"
+#include "ParticleSystemComponent.h"
 #include "ResourceMaterial.h"
 #include "ResourcesModule.h"
 #include "ShaderScriptComponent.h"
@@ -210,6 +211,10 @@ bool Banshee_v2::Init()
                 }
             }
         }
+        else if (currentGO->GetName() == "PS_BansheeHit")
+        {
+            hitParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+        }
     }
 
     rng            = std::mt19937(std::random_device {}());
@@ -332,6 +337,7 @@ void Banshee_v2::OnDeath()
 
 void Banshee_v2::OnDamageTaken(int amount)
 {
+    if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
 }
 
 void Banshee_v2::PerformAttack()
