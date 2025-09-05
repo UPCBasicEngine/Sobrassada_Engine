@@ -2,6 +2,7 @@
 
 #include "Archer.h"
 #include "Banshee.h"
+#include "Banshee_v2.h"
 #include "Boss.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
@@ -37,11 +38,12 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
-#include "Banshee_v2.h"
 
 #include "AbilityIconFill.h"
+#include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
 #include "DamageMask.h"
+#include "MovingUVClipErode.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
@@ -105,10 +107,10 @@ constexpr const char* scripts[] = {
 constexpr const char* shaderScripts[] = {
     "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
     "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask"
+    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet", "MovingUVClipErode"
 };
 
-Application* AppEngine = nullptr;
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -165,12 +167,14 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
+    if (scriptType == "AttackVfxSpritesheet") return new AttackVfxSpritesheet(parent);
     if (scriptType == "DamageMask") return new DamageMask(parent);
     if (scriptType == "RiastradBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
     if (scriptType == "HealthBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_HealthBarFill.glsl");
     if (scriptType == "AbilityIconFill") return new AbilityIconFill(parent);
+    if (scriptType == "MovingUVClipErode") return new MovingUVClipErode(parent);
     if (scriptType == "HealGroundHalo")
         return new HealVFXGround(
             parent, "./EngineDefaults/Shader/Custom/Vertex/HealVFX_Vertex.glsl",

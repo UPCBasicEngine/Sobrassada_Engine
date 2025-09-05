@@ -124,43 +124,56 @@ class CuChulainn : public Character
     
 
   private:
-    CharacterStates state              = CharacterStates::IDLE;
+    CharacterStates state                = CharacterStates::IDLE;
 
     int enemiesCont                   = 0;
     std::string cameraName             = "Camera Pivot";
     GameObject* cameraObject           = nullptr;
     CameraMovement* camera             = nullptr;
 
-    std::string spearName              = "SpearProjectile";
-    Projectile* spear                  = nullptr;
+    std::string spearName                = "SpearProjectile";
+    Projectile* spear                    = nullptr;
 
-    float defaultSpeed                 = 7.0f;
-    float inputBuffer                  = 0.5f;
+    float defaultSpeed                   = 7.0f;
+    float inputBuffer                    = 0.5f;
 
-    std::string healthBarName          = "HealthBarFill";
-    BarFill* healthBar                 = nullptr;
+    std::string healthBarName            = "HealthBarFill";
+    BarFill* healthBar                   = nullptr;
 
     // Dash
-    std::string dashIconName           = "DashCooldown";
-    AbilityIconFill* dashIcon          = nullptr;
-    float3 lastDashStartPos            = float3::zero;
-    bool isDashing                     = false;
-    bool wasDashing                    = false;
-    float dashCooldown                 = 2.0f;
-    float dashTimer                    = 0.0f;
-    bool desiredDash                   = false;
-    float dashBufferTimer              = 0.0f;
-    bool dashUnlocked                  = false;
+    std::string dashIconName             = "DashCooldown";
+    AbilityIconFill* dashIcon            = nullptr;
+    float3 lastDashStartPos              = float3::zero;
+    bool isDashing                       = false;
+    bool wasDashing                      = false;
+    float dashCooldown                   = 2.0f;
+    float dashTimer                      = 0.0f;
+    bool desiredDash                     = false;
+    float dashBufferTimer                = 0.0f;
+    bool dashUnlocked                    = false;
 
     // Basic attack
-    std::string meleeVfxName           = "SpearVFX";
-    std::string meleeTrailName         = "SpearMeleeTrail";
-    GameObject* meleeVfxObject         = nullptr;
-    GameObject* meleeTrailObject       = nullptr;
-    bool desiredAttack                 = false;
-    float attackBufferTimer            = 0.0f;
-    int comboCounter                   = -1;
-    float comboBufferTimer             = 0.0f;
+    std::string meleeVfxName             = "SpearVFX";
+    std::string meleeTrailName           = "SpearMeleeTrail";
+    std::string attackVfxHorizontal1Name = "AttackVfxH1";
+    std::string attackVfxVertical1Name   = "AttackVfxV1";
+    std::string attackVfxHorizontal2Name = "AttackVfxH2";
+    std::string attackVfxVertical2Name   = "AttackVfxV2";
+    std::string attackVfxHorizontal3Name = "AttackVfxH3";
+    std::string attackVfxVertical3Name   = "AttackVfxV3";
+    GameObject* meleeVfxObject           = nullptr;
+    GameObject* meleeTrailObject         = nullptr;
+    GameObject* attackVfxHorizontal1     = nullptr;
+    GameObject* attackVfxVertical1       = nullptr;
+    GameObject* attackVfxHorizontal2     = nullptr;
+    GameObject* attackVfxVertical2       = nullptr;
+    GameObject* attackVfxHorizontal3     = nullptr;
+    GameObject* attackVfxVertical3       = nullptr;
+    bool desiredAttack                   = false;
+    float attackBufferTimer              = 0.0f;
+    int comboCounter                     = -1;
+    float comboBufferTimer               = 0.0f;
+    float meleeVfxDelay                  = 0.1f;
 
     //Arrow Hit VFX 
     GameObject* arrowHitVfxObject         = nullptr;
@@ -171,151 +184,151 @@ class CuChulainn : public Character
 
   
     // Charged attack
-    std::string chargedAttackName      = "Charged";
-    GameObject* chargedAttackCollider  = nullptr;
-    bool isChargingAttack              = false;
-    float chargeTimer                  = 0.0f;
-    float chargeDuration               = 1.0f;
-    bool desiredChargedAttack          = false;
-    float chargedAttackTimer           = 0.0f;
-    float chargedAttackHitboxDelay     = 0.0f;
-    float chargedAttackHitboxDuration  = 0.0f;
-    int chargedAttackDamage            = 0;
-    float attackPressTimer             = 0.0f;
-    float chargeThreshold              = 0.2f;
+    std::string chargedAttackName        = "Charged";
+    GameObject* chargedAttackCollider    = nullptr;
+    bool isChargingAttack                = false;
+    float chargeTimer                    = 0.0f;
+    float chargeDuration                 = 1.0f;
+    bool desiredChargedAttack            = false;
+    float chargedAttackTimer             = 0.0f;
+    float chargedAttackHitboxDelay       = 0.0f;
+    float chargedAttackHitboxDuration    = 0.0f;
+    int chargedAttackDamage              = 0;
+    float attackPressTimer               = 0.0f;
+    float chargeThreshold                = 0.2f;
 
-    bool desiredAim                    = false;
-    float throwTimer                   = 0.0f;
-    float throwCooldown                = 1.0f;
-    bool resetWeapon                   = false;
+    bool desiredAim                      = false;
+    float throwTimer                     = 0.0f;
+    float throwCooldown                  = 1.0f;
+    bool resetWeapon                     = false;
 
-    int reservedHealth                 = 0;
-    float deathTimer                   = 0.5f;
-    float aimTimer                     = 0.0f;
+    int reservedHealth                   = 0;
+    float deathTimer                     = 0.5f;
+    float aimTimer                       = 0.0f;
 
-    std::string aimShadowName          = "AimShadow";
-    GameObject* aimShadowObject        = nullptr;
+    std::string aimShadowName            = "AimShadow";
+    GameObject* aimShadowObject          = nullptr;
 
     // Ultimate
-    std::string ultimateIconName       = "UltimateCooldown";
-    AbilityIconFill* ultimateIcon      = nullptr;
-    std::string ultimateName           = "ultimate_mc_all";
-    std::string ultimateGlowName       = "ulti_glow";
-    std::string ultimateBlurName       = "mesh_blur";
-    std::string ultimateBrustName       = "mesh_brust";
+    std::string ultimateIconName         = "UltimateCooldown";
+    AbilityIconFill* ultimateIcon        = nullptr;
+    std::string ultimateName             = "ultimate_mc_all";
+    std::string ultimateGlowName         = "ulti_glow";
+    std::string ultimateBlurName         = "mesh_blur";
+    std::string ultimateBrustName        = "mesh_brust";
     std::string ultimateCrack1Name       = "mesh_crack1";
     std::string ultimateCrack2Name       = "mesh_crack2";
-    std::string ultimateHaloName       = "mesh_halo";
-    std::string ultimateSmokeName       = "mesh_outer_smoke";
+    std::string ultimateHaloName         = "mesh_halo";
+    std::string ultimateSmokeName        = "mesh_outer_smoke";
     std::string ultimateSphereName       = "mesh_sphere_glow";
-    std::string ultimateWarningName       = "mesh_warning";
+    std::string ultimateWarningName      = "mesh_warning";
     std::string ultimateSpikesName       = "spike";
-    GameObject* ultimateObject         = nullptr;
-    GameObject* ultimateGlow          = nullptr;
-    GameObject* ultimateBlur          = nullptr;
-    GameObject* ultimateBrust         = nullptr;
-    GameObject* ultimateCrack1        = nullptr;
-    GameObject* ultimateCrack2        = nullptr;
-    GameObject* ultimateHalo          = nullptr;
-    GameObject* ultimateSmoke         = nullptr;
-    GameObject* ultimateSphere        = nullptr;
-    GameObject* ultimateWarning       = nullptr;
-    GameObject* ultimateSpikes            = nullptr;
-    bool desiredUltimate               = false;
-    int ultimateDamage                 = 0;
-    float ultimateTimer                = 0.0f;
-    float ultimateCd                   = 0.0f;
-    float ultimateCdTimer              = 0.0f;
-    float ultimateBufferTimer          = 0.0f;
-    float ultimateHitboxDelay          = 0.0f;
-    float ultimateHitboxDuration       = 0.0f;
-    float ultimateAnimationDelay       = 0.0f;
-    bool ultimateUnlocked              = false;
+    GameObject* ultimateObject           = nullptr;
+    GameObject* ultimateGlow             = nullptr;
+    GameObject* ultimateBlur             = nullptr;
+    GameObject* ultimateBrust            = nullptr;
+    GameObject* ultimateCrack1           = nullptr;
+    GameObject* ultimateCrack2           = nullptr;
+    GameObject* ultimateHalo             = nullptr;
+    GameObject* ultimateSmoke            = nullptr;
+    GameObject* ultimateSphere           = nullptr;
+    GameObject* ultimateWarning          = nullptr;
+    GameObject* ultimateSpikes           = nullptr;
+    bool desiredUltimate                 = false;
+    int ultimateDamage                   = 0;
+    float ultimateTimer                  = 0.0f;
+    float ultimateCd                     = 0.0f;
+    float ultimateCdTimer                = 0.0f;
+    float ultimateBufferTimer            = 0.0f;
+    float ultimateHitboxDelay            = 0.0f;
+    float ultimateHitboxDuration         = 0.0f;
+    float ultimateAnimationDelay         = 0.0f;
+    bool ultimateUnlocked                = false;
 
     // Riastrad
-    std::string riastradBarName        = "BarFill";
-    BarFill* riastradBar               = nullptr;
-    int riastradMeter                  = 0;
-    bool isRiastrad                    = false;
-    bool desiredTransform              = false;
-    float transformBufferTimer         = 0.0f;
-    float transformTimer               = 0.0f;
-    float transformVfxDelay            = 0.35f;
-    float riastradTimer                = 0.0f;
-    float riastradDuration             = 5.0f;
-    float riastradMovementSpeed        = 12.0f;
-    float riastradAnimationsSpeedRatio = 1.5f;
-    int riastradOnDamageTaken          = 2;
-    int riastradOnHit                  = 5;
-    int riastradOnEnemyDeath           = 5;
-    std::string riastradVfxName        = "riastrad_all";
-    std::string riastradBurstName      = "mesh_brust";
-    std::string riastradBlurName       = "mesh_blur";
-    std::string riastradHaloName       = "mesh_halo";
-    std::string riastradSphereName     = "mesh_sphere_glow";
-    std::string riastradCrackName      = "mesh_crack";
-    std::string riastradWaringName     = "mesh_warning";
-    std::string riastradSmoke1Name     = "mesh_smoke_a";
-    std::string riastradSmoke2Name     = "mesh_smoke_b";
-    std::string riastradSmoke3Name     = "mesh_smoke_c";
-    std::string riastradStarsName      = "mesh_stars";
-    GameObject* riastradVfx            = nullptr;
-    GameObject* riastradBurst          = nullptr;
-    GameObject* riastradBlur           = nullptr;
-    GameObject* riastradHalo           = nullptr;
-    GameObject* riastradSphere         = nullptr;
-    GameObject* riastradCrack          = nullptr;
-    GameObject* riastradWaring         = nullptr;
-    GameObject* riastradSmoke1         = nullptr;
-    GameObject* riastradSmoke2         = nullptr;
-    GameObject* riastradSmoke3         = nullptr;
-    GameObject* riastradStars          = nullptr;
+    std::string riastradBarName          = "BarFill";
+    BarFill* riastradBar                 = nullptr;
+    int riastradMeter                    = 0;
+    bool isRiastrad                      = false;
+    bool desiredTransform                = false;
+    float transformBufferTimer           = 0.0f;
+    float transformTimer                 = 0.0f;
+    float transformVfxDelay              = 0.35f;
+    float riastradTimer                  = 0.0f;
+    float riastradDuration               = 5.0f;
+    float riastradMovementSpeed          = 12.0f;
+    float riastradAnimationsSpeedRatio   = 1.5f;
+    int riastradOnDamageTaken            = 2;
+    int riastradOnHit                    = 5;
+    int riastradOnEnemyDeath             = 5;
+    std::string riastradVfxName          = "riastrad_all";
+    std::string riastradBurstName        = "mesh_brust";
+    std::string riastradBlurName         = "mesh_blur";
+    std::string riastradHaloName         = "mesh_halo";
+    std::string riastradSphereName       = "mesh_sphere_glow";
+    std::string riastradCrackName        = "mesh_crack";
+    std::string riastradWaringName       = "mesh_warning";
+    std::string riastradSmoke1Name       = "mesh_smoke_a";
+    std::string riastradSmoke2Name       = "mesh_smoke_b";
+    std::string riastradSmoke3Name       = "mesh_smoke_c";
+    std::string riastradStarsName        = "mesh_stars";
+    GameObject* riastradVfx              = nullptr;
+    GameObject* riastradBurst            = nullptr;
+    GameObject* riastradBlur             = nullptr;
+    GameObject* riastradHalo             = nullptr;
+    GameObject* riastradSphere           = nullptr;
+    GameObject* riastradCrack            = nullptr;
+    GameObject* riastradWaring           = nullptr;
+    GameObject* riastradSmoke1           = nullptr;
+    GameObject* riastradSmoke2           = nullptr;
+    GameObject* riastradSmoke3           = nullptr;
+    GameObject* riastradStars            = nullptr;
 
-    float3 spawnPos                    = float3::zero;
-    AudioSourceComponent* audio        = nullptr;
+    float3 spawnPos                      = float3::zero;
+    AudioSourceComponent* audio          = nullptr;
 
-    float3 camFront                    = float3::zero;
-    float3 camRight                    = float3::zero;
+    float3 camFront                      = float3::zero;
+    float3 camRight                      = float3::zero;
 
-    bool godMode                       = false;
-    float idleTimer                    = 0.0f;
-    float runTimer                     = 0.0f;
-    float stepTime                     = 0.367f;
+    bool godMode                         = false;
+    float idleTimer                      = 0.0f;
+    float runTimer                       = 0.0f;
+    float stepTime                       = 0.367f;
 
-    int mushrooms                      = 0;
-    int mushroomHeal                   = 2;
-    bool desiredTakeMushroom           = false;
-    float takeMushroomCdTimer          = 0.0f;
-    float takeMushroomCd               = 0.0f;
+    int mushrooms                        = 0;
+    int mushroomHeal                     = 2;
+    bool desiredTakeMushroom             = false;
+    float takeMushroomCdTimer            = 0.0f;
+    float takeMushroomCd                 = 0.0f;
 
-    std::string dashTrailName          = "DashTrail";
-    GameObject* dashTrail              = nullptr;
-    std::string dashDecalName          = "DashDecal";
-    GameObject* dashDecal              = nullptr;
+    std::string dashTrailName            = "DashTrail";
+    GameObject* dashTrail                = nullptr;
+    std::string dashDecalName            = "DashDecal";
+    GameObject* dashDecal                = nullptr;
 
-    float dashDecalTimer               = 5.0f;
-    float dashDecalBufferTimer         = 0.0f;
+    float dashDecalTimer                 = 5.0f;
+    float dashDecalBufferTimer           = 0.0f;
 
     // Heal
-    bool isHealing                     = false;
-    std::string healVfxName            = "HealVfx";
-    std::string healParticlesName      = "HealParticles";
-    std::string healKnockbackName      = "Heal Knockback";
-    GameObject* healVfx                = nullptr;
-    GameObject* healParticles          = nullptr;
-    GameObject* healKnockback          = nullptr;
-    float healTimer                    = 0.0f;
-    float healKnockbackDelay           = 0.0f;
+    bool isHealing                       = false;
+    std::string healVfxName              = "HealVfx";
+    std::string healParticlesName        = "HealParticles";
+    std::string healKnockbackName        = "Heal Knockback";
+    GameObject* healVfx                  = nullptr;
+    GameObject* healParticles            = nullptr;
+    GameObject* healKnockback            = nullptr;
+    float healTimer                      = 0.0f;
+    float healKnockbackDelay             = 0.0f;
 
     std::string damageMaskName         = "DamageMask";
     DamageMask* damageMask             = nullptr;
 
     // Curse
-    bool isCursed                      = false;
-    float curseSpeed                   = 4.0f;
-    float curseDuration                = 5.0f;
-    float curseTimer                   = 0.0f;
-    UID playerMaterial                 = 0;
+    bool isCursed                        = false;
+    float curseSpeed                     = 4.0f;
+    float curseDuration                  = 5.0f;
+    float curseTimer                     = 0.0f;
+    UID playerMaterial                   = 0;
 };
 
 extern CharacterControllerComponent* character;
