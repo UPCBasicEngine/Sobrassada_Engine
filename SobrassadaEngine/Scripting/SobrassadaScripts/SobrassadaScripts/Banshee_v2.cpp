@@ -152,12 +152,14 @@ bool Banshee_v2::Init()
         }
         else if (currentGO->GetName() == "SlowArea")
         {
-            slowAreaGO = currentGO;
+            slowAreaGO          = currentGO;
+            slowAreaStartHeight = slowAreaGO->GetLocalTransform().TranslatePart().y;
             slowAreaGO->SetEnabled(false);
         }
         else if (currentGO->GetName() == "SlowAreaIn")
         {
-            slowAreaInGO = currentGO;
+            slowAreaInGO          = currentGO;
+            slowAreaInStartHeight = slowAreaInGO->GetLocalTransform().TranslatePart().y;
             slowAreaInGO->SetEnabled(false);
         }
         else if (currentGO->GetName() == "SlowAreaWarning")
@@ -172,6 +174,8 @@ bool Banshee_v2::Init()
                 float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
             slowAreaWarningGO->SetLocalTransform(starTransform);
             slowAreaWarningGO->SetEnabled(false);
+
+            slowWarningStartHeight = translation.y;
         }
         else if (currentGO->GetName() == "TeleportWarning")
         {
@@ -491,6 +495,7 @@ void Banshee_v2::TakeDamage(int amount)
 
     if ((currentHealth - amount) <= 0)
     {
+        if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
         animComponent->UseTrigger("Death");
         currentState = Banshee_v2_States::Dead;
         return;
@@ -841,11 +846,13 @@ void Banshee_v2::SlowArea(float deltaTime)
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
 
+            UpdateLastPlayerPosition();
+            MoveSlowAreaToPlayer();
+
             elapsedSlowAreaWaring = 0.f;
             slowAreaWarningGO->SetEnabled(true);
             slowAreaGO->SetEnabled(true);
 
-            UpdateLastPlayerPosition();
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
         {
@@ -920,15 +927,18 @@ void Banshee_v2::MoveSlowAreaToPlayer()
     float4x4 parentInvertedGlobal = parent->GetGlobalTransform().Inverted();
 
     slowAreaGO->GetGlobalTransform().Decompose(translate, rotation, scale);
-    float4x4 newGlobalTransform = float4x4::FromTRS(lastPlayerPosition, rotation, scale);
+    float4x4 newGlobalTransform =
+        float4x4::FromTRS(float3(lastPlayerPosition.x, slowAreaStartHeight, lastPlayerPosition.z), rotation, scale);
     slowAreaGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
 
     slowAreaInGO->GetGlobalTransform().Decompose(translate, rotation, scale);
-    newGlobalTransform = float4x4::FromTRS(lastPlayerPosition, rotation, scale);
+    newGlobalTransform =
+        float4x4::FromTRS(float3(lastPlayerPosition.x, slowAreaInStartHeight, lastPlayerPosition.z), rotation, scale);
     slowAreaInGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
 
     slowAreaWarningGO->GetGlobalTransform().Decompose(translate, rotation, scale);
-    newGlobalTransform = float4x4::FromTRS(lastPlayerPosition, rotation, scale);
+    newGlobalTransform =
+        float4x4::FromTRS(float3(lastPlayerPosition.x, slowWarningStartHeight, lastPlayerPosition.z), rotation, scale);
     slowAreaWarningGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
 }
 
