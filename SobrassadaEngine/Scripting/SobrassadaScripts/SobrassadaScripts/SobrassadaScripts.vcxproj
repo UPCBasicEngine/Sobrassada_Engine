@@ -467,6 +467,7 @@
   <ItemGroup>
     <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
+    <ClInclude Include="AttackVfxSpritesheet.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
     <ClInclude Include="BossMirage.h" />
@@ -2053,6 +2054,7 @@
     </ClCompile>
     <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
+    <ClCompile Include="AttackVfxSpritesheet.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />
     <ClCompile Include="BossMirage.cpp" />

@@ -202,6 +202,9 @@
     <ClInclude Include="imgui_curve_editor.h">
       <Filter>External</Filter>
     </ClInclude>
+    <ClInclude Include="AttackVfxSpritesheet.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
     <ClInclude Include="SavePlayerData.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -941,6 +944,9 @@
     </ClCompile>
     <ClCompile Include="imgui_curve_editor.cpp">
       <Filter>External</Filter>
+    </ClCompile>
+    <ClCompile Include="AttackVfxSpritesheet.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
     <ClCompile Include="SavePlayerData.cpp">
       <Filter>Utils</Filter>
