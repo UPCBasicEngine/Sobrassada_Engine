@@ -87,7 +87,6 @@ bool ColorChange::Init()
             indexCount = (unsigned int)rmesh->GetIndices().size();
         }
 
-        meshComp->SetEnabled(false);
         meshComp->SetUpdateShaderStorage(true);
     }
     return true;

@@ -110,9 +110,13 @@ bool Character::Init()
         else onHitVfx2->SetEnabled(false);
 
         colorChange = parent->GetComponentChild<ShaderScriptComponent*>(AppEngine);
-        mesh        = colorChange->GetParent()->GetComponent<MeshComponent*>();
         if (!colorChange) GLOG("[WARNING - %s] No color change shader found in children", parent->GetName())
-        mesh->SetEnabled(true);
+        else
+        {
+            colorChange->SetEnabled(false);
+            mesh = colorChange->GetParent()->GetComponent<MeshComponent*>();
+            mesh->SetEnabled(true);
+        }
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -311,19 +315,23 @@ void Character::UpdateTimers(float deltaTime)
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
 
-    if (type != CharacterType::CuChulainn)
+    if (type != CharacterType::CuChulainn && isHit)
     {
         onHitVfxTimer -= deltaTime;
 
         // Do this in the next frame after enabling the mesh to avoid popping
-        if (mesh->GetEnabled() && colorChange->GetEnabled()) colorChange->SetEnabled(false);
+        if (mesh && mesh->GetEnabled() && colorChange && colorChange->GetEnabled())
+        {
+            colorChange->SetEnabled(false);
+            isHit = false;
+        }
 
         if (onHitVfxTimer < 0.0f)
         {
             if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
             if (onHitVfx2 && onHitVfx2->IsEnabled()) onHitVfx2->SetEnabled(false);
 
-            if (!mesh->GetEnabled()) mesh->SetEnabled(true);
+            if (mesh && !mesh->GetEnabled()) mesh->SetEnabled(true);
         }
     }
 }
@@ -377,12 +385,13 @@ void Character::TakeDamage(int amount)
             onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
         }
 
-        if (colorChange)
+        if (colorChange && mesh)
         {
             mesh->SetEnabled(false);
             colorChange->SetEnabled(true);
         }
 
+        isHit         = true;
         onHitVfxTimer = onHitVfxDuration;
     }
 

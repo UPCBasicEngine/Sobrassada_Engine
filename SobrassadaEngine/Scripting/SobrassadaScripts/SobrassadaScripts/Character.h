@@ -120,6 +120,7 @@ class Character : public Script
     bool isSearching                            = false;
 
     // Hit VFX
+    bool isHit                                  = false;
     float onHitVfxDuration                      = 0.1f;
     float onHitVfxTimer                         = 0.0;
     std::string onHitPivotName                  = "OnHitPivot";

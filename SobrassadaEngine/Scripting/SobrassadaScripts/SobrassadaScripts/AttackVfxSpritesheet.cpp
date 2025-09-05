@@ -200,7 +200,7 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
         glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-10.0f, -10.0f);
+        glPolygonOffset(-2.0f, -2.0f);
 
         if (isDoubleSided) glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
