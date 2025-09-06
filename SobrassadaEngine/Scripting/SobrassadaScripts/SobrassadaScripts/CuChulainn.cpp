@@ -179,6 +179,10 @@ bool CuChulainn::Init()
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
 
+    spearCharacter        = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameMesh);
+    if (!spearCharacter) GLOG("[WARNING] No spear (non projectile) found for CuChualin")
+    else spearCharacter->SetEnabled(true);
+
     chargedAttackCollider = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargedAttackName);
     if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
@@ -964,7 +968,6 @@ void CuChulainn::UpdateTimers(float deltaTime)
         {
             weapon->SetEnabled(true);
             resetWeapon = false;
-            GameObject* spearCharacter = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameMesh);
             spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(true);
         }
         throwTimer = 0.0f;
@@ -1120,7 +1123,6 @@ void CuChulainn::ThrowSpear()
     {
         weapon->SetEnabled(false);
         resetWeapon = true;
-        GameObject* spearCharacter = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameMesh);
         spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(false);
     }
     if (aimShadowObject) aimShadowObject->SetEnabled(false);
