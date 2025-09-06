@@ -66,16 +66,13 @@ void PauseMenuScript::CachePanel()
 
     Scene* scene        = AppEngine->GetSceneModule()->GetScene();
     const auto& objects = scene->GetAllGameObjects();
-
     for (const auto& [uid, go] : objects)
     {
-        if (go == nullptr)
-            continue;
-
+        if (!go) continue;
         if (go->GetName() == panelToShowName)
         {
-            cachedTarget = go; 
-            return;            
+            cachedTarget = go;
+            return;
         }
     }
 }
