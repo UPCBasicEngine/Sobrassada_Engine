@@ -110,10 +110,12 @@ void Projectile::Move(float deltaTime)
     
 
     const float3 worldPos = parent->GetGlobalTransform().TranslatePart() + direction * speed * deltaTime;
+    const float4x4 parentWS = parent->GetParentGlobalTransform();
+    const float3 nextLocal  = (parentWS.Inverted() * float4(worldPos, 1.0f)).xyz();
 
-    parent->SetLocalPosition(worldPos - parent->GetParentGlobalTransform().TranslatePart());
+    parent->SetLocalPosition(nextLocal);
 
-    if (worldPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.11f))
+    if (worldPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.0f))
     {
         parent->SetEnabled(false);
     }
