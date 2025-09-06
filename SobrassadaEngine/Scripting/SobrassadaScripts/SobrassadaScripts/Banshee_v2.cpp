@@ -927,18 +927,23 @@ void Banshee_v2::MoveSlowAreaToPlayer()
     float4x4 parentInvertedGlobal = parent->GetGlobalTransform().Inverted();
 
     slowAreaGO->GetGlobalTransform().Decompose(translate, rotation, scale);
-    float4x4 newGlobalTransform =
-        float4x4::FromTRS(float3(lastPlayerPosition.x, slowAreaStartHeight, lastPlayerPosition.z), rotation, scale);
+    float4x4 newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowAreaStartHeight, lastPlayerPosition.z), rotation, scale
+    );
     slowAreaGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
 
     slowAreaInGO->GetGlobalTransform().Decompose(translate, rotation, scale);
-    newGlobalTransform =
-        float4x4::FromTRS(float3(lastPlayerPosition.x, slowAreaInStartHeight, lastPlayerPosition.z), rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowAreaInStartHeight, lastPlayerPosition.z), rotation,
+        scale
+    );
     slowAreaInGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
 
     slowAreaWarningGO->GetGlobalTransform().Decompose(translate, rotation, scale);
-    newGlobalTransform =
-        float4x4::FromTRS(float3(lastPlayerPosition.x, slowWarningStartHeight, lastPlayerPosition.z), rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowWarningStartHeight, lastPlayerPosition.z), rotation,
+        scale
+    );
     slowAreaWarningGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
 }
 
