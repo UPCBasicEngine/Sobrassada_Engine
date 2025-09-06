@@ -214,17 +214,17 @@ class CuChulainn : public Character
     // Ultimate
     std::string ultimateIconName         = "UltimateCooldown";
     AbilityIconFill* ultimateIcon        = nullptr;
-    std::string ultimateName             = "ultimate_mc_all";
+    std::string ultimateName             = "ultimate_attack";
     std::string ultimateGlowName         = "ulti_glow";
-    std::string ultimateBlurName         = "mesh_blur";
-    std::string ultimateBrustName        = "mesh_brust";
+    std::string ultimateBlurName         = "ultimate_mesh_blur";
+    std::string ultimateBrustName        = "ultimate_mesh_brust";
     std::string ultimateCrack1Name       = "mesh_crack1";
     std::string ultimateCrack2Name       = "mesh_crack2";
     std::string ultimateHaloName         = "mesh_halo";
     std::string ultimateSmokeName        = "mesh_outer_smoke";
     std::string ultimateSphereName       = "mesh_sphere_glow";
-    std::string ultimateWarningName      = "mesh_warning";
-    std::string ultimateSpikesName       = "spike";
+    std::string ultimateWarningName      = "ultimate_mesh_warning";
+    std::string ultimateSpikesName       = "ult_spike";
     GameObject* ultimateObject           = nullptr;
     GameObject* ultimateGlow             = nullptr;
     GameObject* ultimateBlur             = nullptr;
