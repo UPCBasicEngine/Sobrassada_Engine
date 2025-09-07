@@ -14,6 +14,7 @@
 SpawnPoint::SpawnPoint(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
+    fields.push_back({"Tree name", InspectorField::FieldType::InputText, &treeName});
     fields.push_back({"Leafs name", InspectorField::FieldType::InputText, &leafsName});
     fields.push_back({"Set only once", InspectorField::FieldType::Bool, &isOneUse});
     fields.push_back({"Set Health for player", InspectorField::FieldType::Int, &setHealth});
@@ -30,6 +31,26 @@ bool SpawnPoint::Init()
     }
 
     for (const UID childUID : parent->GetChildren())
+    {
+        GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+        if (child == nullptr)
+        {
+            isSetupCorrectly = false;
+            GLOG("[ERROR] Child game object is nullptr")
+            return false;
+        }
+
+        if (child->GetName() == treeName) tree = child;
+    }
+
+    if (tree == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] No child go for tree found")
+        return false;
+    }
+
+    for (const UID childUID : tree->GetChildren())
     {
         GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
         if (child == nullptr)
@@ -64,7 +85,7 @@ void SpawnPoint::OnCollision(GameObject* otherObject, const float3 collisionNorm
         CuChulainn* playerScript = scriptComp->GetScriptByType<CuChulainn>();
         if (playerScript)
         {
-            if (AnimationComponent* animComp = parent->GetComponent<AnimationComponent*>())
+            if (AnimationComponent* animComp = tree->GetComponent<AnimationComponent*>())
             {
                 leafs->SetEnabled(true);
                 animComp->OnPlay(false, false);
