@@ -560,8 +560,6 @@ void CuChulainn::OnDeath()
     isDead = true;
 
     if (animComponent) animComponent->UseTrigger("Death");
-
-    // >>> No obrim Game Over encara; el demanarem quan acabi l'animació (veure Update)
     pendingGameOver = true;
 }
 
