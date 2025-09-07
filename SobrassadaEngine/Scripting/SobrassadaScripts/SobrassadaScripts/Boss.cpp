@@ -750,6 +750,7 @@ void Boss::ShieldStrikes(float deltaTime)
     case BossActions::Chase:
         if (!actionTriggerDone)
         {
+            agentAI->ResumeMovement();
             animComponent->UseTrigger("Run");
             actionTriggerDone = true;
         }
@@ -1336,6 +1337,8 @@ void Boss::ResetValues(bool isForMirage)
     fallTimeRemaining      = 0.0f;
     fallStartPosLocal      = float3::zero;
 
+    animComponent->OnResume();
+
     if (!isForMirage) mirageActivated = false;
 
     if (weaponCollider) weaponCollider->SetEnabled(false);
@@ -1380,6 +1383,7 @@ void Boss::ResetValues(bool isForMirage)
     if (blastHitUV) blastHitUV->Reset();
 
     agentAI->ResetAngularSpeed();
+    agentAI->SetFreeMove(false);
 }
 
 void Boss::ShieldBlast(float deltaTime)

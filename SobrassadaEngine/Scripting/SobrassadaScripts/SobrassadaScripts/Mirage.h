@@ -17,6 +17,7 @@ class Mirage : public Script
     Mirage(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
+    int getOrder() { return weightOrder; }
 
   protected:
     MirageState state            = MirageState::Sleeping;
@@ -30,6 +31,6 @@ class Mirage : public Script
     float stateTimer             = 0.0f;
     int weightOrder              = 0;
 
-    const float3* endPoint     = nullptr;
+    float3 endPoint;
     MirageBossDash* bossDash     = nullptr;
 };

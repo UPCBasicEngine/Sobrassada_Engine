@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "MirageBossDash.h"
 #include "Application.h"
 #include "CameraComponent.h"
 #include "Component.h"
@@ -7,7 +8,6 @@
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "Globals.h"
-#include "MirageBossDash.h"
 #include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -24,7 +24,6 @@ MirageBossDash::MirageBossDash(GameObject* parent)
 bool MirageBossDash::Init()
 {
     Character::Init();
-    dashEnd = parent->GetChildGameObjectByName("EndPoint")->GetLocalTransform().TranslatePart();
     return true;
 }
 
@@ -78,15 +77,27 @@ void MirageBossDash::Idle()
 
 void MirageBossDash::OverheadStrike(float deltaTime)
 {
-
     if (stateEnter)
     {
         stateEnter        = false;
         actionTriggerDone = false;
+        currentAction     = BossDashActions::Prepare; // instead of directly Dash
     }
 
     switch (currentAction)
     {
+    case BossDashActions::Prepare:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            if (animComponent) animComponent->UseTrigger("Prepare");
+        }
+        if (animComponent && animComponent->IsFinished())
+        {
+            currentAction     = BossDashActions::Dash;
+            actionTriggerDone = false;
+        }
+        break;
 
     case BossDashActions::Dash:
         if (!actionTriggerDone)
@@ -94,14 +105,15 @@ void MirageBossDash::OverheadStrike(float deltaTime)
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Dash");
             StartDash();
+            Attack(deltaTime);
         }
 
         if (isDashing) Dash(deltaTime);
         else
         {
+            currentAction     = BossDashActions::Idle;
             actionTriggerDone = false;
         }
-
         break;
     }
 }
@@ -110,7 +122,7 @@ void MirageBossDash::StartDash()
 {
     isDashing      = true;
 
-    float3 bossPos = parent->GetGlobalTransform().TranslatePart();
+    float3 bossPos = parent->GetLocalTransform().TranslatePart();
 
     bossPos.y      = 0.0f;
     dashEnd.y      = 0.0f;
@@ -151,6 +163,7 @@ void MirageBossDash::Dash(float deltaTime)
     {
         isDashing = false;
         parent->SetLocalPosition(dashStartPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z));
+        parent->SetEnabled(false);
     }
 }
 

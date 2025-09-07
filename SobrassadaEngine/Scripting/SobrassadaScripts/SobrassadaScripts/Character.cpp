@@ -128,6 +128,11 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             arrowProj->Hit(otherObject);
         }
     }
+
+    if (HashString(otherObject->GetName()) == HashString("BlastShield_2"))
+    {
+        TakeDamage(1);
+    }
 }
 
 void Character::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
@@ -238,17 +243,6 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 damageCollider->SetEnabled(false);
             }
         }
-
-        /*
-        // Mushroom check
-        Mushroom* mushroomScript = otherScript->GetScriptByType<Mushroom>();
-        if (mushroomScript)
-        {
-            if (mushroomScript->IsReady() && playerScript->GetDesiredTakeMushroom() && playerScript->CanTakeMushroom())
-            {
-                if (playerScript->TakeMushroom()) mushroomScript->Disable();
-            }
-        }*/
 
         Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
         if (spoutsScript)

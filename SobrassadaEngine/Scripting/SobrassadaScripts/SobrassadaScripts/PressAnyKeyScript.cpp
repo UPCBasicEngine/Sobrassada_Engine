@@ -52,18 +52,3 @@ void PressAnyKeyScript::Update(float deltaTime)
         }
     }
 }
-
-
-
-void PressAnyKeyScript::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
-{
-    targetState.AddMember("NextGameObject", rapidjson::Value(nextGameObjectName.c_str(), allocator), allocator);
-}
-
-void PressAnyKeyScript::Load(const rapidjson::Value& initialState)
-{
-    if (initialState.HasMember("NextGameObject") && initialState["NextGameObject"].IsString())
-    {
-        nextGameObjectName = initialState["NextGameObject"].GetString();
-    }
-}

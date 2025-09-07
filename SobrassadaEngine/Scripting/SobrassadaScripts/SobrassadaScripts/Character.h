@@ -50,6 +50,8 @@ class Character : public Script
     bool IsDead() const { return isDead; };
 
     CharacterType GetCharacterType() const { return type; }
+    int GetMaxHealth() const { return maxHealth; }
+    int GetCurrentHealth() const { return currentHealth; }
 
     void SetAssociatedBarrier(MagicBarrier* newAssociatedBarrier) { associatedBarrier = newAssociatedBarrier; }
 

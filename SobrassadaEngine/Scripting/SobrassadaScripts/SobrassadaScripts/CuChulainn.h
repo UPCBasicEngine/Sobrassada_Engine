@@ -2,6 +2,7 @@
 
 #include "Character.h"
 #include "Globals.h"
+#include "SavePlayerData.h"
 
 class GameObject;
 class CharacterControllerComponent;
@@ -53,6 +54,9 @@ class CuChulainn : public Character
     int GetChargedAttackDamage() const { return chargedAttackDamage; }
     int GetMushrooms() const { return mushrooms; }
     bool GetDesiredTakeMushroom() const { return desiredTakeMushroom; }
+    int GetRiastradMeter() const { return riastradMeter; }
+    bool IsDashUnlocked() const { return dashUnlocked; }
+    bool IsUltimateUnlocked() const { return ultimateUnlocked; }
     int GetEnemiesCount() const { return enemiesCont; }
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
@@ -68,11 +72,14 @@ class CuChulainn : public Character
     void OnEnemyHit();
     void OnEnemyDefeated();
 
-    void ActivateAbility(std::string& abilityName);
+    void ActivateAbility(std::string abilityName);
     void OnArrowHit();
   
     void StartCurse();
-
+    
+    void ExportState(PlayerState& playerState) const;
+    void ApplySavedState(const PlayerState& playerState);
+    
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;

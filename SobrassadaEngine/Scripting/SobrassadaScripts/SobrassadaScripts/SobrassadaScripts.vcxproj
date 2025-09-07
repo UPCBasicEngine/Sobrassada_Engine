@@ -487,6 +487,7 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
     <ClInclude Include="GameOverScript.h" />
+    <ClInclude Include="GameSession.h" />
     <ClInclude Include="HealVFXGround.h" />
     <ClInclude Include="MagicBarrier.h" />
     <ClInclude Include="imgui_curve_editor.h" />
@@ -509,6 +510,7 @@
     <ClInclude Include="MovingUVPostScript.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RotateGameObject.h" />
+    <ClInclude Include="SavePlayerData.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="SpawnPoint.h" />
     <ClInclude Include="SpawnUI.h" />
@@ -2071,6 +2073,7 @@
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
+    <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
     <ClCompile Include="MagicBarrier.cpp" />
     <ClCompile Include="imgui_curve_editor.cpp" />
@@ -2105,6 +2108,7 @@
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="MovingUVPostScript.cpp" />
     <ClCompile Include="RotateGameObject.cpp" />
+    <ClCompile Include="SavePlayerData.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="ScriptExport.cpp" />
     <ClCompile Include="SpawnPoint.cpp" />

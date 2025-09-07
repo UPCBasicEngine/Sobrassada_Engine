@@ -19,6 +19,7 @@ enum class BossDashStates
 enum class BossDashActions
 {
     Idle,
+    Prepare,
     Dash,
 };
 
