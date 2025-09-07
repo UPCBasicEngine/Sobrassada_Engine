@@ -227,11 +227,15 @@ void CubeColliderComponent::Update(float deltaTime)
 {
     if (!IsEffectivelyEnabled())
     {
-        if (rigidBody) App->GetPhysicsModule()->DeleteCubeRigidBody(this);
+        if (rigidBody) DeleteRigidBody();
         return;
     }
     else
     {
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
+
         if (rigidBody == nullptr) App->GetPhysicsModule()->CreateCubeRigidBody(this);
     }
 }
@@ -289,8 +293,16 @@ void CubeColliderComponent::SetEnabled(bool newEnabled)
 {
     Component::SetEnabled(newEnabled);
 
-    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateCubeRigidBody(this);
-    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteCubeRigidBody(this);
+    if (enabled && !rigidBody)
+    {
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
+
+        App->GetPhysicsModule()->CreateCubeRigidBody(this);
+    }
+
+    else if (!enabled && rigidBody) DeleteRigidBody();
 }
 
 void CubeColliderComponent::CalculateCollider()
