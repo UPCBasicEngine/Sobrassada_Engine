@@ -15,8 +15,8 @@ uniform mat4 projLight;
 uniform vec4 windParameters;
 // x: v0 (no movement border), y: v1 (full movement border), z: use central pivot, w: use gravity
 uniform vec4 windUVParameters;
-// x: axis amplitude, y: axis amplitude, z: axis amplitude
-uniform vec3 windAmplitudes;
+// x: axis amplitude, y: axis amplitude, z: axis amplitude, w: use constant movement
+uniform vec4 windAmplitudes;
 // x: axis frequency, y: axis frequency, z: axis frequency, w: time scale
 uniform vec4 windFrequency;
 
@@ -78,14 +78,14 @@ void main()
     {
     // windParameters: x: currentTime (set to 0 disables the wind), y: wind speed, z: gust frequency, y: gust speed
     // windUVParameters: x: v0 (no movement border), y: v1 (full movement border), z: use central pivot, w: use gravity
-    // windAmplitudes: x: axis amplitude, y: axis amplitude, z: axis amplitude
+    // windAmplitudes: x: axis amplitude, y: axis amplitude, z: axis amplitude, w: use constant movement
     // windFrequency: x: axis frequency, y: axis frequency, z: axis frequency, w: time scale
 
         pos = vertex_position;
 
         if (bool(windParameters.x))
         {
-            float vCoordLerp = max(min(((1-uv0.y) - windUVParameters.x) / (windUVParameters.y - windUVParameters.x), 1), 0);
+            float adaptedYUV = bool(windAmplitudes.w) ? 1 : max(min(((1-uv0.y) - windUVParameters.x) / (windUVParameters.y - windUVParameters.x), 1), 0);
 
             vec4 deltaWindDirection = deltaWindDirections[instance_index];
 
@@ -101,11 +101,11 @@ void main()
             float scaledTime = windParameters.x * 0.001 * (log(windParameters.y * 2) + 1) * windFrequency.w;
             float scaledWindSpeed = combinedWindSpeed;
 
-            float basicOffset = sin(pos.x + scaledTime + 1.0 - vCoordLerp) * vCoordLerp * scaledWindSpeed;
+            vec3 sinOffsetPos = bool(windAmplitudes.w) ? vec3(0, 0, 0) : pos;
 
-            float offsetX = sin((pos.x + scaledTime + 1.0 - vCoordLerp) * windFrequency.x) * vCoordLerp * scaledWindSpeed * windAmplitudes.x;
-            float offsetY = sin((pos.y + scaledTime + 1.0 - vCoordLerp) * windFrequency.y) * vCoordLerp * scaledWindSpeed * windAmplitudes.y;
-            float offsetZ = sin((pos.z + scaledTime + 1.0 - vCoordLerp) * windFrequency.z) * vCoordLerp * scaledWindSpeed * windAmplitudes.z;
+            float offsetX = sin((sinOffsetPos.x + scaledTime + 1.0 - adaptedYUV) * windFrequency.x) * adaptedYUV * scaledWindSpeed * windAmplitudes.x;
+            float offsetY = sin((sinOffsetPos.y + scaledTime + 1.0 - adaptedYUV) * windFrequency.y) * adaptedYUV * scaledWindSpeed * windAmplitudes.y;
+            float offsetZ = sin((sinOffsetPos.z + scaledTime + 1.0 - adaptedYUV) * windFrequency.z) * adaptedYUV * scaledWindSpeed * windAmplitudes.z;
 
             vec3 offset = vec3(offsetX, offsetY, offsetZ);
 
