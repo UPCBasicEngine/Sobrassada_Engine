@@ -15,11 +15,15 @@ static bool IsInsideCameraView(const float3& worldPosition, float screenEdgeMarg
     Scene* scene                = AppEngine->GetSceneModule()->GetScene();
     CameraComponent* mainCamera = scene ? scene->GetMainCamera() : nullptr;
     if (!mainCamera) return true;
+
     const float4x4 view       = mainCamera->GetViewMatrix();
     const float4x4 projection = mainCamera->GetProjectionMatrix();
+
     const float4 clip         = projection * view * float4(worldPosition, 1.0f);
     if (fabsf(clip.w) < 0.0001f) return true;
+
     const float3 normalized = float3(clip.x, clip.y, clip.z) / clip.w;
+
     const float limit       = 1.0f + screenEdgeMargin;
     const bool insideX      = (normalized.x >= -limit) && (normalized.x <= limit);
     const bool insideY      = (normalized.y >= -limit) && (normalized.y <= limit);
@@ -74,32 +78,22 @@ void Projectile::Update(float deltaTime)
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
    
-    parent->SetEnabled(false);
-    parent->SetEnabledRecursive(false);
-
-   
-    startPos                 = origin;
-    this->direction          = direction;
-    frames                   = 0;
-    isActive                 = true;
-
+    startPos        = origin;
+    this->direction = direction.Normalized();
+    frames          = 0;
+    if (collider) collider->SetEnabled(false);
     
+    // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
-    const Quat rotation      = Quat::LookAt(float3::unitZ, direction, float3::unitY, float3::unitY);
+    const Quat rotation      = Quat::LookAt(float3::unitZ, this->direction, float3::unitY, float3::unitY);
     const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
-    parent->SetLocalTransform(transform);
+    
+    const float4x4 parentWS  = parent->GetParentGlobalTransform();
+    const float4x4 localTRS  = parentWS.Inverted() * transform;
+    
+    parent->SetLocalTransform(localTRS);
 
-    // FOURTH: Disable collider initially (will be enabled after frame delay)
-    if (collider)
-    {
-        collider->SetEnabled(false);
-    }
-
-    // FIFTH: Enable the arrow after positioning is complete
-    parent->SetEnabled(true);
     parent->SetEnabledRecursive(true);
-
-    GLOG("Arrow shot initialized at position: (%.2f, %.2f, %.2f)", origin.x, origin.y, origin.z);
 }
 
 void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
@@ -168,14 +162,17 @@ void Projectile::Move(float deltaTime)
         collider->SetEnabled(true);
     }
 
-    float3 currentPos  = parent->GetPosition();
-    currentPos        += direction * speed * deltaTime;
-    parent->SetLocalPosition(currentPos);
+    //float3 currentPos  = parent->GetPosition();
+    //currentPos        += direction * speed * deltaTime;
+    
 
-    const float3 worldPos = parent->GetGlobalTransform().TranslatePart();
+    const float3 worldPos = parent->GetGlobalTransform().TranslatePart() + direction * speed * deltaTime;
+    const float4x4 parentWS = parent->GetParentGlobalTransform();
+    const float3 nextLocal  = (parentWS.Inverted() * float4(worldPos, 1.0f)).xyz();
 
-    // Check if projectile should be stopped (out of range or camera view)
-    if (currentPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.11f))
+    parent->SetLocalPosition(nextLocal);
+
+    if (worldPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.0f))
     {
         StopProjectile();
     }

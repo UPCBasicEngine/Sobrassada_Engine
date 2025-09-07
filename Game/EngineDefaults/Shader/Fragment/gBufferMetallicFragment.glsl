@@ -32,7 +32,8 @@ struct Material
     int hasMetallic;
     uvec2 emmisiveTex;
     uvec2 occlusionTex;
-    uvec2 padding;
+    float emissiveIntensity;
+    float padding;
 };
 
 uniform bool isWireframe;
@@ -80,6 +81,6 @@ void main()
         N = normalize(final_normal);
     }
     gNormal = vec4(N,0);
-    vec3 emissiveColor = pow(texture(sampler2D(mat.emmisiveTex), uv0).rgb, vec3(2.2f));
+    vec3 emissiveColor = pow(texture(sampler2D(mat.emmisiveTex), uv0).rgb, vec3(2.2f)) * vec3(mat.emissiveIntensity);
     gEmissive = vec4(emissiveColor, 1.0);
 }

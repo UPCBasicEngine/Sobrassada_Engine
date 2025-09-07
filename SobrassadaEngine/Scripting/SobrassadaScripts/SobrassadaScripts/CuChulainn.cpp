@@ -2,6 +2,7 @@
 
 #include "AbilityIconFill.h"
 #include "Application.h"
+#include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
 #include "CameraComponent.h"
 #include "CameraMovement.h"
@@ -10,10 +11,12 @@
 #include "DamageMask.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "GameSession.h"
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
 #include "ParticleSystemComponent.h"
+#include "ProjectModule.h"
 #include "Projectile.h"
 #include "RaycastController.h"
 #include "ResourceAnimation.h"
@@ -58,6 +61,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
     fields.push_back({"Dash Icon Name", InspectorField::FieldType::InputText, &dashIconName});
     fields.push_back({"Health Bar Name", InspectorField::FieldType::InputText, &healthBarName});
+    fields.push_back({"Melee VFX delay", InspectorField::FieldType::Float, &meleeVfxDelay, 0.0f, 1.0f});
 
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
@@ -124,6 +128,12 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
+    fields.push_back({"Melee VFX Horizontal 1", InspectorField::FieldType::InputText, &attackVfxHorizontal1Name});
+    fields.push_back({"Melee VFX Vertical 1", InspectorField::FieldType::InputText, &attackVfxVertical1Name});
+    fields.push_back({"Melee VFX Horizontal 2", InspectorField::FieldType::InputText, &attackVfxHorizontal2Name});
+    fields.push_back({"Melee VFX Vertical 2", InspectorField::FieldType::InputText, &attackVfxVertical2Name});
+    fields.push_back({"Melee VFX Horizontal 3", InspectorField::FieldType::InputText, &attackVfxHorizontal3Name});
+    fields.push_back({"Attack VFX Vertical 3", InspectorField::FieldType::InputText, &attackVfxVertical3Name});
     fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
     fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
 
@@ -170,6 +180,10 @@ bool CuChulainn::Init()
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
 
+    spearCharacter        = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameMesh);
+    if (!spearCharacter) GLOG("[WARNING] No spear (non projectile) found for CuChualin")
+    else spearCharacter->SetEnabled(true);
+
     chargedAttackCollider = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargedAttackName);
     if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
@@ -197,6 +211,32 @@ bool CuChulainn::Init()
      arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
      else arrowHitVfxObject->SetEnabled(false);
+    attackVfxHorizontal1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal1Name);
+    if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
+    else attackVfxHorizontal1->SetEnabled(false);
+
+    attackVfxVertical1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical1Name);
+    if (!attackVfxVertical1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
+    else attackVfxVertical1->SetEnabled(false);
+
+    attackVfxHorizontal2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal2Name);
+    if (!attackVfxHorizontal2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
+    else attackVfxHorizontal2->SetEnabled(false);
+
+    attackVfxVertical2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical2Name);
+    if (!attackVfxVertical2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
+    else attackVfxVertical2->SetEnabled(false);
+
+    attackVfxHorizontal3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal3Name);
+    if (!attackVfxHorizontal3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
+    else attackVfxHorizontal3->SetEnabled(false);
+
+    attackVfxVertical3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical3Name);
+    if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
+    else attackVfxVertical3->SetEnabled(false);
+    arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
+    if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
+    else arrowHitVfxObject->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
@@ -392,12 +432,11 @@ bool CuChulainn::Init()
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
     else ultimateSpikes->SetEnabled(false);
 
-     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
+    CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
     {
         GLOG("=== PLAYER COLLIDER INFO ===");
         GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
-       
         GLOG("Player name: %s", parent->GetName().c_str());
 
         // Verificar tags
@@ -414,7 +453,22 @@ bool CuChulainn::Init()
     {
         GLOG("[ERROR] Player has no CapsuleColliderComponent!");
     }
-    state = CharacterStates::IDLE;
+    state                         = CharacterStates::IDLE;
+
+    // Apply saved changes between scenes
+    const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
+    const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
+
+    if (gNewGame)
+    {
+        gNewGame = false;
+        SavePlayerData::DeleteSaveFile(savePath);
+    }
+    else
+    {
+        PlayerState loadedPlayerState;
+        if (SavePlayerData::LoadPlayerFromFile(loadedPlayerState, savePath)) ApplySavedState(loadedPlayerState);
+    }
 
     return true;
 }
@@ -510,6 +564,10 @@ void CuChulainn::OnDamageTaken(int amount)
     {
         GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
 
+    if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
+    {
+        GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
+
         arrowHitVfxObject->SetEnabled(true);
 
         ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
@@ -520,11 +578,11 @@ void CuChulainn::OnDamageTaken(int amount)
         }
     }
     if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
-    if (damageMask)
-    {
-        damageMask->SetLife(static_cast<float>(currentHealth));
-        damageMask->OnHit();
-    }
+        if (damageMask)
+        {
+            damageMask->SetLife(static_cast<float>(currentHealth));
+            damageMask->OnHit();
+        }
 
     if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
         state == CharacterStates::HEAL)
@@ -533,8 +591,7 @@ void CuChulainn::OnDamageTaken(int amount)
         if (animComponent)
         {
             animComponent->UseTrigger("Hurt");
-            //character->EnableMovement(false);
-           
+            // character->EnableMovement(false);
         }
       
         
@@ -568,10 +625,7 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
-             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
         Move();
 
     // When finished animation, go back to idle state
@@ -583,6 +637,12 @@ void CuChulainn::HandleState(float deltaTime)
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
             if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+            if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
+            if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
+            if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
+            if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
+            if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
+            if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -630,7 +690,6 @@ void CuChulainn::HandleState(float deltaTime)
         }
     }
 }
-
 
 void CuChulainn::GetInputs()
 {
@@ -894,7 +953,6 @@ void CuChulainn::UpdateTimers(float deltaTime)
             arrowHitVfxObject->SetEnabled(false);
             arrowHitVfxTimer = 0.0f;
             arrowVfxIsActive = false;
-           
         }
     }
 
@@ -923,6 +981,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         {
             weapon->SetEnabled(true);
             resetWeapon = false;
+            spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(true);
         }
         throwTimer = 0.0f;
     }
@@ -1006,7 +1065,8 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (state == CharacterStates::HEAL) healTimer += deltaTime;
     if (state == CharacterStates::TRANSFORM) transformTimer += deltaTime;
 
-    if (state == CharacterStates::DASH) isInvulnerable = true;
+    if (state == CharacterStates::DASH || state == CharacterStates::HURT || state == CharacterStates::RESPAWN)
+        isInvulnerable = true;
 
     isDashing = state == CharacterStates::DASH ? true : false;
     isHealing = state == CharacterStates::HEAL ? true : false;
@@ -1076,10 +1136,12 @@ void CuChulainn::ThrowSpear()
     {
         weapon->SetEnabled(false);
         resetWeapon = true;
+        spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(false);
     }
     if (aimShadowObject) aimShadowObject->SetEnabled(false);
 
-    spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
+
+    spear->Shoot(parent->GetGlobalTransform().TranslatePart(), character->GetFrontDirection());
 }
 
 void CuChulainn::Dash()
@@ -1126,17 +1188,50 @@ void CuChulainn::PerformAttack()
 {
     if (isAttacking && state == CharacterStates::BASIC_ATTACK)
     {
+        float currentVfxDelay    = isRiastrad ? meleeVfxDelay / riastradAnimationsSpeedRatio : meleeVfxDelay;
         float currentHitboxDelay = isRiastrad ? attackHitboxDelay / riastradAnimationsSpeedRatio : attackHitboxDelay;
         float currentHitboxDuration =
             isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
+
+        if (attackTimer > currentVfxDelay)
+        {
+            GameObject* vfxHorizontal = nullptr;
+            GameObject* vfxVertical   = nullptr;
+            switch (comboCounter)
+            {
+            case 0:
+                vfxHorizontal = attackVfxHorizontal1;
+                vfxVertical   = attackVfxVertical1;
+                break;
+            case 1:
+                vfxHorizontal = attackVfxHorizontal2;
+                vfxVertical   = attackVfxVertical2;
+                break;
+            case 2:
+                vfxVertical = attackVfxVertical3;
+                break;
+            }
+
+            if (vfxHorizontal && !vfxHorizontal->IsEnabled())
+            {
+                vfxHorizontal->SetEnabled(true);
+                vfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
+                vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            }
+            if (vfxVertical && !vfxVertical->IsEnabled())
+            {
+                vfxVertical->SetEnabled(true);
+                vfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
+                vfxVertical->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            }
+        }
 
         if (attackTimer < currentHitboxDelay)
         {
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
-                 attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -1646,7 +1741,7 @@ void CuChulainn::OnEnemyDefeated()
     AddRiastrad(riastradOnEnemyDeath);
 }
 
-void CuChulainn::ActivateAbility(std::string& abilityName)
+void CuChulainn::ActivateAbility(std::string abilityName)
 {
     std::transform(abilityName.begin(), abilityName.end(), abilityName.begin(), ::tolower);
 
@@ -1657,7 +1752,6 @@ void CuChulainn::ActivateAbility(std::string& abilityName)
 void CuChulainn::OnArrowHit()
 {
     arrowVfxIsActive = true;
-   
 }
 
 void CuChulainn::StartCurse()
@@ -1676,6 +1770,34 @@ void CuChulainn::StartCurse()
     isCursed = true;
     character->SetMaxSpeed(curseSpeed);
     curseTimer = curseDuration;
+}
+
+void CuChulainn::ExportState(PlayerState& playerState) const
+{
+    playerState.currentHealth    = currentHealth;
+    playerState.maxHealth        = maxHealth;
+    playerState.riastrad         = riastradMeter;
+    playerState.mushrooms        = mushrooms;
+    playerState.dashUnlocked     = dashUnlocked;
+    playerState.ultimateUnlocked = ultimateUnlocked;
+}
+
+void CuChulainn::ApplySavedState(const PlayerState& playerState)
+{
+    maxHealth      = max(5, playerState.maxHealth);
+    currentHealth  = std::clamp(playerState.currentHealth, 1, maxHealth);
+    reservedHealth = currentHealth;
+
+    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
+
+    riastradMeter = 0;
+    AddRiastrad(playerState.riastrad);
+
+    mushrooms = playerState.mushrooms;
+
+    if (playerState.dashUnlocked) ActivateAbility(static_cast<std::string>("dash"));
+    if (playerState.ultimateUnlocked) ActivateAbility(static_cast<std::string>("ultimate"));
 }
 
 void CuChulainn::EndCurse()

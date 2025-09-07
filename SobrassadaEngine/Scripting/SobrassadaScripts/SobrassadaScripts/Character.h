@@ -27,7 +27,8 @@ enum class CharacterType
     Archer,
     Banshee,
     Destructible,
-    Changeling
+    Changeling,
+    Boss
 };
 
 class Character : public Script
@@ -49,6 +50,8 @@ class Character : public Script
     bool IsDead() const { return isDead; };
 
     CharacterType GetCharacterType() const { return type; }
+    int GetMaxHealth() const { return maxHealth; }
+    int GetCurrentHealth() const { return currentHealth; }
 
     void SetAssociatedBarrier(MagicBarrier* newAssociatedBarrier) { associatedBarrier = newAssociatedBarrier; }
 

@@ -115,14 +115,18 @@ bool MovingUVTransparent::Init()
 
 void MovingUVTransparent::Update(float deltaTime)
 {
-    float newOffset  = deltaTime * animationSpeed;
-    uvOffset.x      += newOffset * uvOffsetDirection.x;
-    uvOffset.y      += newOffset * uvOffsetDirection.y;
+    if (!isPaused)
+    {
+        float newOffset  = deltaTime * animationSpeed;
+        uvOffset.x      += newOffset * uvOffsetDirection.x;
+        uvOffset.y      += newOffset * uvOffsetDirection.y;
+    }
 }
 
 void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
+    if (!(shaderProgram && indexCount > 0 && meshComp)) return;
+    if (meshComp->GetHasBones() && !meshComp->GetBatch()) return;
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 

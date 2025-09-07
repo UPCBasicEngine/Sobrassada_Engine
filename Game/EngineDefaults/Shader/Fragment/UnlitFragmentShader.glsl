@@ -30,6 +30,7 @@ struct Material
     int hasMetallic;
     uvec2 emmisiveTex;
     uvec2 occlusionTex;
+    float emissiveIntensity;
     uvec2 padding;
 };
 

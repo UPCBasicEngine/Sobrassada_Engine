@@ -50,6 +50,8 @@ bool ShaderModule::Init()
 
     spritesheetProgram        = CreateShaderProgram(SPRITESHEET_VERTEX_SHADER_PATH, SPRITESHEET_FRAGMENT_SHADER_PATH);
     particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
+
+    videoProgram          = CreateShaderProgram(VIDEO_VERTEX_SHADER_PATH, VIDEO_FRAGMENT_SHADER_PATH);
     return true;
 }
 
@@ -81,6 +83,7 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(ssaoProgram);
     glDeleteProgram(ssaoDebugProgram);
     glDeleteProgram(ssaoBlurProgram);
+    glDeleteProgram(videoProgram);
 
     for (auto& shaderIterator : customShaderPrograms)
     {
