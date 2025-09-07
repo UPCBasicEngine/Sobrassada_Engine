@@ -27,25 +27,26 @@ struct Command
 GeometryBatch::GeometryBatch(const MeshComponent* component)
     : totalVertexCount(0), totalIndexCount(0), currentBufferIndex(0)
 {
-    mode            = component->GetResourceMesh()->GetMode();
-    isSpecular      = component->GetResourceMaterial()->GetIsSpecular();
-    isMetallic      = component->GetResourceMaterial()->GetIsMetallicRoughness();
-    hasBones        = component->GetHasBones();
-    isNavmeshValid  = component->GetParent()->IsNavMeshValid();
-    isAlpha         = component->GetRenderMode() == 2;
-    isDoubleSided   = component->GetResourceMaterial()->IsDoubleSided();
-    doApplyWind     = component->GetResourceMaterial()->DoApplyWind();
-    vCoord0         = component->GetResourceMaterial()->GetVCoord0();
-    vCoord1         = component->GetResourceMaterial()->GetVCoord1();
-    useCentralPivot = component->GetResourceMaterial()->UseCentralPivot();
-    useWindGravity  = component->GetResourceMaterial()->UseWindGravity();
-    windXAmplitude  = component->GetResourceMaterial()->GetWindXAmplitude();
-    windYAmplitude  = component->GetResourceMaterial()->GetWindYAmplitude();
-    windZAmplitude  = component->GetResourceMaterial()->GetWindZAmplitude();
-    windXFrequency  = component->GetResourceMaterial()->GetWindXFrequency();
-    windYFrequency  = component->GetResourceMaterial()->GetWindYFrequency();
-    windZFrequency  = component->GetResourceMaterial()->GetWindZFrequency();
-    windTimeScale   = component->GetResourceMaterial()->GetWindTimeScale();
+    mode                = component->GetResourceMesh()->GetMode();
+    isSpecular          = component->GetResourceMaterial()->GetIsSpecular();
+    isMetallic          = component->GetResourceMaterial()->GetIsMetallicRoughness();
+    hasBones            = component->GetHasBones();
+    isNavmeshValid      = component->GetParent()->IsNavMeshValid();
+    isAlpha             = component->GetRenderMode() == 2;
+    isDoubleSided       = component->GetResourceMaterial()->IsDoubleSided();
+    doApplyWind         = component->GetResourceMaterial()->DoApplyWind();
+    vCoord0             = component->GetResourceMaterial()->GetVCoord0();
+    vCoord1             = component->GetResourceMaterial()->GetVCoord1();
+    useCentralPivot     = component->GetResourceMaterial()->UseCentralPivot();
+    useWindGravity      = component->GetResourceMaterial()->UseWindGravity();
+    useConstantMovement = component->GetResourceMaterial()->UseConstantMovement();
+    windXAmplitude      = component->GetResourceMaterial()->GetWindXAmplitude();
+    windYAmplitude      = component->GetResourceMaterial()->GetWindYAmplitude();
+    windZAmplitude      = component->GetResourceMaterial()->GetWindZAmplitude();
+    windXFrequency      = component->GetResourceMaterial()->GetWindXFrequency();
+    windYFrequency      = component->GetResourceMaterial()->GetWindYFrequency();
+    windZFrequency      = component->GetResourceMaterial()->GetWindZFrequency();
+    windTimeScale       = component->GetResourceMaterial()->GetWindTimeScale();
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &indirect);

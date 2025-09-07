@@ -40,6 +40,7 @@ void ResourceMaterial::OnEditorUpdate()
         updated |= ImGui::SliderFloat("UV 1 border", &vCoord1, vCoord0 + 0.01f, 1);
         updated |= ImGui::Checkbox("Use central pivot", &useCentralPivot);
         updated |= ImGui::Checkbox("Wind gravity", &useWindGravity);
+        updated |= ImGui::Checkbox("Use constant movement", &useConstantMovement);
         updated |= ImGui::SliderFloat("X amplitude", &windXAmplitude, 0, 2);
         updated |= ImGui::SliderFloat("Y amplitude", &windYAmplitude, 0, 2);
         updated |= ImGui::SliderFloat("Z amplitude", &windZAmplitude, 0, 2);
@@ -325,6 +326,7 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("vCoord1", vCoord1, allocator);
                 importOptions.AddMember("useCentralPivot", useCentralPivot, allocator);
                 importOptions.AddMember("useWindGravity", useWindGravity, allocator);
+                importOptions.AddMember("useConstantMovement", useConstantMovement, allocator);
                 importOptions.AddMember("windXAmplitude", windXAmplitude, allocator);
                 importOptions.AddMember("windYAmplitude", windYAmplitude, allocator);
                 importOptions.AddMember("windZAmplitude", windZAmplitude, allocator);
@@ -435,6 +437,10 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     if (importOptions.HasMember("useWindGravity") && importOptions["useWindGravity"].IsBool())
         useWindGravity = importOptions["useWindGravity"].GetBool();
     else useWindGravity = false;
+
+    if (importOptions.HasMember("useConstantMovement") && importOptions["useConstantMovement"].IsBool())
+        useConstantMovement = importOptions["useConstantMovement"].GetBool();
+    else useConstantMovement = false;
 
     if (importOptions.HasMember("windXAmplitude") && importOptions["windXAmplitude"].IsFloat())
         windXAmplitude = importOptions["windXAmplitude"].GetFloat();
