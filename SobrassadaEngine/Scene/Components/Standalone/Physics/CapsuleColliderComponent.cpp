@@ -75,7 +75,7 @@ CapsuleColliderComponent::CapsuleColliderComponent(const rapidjson::Value& initi
         std::bind(&CapsuleColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    userPointer          = BulletUserPointer(
+    userPointer = BulletUserPointer(
         this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
     );
     // App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
@@ -214,12 +214,20 @@ void CapsuleColliderComponent::Update(float deltaTime)
 {
     if (!IsEffectivelyEnabled())
     {
-        if (rigidBody) App->GetPhysicsModule()->DeleteCapsuleRigidBody(this);
+        if (rigidBody) DeleteRigidBody();
         return;
     }
     else
     {
-        if (rigidBody == nullptr) App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+        if (rigidBody == nullptr)
+        {
+            userPointer = BulletUserPointer(
+                this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback,
+                layer
+            );
+
+            App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+        }
     }
 }
 
@@ -262,6 +270,9 @@ void CapsuleColliderComponent::OnCollisionExit(GameObject* otherObject, Collider
 
 void CapsuleColliderComponent::DeleteRigidBody()
 {
+    userPointer = BulletUserPointer(
+        nullptr, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
     App->GetPhysicsModule()->DeleteCapsuleRigidBody(this);
 }
 
@@ -269,8 +280,15 @@ void CapsuleColliderComponent::SetEnabled(bool newEnabled)
 {
     Component::SetEnabled(newEnabled);
 
-    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
-    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteCapsuleRigidBody(this);
+    if (enabled && !rigidBody)
+    {
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
+
+        App->GetPhysicsModule()->CreateCapsuleRigidBody(this);
+    }
+    else if (!enabled && rigidBody) DeleteRigidBody();
 }
 
 void CapsuleColliderComponent::CalculateCollider()
