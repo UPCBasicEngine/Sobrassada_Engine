@@ -81,39 +81,32 @@ void PauseMenuScript::Update(float)
 {
     if (gGameOverActive) return;
 
-    // ESC always active (checked in Game_Canvas which ticks while paused)
-    const KeyState* k = AppEngine->GetInputModule()->GetKeyboard();
-    if (k[SDL_SCANCODE_ESCAPE] == KEY_DOWN)
+    const InputModule* in = AppEngine->GetInputModule();
+    const KeyState* pad   = in ? in->GetControllerButtons() : nullptr;
+
+    bool padToggleHeld    = false;
+    if (pad)
+    {
+        const bool startHeld = (pad[SDL_CONTROLLER_BUTTON_START] != KEY_IDLE);
+        const bool backHeld  = (pad[SDL_CONTROLLER_BUTTON_BACK] != KEY_IDLE);
+        const bool bHeld     = (isOpen && (pad[SDL_CONTROLLER_BUTTON_B] != KEY_IDLE));
+        padToggleHeld        = startHeld || backHeld || bHeld;
+    }
+
+    static bool padTogglePrev = false;
+    const bool padToggleEdge  = padToggleHeld && !padTogglePrev;
+    padTogglePrev             = padToggleHeld;
+
+    const KeyState* k         = AppEngine->GetInputModule()->GetKeyboard();
+    if (padToggleEdge || (k[SDL_SCANCODE_ESCAPE] == KEY_DOWN))
     {
         Toggle();
         return;
     }
 
-    if (!isOpen) return;
-
-    // if panel got disabled externally, rebuild next frame
-    if (!cachedTarget || !cachedTarget->IsEnabled())
-    {
-        builtOnce = false;
-        return;
-    }
-
-    if (!builtOnce)
-    {
-        BuildFromPanel();
-        selectedIndex = 0;
-        UpdateSelection();
-        builtOnce = true;
-    }
-
-    // ensure only one arrow is ON
-    int on = 0;
-    for (auto* a : arrowImages)
-        if (a && a->IsEnabled()) ++on;
-    if (on != 1) UpdateSelection();
-
-    HandleInput();
+    if (isOpen) HandleInput();
 }
+
 
 void PauseMenuScript::Save(rapidjson::Value& out, rapidjson::Document::AllocatorType& a)
 {
@@ -226,17 +219,14 @@ uint64_t PauseMenuScript::GetCurrentTimeMs() const
 
 void PauseMenuScript::ReadInputs(bool& up, bool& down, bool& acc, int& stickDir)
 {
-    SDL_PumpEvents();
-    SDL_GameControllerUpdate();
-
-    // keyboard direct state
+    // keyboard
     const Uint8* kb          = SDL_GetKeyboardState(nullptr);
     const bool kUp           = (kb[SDL_SCANCODE_UP] != 0) || (kb[SDL_SCANCODE_W] != 0);
     const bool kDown         = (kb[SDL_SCANCODE_DOWN] != 0) || (kb[SDL_SCANCODE_S] != 0);
     const bool kEnt          = (kb[SDL_SCANCODE_RETURN] != 0) || (kb[SDL_SCANCODE_KP_ENTER] != 0);
     const bool kSpc          = (kb[SDL_SCANCODE_SPACE] != 0);
 
-    // gamepad via InputModule (edges are handled manually here)
+    // gamepad via InputModule
     const InputModule* input = AppEngine->GetInputModule();
     const KeyState* buttons  = input ? input->GetControllerButtons() : nullptr;
     const bool padUpHeld     = buttons ? (buttons[SDL_CONTROLLER_BUTTON_DPAD_UP] != KEY_IDLE) : false;
@@ -247,7 +237,6 @@ void PauseMenuScript::ReadInputs(bool& up, bool& down, bool& acc, int& stickDir)
     up                       = kUp || padUpHeld || (ls.y < -0.5f);
     down                     = kDown || padDownHeld || (ls.y > 0.5f);
     acc                      = kEnt || kSpc || padAHeld;
-
     stickDir                 = (ls.y > 0.5f) ? +1 : ((ls.y < -0.5f) ? -1 : 0);
 }
 
