@@ -15,6 +15,8 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
+#include "Wwise_IDs.h"
 #include <cmath>
 
 Archer::Archer(GameObject* parent)
@@ -129,6 +131,8 @@ bool Archer::Init()
         GameObject* arrowObj = arrowPool[i]->GetParent();
         /*  GLOG("Arrow[%d]: %s, Enabled: %s", i, arrowObj->GetName().c_str(), arrowObj->IsEnabled() ? "YES" : "NO");*/
     }
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] ARCHER: No audio component found");
 
     /*  GLOG("=== ARCHER INIT COMPLETE ===");*/
     return true;
@@ -189,31 +193,38 @@ bool Archer::CheckLineOfSight()
 {
     if (!character) return false;
 
-    float distanceToPlayer                = GetDistanceFromPlayer();
+    float3 archerPos                      = parent->GetPosition();
+    float3 playerPos                      = character->GetLastPosition();
 
     Scene* scene                          = AppEngine->GetSceneModule()->GetScene();
     const std::vector<GameObject*>* walls = scene->GetTaggedGameObjects(HashString("Wall"));
 
-    if (!walls) return true; 
+    if (!walls || walls->empty()) return true;
 
-    float3 archerPos = parent->GetPosition();
-    float3 playerPos = character->GetLastPosition();
-
+    // Simple but effective line of sight check
     for (GameObject* wall : *walls)
     {
         if (!wall->IsEnabled()) continue;
 
-        float3 wallPos         = wall->GetPosition();
-        float distArcherToWall = archerPos.Distance(wallPos);
-        float distWallToPlayer = wallPos.Distance(playerPos);
+        float3 wallPos           = wall->GetPosition();
 
-        if (abs((distArcherToWall + distWallToPlayer) - distanceToPlayer) < 3.0f &&
-            distArcherToWall < distanceToPlayer && distWallToPlayer < distanceToPlayer)
+        // Check if wall is between archer and player
+        float distArcherToPlayer = archerPos.Distance(playerPos);
+        float distArcherToWall   = archerPos.Distance(wallPos);
+        float distWallToPlayer   = wallPos.Distance(playerPos);
+
+        // If wall is roughly on the line between archer and player
+        float totalDist          = distArcherToWall + distWallToPlayer;
+
+        if (abs(totalDist - distArcherToPlayer) < 2.0f && distArcherToWall < distArcherToPlayer &&
+            distWallToPlayer < distArcherToPlayer)
         {
+            GLOG("Line of sight BLOCKED by wall: %s", wall->GetName().c_str());
             return false;
         }
     }
 
+    GLOG("Line of sight CLEAR");
     return true;
 }
 
@@ -303,60 +314,161 @@ float Archer::CalculateCoverScore(GameObject* coverObj)
 
 float3 Archer::FindShootingPosition()
 {
-    if (!currentCover || !character) return parent->GetPosition();
+    if (!character) return parent->GetPosition();
+
+    // If we don't have cover, just find any clear position
+    if (!currentCover)
+    {
+        GLOG("No cover - finding general clear shooting position");
+        return FindClearShootingPosition();
+    }
 
     float3 coverPos  = currentCover->GetPosition();
     float3 playerPos = character->GetLastPosition();
 
-    for (int i = 0; i < 8; i++)
+    GLOG("Finding shooting position around cover: %s", currentCover->GetName().c_str());
+
+    // Try positions around the cover that have line of sight to player
+    for (int i = 0; i < 16; i++)
     {
-        float angle                           = (i / 8.0f) * 2.0f * 3.14159f;
-        float3 offset                         = float3(cos(angle), 0, sin(angle)) * coverRadius;
-        float3 candidate                      = coverPos + offset;
+        float angle      = (i / 16.0f) * 2.0f * 3.14159f;
+        float3 offset    = float3(cos(angle), 0, sin(angle)) * coverRadius;
+        float3 candidate = coverPos + offset;
 
-        float3 candidateToPlayer              = playerPos - candidate;
-        float distToPlayer                    = candidateToPlayer.Length();
-
-        bool hasLineOfSightFromCandidate      = true;
-        Scene* scene                          = AppEngine->GetSceneModule()->GetScene();
-        const std::vector<GameObject*>* walls = scene->GetTaggedGameObjects(HashString("Wall"));
-
-        if (walls)
+        // Check if this position has line of sight to player
+        if (HasLineOfSightFromPosition(candidate, playerPos))
         {
-            for (GameObject* wall : *walls)
+            // Verify position is on navmesh
+            if (agentAI)
             {
-                if (!wall->IsEnabled() || wall == currentCover) continue;
+                bool posOverPoly        = false;
+                float3 closestPoint     = float3::zero;
+                const float3 searchArea = {1.0f, 2.0f, 1.0f};
 
-                float3 wallPos            = wall->GetPosition();
-                float distCandidateToWall = candidate.Distance(wallPos);
-                float distWallToPlayer    = wallPos.Distance(playerPos);
-
-                if (abs((distCandidateToWall + distWallToPlayer) - distToPlayer) < 2.0f &&
-                    distCandidateToWall < distToPlayer && distWallToPlayer < distToPlayer)
+                agentAI->GetClosestPointInNavmesh(candidate, searchArea, posOverPoly, closestPoint);
+                if (posOverPoly)
                 {
-                    hasLineOfSightFromCandidate = false;
-                    break;
+                    GLOG("Found shooting position around cover with clear LOS");
+                    return closestPoint;
                 }
             }
         }
+    }
 
-        if (hasLineOfSightFromCandidate)
+    GLOG("No clear shooting position around cover - using fallback");
+    return FindClearShootingPosition();
+}
+
+float3 Archer::FindClearShootingPosition()
+{
+    if (!character) return parent->GetPosition();
+
+    float3 archerPos       = parent->GetPosition();
+    float3 playerPos       = character->GetLastPosition();
+
+    // Try positions in a circle around the archer
+    const int numPositions = 12;
+    const float radius     = 3.0f; // how far to move to find clear shot
+
+    for (int i = 0; i < numPositions; i++)
+    {
+        float angle         = (i / float(numPositions)) * 2.0f * 3.14159f;
+        float3 offset       = float3(cos(angle) * radius, 0, sin(angle) * radius);
+        float3 candidatePos = archerPos + offset;
+
+        // Check if this position has line of sight to player
+        if (HasLineOfSightFromPosition(candidatePos, playerPos))
         {
-            return candidate;
+            // Make sure the position is on navmesh
+            bool posOverPoly        = false;
+            float3 closestPoint     = float3::zero;
+            const float3 searchArea = {1.0f, 2.0f, 1.0f};
+
+            if (agentAI)
+            {
+                agentAI->GetClosestPointInNavmesh(candidatePos, searchArea, posOverPoly, closestPoint);
+                if (posOverPoly)
+                {
+                    GLOG("Found clear shooting position");
+                    return closestPoint;
+                }
+            }
         }
     }
 
-    return coverPos; 
+    // If no clear position found, try to get closer to player
+    float3 directionToPlayer = (playerPos - archerPos).Normalized();
+    float3 closerPos         = archerPos + directionToPlayer * 2.0f;
+
+    if (agentAI)
+    {
+        bool posOverPoly        = false;
+        float3 closestPoint     = float3::zero;
+        const float3 searchArea = {1.0f, 2.0f, 1.0f};
+        agentAI->GetClosestPointInNavmesh(closerPos, searchArea, posOverPoly, closestPoint);
+        if (posOverPoly)
+        {
+            return closestPoint;
+        }
+    }
+
+    return archerPos; // fallback to current position
 }
 
 bool Archer::CanShootSafely()
 {
     if (!character || attackCdTimer > 0.0f) return false;
 
-    float distanceToPlayer = GetDistanceFromPlayer();
-    hasLineOfSight         = CheckLineOfSight();
+    // FIRST check line of sight - this is critical!
+    if (!CheckLineOfSight())
+    {
+        GLOG("CANNOT SHOOT SAFELY - NO LINE OF SIGHT TO PLAYER");
+        return false;
+    }
 
-    return (distanceToPlayer >= safeShootingDistance || (currentCover != nullptr)) && hasLineOfSight;
+    float distanceToPlayer = GetDistanceFromPlayer();
+
+    // Then check if we're at safe distance or have cover
+    bool safeDistance      = (distanceToPlayer >= safeShootingDistance || currentCover != nullptr);
+
+    GLOG("CAN SHOOT SAFELY - LOS: YES, Distance: %.1f, Safe: %s", distanceToPlayer, safeDistance ? "YES" : "NO");
+    return safeDistance;
+    
+}
+
+bool Archer::HasLineOfSightFromPosition(float3 fromPos, float3 toPos)
+{
+    fromPos.y                             += 1.5f; // eye level
+    toPos.y                               += 1.0f; // target center
+
+    Scene* scene                           = AppEngine->GetSceneModule()->GetScene();
+    const std::vector<GameObject*>* walls  = scene->GetTaggedGameObjects(HashString("Wall"));
+
+    if (!walls) return true;
+
+    float distance   = fromPos.Distance(toPos);
+    float3 direction = (toPos - fromPos).Normalized();
+
+    for (GameObject* wall : *walls)
+    {
+        if (!wall->IsEnabled()) continue;
+
+        float3 wallPos         = wall->GetPosition();
+        float3 toWall          = wallPos - fromPos;
+        float projectionLength = toWall.Dot(direction);
+
+        if (projectionLength < 0.5f || projectionLength > distance - 0.5f) continue;
+
+        float3 closestPointOnLine = fromPos + direction * projectionLength;
+        float distanceToLine      = wallPos.Distance(closestPointOnLine);
+
+        if (distanceToLine < 1.5f)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void Archer::SeekCover(float deltaTime)
@@ -386,46 +498,108 @@ void Archer::StayInCover(float deltaTime)
 
     float distanceToPlayer = GetDistanceFromPlayer();
 
+    GLOG("In cover - Player distance: %.1f, Safe distance: %.1f", distanceToPlayer, safeShootingDistance);
+
+    // If player is at safe distance and we've waited enough, try to find shooting position
     if (distanceToPlayer >= safeShootingDistance && repositionTimer >= repositionDelay)
     {
+        // First check if we can shoot from current cover position
+        if (CheckLineOfSight() && CanShootSafely())
+        {
+            GLOG("Can shoot directly from cover position");
+            currentState = ArcherStates::AIM;
+            isInCover    = false;
+            return;
+        }
+
+        // Find a shooting position with clear line of sight
         shootingPosition = FindShootingPosition();
-        currentState     = ArcherStates::POSITIONING_TO_SHOOT;
-        repositionTimer  = 0.0f;
-        GLOG("Archer leaving cover to shoot");
+
+        // Verify the shooting position actually has line of sight
+        if (HasLineOfSightFromPosition(shootingPosition, character->GetLastPosition()))
+        {
+            currentState    = ArcherStates::POSITIONING_TO_SHOOT;
+            repositionTimer = 0.0f;
+            GLOG("Leaving cover to shoot from verified clear position");
+        }
+        else
+        {
+            GLOG("Shooting position has no line of sight - staying in cover");
+            repositionTimer = repositionDelay * 0.5f; // Try again sooner
+        }
     }
- 
+    // If player is too close, stay hidden and wait
     else if (distanceToPlayer < safeShootingDistance * 0.8f)
     {
         agentAI->SetSpeed(0.0f, 0.0f);
         if (animComponent) animComponent->UseTrigger("idle");
+        GLOG("Player too close - hiding in cover");
+    }
+    // If we somehow have clear line of sight from cover, take the shot
+    else if (CheckLineOfSight() && CanShootSafely())
+    {
+        GLOG("Surprise clear shot from cover - taking it!");
+        currentState = ArcherStates::AIM;
+        isInCover    = false;
     }
 }
 
 void Archer::PositionToShoot(float deltaTime)
 {
+    if (!character) return;
+
     float distanceToShootPos = parent->GetPosition().Distance(shootingPosition);
 
-    if (distanceToShootPos <= 1.0f) 
+    // Check if we've reached the shooting position
+    if (distanceToShootPos <= 1.5f)
     {
+        GLOG("Reached shooting position - verifying line of sight");
+
+        // Double-check line of sight from this position
         if (CheckLineOfSight() && CanShootSafely())
         {
-            currentState = ArcherStates::AIM;
-            isInCover    = false;
+            GLOG("CLEAR SHOT CONFIRMED - STARTING AIM");
+            currentState    = ArcherStates::AIM;
+            isInCover       = false;
+            repositionTimer = 0.0f;
         }
         else
         {
-            currentState = ArcherStates::IN_COVER;
+            GLOG("NO CLEAR SHOT FROM POSITION - FINDING NEW POSITION");
+
+            // Try to find a better position
+            float3 newShootingPos = FindClearShootingPosition();
+            float distanceToNew   = parent->GetPosition().Distance(newShootingPos);
+
+            if (distanceToNew > 1.0f && distanceToNew < 10.0f) // reasonable distance
+            {
+                shootingPosition = newShootingPos;
+                repositionTimer  = 0.0f;
+                GLOG("Moving to new shooting position");
+            }
+            else
+            {
+                // Can't find good shooting position, try chasing instead
+                GLOG("Cannot find clear shooting position - switching to CHASE");
+                currentState    = ArcherStates::CHASE;
+                repositionTimer = 0.0f;
+            }
         }
     }
     else
     {
+        // Continue moving to shooting position
         agentAI->SetPathNavigation(shootingPosition);
         if (animComponent) animComponent->UseTrigger("run");
+
+        GLOG("Moving to shooting position (%.1f units away)", distanceToShootPos);
     }
 
-    if (repositionTimer >= 3.0f)
+    // Timeout protection - don't get stuck trying to reach impossible positions
+    if (repositionTimer >= 5.0f)
     {
-        currentState    = ArcherStates::IN_COVER;
+        GLOG("POSITIONING TIMEOUT - SWITCHING TO CHASE");
+        currentState    = ArcherStates::CHASE;
         repositionTimer = 0.0f;
     }
 }
@@ -582,7 +756,7 @@ void Archer::OverShooting(float deltaTime)
 
                     bool isEnabled = arrowGameObject->IsEnabled();
                     GLOG("Arrow activation result: %s", isEnabled ? "SUCCESS" : "FAILED");
-
+                    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_OVERSHOOTING);
                     currentArrow->Shoot(arrowPos, shootDirection);
                     GLOG("Arrow shot executed!");
                 }
@@ -725,24 +899,139 @@ void Archer::ApplyKnockback()
 
 void Archer::ChaseAI()
 {
+    if (isDead) return;
+
     if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
     {
-        currentState = ArcherStates::PATROL;
+        GLOG("PLAYER IS DEAD - GOING TO PATROL");
+        currentState    = ArcherStates::PATROL;
+        isRepositioning = false;
+        repositionTimer = 0.0f;
+        seekingCover    = false;
+        isInCover       = false;
+        currentCover    = nullptr;
         return;
     }
 
-    if (animComponent) animComponent->UseTrigger("run");
+    const float distance = GetDistanceFromPlayer();
+    hasLineOfSight       = CheckLineOfSight();
 
-    if (character != nullptr)
+    // Don't change states while repositioning
+    if (isRepositioning)
     {
-        if (CheckLineOfSight() && GetDistanceFromPlayer() <= rangeAIAttack)
+        return;
+    }
+
+    // Static archers shouldn't move much
+    if (isStatic)
+    {
+        if (distance <= maxDetectionRange)
         {
-            currentState = ArcherStates::AIM;
+            if (distance <= rangeAIAttack && attackCdTimer <= 0.0f && hasLineOfSight) currentState = ArcherStates::AIM;
+            else if (distance <= rangeAIAttack && attackCdTimer > 0.0f) currentState = ArcherStates::SEARCH;
+            else if (distance <= rangeAIAttack && !hasLineOfSight)
+            {
+                // Static archer without line of sight should try minor repositioning
+                GLOG("STATIC ARCHER WITHOUT LOS - MINOR REPOSITIONING");
+                isRepositioning  = true;
+                repositionTimer  = 0.0f;
+                repositionTarget = FindClearShootingPosition();
+            }
+            else currentState = ArcherStates::AIM;
+        }
+        else
+        {
+            currentState = ArcherStates::SEARCH;
+        }
+        return;
+    }
+
+    // For MOBILE archers (isStatic = false), handle cover states first
+    if (currentState == ArcherStates::SEEKING_COVER || currentState == ArcherStates::IN_COVER ||
+        currentState == ArcherStates::POSITIONING_TO_SHOOT)
+    {
+        // Only escape if VERY close
+        if (distance <= rangeEscape)
+        {
+            GLOG("PLAYER TOO CLOSE - ESCAPING FROM COVER");
+            currentState = ArcherStates::ESCAPE;
+            isInCover    = false;
+            seekingCover = false;
+            currentCover = nullptr;
+        }
+        return; // Stay in cover states otherwise
+    }
+
+    // MAIN LOGIC: Try cover BEFORE escape for mobile archers
+
+    // 1. If player is close but not too close, seek cover first
+    if (distance <= coverSeekRange && distance > rangeEscape)
+    {
+        GLOG("PLAYER IN COVER RANGE - SEEKING COVER FIRST");
+        currentCover = FindNearestCover();
+        if (currentCover)
+        {
+            seekingCover    = true;
+            isInCover       = false;
+            coverPosition   = currentCover->GetPosition();
+            currentState    = ArcherStates::SEEKING_COVER;
+            repositionTimer = 0.0f;
+            GLOG("Archer seeking cover at wall: %s", currentCover->GetName().c_str());
             return;
         }
+        else
+        {
+            GLOG("NO COVER FOUND - WILL HANDLE NORMALLY");
+        }
+    }
 
-        agentAI->SetPathNavigation(character->GetLastPosition());
-        ChangeState();
+    // 2. Only escape if player is VERY close AND no cover is available
+    if (distance <= rangeEscape)
+    {
+        // Try to find cover first even when escaping
+        if (!currentCover)
+        {
+            currentCover = FindNearestCover();
+        }
+
+        if (currentCover && distance > rangeEscape * 0.7f) // If we have some room
+        {
+            GLOG("CLOSE PLAYER BUT COVER AVAILABLE - SEEKING COVER INSTEAD OF ESCAPE");
+            seekingCover    = true;
+            isInCover       = false;
+            coverPosition   = currentCover->GetPosition();
+            currentState    = ArcherStates::SEEKING_COVER;
+            repositionTimer = 0.0f;
+        }
+        else
+        {
+            GLOG("PLAYER TOO CLOSE - ESCAPING (no cover or too close)");
+            currentState = ArcherStates::ESCAPE;
+            isInCover    = false;
+            seekingCover = false;
+            currentCover = nullptr;
+        }
+        return;
+    }
+
+    // 3. Normal combat logic
+    if (distance <= rangeAIAttack && hasLineOfSight)
+    {
+        currentState = ArcherStates::AIM;
+    }
+    else if (distance <= rangeAIAttack && !hasLineOfSight)
+    {
+        // In attack range but no line of sight - chase to reposition
+        GLOG("IN ATTACK RANGE BUT NO LOS - CHASING TO REPOSITION");
+        currentState = ArcherStates::CHASE;
+    }
+    else if (distance <= rangeAIChase)
+    {
+        currentState = ArcherStates::CHASE;
+    }
+    else if (distance > maxDetectionRange)
+    {
+        currentState = ArcherStates::SEARCH;
     }
     else
     {
@@ -822,12 +1111,12 @@ void Archer::Aim(float deltaTime)
         return;
     }
 
-    float distance = GetDistanceFromPlayer();
     if (!weaponCollider) return;
 
+    // Check line of sight FIRST
     if (!CheckLineOfSight())
     {
-        GLOG("ARCHER LOST LINE OF SIGHT - GOING TO CHASE");
+        GLOG("AIM -> Lost line of sight, switching to CHASE");
         isAiming     = false;
         aimTimer     = 0.0f;
         currentState = ArcherStates::CHASE;
@@ -838,9 +1127,10 @@ void Archer::Aim(float deltaTime)
     {
         agentAI->SetLookForward(false);
         if (animComponent) animComponent->UseTrigger("aim");
-
+        agentAI->SetSpeed(0.0f, 0.0f);
         isAiming = true;
         aimTimer = 0.0f;
+        GLOG("ARCHER STARTED AIMING");
     }
     else
     {
@@ -854,17 +1144,28 @@ void Archer::Aim(float deltaTime)
 
         if (aimTimer >= aimDuration)
         {
-            isAiming = false;
-            aimTimer = 0.0f;
-
-            if (hasMultipleShoots)
+            // Double-check line of sight before shooting
+            if (CheckLineOfSight())
             {
-                currentState = ArcherStates::OVERSHOOTING;
+                GLOG("ARCHER FINISHED AIMING - ATTACKING");
+                isAiming = false;
+                aimTimer = 0.0f;
+
+                if (hasMultipleShoots)
+                {
+                    currentState = ArcherStates::OVERSHOOTING;
+                }
+                else
+                {
+                    currentState = ArcherStates::BASIC_ATTACK;
+                }
             }
             else
             {
-
-                currentState = ArcherStates::BASIC_ATTACK;
+                GLOG("Lost LOS during aim - switching to CHASE");
+                isAiming     = false;
+                aimTimer     = 0.0f;
+                currentState = ArcherStates::CHASE;
             }
         }
     }
@@ -911,7 +1212,16 @@ void Archer::Attack(float deltaTime)
         return;
     }
 
-    float distance = GetDistanceFromPlayer();
+    // Check line of sight before attacking
+    if (!CheckLineOfSight())
+    {
+        GLOG("ATTACK -> Lost line of sight, switching to CHASE");
+        hasShot      = false;
+        isAttacking  = false;
+        currentState = ArcherStates::CHASE;
+        return;
+    }
+
     if (!weaponCollider) return;
 
     if (!isAttacking)
@@ -920,7 +1230,6 @@ void Archer::Attack(float deltaTime)
         if (animComponent) animComponent->UseTrigger("attack");
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
-
         GLOG("SINGLE ATTACK STARTED");
     }
     else
@@ -930,19 +1239,33 @@ void Archer::Attack(float deltaTime)
 
         if (!hasShot && attackTimer >= attackHitboxDelay)
         {
-            hasShot = true;
-            if (!arrow) return;
-
-            float3 predictedTarget = CalculatePredictiveTarget();
-            float3 direction       = (predictedTarget - parent->GetGlobalTransform().TranslatePart()).Normalized();
-            float3 arrowPos        = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
-
-            GameObject* arrowObj   = arrow->GetParent();
-            if (arrowObj)
+            // Final line of sight check before shooting
+            if (CheckLineOfSight())
             {
-                arrowObj->SetEnabled(true);
-                arrowObj->SetEnabledRecursive(true);
-                arrow->Shoot(arrowPos, direction);
+                hasShot = true;
+                if (!arrow) return;
+
+                float3 predictedTarget = CalculatePredictiveTarget();
+                float3 direction       = (predictedTarget - parent->GetGlobalTransform().TranslatePart()).Normalized();
+                float3 arrowPos        = float3(parent->GetPosition().x, 1.3f, parent->GetPosition().z);
+
+                GameObject* arrowObj   = arrow->GetParent();
+                if (arrowObj)
+                {
+                    arrowObj->SetEnabled(true);
+                    arrowObj->SetEnabledRecursive(true);
+                    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_ATTACK);
+                    arrow->Shoot(arrowPos, direction);
+                    GLOG("ARROW SHOT WITH CLEAR LOS");
+                }
+            }
+            else
+            {
+                GLOG("ATTACK -> No LOS at shot time, switching to CHASE");
+                hasShot      = false;
+                isAttacking  = false;
+                currentState = ArcherStates::CHASE;
+                return;
             }
         }
 
@@ -954,10 +1277,8 @@ void Archer::Attack(float deltaTime)
             attackCdTimer = attackCooldown;
             agentAI->ResetSpeed();
             agentAI->SetLookForward(true);
-
             isAiming = false;
             aimTimer = 0.0f;
-
             ChangeState();
         }
     }
@@ -978,15 +1299,16 @@ void Archer::ChangeState()
     }
 
     const float distance = GetDistanceFromPlayer();
-    hasLineOfSight       = CheckLineOfSight();
+    bool hasLOS          = CheckLineOfSight();
 
+    GLOG("ChangeState - Distance: %.1f, LOS: %s, Static: %s", distance, hasLOS ? "YES" : "NO", isStatic ? "YES" : "NO");
+
+    // Static archers - simplified logic
     if (isStatic)
     {
-        if (distance <= maxDetectionRange)
+        if (distance <= rangeAIAttack && hasLOS && attackCdTimer <= 0.0f)
         {
-            if (distance <= rangeAIAttack && attackCdTimer <= 0.0f && hasLineOfSight) currentState = ArcherStates::AIM;
-            else if (distance <= rangeAIAttack && attackCdTimer > 0.0f) currentState = ArcherStates::SEARCH;
-            else currentState = ArcherStates::AIM;
+            currentState = ArcherStates::AIM;
         }
         else
         {
@@ -995,106 +1317,42 @@ void Archer::ChangeState()
         return;
     }
 
-    if (currentState == ArcherStates::SEEKING_COVER || currentState == ArcherStates::IN_COVER ||
-        currentState == ArcherStates::POSITIONING_TO_SHOOT)
-    {
-        if (distance <= rangeEscape)
-        {
-            currentState = ArcherStates::ESCAPE;
-            isInCover    = false;
-            seekingCover = false;
-            currentCover = nullptr;
-        }
-        return; 
-    }
-  
+    // Mobile archers logic
     if (distance <= rangeEscape)
     {
+        GLOG("Player very close - ESCAPING");
         currentState = ArcherStates::ESCAPE;
-        isInCover    = false;
         seekingCover = false;
+        isInCover    = false;
         currentCover = nullptr;
     }
-  
-    else if (ShouldSeekCover())
+    else if (distance <= rangeAIAttack)
     {
-        currentCover = FindNearestCover();
-        if (currentCover)
+        if (hasLOS)
         {
-            seekingCover    = true;
-            isInCover       = false;
-            coverPosition   = currentCover->GetPosition();
-            currentState    = ArcherStates::SEEKING_COVER;
-            repositionTimer = 0.0f;
-            GLOG("Archer seeking cover at wall: %s", currentCover->GetName().c_str());
+            GLOG("In attack range with LOS - AIMING");
+            currentState = ArcherStates::AIM;
         }
         else
         {
-            if (distance <= rangeAIAttack && hasLineOfSight) currentState = ArcherStates::AIM;
-            else if (distance >= rangeAIChase) currentState = ArcherStates::CHASE;
-            else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
-            else currentState = ArcherStates::PATROL;
+            GLOG("In attack range but no LOS - CHASING");
+            currentState = ArcherStates::CHASE;
         }
     }
- 
-    else if (distance <= rangeAIAttack && hasLineOfSight)
+    else if (distance <= rangeAIChase)
     {
-        currentState = ArcherStates::AIM;
-    }
-    else if (distance >= rangeAIChase)
-    {
+        GLOG("In chase range - CHASING");
         currentState = ArcherStates::CHASE;
     }
     else if (distance > maxDetectionRange)
     {
+        GLOG("Player far away - SEARCHING");
         currentState = ArcherStates::SEARCH;
     }
     else
     {
+        GLOG("Default - PATROL");
         currentState = ArcherStates::PATROL;
-    }
-
-    if (isStatic)
-    {
-        if (distance <= maxDetectionRange)
-        {
-            if (distance <= rangeAIAttack && attackCdTimer <= 0.0f && hasLineOfSight) currentState = ArcherStates::AIM;
-            else if (distance <= rangeAIAttack && attackCdTimer > 0.0f) currentState = ArcherStates::SEARCH;
-            else currentState = ArcherStates::AIM;
-        }
-        else
-        {
-            GLOG("STATIC ARCHER - NO PLAYER IN RANGE, IDLE");
-            currentState = ArcherStates::SEARCH;
-        }
-    }
-    else
-    {
-        if (distance <= rangeEscape)
-        {
-            currentState = ArcherStates::ESCAPE;
-            chaseTimer   = 0.0f; 
-        }
-       
-        else if (distance <= rangeAIAttack && hasLineOfSight)
-        {
-            currentState = ArcherStates::AIM;
-            chaseTimer   = 0.0f; 
-        }
-        else if (distance >= rangeAIChase)
-        {
-            currentState = ArcherStates::CHASE;
-        }
-        else if (distance > maxDetectionRange)
-        {
-            currentState = ArcherStates::SEARCH;
-            chaseTimer   = 0.0f; 
-        }
-        else
-        {
-            currentState = ArcherStates::PATROL;
-            chaseTimer   = 0.0f; 
-        }
     }
 }
 

@@ -4,6 +4,7 @@
 class GameObject;
 class AIAgentComponent;
 class Projectile;
+class AudioSourceComponent;
 
 enum class ArcherStates
 {
@@ -55,7 +56,9 @@ class Archer : public Character
     GameObject* FindNearestCover();
     float CalculateCoverScore(GameObject* coverObj);
     float3 FindShootingPosition();
+    float3 FindClearShootingPosition();
     bool CanShootSafely();
+    bool HasLineOfSightFromPosition(float3 fromPos, float3 toPos);
     void SeekCover(float deltaTime);
     void StayInCover(float deltaTime);
     void PositionToShoot(float deltaTime);
@@ -110,4 +113,10 @@ class Archer : public Character
     float repositionTimer      = 0.0f;
     float repositionDelay      = 2.0f;
     float allyDetectionRange   = 6.0f;
+
+    float repositionTimeout    = 2.0f;
+    bool isRepositioning       = false;
+    float3 repositionTarget    = float3::zero;
+    AudioSourceComponent* audio = nullptr;
+
 };
