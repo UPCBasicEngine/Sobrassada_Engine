@@ -41,8 +41,12 @@
 #include "SDL.h"
 #include "Wwise_IDs.h"
 
+extern "C" void GO_RequestGameOver();
+extern bool gGameOverActive;
+
 CharacterControllerComponent* character = nullptr;
 CuChulainn* playerScript                = nullptr;
+
 
 CuChulainn::CuChulainn(GameObject* parent)
     : Character(parent, 5, 1, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, CharacterType::CuChulainn)
@@ -470,8 +474,19 @@ void CuChulainn::Update(float deltaTime)
 {
     if (state == CharacterStates::DEATH)
     {
-        deathTimer += deltaTime;
-        if (deathTimer > 4.0f) Respawn();
+        deathTimer                   += deltaTime;
+
+        const bool deathAnimDone      = (animComponent && animComponent->IsFinished());
+        constexpr float kGO_MinDelay  = 1.6f; 
+        constexpr float kGO_MaxDelay  = 3.5f; 
+
+        if (pendingGameOver && ((deathAnimDone && deathTimer >= kGO_MinDelay) || (deathTimer >= kGO_MaxDelay)))
+        {
+            pendingGameOver = false;
+            GO_RequestGameOver();
+        }
+
+        if (deathTimer > 4.0f && !gGameOverActive) Respawn();
     }
 
     if (isDead || !character) return;
@@ -522,6 +537,8 @@ void CuChulainn::Update(float deltaTime)
     }
 }
 
+
+
 void CuChulainn::OnDestroy()
 {
     animComponent->GetResourceStateMachine()->ResetClipsSpeed();
@@ -529,15 +546,23 @@ void CuChulainn::OnDestroy()
 
 void CuChulainn::OnDeath()
 {
-    // TODO: include death sound for the character
     isAttacking = false;
     deathTimer  = 0.0f;
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     character->EnableMovement(false);
-    state = CharacterStates::DEATH;
+
+    state  = CharacterStates::DEATH;
+    isDead = true;
+
     if (animComponent) animComponent->UseTrigger("Death");
+
+    // >>> No obrim Game Over encara; el demanarem quan acabi l'animació (veure Update)
+    pendingGameOver = true;
 }
+
+
+
 
 void CuChulainn::OnDamageTaken(int amount)
 {
@@ -608,7 +633,10 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
         Move();
 
     // When finished animation, go back to idle state
@@ -1211,7 +1239,8 @@ void CuChulainn::PerformAttack()
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
             character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
         }
@@ -1469,6 +1498,7 @@ void CuChulainn::SetPosition(const float3& position)
 
 void CuChulainn::Respawn()
 {
+    GLOG("[PLAYER] Respawn()");
     Character::Restart();
 
     isDead        = false;
@@ -1481,12 +1511,19 @@ void CuChulainn::Respawn()
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
+    GLOG("[PLAYER] -> state=RESPAWN hp=%d", currentHealth);
 }
-
 void CuChulainn::TakeDamage(int amount)
 {
-    if (godMode || isRiastrad || state == CharacterStates::ULTIMATE) return;
+    int prev = currentHealth;
+    GLOG("[PLAYER] TakeDamage(%d) hpBefore=%d state=%s", amount, prev, GetLogicStateName().c_str());
+    if (godMode || isRiastrad || state == CharacterStates::ULTIMATE) {
+        GLOG("[PLAYER] TakeDamage -> INVULNERABLE (ignorat)");
+        return;
+    }
     Character::TakeDamage(amount);
+    GLOG("[PLAYER] TakeDamage -> hpAfter=%d isDead=%d state=%s",
+         currentHealth, (int)isDead, GetLogicStateName().c_str());
 }
 
 bool CuChulainn::TakeMushroom()
@@ -1844,4 +1881,20 @@ const std::string CuChulainn::GetLogicStateName()
         return "MISSING!";
         break;
     }
+}
+
+bool CuChulainn::ConsumeJustDied()
+{
+    if (justDied)
+    {
+        justDied = false; // reset the flag after consuming
+        return true;      
+    }
+    return false; // nothing to consume
+}
+
+
+bool CuChulainn::IsGameOverCondition() const
+{
+    return isDead || state == CharacterStates::DEATH || currentHealth <= 0;
 }

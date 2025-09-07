@@ -79,6 +79,10 @@ class CuChulainn : public Character
     
     void ExportState(PlayerState& playerState) const;
     void ApplySavedState(const PlayerState& playerState);
+    const std::string GetLogicStateName();
+    bool ConsumeJustDied();
+    bool IsGameOverCondition() const;
+
     
   private:
     void OnDeath() override;
@@ -119,8 +123,6 @@ class CuChulainn : public Character
     void EndCurse();
 
     void SetPosition(const float3& position);
-    const std::string GetLogicStateName();
-
     
 
   private:
@@ -294,6 +296,8 @@ class CuChulainn : public Character
     float idleTimer                      = 0.0f;
     float runTimer                       = 0.0f;
     float stepTime                       = 0.367f;
+    bool justDied                         = false;
+    bool pendingGameOver                  = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;

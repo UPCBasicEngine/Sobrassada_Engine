@@ -486,6 +486,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="FullscreenToggleScript.h" />
+    <ClInclude Include="GameOverNavigatorScript.h" />
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="GameSession.h" />
     <ClInclude Include="HealVFXGround.h" />
@@ -2073,6 +2074,7 @@
     <ClCompile Include="FireballTrap.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="FullscreenToggleScript.cpp" />
+    <ClCompile Include="GameOverNavigatorScript.cpp" />
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />

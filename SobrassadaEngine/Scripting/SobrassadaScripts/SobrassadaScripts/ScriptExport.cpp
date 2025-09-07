@@ -15,6 +15,7 @@
 #include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
+#include "GameOverNavigatorScript.h"
 #include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
@@ -101,14 +102,16 @@ constexpr const char* scripts[] = {
     "Mirage",
     "BossMirage",
     "Boss",
-    "MirageBossDash"
+    "MirageBossDash",
+    "GameOverNavigatorScript"
 };
 
-constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
-    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet", "MovingUVClipErode"
-};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
+                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
+                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
+                                         "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
+                                         "AbilityIconFill",       "DamageMask",           "AttackVfxSpritesheet",
+                                         "MovingUVClipErode"};
 
 Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
@@ -162,6 +165,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
+    if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
 
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
