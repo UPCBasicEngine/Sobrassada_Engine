@@ -40,6 +40,7 @@ void ResourceMaterial::OnEditorUpdate()
         updated |= ImGui::SliderFloat("UV 1 border", &vCoord1, vCoord0 + 0.01f, 1);
         updated |= ImGui::Checkbox("Use central pivot", &useCentralPivot);
         updated |= ImGui::Checkbox("Wind gravity", &useWindGravity);
+        updated |= ImGui::Checkbox("Use constant movement", &useConstantMovement);
         updated |= ImGui::SliderFloat("X amplitude", &windXAmplitude, 0, 2);
         updated |= ImGui::SliderFloat("Y amplitude", &windYAmplitude, 0, 2);
         updated |= ImGui::SliderFloat("Z amplitude", &windZAmplitude, 0, 2);
@@ -237,6 +238,7 @@ void ResourceMaterial::OnEditorUpdate()
         {
             ImGui::SetTooltip("Texture Dimensions: %d, %d", emmisiveTexture.width, emmisiveTexture.height);
         }
+        updated |= ImGui::SliderFloat("Emissive Intensity", &material.emissiveIntensity, 0.0f, 1.0f);
         // TODO: commented all select buttons until save data to meta is implemented
         /*ImGui::SameLine();
         if (ImGui::Button("Select Emissive Texture"))
@@ -320,11 +322,13 @@ void ResourceMaterial::SaveToMeta()
                 importOptions.AddMember("isTransparent", isTransparent, allocator);
                 importOptions.AddMember("isAlphaDiscard", isAlpha, allocator);
                 importOptions.AddMember("isDoubleSided", doubleSided, allocator);
+                importOptions.AddMember("emissiveIntensity", material.emissiveIntensity, allocator);
                 importOptions.AddMember("applyWind", applyWind, allocator);
                 importOptions.AddMember("vCoord0", vCoord0, allocator);
                 importOptions.AddMember("vCoord1", vCoord1, allocator);
                 importOptions.AddMember("useCentralPivot", useCentralPivot, allocator);
                 importOptions.AddMember("useWindGravity", useWindGravity, allocator);
+                importOptions.AddMember("useConstantMovement", useConstantMovement, allocator);
                 importOptions.AddMember("windXAmplitude", windXAmplitude, allocator);
                 importOptions.AddMember("windYAmplitude", windYAmplitude, allocator);
                 importOptions.AddMember("windZAmplitude", windZAmplitude, allocator);
@@ -428,6 +432,10 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
         vCoord1 = importOptions["vCoord1"].GetFloat();
     else vCoord1 = 1.0f;
 
+    if (importOptions.HasMember("emissiveIntensity") && importOptions["emissiveIntensity"].IsFloat())
+        material.emissiveIntensity = importOptions["emissiveIntensity"].GetFloat();
+    else material.emissiveIntensity = 1.0f;
+
     if (importOptions.HasMember("useCentralPivot") && importOptions["useCentralPivot"].IsBool())
         useCentralPivot = importOptions["useCentralPivot"].GetBool();
     else useCentralPivot = false;
@@ -435,6 +443,10 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     if (importOptions.HasMember("useWindGravity") && importOptions["useWindGravity"].IsBool())
         useWindGravity = importOptions["useWindGravity"].GetBool();
     else useWindGravity = false;
+
+    if (importOptions.HasMember("useConstantMovement") && importOptions["useConstantMovement"].IsBool())
+        useConstantMovement = importOptions["useConstantMovement"].GetBool();
+    else useConstantMovement = false;
 
     if (importOptions.HasMember("windXAmplitude") && importOptions["windXAmplitude"].IsFloat())
         windXAmplitude = importOptions["windXAmplitude"].GetFloat();

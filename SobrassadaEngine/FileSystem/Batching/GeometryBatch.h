@@ -45,6 +45,7 @@ class GeometryBatch
     const float GetVCoord1() const { return vCoord1; }
     const bool UseCentralPivot() const { return useCentralPivot; }
     const bool UseWindGravity() const { return useWindGravity; }
+    const bool UseConstantMovement() const { return useConstantMovement; }
     const float GetWindXAmplitude() const { return windXAmplitude; }
     const float GetWindYAmplitude() const { return windYAmplitude; }
     const float GetWindZAmplitude() const { return windZAmplitude; }
@@ -116,6 +117,7 @@ class GeometryBatch
     float vCoord1                 = 1.0f;
     bool useCentralPivot          = false;
     bool useWindGravity           = false;
+    bool useConstantMovement      = false;
     float windXAmplitude          = 1.0f;
     float windYAmplitude          = 1.0f;
     float windZAmplitude          = 1.0f;
