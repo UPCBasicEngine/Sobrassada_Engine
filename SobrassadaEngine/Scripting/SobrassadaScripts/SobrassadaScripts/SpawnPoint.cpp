@@ -7,8 +7,10 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Wwise_IDs.h"
 #include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 
 SpawnPoint::SpawnPoint(GameObject* parent) : Script(parent)
@@ -90,6 +92,9 @@ void SpawnPoint::OnCollision(GameObject* otherObject, const float3 collisionNorm
                 leafs->SetEnabled(true);
                 animComp->OnPlay(false, false);
             }
+
+            if (AudioSourceComponent* audioComp = parent->GetComponent<AudioSourceComponent*>(); audioComp != nullptr)
+                audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_TREEOFLIFE_02);
             
             playerScript->SetSpawnPosition(parent->GetPosition());
             playerScript->SetHealth(setHealth);

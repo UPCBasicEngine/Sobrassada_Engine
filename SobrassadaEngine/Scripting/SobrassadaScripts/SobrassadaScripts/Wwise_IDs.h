@@ -15,10 +15,13 @@ namespace AK
     {
         static const AkUniqueID PLAY_FIRST_THEME = 1086074370U;
         static const AkUniqueID PLAY_FOREST = 207755397U;
+        static const AkUniqueID PLAY_SFX_ARCHER_ATTACK = 1559026790U;
+        static const AkUniqueID PLAY_SFX_ARCHER_OVERSHOOTING = 2850888511U;
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
         static const AkUniqueID PLAY_SFX_BUTTON_01 = 920741356U;
         static const AkUniqueID PLAY_SFX_BUTTON_02 = 920741359U;
         static const AkUniqueID PLAY_SFX_BUTTON_03 = 920741358U;
+        static const AkUniqueID PLAY_SFX_CATAPULT = 4294826722U;
         static const AkUniqueID PLAY_SFX_CAVE_01 = 3434634929U;
         static const AkUniqueID PLAY_SFX_CAVE_02 = 3434634930U;
         static const AkUniqueID PLAY_SFX_CAVE_03 = 3434634931U;
