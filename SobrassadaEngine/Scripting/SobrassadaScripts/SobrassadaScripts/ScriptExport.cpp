@@ -50,6 +50,7 @@
 #include "BossMirage.h"
 #include "Mirage.h"
 #include "MirageBossDash.h"
+#include "BossSpouts.h"
 
 #include <string>
 
@@ -99,7 +100,8 @@ constexpr const char* scripts[] = {
     "Mirage",
     "BossMirage",
     "Boss",
-    "MirageBossDash"
+    "MirageBossDash",
+    "BossSpouts"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -217,6 +219,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Mirage") return new Mirage(parent);
     if (scriptType == "BossMirage") return new BossMirage(parent);
     if (scriptType == "MirageBossDash") return new MirageBossDash(parent);
+    if (scriptType == "BossSpouts") return new BossSpouts(parent);
 
     return nullptr;
 }
