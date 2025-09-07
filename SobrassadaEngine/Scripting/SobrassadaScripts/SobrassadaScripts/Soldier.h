@@ -4,6 +4,7 @@
 
 class GameObject;
 class AIAgentComponent;
+class AudioSourceComponent;
 
 enum class SoldierStates
 {
@@ -48,6 +49,8 @@ class Soldier : public Character
   private:
     AIAgentComponent* agentAI        = nullptr;
     SoldierStates currentState       = SoldierStates::NONE;
+
+    AudioSourceComponent* audio      = nullptr;
 
     float3 patrolPoint               = float3::zero;
 
