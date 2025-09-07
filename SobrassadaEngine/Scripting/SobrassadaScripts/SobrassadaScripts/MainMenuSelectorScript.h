@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+class GameObject;
 class PauseMenuScript;
 class GameOverScript;
 
@@ -19,23 +20,25 @@ class MainMenuSelectorScript : public Script
     void Inspector() override {}
 
   private:
-    // Configurable via inspector
+    // Inspector-configurable
     std::string panelName = "PauseMenuPanel";
 
-    // Cached panel + items
+    // Cached panel & UI elements
     GameObject* panelRoot = nullptr;
     std::vector<GameObject*> menuItems;
     std::vector<GameObject*> arrowImages;
 
+    // Navigation state
     int selectedIndex            = 0;
     bool stickMoved              = false;
     bool builtOnce               = false;
 
+    // Controllers (used to close Pause/GameOver)
     PauseMenuScript* pauseCtrl   = nullptr;
     GameOverScript* gameOverCtrl = nullptr;
 
-    // helpers
-    void CachePanel_();
-    void BuildFromPanel_();
-    void UpdateSelection_();
+    // Helpers
+    void CachePanel();
+    void BuildFromPanel();
+    void UpdateSelection();
 };

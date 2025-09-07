@@ -18,7 +18,7 @@
 
 bool MainMenuSelectorScript::Init()
 {
-    CachePanel_();
+    CachePanel();
 
     // find Pause/GameOver controllers walking up from this script's GO
     Scene* scene     = AppEngine->GetSceneModule()->GetScene();
@@ -33,17 +33,20 @@ bool MainMenuSelectorScript::Init()
         node = scene->GetGameObjectByUID(node->GetParent());
     }
 
+    // ensure initial state
+    stickMoved = false;
+
     if (panelRoot && panelRoot->IsEnabled())
     {
-        BuildFromPanel_();
-        UpdateSelection_();
+        BuildFromPanel();
+        UpdateSelection();
         builtOnce = true;
     }
 
     return true;
 }
 
-void MainMenuSelectorScript::CachePanel_()
+void MainMenuSelectorScript::CachePanel()
 {
     if (panelRoot) return;
 
@@ -58,7 +61,7 @@ void MainMenuSelectorScript::CachePanel_()
             break;
         }
 
-    // 2) Fallback: autodetect first GO that has children named "MenuItem_*"
+    // 2) Fallback: first GO that has children named "MenuItem_*"
     if (!panelRoot)
     {
         for (const auto& [uid, go] : objects)
@@ -82,20 +85,22 @@ void MainMenuSelectorScript::CachePanel_()
         }
     }
 
-    GLOG("[SEL] CachePanel -> %s (name=%s)", panelRoot ? "FOUND" : "NOT FOUND", panelName.c_str());
+    // GLOG: cache result
+    // GLOG("[SEL] CachePanel -> %s (name=%s)", panelRoot ? "FOUND" : "NOT FOUND", panelName.c_str());
 }
 
-void MainMenuSelectorScript::BuildFromPanel_()
+void MainMenuSelectorScript::BuildFromPanel()
 {
     if (!panelRoot) return;
 
     menuItems.clear();
     arrowImages.clear();
 
-    const auto& children = panelRoot->GetChildren();
-    for (UID cid : children)
+    Scene* scene = AppEngine->GetSceneModule()->GetScene();
+
+    for (UID cid : panelRoot->GetChildren())
     {
-        GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(cid);
+        GameObject* child = scene->GetGameObjectByUID(cid);
         if (!child) continue;
 
         if (child->GetName().find("MenuItem_") != std::string::npos)
@@ -104,86 +109,102 @@ void MainMenuSelectorScript::BuildFromPanel_()
 
             for (UID gcid : child->GetChildren())
             {
-                GameObject* arrow = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(gcid);
+                GameObject* arrow = scene->GetGameObjectByUID(gcid);
                 if (arrow && arrow->GetName().find("Arrow") != std::string::npos) arrowImages.push_back(arrow);
             }
         }
     }
 
-    // turn all arrows off; UpdateSelection_() will light the selected one
+    // turn all arrows off; UpdateSelection() will light the selected one
     for (auto* a : arrowImages)
         if (a) a->SetEnabled(false);
 
-    GLOG("[SEL] BuildFromPanel: items=%zu arrows=%zu", menuItems.size(), arrowImages.size());
+    // GLOG: discovered items/arrows
+    // GLOG("[SEL] BuildFromPanel: items=%zu arrows=%zu", menuItems.size(), arrowImages.size());
 }
 
-void MainMenuSelectorScript::UpdateSelection_()
+void MainMenuSelectorScript::UpdateSelection()
 {
     if (menuItems.empty()) return;
+
     selectedIndex = std::clamp(selectedIndex, 0, (int)menuItems.size() - 1);
 
+    Scene* scene  = AppEngine->GetSceneModule()->GetScene();
     for (size_t i = 0; i < menuItems.size(); ++i)
     {
         for (UID uid : menuItems[i]->GetChildren())
         {
-            GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(uid);
+            GameObject* child = scene->GetGameObjectByUID(uid);
             if (child && child->GetName().find("Arrow") != std::string::npos)
                 child->SetEnabled(i == (size_t)selectedIndex);
         }
     }
+    // GLOG: selection updated
+    // GLOG("[SEL] UpdateSelection -> sel=%d", selectedIndex);
 }
 
 void MainMenuSelectorScript::Update(float)
 {
-    if (!panelRoot) CachePanel_();
+    if (!panelRoot) CachePanel();
     if (!panelRoot) return;
 
     const bool panelEnabled = panelRoot->IsEnabled();
 
-    // build on first open / first tick
-    if (panelEnabled && !builtOnce)
+    // if panel just turned off, mark for rebuild and bail
+    if (!panelEnabled)
     {
-        BuildFromPanel_();
+        builtOnce = false;
+        return;
+    }
+
+    // build on first open / first tick
+    if (!builtOnce)
+    {
+        BuildFromPanel();
         selectedIndex = 0;
-        UpdateSelection_();
+        UpdateSelection();
         builtOnce = true;
     }
 
-    if (!panelEnabled || menuItems.empty()) return;
+    if (menuItems.empty()) return;
 
     // self-correct: ensure exactly one arrow ON
     int arrowsOn = 0;
     for (auto* a : arrowImages)
         if (a && a->IsEnabled()) ++arrowsOn;
-    if (arrowsOn != 1) UpdateSelection_();
+    if (arrowsOn != 1) UpdateSelection();
 
-    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
-    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
-    const float2& leftStick        = AppEngine->GetInputModule()->GetLeftStick();
+    const InputModule* input   = AppEngine->GetInputModule();
+    const KeyState* keys       = input->GetKeyboard();
+    const KeyState* padButtons = input->GetControllerButtons();
+    const float2& leftStick    = input->GetLeftStick();
 
-    bool moveDown                  = keys[SDL_SCANCODE_DOWN] == KEY_DOWN ||
-                    gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_DOWN || (leftStick.y > 0.5f && !stickMoved);
+    const bool moveDown        = keys[SDL_SCANCODE_DOWN] == KEY_DOWN ||
+                          padButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_DOWN ||
+                          (leftStick.y > 0.5f && !stickMoved);
 
-    bool moveUp = keys[SDL_SCANCODE_UP] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_DOWN ||
-                  (leftStick.y < -0.5f && !stickMoved);
+    const bool moveUp = keys[SDL_SCANCODE_UP] == KEY_DOWN || padButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_DOWN ||
+                        (leftStick.y < -0.5f && !stickMoved);
 
     if (moveDown)
     {
         selectedIndex = (selectedIndex + 1) % (int)menuItems.size();
-        UpdateSelection_();
+        UpdateSelection();
         stickMoved = true;
     }
     else if (moveUp)
     {
         selectedIndex = (selectedIndex - 1 + (int)menuItems.size()) % (int)menuItems.size();
-        UpdateSelection_();
+        UpdateSelection();
         stickMoved = true;
     }
 
     if (std::fabs(leftStick.y) < 0.3f) stickMoved = false;
 
-    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
-        gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
+    const bool accept = keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
+                        padButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN;
+
+    if (accept)
     {
         GameObject* selectedItem = menuItems[selectedIndex];
 
@@ -204,11 +225,7 @@ void MainMenuSelectorScript::Update(float)
         }
         else
         {
-            ButtonComponent* button = selectedItem->GetComponent<ButtonComponent*>();
-            if (button) button->OnClick();
+            if (auto* button = selectedItem->GetComponent<ButtonComponent*>()) button->OnClick();
         }
     }
-
-    // if the panel gets disabled (scene change or close), allow rebuild next time
-    if (!panelEnabled) builtOnce = false;
 }
