@@ -110,6 +110,10 @@ class Boss : public Character
 
     void WaterSpouts();
 
+    void SetState(BossStates newState);
+    BossStates ChooseAlternativeState() const;
+
+    const std::vector<BossStates>& GetAvailableStates() const;
     const char* GetStateName() const;
     const char* GetActionName() const;
 
@@ -193,6 +197,12 @@ class Boss : public Character
     MeshComponent* blastPreHitMesh                   = nullptr;
     ShaderScriptComponent* blastHitScript            = nullptr;
     MovingUVTransparent* blastHitUV                  = nullptr;
+    ShaderScriptComponent* blastBlackLightsScript    = nullptr;
+    MovingUVTransparent* blastBlackLightsUV          = nullptr;
+    ShaderScriptComponent* blastSphereEnergyScript   = nullptr;
+    MovingUVTransparent* blastSphereEnergyUV         = nullptr;
+    ShaderScriptComponent* blastBlackExpansionScript = nullptr;
+    MovingUVTransparent* blastBlackExpansionUV       = nullptr;
 
     // Particle
     std::string atomParticleName                     = "";
@@ -214,12 +224,20 @@ class Boss : public Character
     UID healthBarImage;
 
     // Mirage
-    int mirage1 = 50, mirage2 = 30, mirage3 = 10;
-    std::array<int, 3> mirageActivation = {mirage1, mirage2, mirage3};
-    BossMirage* bossMirageScript        = nullptr;
-    bool mirageActivated                = false;
+    const int mirage1 = 50, mirage2 = 30, mirage3 = 10;
+    const std::array<int, 3> mirageActivation  = {mirage1, mirage2, mirage3};
+    BossMirage* bossMirageScript               = nullptr;
+    bool mirageActivated                       = false;
 
+    int repeatedState                          = 0;
+    const int maxRepeats                       = 2;
     // WaterSpout
-    Spouts* waterSpout                  = nullptr;
-    std::string spoutName               = "";
+    Spouts* waterSpout = nullptr;
+    std::string spoutName = "";
+
+    const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};
+    const std::vector<BossStates> phase2States = {BossStates::ShieldStrikes, BossStates::ShieldBlast};
+    const std::vector<BossStates> phase3States = {
+        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike
+    };
 };
