@@ -467,6 +467,7 @@
   <ItemGroup>
     <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
+    <ClInclude Include="AttackVfxSpritesheet.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
     <ClInclude Include="BossMirage.h" />
@@ -499,6 +500,7 @@
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
     <ClInclude Include="MovingUVTransparent.h" />
+    <ClInclude Include="MovingUVClipErode.h" />
     <ClInclude Include="Mushroom.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
@@ -2053,6 +2055,7 @@
     </ClCompile>
     <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
+    <ClCompile Include="AttackVfxSpritesheet.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />
     <ClCompile Include="BossMirage.cpp" />
@@ -2085,6 +2088,7 @@
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
     <ClCompile Include="MovingUVTransparent.cpp" />
+    <ClCompile Include="MovingUVClipErode.cpp" />
     <ClCompile Include="Mushroom.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />

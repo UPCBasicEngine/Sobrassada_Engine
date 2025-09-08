@@ -2,6 +2,7 @@
 
 #include "AbilityIconFill.h"
 #include "Application.h"
+#include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
 #include "CameraComponent.h"
 #include "CameraMovement.h"
@@ -59,6 +60,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash cooldown", InspectorField::FieldType::Float, &dashCooldown, 0.0f, 5.0f});
     fields.push_back({"Dash Icon Name", InspectorField::FieldType::InputText, &dashIconName});
     fields.push_back({"Health Bar Name", InspectorField::FieldType::InputText, &healthBarName});
+    fields.push_back({"Melee VFX delay", InspectorField::FieldType::Float, &meleeVfxDelay, 0.0f, 1.0f});
 
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
@@ -125,6 +127,12 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
+    fields.push_back({"Melee VFX Horizontal 1", InspectorField::FieldType::InputText, &attackVfxHorizontal1Name});
+    fields.push_back({"Melee VFX Vertical 1", InspectorField::FieldType::InputText, &attackVfxVertical1Name});
+    fields.push_back({"Melee VFX Horizontal 2", InspectorField::FieldType::InputText, &attackVfxHorizontal2Name});
+    fields.push_back({"Melee VFX Vertical 2", InspectorField::FieldType::InputText, &attackVfxVertical2Name});
+    fields.push_back({"Melee VFX Horizontal 3", InspectorField::FieldType::InputText, &attackVfxHorizontal3Name});
+    fields.push_back({"Attack VFX Vertical 3", InspectorField::FieldType::InputText, &attackVfxVertical3Name});
     fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
     fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
 
@@ -171,6 +179,10 @@ bool CuChulainn::Init()
         if (!spear) GLOG("[WARNING] No projectile found by the name %s", spearName.c_str());
     }
 
+    spearCharacter        = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spearNameMesh);
+    if (!spearCharacter) GLOG("[WARNING] No spear (non projectile) found for CuChualin")
+    else spearCharacter->SetEnabled(true);
+
     chargedAttackCollider = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargedAttackName);
     if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
@@ -195,6 +207,29 @@ bool CuChulainn::Init()
     if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
     else meleeVfxObject->SetEnabled(false);
 
+    attackVfxHorizontal1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal1Name);
+    if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
+    else attackVfxHorizontal1->SetEnabled(false);
+
+    attackVfxVertical1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical1Name);
+    if (!attackVfxVertical1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
+    else attackVfxVertical1->SetEnabled(false);
+
+    attackVfxHorizontal2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal2Name);
+    if (!attackVfxHorizontal2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
+    else attackVfxHorizontal2->SetEnabled(false);
+
+    attackVfxVertical2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical2Name);
+    if (!attackVfxVertical2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
+    else attackVfxVertical2->SetEnabled(false);
+
+    attackVfxHorizontal3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal3Name);
+    if (!attackVfxHorizontal3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
+    else attackVfxHorizontal3->SetEnabled(false);
+
+    attackVfxVertical3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical3Name);
+    if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
+    else attackVfxVertical3->SetEnabled(false);
     arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
@@ -352,17 +387,11 @@ bool CuChulainn::Init()
     if (!ultimateBrust) GLOG("[WARNING] No ultimate Brust VFX found for CuChulain")
     else ultimateBrust->SetEnabled(false);
 
-    ultimateCrack1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        ultimateName, ultimateCrack1Name
+    ultimateCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateCrackName
     );
-    if (!ultimateCrack1) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
-    else ultimateCrack1->SetEnabled(false);
-
-    ultimateCrack2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        ultimateName, ultimateCrack2Name
-    );
-    if (!ultimateCrack2) GLOG("[WARNING] No ultimate Crack2 VFX found for CuChulain")
-    else ultimateCrack2->SetEnabled(false);
+    if (!ultimateCrack) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
+    else ultimateCrack->SetEnabled(false);
 
     ultimateHalo =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateHaloName);
@@ -589,6 +618,12 @@ void CuChulainn::HandleState(float deltaTime)
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
             if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+            if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
+            if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
+            if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
+            if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
+            if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
+            if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -927,6 +962,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         {
             weapon->SetEnabled(true);
             resetWeapon = false;
+            spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(true);
         }
         throwTimer = 0.0f;
     }
@@ -1081,10 +1117,12 @@ void CuChulainn::ThrowSpear()
     {
         weapon->SetEnabled(false);
         resetWeapon = true;
+        spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(false);
     }
     if (aimShadowObject) aimShadowObject->SetEnabled(false);
 
-    spear->Shoot(parent->GetPosition(), character->GetFrontDirection());
+
+    spear->Shoot(parent->GetGlobalTransform().TranslatePart(), character->GetFrontDirection());
 }
 
 void CuChulainn::Dash()
@@ -1131,9 +1169,43 @@ void CuChulainn::PerformAttack()
 {
     if (isAttacking && state == CharacterStates::BASIC_ATTACK)
     {
+        float currentVfxDelay    = isRiastrad ? meleeVfxDelay / riastradAnimationsSpeedRatio : meleeVfxDelay;
         float currentHitboxDelay = isRiastrad ? attackHitboxDelay / riastradAnimationsSpeedRatio : attackHitboxDelay;
         float currentHitboxDuration =
             isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
+
+        if (attackTimer > currentVfxDelay)
+        {
+            GameObject* vfxHorizontal = nullptr;
+            GameObject* vfxVertical   = nullptr;
+            switch (comboCounter)
+            {
+            case 0:
+                vfxHorizontal = attackVfxHorizontal1;
+                vfxVertical   = attackVfxVertical1;
+                break;
+            case 1:
+                vfxHorizontal = attackVfxHorizontal2;
+                vfxVertical   = attackVfxVertical2;
+                break;
+            case 2:
+                vfxVertical = attackVfxVertical3;
+                break;
+            }
+
+            if (vfxHorizontal && !vfxHorizontal->IsEnabled())
+            {
+                vfxHorizontal->SetEnabled(true);
+                vfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
+                vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            }
+            if (vfxVertical && !vfxVertical->IsEnabled())
+            {
+                vfxVertical->SetEnabled(true);
+                vfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
+                vfxVertical->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            }
+        }
 
         if (attackTimer < currentHitboxDelay)
         {
@@ -1181,8 +1253,7 @@ void CuChulainn::PerformAttack()
                     const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
 
                     ultimateSpikes->SetEnabled(norm >= 0.15f);
-                    if (ultimateCrack1) ultimateCrack1->SetEnabled(norm >= 0.15f);
-                    if (ultimateCrack2) ultimateCrack2->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack) ultimateCrack->SetEnabled(norm >= 0.15f);
                 }
             }
             if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
@@ -1270,7 +1341,7 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateBlur)
     {
         ultimateBlur->SetEnabled(true);
-        ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+        //ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
         if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
             ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
@@ -1278,13 +1349,9 @@ void CuChulainn::UpdateUltimateVfx()
     {
         ultimateBrust->SetEnabled(true);
     }
-    if (ultimateCrack1)
+    if (ultimateCrack)
     {
-        ultimateCrack1->SetEnabled(true);
-    }
-    if (ultimateCrack2)
-    {
-        ultimateCrack2->SetEnabled(true);
+        ultimateCrack->SetEnabled(true);
     }
     if (ultimateHalo)
     {

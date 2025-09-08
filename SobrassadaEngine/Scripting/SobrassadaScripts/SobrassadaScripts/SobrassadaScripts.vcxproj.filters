@@ -169,6 +169,9 @@
     <ClInclude Include="MiniFireball.h">
       <Filter>Environment\Traps</Filter>
     </ClInclude>
+    <ClInclude Include="MovingUVClipErode.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
     <ClInclude Include="BossMirage.h">
       <Filter>Characters\Boss</Filter>
     </ClInclude>
@@ -198,6 +201,9 @@
     </ClInclude>
     <ClInclude Include="imgui_curve_editor.h">
       <Filter>External</Filter>
+    </ClInclude>
+    <ClInclude Include="AttackVfxSpritesheet.h">
+      <Filter>ShaderScripts</Filter>
     </ClInclude>
     <ClInclude Include="SavePlayerData.h">
       <Filter>Utils</Filter>
@@ -909,6 +915,9 @@
     <ClCompile Include="MiniFireball.cpp">
       <Filter>Environment\Traps</Filter>
     </ClCompile>
+    <ClCompile Include="MovingUVClipErode.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
     <ClCompile Include="BossMirage.cpp">
       <Filter>Characters\Boss</Filter>
     </ClCompile>
@@ -938,6 +947,9 @@
     </ClCompile>
     <ClCompile Include="imgui_curve_editor.cpp">
       <Filter>External</Filter>
+    </ClCompile>
+    <ClCompile Include="AttackVfxSpritesheet.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
     <ClCompile Include="SavePlayerData.cpp">
       <Filter>Utils</Filter>

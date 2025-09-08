@@ -13,6 +13,9 @@
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
+
+#include "Wwise_IDs.h"
 #include <random>
 
 Soldier::Soldier(GameObject* parent)
@@ -55,6 +58,9 @@ bool Soldier::Init()
         GLOG("Melee trail found for melee attack in Soldier")
         meleeTrailObject->SetEnabled(false);
     }
+
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] Soldier: No audio component found");
 
     return true;
 }
@@ -147,6 +153,7 @@ void Soldier::OnDamageTaken(int amount)
     // std::string animState               = animStateFromPlayer.GetString();
     // GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
 }
 
 void Soldier::PerformAttack()
@@ -213,6 +220,7 @@ void Soldier::HandleState(float deltaTime)
 void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    GLOG("Player location: %s", playerLocation.GetString().c_str());
     bool playerInLocation            = parent->HasTag(playerLocation);
 
     if (!playerScript->IsDead())
@@ -326,6 +334,8 @@ void Soldier::Attack(float deltaTime)
             if ((inFirstWindow || inSecondWindow) && !weaponCollider->GetEnabled())
             {
                 weaponCollider->SetEnabled(true);
+                if (inFirstWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_1);
+                if (inSecondWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_2);
             }
             else if (!inFirstWindow && !inSecondWindow && weaponCollider->GetEnabled())
             {
@@ -338,6 +348,7 @@ void Soldier::Attack(float deltaTime)
                 attackTimer <= attackHitboxDelay + attackHitboxDuration)
             {
                 weaponCollider->SetEnabled(true);
+                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_THRUST);
 
                 thrustAdvance = true;
             }
@@ -374,7 +385,7 @@ void Soldier::ChangeState()
 {
     if (playerScript->IsDead())
     {
-        currentState = SoldierStates::DEATH;
+        currentState = SoldierStates::PATROL;
         return;
     }
 

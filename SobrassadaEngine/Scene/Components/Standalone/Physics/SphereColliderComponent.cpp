@@ -71,7 +71,7 @@ SphereColliderComponent::SphereColliderComponent(const rapidjson::Value& initial
         std::bind(&SphereColliderComponent::OnCollisionExit, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    userPointer          = BulletUserPointer(
+    userPointer = BulletUserPointer(
         this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
     );
     // App->GetPhysicsModule()->CreateSphereRigidBody(this);
@@ -207,11 +207,15 @@ void SphereColliderComponent::Update(float deltaTime)
 {
     if (!IsEffectivelyEnabled())
     {
-        if (rigidBody) App->GetPhysicsModule()->DeleteSphereRigidBody(this);
+        if (rigidBody) DeleteRigidBody();
         return;
     }
     else
     {
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
+
         if (rigidBody == nullptr) App->GetPhysicsModule()->CreateSphereRigidBody(this);
     }
 }
@@ -256,6 +260,10 @@ void SOBRASADA_API_ENGINE SphereColliderComponent::OnCollisionExit(GameObject* o
 
 void SphereColliderComponent::DeleteRigidBody()
 {
+    userPointer = BulletUserPointer(
+        nullptr, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+    );
+
     App->GetPhysicsModule()->DeleteSphereRigidBody(this);
 }
 
@@ -263,8 +271,16 @@ void SphereColliderComponent::SetEnabled(bool newEnabled)
 {
     Component::SetEnabled(newEnabled);
 
-    if (enabled && !rigidBody) App->GetPhysicsModule()->CreateSphereRigidBody(this);
-    else if (!enabled && rigidBody) App->GetPhysicsModule()->DeleteSphereRigidBody(this);
+    if (enabled && !rigidBody)
+    {
+        userPointer = BulletUserPointer(
+            this, &onCollissionCallback, &onCollissionEnterCallback, &onCollissionExitCallback, generateCallback, layer
+        );
+
+        App->GetPhysicsModule()->CreateSphereRigidBody(this);
+    }
+
+    else if (!enabled && rigidBody) DeleteRigidBody();
 }
 
 void SphereColliderComponent::CalculateCollider()

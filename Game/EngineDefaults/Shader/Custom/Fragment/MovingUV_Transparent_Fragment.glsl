@@ -55,7 +55,8 @@ layout(std140, binding = 6) uniform Material
     int hasMetallic;
     uvec2 emmisiveTex;
     uvec2 occlusionTex;
-    uvec2 padding;
+    float emissiveIntensity;
+    float padding;
 };
 
 layout(std140, binding = 2) uniform Ambient
@@ -248,7 +249,7 @@ void main()
 
     const vec4 emissive = vec4(pow(texture(sampler2D(emmisiveTex), uv), vec4(2.2f)));
 
-    hdr += emissive.rgb;
+    hdr += emissive.rgb * vec3(emissiveIntensity);
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));
