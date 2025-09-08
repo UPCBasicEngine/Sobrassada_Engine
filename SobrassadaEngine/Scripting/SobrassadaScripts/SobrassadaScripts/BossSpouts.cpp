@@ -13,6 +13,13 @@ BossSpouts::BossSpouts(GameObject* parent) : Script(parent)
 
 bool BossSpouts::Init()
 {
+    Scene* scene = AppEngine->GetSceneModule()->GetScene();
+    if (!parent->GetChildren().empty())
+    {
+        UID childId = parent->GetChildren()[0];
+        spout       = scene->GetGameObjectByUID(childId);
+    }
+
     angle = 0.0f;
     return true;
 }
@@ -25,5 +32,5 @@ void BossSpouts::Update(float deltaTime)
     float z  = center.z + sinf(angle) * radius;
     float y  = center.y + verticalOffset;
 
-    parent->SetLocalPosition(float3(x, y, z));
+    spout->SetLocalPosition(float3(x, y, z));
 }

@@ -23,6 +23,7 @@ class Spouts : public Script
     bool Init() override;
     void Update(float deltaTime) override;
     int GetDamage() { return damage; }
+    void ForceActivate();
 
   private:
     bool enableRune                         = false;
