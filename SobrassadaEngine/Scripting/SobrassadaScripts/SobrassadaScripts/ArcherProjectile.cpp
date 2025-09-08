@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ArcherProjectile.h"
 #include "CameraComponent.h"
 #include "Character.h"
@@ -7,7 +8,6 @@
 #include "ScriptComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "WallCollision.h"
-#include "pch.h"
 
 static bool IsInsideCameraView(const float3& worldPosition, float screenEdgeMargin = 0.05f)
 {
