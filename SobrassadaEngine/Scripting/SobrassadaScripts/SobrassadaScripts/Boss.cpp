@@ -573,28 +573,33 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 85;
-        shieldBlastRate   = 100;
+        shieldStrikesRate = 50;
+        waterSpoutsRate   = 100;
+        shieldBlastRate   = 80;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate = 55;
-        shieldBlastRate   = 100;
+        shieldStrikesRate = 40;
+        shieldBlastRate   = 80;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
         shieldStrikesRate = 40;
-        shieldBlastRate   = 100;
+        shieldBlastRate   = 80;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Far:
         shieldStrikesRate = 20;
-        shieldBlastRate   = 100;
+        shieldBlastRate   = 80;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Farther:
         shieldStrikesRate = 10;
-        shieldBlastRate   = 100;
+        shieldBlastRate   = 80;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Extreme:
