@@ -122,20 +122,43 @@ void CharacterControllerComponent::Clone(const Component* other)
 
 void CharacterControllerComponent::Init()
 {
-    lastPosition = parent->GetGlobalTransform().TranslatePart();
+   
+    float3 startPos  = parent->GetGlobalTransform().TranslatePart();
+    lastPosition     = startPos;
+    previousPosition = startPos;
 }
 
 void CharacterControllerComponent::Update(float time) // SO many navmesh getters!!!! Memo to rethink this
 {
     if (!IsEffectivelyEnabled() || !inputDown) return;
-
     if (!App->GetSceneModule()->GetInPlayMode()) return;
 
     float deltaTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
-
     if (deltaTime == 0.0f) return;
 
-    float3 currentPos    = parent->GetGlobalTransform().TranslatePart();
+   
+    float3 currentPos = parent->GetGlobalTransform().TranslatePart();
+
+    
+    if (deltaTime > 0.0f && deltaTime < 0.1f) 
+    {
+        float3 frameVelocity                 = (currentPos - previousPosition) / deltaTime;
+
+
+        velocitySamples[velocitySampleIndex] = frameVelocity;
+        velocitySampleIndex                  = (velocitySampleIndex + 1) % VELOCITY_SAMPLES;
+
+       
+        float3 velocitySum                   = float3::zero;
+        for (int i = 0; i < VELOCITY_SAMPLES; i++)
+        {
+            velocitySum += velocitySamples[i];
+        }
+        currentVelocity = velocitySum / VELOCITY_SAMPLES;
+    }
+
+    previousPosition     = currentPos;
+   
     lastPosition         = currentPos;
 
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
@@ -167,15 +190,14 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
         if (dtStatusFailed(status) || targetRef == 0)
         {
-            // GLOG("Failed to find valid target poly for movement.");
             return;
         }
     }
 
-    if (deltaTime < 0.1f && !isDashing) // TODO: deltaTime spikes, need to know why
+    if (deltaTime < 0.1f && !isDashing) // Your existing deltaTime check
     {
         verticalSpeed += gravity * deltaTime;
-        verticalSpeed  = std::max(verticalSpeed, maxFallSpeed); // Clamp fall speed
+        verticalSpeed  = std::max(verticalSpeed, maxFallSpeed);
 
         currentPos.y  += std::max(-0.5f, verticalSpeed * deltaTime);
 
