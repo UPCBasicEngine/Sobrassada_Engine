@@ -21,6 +21,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_BUTTON_01 = 920741356U;
         static const AkUniqueID PLAY_SFX_BUTTON_02 = 920741359U;
         static const AkUniqueID PLAY_SFX_BUTTON_03 = 920741358U;
+        static const AkUniqueID PLAY_SFX_CATAPULT = 4294826722U;
         static const AkUniqueID PLAY_SFX_CAVE_01 = 3434634929U;
         static const AkUniqueID PLAY_SFX_CAVE_02 = 3434634930U;
         static const AkUniqueID PLAY_SFX_CAVE_03 = 3434634931U;
@@ -39,6 +40,9 @@ namespace AK
         static const AkUniqueID PLAY_SFX_POOKA_DEATH = 4271776059U;
         static const AkUniqueID PLAY_SFX_POOKA_HURT = 1906970548U;
         static const AkUniqueID PLAY_SFX_SOLDIER_ATTACK = 3285336459U;
+        static const AkUniqueID PLAY_SFX_SOLDIER_SLASH_1 = 3272153282U;
+        static const AkUniqueID PLAY_SFX_SOLDIER_SLASH_2 = 3272153281U;
+        static const AkUniqueID PLAY_SFX_SOLDIER_THRUST = 1691226597U;
         static const AkUniqueID PLAY_SFX_STEPS_GRASS = 879946080U;
         static const AkUniqueID PLAY_SFX_STEPS_ROCK = 2099665009U;
         static const AkUniqueID PLAY_SFX_STEPS_WOOD = 2418067177U;
