@@ -204,6 +204,7 @@
     </ClInclude>
     <ClInclude Include="WallCollision.h">
       <Filter>Environment</Filter>
+    </ClInclude>
     <ClInclude Include="AttackVfxSpritesheet.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
@@ -212,6 +213,9 @@
     </ClInclude>
     <ClInclude Include="GameSession.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ArcherProjectile.h">
+      <Filter>Characters</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -949,6 +953,7 @@
     </ClCompile>
     <ClCompile Include="WallCollision.cpp">
       <Filter>Environment</Filter>
+    </ClCompile>
     <ClCompile Include="AttackVfxSpritesheet.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
@@ -957,6 +962,9 @@
     </ClCompile>
     <ClCompile Include="GameSession.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ArcherProjectile.cpp">
+      <Filter>Characters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
