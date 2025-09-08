@@ -15,6 +15,8 @@ namespace AK
     {
         static const AkUniqueID PLAY_FIRST_THEME = 1086074370U;
         static const AkUniqueID PLAY_FOREST = 207755397U;
+        static const AkUniqueID PLAY_LEVEL1_AMBIENT_THEME = 1262494734U;
+        static const AkUniqueID PLAY_LEVEL1_FIGHT_THEME = 2666170724U;
         static const AkUniqueID PLAY_SFX_ARCHER_ATTACK = 1559026790U;
         static const AkUniqueID PLAY_SFX_ARCHER_OVERSHOOTING = 2850888511U;
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
@@ -32,6 +34,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_MC_HIT = 2490745552U;
         static const AkUniqueID PLAY_SFX_MC_HURT = 2204804306U;
         static const AkUniqueID PLAY_SFX_MC_NORMALATTACK_01 = 2177541458U;
+        static const AkUniqueID PLAY_SFX_MC_TRANSFORM = 3477603499U;
         static const AkUniqueID PLAY_SFX_MC_ULTIMATEATTACK = 1030865972U;
         static const AkUniqueID PLAY_SFX_POOKA_ATTACK = 2845739403U;
         static const AkUniqueID PLAY_SFX_POOKA_BURYDOWN = 3129736499U;
@@ -55,6 +58,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_WIND_01 = 4018713014U;
         static const AkUniqueID PLAY_SFX_WIND_02 = 4018713013U;
         static const AkUniqueID PLAY_TORCH = 2025845440U;
+        static const AkUniqueID PLAY_TUTORIAL_THEME = 1202310014U;
     } // namespace EVENTS
 
     namespace GAME_PARAMETERS
