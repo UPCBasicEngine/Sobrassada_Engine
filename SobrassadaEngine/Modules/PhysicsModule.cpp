@@ -79,6 +79,8 @@ update_status PhysicsModule::PreUpdate(float time)
             BulletUserPointer* secondUserPointer =
                 static_cast<BulletUserPointer*>(contactManifold->getBody1()->getUserPointer());
 
+            if (!firstUserPointer || !secondUserPointer) continue;
+
             // Calculating normal
             const float3 normal = float3(contactManifold->getContactPoint(0).m_normalWorldOnB);
 
@@ -226,6 +228,7 @@ void PhysicsModule::DeleteCubeRigidBody(CubeColliderComponent* colliderComponent
 
     collisionObjects.erase(colliderComponent->GetParentUID());
     bodiesToRemove.push_back(colliderComponent->rigidBody);
+    colliderComponent->rigidBody->setUserPointer(nullptr);
     colliderComponent->rigidBody = nullptr;
 }
 
@@ -245,8 +248,7 @@ void PhysicsModule::CreateSphereRigidBody(SphereColliderComponent* colliderCompo
     if (isDynamic) collisionShape->calculateLocalInertia(colliderComponent->mass, localInertia);
 
     // MotionState for RENDER AND
-    colliderComponent->motionState =
-        BulletMotionState(colliderComponent, scaledOff, colliderComponent->centerRotation);
+    colliderComponent->motionState = BulletMotionState(colliderComponent, scaledOff, colliderComponent->centerRotation);
 
     // Creating final RigidBody
     btRigidBody::btRigidBodyConstructionInfo rbInfo(
@@ -274,6 +276,7 @@ void PhysicsModule::DeleteSphereRigidBody(SphereColliderComponent* colliderCompo
 
     collisionObjects.erase(colliderComponent->GetParentUID());
     bodiesToRemove.push_back(colliderComponent->rigidBody);
+    colliderComponent->rigidBody->setUserPointer(nullptr);
     colliderComponent->rigidBody = nullptr;
 }
 
@@ -318,6 +321,7 @@ void PhysicsModule::DeleteCapsuleRigidBody(CapsuleColliderComponent* colliderCom
 
     collisionObjects.erase(colliderComponent->GetParentUID());
     bodiesToRemove.push_back(colliderComponent->rigidBody);
+    colliderComponent->rigidBody->setUserPointer(nullptr);
     colliderComponent->rigidBody = nullptr;
 }
 

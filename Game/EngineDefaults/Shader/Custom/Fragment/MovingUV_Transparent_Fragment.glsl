@@ -249,7 +249,7 @@ void main()
 
     const vec4 emissive = vec4(pow(texture(sampler2D(emmisiveTex), uv), vec4(2.2f)));
 
-    hdr += emissive.rgb * vec3(mat.emissiveIntensity);
+    hdr += emissive.rgb * vec3(emissiveIntensity);
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));

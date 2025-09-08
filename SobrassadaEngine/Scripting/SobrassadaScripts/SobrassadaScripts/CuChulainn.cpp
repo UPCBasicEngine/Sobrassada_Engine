@@ -391,17 +391,11 @@ bool CuChulainn::Init()
     if (!ultimateBrust) GLOG("[WARNING] No ultimate Brust VFX found for CuChulain")
     else ultimateBrust->SetEnabled(false);
 
-    ultimateCrack1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        ultimateName, ultimateCrack1Name
+    ultimateCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateCrackName
     );
-    if (!ultimateCrack1) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
-    else ultimateCrack1->SetEnabled(false);
-
-    ultimateCrack2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        ultimateName, ultimateCrack2Name
-    );
-    if (!ultimateCrack2) GLOG("[WARNING] No ultimate Crack2 VFX found for CuChulain")
-    else ultimateCrack2->SetEnabled(false);
+    if (!ultimateCrack) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
+    else ultimateCrack->SetEnabled(false);
 
     ultimateHalo =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateHaloName);
@@ -1286,8 +1280,7 @@ void CuChulainn::PerformAttack()
                     const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
 
                     ultimateSpikes->SetEnabled(norm >= 0.15f);
-                    if (ultimateCrack1) ultimateCrack1->SetEnabled(norm >= 0.15f);
-                    if (ultimateCrack2) ultimateCrack2->SetEnabled(norm >= 0.15f);
+                    if (ultimateCrack) ultimateCrack->SetEnabled(norm >= 0.15f);
                 }
             }
             if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
@@ -1375,7 +1368,7 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateBlur)
     {
         ultimateBlur->SetEnabled(true);
-        ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+        //ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
         if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
             ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
@@ -1383,13 +1376,9 @@ void CuChulainn::UpdateUltimateVfx()
     {
         ultimateBrust->SetEnabled(true);
     }
-    if (ultimateCrack1)
+    if (ultimateCrack)
     {
-        ultimateCrack1->SetEnabled(true);
-    }
-    if (ultimateCrack2)
-    {
-        ultimateCrack2->SetEnabled(true);
+        ultimateCrack->SetEnabled(true);
     }
     if (ultimateHalo)
     {
