@@ -1,8 +1,9 @@
+
+#include "pch.h"
 #include "WallCollision.h"
 #include "ArcherProjectile.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
-#include "pch.h"
 
 WallCollision::WallCollision(GameObject* parent) : Script(parent)
 {
