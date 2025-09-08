@@ -31,6 +31,7 @@
 #include "PlayerLocationScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
+#include "ArcherProjectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
@@ -39,6 +40,8 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "Banshee_v2.h"
+#include "WallCollision.h"
 
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
@@ -98,11 +101,12 @@ constexpr const char* scripts[] = {
     "Destructible",
     "MagicBarrier",
     "Banshee_v2",
-    "Destructible",
+    "WallCollision",
     "Mirage",
     "BossMirage",
     "Boss",
     "MirageBossDash",
+    "ArcherProjectile"
     "GameOverNavigatorScript"
 };
 
@@ -140,6 +144,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "SoldierScript") return new Soldier(parent);
     if (scriptType == "CameraMovement") return new CameraMovement(parent);
     if (scriptType == "Projectile") return new Projectile(parent);
+    if (scriptType == "ArcherProjectile") return new ArcherProjectile(parent);
     if (scriptType == "Banshee") return new Banshee(parent);
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
@@ -157,6 +162,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Spouts") return new Spouts(parent);
     if (scriptType == "Destructible") return new Destructible(parent);
     if (scriptType == "MagicBarrier") return new MagicBarrier(parent);
+    if (scriptType == "WallCollision") return new WallCollision(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
