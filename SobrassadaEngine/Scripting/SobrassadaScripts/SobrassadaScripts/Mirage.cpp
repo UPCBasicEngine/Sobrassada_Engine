@@ -22,7 +22,7 @@ Mirage::Mirage(GameObject* parent) : Script(parent)
 bool Mirage::Init()
 {
     Scene* scene = AppEngine->GetSceneModule()->GetScene();
-    GLOG("MIRAGE DETECTED");
+    //GLOG("MIRAGE DETECTED");
     state                       = MirageState::Sleeping;
     stateTimer                  = 0.0f;
     meshComponent               = parent->GetComponent<MeshComponent*>();
@@ -36,7 +36,7 @@ bool Mirage::Init()
 
     bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
     endPoint                    = secondChild->GetLocalTransform().TranslatePart();
-    GLOG("Mirage endpoint at %f,%f,%f", endPoint.x, endPoint.y, endPoint.z);
+    //GLOG("Mirage endpoint at %f,%f,%f", endPoint.x, endPoint.y, endPoint.z);
     bossDash->setEndPoint(endPoint);
 
     parent->SetEnabled(false);
