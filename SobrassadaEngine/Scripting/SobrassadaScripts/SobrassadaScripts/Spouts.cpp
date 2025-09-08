@@ -31,6 +31,14 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
     fields.push_back({"Explosion Duration", InspectorField::FieldType::Float, &explosionDuration, 0.01f, 0.5f});
     fields.push_back({"Water Spout Duration", InspectorField::FieldType::Float, &spoutWaterTimer, 0.01f, 10.0f});
     fields.push_back({"Character", InspectorField::FieldType::GameObject, &character});
+    fields.push_back(
+        {"Trigger Spout",
+         [this](Script* self)
+         {
+             GLOG("Triggering spout");
+             ForceActivate();
+         }}
+    );
 }
 
 bool Spouts::Init()
