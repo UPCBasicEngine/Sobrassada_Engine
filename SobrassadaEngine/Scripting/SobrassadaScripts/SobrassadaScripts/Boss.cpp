@@ -1575,8 +1575,6 @@ void Boss::SetState(BossStates newState)
         if (repeatedState >= maxRepeats)
         {
             currentState  = ChooseAlternativeState();
-            GLOG("REPEATED MAX")
-            GLOG("%s", GetStateName());
             repeatedState = 0;
             return;
         }
@@ -1587,8 +1585,6 @@ void Boss::SetState(BossStates newState)
     }
 
     currentState = newState;
-    GLOG("NEW STATE")
-    GLOG("%s", GetStateName());
 }
 
 BossStates Boss::ChooseAlternativeState() const
