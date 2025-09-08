@@ -14,6 +14,7 @@
 #include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
+#include "Spouts.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -45,12 +46,12 @@ Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
     fields.push_back({"Smoke", InspectorField::FieldType::InputText, &smokeParticleName});
     fields.push_back({"Charge Shield", InspectorField::FieldType::InputText, &chargeShieldParticleName});
+    fields.push_back({"Spout", InspectorField::FieldType::InputText, &spoutName});
 }
 
 bool Boss::Init()
 {
     Character::Init();
-
     agentAI = parent->GetComponent<AIAgentComponent*>();
     if (agentAI == nullptr) GLOG("AIAgent component not found for Boss")
     else
@@ -78,6 +79,10 @@ bool Boss::Init()
     bigArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(bigAreaName);
     if (bigArea) bigArea->SetEnabled(false);
     else GLOG("Not big area object found for ferdiad");
+
+    GameObject* spout            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spoutName);
+    ScriptComponent* spoutScript = spout->GetComponent<ScriptComponent*>();
+    waterSpout                   = spoutScript->GetScriptByType<Spouts>();
 
     GameObject* overheadPrepareVFX =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadPrepareVFXName);
@@ -450,6 +455,7 @@ void Boss::HandleState(float deltaTime)
         break;
 
     case BossStates::WaterSpouts:
+        WaterSpouts();
         break;
     }
 }
@@ -1309,6 +1315,15 @@ void Boss::Mirage()
     default:
         GLOG("Error: Mirage")
         break;
+    }
+}
+
+void Boss::WaterSpouts()
+{
+    if (waterSpout)
+    {
+        GLOG("Force Activating spout");
+        waterSpout->ForceActivate();
     }
 }
 

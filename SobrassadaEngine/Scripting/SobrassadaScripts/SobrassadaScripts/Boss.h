@@ -14,6 +14,7 @@ class MovingUVTransparent;
 class MeshComponent;
 class ParticleSystemComponent;
 class CapsuleColliderComponent;
+class Spouts;
 
 enum class BossDistance
 {
@@ -106,6 +107,8 @@ class Boss : public Character
     void ResetValues(bool isForMirage = false);
 
     void ShieldBlast(float deltaTime);
+
+    void WaterSpouts();
 
     const char* GetStateName() const;
     const char* GetActionName() const;
@@ -215,4 +218,8 @@ class Boss : public Character
     std::array<int, 3> mirageActivation = {mirage1, mirage2, mirage3};
     BossMirage* bossMirageScript        = nullptr;
     bool mirageActivated                = false;
+
+    // WaterSpout
+    Spouts* waterSpout                  = nullptr;
+    std::string spoutName               = "";
 };

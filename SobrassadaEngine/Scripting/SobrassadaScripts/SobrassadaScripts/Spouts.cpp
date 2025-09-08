@@ -179,6 +179,7 @@ void Spouts::ForceActivate()
 {
     if (activationState == ACTIVATION_STATE::SLEEPING)
     {
+        GLOG("Force Activation");
         if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
         activationState = ACTIVATION_STATE::CHARGING;
         if (rune) rune->SetEnabled(false);
