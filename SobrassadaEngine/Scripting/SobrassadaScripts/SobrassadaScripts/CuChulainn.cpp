@@ -552,756 +552,769 @@ void CuChulainn::OnDamageTaken(int amount)
 
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
-   
-    
-     if (arrowVfxIsActive && !arrowHitVfxObject->IsEnabled())
+
+    if (arrowVfxIsActive && !arrowHitVfxObject->IsEnabled())
     {
         GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
 
-    if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
-    {
-        GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
-
-        arrowHitVfxObject->SetEnabled(true);
-
-        ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
-        if (particleSystem)
+        if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
         {
-            particleSystem->SpawnAllInstances();
-            GLOG("Arrow VFX particles spawned");
+            GLOG(
+                "Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer
+            );
+
+            arrowHitVfxObject->SetEnabled(true);
+
+            ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
+            if (particleSystem)
+            {
+                particleSystem->SpawnAllInstances();
+                GLOG("Arrow VFX particles spawned");
+            }
         }
+        if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
+            if (damageMask)
+            {
+                damageMask->SetLife(static_cast<float>(currentHealth));
+                damageMask->OnHit();
+            }
+
+        if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
+            state == CharacterStates::HEAL)
+        {
+            state = CharacterStates::HURT;
+            if (animComponent)
+            {
+                animComponent->UseTrigger("Hurt");
+                // character->EnableMovement(false);
+            }
+        }
+
+        // TODO: Test if hitstop when hit feels nice
+        // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
     }
-    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
-        if (damageMask)
-        {
-            damageMask->SetLife(static_cast<float>(currentHealth));
-            damageMask->OnHit();
-        }
-
-    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
-        state == CharacterStates::HEAL)
-    {
-        state = CharacterStates::HURT;
-        if (animComponent)
-        {
-            animComponent->UseTrigger("Hurt");
-            // character->EnableMovement(false);
-        }
-      
-        
-    }
-
-    // TODO: Test if hitstop when hit feels nice
-    // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
 }
 
-void CuChulainn::OnHealed(int amount)
-{
-    // TODO: play CuChulainn recover sound
-    if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
-    if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
-}
-
-void CuChulainn::HandleState(float deltaTime)
-{
-    if (state == CharacterStates::AIM && !desiredAim && !resetWeapon)
+    void CuChulainn::OnHealed(int amount)
     {
-        animComponent->OnResume();
-        animComponent->UseTrigger("Idle");
-        state    = CharacterStates::IDLE;
-        aimTimer = 0.0f;
+        // TODO: play CuChulainn recover sound
+        if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
+        if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
     }
 
-    if (desiredTransform && CanTransform()) ToggleRiastrad();
-    else if (desiredDash && CanDash()) Dash();
-    else if (desiredHeal && CanHeal()) UseMushroom();
-    else if (desiredUltimate && CanUltimate()) UltimateAttack();
-    else if (desiredAttack && CanAttack()) Attack(deltaTime);
-    else if (desiredAim && CanAim()) Aim(deltaTime);
-    else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
-        Move();
-
-    // When finished animation, go back to idle state
-    if (animComponent && animComponent->IsFinished())
+    void CuChulainn::HandleState(float deltaTime)
     {
-        if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
-            stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
+        if (state == CharacterStates::AIM && !desiredAim && !resetWeapon)
         {
-            if (isAttacking) comboBufferTimer = 0.1f;
-            isAttacking = false;
-            if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
-            if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
-            if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
-            if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
-            if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
-            if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
-            if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+            animComponent->OnResume();
+            animComponent->UseTrigger("Idle");
+            state    = CharacterStates::IDLE;
+            aimTimer = 0.0f;
         }
-        else if (stateName == HashString("Charge"))
+
+        if (desiredTransform && CanTransform()) ToggleRiastrad();
+        else if (desiredDash && CanDash()) Dash();
+        else if (desiredHeal && CanHeal()) UseMushroom();
+        else if (desiredUltimate && CanUltimate()) UltimateAttack();
+        else if (desiredAttack && CanAttack()) Attack(deltaTime);
+        else if (desiredAim && CanAim()) Aim(deltaTime);
+        else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
+        else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() &&
+                 state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL &&
+                 state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
+                 state != CharacterStates::CHARGING && state != CharacterStates::HEAL &&
+                 state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
+            Move();
+
+        // When finished animation, go back to idle state
+        if (animComponent && animComponent->IsFinished())
         {
-            animComponent->UseTrigger("Charge");
+            if (stateName == HashString("Attack_1") || stateName == HashString("Attack_2") ||
+                stateName == HashString("Attack_3") || stateName == HashString("Attack_4"))
+            {
+                if (isAttacking) comboBufferTimer = 0.1f;
+                isAttacking = false;
+                if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+                if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
+                if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
+                if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
+                if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
+                if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
+                if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+            }
+            else if (stateName == HashString("Charge"))
+            {
+                animComponent->UseTrigger("Charge");
+            }
+            else
+            {
+                if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
+                if (state == CharacterStates::ULTIMATE &&
+                    ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+                {
+                    // if (ultimateGlow)
+                    //     ultimateGlow->SetEnabled(false);
+                    // if (ultimateBlur) ultimateBlur->SetEnabled(false);
+                    // if (ultimateBrust) ultimateBrust->SetEnabled(false);
+                    // if (ultimateCrack1) ultimateCrack1->SetEnabled(false);
+                    // if (ultimateCrack2) ultimateCrack2->SetEnabled(false);
+                    // if (ultimateHalo) ultimateHalo->SetEnabled(false);
+                    // if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
+                    // if (ultimateSphere) ultimateSphere->SetEnabled(false);
+                    // if (ultimateWarning) ultimateWarning->SetEnabled(false);
+                    return;
+                }
+                if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
+                if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
+                if (state == CharacterStates::TRANSFORM)
+                {
+                    transformTimer = 0.0f;
+                    chargedAttackCollider->SetEnabled(false);
+                    riastradVfx->GetComponent<AnimationComponent*>()->OnStop();
+                    // riastradVfx->SetEnabled(false);
+
+                    if (riastradBlur) riastradBlur->SetEnabled(false);
+                    if (riastradBurst) riastradBurst->SetEnabled(false);
+                    if (riastradHalo) riastradHalo->SetEnabled(false);
+                    if (riastradSphere) riastradSphere->SetEnabled(false);
+                    if (riastradCrack) riastradCrack->SetEnabled(false);
+                    if (riastradWaring) riastradWaring->SetEnabled(false);
+                    if (riastradSmoke1) riastradSmoke1->SetEnabled(false);
+                    if (riastradSmoke2) riastradSmoke2->SetEnabled(false);
+                    if (riastradSmoke3) riastradSmoke3->SetEnabled(false);
+                    if (riastradStars) riastradStars->SetEnabled(false);
+                }
+                state = CharacterStates::IDLE;
+                animComponent->UseTrigger("Idle");
+            }
+        }
+    }
+
+    void CuChulainn::GetInputs()
+    {
+        if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
+
+        const InputModule* input   = AppEngine->GetInputModule();
+        const KeyState* keyboard   = input->GetKeyboard();
+        const KeyState* mouse      = input->GetMouseButtons();
+        const KeyState* controller = input->GetControllerButtons();
+        const float2& leftJoystick = input->GetLeftStick();
+
+        float3 direction           = float3::zero;
+        if (input->IsUsingKeyboard())
+        {
+
+            if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
+            if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
+            if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
+            if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
         }
         else
         {
-            if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
-            if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
-            {
-                // if (ultimateGlow)
-                //     ultimateGlow->SetEnabled(false);
-                // if (ultimateBlur) ultimateBlur->SetEnabled(false);
-                // if (ultimateBrust) ultimateBrust->SetEnabled(false);
-                // if (ultimateCrack1) ultimateCrack1->SetEnabled(false);
-                // if (ultimateCrack2) ultimateCrack2->SetEnabled(false);
-                // if (ultimateHalo) ultimateHalo->SetEnabled(false);
-                // if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
-                // if (ultimateSphere) ultimateSphere->SetEnabled(false);
-                // if (ultimateWarning) ultimateWarning->SetEnabled(false);
-                return;
-            }
-            if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
-            if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
-            if (state == CharacterStates::TRANSFORM)
-            {
-                transformTimer = 0.0f;
-                chargedAttackCollider->SetEnabled(false);
-                riastradVfx->GetComponent<AnimationComponent*>()->OnStop();
-                // riastradVfx->SetEnabled(false);
+            direction.x = leftJoystick.x;
+            direction.z = leftJoystick.y;
 
-                if (riastradBlur) riastradBlur->SetEnabled(false);
-                if (riastradBurst) riastradBurst->SetEnabled(false);
-                if (riastradHalo) riastradHalo->SetEnabled(false);
-                if (riastradSphere) riastradSphere->SetEnabled(false);
-                if (riastradCrack) riastradCrack->SetEnabled(false);
-                if (riastradWaring) riastradWaring->SetEnabled(false);
-                if (riastradSmoke1) riastradSmoke1->SetEnabled(false);
-                if (riastradSmoke2) riastradSmoke2->SetEnabled(false);
-                if (riastradSmoke3) riastradSmoke3->SetEnabled(false);
-                if (riastradStars) riastradStars->SetEnabled(false);
-            }
-            state = CharacterStates::IDLE;
-            animComponent->UseTrigger("Idle");
+            if (controller[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
+            if (controller[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
+            if (controller[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
+            if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
         }
-    }
-}
 
-void CuChulainn::GetInputs()
-{
-    if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
+        if (direction.Length() < 0.55f) character->SetIsRunning(false);
+        else character->SetIsRunning(true);
+        direction = camFront * direction.z + camRight * direction.x;
+        character->SetDirection(direction);
 
-    const InputModule* input   = AppEngine->GetInputModule();
-    const KeyState* keyboard   = input->GetKeyboard();
-    const KeyState* mouse      = input->GetMouseButtons();
-    const KeyState* controller = input->GetControllerButtons();
-    const float2& leftJoystick = input->GetLeftStick();
-
-    float3 direction           = float3::zero;
-    if (input->IsUsingKeyboard())
-    {
-
-        if (keyboard[SDL_SCANCODE_W] == KEY_REPEAT) direction.z -= 1.0f;
-        if (keyboard[SDL_SCANCODE_S] == KEY_REPEAT) direction.z += 1.0f;
-        if (keyboard[SDL_SCANCODE_A] == KEY_REPEAT) direction.x -= 1.0f;
-        if (keyboard[SDL_SCANCODE_D] == KEY_REPEAT) direction.x += 1.0f;
-    }
-    else
-    {
-        direction.x = leftJoystick.x;
-        direction.z = leftJoystick.y;
-
-        if (controller[SDL_CONTROLLER_BUTTON_DPAD_LEFT] == KEY_REPEAT) direction.x = -1.0f;
-        if (controller[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_REPEAT) direction.z = -1.0f;
-        if (controller[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] == KEY_REPEAT) direction.x = 1.0f;
-        if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
-    }
-
-    if (direction.Length() < 0.55f) character->SetIsRunning(false);
-    else character->SetIsRunning(true);
-    direction = camFront * direction.z + camRight * direction.x;
-    character->SetDirection(direction);
-
-    // Heal
-    if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
-    {
-        desiredTakeMushroom = true;
-        takeMushroomCdTimer = takeMushroomCd;
-    }
-    if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
-    {
-        if (mushrooms != 0)
+        // Heal
+        if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
         {
-            desiredHeal = true;
-            healCdTimer = healCooldown;
+            desiredTakeMushroom = true;
+            takeMushroomCdTimer = takeMushroomCd;
+        }
+        if (keyboard[SDL_SCANCODE_R] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN)
+        {
+            if (mushrooms != 0)
+            {
+                desiredHeal = true;
+                healCdTimer = healCooldown;
+            }
+        }
+
+        // Riastrad
+        if (keyboard[SDL_SCANCODE_Q] == KEY_DOWN ||
+            (input->GetLeftTrigger().first == KEY_REPEAT && input->GetRightTrigger().first == KEY_REPEAT))
+        {
+            if (!isRiastrad)
+            {
+                desiredTransform     = true;
+                transformBufferTimer = inputBuffer;
+            }
+        }
+
+        // Dash
+        if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
+        {
+            desiredDash     = true;
+            dashBufferTimer = inputBuffer;
+        }
+
+        // Attack
+        if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
+        {
+            desiredAttack     = true;
+            attackBufferTimer = inputBuffer;
+        }
+        if (mouse[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_X] == KEY_REPEAT)
+        {
+            isChargingAttack = true;
+        }
+        if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
+        {
+            isChargingAttack     = true;
+            desiredChargedAttack = true;
+        }
+
+        // Ranged
+        if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
+        {
+            desiredAim = true;
+        }
+        if (input->GetLeftTrigger().first == KEY_UP)
+        {
+            if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
+        }
+        if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
+        {
+            if (state == CharacterStates::AIM && throwTimer <= 0.0f) ThrowSpear();
+        }
+
+        // Ultimatee
+        if (keyboard[SDL_SCANCODE_F] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
+        {
+            desiredUltimate     = true;
+            ultimateBufferTimer = inputBuffer;
+        }
+
+        // Debug
+        if (keyboard[SDL_SCANCODE_F5] == KEY_DOWN)
+        {
+            // TODO: This should be SetPosition, Respawn is here to test
+            // SetPosition(spawnPos);
+            Respawn();
+        }
+        if (keyboard[SDL_SCANCODE_F6] == KEY_DOWN)
+        {
+            spawnPos = parent->GetGlobalTransform().TranslatePart();
+        }
+        if (keyboard[SDL_SCANCODE_F7] == KEY_DOWN)
+        {
+            godMode = !godMode;
+            if (godMode) GLOG("God Mode enabled")
+            else GLOG("God Mode disabled")
+        }
+        if (keyboard[SDL_SCANCODE_F8] == KEY_DOWN)
+        {
+            AddRiastrad(100);
+            GLOG("Fill riastrad")
+        }
+        if (keyboard[SDL_SCANCODE_F10] == KEY_DOWN)
+        {
+            AddRiastrad(10);
+            Heal(10);
+        }
+        if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
+        {
+            StartCurse();
         }
     }
 
-    // Riastrad
-    if (keyboard[SDL_SCANCODE_Q] == KEY_DOWN ||
-        (input->GetLeftTrigger().first == KEY_REPEAT && input->GetRightTrigger().first == KEY_REPEAT))
+    bool CuChulainn::CanDash() const
     {
+        if (!dashUnlocked) return false; // When tutorial map is correctly fixed, put this to make progression
+
+        bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking &&
+                       state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
+                       state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
+                       state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL && !isCursed &&
+                       state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+
+        if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer > 0.0f;
+
+        return canDash;
+    }
+
+    bool CuChulainn::CanAttack() const
+    {
+        return attackPressTimer < chargeThreshold && state != CharacterStates::DASH && !isAttacking &&
+               state != CharacterStates::FALL && state != CharacterStates::RESPAWN && comboCounter <= 1 &&
+               attackCdTimer <= 0.0f && state != CharacterStates::ULTIMATE &&
+               state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+               state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
+               state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+    }
+
+    bool CuChulainn::CanUltimate() const
+    {
+        bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+                           state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
+                           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+                           state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM &&
+                           state != CharacterStates::HURT;
+
+        if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer > 0.0f;
+
+        return canUltimate;
+    }
+
+    bool CuChulainn::CanTakeMushroom() const
+    {
+        return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK &&
+               state != CharacterStates::AIM && state != CharacterStates::RESPAWN && state != CharacterStates::DEATH &&
+               state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL &&
+               state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+    }
+
+    bool CuChulainn::CanHeal() const
+    {
+        return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
+               state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
+               state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
+               state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
+               !isHealing && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+    }
+
+    bool CuChulainn::CanAim() const
+    {
+        return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
+               state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
+               state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
+               state != CharacterStates::CHARGING && state != CharacterStates::TAKE_MUSHROOM &&
+               state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+    }
+
+    bool CuChulainn::CanChargeAttack() const
+    {
+        bool canChargeAttack = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+                               state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
+                               state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK &&
+                               state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
+                               state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+
+        if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer > 0.0f;
+
+        return canChargeAttack;
+    }
+
+    bool CuChulainn::CanTransform() const
+    {
+        bool canTransform = false;
         if (!isRiastrad)
         {
-            desiredTransform     = true;
-            transformBufferTimer = inputBuffer;
-        }
-    }
-
-    // Dash
-    if (keyboard[SDL_SCANCODE_SPACE] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
-    {
-        desiredDash     = true;
-        dashBufferTimer = inputBuffer;
-    }
-
-    // Attack
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
-    {
-        desiredAttack     = true;
-        attackBufferTimer = inputBuffer;
-    }
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_X] == KEY_REPEAT)
-    {
-        isChargingAttack = true;
-    }
-    if (mouse[SDL_BUTTON_LEFT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_X] == KEY_UP)
-    {
-        isChargingAttack     = true;
-        desiredChargedAttack = true;
-    }
-
-    // Ranged
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_REPEAT)
-    {
-        desiredAim = true;
-    }
-    if (input->GetLeftTrigger().first == KEY_UP)
-    {
-        if (state == CharacterStates::AIM) camera->EnableAimOffset(false);
-    }
-    if (mouse[SDL_BUTTON_RIGHT - 1] == KEY_UP || controller[SDL_CONTROLLER_BUTTON_Y] == KEY_UP)
-    {
-        if (state == CharacterStates::AIM && throwTimer <= 0.0f) ThrowSpear();
-    }
-
-    // Ultimatee
-    if (keyboard[SDL_SCANCODE_F] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
-    {
-        desiredUltimate     = true;
-        ultimateBufferTimer = inputBuffer;
-    }
-
-    // Debug
-    if (keyboard[SDL_SCANCODE_F5] == KEY_DOWN)
-    {
-        // TODO: This should be SetPosition, Respawn is here to test
-        // SetPosition(spawnPos);
-        Respawn();
-    }
-    if (keyboard[SDL_SCANCODE_F6] == KEY_DOWN)
-    {
-        spawnPos = parent->GetGlobalTransform().TranslatePart();
-    }
-    if (keyboard[SDL_SCANCODE_F7] == KEY_DOWN)
-    {
-        godMode = !godMode;
-        if (godMode) GLOG("God Mode enabled")
-        else GLOG("God Mode disabled")
-    }
-    if (keyboard[SDL_SCANCODE_F8] == KEY_DOWN)
-    {
-        AddRiastrad(100);
-        GLOG("Fill riastrad")
-    }
-    if (keyboard[SDL_SCANCODE_F10] == KEY_DOWN)
-    {
-        AddRiastrad(10);
-        Heal(10);
-    }
-    if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
-    {
-        StartCurse();
-    }
-}
-
-bool CuChulainn::CanDash() const
-{
-    if (!dashUnlocked) return false; // When tutorial map is correctly fixed, put this to make progression
-
-    bool canDash = dashTimer <= 0 && state != CharacterStates::AIM && !isAttacking && state != CharacterStates::FALL &&
-                   state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
-                   state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                   state != CharacterStates::HEAL && !isCursed && state != CharacterStates::TRANSFORM &&
-                   state != CharacterStates::HURT;
-
-    if (canDash && state == CharacterStates::BASIC_ATTACK) canDash = comboBufferTimer > 0.0f;
-
-    return canDash;
-}
-
-bool CuChulainn::CanAttack() const
-{
-    return attackPressTimer < chargeThreshold && state != CharacterStates::DASH && !isAttacking &&
-           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && comboCounter <= 1 &&
-           attackCdTimer <= 0.0f && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK &&
-           state != CharacterStates::CHARGING && state != CharacterStates::TAKE_MUSHROOM &&
-           state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
-}
-
-bool CuChulainn::CanUltimate() const
-{
-    bool canUltimate = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
-                       state != CharacterStates::RESPAWN && ultimateCdTimer <= 0.0f &&
-                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM &&
-                       state != CharacterStates::HURT;
-
-    if (canUltimate && state == CharacterStates::BASIC_ATTACK) canUltimate = comboBufferTimer > 0.0f;
-
-    return canUltimate;
-}
-
-bool CuChulainn::CanTakeMushroom() const
-{
-    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && state != CharacterStates::AIM &&
-           state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL &&
-           state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
-}
-
-bool CuChulainn::CanHeal() const
-{
-    return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&
-           state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
-           state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
-           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
-           !isHealing && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
-}
-
-bool CuChulainn::CanAim() const
-{
-    return state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK && throwTimer <= 0 &&
-           state != CharacterStates::FALL && state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
-           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-           state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
-           state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
-}
-
-bool CuChulainn::CanChargeAttack() const
-{
-    bool canChargeAttack = state != CharacterStates::DASH && !isAttacking && state != CharacterStates::FALL &&
+            canTransform = riastradMeter == 100 && state != CharacterStates::DASH && !isAttacking &&
+                           character->IsGrounded() && state != CharacterStates::FALL &&
                            state != CharacterStates::RESPAWN && state != CharacterStates::ULTIMATE &&
                            state != CharacterStates::AIM && state != CharacterStates::CHARGED_ATTACK &&
                            state != CharacterStates::TAKE_MUSHROOM && state != CharacterStates::HEAL &&
                            state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 
-    if (canChargeAttack && state == CharacterStates::BASIC_ATTACK) canChargeAttack = comboBufferTimer > 0.0f;
-
-    return canChargeAttack;
-}
-
-bool CuChulainn::CanTransform() const
-{
-    bool canTransform = false;
-    if (!isRiastrad)
-    {
-        canTransform = riastradMeter == 100 && state != CharacterStates::DASH && !isAttacking &&
-                       character->IsGrounded() && state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
-                       state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
-                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM &&
-                       state != CharacterStates::HURT;
-
-        if (canTransform && state == CharacterStates::BASIC_ATTACK) canTransform = comboBufferTimer > 0.0f;
-    }
-    else
-    {
-        canTransform = state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK &&
-                       state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
-                       state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
-                       state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
-                       state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
-    }
-
-    return canTransform;
-}
-
-void CuChulainn::UpdateTimers(float deltaTime)
-{
-    weaponCollider->SetEnabled(false);
-    Character::UpdateTimers(deltaTime);
-
-    // Dash
-    dashTimer -= deltaTime;
-    if (dashTimer < 0.0f) dashTimer = 0.0f;
-    if (desiredDash)
-    {
-        dashBufferTimer -= deltaTime;
-        if (dashBufferTimer < 0.0f) desiredDash = false;
-    }
-
-    if (arrowVfxIsActive && arrowHitVfxObject->IsEnabled())
-    {
-        arrowHitVfxTimer += deltaTime;
-        if (arrowHitVfxTimer >= arrowHitVfxDuration)
-        {
-            arrowHitVfxObject->SetEnabled(false);
-            arrowHitVfxTimer = 0.0f;
-            arrowVfxIsActive = false;
+            if (canTransform && state == CharacterStates::BASIC_ATTACK) canTransform = comboBufferTimer > 0.0f;
         }
-    }
-
-    // Dash decal
-    dashDecalBufferTimer -= deltaTime;
-    if (dashDecalBufferTimer < 0.0f)
-    {
-        if (dashDecal) dashDecal->SetEnabled(false);
-
-        dashDecalBufferTimer = 0.0f;
-    }
-
-    // Melee attack
-    if (desiredAttack)
-    {
-        attackBufferTimer -= deltaTime;
-        if (attackBufferTimer < 0.0f) desiredAttack = false;
-    }
-
-    // Ranged attack
-    desiredAim  = false;
-    throwTimer -= deltaTime;
-    if (throwTimer < 0.0f)
-    {
-        if (resetWeapon)
+        else
         {
-            weapon->SetEnabled(true);
-            resetWeapon = false;
-            spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(true);
+            canTransform = state != CharacterStates::DASH && state != CharacterStates::BASIC_ATTACK &&
+                           state != CharacterStates::FALL && state != CharacterStates::RESPAWN &&
+                           state != CharacterStates::ULTIMATE && state != CharacterStates::AIM &&
+                           state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::TAKE_MUSHROOM &&
+                           state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM;
         }
-        throwTimer = 0.0f;
+
+        return canTransform;
     }
 
-    // Take mushrooms
-    takeMushroomCdTimer -= deltaTime;
-    if (takeMushroomCdTimer <= 0.0f)
+    void CuChulainn::UpdateTimers(float deltaTime)
     {
-        desiredTakeMushroom = false;
-        takeMushroomCdTimer = 0.0f;
-    }
+        weaponCollider->SetEnabled(false);
+        Character::UpdateTimers(deltaTime);
 
-    if (!isAttacking && comboBufferTimer > 0.0f)
-    {
-        comboBufferTimer -= deltaTime;
-        if (comboBufferTimer <= 0.0f)
+        // Dash
+        dashTimer -= deltaTime;
+        if (dashTimer < 0.0f) dashTimer = 0.0f;
+        if (desiredDash)
         {
-            comboCounter  = -1;
-            attackCdTimer = attackCooldown;
-            if (state != CharacterStates::ULTIMATE && meleeTrailObject) meleeTrailObject->SetEnabled(false);
-
-            if (state == CharacterStates::BASIC_ATTACK)
-            {
-                state = CharacterStates::IDLE;
-                if (animComponent) animComponent->UseTrigger("AttackEnd");
-            }
+            dashBufferTimer -= deltaTime;
+            if (dashBufferTimer < 0.0f) desiredDash = false;
         }
-    }
 
-    // Ultimate
-    ultimateCdTimer -= deltaTime;
-    if (ultimateCdTimer < 0.0f) ultimateCdTimer = 0.0f;
-    if (desiredUltimate)
-    {
-        ultimateBufferTimer -= deltaTime;
-        if (ultimateBufferTimer < 0.0f) desiredUltimate = false;
-    }
-
-    // Charged attack
-    if (isChargingAttack)
-    {
-        attackPressTimer += deltaTime;
-        // GLOG("Attack press timer: %f", attackPressTimer);
-
-        if (state == CharacterStates::CHARGING)
+        if (arrowVfxIsActive && arrowHitVfxObject->IsEnabled())
         {
-            // GLOG("Charge timer: %f", chargeTimer);
-            chargeTimer -= deltaTime;
-            if (chargeTimer < 0.0f) chargeTimer = 0.0f;
-        }
-    }
-    else
-    {
-        attackPressTimer = 0.0f;
-    }
-    isChargingAttack     = false;
-    desiredChargedAttack = false;
-
-    // Riastrad
-    if (desiredTransform)
-    {
-        transformBufferTimer -= deltaTime;
-        if (transformBufferTimer < 0.0f) desiredTransform = false;
-    }
-    if (isRiastrad)
-    {
-        riastradTimer -= deltaTime;
-        if (riastradTimer <= 0.0f) desiredTransform = true;
-    }
-
-    if (isCursed)
-    {
-        curseTimer -= deltaTime;
-        if (curseTimer <= 0) EndCurse();
-    }
-
-    if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
-    if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
-    if (state == CharacterStates::IDLE) idleTimer += deltaTime;
-    if (state == CharacterStates::RUN) runTimer += deltaTime;
-    if (state == CharacterStates::HEAL) healTimer += deltaTime;
-    if (state == CharacterStates::TRANSFORM) transformTimer += deltaTime;
-
-    if (state == CharacterStates::DASH || state == CharacterStates::HURT || state == CharacterStates::RESPAWN)
-        isInvulnerable = true;
-
-    isDashing = state == CharacterStates::DASH ? true : false;
-    isHealing = state == CharacterStates::HEAL ? true : false;
-}
-
-void CuChulainn::LookAtMouse()
-{
-    const float3 mouseWorldPos = AppEngine->GetSceneModule()->GetScene()->GetMainCamera()->ScreenPointToXZ(
-        parent->GetGlobalTransform().TranslatePart().y
-    );
-    float3 direction = mouseWorldPos - parent->GetGlobalTransform().TranslatePart();
-    direction.y      = 0;
-    direction.Normalize();
-    character->LookAt(direction);
-}
-
-void CuChulainn::LookAtRightStick()
-{
-    const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
-    const float3 direction = camFront * stick.y + camRight * stick.x;
-    if (direction.LengthSq() > 0.001f) character->LookAt(direction);
-}
-
-void CuChulainn::LookAtLeftStick()
-{
-    const float2& stick    = AppEngine->GetInputModule()->GetLeftStick();
-    const float3 direction = camFront * stick.y + camRight * stick.x;
-    if (direction.LengthSq() > 0.001f) character->LookAt(direction);
-}
-
-void CuChulainn::CheckIsFalling()
-{
-    const float verticalSpeed = character->GetRealSpeed().y;
-
-    // GLOG("Vertical speed %f", verticalSpeed);
-    if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
-    {
-        animComponent->UseTrigger("Fall");
-        state = CharacterStates::FALL;
-    }
-
-    if (state == CharacterStates::FALL && verticalSpeed >= -1.0f)
-    {
-        animComponent->UseTrigger("Land");
-        character->EnableMovement(false);
-    }
-
-    const float maxDepth = -60.0f;
-
-    if (parent->GetGlobalTransform().TranslatePart().y < maxDepth)
-    {
-        SetPosition(lastDashStartPos);
-        TakeDamage(1);
-    }
-}
-
-void CuChulainn::ThrowSpear()
-{
-    if (camera) camera->EnableAimOffset(false);
-    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
-    animComponent->OnResume();
-    aimTimer   = 0.0f;
-
-    throwTimer = throwCooldown;
-    if (weapon)
-    {
-        weapon->SetEnabled(false);
-        resetWeapon = true;
-        spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(false);
-    }
-    if (aimShadowObject) aimShadowObject->SetEnabled(false);
-
-
-    spear->Shoot(parent->GetGlobalTransform().TranslatePart(), character->GetFrontDirection());
-}
-
-void CuChulainn::Dash()
-{
-    if (state == CharacterStates::AIM && camera)
-    {
-        camera->EnableAimOffset(false);
-        if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
-    }
-    else if (state == CharacterStates::BASIC_ATTACK)
-    {
-        comboBufferTimer = character->GetDashDuration() + 0.1f;
-        isAttacking      = false;
-    }
-    desiredDash      = false;
-    state            = CharacterStates::DASH;
-
-    // GLOG("DASH");
-
-    dashTimer        = isRiastrad ? dashCooldown * 0.75f : dashCooldown;
-    lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
-    LookAtLeftStick();
-    character->StartDash();
-    isDashing = true;
-
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
-
-    if (animComponent) animComponent->UseTrigger("Dash");
-    if (dashTrail) dashTrail->SetEnabled(true);
-    if (dashDecal)
-    {
-        // TODO: set dash decal to the final position of player and not to direction
-        dashDecal->SetEnabled(true);
-        const float3 scale  = dashDecal->GetLocalTransform().ExtractScale();
-        const Quat rotation = Quat::LookAt(float3::unitY, character->GetFrontDirection(), float3::unitZ, float3::unitY);
-        const float3 pos    = lastDashStartPos + 2.5f * character->GetFrontDirection().Normalized();
-        const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
-        dashDecal->SetLocalTransform(decalTransform);
-        dashDecalBufferTimer = dashDecalTimer;
-    }
-}
-
-void CuChulainn::PerformAttack()
-{
-    if (isAttacking && state == CharacterStates::BASIC_ATTACK)
-    {
-        float currentVfxDelay    = isRiastrad ? meleeVfxDelay / riastradAnimationsSpeedRatio : meleeVfxDelay;
-        float currentHitboxDelay = isRiastrad ? attackHitboxDelay / riastradAnimationsSpeedRatio : attackHitboxDelay;
-        float currentHitboxDuration =
-            isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
-
-        if (attackTimer > currentVfxDelay)
-        {
-            GameObject* vfxHorizontal = nullptr;
-            GameObject* vfxVertical   = nullptr;
-            switch (comboCounter)
+            arrowHitVfxTimer += deltaTime;
+            if (arrowHitVfxTimer >= arrowHitVfxDuration)
             {
-            case 0:
-                vfxHorizontal = attackVfxHorizontal1;
-                vfxVertical   = attackVfxVertical1;
-                break;
-            case 1:
-                vfxHorizontal = attackVfxHorizontal2;
-                vfxVertical   = attackVfxVertical2;
-                break;
-            case 2:
-                vfxVertical = attackVfxVertical3;
-                break;
-            }
-
-            if (vfxHorizontal && !vfxHorizontal->IsEnabled())
-            {
-                vfxHorizontal->SetEnabled(true);
-                vfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
-                vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
-            }
-            if (vfxVertical && !vfxVertical->IsEnabled())
-            {
-                vfxVertical->SetEnabled(true);
-                vfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
-                vfxVertical->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+                arrowHitVfxObject->SetEnabled(false);
+                arrowHitVfxTimer = 0.0f;
+                arrowVfxIsActive = false;
             }
         }
 
-        if (attackTimer < currentHitboxDelay)
+        // Dash decal
+        dashDecalBufferTimer -= deltaTime;
+        if (dashDecalBufferTimer < 0.0f)
         {
-            float distance = comboCounter == 2 ? 10.0f : 5.0f;
-            character->MoveTo(distance);
-        }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
-        {
-            weaponCollider->SetEnabled(true);
-        }
-        else if (weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay + currentHitboxDuration)
-        {
-            weaponCollider->SetEnabled(false);
-        }
-    }
-    else if (state == CharacterStates::ULTIMATE)
-    {
-        float currentHitboxDelay =
-            isRiastrad ? ultimateHitboxDelay / riastradAnimationsSpeedRatio : ultimateHitboxDelay;
-        float currentHitboxDuration =
-            isRiastrad ? ultimateHitboxDuration / riastradAnimationsSpeedRatio : ultimateHitboxDuration;
-        float currentAnimationDelay =
-            isRiastrad ? ultimateAnimationDelay / riastradAnimationsSpeedRatio : ultimateAnimationDelay;
+            if (dashDecal) dashDecal->SetEnabled(false);
 
-        if (!ultimateObject->IsEnabled() && ultimateTimer >= currentAnimationDelay)
-        {
-            ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
-            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
-            ultimateObject->GetComponent<AnimationComponent*>()->GetAnimationController()->SetTime(0.0f);
-            ultimateObject->SetEnabled(true);
-            ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
-            ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
-
-            UpdateUltimateVfx();
+            dashDecalBufferTimer = 0.0f;
         }
-        else if (ultimateObject->IsEnabled())
+
+        // Melee attack
+        if (desiredAttack)
         {
-            if (ultimateSpikes) // Control spikes animation appearance
+            attackBufferTimer -= deltaTime;
+            if (attackBufferTimer < 0.0f) desiredAttack = false;
+        }
+
+        // Ranged attack
+        desiredAim  = false;
+        throwTimer -= deltaTime;
+        if (throwTimer < 0.0f)
+        {
+            if (resetWeapon)
             {
-                AnimationComponent* ac = ultimateObject->GetComponent<AnimationComponent*>();
-                if (ac && ac->GetCurrentAnimation())
+                weapon->SetEnabled(true);
+                resetWeapon = false;
+                spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(true);
+            }
+            throwTimer = 0.0f;
+        }
+
+        // Take mushrooms
+        takeMushroomCdTimer -= deltaTime;
+        if (takeMushroomCdTimer <= 0.0f)
+        {
+            desiredTakeMushroom = false;
+            takeMushroomCdTimer = 0.0f;
+        }
+
+        if (!isAttacking && comboBufferTimer > 0.0f)
+        {
+            comboBufferTimer -= deltaTime;
+            if (comboBufferTimer <= 0.0f)
+            {
+                comboCounter  = -1;
+                attackCdTimer = attackCooldown;
+                if (state != CharacterStates::ULTIMATE && meleeTrailObject) meleeTrailObject->SetEnabled(false);
+
+                if (state == CharacterStates::BASIC_ATTACK)
                 {
-                    const float dur  = ac->GetCurrentAnimation()->GetDuration();
-                    const float t    = ac->GetAnimationController()->GetTime();
-                    const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
-
-                    ultimateSpikes->SetEnabled(norm >= 0.15f);
-                    if (ultimateCrack) ultimateCrack->SetEnabled(norm >= 0.15f);
+                    state = CharacterStates::IDLE;
+                    if (animComponent) animComponent->UseTrigger("AttackEnd");
                 }
             }
-            if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
-                ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
-            {
-                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
-            }
-            else if (ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
-            {
-                ultimateObject->SetEnabled(false);
-                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
-                ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
-                ultimateTimer = 0.f;
-                if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-            }
         }
-    }
-    else if (state == CharacterStates::CHARGED_ATTACK)
-    {
-        float currentHitboxDelay =
-            isRiastrad ? chargedAttackHitboxDelay / riastradAnimationsSpeedRatio : chargedAttackHitboxDelay;
-        float currentHitboxDuration =
-            isRiastrad ? chargedAttackHitboxDuration / riastradAnimationsSpeedRatio : chargedAttackHitboxDuration;
 
-        if (!chargedAttackCollider->IsEnabled() && chargedAttackTimer >= currentHitboxDelay &&
-            chargedAttackTimer < currentHitboxDelay + currentHitboxDuration)
+        // Ultimate
+        ultimateCdTimer -= deltaTime;
+        if (ultimateCdTimer < 0.0f) ultimateCdTimer = 0.0f;
+        if (desiredUltimate)
         {
-            chargedAttackCollider->SetEnabled(true);
+            ultimateBufferTimer -= deltaTime;
+            if (ultimateBufferTimer < 0.0f) desiredUltimate = false;
         }
-        else if (chargedAttackCollider->IsEnabled() && chargedAttackTimer >= currentHitboxDelay + currentHitboxDuration)
+
+        // Charged attack
+        if (isChargingAttack)
         {
-            chargedAttackCollider->SetEnabled(false);
+            attackPressTimer += deltaTime;
+            // GLOG("Attack press timer: %f", attackPressTimer);
+
+            if (state == CharacterStates::CHARGING)
+            {
+                // GLOG("Charge timer: %f", chargeTimer);
+                chargeTimer -= deltaTime;
+                if (chargeTimer < 0.0f) chargeTimer = 0.0f;
+            }
+        }
+        else
+        {
+            attackPressTimer = 0.0f;
+        }
+        isChargingAttack     = false;
+        desiredChargedAttack = false;
+
+        // Riastrad
+        if (desiredTransform)
+        {
+            transformBufferTimer -= deltaTime;
+            if (transformBufferTimer < 0.0f) desiredTransform = false;
+        }
+        if (isRiastrad)
+        {
+            riastradTimer -= deltaTime;
+            if (riastradTimer <= 0.0f) desiredTransform = true;
+        }
+
+        if (isCursed)
+        {
+            curseTimer -= deltaTime;
+            if (curseTimer <= 0) EndCurse();
+        }
+
+        if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
+        if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
+        if (state == CharacterStates::IDLE) idleTimer += deltaTime;
+        if (state == CharacterStates::RUN) runTimer += deltaTime;
+        if (state == CharacterStates::HEAL) healTimer += deltaTime;
+        if (state == CharacterStates::TRANSFORM) transformTimer += deltaTime;
+
+        if (state == CharacterStates::DASH || state == CharacterStates::HURT || state == CharacterStates::RESPAWN)
+            isInvulnerable = true;
+
+        isDashing = state == CharacterStates::DASH ? true : false;
+        isHealing = state == CharacterStates::HEAL ? true : false;
+    }
+
+    void CuChulainn::LookAtMouse()
+    {
+        const float3 mouseWorldPos = AppEngine->GetSceneModule()->GetScene()->GetMainCamera()->ScreenPointToXZ(
+            parent->GetGlobalTransform().TranslatePart().y
+        );
+        float3 direction = mouseWorldPos - parent->GetGlobalTransform().TranslatePart();
+        direction.y      = 0;
+        direction.Normalize();
+        character->LookAt(direction);
+    }
+
+    void CuChulainn::LookAtRightStick()
+    {
+        const float2& stick    = AppEngine->GetInputModule()->GetRightStick();
+        const float3 direction = camFront * stick.y + camRight * stick.x;
+        if (direction.LengthSq() > 0.001f) character->LookAt(direction);
+    }
+
+    void CuChulainn::LookAtLeftStick()
+    {
+        const float2& stick    = AppEngine->GetInputModule()->GetLeftStick();
+        const float3 direction = camFront * stick.y + camRight * stick.x;
+        if (direction.LengthSq() > 0.001f) character->LookAt(direction);
+    }
+
+    void CuChulainn::CheckIsFalling()
+    {
+        const float verticalSpeed = character->GetRealSpeed().y;
+
+        // GLOG("Vertical speed %f", verticalSpeed);
+        if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
+        {
+            animComponent->UseTrigger("Fall");
+            state = CharacterStates::FALL;
+        }
+
+        if (state == CharacterStates::FALL && verticalSpeed >= -1.0f)
+        {
+            animComponent->UseTrigger("Land");
+            character->EnableMovement(false);
+        }
+
+        const float maxDepth = -60.0f;
+
+        if (parent->GetGlobalTransform().TranslatePart().y < maxDepth)
+        {
+            SetPosition(lastDashStartPos);
+            TakeDamage(1);
         }
     }
-}
+
+    void CuChulainn::ThrowSpear()
+    {
+        if (camera) camera->EnableAimOffset(false);
+        if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+        // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+        animComponent->OnResume();
+        aimTimer   = 0.0f;
+
+        throwTimer = throwCooldown;
+        if (weapon)
+        {
+            weapon->SetEnabled(false);
+            resetWeapon = true;
+            spearCharacter->GetComponent<MeshComponent*>()->SetEnabled(false);
+        }
+        if (aimShadowObject) aimShadowObject->SetEnabled(false);
+
+        spear->Shoot(parent->GetGlobalTransform().TranslatePart(), character->GetFrontDirection());
+    }
+
+    void CuChulainn::Dash()
+    {
+        if (state == CharacterStates::AIM && camera)
+        {
+            camera->EnableAimOffset(false);
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
+        }
+        else if (state == CharacterStates::BASIC_ATTACK)
+        {
+            comboBufferTimer = character->GetDashDuration() + 0.1f;
+            isAttacking      = false;
+        }
+        desiredDash      = false;
+        state            = CharacterStates::DASH;
+
+        // GLOG("DASH");
+
+        dashTimer        = isRiastrad ? dashCooldown * 0.75f : dashCooldown;
+        lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
+        LookAtLeftStick();
+        character->StartDash();
+        isDashing = true;
+
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+
+        if (animComponent) animComponent->UseTrigger("Dash");
+        if (dashTrail) dashTrail->SetEnabled(true);
+        if (dashDecal)
+        {
+            // TODO: set dash decal to the final position of player and not to direction
+            dashDecal->SetEnabled(true);
+            const float3 scale = dashDecal->GetLocalTransform().ExtractScale();
+            const Quat rotation =
+                Quat::LookAt(float3::unitY, character->GetFrontDirection(), float3::unitZ, float3::unitY);
+            const float3 pos              = lastDashStartPos + 2.5f * character->GetFrontDirection().Normalized();
+            const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
+            dashDecal->SetLocalTransform(decalTransform);
+            dashDecalBufferTimer = dashDecalTimer;
+        }
+    }
+
+    void CuChulainn::PerformAttack()
+    {
+        if (isAttacking && state == CharacterStates::BASIC_ATTACK)
+        {
+            float currentVfxDelay = isRiastrad ? meleeVfxDelay / riastradAnimationsSpeedRatio : meleeVfxDelay;
+            float currentHitboxDelay =
+                isRiastrad ? attackHitboxDelay / riastradAnimationsSpeedRatio : attackHitboxDelay;
+            float currentHitboxDuration =
+                isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
+
+            if (attackTimer > currentVfxDelay)
+            {
+                GameObject* vfxHorizontal = nullptr;
+                GameObject* vfxVertical   = nullptr;
+                switch (comboCounter)
+                {
+                case 0:
+                    vfxHorizontal = attackVfxHorizontal1;
+                    vfxVertical   = attackVfxVertical1;
+                    break;
+                case 1:
+                    vfxHorizontal = attackVfxHorizontal2;
+                    vfxVertical   = attackVfxVertical2;
+                    break;
+                case 2:
+                    vfxVertical = attackVfxVertical3;
+                    break;
+                }
+
+                if (vfxHorizontal && !vfxHorizontal->IsEnabled())
+                {
+                    vfxHorizontal->SetEnabled(true);
+                    vfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
+                    vfxHorizontal->GetComponent<ShaderScriptComponent*>()
+                        ->GetScriptByType<AttackVfxSpritesheet>()
+                        ->Reset();
+                }
+                if (vfxVertical && !vfxVertical->IsEnabled())
+                {
+                    vfxVertical->SetEnabled(true);
+                    vfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
+                    vfxVertical->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset(
+                    );
+                }
+            }
+
+            if (attackTimer < currentHitboxDelay)
+            {
+                float distance = comboCounter == 2 ? 10.0f : 5.0f;
+                character->MoveTo(distance);
+            }
+            else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                     attackTimer < currentHitboxDelay + currentHitboxDuration)
+            {
+                weaponCollider->SetEnabled(true);
+            }
+            else if (weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay + currentHitboxDuration)
+            {
+                weaponCollider->SetEnabled(false);
+            }
+        }
+        else if (state == CharacterStates::ULTIMATE)
+        {
+            float currentHitboxDelay =
+                isRiastrad ? ultimateHitboxDelay / riastradAnimationsSpeedRatio : ultimateHitboxDelay;
+            float currentHitboxDuration =
+                isRiastrad ? ultimateHitboxDuration / riastradAnimationsSpeedRatio : ultimateHitboxDuration;
+            float currentAnimationDelay =
+                isRiastrad ? ultimateAnimationDelay / riastradAnimationsSpeedRatio : ultimateAnimationDelay;
+
+            if (!ultimateObject->IsEnabled() && ultimateTimer >= currentAnimationDelay)
+            {
+                ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+                ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
+                ultimateObject->GetComponent<AnimationComponent*>()->GetAnimationController()->SetTime(0.0f);
+                ultimateObject->SetEnabled(true);
+                ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
+                ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+
+                UpdateUltimateVfx();
+            }
+            else if (ultimateObject->IsEnabled())
+            {
+                if (ultimateSpikes) // Control spikes animation appearance
+                {
+                    AnimationComponent* ac = ultimateObject->GetComponent<AnimationComponent*>();
+                    if (ac && ac->GetCurrentAnimation())
+                    {
+                        const float dur  = ac->GetCurrentAnimation()->GetDuration();
+                        const float t    = ac->GetAnimationController()->GetTime();
+                        const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
+
+                        ultimateSpikes->SetEnabled(norm >= 0.15f);
+                        if (ultimateCrack) ultimateCrack->SetEnabled(norm >= 0.15f);
+                    }
+                }
+                if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
+                    ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+                {
+                    ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
+                }
+                else if (ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+                {
+                    ultimateObject->SetEnabled(false);
+                    ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+                    ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
+                    ultimateTimer = 0.f;
+                    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+                }
+            }
+        }
+        else if (state == CharacterStates::CHARGED_ATTACK)
+        {
+            float currentHitboxDelay =
+                isRiastrad ? chargedAttackHitboxDelay / riastradAnimationsSpeedRatio : chargedAttackHitboxDelay;
+            float currentHitboxDuration =
+                isRiastrad ? chargedAttackHitboxDuration / riastradAnimationsSpeedRatio : chargedAttackHitboxDuration;
+
+            if (!chargedAttackCollider->IsEnabled() && chargedAttackTimer >= currentHitboxDelay &&
+                chargedAttackTimer < currentHitboxDelay + currentHitboxDuration)
+            {
+                chargedAttackCollider->SetEnabled(true);
+            }
+            else if (chargedAttackCollider->IsEnabled() &&
+                     chargedAttackTimer >= currentHitboxDelay + currentHitboxDuration)
+            {
+                chargedAttackCollider->SetEnabled(false);
+            }
+        }
+    }
+
 
 void CuChulainn::Attack(float deltaTime)
 {

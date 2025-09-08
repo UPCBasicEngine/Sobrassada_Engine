@@ -3,8 +3,9 @@
 
 class GameObject;
 class AIAgentComponent;
-class Projectile;
+class ArcherProjectile;
 class AudioSourceComponent;
+class Scene;
 
 enum class ArcherStates
 {
@@ -68,7 +69,7 @@ class Archer : public Character
     AIAgentComponent* agentAI  = nullptr;
     ArcherStates currentState  = ArcherStates::NONE;
     std::string arrowName      = "";
-    Projectile* arrow          = nullptr;
+    ArcherProjectile* arrow          = nullptr;
     float3 patrolPoint         = float3::zero;
     bool hasShot               = false;
     float3 currentEscapeTarget = float3::zero;
@@ -90,7 +91,7 @@ class Archer : public Character
     float shotDelay            = 0.2f;
     float shotTimer            = 0.0f;
     bool hasStartedShooting    = false;
-    std::vector<Projectile*> arrowPool;
+    std::vector<ArcherProjectile*> arrowPool;
     int currentArrowIndex      = 0;
     int poolSize               = 5;
 
@@ -118,5 +119,15 @@ class Archer : public Character
     bool isRepositioning       = false;
     float3 repositionTarget    = float3::zero;
     AudioSourceComponent* audio = nullptr;
+    const std::vector<GameObject*>* walls;
+    const std::vector<GameObject*>* soldiers;
+    Scene* scene                        = nullptr;
+
+    //Hit VFX
+    std::string archerHitVFX = "HitArcher";
+    GameObject* archerVfxObject         = nullptr;
+    bool hitVfxIsActive       = false;
+    float hitVfxDuration           = 0.2f;
+    float hitVfxTimer              = 0.0f;
 
 };

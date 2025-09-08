@@ -206,6 +206,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>SobrassadaScripts</TargetName>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <TargetName>SobrassadaScripts</TargetName>
@@ -378,6 +379,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)DirectXTex;$(SolutionDir)Libs;$(SolutionDir)Libs\Wwise\samples\SoundEngine\Common;$(SolutionDir)Libs\Wwise\samples\SoundEngine\IO;$(SolutionDir)Libs\Wwise\include;$(SolutionDir)Libs\ImNodeFlow-1.2.2\include;$(SolutionDir)Libs\SDL\include;$(SolutionDir)Libs\glew-2.1.0\include;$(SolutionDir)Libs\MathGeoLib\include;$(SolutionDir)Libs\ImGui;$(SolutionDir)Libs\ImGuizmo;$(SolutionDir)Libs\Tinygltf;$(SolutionDir)Libs\freetype\include;$(SolutionDir)Libs\Optick_1.4.0\include;$(SolutionDir)Libs\RecastDetour\Detour\Include;$(SolutionDir)Libs\RecastDetour\DetourCrowd\Include;$(SolutionDir)Libs\RecastDetour\Recast\Include;$(SolutionDir)Modules;$(SolutionDir)ResourceManagement\Resources;$(SolutionDir)UI;$(SolutionDir)UI\EngineEditors;$(SolutionDir)UI\EngineEditors\Editor;$(SolutionDir)UI\EngineEditors\Nodes;$(SolutionDir)Utils;$(SolutionDir)Utils\Trees;$(SolutionDir)FileSystem;$(SolutionDir)FileSystem\Batching;$(SolutionDir)FileSystem\Config;$(SolutionDir)FileSystem\Importers;$(SolutionDir)FileSystem\Meta;$(SolutionDir)DebugDraw;$(SolutionDir)Scene;$(SolutionDir)Scene\GameObjects;$(SolutionDir)Scene\Components;$(SolutionDir)Libs\bullet\include;$(SolutionDir)Libs\bullet\include\LinearMath;$(SolutionDir)Utils\Physics;$(SolutionDir)Libs\ffmpeg\include;$(SolutionDir)Utils\Modules;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -467,6 +469,7 @@
   <ItemGroup>
     <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
+    <ClInclude Include="ArcherProjectile.h" />
     <ClInclude Include="AttackVfxSpritesheet.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
@@ -2055,6 +2058,7 @@
     </ClCompile>
     <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
+    <ClCompile Include="ArcherProjectile.cpp" />
     <ClCompile Include="AttackVfxSpritesheet.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />

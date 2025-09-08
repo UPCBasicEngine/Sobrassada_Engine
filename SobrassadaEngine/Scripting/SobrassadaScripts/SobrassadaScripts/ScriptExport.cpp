@@ -30,6 +30,7 @@
 #include "PlayerLocationScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
+#include "ArcherProjectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
@@ -99,12 +100,12 @@ constexpr const char* scripts[] = {
     "Destructible",
     "MagicBarrier",
     "Banshee_v2",
-    "WallCollision"
-    "Destructible",
+    "WallCollision",
     "Mirage",
     "BossMirage",
     "Boss",
-    "MirageBossDash"
+    "MirageBossDash",
+    "ArcherProjectile"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -140,6 +141,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "SoldierScript") return new Soldier(parent);
     if (scriptType == "CameraMovement") return new CameraMovement(parent);
     if (scriptType == "Projectile") return new Projectile(parent);
+    if (scriptType == "ArcherProjectile") return new ArcherProjectile(parent);
     if (scriptType == "Banshee") return new Banshee(parent);
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);

@@ -14,6 +14,7 @@
 #include "MagicBarrier.h"
 #include "Mushroom.h"
 #include "Projectile.h"
+#include "ArcherProjectile.h"
 #include "ScriptComponent.h"
 #include "Spouts.h"
 #include "Standalone/AnimationComponent.h"
@@ -122,7 +123,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             }
         }
 
-        Projectile* arrowProj = otherScript->GetScriptByType<Projectile>();
+        ArcherProjectile* arrowProj = otherScript->GetScriptByType<ArcherProjectile>();
         if (arrowProj)
         {
             arrowProj->Hit(otherObject);
@@ -216,7 +217,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
     if (otherScript)
     {
         // Projectile check
-        Projectile* projectile = otherScript->GetScriptByType<Projectile>();
+        ArcherProjectile* projectile = otherScript->GetScriptByType<ArcherProjectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
             if (type == CharacterType::CuChulainn)

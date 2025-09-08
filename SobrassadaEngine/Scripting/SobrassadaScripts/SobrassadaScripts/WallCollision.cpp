@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "GameObject.h"
-#include "Projectile.h"
+#include "ArcherProjectile.h"
 #include "ScriptComponent.h"
 #include "WallCollision.h"
 
@@ -28,7 +28,7 @@ void WallCollision::OnCollision(GameObject* otherObject, const float3 collisionN
         return;
     }
 
-    Projectile* projectile = scriptComp->GetScriptByType<Projectile>();
+    ArcherProjectile* projectile = scriptComp->GetScriptByType<ArcherProjectile>();
     if (!projectile)
     {
         GLOG("WallCollision: No projectile script found");
