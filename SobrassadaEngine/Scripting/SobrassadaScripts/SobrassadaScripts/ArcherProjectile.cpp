@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ArcherProjectile.h"
 #include "CameraComponent.h"
 #include "Character.h"
@@ -8,7 +7,7 @@
 #include "ScriptComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "WallCollision.h"
-
+#include "pch.h"
 
 static bool IsInsideCameraView(const float3& worldPosition, float screenEdgeMargin = 0.05f)
 {
@@ -71,29 +70,24 @@ void ArcherProjectile::Update(float deltaTime)
 
 void ArcherProjectile::Shoot(const float3& origin, const float3& direction)
 {
-    // FIRST: Disable the arrow completely to prevent visual artifacts
     parent->SetEnabled(false);
     parent->SetEnabledRecursive(false);
 
-    // SECOND: Set up the projectile state
     startPos                 = origin;
     this->direction          = direction.Normalized();
     frames                   = 0;
     isActive                 = true;
 
-    // THIRD: Position and rotate the arrow while it's disabled
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
     const Quat rotation      = Quat::LookAt(float3::unitZ, this->direction, float3::unitY, float3::unitY);
     const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
     parent->SetLocalTransform(transform);
 
-    // FOURTH: Disable collider initially (will be enabled after frame delay)
     if (collider)
     {
         collider->SetEnabled(false);
     }
 
-    // FIFTH: Enable the arrow after positioning is complete
     parent->SetEnabled(true);
     parent->SetEnabledRecursive(true);
 
@@ -141,11 +135,7 @@ void ArcherProjectile::Hit(GameObject* otherObject)
     {
         CuChulainn* player = script->GetScriptByType<CuChulainn>();
         player->OnArrowHit();
-
-        // TODO: Add archer-specific hit particles here
         GLOG("Archer arrow hit player - triggering particles");
-
-        // Disable the arrow after hitting
         StopProjectile();
     }
 }
@@ -158,17 +148,14 @@ void ArcherProjectile::Reset()
     frames        = 0;
     hasHitTarget  = false;
 
-    // Reset position and direction
     startPos      = float3::zero;
     direction     = float3::zero;
 
-    // Disable collider
     if (collider)
     {
         collider->SetEnabled(false);
     }
 
-    // Disable the GameObject
     parent->SetEnabled(false);
 
     GLOG("Archer projectile reset to initial state");
@@ -182,8 +169,6 @@ void ArcherProjectile::StopProjectile()
 void ArcherProjectile::Move(float deltaTime)
 {
     if (!isActive) return;
-
-    // Let 20 frames pass before enabling the collider, so it doesn't collide with the shooter
     frames += 1;
     if (frames > 20 && collider && !collider->GetEnabled())
     {
@@ -195,8 +180,6 @@ void ArcherProjectile::Move(float deltaTime)
     parent->SetLocalPosition(currentPos);
 
     const float3 worldPos = parent->GetGlobalTransform().TranslatePart();
-
-    // Check range first
     if (currentPos.Distance(startPos) > range)
     {
         GLOG("Archer arrow stopped - out of range");
@@ -204,7 +187,6 @@ void ArcherProjectile::Move(float deltaTime)
         return;
     }
 
-    // Camera check with generous margin after arrow has been active for a bit
     if (frames > 60 && !IsInsideCameraView(worldPos, 0.5f))
     {
         GLOG("Archer arrow stopped - out of camera view");

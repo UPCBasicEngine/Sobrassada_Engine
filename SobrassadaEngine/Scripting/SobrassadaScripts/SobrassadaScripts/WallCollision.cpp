@@ -1,13 +1,11 @@
-#include "pch.h"
-#include "GameObject.h"
-#include "ArcherProjectile.h"
-#include "ScriptComponent.h"
 #include "WallCollision.h"
-
+#include "ArcherProjectile.h"
+#include "GameObject.h"
+#include "ScriptComponent.h"
+#include "pch.h"
 
 WallCollision::WallCollision(GameObject* parent) : Script(parent)
 {
-    
 }
 
 bool WallCollision::Init()
@@ -18,7 +16,7 @@ bool WallCollision::Init()
 
 void WallCollision::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
-    
+
     GLOG("WallCollision: Something hit the wall - %s", otherObject->GetName().c_str());
 
     ScriptComponent* scriptComp = otherObject->GetComponent<ScriptComponent*>();

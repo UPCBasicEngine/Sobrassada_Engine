@@ -13,6 +13,4 @@ class WallCollision : public Script
     void Update(float deltaTime) override {}
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
-  private:
-    // No necesita variables adicionales
 };

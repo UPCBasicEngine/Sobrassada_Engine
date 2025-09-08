@@ -50,7 +50,6 @@ class Archer : public Character
     void SearchForPlayer();
     void ApplyKnockback();
 
-   
     bool CheckLineOfSight();
     bool ShouldSeekCover();
     bool HasNearbyAllies();
@@ -69,7 +68,7 @@ class Archer : public Character
     AIAgentComponent* agentAI  = nullptr;
     ArcherStates currentState  = ArcherStates::NONE;
     std::string arrowName      = "";
-    ArcherProjectile* arrow          = nullptr;
+    ArcherProjectile* arrow    = nullptr;
     float3 patrolPoint         = float3::zero;
     bool hasShot               = false;
     float3 currentEscapeTarget = float3::zero;
@@ -92,42 +91,40 @@ class Archer : public Character
     float shotTimer            = 0.0f;
     bool hasStartedShooting    = false;
     std::vector<ArcherProjectile*> arrowPool;
-    int currentArrowIndex      = 0;
-    int poolSize               = 5;
+    int currentArrowIndex       = 0;
+    int poolSize                = 5;
 
-  
-    bool hasLineOfSight        = false;
-    float chaseTimer           = 0.0f;
-    float maxChaseTime         = 8.0f;
-    float lastDistanceToPlayer = 999.0f;
-    float stuckThreshold       = 1.0f;
+    bool hasLineOfSight         = false;
+    float chaseTimer            = 0.0f;
+    float maxChaseTime          = 8.0f;
+    float lastDistanceToPlayer  = 999.0f;
+    float stuckThreshold        = 1.0f;
 
-    bool isInCover             = false;
-    bool seekingCover          = false;
-    GameObject* currentCover   = nullptr;
-    float3 coverPosition       = float3::zero;
+    bool isInCover              = false;
+    bool seekingCover           = false;
+    GameObject* currentCover    = nullptr;
+    float3 coverPosition        = float3::zero;
 
-    float3 shootingPosition    = float3::zero;
-    float coverSeekRange       = 8.0f;
-    float coverRadius          = 3.0f;
-    float safeShootingDistance = 12.0f;
-    float repositionTimer      = 0.0f;
-    float repositionDelay      = 2.0f;
-    float allyDetectionRange   = 6.0f;
+    float3 shootingPosition     = float3::zero;
+    float coverSeekRange        = 8.0f;
+    float coverRadius           = 3.0f;
+    float safeShootingDistance  = 12.0f;
+    float repositionTimer       = 0.0f;
+    float repositionDelay       = 2.0f;
+    float allyDetectionRange    = 6.0f;
 
-    float repositionTimeout    = 2.0f;
-    bool isRepositioning       = false;
-    float3 repositionTarget    = float3::zero;
+    float repositionTimeout     = 2.0f;
+    bool isRepositioning        = false;
+    float3 repositionTarget     = float3::zero;
     AudioSourceComponent* audio = nullptr;
     const std::vector<GameObject*>* walls;
     const std::vector<GameObject*>* soldiers;
-    Scene* scene                        = nullptr;
+    Scene* scene                = nullptr;
 
-    //Hit VFX
-    std::string archerHitVFX = "HitArcher";
-    GameObject* archerVfxObject         = nullptr;
-    bool hitVfxIsActive       = false;
-    float hitVfxDuration           = 0.2f;
-    float hitVfxTimer              = 0.0f;
-
+    // Hit VFX
+    std::string archerHitVFX    = "HitArcher";
+    GameObject* archerVfxObject = nullptr;
+    bool hitVfxIsActive         = false;
+    float hitVfxDuration        = 0.2f;
+    float hitVfxTimer           = 0.0f;
 };
