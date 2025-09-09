@@ -11,13 +11,12 @@ class ChangeSceneScript : public Script
 
     bool Init() override;
     void Update(float deltaTime) override {}
-    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
+    void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
     std::string playerName      = "";
     std::string targetSceneName = "";
     std::string scenesPath      = "";
     std::string fullScenePath   = "";
-    GameObject* player    = nullptr;
-   
+    GameObject* player          = nullptr;
 };
