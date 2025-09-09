@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "ArcherProjectile.h"
 #include "Banshee_v2.h"
 #include "Boss.h"
 #include "CameraComponent.h"
@@ -14,7 +15,6 @@
 #include "MagicBarrier.h"
 #include "Mushroom.h"
 #include "Projectile.h"
-#include "ArcherProjectile.h"
 #include "ScriptComponent.h"
 #include "Spouts.h"
 #include "Standalone/AnimationComponent.h"
@@ -174,7 +174,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
+                                  playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -216,9 +217,18 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
     otherScript = otherObject->GetComponent<ScriptComponent*>();
     if (otherScript)
     {
-        // Projectile check
-        ArcherProjectile* projectile = otherScript->GetScriptByType<ArcherProjectile>();
+        // Player projectile check
+        Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
+        {
+            TakeDamage(projectile->GetDamage());
+            otherWeapon->SetEnabled(false);
+            otherObject->SetEnabled(false);
+        }
+
+        // Archer projectile check
+        ArcherProjectile* archerProjectile = otherScript->GetScriptByType<ArcherProjectile>();
+        if (archerProjectile && otherWeapon && otherWeapon->GetEnabled())
         {
             if (type == CharacterType::CuChulainn)
             {
@@ -226,7 +236,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 player->OnArrowHit();
             }
 
-            TakeDamage(projectile->GetDamage());
+            TakeDamage(archerProjectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
         }
@@ -294,7 +304,6 @@ void Character::TakeDamage(int amount)
     OnDamageTaken(amount);
 
     if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
-   
 
     if (currentHealth <= 0) Die();
 }
