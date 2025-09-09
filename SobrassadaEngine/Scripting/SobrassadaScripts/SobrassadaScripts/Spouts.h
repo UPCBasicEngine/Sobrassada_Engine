@@ -27,6 +27,7 @@ class Spouts : public Script
 
   private:
     bool enableRune                         = false;
+    bool bossControlled                     = false;
     float activationRange                   = 10.0f;
     int damage                              = 1;
     float chargingDuration                  = 1.0f;

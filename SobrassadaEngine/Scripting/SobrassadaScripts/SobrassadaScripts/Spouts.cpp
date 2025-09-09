@@ -15,6 +15,7 @@
 Spouts::Spouts(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Enable Rune", InspectorField::FieldType::Bool, &enableRune});
+    fields.push_back({"Boss Controlled", InspectorField::FieldType::Bool, &bossControlled});
     fields.push_back({"Activation Range", InspectorField::FieldType::Float, &activationRange, 0.0f, 100.0f});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &damage, 0, 5});
     fields.push_back({"Charging Duration", InspectorField::FieldType::Float, &chargingDuration, 0.01f, 10.0f});
@@ -75,6 +76,8 @@ void Spouts::Update(float deltaTime)
         if (character == nullptr) return;
 
         if (enableRune) rune->SetEnabled(true);
+
+        if (bossControlled) return;
 
         damageCollider->SetEnabled(false);
         float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
