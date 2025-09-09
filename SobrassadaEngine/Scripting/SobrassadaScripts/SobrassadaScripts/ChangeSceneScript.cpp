@@ -51,12 +51,9 @@ void ChangeSceneScript::OnCollisionEnter(GameObject* otherObject, const float3 c
             playerScript->ExportState(playerState);
             SavePlayerData::SavePlayerToFile(playerState, savePath);
 
-            SceneModule* sceneModule   = AppEngine->GetSceneModule();
             std::string tempPlayerName = playerName;
 
             AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
-
-            GLOG("[ERROR] Failed to load scene: %s", targetSceneName);
         }
     }
 }
