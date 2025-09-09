@@ -1,13 +1,14 @@
 #include "pch.h"
+
 #include "Projectile.h"
+
 #include "CameraComponent.h"
-#include "ScriptComponent.h"
 #include "Character.h"
+#include "CuChulainn.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
-#include "WallCollision.h"
-#include "CuChulainn.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+
 #include "Math/Quat.h"
 
 static bool IsInsideCameraView(const float3& worldPosition, float screenEdgeMargin = 0.05f)
@@ -28,6 +29,7 @@ static bool IsInsideCameraView(const float3& worldPosition, float screenEdgeMarg
     const bool insideX      = (normalized.x >= -limit) && (normalized.x <= limit);
     const bool insideY      = (normalized.y >= -limit) && (normalized.y <= limit);
     const bool insideZ      = (normalized.z >= -1.0f - screenEdgeMargin) && (normalized.z <= 1.0f + screenEdgeMargin);
+
     return insideX && insideY && insideZ;
 }
 
@@ -46,51 +48,29 @@ bool Projectile::Init()
         GLOG("[WARNING: Projectile Init()] Couldn't find the collider component");
         return false;
     }
-
-    GLOG("PROJECTILE INIT DEBUG");
     return true;
 }
 
 void Projectile::Update(float deltaTime)
 {
-    if (isStuckInWall)
-    {
-        stuckTimer += deltaTime;
-
-       
-        if (stuckTimer >= stuckDuration)
-        {
-            parent->SetEnabled(false);
-          
-            isStuckInWall = false;
-            stuckTimer    = 0.0f;
-        }
-        return; 
-    }
-
-   
-    if (isActive)
-    {
-        Move(deltaTime);
-    }
+    Move(deltaTime);
 }
 
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
-   
     startPos        = origin;
     this->direction = direction.Normalized();
     frames          = 0;
     if (collider) collider->SetEnabled(false);
-    
+
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
     const Quat rotation      = Quat::LookAt(float3::unitZ, this->direction, float3::unitY, float3::unitY);
     const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
-    
+
     const float4x4 parentWS  = parent->GetParentGlobalTransform();
     const float4x4 localTRS  = parentWS.Inverted() * transform;
-    
+
     parent->SetLocalTransform(localTRS);
 
     parent->SetEnabledRecursive(true);
@@ -98,34 +78,13 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
 
 void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
+    // GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
+
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
-  if (script && script->GetScriptByType<Character>()) return;
-    
+    if (script && script->GetScriptByType<Character>()) return;
 
- if (otherObject->HasTag(wallTag) && script->GetScriptByType<WallCollision>())
-  {
-      GLOG("WALL WALL WALL WALL");
-      isStuckInWall = true;
-      stuckTimer    = 0.0f;
-
-      
-      if (collider) collider->SetEnabled(false);
-
-      GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
-      return; 
-  }
-  parent->SetEnabled(false);
-}
-
-void Projectile::OnWallHit()
-{
-    GLOG("Projectile hit wall - activating stuck state");
-
-    isStuckInWall = true;
-    stuckTimer    = 0.0f;
-    GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
-    StopProjectile();
+    parent->SetEnabled(false);
 }
 
 void Projectile::Hit(GameObject* otherObject)
@@ -138,35 +97,17 @@ void Projectile::Hit(GameObject* otherObject)
     }
 }
 
-void Projectile::StopProjectile()
-{
-    isActive = false;
-    parent->SetEnabled(false);
-
-    if (collider)
-    {
-        collider->SetEnabled(false);
-    }
-
-    GLOG("Projectile stopped and disabled");
-}
-
 void Projectile::Move(float deltaTime)
 {
-    if (!isActive) return;
-
-    // Let 20 frames pass before enabling the collider, so it doesn't collide with the shooter
+    // Let 20 frames pass before enabling the collider, so it doesn't collide with the previous collided element.
+    // TODO: Try to change this
     frames += 1;
-    if (frames > 20 && collider && !collider->GetEnabled())
-    {
-        collider->SetEnabled(true);
-    }
+    if (frames > 20 && collider && !collider->GetEnabled()) collider->SetEnabled(true);
 
-    //float3 currentPos  = parent->GetPosition();
-    //currentPos        += direction * speed * deltaTime;
-    
+    // float3 currentPos  = parent->GetPosition();
+    // currentPos        += direction * speed * deltaTime;
 
-    const float3 worldPos = parent->GetGlobalTransform().TranslatePart() + direction * speed * deltaTime;
+    const float3 worldPos   = parent->GetGlobalTransform().TranslatePart() + direction * speed * deltaTime;
     const float4x4 parentWS = parent->GetParentGlobalTransform();
     const float3 nextLocal  = (parentWS.Inverted() * float4(worldPos, 1.0f)).xyz();
 
@@ -174,6 +115,6 @@ void Projectile::Move(float deltaTime)
 
     if (worldPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.0f))
     {
-        StopProjectile();
+        parent->SetEnabled(false);
     }
 }
