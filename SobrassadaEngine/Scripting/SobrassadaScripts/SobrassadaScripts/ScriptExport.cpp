@@ -106,7 +106,7 @@ constexpr const char* scripts[] = {
     "BossMirage",
     "Boss",
     "MirageBossDash",
-    "ArcherProjectile"
+    "ArcherProjectile",
     "GameOverNavigatorScript"
 };
 
