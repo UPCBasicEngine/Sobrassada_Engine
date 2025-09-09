@@ -6,11 +6,11 @@
 #include "GameObject.h"
 #include "Globals.h"
 #include "ProjectModule.h"
+#include "SavePlayerData.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
-#include "SavePlayerData.h"
 
 ChangeSceneScript::ChangeSceneScript(GameObject* parent) : Script(parent)
 {
@@ -32,7 +32,7 @@ bool ChangeSceneScript::Init()
     return true;
 }
 
-void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
+void ChangeSceneScript::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     if (otherObject != player) return;
 
@@ -51,20 +51,10 @@ void ChangeSceneScript::OnCollision(GameObject* otherObject, const float3 collis
             playerScript->ExportState(playerState);
             SavePlayerData::SavePlayerToFile(playerState, savePath);
 
-            SceneModule* sceneModule = AppEngine->GetSceneModule();
+            SceneModule* sceneModule   = AppEngine->GetSceneModule();
             std::string tempPlayerName = playerName;
 
-            rapidjson::Document doc;
-            if (FileSystem::LoadJSON(fullScenePath.c_str(), doc))
-            {
-                if (doc.HasMember("Scene") && doc["Scene"].IsObject())
-                {
-                    sceneModule->LoadScene(doc["Scene"], false);
-                    sceneModule->SwitchPlayMode(true);
-
-                    GLOG("Scene change successful!");
-                }
-            }
+            AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
 
             GLOG("[ERROR] Failed to load scene: %s", targetSceneName);
         }
