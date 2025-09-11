@@ -638,8 +638,8 @@ void Boss::ChooseNextStateSecondPhase()
 
     case BossDistance::Near:
         shieldStrikesRate = 50;
-        waterSpoutsRate   = 100;
         shieldBlastRate   = 80;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Medium:
@@ -1405,10 +1405,50 @@ void Boss::Mirage()
 
 void Boss::WaterSpouts()
 {
-    if (waterSpout)
+    if (!waterSpout) return;
+
+     if (stateEnter)
     {
-        GLOG("Force Activating spout");
-        waterSpout->ForceActivate();
+        stateEnter        = false;
+        actionTriggerDone = false;
+        currentAction     = BossActions::WaterSpoutCharge;
+    }
+
+     switch (currentAction)
+    {
+    case BossActions::WaterSpoutCharge:
+        if (!actionTriggerDone)
+        {
+            agentAI->PauseMovement();
+            if (animComponent) animComponent->UseTrigger("WaterSpoutCharge"); // charge animation
+            actionTriggerDone = true;
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            waterSpout->ForceActivate();          // trigger the spout
+            currentAction     = BossActions::WaterSpoutHit; // move to hit
+            actionTriggerDone = false;
+        }
+        break;
+
+    case BossActions::WaterSpoutHit:
+        if (!actionTriggerDone)
+        {
+            if (animComponent) animComponent->UseTrigger("WaterSpoutHit"); // spout hit animation
+            actionTriggerDone = true;
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            actionTriggerDone = false;
+            ChooseNextState(); // go back to AI loop
+        }
+        break;
+
+    default:
+        GLOG("Error: WaterSpouts");
+        break;
     }
 }
 
@@ -1744,8 +1784,11 @@ const char* Boss::GetActionName() const
     case BossActions::End:
         return "End";
 
-    case BossActions::WaterSpouts:
-        return "WaterSpouts";
+    case BossActions::WaterSpoutCharge:
+        return "WaterSpoutCharge";
+
+    case BossActions::WaterSpoutHit:
+       return "WaterSpoutHit";
 
     case BossActions::Load:
         return "Load";

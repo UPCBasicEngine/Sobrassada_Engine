@@ -58,7 +58,8 @@ enum class BossActions
     Start, // Mirage
     Charge,
     End,
-    WaterSpouts,
+    WaterSpoutCharge, //WaterSpout
+    WaterSpoutHit,
     Load, // ShieldBlast
     PreShoot,
     Shoot,
