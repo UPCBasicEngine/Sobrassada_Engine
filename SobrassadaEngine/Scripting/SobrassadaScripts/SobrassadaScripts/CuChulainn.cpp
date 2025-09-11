@@ -405,7 +405,7 @@ void CuChulainn::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
-    if (arrowVfxIsActive && !arrowHitVfxObject->IsEnabled())
+    if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
     {
         GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
 
@@ -805,11 +805,16 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
     }
 
-    // Dash decal
-    dashDecalBufferTimer -= deltaTime;
-    if (dashDecalBufferTimer < 0.0f)
-    {
-        if (dashDecal) dashDecal->SetEnabled(false);
+        if (arrowVfxIsActive && arrowHitVfxObject && arrowHitVfxObject->IsEnabled())
+        {
+            arrowHitVfxTimer += deltaTime;
+            if (arrowHitVfxTimer >= arrowHitVfxDuration)
+            {
+                arrowHitVfxObject->SetEnabled(false);
+                arrowHitVfxTimer = 0.0f;
+                arrowVfxIsActive = false;
+            }
+        }
 
         dashDecalBufferTimer = 0.0f;
     }
