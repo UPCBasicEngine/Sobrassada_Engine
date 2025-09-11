@@ -30,7 +30,8 @@ enum class CharacterType
     Banshee,
     Destructible,
     Changeling,
-    Boss
+    Boss,
+    Mirage
 };
 
 class Character : public Script
@@ -130,6 +131,7 @@ class Character : public Script
     GameObject* onHitVfx1                       = nullptr;
     GameObject* onHitVfx2                       = nullptr;
 
+    std::string meshName                        = "";
     MeshComponent* mesh                         = nullptr;
     ShaderScriptComponent* colorChange          = nullptr;
 

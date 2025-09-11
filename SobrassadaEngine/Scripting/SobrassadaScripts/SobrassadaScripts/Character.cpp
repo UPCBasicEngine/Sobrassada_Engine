@@ -54,12 +54,13 @@ Character::Character(
 
     fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
 
-    if (type != CharacterType::CuChulainn)
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
+        fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
         fields.push_back({"On Hit VFX Duration", InspectorField::FieldType::Float, &onHitVfxDuration, 0.0f, 1.0f});
         fields.push_back({"On Hit Pivot Name", InspectorField::FieldType::InputText, &onHitPivotName});
         fields.push_back({"On Hit VFX 1", InspectorField::FieldType::InputText, &onHitVfx1Name});
@@ -96,7 +97,7 @@ bool Character::Init()
         else weaponCollider->SetEnabled(false);
     }
 
-    if (type != CharacterType::CuChulainn)
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
         onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
         if (!onHitPivot) GLOG("[WARNING - %s] No on hit Pivot found for enemy", parent->GetName())
@@ -109,13 +110,17 @@ bool Character::Init()
         if (!onHitVfx2) GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName())
         else onHitVfx2->SetEnabled(false);
 
-        colorChange = parent->GetComponentChild<ShaderScriptComponent*>(AppEngine);
-        if (!colorChange) GLOG("[WARNING - %s] No color change shader found in children", parent->GetName())
+        GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
+        if (!meshObject) GLOG("[WARNING - %s] No mesh object found in children", parent->GetName())
         else
         {
-            colorChange->SetEnabled(false);
-            mesh = colorChange->GetParent()->GetComponent<MeshComponent*>();
-            mesh->SetEnabled(true);
+            mesh = meshObject->GetComponent<MeshComponent*>();
+            if (mesh) mesh->SetEnabled(true);
+            else GLOG("[WARNING - %s] No mesh component found", parent->GetName())
+
+            colorChange = meshObject->GetComponent<ShaderScriptComponent*>();
+            if (colorChange) colorChange->SetEnabled(false);
+            else GLOG("[WARNING - %s] No shader script component found", parent->GetName())
         }
     }
 
@@ -315,7 +320,7 @@ void Character::UpdateTimers(float deltaTime)
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
 
-    if (type != CharacterType::CuChulainn && isHit)
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage && isHit)
     {
         onHitVfxTimer -= deltaTime;
 
@@ -347,7 +352,7 @@ void Character::TakeDamage(int amount)
 
     OnDamageTaken(amount);
 
-    if (type != CharacterType::CuChulainn)
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
         playerScript->OnEnemyHit();
 

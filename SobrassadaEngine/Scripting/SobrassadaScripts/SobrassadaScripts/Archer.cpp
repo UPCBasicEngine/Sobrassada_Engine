@@ -132,7 +132,7 @@ bool Archer::Init()
     GLOG("=== FINAL ARROW STATES ===");
     for (int i = 0; i < arrowPool.size(); i++)
     {
-        GameObject* arrowObj = arrowPool[i]->GetParent();
+        GameObject* arrowObj = arrowPool[i]->GetParent();;
         GLOG("Arrow[%d]: %s, Enabled: %s", i, arrowObj->GetName().c_str(), arrowObj->IsEnabled() ? "YES" : "NO");
     }
 
@@ -147,6 +147,17 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+
+    if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
+    {
+        parent->SetEnabled(false);
+    }
+
+    if (currentState == ArcherStates::DEATH)
+    {
+        Character::UpdateTimers(deltaTime);
+        return;
+    }
 
     if (isKnockback)
     {
@@ -170,15 +181,7 @@ void Archer::Update(float deltaTime)
     }
     Character::Update(deltaTime);
 
-    if (isDead)
-    {
-   
-        if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
-        {
-            GLOG("DEATH ANIMATION FINISHED - DISABLING OBJECT");
-            parent->SetEnabled(false);
-        }
-    }
+
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
         const std::string life      = "Health: " + std::to_string(currentHealth);
