@@ -621,6 +621,7 @@
     <ClCompile Include="Utils\SSAO.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\WindConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1227,6 +1228,8 @@
     <ClInclude Include="Utils\SSAO.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />
+    <ClInclude Include="Utils\WindConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

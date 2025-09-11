@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "ArcherProjectile.h"
 #include "Banshee_v2.h"
 #include "Boss.h"
 #include "CameraComponent.h"
@@ -122,7 +123,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             }
         }
 
-        Projectile* arrowProj = otherScript->GetScriptByType<Projectile>();
+        ArcherProjectile* arrowProj = otherScript->GetScriptByType<ArcherProjectile>();
         if (arrowProj)
         {
             arrowProj->Hit(otherObject);
@@ -173,7 +174,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
+                                  playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -215,18 +217,26 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
     otherScript = otherObject->GetComponent<ScriptComponent*>();
     if (otherScript)
     {
-        // Projectile check
+        // Player projectile check
         Projectile* projectile = otherScript->GetScriptByType<Projectile>();
         if (projectile && otherWeapon && otherWeapon->GetEnabled())
         {
+            TakeDamage(projectile->GetDamage());
+            otherWeapon->SetEnabled(false);
+            otherObject->SetEnabled(false);
+        }
 
+        // Archer projectile check
+        ArcherProjectile* archerProjectile = otherScript->GetScriptByType<ArcherProjectile>();
+        if (archerProjectile && otherWeapon && otherWeapon->GetEnabled())
+        {
             if (type == CharacterType::CuChulainn)
             {
                 CuChulainn* player = static_cast<CuChulainn*>(this);
                 player->OnArrowHit();
             }
 
-            TakeDamage(projectile->GetDamage());
+            TakeDamage(archerProjectile->GetDamage());
             otherWeapon->SetEnabled(false);
             otherObject->SetEnabled(false);
         }

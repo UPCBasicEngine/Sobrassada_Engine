@@ -51,6 +51,13 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     void SetIsRunning(bool running) { isRunning = running; }
 
+    const float3& GetVelocity() const { return currentVelocity; }
+    bool IsMoving(float threshold = 0.1f) const { return currentVelocity.Length() > threshold; }
+    float3 GetPredictedPosition(float timeAhead) const { return lastPosition + (currentVelocity * timeAhead); }
+
+  
+
+
   private:
     void Dash(float deltaTime);
     void CheckDashObstacles();
@@ -61,6 +68,11 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
   private:
     float3 targetDirection       = float3::zero;
     float3 lastPosition          = float3::zero;
+    float3 previousPosition      = float3::zero;
+    float3 currentVelocity       = float3::zero;
+    static const int VELOCITY_SAMPLES        = 3;
+    float3 velocitySamples[VELOCITY_SAMPLES] = {float3::zero};
+    int velocitySampleIndex                  = 0;
 
     float walkSpeed              = 3.0f;
     float maxSpeed               = 7.0f;
