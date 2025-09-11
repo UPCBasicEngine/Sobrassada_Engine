@@ -317,6 +317,63 @@ bool Boss::Init()
             else GLOG("Not blast area object found for ferdiad");
         }
         else GLOG("Blast hit VFX not found for ferdiad");
+
+        GameObject* blastBlackLights = shieldBlastVFX->GetChildGameObjectByName("BlackLights");
+        if (blastBlackLights)
+        {
+            MeshComponent* blastBlackLightsMesh = blastBlackLights->GetComponent<MeshComponent*>();
+            if (blastBlackLightsMesh) blastBlackLightsMesh->SetEnabled(false);
+            else GLOG("Blast black lights mesh not found for ferdiad");
+
+            blastBlackLightsScript = blastBlackLights->GetComponent<ShaderScriptComponent*>();
+            if (blastBlackLightsScript)
+            {
+                blastBlackLightsScript->SetEnabled(false);
+
+                blastBlackLightsUV = blastBlackLightsScript->GetScriptByType<MovingUVTransparent>();
+                if (!blastBlackLightsUV) GLOG("Blast black lights script incorrect for ferdiad");
+            }
+            else GLOG("Blast black lights script not found for ferdiad");
+        }
+        else GLOG("Blast black lights VFX not found for ferdiad");
+
+        GameObject* blastSphereEnergy = shieldBlastVFX->GetChildGameObjectByName("SphereEnergy");
+        if (blastSphereEnergy)
+        {
+            MeshComponent* blastSphereEnergyMesh = blastSphereEnergy->GetComponent<MeshComponent*>();
+            if (blastSphereEnergyMesh) blastSphereEnergyMesh->SetEnabled(false);
+            else GLOG("Blast sphere energy mesh not found for ferdiad");
+
+            blastSphereEnergyScript = blastSphereEnergy->GetComponent<ShaderScriptComponent*>();
+            if (blastSphereEnergyScript)
+            {
+                blastSphereEnergyScript->SetEnabled(false);
+
+                blastSphereEnergyUV = blastSphereEnergyScript->GetScriptByType<MovingUVTransparent>();
+                if (!blastSphereEnergyUV) GLOG("Blast sphere energy script incorrect for ferdiad");
+            }
+            else GLOG("Blast sphere energy script not found for ferdiad");
+        }
+        else GLOG("Blast sphere energy VFX not found for ferdiad");
+
+        GameObject* blastBlackExpansion = shieldBlastVFX->GetChildGameObjectByName("BlackExpansion");
+        if (blastBlackExpansion)
+        {
+            MeshComponent* blastBlackExpansionMesh = blastBlackExpansion->GetComponent<MeshComponent*>();
+            if (blastBlackExpansionMesh) blastBlackExpansionMesh->SetEnabled(false);
+            else GLOG("Blast black expansion mesh not found for ferdiad");
+
+            blastBlackExpansionScript = blastBlackExpansion->GetComponent<ShaderScriptComponent*>();
+            if (blastBlackExpansionScript)
+            {
+                blastBlackExpansionScript->SetEnabled(false);
+
+                blastBlackExpansionUV = blastBlackExpansionScript->GetScriptByType<MovingUVTransparent>();
+                if (!blastBlackExpansionUV) GLOG("Blast black expansion script incorrect for ferdiad");
+            }
+            else GLOG("Blast black expansion script not found for ferdiad");
+        }
+        else GLOG("Blast black expansion VFX not found for ferdiad");
     }
     else GLOG("Shield blast VFX not found for ferdiad");
 
@@ -452,6 +509,13 @@ void Boss::HandleState(float deltaTime)
     case BossStates::WaterSpouts:
         break;
     }
+
+    if (playerScript &&
+        (playerScript->GetState() == CharacterStates::DEATH || playerScript->GetState() == CharacterStates::RESPAWN))
+    {
+        doIdle = true;
+        ChooseNextState();
+    }
 }
 
 void Boss::UpdateTimers(float deltaTime)
@@ -543,11 +607,11 @@ void Boss::ChooseNextStateFirstPhase()
     {
         if (num <= shieldStrikesRate)
         {
-            currentState = BossStates::ShieldStrikes;
+            SetState(BossStates::ShieldStrikes);
         }
         else if (num <= overheadStrikeRate)
         {
-            currentState = BossStates::OverheadStrike;
+            SetState(BossStates::OverheadStrike);
         }
     }
 }
@@ -611,11 +675,11 @@ void Boss::ChooseNextStateSecondPhase()
     {
         if (num <= shieldStrikesRate)
         {
-            currentState = BossStates::ShieldStrikes;
+            SetState(BossStates::ShieldStrikes);
         }
         else if (num <= shieldBlastRate)
         {
-            currentState = BossStates::ShieldBlast;
+            SetState(BossStates::ShieldBlast);
         }
     }
 }
@@ -685,15 +749,15 @@ void Boss::ChooseNextStateThirdPhase()
     {
         if (num <= shieldStrikesRate)
         {
-            currentState = BossStates::ShieldStrikes;
+            SetState(BossStates::ShieldStrikes);
         }
         else if (num <= overheadStrikeRate)
         {
-            currentState = BossStates::OverheadStrike;
+            SetState(BossStates::OverheadStrike);
         }
         else if (num <= shieldBlastRate)
         {
-            currentState = BossStates::ShieldBlast;
+            SetState(BossStates::ShieldBlast);
         }
     }
 }
@@ -705,10 +769,11 @@ void Boss::Idle()
 
         // TODO: Randomize the idle duration
         // agentAI->SetSpeed(0.0f, 10.0f);
-
+        if (doIdle) ResetValues(true);
         stateEnter    = false;
-        currentAction = BossActions::Idle;
         doIdle        = false;
+        currentAction = BossActions::Idle;
+        agentAI->PauseMovement();
 
         if (animComponent) animComponent->UseTrigger("Idle");
     }
@@ -720,10 +785,11 @@ void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
-        ResetValues(true);
+        if (doTaunt) ResetValues(true);
         stateEnter    = false;
         doTaunt       = false;
         currentAction = BossActions::Taunt;
+        agentAI->PauseMovement();
 
         if (animComponent) animComponent->UseTrigger("Taunt");
     }
@@ -763,6 +829,18 @@ void Boss::ShieldStrikes(float deltaTime)
             else if (shieldStrikeLastAction == 2) currentAction = BossActions::Combo3;
             else currentAction = BossActions::Combo1;
             actionTriggerDone = false;
+        }
+
+        switch (CheckDistance()) // if far change mechanic
+        {
+        case BossDistance::Far:
+        case BossDistance::Farther:
+        case BossDistance::Extreme:
+            agentAI->PauseMovement();
+            ChooseNextState();
+            break;
+        default:
+            break;
         }
         break;
 
@@ -876,6 +954,8 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::Prepare:
         if (!actionTriggerDone)
         {
+            agentAI->ResumeMovement();
+
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Prepare");
 
@@ -1381,6 +1461,12 @@ void Boss::ResetValues(bool isForMirage)
     if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
     if (blastHitScript) blastHitScript->SetEnabled(false);
     if (blastHitUV) blastHitUV->Reset();
+    if (blastBlackLightsScript) blastBlackLightsScript->SetEnabled(false);
+    if (blastBlackLightsUV) blastBlackLightsUV->Reset();
+    if (blastSphereEnergyScript) blastSphereEnergyScript->SetEnabled(false);
+    if (blastSphereEnergyUV) blastSphereEnergyUV->Reset();
+    if (blastBlackExpansionScript) blastBlackExpansionScript->SetEnabled(false);
+    if (blastBlackExpansionUV) blastBlackExpansionUV->Reset();
 
     agentAI->ResetAngularSpeed();
     agentAI->SetFreeMove(false);
@@ -1400,6 +1486,7 @@ void Boss::ShieldBlast(float deltaTime)
     case BossActions::Load:
         if (!actionTriggerDone)
         {
+            agentAI->PauseMovement();
             actionTriggerDone = true;
             animComponent->UseTrigger("BlastCharge");
         }
@@ -1422,7 +1509,7 @@ void Boss::ShieldBlast(float deltaTime)
             attackHitboxDelay    = blastHitboxDelay;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
-            agentAI->SetAngularSpeed(1.0f);
+            agentAI->SetAngularSpeed(0.5f);
         }
 
         if (attackTimer >= 0.3f && blastPreHitMesh && !blastPreHitMesh->GetEnabled()) blastPreHitMesh->SetEnabled(true);
@@ -1446,6 +1533,9 @@ void Boss::ShieldBlast(float deltaTime)
             if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
             if (blastArea) blastArea->SetEnabled(true);
             if (blastHitScript) blastHitScript->SetEnabled(true);
+            if (blastBlackLightsScript) blastBlackLightsScript->SetEnabled(true);
+            if (blastSphereEnergyScript) blastSphereEnergyScript->SetEnabled(true);
+            if (blastBlackExpansionScript) blastBlackExpansionScript->SetEnabled(true);
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
@@ -1457,6 +1547,12 @@ void Boss::ShieldBlast(float deltaTime)
             if (blastArea) blastArea->SetEnabled(false);
             if (blastHitScript) blastHitScript->SetEnabled(false);
             if (blastHitUV) blastHitUV->Reset();
+            if (blastBlackLightsScript) blastBlackLightsScript->SetEnabled(false);
+            if (blastBlackLightsUV) blastBlackLightsUV->Reset();
+            if (blastSphereEnergyScript) blastSphereEnergyScript->SetEnabled(false);
+            if (blastSphereEnergyUV) blastSphereEnergyUV->Reset();
+            if (blastBlackExpansionScript) blastBlackExpansionScript->SetEnabled(false);
+            if (blastBlackExpansionUV) blastBlackExpansionUV->Reset();
 
             agentAI->ResetAngularSpeed();
 
@@ -1469,6 +1565,36 @@ void Boss::ShieldBlast(float deltaTime)
         GLOG("Error: ShieldBlast")
         break;
     }
+}
+
+void Boss::SetState(BossStates newState)
+{
+    if (newState == currentState)
+    {
+        repeatedState++;
+        if (repeatedState >= maxRepeats)
+        {
+            currentState  = ChooseAlternativeState();
+            repeatedState = 0;
+            return;
+        }
+    }
+    else
+    {
+        repeatedState = 0;
+    }
+
+    currentState = newState;
+}
+
+BossStates Boss::ChooseAlternativeState() const
+{
+    std::vector<BossStates> allStates = GetAvailableStates();
+
+    allStates.erase(std::remove(allStates.begin(), allStates.end(), currentState), allStates.end());
+
+    int index = rand() % allStates.size();
+    return allStates[index];
 }
 
 void Boss::ChangePhase()
@@ -1492,6 +1618,21 @@ void Boss::ChangePhase()
         agentAI->ResumeMovement();
 
         ChooseNextState();
+    }
+}
+
+const std::vector<BossStates>& Boss::GetAvailableStates() const
+{
+    switch (phase)
+    {
+    case 1:
+        return phase1States;
+    case 2:
+        return phase2States;
+    case 3:
+        return phase3States;
+    default:
+        break;
     }
 }
 

@@ -16,8 +16,14 @@ class SpawnPoint : public Script
     void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
+    bool isSetupCorrectly    = true;
     std::string playerName   = "";
+    std::string treeName     = "EN_TreeOfLife";
+    std::string leafsName    = "Tree_Leaves";
     const GameObject* player = nullptr;
     bool isOneUse            = false;
     int setHealth            = 0;
+    bool activated           = false;
+    GameObject* tree        = nullptr;
+    GameObject* leafs        = nullptr;
 };

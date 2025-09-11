@@ -2,11 +2,11 @@
 
 #include "Projectile.h"
 
+#include "CameraComponent.h"
 #include "Character.h"
+#include "CuChulainn.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
-#include "CuChulainn.h"
-#include "CameraComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include "Math/Quat.h"
@@ -58,29 +58,33 @@ void Projectile::Update(float deltaTime)
 
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
-   
     startPos        = origin;
-    this->direction = direction;
+    this->direction = direction.Normalized();
     frames          = 0;
-    
+    if (collider) collider->SetEnabled(false);
+
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
-    const Quat rotation      = Quat::LookAt(float3::unitZ, direction, float3::unitY, float3::unitY);
+    const Quat rotation      = Quat::LookAt(float3::unitZ, this->direction, float3::unitY, float3::unitY);
     const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
-    parent->SetLocalTransform(transform);
+
+    const float4x4 parentWS  = parent->GetParentGlobalTransform();
+    const float4x4 localTRS  = parentWS.Inverted() * transform;
+
+    parent->SetLocalTransform(localTRS);
 
     parent->SetEnabledRecursive(true);
 }
 
 void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
-    //GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
+    // GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
 
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
-  if (script && script->GetScriptByType<Character>()) return;
+    if (script && script->GetScriptByType<Character>()) return;
 
-      parent->SetEnabled(false);
+    parent->SetEnabled(false);
 }
 
 void Projectile::Hit(GameObject* otherObject)
@@ -100,13 +104,16 @@ void Projectile::Move(float deltaTime)
     frames += 1;
     if (frames > 20 && collider && !collider->GetEnabled()) collider->SetEnabled(true);
 
-    float3 currentPos  = parent->GetPosition();
-    currentPos        += direction * speed * deltaTime;
-    parent->SetLocalPosition(currentPos);
+    // float3 currentPos  = parent->GetPosition();
+    // currentPos        += direction * speed * deltaTime;
 
-    const float3 worldPos = parent->GetGlobalTransform().TranslatePart();
+    const float3 worldPos   = parent->GetGlobalTransform().TranslatePart() + direction * speed * deltaTime;
+    const float4x4 parentWS = parent->GetParentGlobalTransform();
+    const float3 nextLocal  = (parentWS.Inverted() * float4(worldPos, 1.0f)).xyz();
 
-    if (currentPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.11f))
+    parent->SetLocalPosition(nextLocal);
+
+    if (worldPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.0f))
     {
         parent->SetEnabled(false);
     }
