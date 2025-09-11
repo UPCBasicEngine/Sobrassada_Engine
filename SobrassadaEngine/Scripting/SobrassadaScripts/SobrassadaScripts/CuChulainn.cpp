@@ -794,7 +794,7 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (dashBufferTimer < 0.0f) desiredDash = false;
     }
 
-    if (arrowVfxIsActive && arrowHitVfxObject->IsEnabled())
+    if (arrowVfxIsActive && arrowHitVfxObject && arrowHitVfxObject->IsEnabled())
     {
         arrowHitVfxTimer += deltaTime;
         if (arrowHitVfxTimer >= arrowHitVfxDuration)
@@ -805,16 +805,11 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
     }
 
-        if (arrowVfxIsActive && arrowHitVfxObject && arrowHitVfxObject->IsEnabled())
-        {
-            arrowHitVfxTimer += deltaTime;
-            if (arrowHitVfxTimer >= arrowHitVfxDuration)
-            {
-                arrowHitVfxObject->SetEnabled(false);
-                arrowHitVfxTimer = 0.0f;
-                arrowVfxIsActive = false;
-            }
-        }
+    // Dash decal
+    dashDecalBufferTimer -= deltaTime;
+    if (dashDecalBufferTimer < 0.0f)
+    {
+        if (dashDecal) dashDecal->SetEnabled(false);
 
         dashDecalBufferTimer = 0.0f;
     }
