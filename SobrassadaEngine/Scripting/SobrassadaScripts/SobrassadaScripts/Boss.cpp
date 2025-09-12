@@ -637,32 +637,32 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 50;
-        shieldBlastRate   = 80;
+        shieldStrikesRate = 10;
+        shieldBlastRate   = 20;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate = 40;
-        shieldBlastRate   = 80;
+        shieldStrikesRate = 10;
+        shieldBlastRate   = 20;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate = 40;
-        shieldBlastRate   = 80;
+        shieldStrikesRate = 10;
+        shieldBlastRate   = 20;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Far:
-        shieldStrikesRate = 20;
-        shieldBlastRate   = 80;
+        shieldStrikesRate = 10;
+        shieldBlastRate   = 20;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Farther:
         shieldStrikesRate = 10;
-        shieldBlastRate   = 80;
+        shieldBlastRate   = 20;
         waterSpoutsRate   = 100;
         break;
 
@@ -692,7 +692,12 @@ void Boss::ChooseNextStateSecondPhase()
         {
             SetState(BossStates::ShieldBlast);
         }
+        else if (num <= waterSpoutsRate)
+        {
+            SetState(BossStates::WaterSpouts);
+        }
     }
+
 }
 
 // Phase3: (ALL) ShieldStrikes, OverheadStrike, ShieldBlast, Mirage & WaterSpouts
