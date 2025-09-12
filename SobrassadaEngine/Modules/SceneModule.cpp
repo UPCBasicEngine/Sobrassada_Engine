@@ -214,8 +214,6 @@ void SceneModule::CreateScene()
 
 void SceneModule::LoadScene(const rapidjson::Value& initialState, const bool forceReload)
 {
-    auto start = std::chrono::high_resolution_clock::now();
-    
     const UID extractedSceneUID = initialState["UID"].GetUint64();
     if (!forceReload && loadedScene != nullptr && loadedScene->GetSceneUID() == extractedSceneUID)
     {
@@ -227,9 +225,6 @@ void SceneModule::LoadScene(const rapidjson::Value& initialState, const bool for
 
     loadedScene = new Scene(initialState, extractedSceneUID);
     loadedScene->Init();
-
-    auto finish = std::chrono::high_resolution_clock::now();
-    GLOG("Loading time: %g", static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() / 1000000.))
 }
 
 void SceneModule::CloseScene()
