@@ -49,6 +49,9 @@ class LibraryModule : public Module
     UID AssignFiletypeUID(UID originalUID, FileType fileType);
     void DeletePrefabFiles(UID prefabUID);
 
+    // Deletes the metadata cache so its regenerated with the next call to access it
+    void InvalidateMetadataCache();
+
     void AddTexture(UID textureUID, const std::string& ddsPath);
     void AddMesh(UID meshUID, const std::string& matPath);
     void AddMaterial(UID materialUID, const std::string& sobPath);

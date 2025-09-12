@@ -281,6 +281,7 @@ void LibraryModule::SearchImportOptionsFromUID(UID uid, const std::string& path,
 
     if (const auto it = cachedMetadataDocuments.find(uid); it != cachedMetadataDocuments.end())
     {
+        // Doc can not be cached, so we have to load the json twice
         rapidjson::Document doc;
         if (!FileSystem::LoadJSON(it->second.c_str(), doc)) return;
         
@@ -353,6 +354,11 @@ void LibraryModule::DeletePrefabFiles(UID prefabUID)
     resourcePathsMap.erase(prefabUID);
 
     App->GetSceneModule()->GetScene()->OverridePrefabs(prefabUID);
+}
+
+void LibraryModule::InvalidateMetadataCache()
+{
+    cachedMetadataDocuments.clear();
 }
 
 void LibraryModule::AddTexture(UID textureUID, const std::string& textureName)
