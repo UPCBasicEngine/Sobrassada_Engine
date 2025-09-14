@@ -23,8 +23,6 @@
 #include <SDL_mouse.h>
 #include <algorithm>
 #include <cmath>
-#include <thread>
-#include <chrono>
 
 CharacterControllerComponent::CharacterControllerComponent(UID uid, GameObject* parent)
     : Component(uid, parent, "Character Controller", COMPONENT_CHARACTER_CONTROLLER)
