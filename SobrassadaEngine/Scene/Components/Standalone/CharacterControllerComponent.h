@@ -23,7 +23,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override;
 
-    void AdjustHeightToNavMesh(float3& currentPos);
+    void AdjustHeightToNavMesh(float3 currentPos, float deltaTime);
     void Move(float deltaTime);
     void LookAtMovement(const float3& moveDir, float deltaTime);
     void Rotate(float rotationDirection, float deltaTime);
@@ -84,7 +84,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     dtNavMeshQuery* navMeshQuery = nullptr;
 
-    float gravity                = -30.0f;
+    float gravity                = -40.0f;
     float verticalSpeed          = 0.0f;
     float maxFallSpeed           = -30.0f;
 

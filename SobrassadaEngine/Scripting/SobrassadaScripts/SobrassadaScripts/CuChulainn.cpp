@@ -1102,13 +1102,13 @@ void CuChulainn::OnDamageTaken(int amount)
         const float verticalSpeed = character->GetRealSpeed().y;
 
         // GLOG("Vertical speed %f", verticalSpeed);
-        if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
+        if (verticalSpeed <= -1.0f && !character->IsGrounded() && animComponent)
         {
             animComponent->UseTrigger("Fall");
             state = CharacterStates::FALL;
         }
 
-        if (state == CharacterStates::FALL && verticalSpeed >= -1.0f)
+        if (state == CharacterStates::FALL && character->IsGrounded())
         {
             animComponent->UseTrigger("Land");
             character->EnableMovement(false);
