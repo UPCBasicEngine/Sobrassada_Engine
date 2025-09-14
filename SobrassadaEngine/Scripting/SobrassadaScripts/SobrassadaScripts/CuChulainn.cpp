@@ -722,8 +722,21 @@ void CuChulainn::OnDamageTaken(int amount)
 
         if (direction.Length() < 0.55f) character->SetIsRunning(false);
         else character->SetIsRunning(true);
+        
         direction = camFront * direction.z + camRight * direction.x;
+        
+        const float deltaTime = AppEngine->GetGameTimer()->GetDeltaTime();
+        const float playerSpeed = character->GetSpeed();
+        const float skinWidth   = 0.05f;
+        const float lookAheadDistance = max(0.12f, playerSpeed * deltaTime);
+
+        //if (/*Check raycast detect blocker GO*/)
+        //{
+        //    direction                     = float3::zero;
+        //}
+
         character->SetDirection(direction);
+
 
         // Heal
         if (keyboard[SDL_SCANCODE_E] == KEY_DOWN || controller[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
