@@ -52,6 +52,10 @@ bool ShaderModule::Init()
     particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
 
     videoProgram          = CreateShaderProgram(VIDEO_VERTEX_SHADER_PATH, VIDEO_FRAGMENT_SHADER_PATH);
+
+    // REMOVE JUST TESTING
+    redTextureProgram     = CreateComputeProgram("./EngineDefaults/Shader/Compute/RedTextureCompute.glsl");
+
     return true;
 }
 

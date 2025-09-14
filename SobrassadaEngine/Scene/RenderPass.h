@@ -34,6 +34,7 @@ class RenderPass
     void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
     void SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
     void SsaoBlurPassRender(SSAO* ssao);
+    void VolumetricFogPassRender();
 
     void RenderGBufferDebug(GBuffer* gbuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) const;
@@ -59,4 +60,7 @@ class RenderPass
     unsigned int visibleLightIndicesSSBO = 0;
     size_t currentSize                   = 0;
     int tilesX;
+
+    // Volumetric Fog
+    unsigned int fogResultTexture = 0;
 };

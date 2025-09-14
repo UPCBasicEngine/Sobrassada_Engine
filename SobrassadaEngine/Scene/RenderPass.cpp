@@ -97,6 +97,8 @@ RenderPass::~RenderPass()
     glDeleteTextures(1, &depthTexture);
     glDeleteFramebuffers(1, &depthFBO);
 
+    glDeleteTextures(1, &fogResultTexture);
+
     gbuffer     = nullptr;
     framebuffer = nullptr;
 }
@@ -298,6 +300,11 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
+    glPopDebugGroup();
+
+    // TEMPORAL, ADJUST LATER
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
+    VolumetricFogPassRender();
     glPopDebugGroup();
 }
 
@@ -549,7 +556,7 @@ void RenderPass::ShadowMapPassRender(
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
 
-    //batchManager->RenderShadowMap(meshesToRender, ubo);
+    // batchManager->RenderShadowMap(meshesToRender, ubo);
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -632,6 +639,56 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderPass::VolumetricFogPassRender()
+{
+    if (fogResultTexture == 0)
+    {
+        glGenTextures(1, &fogResultTexture);
+        glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    }
+
+    
+
+    glBindImageTexture(5, fogResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
+
+    glUseProgram(App->GetShaderModule()->GetRedTextureComputeProgram());
+
+    // Local size of compute is (8,8,1)
+    unsigned int numGroupsX = (width + (8 - 1)) / 8;
+    unsigned int numGroupsY = (height + (8 - 1)) / 8;
+    float blendFactor       = 0.5f;
+
+    glUniform1i(0, width);
+    glUniform1i(1, height);
+    glUniform1f(2, blendFactor);
+
+    glDispatchCompute(numGroupsX, numGroupsY, 1);
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glUseProgram(quadProgram);
+
+    unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
+    glUniform1i(loc, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glDisable(GL_BLEND);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const

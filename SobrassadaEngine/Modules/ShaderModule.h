@@ -45,6 +45,9 @@ class ShaderModule : public Module
     int GetSsaoBlurProgram() const { return ssaoBlurProgram; }
     int GetVideoProgram() const { return videoProgram; }
 
+    // REMOVE JUST TESTING
+    unsigned int GetRedTextureComputeProgram() const { return redTextureProgram; }
+
   private:
     char* LoadShaderSource(const char* shaderPath);
     unsigned int CompileShader(unsigned int shaderType, const char* source);
@@ -88,6 +91,9 @@ class ShaderModule : public Module
     int ssaoBlurProgram                = -1;
 
     int videoProgram                   = -1;
+
+    // REMOVE JUST TESTING
+    unsigned int redTextureProgram     = 0;
 
     std::map<HashString, unsigned int> customShaderPrograms;
 };
