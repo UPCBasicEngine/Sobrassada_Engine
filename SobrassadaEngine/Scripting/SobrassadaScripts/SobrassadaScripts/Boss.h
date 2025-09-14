@@ -233,7 +233,7 @@ class Boss : public Character
     int repeatedState                          = 0;
     const int maxRepeats                       = 2;
     // WaterSpout
-    Spouts* waterSpout = nullptr;
+    std::vector<Spouts*> waterSpouts;
     std::string spoutName = "";
 
     const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};

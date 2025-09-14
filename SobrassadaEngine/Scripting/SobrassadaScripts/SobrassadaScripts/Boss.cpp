@@ -80,9 +80,19 @@ bool Boss::Init()
     if (bigArea) bigArea->SetEnabled(false);
     else GLOG("Not big area object found for ferdiad");
 
-    GameObject* spout            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spoutName);
-    ScriptComponent* spoutScript = spout->GetComponent<ScriptComponent*>();
-    waterSpout                   = spoutScript->GetScriptByType<Spouts>();
+    //grab the 4 spouts in the arena
+    for (int i = 1; i <= 4; ++i)
+    {
+        std::string spoutsNames = spoutName + std::to_string(i);
+        GameObject* spout = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spoutsNames);
+        if (!spout) continue;
+
+        ScriptComponent* spoutScript = spout->GetComponent<ScriptComponent*>();
+        if (!spoutScript) continue;
+
+        Spouts* spoutLogic = spoutScript->GetScriptByType<Spouts>();
+        if (spoutLogic) waterSpouts.push_back(spoutLogic);
+    }
 
     GameObject* overheadPrepareVFX =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadPrepareVFXName);
@@ -1421,21 +1431,25 @@ void Boss::WaterSpouts()
 
      switch (currentAction)
     {
-    case BossActions::WaterSpoutCharge:
-        if (!actionTriggerDone)
-        {
-            agentAI->PauseMovement();
-            if (animComponent) animComponent->UseTrigger("WaterSpoutCharge"); // charge animation
-            actionTriggerDone = true;
-        }
+     case BossActions::WaterSpoutCharge:
+         if (!actionTriggerDone)
+         {
+             agentAI->PauseMovement();
+             if (animComponent) animComponent->UseTrigger("WaterSpoutCharge");
+             actionTriggerDone = true;
+         }
 
-        if (animComponent && animComponent->IsFinished())
-        {
-            waterSpout->ForceActivate();          // trigger the spout
-            currentAction     = BossActions::WaterSpoutHit; // move to hit
-            actionTriggerDone = false;
-        }
-        break;
+         if (animComponent && animComponent->IsFinished())
+         {
+             for (Spouts* spout : waterSpouts)
+             {
+                 if (spout) spout->ForceActivate();
+             }
+
+             currentAction = BossActions::WaterSpoutHit;
+             actionTriggerDone = false;
+         }
+         break;
 
     case BossActions::WaterSpoutHit:
         if (!actionTriggerDone)

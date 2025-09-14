@@ -30,7 +30,7 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
         {"Rotation Speed Blue Waves", InspectorField::FieldType::Float, &rotationSpeedBlueWaves, 0.0f, 180.0f}
     );
     fields.push_back({"Explosion Duration", InspectorField::FieldType::Float, &explosionDuration, 0.01f, 0.5f});
-    fields.push_back({"Water Spout Duration", InspectorField::FieldType::Float, &spoutWaterTimer, 0.01f, 10.0f});
+    fields.push_back({"Water Spout Duration", InspectorField::FieldType::Float, &spoutWaterTimer, 0.01f, 100.0f});
     fields.push_back({"Character", InspectorField::FieldType::GameObject, &character});
     fields.push_back(
         {"Trigger Spout",
