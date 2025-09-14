@@ -497,9 +497,8 @@ namespace MeshImporter
         float3 maxPos  = *reinterpret_cast<float3*>(cursor);
         cursor        += sizeof(float3);
 
-        rapidjson::Document doc;
         rapidjson::Value importOptions;
-        App->GetLibraryModule()->GetImportOptions(meshUID, doc, importOptions);
+        App->GetLibraryModule()->GetImportOptions(meshUID, importOptions);
 
         ResourceMesh* mesh = new ResourceMesh(meshUID, name, maxPos, minPos, importOptions);
 

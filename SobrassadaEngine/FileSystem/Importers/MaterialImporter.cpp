@@ -262,10 +262,9 @@ ResourceMaterial* MaterialImporter::LoadMaterial(UID materialUID)
     }
 
     char* cursor = buffer;
-
-    rapidjson::Document doc;
+    
     rapidjson::Value importOptions;
-    App->GetLibraryModule()->GetImportOptions(materialUID, doc, importOptions);
+    App->GetLibraryModule()->GetImportOptions(materialUID, importOptions);
 
     // Create Mesh
     Material mat               = *reinterpret_cast<Material*>(cursor);
