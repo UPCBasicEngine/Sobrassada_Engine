@@ -64,6 +64,10 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Dash Icon Name", InspectorField::FieldType::InputText, &dashIconName});
     fields.push_back({"Health Bar Name", InspectorField::FieldType::InputText, &healthBarName});
     fields.push_back({"Melee VFX delay", InspectorField::FieldType::Float, &meleeVfxDelay, 0.0f, 1.0f});
+    fields.push_back({"Time Stop on hit duration", InspectorField::FieldType::Float, &hitTimeStopDuration, 0.0f, 1.0f});
+    fields.push_back(
+        {"Time Stop on death duration", InspectorField::FieldType::Float, &deathTimeStopDuration, 0.0f, 1.0f}
+    );
 
     // Unlocked abilities
     fields.push_back({InspectorField::FieldType::Text, (void*)"Unlocked Abilities from Start"});
@@ -213,7 +217,6 @@ bool CuChulainn::Init()
     arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
-
     attackVfxHorizontal1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal1Name);
     if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
     else attackVfxHorizontal1->SetEnabled(false);
@@ -904,8 +907,11 @@ void CuChulainn::UpdateTimers(float deltaTime)
     if (isCursed)
     {
         curseTimer -= deltaTime;
-        if (curseTimer <= 0) EndCurse();
+        if (curseTimer <= 0.0f) EndCurse();
     }
+
+    timeStopTimer -= AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
+    if (timeStopTimer <= 0.0f) AppEngine->GetGameTimer()->SetTimeScale(1.0f);
 
     if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
@@ -1588,11 +1594,15 @@ void CuChulainn::AddRiastrad(int amount)
 
 void CuChulainn::OnEnemyHit()
 {
+    AppEngine->GetGameTimer()->SetTimeScale(0.0f);
+    timeStopTimer = hitTimeStopDuration;
     AddRiastrad(riastradOnHit);
 }
 
 void CuChulainn::OnEnemyDefeated()
 {
+    AppEngine->GetGameTimer()->SetTimeScale(0.0f);
+    timeStopTimer = deathTimeStopDuration;
     AddRiastrad(riastradOnEnemyDeath);
 }
 

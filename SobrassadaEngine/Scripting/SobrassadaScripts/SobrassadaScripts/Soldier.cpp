@@ -67,12 +67,18 @@ bool Soldier::Init()
 
 void Soldier::Update(float deltaTime)
 {
+    if (agentAI == nullptr) return;
+
     if (currentState == SoldierStates::DEATH && animComponent && animComponent->IsFinished())
     {
         parent->SetEnabled(false);
     }
 
-    if (currentState == SoldierStates::DEATH || agentAI == nullptr) return;
+    if (currentState == SoldierStates::DEATH)
+    {
+        Character::UpdateTimers(deltaTime);
+        return;
+    }
 
     if (isKnockback)
     {

@@ -217,6 +217,9 @@
     <ClInclude Include="GameOverNavigatorScript.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="ColorChange.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
     <ClInclude Include="ArcherProjectile.h">
       <Filter>Characters</Filter>
     </ClInclude>
@@ -968,6 +971,9 @@
     </ClCompile>
     <ClCompile Include="GameOverScript.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorChange.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
     <ClCompile Include="ArcherProjectile.cpp">
       <Filter>Characters</Filter>
