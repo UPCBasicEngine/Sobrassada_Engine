@@ -730,10 +730,10 @@ void CuChulainn::OnDamageTaken(int amount)
         const float skinWidth   = 0.05f;
         const float lookAheadDistance = max(0.12f, playerSpeed * deltaTime);
 
-        //if (/*Check raycast detect blocker GO*/)
-        //{
-        //    direction                     = float3::zero;
-        //}
+        if (IsBlockedAhead(parent, direction, lookAheadDistance, skinWidth))
+        {
+            direction                     = float3::zero;
+        }
 
         character->SetDirection(direction);
 
