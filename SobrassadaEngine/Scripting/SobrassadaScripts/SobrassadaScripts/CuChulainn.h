@@ -79,7 +79,6 @@ class CuChulainn : public Character
 
     void ExportState(PlayerState& playerState) const;
     void ApplySavedState(const PlayerState& playerState);
-    const std::string GetLogicStateName();
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
 

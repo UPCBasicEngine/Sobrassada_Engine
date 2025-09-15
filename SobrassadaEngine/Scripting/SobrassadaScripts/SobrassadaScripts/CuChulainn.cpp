@@ -217,6 +217,7 @@ bool CuChulainn::Init()
     arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
+
     attackVfxHorizontal1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal1Name);
     if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
     else attackVfxHorizontal1->SetEnabled(false);
@@ -257,8 +258,80 @@ bool CuChulainn::Init()
     if (!healParticles) GLOG("[WARNING] No heal visual found for CuChulain")
     else healParticles->SetEnabled(false);
 
+    // Riastrad VFX
     riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
     if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
+
+    riastradBurst = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradBurstName
+    );
+    if (!riastradBurst) GLOG("[WARNING] No riastrad Burst VFX found for CuChulain")
+    else riastradBurst->SetEnabled(false);
+
+    riastradBlur = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradBlurName
+    );
+    if (!riastradBlur) GLOG("[WARNING] No riastrad Blur VFX found for CuChulain")
+    else riastradBlur->SetEnabled(false);
+
+    riastradHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradHaloName
+    );
+    if (!riastradHalo) GLOG("[WARNING] No riastrad Halo VFX found for CuChulain")
+    else riastradHalo->SetEnabled(false);
+
+    riastradSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSphereName
+    );
+    if (!riastradSphere) GLOG("[WARNING] No riastrad Sphere VFX found for CuChulain")
+    else riastradSphere->SetEnabled(false);
+
+    riastradCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradCrackName
+    );
+    if (!riastradCrack) GLOG("[WARNING] No riastrad Crack VFX found for CuChulain")
+    else riastradCrack->SetEnabled(false);
+
+    riastradWaring = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradWaringName
+    );
+    if (!riastradWaring) GLOG("[WARNING] No riastrad Warning VFX found for CuChulain")
+    else riastradWaring->SetEnabled(false);
+
+    riastradSmoke1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSmoke1Name
+    );
+    ;
+    if (!riastradSmoke1) GLOG("[WARNING] No riastrad Smoke 1 VFX found for CuChulain")
+    else riastradSmoke1->SetEnabled(false);
+
+    riastradSmoke2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSmoke2Name
+    );
+    ;
+    if (!riastradSmoke2) GLOG("[WARNING] No riastrad Smoke 2 VFX found for CuChulain")
+    else riastradSmoke2->SetEnabled(false);
+
+    riastradSmoke3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradSmoke3Name
+    );
+    ;
+    if (!riastradSmoke3) GLOG("[WARNING] No riastrad Smoke 3 VFX found for CuChulain")
+    else riastradSmoke3->SetEnabled(false);
+
+    riastradStars = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradStarsName
+    );
+    if (!riastradStars) GLOG("[WARNING] No riastrad Stars VFX found for CuChulain")
+    else riastradStars->SetEnabled(false);
+
+    GameObject* riastradBarObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradBarName);
+    if (riastradBarObj)
+    {
+        ShaderScriptComponent* shaderScript = riastradBarObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript) riastradBar = shaderScript->GetScriptByType<BarFill>();
+    }
+    if (!riastradBar) GLOG("[WARNING] No riastrad Fill Bar Shader Script found for CuChulain");
 
     GameObject* healthBarObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healthBarName);
     if (healthBarObj)
@@ -284,11 +357,97 @@ bool CuChulainn::Init()
     }
     if (!damageMask) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
 
+    GameObject* dashIconObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashIconName);
+    if (dashIconObj)
+    {
+        ShaderScriptComponent* shaderScript = dashIconObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript) dashIcon = shaderScript->GetScriptByType<AbilityIconFill>();
+    }
+    if (!dashIcon) GLOG("[WARNING] No dash icon Shader Script found for CuChulain");
+
+    GameObject* ultimateIconObj = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(ultimateIconName);
+    if (ultimateIconObj)
+    {
+        ShaderScriptComponent* shaderScript = ultimateIconObj->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript) ultimateIcon = shaderScript->GetScriptByType<AbilityIconFill>();
+    }
+    if (!ultimateIcon) GLOG("[WARNING] No dash icon Shader Script found for CuChulain");
+
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
-    if (!riastradBar) GLOG("[WARNING] CuChulainn: No riastard bar gameObject found");
+    // Ultimate
+    ultimateGlow =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
+    if (!ultimateGlow) GLOG("[WARNING] No ultimate Glow VFX found for CuChulain")
+    else ultimateGlow->SetEnabled(false);
 
+    ultimateBlur =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateBlurName);
+    if (!ultimateBlur) GLOG("[WARNING] No ultimate Blur VFX found for CuChulain")
+    else ultimateBlur->SetEnabled(false);
+
+    ultimateBrust = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateBrustName
+    );
+    if (!ultimateBrust) GLOG("[WARNING] No ultimate Brust VFX found for CuChulain")
+    else ultimateBrust->SetEnabled(false);
+
+    ultimateCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateCrackName
+    );
+    if (!ultimateCrack) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
+    else ultimateCrack->SetEnabled(false);
+
+    ultimateHalo =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateHaloName);
+    if (!ultimateHalo) GLOG("[WARNING] No ultimate Halo VFX found for CuChulain")
+    else ultimateHalo->SetEnabled(false);
+
+    ultimateSmoke = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSmokeName
+    );
+    if (!ultimateSmoke) GLOG("[WARNING] No ultimate Smoke VFX found for CuChulain")
+    else ultimateSmoke->SetEnabled(false);
+
+    ultimateSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSphereName
+    );
+    if (!ultimateSphere) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateSphere->SetEnabled(false);
+
+    ultimateWarning = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateWarningName
+    );
+    if (!ultimateWarning) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateWarning->SetEnabled(false);
+
+    ultimateSpikes = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        ultimateName, ultimateSpikesName
+    );
+    if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    else ultimateSpikes->SetEnabled(false);
+
+    CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
+    if (playerCollider)
+    {
+        GLOG("=== PLAYER COLLIDER INFO ===");
+        GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
+        GLOG("Player name: %s", parent->GetName().c_str());
+
+        if (parent->HasTag(HashString("Player")))
+        {
+            GLOG("Player has 'Player' tag: YES");
+        }
+        else
+        {
+            GLOG("Player has 'Player' tag: NO - THIS IS A PROBLEM!");
+        }
+    }
+    else
+    {
+        GLOG("[ERROR] Player has no CapsuleColliderComponent!");
+    }
     state                         = CharacterStates::IDLE;
 
     // Apply saved changes between scenes
