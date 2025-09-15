@@ -28,6 +28,7 @@ AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
+    fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
@@ -152,6 +153,11 @@ void AttackVfxSpritesheet::Update(float deltaTime)
         }
     }
     timer = 0.0f;
+
+    if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+    {
+        parent->SetEnabled(false);
+    }
 }
 
 void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
@@ -194,7 +200,7 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
         glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-10.0f, -10.0f);
+        glPolygonOffset(-2.0f, -2.0f);
 
         if (isDoubleSided) glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
