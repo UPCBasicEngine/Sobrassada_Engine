@@ -121,6 +121,8 @@ class CuChulainn : public Character
     void AddRiastrad(int amount);
     void EndCurse();
 
+    bool IsBlockedAhead(const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth);
+
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
 

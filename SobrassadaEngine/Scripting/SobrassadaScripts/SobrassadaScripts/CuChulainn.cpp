@@ -1842,6 +1842,30 @@ void CuChulainn::EndCurse()
     character->SetMaxSpeed(defaultSpeed);
 }
 
+bool CuChulainn::IsBlockedAhead(
+    const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth
+)
+{
+    if (!ownerGO || desiredMoveDirection.LengthSq() < 0.001f) return false;
+
+    Scene* currentScene = AppEngine->GetSceneModule()->GetScene();
+    const float3 playerWorldPosition = ownerGO->GetGlobalTransform().TranslatePart();
+    const float3 normMoveDir         = desiredMoveDirection.Normalized();
+
+    auto hitsBlockAtHeight           = [&](float height)
+    {
+        const float3 rayStart = playerWorldPosition + float3::unitY * height;
+
+        LineSegment ray(rayStart, rayStart + normMoveDir * (lookAheadDistance + skinWidth));
+        GameObject* hitGO =
+            RaycastController::GetRayIntersectionTrees(ray, currentScene->GetOctree(), currentScene->GetDynamicTree());
+
+        return hitGO && HasblockingTag(hitGO);
+    };
+
+    return hitsBlockAtHeight(0.2f) || hitsBlockAtHeight(0.9f);
+}
+
 const std::string CuChulainn::GetLogicStateName()
 {
     switch (state)
