@@ -20,6 +20,9 @@ TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
     fields.push_back({"Starting Position", InspectorField::FieldType::Vec3, &startPosition, -100.0, 100.0f});
     fields.push_back({"Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, -100.0, 100.0f});
     fields.push_back({"Starting Scale", InspectorField::FieldType::Vec3, &startScale, -100.0, 100.0f});
+    fields.push_back({ "Final Position", InspectorField::FieldType::Vec3, &finalPosition, -100.0f, 100.0f });
+    fields.push_back({ "Final Rotation", InspectorField::FieldType::Vec3, &finalRotation, -100.0f, 100.0f });
+    fields.push_back({ "Final Scale", InspectorField::FieldType::Vec3, &finalScale, -100.0f, 100.0f });
     fields.push_back(
         {"Set Start Transform",
          [this](Script* self)
