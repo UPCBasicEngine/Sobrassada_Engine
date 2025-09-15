@@ -79,7 +79,10 @@ class CuChulainn : public Character
 
     void ExportState(PlayerState& playerState) const;
     void ApplySavedState(const PlayerState& playerState);
+    bool ConsumeJustDied();
+    bool IsGameOverCondition() const;
 
+    
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -291,6 +294,8 @@ class CuChulainn : public Character
     float idleTimer                      = 0.0f;
     float runTimer                       = 0.0f;
     float stepTime                       = 0.367f;
+    bool justDied                         = false;
+    bool pendingGameOver                  = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;
