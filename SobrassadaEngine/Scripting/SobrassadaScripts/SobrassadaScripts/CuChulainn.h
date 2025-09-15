@@ -130,9 +130,9 @@ class CuChulainn : public Character
     CameraMovement* camera               = nullptr;
 
     std::string spearName                = "SpearProjectile";
-    std::string spearNameMesh             = "WP_Spear_Cu_Chu";
+    std::string spearNameMesh            = "WP_Spear_Cu_Chu";
     Projectile* spear                    = nullptr;
-    GameObject* spearCharacter            = nullptr;
+    GameObject* spearCharacter           = nullptr;
 
     float defaultSpeed                   = 7.0f;
     float inputBuffer                    = 0.5f;
@@ -215,20 +215,14 @@ class CuChulainn : public Character
     std::string ultimateGlowName         = "ulti_glow";
     std::string ultimateBlurName         = "ultimate_mesh_blur";
     std::string ultimateBrustName        = "ultimate_mesh_brust";
-    std::string ultimateCrackName       = "ultimate_mesh_crack2";
-    std::string ultimateHaloName         = "mesh_halo";
-    std::string ultimateSmokeName        = "mesh_outer_smoke";
-    std::string ultimateSphereName       = "mesh_sphere_glow";
+    std::string ultimateCrackName        = "ultimate_mesh_crack2";
     std::string ultimateWarningName      = "ultimate_mesh_warning";
     std::string ultimateSpikesName       = "ult_spike";
     GameObject* ultimateObject           = nullptr;
     GameObject* ultimateGlow             = nullptr;
     GameObject* ultimateBlur             = nullptr;
     GameObject* ultimateBrust            = nullptr;
-    GameObject* ultimateCrack           = nullptr;
-    GameObject* ultimateHalo             = nullptr;
-    GameObject* ultimateSmoke            = nullptr;
-    GameObject* ultimateSphere           = nullptr;
+    GameObject* ultimateCrack            = nullptr;
     GameObject* ultimateWarning          = nullptr;
     GameObject* ultimateSpikes           = nullptr;
     bool desiredUltimate                 = false;
@@ -250,7 +244,7 @@ class CuChulainn : public Character
     bool desiredTransform                = false;
     float transformBufferTimer           = 0.0f;
     float transformTimer                 = 0.0f;
-    float transformVfxDelay              = 0.35f;
+    float transformVfxDelay              = 0.3f;
     float riastradTimer                  = 0.0f;
     float riastradDuration               = 5.0f;
     float riastradMovementSpeed          = 12.0f;
@@ -258,27 +252,15 @@ class CuChulainn : public Character
     int riastradOnDamageTaken            = 2;
     int riastradOnHit                    = 5;
     int riastradOnEnemyDeath             = 5;
-    std::string riastradVfxName          = "riastrad_all";
-    std::string riastradBurstName        = "mesh_brust";
-    std::string riastradBlurName         = "mesh_blur";
-    std::string riastradHaloName         = "mesh_halo";
-    std::string riastradSphereName       = "mesh_sphere_glow";
-    std::string riastradCrackName        = "mesh_crack";
-    std::string riastradWaringName       = "mesh_warning";
-    std::string riastradSmoke1Name       = "mesh_smoke_a";
-    std::string riastradSmoke2Name       = "mesh_smoke_b";
-    std::string riastradSmoke3Name       = "mesh_smoke_c";
-    std::string riastradStarsName        = "mesh_stars";
+    std::string riastradVfxName          = "riastrad_attack";
+    std::string riastradBlurName         = "risastrad_mesh_blur";
+    std::string riastradCrackName        = "risastrad_mesh_crack";
+    std::string riastradWarningName      = "risastrad_mesh_warning";
+    std::string riastradStarsName        = "risastrad_mesh_stars";
     GameObject* riastradVfx              = nullptr;
-    GameObject* riastradBurst            = nullptr;
     GameObject* riastradBlur             = nullptr;
-    GameObject* riastradHalo             = nullptr;
-    GameObject* riastradSphere           = nullptr;
     GameObject* riastradCrack            = nullptr;
-    GameObject* riastradWaring           = nullptr;
-    GameObject* riastradSmoke1           = nullptr;
-    GameObject* riastradSmoke2           = nullptr;
-    GameObject* riastradSmoke3           = nullptr;
+    GameObject* riastradWarning          = nullptr;
     GameObject* riastradStars            = nullptr;
 
     float3 spawnPos                      = float3::zero;
