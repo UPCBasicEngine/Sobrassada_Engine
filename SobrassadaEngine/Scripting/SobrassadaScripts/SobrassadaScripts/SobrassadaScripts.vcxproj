@@ -498,6 +498,7 @@
     <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="Mirage.h" />
     <ClInclude Include="MirageBossDash.h" />
+    <ClInclude Include="MirageVFX.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -2087,6 +2088,7 @@
     <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="Mirage.cpp" />
     <ClCompile Include="MirageBossDash.cpp" />
+    <ClCompile Include="MirageVFX.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />

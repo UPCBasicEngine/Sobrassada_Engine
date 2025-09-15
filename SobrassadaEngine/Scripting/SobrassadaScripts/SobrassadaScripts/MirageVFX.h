@@ -6,11 +6,11 @@
 
 class MeshComponent;
 
-class HealVFXGround : public Script
+class MirageVFX : public Script
 {
   public:
-    HealVFXGround(GameObject* parent, const std::string& ver, const std::string& frag);
-    ~HealVFXGround() override;
+    MirageVFX(GameObject* parent, const std::string& ver, const std::string& frag);
+    ~MirageVFX() override;
 
     bool Init() override;
     void Update(float deltaTime) override;

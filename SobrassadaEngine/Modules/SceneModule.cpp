@@ -450,7 +450,7 @@ void SceneModule::HandleTreesUpdates()
     OPTICK_CATEGORY("Application::HandleTreesUpdates", Optick::Category::GameLogic)
 #endif
     {
-        if (loadedScene->IsStaticModified())
+        if (loadedScene->IsStaticModified() && !inPlayMode)
         {
             loadedScene->UpdateStaticSpatialStructure();
         }

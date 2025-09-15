@@ -217,6 +217,9 @@
     <ClInclude Include="ArcherProjectile.h">
       <Filter>Characters</Filter>
     </ClInclude>
+    <ClInclude Include="MirageVFX.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -965,6 +968,9 @@
     </ClCompile>
     <ClCompile Include="ArcherProjectile.cpp">
       <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="MirageVFX.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

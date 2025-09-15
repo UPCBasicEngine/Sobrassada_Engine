@@ -549,7 +549,7 @@ void RenderPass::ShadowMapPassRender(
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
 
-    //batchManager->RenderShadowMap(meshesToRender, ubo);
+    batchManager->RenderShadowMap(meshesToRender, ubo);
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
