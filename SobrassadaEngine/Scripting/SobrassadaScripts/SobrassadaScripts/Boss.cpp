@@ -1420,7 +1420,6 @@ void Boss::Mirage()
 
 void Boss::WaterSpouts()
 {
-    if (!waterSpout) return;
 
      if (stateEnter)
     {

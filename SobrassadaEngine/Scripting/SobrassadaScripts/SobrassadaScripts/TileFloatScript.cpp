@@ -32,6 +32,17 @@ TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
              Quat rotQuat                     = Quat(currentTransform.RotatePart());
          }}
     );
+    fields.push_back(
+        { "Set End Transform",
+         [this](Script* self)
+         {
+             const float4x4& currentTransform = this->parent->GetLocalTransform();
+             this->finalPosition = currentTransform.TranslatePart();
+             this->finalRotation = Quat(currentTransform.RotatePart());
+             this->finalScale = currentTransform.GetScale();
+             Quat rotQuat = Quat(currentTransform.RotatePart());
+         } }
+    );
 }
 
 
@@ -39,11 +50,6 @@ bool TileFloatScript::Init()
 {
 
     // get final (correct) position, and move the tile to start (rotated, moved and scaled) position
-    const float4x4& originalTransform = parent->GetLocalTransform();
-    finalPosition                    = originalTransform.TranslatePart();
-    finalRotation                    = Quat(originalTransform.RotatePart());
-    finalScale                       = originalTransform.GetScale();
-
     startQuat                        = Quat::FromEulerXYZ(startRotation.x, startRotation.y, startRotation.z);
 
     const float4x4 startTransform    = float4x4::FromTRS(startPosition, startQuat, startScale);
