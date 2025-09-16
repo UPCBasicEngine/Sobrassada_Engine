@@ -299,6 +299,10 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
+    AntiAliasingPassRender(framebuffer);
+    glPopDebugGroup();
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -549,7 +553,7 @@ void RenderPass::ShadowMapPassRender(
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
 
-    //batchManager->RenderShadowMap(meshesToRender, ubo);
+    // batchManager->RenderShadowMap(meshesToRender, ubo);
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -632,6 +636,40 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
+{
+    // Must create a temporal frameBuffer and texture, to avoid reading and drawing to same texture = black screen
+    GLuint fxaaFramebuffer, fxaaTexture;
+    glGenFramebuffers(1, &fxaaFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, fxaaFramebuffer);
+
+    glGenTextures(1, &fxaaTexture);
+    glBindTexture(GL_TEXTURE_2D, fxaaTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fxaaTexture, 0);
+
+    // Copy
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer->GetFramebufferID());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fxaaFramebuffer);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    Bind();
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    unsigned int fxaaProgram = App->GetShaderModule()->GetFXAAProgram();
+    glUseProgram(fxaaProgram);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, fxaaTexture);
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDeleteFramebuffers(1, &fxaaFramebuffer);
+    glDeleteTextures(1, &fxaaTexture);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const

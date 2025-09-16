@@ -34,6 +34,7 @@ class RenderPass
     void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
     void SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
     void SsaoBlurPassRender(SSAO* ssao);
+    void AntiAliasingPassRender(Framebuffer* framebuffer) const;
 
     void RenderGBufferDebug(GBuffer* gbuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) const;

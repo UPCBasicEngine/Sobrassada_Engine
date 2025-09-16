@@ -435,8 +435,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;DirectXTex.lib;glew32.lib;opengl32.lib;SDL2.lib;SDL2main.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\SDL\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile Game|x64'">
