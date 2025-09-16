@@ -271,7 +271,7 @@ void Soldier::SearchForPlayer()
     if (!isSearching)
     {
         // TODO: Would be nice to be a "search" animation instead of idle
-        animComponent->UseTrigger("detectPlayer");
+        animComponent->UseTrigger("search");
         isSearching = true;
         searchTimer = searchDuration;
         agentAI->SetSpeed(0.0f, 10.0f);
@@ -482,5 +482,5 @@ void Soldier::SetOnWaiting()
     GLOG("Soldier %s is waiting", parent->GetName().c_str());
     currentState = SoldierStates::CHEERING;
     agentAI->SetSpeed(0.0f, 10.0f);
-    if (animComponent) animComponent->UseTrigger("idle");
+    if (animComponent) animComponent->UseTrigger("cheer");
 }
