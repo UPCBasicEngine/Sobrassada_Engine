@@ -121,9 +121,57 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
             const rapidjson::Value& gameObject = gameObjects[i];
 
             GameObject* newGameObject          = new GameObject(gameObject);
-            gameObjectsContainer.insert({newGameObject->GetUID(), newGameObject});
+            if (newGameObject->GetPrefabUID() != INVALID_UID)
+            {
+                std::stack<UID> prefabBuffer;
+                prefabBuffer.push(newGameObject->GetPrefabUID());
 
-            gameObjectDataMap[newGameObject->GetUID()] = &gameObject;
+                while (!prefabBuffer.empty())
+                {
+                    const ResourcePrefab* resourcePrefab      = dynamic_cast<ResourcePrefab*>(
+                    App->GetResourcesModule()->RequestResource(prefabBuffer.top()));
+                    if (resourcePrefab == nullptr)
+                    {
+                        GLOG("Prefab for UID %d not found", prefabBuffer.top())
+                        continue;
+                    }
+                    
+                    const std::unordered_map<UID, GameObject*>& prefabGOContainer = resourcePrefab->GetGameObjectsContainer();
+                    // All uids of the prefab will be summed with this to generate new unique ids for the scene game object tree
+                    const UID staticModUID = GenerateUID();
+                    for (const auto& prefabGO : prefabGOContainer)
+                    {
+                        GameObject* clonedGameObject = new GameObject(prefabGO.second->GetParent(), prefabGO.second, false);
+                        clonedGameObject->ModifyAllUIDsBy(staticModUID);
+
+                        if (clonedGameObject->GetPrefabUID() == newGameObject->GetPrefabUID())
+                        {
+                            // Replace some settings with the GO settings from the scene file
+                            clonedGameObject->SetParent(newGameObject->GetParent());
+                            clonedGameObject->SetUID(newGameObject->GetUID());
+                            clonedGameObject->SetLocalTransform(newGameObject->GetLocalTransform(), false);
+                        } else if (clonedGameObject->GetPrefabUID() != INVALID_UID)
+                            prefabBuffer.push(clonedGameObject->GetPrefabUID());
+                            TODO Make sure that the children UIDs and the parent UID at the crossing point match
+                            Vor allem wenn ein prefab direktes kind eines anderen prefabs ist
+
+                        
+                    }
+                    
+                    prefabBuffer.pop();
+                }
+
+                // Definitiv falsch, muss auch für verschachtelte prefabs geupdated werden
+                for (UID rootChild: gameObjectsContainer[newGameObject->GetUID()]->GetChildren())
+                    gameObjectsContainer[rootChild]->SetParent(newGameObject->GetUID());
+
+                gameObjectsContainer[newGameObject->GetUID()]->SetEnabledRecursive(newGameObject->IsEnabled());
+            } else
+            {
+                gameObjectsContainer.insert({newGameObject->GetUID(), newGameObject});
+
+                gameObjectDataMap[newGameObject->GetUID()] = &gameObject;
+            }
         }
     }
 
@@ -296,15 +344,27 @@ void Scene::Save(
     // Serialize GameObjects
     rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
 
-    for (auto it = gameObjectsContainer.begin(); it != gameObjectsContainer.end(); ++it)
+    //if (!IsGloballyEnabled()) return;
+    std::stack<UID> childrenBuffer;
+    childrenBuffer.push(gameObjectRootUID);
+
+    while (!childrenBuffer.empty())
     {
-        if (it->second != nullptr && it->second != multiSelectParent)
+        GameObject* gameObject = GetGameObjectByUID(childrenBuffer.top());
+        childrenBuffer.pop();
+        if (gameObject != nullptr && gameObject != multiSelectParent)
         {
             rapidjson::Value goJSON(rapidjson::kObjectType);
 
-            it->second->Save(goJSON, allocator);
+            gameObject->Save(goJSON, allocator);
 
             gameObjectsJSON.PushBack(goJSON, allocator);
+
+            if (gameObject->GetPrefabUID() == INVALID_UID)
+            {
+                for (UID child : gameObject->GetChildren())
+                    childrenBuffer.push(child);
+            }
         }
     }
 
@@ -1424,8 +1484,7 @@ void Scene::LoadPrefab(
 
         if (resourcePrefab == nullptr) return; // If the prefab file is corrupted or not available, loading is cancelled
 
-        const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsVector();
-        const std::vector<int>& parentIndices            = resourcePrefab->GetParentIndices();
+        const std::vector<GameObject*>& referenceObjects = resourcePrefab->GetGameObjectsContainer();
 
         std::vector<GameObject*> newObjects;
         newObjects.push_back(new GameObject(GetGameObjectRootUID(), referenceObjects[0]));
@@ -1543,7 +1602,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
     // Check that the prefab and target objects have the field prefabChildUID. If not, override like in the old times
     bool newPrefab                                = true;
 
-    const std::vector<GameObject*>& prefabObjects = prefab->GetGameObjectsVector();
+    const std::vector<GameObject*>& prefabObjects = prefab->GetGameObjectsContainer();
     for (int i = 1; i < prefabObjects.size(); ++i)
     {
         if (prefabObjects[i]->GetPrefabChildUID() == INVALID_UID)
@@ -1653,7 +1712,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
     {
         GLOG("Update NEW prefab");
 
-        const std::vector<GameObject*>& referenceObjectsVector = prefab->GetGameObjectsVector();
+        const std::vector<GameObject*>& referenceObjectsVector = prefab->GetGameObjectsContainer();
         std::unordered_map<UID, GameObject*> referenceObjectsMap;
         prefab->GetGameObjectsMap(referenceObjectsMap);
 

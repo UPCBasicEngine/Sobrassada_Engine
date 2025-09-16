@@ -16,7 +16,7 @@
 
 namespace PrefabManager
 {
-    UID SavePrefab(const GameObject* gameObject, bool override, const UID versionUID)
+    UID SavePrefab(const GameObject* gameObject, bool override)
     {
         // Create doc JSON
         rapidjson::Document doc;
@@ -32,19 +32,19 @@ namespace PrefabManager
         const std::string& savePath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_LIB_PATH +
                                       std::to_string(finalPrefabUID) + PREFAB_EXTENSION;
 
-        std::string name = gameObject->GetName();
+        const std::string& name = gameObject->GetName();
 
         // Create structure
         prefab.AddMember("UID", finalPrefabUID, allocator);
-        prefab.AddMember("VersionUID", versionUID, allocator);
         prefab.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
 
         // Serialize GameObjects
         rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
+        Switch to stack like in the scene so its possible to cut when a nested prefab is encountered
         std::queue<const GameObject*> queue; // Traverse all gameObjects using a queue to avoid recursiveness
         queue.push(gameObject);
 
-        while (queue.size() > 0)
+        while (!queue.empty())
         {
             const GameObject* currentGameObject = queue.front();
 
@@ -162,7 +162,7 @@ namespace PrefabManager
                 loadedGameObjects.push_back(newObject);
             }
         }
-        ResourcePrefab* resourcePrefab = new ResourcePrefab(uid, versionUid, name);
+        ResourcePrefab* resourcePrefab = new ResourcePrefab(uid, name);
         resourcePrefab->LoadData(loadedGameObjects, parentIndices);
         return resourcePrefab;
     }

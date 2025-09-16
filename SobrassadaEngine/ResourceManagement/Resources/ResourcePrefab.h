@@ -3,26 +3,22 @@
 #include "Resource.h"
 
 #include <unordered_map>
-#include <vector>
 
 class GameObject;
 
 class ResourcePrefab : public Resource
 {
   public:
-    ResourcePrefab(UID uid, UID versionUid, const std::string& name);
+    ResourcePrefab(UID uid, const std::string& name);
     ~ResourcePrefab() override;
 
-    void LoadData(const std::vector<GameObject*>& objects, const std::vector<int>& indices);
+    void LoadData(const std::unordered_map<UID, GameObject*>& objects);
 
-    GameObject* GetRootObject() const { return gameObjects[0]; }
-    void GetGameObjectsMap(std::unordered_map<UID, GameObject*>& mapToFill);
-    const std::vector<GameObject*>& GetGameObjectsVector() const { return gameObjects; }
-    const std::vector<int>& GetParentIndices() const { return parentIndices; }
-    const UID GetVersionUID() const { return versionUID; }
+    GameObject* GetRootObject() const { return gameObjectsContainer.at(gameObjectRootUID); }
+    const std::unordered_map<UID, GameObject*>& GetGameObjectsContainer() const { return gameObjectsContainer; }
 
   private:
-    UID versionUID = INVALID_UID;
-    std::vector<GameObject*> gameObjects;
-    std::vector<int> parentIndices;
+
+    UID gameObjectRootUID       = INVALID_UID;
+    std::unordered_map<UID, GameObject*> gameObjectsContainer;
 };

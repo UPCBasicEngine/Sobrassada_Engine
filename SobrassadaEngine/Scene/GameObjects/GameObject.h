@@ -56,7 +56,7 @@ class SOBRASADA_API_ENGINE GameObject
     GameObject(const std::string& name);
     GameObject(UID parentUID, const std::string& name);
     GameObject(UID parentUID, const std::string& name, UID uid);
-    GameObject(UID parentUID, GameObject* refObject);
+    GameObject(UID parentUID, GameObject* refObject, bool updateAABB = true);
 
     GameObject(const rapidjson::Value& initialState);
 
@@ -91,6 +91,9 @@ class SOBRASADA_API_ENGINE GameObject
     bool TargetIsChildren(UID uidTarget);
     void UpdateComponents(float deltaTime);
     void RenderDebugComponents(float deltaTime);
+    
+    // Function which adds the modification UID to its parent, children and own UID to generate new unique UIDs
+    void ModifyAllUIDsBy(UID modificationUID);
 
     const std::string& GetName() const { return name; }
     void SetName(const std::string& newName) { name = newName; }
@@ -144,7 +147,7 @@ class SOBRASADA_API_ENGINE GameObject
     std::tuple<COMPONENTS>& GetComponentsTupleRef() { return compTuple; }
     const bool HasScriptsToLoad() const { return hasScriptsToLoad; }
 
-    void SetLocalTransform(const float4x4& newTransform);
+    void SetLocalTransform(const float4x4& newTransform, bool updateChildTransforms = true);
     void SetLocalPosition(const float3& newPos);
     void DrawGizmos() const;
 
@@ -154,10 +157,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void RemovePrefabStatus();
     UID GetPrefabUID() const { return prefabUID; }
-    UID GetPrefabVersionUID() const { return prefabVersionUID; }
-    UID GetPrefabChildUID() const { return prefabChildUID; }
     void SetPrefabUID(const UID uid) { prefabUID = uid; }
-    void SetPrefabChildUID(const UID uid) { prefabChildUID = uid; }
 
     void ParentUpdatedComponents();
     void OnTransformUpdated();
@@ -202,8 +202,6 @@ class SOBRASADA_API_ENGINE GameObject
     char newTagName[64]                  = "";
 
     UID prefabUID                        = INVALID_UID;
-    UID prefabVersionUID                 = INVALID_UID;
-    UID prefabChildUID                   = INVALID_UID;
 
     bool drawNodes                       = false;
 
