@@ -495,42 +495,38 @@ void CuChulainn::OnDamageTaken(int amount)
     {
         GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
 
-        if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
+        arrowHitVfxObject->SetEnabled(true);
+
+        ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
+        if (particleSystem)
         {
-            GLOG(
-                "Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer
-            );
-
-            arrowHitVfxObject->SetEnabled(true);
-
-            ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
-            if (particleSystem)
-            {
-                particleSystem->SpawnAllInstances();
-                GLOG("Arrow VFX particles spawned");
-            }
+            particleSystem->SpawnAllInstances();
+            GLOG("Arrow VFX particles spawned");
         }
-        if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
-            if (damageMask)
-            {
-                damageMask->SetLife(static_cast<float>(currentHealth));
-                damageMask->OnHit();
-            }
-
-        if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
-            state == CharacterStates::HEAL)
-        {
-            state = CharacterStates::HURT;
-            if (animComponent)
-            {
-                animComponent->UseTrigger("Hurt");
-                // character->EnableMovement(false);
-            }
-        }
-
-        // TODO: Test if hitstop when hit feels nice
-        // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
     }
+
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
+        if (damageMask)
+        {
+            damageMask->SetLife(static_cast<float>(currentHealth));
+            damageMask->OnHit();
+        }
+
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
+        state == CharacterStates::HEAL)
+    {
+        state = CharacterStates::HURT;
+        if (animComponent)
+        {
+            float x = (float)rand() / RAND_MAX;
+            if (x < 0.5f) animComponent->UseTrigger("Hurt");
+            else animComponent->UseTrigger("Hurt2");
+            character->EnableMovement(false);
+        }
+    }
+
+    // TODO: Test if hitstop when hit feels nice
+    // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
 }
 
 void CuChulainn::OnHealed(int amount)
@@ -809,7 +805,8 @@ bool CuChulainn::CanHeal() const
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
-           !isHealing && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+           !isHealing && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT &&
+           currentHealth < maxHealth;
 }
 
 bool CuChulainn::CanAim() const
@@ -1291,7 +1288,7 @@ void CuChulainn::UpdateUltimateVfx()
 {
     if (ultimateBlur)
     {
-        ultimateBlur->SetEnabled(true); 
+        ultimateBlur->SetEnabled(true);
         if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
         {
             ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
