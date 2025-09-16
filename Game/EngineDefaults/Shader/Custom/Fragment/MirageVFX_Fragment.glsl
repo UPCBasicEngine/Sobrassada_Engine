@@ -2,7 +2,8 @@
 
 #extension GL_ARB_bindless_texture : require
 
-layout(location = 9) uniform float time;
+layout(location = 1) uniform mat4 view;
+layout(location = 7) uniform float animationTimer;
 
 layout(std140, binding = 6) uniform Material
 {
@@ -22,7 +23,6 @@ layout(std140, binding = 6) uniform Material
     uvec2 occlusionTex;
     uvec2 padding;
 };
-
 
 in vec2 uv;
 
@@ -51,9 +51,9 @@ vec3 colorRamp(float x){
 
 void main()
 {
-    vec2 texcoord_read = vec2(uv.y, time * 0.001);
+    vec2 texcoord_read = vec2(uv.y, animationTimer);
     float read = texture(sampler2D(diffuseTex), texcoord_read).x;
     float value = uv.x * (read + 0.39);
 
-    fragColor = vec4(colorRamp(value), value);
+    fragColor = vec4(colorRamp(value), 1 - value);
 }
