@@ -667,12 +667,14 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
     glUniform1f(1, (float)height);
 
     float zNear, zFar;
+    float3 cameraPosition;
     float4x4 inverseProjection, inverseView;
 
     if (camera)
     {
         inverseProjection = camera->GetProjectionMatrix().Inverted();
         inverseView       = camera->GetViewMatrix().Inverted();
+        cameraPosition    = camera->GetCameraPosition();
         zNear             = 0.1f;
         zFar              = 50.f;
     }
@@ -680,6 +682,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
     {
         inverseProjection = App->GetCameraModule()->GetProjectionMatrix().Inverted();
         inverseView       = App->GetCameraModule()->GetViewMatrix().Inverted();
+        cameraPosition    = App->GetCameraModule()->GetCameraPosition();
         zNear             = 0.1f;
         zFar              = 2500.f;
     }
@@ -688,10 +691,11 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
     glUniformMatrix4fv(3, 1, GL_FALSE, &inverseView[0][0]);
     glUniform1f(4, zNear);
     glUniform1f(5, zFar);
+    glUniform3fv(6, 1, &cameraPosition[0]);
 
     // TEMPORAL, REMOVE LATER
     float blendFactor = 1.f;
-    glUniform1f(6, blendFactor);
+    glUniform1f(7, blendFactor);
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 

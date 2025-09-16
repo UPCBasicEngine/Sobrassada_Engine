@@ -10,9 +10,10 @@ uniform layout(location = 3) mat4 inverseViewMatrix;
 
 uniform layout(location = 4) float zNear;
 uniform layout(location = 5) float zFar;
+uniform layout(location = 6) vec3 cameraPosition;
 
 // JUST FOR TESTING REMOVE AT SOME POINT
-uniform layout(location=6) float blendFactor;
+uniform layout(location=7) float blendFactor;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -31,7 +32,8 @@ vec3 GetWorldPosition(float depth, vec2 uv)
 
     vec4 worldPosition = inverseViewMatrix * viewPosition;
 
-    return worldPosition.xyz;
+    return worldPosition.xyz + cameraPosition;
+    // return worldPosition.xyz;
 }
 
 void main()
