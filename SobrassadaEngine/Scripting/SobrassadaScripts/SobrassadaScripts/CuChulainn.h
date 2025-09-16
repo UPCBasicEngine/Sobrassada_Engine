@@ -69,6 +69,8 @@ class CuChulainn : public Character
         if (enemiesCont != 0) enemiesCont--;
         GLOG("Enemy out. Total unique enemies colliding: %zu", enemiesCont);
     }
+
+    void OnObjectDestroyed();
     void OnEnemyHit();
     void OnEnemyDefeated();
 
@@ -249,8 +251,9 @@ class CuChulainn : public Character
     float riastradDuration               = 5.0f;
     float riastradMovementSpeed          = 12.0f;
     float riastradAnimationsSpeedRatio   = 1.5f;
-    int riastradOnDamageTaken            = 2;
-    int riastradOnHit                    = 5;
+    int riastradOnDamageTaken            = 1;
+    int riastradOnObjectHit              = 1;
+    int riastradOnEnemyHit               = 3;
     int riastradOnEnemyDeath             = 5;
     std::string riastradVfxName          = "riastrad_attack";
     std::string riastradBlurName         = "risastrad_mesh_blur";

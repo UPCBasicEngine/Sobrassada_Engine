@@ -114,7 +114,8 @@ CuChulainn::CuChulainn(GameObject* parent)
         {"Riastrad animations speed ratio", InspectorField::FieldType::Float, &riastradAnimationsSpeedRatio, 0.0f, 2.0f}
     );
     fields.push_back({"Riastrad on damage taken", InspectorField::FieldType::Int, &riastradOnDamageTaken, 0, 100});
-    fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
+    fields.push_back({"Riastrad on object destroyed", InspectorField::FieldType::Int, &riastradOnObjectHit, 0, 100});
+    fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnEnemyHit, 0, 100});
     fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
     fields.push_back({"Transform VFX Delay", InspectorField::FieldType::Float, &transformVfxDelay, 0.0f, 20.0f});
     fields.push_back({"Riastrad VFX blur", InspectorField::FieldType::InputText, &riastradBlurName});
@@ -1623,11 +1624,18 @@ void CuChulainn::AddRiastrad(int amount)
     riastradBar->SetFillAmount(riastradMeter / 100.0f);
 }
 
+void CuChulainn::OnObjectDestroyed()
+{
+    AppEngine->GetGameTimer()->SetTimeScale(0.0f);
+    timeStopTimer = hitTimeStopDuration;
+    AddRiastrad(riastradOnObjectHit);
+}
+
 void CuChulainn::OnEnemyHit()
 {
     AppEngine->GetGameTimer()->SetTimeScale(0.0f);
     timeStopTimer = hitTimeStopDuration;
-    AddRiastrad(riastradOnHit);
+    AddRiastrad(riastradOnEnemyHit);
 }
 
 void CuChulainn::OnEnemyDefeated()
