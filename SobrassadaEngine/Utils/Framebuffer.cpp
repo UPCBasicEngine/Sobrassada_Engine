@@ -4,9 +4,8 @@
 
 #include "glew.h"
 
-Framebuffer::Framebuffer(int witdh, int height, bool useRbo)
-    : fbo(0), rbo(0), framebufferTexture(0), textureWidth(witdh), textureHeight(height), shouldResize(false),
-      useRbo(useRbo)
+Framebuffer::Framebuffer(int witdh, int height)
+    : fbo(0), framebufferTexture(0), textureWidth(witdh), textureHeight(height), shouldResize(false)
 {
 
     CreateTexture(witdh, height);
@@ -16,9 +15,9 @@ Framebuffer::Framebuffer(int witdh, int height, bool useRbo)
 Framebuffer::~Framebuffer()
 {
     glDeleteFramebuffers(1, &fbo);
-    glDeleteRenderbuffers(1, &rbo);
 
     glDeleteTextures(1, &framebufferTexture);
+    glDeleteTextures(1, &framebufferDepthTexture);
 }
 
 void Framebuffer::Bind()
@@ -56,15 +55,9 @@ bool Framebuffer::Initialize()
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
 
-    if (useRbo)
-    {
-        if (rbo == 0) glCreateRenderbuffers(1, &rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, textureWidth, textureHeight);
-
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-    }
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, framebufferDepthTexture, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -85,4 +78,14 @@ void Framebuffer::CreateTexture(int width, int height)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    if (framebufferDepthTexture == 0) glGenTextures(1, &framebufferDepthTexture);
+
+    glBindTexture(GL_TEXTURE_2D, framebufferDepthTexture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

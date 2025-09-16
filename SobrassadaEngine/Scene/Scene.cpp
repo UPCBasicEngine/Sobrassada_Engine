@@ -588,7 +588,7 @@ void Scene::RenderSceneToFrameBuffer()
     ImGui::SetCursorPos(ImVec2(0.f, 0.f));
 
     ImGui::Image(
-        (ImTextureID)framebuffer->GetTextureID(),
+        (ImTextureID)framebuffer->GetColorTexture(),
         ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()), ImVec2(0.f, 1.f),
         ImVec2(1.f, 0.f)
     );
