@@ -22,6 +22,7 @@ vec3 GetWorldPosition(float depth, vec2 uv)
 
     vec4 clipPosition = vec4(position * 2.0 - 1.0, 1);
 
+    // Linearize depth, zFar is very big so all values are very close to 1
     clipPosition.z = 2.0 * zNear * zFar / (zFar + zNear - clipPosition.z * (zFar - zNear));
 
     vec4 viewPosition = inverseProjectionMatrix * clipPosition;
@@ -39,7 +40,6 @@ void main()
     {
         vec2 uvCoords = vec2(gl_GlobalInvocationID.x / width, gl_GlobalInvocationID.y / height);
         float depth = texture(depthTexture, uvCoords).r;
-        // vec4 depth = texture(depthTexture, uvCoords);
 
         imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(GetWorldPosition(depth, uvCoords), blendFactor));
     }
