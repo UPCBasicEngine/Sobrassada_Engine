@@ -15,6 +15,7 @@
 #include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
+#include "GameOverNavigatorScript.h"
 #include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
@@ -44,6 +45,7 @@
 
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
+#include "ColorChange.h"
 #include "BarFill.h"
 #include "DamageMask.h"
 #include "MovingUVClipErode.h"
@@ -105,13 +107,14 @@ constexpr const char* scripts[] = {
     "BossMirage",
     "Boss",
     "MirageBossDash",
-    "ArcherProjectile"
+    "ArcherProjectile",
+    "GameOverNavigatorScript"
 };
 
 constexpr const char* shaderScripts[] = {
     "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
     "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet", "MovingUVClipErode"
+    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet", "MovingUVClipErode",  "ColorChange"
 };
 
 Application* AppEngine                = nullptr;
@@ -168,6 +171,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
+    if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
 
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
@@ -175,6 +179,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MovingUVTransparent") return new MovingUVTransparent(parent);
     if (scriptType == "AttackVfxSpritesheet") return new AttackVfxSpritesheet(parent);
     if (scriptType == "DamageMask") return new DamageMask(parent);
+    if (scriptType == "ColorChange") return new ColorChange(parent);
     if (scriptType == "RiastradBarFill")
         return new BarFill(parent, "./EngineDefaults/Shader/Custom/Fragment/UI_RiastradBarFill.glsl");
     if (scriptType == "HealthBarFill")

@@ -125,6 +125,17 @@ void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
 
+    if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
+    {
+        parent->SetEnabled(false);
+    }
+
+    if (currentState == ArcherStates::DEATH)
+    {
+        Character::UpdateTimers(deltaTime);
+        return;
+    }
+
     if (isKnockback)
     {
         float3 currentPos   = parent->GetGlobalTransform().TranslatePart();
@@ -156,14 +167,6 @@ void Archer::Update(float deltaTime)
             archerVfxObject->SetEnabled(false);
             hitVfxTimer    = 0.0f;
             hitVfxIsActive = false;
-        }
-    }
-    if (isDead)
-    {
-        if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
-        {
-            GLOG("DEATH ANIMATION FINISHED - DISABLING OBJECT");
-            parent->SetEnabled(false);
         }
     }
 

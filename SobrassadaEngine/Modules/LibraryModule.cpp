@@ -236,14 +236,14 @@ bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
     return true;
 }
 
-void LibraryModule::GetImportOptions(UID uid, rapidjson::Document& doc, rapidjson::Value& outImportOptions) const
+void LibraryModule::GetImportOptions(UID uid, rapidjson::Value& outImportOptions)
 {
     const std::string& projectPath = App->GetProjectModule()->GetLoadedProjectPath();
-    SearchImportOptionsFromUID(uid, projectPath, doc, outImportOptions);
+    SearchImportOptionsFromUID(uid, projectPath, outImportOptions);
     if (outImportOptions.IsNull())
     {
         const std::string& engineDefaultPath = ENGINE_DEFAULT_ASSETS;
-        SearchImportOptionsFromUID(uid, engineDefaultPath, doc, outImportOptions);
+        SearchImportOptionsFromUID(uid, engineDefaultPath, outImportOptions);
     }
 }
 
@@ -257,25 +257,35 @@ UID LibraryModule::GetUIDFromMetaFile(const std::string& filePath) const
     return INVALID_UID;
 }
 
-void LibraryModule::SearchImportOptionsFromUID(
-    UID uid, const std::string& path, rapidjson::Document& doc, rapidjson::Value& outImportOptions
-) const
+void LibraryModule::SearchImportOptionsFromUID(UID uid, const std::string& path, rapidjson::Value& outImportOptions)
 {
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_PATH))
+    if (cachedMetadataDocuments.empty())
     {
-        if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_PATH))
         {
-            std::string filePath = entry.path().string();
-            if (!FileSystem::LoadJSON(filePath.c_str(), doc)) continue;
-
-            UID assetUID = doc["UID"].GetUint64();
-
-            if (uid == assetUID && doc.HasMember("importOptions") && doc["importOptions"].IsObject())
+            if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
             {
-                outImportOptions = doc["importOptions"];
-                return;
+                std::string filePath = entry.path().string();
+                rapidjson::Document doc;
+                if (!FileSystem::LoadJSON(filePath.c_str(), doc)) continue;
+
+                UID assetUID = doc["UID"].GetUint64();
+                
+                if (doc.HasMember("importOptions") && doc["importOptions"].IsObject())
+                {
+                    cachedMetadataDocuments[assetUID] = entry.path().string();
+                }
             }
         }
+    }
+
+    if (const auto it = cachedMetadataDocuments.find(uid); it != cachedMetadataDocuments.end())
+    {
+        // Doc can not be cached, so we have to load the json twice
+        rapidjson::Document doc;
+        if (!FileSystem::LoadJSON(it->second.c_str(), doc)) return;
+        
+        outImportOptions = doc["importOptions"];
     }
 }
 
@@ -344,6 +354,11 @@ void LibraryModule::DeletePrefabFiles(UID prefabUID)
     resourcePathsMap.erase(prefabUID);
 
     App->GetSceneModule()->GetScene()->OverridePrefabs(prefabUID);
+}
+
+void LibraryModule::InvalidateMetadataCache()
+{
+    cachedMetadataDocuments.clear();
 }
 
 void LibraryModule::AddTexture(UID textureUID, const std::string& textureName)
