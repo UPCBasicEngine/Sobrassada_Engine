@@ -675,16 +675,16 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
         inverseProjection = camera->GetProjectionMatrix().Inverted();
         inverseView       = camera->GetViewMatrix().Inverted();
         cameraPosition    = camera->GetCameraPosition();
-        zNear             = 0.1f;
-        zFar              = 50.f;
+        zNear             = camera->GetNearPlaneDistance();
+        zFar              = camera->GetFarPlaneDistance();
     }
     else
     {
         inverseProjection = App->GetCameraModule()->GetProjectionMatrix().Inverted();
         inverseView       = App->GetCameraModule()->GetViewMatrix().Inverted();
         cameraPosition    = App->GetCameraModule()->GetCameraPosition();
-        zNear             = 0.1f;
-        zFar              = 2500.f;
+        zNear             = App->GetCameraModule()->GetNearPlaneDistance();
+        zFar              = App->GetCameraModule()->GetFarPlaneDistance();
     }
 
     glUniformMatrix4fv(2, 1, GL_FALSE, &inverseProjection[0][0]);
@@ -701,17 +701,19 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
-    unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
+    // RENDER COMPUTED TEXTURE ON TOP OF SCENE
 
-    glUseProgram(quadProgram);
+    //unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
 
-    unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
-    glUniform1i(loc, 0);
+    //glUseProgram(quadProgram);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+    //unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
+    //glUniform1i(loc, 0);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const

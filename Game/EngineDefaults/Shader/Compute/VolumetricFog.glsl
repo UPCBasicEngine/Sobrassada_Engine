@@ -21,9 +21,9 @@ vec3 GetWorldPosition(float depth, vec2 uv)
 {
     vec3 position = vec3(uv,depth);
 
-    vec4 clipPosition = vec4(position * 2.0 - 1.0, 1);
+    vec4 clipPosition = vec4(position * 2.0 - 1.0, 1.0);
 
-    // Linearize depth, zFar is very big so all values are very close to 1
+    // Depth buffer linearization 
     clipPosition.z = 2.0 * zNear * zFar / (zFar + zNear - clipPosition.z * (zFar - zNear));
 
     vec4 viewPosition = inverseProjectionMatrix * clipPosition;
@@ -32,8 +32,7 @@ vec3 GetWorldPosition(float depth, vec2 uv)
 
     vec4 worldPosition = inverseViewMatrix * viewPosition;
 
-    return worldPosition.xyz + cameraPosition;
-    // return worldPosition.xyz;
+    return worldPosition.xyz;
 }
 
 void main()
