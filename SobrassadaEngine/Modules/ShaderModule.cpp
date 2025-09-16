@@ -53,8 +53,7 @@ bool ShaderModule::Init()
 
     videoProgram          = CreateShaderProgram(VIDEO_VERTEX_SHADER_PATH, VIDEO_FRAGMENT_SHADER_PATH);
 
-    // REMOVE JUST TESTING
-    redTextureProgram     = CreateComputeProgram("./EngineDefaults/Shader/Compute/RedTextureCompute.glsl");
+    volumetricFogProgram  = CreateComputeProgram(VOLUMETRIC_FOG_COMPUTE_SHADER_PATH); 
 
     return true;
 }

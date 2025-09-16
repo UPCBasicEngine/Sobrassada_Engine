@@ -44,9 +44,7 @@ class ShaderModule : public Module
     int GetSsaoDebugProgram() const { return ssaoDebugProgram; }
     int GetSsaoBlurProgram() const { return ssaoBlurProgram; }
     int GetVideoProgram() const { return videoProgram; }
-
-    // REMOVE JUST TESTING
-    unsigned int GetRedTextureComputeProgram() const { return redTextureProgram; }
+    int GetVolumetricFogComputeProgram() const { return volumetricFogProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -92,8 +90,7 @@ class ShaderModule : public Module
 
     int videoProgram                   = -1;
 
-    // REMOVE JUST TESTING
-    unsigned int redTextureProgram     = 0;
+    unsigned int volumetricFogProgram  = 0;
 
     std::map<HashString, unsigned int> customShaderPrograms;
 };
