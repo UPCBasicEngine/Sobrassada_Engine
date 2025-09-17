@@ -16,7 +16,18 @@ class RenderPass
     RenderPass();
     ~RenderPass();
 
-    void RenderScene(Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera, float deltaTime);
+    void RenderScene(
+        Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera,
+        float deltaTime
+    );
+
+    bool IsShowBorders() const { return showBorders; }
+    float GetGlobalThreshold() const { return globalThreshold; }
+    float GetLocalThreshold() const { return localThreshold; }
+
+    void SetShowBorders(bool show) { showBorders = show; }
+    void SetGlobalThreshold(float newThreshold) { globalThreshold = newThreshold; }
+    void SetLocalThreshold(float newThreshold) { localThreshold = newThreshold; }
 
   private:
     void Bind() const;
@@ -60,4 +71,9 @@ class RenderPass
     unsigned int visibleLightIndicesSSBO = 0;
     size_t currentSize                   = 0;
     int tilesX;
+
+    // FXAA
+    bool showBorders      = false;
+    float globalThreshold = 0.0312f;
+    float localThreshold  = 0.063f;
 };

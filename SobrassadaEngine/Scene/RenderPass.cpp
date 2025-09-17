@@ -656,6 +656,10 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, fxaaTexture);
 
+    glUniform1i(0, showBorders);
+    glUniform1f(1, globalThreshold);
+    glUniform1f(2, localThreshold);
+
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
 #ifndef GAME
