@@ -103,50 +103,32 @@ RenderPass::~RenderPass()
 
 void RenderPass::Bind() const
 {
-#ifndef GAME
     framebuffer->Bind();
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-
     glViewport(0, 0, width, height);
 }
 
 // Copy Depth to Framebuffer
 void RenderPass::CopyDepth() const
 {
-#ifndef GAME
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
+
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
-#ifndef GAME
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 }
 
 // Copy Depth and Stencil to Framebuffer
 void RenderPass::CopyDepthStencil() const
 {
-#ifndef GAME
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
 
     glBlitFramebuffer(
         0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
     );
 
-#ifndef GAME
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 }
 
 void RenderPass::RenderScene(
@@ -640,8 +622,11 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
+    GLuint fxaaTexture = -1;
+
+#ifndef GAME
     // Must create a temporal frameBuffer and texture, to avoid reading and drawing to same texture = black screen
-    GLuint fxaaFramebuffer, fxaaTexture;
+    GLuint fxaaFramebuffer = -1;
     glGenFramebuffers(1, &fxaaFramebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, fxaaFramebuffer);
 
@@ -658,7 +643,12 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     Bind();
-    glClear(GL_COLOR_BUFFER_BIT);
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, width, height);
+
+    fxaaTexture = framebuffer->GetTextureID();
+#endif
 
     unsigned int fxaaProgram = App->GetShaderModule()->GetFXAAProgram();
     glUseProgram(fxaaProgram);
@@ -668,8 +658,10 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
+#ifndef GAME
     glDeleteFramebuffers(1, &fxaaFramebuffer);
     glDeleteTextures(1, &fxaaTexture);
+#endif
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
