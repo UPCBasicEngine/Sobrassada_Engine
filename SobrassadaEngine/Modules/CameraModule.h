@@ -49,7 +49,7 @@ class CameraModule : public Module
     {
         return isCameraDetached ? detachedCamera.nearPlaneDistance : camera.nearPlaneDistance;
     }
-    S
+
     float GetFarPlaneDistance() const
     {
         return isCameraDetached ? detachedCamera.farPlaneDistance : camera.farPlaneDistance;
