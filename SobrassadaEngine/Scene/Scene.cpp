@@ -211,25 +211,9 @@ void Scene::Init()
         gameObjectToLoad->LoadData(*pair.second);
     }
     gameObjectDataMap.clear();
-    // When loading a scene, overrides all gameObjects that have a prefabUID. That is because if the prefab has been
-    // modified, the scene file may have not, so the prefabs need to be updated when loading the scene again
-    std::vector<UID> prefabs;
-    for (const auto& gameObject : gameObjectsContainer)
-    {
-        if (gameObject.second->GetPrefabUID() == INVALID_UID) continue;
-
-        // Add to prefabs UIDs if not existing, only once each
-        std::vector<UID>::iterator it = std::find(prefabs.begin(), prefabs.end(), gameObject.second->GetPrefabUID());
-        if (it == prefabs.end()) prefabs.emplace_back(gameObject.second->GetPrefabUID());
-    }
 
     lightsConfig->InitSkybox();
     lightsConfig->InitLightBuffers();
-
-    for (const UID prefab : prefabs)
-    {
-        DeletePrefab(prefab);
-    }
 
     for (auto& gameObject : gameObjectsContainer)
     {
@@ -312,7 +296,7 @@ void Scene::Save(
         {
             rapidjson::Value goJSON(rapidjson::kObjectType);
 
-            gameObject->Save(goJSON, allocator);
+            gameObject->Save(goJSON, allocator, true);
 
             gameObjectsJSON.PushBack(goJSON, allocator);
 
@@ -1481,10 +1465,11 @@ void Scene::LoadNestedPrefab(GameObject* prefabRoot)
         for (UID rootChild: gameObjectsContainer[parentToUpdate]->GetChildren())
             gameObjectsContainer[rootChild]->SetParent(parentToUpdate);
     }
-    gameObjectsContainer[prefabRoot->GetUID()]->SetEnabledRecursive(prefabRoot->IsEnabled());
+    if (gameObjectsContainer[prefabRoot->GetUID()] != nullptr) 
+        gameObjectsContainer[prefabRoot->GetUID()]->SetEnabledRecursive(prefabRoot->IsEnabled());
 }
 
-void Scene::AddPrefab(UID prefabUID)
+void Scene::AddPrefab(UID prefabUID, const float4x4& transform, const HashString& assignTag)
 {
     GameObject* parent = GetSelectedGameObject();
     if (parent == nullptr) parent = GetGameObjectByUID(gameObjectRootUID);
@@ -1496,6 +1481,13 @@ void Scene::AddPrefab(UID prefabUID)
     LoadNestedPrefab(prefabBaseGO);
 
     prefabBaseGO->UpdateTransformForGOBranch();
+
+    // ADD TAG TO ALL GO THAT CONTAIN A SCRIPT, NO WAY OF KNOWING WHICH IS THE GO FOR AN ENEMY TO ASSIGN IT DIRECTLY
+    // TO USE IT IN PLAYER LOCATION UPDATES
+    if (assignTag == emptyString) return;
+
+    if (prefabBaseGO->IsComponentCreated((int)ComponentType::COMPONENT_SCRIPT - 1))
+        RequestTag(assignTag, prefabBaseGO);
 }
 
 void Scene::UpdatePrefab(UID prefabUID)

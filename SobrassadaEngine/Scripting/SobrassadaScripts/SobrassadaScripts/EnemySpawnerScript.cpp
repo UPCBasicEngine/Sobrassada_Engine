@@ -59,7 +59,7 @@ void EnemySpawnerScript::OnCollisionEnter(GameObject* other, const float3 normal
         spawnTransform[1][3]    += offset.y;
         spawnTransform[2][3]    += offset.z;
 
-        scene->LoadPrefab(prefabUID, prefab, spawnTransform, true, {}, locationTag);
+        scene->AddPrefab(prefabUID, spawnTransform, locationTag);
     }
 
     if (spawnOnce) spawned = true;

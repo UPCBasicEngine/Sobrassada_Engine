@@ -152,7 +152,7 @@ namespace PrefabManager
             }
         }
         ResourcePrefab* resourcePrefab = new ResourcePrefab(rootGO->GetUID(), rootGO->GetName());
-        resourcePrefab->LoadData(loadedGameObjects);
+        resourcePrefab->LoadData(rootGO->GetUID(), loadedGameObjects);
         return resourcePrefab;
     }
 } // namespace PrefabManager

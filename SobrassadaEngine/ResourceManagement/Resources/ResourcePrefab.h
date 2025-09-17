@@ -12,7 +12,7 @@ class ResourcePrefab : public Resource
     ResourcePrefab(UID uid, const std::string& name);
     ~ResourcePrefab() override;
 
-    void LoadData(const std::vector<GameObject*>& objects);
+    void LoadData(UID rootUID, const std::vector<GameObject*>& objects);
 
     GameObject* GetRootObject() const { return gameObjectsContainer.at(gameObjectRootUID); }
     const std::unordered_map<UID, GameObject*>& GetGameObjectsContainer() const { return gameObjectsContainer; }

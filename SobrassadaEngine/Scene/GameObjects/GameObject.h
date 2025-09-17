@@ -77,7 +77,7 @@ class SOBRASADA_API_ENGINE GameObject
     bool AddGameObject(UID gameObjectUID);
     bool RemoveGameObject(UID gameObjectUID);
 
-    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
+    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator, bool saveMinimalPrefabConfig = false) const;
 
     void UpdateEnabledState();
     void UpdateNavmeshValidState();

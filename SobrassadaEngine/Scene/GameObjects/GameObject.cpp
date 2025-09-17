@@ -402,7 +402,7 @@ bool GameObject::RemoveGameObject(UID gameObjectUID)
     return false;
 }
 
-void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator, bool saveMinimalPrefabConfig) const
 {
     targetState.AddMember("UID", uid, allocator);
     targetState.AddMember("ParentUID", parentUID, allocator);
@@ -427,16 +427,13 @@ void GameObject::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
         .PushBack(localTransform.ptr()[15], allocator);
 
     targetState.AddMember("LocalTransform", valLocalTransform, allocator);
-
-    if (prefabUID != INVALID_UID)
-    {
-        targetState.AddMember("PrefabUID", prefabUID, allocator);
-        return; // If its a prefab, only save the data which should be overwritten from the prefab
-    }
-    
-    targetState.AddMember("WasEnabled", wasEnabled, allocator);
+    targetState.AddMember("PrefabUID", prefabUID, allocator);
     targetState.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
     targetState.AddMember("Mobility", mobilitySettings, allocator);
+
+    if (saveMinimalPrefabConfig && prefabUID != INVALID_UID) return;
+    
+    targetState.AddMember("WasEnabled", wasEnabled, allocator);
     targetState.AddMember("SelectParent", selectParent, allocator);
     targetState.AddMember("NavmeshValid", navMeshValid, allocator);
 

@@ -44,7 +44,7 @@ class SOBRASADA_API_ENGINE Scene
 
     void LoadModel(const UID modelUID);
     void LoadNestedPrefab(GameObject* prefabRoot);
-    void AddPrefab(UID prefabUID);
+    void AddPrefab(UID prefabUID, const float4x4& transform = float4x4::identity, const HashString& assignTag = HashString());
     void UpdatePrefab(UID prefabUID);
     void DeletePrefab(UID prefabUID) const;
 

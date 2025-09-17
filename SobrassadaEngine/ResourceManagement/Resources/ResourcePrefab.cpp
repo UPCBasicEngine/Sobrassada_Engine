@@ -14,8 +14,9 @@ ResourcePrefab::~ResourcePrefab()
     gameObjectsContainer.clear();
 }
 
-void ResourcePrefab::LoadData(const std::vector<GameObject*>& objects)
+void ResourcePrefab::LoadData(UID rootUID, const std::vector<GameObject*>& objects)
 {
+    gameObjectRootUID = rootUID;
     for (auto gameObject : objects)
     {
         gameObjectsContainer[gameObject->GetUID()] = gameObject;
