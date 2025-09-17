@@ -62,6 +62,7 @@ class Archer : public Character
     void SeekCover(float deltaTime);
     void StayInCover(float deltaTime);
     void PositionToShoot(float deltaTime);
+    const std::string GetLogicStateName();
 
   private:
     float rangeEscape          = rangeAIAttack - 1;
@@ -104,6 +105,7 @@ class Archer : public Character
     bool seekingCover           = false;
     GameObject* currentCover    = nullptr;
     float3 coverPosition        = float3::zero;
+    float timeInCover           = 0.0f;
 
     float3 shootingPosition     = float3::zero;
     float coverSeekRange        = 8.0f;
@@ -125,6 +127,6 @@ class Archer : public Character
     std::string archerHitVFX    = "HitArcher";
     GameObject* archerVfxObject = nullptr;
     bool hitVfxIsActive         = false;
-    float hitVfxDuration        = 0.2f;
+    float hitVfxDuration        = 0.8f;
     float hitVfxTimer           = 0.0f;
 };
