@@ -262,7 +262,7 @@ void LibraryModule::SearchImportOptionsFromUID(UID uid, rapidjson::Document& doc
     if (const auto it = cachedMetadataDocuments.find(uid); it != cachedMetadataDocuments.end())
     {
         if (!FileSystem::LoadJSON(it->second.c_str(), doc)) return;
-        
+
         importOptions = doc["importOptions"];
     }
 }
@@ -490,7 +490,7 @@ void LibraryModule::CreateCacheForMetadata(const std::string& path)
             if (!FileSystem::LoadJSON(filePath.c_str(), doc)) continue;
 
             UID assetUID = doc["UID"].GetUint64();
-                
+
             if (doc.HasMember("importOptions") && doc["importOptions"].IsObject())
             {
                 cachedMetadataDocuments[assetUID] = entry.path().string();

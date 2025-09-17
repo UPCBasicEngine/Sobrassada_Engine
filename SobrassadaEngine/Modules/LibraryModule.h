@@ -45,7 +45,7 @@ class LibraryModule : public Module
     bool LoadLibraryMaps(const std::string& projectPath);
     void GetImportOptions(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions);
     UID GetUIDFromMetaFile(const std::string& path) const;
-    void SearchImportOptionsFromUID(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions) ;
+    void SearchImportOptionsFromUID(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions);
     UID AssignFiletypeUID(UID originalUID, FileType fileType);
     void DeletePrefabFiles(UID prefabUID);
 
@@ -87,11 +87,10 @@ class LibraryModule : public Module
     const std::unordered_map<UID, HashString>& GetAllNamesMap() const { return namesMap; }
 
   private:
-
     void CreateCacheForMetadata(const std::string& path);
 
     std::unordered_map<UID, std::string> cachedMetadataDocuments;
-    
+
     // maps for user visuals | name -> UID
     std::unordered_map<HashString, UID> textureMap;
     std::unordered_map<HashString, UID> materialMap;
