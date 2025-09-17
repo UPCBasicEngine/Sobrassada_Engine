@@ -43,9 +43,9 @@ class LibraryModule : public Module
     bool LoadScene(const char* fileName, bool reload = false) const;
 
     bool LoadLibraryMaps(const std::string& projectPath);
-    void GetImportOptions(UID uid, rapidjson::Value& importOptions);
+    void GetImportOptions(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions);
     UID GetUIDFromMetaFile(const std::string& path) const;
-    void SearchImportOptionsFromUID(UID uid, rapidjson::Value& importOptions);
+    void SearchImportOptionsFromUID(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions) ;
     UID AssignFiletypeUID(UID originalUID, FileType fileType);
     void DeletePrefabFiles(UID prefabUID);
 

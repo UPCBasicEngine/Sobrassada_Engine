@@ -236,9 +236,9 @@ bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
     return true;
 }
 
-void LibraryModule::GetImportOptions(UID uid, rapidjson::Value& outImportOptions)
+void LibraryModule::GetImportOptions(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions)
 {
-    SearchImportOptionsFromUID(uid, outImportOptions);
+    SearchImportOptionsFromUID(uid, doc, importOptions);
 }
 
 UID LibraryModule::GetUIDFromMetaFile(const std::string& filePath) const
@@ -251,7 +251,7 @@ UID LibraryModule::GetUIDFromMetaFile(const std::string& filePath) const
     return INVALID_UID;
 }
 
-void LibraryModule::SearchImportOptionsFromUID(UID uid, rapidjson::Value& outImportOptions)
+void LibraryModule::SearchImportOptionsFromUID(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions)
 {
     if (cachedMetadataDocuments.empty())
     {
@@ -261,10 +261,9 @@ void LibraryModule::SearchImportOptionsFromUID(UID uid, rapidjson::Value& outImp
 
     if (const auto it = cachedMetadataDocuments.find(uid); it != cachedMetadataDocuments.end())
     {
-        rapidjson::Document doc;
         if (!FileSystem::LoadJSON(it->second.c_str(), doc)) return;
         
-        outImportOptions = doc["importOptions"];
+        importOptions = doc["importOptions"];
     }
 }
 
