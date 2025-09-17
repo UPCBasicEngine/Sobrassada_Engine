@@ -672,7 +672,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
 
     if (camera)
     {
-        projection        = camera->GetProjectionMatrix().Inverted();
+        projection        = camera->GetProjectionMatrix();
         inverseView       = camera->GetWorldMatrix();
         cameraPosition    = camera->GetCameraPosition();
         zNear             = camera->GetNearPlaneDistance();
@@ -680,7 +680,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
     }
     else
     {
-        projection        = App->GetCameraModule()->GetProjectionMatrix().Inverted();
+        projection        = App->GetCameraModule()->GetProjectionMatrix();
         inverseView       = App->GetCameraModule()->GetWorldMatrix();
         cameraPosition    = App->GetCameraModule()->GetCameraPosition();
         zNear             = App->GetCameraModule()->GetNearPlaneDistance();

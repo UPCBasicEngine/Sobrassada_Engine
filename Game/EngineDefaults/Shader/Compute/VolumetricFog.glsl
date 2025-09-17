@@ -37,16 +37,18 @@ vec3 GetWorldPosition(float depth, vec2 uv)
 
 vec3 GetWorldPosition2(float depth, vec2 uv)
 {
-    float a = projection[2][3];
+    float a = projection[3][2];
     float b = projection[2][2];
 
-    float zView = - a / (depth * 2.0 - 1.0 + b);
+    float zView = - a / ((depth * 2.0 - 1.0) + b);
     
     a = projection[0][0];
     b = projection[1][1];
 
-    float xView = -zView / a * (uv.x * 2.0 - 1.0);
-    float yView = -zView / b * (uv.y * 2.0 - 1.0);
+    // float xView = -zView / a * (uv.x * 2.0 - 1.0);
+    // float yView = -zView / b * (uv.y * 2.0 - 1.0);
+    float xView = (-zView * (uv.x * 2.0 - 1.0)) / a ;
+    float yView = (-zView * (uv.y * 2.0 - 1.0)) / b;
 
     vec4 viewPosition =  vec4(xView,yView,zView, 1.0);
 
@@ -62,6 +64,6 @@ void main()
         vec2 uvCoords = vec2(gl_GlobalInvocationID.x / width, gl_GlobalInvocationID.y / height);
         float depth = texture(depthTexture, uvCoords).r;
 
-        imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(GetWorldPosition(depth, uvCoords), blendFactor));
+        imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(GetWorldPosition2(depth, uvCoords), blendFactor));
     }
 }
