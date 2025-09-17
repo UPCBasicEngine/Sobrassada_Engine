@@ -12,11 +12,11 @@
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 #include <filesystem>
-#include <queue>
+#include <stack>
 
 namespace PrefabManager
 {
-    UID SavePrefab(const GameObject* gameObject, bool override)
+    void SavePrefab(GameObject* gameObject)
     {
         // Create doc JSON
         rapidjson::Document doc;
@@ -26,40 +26,42 @@ namespace PrefabManager
         rapidjson::Value prefab(rapidjson::kObjectType);
 
         // Scene values
-        const UID uid = GenerateUID();
-        const UID finalPrefabUID =
-            override ? gameObject->GetPrefabUID() : App->GetLibraryModule()->AssignFiletypeUID(uid, FileType::Prefab);
+        const UID finalPrefabUID = gameObject->GetPrefabUID() != INVALID_UID ? gameObject->GetPrefabUID() :
+            App->GetLibraryModule()->AssignFiletypeUID(GenerateUID(), FileType::Prefab);
+            
         const std::string& savePath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_LIB_PATH +
                                       std::to_string(finalPrefabUID) + PREFAB_EXTENSION;
 
-        const std::string& name = gameObject->GetName();
-
-        // Create structure
-        prefab.AddMember("UID", finalPrefabUID, allocator);
-        prefab.AddMember("Name", rapidjson::Value(name.c_str(), allocator), allocator);
+        gameObject->SetPrefabUID(finalPrefabUID);
+        gameObject->Save(prefab, allocator);
 
         // Serialize GameObjects
         rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
-        Switch to stack like in the scene so its possible to cut when a nested prefab is encountered
-        std::queue<const GameObject*> queue; // Traverse all gameObjects using a queue to avoid recursiveness
-        queue.push(gameObject);
+        
+        std::stack<UID> childrenBuffer;
+        for (UID child: gameObject->GetChildren())
+            childrenBuffer.push(child);
 
-        while (!queue.empty())
+        while (!childrenBuffer.empty())
         {
-            const GameObject* currentGameObject = queue.front();
-
-            rapidjson::Value goJSON(rapidjson::kObjectType);
-            currentGameObject->Save(goJSON, allocator);
-            gameObjectsJSON.PushBack(goJSON, allocator);
-
-            for (UID child : currentGameObject->GetChildren())
+            GameObject* go = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenBuffer.top());
+            childrenBuffer.pop();
+            if (go != nullptr)
             {
-                queue.push(App->GetSceneModule()->GetScene()->GetGameObjectByUID(child));
+                rapidjson::Value goJSON(rapidjson::kObjectType);
+
+                go->Save(goJSON, allocator);
+
+                gameObjectsJSON.PushBack(goJSON, allocator);
+
+                if (go->GetPrefabUID() == INVALID_UID)
+                {
+                    for (UID child : go->GetChildren())
+                        childrenBuffer.push(child);
+                }
             }
-
-            queue.pop();
         }
-
+        
         // Add gameObjects to scene
         prefab.AddMember("GameObjects", gameObjectsJSON, allocator);
 
@@ -71,18 +73,18 @@ namespace PrefabManager
         doc.Accept(writer);
 
         // Create meta file
-        std::string assetPath = PREFABS_ASSETS_PATH + name + PREFAB_EXTENSION;
+        std::string assetPath = PREFABS_ASSETS_PATH + gameObject->GetName() + PREFAB_EXTENSION;
         MetaPrefab meta(finalPrefabUID, assetPath);
-        meta.Save(name, assetPath);
+        meta.Save(gameObject->GetName(), assetPath);
 
-        assetPath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_ASSETS_PATH + name + PREFAB_EXTENSION;
+        assetPath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_ASSETS_PATH + gameObject->GetName() + PREFAB_EXTENSION;
         // Save in assets
         unsigned int bytesWritten = (unsigned int
         )FileSystem::Save(assetPath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
         if (bytesWritten == 0)
         {
             GLOG("Failed to save prefab file: %s", assetPath);
-            return INVALID_UID;
+            return;
         }
 
         // Save in library
@@ -91,15 +93,13 @@ namespace PrefabManager
         if (bytesWritten == 0)
         {
             GLOG("Failed to save prefab file: %s", savePath);
-            return INVALID_UID;
+            return;
         }
 
         // Add the prefab to the resources map
-        App->GetLibraryModule()->AddPrefab(finalPrefabUID, name);
-        App->GetLibraryModule()->AddName(name, finalPrefabUID);
+        App->GetLibraryModule()->AddPrefab(finalPrefabUID, gameObject->GetName());
+        App->GetLibraryModule()->AddName(gameObject->GetName(), finalPrefabUID);
         App->GetLibraryModule()->AddResource(savePath, finalPrefabUID);
-
-        return finalPrefabUID;
     }
 
     void CopyPrefab(
@@ -133,15 +133,12 @@ namespace PrefabManager
 
         rapidjson::Value& prefab = doc["Prefab"];
 
-        UID uid                  = prefab["UID"].GetUint64();
-
-        UID versionUid           = INVALID_UID;
-        if (prefab.HasMember("VersionUID")) versionUid = prefab["VersionUID"].GetUint64();
-
-        std::string name = prefab["Name"].GetString();
-
+        GameObject* rootGO = new GameObject(prefab);
+        rootGO->LoadData(prefab);
+        
         std::vector<GameObject*> loadedGameObjects;
-        std::vector<int> parentIndices;
+        loadedGameObjects.push_back(rootGO);
+        
         if (prefab.HasMember("GameObjects") && prefab["GameObjects"].IsArray())
         {
             const rapidjson::Value& gameObjects = prefab["GameObjects"];
@@ -150,20 +147,12 @@ namespace PrefabManager
                 const rapidjson::Value& gameObject = gameObjects[i];
                 GameObject* newObject              = new GameObject(gameObject);
                 newObject->LoadData(gameObject);
-
-                int index = 0;
-                for (const GameObject* obj : loadedGameObjects)
-                {
-                    if (obj->GetUID() == newObject->GetParent()) break;
-                    ++index;
-                }
-                parentIndices.push_back(index
-                ); // We will ignore the parent index of the root object, so it's fine this is also 0 for it
+                
                 loadedGameObjects.push_back(newObject);
             }
         }
-        ResourcePrefab* resourcePrefab = new ResourcePrefab(uid, name);
-        resourcePrefab->LoadData(loadedGameObjects, parentIndices);
+        ResourcePrefab* resourcePrefab = new ResourcePrefab(rootGO->GetUID(), rootGO->GetName());
+        resourcePrefab->LoadData(loadedGameObjects);
         return resourcePrefab;
     }
 } // namespace PrefabManager

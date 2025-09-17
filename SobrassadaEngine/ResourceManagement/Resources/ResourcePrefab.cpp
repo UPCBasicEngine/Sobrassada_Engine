@@ -14,7 +14,10 @@ ResourcePrefab::~ResourcePrefab()
     gameObjectsContainer.clear();
 }
 
-void ResourcePrefab::LoadData(const std::unordered_map<UID, GameObject*>& objects)
+void ResourcePrefab::LoadData(const std::vector<GameObject*>& objects)
 {
-    gameObjectsContainer = objects;
+    for (auto gameObject : objects)
+    {
+        gameObjectsContainer[gameObject->GetUID()] = gameObject;
+    }
 }

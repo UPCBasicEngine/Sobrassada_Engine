@@ -52,18 +52,32 @@ Resource* ResourcesModule::RequestResource(UID uid)
 void ResourcesModule::ReleaseResource(const Resource* resource)
 {
     if (resource != nullptr)
-    {
-        std::map<UID, Resource*>::iterator it = resources.find(resource->GetUID());
+        ReleaseResource(resource->GetUID());
+}
 
-        if (it != resources.end())
+void ResourcesModule::ReleaseResource(UID resourceUID)
+{
+    std::map<UID, Resource*>::iterator it = resources.find(resourceUID);
+
+    if (it != resources.end())
+    {
+        it->second->RemoveReference();
+        if (it->second->GetReferenceCount() <= 0)
         {
-            it->second->RemoveReference();
-            if (it->second->GetReferenceCount() <= 0)
-            {
-                delete it->second;
-                resources.erase(it);
-            }
+            delete it->second;
+            resources.erase(it);
         }
+    }
+}
+
+void ResourcesModule::ForceUnloadResource(UID resourceUID)
+{
+    std::map<UID, Resource*>::iterator it = resources.find(resourceUID);
+
+    if (it != resources.end())
+    {
+        delete it->second;
+        resources.erase(it);
     }
 }
 

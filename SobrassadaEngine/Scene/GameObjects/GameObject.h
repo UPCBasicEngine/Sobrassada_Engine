@@ -152,6 +152,7 @@ class SOBRASADA_API_ENGINE GameObject
     void DrawGizmos() const;
 
     void CreatePrefab();
+    void UpdatePrefab();
     bool IsGloballyEnabled() const;
     void SetEnabledRecursive(bool value);
 

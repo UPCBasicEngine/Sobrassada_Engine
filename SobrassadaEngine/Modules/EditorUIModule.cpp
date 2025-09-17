@@ -575,7 +575,7 @@ void EditorUIModule::LoadPrefabDialog(bool& loadPrefab)
 
     ImGui::Dummy(ImVec2(0, 3));
 
-    if (ImGui::Button("Ok", ImVec2(0, 0))) App->GetSceneModule()->GetScene()->LoadPrefab(prefabUID);
+    if (ImGui::Button("Ok", ImVec2(0, 0))) App->GetSceneModule()->GetScene()->AddPrefab(prefabUID);
 
     ImGui::SameLine();
 
@@ -583,7 +583,7 @@ void EditorUIModule::LoadPrefabDialog(bool& loadPrefab)
 
     ImGui::Dummy(ImVec2(0, 5));
 
-    if (ImGui::Button("DELETE!", ImVec2(0, 0))) App->GetLibraryModule()->DeletePrefabFiles(prefabUID);
+    if (ImGui::Button("DELETE!", ImVec2(0, 0))) App->GetSceneModule()->GetScene()->DeletePrefab(prefabUID);
 
     ImGui::End();
 

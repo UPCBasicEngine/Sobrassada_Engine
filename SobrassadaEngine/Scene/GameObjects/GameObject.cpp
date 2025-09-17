@@ -9,6 +9,7 @@
 
 #include "CameraComponent.h"
 #include "ParticleSystemComponent.h"
+#include "ResourcesModule.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
@@ -1057,11 +1058,8 @@ void GameObject::RenderContextMenu()
             currentRenamingUID = uid;
         }
 
-        const char* label = prefabUID == INVALID_UID ? "Create Prefab" : "Update global Prefab";
-        if (ImGui::MenuItem(label)) CreatePrefab();
-
-        // TODO if (prefabUID != INVALID_UID && ImGui::MenuItem("Discard local prefab changes"))
-
+        if (prefabUID == INVALID_UID && ImGui::MenuItem("Create Prefab")) CreatePrefab();
+        if (prefabUID != INVALID_UID && ImGui::MenuItem("Update Prefab")) UpdatePrefab();
         if (prefabUID != INVALID_UID && ImGui::MenuItem("Unlink prefab")) RemovePrefabStatus();
 
         
@@ -1451,40 +1449,20 @@ bool GameObject::RemoveComponent(ComponentType componentType)
 
 void GameObject::CreatePrefab()
 {
-    bool override = this->prefabUID != INVALID_UID;
+    PrefabManager::SavePrefab(this);
+}
 
-    std::queue<UID> childrenUIDs;
-    childrenUIDs.push(uid);
-
-    prefabUID        = PrefabManager::SavePrefab(this, override);
-
-    if (override)
-    {
-        // Update all prefabs
-        App->GetSceneModule()->GetScene()->OverridePrefabs(prefabUID);
-    }
+void GameObject::UpdatePrefab()
+{
+    PrefabManager::SavePrefab(this);
+    // Update all prefabs
+    App->GetSceneModule()->GetScene()->UpdatePrefab(prefabUID);
 }
 
 void GameObject::RemovePrefabStatus()
 {
-    // Clear prefab flags of all the gameObject hierarchy
-    prefabUID        = INVALID_UID;
-    prefabVersionUID = INVALID_UID;
-
-    std::stack<UID> childrenUIDs;
-    childrenUIDs.push(uid);
-
-    while (!childrenUIDs.empty())
-    {
-        GameObject* currentObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(childrenUIDs.top());
-        childrenUIDs.pop();
-
-        currentObject->prefabChildUID = INVALID_UID;
-        for (UID child : currentObject->children)
-        {
-            childrenUIDs.push(child);
-        }
-    }
+    App->GetResourcesModule()->ReleaseResource(prefabUID);
+    prefabUID = INVALID_UID;
 }
 
 bool GameObject::IsGloballyEnabled() const
