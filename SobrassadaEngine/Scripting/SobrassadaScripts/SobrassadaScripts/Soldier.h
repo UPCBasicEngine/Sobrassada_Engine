@@ -45,6 +45,7 @@ class Soldier : public Character
     void SearchForPlayer();
     void SetOnWaiting();
     const char* ManageAttackAnimations();
+    void SelectRandomHelmet();
 
   private:
     AIAgentComponent* agentAI        = nullptr;
@@ -74,4 +75,12 @@ class Soldier : public Character
     int maxEnemiesNearby   = 3;
     std::string meleeTrailName       = "";
     GameObject* meleeTrailObject     = nullptr;
+    std::string helmet1Name       = "";
+    GameObject* helmet1Object     = nullptr;
+    std::string helmet2Name          = "";
+    GameObject* helmet2Object        = nullptr;
+    std::string helmet3Name          = "";
+    GameObject* helmet3Object        = nullptr;
+    std::string helmet4Name          = "";
+    GameObject* helmet4Object        = nullptr;
 };

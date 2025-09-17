@@ -11,9 +11,9 @@
 #include "Soldier.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
-#include "Standalone/Audio/AudioSourceComponent.h"
 
 #include "Wwise_IDs.h"
 #include <random>
@@ -29,6 +29,10 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Cheering distance", InspectorField::FieldType::Float, &cheeringDistance, 0.0f, 10.0f});
     fields.push_back({"Max number of enemies nearby", InspectorField::FieldType::Int, &maxEnemiesNearby, 0, 10});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
+    fields.push_back({"Helmet 1 object", InspectorField::FieldType::InputText, &helmet1Name});
+    fields.push_back({"Helmet 2 object", InspectorField::FieldType::InputText, &helmet2Name});
+    fields.push_back({"Helmet 3 object", InspectorField::FieldType::InputText, &helmet3Name});
+    fields.push_back({"Helmet 4 object", InspectorField::FieldType::InputText, &helmet4Name});
 }
 
 bool Soldier::Init()
@@ -58,6 +62,40 @@ bool Soldier::Init()
         GLOG("Melee trail found for melee attack in Soldier")
         meleeTrailObject->SetEnabled(false);
     }
+
+    helmet1Object = parent->GetChildGameObjectByName(helmet1Name);
+    if (!helmet1Object) GLOG("[WARNING] No helmet 1 trail found for  Soldier")
+    else
+    {
+        GLOG("Helmet 1 found for in Soldier")
+        helmet1Object->SetEnabled(false);
+    }
+
+    helmet2Object = parent->GetChildGameObjectByName(helmet2Name);
+    if (!helmet2Object) GLOG("[WARNING] No helmet 2 trail found for  Soldier")
+    else
+    {
+        GLOG("Helmet 2 found for in Soldier")
+        helmet2Object->SetEnabled(false);
+    }
+
+    helmet3Object = parent->GetChildGameObjectByName(helmet3Name);
+    if (!helmet3Object) GLOG("[WARNING] No helmet 3 trail found for  Soldier")
+    else
+    {
+        GLOG("Helmet 3 found for in Soldier")
+        helmet3Object->SetEnabled(false);
+    }
+
+    helmet4Object = parent->GetChildGameObjectByName(helmet4Name);
+    if (!helmet4Object) GLOG("[WARNING] No helmet 4 trail found for  Soldier")
+    else
+    {
+        GLOG("Helmet 4 found for in Soldier")
+        helmet4Object->SetEnabled(false);
+    }
+
+    SelectRandomHelmet();
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Soldier: No audio component found");
@@ -221,7 +259,7 @@ void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
     GLOG("Player location: %s", playerLocation.GetString().c_str());
-    bool playerInLocation            = parent->HasTag(playerLocation);
+    bool playerInLocation = parent->HasTag(playerLocation);
 
     if (!playerScript->IsDead())
     {
@@ -483,4 +521,29 @@ void Soldier::SetOnWaiting()
     currentState = SoldierStates::CHEERING;
     agentAI->SetSpeed(0.0f, 10.0f);
     if (animComponent) animComponent->UseTrigger("cheer");
+}
+
+void Soldier::SelectRandomHelmet()
+{
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<> dis(0, 3);
+
+    switch (dis(gen))
+    {
+    case 1:
+        if (helmet1Object) helmet1Object->SetEnabled(true);
+        break;
+    case 2:
+        if (helmet2Object) helmet2Object->SetEnabled(true);
+        break;
+    case 3:
+        if (helmet3Object) helmet3Object->SetEnabled(true);
+        break;
+    case 4:
+        if (helmet4Object) helmet4Object->SetEnabled(true);
+        break;
+    default:
+        break;
+    }
 }
