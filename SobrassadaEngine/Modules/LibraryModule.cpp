@@ -238,13 +238,7 @@ bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
 
 void LibraryModule::GetImportOptions(UID uid, rapidjson::Value& outImportOptions)
 {
-    const std::string& projectPath = App->GetProjectModule()->GetLoadedProjectPath();
-    SearchImportOptionsFromUID(uid, projectPath, outImportOptions);
-    if (outImportOptions.IsNull())
-    {
-        const std::string& engineDefaultPath = ENGINE_DEFAULT_ASSETS;
-        SearchImportOptionsFromUID(uid, engineDefaultPath, outImportOptions);
-    }
+    SearchImportOptionsFromUID(uid, outImportOptions);
 }
 
 UID LibraryModule::GetUIDFromMetaFile(const std::string& filePath) const
@@ -257,31 +251,16 @@ UID LibraryModule::GetUIDFromMetaFile(const std::string& filePath) const
     return INVALID_UID;
 }
 
-void LibraryModule::SearchImportOptionsFromUID(UID uid, const std::string& path, rapidjson::Value& outImportOptions)
+void LibraryModule::SearchImportOptionsFromUID(UID uid, rapidjson::Value& outImportOptions)
 {
     if (cachedMetadataDocuments.empty())
     {
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_PATH))
-        {
-            if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
-            {
-                std::string filePath = entry.path().string();
-                rapidjson::Document doc;
-                if (!FileSystem::LoadJSON(filePath.c_str(), doc)) continue;
-
-                UID assetUID = doc["UID"].GetUint64();
-                
-                if (doc.HasMember("importOptions") && doc["importOptions"].IsObject())
-                {
-                    cachedMetadataDocuments[assetUID] = entry.path().string();
-                }
-            }
-        }
+        CreateCacheForMetadata(ENGINE_DEFAULT_ASSETS);
+        CreateCacheForMetadata(App->GetProjectModule()->GetLoadedProjectPath());
     }
 
     if (const auto it = cachedMetadataDocuments.find(uid); it != cachedMetadataDocuments.end())
     {
-        // Doc can not be cached, so we have to load the json twice
         rapidjson::Document doc;
         if (!FileSystem::LoadJSON(it->second.c_str(), doc)) return;
         
@@ -499,6 +478,26 @@ const std::string& LibraryModule::GetResourcePath(UID resourceID) const
     }
 
     return emptyString;
+}
+
+void LibraryModule::CreateCacheForMetadata(const std::string& path)
+{
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_PATH))
+    {
+        if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
+        {
+            std::string filePath = entry.path().string();
+            rapidjson::Document doc;
+            if (!FileSystem::LoadJSON(filePath.c_str(), doc)) continue;
+
+            UID assetUID = doc["UID"].GetUint64();
+                
+            if (doc.HasMember("importOptions") && doc["importOptions"].IsObject())
+            {
+                cachedMetadataDocuments[assetUID] = entry.path().string();
+            }
+        }
+    }
 }
 
 const std::string& LibraryModule::GetResourceName(UID resourceID) const
