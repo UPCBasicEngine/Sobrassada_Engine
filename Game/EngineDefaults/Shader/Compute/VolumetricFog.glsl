@@ -5,7 +5,7 @@ uniform layout(binding = 1) sampler2D depthTexture;
 
 uniform layout(location = 0) float width;
 uniform layout(location = 1) float height;
-uniform layout(location = 2) mat4 inverseProjectionMatrix;
+uniform layout(location = 2) mat4 projection;
 uniform layout(location = 3) mat4 inverseViewMatrix;
 
 uniform layout(location = 4) float zNear;
@@ -26,9 +26,29 @@ vec3 GetWorldPosition(float depth, vec2 uv)
     // Depth buffer linearization 
     clipPosition.z = 2.0 * zNear * zFar / (zFar + zNear - clipPosition.z * (zFar - zNear));
 
-    vec4 viewPosition = inverseProjectionMatrix * clipPosition;
+    vec4 viewPosition = projection * clipPosition;
 
     viewPosition /= viewPosition.w;
+
+    vec4 worldPosition = inverseViewMatrix * viewPosition;
+
+    return worldPosition.xyz;
+}
+
+vec3 GetWorldPosition2(float depth, vec2 uv)
+{
+    float a = projection[2][3];
+    float b = projection[2][2];
+
+    float zView = - a / (depth * 2.0 - 1.0 + b);
+    
+    a = projection[0][0];
+    b = projection[1][1];
+
+    float xView = -zView / a * (uv.x * 2.0 - 1.0);
+    float yView = -zView / b * (uv.y * 2.0 - 1.0);
+
+    vec4 viewPosition =  vec4(xView,yView,zView, 1.0);
 
     vec4 worldPosition = inverseViewMatrix * viewPosition;
 
