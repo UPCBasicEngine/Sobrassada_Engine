@@ -21,10 +21,12 @@ class RenderPass
         float deltaTime
     );
 
+    bool IsFXAAEnabled() const { return enableFXAA; }
     bool IsShowBorders() const { return showBorders; }
     float GetGlobalThreshold() const { return globalThreshold; }
     float GetLocalThreshold() const { return localThreshold; }
 
+    void SetEnabled(bool enable) { enableFXAA = enable; }
     void SetShowBorders(bool show) { showBorders = show; }
     void SetGlobalThreshold(float newThreshold) { globalThreshold = newThreshold; }
     void SetLocalThreshold(float newThreshold) { localThreshold = newThreshold; }
@@ -73,6 +75,7 @@ class RenderPass
     int tilesX;
 
     // FXAA
+    bool enableFXAA       = true;
     bool showBorders      = false;
     float globalThreshold = 0.0312f;
     float localThreshold  = 0.063f;

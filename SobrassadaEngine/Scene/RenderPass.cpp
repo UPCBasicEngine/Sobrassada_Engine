@@ -659,6 +659,7 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glUniform1i(0, showBorders);
     glUniform1f(1, globalThreshold);
     glUniform1f(2, localThreshold);
+    glUniform1i(3, enableFXAA);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 

@@ -1958,7 +1958,11 @@ void EditorUIModule::FXAASettings() const
 {
     RenderPass* render = App->GetSceneModule()->GetScene()->GetRenderPass();
 
-    bool showBorders   = render->IsShowBorders();
+    bool enable        = render->IsFXAAEnabled();
+    ImGui::Checkbox("Enable FXAA", &enable);
+    render->SetEnabled(enable);
+
+    bool showBorders = render->IsShowBorders();
     ImGui::Checkbox("Show borders", &showBorders);
     render->SetShowBorders(showBorders);
 
