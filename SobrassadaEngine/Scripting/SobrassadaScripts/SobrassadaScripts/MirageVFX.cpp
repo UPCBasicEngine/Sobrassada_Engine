@@ -36,7 +36,6 @@ MirageVFX::~MirageVFX()
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(1, &materialBuffer);
 }
 
 bool MirageVFX::Init()
@@ -54,7 +53,6 @@ bool MirageVFX::Init()
             glGenVertexArrays(1, &vao);
             glGenBuffers(1, &vbo);
             glGenBuffers(1, &ebo);
-            glGenBuffers(1, &materialBuffer);
 
             glBindVertexArray(vao);
 
@@ -87,17 +85,6 @@ bool MirageVFX::Init()
             indexCount = (unsigned int)rmesh->GetIndices().size();
         }
 
-        const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
-        if (rmat)
-        {
-            isAlphaDiscard  = rmat->IsAlphaDiscard();
-
-            MaterialGPU mat = rmat->GetMaterial();
-
-            glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
-            glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
-        }
-
         meshComp->SetEnabled(false);
     }
     return true;
@@ -111,7 +98,6 @@ void MirageVFX::Update(float deltaTime)
         Reset();
     }
 
-    GLOG("%2f", frameTimer);
     frameTimer += deltaTime * animationFPS;
 }
 
@@ -142,16 +128,7 @@ void MirageVFX::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
-        glUniform1i(4, 0);
-        glUniform1i(5, true);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-
-        float3 cameraPos = float3::zero;
-        if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
-        else cameraPos = cameraComp->GetCameraPosition();
-
-        glUniform3fv(7, 1, &cameraPos[0]);
-        glUniform1f(8, frameTimer);
+        glUniform1f(3, frameTimer);
 
         glBindVertexArray(vao);
 

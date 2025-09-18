@@ -1,7 +1,6 @@
 #version 460
 
-layout(location = 8) uniform float animationTimer;
-layout(location = 9) uniform float sharpness;
+layout(location = 3) uniform float animationTimer;
 
 in vec2 uv;
 
