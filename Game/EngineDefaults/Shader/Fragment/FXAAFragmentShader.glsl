@@ -1,5 +1,8 @@
 #version 460
 
+#define EDGE_STEP_COUNT 12
+#define EDGE_STEPS 1, 1.5, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4
+
 in vec2 uv0;
 
 layout(binding=0) uniform sampler2D lastDrawTexture;
@@ -58,13 +61,6 @@ float getMin(float values[5])
     return minValue;
 }
 
-vec2 ComputeBlendDirection(float middle, float neighbour, float oppositeNeighbour)
-{
-    vec2 pixelStep;
-    
-    return pixelStep;
-}
-
 float ComputePixelBlendFactor(LuminanceData l)
 {
     float average = 2.0f * (l.north + l.east + l.south + l.west) + l.northEast + l.southEast + l.southWest + l.northWest;
@@ -94,19 +90,19 @@ EdgeData ComputeEdgeDirection(LuminanceData l)
     float neighbour = e.isHorizontal ? l.north : l.east;
     float oppositeNeighbour = e.isHorizontal ? l.south : l.west;
 
-    float pGradient = abs(neighbour - l.middle);
-    float nGradient = abs(oppositeNeighbour - l.middle);
-    if (pGradient >= nGradient)
+    float positiveGradient = abs(neighbour - l.middle);
+    float negativeGradient = abs(oppositeNeighbour - l.middle);
+    if (positiveGradient >= negativeGradient)
     {
         e.pixelStep = e.isHorizontal ? vec2(0.0f, 1.0f / textureSize(lastDrawTexture, 0).y) : vec2(1.0f / textureSize(lastDrawTexture, 0).x, 0.0f);
         e.oppositeLuminance = neighbour;
-        e.gradient = pGradient;
+        e.gradient = positiveGradient;
     }
     else
     {
         e.pixelStep = e.isHorizontal ? vec2(0.0f, -1.0f / textureSize(lastDrawTexture, 0).y) : vec2(-1.0f / textureSize(lastDrawTexture, 0).x, 0.0f);
         e.oppositeLuminance = oppositeNeighbour;
-        e.gradient = nGradient;
+        e.gradient = negativeGradient;
     }
 
     return e;
@@ -114,11 +110,66 @@ EdgeData ComputeEdgeDirection(LuminanceData l)
 
 float ComputeEdgeBlendFactor(LuminanceData l, EdgeData e)
 {
-    vec2 currentUv = uv0;
+    const float edgeSteps[EDGE_STEP_COUNT] = { EDGE_STEPS };
+    vec2 startUv = uv0;
 
-    currentUv += e.pixelStep * 0.5f;
+    // Go the the middle point between the border pixels
+    startUv += e.pixelStep * 0.5f;
 
-    return 0;
+    vec2 edgeStep;
+    if (e.isHorizontal) edgeStep = vec2(1.0f / textureSize(lastDrawTexture, 0).x, 0.0f);
+    else edgeStep = vec2(0.0f, 1.0f / textureSize(lastDrawTexture, 0).y);
+
+    float startEdgeLuminance = (l.middle + e.oppositeLuminance) * 0.5f;
+    float gradientThreshold = e.gradient * 0.25f;
+
+    vec2 positiveUv = startUv;
+    float positiveLuminance = startEdgeLuminance;
+    for (int i = 0; i < EDGE_STEP_COUNT; ++i) 
+    {
+        positiveUv += edgeStep * edgeSteps[i];
+        positiveLuminance = luma(texture(lastDrawTexture, positiveUv)) - startEdgeLuminance;
+        if (abs(positiveLuminance) >= gradientThreshold) break;  // If bigger than threshold, we are at the end of the border
+    }
+
+    vec2 negativeUv = startUv;
+    float negativeLuminance = startEdgeLuminance;
+    for (int i = 0; i < EDGE_STEP_COUNT; ++i) 
+    {
+        negativeUv -= edgeStep * edgeSteps[i];
+        negativeLuminance = luma(texture(lastDrawTexture, negativeUv)) - startEdgeLuminance;
+        if (abs(negativeLuminance) >= gradientThreshold) break;  // If bigger than threshold, we are at the end of the border
+    }
+
+    float positiveDistance = 0.0f;
+    float negativeDistance = 0.0f;
+    if (e.isHorizontal)
+    {
+        positiveDistance = positiveUv.x - startUv.x;
+        negativeDistance = startUv.x - negativeUv.x;
+    }
+    else
+    {
+        positiveDistance = positiveUv.y - startUv.y;
+        negativeDistance = startUv.y - negativeUv.y;
+    }
+
+    bool deltaSign = false;
+    float shortestDistance = 0.0f;
+    if (positiveDistance <= negativeDistance)
+    {
+        shortestDistance = positiveDistance;
+        deltaSign = positiveLuminance >= 0;
+    }
+    else
+    {
+        shortestDistance = negativeDistance;
+        deltaSign = negativeLuminance >= 0;
+    }
+
+    // Only blend in one direction of the border
+    if (deltaSign == (l.middle - startEdgeLuminance >= 0)) return 0;
+    else return 0.5f - shortestDistance / (positiveDistance + negativeDistance);
 }
 
 vec3 ApplyFXAA(LuminanceData l) 
@@ -134,13 +185,13 @@ vec3 ApplyFXAA(LuminanceData l)
     }
     else
     {
-        return texture(lastDrawTexture, uv0 + e.pixelStep * pixelBlendFactor).rgb;
+        return texture(lastDrawTexture, uv0 + e.pixelStep * max(pixelBlendFactor, edgeBlendFactor)).rgb;
     }
 }
 
 void main()
 {
-    if (!enableFXAA)  // If disable, just pass-through. Needed for drawing to screen framebuffer anyway
+    if (!enableFXAA)  // If disabled, just pass-through. Needed for drawing to screen framebuffer anyway
     {
         fragColor = texture(lastDrawTexture, uv0);
         return;
@@ -169,7 +220,6 @@ void main()
     if(l.contrast < max(localThreshold * maxValue, globalThreshold))
     {
         fragColor = texture(lastDrawTexture, uv0);
-        //fragColor = vec4(vec3(0.0f), 1.0f);
     }
     else
     {
