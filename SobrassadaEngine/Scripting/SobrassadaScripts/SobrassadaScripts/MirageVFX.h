@@ -32,6 +32,7 @@ class MirageVFX : public Script
 
     float frameTimer            = 0.01f;
     float animationFPS          = 0.0f;
+    float sharpness             = 2.5f;
     bool isAdditive             = false;
 
     MeshComponent* meshComp     = nullptr;

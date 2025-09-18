@@ -1,32 +1,47 @@
 #version 460
 
-#extension GL_ARB_bindless_texture : require
-
-layout(location = 1) uniform mat4 view;
-layout(location = 7) uniform float animationTimer;
-
-layout(std140, binding = 6) uniform Material
-{
-    vec4 diffColor;
-    vec3 specColor;
-    float shininess;
-    bool shininessInAlpha;
-    float metallicFactor;
-    float roughnessFactor;
-    uvec2 diffuseTex;
-    uvec2 specularTex;
-    uvec2 metallicTex;
-    uvec2 normalTex;
-    int hasSpecular;
-    int hasMetallic;
-    uvec2 emmisiveTex;
-    uvec2 occlusionTex;
-    uvec2 padding;
-};
+layout(location = 8) uniform float animationTimer;
+layout(location = 9) uniform float sharpness;
 
 in vec2 uv;
 
 out vec4 fragColor;
+
+vec2 hash( vec2 p )
+{
+    p = vec2( dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)) );
+    return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+
+float noise( in vec2 p )
+{
+    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+
+    vec2  i = floor( p + (p.x+p.y)*K1 );
+    vec2  a = p - i + (i.x+i.y)*K2;
+    float m = step(a.y,a.x); 
+    vec2  o = vec2(m,1.0-m);
+    vec2  b = a - o + K2;
+    vec2  c = a - 1.0 + 2.0*K2;
+    vec3  h = max( 0.5-vec3(dot(a,a), dot(b,b), dot(c,c) ), 0.0 );
+    vec3  n = h*h*h*h*vec3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+    return dot( n, vec3(70.0) );
+}
+
+float smoothnoise( in vec2 p ){    
+    p += animationTimer*0.05;
+    float f = 0.0;
+    
+    p *= 5.0;
+    mat2 m = mat2( 1.6,  1.2, -1.2,  1.6 );
+    f  = 0.5000*noise( p ); p = m*p;
+    f += 0.2500*noise( p ); p = m*p;
+    f += 0.1250*noise( p ); p = m*p;
+    f += 0.0625*noise( p ); p = m*p;
+
+    return 0.5 + 0.5*f;
+}
 
 vec3 colorRamp(float x){
     float thresholds[4] = float[4](0.02, 0.258, 0.433, 0.649);
@@ -34,13 +49,13 @@ vec3 colorRamp(float x){
         vec3(0, 0, 0), 
         vec3(0.188, 0.357, 0.733), 
         vec3(0.153, 0.941, 0.957), 
-        vec3(1, 1, 1)
+        vec3(1.0, 1.0, 1.0)
     );
     if(x < thresholds[0]) return colors[0];
     if(x >= thresholds[3]) return colors[3];
 
     int i;
-    for(i = 0; i < 4; ++i){
+    for(i = 1; i < 4; ++i){
         if(x < thresholds[i]) break;
     }
     float numerator = x - thresholds[i-1];
@@ -51,9 +66,10 @@ vec3 colorRamp(float x){
 
 void main()
 {
-    vec2 texcoord_read = vec2(uv.y, animationTimer);
-    float read = texture(sampler2D(diffuseTex), texcoord_read).x;
-    float value = uv.x * (read + 0.39);
+    vec2 texcoord_read = vec2((1 - uv.y) * 10.0f, animationTimer);
+    float read = smoothnoise(texcoord_read);
+    float read2 = pow(read, 2.5);
+    float value = clamp((1 - uv.x) * (read2 + 0.39), 0.0, 1.0);
 
-    fragColor = vec4(colorRamp(value), 1 - value);
+    fragColor = vec4(colorRamp(value), 1.0) * value;
 }

@@ -20,5 +20,5 @@ void main()
     tangent = vec4(normalMatrix * vertexTangent.xyz, vertexTangent.w);
     pos = vec3(model * vec4(vertexPosition, 1.0));
     uv = vertexUV;
-    gl_Position =  gl_Position = proj * view * vec4(pos, 1.0f);
+    gl_Position = proj * view * vec4(pos, 1.0f);
 }
