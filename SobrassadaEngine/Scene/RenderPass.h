@@ -16,7 +16,10 @@ class RenderPass
     RenderPass();
     ~RenderPass();
 
-    void RenderScene(Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera, float deltaTime);
+    void RenderScene(
+        Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera,
+        float deltaTime
+    );
 
   private:
     void Bind() const;
@@ -34,7 +37,7 @@ class RenderPass
     void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
     void SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
     void SsaoBlurPassRender(SSAO* ssao);
-    void VolumetricFogPassRender(CameraComponent* camera);
+    void VolumetricFogPassRender(CameraComponent* camera, DirectionalLightComponent* light);
 
     void RenderGBufferDebug(GBuffer* gbuffer) const;
     void RenderDepthDebug(GBuffer* gbuffer, CameraComponent* camera) const;
@@ -63,4 +66,9 @@ class RenderPass
 
     // Volumetric Fog
     unsigned int fogResultTexture = 0;
+    int numStepsVolumetric        = 32;
+    float fogIntensity            = 0.2f;
+    float noiseAmmount            = 1.f;
+    float extinctionCoefficient   = 0.04f;
+    float anisotropy              = 0.5f;
 };

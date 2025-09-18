@@ -304,7 +304,7 @@ void RenderPass::RenderScene(
 
     // TEMPORAL, ADJUST LATER
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
-    VolumetricFogPassRender(camera);
+    VolumetricFogPassRender(camera, light);
     glPopDebugGroup();
 }
 
@@ -641,8 +641,10 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
+void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLightComponent* light)
 {
+    if (!light) return;
+
     if (fogResultTexture == 0)
     {
         glGenTextures(1, &fogResultTexture);
@@ -650,12 +652,14 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
 
     // TMP -> CHANGE TO ONLY WHEN FRAMEBUFFER IS RESIZED
     glBindTexture(GL_TEXTURE_2D, fogResultTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glBindImageTexture(0, fogResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindImageTexture(0, fogResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
     glBindTextureUnit(1, framebuffer->GetDepthTexture());
+    glBindTextureUnit(2, depthTexture);
+    glBindTextureUnit(3, framebuffer->GetColorTexture());
 
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
@@ -663,32 +667,38 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
     unsigned int numGroupsX = (width + (8 - 1)) / 8;
     unsigned int numGroupsY = (height + (8 - 1)) / 8;
 
-    glUniform1f(0, (float)width);
-    glUniform1f(1, (float)height);
-
     float3 cameraPosition;
     float4x4 projection, inverseView;
 
     if (camera)
     {
-        projection        = camera->GetProjectionMatrix();
-        inverseView       = camera->GetWorldMatrix();
-        cameraPosition    = camera->GetCameraPosition();
+        projection     = camera->GetProjectionMatrix();
+        inverseView    = camera->GetWorldMatrix();
+        cameraPosition = camera->GetCameraPosition();
     }
     else
     {
-        projection        = App->GetCameraModule()->GetProjectionMatrix();
-        inverseView       = App->GetCameraModule()->GetWorldMatrix();
-        cameraPosition    = App->GetCameraModule()->GetCameraPosition();
+        projection     = App->GetCameraModule()->GetProjectionMatrix();
+        inverseView    = App->GetCameraModule()->GetWorldMatrix();
+        cameraPosition = App->GetCameraModule()->GetCameraPosition();
     }
 
-    glUniformMatrix4fv(2, 1, GL_TRUE, &projection[0][0]);
-    glUniformMatrix4fv(3, 1, GL_TRUE, &inverseView[0][0]);
-    glUniform3fv(4, 1, &cameraPosition[0]);
+    glUniformMatrix4fv(0, 1, GL_TRUE, &projection[0][0]);
+    glUniformMatrix4fv(1, 1, GL_TRUE, &inverseView[0][0]);
+    glUniform3fv(2, 1, &cameraPosition[0]);
 
-    // TEMPORAL, REMOVE LATER
-    float blendFactor = 1.f;
-    glUniform1f(7, blendFactor);
+    float time = 1.f;
+
+    glUniform1i(3, numStepsVolumetric);
+    glUniform1f(4, fogIntensity);
+    glUniform1f(5, extinctionCoefficient);
+    glUniform1f(6, time);
+    glUniform1f(7, noiseAmmount);
+    glUniform1f(8, anisotropy);
+
+    float3 dirLightDir = light->GetDirection(), dirLightColor = light->GetColor();
+    glUniform3fv(9, 1, &dirLightDir[0]);
+    glUniform3fv(10, 1, &dirLightColor[0]);
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 
@@ -696,22 +706,22 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
 
     // RENDER COMPUTED TEXTURE ON TOP OF SCENE
 
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    //unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
+    unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
 
-    //glUseProgram(quadProgram);
+    glUseProgram(quadProgram);
 
-    //unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
-    //glUniform1i(loc, 0);
+    unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
+    glUniform1i(loc, 0);
 
-    //glActiveTexture(GL_TEXTURE0);
-    //glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, fogResultTexture);
 
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    //glDisable(GL_BLEND);
+    // glDisable(GL_BLEND);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const

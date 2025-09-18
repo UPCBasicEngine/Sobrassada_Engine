@@ -1,0 +1,139 @@
+#version 460
+
+#define M_PI 3.14159265358979323846
+
+uniform layout(binding = 0) writeonly image2D transmitanceTexture;
+uniform layout(binding = 1) sampler2D depthTexture;
+uniform layout(binding = 2) sampler2D directionalLightShadowTexture;
+uniform layout(binding = 3) sampler2D sceneTexture;
+
+uniform layout(location = 0) mat4 projection;
+uniform layout(location = 1) mat4 inverseViewMatrix;
+uniform layout(location = 2) vec3 cameraPosition;
+
+uniform layout(location = 3) int NUM_STEPS;
+uniform layout(location = 4) float fogIntensity;
+uniform layout(location = 5) float extinctionCoefficient;
+uniform layout(location = 6) float time;
+uniform layout(location = 7) float noiseAmmount;
+uniform layout(location = 8) float anisotropy;
+
+uniform layout(location = 9) vec3 directionalLightDirection;
+uniform layout(location = 10) vec3 directionalLightColor;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+float rand(vec2 co){return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);}
+float rand (vec2 co, float l) {return rand(vec2(rand(co), l));}
+float rand (vec2 co, float l, float t) {return rand(vec2(rand(co, l), t));}
+
+vec3 GetWorldPosition(float depth, vec2 uv)
+{
+    float a = projection[3][2];
+    float b = projection[2][2];
+
+    float zView = - a / ((depth * 2.0 - 1.0) + b);
+    
+    a = projection[0][0];
+    b = projection[1][1];
+
+    float xView = (-zView / a) * (uv.x * 2.0 - 1.0);
+    float yView = (-zView / b) * (uv.y * 2.0 - 1.0);
+
+    vec4 worldPosition = inverseViewMatrix *  vec4(xView,yView,zView, 1.0);
+
+    return worldPosition.xyz;
+}
+
+// THIS IS TEMPORAL, LATER USE A TEXTURE, SHOULD IMPROVE PERFORMANCE
+float noise(vec3 currentPosition, float time)
+{
+    vec2 pos = floor(currentPosition.xy * currentPosition.z);
+	vec2 posx = pos + vec2(1.0, 0.0);
+	vec2 posy = pos + vec2(0.0, 1.0);
+	vec2 posxy = pos + vec2(1.0);
+	
+	float c = rand(pos, currentPosition.z, time);
+	float cx = rand(posx, currentPosition.z, time);
+	float cy = rand(posy, currentPosition.z, time);
+	float cxy = rand(posxy, currentPosition.z, time);
+	
+	vec2 d = fract(currentPosition.xy * currentPosition.z);
+	d = -0.5 * cos(d * M_PI) + 0.5;
+	
+	float ccx = mix(c, cx, d.x);
+	float cycxy = mix(cy, cxy, d.x);
+	float center = mix(ccx, cycxy, d.y);
+	
+	return center * 2.0 - 1.0;
+}
+
+float CalculateExtinctionCoefficient(vec3 currentPosition)
+{
+    return extinctionCoefficient * noise(currentPosition, time) * noiseAmmount;
+}
+
+float ScatteringPhaseFunction(vec3 viewDirection, vec3 lightDirection)
+{
+    float k = 1.55 * anisotropy - 0.55 * anisotropy * anisotropy * anisotropy;
+    float theta = dot(viewDirection, lightDirection);
+
+    return (1 - k * k) / (4 * M_PI * (1 + k * cos(theta)) * (1 + k * cos(theta)));
+}
+
+vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoords)
+{
+    vec3 light = vec3(0.0);
+    rayDirection = normalize(rayDirection);
+
+    // DIRECTIONAL LIGHT
+    float dLightVisibility = texture(directionalLightShadowTexture, uvCoords).r;
+    light += ScatteringPhaseFunction(-rayDirection, normalize(directionalLightDirection)) * dLightVisibility;
+
+    return light;
+}
+
+void main()
+{
+    const ivec2 textureSize = imageSize(transmitanceTexture);
+
+    if(gl_GlobalInvocationID.x < textureSize.x && gl_GlobalInvocationID.y < textureSize.y)
+    {
+        vec2 uvCoords = vec2(gl_GlobalInvocationID.x / float(textureSize.x), gl_GlobalInvocationID.y / float(textureSize.y));
+        float depth = texture(depthTexture, uvCoords).r;
+        
+        vec3 worldPosition = GetWorldPosition(depth, uvCoords);
+
+        vec3 rayDirection = worldPosition - cameraPosition;
+        vec3 currentPosition = cameraPosition;
+
+        vec3 marchingStep = rayDirection / float(NUM_STEPS);
+        float stepSize = length(marchingStep);
+
+        float accExtintionCoeff = 0.0;
+        vec3 accInScattering = vec3(0.0);
+
+        for(int i = 0; i < NUM_STEPS; ++i)
+        {
+            accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition) * stepSize;
+            accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords) * stepSize * exp(-accExtintionCoeff);
+
+            currentPosition += marchingStep;
+        }
+
+        vec3 finalInScattering = accInScattering * fogIntensity;
+
+        vec4 originalColor = texture(sceneTexture, uvCoords);
+
+        if(depth < 1.f)
+        {
+            imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(originalColor.rgb + finalInScattering, 1.0));
+        }
+        else
+        {
+            imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), originalColor);
+        }
+
+        // imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(originalColor.rgb, 1.0));
+    }
+}

@@ -187,7 +187,7 @@ constexpr const char* VIDEO_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Sha
 // Compute Shaders
 constexpr const char* SHADOW_DEPTH_COMPUTE_SHADER_PATH   = "./EngineDefaults/Shader/Compute/ShadowMapDepthCompute.glsl";
 constexpr const char* TILE_SHADING_COMPUTE_SHADER_PATH   = "./EngineDefaults/Shader/Compute/TileShadingCompute.glsl";
-constexpr const char* VOLUMETRIC_FOG_COMPUTE_SHADER_PATH = "./EngineDefaults/Shader/Compute/VolumetricFog.glsl";
+constexpr const char* VOLUMETRIC_FOG_COMPUTE_SHADER_PATH = "./EngineDefaults/Shader/Compute/VolumetricFog.comp";
 
 using UID                                                = uint64_t;
 
