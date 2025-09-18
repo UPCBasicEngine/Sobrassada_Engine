@@ -10,6 +10,7 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
+#include "Geometry/LineSegment.h"
 #include "Math/float3.h"
 #include "btBulletDynamicsCommon.h"
 
@@ -360,7 +361,6 @@ void PhysicsModule::AddRigidBody(btRigidBody* rigidBody, ColliderType colliderTy
     int mask                      = 0;
     const LayerBitset& maskBitset = colliderLayerConfig[(int)layerType];
 
- 
     for (int i = 0; i < maskBitset.size(); ++i)
     {
         if (maskBitset[i]) mask |= 1 << i;
@@ -370,7 +370,7 @@ void PhysicsModule::AddRigidBody(btRigidBody* rigidBody, ColliderType colliderTy
 // TODO READ FROM CONFIG FILE
 void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
 {
-   
+
     for (int i = 0; i < colliderLayerConfig.size(); ++i)
         colliderLayerConfig[i].reset();
     // loading defaults if no scene state with saved data
@@ -394,17 +394,16 @@ void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
                  1 << (int)ColliderLayer::TRIGGERS | 1 << (int)ColliderLayer::ENEMY_PROJECTILE;
         colliderLayerConfig[3] |= config;
 
-       config                  = 1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WALL;
-        colliderLayerConfig[4] |= config; 
+        config                  = 1 << (int)ColliderLayer::ENEMY | 1 << (int)ColliderLayer::WALL;
+        colliderLayerConfig[4] |= config;
 
         // ENEMY PROJECTILE
-        config                  = 1 << (int)ColliderLayer::PLAYER | 1 <<(int)ColliderLayer::WALL;
+        config                  = 1 << (int)ColliderLayer::PLAYER | 1 << (int)ColliderLayer::WALL;
         colliderLayerConfig[5] |= config;
 
-       // WALL
+        // WALL
         config = 1 << (int)ColliderLayer::PLAYER_PROJECTILE | 1 << (int)ColliderLayer::ENEMY_PROJECTILE;
         colliderLayerConfig[6] |= config;
-       
     }
     else
     {
@@ -460,8 +459,6 @@ void PhysicsModule::LoadLayerData(const rapidjson::Value* initialState)
             colliderLayerConfig[6] |= currentMask;
         }
     }
-
-
 }
 
 void PhysicsModule::SaveLayerData(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator)
@@ -528,4 +525,26 @@ void PhysicsModule::RebuildWorld()
     {
         gameObject.second->ParentUpdatedComponents();
     }
+}
+
+BulletUserPointer* PhysicsModule::RaycastToWorld(const math::LineSegment& ray)
+{
+    if (!dynamicsWorld) return nullptr;
+
+    btVector3 start, finish;
+
+    start  = btVector3(ray.a.x, ray.a.y, ray.a.z);
+    finish = btVector3(ray.b.x, ray.b.y, ray.b.z);
+
+    btCollisionWorld::ClosestRayResultCallback raycastResult(start, finish);
+    dynamicsWorld->rayTest(start, finish, raycastResult);
+
+    if (raycastResult.hasHit())
+    {
+        BulletUserPointer* userPointer =
+            static_cast<BulletUserPointer*>(raycastResult.m_collisionObject->getUserPointer());
+        if (userPointer) return userPointer;
+    }
+
+    return nullptr;
 }

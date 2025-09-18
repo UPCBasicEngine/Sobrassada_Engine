@@ -21,6 +21,11 @@ class CubeColliderComponent;
 class SphereColliderComponent;
 class CapsuleColliderComponent;
 
+namespace math
+{
+    class LineSegment;
+}
+
 constexpr float DEFAULT_GRAVITY = -9.81f;
 
 typedef std::bitset<sizeof(ColliderLayerStrings) / sizeof(char*)> LayerBitset;
@@ -41,6 +46,8 @@ class SOBRASADA_API_ENGINE PhysicsModule : public Module
     void SaveLayerData(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator);
     void EmptyWorld();
     void RebuildWorld();
+
+    BulletUserPointer* RaycastToWorld(const math::LineSegment& ray);
 
     void CreateCubeRigidBody(CubeColliderComponent* colliderComponent);
     void UpdateCubeRigidBody(CubeColliderComponent* colliderComponent);
