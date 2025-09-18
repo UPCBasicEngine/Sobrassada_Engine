@@ -666,7 +666,6 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
     glUniform1f(0, (float)width);
     glUniform1f(1, (float)height);
 
-    float zNear, zFar;
     float3 cameraPosition;
     float4x4 projection, inverseView;
 
@@ -675,23 +674,17 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
         projection        = camera->GetProjectionMatrix();
         inverseView       = camera->GetWorldMatrix();
         cameraPosition    = camera->GetCameraPosition();
-        zNear             = camera->GetNearPlaneDistance();
-        zFar              = camera->GetFarPlaneDistance();
     }
     else
     {
         projection        = App->GetCameraModule()->GetProjectionMatrix();
         inverseView       = App->GetCameraModule()->GetWorldMatrix();
         cameraPosition    = App->GetCameraModule()->GetCameraPosition();
-        zNear             = App->GetCameraModule()->GetNearPlaneDistance();
-        zFar              = App->GetCameraModule()->GetFarPlaneDistance();
     }
 
-    glUniformMatrix4fv(2, 1, GL_FALSE, &projection[0][0]);
-    glUniformMatrix4fv(3, 1, GL_FALSE, &inverseView[0][0]);
-    glUniform1f(4, zNear);
-    glUniform1f(5, zFar);
-    glUniform3fv(6, 1, &cameraPosition[0]);
+    glUniformMatrix4fv(2, 1, GL_TRUE, &projection[0][0]);
+    glUniformMatrix4fv(3, 1, GL_TRUE, &inverseView[0][0]);
+    glUniform3fv(4, 1, &cameraPosition[0]);
 
     // TEMPORAL, REMOVE LATER
     float blendFactor = 1.f;
@@ -703,22 +696,22 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera)
 
     // RENDER COMPUTED TEXTURE ON TOP OF SCENE
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
-    unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
+    //unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
 
-    glUseProgram(quadProgram);
+    //glUseProgram(quadProgram);
 
-    unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
-    glUniform1i(loc, 0);
+    //unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
+    //glUniform1i(loc, 0);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, fogResultTexture);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    glDisable(GL_BLEND);
+    //glDisable(GL_BLEND);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const

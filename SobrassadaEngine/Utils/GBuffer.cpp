@@ -105,7 +105,8 @@ void GBuffer::InitializeGBuffer()
     if (depthTexture == 0) glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, screenWidth, screenHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8,
+        GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, screenWidth, screenHeight, 0, GL_DEPTH_STENCIL,
+        GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
         NULL
     );
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
