@@ -98,6 +98,7 @@ void MirageVFX::Update(float deltaTime)
         Reset();
     }
 
+            GLOG("frameTimer: %f", frameTimer);
     frameTimer += deltaTime * animationFPS;
 }
 
@@ -128,7 +129,7 @@ void MirageVFX::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
-        glUniform1f(3, frameTimer);
+        glUniform1f(4, frameTimer);
 
         glBindVertexArray(vao);
 
