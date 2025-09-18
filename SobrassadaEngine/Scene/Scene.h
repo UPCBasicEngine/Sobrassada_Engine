@@ -128,6 +128,7 @@ class SOBRASADA_API_ENGINE Scene
         return selectedGameObjectsMobility;
     }
     const std::map<UID, float4x4>& GetMultiselectedObjectsLocals() const { return selectedGameObjectsOgLocals; }
+    RenderPass* GetRenderPass() { return renderPass; }
 
     void SetMainCamera(CameraComponent* camera) { mainCamera = camera; }
     void SetSelectedGameObject(UID newSelectedGameObject) { selectedGameObjectUID = newSelectedGameObject; };

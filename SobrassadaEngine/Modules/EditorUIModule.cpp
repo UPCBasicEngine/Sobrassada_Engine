@@ -26,6 +26,7 @@
 #include "TextureEditor.h"
 #include "TextureImporter.h"
 #include "WindowModule.h"
+#include "RenderPass.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -284,6 +285,8 @@ void EditorUIModule::Draw()
 
     if (crowdControl) CrowdControl(crowdControl);
 
+    if (fogConfig) FogConfig(fogConfig);
+
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
 
@@ -350,6 +353,7 @@ void EditorUIModule::MainMenu()
             if (ImGui::MenuItem("Lights Config", "", lightConfig)) lightConfig = !lightConfig;
             if (ImGui::MenuItem("Navmesh", "", navmesh)) navmesh = !navmesh;
             if (ImGui::MenuItem("Crowd Control", "", crowdControl)) crowdControl = !crowdControl;
+            if (ImGui::MenuItem("Fog Config", "", fogConfig)) fogConfig = !fogConfig;
             ImGui::EndDisabled();
 
             ImGui::EndMenu();
@@ -538,6 +542,25 @@ void EditorUIModule::CrowdControl(bool& crowdControl)
     ImGui::Begin("Crowd Control", &crowdControl, ImGuiWindowFlags_None);
 
     App->GetPathfinderModule()->RenderCrowdEditor();
+
+    ImGui::End();
+}
+
+void EditorUIModule::FogConfig(bool& fogConfig)
+{
+    if (!fogConfig || !App->GetSceneModule()->IsSceneLoaded()) return;
+
+    RenderPass* renderPass = App->GetSceneModule()->GetScene()->GetRenderPass();
+
+    if (!renderPass) return;
+
+    ImGui::Begin("Fog Config", &fogConfig, ImGuiWindowFlags_None);
+
+    ImGui::DragInt("Number steps", &renderPass->numStepsVolumetric, 8, 8, 64);
+    ImGui::DragFloat("Fog intensity", &renderPass->fogIntensity, 0.01f, 0.0f, 1.f);
+    ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
+    ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01, 0.01, 1.f);
+    ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01, -0.99, 0.99);
 
     ImGui::End();
 }

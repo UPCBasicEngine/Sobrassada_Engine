@@ -44,6 +44,14 @@ class RenderPass
     void RenderShadowMapDebug() const;
     void RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer) const;
 
+  public:
+
+    int numStepsVolumetric        = 32;
+    float fogIntensity            = 0.2f;
+    float noiseAmmount            = 1.f;
+    float extinctionCoefficient   = 0.04f;
+    float anisotropy              = 0.5f;
+
   private:
     GBuffer* gbuffer         = nullptr;
     SSAO* ssao               = nullptr;
@@ -66,9 +74,4 @@ class RenderPass
 
     // Volumetric Fog
     unsigned int fogResultTexture = 0;
-    int numStepsVolumetric        = 32;
-    float fogIntensity            = 0.2f;
-    float noiseAmmount            = 1.f;
-    float extinctionCoefficient   = 0.04f;
-    float anisotropy              = 0.5f;
 };
