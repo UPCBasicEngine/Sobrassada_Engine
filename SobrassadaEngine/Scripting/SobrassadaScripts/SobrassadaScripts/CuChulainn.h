@@ -303,6 +303,7 @@ class CuChulainn : public Character
     float stepTime                       = 0.367f;
     bool justDied                         = false;
     bool pendingGameOver                  = false;
+    bool moveFromCollision                = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;

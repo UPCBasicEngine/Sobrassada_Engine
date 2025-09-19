@@ -732,20 +732,31 @@ void CuChulainn::GetInputs()
         if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
     }
 
-    if (direction.Length() < 0.55f) character->SetIsRunning(false);
-    else character->SetIsRunning(true);
+    /*if (direction.Length() < 0.55f) character->SetIsRunning(false);
+    else character->SetIsRunning(true);*/
+
+    moveFromCollision                 = (direction.Length() >= 0.55f);
+    character->SetIsRunning(moveFromCollision);
 
     direction                     = camFront * direction.z + camRight * direction.x;
+
+    const bool hasLookInput        = direction.LengthSq() > 0.1f * 0.1f;
 
     const float deltaTime         = AppEngine->GetGameTimer()->GetDeltaTime() / 1000.0f;
     const float playerSpeed       = character->GetSpeed();
     const float skinWidth         = 0.05f;
     const float lookAheadDistance = max(0.12f, playerSpeed * deltaTime);
 
+    float3 lookDir                 = direction;
+
     if (IsBlockedAhead(parent, direction, lookAheadDistance, skinWidth))
     {
         direction = float3::zero;
-    }    
+        
+    } 
+
+    if (hasLookInput) character->LookAt(lookDir);
+    
     character->SetDirection(direction);
 
     // Heal
@@ -1460,7 +1471,12 @@ void CuChulainn::Aim(float deltaTime)
 void CuChulainn::Move()
 {
     character->EnableMovement(true);
-    if (character->GetSpeed() > 0.5f)
+
+    const bool actuallyMoving = character->IsMoving();
+    const bool wantsMove      = moveFromCollision;
+    const bool runCondition   = wantsMove || character->GetSpeed() > 0.5f;
+
+    if (runCondition)
     {
         if (state != CharacterStates::RUN)
         {
