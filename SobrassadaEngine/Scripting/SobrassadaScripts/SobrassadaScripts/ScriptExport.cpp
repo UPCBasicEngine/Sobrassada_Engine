@@ -16,6 +16,7 @@
 #include "FireballTrap.h"
 #include "FreeCamera.h"
 #include "FullscreenToggleScript.h"
+#include "GameOverNavigatorScript.h"
 #include "GameOverScript.h"
 #include "Globals.h"
 #include "GodMode.h"
@@ -106,7 +107,8 @@ constexpr const char* scripts[] = {
     "BossMirage",
     "Boss",
     "MirageBossDash",
-    "ArcherProjectile"
+    "ArcherProjectile",
+    "GameOverNavigatorScript"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -171,6 +173,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "FreeCamera") return new FreeCamera(parent);
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
+    if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
 
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);

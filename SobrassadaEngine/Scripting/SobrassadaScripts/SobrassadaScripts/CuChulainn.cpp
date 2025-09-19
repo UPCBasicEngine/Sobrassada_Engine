@@ -41,6 +41,9 @@
 #include "SDL.h"
 #include "Wwise_IDs.h"
 
+extern "C" void GO_RequestGameOver();
+extern bool gGameOverActive;
+
 CharacterControllerComponent* character = nullptr;
 CuChulainn* playerScript                = nullptr;
 
@@ -214,6 +217,7 @@ bool CuChulainn::Init()
     arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
+
     attackVfxHorizontal1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal1Name);
     if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
     else attackVfxHorizontal1->SetEnabled(false);
@@ -237,9 +241,6 @@ bool CuChulainn::Init()
     attackVfxVertical3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical3Name);
     if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
     else attackVfxVertical3->SetEnabled(false);
-    arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
-    if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
-    else arrowHitVfxObject->SetEnabled(false);
 
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
@@ -375,8 +376,6 @@ bool CuChulainn::Init()
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
-    if (!riastradBar) GLOG("[WARNING] CuChulainn: No riastard bar gameObject found");
-
     // Ultimate
     ultimateGlow =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
@@ -436,7 +435,6 @@ bool CuChulainn::Init()
         GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
         GLOG("Player name: %s", parent->GetName().c_str());
 
-        // Verificar tags
         if (parent->HasTag(HashString("Player")))
         {
             GLOG("Player has 'Player' tag: YES");
@@ -456,6 +454,8 @@ bool CuChulainn::Init()
     const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
     const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
 
+    spawnPos                      = parent->GetGlobalTransform().TranslatePart();
+
     if (gNewGame)
     {
         gNewGame = false;
@@ -474,8 +474,19 @@ void CuChulainn::Update(float deltaTime)
 {
     if (state == CharacterStates::DEATH)
     {
-        deathTimer += deltaTime;
-        if (deathTimer > 4.0f) Respawn();
+        deathTimer                   += deltaTime;
+
+        const bool deathAnimDone      = (animComponent && animComponent->IsFinished());
+        constexpr float kGO_MinDelay  = 1.6f;
+        constexpr float kGO_MaxDelay  = 3.5f;
+
+        if (pendingGameOver && ((deathAnimDone && deathTimer >= kGO_MinDelay) || (deathTimer >= kGO_MaxDelay)))
+        {
+            pendingGameOver = false;
+            GO_RequestGameOver();
+        }
+
+        if (deathTimer > 4.0f && !gGameOverActive) Respawn();
     }
 
     if (isDead || !character) return;
@@ -533,14 +544,17 @@ void CuChulainn::OnDestroy()
 
 void CuChulainn::OnDeath()
 {
-    // TODO: include death sound for the character
     isAttacking = false;
     deathTimer  = 0.0f;
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     character->EnableMovement(false);
-    state = CharacterStates::DEATH;
+
+    state  = CharacterStates::DEATH;
+    isDead = true;
+
     if (animComponent) animComponent->UseTrigger("Death");
+    pendingGameOver = true;
 }
 
 void CuChulainn::OnDamageTaken(int amount)
@@ -1484,11 +1498,15 @@ void CuChulainn::SetPosition(const float3& position)
 
 void CuChulainn::Respawn()
 {
+    GLOG("[PLAYER] Respawn()");
     Character::Restart();
 
-    isDead        = false;
-    currentHealth = reservedHealth;
-    state         = CharacterStates::RESPAWN;
+    isDead         = false;
+    deathTimer     = 0.0f;
+
+    currentHealth  = maxHealth;
+    reservedHealth = maxHealth;
+    state          = CharacterStates::RESPAWN;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
@@ -1496,11 +1514,20 @@ void CuChulainn::Respawn()
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
+
+    GLOG("[PLAYER] -> state=RESPAWN hp=%d", currentHealth);
 }
+
 
 void CuChulainn::TakeDamage(int amount)
 {
-    if (godMode || isRiastrad || state == CharacterStates::ULTIMATE) return;
+    int prev = currentHealth;
+    GLOG("[PLAYER] TakeDamage(%d) hpBefore=%d state=%s", amount, prev, GetLogicStateName().c_str());
+    if (godMode || isRiastrad || state == CharacterStates::ULTIMATE)
+    {
+        GLOG("[PLAYER] TakeDamage -> INVULNERABLE (ignorat)");
+        return;
+    }
     Character::TakeDamage(amount);
 }
 
@@ -1863,4 +1890,19 @@ const std::string CuChulainn::GetLogicStateName()
         return "MISSING!";
         break;
     }
+}
+
+bool CuChulainn::ConsumeJustDied()
+{
+    if (justDied)
+    {
+        justDied = false; // reset the flag after consuming
+        return true;
+    }
+    return false; // nothing to consume
+}
+
+bool CuChulainn::IsGameOverCondition() const
+{
+    return isDead || state == CharacterStates::DEATH || currentHealth <= 0;
 }
