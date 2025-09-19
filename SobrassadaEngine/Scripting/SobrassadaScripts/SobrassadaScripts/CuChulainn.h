@@ -163,6 +163,7 @@ class CuChulainn : public Character
     std::string attackVfxVertical2Name   = "AttackVfxV2";
     std::string attackVfxHorizontal3Name = "AttackVfxH3";
     std::string attackVfxVertical3Name   = "AttackVfxV3";
+    std::string attackVfxExplosionName   = "AttackExplosion";
     GameObject* meleeVfxObject           = nullptr;
     GameObject* meleeTrailObject         = nullptr;
     GameObject* attackVfxHorizontal1     = nullptr;
@@ -171,6 +172,7 @@ class CuChulainn : public Character
     GameObject* attackVfxVertical2       = nullptr;
     GameObject* attackVfxHorizontal3     = nullptr;
     GameObject* attackVfxVertical3       = nullptr;
+    GameObject* attackVfxExplosion       = nullptr;
     bool desiredAttack                   = false;
     float attackBufferTimer              = 0.0f;
     int comboCounter                     = -1;

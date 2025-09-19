@@ -132,6 +132,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Melee VFX Vertical 2", InspectorField::FieldType::InputText, &attackVfxVertical2Name});
     fields.push_back({"Melee VFX Horizontal 3", InspectorField::FieldType::InputText, &attackVfxHorizontal3Name});
     fields.push_back({"Attack VFX Vertical 3", InspectorField::FieldType::InputText, &attackVfxVertical3Name});
+    fields.push_back({"Attack VFX Explosion", InspectorField::FieldType::InputText, &attackVfxExplosionName});
     fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
     fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
 
@@ -232,6 +233,11 @@ bool CuChulainn::Init()
     attackVfxVertical3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxVertical3Name);
     if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
     else attackVfxVertical3->SetEnabled(false);
+
+    attackVfxExplosion = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxExplosionName);
+    if (!attackVfxExplosion) GLOG("[WARNING] No attack explosion VFX found for melee attack in CuChulain")
+    else attackVfxExplosion->SetEnabled(false);
+
     arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
@@ -1122,6 +1128,8 @@ void CuChulainn::PerformAttack()
         float currentHitboxDuration =
             isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
 
+        if (comboCounter == 2) currentHitboxDelay *= 1.5f;
+
         if (attackTimer > currentVfxDelay)
         {
             GameObject* vfxHorizontal = nullptr;
@@ -1157,13 +1165,24 @@ void CuChulainn::PerformAttack()
 
         if (attackTimer < currentHitboxDelay)
         {
-            float distance = comboCounter == 2 ? 10.0f : 5.0f;
+            float distance = 5.0f;
             character->MoveTo(distance);
         }
         else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
                  attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
+            if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->IsEnabled())
+            {
+                attackVfxExplosion->SetEnabled(true);
+                float3 dir = 2.0f * character->GetFrontDirection();
+                dir.y      = 1.75f;
+                attackVfxExplosion->SetLocalPosition(parent->GetPosition() + dir);
+                attackVfxExplosion->GetComponent<MeshComponent*>()->SetEnabled(false);
+                attackVfxExplosion->GetComponent<ShaderScriptComponent*>()
+                    ->GetScriptByType<AttackVfxSpritesheet>()
+                    ->Reset();
+            }
         }
         else if (weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay + currentHitboxDuration)
         {
