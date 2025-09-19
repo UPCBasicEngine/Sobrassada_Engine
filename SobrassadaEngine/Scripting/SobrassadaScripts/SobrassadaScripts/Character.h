@@ -3,14 +3,16 @@
 #include "HashString.h"
 #include "Script.h"
 
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 class MagicBarrier;
 class GameObject;
 class CharacterControllerComponent;
 class AnimationComponent;
 class CapsuleColliderComponent;
+class ShaderScriptComponent;
+class MeshComponent;
 
 enum class PlayerDistances
 {
@@ -28,7 +30,8 @@ enum class CharacterType
     Banshee,
     Destructible,
     Changeling,
-    Boss
+    Boss,
+    Mirage
 };
 
 class Character : public Script
@@ -78,7 +81,6 @@ class Character : public Script
     CapsuleColliderComponent* characterCollider = nullptr;
     GameObject* weapon                          = nullptr;
     CapsuleColliderComponent* weaponCollider    = nullptr;
-    
 
     int maxHealth                               = 0;
     int currentHealth                           = 0;
@@ -117,6 +119,21 @@ class Character : public Script
     float searchTimer                           = 0.0f;
     float searchDuration                        = 5.0f;
     bool isSearching                            = false;
+
+    // Hit VFX
+    bool isHit                                  = false;
+    float onHitVfxDuration                      = 0.1f;
+    float onHitVfxTimer                         = 0.0;
+    std::string onHitPivotName                  = "OnHitPivot";
+    std::string onHitVfx1Name                   = "OnHitVfx1";
+    std::string onHitVfx2Name                   = "OnHitVfx2";
+    GameObject* onHitPivot                      = nullptr;
+    GameObject* onHitVfx1                       = nullptr;
+    GameObject* onHitVfx2                       = nullptr;
+
+    std::string meshName                        = "";
+    MeshComponent* mesh                         = nullptr;
+    ShaderScriptComponent* colorChange          = nullptr;
 
     // Level
     MagicBarrier* associatedBarrier             = nullptr;
