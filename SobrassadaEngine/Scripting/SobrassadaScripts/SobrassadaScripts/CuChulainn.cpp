@@ -734,7 +734,18 @@ void CuChulainn::GetInputs()
 
     if (direction.Length() < 0.55f) character->SetIsRunning(false);
     else character->SetIsRunning(true);
-    direction = camFront * direction.z + camRight * direction.x;
+
+    direction                     = camFront * direction.z + camRight * direction.x;
+
+    const float deltaTime         = AppEngine->GetGameTimer()->GetDeltaTime() / 1000.0f;
+    const float playerSpeed       = character->GetSpeed();
+    const float skinWidth         = 0.05f;
+    const float lookAheadDistance = max(0.12f, playerSpeed * deltaTime);
+
+    if (IsBlockedAhead(parent, direction, lookAheadDistance, skinWidth))
+    {
+        direction = float3::zero;
+    }    
     character->SetDirection(direction);
 
     // Heal
@@ -1849,6 +1860,43 @@ void CuChulainn::EndCurse()
 
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
+}
+
+bool CuChulainn::IsBlockedAhead(
+    const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth
+)
+{
+    if (!ownerGO || desiredMoveDirection.LengthSq() < 0.001f) return false;
+
+    Scene* currentScene              = AppEngine->GetSceneModule()->GetScene();
+    const float3 playerWorldPosition = ownerGO->GetGlobalTransform().TranslatePart();
+    const float3 normMoveDir         = desiredMoveDirection.Normalized();
+
+    auto hitsBlockAtHeight           = [&](float height)
+    {
+        const float3 rayStart = playerWorldPosition + float3::unitY * height;
+
+        LineSegment ray(rayStart, rayStart + normMoveDir * (lookAheadDistance + skinWidth));
+        
+        GameObject* hitGO              = nullptr;
+        BulletUserPointer* userPointer = RaycastController::GetRayIntersectionPhysics(ray);
+        if (userPointer)
+        {
+            hitGO = userPointer->collider->GetParent();
+            GLOG("[IsBlockedAhead]: Physics Raycast hit!, %s", hitGO->GetName().c_str());
+        }
+
+        DebugDrawModule* debug = AppEngine->GetDebugDrawModule();
+
+        if (debug->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+        {
+            float3 centralColor = hitGO != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+            debug->DrawLineSegment(ray, centralColor);
+        }
+        return hitGO && HasblockingTag(hitGO);
+    };
+
+    return hitsBlockAtHeight(0.2f) || hitsBlockAtHeight(0.9f);
 }
 
 const std::string CuChulainn::GetLogicStateName()
