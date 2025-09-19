@@ -241,7 +241,8 @@ void BatchManager::RenderTransparent(
     GeometryBatch* currentBatch = batchMeshes[0]->GetBatch();
     std::vector<MeshComponent*> currentBatchMeshes;
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
     currentBatchMeshes.push_back(batchMeshes[0]);
     glEnable(GL_BLEND);
