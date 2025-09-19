@@ -885,6 +885,17 @@ bool CuChulainn::CanTakeMushroom() const
            state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
 }
 
+bool CuChulainn::HasblockingTag(GameObject* go)
+{
+    if (!go) return false;
+    for (const char* tagName : BlockerGOTags)
+    {
+        if (go->HasTag(HashString(tagName))) return true;
+    }
+
+    return false;
+}
+
 bool CuChulainn::CanHeal() const
 {
     return state != CharacterStates::DASH && !isAttacking && state != CharacterStates::AIM &&

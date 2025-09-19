@@ -34,6 +34,8 @@ enum class CharacterStates
     HURT
 };
 
+constexpr const char* BlockerGOTags[] = {"MagicBarrier"};
+
 class CuChulainn : public Character
 {
   public:
@@ -58,6 +60,8 @@ class CuChulainn : public Character
     bool IsDashUnlocked() const { return dashUnlocked; }
     bool IsUltimateUnlocked() const { return ultimateUnlocked; }
     int GetEnemiesCount() const { return enemiesCont; }
+    bool HasblockingTag(GameObject* go);
+
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
