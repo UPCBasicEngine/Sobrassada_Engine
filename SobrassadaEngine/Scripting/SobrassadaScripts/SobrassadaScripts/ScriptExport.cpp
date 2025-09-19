@@ -236,7 +236,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MirageBossDash") return new MirageBossDash(parent);
 
     if (scriptType == "MirageVFX")
-        return new HealVFXGround(
+        return new MirageVFX(
             parent, "./EngineDefaults/Shader/Custom/Vertex/MirageVFX_Vertex.glsl",
             "./EngineDefaults/Shader/Custom/Fragment/MirageVFX_Fragment.glsl"
         );

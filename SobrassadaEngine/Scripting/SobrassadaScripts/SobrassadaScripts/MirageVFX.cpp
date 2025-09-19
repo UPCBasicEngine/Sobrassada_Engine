@@ -27,7 +27,6 @@ MirageVFX::MirageVFX(GameObject* parent, const std::string& ver, const std::stri
     vertex   = ver;
     fragment = frag;
     fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationFPS, 0.0f, 100.0f});
-    fields.push_back({"Sharpness", InspectorField::FieldType::Float, &sharpness, 0.0f, 5.0f});
     fields.push_back({"Additive", InspectorField::FieldType::Bool, &isAdditive});
 }
 
@@ -134,9 +133,8 @@ void MirageVFX::Render(float deltaTime, CameraComponent* cameraComp)
         glBindVertexArray(vao);
 
         if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        else glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        glDisable(GL_BLEND);
         glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
         glEnable(GL_CULL_FACE);
