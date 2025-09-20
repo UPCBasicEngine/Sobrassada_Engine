@@ -15,6 +15,7 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #define TINYGLTF_IMPLEMENTATION /* Only in one of the includes */
+#include "LibraryModule.h"
 #include "MetaMesh.h"
 #include "tiny_gltf.h"
 #include <utility>
@@ -105,6 +106,10 @@ namespace SceneImporter
 
         // Import Model
         ModelImporter::ImportModel(model, gltfMeshes, filePath, targetFilePath);
+
+        // Could also create new cache entries for all imported files, however the performance gain is minimal and the
+        // risk for missing files high. Not worth the development work
+        App->GetLibraryModule()->InvalidateMetadataCache();
     }
 
     void CopyGLTF(const char* filePath, const std::string& targetFilePath, std::string& copiedFilePath)

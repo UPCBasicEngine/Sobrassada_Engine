@@ -214,6 +214,12 @@
     <ClInclude Include="GameSession.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="GameOverNavigatorScript.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorChange.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
     <ClInclude Include="ArcherProjectile.h">
       <Filter>Characters</Filter>
     </ClInclude>
@@ -891,9 +897,6 @@
     <ClCompile Include="EnemySpawnerScript.cpp">
       <Filter>Characters\Enemies</Filter>
     </ClCompile>
-    <ClCompile Include="GameOverScript.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="PlayerLocationScript.cpp">
       <Filter>Environment</Filter>
     </ClCompile>
@@ -965,6 +968,15 @@
     </ClCompile>
     <ClCompile Include="GameSession.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverNavigatorScript.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverScript.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorChange.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
     <ClCompile Include="ArcherProjectile.cpp">
       <Filter>Characters</Filter>

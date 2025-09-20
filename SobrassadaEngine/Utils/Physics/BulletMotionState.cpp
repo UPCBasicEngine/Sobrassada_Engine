@@ -89,9 +89,9 @@ void BulletMotionState::setWorldTransform(const btTransform& physicsWorldTransfo
         gameObjectTransform.getOrigin().x(), gameObjectTransform.getOrigin().y(), gameObjectTransform.getOrigin().z()
     );
 
-    float4x4 newLocalMatrix = float4x4::FromTRS(newPosition, rotationMat, collider->GetParent()->GetScale());
+    float4x4 newLocalMatrix        = float4x4::FromTRS(newPosition, rotationMat, collider->GetParent()->GetScale());
 
-    collider->GetParent()->SetLocalTransform(newLocalMatrix);
-    collider->GetParent()->SetPosition(newPosition);
-    collider->GetParent()->UpdateTransformForGOBranch();
+    float4x4 parentGOInverseGlobal = collider->GetParent()->GetParentGlobalTransform().Inverted();
+
+    collider->GetParent()->SetLocalTransform(parentGOInverseGlobal * newLocalMatrix);
 }
