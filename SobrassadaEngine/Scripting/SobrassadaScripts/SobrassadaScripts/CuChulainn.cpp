@@ -732,9 +732,6 @@ void CuChulainn::GetInputs()
         if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
     }
 
-    /*if (direction.Length() < 0.55f) character->SetIsRunning(false);
-    else character->SetIsRunning(true);*/
-
     moveFromCollision                 = (direction.Length() >= 0.55f);
     character->SetIsRunning(moveFromCollision);
 
