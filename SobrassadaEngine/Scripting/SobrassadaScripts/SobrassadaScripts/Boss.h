@@ -237,8 +237,8 @@ class Boss : public Character
     std::string spoutName = "";
 
     const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};
-    const std::vector<BossStates> phase2States = {BossStates::ShieldStrikes, BossStates::ShieldBlast};
+    const std::vector<BossStates> phase2States = {BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::WaterSpouts};
     const std::vector<BossStates> phase3States = {
-        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike
+        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike, BossStates::WaterSpouts
     };
 };
