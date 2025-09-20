@@ -419,6 +419,8 @@ bool Boss::Init()
         GLOG("Boss arena not found");
     }
 
+    startRot = parent->GetGlobalTransform().RotatePart().ToEulerXYZ();
+
     return true;
 }
 
@@ -446,6 +448,21 @@ void Boss::Update(float deltaTime)
 
         RenderDebug(logs, float3(1.0f, 0.5f, 0.0f));
     }
+
+    if (playerScript && playerScript->GetState() == CharacterStates::DEATH) restart = true;
+}
+
+void Boss::OnPlayerExitLocation()
+{
+    waiting = true;
+}
+
+void Boss::OnPlayerEnterLocation()
+{
+    waiting = false;
+
+    doTaunt = true;
+    ChooseNextState();
 }
 
 void Boss::OnDeath()
@@ -479,7 +496,7 @@ void Boss::HandleState(float deltaTime)
     switch (currentState)
     {
     case BossStates::Idle:
-        Idle();
+        Idle(deltaTime);
         break;
 
     case BossStates::Taunt:
@@ -508,13 +525,13 @@ void Boss::HandleState(float deltaTime)
 
     case BossStates::WaterSpouts:
         break;
-    }
 
-    if (playerScript &&
-        (playerScript->GetState() == CharacterStates::DEATH || playerScript->GetState() == CharacterStates::RESPAWN))
-    {
-        doIdle = true;
-        ChooseNextState();
+    case BossStates::Restart:
+        Restart(deltaTime);
+        break;
+    default:
+        GLOG("ERROR: Ferdiad HandleState")
+        break;
     }
 }
 
@@ -528,6 +545,12 @@ void Boss::UpdateTimers(float deltaTime)
 void Boss::ChooseNextState()
 {
     stateEnter = true;
+
+    if (restart)
+    {
+        currentState = BossStates::Restart;
+        return;
+    }
 
     switch (phase)
     {
@@ -762,14 +785,14 @@ void Boss::ChooseNextStateThirdPhase()
     }
 }
 
-void Boss::Idle()
+void Boss::Idle(float deltaTime)
 {
     if (stateEnter)
     {
 
         // TODO: Randomize the idle duration
         // agentAI->SetSpeed(0.0f, 10.0f);
-        if (doIdle) ResetValues(true);
+        if (doIdle) ResetValues(false);
         stateEnter    = false;
         doIdle        = false;
         currentAction = BossActions::Idle;
@@ -778,14 +801,19 @@ void Boss::Idle()
         if (animComponent) animComponent->UseTrigger("Idle");
     }
 
-    ChooseNextState();
+    if (!waiting) ChooseNextState();
+    else
+    {
+        agentAI->ResumeMovement();
+        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+    }
 }
 
 void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
-        if (doTaunt) ResetValues(true);
+        if (doTaunt) ResetValues(false);
         stateEnter    = false;
         doTaunt       = false;
         currentAction = BossActions::Taunt;
@@ -795,7 +823,7 @@ void Boss::Taunt(float deltaTime)
     }
     agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-    if (animComponent && animComponent->IsFinished()) Idle();
+    if (animComponent && animComponent->IsFinished()) Idle(deltaTime);
     else ChooseNextState();
 }
 
@@ -1330,7 +1358,7 @@ void Boss::Mirage()
     {
         GLOG("[BOSS] - Mirage");
 
-        ResetValues(true);
+        ResetValues(false);
         mirageActivated = true;
         stateEnter      = false;
         agentAI->PauseMovement();
@@ -1392,7 +1420,7 @@ void Boss::Mirage()
     }
 }
 
-void Boss::ResetValues(bool isForMirage)
+void Boss::ResetValues(bool changePhase)
 {
     doIdle                 = false;
     doTaunt                = false;
@@ -1419,7 +1447,7 @@ void Boss::ResetValues(bool isForMirage)
 
     animComponent->OnResume();
 
-    if (!isForMirage) mirageActivated = false;
+    if (changePhase) mirageActivated = false;
 
     if (weaponCollider) weaponCollider->SetEnabled(false);
     if (closeArea) closeArea->SetEnabled(false);
@@ -1597,11 +1625,50 @@ BossStates Boss::ChooseAlternativeState() const
     return allStates[index];
 }
 
+void Boss::Restart(float deltaTime)
+{
+    if (stateEnter)
+    {
+        restart           = false;
+        stateEnter        = false;
+        actionTriggerDone = false;
+
+        currentAction     = BossActions::Return;
+    }
+
+    switch (currentAction)
+    {
+    case BossActions::Return:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+            agentAI->ResumeMovement();
+            animComponent->UseTrigger("Run");
+        }
+
+        agentAI->SetPathNavigation(startPos);
+
+        if (CheckDistanceWithPoint(startPos))
+        {
+            GLOG("POINT REACHED");
+            actionTriggerDone = false;
+            doIdle            = true;
+            waiting           = true;
+            ChooseNextState();
+        }
+        break;
+
+    default:
+        GLOG("ERROR: Restart");
+        break;
+    }
+}
+
 void Boss::ChangePhase()
 {
     if (stateEnter)
     {
-        ResetValues(false);
+        ResetValues(true);
         stateEnter = false;
         phase++;
 
@@ -1666,6 +1733,9 @@ const char* Boss::GetStateName() const
 
     case BossStates::ShieldBlast:
         return "ShieldBlast";
+
+    case BossStates::Restart:
+        return "Restart";
 
     default:
         return "ERROR: NO STATE";
@@ -1735,6 +1805,9 @@ const char* Boss::GetActionName() const
 
     case BossActions::Shoot:
         return "Shoot";
+
+    case BossActions::Return:
+        return "Return";
 
     default:
         return "ERROR: NO ACTION";

@@ -37,6 +37,7 @@ enum class BossStates
     ChangePhase,
     WaterSpouts,
     ShieldBlast,
+    Restart,
 };
 
 enum class BossActions
@@ -61,6 +62,7 @@ enum class BossActions
     Load, // ShieldBlast
     PreShoot,
     Shoot,
+    Return,
 };
 
 class Boss : public Character
@@ -71,6 +73,8 @@ class Boss : public Character
 
     bool Init() override;
     void Update(float deltaTime) override;
+    void OnPlayerExitLocation() override;
+    void OnPlayerEnterLocation() override;
 
     GameObject* GetCloseArea() const { return closeArea; }
     int GetCloseAreaDamage() const { return closeAreaDamage; }
@@ -85,7 +89,7 @@ class Boss : public Character
     void ChooseNextStateSecondPhase();
     void ChooseNextStateThirdPhase();
 
-    void Idle();
+    void Idle(float deltaTime);
     void Taunt(float deltaTime);
     void ShieldStrikes(float deltaTime);
 
@@ -110,6 +114,8 @@ class Boss : public Character
     void SetState(BossStates newState);
     BossStates ChooseAlternativeState() const;
 
+    void Restart(float deltaTime);
+
     const std::vector<BossStates>& GetAvailableStates() const;
     const char* GetStateName() const;
     const char* GetActionName() const;
@@ -118,6 +124,10 @@ class Boss : public Character
     AIAgentComponent* agentAI = nullptr;
     BossStates currentState   = BossStates::Idle;
     BossActions currentAction = BossActions::Idle;
+
+    bool waiting              = true;
+    bool restart              = false;
+    float3 startRot           = float3::zero;
 
     int phase                 = 1;
     int phase1 = 40, phase2 = 20, phase3 = 0;
