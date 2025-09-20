@@ -97,7 +97,6 @@ void MirageVFX::Update(float deltaTime)
         Reset();
     }
 
-            GLOG("frameTimer: %f", frameTimer);
     frameTimer += deltaTime * animationFPS;
 }
 
