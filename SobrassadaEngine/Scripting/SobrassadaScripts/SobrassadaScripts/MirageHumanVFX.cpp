@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "MirageVFX.h"
+#include "MirageHumanVFX.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -22,22 +22,22 @@
 #include "Math/float3.h"
 #include "glew.h"
 
-MirageVFX::MirageVFX(GameObject* parent, const std::string& ver, const std::string& frag) : Script(parent)
+MirageHumanVFX::MirageHumanVFX(GameObject* parent, const std::string& ver, const std::string& frag) : Script(parent)
 {
     vertex   = ver;
     fragment = frag;
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationFPS, 0.0f, 100.0f});
     fields.push_back({"Additive", InspectorField::FieldType::Bool, &isAdditive});
+    fields.push_back({"Color Tint", InspectorField::FieldType::Vec3, &colorTint});
 }
 
-MirageVFX::~MirageVFX()
+MirageHumanVFX::~MirageHumanVFX()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
 }
 
-bool MirageVFX::Init()
+bool MirageHumanVFX::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(vertex.c_str(), fragment.c_str());
 
@@ -89,12 +89,11 @@ bool MirageVFX::Init()
     return true;
 }
 
-void MirageVFX::Update(float deltaTime)
+void MirageHumanVFX::Update(float deltaTime)
 {
-    frameTimer += deltaTime * animationFPS;
 }
 
-void MirageVFX::Render(float deltaTime, CameraComponent* cameraComp)
+void MirageHumanVFX::Render(float deltaTime, CameraComponent* cameraComp)
 {
     if (shaderProgram && indexCount > 0 && meshComp)
     {
@@ -121,22 +120,15 @@ void MirageVFX::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
-        glUniform1f(4, frameTimer);
+        glUniform3fv(3, 1, &colorTint[0]);
 
         glBindVertexArray(vao);
 
         if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         else glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-        glEnable(GL_CULL_FACE);
 
         glBindVertexArray(0);
     }
-}
-
-void MirageVFX::Reset()
-{
-    frameTimer = 0.0f;
 }

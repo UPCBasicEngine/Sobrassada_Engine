@@ -25,6 +25,7 @@
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MiniFireball.h"
+#include "MirageHumanVFX.h"
 #include "MirageVFX.h"
 #include "MoveGOInSpline.h"
 #include "Mushroom.h"
@@ -45,8 +46,8 @@
 
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
-#include "ColorChange.h"
 #include "BarFill.h"
+#include "ColorChange.h"
 #include "DamageMask.h"
 #include "MovingUVClipErode.h"
 #include "MovingUVLight.h"
@@ -111,15 +112,15 @@ constexpr const char* scripts[] = {
     "GameOverNavigatorScript"
 };
 
-constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight",   "MovingUVTransparent",   "HealGroundHalo",
-    "HealVerticalPlanes", "HealSpikesBurst", "HealGroundSpikesLight", "HealGroundSpikesDark",
-    "HealLightBurst",     "HealSpikesUp",    "RiastradBarFill",       "HealthBarFill",
-    "AbilityIconFill",    "DamageMask",      "AttackVfxSpritesheet",  "MovingUVClipErode",
-    "ColorChange",     "MirageVFX"
-};
+constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
+                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
+                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
+                                         "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
+                                         "AbilityIconFill",       "DamageMask",           "AttackVfxSpritesheet",
+                                         "MovingUVClipErode",     "ColorChange",          "MirageVFX",
+                                         "MirageHumanVFX"};
 
-Application* AppEngine = nullptr;
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -239,6 +240,11 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
         return new MirageVFX(
             parent, "./EngineDefaults/Shader/Custom/Vertex/MirageVFX_Vertex.glsl",
             "./EngineDefaults/Shader/Custom/Fragment/MirageVFX_Fragment.glsl"
+        );
+    if (scriptType == "MirageHumanVFX")
+        return new MirageHumanVFX(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/MirageVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/MirageHumanVFX_Fragment.glsl"
         );
 
     return nullptr;
