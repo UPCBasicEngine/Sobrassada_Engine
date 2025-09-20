@@ -270,27 +270,9 @@ GameObject::GameObject(UID parentUID, GameObject* refObject, bool updateAABB)
         OnAABBUpdated();
 }
 
-GameObject::GameObject(const rapidjson::Value& initialState) : uid(initialState["UID"].GetUint64())
+GameObject::GameObject(const rapidjson::Value& initialState)
 {
-}
-
-GameObject::~GameObject()
-{
-    // REMOVE FROM TAGS REMOVES IT FROM "tags"
-    std::vector<HashString> tagsCopy = tags;
-    for (int i = 0; i < tagsCopy.size(); ++i)
-    {
-        App->GetSceneModule()->GetScene()->RemoveFromTag(tags[i], this);
-    }
-
-    std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
-}
-
-void GameObject::LoadData(const rapidjson::Value& initialState)
-{
-    compTuple = std::make_tuple(COMPONENTS_NULLPTR);
-    createdComponents.reset();
-
+    uid                    = initialState["UID"].GetUint64();
     parentUID              = initialState["ParentUID"].GetUint64();
     name                   = initialState["Name"].GetString();
     selectedComponentIndex = COMPONENT_NONE;
@@ -323,6 +305,34 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
         scale    = localTransform.GetScale();
     }
 
+    if (initialState.HasMember("Children") && initialState["Children"].IsArray())
+    {
+        const rapidjson::Value& initChildren = initialState["Children"];
+
+        for (rapidjson::SizeType i = 0; i < initChildren.Size(); i++)
+        {
+            children.push_back(initChildren[i].GetUint64());
+        }
+    }
+}
+
+GameObject::~GameObject()
+{
+    // REMOVE FROM TAGS REMOVES IT FROM "tags"
+    std::vector<HashString> tagsCopy = tags;
+    for (int i = 0; i < tagsCopy.size(); ++i)
+    {
+        App->GetSceneModule()->GetScene()->RemoveFromTag(tags[i], this);
+    }
+
+    std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
+}
+
+void GameObject::LoadData(const rapidjson::Value& initialState)
+{
+    compTuple = std::make_tuple(COMPONENTS_NULLPTR);
+    createdComponents.reset();
+
     // Deserialize Components
     if (initialState.HasMember("Components") && initialState["Components"].IsArray())
     {
@@ -333,16 +343,6 @@ void GameObject::LoadData(const rapidjson::Value& initialState)
             const rapidjson::Value& jsonComponent = jsonComponents[i];
 
             ComponentUtils::CreateExistingComponent(jsonComponent, this);
-        }
-    }
-
-    if (initialState.HasMember("Children") && initialState["Children"].IsArray())
-    {
-        const rapidjson::Value& initChildren = initialState["Children"];
-
-        for (rapidjson::SizeType i = 0; i < initChildren.Size(); i++)
-        {
-            children.push_back(initChildren[i].GetUint64());
         }
     }
 }
@@ -1447,6 +1447,7 @@ bool GameObject::RemoveComponent(ComponentType componentType)
 void GameObject::CreatePrefab()
 {
     PrefabManager::SavePrefab(this);
+    //App->GetSceneModule()->GetScene()->Save();
 }
 
 void GameObject::UpdatePrefab()
@@ -1458,7 +1459,6 @@ void GameObject::UpdatePrefab()
 
 void GameObject::RemovePrefabStatus()
 {
-    App->GetResourcesModule()->ReleaseResource(prefabUID);
     prefabUID = INVALID_UID;
 }
 

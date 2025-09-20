@@ -619,7 +619,6 @@
     </ClCompile>
     <ClCompile Include="Modules\CameraModule.cpp" />
     <ClCompile Include="Modules\EditorUIModule.cpp" />
-    <ClCompile Include="ResourceManagement\Resources\ResourcePrefab.cpp" />
     <ClCompile Include="Modules\ProjectModule.cpp" />
     <ClCompile Include="Scene\Components\Standalone\CharacterControllerComponent.cpp" />
     <ClCompile Include="UI\EngineEditors\Nodes\CustomNode.cpp" />
@@ -841,7 +840,6 @@
     <ClInclude Include="ResourceManagement\Resources\ResourceMesh.h" />
     <ClInclude Include="ResourceManagement\Resources\ResourceModel.h" />
     <ClInclude Include="ResourceManagement\Resources\ResourceTexture.h" />
-    <ClInclude Include="ResourceManagement\Resources\ResourcePrefab.h" />
     <ClInclude Include="FileSystem\FileSystem.h" />
     <ClInclude Include="Modules\LibraryModule.h" />
     <ClInclude Include="FileSystem\Material.h" />

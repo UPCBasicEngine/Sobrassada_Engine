@@ -19,7 +19,6 @@ class SOBRASADA_API_ENGINE ResourcesModule : public Module
     Resource* RequestResource(UID uid);
     void ReleaseResource(const Resource* resource);
     void ReleaseResource(UID resourceUID);
-    void ForceUnloadResource(UID resourceUID);
     void UnloadAllResources();
 
     BatchManager* GetBatchManager() { return batchManager; }

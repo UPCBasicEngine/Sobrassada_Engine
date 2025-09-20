@@ -575,7 +575,7 @@ void EditorUIModule::LoadPrefabDialog(bool& loadPrefab)
 
     ImGui::Dummy(ImVec2(0, 3));
 
-    if (ImGui::Button("Ok", ImVec2(0, 0))) App->GetSceneModule()->GetScene()->AddPrefab(prefabUID);
+    if (ImGui::Button("Ok", ImVec2(0, 0))) App->GetSceneModule()->GetScene()->SpawnPrefabAtSelection(prefabUID);
 
     ImGui::SameLine();
 

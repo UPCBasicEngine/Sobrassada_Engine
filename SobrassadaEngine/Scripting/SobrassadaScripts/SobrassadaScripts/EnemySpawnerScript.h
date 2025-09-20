@@ -6,7 +6,6 @@
 #include <string>
 
 class GameObject;
-class ResourcePrefab;
 
 class EnemySpawnerScript : public Script
 {
@@ -24,8 +23,6 @@ class EnemySpawnerScript : public Script
 
     std::string locationTagString = "";
     HashString locationTag;
-
-    ResourcePrefab* prefab = nullptr;
 
     bool spawnOnce         = false;
     bool spawned           = false;

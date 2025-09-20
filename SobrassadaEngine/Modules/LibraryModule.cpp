@@ -352,8 +352,6 @@ void LibraryModule::DeletePrefabFiles(UID prefabUID)
     prefabMap.erase(GetResourceName(prefabUID));
     namesMap.erase(prefabUID);
     resourcePathsMap.erase(prefabUID);
-
-    App->GetSceneModule()->GetScene()->DeletePrefab(prefabUID);
 }
 
 void LibraryModule::InvalidateMetadataCache()

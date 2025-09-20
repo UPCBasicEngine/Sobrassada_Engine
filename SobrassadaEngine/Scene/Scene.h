@@ -18,7 +18,6 @@ class GameObject;
 class Component;
 class RootComponent;
 class Octree;
-class ResourcePrefab;
 class Quadtree;
 class CameraComponent;
 class FrustumPlanes;
@@ -43,10 +42,11 @@ class SOBRASADA_API_ENGINE Scene
     );
 
     void LoadModel(const UID modelUID);
-    void LoadNestedPrefab(GameObject* prefabRoot);
-    void AddPrefab(UID prefabUID, const float4x4& transform = float4x4::identity, const HashString& assignTag = HashString());
+    void SpawnPrefabAtSelection(UID prefabUID);
+    void SpawnPrefabAsChildOf(UID prefabUID, GameObject* parent, const HashString& assignTag = HashString());
+    void SpawnPrefab(UID prefabUID, GameObject* base, const HashString& assignTag = HashString());
     void UpdatePrefab(UID prefabUID);
-    void DeletePrefab(UID prefabUID) const;
+    void DeletePrefab(UID prefabUID);
 
     update_status Update(float deltaTime);
     update_status PostUpdate(float deltaTime);
@@ -196,6 +196,7 @@ class SOBRASADA_API_ENGINE Scene
     std::map<UID, float4x4> selectedGameObjectsOgLocals;
 
     std::unordered_map<uint64_t, const rapidjson::Value*> gameObjectDataMap;
+    std::vector<GameObject*> prefabsToInitialize;
 
     HashString emptyString    = HashString("");
     HashString playerLocation = HashString("");

@@ -31,7 +31,6 @@
 #include "Resource.h"
 #include "ResourceMaterial.h"
 #include "ResourceModel.h"
-#include "ResourcePrefab.h"
 #include "ResourcesModule.h"
 #include "SSAO.h"
 #include "SceneModule.h"
@@ -68,6 +67,7 @@
 #include "imgui_internal.h"
 // guizmo after imgui include
 #include "ImGuizmo.h"
+#include "PrefabManager.h"
 #ifdef OPTICK
 #include "optick.h"
 #endif
@@ -122,7 +122,7 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
 
             GameObject* newGameObject          = new GameObject(gameObject);
             if (newGameObject->GetPrefabUID() != INVALID_UID)
-                LoadNestedPrefab(newGameObject);
+                prefabsToInitialize.push_back(newGameObject);
             else
             {
                 gameObjectsContainer.insert({newGameObject->GetUID(), newGameObject});
@@ -211,6 +211,11 @@ void Scene::Init()
         gameObjectToLoad->LoadData(*pair.second);
     }
     gameObjectDataMap.clear();
+
+    for (GameObject* prefabBase: prefabsToInitialize)
+        PrefabManager::LoadPrefab(prefabBase->GetPrefabUID(), prefabBase, gameObjectsContainer);
+
+    prefabsToInitialize.clear();
 
     lightsConfig->InitSkybox();
     lightsConfig->InitLightBuffers();
@@ -1410,77 +1415,32 @@ void Scene::LoadModel(const UID modelUID)
     }
 }
 
-void Scene::LoadNestedPrefab(GameObject* prefabRoot)
-{
-    std::vector<UID> parentsToUpdate; // Contains all uids of gos which are a prefab root
-    parentsToUpdate.push_back(prefabRoot->GetUID());
-    std::stack<GameObject*> prefabBuffer;   // Prefab uids for iterative iteration
-    prefabBuffer.push(prefabRoot);
-
-    while (!prefabBuffer.empty())
-    {
-        GameObject* replacementTarget = prefabBuffer.top();
-        const ResourcePrefab* resourcePrefab      = dynamic_cast<ResourcePrefab*>(
-            App->GetResourcesModule()->RequestResource(prefabBuffer.top()->GetPrefabUID()));
-        if (resourcePrefab == nullptr)
-        {
-            GLOG("Prefab for UID %d not found", prefabBuffer.top())
-            continue;
-        }
-
-        prefabBuffer.pop();
-        const std::unordered_map<UID, GameObject*>& prefabGOContainer = resourcePrefab->GetGameObjectsContainer();
-        // All uids of the prefab will be summed with this to generate new unique ids for the scene game object tree
-        const UID staticModUID = GenerateUID();
-
-        std::stack<UID> prefabChildBuffer;
-
-        GameObject* replacement = new GameObject(replacementTarget->GetParent(), resourcePrefab->GetRootObject(), false);
-        replacement->ModifyAllUIDsBy(staticModUID);
-        replacement->SetUID(replacementTarget->GetUID());
-        replacement->SetParent(replacementTarget->GetParent());
-        replacement->SetLocalTransform(replacementTarget->GetLocalTransform(), false);
-        gameObjectsContainer.insert({replacement->GetUID(), replacement});
-
-        for (UID child: replacement->GetChildren())
-            prefabChildBuffer.push(child);
-        
-        while (!prefabChildBuffer.empty())
-        {
-            GameObject* childGO = prefabGOContainer.at(prefabChildBuffer.top());
-            prefabChildBuffer.pop();
-            GameObject* clonedGameObject = new GameObject(childGO->GetParent(), childGO, false);
-            clonedGameObject->ModifyAllUIDsBy(staticModUID);
-            if (clonedGameObject->GetPrefabUID() != INVALID_UID)
-            {
-                parentsToUpdate.push_back(clonedGameObject->GetUID());
-                prefabBuffer.push(clonedGameObject);
-            } else 
-                gameObjectsContainer.insert({clonedGameObject->GetUID(), clonedGameObject});
-        }
-    }
-
-    for (UID parentToUpdate: parentsToUpdate)
-    {
-        for (UID rootChild: gameObjectsContainer[parentToUpdate]->GetChildren())
-            gameObjectsContainer[rootChild]->SetParent(parentToUpdate);
-    }
-    if (gameObjectsContainer[prefabRoot->GetUID()] != nullptr) 
-        gameObjectsContainer[prefabRoot->GetUID()]->SetEnabledRecursive(prefabRoot->IsEnabled());
-}
-
-void Scene::AddPrefab(UID prefabUID, const float4x4& transform, const HashString& assignTag)
+void Scene::SpawnPrefabAtSelection(UID prefabUID)
 {
     GameObject* parent = GetSelectedGameObject();
     if (parent == nullptr) parent = GetGameObjectByUID(gameObjectRootUID);
+    SpawnPrefabAsChildOf(prefabUID, parent);
+}
+
+void Scene::SpawnPrefabAsChildOf(UID prefabUID, GameObject* parent, const HashString& assignTag)
+{
     GameObject* prefabBaseGO = new GameObject(parent->GetUID(), "Base");
     prefabBaseGO->SetPrefabUID(prefabUID);
-    gameObjectsContainer.insert({prefabBaseGO->GetUID(), prefabBaseGO});
     parent->AddGameObject(prefabBaseGO->GetUID());
 
-    LoadNestedPrefab(prefabBaseGO);
+    SpawnPrefab(prefabUID, prefabBaseGO, assignTag);
+}
 
+void Scene::SpawnPrefab(UID prefabUID, GameObject* base, const HashString& assignTag)
+{
+    const UID baseUID = base->GetUID();
+    PrefabManager::LoadPrefab(prefabUID, base, gameObjectsContainer);
+
+    // base will be deleted inside LoadPrefab and replaced by a new gameObject with the same id
+    GameObject* prefabBaseGO = GetGameObjectByUID(baseUID);
     prefabBaseGO->UpdateTransformForGOBranch();
+
+    if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
 
     // ADD TAG TO ALL GO THAT CONTAIN A SCRIPT, NO WAY OF KNOWING WHICH IS THE GO FOR AN ENEMY TO ASSIGN IT DIRECTLY
     // TO USE IT IN PLAYER LOCATION UPDATES
@@ -1492,30 +1452,29 @@ void Scene::AddPrefab(UID prefabUID, const float4x4& transform, const HashString
 
 void Scene::UpdatePrefab(UID prefabUID)
 {
-    App->GetResourcesModule()->ForceUnloadResource(prefabUID);
-    
+    std::vector<GameObject*> baseGameObjects;
     for (const auto& gameObject : gameObjectsContainer)
     {
         if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
         {
             for (UID child: gameObject.second->GetChildren())
                 RemoveGameObjectHierarchy(child);
-            LoadNestedPrefab(gameObject.second);
+            baseGameObjects.emplace_back(gameObject.second);
         }
     }
+
+    for (GameObject* gameObject : baseGameObjects)
+        SpawnPrefab(prefabUID, gameObject);
     
     if (lightsConfig != nullptr) lightsConfig->GetAllSceneLights();
 }
 
-void Scene::DeletePrefab(const UID prefabUID) const
+void Scene::DeletePrefab(const UID prefabUID)
 {
     for (const auto& gameObject : gameObjectsContainer)
     {
         if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
-        {
-            gameObject.second->RemovePrefabStatus();
-            App->GetResourcesModule()->ReleaseResource(prefabUID);
-        }
+            QueueGameObjectDelete(gameObject.second->GetUID());
     }
 
     App->GetLibraryModule()->DeletePrefabFiles(prefabUID);

@@ -70,17 +70,6 @@ void ResourcesModule::ReleaseResource(UID resourceUID)
     }
 }
 
-void ResourcesModule::ForceUnloadResource(UID resourceUID)
-{
-    std::map<UID, Resource*>::iterator it = resources.find(resourceUID);
-
-    if (it != resources.end())
-    {
-        delete it->second;
-        resources.erase(it);
-    }
-}
-
 Resource* ResourcesModule::CreateNewResource(UID uid)
 {
     Resource* loadedResource = Importer::Load(uid);

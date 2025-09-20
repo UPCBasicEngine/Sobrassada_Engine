@@ -13,7 +13,6 @@
 #include "ResourceMaterial.h"
 #include "ResourceMesh.h"
 #include "ResourceModel.h"
-#include "ResourcePrefab.h"
 #include "ResourceTexture.h"
 #include "ResourceFont.h"
 #include "ResourceStateMachine.h"
@@ -38,8 +37,6 @@ Resource* Importer::Load(UID uid)
         return ModelImporter::LoadModel(uid);
     case ResourceType::Animation:
     return AnimationImporter::LoadAnimation(uid);
-    case ResourceType::Prefab:
-        return PrefabManager::LoadPrefab(uid);
     case ResourceType::StateMachine:
         return StateMachineManager::LoadStateMachine(uid);
     case ResourceType::Font:

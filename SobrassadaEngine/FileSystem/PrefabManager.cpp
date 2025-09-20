@@ -6,8 +6,10 @@
 #include "LibraryModule.h"
 #include "MetaPrefab.h"
 #include "ProjectModule.h"
-#include "ResourcePrefab.h"
 #include "SceneModule.h"
+#include "Scripting/SobrassadaScripts/SobrassadaScripts/GameSession.h"
+#include "Standalone/AnimationComponent.h"
+#include "Standalone/MeshComponent.h"
 
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
@@ -32,8 +34,14 @@ namespace PrefabManager
         const std::string& savePath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_LIB_PATH +
                                       std::to_string(finalPrefabUID) + PREFAB_EXTENSION;
 
+        prefab.AddMember("UID", finalPrefabUID, allocator);
+
+        rapidjson::Value root(rapidjson::kObjectType);
+
         gameObject->SetPrefabUID(finalPrefabUID);
-        gameObject->Save(prefab, allocator);
+        gameObject->Save(root, allocator);
+
+        prefab.AddMember("Root", root, allocator);
 
         // Serialize GameObjects
         rapidjson::Value gameObjectsJSON(rapidjson::kArrayType);
@@ -114,45 +122,152 @@ namespace PrefabManager
         App->GetLibraryModule()->AddResource(destination, sourceUID);
     }
 
-    ResourcePrefab* LoadPrefab(UID prefabUID)
+    void LoadPrefab(UID prefabUID, GameObject* targetGO, std::unordered_map<UID, GameObject*>& outGameObjects)
     {
-        rapidjson::Document doc;
-        std::string filepath = App->GetLibraryModule()->GetResourcePath(prefabUID);
-
-        bool loaded          = FileSystem::LoadJSON(filepath.c_str(), doc);
-        if (!loaded)
-        {
-            GLOG("Failed to load prefab file: %s", filepath.c_str());
-            return nullptr;
-        }
-        if (!doc.HasMember("Prefab") || !doc["Prefab"].IsObject())
-        {
-            GLOG("Invalid prefab format: %s", filepath.c_str());
-            return nullptr;
-        }
-
-        rapidjson::Value& prefab = doc["Prefab"];
-
-        GameObject* rootGO = new GameObject(prefab);
-        rootGO->LoadData(prefab);
+        targetGO->SetPrefabUID(prefabUID);
+        outGameObjects.erase(targetGO->GetUID());
         
-        std::vector<GameObject*> loadedGameObjects;
-        loadedGameObjects.push_back(rootGO);
-        
-        if (prefab.HasMember("GameObjects") && prefab["GameObjects"].IsArray())
+        std::stack<GameObject*> prefabBuffer;   // Prefab uids for iterative iteration
+        prefabBuffer.push(targetGO);
+
+        const UID baseTargetUID = targetGO->GetUID();
+        const bool baseTargetEnabled = targetGO->IsEnabled();
+
+        std::unordered_map<HashString, std::vector<std::pair<GameObject*, int>>> gameObjectsToInit;
+        std::vector<GameObject*> goBoneUpdate;
+
+        // All uids of the prefab will be summed with this to generate new unique ids for the scene game object tree
+        const UID staticModUID = GenerateUID();
+
+        while (!prefabBuffer.empty())
         {
-            const rapidjson::Value& gameObjects = prefab["GameObjects"];
-            for (rapidjson::SizeType i = 0; i < gameObjects.Size(); i++)
+            GameObject* currentTargetGO = prefabBuffer.top();
+            prefabBuffer.pop();
+            
+            rapidjson::Document doc;
+            const std::string& filepath = App->GetLibraryModule()->GetResourcePath(currentTargetGO->GetPrefabUID());
+
+            std::vector<std::pair<GameObject*, int>> cachedGameObjects;
+
+            bool loaded          = FileSystem::LoadJSON(filepath.c_str(), doc);
+            if (!loaded)
             {
-                const rapidjson::Value& gameObject = gameObjects[i];
-                GameObject* newObject              = new GameObject(gameObject);
-                newObject->LoadData(gameObject);
+                GLOG("Failed to load prefab file: %s", filepath.c_str());
+                return;
+            }
+            if (!doc.HasMember("Prefab") || !doc["Prefab"].IsObject())
+            {
+                GLOG("Invalid prefab format: %s", filepath.c_str());
+                return;
+            }
+            
+            rapidjson::Value& prefab = doc["Prefab"];
+            rapidjson::Value& root = prefab["Root"];
+        
+            GameObject* rootGO = new GameObject(root);
+            rootGO->ModifyAllUIDsBy(staticModUID);
+            rootGO->SetUID(currentTargetGO->GetUID());
+            rootGO->SetParent(currentTargetGO->GetParent());
+            rootGO->SetLocalTransform(currentTargetGO->GetLocalTransform(), false);
+            
+            outGameObjects.insert({rootGO->GetUID(), rootGO});
+            cachedGameObjects.emplace_back(std::pair(rootGO, -1));
+        
+            if (prefab.HasMember("GameObjects") && prefab["GameObjects"].IsArray())
+            {
+                const rapidjson::Value& gameObjects = prefab["GameObjects"];
                 
-                loadedGameObjects.push_back(newObject);
+                for (rapidjson::SizeType i = 0; i < gameObjects.Size(); i++)
+                {
+                    const rapidjson::Value& gameObject = gameObjects[i];
+                    GameObject* newObject              = new GameObject(gameObject);
+                    if (newObject->GetPrefabUID() != INVALID_UID)
+                    {
+                        prefabBuffer.push(newObject);
+                        continue;
+                    }
+                    newObject->ModifyAllUIDsBy(staticModUID);
+                    outGameObjects.insert({newObject->GetUID(), newObject});
+                    cachedGameObjects.emplace_back(newObject, i);
+                }
+                
+                for (UID childUID : rootGO->GetChildren())
+                {
+                    if (outGameObjects.find(childUID) != outGameObjects.end())
+                        outGameObjects.at(childUID)->SetParent(rootGO->GetUID());
+                }
+            }
+
+            gameObjectsToInit.insert({filepath, cachedGameObjects});
+            
+            delete currentTargetGO; // This game object is replaced by the root of the prefab from the prefab file
+            currentTargetGO = nullptr;
+        }
+
+        for (const auto& pair : gameObjectsToInit)
+        {
+            rapidjson::Document doc;
+            const std::string& filepath = App->GetLibraryModule()->GetResourcePath(pair.second[0].first->GetPrefabUID());
+
+            bool loaded          = FileSystem::LoadJSON(filepath.c_str(), doc);
+            if (!loaded)
+            {
+                GLOG("Failed to load prefab file: %s", filepath.c_str());
+                return;
+            }
+            if (!doc.HasMember("Prefab") || !doc["Prefab"].IsObject())
+            {
+                GLOG("Invalid prefab format: %s", filepath.c_str());
+                return;
+            }
+            
+            rapidjson::Value& prefab = doc["Prefab"];
+            rapidjson::Value& root = prefab["Root"];
+
+            if (prefab.HasMember("GameObjects") && prefab["GameObjects"].IsArray())
+            {
+                const rapidjson::Value& gameObjects = prefab["GameObjects"];
+
+                for (auto goIndexPair : pair.second)
+                {
+                    if (goIndexPair.second == -1)
+                        goIndexPair.first->LoadData(root);
+                    else
+                        goIndexPair.first->LoadData(gameObjects[goIndexPair.second]);
+
+                    const MeshComponent* mesh = goIndexPair.first->GetComponent<MeshComponent*>();
+                    if (mesh != nullptr && !mesh->GetBones().empty()) goBoneUpdate.emplace_back(goIndexPair.first);
+                }
             }
         }
-        ResourcePrefab* resourcePrefab = new ResourcePrefab(rootGO->GetUID(), rootGO->GetName());
-        resourcePrefab->LoadData(rootGO->GetUID(), loadedGameObjects);
-        return resourcePrefab;
+        gameObjectsToInit.clear();
+
+        for (const GameObject* go : goBoneUpdate)
+            UpdateBonesIfNecessary(go, staticModUID, outGameObjects);
+        
+        App->GetSceneModule()->GetScene()->GetGameObjectByUID(baseTargetUID)->SetEnabledRecursive(baseTargetEnabled);
+    }
+
+    void UpdateBonesIfNecessary(const GameObject* target, UID staticModUID, const std::unordered_map<UID, GameObject*>& gameObjects)
+    {
+        MeshComponent* mesh = target->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && !mesh->GetBones().empty())
+        {
+            // Remap the bones references
+            const std::vector<UID>& bones = mesh->GetBones();
+            std::vector<UID> newBonesUIDs;
+            std::vector<GameObject*> newBonesObjects;
+
+            for (const UID bone : bones)
+            {
+                newBonesUIDs.push_back(bone + staticModUID);
+                newBonesObjects.push_back(gameObjects.at(bone + staticModUID));
+            }
+
+            mesh->SetBones(newBonesObjects, newBonesUIDs);
+        }
+
+        // If has animations, map them here
+        if (AnimationComponent* animComp = target->GetComponent<AnimationComponent*>()) animComp->SetBoneMapping();
     }
 } // namespace PrefabManager

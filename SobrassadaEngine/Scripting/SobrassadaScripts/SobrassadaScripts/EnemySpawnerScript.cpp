@@ -6,7 +6,6 @@
 #include "Math/float3.h"
 #include "Math/float4x4.h"
 #include "PrefabManager.h"
-#include "ResourcePrefab.h"
 #include "ResourcesModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
@@ -26,23 +25,23 @@ EnemySpawnerScript::~EnemySpawnerScript()
 
 bool EnemySpawnerScript::Init()
 {
-    prefab      = PrefabManager::LoadPrefab(prefabUID);
+    //prefab      = PrefabManager::LoadPrefab(prefabUID);
     locationTag = HashString(locationTagString);
 
-    if (!prefab) GLOG("[EnemYSpawner - WARNING] No prefab found by uid");
+    //if (!prefab) GLOG("[EnemYSpawner - WARNING] No prefab found by uid");
     return true;
 }
 
 void EnemySpawnerScript::OnDestroy()
 {
-    delete prefab;
+    //delete prefab;
 }
 
 void EnemySpawnerScript::OnCollisionEnter(GameObject* other, const float3 normal, ColliderLayer layer)
 {
 
     if (spawnOnce && spawned) return;
-    if (!prefab) return;
+    //if (!prefab) return;
 
     Scene* scene           = AppEngine->GetSceneModule()->GetScene();
 
@@ -59,7 +58,7 @@ void EnemySpawnerScript::OnCollisionEnter(GameObject* other, const float3 normal
         spawnTransform[1][3]    += offset.y;
         spawnTransform[2][3]    += offset.z;
 
-        scene->AddPrefab(prefabUID, spawnTransform, locationTag);
+        scene->SpawnPrefabAsChildOf(prefabUID, spawnRoot, locationTag);
     }
 
     if (spawnOnce) spawned = true;
