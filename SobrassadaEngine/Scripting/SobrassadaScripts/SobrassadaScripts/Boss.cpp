@@ -529,6 +529,7 @@ void Boss::HandleState(float deltaTime)
     case BossStates::Restart:
         Restart(deltaTime);
         break;
+
     default:
         GLOG("ERROR: Ferdiad HandleState")
         break;
