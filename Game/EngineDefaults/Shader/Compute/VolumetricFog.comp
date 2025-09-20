@@ -21,7 +21,44 @@ uniform layout(location = 8) float anisotropy;
 uniform layout(location = 9) vec3 directionalLightDirection;
 uniform layout(location = 10) vec3 directionalLightColor;
 
-layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+struct PointLight
+{
+	vec4 position;		// xyz = position & w = range
+	vec4 color;			// rgb = color & alpha = intensity 
+};
+
+struct SpotLight
+{
+	vec4 position;		// xyz = position & w = range
+	vec4 color;			// rgb = color & alpha = intensity
+	vec3 direction;	
+	float innerAngle;
+	float outerAngle;
+};
+
+struct VisibleIndex {
+	int index;
+};
+
+readonly layout(std430, binding = 4) buffer PointLights
+{
+	int pointLightsCount;
+	PointLight pointLights[];
+};
+
+readonly layout(std430, binding = 5) buffer SpotLights
+{
+	int spotLightsCount;
+	SpotLight spotLights[];
+};
+
+
+layout(std430, binding = 1) writeonly buffer VisibleLightIndicesBuffer {
+	VisibleIndex data[];
+} visibleLightIndicesBuffer;
+
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 float rand(vec2 co){return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);}
 float rand (vec2 co, float l) {return rand(vec2(rand(co), l));}
@@ -99,6 +136,10 @@ void main()
 
     if(gl_GlobalInvocationID.x < textureSize.x && gl_GlobalInvocationID.y < textureSize.y)
     {
+	    ivec2 tileID = ivec2(gl_WorkGroupID.xy);
+	    ivec2 tileNumber = ivec2(gl_NumWorkGroups.xy);
+        uint index = tileID.y * tileNumber.x + tileID.x;
+
         vec2 uvCoords = vec2(gl_GlobalInvocationID.x / float(textureSize.x), gl_GlobalInvocationID.y / float(textureSize.y));
         float depth = texture(depthTexture, uvCoords).r;
         

@@ -663,9 +663,9 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
-    // Local size of compute is (8,8,1)
-    unsigned int numGroupsX = (width + (8 - 1)) / 8;
-    unsigned int numGroupsY = (height + (8 - 1)) / 8;
+    // Local size of compute is (16,16,1)
+    unsigned int numGroupsX = (width + (16 - 1)) / 16;
+    unsigned int numGroupsY = (height + (16 - 1)) / 16;
 
     float3 cameraPosition;
     float4x4 projection, inverseView;
