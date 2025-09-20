@@ -225,6 +225,9 @@
     </ClInclude>
     <ClInclude Include="BossSpouts.h">
       <Filter>Characters\Boss</Filter>
+	</ClInclude>
+    <ClInclude Include="MirageVFX.h">
+      <Filter>ShaderScripts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -983,6 +986,9 @@
     </ClCompile>
     <ClCompile Include="BossSpouts.cpp">
       <Filter>Characters\Boss</Filter>
+	</ClCompile>
+    <ClCompile Include="MirageVFX.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

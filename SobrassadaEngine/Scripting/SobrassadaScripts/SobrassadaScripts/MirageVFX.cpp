@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "HealVFXGround.h"
+#include "MirageVFX.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -22,7 +22,7 @@
 #include "Math/float3.h"
 #include "glew.h"
 
-HealVFXGround::HealVFXGround(GameObject* parent, const std::string& ver, const std::string& frag) : Script(parent)
+MirageVFX::MirageVFX(GameObject* parent, const std::string& ver, const std::string& frag) : Script(parent)
 {
     vertex   = ver;
     fragment = frag;
@@ -30,15 +30,14 @@ HealVFXGround::HealVFXGround(GameObject* parent, const std::string& ver, const s
     fields.push_back({"Additive", InspectorField::FieldType::Bool, &isAdditive});
 }
 
-HealVFXGround::~HealVFXGround()
+MirageVFX::~MirageVFX()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(1, &materialBuffer);
 }
 
-bool HealVFXGround::Init()
+bool MirageVFX::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(vertex.c_str(), fragment.c_str());
 
@@ -53,7 +52,6 @@ bool HealVFXGround::Init()
             glGenVertexArrays(1, &vao);
             glGenBuffers(1, &vbo);
             glGenBuffers(1, &ebo);
-            glGenBuffers(1, &materialBuffer);
 
             glBindVertexArray(vao);
 
@@ -86,23 +84,12 @@ bool HealVFXGround::Init()
             indexCount = (unsigned int)rmesh->GetIndices().size();
         }
 
-        const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
-        if (rmat)
-        {
-            isAlphaDiscard  = rmat->IsAlphaDiscard();
-
-            MaterialGPU mat = rmat->GetMaterial();
-
-            glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
-            glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
-        }
-
         meshComp->SetEnabled(false);
     }
     return true;
 }
 
-void HealVFXGround::Update(float deltaTime)
+void MirageVFX::Update(float deltaTime)
 {
     // TODO: DELETE
     if (AppEngine->GetInputModule()->GetKeyboard()[SDL_SCANCODE_F4] == KeyState::KEY_DOWN)
@@ -110,10 +97,11 @@ void HealVFXGround::Update(float deltaTime)
         Reset();
     }
 
+            GLOG("frameTimer: %f", frameTimer);
     frameTimer += deltaTime * animationFPS;
 }
 
-void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
+void MirageVFX::Render(float deltaTime, CameraComponent* cameraComp)
 {
     if (shaderProgram && indexCount > 0 && meshComp)
     {
@@ -140,22 +128,12 @@ void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
-        glUniform1i(4, 0);
-        glUniform1i(5, true);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-
-        float3 cameraPos = float3::zero;
-        if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
-        else cameraPos = cameraComp->GetCameraPosition();
-        glUniform1f(9, deltaTime);
-
-        glUniform3fv(6, 1, &cameraPos[0]);
-        glUniform1f(7, frameTimer);
+        glUniform1f(4, frameTimer);
 
         glBindVertexArray(vao);
 
         if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        else glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
@@ -165,7 +143,7 @@ void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
     }
 }
 
-void HealVFXGround::Reset()
+void MirageVFX::Reset()
 {
     frameTimer = 0.0f;
 }
