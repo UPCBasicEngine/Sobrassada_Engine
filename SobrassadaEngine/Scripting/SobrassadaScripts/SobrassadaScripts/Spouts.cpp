@@ -146,10 +146,8 @@ void Spouts::Update(float deltaTime)
 
         activationState = ACTIVATION_STATE::COOLDOWN;
         chargingTimer   = 0.0f;
-        if (distance <= activationRange)
-        {
-            damageCollider->SetEnabled(true);
-        }
+
+        damageCollider->SetEnabled(true);
     }
     else if (activationState == ACTIVATION_STATE::COOLDOWN)
     {
