@@ -68,9 +68,9 @@ void CoverPointTrigger::CalculateGroundPosition()
     float3 coverPointPos = parent->GetPosition();
     GLOG("=== CALCULATING GROUND POSITION FOR %s ===", parent->GetName().c_str());
 
-    // NO proyectes aquí - hazlo cuando sea necesario
+   
     groundPosition = coverPointPos;
-    isProjected    = false; // Marca que no está proyectado aún
+    isProjected    = false;
 
     GLOG("Ground position set to original: (%.2f, %.2f, %.2f)", groundPosition.x, groundPosition.y, groundPosition.z);
 }
@@ -107,14 +107,14 @@ void CoverPointTrigger::RegisterWithArchers()
 
 void CoverPointTrigger::AddToGlobalAvailableList()
 {
-    // Add this cover point to all archers' available lists
+    
     for (Archer* archer : registeredArchers)
     {
         if (archer)
         {
             std::vector<GameObject*>& availablePoints = archer->GetAvailableCoverPoints();
 
-            // Check if already in list to avoid duplicates
+            
             bool alreadyExists                        = false;
             for (GameObject* existingPoint : availablePoints)
             {
@@ -145,7 +145,7 @@ void CoverPointTrigger::MoveCoverPointToOccupied()
         std::vector<GameObject*>& availablePoints = archer->GetAvailableCoverPoints();
         std::vector<GameObject*>& occupiedPoints  = archer->GetOccupiedCoverPoints();
 
-        // Remove from available list
+      
         auto it                                   = std::find(availablePoints.begin(), availablePoints.end(), parent);
         if (it != availablePoints.end())
         {
@@ -153,7 +153,7 @@ void CoverPointTrigger::MoveCoverPointToOccupied()
             GLOG("Removed from available list for archer");
         }
 
-        // Add to occupied list if not already there
+     
         auto occupiedIt = std::find(occupiedPoints.begin(), occupiedPoints.end(), parent);
         if (occupiedIt == occupiedPoints.end())
         {
@@ -174,7 +174,7 @@ void CoverPointTrigger::MoveCoverPointToAvailable()
         std::vector<GameObject*>& availablePoints = archer->GetAvailableCoverPoints();
         std::vector<GameObject*>& occupiedPoints  = archer->GetOccupiedCoverPoints();
 
-        // Remove from occupied list
+       
         auto it                                   = std::find(occupiedPoints.begin(), occupiedPoints.end(), parent);
         if (it != occupiedPoints.end())
         {
@@ -182,7 +182,7 @@ void CoverPointTrigger::MoveCoverPointToAvailable()
             GLOG("Removed from occupied list for archer");
         }
 
-        // Add back to available list if not already there
+     
         auto availableIt = std::find(availablePoints.begin(), availablePoints.end(), parent);
         if (availableIt == availablePoints.end())
         {
@@ -196,7 +196,7 @@ void CoverPointTrigger::Update(float deltaTime)
 {
     if (!player) return;
 
-    // Manual distance check as backup to collision detection
+  
     if (!isCompromised)
     {
         float distanceToPlayer = groundPosition.Distance(player->GetPosition());
@@ -223,27 +223,26 @@ void CoverPointTrigger::Update(float deltaTime)
 
 void CoverPointTrigger::CompromiseCoverPoint()
 {
-    if (isCompromised) return; // Already compromised
-
+    if (isCompromised) return; 
     GLOG("COMPROMISING cover point %s", parent->GetName().c_str());
 
     isCompromised = true;
-    // Move to occupied list
+   
     MoveCoverPointToOccupied();
 
-    // Notify all registered archers
+  
     NotifyArchersCompromised();
 }
 
 void CoverPointTrigger::ResetCoverPoint()
 {
-    if (!isCompromised) return; // Not compromised
+    if (!isCompromised) return;
 
     GLOG("RESETTING cover point %s", parent->GetName().c_str());
 
     isCompromised = false;
 
-    // Move back to available list
+   
     MoveCoverPointToAvailable();
 }
 
@@ -288,7 +287,7 @@ void CoverPointTrigger::NotifyArchersCompromised()
     {
         if (!archer) continue;
 
-        // If this archer is using this cover point, force search for new one
+        
         if (archer->GetCurrentCoverPoint() == parent)
         {
             GLOG("Notifying archer that cover point %s is compromised", parent->GetName().c_str());
@@ -328,14 +327,14 @@ float3 CoverPointTrigger::GetGroundPosition() const
 
 float3 CoverPointTrigger::GetFlankingPosition(const float3& playerPos) const
 {
-    // Calculate perpendicular positions for flanking
+    
     float3 coverToPlayer = (playerPos - groundPosition).Normalized();
-    coverToPlayer.y      = 0; // Keep on ground plane
+    coverToPlayer.y      = 0; 
 
-    // Cross product with up vector to get perpendicular
+    
     float3 perpendicular = float3(-coverToPlayer.z, 0, coverToPlayer.x);
 
-    // Try both sides and pick the one farther from player
+  
     float3 leftFlank     = groundPosition + perpendicular * 4.0f;
     float3 rightFlank    = groundPosition - perpendicular * 4.0f;
 
