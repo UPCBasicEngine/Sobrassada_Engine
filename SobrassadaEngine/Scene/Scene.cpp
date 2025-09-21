@@ -1471,6 +1471,7 @@ void Scene::UpdatePrefab(UID prefabUID)
 
 void Scene::DeletePrefab(const UID prefabUID)
 {
+    UpdatePrefab(prefabUID); // To remove any deleted go references in the file
     for (const auto& gameObject : gameObjectsContainer)
     {
         if (gameObject.second != nullptr && gameObject.second->GetPrefabUID() == prefabUID)
