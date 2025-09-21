@@ -342,8 +342,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;OptickCore.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;$(SolutionDir)Libs\Optick_1.4.0\lib\LibDebug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;SDL2.lib;SDL2main.lib;OptickCore.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;$(SolutionDir)Libs\Optick_1.4.0\lib\LibDebug;$(SolutionDir)Libs\SDL\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game Debug|x64'">
@@ -362,8 +362,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;OptickCore.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;$(SolutionDir)Libs\Optick_1.4.0\lib\LibDebug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;SDL2.lib;SDL2main.lib;OptickCore.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;$(SolutionDir)Libs\Optick_1.4.0\lib\LibDebug;$(SolutionDir)Libs\SDL\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -387,8 +387,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;$(SolutionDir)Libs\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;SDL2.lib;SDL2main.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;$(SolutionDir)Libs\SDL\lib;%(AdditionalLibraryDirectories);$(SolutionDir)Libs\SDL\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
@@ -411,8 +411,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;SDL2.lib;SDL2main.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories);$(SolutionDir)Libs\SDL\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game|x64'">
@@ -435,8 +435,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;SDL2.lib;SDL2main.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories);$(SolutionDir)Libs\SDL\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile Game|x64'">
@@ -459,8 +459,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LinearMath_debug.lib;BulletCollision_debug.lib;BulletDynamics_debug.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;SDL2.lib;SDL2main.lib;DirectXTex.lib;glew32.lib;opengl32.lib;freetype.lib;SobrassadaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libs\glew-2.1.0\lib;$(SolutionDir)Libs\freetype\lib;$(SolutionDir)Libs\bullet\lib;$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\$(Platform)\$(Configuration)\;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)Libs\ffmpeg\lib;%(AdditionalLibraryDirectories);$(SolutionDir)Libs\SDL\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

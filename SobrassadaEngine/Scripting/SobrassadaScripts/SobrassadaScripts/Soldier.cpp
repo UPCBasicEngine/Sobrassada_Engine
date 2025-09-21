@@ -226,7 +226,7 @@ void Soldier::HandleState(float deltaTime)
 void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-    GLOG("Player location: %s", playerLocation.GetString().c_str());
+    //GLOG("Player location: %s", playerLocation.GetString().c_str());
     bool playerInLocation            = parent->HasTag(playerLocation);
 
     if (!playerScript->IsDead())
