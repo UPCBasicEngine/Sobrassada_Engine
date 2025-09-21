@@ -647,32 +647,32 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 10;
-        shieldBlastRate   = 20;
+        shieldStrikesRate = 40;
+        shieldBlastRate   = 80;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate = 10;
-        shieldBlastRate   = 20;
+        shieldStrikesRate = 20;
+        shieldBlastRate   = 60;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate = 10;
-        shieldBlastRate   = 20;
+        shieldStrikesRate = 20;
+        shieldBlastRate   = 60;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Far:
         shieldStrikesRate = 10;
-        shieldBlastRate   = 20;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Farther:
         shieldStrikesRate = 10;
-        shieldBlastRate   = 20;
+        shieldBlastRate   = 80;
         waterSpoutsRate   = 100;
         break;
 
@@ -722,37 +722,43 @@ void Boss::ChooseNextStateThirdPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate  = 95;
-        overheadStrikeRate = 100;
+        shieldStrikesRate  = 55;
+        overheadStrikeRate = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Near:
         shieldStrikesRate  = 60;
-        overheadStrikeRate = 90;
-        shieldBlastRate    = 100;
+        overheadStrikeRate = 70;
+        shieldBlastRate    = 90;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Medium:
         shieldStrikesRate  = 30;
-        overheadStrikeRate = 70;
-        shieldBlastRate    = 100;
+        overheadStrikeRate = 60;
+        shieldBlastRate    = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Distant:
         shieldStrikesRate  = 20;
         overheadStrikeRate = 55;
-        shieldBlastRate    = 100;
+        shieldBlastRate    = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Far:
         shieldBlastRate    = 10;
         overheadStrikeRate = 40;
-        shieldBlastRate    = 100;
+        shieldBlastRate    = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Farther:
         shieldStrikesRate = 10;
-        shieldBlastRate   = 100;
+        shieldBlastRate   = 90;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Extreme:
