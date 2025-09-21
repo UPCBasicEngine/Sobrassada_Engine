@@ -715,7 +715,7 @@ void Archer::ActivateGlowVFX()
     }
 
     float3 archerPos       = parent->GetPosition();
-    float3 glowPos         = float3(archerPos.x, archerPos.y + 1.3f, archerPos.z + 3.0); 
+    float3 glowPos         = float3(archerPos.x + 1.5f, archerPos.y + 1.3f, archerPos.z); 
 
 
     float4x4 glowTransform = glowVfxObject->GetGlobalTransform();
@@ -1352,7 +1352,7 @@ void Archer::ChaseAI()
         float distance = GetDistanceFromPlayer();
 
         agentAI->ResetSpeed();
-        agentAI->SetSpeed(5.0, 10.0f);
+        agentAI->SetSpeed(10.0, 10.0f);
         agentAI->SetLookForward(true);
 
         if (distance <= rangeEscape)
@@ -1750,7 +1750,7 @@ void Archer::Escape(float deltaTime)
 
     agentAI->SetPathNavigation(currentEscapeTarget);
     agentAI->LookAtMovement(currentEscapeTarget, deltaTime);
-    agentAI->SetSpeed(25.0f, 5.0f);
+    agentAI->SetSpeed(25.0f, 8.0f);
 
     if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
     {
