@@ -8,6 +8,8 @@ class dtNavMeshQuery;
 
 using dtPolyRef = unsigned int;
 
+constexpr const char* DashBlockerGOTags[] = {"MagicBarrier"};
+
 class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 {
 
@@ -107,4 +109,5 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     bool isRunning               = false;
     bool preciseDash             = true;
+    bool dashMoveBlocked                     = false;
 };
