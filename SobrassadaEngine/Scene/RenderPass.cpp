@@ -296,6 +296,11 @@ void RenderPass::RenderScene(
     App->GetShaderScriptModule()->RenderTransparentPassShaders(0.f, camera);
     glPopDebugGroup();
 
+    // TEMPORAL, ADJUST LATER
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
+    VolumetricFogPassRender(camera, light);
+    glPopDebugGroup();
+
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
 #endif
@@ -320,10 +325,6 @@ void RenderPass::RenderScene(
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 
-    // TEMPORAL, ADJUST LATER
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
-    VolumetricFogPassRender(camera, light);
-    glPopDebugGroup();
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -724,8 +725,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     // RENDER COMPUTED TEXTURE ON TOP OF SCENE
 
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
 
     unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
 
@@ -739,7 +739,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    // glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
