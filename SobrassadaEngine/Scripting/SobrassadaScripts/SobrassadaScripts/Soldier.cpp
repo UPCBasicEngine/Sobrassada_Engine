@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "AttackVfxSpritesheet.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
@@ -8,11 +9,13 @@
 #include "GameTimer.h"
 #include "Globals.h"
 #include "ResourceStateMachine.h"
+#include "ShaderScriptComponent.h"
 #include "Soldier.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include "Wwise_IDs.h"
@@ -33,6 +36,8 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Helmet 2 object", InspectorField::FieldType::InputText, &helmet2Name});
     fields.push_back({"Helmet 3 object", InspectorField::FieldType::InputText, &helmet3Name});
     fields.push_back({"Helmet 4 object", InspectorField::FieldType::InputText, &helmet4Name});
+    fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
+    fields.push_back({"Thrust VFX object", InspectorField::FieldType::InputText, &thrustVfxName});
 }
 
 bool Soldier::Init()
@@ -64,35 +69,51 @@ bool Soldier::Init()
     }
 
     helmet1Object = parent->GetChildGameObjectByName(helmet1Name);
-    if (!helmet1Object) GLOG("[WARNING] No helmet 1 trail found for  Soldier")
+    if (!helmet1Object) GLOG("[WARNING] No helmet 1 found for Soldier")
     else
     {
-        GLOG("Helmet 1 found for in Soldier")
+        GLOG("Helmet 1 found in Soldier")
         helmet1Object->SetEnabled(false);
     }
 
     helmet2Object = parent->GetChildGameObjectByName(helmet2Name);
-    if (!helmet2Object) GLOG("[WARNING] No helmet 2 trail found for  Soldier")
+    if (!helmet2Object) GLOG("[WARNING] No helmet 2 found for Soldier")
     else
     {
-        GLOG("Helmet 2 found for in Soldier")
+        GLOG("Helmet 2 found in Soldier")
         helmet2Object->SetEnabled(false);
     }
 
     helmet3Object = parent->GetChildGameObjectByName(helmet3Name);
-    if (!helmet3Object) GLOG("[WARNING] No helmet 3 trail found for  Soldier")
+    if (!helmet3Object) GLOG("[WARNING] No helmet 3 found for Soldier")
     else
     {
-        GLOG("Helmet 3 found for in Soldier")
+        GLOG("Helmet 3 found in Soldier")
         helmet3Object->SetEnabled(false);
     }
 
     helmet4Object = parent->GetChildGameObjectByName(helmet4Name);
-    if (!helmet4Object) GLOG("[WARNING] No helmet 4 trail found for  Soldier")
+    if (!helmet4Object) GLOG("[WARNING] No helmet 4 found for  Soldier")
     else
     {
-        GLOG("Helmet 4 found for in Soldier")
+        GLOG("Helmet 4 found in Soldier")
         helmet4Object->SetEnabled(false);
+    }
+
+    meleeVfxObject = parent->GetChildGameObjectByName(meleeVfxName);
+    if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
+    else
+    {
+        GLOG("MeleVFX found in Soldier")
+        meleeVfxObject->SetEnabled(false);
+    }
+
+    thrustVfxObject = parent->GetChildGameObjectByName(thrustVfxName);
+    if (!thrustVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
+    else
+    {
+        GLOG("MeleVFX found in Soldier")
+        thrustVfxObject->SetEnabled(false);
     }
 
     SelectRandomHelmet();
@@ -258,8 +279,8 @@ void Soldier::HandleState(float deltaTime)
 void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-    GLOG("Player location: %s", playerLocation.GetString().c_str());
-    bool playerInLocation = parent->HasTag(playerLocation);
+    // GLOG("Player location: %s", playerLocation.GetString().c_str());
+    bool playerInLocation            = parent->HasTag(playerLocation);
 
     if (!playerScript->IsDead())
     {
@@ -374,6 +395,38 @@ void Soldier::Attack(float deltaTime)
                 weaponCollider->SetEnabled(true);
                 if (inFirstWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_1);
                 if (inSecondWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_2);
+                if (inFirstWindow)
+                {
+                    if (meleeVfxObject && !meleeVfxObject->IsEnabled())
+                    {
+                        meleeVfxObject->SetEnabled(true);
+                        meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
+                        meleeVfxObject->GetComponent<ShaderScriptComponent*>()
+                            ->GetScriptByType<AttackVfxSpritesheet>()
+                            ->Reset();
+                    }
+                }
+                else
+                {
+                    if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+                    //if (meleeVfxObject && !meleeVfxObject->IsEnabled())
+                    //{
+                    //    // Obtener la matriz local actual
+                    //    float4x4 local = meleeVfxObject->GetLocalTransform();
+
+                    //    // Invertir el eje X (primera columna)
+                    //    local.SetCol3(0, -local.Col3(0));
+
+                    //    // Aplicar la nueva matriz local
+                    //    meleeVfxObject->SetLocalTransform(local);
+
+                    //    meleeVfxObject->SetEnabled(true);
+                    //    meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
+                    //    meleeVfxObject->GetComponent<ShaderScriptComponent*>()
+                    //        ->GetScriptByType<AttackVfxSpritesheet>()
+                    //        ->Reset();
+                    //}
+                }
             }
             else if (!inFirstWindow && !inSecondWindow && weaponCollider->GetEnabled())
             {
@@ -382,6 +435,14 @@ void Soldier::Attack(float deltaTime)
         }
         else // thrust
         {
+            if (thrustVfxObject && !thrustVfxObject->IsEnabled())
+            {
+                thrustVfxObject->SetEnabled(true);
+                thrustVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
+                thrustVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset(
+                );
+            }
+
             if (!weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay &&
                 attackTimer <= attackHitboxDelay + attackHitboxDuration)
             {
@@ -414,6 +475,8 @@ void Soldier::Attack(float deltaTime)
             isAttacking   = false;
             attackCdTimer = attackCooldown;
             if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+            if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+            if (thrustVfxObject) thrustVfxObject->SetEnabled(false);
             ChangeState();
         }
     }
@@ -527,21 +590,45 @@ void Soldier::SelectRandomHelmet()
 {
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0, 3);
+    static std::uniform_int_distribution<> dis(1, 4);
 
     switch (dis(gen))
     {
     case 1:
-        if (helmet1Object) helmet1Object->SetEnabled(true);
+        helmet1Object = parent->GetChildGameObjectByName(helmet1Name);
+        if (!helmet1Object) GLOG("[WARNING] No helmet 1 found for  Soldier")
+        else
+        {
+            GLOG("Helmet 1 found for in Soldier")
+            helmet1Object->SetEnabled(true);
+        }
         break;
     case 2:
-        if (helmet2Object) helmet2Object->SetEnabled(true);
+        helmet2Object = parent->GetChildGameObjectByName(helmet2Name);
+        if (!helmet2Object) GLOG("[WARNING] No helmet 2 found for  Soldier")
+        else
+        {
+            GLOG("Helmet 2 found for in Soldier")
+            helmet2Object->SetEnabled(true);
+        }
         break;
     case 3:
-        if (helmet3Object) helmet3Object->SetEnabled(true);
+        helmet3Object = parent->GetChildGameObjectByName(helmet3Name);
+        if (!helmet3Object) GLOG("[WARNING] No helmet 3 found for  Soldier")
+        else
+        {
+            GLOG("Helmet 3 found for in Soldier")
+            helmet3Object->SetEnabled(true);
+        }
         break;
     case 4:
-        if (helmet4Object) helmet4Object->SetEnabled(true);
+        helmet4Object = parent->GetChildGameObjectByName(helmet4Name);
+        if (!helmet4Object) GLOG("[WARNING] No helmet 4 found for  Soldier")
+        else
+        {
+            GLOG("Helmet 4 found for in Soldier")
+            helmet4Object->SetEnabled(true);
+        }
         break;
     default:
         break;

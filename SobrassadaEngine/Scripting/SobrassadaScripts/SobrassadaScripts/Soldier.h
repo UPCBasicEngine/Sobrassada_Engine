@@ -83,4 +83,8 @@ class Soldier : public Character
     GameObject* helmet3Object        = nullptr;
     std::string helmet4Name          = "";
     GameObject* helmet4Object        = nullptr;
+    std::string meleeVfxName         = "";
+    GameObject* meleeVfxObject       = nullptr;
+    std::string thrustVfxName         = "";
+    GameObject* thrustVfxObject       = nullptr;
 };
