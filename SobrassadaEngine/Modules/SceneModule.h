@@ -45,6 +45,9 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
 
     void AddGameObjectToUpdateComponents(GameObject* gameObject);
     void RequestSceneLoad(const std::string& scenePath);
+    void InitAsyncScenePreLoad(const std::string& fullScenePath);
+
+    bool IsAsyncSceneLoaded() const { return !asyncLoadedGameObjectsContainer.empty(); }
 
   private:
     void HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard);
@@ -58,4 +61,8 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     bool onlyOncePlayMode = false;
     bool loadSceneNextFrame = false;
     std::string pendingScenePath;
+
+    // Preload data storage for async loading functionality
+    std::unordered_map<UID, GameObject*> asyncLoadedGameObjectsContainer;
+    
 };

@@ -42,6 +42,7 @@
 #include "VSyncToggleScript.h"
 #include "Banshee_v2.h"
 #include "WallCollision.h"
+#include "AsyncSceneLoading.h"
 
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
@@ -108,7 +109,8 @@ constexpr const char* scripts[] = {
     "Boss",
     "MirageBossDash",
     "ArcherProjectile",
-    "GameOverNavigatorScript"
+    "GameOverNavigatorScript",
+    "AsyncSceneLoading"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -172,6 +174,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
     if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
+    if (scriptType == "AsyncSceneLoading") return new AsyncSceneLoading(parent);
 
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);

@@ -468,3 +468,7 @@ void SceneModule::RequestSceneLoad(const std::string& scenePath)
     pendingScenePath   = scenePath;
     loadSceneNextFrame = true;
 }
+
+void SceneModule::InitAsyncScenePreLoad(const std::string& fullScenePath)
+{
+}

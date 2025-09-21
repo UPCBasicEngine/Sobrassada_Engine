@@ -12,6 +12,9 @@ class ChangeSceneScript : public Script
     bool Init() override;
     void Update(float deltaTime) override {}
     void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
+    void SwitchScene() const;
+
+    const std::string& GetFullScenePath() const { return fullScenePath; }
 
   private:
     std::string playerName      = "";

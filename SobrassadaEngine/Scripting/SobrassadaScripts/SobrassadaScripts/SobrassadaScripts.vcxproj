@@ -470,6 +470,7 @@
     <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
     <ClInclude Include="ArcherProjectile.h" />
+    <ClInclude Include="AsyncSceneLoading.h" />
     <ClInclude Include="AttackVfxSpritesheet.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
@@ -2061,6 +2062,7 @@
     <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="ArcherProjectile.cpp" />
+    <ClCompile Include="AsyncSceneLoading.cpp" />
     <ClCompile Include="AttackVfxSpritesheet.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />
