@@ -1272,7 +1272,13 @@ void CuChulainn::PerformAttack()
         if (attackTimer < currentHitboxDelay)
         {
             float distance = comboCounter == 2 ? 10.0f : 5.0f;
-            character->MoveTo(distance);
+            float deltaTime = AppEngine->GetGameTimer()->GetDeltaTime() / 1000.0f;
+
+            float adaptedDistance = distance * deltaTime;
+            const float skin      = 0.05f;
+
+            if (!IsBlockedAhead(parent, character->GetFrontDirection(),max(0.55f, adaptedDistance), skin))
+                character->MoveTo(distance);
         }
         else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
                  attackTimer < currentHitboxDelay + currentHitboxDuration)
