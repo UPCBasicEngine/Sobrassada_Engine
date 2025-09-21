@@ -28,6 +28,10 @@ MirageVFX::MirageVFX(GameObject* parent, const std::string& ver, const std::stri
     fragment = frag;
     fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationFPS, 0.0f, 100.0f});
     fields.push_back({"Additive", InspectorField::FieldType::Bool, &isAdditive});
+    fields.push_back({"Color 1", InspectorField::FieldType::Vec3, &color1, 0.0f, 1.0f});
+    fields.push_back({"Color 2", InspectorField::FieldType::Vec3, &color2, 0.0f, 1.0f});
+    fields.push_back({"Color 3", InspectorField::FieldType::Vec3, &color3, 0.0f, 1.0f});
+    fields.push_back({"Color 4", InspectorField::FieldType::Vec3, &color4, 0.0f, 1.0f});
 }
 
 MirageVFX::~MirageVFX()
@@ -128,6 +132,10 @@ void MirageVFX::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
         glUniform1f(4, frameTimer);
+        glUniform3f(5, color1.x, color1.y, color1.z);
+        glUniform3f(6, color2.x, color2.y, color2.z);
+        glUniform3f(7, color3.x, color3.y, color3.z);
+        glUniform3f(8, color4.x, color4.y, color4.z);
 
         glBindVertexArray(vao);
 

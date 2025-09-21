@@ -1,6 +1,10 @@
 #version 460
 
 layout(location = 4) uniform float animationTimer;
+layout(location = 5) uniform vec3 color1; 
+layout(location = 6) uniform vec3 color2; 
+layout(location = 7) uniform vec3 color3; 
+layout(location = 8) uniform vec3 color4; 
 
 in vec2 uv;
 
@@ -43,11 +47,11 @@ float smoothnoise( in vec2 p ){
 }
 
 vec3 colorRamp(float x){
-    if(x < 0.02) return vec3(0, 0, 0);
-    else if(x < 0.258) return mix(vec3(0, 0, 0), vec3(0.188, 0.357, 0.733), (x - 0.02)/(0.258 - 0.02));
-    else if(x < 0.433) return mix(vec3(0.188, 0.357, 0.733), vec3(0.153, 0.941, 0.957), (x - 0.258)/(0.433 - 0.258));
-    else if(x < 0.649) return mix(vec3(0.153, 0.941, 0.957), vec3(1.0), (x - 0.433)/(0.649 - 0.433));
-    else return vec3(1.0);
+    if(x < 0.02) return vec3(0.0);
+    else if(x < 0.258) return mix(vec3(0.0), color1, (x - 0.02)/(0.258 - 0.02));
+    else if(x < 0.433) return mix(color1, color2, (x - 0.258)/(0.433 - 0.258));
+    else if(x < 0.649) return mix(color2, color3, (x - 0.433)/(0.649 - 0.433));
+    else return color4;
 }
 
 void main()

@@ -36,4 +36,9 @@ class MirageVFX : public Script
     MeshComponent* meshComp     = nullptr;
     std::string fragment        = "";
     std::string vertex          = "";
+
+    float3 color1               = float3(0.188f, 0.357f, 0.733f);
+    float3 color2               = float3(0.153f, 0.941f, 0.957f);
+    float3 color3               = float3(1.0f, 1.0f, 1.0f);
+    float3 color4               = float3(1.0f, 1.0f, 1.0f);
 };
