@@ -1469,7 +1469,9 @@ void Boss::WaterSpouts()
 
         if (animComponent && animComponent->IsFinished())
         {
+            agentAI->ResumeMovement();
             actionTriggerDone = false;
+
             ChooseNextState(); // go back to AI loop
         }
         break;
