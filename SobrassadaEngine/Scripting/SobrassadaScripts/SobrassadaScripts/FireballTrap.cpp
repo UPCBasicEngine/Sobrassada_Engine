@@ -114,6 +114,21 @@ void FireballTrap::SetupInspectorFields()
     fields.push_back({"Mini Start Height", InspectorField::FieldType::Float, &cfg.miniStartHeight, 0.f, 5.f});
     fields.push_back({"Mini Up Speed", InspectorField::FieldType::Float, &cfg.miniUpSpeed, 0.f, 20.f});
     fields.push_back({"Mini Landing Radius", InspectorField::FieldType::Float, &cfg.miniLandingRadius, 0.f, 3.f});
+
+    // Anim prefabs
+    fields.push_back({"Anim Wind Name", InspectorField::FieldType::InputText, &animAName});
+    fields.push_back({"Anim BigBomb Name", InspectorField::FieldType::InputText, &animBName});
+    fields.push_back({"Anim MiniBomb Name", InspectorField::FieldType::InputText, &animCName});
+
+    // Anim delays/life
+    fields.push_back({"Anim Wind Delay", InspectorField::FieldType::Float, &animADelay, 0.f, 10.f});
+    fields.push_back({"Anim Wind Life", InspectorField::FieldType::Float, &animALife, 0.f, 20.f});
+
+    fields.push_back({"Anim BigBomb Delay", InspectorField::FieldType::Float, &animBDelay, 0.f, 10.f});
+    fields.push_back({"Anim BigBomb Life", InspectorField::FieldType::Float, &animBLife, 0.f, 20.f});
+
+    fields.push_back({"Anim MiniBomb Delay", InspectorField::FieldType::Float, &animCDelay, 0.f, 10.f});
+    fields.push_back({"Anim MiniBomb Life", InspectorField::FieldType::Float, &animCLife, 0.f, 20.f});
 }
 bool FireballTrap::Init()
 {
@@ -187,6 +202,22 @@ bool FireballTrap::Init()
     if (vfxIndicatorPrefab) vfxIndicatorPrefab->SetEnabled(false);
     if (miniIndicatorVfxPrefab) miniIndicatorVfxPrefab->SetEnabled(false);
 
+    if (!animAPrefab && !animAName.empty())
+    {
+        animAPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animAName);
+        if (animAPrefab) animAPrefab->SetEnabled(false);
+    }
+    if (!animBPrefab && !animBName.empty())
+    {
+        animBPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animBName);
+        if (animBPrefab) animBPrefab->SetEnabled(false);
+    }
+    if (!animCPrefab && !animCName.empty())
+    {
+        animCPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animCName);
+        if (animCPrefab) animCPrefab->SetEnabled(false);
+    }
+
     return true;
 }
 
@@ -245,6 +276,7 @@ void FireballTrap::Update(float deltaTime)
     }
 
     UpdateScheduledVfx(deltaTime);
+    UpdateScheduledAnims(deltaTime);
 }
 
 void FireballTrap::StartAttack()
@@ -353,6 +385,19 @@ void FireballTrap::HandleImpact()
         damageAreaCollider->SetEnabled(true);
     }
 
+    ScheduleAnim(
+        animAPrefab, vfxSchedClock + animADelay, animALife, false, impactLocalPos,
+        (animAPrefab ? animAPrefab->GetScale() : float3::one)
+    );
+    ScheduleAnim(
+        animBPrefab, vfxSchedClock + animBDelay, animBLife, false, impactLocalPos,
+        (animBPrefab ? animBPrefab->GetScale() : float3::one)
+    );
+    ScheduleAnim(
+        animCPrefab, vfxSchedClock + animCDelay, animCLife, false, impactLocalPos,
+        (animCPrefab ? animCPrefab->GetScale() : float3::one)
+    );
+
     if (!bigBallHitPlayerThisAttack)
     {
         plannedMiniAngles.clear();
@@ -404,6 +449,7 @@ void FireballTrap::DisableDamage()
     currentDecal    = nullptr;
     activationState = ACTIVATION_STATE::SLEEPING;
     ClearScheduledVfx();
+    ClearScheduledAnims();
 }
 
 void FireballTrap::UpdateFireball(float deltaTime)
@@ -616,15 +662,9 @@ GameObject* FireballTrap::AcquireFromPool(GameObject* prefab)
     auto& pool = vfxPools[prefab];
 
     for (GameObject* go : pool)
-    {
         if (go && !go->IsEnabled()) return go;
-    }
 
-    GameObject* inst = new GameObject(parent->GetUID(), prefab);
-    inst->SetEnabled(false);
-    parent->AddChildren(inst->GetUID());
-    AppEngine->GetSceneModule()->GetScene()->AddGameObject(inst->GetUID(), inst);
-
+    GameObject* inst = CloneHierarchy(prefab, parent->GetUID());
     pool.push_back(inst);
     return inst;
 }
@@ -632,8 +672,11 @@ GameObject* FireballTrap::AcquireFromPool(GameObject* prefab)
 void FireballTrap::ReleaseToPool(GameObject* inst)
 {
     if (!inst) return;
+
     if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>()) ssc->SetScriptEnabled("MovingUVClipErode", false);
-    inst->SetEnabled(false);
+
+    StopAnimationsRecursive(inst);
+    SetEnabledRecursive(inst, false);
 }
 
 void FireballTrap::UpdateScheduledVfx(float dt)
@@ -650,16 +693,13 @@ void FireballTrap::UpdateScheduledVfx(float dt)
             GameObject* inst = AcquireFromPool(e.prefab);
             if (!inst) continue;
 
-            const float3 parentS = parent->GetScale();
-            const float3 localS  = SafeDiv(e.localScale, parentS);
-            const float4x4 tf    = float4x4::FromTRS(e.localPos, float3x3::identity, localS);
-
+            const float3 worldPos = parent->GetGlobalTransform().MulPos(e.localPos);
+            const float4x4 tf     = float4x4::FromTRS(worldPos, float3x3::identity, e.localScale);
             inst->SetLocalTransform(tf);
             inst->SetEnabled(true);
 
             if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>())
             {
-                const bool isBlackStain = (e.prefab == vfxBlackStainPrefab);
                 ssc->SetScriptEnabled("MovingUVClipErode", true);
                 if (auto* m = inst->GetComponent<MeshComponent*>()) m->SetEnabled(false);
             }
@@ -675,8 +715,8 @@ void FireballTrap::UpdateScheduledVfx(float dt)
             e.timer += dt;
             if (e.timer >= e.life)
             {
-                ReleaseToPool(e.instance); 
-                e.instance = nullptr;      
+                ReleaseToPool(e.instance);
+                e.instance = nullptr;
             }
         }
     }
@@ -701,4 +741,160 @@ void FireballTrap::ClearScheduledVfx()
     }
     scheduledVfx.clear();
     vfxSchedClock = 0.f;
+}
+
+void FireballTrap::ScheduleAnim(
+    GameObject* prefab, float delay, float life, bool loop, const float3& pos, const float3& scale, UID clip
+)
+{
+    if (!prefab) return;
+    scheduledAnims.push_back({prefab, clip, delay, life, loop, false, 0.f, nullptr, pos, scale});
+}
+
+static inline void StartAnimOnInstance(GameObject* inst, UID clip, bool loop)
+{
+    if (!inst) return;
+    if (auto* ac = inst->GetComponent<AnimationComponent*>())
+    {
+        if (clip != INVALID_UID) ac->SetAnimationResource(clip);
+        ac->OnStop();
+        ac->OnPlay(false, loop);
+    }
+}
+
+void FireballTrap::UpdateScheduledAnims(float dt)
+{
+    for (auto& e : scheduledAnims)
+    {
+        if (!e.prefab) continue;
+
+        if (!e.triggered && vfxSchedClock >= e.delay)
+        {
+            GameObject* inst = AcquireFromPool(e.prefab);
+            if (!inst) continue;
+
+            const float4x4 parentW = parent->GetGlobalTransform();
+            const float4x4 prefabW = e.prefab->GetGlobalTransform();
+            const float4x4 worldTf =
+                float4x4::FromTRS(parentW.MulPos(e.localPos), prefabW.RotatePart(), prefabW.ExtractScale());
+            const float4x4 localTf = parentW.Inverted() * worldTf;
+            inst->SetLocalTransform(localTf);
+
+            SetEnabledRecursive(inst, true);
+            StartAnimationsRecursive(inst, e.clip, e.loop);
+
+            if (e.life <= 0.f)
+            {
+                if (auto* ac = inst->GetComponent<AnimationComponent*>())
+                    if (ac->GetCurrentAnimation()) e.life = ac->GetCurrentAnimation()->GetDuration();
+                if (e.life <= 0.f) e.life = 1.0f;
+            }
+
+            e.instance  = inst;
+            e.triggered = true;
+            e.timer     = 0.f;
+        }
+
+        if (e.triggered && e.instance)
+        {
+            e.timer += dt;
+            if (e.timer >= e.life)
+            {
+                StopAnimationsRecursive(e.instance);
+                ReleaseToPool(e.instance);
+                e.instance = nullptr;
+            }
+        }
+    }
+
+    scheduledAnims.erase(
+        std::remove_if(
+            scheduledAnims.begin(), scheduledAnims.end(),
+            [](const AnimEvent& ev) { return ev.triggered && ev.instance == nullptr; }
+        ),
+        scheduledAnims.end()
+    );
+}
+
+
+void FireballTrap::ClearScheduledAnims()
+{
+    for (auto& e : scheduledAnims)
+    {
+        if (e.instance)
+        {
+            StopAnimationsRecursive(e.instance);
+            ReleaseToPool(e.instance);
+        }
+        e.instance  = nullptr;
+        e.triggered = true;
+    }
+    scheduledAnims.clear();
+}
+
+GameObject* FireballTrap::CloneHierarchy(GameObject* src, UID newParentUID)
+{
+    if (!src) return nullptr;
+
+    Scene* sc       = AppEngine->GetSceneModule()->GetScene();
+
+    // Clone this node
+    GameObject* dst = new GameObject(newParentUID, src);
+    dst->SetEnabled(false);
+    sc->AddGameObject(dst->GetUID(), dst);
+
+    // Parent link
+    if (newParentUID != INVALID_UID)
+    {
+        if (GameObject* p = sc->GetGameObjectByUID(newParentUID)) p->AddChildren(dst->GetUID());
+    }
+
+    // Recurse on children
+    for (UID childUID : src->GetChildren())
+    {
+        GameObject* srcChild = sc->GetGameObjectByUID(childUID);
+        if (!srcChild) continue;
+        CloneHierarchy(srcChild, dst->GetUID());
+    }
+
+    return dst;
+}
+
+void FireballTrap::SetEnabledRecursive(GameObject* go, bool enabled)
+{
+    if (!go) return;
+    go->SetEnabled(enabled);
+
+    Scene* sc = AppEngine->GetSceneModule()->GetScene();
+    for (UID cUID : go->GetChildren())
+        if (GameObject* c = sc->GetGameObjectByUID(cUID)) SetEnabledRecursive(c, enabled);
+}
+
+void FireballTrap::StopAnimationsRecursive(GameObject* go)
+{
+    if (!go) return;
+
+    if (auto* ac = go->GetComponent<AnimationComponent*>()) ac->OnStop();
+
+    Scene* sc = AppEngine->GetSceneModule()->GetScene();
+    for (UID cUID : go->GetChildren())
+        if (GameObject* c = sc->GetGameObjectByUID(cUID)) StopAnimationsRecursive(c);
+}
+
+void FireballTrap::StartAnimationsRecursive(GameObject* go, UID clip, bool loop)
+{
+    if (!go) return;
+
+    if (auto* ac = go->GetComponent<AnimationComponent*>())
+    {
+        if (clip != INVALID_UID) ac->SetAnimationResource(clip);
+        ac->OnStop();
+        ac->OnPlay(false, loop);
+        if (ac->GetAnimationController()) ac->GetAnimationController()->SetTime(0.0f);
+        ac->Update(0.0f);
+    }
+
+    Scene* sc = AppEngine->GetSceneModule()->GetScene();
+    for (UID cUID : go->GetChildren())
+        if (GameObject* c = sc->GetGameObjectByUID(cUID)) StartAnimationsRecursive(c, clip, loop);
 }

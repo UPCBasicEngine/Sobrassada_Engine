@@ -1,6 +1,9 @@
 #pragma once
 
+#include "ResourceAnimation.h"
 #include "Script.h"
+#include "Standalone/AnimController.h"
+#include "Standalone/AnimationComponent.h"
 #include <array>
 #include <unordered_map>
 #include <vector>
@@ -61,6 +64,21 @@ class FireballTrap : public Script
         float life     = 2.f;
         float timer    = 0.f;
         bool active    = false;
+    };
+
+    struct AnimEvent
+    {
+        GameObject* prefab   = nullptr;
+        UID clip             = INVALID_UID;
+        float delay          = 0.f;
+        float life           = 0.f;
+        bool loop            = false;
+        bool triggered       = false;
+        float timer          = 0.f;
+        GameObject* instance = nullptr;
+
+        float3 localPos      = float3::zero;
+        float3 localScale    = float3::one;
     };
 
     static constexpr int EXTRA_VFX_COUNT = 11;
@@ -147,6 +165,7 @@ class FireballTrap : public Script
     void UpdateScheduledVfx(float dt);
     void ClearScheduledVfx();
 
+    bool inspectorInitialized          = false;
     // Prefabs (set via Inspector later)
     GameObject* vfxMainLightPrefab     = nullptr;
     GameObject* vfxLightImpactPrefab   = nullptr;
@@ -183,4 +202,32 @@ class FireballTrap : public Script
     std::vector<float> plannedMiniAngles;
 
     bool bigBallHitPlayerThisAttack = false;
+
+    // Animations
+    GameObject* animAPrefab         = nullptr;
+    GameObject* animBPrefab         = nullptr;
+    GameObject* animCPrefab         = nullptr;
+
+    float animADelay = 0.f, animALife = 0.f;
+    float animBDelay = 0.f, animBLife = 0.f;
+    float animCDelay = 0.f, animCLife = 0.f;
+
+    // Animation scheduling
+    void ScheduleAnim(
+        GameObject* prefab, float delay, float life, bool loop, const float3& pos, const float3& scale = float3::one,
+        UID clip = INVALID_UID
+    );
+    void StartAnimationsRecursive(GameObject* go, UID clip, bool loop);
+    void UpdateScheduledAnims(float dt);
+    void ClearScheduledAnims();
+
+    std::vector<AnimEvent> scheduledAnims;
+
+    GameObject* CloneHierarchy(GameObject* src, UID newParentUID);
+    void SetEnabledRecursive(GameObject* go, bool enabled);
+    void StopAnimationsRecursive(GameObject* go);
+
+    std::string animAName = "Bomb_animation_W"; // Wind
+    std::string animBName = "Bomb_animation_N"; // BigBomb
+    std::string animCName = "Bomb_animation_S"; // MiniBomb
 };
