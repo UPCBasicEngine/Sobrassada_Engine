@@ -39,6 +39,7 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "CoverPointTrigger.h"
 #include "Banshee_v2.h"
 #include "WallCollision.h"
 
@@ -105,7 +106,8 @@ constexpr const char* scripts[] = {
     "BossMirage",
     "Boss",
     "MirageBossDash",
-    "ArcherProjectile"
+    "ArcherProjectile",
+    "CoverPointTrigger"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -160,6 +162,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Destructible") return new Destructible(parent);
     if (scriptType == "MagicBarrier") return new MagicBarrier(parent);
     if (scriptType == "WallCollision") return new WallCollision(parent);
+    if (scriptType == "CoverPointTrigger") return new CoverPointTrigger(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
