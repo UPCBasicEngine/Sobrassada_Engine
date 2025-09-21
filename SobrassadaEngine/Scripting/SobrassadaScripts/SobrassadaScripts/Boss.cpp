@@ -653,19 +653,19 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate = 20;
+        shieldStrikesRate = 30;
         shieldBlastRate   = 60;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate = 20;
-        shieldBlastRate   = 60;
+        shieldStrikesRate = 30;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Far:
-        shieldStrikesRate = 10;
+        shieldStrikesRate = 20;
         shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
@@ -790,6 +790,10 @@ void Boss::ChooseNextStateThirdPhase()
         else if (num <= shieldBlastRate)
         {
             SetState(BossStates::ShieldBlast);
+        }
+        else if (num <= waterSpoutsRate)
+        {
+            SetState(BossStates::WaterSpouts);
         }
     }
 }
