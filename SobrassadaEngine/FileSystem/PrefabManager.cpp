@@ -171,7 +171,7 @@ namespace PrefabManager
             rootGO->SetLocalTransform(currentTargetGO->GetLocalTransform(), false);
             
             outGameObjects.insert({rootGO->GetUID(), rootGO});
-            cachedGameObjects.emplace_back(std::pair(rootGO, -1));
+            cachedGameObjects.emplace_back(rootGO, -1);
         
             if (prefab.HasMember("GameObjects") && prefab["GameObjects"].IsArray())
             {
@@ -181,20 +181,15 @@ namespace PrefabManager
                 {
                     const rapidjson::Value& gameObject = gameObjects[i];
                     GameObject* newObject              = new GameObject(gameObject);
-                    if (newObject->GetPrefabUID() != INVALID_UID)
-                    {
-                        prefabBuffer.push(newObject);
-                        continue;
-                    }
                     newObject->ModifyAllUIDsBy(staticModUID);
-                    outGameObjects.insert({newObject->GetUID(), newObject});
-                    cachedGameObjects.emplace_back(newObject, i);
-                }
-                
-                for (UID childUID : rootGO->GetChildren())
-                {
-                    if (outGameObjects.find(childUID) != outGameObjects.end())
-                        outGameObjects.at(childUID)->SetParent(rootGO->GetUID());
+                    newObject->SetParent(rootGO->GetParent());
+                    if (newObject->GetPrefabUID() != INVALID_UID) 
+                        prefabBuffer.push(newObject);
+                    else
+                    {
+                        outGameObjects.insert({newObject->GetUID(), newObject});
+                        cachedGameObjects.emplace_back(newObject, i);
+                    }
                 }
             }
 
