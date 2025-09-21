@@ -10,6 +10,9 @@ class Framebuffer;
 class CameraComponent;
 class DirectionalLightComponent;
 
+constexpr int SpotLightShadowMapSize = 1024;
+constexpr int TotalShadowMaps = 15;
+
 class RenderPass
 {
   public:
@@ -45,7 +48,7 @@ class RenderPass
     void RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffer* framebuffer) const;
 
   public:
-
+    // Volumetric parameters
     int numStepsVolumetric        = 32;
     float fogIntensity            = 0.2f;
     float noiseAmmount            = 1.f;
@@ -66,6 +69,9 @@ class RenderPass
     unsigned int depthTexture, depthFBO;
     float4x4 lightView;
     float4x4 lightProj;
+
+    // SpotLight Shadows
+    unsigned int spotShadowMaps[TotalShadowMaps] = {0};
 
     // Tile Shading
     unsigned int visibleLightIndicesSSBO = 0;

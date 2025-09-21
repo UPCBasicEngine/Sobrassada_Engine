@@ -14,6 +14,10 @@ SpotLightComponent::SpotLightComponent(UID uid, GameObject* parent)
     range      = 3;
     innerAngle = 10;
     outerAngle = 20;
+
+    spotLigthFrustum.type = FrustumType::PerspectiveFrustum;
+    spotLigthFrustum.pos = parent->GetGlobalPostition();
+    spotLigthFrustum.front = GetDirection();
 }
 
 SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, GameObject* parent)

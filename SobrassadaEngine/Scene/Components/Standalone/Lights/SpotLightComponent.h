@@ -2,6 +2,7 @@
 
 #include "../LightComponent.h"
 
+#include "Geometry/Frustum.h"
 #include "rapidjson/document.h"
 
 class SpotLightComponent : public LightComponent
@@ -29,4 +30,6 @@ class SpotLightComponent : public LightComponent
     float range;
     float innerAngle;
     float outerAngle;
+
+    Frustum spotLigthFrustum;
 };

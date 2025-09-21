@@ -62,6 +62,24 @@ RenderPass::RenderPass()
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // SpotLigth shadow map creation
+    glGenTextures(TotalShadowMaps, &spotShadowMaps[0]);
+
+    for (int i = 0; i < TotalShadowMaps; ++i)
+    {
+        glBindTexture(GL_TEXTURE_2D, spotShadowMaps[i]);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SpotLightShadowMapSize, SpotLightShadowMapSize, 0,
+            GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+        );
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     constexpr float cubeVertices[] = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
                                       -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
 
