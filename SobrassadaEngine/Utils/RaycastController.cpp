@@ -5,6 +5,7 @@
 #include "CameraModule.h"
 #include "FileSystem/Mesh.h"
 #include "GameObject.h"
+#include "PhysicsModule.h"
 #include "ResourceMesh.h"
 #include "SceneModule.h"
 #include "Standalone/BillboardComponent.h"
@@ -47,25 +48,23 @@ namespace RaycastController
             if (meshComponent != nullptr)
             {
                 const ResourceMesh* resourceMesh = meshComponent->GetResourceMesh();
-                if (!resourceMesh) continue;  
+                if (!resourceMesh) continue;
 
-                float4x4 globalTransform         = meshComponent->GetCombinedMatrix();
+                float4x4 globalTransform = meshComponent->GetCombinedMatrix();
                 globalTransform.Inverse();
                 localRay.Transform(globalTransform);
 
                 const std::vector<unsigned int>& indices = resourceMesh->GetIndices();
                 const std::vector<Vertex>& vertices      = resourceMesh->GetLocalVertices();
-                if (indices.size() < 3 || vertices.empty())
-                    continue;
+                if (indices.size() < 3 || vertices.empty()) continue;
 
-                for (size_t i = 2; i < indices.size(); i += 3) 
+                for (size_t i = 2; i < indices.size(); i += 3)
                 {
                     unsigned int indexA = indices[i - 2];
                     unsigned int indexB = indices[i - 1];
                     unsigned int indexC = indices[i];
 
-                    if (indexA >= vertices.size() || indexB >= vertices.size() || indexC >= vertices.size())
-                        continue; 
+                    if (indexA >= vertices.size() || indexB >= vertices.size() || indexC >= vertices.size()) continue;
 
                     const float3& firstVertex  = vertices[indexA].position;
                     const float3& secondVertex = vertices[indexB].position;
@@ -183,5 +182,14 @@ namespace RaycastController
             selectedGameObject->UpdateOpenNodeHierarchy(true);
 
         return selectedGameObject;
+    }
+
+    BulletUserPointer* GetRayIntersectionPhysics(const math::LineSegment& ray)
+    {
+        PhysicsModule* physicsModule = App->GetPhysicsModule();
+
+        if (!physicsModule) return nullptr;
+
+        return physicsModule->RaycastToWorld(ray);
     }
 } // namespace RaycastController
