@@ -13,10 +13,12 @@
 #include "GameObject.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Wwise_IDs.h"
 
 constexpr float TAU                  = 2.0f * PI;
 constexpr float SHADOW_MIN_SCALE     = 0.01f;
@@ -400,6 +402,11 @@ void FireballTrap::HandleImpact()
 
     if (!bigBallHitPlayerThisAttack)
     {
+        if (auto* audioComp = fireball->GetComponent<AudioSourceComponent*>())
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_CATAPULT);
+        else if (auto* audioCompP = parent->GetComponent<AudioSourceComponent*>())
+            audioCompP->EmitEvent(AK::EVENTS::PLAY_SFX_CATAPULT);
+
         plannedMiniAngles.clear();
 
         const float stepAng     = TAU / float(std::max(1u, miniCount));
