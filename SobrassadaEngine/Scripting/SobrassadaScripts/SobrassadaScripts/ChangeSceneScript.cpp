@@ -42,23 +42,18 @@ void ChangeSceneScript::OnCollisionEnter(GameObject* otherObject, const float3 c
         CuChulainn* playerScript = scriptComp->GetScriptByType<CuChulainn>();
         if (playerScript)
         {
-            SwitchScene();
+            GLOG("Processing scene change request to: %s", targetSceneName);
+
+            const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
+            const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
+
+            PlayerState playerState;
+            playerScript->ExportState(playerState);
+            SavePlayerData::SavePlayerToFile(playerState, savePath);
+
+            std::string tempPlayerName = playerName;
+
+            AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
         }
     }
-}
-
-void ChangeSceneScript::SwitchScene() const
-{
-    GLOG("Processing scene change request to: %s", targetSceneName.c_str())
-
-    const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
-    const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
-
-    PlayerState playerState;
-    playerScript->ExportState(playerState);
-    SavePlayerData::SavePlayerToFile(playerState, savePath);
-
-    std::string tempPlayerName = playerName;
-
-    AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
 }

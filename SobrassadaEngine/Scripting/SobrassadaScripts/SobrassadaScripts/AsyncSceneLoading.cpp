@@ -2,10 +2,16 @@
 
 #include "AsyncSceneLoading.h"
 
-#include "ChangeSceneScript.h"
 #include "GameObject.h"
-#include "ScriptComponent.h"
+#include "ProjectModule.h"
 #include "Standalone/VideoComponent.h"
+
+
+AsyncSceneLoading::AsyncSceneLoading(GameObject* parent) : Script(parent)
+{
+    fields.push_back({"Use async loading", InspectorField::FieldType::Bool, &useAsyncLoading});
+    fields.emplace_back("Target Scene Name", InspectorField::FieldType::InputText, &targetSceneName);
+}
 
 bool AsyncSceneLoading::Init()
 {
@@ -16,17 +22,12 @@ bool AsyncSceneLoading::Init()
         GLOG("No video component found")
         return false;
     }
-
-    changeSceneScript = parent->GetComponent<ScriptComponent*>()->GetScriptByType<ChangeSceneScript>();
-    if (!changeSceneScript)
-    {
-        isSetupCorrectly = false;
-        GLOG("No change scene script found")
-        return false;
-    }
-
-    AppEngine->GetSceneModule()->InitAsyncScenePreLoad(changeSceneScript->GetFullScenePath());
+    
+    fullScenePath = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + targetSceneName + SCENE_EXTENSION;
+    
     videoComponent->Play();
+    if (useAsyncLoading)
+        AppEngine->GetSceneModule()->InitAsyncScenePreLoad(fullScenePath);
 
     return true;
 }
@@ -35,12 +36,7 @@ void AsyncSceneLoading::Update(float deltaTime)
 {
     if (!isSetupCorrectly) return;
 
-    if (!videoComponent->IsPlaying() && AppEngine->GetSceneModule()->IsAsyncSceneLoaded())
-        changeSceneScript->SwitchScene();
-        
-}
-
-void AsyncSceneLoading::OnDestroy()
-{
-   
+    if (!videoComponent->IsPlaying() && (!useAsyncLoading || AppEngine->GetSceneModule()->IsAsyncSceneLoaded()))
+        AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
+    
 }

@@ -5,6 +5,8 @@
 
 #include "rapidjson/document.h"
 
+#include <future>
+
 class GameObject;
 enum KeyState;
 
@@ -24,7 +26,7 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
 
     void CreateScene();
     void LoadScene(const rapidjson::Value& initialState, bool forceReload = false);
-    void CloseScene();
+    void CloseScene(bool keepResources = false);
 
     void SwitchPlayMode(bool play);
 
@@ -47,7 +49,7 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     void RequestSceneLoad(const std::string& scenePath);
     void InitAsyncScenePreLoad(const std::string& fullScenePath);
 
-    bool IsAsyncSceneLoaded() const { return !asyncLoadedGameObjectsContainer.empty(); }
+    bool IsAsyncSceneLoaded() const { return asyncLoadingThread.valid(); }
 
   private:
     void HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard);
@@ -62,7 +64,7 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     bool loadSceneNextFrame = false;
     std::string pendingScenePath;
 
-    // Preload data storage for async loading functionality
-    std::unordered_map<UID, GameObject*> asyncLoadedGameObjectsContainer;
+    // Preload next scene for async loading functionality
+    std::future<Scene*> asyncLoadingThread;
     
 };
