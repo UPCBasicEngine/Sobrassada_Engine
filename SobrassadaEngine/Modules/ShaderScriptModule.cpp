@@ -264,6 +264,7 @@ void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraCompon
 
 void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraComponent* camera)
 {
+    glDepthMask(GL_FALSE);
     // SORT MESHES TO CAMERA DISTABCE
     std::sort(
         transparentComponents.begin(), transparentComponents.end(),
@@ -309,6 +310,7 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
     }
 
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 }
 
 void ShaderScriptModule::RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera)
