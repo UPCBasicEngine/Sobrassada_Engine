@@ -82,7 +82,6 @@ class CuChulainn : public Character
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
 
-    
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -133,9 +132,9 @@ class CuChulainn : public Character
     CameraMovement* camera               = nullptr;
 
     std::string spearName                = "SpearProjectile";
-    std::string spearNameMesh             = "WP_Spear_Cu_Chu";
+    std::string spearNameMesh            = "WP_Spear_Cu_Chu";
     Projectile* spear                    = nullptr;
-    GameObject* spearCharacter            = nullptr;
+    GameObject* spearCharacter           = nullptr;
 
     float defaultSpeed                   = 7.0f;
     float inputBuffer                    = 0.5f;
@@ -172,11 +171,12 @@ class CuChulainn : public Character
     GameObject* attackVfxVertical2       = nullptr;
     GameObject* attackVfxHorizontal3     = nullptr;
     GameObject* attackVfxVertical3       = nullptr;
+    bool moveWithAttack                  = false;
     bool desiredAttack                   = false;
     float attackBufferTimer              = 0.0f;
-    int comboCounter                     = -1;
     float comboBufferTimer               = 0.0f;
     float meleeVfxDelay                  = 0.1f;
+    int comboCounter                     = -1;
 
     // Arrow Hit VFX
     GameObject* arrowHitVfxObject        = nullptr;
@@ -218,7 +218,7 @@ class CuChulainn : public Character
     std::string ultimateGlowName         = "ulti_glow";
     std::string ultimateBlurName         = "ultimate_mesh_blur";
     std::string ultimateBrustName        = "ultimate_mesh_brust";
-    std::string ultimateCrackName       = "ultimate_mesh_crack2";
+    std::string ultimateCrackName        = "ultimate_mesh_crack2";
     std::string ultimateHaloName         = "mesh_halo";
     std::string ultimateSmokeName        = "mesh_outer_smoke";
     std::string ultimateSphereName       = "mesh_sphere_glow";
@@ -228,7 +228,7 @@ class CuChulainn : public Character
     GameObject* ultimateGlow             = nullptr;
     GameObject* ultimateBlur             = nullptr;
     GameObject* ultimateBrust            = nullptr;
-    GameObject* ultimateCrack           = nullptr;
+    GameObject* ultimateCrack            = nullptr;
     GameObject* ultimateHalo             = nullptr;
     GameObject* ultimateSmoke            = nullptr;
     GameObject* ultimateSphere           = nullptr;

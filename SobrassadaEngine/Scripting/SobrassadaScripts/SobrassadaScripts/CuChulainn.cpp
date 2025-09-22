@@ -546,14 +546,21 @@ void CuChulainn::OnDeath()
 {
     isAttacking = false;
     deathTimer  = 0.0f;
-    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     character->EnableMovement(false);
+    state = CharacterStates::DEATH;
 
-    state  = CharacterStates::DEATH;
-    isDead = true;
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+    if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
+    if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
+    if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
+    if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
+    if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
+    if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
 
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false); 
     if (animComponent) animComponent->UseTrigger("Death");
+
+    isDead = true;
     pendingGameOver = true;
 }
 
@@ -1116,13 +1123,13 @@ void CuChulainn::CheckIsFalling()
     const float verticalSpeed = character->GetRealSpeed().y;
 
     // GLOG("Vertical speed %f", verticalSpeed);
-    if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
+    if (verticalSpeed <= -1.0f && !character->IsGrounded() && animComponent)
     {
         animComponent->UseTrigger("Fall");
         state = CharacterStates::FALL;
     }
 
-    if (state == CharacterStates::FALL && verticalSpeed >= -1.0f)
+    if (state == CharacterStates::FALL && character->IsGrounded())
     {
         animComponent->UseTrigger("Land");
         character->EnableMovement(false);
@@ -1241,7 +1248,7 @@ void CuChulainn::PerformAttack()
 
         if (attackTimer < currentHitboxDelay)
         {
-            float distance = comboCounter == 2 ? 10.0f : 5.0f;
+            float distance = moveWithAttack ? comboCounter == 2 ? 10.0f : 5.0f : 0.0f;
             character->MoveTo(distance);
         }
         else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
@@ -1331,14 +1338,14 @@ void CuChulainn::Attack(float deltaTime)
         camera->EnableAimOffset(false);
     }
 
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
+    ++comboCounter;
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
+
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     if (meleeVfxObject) meleeVfxObject->SetEnabled(true);
-    ++comboCounter;
-    // GLOG("Combo counter: %d", comboCounter);
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
@@ -1347,6 +1354,78 @@ void CuChulainn::Attack(float deltaTime)
     {
         const std::string trigger = "Attack" + std::to_string(comboCounter);
         animComponent->UseTrigger(trigger);
+    }
+
+    // Raycast to check if enemy in front, to decide wether to move forward or not
+    const float3 position         = parent->GetGlobalTransform().TranslatePart();
+    const float3 direction        = character->GetFrontDirection();
+    const float3 lateralDirection = direction.Cross(float3::unitY).Normalized();
+
+    const float3 rightRayOrigin   = position + lateralDirection * 0.3f;
+    const float3 rightRayOrigin2  = position + lateralDirection * 0.6f;
+    const float3 rightRayOrigin3  = position + lateralDirection * 0.9f;
+
+    const float3 leftRayOrigin    = position - lateralDirection * 0.3f;
+    const float3 leftRayOrigin2   = position - lateralDirection * 0.6f;
+    const float3 leftRayOrigin3   = position - lateralDirection * 0.9f;
+
+    LineSegment centerRay(position + direction * 0.075f, position + direction * 3.0f);
+
+    LineSegment leftRay(leftRayOrigin, leftRayOrigin + direction * 3.0f);
+    LineSegment leftRay2(leftRayOrigin2 - direction * 0.2f, leftRayOrigin2 + direction * 3.0f);
+    LineSegment leftRay3(leftRayOrigin3 - direction * 0.2f, leftRayOrigin3 + direction * 3.0f);
+
+    LineSegment rightRay(rightRayOrigin, rightRayOrigin + direction * 3.0f);
+    LineSegment rightRay2(rightRayOrigin2 - direction * 0.2f, rightRayOrigin2 + direction * 3.0f);
+    LineSegment rightRay3(rightRayOrigin3 - direction * 0.2f, rightRayOrigin3 + direction * 3.0f);
+
+    GameObject* centerHit = RaycastController::GetRayIntersectionTrees(
+        centerRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
+    );
+    GameObject* leftHit =
+        RaycastController::GetRayIntersectionTrees(leftRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* leftHit2 =
+        RaycastController::GetRayIntersectionTrees(leftRay2, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* leftHit3 =
+        RaycastController::GetRayIntersectionTrees(leftRay3, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+
+    GameObject* rightHit =
+        RaycastController::GetRayIntersectionTrees(rightRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* rightHit2 =
+        RaycastController::GetRayIntersectionTrees(rightRay2, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* rightHit3 =
+        RaycastController::GetRayIntersectionTrees(rightRay3, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+
+    if (centerHit || leftHit || leftHit2 || leftHit3 || rightHit || rightHit2 || rightHit3)
+    {
+        //GLOG("HIT WITH DYNAMIC OBJECT");
+        moveWithAttack = false;
+    }
+    else
+    {
+        //GLOG("NO ONJECT HIT")
+        moveWithAttack = true;
+    }
+
+    DebugDrawModule* debug = AppEngine->GetDebugDrawModule();
+    if (debug->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        float3 centralColor = centerHit != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(centerRay, centralColor);
+
+        float3 rightColor = rightHit != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(rightRay, rightColor);
+        float3 rightColor2 = rightHit2 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(rightRay2, rightColor2);
+        float3 rightColor3 = rightHit3 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(rightRay3, rightColor3);
+
+        float3 leftColor = leftHit != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(leftRay, leftColor);
+        float3 leftColor2 = leftHit2 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(leftRay2, leftColor2);
+        float3 leftColor3 = leftHit3 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(leftRay3, leftColor3);
     }
 }
 
