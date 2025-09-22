@@ -446,9 +446,10 @@ void Soldier::Attack(float deltaTime)
                     //}
                 }
             }
-            else if (!inFirstWindow && !inSecondWindow && weaponCollider->GetEnabled())
+            else if (!inFirstWindow && !inSecondWindow)
             {
-                weaponCollider->SetEnabled(false);
+                if (weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
+                if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
             }
         }
         else // thrust
