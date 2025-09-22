@@ -7,6 +7,7 @@
 #include "InputModule.h"
 #include "OpenGLModule.h"
 #include "PhysicsModule.h"
+#include "RenderPass.h"
 
 #include "SDL.h"
 #include "glew.h"
@@ -111,6 +112,19 @@ void GameDebugUIModule::GameDebugMenu()
     ImGui::Checkbox("Console", &openConsole);
 
     if (openConsole) App->GetEditorUIModule()->Console(openConsole);
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    RenderPass* render = App->GetSceneModule()->GetScene()->GetRenderPass();
+    bool enableFXAA = render->IsFXAAEnabled();
+    ImGui::Checkbox("Enable FXAA", &enableFXAA);
+    render->SetEnabled(enableFXAA);
+
+    bool showBorders = render->IsShowBorders();
+    ImGui::Checkbox("Show borders", &showBorders);
+    render->SetShowBorders(showBorders);
 
     ImGui::Separator();
     ImGui::Spacing();

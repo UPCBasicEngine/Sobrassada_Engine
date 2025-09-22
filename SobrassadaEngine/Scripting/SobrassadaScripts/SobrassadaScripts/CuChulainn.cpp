@@ -41,6 +41,9 @@
 #include "SDL.h"
 #include "Wwise_IDs.h"
 
+extern "C" void GO_RequestGameOver();
+extern bool gGameOverActive;
+
 CharacterControllerComponent* character = nullptr;
 CuChulainn* playerScript                = nullptr;
 
@@ -210,6 +213,7 @@ bool CuChulainn::Init()
     arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
+
     attackVfxHorizontal1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxHorizontal1Name);
     if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
     else attackVfxHorizontal1->SetEnabled(false);
@@ -337,8 +341,6 @@ bool CuChulainn::Init()
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
-    if (!riastradBar) GLOG("[WARNING] CuChulainn: No riastard bar gameObject found");
-
     // Ultimate
     ultimateGlow =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
@@ -381,7 +383,6 @@ bool CuChulainn::Init()
         GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
         GLOG("Player name: %s", parent->GetName().c_str());
 
-        // Verificar tags
         if (parent->HasTag(HashString("Player")))
         {
             GLOG("Player has 'Player' tag: YES");
@@ -401,6 +402,8 @@ bool CuChulainn::Init()
     const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
     const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);
 
+    spawnPos                      = parent->GetGlobalTransform().TranslatePart();
+
     if (gNewGame)
     {
         gNewGame = false;
@@ -419,8 +422,19 @@ void CuChulainn::Update(float deltaTime)
 {
     if (state == CharacterStates::DEATH)
     {
-        deathTimer += deltaTime;
-        if (deathTimer > 4.0f) Respawn();
+        deathTimer                   += deltaTime;
+
+        const bool deathAnimDone      = (animComponent && animComponent->IsFinished());
+        constexpr float kGO_MinDelay  = 1.6f;
+        constexpr float kGO_MaxDelay  = 3.5f;
+
+        if (pendingGameOver && ((deathAnimDone && deathTimer >= kGO_MinDelay) || (deathTimer >= kGO_MaxDelay)))
+        {
+            pendingGameOver = false;
+            GO_RequestGameOver();
+        }
+
+        if (deathTimer > 4.0f && !gGameOverActive) Respawn();
     }
 
     if (isDead || !character) return;
@@ -498,14 +512,24 @@ void CuChulainn::OnDestroy()
 
 void CuChulainn::OnDeath()
 {
-    // TODO: include death sound for the character
     isAttacking = false;
     deathTimer  = 0.0f;
-    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     character->EnableMovement(false);
     state = CharacterStates::DEATH;
+
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+    if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
+    if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
+    if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
+    if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
+    if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
+    if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+
+    if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false); 
     if (animComponent) animComponent->UseTrigger("Death");
+
+    isDead = true;
+    pendingGameOver = true;
 }
 
 void CuChulainn::OnDamageTaken(int amount)
@@ -1058,13 +1082,13 @@ void CuChulainn::CheckIsFalling()
     const float verticalSpeed = character->GetRealSpeed().y;
 
     // GLOG("Vertical speed %f", verticalSpeed);
-    if (verticalSpeed <= -3.0f && !character->IsGrounded() && animComponent)
+    if (verticalSpeed <= -1.0f && !character->IsGrounded() && animComponent)
     {
         animComponent->UseTrigger("Fall");
         state = CharacterStates::FALL;
     }
 
-    if (state == CharacterStates::FALL && verticalSpeed >= -1.0f)
+    if (state == CharacterStates::FALL && character->IsGrounded())
     {
         animComponent->UseTrigger("Land");
         character->EnableMovement(false);
@@ -1174,7 +1198,7 @@ void CuChulainn::PerformAttack()
 
         if (attackTimer < currentHitboxDelay)
         {
-            float distance = 5.0f;
+            float distance = moveWithAttack ? 5.0f : 0.0f;
             character->MoveTo(distance);
         }
         else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
@@ -1275,14 +1299,14 @@ void CuChulainn::Attack(float deltaTime)
         camera->EnableAimOffset(false);
     }
 
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
+    ++comboCounter;
     desiredAttack = false;
     state         = CharacterStates::BASIC_ATTACK;
     character->EnableMovement(false);
+
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     if (meleeVfxObject) meleeVfxObject->SetEnabled(true);
-    ++comboCounter;
-    // GLOG("Combo counter: %d", comboCounter);
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
@@ -1291,6 +1315,78 @@ void CuChulainn::Attack(float deltaTime)
     {
         const std::string trigger = "Attack" + std::to_string(comboCounter);
         animComponent->UseTrigger(trigger);
+    }
+
+    // Raycast to check if enemy in front, to decide wether to move forward or not
+    const float3 position         = parent->GetGlobalTransform().TranslatePart();
+    const float3 direction        = character->GetFrontDirection();
+    const float3 lateralDirection = direction.Cross(float3::unitY).Normalized();
+
+    const float3 rightRayOrigin   = position + lateralDirection * 0.3f;
+    const float3 rightRayOrigin2  = position + lateralDirection * 0.6f;
+    const float3 rightRayOrigin3  = position + lateralDirection * 0.9f;
+
+    const float3 leftRayOrigin    = position - lateralDirection * 0.3f;
+    const float3 leftRayOrigin2   = position - lateralDirection * 0.6f;
+    const float3 leftRayOrigin3   = position - lateralDirection * 0.9f;
+
+    LineSegment centerRay(position + direction * 0.075f, position + direction * 3.0f);
+
+    LineSegment leftRay(leftRayOrigin, leftRayOrigin + direction * 3.0f);
+    LineSegment leftRay2(leftRayOrigin2 - direction * 0.2f, leftRayOrigin2 + direction * 3.0f);
+    LineSegment leftRay3(leftRayOrigin3 - direction * 0.2f, leftRayOrigin3 + direction * 3.0f);
+
+    LineSegment rightRay(rightRayOrigin, rightRayOrigin + direction * 3.0f);
+    LineSegment rightRay2(rightRayOrigin2 - direction * 0.2f, rightRayOrigin2 + direction * 3.0f);
+    LineSegment rightRay3(rightRayOrigin3 - direction * 0.2f, rightRayOrigin3 + direction * 3.0f);
+
+    GameObject* centerHit = RaycastController::GetRayIntersectionTrees(
+        centerRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
+    );
+    GameObject* leftHit =
+        RaycastController::GetRayIntersectionTrees(leftRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* leftHit2 =
+        RaycastController::GetRayIntersectionTrees(leftRay2, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* leftHit3 =
+        RaycastController::GetRayIntersectionTrees(leftRay3, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+
+    GameObject* rightHit =
+        RaycastController::GetRayIntersectionTrees(rightRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* rightHit2 =
+        RaycastController::GetRayIntersectionTrees(rightRay2, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    GameObject* rightHit3 =
+        RaycastController::GetRayIntersectionTrees(rightRay3, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+
+    if (centerHit || leftHit || leftHit2 || leftHit3 || rightHit || rightHit2 || rightHit3)
+    {
+        //GLOG("HIT WITH DYNAMIC OBJECT");
+        moveWithAttack = false;
+    }
+    else
+    {
+        //GLOG("NO ONJECT HIT")
+        moveWithAttack = true;
+    }
+
+    DebugDrawModule* debug = AppEngine->GetDebugDrawModule();
+    if (debug->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+    {
+        float3 centralColor = centerHit != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(centerRay, centralColor);
+
+        float3 rightColor = rightHit != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(rightRay, rightColor);
+        float3 rightColor2 = rightHit2 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(rightRay2, rightColor2);
+        float3 rightColor3 = rightHit3 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(rightRay3, rightColor3);
+
+        float3 leftColor = leftHit != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(leftRay, leftColor);
+        float3 leftColor2 = leftHit2 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(leftRay2, leftColor2);
+        float3 leftColor3 = leftHit3 != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+        debug->DrawLineSegment(leftRay3, leftColor3);
     }
 }
 
@@ -1438,11 +1534,15 @@ void CuChulainn::SetPosition(const float3& position)
 
 void CuChulainn::Respawn()
 {
+    GLOG("[PLAYER] Respawn()");
     Character::Restart();
 
-    isDead        = false;
-    currentHealth = reservedHealth;
-    state         = CharacterStates::RESPAWN;
+    isDead         = false;
+    deathTimer     = 0.0f;
+
+    currentHealth  = maxHealth;
+    reservedHealth = maxHealth;
+    state          = CharacterStates::RESPAWN;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
@@ -1450,11 +1550,20 @@ void CuChulainn::Respawn()
     SetPosition(spawnPos);
     if (animComponent) animComponent->UseTrigger("Respawn");
     character->EnableMovement(false);
+
+    GLOG("[PLAYER] -> state=RESPAWN hp=%d", currentHealth);
 }
+
 
 void CuChulainn::TakeDamage(int amount)
 {
-    if (godMode || isRiastrad || state == CharacterStates::ULTIMATE) return;
+    int prev = currentHealth;
+    GLOG("[PLAYER] TakeDamage(%d) hpBefore=%d state=%s", amount, prev, GetLogicStateName().c_str());
+    if (godMode || isRiastrad || state == CharacterStates::ULTIMATE)
+    {
+        GLOG("[PLAYER] TakeDamage -> INVULNERABLE (ignorat)");
+        return;
+    }
     Character::TakeDamage(amount);
 }
 
@@ -1798,4 +1907,19 @@ const std::string CuChulainn::GetLogicStateName()
         return "MISSING!";
         break;
     }
+}
+
+bool CuChulainn::ConsumeJustDied()
+{
+    if (justDied)
+    {
+        justDied = false; // reset the flag after consuming
+        return true;
+    }
+    return false; // nothing to consume
+}
+
+bool CuChulainn::IsGameOverCondition() const
+{
+    return isDead || state == CharacterStates::DEATH || currentHealth <= 0;
 }

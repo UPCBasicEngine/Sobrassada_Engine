@@ -81,6 +81,8 @@ class CuChulainn : public Character
 
     void ExportState(PlayerState& playerState) const;
     void ApplySavedState(const PlayerState& playerState);
+    bool ConsumeJustDied();
+    bool IsGameOverCondition() const;
 
   private:
     void OnDeath() override;
@@ -173,11 +175,12 @@ class CuChulainn : public Character
     GameObject* attackVfxHorizontal3     = nullptr;
     GameObject* attackVfxVertical3       = nullptr;
     GameObject* attackVfxExplosion       = nullptr;
+    bool moveWithAttack                  = false;
     bool desiredAttack                   = false;
     float attackBufferTimer              = 0.0f;
-    int comboCounter                     = -1;
     float comboBufferTimer               = 0.0f;
     float meleeVfxDelay                  = 0.1f;
+    int comboCounter                     = -1;
 
     // Arrow Hit VFX
     GameObject* arrowHitVfxObject        = nullptr;
@@ -220,6 +223,9 @@ class CuChulainn : public Character
     std::string ultimateBlurName         = "ultimate_mesh_blur";
     std::string ultimateBrustName        = "ultimate_mesh_brust";
     std::string ultimateCrackName        = "ultimate_mesh_crack2";
+    std::string ultimateHaloName         = "mesh_halo";
+    std::string ultimateSmokeName        = "mesh_outer_smoke";
+    std::string ultimateSphereName       = "mesh_sphere_glow";
     std::string ultimateWarningName      = "ultimate_mesh_warning";
     std::string ultimateSpikesName       = "ult_spike";
     GameObject* ultimateObject           = nullptr;
@@ -227,6 +233,9 @@ class CuChulainn : public Character
     GameObject* ultimateBlur             = nullptr;
     GameObject* ultimateBrust            = nullptr;
     GameObject* ultimateCrack            = nullptr;
+    GameObject* ultimateHalo             = nullptr;
+    GameObject* ultimateSmoke            = nullptr;
+    GameObject* ultimateSphere           = nullptr;
     GameObject* ultimateWarning          = nullptr;
     GameObject* ultimateSpikes           = nullptr;
     bool desiredUltimate                 = false;
@@ -278,6 +287,8 @@ class CuChulainn : public Character
     float idleTimer                      = 0.0f;
     float runTimer                       = 0.0f;
     float stepTime                       = 0.367f;
+    bool justDied                         = false;
+    bool pendingGameOver                  = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;
