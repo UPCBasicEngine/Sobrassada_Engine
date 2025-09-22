@@ -239,7 +239,7 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
-    ShadowMapPassRender(camera, light, objectsToRender);
+    //ShadowMapPassRender(camera, light, objectsToRender);
     glPopDebugGroup();
 
     glViewport(0, 0, width, height);
@@ -299,7 +299,7 @@ void RenderPass::RenderScene(
 
     // TEMPORAL, ADJUST LATER
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
-    // VolumetricFogPassRender(camera, light);
+     VolumetricFogPassRender(camera, light);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -721,6 +721,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
+    App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
+
     // Local size of compute is (16,16,1)
     unsigned int numGroupsX = (width + (16 - 1)) / 16;
     unsigned int numGroupsY = (height + (16 - 1)) / 16;
@@ -754,9 +756,9 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1f(7, noiseAmmount);
     glUniform1f(8, anisotropy);
 
-    float3 dirLightDir = light->GetDirection(), dirLightColor = light->GetColor();
-    glUniform3fv(9, 1, &dirLightDir[0]);
-    glUniform3fv(10, 1, &dirLightColor[0]);
+    //float3 dirLightDir = light->GetDirection(), dirLightColor = light->GetColor();
+    //glUniform3fv(9, 1, &dirLightDir[0]);
+    //glUniform3fv(10, 1, &dirLightColor[0]);
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 

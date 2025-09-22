@@ -18,8 +18,8 @@ uniform layout(location = 6) float time;
 uniform layout(location = 7) float noiseAmmount;
 uniform layout(location = 8) float anisotropy;
 
-uniform layout(location = 9) vec3 directionalLightDirection;
-uniform layout(location = 10) vec3 directionalLightColor;
+// uniform layout(location = 9) vec3 directionalLightDirection;
+// uniform layout(location = 10) vec3 directionalLightColor;
 
 struct PointLight
 {
@@ -38,6 +38,12 @@ struct SpotLight
 
 struct VisibleIndex {
 	int index;
+};
+
+layout(std140, binding = 3) uniform Directional
+{
+    vec4 directional_dir;
+    vec4 directional_color;
 };
 
 readonly layout(std430, binding = 4) buffer PointLights
@@ -124,8 +130,9 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
     rayDirection = normalize(rayDirection);
 
     // DIRECTIONAL LIGHT
-    float dLightVisibility = texture(directionalLightShadowTexture, uvCoords).r;
-    light += ScatteringPhaseFunction(-rayDirection, normalize(directionalLightDirection)) * dLightVisibility;
+    // float dLightVisibility = texture(directionalLightShadowTexture, uvCoords).r;
+    float dLightVisibility = 1.f;
+    light += ScatteringPhaseFunction(-rayDirection, normalize(directional_dir.xyz)) * dLightVisibility * directional_color.rgb;
 
     return light;
 }
