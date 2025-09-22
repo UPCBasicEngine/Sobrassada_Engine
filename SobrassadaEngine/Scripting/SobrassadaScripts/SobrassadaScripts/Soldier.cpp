@@ -17,6 +17,7 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "ResourceAnimation.h"
 
 #include "Wwise_IDs.h"
 #include <random>
@@ -150,6 +151,11 @@ void Soldier::Update(float deltaTime)
         return;
     }
 
+    if (meleeVfxObject && meleeVfxObject->IsEnabled())
+    {
+        float duration = animComponent->GetCurrentAnimation()->GetDuration();
+    }
+
     Character::Update(deltaTime);
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
@@ -178,6 +184,22 @@ void Soldier::OnPlayerEnterLocation()
     currentState = SoldierStates::PATROL;
     if (agentAI) agentAI->SetPathNavigation(startPos);
     reachedPatrolPoint = false;
+}
+
+void Soldier::SetAttackVFX()
+{
+
+    if (meleeVfxObject && !meleeVfxObject->IsEnabled())
+    {
+        meleeVfxObject->SetEnabled(true);
+        meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
+        meleeVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
+}
+
+void Soldier::DisableAttackVFX()
+{
+    if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
 }
 
 void Soldier::OnDeath()
@@ -389,7 +411,7 @@ void Soldier::Attack(float deltaTime)
                 attackTimer >= attackHitboxDelay && attackTimer <= attackHitboxDelay + attackHitboxDuration;
             float secondDelay   = attackHitboxDelay + attackHitboxDuration + secondAttackDelay;
             bool inSecondWindow = attackTimer >= secondDelay && attackTimer <= secondDelay + attackHitboxDuration;
-
+            
             if ((inFirstWindow || inSecondWindow) && !weaponCollider->GetEnabled())
             {
                 weaponCollider->SetEnabled(true);
@@ -397,18 +419,14 @@ void Soldier::Attack(float deltaTime)
                 if (inSecondWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_2);
                 if (inFirstWindow)
                 {
-                    if (meleeVfxObject && !meleeVfxObject->IsEnabled())
-                    {
-                        meleeVfxObject->SetEnabled(true);
-                        meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
-                        meleeVfxObject->GetComponent<ShaderScriptComponent*>()
-                            ->GetScriptByType<AttackVfxSpritesheet>()
-                            ->Reset();
-                    }
+                    GLOG("First window is true");
+                    SetAttackVFX();
+
                 }
                 else
                 {
-                    if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+                    GLOG("First window is false");
+                    
                     //if (meleeVfxObject && !meleeVfxObject->IsEnabled())
                     //{
                     //    // Obtener la matriz local actual
@@ -633,4 +651,6 @@ void Soldier::SelectRandomHelmet()
     default:
         break;
     }
+
+
 }

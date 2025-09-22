@@ -29,6 +29,8 @@ class Soldier : public Character
 
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
+    void SetAttackVFX();
+    void DisableAttackVFX();
 
   private:
     void OnDeath() override;
@@ -72,6 +74,7 @@ class Soldier : public Character
     bool thrustAdvance               = false;
     bool countedInPlayerEnemies      = false;
     float cheeringDistance           = 5.0f;
+
     int maxEnemiesNearby   = 3;
     std::string meleeTrailName       = "";
     GameObject* meleeTrailObject     = nullptr;
