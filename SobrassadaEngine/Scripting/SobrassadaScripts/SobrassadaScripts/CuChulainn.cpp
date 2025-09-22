@@ -429,6 +429,7 @@ void CuChulainn::Update(float deltaTime)
     Character::Update(deltaTime);
     PerformAttack();
 
+    // Heal knockback and VFX
     if (state == CharacterStates::HEAL && healTimer > healKnockbackDelay && !healKnockback->IsEnabled())
     {
         if (healKnockback) healKnockback->SetEnabled(true);
@@ -439,10 +440,29 @@ void CuChulainn::Update(float deltaTime)
         }
         Heal(mushroomHeal);
     }
+
+    // RiastradVFX
     if (state == CharacterStates::TRANSFORM && !riastradCrack->IsEnabled())
     {
         EnableRiastradVfx();
     }
+
+    // Dash decal spawn when in middle of dash
+    const float dashDecalTriggerDist = 2.0f;
+    if (state == CharacterStates::DASH && dashDecal &&
+        parent->GetGlobalTransform().TranslatePart().Distance(lastDashStartPos) > dashDecalTriggerDist)
+    {
+        // TODO: set dash decal to the final position of player and not to direction
+        dashDecal->SetEnabled(true);
+        const float3 scale = dashDecal->GetLocalTransform().ExtractScale();
+        const Quat rotation =
+            Quat::LookAt(float3::unitY, character->GetDashDirection().Normalized(), float3::unitZ, float3::unitY);
+        const float3 pos              = lastDashStartPos + 1.5f * character->GetDashDirection().Normalized();
+        const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
+        dashDecal->SetLocalTransform(decalTransform);
+        dashDecalBufferTimer = dashDecalTimer;
+    }
+
     CheckIsFalling();
     if (dashIcon) dashIcon->SetFillAmount(1.0f - (dashTimer / dashCooldown));
     if (ultimateIcon) ultimateIcon->SetFillAmount(1.0f - (ultimateCdTimer / ultimateCd));
@@ -1106,17 +1126,6 @@ void CuChulainn::Dash()
 
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
-    if (dashDecal)
-    {
-        // TODO: set dash decal to the final position of player and not to direction
-        dashDecal->SetEnabled(true);
-        const float3 scale  = dashDecal->GetLocalTransform().ExtractScale();
-        const Quat rotation = Quat::LookAt(float3::unitY, character->GetFrontDirection(), float3::unitZ, float3::unitY);
-        const float3 pos    = lastDashStartPos + 2.5f * character->GetFrontDirection().Normalized();
-        const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
-        dashDecal->SetLocalTransform(decalTransform);
-        dashDecalBufferTimer = dashDecalTimer;
-    }
 }
 
 void CuChulainn::PerformAttack()
