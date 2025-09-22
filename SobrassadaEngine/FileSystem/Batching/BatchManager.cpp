@@ -190,91 +190,96 @@ void BatchManager::RenderTransparent(
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    std::vector<MeshComponent*> batchMeshes;
-    for (MeshComponent* mesh : meshesToRender)
+    for (GeometryBatch* it : transparentBatches)
     {
-        GameObject* owner = mesh->GetParent();
-        if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
-
-        batchMeshes.push_back(mesh);
-    }
-
-    if (batchMeshes.empty()) return;
-
-    std::sort(
-        batchMeshes.begin(), batchMeshes.end(),
-        [camera](MeshComponent* a, MeshComponent* b)
+        std::vector<MeshComponent*> batchMeshes;
+        for (MeshComponent* mesh : meshesToRender)
         {
-            if (camera != nullptr)
-            {
-                float distanceA =
-                    (a->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition()).LengthSq();
-                float distanceB =
-                    (b->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition()).LengthSq();
+            GameObject* owner = mesh->GetParent();
+            if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
-                return distanceA > distanceB;
+            if(mesh->GetBatch() == it) batchMeshes.push_back(mesh);
+        }
+
+        if (batchMeshes.empty()) return;
+
+
+        std::sort(
+            batchMeshes.begin(), batchMeshes.end(),
+            [camera](MeshComponent* a, MeshComponent* b)
+            {
+                if (camera != nullptr)
+                {
+                    float distanceA =
+                        (a->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition()).LengthSq();
+                    float distanceB =
+                        (b->GetParent()->GetGlobalTransform().TranslatePart() - camera->GetCameraPosition()).LengthSq();
+
+                    return distanceA > distanceB;
+                }
+                else
+                {
+                    float distanceA = (a->GetParent()->GetGlobalTransform().TranslatePart() -
+                                       App->GetCameraModule()->GetCameraPosition())
+                                          .LengthSq();
+                    float distanceB = (b->GetParent()->GetGlobalTransform().TranslatePart() -
+                                       App->GetCameraModule()->GetCameraPosition())
+                                          .LengthSq();
+
+                    return distanceA > distanceB;
+                }
+            }
+        );
+
+        const auto start = std::chrono::high_resolution_clock::now();
+
+        glUseProgram(program);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+        unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+        glUniformBlockBinding(program, blockIdx, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        GeometryBatch* currentBatch = batchMeshes[0]->GetBatch();
+        std::vector<MeshComponent*> currentBatchMeshes;
+
+        if (it->IsAdditive()) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+        currentBatchMeshes.push_back(batchMeshes[0]);
+        glEnable(GL_BLEND);
+
+        if (batchMeshes[0]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
+
+        for (size_t i = 1; i < batchMeshes.size(); ++i)
+        {
+            MeshComponent* mesh  = batchMeshes[i];
+            GeometryBatch* batch = mesh->GetBatch();
+            if (batch == currentBatch)
+            {
+                currentBatchMeshes.push_back(mesh);
             }
             else
             {
-                float distanceA =
-                    (a->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
-                        .LengthSq();
-                float distanceB =
-                    (b->GetParent()->GetGlobalTransform().TranslatePart() - App->GetCameraModule()->GetCameraPosition())
-                        .LengthSq();
+                currentBatch->ResetUpdatedOnce();
+                currentBatch->Render(currentBatchMeshes);
+                currentBatchMeshes.clear();
 
-                return distanceA > distanceB;
+                if (batchMeshes[i]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
+                else glEnable(GL_CULL_FACE);
+                currentBatch = batch;
+                currentBatchMeshes.push_back(mesh);
             }
         }
-    );
 
-    const auto start = std::chrono::high_resolution_clock::now();
-
-    glUseProgram(program);
-
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-    glUniformBlockBinding(program, blockIdx, 0);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    GeometryBatch* currentBatch = batchMeshes[0]->GetBatch();
-    std::vector<MeshComponent*> currentBatchMeshes;
-
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-    currentBatchMeshes.push_back(batchMeshes[0]);
-    glEnable(GL_BLEND);
-
-    if (batchMeshes[0]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
-
-    for (size_t i = 1; i < batchMeshes.size(); ++i)
-    {
-        MeshComponent* mesh  = batchMeshes[i];
-        GeometryBatch* batch = mesh->GetBatch();
-        if (batch == currentBatch)
-        {
-            currentBatchMeshes.push_back(mesh);
-        }
-        else
+        if (!currentBatchMeshes.empty())
         {
             currentBatch->ResetUpdatedOnce();
             currentBatch->Render(currentBatchMeshes);
             currentBatchMeshes.clear();
-
-            if (batchMeshes[i]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
-            else glEnable(GL_CULL_FACE);
-            currentBatch = batch;
-            currentBatchMeshes.push_back(mesh);
         }
-    }
-
-    if (!currentBatchMeshes.empty())
-    {
-        currentBatch->ResetUpdatedOnce();
-        currentBatch->Render(currentBatchMeshes);
-        currentBatchMeshes.clear();
     }
 
     glEnable(GL_CULL_FACE);
@@ -340,7 +345,11 @@ GeometryBatch* BatchManager::RequestBatch(const MeshComponent* component)
 
     if (isTransparent)
     {
-        return CreateNewBatch(component);
+        for (GeometryBatch* it : transparentBatches)
+        {
+            if (it->IsAdditive() == component->GetAdditive()) return it;
+            else return CreateNewBatch(component);
+        }
     }
     else
     {
