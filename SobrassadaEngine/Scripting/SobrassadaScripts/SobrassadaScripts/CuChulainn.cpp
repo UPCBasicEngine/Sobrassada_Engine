@@ -752,7 +752,7 @@ void CuChulainn::GetInputs()
         
     } 
 
-    if (hasLookInput) character->LookAt(lookDir);
+    if (hasLookInput && !isAttacking) character->LookAt(lookDir);
     
     character->SetDirection(direction);
 
