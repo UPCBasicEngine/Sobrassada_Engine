@@ -6,7 +6,6 @@
 #include "ProjectModule.h"
 #include "Standalone/VideoComponent.h"
 
-
 AsyncSceneLoading::AsyncSceneLoading(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Use async loading", InspectorField::FieldType::Bool, &useAsyncLoading});
@@ -22,12 +21,12 @@ bool AsyncSceneLoading::Init()
         GLOG("No video component found")
         return false;
     }
-    
-    fullScenePath = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + targetSceneName + SCENE_EXTENSION;
-    
+
+    fullScenePath =
+        AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + targetSceneName + SCENE_EXTENSION;
+
     videoComponent->Play();
-    if (useAsyncLoading)
-        AppEngine->GetSceneModule()->InitAsyncScenePreLoad(fullScenePath);
+    if (useAsyncLoading) AppEngine->GetSceneModule()->InitAsyncScenePreLoad(fullScenePath);
 
     return true;
 }
@@ -38,5 +37,4 @@ void AsyncSceneLoading::Update(float deltaTime)
 
     if (!videoComponent->IsPlaying() && (!useAsyncLoading || AppEngine->GetSceneModule()->IsAsyncSceneLoaded()))
         AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
-    
 }

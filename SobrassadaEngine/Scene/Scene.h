@@ -205,5 +205,5 @@ class SOBRASADA_API_ENGINE Scene
 
     RenderPass* renderPass = nullptr;
 
-     std::vector<UID> pendingDeletes;
+    std::vector<UID> pendingDeletes;
 };

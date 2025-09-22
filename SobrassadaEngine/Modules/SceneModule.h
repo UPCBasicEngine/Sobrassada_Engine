@@ -58,13 +58,12 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
     void HandleTreesUpdates();
 
   private:
-    Scene* loadedScene    = nullptr;
-    bool inPlayMode       = false;
-    bool onlyOncePlayMode = false;
+    Scene* loadedScene      = nullptr;
+    bool inPlayMode         = false;
+    bool onlyOncePlayMode   = false;
     bool loadSceneNextFrame = false;
     std::string pendingScenePath;
 
     // Preload next scene for async loading functionality
     std::future<Scene*> asyncLoadingThread;
-    
 };

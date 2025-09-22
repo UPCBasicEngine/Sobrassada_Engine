@@ -199,7 +199,8 @@ update_status SceneModule::PostUpdate(float deltaTime)
         if (!asyncLoadingThread.valid() || loadedScene == nullptr)
         {
             rapidjson::Document doc;
-            if (FileSystem::LoadJSON(pendingScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
+            if (FileSystem::LoadJSON(pendingScenePath.c_str(), doc) && doc.HasMember("Scene") &&
+                doc["Scene"].IsObject())
             {
                 CloseScene();
                 LoadScene(doc["Scene"], false);
@@ -489,19 +490,22 @@ void SceneModule::RequestSceneLoad(const std::string& scenePath)
 
 void SceneModule::InitAsyncScenePreLoad(const std::string& fullScenePath)
 {
-    asyncLoadingThread = std::async(std::launch::async, [&fullScenePath]()
-    {
-        Scene* asyncPreLoadedScene = nullptr;
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        /*rapidjson::Document doc;
-        if (FileSystem::LoadJSON(fullScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
+    asyncLoadingThread = std::async(
+        std::launch::async,
+        [&fullScenePath]()
         {
-            rapidjson::Value& scene = doc["Scene"];
-            const UID extractedSceneUID = scene["UID"].GetUint64();
-            asyncPreLoadedScene = new Scene(scene, extractedSceneUID);
-            asyncPreLoadedScene->Init();
-        }*/
+            Scene* asyncPreLoadedScene = nullptr;
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            /*rapidjson::Document doc;
+            if (FileSystem::LoadJSON(fullScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
+            {
+                rapidjson::Value& scene = doc["Scene"];
+                const UID extractedSceneUID = scene["UID"].GetUint64();
+                asyncPreLoadedScene = new Scene(scene, extractedSceneUID);
+                asyncPreLoadedScene->Init();
+            }*/
 
-        return asyncPreLoadedScene;
-    });
+            return asyncPreLoadedScene;
+        }
+    );
 }
