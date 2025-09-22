@@ -1,11 +1,13 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "AttackVfxSpritesheet.h"
 #include "ArcherProjectile.h"
 #include "Banshee_v2.h"
 #include "Boss.h"
 #include "CameraComponent.h"
 #include "Character.h"
+#include "ColorChange.h"
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
 #include "EditorUIModule.h"
@@ -13,16 +15,20 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "MagicBarrier.h"
+#include "Math/Quat.h"
 #include "Mushroom.h"
 #include "Projectile.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Spouts.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "WindowModule.h"
+#include <math.h>
 
 #include <string>
 
@@ -49,12 +55,17 @@ Character::Character(
 
     fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
 
-    if (type != CharacterType::CuChulainn)
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 15.0f});
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
+        fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
+        fields.push_back({"On Hit VFX Duration", InspectorField::FieldType::Float, &onHitVfxDuration, 0.0f, 1.0f});
+        fields.push_back({"On Hit Pivot Name", InspectorField::FieldType::InputText, &onHitPivotName});
+        fields.push_back({"On Hit VFX 1", InspectorField::FieldType::InputText, &onHitVfx1Name});
+        fields.push_back({"On Hit VFX 2", InspectorField::FieldType::InputText, &onHitVfx2Name});
     }
 }
 
@@ -85,6 +96,33 @@ bool Character::Init()
         weapon = weaponCollider->GetParent();
         if (!weapon) GLOG("Weapon game object not found")
         else weaponCollider->SetEnabled(false);
+    }
+
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
+    {
+        onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
+        if (!onHitPivot) GLOG("[WARNING - %s] No on hit Pivot found for enemy", parent->GetName())
+
+        onHitVfx1 = parent->GetChildGameObjectByName(onHitVfx1Name);
+        if (!onHitVfx1) GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName())
+        else onHitVfx1->SetEnabled(false);
+
+        onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
+        if (!onHitVfx2) GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName())
+        else onHitVfx2->SetEnabled(false);
+
+        GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
+        if (!meshObject) GLOG("[WARNING - %s] No mesh object found in children", parent->GetName())
+        else
+        {
+            mesh = meshObject->GetComponent<MeshComponent*>();
+            if (mesh) mesh->SetEnabled(true);
+            else GLOG("[WARNING - %s] No mesh component found", parent->GetName())
+
+            colorChange = meshObject->GetComponent<ShaderScriptComponent*>();
+            if (colorChange) colorChange->SetEnabled(false);
+            else GLOG("[WARNING - %s] No shader script component found", parent->GetName())
+        }
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -290,6 +328,26 @@ void Character::UpdateTimers(float deltaTime)
 
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
+
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage && isHit)
+    {
+        onHitVfxTimer -= deltaTime;
+
+        // Do this in the next frame after enabling the mesh to avoid popping
+        if (mesh && mesh->GetEnabled() && colorChange && colorChange->GetEnabled())
+        {
+            colorChange->SetEnabled(false);
+            isHit = false;
+        }
+
+        if (onHitVfxTimer < 0.0f)
+        {
+            if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
+            if (onHitVfx2 && onHitVfx2->IsEnabled()) onHitVfx2->SetEnabled(false);
+
+            if (mesh && !mesh->GetEnabled()) mesh->SetEnabled(true);
+        }
+    }
 }
 
 void Character::TakeDamage(int amount)
@@ -303,7 +361,53 @@ void Character::TakeDamage(int amount)
 
     OnDamageTaken(amount);
 
-    if (type != CharacterType::CuChulainn) playerScript->OnEnemyHit();
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
+    {
+        playerScript->OnEnemyHit();
+
+        if (onHitPivot)
+        {
+            float3 pivotPos  = onHitPivot->GetGlobalTransform().TranslatePart();
+            float3 targetPos = character->GetParent()->GetGlobalTransform().TranslatePart();
+
+            float3 dirWorld  = targetPos - pivotPos;
+            dirWorld.y       = 0.0f;
+            dirWorld.Normalize();
+
+            float4x4 parentWorld = onHitPivot->GetParentGlobalTransform();
+            float3 dirLocal      = parentWorld.Inverted().TransformDir(dirWorld);
+
+            float localYaw       = atan2(dirLocal.x, dirLocal.z);
+            Quat yawRot          = Quat::RotateY(localYaw);
+
+            float4x4 local       = onHitPivot->GetLocalTransform();
+            float4x4 newLocal    = float4x4::FromTRS(local.TranslatePart(), yawRot, local.GetScale());
+            onHitPivot->SetLocalTransform(newLocal);
+        }
+
+        if (onHitVfx1)
+        {
+            onHitVfx1->SetEnabled(true);
+            onHitVfx1->GetComponent<MeshComponent*>()->SetEnabled(false);
+            onHitVfx1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+
+        if (onHitVfx2)
+        {
+            onHitVfx2->SetEnabled(true);
+            onHitVfx2->GetComponent<MeshComponent*>()->SetEnabled(false);
+            onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+
+        if (colorChange && mesh)
+        {
+            mesh->SetEnabled(false);
+            colorChange->SetEnabled(true);
+        }
+
+        isHit         = true;
+        onHitVfxTimer = onHitVfxDuration;
+    }
 
     if (currentHealth <= 0) Die();
 }

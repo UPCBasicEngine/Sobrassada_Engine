@@ -14,6 +14,7 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "Utils/RaycastController.h"
+#include "BulletUserPointer.h"
 
 #include "Geometry/LineSegment.h"
 #include "Geometry/Plane.h"
@@ -532,6 +533,14 @@ void CharacterControllerComponent::CheckDashObstacles()
     GameObject* leftHit = RaycastController::GetRayIntersectionTrees(
         leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
     );
+
+    GameObject* hitParent          = nullptr;
+    BulletUserPointer* userPointer = RaycastController::GetRayIntersectionPhysics(centralRay);
+    if (userPointer)
+    {
+        hitParent = userPointer->collider->GetParent();
+        GLOG("[CharacterControllerComponent]: Physics Raycast hit!, %s", hitParent->GetName().c_str());
+    }
 
     DebugDrawModule* debug = App->GetDebugDrawModule();
     if (debug->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))

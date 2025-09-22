@@ -79,6 +79,8 @@ class CuChulainn : public Character
 
     void ExportState(PlayerState& playerState) const;
     void ApplySavedState(const PlayerState& playerState);
+    bool ConsumeJustDied();
+    bool IsGameOverCondition() const;
 
   private:
     void OnDeath() override;
@@ -292,6 +294,8 @@ class CuChulainn : public Character
     float idleTimer                      = 0.0f;
     float runTimer                       = 0.0f;
     float stepTime                       = 0.367f;
+    bool justDied                         = false;
+    bool pendingGameOver                  = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;
@@ -327,6 +331,10 @@ class CuChulainn : public Character
     float curseDuration                  = 5.0f;
     float curseTimer                     = 0.0f;
     UID playerMaterial                   = 0;
+
+    float timeStopTimer                  = 0.0f;
+    float hitTimeStopDuration            = 0.05f;
+    float deathTimeStopDuration          = 0.1f;
 };
 
 extern CharacterControllerComponent* character;
