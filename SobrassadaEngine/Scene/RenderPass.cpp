@@ -18,6 +18,7 @@
 #include "ShaderScriptModule.h"
 #include "Standalone/DecalComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
+#include "Standalone/Lights/SpotLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
 
@@ -298,7 +299,7 @@ void RenderPass::RenderScene(
 
     // TEMPORAL, ADJUST LATER
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
-    VolumetricFogPassRender(camera, light);
+    // VolumetricFogPassRender(camera, light);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -324,7 +325,6 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
-
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -552,6 +552,7 @@ void RenderPass::ShadowMapPassRender(
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
@@ -559,6 +560,7 @@ void RenderPass::ShadowMapPassRender(
 
     FrustumPlanes lightFrustum;
     lightFrustum.UpdateFrustumPlanes(lightView, lightProj);
+
     std::vector<GameObject*> shadowObjectsToRender;
     App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
 
@@ -575,7 +577,44 @@ void RenderPass::ShadowMapPassRender(
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
 
-    // batchManager->RenderShadowMap(meshesToRender, ubo);
+    batchManager->RenderShadowMap(meshesToRender, ubo);
+
+    // RENDER SPOTLIGHT SHADOWMAPS
+    auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
+    glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
+
+    for (int i = 0; i < TotalShadowMaps && i < spotLights.size(); ++i)
+    {
+        if (!spotLights[i]) continue;
+
+        meshesToRender.clear();
+        shadowObjectsToRender.clear();
+
+        lightFrustum.UpdateFrustumPlanes(spotLights[i]->GetViewMatrix(), spotLights[i]->GetProjectionMatrix());
+        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
+
+        for (const auto& gameObject : shadowObjectsToRender)
+        {
+            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                mesh->GetBatch() != nullptr && mesh->GetRenderMode() != 1 && mesh->GetProduceShadows())
+                meshesToRender.push_back(mesh);
+        }
+
+        if (meshesToRender.size() < 1) continue;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, spotShadowMaps[i], 0);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        lightmatrices.viewMatrix       = spotLights[i]->GetViewMatrix();
+        lightmatrices.projectionMatrix = spotLights[i]->GetProjectionMatrix();
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        batchManager->RenderShadowMap(meshesToRender, ubo);
+    }
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -106,6 +106,8 @@ class LightsConfig
 
     DirectionalLightComponent* GetDirectionalLight() { return directionalLight; }
 
+    const std::vector<SpotLightComponent*>& GetSpotLights() const { return spotLights; }
+
   private:
     void LoadSkyboxTexture(UID cubemapUID);
     void FreeCubemap() const;
