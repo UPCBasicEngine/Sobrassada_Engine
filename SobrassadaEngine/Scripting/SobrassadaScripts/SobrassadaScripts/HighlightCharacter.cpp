@@ -129,7 +129,7 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
     splineMovementTarget->SetEnabled(true);
     cameraMovementScript->InitAlternativeTarget(splineMovementTarget);
     
-    //TODO characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence()
+    characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence();
     isExecuting = true;
     neverExecuted = false;
 }

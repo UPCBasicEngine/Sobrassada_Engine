@@ -137,6 +137,16 @@ void Changeling::OnPlayerEnterLocation()
 {
 }
 
+void Changeling::PlayHighlightSequence()
+{
+    // Don´t play the highlight if the pooka is already doing something else
+    if (currentState == ChangelingStates::IDLE_BURIED)
+    {
+        currentState = ChangelingStates::HIGHLIGHTING;
+        currentHighlightingState = HighlightingStates::IDLE;
+    }
+}
+
 void Changeling::OnDeath()
 {
     isDead = false; // TODO To keep getting updates until the death animation is finished
@@ -226,6 +236,9 @@ void Changeling::HandleState(float deltaTime)
         break;
     case ChangelingStates::DYING:
         UpdateDyingState(deltaTime, distanceToPlayerSq);
+        break;
+    case ChangelingStates::HIGHLIGHTING:
+        UpdateHighlightState(deltaTime, distanceToPlayerSq);
         break;
     case ChangelingStates::NONE:
         currentState = ChangelingStates::IDLE_BURIED;
@@ -650,6 +663,59 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
         isDead = true;
         finalAttackCollider->DeleteRigidBody();
         parentGO->SetEnabled(false);
+    }
+}
+
+void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
+{
+    if (!animComponent) currentState = ChangelingStates::IDLE_BURIED;
+        
+    switch (currentHighlightingState)
+    {
+    case HighlightingStates::IDLE:
+        animComponent->UseTrigger("Trigger_BuryUp");
+        currentHighlightingState = HighlightingStates::BURY_UP;
+        break;
+    case HighlightingStates::BURY_UP:
+        if (animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Trigger_VisibleIdle");
+            animComponent->UseTrigger("Trigger_PrepareDash");
+            currentHighlightingState = HighlightingStates::DROP_DOWN;
+        }
+        break;
+    case HighlightingStates::DROP_DOWN:
+        if (animComponent->IsFinished())
+        {
+            stateTimer = highlightDuration;
+            animComponent->UseTrigger("Trigger_Dash");
+            animComponent->UseTrigger("Trigger_Wiggle");
+            currentHighlightingState = HighlightingStates::WIGGLE;
+        }
+        break;
+    case HighlightingStates::WIGGLE:
+        if (stateTimer <= 0.f)
+        {
+            animComponent->UseTrigger("Trigger_FinishDash");
+            currentHighlightingState = HighlightingStates::STAND_UP;
+        }
+        break;
+    case HighlightingStates::STAND_UP:
+        if (animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Trigger_VisibleIdle");
+            animComponent->UseTrigger("Trigger_BuryDown");
+            currentHighlightingState = HighlightingStates::BURY_DOWN;
+        }
+        break;
+    case HighlightingStates::BURY_DOWN:
+        if (animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Trigger_BurriedIdle");
+            currentHighlightingState = HighlightingStates::IDLE;
+            currentState = ChangelingStates::IDLE_BURIED;
+        }
+        break;
     }
 }
 

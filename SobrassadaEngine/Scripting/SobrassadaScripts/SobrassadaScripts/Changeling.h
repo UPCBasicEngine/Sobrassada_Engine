@@ -45,6 +45,17 @@ enum class ChangelingStates
     FINAL_ATTACK            = 15,
     DAMAGED                 = 16,
     DYING                   = 17,
+    HIGHLIGHTING            = 18,
+};
+
+enum class HighlightingStates
+{
+    IDLE = 0,
+    BURY_UP = 1,
+    DROP_DOWN = 2,
+    WIGGLE = 3,
+    STAND_UP = 4,
+    BURY_DOWN = 5,
 };
 
 class Changeling : public Character
@@ -58,6 +69,8 @@ class Changeling : public Character
 
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
+
+    void PlayHighlightSequence() override;
 
   private:
     void OnDeath() override;
@@ -81,6 +94,7 @@ class Changeling : public Character
     void UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
+    void UpdateHighlightState(float deltaTime, float distanceToPlayerSq);
 
     bool ST_BuryUp(float deltaTime, float distanceToPlayerSq);
     bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
@@ -144,6 +158,9 @@ class Changeling : public Character
     ChangelingVersions randomVersion =
         ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
     int maxEnemiesLeftForFinalAttack       = 0;
+
+    HighlightingStates currentHighlightingState = HighlightingStates::IDLE;
+    const float highlightDuration = 2.f;
 
     // Default specific
     float chaseSpeed                       = 1.0f;
