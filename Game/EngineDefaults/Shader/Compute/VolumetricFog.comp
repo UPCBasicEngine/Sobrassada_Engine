@@ -7,6 +7,7 @@ uniform layout(binding = 1) sampler2D depthTexture;
 uniform layout(binding = 2) sampler2D directionalLightShadowTexture;
 uniform layout(binding = 3) sampler2D sceneTexture;
 
+
 uniform layout(location = 0) mat4 projection;
 uniform layout(location = 1) mat4 inverseViewMatrix;
 uniform layout(location = 2) vec3 cameraPosition;
@@ -18,8 +19,15 @@ uniform layout(location = 6) float time;
 uniform layout(location = 7) float noiseAmmount;
 uniform layout(location = 8) float anisotropy;
 
-// uniform layout(location = 9) vec3 directionalLightDirection;
-// uniform layout(location = 10) vec3 directionalLightColor;
+// TESTING LAYOUTS -> LATER SHOULD BE INCLUDED IN A BUFFER / UNIFORM
+
+
+// ONLY ONE SPOT, JUST FOR TESTING -> MOVE TO SPOT LIGHTS BUFFER AND MAKE TEXTURE RESIDENT SO IT CAN BE ACCESED
+uniform layout(binding = 9) sampler2D spotTexture;
+
+// DIRECTIONAL LIGHT MATRICES -> MOVE TO UNIFORM OF DIRECTIONAL
+uniform layout(location = 10) mat4 directinal_View_Mat;
+uniform layout(location = 11) mat4 directinal_Projection_Mat;
 
 struct PointLight
 {
@@ -130,10 +138,16 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
     rayDirection = normalize(rayDirection);
 
     // DIRECTIONAL LIGHT
-    // float dLightVisibility = texture(directionalLightShadowTexture, uvCoords).r;
-    float dLightVisibility = 1.f;
-    light += ScatteringPhaseFunction(-rayDirection, normalize(directional_dir.xyz)) * dLightVisibility * directional_color.rgb;
+    vec4 currentPosFromLight = directinal_Projection_Mat * directinal_View_Mat * vec4(currentPosition, 1.0);
+    vec3 projCoords = currentPosFromLight.xyz / currentPosFromLight.w;
+    projCoords = projCoords * 0.5 + 0.5;
 
+    if(projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <= 1.0 && projCoords.z >= 0.0 && projCoords.z <= 1.0)
+    {
+        float dLightVisibility = texture(directionalLightShadowTexture, projCoords.xy).r;
+        light += ScatteringPhaseFunction(-rayDirection, normalize(directional_dir.xyz)) * dLightVisibility * directional_color.rgb;
+    }
+    
     return light;
 }
 

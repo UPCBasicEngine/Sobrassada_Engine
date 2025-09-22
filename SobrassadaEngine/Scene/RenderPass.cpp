@@ -239,7 +239,7 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
-    //ShadowMapPassRender(camera, light, objectsToRender);
+    ShadowMapPassRender(camera, light, objectsToRender);
     glPopDebugGroup();
 
     glViewport(0, 0, width, height);
@@ -299,7 +299,7 @@ void RenderPass::RenderScene(
 
     // TEMPORAL, ADJUST LATER
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
-     VolumetricFogPassRender(camera, light);
+    VolumetricFogPassRender(camera, light);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -756,9 +756,47 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1f(7, noiseAmmount);
     glUniform1f(8, anisotropy);
 
-    //float3 dirLightDir = light->GetDirection(), dirLightColor = light->GetColor();
-    //glUniform3fv(9, 1, &dirLightDir[0]);
-    //glUniform3fv(10, 1, &dirLightColor[0]);
+    // FOR TESTING, REMOVE AND DO PROPER ADAPTATION
+    // Compute light
+    float3 corners[8];
+    camera == nullptr ? App->GetCameraModule()->GetFrustumCorners(corners) : camera->GetFrustumCorners(corners);
+
+    float3 sphereCenter = float3::zero;
+
+    camera == nullptr ? sphereCenter = App->GetCameraModule()->GetCamera().CenterPoint()
+                      : sphereCenter = camera->GetCameraCenter();
+    float sphereRadius = 0.0f;
+    for (int i = 0; i < 8; ++i)
+    {
+        float dist = (corners[i] - sphereCenter).Length();
+        if (dist > sphereRadius) sphereRadius = dist;
+    }
+
+    float3 lightDir = light->GetDirection();
+    lightDir.Normalize();
+    float3 lightUp = -lightDir.Cross(float3(1.0, 0.0, 0.0));
+    lightUp.Normalize();
+    float3 lightRight = lightUp.Cross(lightDir);
+    lightRight.Normalize();
+
+    Frustum shadowfrustum;
+
+    shadowfrustum.type               = FrustumType::OrthographicFrustum;
+    shadowfrustum.pos                = sphereCenter + lightDir * sphereRadius;
+    shadowfrustum.front              = lightDir;
+    shadowfrustum.up                 = lightUp;
+    shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
+    shadowfrustum.orthographicHeight = sphereRadius * 2.0f;
+    shadowfrustum.nearPlaneDistance  = 0.1f;
+    shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
+
+    float4x4 dirLightProj, dirLightView;
+
+    dirLightView = shadowfrustum.ViewMatrix();
+    dirLightProj = shadowfrustum.ProjectionMatrix();
+
+    glUniformMatrix4fv(10, 1, GL_TRUE, &dirLightView[0][0]);
+    glUniformMatrix4fv(11, 1, GL_TRUE, &dirLightProj[0][0]);
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 
