@@ -17,6 +17,10 @@ namespace AK
         static const AkUniqueID PLAY_FOREST = 207755397U;
         static const AkUniqueID PLAY_LEVEL1_AMBIENT_THEME = 1262494734U;
         static const AkUniqueID PLAY_LEVEL1_FIGHT_THEME = 2666170724U;
+        static const AkUniqueID PLAY_LOAD1 = 2715237991U;
+        static const AkUniqueID PLAY_LOAD2 = 2715237988U;
+        static const AkUniqueID PLAY_LOAD3 = 2715237989U;
+        static const AkUniqueID PLAY_LOAD4 = 2715237986U;
         static const AkUniqueID PLAY_SFX_ARCHER_ATTACK = 1559026790U;
         static const AkUniqueID PLAY_SFX_ARCHER_OVERSHOOTING = 2850888511U;
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;

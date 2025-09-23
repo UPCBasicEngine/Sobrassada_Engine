@@ -223,6 +223,9 @@
     <ClInclude Include="ArcherProjectile.h">
       <Filter>Characters</Filter>
     </ClInclude>
+    <ClInclude Include="AsyncSceneLoading.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
     <ClInclude Include="HighlightCharacter.h">
       <Filter>Characters</Filter>
     </ClInclude>
@@ -983,6 +986,9 @@
     </ClCompile>
     <ClCompile Include="HighlightCharacter.cpp">
       <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncSceneLoading.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
