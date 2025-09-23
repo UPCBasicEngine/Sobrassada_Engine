@@ -69,6 +69,8 @@ class CuChulainn : public Character
         if (enemiesCont != 0) enemiesCont--;
         GLOG("Enemy out. Total unique enemies colliding: %zu", enemiesCont);
     }
+
+    void OnObjectDestroyed();
     void OnEnemyHit();
     void OnEnemyDefeated();
 
@@ -163,6 +165,7 @@ class CuChulainn : public Character
     std::string attackVfxVertical2Name   = "AttackVfxV2";
     std::string attackVfxHorizontal3Name = "AttackVfxH3";
     std::string attackVfxVertical3Name   = "AttackVfxV3";
+    std::string attackVfxExplosionName   = "AttackExplosion";
     GameObject* meleeVfxObject           = nullptr;
     GameObject* meleeTrailObject         = nullptr;
     GameObject* attackVfxHorizontal1     = nullptr;
@@ -171,6 +174,7 @@ class CuChulainn : public Character
     GameObject* attackVfxVertical2       = nullptr;
     GameObject* attackVfxHorizontal3     = nullptr;
     GameObject* attackVfxVertical3       = nullptr;
+    GameObject* attackVfxExplosion       = nullptr;
     bool moveWithAttack                  = false;
     bool desiredAttack                   = false;
     float attackBufferTimer              = 0.0f;
@@ -253,35 +257,24 @@ class CuChulainn : public Character
     bool desiredTransform                = false;
     float transformBufferTimer           = 0.0f;
     float transformTimer                 = 0.0f;
-    float transformVfxDelay              = 0.35f;
+    float transformVfxDelay              = 0.3f;
     float riastradTimer                  = 0.0f;
     float riastradDuration               = 5.0f;
     float riastradMovementSpeed          = 12.0f;
     float riastradAnimationsSpeedRatio   = 1.5f;
-    int riastradOnDamageTaken            = 2;
-    int riastradOnHit                    = 5;
+    int riastradOnDamageTaken            = 1;
+    int riastradOnObjectHit              = 1;
+    int riastradOnEnemyHit               = 3;
     int riastradOnEnemyDeath             = 5;
-    std::string riastradVfxName          = "riastrad_all";
-    std::string riastradBurstName        = "mesh_brust";
-    std::string riastradBlurName         = "mesh_blur";
-    std::string riastradHaloName         = "mesh_halo";
-    std::string riastradSphereName       = "mesh_sphere_glow";
-    std::string riastradCrackName        = "mesh_crack";
-    std::string riastradWaringName       = "mesh_warning";
-    std::string riastradSmoke1Name       = "mesh_smoke_a";
-    std::string riastradSmoke2Name       = "mesh_smoke_b";
-    std::string riastradSmoke3Name       = "mesh_smoke_c";
-    std::string riastradStarsName        = "mesh_stars";
+    std::string riastradVfxName          = "riastrad_attack";
+    std::string riastradBlurName         = "risastrad_mesh_blur";
+    std::string riastradCrackName        = "risastrad_mesh_crack";
+    std::string riastradWarningName      = "risastrad_mesh_warning";
+    std::string riastradStarsName        = "risastrad_mesh_stars";
     GameObject* riastradVfx              = nullptr;
-    GameObject* riastradBurst            = nullptr;
     GameObject* riastradBlur             = nullptr;
-    GameObject* riastradHalo             = nullptr;
-    GameObject* riastradSphere           = nullptr;
     GameObject* riastradCrack            = nullptr;
-    GameObject* riastradWaring           = nullptr;
-    GameObject* riastradSmoke1           = nullptr;
-    GameObject* riastradSmoke2           = nullptr;
-    GameObject* riastradSmoke3           = nullptr;
+    GameObject* riastradWarning          = nullptr;
     GameObject* riastradStars            = nullptr;
 
     float3 spawnPos                      = float3::zero;

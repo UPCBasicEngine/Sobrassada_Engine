@@ -117,18 +117,13 @@ CuChulainn::CuChulainn(GameObject* parent)
         {"Riastrad animations speed ratio", InspectorField::FieldType::Float, &riastradAnimationsSpeedRatio, 0.0f, 2.0f}
     );
     fields.push_back({"Riastrad on damage taken", InspectorField::FieldType::Int, &riastradOnDamageTaken, 0, 100});
-    fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnHit, 0, 100});
+    fields.push_back({"Riastrad on object destroyed", InspectorField::FieldType::Int, &riastradOnObjectHit, 0, 100});
+    fields.push_back({"Riastrad on enemy hit", InspectorField::FieldType::Int, &riastradOnEnemyHit, 0, 100});
     fields.push_back({"Riastrad on enemy defeated", InspectorField::FieldType::Int, &riastradOnEnemyDeath, 0, 100});
     fields.push_back({"Transform VFX Delay", InspectorField::FieldType::Float, &transformVfxDelay, 0.0f, 20.0f});
-    fields.push_back({"Riastrad VFX burst", InspectorField::FieldType::InputText, &riastradBurstName});
     fields.push_back({"Riastrad VFX blur", InspectorField::FieldType::InputText, &riastradBlurName});
-    fields.push_back({"Riastrad VFX halo", InspectorField::FieldType::InputText, &riastradHaloName});
-    fields.push_back({"Riastrad VFX sphere", InspectorField::FieldType::InputText, &riastradSphereName});
     fields.push_back({"Riastrad VFX crack", InspectorField::FieldType::InputText, &riastradCrackName});
-    fields.push_back({"Riastrad VFX waring", InspectorField::FieldType::InputText, &riastradWaringName});
-    fields.push_back({"Riastrad VFX smoke 1", InspectorField::FieldType::InputText, &riastradSmoke1Name});
-    fields.push_back({"Riastrad VFX smoke 2", InspectorField::FieldType::InputText, &riastradSmoke2Name});
-    fields.push_back({"Riastrad VFX smoke 3", InspectorField::FieldType::InputText, &riastradSmoke3Name});
+    fields.push_back({"Riastrad VFX waring", InspectorField::FieldType::InputText, &riastradWarningName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
@@ -140,6 +135,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Melee VFX Vertical 2", InspectorField::FieldType::InputText, &attackVfxVertical2Name});
     fields.push_back({"Melee VFX Horizontal 3", InspectorField::FieldType::InputText, &attackVfxHorizontal3Name});
     fields.push_back({"Attack VFX Vertical 3", InspectorField::FieldType::InputText, &attackVfxVertical3Name});
+    fields.push_back({"Attack VFX Explosion", InspectorField::FieldType::InputText, &attackVfxExplosionName});
     fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
     fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
 
@@ -242,6 +238,14 @@ bool CuChulainn::Init()
     if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
     else attackVfxVertical3->SetEnabled(false);
 
+    attackVfxExplosion = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(attackVfxExplosionName);
+    if (!attackVfxExplosion) GLOG("[WARNING] No attack explosion VFX found for melee attack in CuChulain")
+    else attackVfxExplosion->SetEnabled(false);
+
+    arrowHitVfxObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(arrowHitVfxName);
+    if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
+    else arrowHitVfxObject->SetEnabled(false);
+
     dashTrail = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(dashTrailName);
     if (!dashTrail) GLOG("[WARNING] No dash trail found for CuChulain")
     else dashTrail->SetEnabled(false);
@@ -262,29 +266,11 @@ bool CuChulainn::Init()
     riastradVfx = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(riastradVfxName);
     if (!riastradVfx) GLOG("[WARNING] No riastrad VFX found for CuChulain")
 
-    riastradBurst = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        riastradVfxName, riastradBurstName
-    );
-    if (!riastradBurst) GLOG("[WARNING] No riastrad Burst VFX found for CuChulain")
-    else riastradBurst->SetEnabled(false);
-
     riastradBlur = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
         riastradVfxName, riastradBlurName
     );
     if (!riastradBlur) GLOG("[WARNING] No riastrad Blur VFX found for CuChulain")
     else riastradBlur->SetEnabled(false);
-
-    riastradHalo = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        riastradVfxName, riastradHaloName
-    );
-    if (!riastradHalo) GLOG("[WARNING] No riastrad Halo VFX found for CuChulain")
-    else riastradHalo->SetEnabled(false);
-
-    riastradSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        riastradVfxName, riastradSphereName
-    );
-    if (!riastradSphere) GLOG("[WARNING] No riastrad Sphere VFX found for CuChulain")
-    else riastradSphere->SetEnabled(false);
 
     riastradCrack = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
         riastradVfxName, riastradCrackName
@@ -292,32 +278,11 @@ bool CuChulainn::Init()
     if (!riastradCrack) GLOG("[WARNING] No riastrad Crack VFX found for CuChulain")
     else riastradCrack->SetEnabled(false);
 
-    riastradWaring = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        riastradVfxName, riastradWaringName
+    riastradWarning = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
+        riastradVfxName, riastradWarningName
     );
-    if (!riastradWaring) GLOG("[WARNING] No riastrad Warning VFX found for CuChulain")
-    else riastradWaring->SetEnabled(false);
-
-    riastradSmoke1 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        riastradVfxName, riastradSmoke1Name
-    );
-    ;
-    if (!riastradSmoke1) GLOG("[WARNING] No riastrad Smoke 1 VFX found for CuChulain")
-    else riastradSmoke1->SetEnabled(false);
-
-    riastradSmoke2 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        riastradVfxName, riastradSmoke2Name
-    );
-    ;
-    if (!riastradSmoke2) GLOG("[WARNING] No riastrad Smoke 2 VFX found for CuChulain")
-    else riastradSmoke2->SetEnabled(false);
-
-    riastradSmoke3 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        riastradVfxName, riastradSmoke3Name
-    );
-    ;
-    if (!riastradSmoke3) GLOG("[WARNING] No riastrad Smoke 3 VFX found for CuChulain")
-    else riastradSmoke3->SetEnabled(false);
+    if (!riastradWarning) GLOG("[WARNING] No riastrad Warning VFX found for CuChulain")
+    else riastradWarning->SetEnabled(false);
 
     riastradStars = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
         riastradVfxName, riastradStarsName
@@ -399,23 +364,6 @@ bool CuChulainn::Init()
     if (!ultimateCrack) GLOG("[WARNING] No ultimate Crack1 VFX found for CuChulain")
     else ultimateCrack->SetEnabled(false);
 
-    ultimateHalo =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateHaloName);
-    if (!ultimateHalo) GLOG("[WARNING] No ultimate Halo VFX found for CuChulain")
-    else ultimateHalo->SetEnabled(false);
-
-    ultimateSmoke = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        ultimateName, ultimateSmokeName
-    );
-    if (!ultimateSmoke) GLOG("[WARNING] No ultimate Smoke VFX found for CuChulain")
-    else ultimateSmoke->SetEnabled(false);
-
-    ultimateSphere = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
-        ultimateName, ultimateSphereName
-    );
-    if (!ultimateSphere) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
-    else ultimateSphere->SetEnabled(false);
-
     ultimateWarning = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByParentNameAndTargetName(
         ultimateName, ultimateWarningName
     );
@@ -495,6 +443,7 @@ void CuChulainn::Update(float deltaTime)
     Character::Update(deltaTime);
     PerformAttack();
 
+    // Heal knockback and VFX
     if (state == CharacterStates::HEAL && healTimer > healKnockbackDelay && !healKnockback->IsEnabled())
     {
         if (healKnockback) healKnockback->SetEnabled(true);
@@ -505,10 +454,29 @@ void CuChulainn::Update(float deltaTime)
         }
         Heal(mushroomHeal);
     }
+
+    // RiastradVFX
     if (state == CharacterStates::TRANSFORM && !riastradCrack->IsEnabled())
     {
         EnableRiastradVfx();
     }
+
+    // Dash decal spawn when in middle of dash
+    const float dashDecalTriggerDist = 2.0f;
+    if (state == CharacterStates::DASH && dashDecal &&
+        parent->GetGlobalTransform().TranslatePart().Distance(lastDashStartPos) > dashDecalTriggerDist)
+    {
+        // TODO: set dash decal to the final position of player and not to direction
+        dashDecal->SetEnabled(true);
+        const float3 scale = dashDecal->GetLocalTransform().ExtractScale();
+        const Quat rotation =
+            Quat::LookAt(float3::unitY, character->GetDashDirection().Normalized(), float3::unitZ, float3::unitY);
+        const float3 pos              = lastDashStartPos + 1.5f * character->GetDashDirection().Normalized();
+        const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
+        dashDecal->SetLocalTransform(decalTransform);
+        dashDecalBufferTimer = dashDecalTimer;
+    }
+
     CheckIsFalling();
     if (dashIcon) dashIcon->SetFillAmount(1.0f - (dashTimer / dashCooldown));
     if (ultimateIcon) ultimateIcon->SetFillAmount(1.0f - (ultimateCdTimer / ultimateCd));
@@ -578,42 +546,38 @@ void CuChulainn::OnDamageTaken(int amount)
     {
         GLOG("Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer);
 
-        if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
+        arrowHitVfxObject->SetEnabled(true);
+
+        ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
+        if (particleSystem)
         {
-            GLOG(
-                "Activating arrow VFX - isActive: %s, timer: %f", arrowVfxIsActive ? "true" : "false", arrowHitVfxTimer
-            );
-
-            arrowHitVfxObject->SetEnabled(true);
-
-            ParticleSystemComponent* particleSystem = arrowHitVfxObject->GetComponent<ParticleSystemComponent*>();
-            if (particleSystem)
-            {
-                particleSystem->SpawnAllInstances();
-                GLOG("Arrow VFX particles spawned");
-            }
+            particleSystem->SpawnAllInstances();
+            GLOG("Arrow VFX particles spawned");
         }
-        if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
-            if (damageMask)
-            {
-                damageMask->SetLife(static_cast<float>(currentHealth));
-                damageMask->OnHit();
-            }
-
-        if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
-            state == CharacterStates::HEAL)
-        {
-            state = CharacterStates::HURT;
-            if (animComponent)
-            {
-                animComponent->UseTrigger("Hurt");
-                // character->EnableMovement(false);
-            }
-        }
-
-        // TODO: Test if hitstop when hit feels nice
-        // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
     }
+
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
+        if (damageMask)
+        {
+            damageMask->SetLife(static_cast<float>(currentHealth));
+            damageMask->OnHit();
+        }
+
+    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
+        state == CharacterStates::HEAL)
+    {
+        state = CharacterStates::HURT;
+        if (animComponent)
+        {
+            float x = (float)rand() / RAND_MAX;
+            if (x < 0.5f) animComponent->UseTrigger("Hurt");
+            else animComponent->UseTrigger("Hurt2");
+            character->EnableMovement(false);
+        }
+    }
+
+    // TODO: Test if hitstop when hit feels nice
+    // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
 }
 
 void CuChulainn::OnHealed(int amount)
@@ -661,6 +625,7 @@ void CuChulainn::HandleState(float deltaTime)
             if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
             if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
             if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+            //if (attackVfxExplosion) attackVfxExplosion->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -693,14 +658,8 @@ void CuChulainn::HandleState(float deltaTime)
                 // riastradVfx->SetEnabled(false);
 
                 if (riastradBlur) riastradBlur->SetEnabled(false);
-                if (riastradBurst) riastradBurst->SetEnabled(false);
-                if (riastradHalo) riastradHalo->SetEnabled(false);
-                if (riastradSphere) riastradSphere->SetEnabled(false);
                 if (riastradCrack) riastradCrack->SetEnabled(false);
-                if (riastradWaring) riastradWaring->SetEnabled(false);
-                if (riastradSmoke1) riastradSmoke1->SetEnabled(false);
-                if (riastradSmoke2) riastradSmoke2->SetEnabled(false);
-                if (riastradSmoke3) riastradSmoke3->SetEnabled(false);
+                if (riastradWarning) riastradWarning->SetEnabled(false);
                 if (riastradStars) riastradStars->SetEnabled(false);
             }
             state = CharacterStates::IDLE;
@@ -898,7 +857,8 @@ bool CuChulainn::CanHeal() const
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::TAKE_MUSHROOM &&
            state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && mushrooms > 0 &&
-           !isHealing && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+           !isHealing && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT &&
+           currentHealth < maxHealth;
 }
 
 bool CuChulainn::CanAim() const
@@ -1191,17 +1151,6 @@ void CuChulainn::Dash()
 
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
-    if (dashDecal)
-    {
-        // TODO: set dash decal to the final position of player and not to direction
-        dashDecal->SetEnabled(true);
-        const float3 scale  = dashDecal->GetLocalTransform().ExtractScale();
-        const Quat rotation = Quat::LookAt(float3::unitY, character->GetFrontDirection(), float3::unitZ, float3::unitY);
-        const float3 pos    = lastDashStartPos + 2.5f * character->GetFrontDirection().Normalized();
-        const float4x4 decalTransform = float4x4::FromTRS(pos, rotation, scale);
-        dashDecal->SetLocalTransform(decalTransform);
-        dashDecalBufferTimer = dashDecalTimer;
-    }
 }
 
 void CuChulainn::PerformAttack()
@@ -1212,6 +1161,8 @@ void CuChulainn::PerformAttack()
         float currentHitboxDelay = isRiastrad ? attackHitboxDelay / riastradAnimationsSpeedRatio : attackHitboxDelay;
         float currentHitboxDuration =
             isRiastrad ? attackHitboxDuration / riastradAnimationsSpeedRatio : attackHitboxDuration;
+
+        if (comboCounter == 2) currentHitboxDelay *= 1.5f;
 
         if (attackTimer > currentVfxDelay)
         {
@@ -1248,13 +1199,24 @@ void CuChulainn::PerformAttack()
 
         if (attackTimer < currentHitboxDelay)
         {
-            float distance = moveWithAttack ? comboCounter == 2 ? 10.0f : 5.0f : 0.0f;
+            float distance = moveWithAttack ? 5.0f : 0.0f;
             character->MoveTo(distance);
         }
         else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
                  attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
+            if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->IsEnabled())
+            {
+                attackVfxExplosion->SetEnabled(true);
+                float3 dir = 2.0f * character->GetFrontDirection();
+                dir.y      = 1.75f;
+                attackVfxExplosion->SetLocalPosition(parent->GetPosition() + dir);
+                attackVfxExplosion->GetComponent<MeshComponent*>()->SetEnabled(false);
+                attackVfxExplosion->GetComponent<ShaderScriptComponent*>()
+                    ->GetScriptByType<AttackVfxSpritesheet>()
+                    ->Reset();
+            }
         }
         else if (weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay + currentHitboxDuration)
         {
@@ -1453,42 +1415,38 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateBlur)
     {
         ultimateBlur->SetEnabled(true);
-        // ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
         if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
+        {
+            ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
             ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        }
     }
     if (ultimateBrust)
     {
         ultimateBrust->SetEnabled(true);
+        if (ultimateBrust->GetComponent<ShaderScriptComponent*>())
+        {
+            ultimateBrust->GetComponent<MeshComponent*>()->SetEnabled(false);
+            ultimateBrust->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        }
     }
     if (ultimateCrack)
     {
         ultimateCrack->SetEnabled(true);
-    }
-    if (ultimateHalo)
-    {
-        ultimateHalo->SetEnabled(true);
-        ultimateHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
-        if (ultimateHalo->GetComponent<ShaderScriptComponent*>())
-            ultimateHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (ultimateSmoke)
-    {
-        ultimateSmoke->SetEnabled(true);
-        ultimateSmoke->GetComponent<MeshComponent*>()->SetEnabled(false);
-        if (ultimateSmoke->GetComponent<ShaderScriptComponent*>())
-            ultimateSmoke->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (ultimateSphere)
-    {
-        ultimateSphere->SetEnabled(true);
-        ultimateSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
-        if (ultimateSphere->GetComponent<ShaderScriptComponent*>())
-            ultimateSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        if (ultimateCrack->GetComponent<ShaderScriptComponent*>())
+        {
+            ultimateCrack->GetComponent<MeshComponent*>()->SetEnabled(false);
+            ultimateCrack->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        }
     }
     if (ultimateWarning)
     {
         ultimateWarning->SetEnabled(true);
+        if (ultimateWarning->GetComponent<ShaderScriptComponent*>())
+        {
+            ultimateWarning->GetComponent<MeshComponent*>()->SetEnabled(false);
+            ultimateWarning->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        }
     }
 }
 
@@ -1725,6 +1683,12 @@ void CuChulainn::ToggleRiastrad()
         {
             clip.animationSpeed *= riastradAnimationsSpeedRatio;
         }
+
+        if (riastradVfx)
+        {
+            riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(true);
+            riastradVfx->SetLocalPosition(parent->GetLocalTransform().TranslatePart());
+        }
     }
     else
     {
@@ -1763,49 +1727,17 @@ void CuChulainn::EnableRiastradVfx()
         mat->SetDiffColor(newColor);
     }
 
-    if (riastradVfx)
+    if (riastradCrack)
     {
-        // riastradVfx->SetEnabled(true);
-        riastradVfx->GetComponent<AnimationComponent*>()->OnPlay(true);
-        riastradVfx->SetLocalPosition(parent->GetLocalTransform().TranslatePart());
+        riastradCrack->SetEnabled(true);
+        riastradCrack->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradCrack->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
-    if (riastradSmoke1)
+    if (riastradWarning)
     {
-        riastradSmoke1->SetEnabled(true);
-        // riastradSmoke1->GetComponent<MeshComponent*>()->SetEnabled(false);
-        // riastradSmoke1->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradSmoke2)
-    {
-        riastradSmoke2->SetEnabled(true);
-        // riastradSmoke2->GetComponent<MeshComponent*>()->SetEnabled(false);
-        // riastradSmoke2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradSmoke3)
-    {
-        riastradSmoke3->SetEnabled(true);
-        // riastradSmoke3->GetComponent<MeshComponent*>()->SetEnabled(false);
-        // riastradSmoke3->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradSphere)
-    {
-        riastradSphere->SetEnabled(true);
-        riastradSphere->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradSphere->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradHalo)
-    {
-        riastradHalo->SetEnabled(true);
-        // riastradHalo->GetComponent<MeshComponent*>()->SetEnabled(false);
-        // riastradHalo->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
-    }
-    if (riastradCrack) riastradCrack->SetEnabled(true);
-    if (riastradWaring) riastradWaring->SetEnabled(true);
-    if (riastradBurst)
-    {
-        riastradBurst->SetEnabled(true);
-        riastradBurst->GetComponent<MeshComponent*>()->SetEnabled(false);
-        riastradBurst->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+        riastradWarning->SetEnabled(true);
+        riastradWarning->GetComponent<MeshComponent*>()->SetEnabled(false);
+        riastradWarning->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
     if (riastradBlur)
     {
@@ -1830,11 +1762,18 @@ void CuChulainn::AddRiastrad(int amount)
     riastradBar->SetFillAmount(riastradMeter / 100.0f);
 }
 
+void CuChulainn::OnObjectDestroyed()
+{
+    AppEngine->GetGameTimer()->SetTimeScale(0.0f);
+    timeStopTimer = hitTimeStopDuration;
+    AddRiastrad(riastradOnObjectHit);
+}
+
 void CuChulainn::OnEnemyHit()
 {
     AppEngine->GetGameTimer()->SetTimeScale(0.0f);
     timeStopTimer = hitTimeStopDuration;
-    AddRiastrad(riastradOnHit);
+    AddRiastrad(riastradOnEnemyHit);
 }
 
 void CuChulainn::OnEnemyDefeated()
@@ -1965,6 +1904,8 @@ const std::string CuChulainn::GetLogicStateName()
     case CharacterStates::TRANSFORM:
         return "Transform";
         break;
+    case CharacterStates::HURT:
+        return "Hurt";
     default:
         return "MISSING!";
         break;

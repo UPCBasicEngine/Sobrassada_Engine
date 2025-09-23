@@ -622,9 +622,13 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     GLuint fxaaTexture = -1;
 
 #ifndef GAME
+    if (!IsFXAAEnabled()) return;
+
     // Must create a temporal frameBuffer and texture, to avoid reading and drawing to same texture = black screen
     GLuint fxaaFramebuffer = -1;
     glGenFramebuffers(1, &fxaaFramebuffer);
@@ -642,8 +646,15 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fxaaFramebuffer);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+    CopyDepthStencil();
     Bind();
 #else
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+
+    glBlitFramebuffer(
+        0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
+    );
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
 
