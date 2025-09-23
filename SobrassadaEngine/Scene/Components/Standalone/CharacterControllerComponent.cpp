@@ -123,7 +123,7 @@ void CharacterControllerComponent::Clone(const Component* other)
 
 void CharacterControllerComponent::Init()
 {
-   
+
     float3 startPos  = parent->GetGlobalTransform().TranslatePart();
     lastPosition     = startPos;
     previousPosition = startPos;
@@ -137,19 +137,15 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     float deltaTime = App->GetGameTimer()->GetDeltaTime() / 1000.0f;
     if (deltaTime == 0.0f) return;
 
-   
     float3 currentPos = parent->GetGlobalTransform().TranslatePart();
 
-    
-    if (deltaTime > 0.0f && deltaTime < 0.1f) 
+    if (deltaTime > 0.0f && deltaTime < 0.1f)
     {
         float3 frameVelocity                 = (currentPos - previousPosition) / deltaTime;
-
 
         velocitySamples[velocitySampleIndex] = frameVelocity;
         velocitySampleIndex                  = (velocitySampleIndex + 1) % VELOCITY_SAMPLES;
 
-       
         float3 velocitySum                   = float3::zero;
         for (int i = 0; i < VELOCITY_SAMPLES; i++)
         {
@@ -159,7 +155,6 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
     }
 
     previousPosition     = currentPos;
-   
     lastPosition         = currentPos;
 
     ResourceNavMesh* nav = App->GetPathfinderModule()->GetNavMesh();
@@ -202,8 +197,7 @@ void CharacterControllerComponent::Update(float time) // SO many navmesh getters
 
         currentPos.y  += std::max(-0.5f, verticalSpeed * deltaTime);
 
-        AdjustHeightToNavMesh(currentPos);
-        parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
+        AdjustHeightToNavMesh(currentPos, deltaTime);
     }
 
     if (!isDashing && isRotating)
@@ -266,17 +260,18 @@ void CharacterControllerComponent::RenderEditorInspector()
     }
 }
 
-void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
+void CharacterControllerComponent::AdjustHeightToNavMesh(float3 currentPos, float deltaTime)
 {
     if (!navMeshQuery) return;
-
-    isGrounded = false;
 
     dtQueryFilter filter;
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
 
-    float halfExt[3] = {0.5f, 1.0f, 0.5f};
+    // These numbers are the distance considering 60 fps as default -> 12.5 * 0.16ms = 0.2f & 1875 * 0.16ms = 30.0 search area.
+    // If lower framerate, the are is bigger because the steps each frame are longer.
+    // If higher framerate, the are is smaller because the steps between frames are way smoother
+    float halfExt[3] = {12.5f * deltaTime, std::max(1875.0f * deltaTime, 30.0f), 12.5f * deltaTime};    // Big Y search because we want to check for navmeshes below to fall
     float nearest[3];
     dtPolyRef newRef = 0;
 
@@ -292,14 +287,20 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3& currentPos)
     dtStatus stH     = navMeshQuery->getPolyHeight(newRef, closest, &polyHeight);
     if (dtStatusSucceed(stH))
     {
-        isGrounded                = true;
-        float distToFloor         = polyHeight - currentPos.y;
-        const float maxStepHeight = 0.2f;
-        if (distToFloor >= 0.0f && distToFloor <= maxStepHeight)
+        float distToFloor         = abs(polyHeight - currentPos.y);
+        const float maxStepHeight = 0.5f;
+        if (distToFloor > 0.0f && distToFloor <= maxStepHeight)
         {
+            isGrounded    = true;
             currentPos.y  = polyHeight;
             verticalSpeed = 0.0f;
         }
+        else
+        {
+            isGrounded = false;
+        }
+
+        parent->SetLocalPosition(currentPos - parent->GetParentGlobalTransform().TranslatePart());
     }
 }
 
@@ -315,23 +316,27 @@ void CharacterControllerComponent::Move(float deltaTime)
     else
     {
         const float desiredSpeed = isRunning ? maxSpeed : walkSpeed;
-        currentSpeed = targetDirection.LengthSq() > 0.001f ? Lerp(currentSpeed, desiredSpeed, std::min(1.f, acceleration * deltaTime))
-                                                           : Lerp(currentSpeed, 0, std::min(1.f, 100 * deltaTime));
+        currentSpeed             = targetDirection.LengthSq() > 0.001f
+                                     ? Lerp(currentSpeed, desiredSpeed, std::min(1.f, acceleration * deltaTime))
+                                     : Lerp(currentSpeed, 0, std::min(1.f, 100 * deltaTime));
     }
 
     const float3 offsetXZ   = rotateDirection * currentSpeed * deltaTime;
     const float3 desiredPos = currentPos + offsetXZ;
 
+    // These numbers are the distance considering 60 fps as default -> 25.0 * 0.16ms = 0.4f search area. 
+    // If lower framerate, the are is bigger because the steps each frame are longer.
+    // If higher framerate, the are is smaller because the steps between frames are way smoother
     const float3 searchArea = {25.0f * deltaTime, 25.0f * deltaTime, 25.0f * deltaTime};
     float3 closestPoint     = float3::zero;
     bool posOverPoly        = false;
     dtStatus status         = GetClosestPointInNavmesh(desiredPos, searchArea, posOverPoly, closestPoint);
-    //GLOG("Search area: %f %f %f", searchArea.x, searchArea.y, searchArea.z);
 
     if (!dtStatusSucceed(status)) return;
 
     // Prevent huge changes
-    if (fabs(closestPoint.x - currentPos.x) > 12.5f * deltaTime || fabs(closestPoint.y - currentPos.y) > 25.0f ||
+    if (fabs(closestPoint.x - currentPos.x) > 12.5f * deltaTime ||
+        fabs(closestPoint.y - currentPos.y) > 25.0f * deltaTime ||
         fabs(closestPoint.z - currentPos.z) > 12.5f * deltaTime)
         return;
 
@@ -719,7 +724,7 @@ unsigned int CharacterControllerComponent::GetClosestPointInNavmesh(
 
     dtStatus status  = navMeshQuery->findNearestPoly(searchPos.ptr(), halfExt, &filter, &newRef, nearest);
 
-    // if (!dtStatusSucceed(status) || newRef == 0) return status;  // If unexpected crash, maybe this is needed
+    if (!dtStatusSucceed(status) || newRef == 0) return status; // If unexpected crash, maybe this is needed
 
     float closest[3] = {};
     status           = navMeshQuery->closestPointOnPoly(newRef, searchPos.ptr(), closest, &posOverPoly);
