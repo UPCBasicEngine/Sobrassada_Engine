@@ -116,6 +116,8 @@ void HighlightCharacter::Update(float deltaTime)
         isExecuting = false;
         splineMovementTarget->SetEnabled(false);
         cameraMovementScript->ResetToDefaultTarget();
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(true);
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(true);
         playerController->SetInputDown(true);
     }
 }
@@ -134,6 +136,9 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
     if (!neverExecuted || otherObject != player) return;
 
     playerController->SetInputDown(false);
+    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
+    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
+    
     splineComponent->SetPointWorld(
         0, playerCameraPivot->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()
     );
