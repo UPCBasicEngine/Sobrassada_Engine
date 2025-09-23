@@ -3,6 +3,8 @@
 #extension GL_ARB_bindless_texture : require
 
 #define M_PI 3.14159265358979323846
+#define MAX_LIGHTS_PER_TILE 1024
+#define TILE_SIZE 16
 
 uniform layout(binding = 0) writeonly image2D transmitanceTexture;
 uniform layout(binding = 1) sampler2D depthTexture;
@@ -30,6 +32,7 @@ uniform layout(binding = 9) sampler2D spotTexture;
 // DIRECTIONAL LIGHT MATRICES -> MOVE TO UNIFORM OF DIRECTIONAL
 uniform layout(location = 10) mat4 directinal_View_Mat;
 uniform layout(location = 11) mat4 directinal_Projection_Mat;
+uniform layout(location = 12) int numTilesX;
 
 struct PointLight
 {
@@ -143,7 +146,7 @@ float ScatteringPhaseFunction(vec3 viewDirection, vec3 lightDirection)
     return (1 - k * k) / (4 * M_PI * (1 + k * cos(theta)) * (1 + k * cos(theta)));
 }
 
-vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoords)
+vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoords, int baseOffset)
 {
     vec3 light = vec3(0.0);
     rayDirection = normalize(rayDirection);
@@ -159,6 +162,20 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
         if(projCoords.z > dLightVisibility )
             light += ScatteringPhaseFunction(-rayDirection, normalize(directional_dir.xyz)) * directional_color.rgb * directional_color.w;
     }
+
+    for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
+    {
+        int lightIndexBuffer = visibleIndices[baseOffset + i];
+
+        if(lightIndexBuffer == -1) break;
+
+        bool isSpot = (lightIndexBuffer & 0x80000000) != 0;
+        int realIndex = lightIndexBuffer & 0x7FFFFFFF;
+        if(isSpot)
+        {
+            return spotLights[realIndex].color.rgb * spotLights[realIndex].color.a;
+        }
+    }
     
     return light;
 }
@@ -169,9 +186,9 @@ void main()
 
     if(gl_GlobalInvocationID.x < textureSize.x && gl_GlobalInvocationID.y < textureSize.y)
     {
-	    ivec2 tileID = ivec2(gl_WorkGroupID.xy);
-	    ivec2 tileNumber = ivec2(gl_NumWorkGroups.xy);
-        uint index = tileID.y * tileNumber.x + tileID.x;
+	    ivec2 tileCoord = ivec2(gl_GlobalInvocationID.xy) / TILE_SIZE;
+	    int tileIndex = tileCoord.y * numTilesX + tileCoord.x;
+        int baseOffset = tileIndex * MAX_LIGHTS_PER_TILE;
 
         vec2 uvCoords = vec2(gl_GlobalInvocationID.x / float(textureSize.x), gl_GlobalInvocationID.y / float(textureSize.y));
         float depth = texture(depthTexture, uvCoords).r;
@@ -190,7 +207,7 @@ void main()
         for(int i = 0; i < NUM_STEPS; ++i)
         {
             accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition) * stepSize;
-            accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords) * stepSize * exp(-accExtintionCoeff);
+            accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords, baseOffset) * stepSize * exp(-accExtintionCoeff);
 
             currentPosition += marchingStep;
         }

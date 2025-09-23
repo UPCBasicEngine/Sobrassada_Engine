@@ -236,7 +236,7 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
-    //ShadowMapPassRender(camera, light, objectsToRender);
+    ShadowMapPassRender(camera, light, objectsToRender);
     glPopDebugGroup();
 
     glViewport(0, 0, width, height);
@@ -784,6 +784,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
 
     // Local size of compute is (16,16,1)
@@ -860,6 +861,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glUniformMatrix4fv(10, 1, GL_TRUE, &dirLightView[0][0]);
     glUniformMatrix4fv(11, 1, GL_TRUE, &dirLightProj[0][0]);
+    glUniform1i(12, tilesX);
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 
