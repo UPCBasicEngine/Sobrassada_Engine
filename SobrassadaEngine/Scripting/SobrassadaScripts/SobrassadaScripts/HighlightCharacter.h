@@ -17,20 +17,23 @@ class HighlightCharacter : public Script
     void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
-    std::string playerName                          = "walk";
-    std::string playerCameraPivotName               = "Camera Pivot";
+    std::string playerName            = "walk";
+    std::string playerCameraPivotName = "Camera Pivot";
     std::string characterToHighlightName;
 
-    bool isSetupCorrectly                           = true;
-    bool isExecuting                                = false;
-    bool neverExecuted                              = true;
+    float secondSplinePointOffset                  = 0.85f;
+    float zoomMultiplier                           = 30.0f;
 
-    GameObject* player                              = nullptr;
-    CharacterControllerComponent* playerController  = nullptr;
-    GameObject* playerCameraPivot                   = nullptr;
-    CameraMovement* cameraMovementScript            = nullptr;
-    GameObject* characterToHighlight                = nullptr;
-    SplineComponent* splineComponent                = nullptr;
-    GameObject* splineMovementTarget                = nullptr;
-    MoveGOInSpline* splineMovementScript            = nullptr;
+    bool isSetupCorrectly                          = true;
+    bool isExecuting                               = false;
+    bool neverExecuted                             = true;
+
+    GameObject* player                             = nullptr;
+    CharacterControllerComponent* playerController = nullptr;
+    GameObject* playerCameraPivot                  = nullptr;
+    CameraMovement* cameraMovementScript           = nullptr;
+    GameObject* characterToHighlight               = nullptr;
+    SplineComponent* splineComponent               = nullptr;
+    GameObject* splineMovementTarget               = nullptr;
+    MoveGOInSpline* splineMovementScript           = nullptr;
 };

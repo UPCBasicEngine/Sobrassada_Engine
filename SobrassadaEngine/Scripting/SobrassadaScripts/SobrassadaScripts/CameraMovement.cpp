@@ -53,12 +53,12 @@ void CameraMovement::Update(float deltaTime)
 void CameraMovement::InitAlternativeTarget(const GameObject* alternativeTarget)
 {
     defaultTarget = target;
-    target = alternativeTarget;
+    target        = alternativeTarget;
 }
 
 void CameraMovement::ResetToDefaultTarget()
 {
-    target = defaultTarget;
+    target        = defaultTarget;
     defaultTarget = nullptr;
 }
 

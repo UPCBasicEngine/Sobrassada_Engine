@@ -2,7 +2,6 @@
 
 #include "HighlightCharacter.h"
 
-
 #include "CameraMovement.h"
 #include "ChangeSceneScript.h"
 #include "CuChulainn.h"
@@ -16,14 +15,19 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
-#include "Standalone/SplineComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
+#include "Standalone/SplineComponent.h"
 
 HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
 {
     fields.emplace_back("Player", InspectorField::FieldType::InputText, &playerName);
     fields.emplace_back("Player camera pivot", InspectorField::FieldType::InputText, &playerCameraPivotName);
     fields.emplace_back("Character to highlight", InspectorField::FieldType::InputText, &characterToHighlightName);
+
+    fields.emplace_back(
+        "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.1f, 2.0f
+    );
+    fields.emplace_back("Zoom multiplier", InspectorField::FieldType::Float, &zoomMultiplier, 0.1f, 50.0f);
 }
 
 bool HighlightCharacter::Init()
@@ -42,12 +46,15 @@ bool HighlightCharacter::Init()
         GLOG("[WARNING] HighlightCharacter: No player controller found in player")
         return false;
     }
-    
+
     playerCameraPivot = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(playerCameraPivotName);
     if (playerCameraPivot == nullptr || playerCameraPivot->GetComponent<ScriptComponent*>() == nullptr)
     {
         isSetupCorrectly = false;
-        GLOG("[WARNING] HighlightCharacter: No player camera with script component found by the name '%s'", playerCameraPivotName.c_str())
+        GLOG(
+            "[WARNING] HighlightCharacter: No player camera with script component found by the name '%s'",
+            playerCameraPivotName.c_str()
+        )
         return false;
     }
 
@@ -63,11 +70,14 @@ bool HighlightCharacter::Init()
     if (characterToHighlight == nullptr)
     {
         isSetupCorrectly = false;
-        GLOG("[WARNING] HighlightCharacter: No character to highlight found by the name '%s'", characterToHighlightName.c_str())
+        GLOG(
+            "[WARNING] HighlightCharacter: No character to highlight found by the name '%s'",
+            characterToHighlightName.c_str()
+        )
         return false;
     }
 
-    for (UID child: AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent())->GetChildren())
+    for (UID child : AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent())->GetChildren())
     {
         GameObject* childGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(child);
         if (childGO != nullptr && childGO->GetComponent<ScriptComponent*>() != nullptr &&
@@ -95,7 +105,7 @@ bool HighlightCharacter::Init()
     }
 
     splineMovementTarget->SetEnabled(false);
-    
+
     return true;
 }
 
@@ -112,8 +122,8 @@ void HighlightCharacter::Update(float deltaTime)
 
 void HighlightCharacter::OnDestroy()
 {
-    player = nullptr;
-    playerController = nullptr;
+    player               = nullptr;
+    playerController     = nullptr;
     cameraMovementScript = nullptr;
     characterToHighlight = nullptr;
     Script::OnDestroy();
@@ -124,12 +134,24 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
     if (!neverExecuted || otherObject != player) return;
 
     playerController->SetInputDown(false);
-    splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart());
-    splineComponent->SetPointWorld(1, characterToHighlight->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart());
+    splineComponent->SetPointWorld(
+        0, playerCameraPivot->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()
+    );
+    splineComponent->SetPointWorld(
+        1, 0.85f * (characterToHighlight->GetGlobalTransform().TranslatePart() -
+                    parent->GetGlobalTransform().TranslatePart())
+    );
+    Quat cameraOrientation =
+        Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
+    splineComponent->SetPointWorld(
+        2, 0.85f * (characterToHighlight->GetGlobalTransform().TranslatePart() -
+                    parent->GetGlobalTransform().TranslatePart()) +
+               (30 * cameraOrientation.Transform(float3(0, 0, -1)))
+    );
     splineMovementTarget->SetEnabled(true);
     cameraMovementScript->InitAlternativeTarget(splineMovementTarget);
-    
+
     characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence();
-    isExecuting = true;
+    isExecuting   = true;
     neverExecuted = false;
 }

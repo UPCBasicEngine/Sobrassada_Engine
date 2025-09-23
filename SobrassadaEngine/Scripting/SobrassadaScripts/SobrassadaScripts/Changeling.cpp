@@ -76,6 +76,9 @@ Changeling::Changeling(GameObject* parent)
 
     fields.emplace_back("VFX_DigUpRocks", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
     fields.emplace_back("VFX_DigUpHole", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
+
+    // Highlight
+    fields.emplace_back("Highlight duration", InspectorField::FieldType::Float, &highlightDuration, 0.1f, 10.0f);
 }
 
 bool Changeling::Init()
@@ -142,7 +145,7 @@ void Changeling::PlayHighlightSequence()
     // Don´t play the highlight if the pooka is already doing something else
     if (currentState == ChangelingStates::IDLE_BURIED)
     {
-        currentState = ChangelingStates::HIGHLIGHTING;
+        currentState             = ChangelingStates::HIGHLIGHTING;
         currentHighlightingState = HighlightingStates::IDLE;
     }
 }
@@ -669,7 +672,7 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
 void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
 {
     if (!animComponent) currentState = ChangelingStates::IDLE_BURIED;
-        
+
     switch (currentHighlightingState)
     {
     case HighlightingStates::IDLE:
@@ -713,7 +716,7 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
         {
             animComponent->UseTrigger("Trigger_BurriedIdle");
             currentHighlightingState = HighlightingStates::IDLE;
-            currentState = ChangelingStates::IDLE_BURIED;
+            currentState             = ChangelingStates::IDLE_BURIED;
         }
         break;
     }
