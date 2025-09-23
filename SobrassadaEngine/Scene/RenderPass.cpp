@@ -125,50 +125,32 @@ RenderPass::~RenderPass()
 
 void RenderPass::Bind() const
 {
-#ifndef GAME
     framebuffer->Bind();
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-
     glViewport(0, 0, width, height);
 }
 
 // Copy Depth to Framebuffer
 void RenderPass::CopyDepth() const
 {
-#ifndef GAME
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
+
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
-#ifndef GAME
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 }
 
 // Copy Depth and Stencil to Framebuffer
 void RenderPass::CopyDepthStencil() const
 {
-#ifndef GAME
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
 
     glBlitFramebuffer(
         0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
     );
 
-#ifndef GAME
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 }
 
 void RenderPass::RenderScene(
@@ -325,6 +307,10 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
+    AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
 }
 
@@ -698,6 +684,55 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
+{
+    GLuint fxaaTexture = -1;
+
+#ifndef GAME
+    // Must create a temporal frameBuffer and texture, to avoid reading and drawing to same texture = black screen
+    GLuint fxaaFramebuffer = -1;
+    glGenFramebuffers(1, &fxaaFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, fxaaFramebuffer);
+
+    glGenTextures(1, &fxaaTexture);
+    glBindTexture(GL_TEXTURE_2D, fxaaTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fxaaTexture, 0);
+
+    // Copy
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer->GetFramebufferID());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fxaaFramebuffer);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    Bind();
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, width, height);
+
+    fxaaTexture = framebuffer->GetTextureID();
+#endif
+
+    unsigned int fxaaProgram = App->GetShaderModule()->GetFXAAProgram();
+    glUseProgram(fxaaProgram);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, fxaaTexture);
+
+    glUniform1i(0, showBorders);
+    glUniform1f(1, globalThreshold);
+    glUniform1f(2, localThreshold);
+    glUniform1i(3, enableFXAA);
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+#ifndef GAME
+    glDeleteFramebuffers(1, &fxaaFramebuffer);
+    glDeleteTextures(1, &fxaaTexture);
+#endif
 }
 
 void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLightComponent* light)
@@ -1112,6 +1147,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 {
     Bind();
 
+    glDepthMask(GL_FALSE);
     BatchManager* batchManager    = App->GetResourcesModule()->GetBatchManager();
 
     const unsigned int program    = App->GetShaderModule()->GetTransparentPassProgram();
@@ -1207,7 +1243,8 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_CULL_FACE);
             glDepthMask(GL_FALSE);
 

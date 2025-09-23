@@ -183,6 +183,7 @@ constexpr const char* PARTICLESYSTEM_FRAGMENT_SHADER_PATH =
 constexpr const char* SSAO_LOW_FRAGMENT_SHADER_PATH      = "./EngineDefaults/Shader/Fragment/SsaoLowFragment.glsl";
 constexpr const char* SSAO_BLUR_FRAGMENT_SHADER_PATH     = "./EngineDefaults/Shader/Fragment/SsaoBlurFragment.glsl";
 constexpr const char* VIDEO_FRAGMENT_SHADER_PATH         = "./EngineDefaults/Shader/Fragment/VideoFragmentShader.glsl";
+constexpr const char* FXAA_FRAGMENT_SHADER_PATH          = "./EngineDefaults/Shader/Fragment/FXAAFragmentShader.glsl";
 
 // Compute Shaders
 constexpr const char* SHADOW_DEPTH_COMPUTE_SHADER_PATH   = "./EngineDefaults/Shader/Compute/ShadowMapDepthCompute.glsl";

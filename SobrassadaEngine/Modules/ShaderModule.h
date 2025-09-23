@@ -44,6 +44,7 @@ class ShaderModule : public Module
     int GetSsaoDebugProgram() const { return ssaoDebugProgram; }
     int GetSsaoBlurProgram() const { return ssaoBlurProgram; }
     int GetVideoProgram() const { return videoProgram; }
+    int GetFXAAProgram() const { return fxaaProgram; }
     int GetVolumetricFogComputeProgram() const { return volumetricFogProgram; }
 
   private:
@@ -89,6 +90,7 @@ class ShaderModule : public Module
     int ssaoBlurProgram                = -1;
 
     int videoProgram                   = -1;
+    int fxaaProgram                    = -1;
 
     unsigned int volumetricFogProgram  = 0;
 

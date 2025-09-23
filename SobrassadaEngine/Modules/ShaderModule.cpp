@@ -52,6 +52,8 @@ bool ShaderModule::Init()
     particleSystemProgram = CreateShaderProgram(PARTICLESYSTEM_VERTEX_SHADER_PATH, PARTICLESYSTEM_FRAGMENT_SHADER_PATH);
 
     videoProgram          = CreateShaderProgram(VIDEO_VERTEX_SHADER_PATH, VIDEO_FRAGMENT_SHADER_PATH);
+    fxaaProgram           = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, FXAA_FRAGMENT_SHADER_PATH);
+
 
     volumetricFogProgram  = CreateComputeProgram(VOLUMETRIC_FOG_COMPUTE_SHADER_PATH); 
 
@@ -87,6 +89,7 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(ssaoDebugProgram);
     glDeleteProgram(ssaoBlurProgram);
     glDeleteProgram(videoProgram);
+    glDeleteProgram(fxaaProgram);
 
     for (auto& shaderIterator : customShaderPrograms)
     {
