@@ -698,9 +698,28 @@ void CuChulainn::GetInputs()
         if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
     }
 
-    if (direction.Length() < 0.55f) character->SetIsRunning(false);
-    else character->SetIsRunning(true);
-    direction = camFront * direction.z + camRight * direction.x;
+    moveFromCollision                 = (direction.Length() >= 0.55f);
+    character->SetIsRunning(moveFromCollision);
+
+    direction                     = camFront * direction.z + camRight * direction.x;
+
+    const bool hasLookInput        = direction.LengthSq() > 0.1f * 0.1f;
+
+    const float deltaTime         = AppEngine->GetGameTimer()->GetDeltaTime() / 1000.0f;
+    const float playerSpeed       = character->GetSpeed();
+    const float skinWidth         = 0.05f;
+    const float lookAheadDistance = max(0.12f, playerSpeed * deltaTime);
+
+    float3 lookDir                 = direction;
+
+    if (IsBlockedAhead(parent, direction, lookAheadDistance, skinWidth))
+    {
+        direction = float3::zero;
+        
+    } 
+
+    if (hasLookInput && !isAttacking) character->LookAt(lookDir);
+    
     character->SetDirection(direction);
 
     // Heal
@@ -849,6 +868,17 @@ bool CuChulainn::CanTakeMushroom() const
            state != CharacterStates::RESPAWN && state != CharacterStates::DEATH && state != CharacterStates::FALL &&
            state != CharacterStates::ULTIMATE && state != CharacterStates::HEAL &&
            state != CharacterStates::TRANSFORM && state != CharacterStates::HURT;
+}
+
+bool CuChulainn::HasblockingTag(GameObject* go)
+{
+    if (!go) return false;
+    for (const char* tagName : BlockerGOTags)
+    {
+        if (go->HasTag(HashString(tagName))) return true;
+    }
+
+    return false;
 }
 
 bool CuChulainn::CanHeal() const
@@ -1200,7 +1230,13 @@ void CuChulainn::PerformAttack()
         if (attackTimer < currentHitboxDelay)
         {
             float distance = moveWithAttack ? 5.0f : 0.0f;
-            character->MoveTo(distance);
+            float deltaTime = AppEngine->GetGameTimer()->GetDeltaTime() / 1000.0f;
+
+            float adaptedDistance = distance * deltaTime;
+            const float skin      = 0.05f;
+
+            if (!IsBlockedAhead(parent, character->GetFrontDirection(),max(0.55f, adaptedDistance), skin))
+                character->MoveTo(distance);
         }
         else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
                  attackTimer < currentHitboxDelay + currentHitboxDuration)
@@ -1475,7 +1511,12 @@ void CuChulainn::Aim(float deltaTime)
 void CuChulainn::Move()
 {
     character->EnableMovement(true);
-    if (character->GetSpeed() > 0.5f)
+
+    const bool actuallyMoving = character->IsMoving();
+    const bool wantsMove      = moveFromCollision;
+    const bool runCondition   = wantsMove || character->GetSpeed() > 0.5f;
+
+    if (runCondition)
     {
         if (state != CharacterStates::RUN)
         {
@@ -1856,6 +1897,43 @@ void CuChulainn::EndCurse()
 
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
+}
+
+bool CuChulainn::IsBlockedAhead(
+    const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth
+)
+{
+    if (!ownerGO || desiredMoveDirection.LengthSq() < 0.001f) return false;
+
+    Scene* currentScene              = AppEngine->GetSceneModule()->GetScene();
+    const float3 playerWorldPosition = ownerGO->GetGlobalTransform().TranslatePart();
+    const float3 normMoveDir         = desiredMoveDirection.Normalized();
+
+    auto hitsBlockAtHeight           = [&](float height)
+    {
+        const float3 rayStart = playerWorldPosition + float3::unitY * height;
+
+        LineSegment ray(rayStart, rayStart + normMoveDir * (lookAheadDistance + skinWidth));
+        
+        GameObject* hitGO              = nullptr;
+        BulletUserPointer* userPointer = RaycastController::GetRayIntersectionPhysics(ray);
+        if (userPointer)
+        {
+            hitGO = userPointer->collider->GetParent();
+            GLOG("[IsBlockedAhead]: Physics Raycast hit!, %s", hitGO->GetName().c_str());
+        }
+
+        DebugDrawModule* debug = AppEngine->GetDebugDrawModule();
+
+        if (debug->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
+        {
+            float3 centralColor = hitGO != nullptr ? float3(1.0f, 0.0f, 0.0f) : float3(1.0f, 1.0f, 0.0f);
+            debug->DrawLineSegment(ray, centralColor);
+        }
+        return hitGO && HasblockingTag(hitGO);
+    };
+
+    return hitsBlockAtHeight(0.2f) || hitsBlockAtHeight(0.9f);
 }
 
 const std::string CuChulainn::GetLogicStateName()

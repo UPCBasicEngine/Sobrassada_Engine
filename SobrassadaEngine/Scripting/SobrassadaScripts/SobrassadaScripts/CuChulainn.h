@@ -34,6 +34,8 @@ enum class CharacterStates
     HURT
 };
 
+constexpr const char* BlockerGOTags[] = {"MagicBarrier"};
+
 class CuChulainn : public Character
 {
   public:
@@ -58,6 +60,8 @@ class CuChulainn : public Character
     bool IsDashUnlocked() const { return dashUnlocked; }
     bool IsUltimateUnlocked() const { return ultimateUnlocked; }
     int GetEnemiesCount() const { return enemiesCont; }
+    bool HasblockingTag(GameObject* go);
+
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
@@ -121,6 +125,9 @@ class CuChulainn : public Character
     void ToggleRiastrad();
     void AddRiastrad(int amount);
     void EndCurse();
+
+    bool IsBlockedAhead(const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth);
+
 
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
@@ -289,6 +296,7 @@ class CuChulainn : public Character
     float stepTime                       = 0.367f;
     bool justDied                         = false;
     bool pendingGameOver                  = false;
+    bool moveFromCollision                = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;
