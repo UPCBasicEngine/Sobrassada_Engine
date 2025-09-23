@@ -34,6 +34,8 @@ enum class CharacterStates
     HURT
 };
 
+constexpr const char* BlockerGOTags[] = {"MagicBarrier"};
+
 class CuChulainn : public Character
 {
   public:
@@ -58,6 +60,8 @@ class CuChulainn : public Character
     bool IsDashUnlocked() const { return dashUnlocked; }
     bool IsUltimateUnlocked() const { return ultimateUnlocked; }
     int GetEnemiesCount() const { return enemiesCont; }
+    bool HasblockingTag(GameObject* go);
+
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
@@ -67,19 +71,23 @@ class CuChulainn : public Character
     void RemoveEnemy()
     {
         if (enemiesCont != 0) enemiesCont--;
-        GLOG("Enemy out. Total unique enemies colliding: %zu",  enemiesCont);
+        GLOG("Enemy out. Total unique enemies colliding: %zu", enemiesCont);
     }
+
+    void OnObjectDestroyed();
     void OnEnemyHit();
     void OnEnemyDefeated();
 
     void ActivateAbility(std::string abilityName);
     void OnArrowHit();
-  
+
     void StartCurse();
-    
+
     void ExportState(PlayerState& playerState) const;
     void ApplySavedState(const PlayerState& playerState);
-    
+    bool ConsumeJustDied();
+    bool IsGameOverCondition() const;
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
@@ -118,23 +126,24 @@ class CuChulainn : public Character
     void AddRiastrad(int amount);
     void EndCurse();
 
+    bool IsBlockedAhead(const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth);
+
+
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
-
-    
 
   private:
     CharacterStates state                = CharacterStates::IDLE;
 
-    int enemiesCont                   = 0;
-    std::string cameraName             = "Camera Pivot";
-    GameObject* cameraObject           = nullptr;
-    CameraMovement* camera             = nullptr;
+    int enemiesCont                      = 0;
+    std::string cameraName               = "Camera Pivot";
+    GameObject* cameraObject             = nullptr;
+    CameraMovement* camera               = nullptr;
 
     std::string spearName                = "SpearProjectile";
-    std::string spearNameMesh             = "WP_Spear_Cu_Chu";
+    std::string spearNameMesh            = "WP_Spear_Cu_Chu";
     Projectile* spear                    = nullptr;
-    GameObject* spearCharacter            = nullptr;
+    GameObject* spearCharacter           = nullptr;
 
     float defaultSpeed                   = 7.0f;
     float inputBuffer                    = 0.5f;
@@ -163,6 +172,7 @@ class CuChulainn : public Character
     std::string attackVfxVertical2Name   = "AttackVfxV2";
     std::string attackVfxHorizontal3Name = "AttackVfxH3";
     std::string attackVfxVertical3Name   = "AttackVfxV3";
+    std::string attackVfxExplosionName   = "AttackExplosion";
     GameObject* meleeVfxObject           = nullptr;
     GameObject* meleeTrailObject         = nullptr;
     GameObject* attackVfxHorizontal1     = nullptr;
@@ -171,20 +181,21 @@ class CuChulainn : public Character
     GameObject* attackVfxVertical2       = nullptr;
     GameObject* attackVfxHorizontal3     = nullptr;
     GameObject* attackVfxVertical3       = nullptr;
+    GameObject* attackVfxExplosion       = nullptr;
+    bool moveWithAttack                  = false;
     bool desiredAttack                   = false;
     float attackBufferTimer              = 0.0f;
-    int comboCounter                     = -1;
     float comboBufferTimer               = 0.0f;
     float meleeVfxDelay                  = 0.1f;
+    int comboCounter                     = -1;
 
-    //Arrow Hit VFX 
-    GameObject* arrowHitVfxObject         = nullptr;
-    std::string arrowHitVfxName           = "";
-    float arrowHitVfxDuration             = 0.2f;
-    float arrowHitVfxTimer                = 0.0f;
-    bool arrowVfxIsActive                 = false;
+    // Arrow Hit VFX
+    GameObject* arrowHitVfxObject        = nullptr;
+    std::string arrowHitVfxName          = "";
+    float arrowHitVfxDuration            = 0.2f;
+    float arrowHitVfxTimer               = 0.0f;
+    bool arrowVfxIsActive                = false;
 
-  
     // Charged attack
     std::string chargedAttackName        = "Charged";
     GameObject* chargedAttackCollider    = nullptr;
@@ -218,7 +229,7 @@ class CuChulainn : public Character
     std::string ultimateGlowName         = "ulti_glow";
     std::string ultimateBlurName         = "ultimate_mesh_blur";
     std::string ultimateBrustName        = "ultimate_mesh_brust";
-    std::string ultimateCrackName       = "ultimate_mesh_crack2";
+    std::string ultimateCrackName        = "ultimate_mesh_crack2";
     std::string ultimateHaloName         = "mesh_halo";
     std::string ultimateSmokeName        = "mesh_outer_smoke";
     std::string ultimateSphereName       = "mesh_sphere_glow";
@@ -228,7 +239,7 @@ class CuChulainn : public Character
     GameObject* ultimateGlow             = nullptr;
     GameObject* ultimateBlur             = nullptr;
     GameObject* ultimateBrust            = nullptr;
-    GameObject* ultimateCrack           = nullptr;
+    GameObject* ultimateCrack            = nullptr;
     GameObject* ultimateHalo             = nullptr;
     GameObject* ultimateSmoke            = nullptr;
     GameObject* ultimateSphere           = nullptr;
@@ -253,35 +264,24 @@ class CuChulainn : public Character
     bool desiredTransform                = false;
     float transformBufferTimer           = 0.0f;
     float transformTimer                 = 0.0f;
-    float transformVfxDelay              = 0.35f;
+    float transformVfxDelay              = 0.3f;
     float riastradTimer                  = 0.0f;
     float riastradDuration               = 5.0f;
     float riastradMovementSpeed          = 12.0f;
     float riastradAnimationsSpeedRatio   = 1.5f;
-    int riastradOnDamageTaken            = 2;
-    int riastradOnHit                    = 5;
+    int riastradOnDamageTaken            = 1;
+    int riastradOnObjectHit              = 1;
+    int riastradOnEnemyHit               = 3;
     int riastradOnEnemyDeath             = 5;
-    std::string riastradVfxName          = "riastrad_all";
-    std::string riastradBurstName        = "mesh_brust";
-    std::string riastradBlurName         = "mesh_blur";
-    std::string riastradHaloName         = "mesh_halo";
-    std::string riastradSphereName       = "mesh_sphere_glow";
-    std::string riastradCrackName        = "mesh_crack";
-    std::string riastradWaringName       = "mesh_warning";
-    std::string riastradSmoke1Name       = "mesh_smoke_a";
-    std::string riastradSmoke2Name       = "mesh_smoke_b";
-    std::string riastradSmoke3Name       = "mesh_smoke_c";
-    std::string riastradStarsName        = "mesh_stars";
+    std::string riastradVfxName          = "riastrad_attack";
+    std::string riastradBlurName         = "risastrad_mesh_blur";
+    std::string riastradCrackName        = "risastrad_mesh_crack";
+    std::string riastradWarningName      = "risastrad_mesh_warning";
+    std::string riastradStarsName        = "risastrad_mesh_stars";
     GameObject* riastradVfx              = nullptr;
-    GameObject* riastradBurst            = nullptr;
     GameObject* riastradBlur             = nullptr;
-    GameObject* riastradHalo             = nullptr;
-    GameObject* riastradSphere           = nullptr;
     GameObject* riastradCrack            = nullptr;
-    GameObject* riastradWaring           = nullptr;
-    GameObject* riastradSmoke1           = nullptr;
-    GameObject* riastradSmoke2           = nullptr;
-    GameObject* riastradSmoke3           = nullptr;
+    GameObject* riastradWarning          = nullptr;
     GameObject* riastradStars            = nullptr;
 
     float3 spawnPos                      = float3::zero;
@@ -294,6 +294,9 @@ class CuChulainn : public Character
     float idleTimer                      = 0.0f;
     float runTimer                       = 0.0f;
     float stepTime                       = 0.367f;
+    bool justDied                         = false;
+    bool pendingGameOver                  = false;
+    bool moveFromCollision                = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;
@@ -320,8 +323,8 @@ class CuChulainn : public Character
     float healTimer                      = 0.0f;
     float healKnockbackDelay             = 0.0f;
 
-    std::string damageMaskName         = "DamageMask";
-    DamageMask* damageMask             = nullptr;
+    std::string damageMaskName           = "DamageMask";
+    DamageMask* damageMask               = nullptr;
 
     // Curse
     bool isCursed                        = false;
@@ -329,6 +332,10 @@ class CuChulainn : public Character
     float curseDuration                  = 5.0f;
     float curseTimer                     = 0.0f;
     UID playerMaterial                   = 0;
+
+    float timeStopTimer                  = 0.0f;
+    float hitTimeStopDuration            = 0.05f;
+    float deathTimeStopDuration          = 0.1f;
 };
 
 extern CharacterControllerComponent* character;

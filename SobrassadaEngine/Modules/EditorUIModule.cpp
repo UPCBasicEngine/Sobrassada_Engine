@@ -19,6 +19,7 @@
 #include "ResourcesModule.h"
 #include "SceneImporter.h"
 
+#include "RenderPass.h"
 #include "SceneModule.h"
 #include "Script.h"
 #include "ScriptModule.h"
@@ -1644,6 +1645,12 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
         PhysicsConfig();
     }
 
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("FXAA"))
+    {
+        FXAASettings();
+    }
+
     ImGui::End();
 }
 
@@ -1945,6 +1952,29 @@ void EditorUIModule::PhysicsConfig() const
     }
 
     // ImGui::ShowDemoWindow();
+}
+
+void EditorUIModule::FXAASettings() const
+{
+    RenderPass* render = App->GetSceneModule()->GetScene()->GetRenderPass();
+
+    bool enable        = render->IsFXAAEnabled();
+    ImGui::Checkbox("Enable FXAA", &enable);
+    render->SetEnabled(enable);
+
+    bool showBorders = render->IsShowBorders();
+    ImGui::Checkbox("Show borders", &showBorders);
+    render->SetShowBorders(showBorders);
+
+    float globalThreshold = render->GetGlobalThreshold();
+    ImGui::DragFloat(
+        "Global Threshold", &globalThreshold, 0.001f, 0.0312f, 0.0833f, "%.4f", ImGuiSliderFlags_AlwaysClamp
+    );
+    render->SetGlobalThreshold(globalThreshold);
+
+    float localThreshold = render->GetLocalThreshold();
+    ImGui::DragFloat("Local Threshold", &localThreshold, 0.001f, 0.063f, 0.333f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
+    render->SetLocalThreshold(localThreshold);
 }
 
 void EditorUIModule::ShowCaps() const

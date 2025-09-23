@@ -5,13 +5,18 @@ out vec2 uv0;
 void main() {
     vec2 pos;
     
-    if (gl_VertexID == 0)
+    if (gl_VertexID == 0) {
         pos = vec2(-1.0, -1.0);
-    else if (gl_VertexID == 1)
+        uv0  = vec2(0.0, 0.0);
+    }   
+    else if (gl_VertexID == 1) {
         pos = vec2(3.0, -1.0);
-    else
+        uv0  = vec2(2.0, 0.0);
+    }
+    else {
         pos = vec2(-1.0, 3.0);
-
-    uv0 = (pos + 1.0) * 0.5;
+        uv0  = vec2(0.0, 2.0);
+    }
+    
     gl_Position = vec4(pos, 0.0, 1.0);
 }

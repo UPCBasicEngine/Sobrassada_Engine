@@ -11,6 +11,10 @@ out vec4 fragColor;
 void main()
 {
     vec4 texColor = texture2D(sampler2D(myTexture), uv);
-    // fragColor = vec4(0, 0, 1.0f, 1.0f);
+    
+    if (texColor.a < 0.1f) {
+        discard;
+    }
+
     fragColor = texColor;
 }

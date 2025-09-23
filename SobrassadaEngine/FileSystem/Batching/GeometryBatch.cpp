@@ -34,6 +34,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isNavmeshValid      = component->GetParent()->IsNavMeshValid();
     isAlpha             = component->GetRenderMode() == 2;
     isDoubleSided       = component->GetResourceMaterial()->IsDoubleSided();
+    additive            = component->GetAdditive();
     doApplyWind         = component->GetResourceMaterial()->DoApplyWind();
     vCoord0             = component->GetResourceMaterial()->GetVCoord0();
     vCoord1             = component->GetResourceMaterial()->GetVCoord1();
