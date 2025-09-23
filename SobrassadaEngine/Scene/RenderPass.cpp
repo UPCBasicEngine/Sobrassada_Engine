@@ -784,6 +784,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
+
     // Local size of compute is (16,16,1)
     unsigned int numGroupsX = (width + (16 - 1)) / 16;
     unsigned int numGroupsY = (height + (16 - 1)) / 16;
