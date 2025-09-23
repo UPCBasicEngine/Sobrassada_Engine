@@ -143,15 +143,15 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
         0, playerCameraPivot->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()
     );
     splineComponent->SetPointWorld(
-        1, 0.85f * (characterToHighlight->GetGlobalTransform().TranslatePart() -
+        1, secondSplinePointOffset * (characterToHighlight->GetGlobalTransform().TranslatePart() -
                     parent->GetGlobalTransform().TranslatePart())
     );
     Quat cameraOrientation =
         Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
     splineComponent->SetPointWorld(
-        2, 0.85f * (characterToHighlight->GetGlobalTransform().TranslatePart() -
+        2, secondSplinePointOffset * (characterToHighlight->GetGlobalTransform().TranslatePart() -
                     parent->GetGlobalTransform().TranslatePart()) +
-               (30 * cameraOrientation.Transform(float3(0, 0, -1)))
+               (zoomMultiplier * cameraOrientation.Transform(float3(0, 0, -1)))
     );
     splineMovementTarget->SetEnabled(true);
     cameraMovementScript->InitAlternativeTarget(splineMovementTarget);
