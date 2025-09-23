@@ -117,6 +117,7 @@ RenderPass::~RenderPass()
     glDeleteFramebuffers(1, &depthFBO);
 
     glDeleteTextures(1, &fogResultTexture);
+    glDeleteTextures(TotalShadowMaps, &spotShadowMaps[0]);
 
     gbuffer     = nullptr;
     framebuffer = nullptr;

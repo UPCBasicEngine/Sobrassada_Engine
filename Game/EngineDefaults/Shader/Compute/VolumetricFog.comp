@@ -145,7 +145,8 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
     if(projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <= 1.0 && projCoords.z >= 0.0 && projCoords.z <= 1.0)
     {
         float dLightVisibility = texture(directionalLightShadowTexture, projCoords.xy).r;
-        light += ScatteringPhaseFunction(-rayDirection, normalize(directional_dir.xyz)) * dLightVisibility * directional_color.rgb;
+        if(projCoords.z > dLightVisibility )
+            light += ScatteringPhaseFunction(-rayDirection, normalize(directional_dir.xyz)) * directional_color.rgb * directional_color.w;
     }
     
     return light;
