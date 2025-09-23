@@ -734,6 +734,9 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     Bind();
+
+    glDepthMask(GL_FALSE);
+
 #else
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
@@ -758,6 +761,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glDeleteFramebuffers(1, &fxaaFramebuffer);
     glDeleteTextures(1, &fxaaTexture);
 #endif
+
+    glDepthMask(GL_TRUE);
 }
 
 void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLightComponent* light)
