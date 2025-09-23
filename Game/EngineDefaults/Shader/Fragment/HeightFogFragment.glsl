@@ -9,8 +9,9 @@ layout(location = 3) uniform float heightFalloff;
 
 layout(location = 4) uniform vec3 cameraPos;
 layout(location = 5) uniform mat4 cameraMatrix;
-layout(location = 6) uniform float maxFog;
-layout(location = 7) uniform vec3 fogColor;
+layout(location = 6) uniform mat4 projection;
+layout(location = 7) uniform float maxFog;
+layout(location = 8) uniform vec3 fogColor;
 
 in vec2 uv0;
 out vec4 fragColor;
@@ -25,7 +26,7 @@ float ApplyFog(float distToPoint, vec3 camToPoint)
     return (densityConstant / heightFalloff) * exp(-cameraPos.y * heightFalloff) * (1.0f - exp(-distToPoint * camToPoint.y * heightFalloff)) / camToPoint.y;
 }
 
-vec3 GetWorldPosition(float depth, vec2 uv)
+vec3 GetWorldPosition(float depth)
 {
     float a = projection[3][2];
     float b = projection[2][2];
@@ -35,8 +36,8 @@ vec3 GetWorldPosition(float depth, vec2 uv)
     a = projection[0][0];
     b = projection[1][1];
 
-    float xView = (-zView / a) * (uv.x * 2.0 - 1.0);
-    float yView = (-zView / b) * (uv.y * 2.0 - 1.0);
+    float xView = (-zView / a) * (uv0.x * 2.0 - 1.0);
+    float yView = (-zView / b) * (uv0.y * 2.0 - 1.0);
 
     vec4 worldPosition = cameraMatrix *  vec4(xView,yView,zView, 1.0);
 
@@ -48,7 +49,7 @@ void main()
     float depth = texture(gDepth, uv0).r;
     float linearDepth = LinearizeDepth(depth);
 
-    vec3 worldPos = GetWorldPosition(depth);
+    vec3 worldPos = GetWorldPosition(linearDepth);
     vec3 rayDir = worldPos - cameraPos;
     float distToPoint = length(rayDir);
 

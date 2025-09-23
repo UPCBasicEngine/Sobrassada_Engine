@@ -653,21 +653,25 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     static float densityConstant = 1.0f;
     static float heightFalloff   = 1.0f;
     ImGui::Begin("Height fog");
-    ImGui::InputFloat("Density constant", &densityConstant);
-    ImGui::InputFloat("Height Falloff", &heightFalloff);
+    ImGui::SliderFloat("Density constant", &densityConstant, 0.0f, 10.0f);
+    ImGui::SliderFloat("Height Falloff", &heightFalloff, 0.0f, 10.0f);
 
     glUniform1f(2, densityConstant);
     glUniform1f(3, heightFalloff);
 
     float4x4 cameraMatrix = camera ? camera->GetWorldMatrix() : App->GetCameraModule()->GetWorldMatrix();
     float3 cameraPos      = camera ? camera->GetCameraPosition() : App->GetCameraModule()->GetCameraPosition();
+    float4x4 projection   = camera ? camera->GetProjectionMatrix() : App->GetCameraModule()->GetProjectionMatrix();
     glUniform3fv(4, 3, cameraPos.ptr());
     glUniformMatrix4fv(5, 1, GL_TRUE, cameraMatrix.ptr());
+    glUniformMatrix4fv(5, 1, GL_TRUE, projection.ptr());
 
-    static float maxFog = 1.0f;
+    static float maxFog    = 1.0f;
     static float3 fogColor = float3::one;
-    ImGui::InputFloat("Max fog", &maxFog);
-    ImGui::InputFloat3("Fog color", fogColor.ptr());
+    ImGui::SliderFloat("Max fog", &maxFog, 0.0f, 10.0f);
+    ImGui::SliderFloat3("Fog color", fogColor.ptr(), 0.0f, 10.0f);
+
+    ImGui::End();
 
     glUniform1f(6, maxFog);
     glUniform3fv(7, 3, fogColor.ptr());
