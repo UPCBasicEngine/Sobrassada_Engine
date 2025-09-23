@@ -282,9 +282,13 @@ void RenderPass::RenderScene(
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
-    AntiAliasingPassRender(framebuffer);
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Height fog Pass");
+    HeightFogPassRender(camera);
     glPopDebugGroup();
+
+    // glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
+    // AntiAliasingPassRender(framebuffer);
+    // glPopDebugGroup();
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -620,9 +624,39 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void RenderPass::HeightFogPassRender(CameraComponent* camera) const
+{
+    Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetHeightFogProgram();
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+
+    unsigned int cameraUBO = camera == nullptr ? App->GetCameraModule()->GetUbo() : camera->GetUbo();
+
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    float nearPlane =
+        camera == nullptr ? App->GetCameraModule()->GetNearPlaneDistance() : camera->GetNearPlaneDistance();
+    float farPlane = camera == nullptr ? 100 : camera->GetFarPlaneDistance();
+    glUniform1f(0, nearPlane);
+    glUniform1f(1, farPlane);
+
+    float densityConstant = 1.0f;
+    float heightFalloff    = 1.0f;
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+}
+
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     GLuint fxaaTexture = -1;
 
@@ -1066,7 +1100,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_CULL_FACE);
             glDepthMask(GL_FALSE);
