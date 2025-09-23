@@ -45,6 +45,17 @@ enum class ChangelingStates
     FINAL_ATTACK            = 15,
     DAMAGED                 = 16,
     DYING                   = 17,
+    HIGHLIGHTING            = 18,
+};
+
+enum class HighlightingStates
+{
+    IDLE      = 0,
+    BURY_UP   = 1,
+    DROP_DOWN = 2,
+    WIGGLE    = 3,
+    STAND_UP  = 4,
+    BURY_DOWN = 5,
 };
 
 class Changeling : public Character
@@ -58,6 +69,8 @@ class Changeling : public Character
 
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
+
+    void PlayHighlightSequence() override;
 
   private:
     void OnDeath() override;
@@ -81,6 +94,7 @@ class Changeling : public Character
     void UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
+    void UpdateHighlightState(float deltaTime, float distanceToPlayerSq);
 
     bool ST_BuryUp(float deltaTime, float distanceToPlayerSq);
     bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
@@ -143,36 +157,39 @@ class Changeling : public Character
     float swapStateChancePerSecond    = 0.05f;
     ChangelingVersions randomVersion =
         ChangelingVersions::RANDOM; // How the pooka behaves during this time (Only used if version = 0)
-    int maxEnemiesLeftForFinalAttack       = 0;
+    int maxEnemiesLeftForFinalAttack            = 0;
+
+    HighlightingStates currentHighlightingState = HighlightingStates::IDLE;
+    float highlightDuration                     = 3.f;
 
     // Default specific
-    float chaseSpeed                       = 1.0f;
-    float chaseAcceleration                = 4.0f;
+    float chaseSpeed                            = 1.0f;
+    float chaseAcceleration                     = 4.0f;
 
     // Sneak specific
-    float maxSneakAngleDegrees             = 45.0f;
-    float minSneakSpeed                    = 0.25f;
-    float maxSneakSpeed                    = 1.0f;
-    float distanceToPlayerForMaxSneakSpeed = 0.0f;
-    float sneakAcceleration                = 4.0f;
-    float peekChancePerSecond              = 0.1f;
-    float3 spottedLocation                 = float3::nan;
-    float3 spottedViewingDirection         = float3::nan;
+    float maxSneakAngleDegrees                  = 45.0f;
+    float minSneakSpeed                         = 0.25f;
+    float maxSneakSpeed                         = 1.0f;
+    float distanceToPlayerForMaxSneakSpeed      = 0.0f;
+    float sneakAcceleration                     = 4.0f;
+    float peekChancePerSecond                   = 0.1f;
+    float3 spottedLocation                      = float3::nan;
+    float3 spottedViewingDirection              = float3::nan;
 
     // Block specific
-    bool dashRight                         = false;
-    unsigned short dashIndex               = 0;
-    float dashAngleDegrees                 = 40.0f;
-    float timeBetweenDashes                = 2.f;
+    bool dashRight                              = false;
+    unsigned short dashIndex                    = 0;
+    float dashAngleDegrees                      = 40.0f;
+    float timeBetweenDashes                     = 2.f;
 
     // VFX
     // Dig up
-    std::string vfxDigUpRocksName          = "VFX_DigUpRocks";
-    GameObject* vfxDigUpRocksObject        = nullptr;
+    std::string vfxDigUpRocksName               = "VFX_DigUpRocks";
+    GameObject* vfxDigUpRocksObject             = nullptr;
 
-    std::string vfxDigUpHoleName           = "VFX_DigUpHole";
-    GameObject* vfxDigUpHoleObject         = nullptr;
+    std::string vfxDigUpHoleName                = "VFX_DigUpHole";
+    GameObject* vfxDigUpHoleObject              = nullptr;
 
     // Audio
-    AudioSourceComponent* audioComp        = nullptr;
+    AudioSourceComponent* audioComp             = nullptr;
 };

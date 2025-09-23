@@ -495,6 +495,7 @@
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="GameSession.h" />
     <ClInclude Include="HealVFXGround.h" />
+    <ClInclude Include="HighlightCharacter.h" />
     <ClInclude Include="MagicBarrier.h" />
     <ClInclude Include="imgui_curve_editor.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
@@ -2087,6 +2088,7 @@
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
+    <ClCompile Include="HighlightCharacter.cpp" />
     <ClCompile Include="MagicBarrier.cpp" />
     <ClCompile Include="imgui_curve_editor.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />

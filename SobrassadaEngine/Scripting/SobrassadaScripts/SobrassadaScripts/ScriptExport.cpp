@@ -56,6 +56,7 @@
 #include "VSyncToggleScript.h"
 
 #include "BossMirage.h"
+#include "HighlightCharacter.h"
 #include "Mirage.h"
 #include "MirageBossDash.h"
 
@@ -110,7 +111,7 @@ constexpr const char* scripts[] = {
     "MirageBossDash",
     "ArcherProjectile",
     "GameOverNavigatorScript",
-    "AsyncSceneLoading"
+    "HighlightCharacter"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -152,6 +153,9 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
     if (scriptType == "Boss") return new Boss(parent);
+    if (scriptType == "HighlightCharacter") return new HighlightCharacter(parent);
+
+    
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);

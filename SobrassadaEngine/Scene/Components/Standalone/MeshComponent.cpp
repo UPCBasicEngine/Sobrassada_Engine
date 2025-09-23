@@ -70,6 +70,7 @@ MeshComponent::MeshComponent(const rapidjson::Value& initialState, GameObject* p
     if (!bonesUIDs.empty() && !bindMatrices.empty()) hasBones = true;
 
     if (initialState.HasMember("ProduceShadows")) produceShadows = initialState["ProduceShadows"].GetBool();
+    if (initialState.HasMember("Additive")) additive = initialState["Additive"].GetBool();
 }
 
 MeshComponent::~MeshComponent()
@@ -115,6 +116,7 @@ void MeshComponent::Save(rapidjson::Value& targetState, rapidjson::Document::All
         if (skinIndex != -1) targetState.AddMember("SkinIndex", skinIndex, allocator);
     }
     targetState.AddMember("ProduceShadows", produceShadows, allocator);
+    targetState.AddMember("Additive", additive, allocator);
 }
 
 void MeshComponent::Clone(const Component* other)
@@ -211,6 +213,8 @@ void MeshComponent::RenderEditorInspector()
             }
             if (batch) BatchEditorMode();
         }
+        
+        if(ImGui::Checkbox("Additive", &additive)) BatchEditorMode();
         currentMaterial->OnEditorUpdate();
     }
 }
