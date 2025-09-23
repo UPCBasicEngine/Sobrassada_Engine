@@ -76,6 +76,9 @@ Changeling::Changeling(GameObject* parent)
 
     fields.emplace_back("VFX_DigUpRocks", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
     fields.emplace_back("VFX_DigUpHole", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
+
+    // Highlight
+    fields.emplace_back("Highlight duration", InspectorField::FieldType::Float, &highlightDuration, 0.1f, 10.0f);
 }
 
 bool Changeling::Init()
@@ -95,7 +98,7 @@ bool Changeling::Init()
     Character::Init();
 
     version = static_cast<ChangelingVersions>(userSelectedVersion);
-    if (version == ChangelingVersions::RANDOM) randomVersion = ChangelingVersions::SNEAK;
+    if (version == ChangelingVersions::RANDOM) randomVersion = ChangelingVersions::DEFAULT;
 
     agentAI->RecreateAgent();
     agentAI->SetLookForward(true);
@@ -135,6 +138,16 @@ void Changeling::OnPlayerExitLocation()
 
 void Changeling::OnPlayerEnterLocation()
 {
+}
+
+void Changeling::PlayHighlightSequence()
+{
+    // Don´t play the highlight if the pooka is already doing something else
+    if (currentState == ChangelingStates::IDLE_BURIED)
+    {
+        currentState             = ChangelingStates::HIGHLIGHTING;
+        currentHighlightingState = HighlightingStates::IDLE;
+    }
 }
 
 void Changeling::OnDeath()
@@ -227,6 +240,9 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::DYING:
         UpdateDyingState(deltaTime, distanceToPlayerSq);
         break;
+    case ChangelingStates::HIGHLIGHTING:
+        UpdateHighlightState(deltaTime, distanceToPlayerSq);
+        break;
     case ChangelingStates::NONE:
         currentState = ChangelingStates::IDLE_BURIED;
         break;
@@ -237,7 +253,8 @@ void Changeling::HandleState(float deltaTime)
 
 void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq)
 {
-    if (ShouldSwapStatesOnRandomVersion(deltaTime)) randomVersion = static_cast<ChangelingVersions>(rand() % 3 + 1);
+    if (ShouldSwapStatesOnRandomVersion(deltaTime))
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
     if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
 
@@ -308,7 +325,7 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
 
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
-        randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
 
@@ -334,7 +351,7 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
-        randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
 
@@ -366,7 +383,7 @@ void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerS
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
-        randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
 
@@ -650,6 +667,59 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
         isDead = true;
         finalAttackCollider->DeleteRigidBody();
         parentGO->SetEnabled(false);
+    }
+}
+
+void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
+{
+    if (!animComponent) currentState = ChangelingStates::IDLE_BURIED;
+
+    switch (currentHighlightingState)
+    {
+    case HighlightingStates::IDLE:
+        animComponent->UseTrigger("Trigger_BuryUp");
+        currentHighlightingState = HighlightingStates::BURY_UP;
+        break;
+    case HighlightingStates::BURY_UP:
+        if (animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Trigger_VisibleIdle");
+            animComponent->UseTrigger("Trigger_PrepareDash");
+            currentHighlightingState = HighlightingStates::DROP_DOWN;
+        }
+        break;
+    case HighlightingStates::DROP_DOWN:
+        if (animComponent->IsFinished())
+        {
+            stateTimer = highlightDuration;
+            animComponent->UseTrigger("Trigger_Dash");
+            animComponent->UseTrigger("Trigger_Wiggle");
+            currentHighlightingState = HighlightingStates::WIGGLE;
+        }
+        break;
+    case HighlightingStates::WIGGLE:
+        if (stateTimer <= 0.f)
+        {
+            animComponent->UseTrigger("Trigger_FinishDash");
+            currentHighlightingState = HighlightingStates::STAND_UP;
+        }
+        break;
+    case HighlightingStates::STAND_UP:
+        if (animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Trigger_VisibleIdle");
+            animComponent->UseTrigger("Trigger_BuryDown");
+            currentHighlightingState = HighlightingStates::BURY_DOWN;
+        }
+        break;
+    case HighlightingStates::BURY_DOWN:
+        if (animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Trigger_BurriedIdle");
+            currentHighlightingState = HighlightingStates::IDLE;
+            currentState             = ChangelingStates::IDLE_BURIED;
+        }
+        break;
     }
 }
 
