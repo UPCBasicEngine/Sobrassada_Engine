@@ -23,6 +23,8 @@
 
 #include "Standalone/VideoComponent.h"
 
+#include "imgui.h"
+
 #ifdef OPTICK
 #include "optick.h"
 #endif
@@ -648,8 +650,27 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     glUniform1f(0, nearPlane);
     glUniform1f(1, farPlane);
 
-    float densityConstant = 1.0f;
-    float heightFalloff    = 1.0f;
+    static float densityConstant = 1.0f;
+    static float heightFalloff   = 1.0f;
+    ImGui::Begin("Height fog");
+    ImGui::InputFloat("Density constant", &densityConstant);
+    ImGui::InputFloat("Height Falloff", &heightFalloff);
+
+    glUniform1f(2, densityConstant);
+    glUniform1f(3, heightFalloff);
+
+    float4x4 cameraMatrix = camera ? camera->GetWorldMatrix() : App->GetCameraModule()->GetWorldMatrix();
+    float3 cameraPos      = camera ? camera->GetCameraPosition() : App->GetCameraModule()->GetCameraPosition();
+    glUniform3fv(4, 3, cameraPos.ptr());
+    glUniformMatrix4fv(5, 1, GL_TRUE, cameraMatrix.ptr());
+
+    static float maxFog = 1.0f;
+    static float3 fogColor = float3::one;
+    ImGui::InputFloat("Max fog", &maxFog);
+    ImGui::InputFloat3("Fog color", fogColor.ptr());
+
+    glUniform1f(6, maxFog);
+    glUniform3fv(7, 3, fogColor.ptr());
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 }

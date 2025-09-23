@@ -9,6 +9,8 @@ layout(location = 3) uniform float heightFalloff;
 
 layout(location = 4) uniform vec3 cameraPos;
 layout(location = 5) uniform mat4 cameraMatrix;
+layout(location = 6) uniform float maxFog;
+layout(location = 7) uniform vec3 fogColor;
 
 in vec2 uv0;
 out vec4 fragColor;
@@ -18,9 +20,9 @@ float LinearizeDepth(float depth)
     return (2.0 * nearPlane) / (farPlane + nearPlane - depth * (farPlane - nearPlane));
 }
 
-float ApplyFog(float distToPoint, vec3 camPos, vec3 camToPoint)
+float ApplyFog(float distToPoint, vec3 camToPoint)
 {
-
+    return (densityConstant / heightFalloff) * exp(-cameraPos.y * heightFalloff) * (1.0f - exp(-distToPoint * camToPoint.y * heightFalloff)) / camToPoint.y;
 }
 
 vec3 GetWorldPosition(float depth, vec2 uv)
@@ -36,7 +38,7 @@ vec3 GetWorldPosition(float depth, vec2 uv)
     float xView = (-zView / a) * (uv.x * 2.0 - 1.0);
     float yView = (-zView / b) * (uv.y * 2.0 - 1.0);
 
-    vec4 worldPosition = inverseViewMatrix *  vec4(xView,yView,zView, 1.0);
+    vec4 worldPosition = cameraMatrix *  vec4(xView,yView,zView, 1.0);
 
     return worldPosition.xyz;
 }
@@ -48,13 +50,18 @@ void main()
 
     vec3 worldPos = GetWorldPosition(depth);
     vec3 rayDir = worldPos - cameraPos;
+    float distToPoint = length(rayDir);
 
-    if (linearDepth > 0.5f)
-    {
-        fragColor = vec4(1.0f);
-    }
-    else
-    {
-        fragColor = vec4(vec3(0.0f), 1.0f);
-    }
+    float fogAmount = min(ApplyFog(distToPoint, rayDir / distToPoint), maxFog);
+
+    fragColor = vec4(fogColor, fogAmount);
+
+    //if (linearDepth > 0.5f)
+    //{
+    //    fragColor = vec4(1.0f);
+    //}
+    //else
+    //{
+    //    fragColor = vec4(vec3(0.0f), 1.0f);
+    //}
 }
