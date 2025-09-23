@@ -440,6 +440,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Lightprobe.cpp" />
+    <ClCompile Include="LightprobeEditor.cpp" />
+    <ClCompile Include="LightprobeManager.cpp" />
     <ClCompile Include="Scene\Components\Standalone\Animation\AnimationTrigger.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp" />
     <ClCompile Include="Scene\Components\Standalone\VideoComponent.cpp" />
@@ -708,6 +711,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Lightprobe.h" />
+    <ClInclude Include="LightprobeEditor.h" />
+    <ClInclude Include="LightprobeManager.h" />
     <ClInclude Include="Scene\Components\Standalone\Animation\AnimationTrigger.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
     <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />

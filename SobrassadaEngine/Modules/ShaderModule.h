@@ -77,6 +77,8 @@ class ShaderModule : public Module
     int decalProgram                   = -1;
     int shadowMapProgram               = -1;
 
+
+
     int shadowDepthProgram             = -1;
     int tileShadingProgram             = -1;
 

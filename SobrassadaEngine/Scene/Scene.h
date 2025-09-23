@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "HashString.h"
 #include "LightsConfig.h"
+#include "LightprobeManager.h"
 
 #include "Math/float3x4.h"
 #include "Math/float4x4.h"
@@ -151,6 +152,10 @@ class SOBRASADA_API_ENGINE Scene
     void QueueGameObjectDelete(UID uid);
     void FlushPendingDeletes();
 
+    LightprobeManager* GetLightprobeManager() const { return lightprobeManager; }
+    void SetLightProbeManager(LightprobeManager* manager);
+    bool HasLightprobeManager() const { return lightprobeManager != nullptr; }
+
     bool isSceneLoaded = false;
 
   private:
@@ -206,4 +211,6 @@ class SOBRASADA_API_ENGINE Scene
     RenderPass* renderPass = nullptr;
 
      std::vector<UID> pendingDeletes;
+
+     LightprobeManager* lightprobeManager = nullptr;
 };

@@ -181,6 +181,12 @@ Scene::~Scene()
     App->GetParticleModule()->ClearParticleSystems();
 
     App->GetPathfinderModule()->ClearNavMesh();
+
+    if (lightprobeManager)
+    {
+        delete lightprobeManager;
+        lightprobeManager = nullptr;
+    }
     delete lightsConfig;
     delete windConfig;
     delete sceneOctree;
@@ -191,6 +197,8 @@ Scene::~Scene()
     windConfig = nullptr;
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
+
+    
 
     // GLOG("%s scene closed", sceneName.c_str());
 }
@@ -1735,6 +1743,15 @@ void Scene::FlushPendingDeletes()
     for (UID id : pendingDeletes)
         RemoveGameObjectHierarchy(id);
     pendingDeletes.clear();
+}
+
+void Scene::SetLightProbeManager(LightprobeManager* manager)
+{
+    if (lightprobeManager && lightprobeManager != manager)
+    {
+        delete lightprobeManager;
+    }
+    lightprobeManager = manager;
 }
 
 template <typename T> std::vector<T> Scene::GetEnabledComponentsOfType() const

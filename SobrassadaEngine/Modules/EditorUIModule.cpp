@@ -4,6 +4,8 @@
 #include "CameraModule.h"
 #include "Component.h"
 #include "EngineEditorBase.h"
+#include "LightprobeEditor.h"
+#include "LightprobeManager.h"
 #include "FileSystem.h"
 #include "GameTimer.h"
 #include "InputModule.h"
@@ -364,6 +366,7 @@ void EditorUIModule::MainMenu()
             if (ImGui::MenuItem("State Machine Editor Engine Editor", ""))
                 OpenEditor(CreateEditor(EditorType::ANIMATION));
             if (ImGui::MenuItem("Texture Editor Engine Editor", "")) OpenEditor(CreateEditor(EditorType::TEXTURE));
+            if (ImGui::MenuItem("Lightprobe Editor Engine Editor", "")) OpenEditor(CreateEditor(EditorType::LIGHTPROBE));
 
             ImGui::EndMenu();
         }
@@ -1539,6 +1542,21 @@ EngineEditorBase* EditorUIModule::CreateEditor(EditorType type)
     case EditorType::TEXTURE:
         return new TextureEditor("TextureEditor_" + std::to_string(uid), uid);
         break;
+    case EditorType::LIGHTPROBE:
+    {
+        Scene* scene = App->GetSceneModule()->GetScene();
+        if (scene && !scene->HasLightprobeManager())
+        {
+            LightprobeManager* newManager = new LightprobeManager;
+            scene->SetLightProbeManager(newManager);
+        }
+        LightprobeEditor* editor = new LightprobeEditor("Lightprobe Editor" + std::to_string(uid), uid);
+        if (scene && scene->HasLightprobeManager()) editor->SetLightprobeManager(scene->GetLightprobeManager());
+        return editor;
+    }
+    
+        break;
+        
     default:
         return nullptr;
     }

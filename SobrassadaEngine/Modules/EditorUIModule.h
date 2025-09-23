@@ -30,7 +30,8 @@ enum EditorType
     BASE,
     NODE,
     TEXTURE,
-    ANIMATION
+    ANIMATION, 
+    LIGHTPROBE
 };
 
 enum class GizmoOperation

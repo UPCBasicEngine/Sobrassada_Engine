@@ -622,6 +622,9 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="Utils\WindConfig.cpp" />
+    <ClCompile Include="Lightprobe.cpp" />
+    <ClCompile Include="LightprobeManager.cpp" />
+    <ClCompile Include="LightprobeEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1230,6 +1233,9 @@
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />
     <ClInclude Include="Utils\WindConfig.h" />
+    <ClInclude Include="Lightprobe.h" />
+    <ClInclude Include="LightprobeManager.h" />
+    <ClInclude Include="LightprobeEditor.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">
