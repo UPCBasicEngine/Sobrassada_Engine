@@ -13,6 +13,12 @@ class DirectionalLightComponent;
 constexpr int SpotLightShadowMapSize = 1024;
 constexpr int TotalShadowMaps = 15;
 
+struct SpotlightShadow
+{
+    float4x4 viewProjection;
+    uint64_t shadowMap;
+};
+
 class RenderPass
 {
   public:
@@ -77,12 +83,13 @@ class RenderPass
     unsigned int decalVAO, decalVBO, decalEBO;
 
     // Shadows
-    unsigned int depthTexture, depthFBO;
+    unsigned int depthTexture, depthFBO, spotShadowSSBO;
     float4x4 lightView;
     float4x4 lightProj;
 
     // SpotLight Shadows
     unsigned int spotShadowMaps[TotalShadowMaps] = {0};
+    unsigned int spotShadowMapsGPU[TotalShadowMaps] = {0};
 
     // Tile Shading
     unsigned int visibleLightIndicesSSBO = 0;

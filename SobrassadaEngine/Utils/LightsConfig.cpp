@@ -116,6 +116,14 @@ void LightsConfig::IsHDRTexture(const std::string& name)
     else isHDRTexture = false;
 }
 
+void LightsConfig::ResetSpotShadowIndexes()
+{
+    for (SpotLightComponent* spot : spotLights)
+    {
+        spot->SetShadowGPUIndex(-1);
+    }
+}
+
 void LightsConfig::RenderSkybox(const float4x4& projection, const float4x4& view) const
 {
     App->GetOpenGLModule()->SetDepthFunc(false);
@@ -501,7 +509,7 @@ void LightsConfig::SetSpotLightsShaderData() const
             spots.emplace_back(Lights::SpotLightShaderData(
                 float4(spotLights[i]->GetGlobalTransform().TranslatePart(), spotLights[i]->GetRange()),
                 float4(spotLights[i]->GetColor(), spotLights[i]->GetIntensity()), float3(spotLights[i]->GetDirection()),
-                spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle()
+                spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle(), spotLights[i]->GetShadowGPUIndex()
             ));
         }
     }
@@ -514,7 +522,7 @@ void LightsConfig::SetSpotLightsShaderData() const
     for (const Lights::SpotLightShaderData& light : spots)
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::SpotLightShaderData), &light);
-        offset += sizeof(Lights::SpotLightShaderData) + 12;
+        offset += sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset;
     }
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, spotBufferId);
 }
@@ -565,7 +573,7 @@ void LightsConfig::AddSpotLight(SpotLightComponent* newSpot)
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     int bufferSize = static_cast<int>(
-        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16
+        (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16
     ); // 12 bytes offset between spotlights
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
     /*GLOG(
@@ -640,7 +648,7 @@ void LightsConfig::RemoveSpotLight(SpotLightComponent* spot)
     // Resize lights buffer
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     int bufferSize = static_cast<int>(
-        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16
+        (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16
     ); // 12 bytes offset between spotlights
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 
@@ -658,11 +666,11 @@ void LightsConfig::GetAllSceneLights()
         directionalLight      = dirLights.empty() ? nullptr : dirLights[0];
 
         // Point
-        //pointLights           = scene->GetEnabledComponentsOfType<PointLightComponent*>();
+        // pointLights           = scene->GetEnabledComponentsOfType<PointLightComponent*>();
         // GLOG("Point lights count: %d", pointLights.size());
 
         // Spot
-        //spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
+        // spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
         // GLOG("Spot lights count: %d", spotLights.size());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
@@ -671,7 +679,8 @@ void LightsConfig::GetAllSceneLights()
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
         size_t spotBufferSize =
-            (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16; // 12 bytes offset between spotlights
+            (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() +
+            16; // 8 bytes offset between spotlights
         glBufferData(GL_SHADER_STORAGE_BUFFER, spotBufferSize, nullptr, GL_STATIC_DRAW);
 
         glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
@@ -715,8 +724,7 @@ void LightsConfig::GetAllSpotLights(const std::vector<Component*>& components)
 
     // Maybe make function to do this because it's called like 3 times
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
-    size_t bufferSize =
-        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16; // 12 bytes offset between spotlights
+    size_t bufferSize = (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16;
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 }
 

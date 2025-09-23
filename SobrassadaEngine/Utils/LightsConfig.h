@@ -59,14 +59,20 @@ namespace Lights
         float3 direction;
         float innerAngle;
         float outerAngle;
+        int shadowGPUIndex;
 
         SpotLightShaderData(
-            const float4& pos, const float4& color, const float3& dir, const float inner, const float outer
+            const float4& pos, const float4& color, const float3& dir, const float inner, const float outer,
+            int shadowGPUIndex
         )
-            : position(pos), color(color), direction(dir), innerAngle(inner), outerAngle(outer)
+            : position(pos), color(color), direction(dir), innerAngle(inner), outerAngle(outer),
+              shadowGPUIndex(shadowGPUIndex)
         {
         }
     };
+
+    constexpr int SpotLightShaderOffset = 16 - (sizeof(SpotLightShaderData) % 16);
+
 } // namespace Lights
 
 class DirectionalLightComponent;
@@ -103,6 +109,8 @@ class LightsConfig
     void LoadData(const rapidjson::Value& lights);
 
     void IsHDRTexture(const std::string& name);
+
+    void ResetSpotShadowIndexes();
 
     DirectionalLightComponent* GetDirectionalLight() { return directionalLight; }
 

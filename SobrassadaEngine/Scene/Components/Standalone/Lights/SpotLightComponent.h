@@ -29,15 +29,18 @@ class SpotLightComponent : public LightComponent
     float GetRange() const { return range; }
     float GetInnerAngle() const { return innerAngle; }
     float GetOuterAngle() const { return outerAngle; }
-
+    int GetShadowGPUIndex() const { return shadowGPUIndex; }
 
     float4x4 GetViewMatrix() const { return spotCamera.ViewMatrix(); }
     float4x4 GetProjectionMatrix() const { return spotCamera.ProjectionMatrix(); }
+
+    void SetShadowGPUIndex(int newIndex) { shadowGPUIndex = newIndex; }
 
   private:
     float range;
     float innerAngle;
     float outerAngle;
 
+    int shadowGPUIndex = -1;
     Frustum spotCamera;
 };

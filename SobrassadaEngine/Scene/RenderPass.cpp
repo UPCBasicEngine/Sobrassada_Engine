@@ -78,8 +78,16 @@ RenderPass::RenderPass()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        spotShadowMapsGPU[i] = glGetTextureHandleARB(spotShadowMaps[i]);
+        glMakeTextureHandleResidentARB(spotShadowMapsGPU[i]);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenBuffers(1, &spotShadowSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(SpotlightShadow) * TotalShadowMaps, nullptr, GL_STATIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     constexpr float cubeVertices[] = {-0.5f, -0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, -0.5f, 0.5f,
                                       -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f};
@@ -117,6 +125,12 @@ RenderPass::~RenderPass()
     glDeleteFramebuffers(1, &depthFBO);
 
     glDeleteTextures(1, &fogResultTexture);
+
+    for (int i = 0; i < TotalShadowMaps; ++i)
+    {
+        glMakeTextureHandleNonResidentARB(spotShadowMapsGPU[i]);
+    }
+
     glDeleteTextures(TotalShadowMaps, &spotShadowMaps[0]);
 
     gbuffer     = nullptr;
@@ -222,7 +236,7 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
-    ShadowMapPassRender(camera, light, objectsToRender);
+    //ShadowMapPassRender(camera, light, objectsToRender);
     glPopDebugGroup();
 
     glViewport(0, 0, width, height);
@@ -567,6 +581,7 @@ void RenderPass::ShadowMapPassRender(
     batchManager->RenderShadowMap(meshesToRender, ubo);
 
     // RENDER SPOTLIGHT SHADOWMAPS
+
     auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
 
@@ -596,9 +611,19 @@ void RenderPass::ShadowMapPassRender(
 
         lightmatrices.viewMatrix       = spotLights[i]->GetViewMatrix();
         lightmatrices.projectionMatrix = spotLights[i]->GetProjectionMatrix();
+
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        // LOADING SPOTLIGHT SHADOW TO SSBO
+        spotLights[i]->SetShadowGPUIndex(i);
+        SpotlightShadow currentShadow;
+        currentShadow.viewProjection = lightmatrices.viewMatrix * lightmatrices.projectionMatrix;
+        currentShadow.shadowMap      = spotShadowMapsGPU[i];
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(SpotlightShadow) * i, sizeof(SpotlightShadow), &currentShadow);
 
         batchManager->RenderShadowMap(meshesToRender, ubo);
     }
@@ -1243,7 +1268,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_CULL_FACE);
             glDepthMask(GL_FALSE);
