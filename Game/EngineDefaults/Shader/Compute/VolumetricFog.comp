@@ -133,6 +133,11 @@ float noise(vec3 currentPosition, float time)
 	return center * 2.0 - 1.0;
 }
 
+bool ValidProjectionCoordinates(vec3 projCoords)
+{
+    return projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <= 1.0 && projCoords.z >= 0.0 && projCoords.z <= 1.0;
+}
+
 float CalculateExtinctionCoefficient(vec3 currentPosition)
 {
     return extinctionCoefficient * noise(currentPosition, time) * noiseAmmount;
@@ -156,7 +161,7 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
     vec3 projCoords = currentPosFromLight.xyz / currentPosFromLight.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    if(projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <= 1.0 && projCoords.z >= 0.0 && projCoords.z <= 1.0)
+    if(ValidProjectionCoordinates(projCoords))
     {
         float dLightVisibility = texture(directionalLightShadowTexture, projCoords.xy).r;
         if(projCoords.z > dLightVisibility )
@@ -173,7 +178,22 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
         int realIndex = lightIndexBuffer & 0x7FFFFFFF;
         if(isSpot)
         {
-            return spotLights[realIndex].color.rgb * spotLights[realIndex].color.a;
+            int shadowIndex = spotLights[realIndex].spotShadowIndex;
+            if(shadowIndex < 0) continue;
+
+            currentPosFromLight = spotShadows[shadowIndex].shadowViewProj * vec4(currentPosition, 1.0);
+            projCoords = currentPosFromLight.xyz / currentPosFromLight.w;
+            projCoords = projCoords * 0.5 + 0.5;
+
+            if(ValidProjectionCoordinates(projCoords))
+            {
+                const float attenuation = SpotLightAttenuation(index, pos);
+                const vec3 spotColor = spotLights[index].color.rgb * spotLights[index].color.a * attenuation;
+
+                vec3 sacttering = ScatteringPhaseFunction(-rayDirection, normalize(spotLights[index].direction));
+
+                light += spotColor * sacttering;
+            }
         }
     }
     
