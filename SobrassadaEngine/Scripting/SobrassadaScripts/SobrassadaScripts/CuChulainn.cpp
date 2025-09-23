@@ -625,6 +625,7 @@ void CuChulainn::HandleState(float deltaTime)
             if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
             if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
             if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+            //if (attackVfxExplosion) attackVfxExplosion->SetEnabled(false);
         }
         else if (stateName == HashString("Charge"))
         {
@@ -1903,6 +1904,8 @@ const std::string CuChulainn::GetLogicStateName()
     case CharacterStates::TRANSFORM:
         return "Transform";
         break;
+    case CharacterStates::HURT:
+        return "Hurt";
     default:
         return "MISSING!";
         break;
