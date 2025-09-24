@@ -190,13 +190,9 @@ class FireballTrap : public Script
     bool bigBallHitPlayerThisAttack = false;
 
     // Animations
-    GameObject* animAPrefab         = nullptr;
-    GameObject* animBPrefab         = nullptr;
     GameObject* animCPrefab         = nullptr;
-
-    float animADelay = 0.f, animALife = 0.f;
-    float animBDelay = 0.f, animBLife = 0.f;
-    float animCDelay = 0.f, animCLife = 0.f;
+    float animCDelay                = 0.f;
+    float animCLife                 = 0.f;
 
     void StartAnimationsRecursive(GameObject* go, UID clip, bool loop);
 
@@ -204,29 +200,16 @@ class FireballTrap : public Script
     void SetEnabledRecursive(GameObject* go, bool enabled);
     void StopAnimationsRecursive(GameObject* go);
     float ComputeMaxAnimDuration(GameObject* root) const;
-
-    std::string animAName = "Bomb_animation_W"; // Wind
-    std::string animBName = "Bomb_animation_N"; // BigBomb
     std::string animCName = "Bomb_animation_S"; // MiniBomb
 
-    struct ManagedAnim
+    void PlayBombAnimSAt(const float3& localPos);
+    void StopBombAnimS();
+
+    struct OneShotAnim
     {
         GameObject* root       = nullptr;
         AnimationComponent* ac = nullptr;
-        std::vector<ShaderScriptComponent*> shaders;
-        float delay     = 0.f;
-        float life      = 0.f;
-        bool loop       = false;
-        bool started    = false;
-        bool active     = false;
-        float timer     = 0.f;
-        float3 localPos = float3::zero;
     };
 
-    void InitManagedAnim(GameObject* go, ManagedAnim& out);
-    void StartManagedAnim(ManagedAnim& m, float delay, float life, bool loop, const float3& localPos);
-    void TickManagedAnim(ManagedAnim& m, float dt);
-    void StopManagedAnim(ManagedAnim& m);
-
-    ManagedAnim animA, animB, animC;
+    OneShotAnim animC;
 };

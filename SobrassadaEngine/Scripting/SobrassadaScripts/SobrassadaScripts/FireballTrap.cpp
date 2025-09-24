@@ -118,20 +118,11 @@ void FireballTrap::SetupInspectorFields()
     fields.push_back({"Mini Landing Radius", InspectorField::FieldType::Float, &cfg.miniLandingRadius, 0.f, 3.f});
 
     // Anim prefabs
-    fields.push_back({"Anim Wind Name", InspectorField::FieldType::InputText, &animAName});
-    fields.push_back({"Anim BigBomb Name", InspectorField::FieldType::InputText, &animBName});
     fields.push_back({"Anim MiniBomb Name", InspectorField::FieldType::InputText, &animCName});
-
-    // Anim delays/life
-    fields.push_back({"Anim Wind Delay", InspectorField::FieldType::Float, &animADelay, 0.f, 10.f});
-    fields.push_back({"Anim Wind Life", InspectorField::FieldType::Float, &animALife, 0.f, 20.f});
-
-    fields.push_back({"Anim BigBomb Delay", InspectorField::FieldType::Float, &animBDelay, 0.f, 10.f});
-    fields.push_back({"Anim BigBomb Life", InspectorField::FieldType::Float, &animBLife, 0.f, 20.f});
-
     fields.push_back({"Anim MiniBomb Delay", InspectorField::FieldType::Float, &animCDelay, 0.f, 10.f});
     fields.push_back({"Anim MiniBomb Life", InspectorField::FieldType::Float, &animCLife, 0.f, 20.f});
 }
+
 bool FireballTrap::Init()
 {
     // Collider: spawn zone
@@ -204,25 +195,18 @@ bool FireballTrap::Init()
     if (vfxIndicatorPrefab) vfxIndicatorPrefab->SetEnabled(false);
     if (miniIndicatorVfxPrefab) miniIndicatorVfxPrefab->SetEnabled(false);
 
-    if (!animAPrefab && !animAName.empty())
-    {
-        animAPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animAName);
-        if (animAPrefab) animAPrefab->SetEnabled(false);
-    }
-    if (!animBPrefab && !animBName.empty())
-    {
-        animBPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animBName);
-        if (animBPrefab) animBPrefab->SetEnabled(false);
-    }
     if (!animCPrefab && !animCName.empty())
     {
         animCPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animCName);
         if (animCPrefab) animCPrefab->SetEnabled(false);
     }
-
-    InitManagedAnim(animAPrefab, animA);
-    InitManagedAnim(animBPrefab, animB);
-    InitManagedAnim(animCPrefab, animC);
+    animC.root = animCPrefab;
+    {
+        auto v   = animCPrefab ? animCPrefab->GetAllComponentsInChilds<AnimationComponent*>(AppEngine)
+                               : std::vector<AnimationComponent*> {};
+        animC.ac = v.empty() ? nullptr : v.front();
+    }
+    if (animC.root) animC.root->SetEnabled(false);
 
     return true;
 }
@@ -282,9 +266,8 @@ void FireballTrap::Update(float deltaTime)
     }
 
     UpdateScheduledVfx(deltaTime);
-    TickManagedAnim(animA, deltaTime);
-    TickManagedAnim(animB, deltaTime);
-    TickManagedAnim(animC, deltaTime);
+
+    if (animC.root && animC.root->IsEnabled() && animC.ac && animC.ac->IsFinished()) StopBombAnimS();
 }
 
 void FireballTrap::StartAttack()
@@ -374,27 +357,23 @@ void FireballTrap::StartAttack()
 
 void FireballTrap::HandleImpact()
 {
-    // Disable falling visuals
     fireball->SetEnabled(false);
     if (fireballShadow) fireballShadow->SetEnabled(false);
 
-    // Decal under big fireball
     if (!vfxBlackStainPrefab)
     {
         if ((currentDecal = RequestImpactDecal())) currentDecal->SetLocalPosition(impactLocalPos);
     }
 
-    // Ground burn mesh & damage collider
     if (groundMesh) groundMesh->SetEnabled(true);
     if (damageAreaCollider)
     {
-        damageAreaCollider->SetEnabled(false); // reset
+        damageAreaCollider->SetEnabled(false);
         damageAreaCollider->centerOffset = impactLocalPos;
         damageAreaCollider->SetEnabled(true);
     }
-    StartManagedAnim(animA, animADelay, animALife, false, impactLocalPos);
-    StartManagedAnim(animB, animBDelay, animBLife, false, impactLocalPos);
-    StartManagedAnim(animC, animCDelay, animCLife, false, impactLocalPos);
+
+    PlayBombAnimSAt(impactLocalPos);
 
     if (!bigBallHitPlayerThisAttack)
     {
@@ -407,7 +386,6 @@ void FireballTrap::HandleImpact()
 
         const float stepAng     = TAU / float(std::max(1u, miniCount));
 
-        // Physics to compute time-to-ground for minis indicator lives until landing
         const float startHeight = cfg.miniStartHeight;
         const float vUp         = cfg.miniUpSpeed;
         const float g           = cfg.gravity;
@@ -821,11 +799,11 @@ void FireballTrap::StartAnimationsRecursive(GameObject* go, UID clip, bool loop)
     if (auto* ac = go->GetComponent<AnimationComponent*>())
     {
         const bool hasSM = (ac->GetResourceStateMachine() != nullptr);
-        bool ok          = false;
 
         if (hasSM)
         {
-            static const char* kOrder[] = {"Play", "Start", "Loop", "Reset", "Idle"};
+            bool ok                     = false;
+            static const char* kOrder[] = {"Play", "Start", "Loop"};
             for (const char* t : kOrder)
             {
                 if (ac->UseTrigger(t))
@@ -866,115 +844,51 @@ float FireballTrap::ComputeMaxAnimDuration(GameObject* root) const
     return maxDur;
 }
 
-
-void FireballTrap::InitManagedAnim(GameObject* go, ManagedAnim& out)
+void FireballTrap::PlayBombAnimSAt(const float3& localPos)
 {
-    out = ManagedAnim {};
-    if (!go) return;
+    if (!animC.root || !animC.ac) return;
 
-    // Ens assegurem que l'anim prefab sigui fill d'aquest trap (instància pròpia)
-    GameObject* root = go;
-    if (root->GetParent() != parent->GetUID())
+    const float4x4 parentW = parent->GetGlobalTransform();
+    const float4x4 prefabW = animC.root->GetGlobalTransform();
+    const float4x4 worldTf = float4x4::FromTRS(parentW.MulPos(localPos), prefabW.RotatePart(), prefabW.ExtractScale());
+    animC.root->SetLocalTransform(parentW.Inverted() * worldTf);
+
+    SetEnabledRecursive(animC.root, true);
+
+    bool started = false;
+
+    if (animC.ac->GetResourceStateMachine())
     {
-        root = CloneHierarchy(go, parent->GetUID());
-        go->SetEnabled(false);
+        (void)animC.ac->UseTrigger("Reset");
+        started = animC.ac->UseTrigger("Play")
+               || animC.ac->UseTrigger("Start")
+               || animC.ac->UseTrigger("Loop")
+               || animC.ac->UseTrigger("Idle");
     }
 
-    out.root    = root;
-
-    auto anims  = root->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
-    out.ac      = anims.empty() ? nullptr : anims.front();
-
-    out.shaders = root->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
-    for (auto* s : out.shaders)
+    if (!started)
     {
-        s->SetScriptEnabled("MovingUVTransparent", false);
-        s->ResetScript("MovingUVTransparent");
-        s->SetScriptEnabled("MovingUVClipErode", false);
-        s->ResetScript("MovingUVClipErode");
+        animC.ac->OnStop();
+        animC.ac->OnPlay(false, false);
     }
 
-    SetEnabledRecursive(root, false);
+    if (auto* ctrl = animC.ac->GetAnimationController())
+    {
+        ctrl->SetTime(0.0f);
+    }
+
+    animC.ac->Update(0.0f);
+
+    GLOG("[FireballTrap] Bomb_animation_S started=%d hasSM=%d isPlaying=%d",
+         (int)started,
+         animC.ac->GetResourceStateMachine()!=nullptr,
+         (int)animC.ac->IsPlaying());
 }
 
 
-void FireballTrap::StartManagedAnim(ManagedAnim& m, float delay, float life, bool loop, const float3& localPos)
+void FireballTrap::StopBombAnimS()
 {
-    if (!m.root) return;
-    m.delay    = delay;
-    m.life     = life;
-    m.loop     = loop;
-    m.localPos = localPos;
-    m.started  = false;
-    m.active   = true;
-    m.timer    = -delay;
-}
-
-void FireballTrap::TickManagedAnim(ManagedAnim& m, float dt)
-{
-    if (!m.active || !m.root) return;
-
-    m.timer += dt;
-
-    if (!m.started && m.timer >= 0.f)
-    {
-        const float4x4 parentW = parent->GetGlobalTransform();
-        const float4x4 prefabW = m.root->GetGlobalTransform();
-        const float4x4 worldTf =
-            float4x4::FromTRS(parentW.MulPos(m.localPos), prefabW.RotatePart(), prefabW.ExtractScale());
-        const float4x4 localTf = parentW.Inverted() * worldTf;
-
-        m.root->SetLocalTransform(localTf);
-        SetEnabledRecursive(m.root, true);
-
-        for (auto* s : m.shaders)
-        {
-            s->SetScriptEnabled("MovingUVTransparent", true);
-            s->SetScriptEnabled("MovingUVClipErode", false);
-            s->ResetScript("MovingUVClipErode");
-        }
-
-        StartAnimationsRecursive(m.root, INVALID_UID, m.loop);
-
-        if (m.life <= 0.f)
-        {
-            float dur = ComputeMaxAnimDuration(m.root);
-            if (dur <= 0.f) dur = 2.0f;
-            m.life = dur;
-        }
-
-        m.started = true;
-    }
-
-    if (m.started && m.timer >= m.life)
-    {
-        StopManagedAnim(m);
-        return;
-    }
-}
-
-
-void FireballTrap::StopManagedAnim(ManagedAnim& m)
-{
-    if (!m.root)
-    {
-        m.active = false;
-        return;
-    }
-
-    StopAnimationsRecursive(m.root);
-
-    for (auto* s : m.shaders)
-    {
-        s->SetScriptEnabled("MovingUVTransparent", false);
-        s->ResetScript("MovingUVTransparent");
-        s->SetScriptEnabled("MovingUVClipErode", false);
-        s->ResetScript("MovingUVClipErode");
-    }
-
-    SetEnabledRecursive(m.root, false);
-
-    m.active  = false;
-    m.started = false;
-    m.timer   = 0.f;
+    if (!animC.root || !animC.ac) return;
+    animC.ac->OnStop();
+    animC.root->SetEnabled(false);
 }
