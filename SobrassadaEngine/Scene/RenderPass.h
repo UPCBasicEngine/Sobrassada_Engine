@@ -13,6 +13,7 @@ class DirectionalLightComponent;
 struct HeightFogParameters
 {
     bool isEnabled        = false;
+    bool followCamera     = false;
     float densityConstant = 1.0f;
     float heightFalloff   = 1.0f;
     float maxFog          = 1.0f;

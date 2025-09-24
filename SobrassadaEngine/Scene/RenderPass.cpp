@@ -649,6 +649,7 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     glUniform1f(7, heightFog.maxFog);
     glUniform3fv(8, 1, heightFog.fogColor.ptr());
     glUniform1f(9, heightFog.fogStartHeight);
+    glUniform1i(10, heightFog.followCamera);
 
     glDepthMask(GL_FALSE);
 

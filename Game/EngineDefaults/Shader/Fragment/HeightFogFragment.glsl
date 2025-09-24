@@ -11,13 +11,14 @@ layout(location = 6) uniform mat4 projection;
 layout(location = 7) uniform float maxFog;
 layout(location = 8) uniform vec3 fogColor;
 layout(location = 9) uniform float fogStartHeight;
+layout(location = 10) uniform bool followCamPos;
 
 in vec2 uv0;
 out vec4 fragColor;
 
 float ApplyFog(float distToPoint, vec3 camToPoint)
 {
-    float heightOffset = cameraPos.y - fogStartHeight;
+    float heightOffset = followCamPos ? cameraPos.y - (cameraPos.y + fogStartHeight) : cameraPos.y - fogStartHeight;
     return densityConstant * exp(-heightOffset * heightFalloff) * (1.0f - exp(-distToPoint * camToPoint.y * heightFalloff)) / (camToPoint.y * heightFalloff);
 }
 

@@ -1975,6 +1975,7 @@ void EditorUIModule::HeightFogSettings() const
     HeightFogParameters heightFog = App->GetSceneModule()->GetScene()->GetRenderPass()->GetHeightFogParameters();
 
     ImGui::Checkbox("Enable Height Fog", &heightFog.isEnabled);
+    ImGui::Checkbox("Follow Camera Height", &heightFog.followCamera);
     ImGui::DragFloat(
         "Density Constant", &heightFog.densityConstant, 0.001f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
     );
