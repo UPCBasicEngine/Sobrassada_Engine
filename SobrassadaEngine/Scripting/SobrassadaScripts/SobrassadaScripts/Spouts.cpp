@@ -75,9 +75,10 @@ void Spouts::Update(float deltaTime)
     {
         if (character == nullptr) return;
 
-        if (enableRune) rune->SetEnabled(true);
-
-        if (bossControlled) return;
+        if (!bossControlled)
+        {
+            if (enableRune) rune->SetEnabled(true);
+        }
 
         damageCollider->SetEnabled(false);
         float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
@@ -133,7 +134,10 @@ void Spouts::Update(float deltaTime)
         explosionScript->SetScriptEnabled("MovingUVTransparent", true);
         shaderExplosionMesh->SetEnabled(false);
 
-        particles->Init();
+        if (!bossControlled)
+        {
+            particles->Init();
+        }
 
         // Tornado Water
         float3 translation, scale;
