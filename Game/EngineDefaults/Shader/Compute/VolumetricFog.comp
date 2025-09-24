@@ -135,8 +135,8 @@ float noise(vec3 currentPosition, float time)
 float SpotLightAttenuation(const int index, vec3 pos)
 {
 	const vec3 dirLight = normalize(spotLights[index].direction);
-	const float distance = dot(pos - spotLights[index].position.xyz, dirLight);
-	const float Fatt = pow(max(1 - pow((distance / spotLights[index].position.w), 4.0), 0.0), 2.0) / (pow(distance, 2.0) + 1.0);
+	const float dist = dot(pos - spotLights[index].position.xyz, dirLight);
+	const float Fatt = pow(max(1 - pow((dist / spotLights[index].position.w), 4.0), 0.0), 2.0) / (pow(dist, 2.0) + 1.0);
 
 	const vec3 D = normalize(pos - spotLights[index].position.xyz);
 	const float C = dot(D, dirLight);
@@ -175,6 +175,7 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
 
     vec4 currentPosFromLight;
     vec3 projCoords;
+    
     // DIRECTIONAL LIGHT
     // currentPosFromLight = directinal_Projection_Mat * directinal_View_Mat * vec4(currentPosition, 1.0);
     // projCoords = currentPosFromLight.xyz / currentPosFromLight.w;
@@ -212,12 +213,10 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
 
                 if(projCoords.z < lightVisible)
                 {
-                    vec3 viewDirection = normalize(currentPosition - spotLights[realIndex].position.xyz);
-
                     const float attenuation = SpotLightAttenuation(realIndex, currentPosition);
                     const vec3 spotColor = spotLights[realIndex].color.rgb * spotLights[realIndex].color.a * attenuation;
 
-                    float spotScattering = ScatteringPhaseFunction(viewDirection, normalize(spotLights[realIndex].direction));
+                    float spotScattering = ScatteringPhaseFunction(-rayDirection, normalize(spotLights[realIndex].direction));
 
                     light += spotColor * spotScattering;
                 }
