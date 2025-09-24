@@ -454,15 +454,17 @@ void Boss::Update(float deltaTime)
 
 void Boss::OnPlayerExitLocation()
 {
+    GLOG("EXIT")
     waiting = true;
 }
 
 void Boss::OnPlayerEnterLocation()
 {
+    GLOG("ENTER")
     waiting = false;
 
     doTaunt = true;
-    ChooseNextState();
+    // ChooseNextState();
 }
 
 void Boss::OnDeath()
@@ -613,14 +615,16 @@ void Boss::ChooseNextStateFirstPhase()
 
     case BossDistance::Extreme:
         float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
-        if (distance <= maxDetectionRange) doTaunt = true;
-        else doIdle = true;
+        //if (distance <= maxDetectionRange) doTaunt = true;
+        //else doIdle = true;
+        //doIdle         = true;
         break;
     }
 
     int num = uniformDist(rng);
     if (doTaunt)
     {
+        GLOG("DO TAUNT")
         currentState = BossStates::Taunt;
     }
     else if (doIdle)
@@ -802,7 +806,11 @@ void Boss::Idle(float deltaTime)
         if (animComponent) animComponent->UseTrigger("Idle");
     }
 
-    if (!waiting) ChooseNextState();
+    if (!waiting)
+    {
+        GLOG("CHOOSE NEXT STATE")
+        ChooseNextState();
+    }
     else
     {
         agentAI->ResumeMovement();
