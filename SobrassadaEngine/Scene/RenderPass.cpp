@@ -639,9 +639,9 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     glUniform1f(2, heightFog.densityConstant);
     glUniform1f(3, heightFog.heightFalloff);
 
-    float4x4 cameraMatrix = camera ? camera->GetWorldMatrix() : App->GetCameraModule()->GetWorldMatrix();
-    float3 cameraPos      = camera ? camera->GetCameraPosition() : App->GetCameraModule()->GetCameraPosition();
-    float4x4 projection   = camera ? camera->GetProjectionMatrix() : App->GetCameraModule()->GetProjectionMatrix();
+    const float4x4 cameraMatrix = camera ? camera->GetWorldMatrix() : App->GetCameraModule()->GetWorldMatrix();
+    const float3 cameraPos      = camera ? camera->GetCameraPosition() : App->GetCameraModule()->GetCameraPosition();
+    const float4x4 projection = camera ? camera->GetProjectionMatrix() : App->GetCameraModule()->GetProjectionMatrix();
     glUniform3fv(4, 1, cameraPos.ptr());
     glUniformMatrix4fv(5, 1, GL_TRUE, cameraMatrix.ptr());
     glUniformMatrix4fv(6, 1, GL_TRUE, projection.ptr());
