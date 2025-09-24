@@ -1624,7 +1624,7 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
     if (ImGui::CollapsingHeader("Editor camera"))
     {
         // TODO: ADD CAMERA MODULE AS TEMPORAL MEANWHILO THERE ARE NO GAMEOBJECTS
-        // CameraConfig();
+        CameraConfig();
     }
 
     ImGui::Spacing();
@@ -1716,6 +1716,16 @@ void EditorUIModule::WindowConfig(bool& vsync)
 
 void EditorUIModule::CameraConfig() const
 {
+    CameraModule* cam = App->GetCameraModule();
+
+    float nearPlane   = cam->GetNearPlaneDistance();
+    float farPlane    = cam->GetFarPlaneDistance();
+
+    ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Far Plane", &farPlane, 0.1f, 0.1f, 5000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+    cam->SetNear(nearPlane);
+    cam->SetFar(farPlane);
 }
 
 void EditorUIModule::OpenGLConfig()
