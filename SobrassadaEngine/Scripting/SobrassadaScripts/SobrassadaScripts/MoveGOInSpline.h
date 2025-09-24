@@ -13,6 +13,8 @@ public:
     bool Init();
     void Update(float deltaTime) override;
 
+    int GetLoopCounter() const { return loopCounter; }
+
 private:
     SplineComponent* FindSpline();
 
@@ -20,6 +22,7 @@ private:
     UID splineIdGO = INVALID_UID;
     float speed  = 1.0f;
     bool isLoop    = false;
+    int loopCounter = 0;
     
     SplineComponent* spline = nullptr;
     float t                 = 0.0f;

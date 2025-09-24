@@ -65,6 +65,7 @@ void MoveGOInSpline::Update(float deltaTime)
         {
             t            = -t;
             goingForward = true;
+            loopCounter++;
         }
     }
     else
