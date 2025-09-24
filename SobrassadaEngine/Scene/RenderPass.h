@@ -9,6 +9,7 @@ class SSAO;
 class Framebuffer;
 class CameraComponent;
 class DirectionalLightComponent;
+class BatchManager;
 
 class RenderPass
 {
