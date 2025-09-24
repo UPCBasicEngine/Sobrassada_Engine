@@ -687,15 +687,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fxaaFramebuffer);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    CopyDepthStencil();
     Bind();
 #else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-
-    glBlitFramebuffer(
-        0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
-    );
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
 
@@ -713,7 +706,9 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glUniform1f(2, fxaaParameters.localThreshold);
     glUniform1i(3, fxaaParameters.isEnabled);
 
+    glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    glDepthMask(GL_TRUE);
 
 #ifndef GAME
     glDeleteFramebuffers(1, &fxaaFramebuffer);
