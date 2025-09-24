@@ -10,6 +10,24 @@ class Framebuffer;
 class CameraComponent;
 class DirectionalLightComponent;
 
+struct HeightFogParameters
+{
+    bool isEnabled        = false;
+    float densityConstant = 1.0f;
+    float heightFalloff   = 1.0f;
+    float maxFog          = 1.0f;
+    float fogStartHeight  = 0.0f;
+    float3 fogColor       = float3::one;
+};
+
+struct FXAAParameters
+{
+    bool isEnabled        = true;
+    bool showBorders      = false;
+    float globalThreshold = 0.0312f;
+    float localThreshold  = 0.16f;
+};
+
 class RenderPass
 {
   public:
@@ -21,15 +39,11 @@ class RenderPass
         float deltaTime
     );
 
-    bool IsFXAAEnabled() const { return enableFXAA; }
-    bool IsShowBorders() const { return showBorders; }
-    float GetGlobalThreshold() const { return globalThreshold; }
-    float GetLocalThreshold() const { return localThreshold; }
+    HeightFogParameters GetHeightFogParameters() const { return heightFog; }
+    void SetHeightFogParameters(const HeightFogParameters& params) { heightFog = params; }
 
-    void SetEnabled(bool enable) { enableFXAA = enable; }
-    void SetShowBorders(bool show) { showBorders = show; }
-    void SetGlobalThreshold(float newThreshold) { globalThreshold = newThreshold; }
-    void SetLocalThreshold(float newThreshold) { localThreshold = newThreshold; }
+    FXAAParameters GetFXAAParameters() const { return fxaaParameters; }
+    void SetFXAAParameters(const FXAAParameters& params) { fxaaParameters = params; }
 
   private:
     void Bind() const;
@@ -75,9 +89,6 @@ class RenderPass
     size_t currentSize                   = 0;
     int tilesX;
 
-    // FXAA
-    bool enableFXAA       = true;
-    bool showBorders      = false;
-    float globalThreshold = 0.0312f;
-    float localThreshold  = 0.063f;
+    HeightFogParameters heightFog;
+    FXAAParameters fxaaParameters;
 };

@@ -1646,6 +1646,12 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
     }
 
     ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Height Fog"))
+    {
+        HeightFogSettings();
+    }
+
+    ImGui::Spacing();
     if (ImGui::CollapsingHeader("FXAA"))
     {
         FXAASettings();
@@ -1954,27 +1960,40 @@ void EditorUIModule::PhysicsConfig() const
     // ImGui::ShowDemoWindow();
 }
 
+void EditorUIModule::HeightFogSettings() const
+{
+    HeightFogParameters heightFog = App->GetSceneModule()->GetScene()->GetRenderPass()->GetHeightFogParameters();
+
+    ImGui::Checkbox("Enable Height Fog", &heightFog.isEnabled);
+    ImGui::DragFloat(
+        "Density Constant", &heightFog.densityConstant, 0.001f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat(
+        "Height Falloff", &heightFog.heightFalloff, 0.001f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat("Max Fog", &heightFog.maxFog, 0.001f, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat(
+        "Start Height", &heightFog.fogStartHeight, 0.001f, -50.0f, 50.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::ColorEdit3("Fog Color", heightFog.fogColor.ptr());
+
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetHeightFogParameters(heightFog);
+}
+
 void EditorUIModule::FXAASettings() const
 {
-    RenderPass* render = App->GetSceneModule()->GetScene()->GetRenderPass();
+    FXAAParameters fxaa = App->GetSceneModule()->GetScene()->GetRenderPass()->GetFXAAParameters();
 
-    bool enable        = render->IsFXAAEnabled();
-    ImGui::Checkbox("Enable FXAA", &enable);
-    render->SetEnabled(enable);
-
-    bool showBorders = render->IsShowBorders();
-    ImGui::Checkbox("Show borders", &showBorders);
-    render->SetShowBorders(showBorders);
-
-    float globalThreshold = render->GetGlobalThreshold();
+    ImGui::Checkbox("Enable FXAA", &fxaa.isEnabled);
+    ImGui::Checkbox("Show borders", &fxaa.showBorders);
     ImGui::DragFloat(
-        "Global Threshold", &globalThreshold, 0.001f, 0.0312f, 0.0833f, "%.4f", ImGuiSliderFlags_AlwaysClamp
+        "Global Threshold", &fxaa.globalThreshold, 0.001f, 0.0312f, 0.0833f, "%.4f", ImGuiSliderFlags_AlwaysClamp
     );
-    render->SetGlobalThreshold(globalThreshold);
+    ImGui::DragFloat(
+        "Local Threshold", &fxaa.localThreshold, 0.001f, 0.063f, 0.333f, "%.4f", ImGuiSliderFlags_AlwaysClamp
+    );
 
-    float localThreshold = render->GetLocalThreshold();
-    ImGui::DragFloat("Local Threshold", &localThreshold, 0.001f, 0.063f, 0.333f, "%.4f", ImGuiSliderFlags_AlwaysClamp);
-    render->SetLocalThreshold(localThreshold);
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetFXAAParameters(fxaa);
 }
 
 void EditorUIModule::ShowCaps() const

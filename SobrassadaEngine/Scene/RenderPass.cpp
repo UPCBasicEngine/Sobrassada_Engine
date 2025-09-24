@@ -23,8 +23,6 @@
 
 #include "Standalone/VideoComponent.h"
 
-#include "imgui.h"
-
 #ifdef OPTICK
 #include "optick.h"
 #endif
@@ -249,6 +247,10 @@ void RenderPass::RenderScene(
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Height fog Pass");
+    HeightFogPassRender(camera);
+    glPopDebugGroup();
+
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
 #endif
@@ -284,13 +286,9 @@ void RenderPass::RenderScene(
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
     glPopDebugGroup();
 
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Height fog Pass");
-    HeightFogPassRender(camera);
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
+    AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
-
-    // glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
-    // AntiAliasingPassRender(framebuffer);
-    // glPopDebugGroup();
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -628,6 +626,8 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 
 void RenderPass::HeightFogPassRender(CameraComponent* camera) const
 {
+    if (!heightFog.isEnabled) return;
+
     Bind();
 
     const unsigned int program = App->GetShaderModule()->GetHeightFogProgram();
@@ -636,47 +636,28 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
 
-    unsigned int cameraUBO = camera == nullptr ? App->GetCameraModule()->GetUbo() : camera->GetUbo();
-
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-    glUniformBlockBinding(program, blockIdx, 0);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    float nearPlane =
-        camera == nullptr ? App->GetCameraModule()->GetNearPlaneDistance() : camera->GetNearPlaneDistance();
-    float farPlane = camera == nullptr ? 100 : camera->GetFarPlaneDistance();
-    glUniform1f(0, nearPlane);
-    glUniform1f(1, farPlane);
-
-    static float densityConstant = 1.0f;
-    static float heightFalloff   = 1.0f;
-    ImGui::Begin("Height fog");
-    ImGui::SliderFloat("Density constant", &densityConstant, 0.0f, 10.0f);
-    ImGui::SliderFloat("Height Falloff", &heightFalloff, 0.0f, 10.0f);
-
-    glUniform1f(2, densityConstant);
-    glUniform1f(3, heightFalloff);
+    glUniform1f(2, heightFog.densityConstant);
+    glUniform1f(3, heightFog.heightFalloff);
 
     float4x4 cameraMatrix = camera ? camera->GetWorldMatrix() : App->GetCameraModule()->GetWorldMatrix();
     float3 cameraPos      = camera ? camera->GetCameraPosition() : App->GetCameraModule()->GetCameraPosition();
     float4x4 projection   = camera ? camera->GetProjectionMatrix() : App->GetCameraModule()->GetProjectionMatrix();
-    glUniform3fv(4, 3, cameraPos.ptr());
+    glUniform3fv(4, 1, cameraPos.ptr());
     glUniformMatrix4fv(5, 1, GL_TRUE, cameraMatrix.ptr());
-    glUniformMatrix4fv(5, 1, GL_TRUE, projection.ptr());
+    glUniformMatrix4fv(6, 1, GL_TRUE, projection.ptr());
 
-    static float maxFog    = 1.0f;
-    static float3 fogColor = float3::one;
-    ImGui::SliderFloat("Max fog", &maxFog, 0.0f, 10.0f);
-    ImGui::SliderFloat3("Fog color", fogColor.ptr(), 0.0f, 10.0f);
+    glUniform1f(7, heightFog.maxFog);
+    glUniform3fv(8, 1, heightFog.fogColor.ptr());
+    glUniform1f(9, heightFog.fogStartHeight);
 
-    ImGui::End();
+    glDepthMask(GL_FALSE);
 
-    glUniform1f(6, maxFog);
-    glUniform3fv(7, 3, fogColor.ptr());
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDepthMask(GL_TRUE);
 }
 
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
@@ -686,7 +667,7 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     GLuint fxaaTexture = -1;
 
 #ifndef GAME
-    if (!IsFXAAEnabled()) return;
+    if (!fxaaParameters.isEnabled) return;
 
     // Must create a temporal frameBuffer and texture, to avoid reading and drawing to same texture = black screen
     GLuint fxaaFramebuffer = -1;
@@ -726,10 +707,10 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, fxaaTexture);
 
-    glUniform1i(0, showBorders);
-    glUniform1f(1, globalThreshold);
-    glUniform1f(2, localThreshold);
-    glUniform1i(3, enableFXAA);
+    glUniform1i(0, fxaaParameters.showBorders);
+    glUniform1f(1, fxaaParameters.globalThreshold);
+    glUniform1f(2, fxaaParameters.localThreshold);
+    glUniform1i(3, fxaaParameters.isEnabled);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
