@@ -21,6 +21,7 @@
 #include "Standalone/Lights/SpotLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
+#include "GameTimer.h"
 
 #include "Standalone/VideoComponent.h"
 
@@ -818,7 +819,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniformMatrix4fv(1, 1, GL_TRUE, &inverseView[0][0]);
     glUniform3fv(2, 1, &cameraPosition[0]);
 
-    float time = 1.f;
+    float time = App->GetGameTimer()->GetTime();
 
     glUniform1i(3, numStepsVolumetric);
     glUniform1f(4, fogIntensity);
