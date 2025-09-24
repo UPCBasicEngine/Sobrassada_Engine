@@ -135,11 +135,12 @@ void RenderPass::RenderScene(
     Framebuffer* framebuff, const std::vector<GameObject*> objectsToRender, CameraComponent* camera, float deltaTime
 )
 {
-    ssao        = App->GetOpenGLModule()->GetSsao();
-    gbuffer     = App->GetOpenGLModule()->GetGBuffer();
-    framebuffer = framebuff;
-    width       = framebuffer->GetTextureWidth();
-    height      = framebuffer->GetTextureHeight();
+    ssao         = App->GetOpenGLModule()->GetSsao();
+    gbuffer      = App->GetOpenGLModule()->GetGBuffer();
+    batchManager = App->GetResourcesModule()->GetBatchManager();
+    framebuffer  = framebuff;
+    width        = framebuffer->GetTextureWidth();
+    height       = framebuffer->GetTextureHeight();
     glViewport(0, 0, width, height);
 
     glEnable(GL_STENCIL_TEST);
@@ -285,6 +286,8 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
     AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
+
+    batchManager->SwapOpaqueBuffers();
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -297,7 +300,6 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
 
     glDisable(GL_BLEND);
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
     for (const auto& gameObject : objectsToRender)
@@ -332,7 +334,6 @@ void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRend
 
     glDisable(GL_BLEND);
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> navMeshesToRender;
     std::vector<MeshComponent*> nonNavMeshesToRender;
 
@@ -471,6 +472,7 @@ void RenderPass::ShadowMapPassRender(
 
     camera == nullptr ? sphereCenter = App->GetCameraModule()->GetCamera().CenterPoint()
                       : sphereCenter = camera->GetCameraCenter();
+
     float sphereRadius = 0.0f;
     for (int i = 0; i < 8; ++i)
     {
@@ -480,10 +482,14 @@ void RenderPass::ShadowMapPassRender(
 
     float3 lightDir = light->GetDirection();
     lightDir.Normalize();
-    float3 lightUp = -lightDir.Cross(float3(1.0, 0.0, 0.0));
-    lightUp.Normalize();
-    float3 lightRight = lightUp.Cross(lightDir);
+
+    float3 worldUp = float3::unitY;
+    if (fabs(lightDir.Dot(worldUp)) > 0.99f) worldUp = float3(1.0f, 0.0f, 0.0f);
+
+    float3 lightRight = worldUp.Cross(lightDir);
     lightRight.Normalize();
+    float3 lightUp = lightDir.Cross(lightRight);
+    lightUp.Normalize();
 
     Frustum shadowfrustum;
 
@@ -512,9 +518,9 @@ void RenderPass::ShadowMapPassRender(
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glViewport(0, 0, shadowResolution, shadowResolution);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
     FrustumPlanes lightFrustum;
@@ -530,12 +536,10 @@ void RenderPass::ShadowMapPassRender(
             meshesToRender.push_back(mesh);
     }
 
-    glViewport(0, 0, shadowResolution, shadowResolution);
+    batchManager->RenderShadowMap(meshesToRender, ubo);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
-
-    // batchManager->RenderShadowMap(meshesToRender, ubo);
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -622,7 +626,7 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     GLuint fxaaTexture = -1;
 
@@ -648,6 +652,7 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 
     CopyDepthStencil();
     Bind();
+
 #else
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
 
@@ -971,7 +976,6 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
     Bind();
 
     glDepthMask(GL_FALSE);
-    BatchManager* batchManager    = App->GetResourcesModule()->GetBatchManager();
 
     const unsigned int program    = App->GetShaderModule()->GetTransparentPassProgram();
     const unsigned int wPOProgram = App->GetShaderModule()->GetTransparentVPOPassProgram();
@@ -1066,7 +1070,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_CULL_FACE);
             glDepthMask(GL_FALSE);
