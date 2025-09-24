@@ -14,6 +14,7 @@ class SphereColliderComponent;
 class CameraMovement;
 class CameraComponent;
 class CubeColliderComponent;
+class ShaderScriptComponent;
 
 // trap lifecycle big ball -> impact -> cooldown
 enum class ACTIVATION_STATE
@@ -64,21 +65,6 @@ class FireballTrap : public Script
         float life     = 2.f;
         float timer    = 0.f;
         bool active    = false;
-    };
-
-    struct AnimEvent
-    {
-        GameObject* prefab   = nullptr;
-        UID clip             = INVALID_UID;
-        float delay          = 0.f;
-        float life           = 0.f;
-        bool loop            = false;
-        bool triggered       = false;
-        float timer          = 0.f;
-        GameObject* instance = nullptr;
-
-        float3 localPos      = float3::zero;
-        float3 localScale    = float3::one;
     };
 
     static constexpr int EXTRA_VFX_COUNT = 11;
@@ -212,22 +198,35 @@ class FireballTrap : public Script
     float animBDelay = 0.f, animBLife = 0.f;
     float animCDelay = 0.f, animCLife = 0.f;
 
-    // Animation scheduling
-    void ScheduleAnim(
-        GameObject* prefab, float delay, float life, bool loop, const float3& pos, const float3& scale = float3::one,
-        UID clip = INVALID_UID
-    );
     void StartAnimationsRecursive(GameObject* go, UID clip, bool loop);
-    void UpdateScheduledAnims(float dt);
-    void ClearScheduledAnims();
-
-    std::vector<AnimEvent> scheduledAnims;
 
     GameObject* CloneHierarchy(GameObject* src, UID newParentUID);
     void SetEnabledRecursive(GameObject* go, bool enabled);
     void StopAnimationsRecursive(GameObject* go);
+    float ComputeMaxAnimDuration(GameObject* root) const;
 
     std::string animAName = "Bomb_animation_W"; // Wind
     std::string animBName = "Bomb_animation_N"; // BigBomb
     std::string animCName = "Bomb_animation_S"; // MiniBomb
+
+    struct ManagedAnim
+    {
+        GameObject* root       = nullptr;
+        AnimationComponent* ac = nullptr;
+        std::vector<ShaderScriptComponent*> shaders;
+        float delay     = 0.f;
+        float life      = 0.f;
+        bool loop       = false;
+        bool started    = false;
+        bool active     = false;
+        float timer     = 0.f;
+        float3 localPos = float3::zero;
+    };
+
+    void InitManagedAnim(GameObject* go, ManagedAnim& out);
+    void StartManagedAnim(ManagedAnim& m, float delay, float life, bool loop, const float3& localPos);
+    void TickManagedAnim(ManagedAnim& m, float dt);
+    void StopManagedAnim(ManagedAnim& m);
+
+    ManagedAnim animA, animB, animC;
 };

@@ -220,6 +220,10 @@ bool FireballTrap::Init()
         if (animCPrefab) animCPrefab->SetEnabled(false);
     }
 
+    InitManagedAnim(animAPrefab, animA);
+    InitManagedAnim(animBPrefab, animB);
+    InitManagedAnim(animCPrefab, animC);
+
     return true;
 }
 
@@ -278,7 +282,9 @@ void FireballTrap::Update(float deltaTime)
     }
 
     UpdateScheduledVfx(deltaTime);
-    UpdateScheduledAnims(deltaTime);
+    TickManagedAnim(animA, deltaTime);
+    TickManagedAnim(animB, deltaTime);
+    TickManagedAnim(animC, deltaTime);
 }
 
 void FireballTrap::StartAttack()
@@ -386,19 +392,9 @@ void FireballTrap::HandleImpact()
         damageAreaCollider->centerOffset = impactLocalPos;
         damageAreaCollider->SetEnabled(true);
     }
-
-    ScheduleAnim(
-        animAPrefab, vfxSchedClock + animADelay, animALife, false, impactLocalPos,
-        (animAPrefab ? animAPrefab->GetScale() : float3::one)
-    );
-    ScheduleAnim(
-        animBPrefab, vfxSchedClock + animBDelay, animBLife, false, impactLocalPos,
-        (animBPrefab ? animBPrefab->GetScale() : float3::one)
-    );
-    ScheduleAnim(
-        animCPrefab, vfxSchedClock + animCDelay, animCLife, false, impactLocalPos,
-        (animCPrefab ? animCPrefab->GetScale() : float3::one)
-    );
+    StartManagedAnim(animA, animADelay, animALife, false, impactLocalPos);
+    StartManagedAnim(animB, animBDelay, animBLife, false, impactLocalPos);
+    StartManagedAnim(animC, animCDelay, animCLife, false, impactLocalPos);
 
     if (!bigBallHitPlayerThisAttack)
     {
@@ -456,7 +452,6 @@ void FireballTrap::DisableDamage()
     currentDecal    = nullptr;
     activationState = ACTIVATION_STATE::SLEEPING;
     ClearScheduledVfx();
-    ClearScheduledAnims();
 }
 
 void FireballTrap::UpdateFireball(float deltaTime)
@@ -680,7 +675,15 @@ void FireballTrap::ReleaseToPool(GameObject* inst)
 {
     if (!inst) return;
 
-    if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>()) ssc->SetScriptEnabled("MovingUVClipErode", false);
+    // Reset shader scripts across the whole instance hierarchy
+    auto shaders = inst->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+    for (auto* ssc : shaders)
+    {
+        ssc->SetScriptEnabled("MovingUVClipErode", false);
+        ssc->ResetScript("MovingUVClipErode");
+        ssc->SetScriptEnabled("MovingUVTransparent", false);
+        ssc->ResetScript("MovingUVTransparent");
+    }
 
     StopAnimationsRecursive(inst);
     SetEnabledRecursive(inst, false);
@@ -694,29 +697,30 @@ void FireballTrap::UpdateScheduledVfx(float dt)
     {
         if (!e.prefab) continue;
 
-        // Trigger when delay elapsed
+        // Trigger
         if (!e.triggered && vfxSchedClock >= e.delay)
         {
             GameObject* inst = AcquireFromPool(e.prefab);
             if (!inst) continue;
 
-            const float3 worldPos = parent->GetGlobalTransform().MulPos(e.localPos);
-            const float4x4 tf     = float4x4::FromTRS(worldPos, float3x3::identity, e.localScale);
-            inst->SetLocalTransform(tf);
-            inst->SetEnabled(true);
+            const float4x4 parentW = parent->GetGlobalTransform();
+            const float4x4 worldTf = float4x4::FromTRS(parentW.MulPos(e.localPos), float3x3::identity, e.localScale);
+            const float4x4 localTf = parentW.Inverted() * worldTf;
 
-            if (auto* ssc = inst->GetComponent<ShaderScriptComponent*>())
-            {
+            inst->SetLocalTransform(localTf);
+            SetEnabledRecursive(inst, true);
+
+            // Enable shader if present (no mesh disable here)
+            auto shaders = inst->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+            for (auto* ssc : shaders)
                 ssc->SetScriptEnabled("MovingUVClipErode", true);
-                if (auto* m = inst->GetComponent<MeshComponent*>()) m->SetEnabled(false);
-            }
 
             e.instance  = inst;
             e.triggered = true;
             e.timer     = 0.f;
         }
 
-        // Lifetime countdown
+        // Lifetime
         if (e.triggered && e.instance)
         {
             e.timer += dt;
@@ -728,7 +732,7 @@ void FireballTrap::UpdateScheduledVfx(float dt)
         }
     }
 
-    // Purge finished events (triggered and no live instance)
+    // Purge finished
     scheduledVfx.erase(
         std::remove_if(
             scheduledVfx.begin(), scheduledVfx.end(),
@@ -750,14 +754,6 @@ void FireballTrap::ClearScheduledVfx()
     vfxSchedClock = 0.f;
 }
 
-void FireballTrap::ScheduleAnim(
-    GameObject* prefab, float delay, float life, bool loop, const float3& pos, const float3& scale, UID clip
-)
-{
-    if (!prefab) return;
-    scheduledAnims.push_back({prefab, clip, delay, life, loop, false, 0.f, nullptr, pos, scale});
-}
-
 static inline void StartAnimOnInstance(GameObject* inst, UID clip, bool loop)
 {
     if (!inst) return;
@@ -767,76 +763,6 @@ static inline void StartAnimOnInstance(GameObject* inst, UID clip, bool loop)
         ac->OnStop();
         ac->OnPlay(false, loop);
     }
-}
-
-void FireballTrap::UpdateScheduledAnims(float dt)
-{
-    for (auto& e : scheduledAnims)
-    {
-        if (!e.prefab) continue;
-
-        if (!e.triggered && vfxSchedClock >= e.delay)
-        {
-            GameObject* inst = AcquireFromPool(e.prefab);
-            if (!inst) continue;
-
-            const float4x4 parentW = parent->GetGlobalTransform();
-            const float4x4 prefabW = e.prefab->GetGlobalTransform();
-            const float4x4 worldTf =
-                float4x4::FromTRS(parentW.MulPos(e.localPos), prefabW.RotatePart(), prefabW.ExtractScale());
-            const float4x4 localTf = parentW.Inverted() * worldTf;
-            inst->SetLocalTransform(localTf);
-
-            SetEnabledRecursive(inst, true);
-            StartAnimationsRecursive(inst, e.clip, e.loop);
-
-            if (e.life <= 0.f)
-            {
-                if (auto* ac = inst->GetComponent<AnimationComponent*>())
-                    if (ac->GetCurrentAnimation()) e.life = ac->GetCurrentAnimation()->GetDuration();
-                if (e.life <= 0.f) e.life = 1.0f;
-            }
-
-            e.instance  = inst;
-            e.triggered = true;
-            e.timer     = 0.f;
-        }
-
-        if (e.triggered && e.instance)
-        {
-            e.timer += dt;
-            if (e.timer >= e.life)
-            {
-                StopAnimationsRecursive(e.instance);
-                ReleaseToPool(e.instance);
-                e.instance = nullptr;
-            }
-        }
-    }
-
-    scheduledAnims.erase(
-        std::remove_if(
-            scheduledAnims.begin(), scheduledAnims.end(),
-            [](const AnimEvent& ev) { return ev.triggered && ev.instance == nullptr; }
-        ),
-        scheduledAnims.end()
-    );
-}
-
-
-void FireballTrap::ClearScheduledAnims()
-{
-    for (auto& e : scheduledAnims)
-    {
-        if (e.instance)
-        {
-            StopAnimationsRecursive(e.instance);
-            ReleaseToPool(e.instance);
-        }
-        e.instance  = nullptr;
-        e.triggered = true;
-    }
-    scheduledAnims.clear();
 }
 
 GameObject* FireballTrap::CloneHierarchy(GameObject* src, UID newParentUID)
@@ -894,9 +820,29 @@ void FireballTrap::StartAnimationsRecursive(GameObject* go, UID clip, bool loop)
 
     if (auto* ac = go->GetComponent<AnimationComponent*>())
     {
-        if (clip != INVALID_UID) ac->SetAnimationResource(clip);
-        ac->OnStop();
-        ac->OnPlay(false, loop);
+        const bool hasSM = (ac->GetResourceStateMachine() != nullptr);
+        bool ok          = false;
+
+        if (hasSM)
+        {
+            static const char* kOrder[] = {"Play", "Start", "Loop", "Reset", "Idle"};
+            for (const char* t : kOrder)
+            {
+                if (ac->UseTrigger(t))
+                {
+                    ok = true;
+                    break;
+                }
+            }
+            if (!ok) ac->OnPlay(false, loop);
+        }
+        else
+        {
+            if (clip != INVALID_UID) ac->SetAnimationResource(clip);
+            ac->OnStop();
+            ac->OnPlay(false, loop);
+        }
+
         if (ac->GetAnimationController()) ac->GetAnimationController()->SetTime(0.0f);
         ac->Update(0.0f);
     }
@@ -904,4 +850,131 @@ void FireballTrap::StartAnimationsRecursive(GameObject* go, UID clip, bool loop)
     Scene* sc = AppEngine->GetSceneModule()->GetScene();
     for (UID cUID : go->GetChildren())
         if (GameObject* c = sc->GetGameObjectByUID(cUID)) StartAnimationsRecursive(c, clip, loop);
+}
+
+float FireballTrap::ComputeMaxAnimDuration(GameObject* root) const
+{
+    if (!root) return 0.f;
+
+    float maxDur = 0.f;
+    auto anims   = root->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+    for (auto* ac : anims)
+    {
+        if (!ac) continue;
+        if (ResourceAnimation* ra = ac->GetCurrentAnimation()) maxDur = std::max(maxDur, ra->GetDuration());
+    }
+    return maxDur;
+}
+
+
+void FireballTrap::InitManagedAnim(GameObject* go, ManagedAnim& out)
+{
+    out = ManagedAnim {};
+    if (!go) return;
+
+    // Ens assegurem que l'anim prefab sigui fill d'aquest trap (instància pròpia)
+    GameObject* root = go;
+    if (root->GetParent() != parent->GetUID())
+    {
+        root = CloneHierarchy(go, parent->GetUID());
+        go->SetEnabled(false);
+    }
+
+    out.root    = root;
+
+    auto anims  = root->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+    out.ac      = anims.empty() ? nullptr : anims.front();
+
+    out.shaders = root->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+    for (auto* s : out.shaders)
+    {
+        s->SetScriptEnabled("MovingUVTransparent", false);
+        s->ResetScript("MovingUVTransparent");
+        s->SetScriptEnabled("MovingUVClipErode", false);
+        s->ResetScript("MovingUVClipErode");
+    }
+
+    SetEnabledRecursive(root, false);
+}
+
+
+void FireballTrap::StartManagedAnim(ManagedAnim& m, float delay, float life, bool loop, const float3& localPos)
+{
+    if (!m.root) return;
+    m.delay    = delay;
+    m.life     = life;
+    m.loop     = loop;
+    m.localPos = localPos;
+    m.started  = false;
+    m.active   = true;
+    m.timer    = -delay;
+}
+
+void FireballTrap::TickManagedAnim(ManagedAnim& m, float dt)
+{
+    if (!m.active || !m.root) return;
+
+    m.timer += dt;
+
+    if (!m.started && m.timer >= 0.f)
+    {
+        const float4x4 parentW = parent->GetGlobalTransform();
+        const float4x4 prefabW = m.root->GetGlobalTransform();
+        const float4x4 worldTf =
+            float4x4::FromTRS(parentW.MulPos(m.localPos), prefabW.RotatePart(), prefabW.ExtractScale());
+        const float4x4 localTf = parentW.Inverted() * worldTf;
+
+        m.root->SetLocalTransform(localTf);
+        SetEnabledRecursive(m.root, true);
+
+        for (auto* s : m.shaders)
+        {
+            s->SetScriptEnabled("MovingUVTransparent", true);
+            s->SetScriptEnabled("MovingUVClipErode", false);
+            s->ResetScript("MovingUVClipErode");
+        }
+
+        StartAnimationsRecursive(m.root, INVALID_UID, m.loop);
+
+        if (m.life <= 0.f)
+        {
+            float dur = ComputeMaxAnimDuration(m.root);
+            if (dur <= 0.f) dur = 2.0f;
+            m.life = dur;
+        }
+
+        m.started = true;
+    }
+
+    if (m.started && m.timer >= m.life)
+    {
+        StopManagedAnim(m);
+        return;
+    }
+}
+
+
+void FireballTrap::StopManagedAnim(ManagedAnim& m)
+{
+    if (!m.root)
+    {
+        m.active = false;
+        return;
+    }
+
+    StopAnimationsRecursive(m.root);
+
+    for (auto* s : m.shaders)
+    {
+        s->SetScriptEnabled("MovingUVTransparent", false);
+        s->ResetScript("MovingUVTransparent");
+        s->SetScriptEnabled("MovingUVClipErode", false);
+        s->ResetScript("MovingUVClipErode");
+    }
+
+    SetEnabledRecursive(m.root, false);
+
+    m.active  = false;
+    m.started = false;
+    m.timer   = 0.f;
 }
