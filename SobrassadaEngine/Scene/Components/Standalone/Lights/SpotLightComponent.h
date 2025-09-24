@@ -33,6 +33,7 @@ class SpotLightComponent : public LightComponent
 
     float4x4 GetViewMatrix() const { return spotCamera.ViewMatrix(); }
     float4x4 GetProjectionMatrix() const { return spotCamera.ProjectionMatrix(); }
+    float4x4 GetViewProjection() const { return spotCamera.ViewProjMatrix(); }
 
     void SetShadowGPUIndex(int newIndex) { shadowGPUIndex = newIndex; }
 

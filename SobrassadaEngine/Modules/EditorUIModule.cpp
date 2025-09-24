@@ -561,7 +561,7 @@ void EditorUIModule::FogConfig(bool& fogConfig)
     ImGui::DragFloat("Fog intensity", &renderPass->fogIntensity, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01f, 0.01f, 1.f);
-    ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01, -0.99, 0.99);
+    ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01f, -0.99f, 0.99f);
 
     ImGui::End();
 }

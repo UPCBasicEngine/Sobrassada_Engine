@@ -23,11 +23,11 @@ SpotLightComponent::SpotLightComponent(UID uid, GameObject* parent)
     float3 tempVec                 = float3::unitX;
     spotCamera.up                  = Cross(spotCamera.front, tempVec).Normalized();
 
-    spotCamera.nearPlaneDistance   = 0.1f;
+    spotCamera.nearPlaneDistance   = 1.f;
     spotCamera.farPlaneDistance    = range;
 
-    spotCamera.horizontalFov       = outerAngle * DEGREE_RAD_CONV;
-    spotCamera.verticalFov         = outerAngle * DEGREE_RAD_CONV;
+    spotCamera.horizontalFov       = 2.0f * outerAngle * DEGREE_RAD_CONV;
+    spotCamera.verticalFov         = 2.0f * outerAngle * DEGREE_RAD_CONV;
 }
 
 SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -56,11 +56,11 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
     float3 tempVec                 = float3::unitX;
     spotCamera.up                  = -Cross(spotCamera.front, tempVec).Normalized();
 
-    spotCamera.nearPlaneDistance   = 0.1f;
+    spotCamera.nearPlaneDistance   = 1.f;
     spotCamera.farPlaneDistance    = range;
 
-    spotCamera.horizontalFov       = outerAngle * DEGREE_RAD_CONV;
-    spotCamera.verticalFov         = outerAngle * DEGREE_RAD_CONV;
+    spotCamera.horizontalFov       = 2.0f * outerAngle * DEGREE_RAD_CONV;
+    spotCamera.verticalFov         = 2.0f * outerAngle * DEGREE_RAD_CONV;
 }
 
 SpotLightComponent::~SpotLightComponent()
@@ -109,11 +109,11 @@ void SpotLightComponent::Clone(const Component* other)
         float3 tempVec                       = float3::unitX;
         spotCamera.up                        = -Cross(spotCamera.front, tempVec).Normalized();
 
-        spotCamera.nearPlaneDistance         = 0.1f;
+        spotCamera.nearPlaneDistance         = 1.f;
         spotCamera.farPlaneDistance          = range;
 
-        spotCamera.horizontalFov             = outerAngle * DEGREE_RAD_CONV;
-        spotCamera.verticalFov               = outerAngle * DEGREE_RAD_CONV;
+        spotCamera.horizontalFov             = 2.0f * outerAngle * DEGREE_RAD_CONV;
+        spotCamera.verticalFov               = 2.0f * outerAngle * DEGREE_RAD_CONV;
     }
     else
     {
@@ -137,7 +137,7 @@ void SpotLightComponent::RenderEditorInspector()
 
     ImGui::Text("Spot light parameters");
 
-    if (ImGui::SliderFloat("Range", &range, 0.0f, 10.0f))
+    if (ImGui::SliderFloat("Range", &range, 0.0f, 100.0f))
     {
         spotCamera.farPlaneDistance = range;
     }
@@ -147,16 +147,16 @@ void SpotLightComponent::RenderEditorInspector()
         if (innerAngle > outerAngle)
         {
             outerAngle               = innerAngle;
-            spotCamera.horizontalFov = outerAngle * DEGREE_RAD_CONV;
-            spotCamera.verticalFov   = outerAngle * DEGREE_RAD_CONV;
+            spotCamera.horizontalFov = 2.0f * outerAngle * DEGREE_RAD_CONV;
+            spotCamera.verticalFov   = 2.0f * outerAngle * DEGREE_RAD_CONV;
         }
     }
     if (ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 90.0f))
     {
         if (outerAngle < innerAngle) innerAngle = outerAngle;
 
-        spotCamera.horizontalFov = outerAngle * DEGREE_RAD_CONV;
-        spotCamera.verticalFov   = outerAngle * DEGREE_RAD_CONV;
+        spotCamera.horizontalFov = 2.0f * outerAngle * DEGREE_RAD_CONV;
+        spotCamera.verticalFov   = 2.0f * outerAngle * DEGREE_RAD_CONV;
     }
 }
 

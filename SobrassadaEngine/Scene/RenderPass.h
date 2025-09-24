@@ -2,6 +2,7 @@
 
 #include "Globals.h"
 #include "math/float4x4.h"
+#include "math/float2.h"
 
 class GameObject;
 class GBuffer;
@@ -17,6 +18,7 @@ struct SpotlightShadow
 {
     float4x4 viewProjection;
     uint64_t shadowMap;
+    float2 padding;
 };
 
 class RenderPass

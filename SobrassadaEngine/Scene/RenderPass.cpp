@@ -583,6 +583,7 @@ void RenderPass::ShadowMapPassRender(
     // RENDER SPOTLIGHT SHADOWMAPS
 
     auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
 
     for (int i = 0; i < TotalShadowMaps && i < spotLights.size(); ++i)
@@ -605,7 +606,7 @@ void RenderPass::ShadowMapPassRender(
 
         if (meshesToRender.size() < 1) continue;
 
-        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+        glBindTexture(GL_TEXTURE_2D, spotShadowMaps[i]);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, spotShadowMaps[i], 0);
         glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -619,7 +620,7 @@ void RenderPass::ShadowMapPassRender(
         // LOADING SPOTLIGHT SHADOW TO SSBO
         spotLights[i]->SetShadowGPUIndex(i);
         SpotlightShadow currentShadow;
-        currentShadow.viewProjection = lightmatrices.viewMatrix * lightmatrices.projectionMatrix;
+        currentShadow.viewProjection = spotLights[i]->GetViewProjection().Transposed();
         currentShadow.shadowMap      = spotShadowMapsGPU[i];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
@@ -787,7 +788,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
-    App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
+    LightsConfig* lConfig = App->GetSceneModule()->GetScene()->GetLightsConfig();
+    lConfig->SetLightsShaderData();
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
