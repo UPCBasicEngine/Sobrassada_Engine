@@ -80,11 +80,11 @@ bool Boss::Init()
     if (bigArea) bigArea->SetEnabled(false);
     else GLOG("Not big area object found for ferdiad");
 
-    //grab the 4 spouts in the arena
+    // grab the 4 spouts in the arena
     for (int i = 1; i <= 4; ++i)
     {
         std::string spoutsNames = spoutName + std::to_string(i);
-        GameObject* spout = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spoutsNames);
+        GameObject* spout       = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spoutsNames);
         if (!spout) continue;
 
         ScriptComponent* spoutScript = spout->GetComponent<ScriptComponent*>();
@@ -631,9 +631,9 @@ void Boss::ChooseNextStateFirstPhase()
 
     case BossDistance::Extreme:
         float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
-        //if (distance <= maxDetectionRange) doTaunt = true;
-        //else doIdle = true;
-        //doIdle         = true;
+        // if (distance <= maxDetectionRange) doTaunt = true;
+        // else doIdle = true;
+        // doIdle         = true;
         break;
     }
 
@@ -735,7 +735,6 @@ void Boss::ChooseNextStateSecondPhase()
             SetState(BossStates::WaterSpouts);
         }
     }
-
 }
 
 // Phase3: (ALL) ShieldStrikes, OverheadStrike, ShieldBlast, Mirage & WaterSpouts
@@ -1468,34 +1467,34 @@ void Boss::Mirage()
 void Boss::WaterSpouts()
 {
 
-     if (stateEnter)
+    if (stateEnter)
     {
         stateEnter        = false;
         actionTriggerDone = false;
         currentAction     = BossActions::WaterSpoutCharge;
     }
 
-     switch (currentAction)
+    switch (currentAction)
     {
-     case BossActions::WaterSpoutCharge:
-         if (!actionTriggerDone)
-         {
-             agentAI->PauseMovement();
-             if (animComponent) animComponent->UseTrigger("WaterSpoutCharge");
-             actionTriggerDone = true;
-         }
+    case BossActions::WaterSpoutCharge:
+        if (!actionTriggerDone)
+        {
+            agentAI->PauseMovement();
+            if (animComponent) animComponent->UseTrigger("WaterSpoutCharge");
+            actionTriggerDone = true;
+        }
 
-         if (animComponent && animComponent->IsFinished())
-         {
-             for (Spouts* spout : waterSpouts)
-             {
-                 if (spout) spout->ForceActivate();
-             }
+        if (animComponent && animComponent->IsFinished())
+        {
+            for (Spouts* spout : waterSpouts)
+            {
+                if (spout) spout->ForceActivate();
+            }
 
-             currentAction = BossActions::WaterSpoutHit;
-             actionTriggerDone = false;
-         }
-         break;
+            currentAction     = BossActions::WaterSpoutHit;
+            actionTriggerDone = false;
+        }
+        break;
 
     case BossActions::WaterSpoutHit:
         if (!actionTriggerDone)
@@ -1897,7 +1896,7 @@ const char* Boss::GetActionName() const
         return "WaterSpoutCharge";
 
     case BossActions::WaterSpoutHit:
-       return "WaterSpoutHit";
+        return "WaterSpoutHit";
 
     case BossActions::Load:
         return "Load";
