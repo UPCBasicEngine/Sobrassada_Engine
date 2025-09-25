@@ -476,12 +476,30 @@ void CharacterControllerComponent::StartDash()
 
 void CharacterControllerComponent::Dash(float deltaTime)
 {
+    dashMoveBlocked         = false;
+
+    CheckDashObstacles();
+
+    const float animStep    = std::min(deltaTime, dashTimeRemaining);
+    const float moveStep    = dashMoveBlocked ? 0.0f : animStep;
+
+    if (moveStep == 0.0f)
+    {
+        dashTimeRemaining -= animStep;
+        if (dashTimeRemaining <= 0.0f)
+        {
+            isDashing       = false;
+            dashMoveBlocked = false;
+        }
+        return;
+    }
+
     const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
 
-    const float3 dashOffset = dashDirection * dashSpeed * deltaTime;
+    const float3 dashOffset = dashDirection * dashSpeed * moveStep;
     float3 desiredPos       = currentPos + dashOffset;
 
-    const float3 searchArea = {62.5f * deltaTime, std::max(0.4f, 25.0f * deltaTime), 62.5f * deltaTime};
+    const float3 searchArea = {62.5f * moveStep, std::max(0.4f, 25.0f * moveStep), 62.5f * moveStep};
     bool posOverPoly        = false;
     float3 closestPoint     = float3::zero;
 
@@ -490,24 +508,28 @@ void CharacterControllerComponent::Dash(float deltaTime)
     if (!dashToNavmesh || obstacleInDash || (posOverPoly && dashToNavmesh)) desiredPos = closestPoint;
 
     parent->SetLocalPosition(desiredPos - parent->GetParentGlobalTransform().TranslatePart());
-    dashTimeRemaining -= deltaTime;
+    dashTimeRemaining -= animStep;
 
     if (dashTimeRemaining > 0.05f && preciseDash)
     {
         // Check if the end of the remaining dash is inside the navmesh in case we are sliding next to the edge
-        const float3 currentPos = parent->GetGlobalTransform().TranslatePart();
-        const float3 finalPos   = currentPos + dashDirection * dashSpeed * dashTimeRemaining;
+        const float3 currentPos2 = parent->GetGlobalTransform().TranslatePart();
+        const float3 finalPos   = currentPos2 + dashDirection * dashSpeed * dashTimeRemaining;
 
-        const float3 searchArea = {12.5f * deltaTime, std::max(1875.0f * deltaTime, 30.0f), 12.5f * deltaTime};
-        float3 closestPoint     = float3::zero;
-        bool posOverPoly        = false;
-        dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea, posOverPoly, closestPoint);
-        dashToNavmesh           = posOverPoly && closestPoint.y <= finalPos.y + 0.2f;
+        const float3 searchArea2 = {12.5f * moveStep, std::max(1875.0f * moveStep, 30.0f), 12.5f * moveStep};
+        float3 closestPoint2     = float3::zero;
+        bool posOverPoly2        = false;
+        dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea2, posOverPoly2, closestPoint2);
+        dashToNavmesh           = posOverPoly2 && closestPoint2.y <= finalPos.y + 0.2f;
 
         if (dashToNavmesh) CheckDashObstacles();
     }
 
-    if (dashTimeRemaining <= 0.0f) isDashing = false;
+    if (dashTimeRemaining <= 0.0f)
+    {
+        isDashing       = false;
+        dashMoveBlocked = false;
+    }
 }
 
 void CharacterControllerComponent::CheckDashObstacles()
@@ -558,6 +580,79 @@ void CharacterControllerComponent::CheckDashObstacles()
     const float wallOffset = 0.7f;
     float tNear, tFar;
 
+    //Check GO with blocking tags
+    auto hasDashBlockingTag = [](GameObject* go) -> bool
+    {
+        if (!go) return false;
+        for (const char* tagName : DashBlockerGOTags)
+        {
+            if (go->HasTag(HashString(tagName))) return true;
+        }
+        return false;
+    };
+
+    auto findBlockingAncestor = [&](GameObject* go) -> GameObject*
+    {
+        GameObject* ancestor = nullptr;
+        for (GameObject* p = go; p; p = App->GetSceneModule()->GetScene()->GetGameObjectByUID(p->GetParent()))
+            if (hasDashBlockingTag(p)) ancestor = p;
+        return ancestor;
+    };
+
+    GameObject* barrierGO = nullptr;
+    if (!barrierGO) barrierGO = findBlockingAncestor(hitParent);
+    if (!barrierGO) barrierGO = findBlockingAncestor(centralHit);
+    if (!barrierGO) barrierGO = findBlockingAncestor(rightHit);
+    if (!barrierGO) barrierGO = findBlockingAncestor(leftHit);
+
+
+    float3 basePos = parent->GetGlobalTransform().TranslatePart();
+    basePos.y            += 0.5f;
+    const float skin     = 0.12f;
+    const float extra    = 0.20f;
+    const float clampLen = std::max(3.0f, dashSpeed * dashTimeRemaining) + extra;
+
+    LineSegment clampRay(basePos, basePos + dashDirection * clampLen);
+    BulletUserPointer* userPointerClamp = RaycastController::GetRayIntersectionPhysics(clampRay);
+    GameObject* hitParentClamp          = userPointerClamp ? userPointerClamp->collider->GetParent() : nullptr;
+
+    if (!barrierGO) barrierGO = findBlockingAncestor(hitParentClamp);
+
+    if (barrierGO)
+    {
+        const AABB& box = barrierGO->GetGlobalAABB();
+        
+        if (box.Contains(basePos))
+        {
+            dashMoveBlocked = true;
+            obstacleInDash  = true;
+            return;
+        }
+        
+        if (box.Intersects(clampRay, tNear, tFar))
+        {
+            const float3 hitPos    = clampRay.GetPoint(tNear);
+
+            const float skin    = 0.12f; 
+            float forward          = (hitPos - basePos).Dot(dashDirection);
+            float stopDist      = std::max(0.0f, forward - skin);
+
+            if (stopDist <= skin)
+            {
+                dashMoveBlocked = true;
+                obstacleInDash  = true;
+                return;
+            }
+
+            const float timeToStop = (dashSpeed > 0.0f) ? (stopDist / dashSpeed) : 0.0f;
+            dashTimeRemaining      = std::min(dashTimeRemaining, timeToStop);
+            
+            dashMoveBlocked   = false;
+            obstacleInDash         = true;
+            return;
+        }
+    }
+
     if (centralHit != nullptr)
     {
         const AABB& box = centralHit->GetGlobalAABB();
@@ -577,7 +672,7 @@ void CharacterControllerComponent::CheckDashObstacles()
         }
     }
 
-    if (rightHit != nullptr)
+    if (rightHit != nullptr && !barrierGO)
     {
         const AABB& box = rightHit->GetGlobalAABB();
         if (box.Intersects(rightRay, tNear, tFar))
@@ -596,7 +691,7 @@ void CharacterControllerComponent::CheckDashObstacles()
         }
     }
 
-    if (leftHit != nullptr)
+    if (leftHit != nullptr && !barrierGO)
     {
         const AABB& box = leftHit->GetGlobalAABB();
         if (box.Intersects(leftRay, tNear, tFar))
