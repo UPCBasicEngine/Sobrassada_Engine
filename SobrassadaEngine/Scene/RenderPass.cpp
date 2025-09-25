@@ -827,8 +827,10 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1f(6, time);
     glUniform1f(7, noiseAmmount);
     glUniform1f(8, anisotropy);
+    glUniform1i(9, tilesX);
+    glUniform1f(10, stepSize);
 
-    // FOR TESTING, REMOVE AND DO PROPER ADAPTATION
+    // THIS WILL PROBABLY CHANGE WITH CHANGES TO SHADOWS
     // Compute light
     float3 corners[8];
     camera == nullptr ? App->GetCameraModule()->GetFrustumCorners(corners) : camera->GetFrustumCorners(corners);
@@ -867,10 +869,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     dirLightView = shadowfrustum.ViewMatrix();
     dirLightProj = shadowfrustum.ProjectionMatrix();
 
-    glUniformMatrix4fv(10, 1, GL_TRUE, &dirLightView[0][0]);
-    glUniformMatrix4fv(11, 1, GL_TRUE, &dirLightProj[0][0]);
-    glUniform1i(12, tilesX);
-    glUniform1f(13, stepSize);
+    glUniformMatrix4fv(11, 1, GL_TRUE, &dirLightView[0][0]);
+    glUniformMatrix4fv(12, 1, GL_TRUE, &dirLightProj[0][0]);
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 

@@ -15,24 +15,20 @@ uniform layout(location = 0) mat4 projection;
 uniform layout(location = 1) mat4 inverseViewMatrix;
 uniform layout(location = 2) vec3 cameraPosition;
 
+// USED ONLY IN FULL SCREEN CALCULATION
 uniform layout(location = 3) int NUM_STEPS;
+
 uniform layout(location = 4) float fogIntensity;
 uniform layout(location = 5) float extinctionCoefficient;
 uniform layout(location = 6) float frameTime;
 uniform layout(location = 7) float noiseAmmount;
 uniform layout(location = 8) float anisotropy;
-
-// TESTING LAYOUTS -> LATER SHOULD BE INCLUDED IN A BUFFER / UNIFORM
-
-
-// ONLY ONE SPOT, JUST FOR TESTING -> MOVE TO SPOT LIGHTS BUFFER AND MAKE TEXTURE RESIDENT SO IT CAN BE ACCESED
-uniform layout(binding = 9) sampler2D spotTexture;
+uniform layout(location = 9) int numTilesX;
+uniform layout(location = 10) float StepSize;
 
 // DIRECTIONAL LIGHT MATRICES -> MOVE TO UNIFORM OF DIRECTIONAL
-uniform layout(location = 10) mat4 directinal_View_Mat;
-uniform layout(location = 11) mat4 directinal_Projection_Mat;
-uniform layout(location = 12) int numTilesX;
-uniform layout(location = 13) float StepSize;
+uniform layout(location = 11) mat4 directinal_View_Mat;
+uniform layout(location = 12) mat4 directinal_Projection_Mat;
 
 struct PointLight
 {
