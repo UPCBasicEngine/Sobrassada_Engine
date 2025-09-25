@@ -142,6 +142,10 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
     }
 
     renderPass = new RenderPass();
+    if (initialState.HasMember("RenderPassConfig") && initialState["RenderPassConfig"].IsObject())
+    {
+        renderPass->LoadData(initialState["RenderPassConfig"]);
+    }
 
     if (initialState.HasMember("tags") && initialState.HasMember("tagsGO"))
     {
@@ -329,6 +333,11 @@ void Scene::Save(
     rapidjson::Value wind(rapidjson::kObjectType);
     windConfig->SaveData(wind, allocator);
     targetState.AddMember("Wind Config", wind, allocator);
+
+    // Save RenderPass Data
+    rapidjson::Value render(rapidjson::kObjectType);
+    renderPass->Save(render, allocator);
+    targetState.AddMember("RenderPassConfig", render, allocator);
 
     // TODO Convert to parameter which can be set later manually instead of saving a scene as default "on scene
     // save"

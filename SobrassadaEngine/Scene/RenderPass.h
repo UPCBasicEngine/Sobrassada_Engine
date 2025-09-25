@@ -4,6 +4,8 @@
 #include "math/float2.h"
 #include "math/float4x4.h"
 
+#include "rapidjson/document.h"
+
 class GameObject;
 class GBuffer;
 class SSAO;
@@ -31,6 +33,9 @@ class RenderPass
         Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera,
         float deltaTime
     );
+    
+    void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
+    void LoadData(const rapidjson::Value& initialState);
 
     bool IsFXAAEnabled() const { return enableFXAA; }
     bool IsShowBorders() const { return showBorders; }
@@ -69,9 +74,9 @@ class RenderPass
   public:
     // Volumetric parameters
     int numStepsVolumetric      = 32;
-    float stepSize              = 0.25f;
+    float stepSize              = 0.5f;
     float fogIntensity          = 1.f;
-    float noiseAmmount          = 1.f;
+    float noiseAmmount          = 0.f;
     float extinctionCoefficient = 0.04f;
     float anisotropy            = 0.5f;
 

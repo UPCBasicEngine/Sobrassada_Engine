@@ -8,6 +8,7 @@
 #include "Framebuffer.h"
 #include "GBuffer.h"
 #include "GameObject.h"
+#include "GameTimer.h"
 #include "LightsConfig.h"
 #include "OpenGLModule.h"
 #include "ParticleSystemModule.h"
@@ -21,7 +22,6 @@
 #include "Standalone/Lights/SpotLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
-#include "GameTimer.h"
 
 #include "Standalone/VideoComponent.h"
 
@@ -136,6 +136,27 @@ RenderPass::~RenderPass()
 
     gbuffer     = nullptr;
     framebuffer = nullptr;
+}
+
+void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
+{
+    targetState.AddMember("numStepsVolumetric", numStepsVolumetric, allocator);
+    targetState.AddMember("stepSize", stepSize, allocator);
+    targetState.AddMember("fogIntensity", fogIntensity, allocator);
+    targetState.AddMember("noiseAmmount", noiseAmmount, allocator);
+    targetState.AddMember("extinctionCoefficient", extinctionCoefficient, allocator);
+    targetState.AddMember("anisotropy", anisotropy, allocator);
+}
+
+void RenderPass::LoadData(const rapidjson::Value& initialState)
+{
+    if (initialState.HasMember("numStepsVolumetric")) numStepsVolumetric = initialState["numStepsVolumetric"].GetInt();
+    if (initialState.HasMember("stepSize")) stepSize = initialState["stepSize"].GetFloat();
+    if (initialState.HasMember("fogIntensity")) fogIntensity = initialState["fogIntensity"].GetFloat();
+    if (initialState.HasMember("noiseAmmount")) noiseAmmount = initialState["noiseAmmount"].GetFloat();
+    if (initialState.HasMember("extinctionCoefficient"))
+        extinctionCoefficient = initialState["extinctionCoefficient"].GetFloat();
+    if (initialState.HasMember("anisotropy")) anisotropy = initialState["anisotropy"].GetFloat();
 }
 
 void RenderPass::Bind() const
