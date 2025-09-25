@@ -98,6 +98,29 @@ void LightprobeEditor::RenderProbeProperties()
 
     ImGui::Text("Needs Update: %s ", probe.needUpdate ? "Yes" : "No");
     ImGui::Text("Cubemap ID: %u", probe.cubemapTexture);
+    if (probe.cubemapTexture != 0 && ImGui::Button("Preview Cubemap"))
+    {
+       showCubemapPreview = !showCubemapPreview;
+    }
+
+    if (showCubemapPreview && probe.cubemapTexture != 0)
+    {
+        ImGui::Text("Cubemap Preview (6 faces):");
+        float previewSize = 64.0f;
+
+        for (int face = 0; face < 6; ++face)
+        {
+            if (face > 0) ImGui::SameLine();
+
+            (ImTextureID)(uintptr_t) probe.cubemapTexture, ImVec2(previewSize, previewSize);
+
+            if (ImGui::IsItemHovered())
+            {
+                const char* faceNames[] = {"+X", "-X", "+Y", "-Y", "+Z", "-Z"};
+                ImGui::SetTooltip("Face: %s", faceNames[face]);
+            }
+        }
+    }
     ImGui::Text("Cubemap Status: %s", probe.cubemapTexture != 0 ? "Generated" : "Not Generated");
     if (probe.cubemapTexture != 0)
     {

@@ -888,6 +888,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glUseProgram(lightingPassProgram);
 
+
     float3 cameraPos;
     if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
     else cameraPos = camera->GetCameraPosition();
@@ -908,6 +909,20 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
     glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
+
+    //Lightprobes
+     Scene* scene = App->GetSceneModule()->GetScene();
+    if (scene && scene->GetLightprobeManager())
+    {
+        LightprobeManager* lightprobeManager = scene->GetLightprobeManager();
+        lightprobeManager->UpdateLightprobeSSBO();
+        lightprobeManager->BindLightprobesToShader(lightingPassProgram);
+    }
+    else
+    {
+        glUniform1i(glGetUniformLocation(lightingPassProgram, "numLightprobes"), 0);
+    }
+   
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 

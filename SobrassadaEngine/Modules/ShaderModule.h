@@ -76,11 +76,9 @@ class ShaderModule : public Module
     int trailProgram                   = -1;
     int decalProgram                   = -1;
     int shadowMapProgram               = -1;
-
-
-
-    int shadowDepthProgram             = -1;
     int tileShadingProgram             = -1;
+    int shadowDepthProgram             = -1;
+
 
     int spritesheetProgram             = -1;
     int particleSystemProgram          = -1;

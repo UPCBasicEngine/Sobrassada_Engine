@@ -21,6 +21,8 @@ uniform vec3 shadowTint;
 
 uniform vec2 screenSize;
 uniform int numTilesX;
+uniform int numLightprobes;
+uniform samplerCube lightprobeCubemaps[8];
 
 in vec2 uv0;
 
@@ -82,6 +84,15 @@ readonly layout(std430, binding = 5) buffer SpotLights
 	int spotLightsCount;
 	SpotLight spotLights[];
 };
+
+layout(std430, binding = 30) readonly buffer LightprobeData 
+{
+    vec4 positionAndInfluence;  // xyz = position, w = influence
+    vec4 boundsMin;             // xyz = boundsMin, w = fadeDistance  
+    vec4 boundsMax;             // xyz = boundsMax, w = cubemapIndex
+    vec4 proxyMin;              // xyz = proxyMin, w = padding
+    vec4 proxyMax;              // xyz = proxyMax, w = padding
+} lightprobes[];
 
 
 float PointLightAttenuation(const int index, vec3 pos) 
@@ -208,6 +219,60 @@ vec3 RenderSpotLight(const int index, const vec3 N, const vec3 Cd, float roughne
 	else return vec3(0);
 }
 
+vec3 GetParallaxCorrectedDirection(vec3 worldPos, vec3 R, vec3 proxyMin, vec3 proxyMax, vec3 probePos)
+{
+    vec3 first = (proxyMax - worldPos) / R;
+    vec3 second = (proxyMin - worldPos) / R;
+
+    vec3 furthest = max(first, second);
+
+    float dist = min(min(furthest.x, furthest.y), furthest.z);
+    vec3 corrected = worldPos + R * dist - probePos;
+    return normalize(corrected);
+}
+
+vec3 GetSingleLightprobeContribution(const vec3 worldPos, const vec3 normal, const vec3 R, 
+                                    const float NdotV, const float roughness, 
+                                    const vec3 diffuseColor, const vec3 specularColor,
+                                    int probeIndex)
+{
+     if (numLightprobes <= probeIndex) return vec3(0.0);
+    
+    vec3 probePos = lightprobes[0].positionAndInfluence.xyz;
+    vec3 boundsMin = lightprobes[0].boundsMin.xyz;
+    vec3 boundsMax = lightprobes[0].boundsMax.xyz;
+    
+    vec3 inBoundsMin = step(boundsMin, worldPos);
+    vec3 inBoundsMax = step(worldPos, boundsMax);
+    float weight = inBoundsMin.x * inBoundsMin.y * inBoundsMin.z * 
+                  inBoundsMax.x * inBoundsMax.y * inBoundsMax.z;
+    
+    vec3 distanceToMin = worldPos - boundsMin;
+    vec3 distanceToMax = boundsMax - worldPos;
+    float edgeDistance = min(distanceToMin.x, min(distanceToMin.y, distanceToMin.z));
+    
+    float fadeDistance = lightprobes[0].boundsMin.w;
+    float smoothWeight = smoothstep(0.0, fadeDistance, edgeDistance);
+    float influence = lightprobes[0].positionAndInfluence.w;
+    int cubemapIndex = int(lightprobes[0].boundsMax.w);
+    vec3 proxyMin = lightprobes[0].proxyMin.xyz;
+    vec3 proxyMax = lightprobes[0].proxyMax.xyz;
+    
+    vec3 correctedR = GetParallaxCorrectedDirection(worldPos, R, proxyMin, proxyMax, probePos);
+    
+    vec3 irradiance = texture(lightprobeCubemaps[0], normal).rgb;
+    float mipLevel = roughness * 7.0; 
+    vec3 radiance = textureLod(lightprobeCubemaps[0], correctedR, mipLevel).rgb;
+    
+    vec3 diffuse = diffuseColor * (1.0 - specularColor) * irradiance;
+    vec3 specular = radiance * specularColor;
+    
+    float finalWeight = smoothWeight * smoothWeight * influence * weight;
+    
+
+    return (diffuse + specular) * finalWeight * 0.4; 
+}
+
 void main()
 {
     const vec4 texColor = texture(gDiffuse, uv0);
@@ -233,7 +298,12 @@ void main()
 
     //vec3 ambient = ambient_color.rgb * ambient_color.a;
     const vec3 ambient = GetAmbientLight(N, R, NdotV, roughness, Cd, RF0);
-    vec3 hdr = ambient;
+    vec3 lightprobeContrib = GetSingleLightprobeContribution(pos, N, R, NdotV, roughness, Cd, RF0, 0);
+                        
+                            
+    vec3 hdr = ambient + lightprobeContrib;
+    
+   
 
     ivec2 tileCoord = ivec2(gl_FragCoord.xy) / TILE_SIZE;
     int tileIndex = tileCoord.y * numTilesX + tileCoord.x;
