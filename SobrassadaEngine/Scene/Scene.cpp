@@ -75,8 +75,8 @@
 #include "WindConfig.h"
 
 #include <set>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
 {
@@ -88,7 +88,7 @@ Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
     gameObjectsContainer.insert({sceneGameObject->GetUID(), sceneGameObject});
 
     lightsConfig = new LightsConfig();
-    windConfig = new WindConfig();
+    windConfig   = new WindConfig();
     renderPass   = new RenderPass();
 }
 
@@ -188,7 +188,7 @@ Scene::~Scene()
     delete renderPass;
 
     lightsConfig = nullptr;
-    windConfig = nullptr;
+    windConfig   = nullptr;
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
 
@@ -1017,7 +1017,7 @@ void Scene::UpdateAllMaterialInstances(const UID materialUID)
     for (const auto& object : gameObjectsContainer)
     {
         MeshComponent* mesh = object.second->GetComponent<MeshComponent*>();
-        if (mesh && mesh->GetResourceMaterial()->GetUID() == materialUID)
+        if (mesh && mesh->GetResourceMaterial() && mesh->GetResourceMaterial()->GetUID() == materialUID)
         {
             mesh->BatchEditorMode();
         }
@@ -1128,7 +1128,7 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
     return nullptr;
 }
 
-//Loops in the Parent Tree node and try to find targetName GO
+// Loops in the Parent Tree node and try to find targetName GO
 GameObject* Scene::GetGameObjectByParentNameAndTargetName(const std::string& parentName, const std::string& targetName)
 {
     // TODO: Replace gameObject name to a HashString, I've seen it is also compared in some scripts and would improve
@@ -1599,7 +1599,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
             else oldPrefabInstances.push_back(gameObject.second);
         }
     }
-    GLOG("Instances to override: %d", instancesToOverride);
+    //GLOG("Instances to override: %d", instancesToOverride);
     if (instancesToOverride == 0)
     {
         App->GetResourcesModule()->ReleaseResource(prefab);

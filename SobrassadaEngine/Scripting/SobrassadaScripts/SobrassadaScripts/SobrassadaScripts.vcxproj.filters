@@ -223,6 +223,21 @@
     <ClInclude Include="ArcherProjectile.h">
       <Filter>Characters</Filter>
     </ClInclude>
+    <ClInclude Include="CoverPointTrigger.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncSceneLoading.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="HighlightCharacter.h">
+      <Filter>Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="BossSpouts.h">
+      <Filter>Characters\Boss</Filter>
+	</ClInclude>
+    <ClInclude Include="MirageVFX.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -977,6 +992,21 @@
     </ClCompile>
     <ClCompile Include="ArcherProjectile.cpp">
       <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="CoverPointTrigger.cpp">
+      <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="HighlightCharacter.cpp">
+      <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncSceneLoading.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="BossSpouts.cpp">
+      <Filter>Characters\Boss</Filter>
+	</ClCompile>
+    <ClCompile Include="MirageVFX.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

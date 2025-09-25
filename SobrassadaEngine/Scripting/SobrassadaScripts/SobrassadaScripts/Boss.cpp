@@ -14,6 +14,7 @@
 #include "ResourceStateMachine.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
+#include "Spouts.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
@@ -45,12 +46,12 @@ Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
     fields.push_back({"Smoke", InspectorField::FieldType::InputText, &smokeParticleName});
     fields.push_back({"Charge Shield", InspectorField::FieldType::InputText, &chargeShieldParticleName});
+    fields.push_back({"Spout", InspectorField::FieldType::InputText, &spoutName});
 }
 
 bool Boss::Init()
 {
     Character::Init();
-
     agentAI = parent->GetComponent<AIAgentComponent*>();
     if (agentAI == nullptr) GLOG("AIAgent component not found for Boss")
     else
@@ -78,6 +79,20 @@ bool Boss::Init()
     bigArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(bigAreaName);
     if (bigArea) bigArea->SetEnabled(false);
     else GLOG("Not big area object found for ferdiad");
+
+    //grab the 4 spouts in the arena
+    for (int i = 1; i <= 4; ++i)
+    {
+        std::string spoutsNames = spoutName + std::to_string(i);
+        GameObject* spout = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spoutsNames);
+        if (!spout) continue;
+
+        ScriptComponent* spoutScript = spout->GetComponent<ScriptComponent*>();
+        if (!spoutScript) continue;
+
+        Spouts* spoutLogic = spoutScript->GetScriptByType<Spouts>();
+        if (spoutLogic) waterSpouts.push_back(spoutLogic);
+    }
 
     GameObject* overheadPrepareVFX =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadPrepareVFXName);
@@ -526,6 +541,7 @@ void Boss::HandleState(float deltaTime)
         break;
 
     case BossStates::WaterSpouts:
+        WaterSpouts();
         break;
 
     case BossStates::Restart:
@@ -659,28 +675,33 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 85;
-        shieldBlastRate   = 100;
+        shieldStrikesRate = 40;
+        shieldBlastRate   = 80;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate = 55;
-        shieldBlastRate   = 100;
+        shieldStrikesRate = 30;
+        shieldBlastRate   = 60;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate = 40;
-        shieldBlastRate   = 100;
+        shieldStrikesRate = 30;
+        shieldBlastRate   = 70;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Far:
         shieldStrikesRate = 20;
-        shieldBlastRate   = 100;
+        shieldBlastRate   = 70;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Farther:
         shieldStrikesRate = 10;
-        shieldBlastRate   = 100;
+        shieldBlastRate   = 80;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Extreme:
@@ -709,7 +730,12 @@ void Boss::ChooseNextStateSecondPhase()
         {
             SetState(BossStates::ShieldBlast);
         }
+        else if (num <= waterSpoutsRate)
+        {
+            SetState(BossStates::WaterSpouts);
+        }
     }
+
 }
 
 // Phase3: (ALL) ShieldStrikes, OverheadStrike, ShieldBlast, Mirage & WaterSpouts
@@ -724,37 +750,43 @@ void Boss::ChooseNextStateThirdPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate  = 95;
-        overheadStrikeRate = 100;
+        shieldStrikesRate  = 55;
+        overheadStrikeRate = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Near:
         shieldStrikesRate  = 60;
-        overheadStrikeRate = 90;
-        shieldBlastRate    = 100;
+        overheadStrikeRate = 70;
+        shieldBlastRate    = 90;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Medium:
         shieldStrikesRate  = 30;
-        overheadStrikeRate = 70;
-        shieldBlastRate    = 100;
+        overheadStrikeRate = 60;
+        shieldBlastRate    = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Distant:
         shieldStrikesRate  = 20;
         overheadStrikeRate = 55;
-        shieldBlastRate    = 100;
+        shieldBlastRate    = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Far:
         shieldBlastRate    = 10;
         overheadStrikeRate = 40;
-        shieldBlastRate    = 100;
+        shieldBlastRate    = 80;
+        waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Farther:
         shieldStrikesRate = 10;
-        shieldBlastRate   = 100;
+        shieldBlastRate   = 90;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Extreme:
@@ -786,6 +818,10 @@ void Boss::ChooseNextStateThirdPhase()
         else if (num <= shieldBlastRate)
         {
             SetState(BossStates::ShieldBlast);
+        }
+        else if (num <= waterSpoutsRate)
+        {
+            SetState(BossStates::WaterSpouts);
         }
     }
 }
@@ -1429,6 +1465,60 @@ void Boss::Mirage()
     }
 }
 
+void Boss::WaterSpouts()
+{
+
+     if (stateEnter)
+    {
+        stateEnter        = false;
+        actionTriggerDone = false;
+        currentAction     = BossActions::WaterSpoutCharge;
+    }
+
+     switch (currentAction)
+    {
+     case BossActions::WaterSpoutCharge:
+         if (!actionTriggerDone)
+         {
+             agentAI->PauseMovement();
+             if (animComponent) animComponent->UseTrigger("WaterSpoutCharge");
+             actionTriggerDone = true;
+         }
+
+         if (animComponent && animComponent->IsFinished())
+         {
+             for (Spouts* spout : waterSpouts)
+             {
+                 if (spout) spout->ForceActivate();
+             }
+
+             currentAction = BossActions::WaterSpoutHit;
+             actionTriggerDone = false;
+         }
+         break;
+
+    case BossActions::WaterSpoutHit:
+        if (!actionTriggerDone)
+        {
+            if (animComponent) animComponent->UseTrigger("WaterSpoutHit"); // spout hit animation
+            actionTriggerDone = true;
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            agentAI->ResumeMovement();
+            actionTriggerDone = false;
+
+            ChooseNextState(); // go back to AI loop
+        }
+        break;
+
+    default:
+        GLOG("Error: WaterSpouts");
+        break;
+    }
+}
+
 void Boss::ResetValues(bool changePhase)
 {
     doIdle                 = false;
@@ -1803,8 +1893,11 @@ const char* Boss::GetActionName() const
     case BossActions::End:
         return "End";
 
-    case BossActions::WaterSpouts:
-        return "WaterSpouts";
+    case BossActions::WaterSpoutCharge:
+        return "WaterSpoutCharge";
+
+    case BossActions::WaterSpoutHit:
+       return "WaterSpoutHit";
 
     case BossActions::Load:
         return "Load";

@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Archer.h"
+#include "ArcherProjectile.h"
 #include "Banshee.h"
 #include "Banshee_v2.h"
 #include "Boss.h"
@@ -24,6 +25,7 @@
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MiniFireball.h"
+#include "MirageVFX.h"
 #include "MoveGOInSpline.h"
 #include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
@@ -31,7 +33,6 @@
 #include "PlayerLocationScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
-#include "ArcherProjectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
@@ -40,8 +41,10 @@
 #include "SwitchScriptTest.h"
 #include "TileFloatScript.h"
 #include "VSyncToggleScript.h"
+#include "CoverPointTrigger.h"
 #include "Banshee_v2.h"
 #include "WallCollision.h"
+#include "AsyncSceneLoading.h"
 
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
@@ -55,8 +58,10 @@
 #include "VSyncToggleScript.h"
 
 #include "BossMirage.h"
+#include "HighlightCharacter.h"
 #include "Mirage.h"
 #include "MirageBossDash.h"
+#include "BossSpouts.h"
 
 #include <string>
 
@@ -108,16 +113,22 @@ constexpr const char* scripts[] = {
     "Boss",
     "MirageBossDash",
     "ArcherProjectile",
-    "GameOverNavigatorScript"
+    "CoverPointTrigger",
+    "GameOverNavigatorScript",
+    "HighlightCharacter",
+    "AsyncSceneLoading",
+    "BossSpouts"
 };
 
 constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
-    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet", "MovingUVClipErode",  "ColorChange"
+    "MovingUVPostScript", "MovingUVLight",   "MovingUVTransparent",   "HealGroundHalo",
+    "HealVerticalPlanes", "HealSpikesBurst", "HealGroundSpikesLight", "HealGroundSpikesDark",
+    "HealLightBurst",     "HealSpikesUp",    "RiastradBarFill",       "HealthBarFill",
+    "AbilityIconFill",    "DamageMask",      "AttackVfxSpritesheet",  "MovingUVClipErode",
+    "ColorChange",     "MirageVFX"
 };
 
-Application* AppEngine                = nullptr;
+Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -150,6 +161,9 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
     if (scriptType == "Boss") return new Boss(parent);
+    if (scriptType == "HighlightCharacter") return new HighlightCharacter(parent);
+
+    
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
@@ -163,6 +177,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Destructible") return new Destructible(parent);
     if (scriptType == "MagicBarrier") return new MagicBarrier(parent);
     if (scriptType == "WallCollision") return new WallCollision(parent);
+    if (scriptType == "CoverPointTrigger") return new CoverPointTrigger(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
@@ -172,6 +187,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
     if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
+    if (scriptType == "AsyncSceneLoading") return new AsyncSceneLoading(parent);
 
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
@@ -232,6 +248,13 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Mirage") return new Mirage(parent);
     if (scriptType == "BossMirage") return new BossMirage(parent);
     if (scriptType == "MirageBossDash") return new MirageBossDash(parent);
+    if (scriptType == "BossSpouts") return new BossSpouts(parent);
+
+    if (scriptType == "MirageVFX")
+        return new MirageVFX(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/MirageVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/MirageVFX_Fragment.glsl"
+        );
 
     return nullptr;
 }

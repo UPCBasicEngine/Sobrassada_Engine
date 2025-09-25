@@ -52,6 +52,8 @@ class Character : public Script
     void Restart();
     bool IsDead() const { return isDead; };
 
+    virtual void PlayHighlightSequence() {}
+
     CharacterType GetCharacterType() const { return type; }
     int GetMaxHealth() const { return maxHealth; }
     int GetCurrentHealth() const { return currentHealth; }

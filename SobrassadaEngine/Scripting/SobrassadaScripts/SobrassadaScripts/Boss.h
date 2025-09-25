@@ -14,6 +14,7 @@ class MovingUVTransparent;
 class MeshComponent;
 class ParticleSystemComponent;
 class CapsuleColliderComponent;
+class Spouts;
 
 enum class BossDistance
 {
@@ -58,7 +59,8 @@ enum class BossActions
     Start, // Mirage
     Charge,
     End,
-    WaterSpouts,
+    WaterSpoutCharge, //WaterSpout
+    WaterSpoutHit,
     Load, // ShieldBlast
     PreShoot,
     Shoot,
@@ -110,6 +112,8 @@ class Boss : public Character
     void ResetValues(bool isForMirage = false);
 
     void ShieldBlast(float deltaTime);
+
+    void WaterSpouts();
 
     void SetState(BossStates newState);
     BossStates ChooseAlternativeState() const;
@@ -238,10 +242,13 @@ class Boss : public Character
 
     int repeatedState                          = 0;
     const int maxRepeats                       = 2;
+    // WaterSpout
+    std::vector<Spouts*> waterSpouts;
+    std::string spoutName = "";
 
     const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};
-    const std::vector<BossStates> phase2States = {BossStates::ShieldStrikes, BossStates::ShieldBlast};
+    const std::vector<BossStates> phase2States = {BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::WaterSpouts};
     const std::vector<BossStates> phase3States = {
-        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike
+        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike, BossStates::WaterSpouts
     };
 };
