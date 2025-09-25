@@ -233,6 +233,133 @@ float sampleIGN(vec2 pixelXY, float time)
     return fract(52.9829189f * fract(0.06711056f*float(pixelXY.x) + 0.00583715f*float(pixelXY.y)));
 }
 
+// RETURNS NUMBER OF INTERSECTIONS, RESULT SHOULD BE 0, 1 OR 2;
+// IF 0 -> DON'T USE T0 OR T1
+// IF 1 -> USE T0
+// IF 2 -> USE T0 AND T1
+int ConeIntersection(in vec3 conePosition, in vec3 coneDirection, in float coneAngle, in float coneLength, in vec3 rayOrigin, in vec3 rayDirection, out float t0, out float t1)
+{
+    int totalIntersections = 0;
+
+    float dotDV = dot(rayDirection, coneDirection);
+    float coneCosine = cos(radians(coneAngle));
+    vec3 CO = rayOrigin - conePosition;
+    float dotCO_V = dot(CO, coneDirection);
+
+    float a = dotDV * dotDV - coneCosine * coneCosine;
+    float b = 2.0 * (dotDV * dotCO_V - dot(rayDirection, CO) * coneCosine * coneCosine);
+    float c = dotCO_V * dotCO_V - dot(CO, CO) * coneCosine * coneCosine;
+
+    float determinant = b*b - 4.0 * a * c;
+
+    if(determinant  == 0)
+    {
+        t0 = -b / (2 * a);
+
+        vec3 point = conePosition + coneDirection * t0;
+        float dist = dot(point - conePosition, coneDirection);
+
+        if(dist > 0 && dist < coneLength) ++totalIntersections;
+    }
+    else if(determinant > 0)
+    {
+        float determinantSqrt = sqrt(determinant);
+        
+        //t0 check
+        float auxTime = (-b - determinantSqrt) / (2.0 * a);
+        vec3 point = conePosition + coneDirection * auxTime;
+        float dist = dot(point - conePosition, coneDirection);
+
+        if(dist > 0 && dist < coneLength)
+        {
+            t0 = auxTime;
+            ++totalIntersections;
+        }
+
+        //t1 check
+        auxTime = (-b + determinantSqrt) / (2.0 * a);
+        point = conePosition + coneDirection * auxTime;
+        dist = dot(point - conePosition, coneDirection);
+
+        if(dist > 0 && dist < coneLength)
+        {
+            if(auxTime < t0)
+            {
+                t1 = t0;
+                t0 = auxTime;
+            }
+            else
+            {
+                t1 = auxTime;
+            }
+
+            ++totalIntersections;
+        }
+    }
+
+    return totalIntersections;
+}
+
+bool SolveQuadratic(in float a, in float b, in float c, out float t0, out float t1)
+{
+    float discr = b * b - 4 * a * c;
+
+    if (discr < 0) return false;
+
+    else if (discr == 0) t0 = t1 = - 0.5 * b / a;
+
+    else 
+    {
+        float discrSqrt = sqrt(discr);
+        float q;
+
+        if(b > 0)  q = -0.5 * (b + discrSqrt);
+        else q = -0.5 * (b - discrSqrt); 
+        
+        t0 = q / a;
+        t1 = c / q;
+    }
+
+    if (t0 > t1)
+    {
+        float tmp = t0;
+        t0 = t1;
+        t1 = tmp;
+    }
+    
+    return true;
+}
+
+bool SpehereIntersection(vec3 center, float radius, vec3 rayOrigin, vec3 rayDirection, out float t0, out float t1)
+{
+    vec3 L = rayOrigin - center;
+    float a = dot(rayDirection, rayDirection); // JUST IN CASE THEY ARE NOT NORMALIZED
+    float b = 2.0 * dot(rayDirection, L);
+    float c = dot(L, L) - (radius * radius);
+    
+    if(!SolveQuadratic(a, b, c, t0, t1)) return false;
+
+    if (t0 > t1)
+    {
+        float tmp = t0;
+        t0 = t1;
+        t1 = tmp;
+    }
+
+    if (t0 < 0) 
+    {
+        t0 = t1; // If t0 is negative, let's use t1 instead.
+        if (t0 < 0) return false; // Both t0 and t1 are negative.
+    }
+
+    return true;
+}
+
+// bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, out float t0, out float t1)
+// {
+
+// }
+
 void main()
 {
     const ivec2 textureSize = imageSize(transmitanceTexture);
