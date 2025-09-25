@@ -28,6 +28,7 @@ AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
+    fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
@@ -103,13 +104,16 @@ bool AttackVfxSpritesheet::Init()
         if (otherImageUID == INVALID_UID || otherImage || otherImageBindlessUID != INVALID_UID) return true;
 
         otherImage = static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(otherImageUID));
-        otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
-        glMakeTextureHandleResidentARB(otherImageBindlessUID);
+        if (otherImage)
+        {
+            otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
+            glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
-        uvRange.x = 0.0f;
-        uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-        uvRange.z = 0.0f;
-        uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.x = 0.0f;
+            uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.z = 0.0f;
+            uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+        } 
     }
     return true;
 }
@@ -152,6 +156,11 @@ void AttackVfxSpritesheet::Update(float deltaTime)
         }
     }
     timer = 0.0f;
+
+    if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+    {
+        parent->SetEnabled(false);
+    }
 }
 
 void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
@@ -191,10 +200,11 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(vao);
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-10.0f, -10.0f);
+        glPolygonOffset(2.0f, -2.0f);
 
         if (isDoubleSided) glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "MovingUVTransparent.h"
+#include "ColorChange.h"
 
 #include "Application.h"
 #include "CameraModule.h"
@@ -9,7 +9,6 @@
 #include "GBuffer.h"
 #include "GameObject.h"
 #include "GeometryBatch.h"
-#include "LightsConfig.h"
 #include "Mesh.h"
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
@@ -18,34 +17,25 @@
 #include "SceneModule.h"
 #include "ShaderModule.h"
 
-#include "Math/float3.h"
 #include "glew.h"
 
-MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
+ColorChange::ColorChange(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Animation Speed", InspectorField::FieldType::Float, &animationSpeed, 0.f, 100.f});
-    fields.push_back({"Moving UV Direction", InspectorField::FieldType::Vec2, &uvOffsetDirection, -1.f, 1.f});
-    fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
-
-    fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
-    fields.push_back({"Fade Out", InspectorField::FieldType::Bool, &isFadeOut});
-    fields.push_back({"Fade Out Time", InspectorField::FieldType::Float, &fadeOutTime, 0.f, 10.f});
-    fields.push_back({"Fade Out Duration", InspectorField::FieldType::Float, &fadeOutDuration, 0.f, 10.f});
+    fields.push_back({"Target Color", InspectorField::FieldType::Color, &targetColor});
 }
 
-MovingUVTransparent::~MovingUVTransparent()
+ColorChange::~ColorChange()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(1, &materialBuffer);
 }
 
-bool MovingUVTransparent::Init()
+bool ColorChange::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
-        "./EngineDefaults/Shader/Custom/Vertex/MovingUV_Light_Vertex.glsl",
-        "./EngineDefaults/Shader/Custom/Fragment/MovingUV_Transparent_Fragment.glsl"
+        "./EngineDefaults/Shader/Custom/Vertex/ColorChange_Vertex.glsl",
+        "./EngineDefaults/Shader/Custom/Fragment/ColorChange_Fragment.glsl"
     );
 
     meshComp = parent->GetComponent<MeshComponent*>();
@@ -59,7 +49,6 @@ bool MovingUVTransparent::Init()
             glGenVertexArrays(1, &vao);
             glGenBuffers(1, &vbo);
             glGenBuffers(1, &ebo);
-            glGenBuffers(1, &materialBuffer);
 
             glBindVertexArray(vao);
 
@@ -98,40 +87,14 @@ bool MovingUVTransparent::Init()
             indexCount = (unsigned int)rmesh->GetIndices().size();
         }
 
-        const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
-        if (rmat)
-        {
-            isAlphaDiscard  = rmat->IsAlphaDiscard();
-
-            MaterialGPU mat = rmat->GetMaterial();
-
-            glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
-            glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
-        }
-
-        meshComp->SetEnabled(false);
         meshComp->SetUpdateShaderStorage(true);
     }
-    uvOffset = uvOffsetStart;
     return true;
 }
 
-void MovingUVTransparent::Update(float deltaTime)
+void ColorChange::Render(float deltaTime, CameraComponent* cameraComp)
 {
-    if (!isPaused)
-    {
-        float newOffset  = deltaTime * animationSpeed;
-        uvOffset.x      += newOffset * uvOffsetDirection.x;
-        uvOffset.y      += newOffset * uvOffsetDirection.y;
-
-        if (isFadeOut) fadeOutTimer += deltaTime;
-    }
-}
-
-void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
-{
-    if (!(shaderProgram && indexCount > 0 && meshComp)) return;
-    if (meshComp->GetHasBones() && !meshComp->GetBatch()) return;
+    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
@@ -148,50 +111,23 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
             viewMatrix       = AppEngine->GetCameraModule()->GetViewMatrix();
         }
 
-        AppEngine->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
-
         glUseProgram(shaderProgram);
 
         glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
         glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
-        glUniform2fv(3, 1, &uvOffset[0]);
+        glUniform3fv(3, 1, targetColor.ptr());
         glUniform1i(9, meshComp->GetHasBones());
         glUniform1ui(10, meshComp->GetBoneIndexOffset());
 
-        float fadeTime = isFadeOut ? fadeOutTime : 1.0f;
-        glUniform1f(7, fadeOutTimer);
-        glUniform1f(8, fadeTime);
-        glUniform1f(11, fadeOutDuration);
-
-        glUniform1i(4, 0);
-        glUniform1i(5, isAlphaDiscard);
-
-        glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-
-        GeometryBatch* batch = meshComp->GetBatch();
-        if (batch) batch->BindBonesBuffer();
-
-        float3 cameraPos = float3::zero;
-        if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
-        else cameraPos = cameraComp->GetCameraPosition();
-
-        glUniform3fv(6, 1, &cameraPos[0]);
+        meshComp->GetBatch()->BindBonesBuffer();
 
         glBindVertexArray(vao);
-
-        if (isDoubleSided) glDisable(GL_CULL_FACE);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-        if (isDoubleSided) glEnable(GL_CULL_FACE);
 
-        if (batch) batch->UnbindBonesBuffer();
+        meshComp->GetBatch()->UnbindBonesBuffer();
 
         glBindVertexArray(0);
     }
-}
-
-void MovingUVTransparent::Reset()
-{
-    uvOffset     = uvOffsetStart;
-    fadeOutTimer = 0.0f;
 }

@@ -155,6 +155,7 @@ class SOBRASADA_API_ENGINE Scene
     LightprobeManager* GetLightprobeManager() const { return lightprobeManager; }
     void SetLightProbeManager(LightprobeManager* manager);
     bool HasLightprobeManager() const { return lightprobeManager != nullptr; }
+    RenderPass* GetRenderPass() const { return renderPass; }
 
     bool isSceneLoaded = false;
 
@@ -210,7 +211,5 @@ class SOBRASADA_API_ENGINE Scene
 
     RenderPass* renderPass = nullptr;
 
-     std::vector<UID> pendingDeletes;
-
-     LightprobeManager* lightprobeManager = nullptr;
+    std::vector<UID> pendingDeletes;
 };

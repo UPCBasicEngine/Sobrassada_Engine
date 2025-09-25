@@ -41,4 +41,7 @@ class AttackVfxSpritesheet : public Script
     ResourceTexture* otherImage = nullptr;
     UID otherImageUID           = 0;
     UID otherImageBindlessUID   = 0;
+
+    bool isOneShot              = false;
+    bool isAdditive             = false;
 };
