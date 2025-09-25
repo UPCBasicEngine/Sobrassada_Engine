@@ -1635,7 +1635,7 @@ void Boss::ShieldBlast(float deltaTime)
             attackHitboxDelay    = blastHitboxDelay;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
-            agentAI->SetAngularSpeed(0.5f);
+            agentAI->SetAngularSpeed(1.0f);
         }
 
         if (attackTimer >= 0.3f && blastPreHitMesh && !blastPreHitMesh->GetEnabled()) blastPreHitMesh->SetEnabled(true);
@@ -1655,6 +1655,8 @@ void Boss::ShieldBlast(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
+
+            agentAI->SetAngularSpeed(0.5f);
 
             if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
             if (blastArea) blastArea->SetEnabled(true);
