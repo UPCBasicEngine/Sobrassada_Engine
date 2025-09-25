@@ -648,6 +648,9 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 
     CopyDepthStencil();
     Bind();
+
+    glDepthMask(GL_FALSE);
+
 #else
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
 
@@ -678,6 +681,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glDeleteFramebuffers(1, &fxaaFramebuffer);
     glDeleteTextures(1, &fxaaTexture);
 #endif
+
+    glDepthMask(GL_TRUE);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const

@@ -59,7 +59,7 @@ enum class BossActions
     Start, // Mirage
     Charge,
     End,
-    WaterSpoutCharge, //WaterSpout
+    WaterSpoutCharge, // WaterSpout
     WaterSpoutHit,
     Load, // ShieldBlast
     PreShoot,
@@ -131,7 +131,6 @@ class Boss : public Character
 
     bool waiting              = true;
     bool restart              = false;
-    float3 startRot           = float3::zero;
 
     int phase                 = 1;
     int phase1 = 40, phase2 = 20, phase3 = 0;
@@ -235,19 +234,22 @@ class Boss : public Character
     UID healthBarImage;
 
     // Mirage
-    const int mirage1 = 50, mirage2 = 30, mirage3 = 10;
-    const std::array<int, 3> mirageActivation  = {mirage1, mirage2, mirage3};
-    BossMirage* bossMirageScript               = nullptr;
-    bool mirageActivated                       = false;
+    int mirage1 = 47, mirage2 = 30, mirage3 = 10;
+    std::array<std::reference_wrapper<int>, 3> mirageActivation = {mirage1, mirage2, mirage3};
+    BossMirage* bossMirageScript              = nullptr;
+    bool mirageActivated                      = false;
 
-    int repeatedState                          = 0;
-    const int maxRepeats                       = 2;
     // WaterSpout
     std::vector<Spouts*> waterSpouts;
-    std::string spoutName = "";
+    std::string spoutName                      = "";
 
+    // Alternative mechanic
+    int repeatedState                          = 0;
+    const int maxRepeats                       = 2;
     const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};
-    const std::vector<BossStates> phase2States = {BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::WaterSpouts};
+    const std::vector<BossStates> phase2States = {
+        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::WaterSpouts
+    };
     const std::vector<BossStates> phase3States = {
         BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike, BossStates::WaterSpouts
     };

@@ -21,15 +21,19 @@
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
-Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
+Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
     fields.push_back({"Phase Start", InspectorField::FieldType::Int, &phase, 1, 3});
+    fields.push_back({"1st Mirage", InspectorField::FieldType::Int, &mirage1, 0, 100});
+    fields.push_back({"2nd Mirage", InspectorField::FieldType::Int, &mirage2, 0, 100});
+    fields.push_back({"3rd Mirage", InspectorField::FieldType::Int, &mirage3, 0, 100});
     fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
     /*fields.push_back({"Height Jump", InspectorField::FieldType::Float, &heightJump, 0.0f, 5.0f});
     fields.push_back({"Jump Duration", InspectorField::FieldType::Float, &jumpDuration, 0.0f, 2.0f});
     fields.push_back({"Fall Duration", InspectorField::FieldType::Float, &fallDuration, 0.0f, 2.0f});*/
     fields.push_back({"Close Area Damage", InspectorField::FieldType::Int, &closeAreaDamage, 0, 5});
+    fields.push_back({"Spout", InspectorField::FieldType::InputText, &spoutName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
     fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
@@ -46,7 +50,6 @@ Boss::Boss(GameObject* parent) : Character(parent, 60, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
     fields.push_back({"Smoke", InspectorField::FieldType::InputText, &smokeParticleName});
     fields.push_back({"Charge Shield", InspectorField::FieldType::InputText, &chargeShieldParticleName});
-    fields.push_back({"Spout", InspectorField::FieldType::InputText, &spoutName});
 }
 
 bool Boss::Init()
@@ -85,13 +88,22 @@ bool Boss::Init()
     {
         std::string spoutsNames = spoutName + std::to_string(i);
         GameObject* spout       = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(spoutsNames);
-        if (!spout) continue;
+        if (!spout)
+        {
+            GLOG("Not spout game object found for ferdiad %s", spoutsNames.c_str());
+            continue;
+        }
 
         ScriptComponent* spoutScript = spout->GetComponent<ScriptComponent*>();
-        if (!spoutScript) continue;
+        if (!spoutScript)
+        {
+            GLOG("Not spout script component found for ferdiad");
+            continue;
+        }
 
         Spouts* spoutLogic = spoutScript->GetScriptByType<Spouts>();
         if (spoutLogic) waterSpouts.push_back(spoutLogic);
+        else GLOG("Not spout script found for ferdiad");
     }
 
     GameObject* overheadPrepareVFX =
@@ -428,13 +440,9 @@ bool Boss::Init()
         {
             bossMirageScript = sc->GetScriptByType<BossMirage>();
         }
+        else GLOG("Not mirage script component found for ferdiad")
     }
-    else
-    {
-        GLOG("Boss arena not found");
-    }
-
-    startRot = parent->GetGlobalTransform().RotatePart().ToEulerXYZ();
+    else GLOG("Boss arena not found for mirage");
 
     return true;
 }
