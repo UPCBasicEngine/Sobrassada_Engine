@@ -7,11 +7,11 @@
 
 struct GPULightprobeData
 {
-    float4 positionAndInfluence; // xyz = position, w = influence
-    float4 boundsMin;            // xyz = boundsMin, w = fadeDistance
-    float4 boundsMax;            // xyz = boundsMax, w = cubemapIndex
-    float4 proxyMin;             // xyz = proxyMin, w = padding
-    float4 proxyMax;             // xyz = proxyMax, w = padding
+    float4 positionAndInfluence;
+    float4 boundsMin;            
+    float4 boundsMax;            
+    float4 proxyMin;           
+    float4 proxyMax;             
 };
 class CameraComponent;
 class LightprobeManager

@@ -221,12 +221,17 @@ vec3 RenderSpotLight(const int index, const vec3 N, const vec3 Cd, float roughne
 
 vec3 GetParallaxCorrectedDirection(vec3 worldPos, vec3 R, vec3 proxyMin, vec3 proxyMax, vec3 probePos)
 {
+    // Calcular intersección rayo-AABB
     vec3 first = (proxyMax - worldPos) / R;
     vec3 second = (proxyMin - worldPos) / R;
-
+    
+    // Tomar el máximo de cada coordenada (más lejano)
     vec3 furthest = max(first, second);
-
+    
+    // Tomar el mínimo de los tres (garantiza intersección dentro del box)
     float dist = min(min(furthest.x, furthest.y), furthest.z);
+    
+    // Dirección corregida: desde punto de intersección hacia posición del probe
     vec3 corrected = worldPos + R * dist - probePos;
     return normalize(corrected);
 }
@@ -236,7 +241,7 @@ vec3 GetSingleLightprobeContribution(const vec3 worldPos, const vec3 normal, con
                                     const vec3 diffuseColor, const vec3 specularColor,
                                     int probeIndex)
 {
-     if (numLightprobes <= probeIndex) return vec3(0.0);
+    if (numLightprobes <= probeIndex) return vec3(0.0);
     
     vec3 probePos = lightprobes[0].positionAndInfluence.xyz;
     vec3 boundsMin = lightprobes[0].boundsMin.xyz;
@@ -254,23 +259,9 @@ vec3 GetSingleLightprobeContribution(const vec3 worldPos, const vec3 normal, con
     float fadeDistance = lightprobes[0].boundsMin.w;
     float smoothWeight = smoothstep(0.0, fadeDistance, edgeDistance);
     float influence = lightprobes[0].positionAndInfluence.w;
-    int cubemapIndex = int(lightprobes[0].boundsMax.w);
-    vec3 proxyMin = lightprobes[0].proxyMin.xyz;
-    vec3 proxyMax = lightprobes[0].proxyMax.xyz;
     
-    vec3 correctedR = GetParallaxCorrectedDirection(worldPos, R, proxyMin, proxyMax, probePos);
-    
-    vec3 irradiance = texture(lightprobeCubemaps[0], normal).rgb;
-    float mipLevel = roughness * 7.0; 
-    vec3 radiance = textureLod(lightprobeCubemaps[0], correctedR, mipLevel).rgb;
-    
-    vec3 diffuse = diffuseColor * (1.0 - specularColor) * irradiance;
-    vec3 specular = radiance * specularColor;
-    
-    float finalWeight = smoothWeight * smoothWeight * influence * weight;
-    
-
-    return (diffuse + specular) * finalWeight * 0.4; 
+   
+    return vec3(0.3, 0.0, 0.0) * (smoothWeight * smoothWeight * influence * weight);
 }
 
 void main()
@@ -299,8 +290,7 @@ void main()
     //vec3 ambient = ambient_color.rgb * ambient_color.a;
     const vec3 ambient = GetAmbientLight(N, R, NdotV, roughness, Cd, RF0);
     vec3 lightprobeContrib = GetSingleLightprobeContribution(pos, N, R, NdotV, roughness, Cd, RF0, 0);
-                        
-                            
+                           
     vec3 hdr = ambient + lightprobeContrib;
     
    
