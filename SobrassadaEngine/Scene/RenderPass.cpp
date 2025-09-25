@@ -951,6 +951,8 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     {
         float3 shadowTint = light->GetShadowTint();
         glUniform3f(glGetUniformLocation(lightingPassProgram, "shadowTint"), shadowTint.x, shadowTint.y, shadowTint.z);
+        float shadowStrength = light->GetShadowStrength();
+        glUniform1f(glGetUniformLocation(lightingPassProgram, "shadowStrength"), shadowStrength);
     }
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
