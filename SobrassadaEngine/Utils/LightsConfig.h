@@ -60,18 +60,21 @@ namespace Lights
         float innerAngle;
         float outerAngle;
         int shadowGPUIndex;
+        float radius;
+        float padding;
 
         SpotLightShaderData(
             const float4& pos, const float4& color, const float3& dir, const float inner, const float outer,
-            int shadowGPUIndex
+            int shadowGPUIndex, float radius
         )
             : position(pos), color(color), direction(dir), innerAngle(inner), outerAngle(outer),
-              shadowGPUIndex(shadowGPUIndex)
+              shadowGPUIndex(shadowGPUIndex), radius(radius), padding(-1)
         {
         }
     };
 
-    constexpr int SpotLightShaderOffset = 16 - (sizeof(SpotLightShaderData) % 16);
+    constexpr int SpotLightShaderOffset =
+        16 - (sizeof(SpotLightShaderData) % 16) == 0 ? 16 : (sizeof(SpotLightShaderData) % 16);
 
 } // namespace Lights
 

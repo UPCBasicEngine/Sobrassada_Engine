@@ -870,6 +870,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniformMatrix4fv(10, 1, GL_TRUE, &dirLightView[0][0]);
     glUniformMatrix4fv(11, 1, GL_TRUE, &dirLightProj[0][0]);
     glUniform1i(12, tilesX);
+    glUniform1f(13, stepSize);
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 

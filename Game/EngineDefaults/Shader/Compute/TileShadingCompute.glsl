@@ -13,6 +13,8 @@ struct SpotLight
 	vec3 direction;	
 	float innerAngle;
 	float outerAngle;
+	int spotShadowIndex;
+    float radius;
 };
 
 readonly layout(std430, binding = 4) buffer PointLights

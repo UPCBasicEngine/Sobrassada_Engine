@@ -32,6 +32,7 @@ uniform layout(binding = 9) sampler2D spotTexture;
 uniform layout(location = 10) mat4 directinal_View_Mat;
 uniform layout(location = 11) mat4 directinal_Projection_Mat;
 uniform layout(location = 12) int numTilesX;
+uniform layout(location = 13) float StepSize;
 
 struct PointLight
 {
@@ -47,6 +48,7 @@ struct SpotLight
 	float innerAngle;
 	float outerAngle;
 	int spotShadowIndex;
+    float radius;
 };
 
 struct VisibleIndex {
@@ -86,6 +88,8 @@ layout(std430, binding = 7) readonly buffer SpotLightShadowBuffer {
 
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// LIGHT CALCULATION FUNCTIONS
 
 float rand(vec2 co){return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);}
 float rand (vec2 co, float l) {return rand(vec2(rand(co), l));}
@@ -233,6 +237,35 @@ float sampleIGN(vec2 pixelXY, float time)
     return fract(52.9829189f * fract(0.06711056f*float(pixelXY.x) + 0.00583715f*float(pixelXY.y)));
 }
 
+// INTERSECTION FUNCITONS -> NORMALIZE DIRECTION VECTORS!
+
+bool IntersectPlane(in vec3 planeOrigin, in vec3 planeNormal, in vec3 rayOrigin, in vec3 rayDirection, out float t0)
+{
+    float denominator = dot(planeNormal, rayDirection);
+    if(denominator > 1e-6)
+    {
+        vec3 vectorRayPlane = planeOrigin - rayOrigin;
+        t0 = dot(vectorRayPlane, planeNormal) / denominator;
+        return t0 >= 0;
+    }
+
+    return false;
+}
+
+bool IntersectDisk(in vec3 planeOrigin, in vec3 planeNormal, in float radius, in vec3 rayOrigin, in vec3 rayDirection, out float t0)
+{
+    if(IntersectPlane(planeOrigin, planeNormal, rayOrigin, rayDirection, t0))
+    {
+        vec3 intersectionPoint = rayOrigin + rayDirection * t0;
+        vec3 planeIntersectVector = intersectionPoint - planeOrigin;
+        float distanceSq = dot(planeIntersectVector, planeIntersectVector);
+
+        return distanceSq <= (radius * radius);
+    }
+
+    return false;
+}
+
 // RETURNS NUMBER OF INTERSECTIONS, RESULT SHOULD BE 0, 1 OR 2;
 // IF 0 -> DON'T USE T0 OR T1
 // IF 1 -> USE T0
@@ -252,7 +285,7 @@ int ConeIntersection(in vec3 conePosition, in vec3 coneDirection, in float coneA
 
     float determinant = b*b - 4.0 * a * c;
 
-    if(determinant  == 0)
+    if(determinant == 0)
     {
         t0 = -b / (2 * a);
 
@@ -355,11 +388,112 @@ bool SpehereIntersection(vec3 center, float radius, vec3 rayOrigin, vec3 rayDire
     return true;
 }
 
-// bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, out float t0, out float t1)
-// {
+bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, in int baseOffset, out float t0, out float t1)
+{
+    bool validIntersection = false;
+    bool insideLight = false; // IF ONLY 1 INTERSECTION IS RECIEVED IT MEANS WE ARE INSIDE THE LIGHT FRUSTUM
 
+    // SPOT LIGHTS
+    for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
+    {
+        int lightIndexBuffer = visibleIndices[baseOffset + i];
+
+        if(lightIndexBuffer == -1) break;
+
+        bool isSpot = (lightIndexBuffer & 0x80000000) != 0;
+        int realIndex = lightIndexBuffer & 0x7FFFFFFF;
+        if(isSpot)
+        {
+            SpotLight spot = spotLights[realIndex];
+            float auxT0 = 0.0, auxT1 = 0.0;
+            vec3 lightDirection = normalize(spot.direction);
+
+            int totalIntersections = ConeIntersection(spot.position.xyz, lightDirection,  spot.outerAngle, spot.position.w, rayOrigin, rayDirection, auxT0, auxT1);
+            if(totalIntersections >= 1)
+            {
+                t0 = min(t0, auxT0);
+                t1 = max(t1, auxT0);
+
+                if(totalIntersections == 2)
+                {
+                    t0 = min(t0, auxT1);
+                    t1 = max(t1, auxT1);
+                }
+            }
+
+            if(IntersectDisk(spot.position.xyz, -lightDirection, spot.radius, rayOrigin, rayDirection, auxT0))
+            {
+                t0 = min(t0, auxT0);
+                t1 = max(t1, auxT0);
+                ++totalIntersections;
+            }
+
+            if(totalIntersections > 0 && !validIntersection) validIntersection = true;
+
+            if(totalIntersections == 1) insideLight = true;
+            
+        }
+
+        if(insideLight) t0 = 0.0;
+
+        return validIntersection;
+    }
+
+    return validIntersection;
+}
+
+// ALL SCENE, NO INTERSECTION CALCULATIONS
+
+// void main()
+// {
+//     const ivec2 textureSize = imageSize(transmitanceTexture);
+
+//     if(gl_GlobalInvocationID.x < textureSize.x && gl_GlobalInvocationID.y < textureSize.y)
+//     {
+// 	    ivec2 tileCoord = ivec2(gl_GlobalInvocationID.xy) / TILE_SIZE;
+// 	    int tileIndex = tileCoord.y * numTilesX + tileCoord.x;
+//         int baseOffset = tileIndex * MAX_LIGHTS_PER_TILE;
+
+//         vec2 uvCoords = vec2(gl_GlobalInvocationID.x / float(textureSize.x), gl_GlobalInvocationID.y / float(textureSize.y));
+//         float depth = texture(depthTexture, uvCoords).r;
+        
+//         vec3 worldPosition = GetWorldPosition(depth, uvCoords);
+
+//         vec3 rayDirection = worldPosition - cameraPosition;
+
+//         vec3 marchingStep = rayDirection / float(NUM_STEPS);
+//         float stepSize = length(marchingStep);
+
+//         vec3 currentPosition = cameraPosition + marchingStep * sampleIGN(gl_GlobalInvocationID.xy, frameTime);
+
+//         float accExtintionCoeff = 0.0;
+//         vec3 accInScattering = vec3(0.0);
+
+//         for(int i = 0; i < NUM_STEPS; ++i)
+//         {
+//             accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition) * stepSize;
+//             accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords, baseOffset) * stepSize * exp(-accExtintionCoeff);
+
+//             currentPosition += marchingStep;
+//         }
+
+//         vec3 finalInScattering = accInScattering * fogIntensity;
+
+//         vec4 originalColor = texture(sceneTexture, uvCoords);
+
+//         if(depth < 1.f)
+//         {
+//             imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(originalColor.rgb + finalInScattering, 1.0));
+//         }
+//         else
+//         {
+//             imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), originalColor);
+//         }
+//     }
 // }
 
+
+// SCENE WITH INTERSECTION CALCULATIONS
 void main()
 {
     const ivec2 textureSize = imageSize(transmitanceTexture);
@@ -376,36 +510,41 @@ void main()
         vec3 worldPosition = GetWorldPosition(depth, uvCoords);
 
         vec3 rayDirection = worldPosition - cameraPosition;
-
-        vec3 marchingStep = rayDirection / float(NUM_STEPS);
-        float stepSize = length(marchingStep);
-
-        vec3 currentPosition = cameraPosition + marchingStep * sampleIGN(gl_GlobalInvocationID.xy, frameTime);
-
-        float accExtintionCoeff = 0.0;
-        vec3 accInScattering = vec3(0.0);
-
-        for(int i = 0; i < NUM_STEPS; ++i)
-        {
-            accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition) * stepSize;
-            accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords, baseOffset) * stepSize * exp(-accExtintionCoeff);
-
-            currentPosition += marchingStep;
-        }
-
-        vec3 finalInScattering = accInScattering * fogIntensity;
+        float maxDistance = length(rayDirection);
+        rayDirection = rayDirection / maxDistance;
 
         vec4 originalColor = texture(sceneTexture, uvCoords);
 
-        if(depth < 1.f)
+        float t0 = maxDistance, t1 = 0.0;
+        bool intersects = RayIntersectionPoints(cameraPosition, rayDirection, baseOffset, t0, t1);
+
+        if(intersects)
         {
+            t0 = max(t0, 0.0);
+            t1 = min(t1, maxDistance);
+
+            float numSteps = ceil((t1 - t0) / StepSize);
+            vec3 marchingStep = rayDirection * StepSize;
+            vec3 currentPosition = cameraPosition + rayDirection * t0 + marchingStep * sampleIGN(gl_GlobalInvocationID.xy, frameTime);
+
+            float accExtintionCoeff = 0.0;
+            vec3 accInScattering = vec3(0.0);
+
+            for(int i = 0; i < numSteps; ++i)
+            {
+                accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition) * StepSize;
+                accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords, baseOffset) * StepSize * exp(-accExtintionCoeff);
+
+                currentPosition += marchingStep;
+            }
+
+            vec3 finalInScattering = accInScattering * fogIntensity;
+
             imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(originalColor.rgb + finalInScattering, 1.0));
         }
         else
         {
             imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), originalColor);
         }
-
-        // imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(vec3(depth), 1.0));
     }
 }

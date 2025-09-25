@@ -509,7 +509,8 @@ void LightsConfig::SetSpotLightsShaderData() const
             spots.emplace_back(Lights::SpotLightShaderData(
                 float4(spotLights[i]->GetGlobalTransform().TranslatePart(), spotLights[i]->GetRange()),
                 float4(spotLights[i]->GetColor(), spotLights[i]->GetIntensity()), float3(spotLights[i]->GetDirection()),
-                spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle(), spotLights[i]->GetShadowGPUIndex()
+                spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle(), spotLights[i]->GetShadowGPUIndex(),
+                spotLights[i]->GetRadius()
             ));
         }
     }

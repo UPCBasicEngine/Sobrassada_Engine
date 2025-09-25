@@ -36,7 +36,8 @@ struct SpotLight
 	vec3 direction;	
 	float innerAngle;
 	float outerAngle;
-    int spotShadowIndex;
+	int spotShadowIndex;
+    float radius;
 };
 
 // UBOs

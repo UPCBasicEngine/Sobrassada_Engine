@@ -558,6 +558,7 @@ void EditorUIModule::FogConfig(bool& fogConfig)
     ImGui::Begin("Fog Config", &fogConfig, ImGuiWindowFlags_None);
 
     ImGui::DragInt("Number steps", &renderPass->numStepsVolumetric, 8, 8, 64);
+    ImGui::DragFloat("Step Size", &renderPass->stepSize, 0.05f, 0.1f, 1.f);
     ImGui::DragFloat("Fog intensity", &renderPass->fogIntensity, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01f, 0.01f, 1.f);

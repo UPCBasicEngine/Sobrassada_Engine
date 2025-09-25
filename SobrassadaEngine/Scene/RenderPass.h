@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Globals.h"
-#include "math/float4x4.h"
 #include "math/float2.h"
+#include "math/float4x4.h"
 
 class GameObject;
 class GBuffer;
@@ -12,7 +12,7 @@ class CameraComponent;
 class DirectionalLightComponent;
 
 constexpr int SpotLightShadowMapSize = 1024;
-constexpr int TotalShadowMaps = 15;
+constexpr int TotalShadowMaps        = 15;
 
 struct SpotlightShadow
 {
@@ -68,11 +68,12 @@ class RenderPass
 
   public:
     // Volumetric parameters
-    int numStepsVolumetric        = 32;
-    float fogIntensity            = 0.2f;
-    float noiseAmmount            = 1.f;
-    float extinctionCoefficient   = 0.04f;
-    float anisotropy              = 0.5f;
+    int numStepsVolumetric      = 32;
+    float stepSize              = 0.25f;
+    float fogIntensity          = 1.f;
+    float noiseAmmount          = 1.f;
+    float extinctionCoefficient = 0.04f;
+    float anisotropy            = 0.5f;
 
   private:
     GBuffer* gbuffer         = nullptr;
@@ -90,20 +91,20 @@ class RenderPass
     float4x4 lightProj;
 
     // SpotLight Shadows
-    unsigned int spotShadowMaps[TotalShadowMaps] = {0};
+    unsigned int spotShadowMaps[TotalShadowMaps]    = {0};
     unsigned int spotShadowMapsGPU[TotalShadowMaps] = {0};
 
     // Tile Shading
-    unsigned int visibleLightIndicesSSBO = 0;
-    size_t currentSize                   = 0;
+    unsigned int visibleLightIndicesSSBO            = 0;
+    size_t currentSize                              = 0;
     int tilesX;
 
     // Volumetric Fog
     unsigned int fogResultTexture = 0;
 
     // FXAA
-    bool enableFXAA       = true;
-    bool showBorders      = false;
-    float globalThreshold = 0.0312f;
-    float localThreshold  = 0.063f;
+    bool enableFXAA               = true;
+    bool showBorders              = false;
+    float globalThreshold         = 0.0312f;
+    float localThreshold          = 0.063f;
 };

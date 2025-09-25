@@ -28,6 +28,9 @@ SpotLightComponent::SpotLightComponent(UID uid, GameObject* parent)
 
     spotCamera.horizontalFov       = 2.0f * outerAngle * DEGREE_RAD_CONV;
     spotCamera.verticalFov         = 2.0f * outerAngle * DEGREE_RAD_CONV;
+
+    const float outerRads          = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
+    radius                         = range * tan(outerRads);
 }
 
 SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -61,6 +64,9 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
 
     spotCamera.horizontalFov       = 2.0f * outerAngle * DEGREE_RAD_CONV;
     spotCamera.verticalFov         = 2.0f * outerAngle * DEGREE_RAD_CONV;
+
+    const float outerRads          = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
+    radius                         = range * tan(outerRads);
 }
 
 SpotLightComponent::~SpotLightComponent()
@@ -114,6 +120,8 @@ void SpotLightComponent::Clone(const Component* other)
 
         spotCamera.horizontalFov             = 2.0f * outerAngle * DEGREE_RAD_CONV;
         spotCamera.verticalFov               = 2.0f * outerAngle * DEGREE_RAD_CONV;
+
+        radius                               = otherLight->radius;
     }
     else
     {
@@ -149,6 +157,9 @@ void SpotLightComponent::RenderEditorInspector()
             outerAngle               = innerAngle;
             spotCamera.horizontalFov = 2.0f * outerAngle * DEGREE_RAD_CONV;
             spotCamera.verticalFov   = 2.0f * outerAngle * DEGREE_RAD_CONV;
+
+            const float outerRads    = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
+            radius                   = range * tan(outerRads);
         }
     }
     if (ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 90.0f))
@@ -157,6 +168,9 @@ void SpotLightComponent::RenderEditorInspector()
 
         spotCamera.horizontalFov = 2.0f * outerAngle * DEGREE_RAD_CONV;
         spotCamera.verticalFov   = 2.0f * outerAngle * DEGREE_RAD_CONV;
+
+        const float outerRads    = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
+        radius                   = range * tan(outerRads);
     }
 }
 
