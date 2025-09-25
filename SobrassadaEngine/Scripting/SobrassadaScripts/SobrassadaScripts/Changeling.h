@@ -13,7 +13,6 @@ enum class ChangelingVersions
 {
     RANDOM,
     DEFAULT,
-    SNEAK,
     BLOCK,
 };
 
@@ -34,18 +33,17 @@ enum class ChangelingStates
     DIG_DOWN_TRANSITION     = 4,
     IDLE_VISIBLE            = 5,
     CHASE                   = 6,
-    BURIED_CHASE            = 7,
-    DASH_ATTACK_PREPARATION = 8,
-    DASH_ATTACK             = 9,
-    DASH_ATTACK_WIGGLE      = 10,
-    DASH_ATTACK_COOLDOWN    = 11,
-    DASH_CHAIN_ATTACK       = 12,
-    BITE_ATTACK             = 13,
-    BITE_ATTACK_COOLDOWN    = 14,
-    FINAL_ATTACK            = 15,
-    DAMAGED                 = 16,
-    DYING                   = 17,
-    HIGHLIGHTING            = 18,
+    DASH_ATTACK_PREPARATION = 7,
+    DASH_ATTACK             = 8,
+    DASH_ATTACK_WIGGLE      = 9,
+    DASH_ATTACK_COOLDOWN    = 10,
+    DASH_CHAIN_ATTACK       = 11,
+    BITE_ATTACK             = 12,
+    BITE_ATTACK_COOLDOWN    = 13,
+    FINAL_ATTACK            = 14,
+    DAMAGED                 = 15,
+    DYING                   = 16,
+    HIGHLIGHTING            = 17,
 };
 
 enum class HighlightingStates
@@ -83,7 +81,6 @@ class Changeling : public Character
     void UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq);
     void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
-    void UpdateBuriedChaseState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackWiggleState(float deltaTime, float distanceToPlayerSq);
@@ -98,7 +95,6 @@ class Changeling : public Character
 
     bool ST_BuryUp(float deltaTime, float distanceToPlayerSq);
     bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
-    bool ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq);
     bool ST_Damaged();
     bool ST_Peek(float deltaTime, float distanceToPlayerSq);
     bool ST_DashAttack(float deltaTime, float distanceToPlayerSq);
@@ -162,19 +158,12 @@ class Changeling : public Character
     HighlightingStates currentHighlightingState = HighlightingStates::IDLE;
     float highlightDuration                     = 3.f;
 
+    float peekChancePerSecond                   = 0.1f;
+    float3 spottedLocation                      = float3::nan;
+
     // Default specific
     float chaseSpeed                            = 1.0f;
     float chaseAcceleration                     = 4.0f;
-
-    // Sneak specific
-    float maxSneakAngleDegrees                  = 45.0f;
-    float minSneakSpeed                         = 0.25f;
-    float maxSneakSpeed                         = 1.0f;
-    float distanceToPlayerForMaxSneakSpeed      = 0.0f;
-    float sneakAcceleration                     = 4.0f;
-    float peekChancePerSecond                   = 0.1f;
-    float3 spottedLocation                      = float3::nan;
-    float3 spottedViewingDirection              = float3::nan;
 
     // Block specific
     bool dashRight                              = false;

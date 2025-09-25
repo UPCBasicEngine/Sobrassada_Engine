@@ -41,7 +41,7 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Dash speed", InspectorField::FieldType::Float, &dashSpeed, 0.1f, 100.0f);
     fields.emplace_back("Min dash distance", InspectorField::FieldType::Float, &minDashDistance, 0.1f, 100.0f);
 
-    // Version selection (0 random, 1 default, 2 sneak, 3 block)
+    // Version selection (0 random, 1 default, 2 block)
     fields.emplace_back("Version (0: Random)", InspectorField::FieldType::Int, &userSelectedVersion, 0, 2);
     fields.emplace_back(
         "Swap states chance per second (Only with version 0)", InspectorField::FieldType::Float,
@@ -50,30 +50,17 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back(
         "Max enemies left for final attack", InspectorField::FieldType::Int, &maxEnemiesLeftForFinalAttack, 0, 40
     );
+    fields.emplace_back("Peek chance per second", InspectorField::FieldType::Float, &peekChancePerSecond, 0.1f, 10.0f);
 
     // Herbert specific (Index 1)
     fields.emplace_back("Chase speed", InspectorField::FieldType::Float, &chaseSpeed, 0.1f, 10.0f);
     fields.emplace_back("Chase Acceleration", InspectorField::FieldType::Float, &chaseAcceleration, 0.1f, 10.0f);
-
-    // Sepp specific (Index 2)
-    fields.emplace_back(
-        "Max sneak angle degrees", InspectorField::FieldType::Float, &maxSneakAngleDegrees, 1.0f, 180.0f
-    );
-    fields.emplace_back("Min sneak speed", InspectorField::FieldType::Float, &minSneakSpeed, 0.001f, 10.0f);
-    fields.emplace_back("Max sneak speed", InspectorField::FieldType::Float, &maxSneakSpeed, 0.1f, 10.0f);
-    fields.emplace_back(
-        "Distance to player for max sneak speed", InspectorField::FieldType::Float, &distanceToPlayerForMaxSneakSpeed,
-        0.1f, 10.0f
-    );
-    fields.emplace_back("Sneak Acceleration", InspectorField::FieldType::Float, &sneakAcceleration, 0.1f, 10.0f);
-    fields.emplace_back("Peek chance per second", InspectorField::FieldType::Float, &peekChancePerSecond, 0.1f, 10.0f);
 
     // Giacomo specific (Index 3)
     fields.emplace_back("Dash angle degrees", InspectorField::FieldType::Float, &dashAngleDegrees, 0.0f, 180.0f);
     fields.emplace_back("Time between dashes", InspectorField::FieldType::Float, &timeBetweenDashes, 0.0f, 10.0f);
 
     // VFX
-
     fields.emplace_back("VFX_DigUpRocks", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
     fields.emplace_back("VFX_DigUpHole", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
 
@@ -207,9 +194,6 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::CHASE:
         UpdateChaseState(deltaTime, distanceToPlayerSq);
         break;
-    case ChangelingStates::BURIED_CHASE:
-        UpdateBuriedChaseState(deltaTime, distanceToPlayerSq);
-        break;
     case ChangelingStates::DASH_ATTACK_PREPARATION:
         UpdateDashAttackPreparationState(deltaTime, distanceToPlayerSq);
         break;
@@ -259,7 +243,6 @@ void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq
     if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
 
     if (ST_BuryUp(deltaTime, distanceToPlayerSq)) return;
-    if (ST_StartBuriedChase(deltaTime, distanceToPlayerSq)) return;
 
     if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
 }
@@ -271,16 +254,7 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
 
     if (animComponent && animComponent->IsFinished())
     {
-        if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
-        {
-            spottedLocation         = character->GetLastPosition();
-            spottedViewingDirection = character->GetFrontDirection();
-        }
-        else
-        {
-            spottedLocation         = float3::nan;
-            spottedViewingDirection = float3::nan;
-        }
+        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
         characterCollider->SetEnabled(false);
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
@@ -303,16 +277,7 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 {
     if (animComponent && animComponent->IsFinished())
     {
-        if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
-        {
-            spottedLocation         = character->GetLastPosition();
-            spottedViewingDirection = character->GetFrontDirection();
-        }
-        else
-        {
-            spottedLocation         = float3::nan;
-            spottedViewingDirection = float3::nan;
-        }
+        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
         characterCollider->SetEnabled(false);
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
@@ -328,14 +293,6 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
         randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
-
-        if (randomVersion == ChangelingVersions::SNEAK)
-        {
-            agentAI->SetSpeed(0.0f, 10.0f);
-            if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
-            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
-            currentState = ChangelingStates::DIG_DOWN_TRANSITION;
-        }
     }
 
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
@@ -354,14 +311,6 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
         randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
-
-        if (randomVersion == ChangelingVersions::SNEAK)
-        {
-            agentAI->SetSpeed(0.0f, 10.0f);
-            if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
-            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
-            currentState = ChangelingStates::DIG_DOWN_TRANSITION;
-        }
     }
 
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
@@ -376,54 +325,6 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
     {
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         agentAI->SetPathNavigation(character->GetLastPosition());
-    }
-}
-
-void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerSq)
-{
-    if (ShouldSwapStatesOnRandomVersion(deltaTime))
-    {
-        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
-
-        GLOG("[INFO] Swapping to random version: %d", randomVersion)
-
-        if (randomVersion != ChangelingVersions::SNEAK)
-        {
-            agentAI->SetSpeed(0.0f, 10.0f);
-            currentState = ChangelingStates::IDLE_BURIED;
-        }
-    }
-
-    agentAI->LookAtMovement(spottedLocation, deltaTime);
-
-    if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
-
-    if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
-
-    const float3 directionToPlayer  = (spottedLocation - parent->GetGlobalTransform().TranslatePart()).Normalized();
-    const float angleToPlayerVision = spottedViewingDirection.AngleBetween(directionToPlayer) * RAD_DEGREE_CONV;
-    if (angleToPlayerVision < maxSneakAngleDegrees)
-    {
-        const float lerpFactor =
-            max(min((distanceToPlayerSq - Pow(distanceToPlayerForMaxSneakSpeed, 2)) /
-                        Pow(maxDetectionRange - distanceToPlayerForMaxSneakSpeed, 2),
-                    1),
-                0);
-
-        const float currentSneakSpeed = minSneakSpeed + (maxSneakSpeed - minSneakSpeed) * (1 - lerpFactor);
-
-        agentAI->SetSpeed(currentSneakSpeed, sneakAcceleration);
-        agentAI->SetPathNavigation(spottedLocation);
-    }
-    else
-    {
-        agentAI->SetSpeed(0, 10);
-    }
-
-    if (spottedLocation.Distance(parent->GetGlobalTransform().TranslatePart()) < 0.5f)
-    {
-        agentAI->SetSpeed(0.0f, 10.0f);
-        currentState = ChangelingStates::IDLE_BURIED;
     }
 }
 
@@ -729,8 +630,6 @@ bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
     const bool initFinalAttack =
         associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
     // Check preconditions
-    if (!initFinalAttack && (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK))
-        return false;
     if (!initFinalAttack && currentState != ChangelingStates::IDLE_BURIED) return false;
     if (!initFinalAttack && !spottedLocation.IsFinite()) return false;
 
@@ -768,20 +667,6 @@ bool Changeling::ST_StartChase(float deltaTime, float distanceToPlayerSq)
     return true;
 }
 
-bool Changeling::ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq)
-{
-    // Check preconditions
-    if (currentState != ChangelingStates::IDLE_BURIED) return false;
-    if (version != ChangelingVersions::SNEAK && randomVersion != ChangelingVersions::SNEAK) return false;
-    if (!spottedLocation.IsFinite()) return false;
-
-    // Implement state transition
-    agentAI->ResetSpeed();
-    currentState = ChangelingStates::BURIED_CHASE;
-
-    return true;
-}
-
 bool Changeling::ST_Damaged()
 {
     if (currentState != ChangelingStates::DAMAGED)
@@ -812,7 +697,7 @@ bool Changeling::ST_Damaged()
 bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BURIED_CHASE) return false;
+    if (currentState != ChangelingStates::IDLE_BURIED) return false;
 
     // Implement state transition
     const int randomValue = max(1, (int)round(1.0f / (peekChancePerSecond * deltaTime)));
@@ -831,8 +716,7 @@ bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (version != ChangelingVersions::SNEAK && distanceToPlayerSq > rangeAIAttack * rangeAIAttack) return false;
-    if (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK) return false;
+    if (distanceToPlayerSq > rangeAIAttack * rangeAIAttack) return false;
     if (currentState != ChangelingStates::CHASE && currentState != ChangelingStates::DASH_ATTACK_COOLDOWN) return false;
 
     // Reset parameters
@@ -899,8 +783,7 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
     if (distanceToPlayerSq > biteAttackRadius * biteAttackRadius) return false;
-    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BURIED_CHASE &&
-        currentState != ChangelingStates::BITE_ATTACK_COOLDOWN)
+    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BITE_ATTACK_COOLDOWN)
         return false;
 
     // Implement state transition
@@ -942,10 +825,10 @@ void Changeling::ValidateSetup()
     isSetupCorrectly = true;
 
     // Validate variant input
-    if (userSelectedVersion < 0 || userSelectedVersion > 3)
+    if (userSelectedVersion < 0 || userSelectedVersion > 2)
     {
         isSetupCorrectly = false;
-        GLOG("[ERROR] Variant input for changeling needs to be on of [0, 1, 2, 3]")
+        GLOG("[ERROR] Variant input for changeling needs to be on of [0, 1, 2]")
         return;
     }
 
