@@ -119,8 +119,6 @@ void FireballTrap::SetupInspectorFields()
 
     // Anim prefabs
     fields.push_back({"Anim MiniBomb Name", InspectorField::FieldType::InputText, &animCName});
-    fields.push_back({"Anim MiniBomb Delay", InspectorField::FieldType::Float, &animCDelay, 0.f, 10.f});
-    fields.push_back({"Anim MiniBomb Life", InspectorField::FieldType::Float, &animCLife, 0.f, 20.f});
 }
 
 bool FireballTrap::Init()
@@ -198,15 +196,48 @@ bool FireballTrap::Init()
     if (!animCPrefab && !animCName.empty())
     {
         animCPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animCName);
-        if (animCPrefab) animCPrefab->SetEnabled(false);
     }
+
     animC.root = animCPrefab;
+
+    if (animCPrefab)
     {
-        auto v   = animCPrefab ? animCPrefab->GetAllComponentsInChilds<AnimationComponent*>(AppEngine)
-                               : std::vector<AnimationComponent*> {};
-        animC.ac = v.empty() ? nullptr : v.front();
+        // Find the animation component
+        animC.ac = animCPrefab->GetComponent<AnimationComponent*>();
+
+        if (animC.ac && !animC.ac->GetCurrentAnimation())
+        {
+            animC.ac->Init();
+            animC.ac->OnStop();
+        }
+
+        // If not on root, check children
+        if (!animC.ac)
+        {
+            auto v = animCPrefab->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+            if (!v.empty())
+            {
+                animC.ac = v.front();
+                GLOG("[INFO] Found animation component in child");
+            }
+        }
+
+        if (animC.ac)
+        {
+            GLOG("[INFO] Animation component ready, resource: %llu", animC.ac->GetAnimationResource());
+            if (!animC.ac->GetCurrentAnimation())
+            {
+                animC.ac->Init();
+            }
+        }
+        else
+        {
+            GLOG("[ERROR] No animation component found in prefab");
+        }
+
+        // Make sure it starts disabled
+        animCPrefab->SetEnabledRecursive(false);
     }
-    if (animC.root) animC.root->SetEnabled(false);
 
     return true;
 }
@@ -267,9 +298,16 @@ void FireballTrap::Update(float deltaTime)
 
     UpdateScheduledVfx(deltaTime);
 
-    if (animC.root && animC.root->IsEnabled() && animC.ac && animC.ac->IsFinished()) StopBombAnimS();
+    if (animCPlaying && animC.ac)
+    {
+        animC.ac->Update(deltaTime);
+        if (animC.ac->IsFinished())
+        {
+            StopBombAnimS();
+            animCPlaying = false;
+        }
+    }
 }
-
 void FireballTrap::StartAttack()
 {
     // Random impact position inside spawn zone
@@ -645,6 +683,14 @@ GameObject* FireballTrap::AcquireFromPool(GameObject* prefab)
         if (go && !go->IsEnabled()) return go;
 
     GameObject* inst = CloneHierarchy(prefab, parent->GetUID());
+
+    auto shaders     = inst->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+    for (auto* ssc : shaders)
+    {
+        ssc->SetScriptEnabled("MovingUVClipErode", false);
+        ssc->SetScriptEnabled("MovingUVTransparent", false);
+    }
+
     pool.push_back(inst);
     return inst;
 }
@@ -732,17 +778,6 @@ void FireballTrap::ClearScheduledVfx()
     vfxSchedClock = 0.f;
 }
 
-static inline void StartAnimOnInstance(GameObject* inst, UID clip, bool loop)
-{
-    if (!inst) return;
-    if (auto* ac = inst->GetComponent<AnimationComponent*>())
-    {
-        if (clip != INVALID_UID) ac->SetAnimationResource(clip);
-        ac->OnStop();
-        ac->OnPlay(false, loop);
-    }
-}
-
 GameObject* FireballTrap::CloneHierarchy(GameObject* src, UID newParentUID)
 {
     if (!src) return nullptr;
@@ -774,121 +809,52 @@ GameObject* FireballTrap::CloneHierarchy(GameObject* src, UID newParentUID)
 void FireballTrap::SetEnabledRecursive(GameObject* go, bool enabled)
 {
     if (!go) return;
-    go->SetEnabled(enabled);
-
-    Scene* sc = AppEngine->GetSceneModule()->GetScene();
-    for (UID cUID : go->GetChildren())
-        if (GameObject* c = sc->GetGameObjectByUID(cUID)) SetEnabledRecursive(c, enabled);
+    go->SetEnabledRecursive(enabled);
 }
 
 void FireballTrap::StopAnimationsRecursive(GameObject* go)
 {
     if (!go) return;
 
-    if (auto* ac = go->GetComponent<AnimationComponent*>()) ac->OnStop();
-
-    Scene* sc = AppEngine->GetSceneModule()->GetScene();
-    for (UID cUID : go->GetChildren())
-        if (GameObject* c = sc->GetGameObjectByUID(cUID)) StopAnimationsRecursive(c);
-}
-
-void FireballTrap::StartAnimationsRecursive(GameObject* go, UID clip, bool loop)
-{
-    if (!go) return;
-
-    if (auto* ac = go->GetComponent<AnimationComponent*>())
+    // Stop all animations in hierarchy
+    auto allAnims = go->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+    for (auto* ac : allAnims)
     {
-        const bool hasSM = (ac->GetResourceStateMachine() != nullptr);
-
-        if (hasSM)
-        {
-            bool ok                     = false;
-            static const char* kOrder[] = {"Play", "Start", "Loop"};
-            for (const char* t : kOrder)
-            {
-                if (ac->UseTrigger(t))
-                {
-                    ok = true;
-                    break;
-                }
-            }
-            if (!ok) ac->OnPlay(false, loop);
-        }
-        else
-        {
-            if (clip != INVALID_UID) ac->SetAnimationResource(clip);
-            ac->OnStop();
-            ac->OnPlay(false, loop);
-        }
-
-        if (ac->GetAnimationController()) ac->GetAnimationController()->SetTime(0.0f);
-        ac->Update(0.0f);
+        if (ac) ac->OnStop();
     }
-
-    Scene* sc = AppEngine->GetSceneModule()->GetScene();
-    for (UID cUID : go->GetChildren())
-        if (GameObject* c = sc->GetGameObjectByUID(cUID)) StartAnimationsRecursive(c, clip, loop);
-}
-
-float FireballTrap::ComputeMaxAnimDuration(GameObject* root) const
-{
-    if (!root) return 0.f;
-
-    float maxDur = 0.f;
-    auto anims   = root->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
-    for (auto* ac : anims)
-    {
-        if (!ac) continue;
-        if (ResourceAnimation* ra = ac->GetCurrentAnimation()) maxDur = std::max(maxDur, ra->GetDuration());
-    }
-    return maxDur;
 }
 
 void FireballTrap::PlayBombAnimSAt(const float3& localPos)
 {
     if (!animC.root || !animC.ac) return;
 
-    const float4x4 parentW = parent->GetGlobalTransform();
-    const float4x4 prefabW = animC.root->GetGlobalTransform();
-    const float4x4 worldTf = float4x4::FromTRS(parentW.MulPos(localPos), prefabW.RotatePart(), prefabW.ExtractScale());
-    animC.root->SetLocalTransform(parentW.Inverted() * worldTf);
-
-    SetEnabledRecursive(animC.root, true);
-
-    bool started = false;
-
-    if (animC.ac->GetResourceStateMachine())
+    if (animC.root->GetParent() != parent->GetUID())
     {
-        (void)animC.ac->UseTrigger("Reset");
-        started = animC.ac->UseTrigger("Play")
-               || animC.ac->UseTrigger("Start")
-               || animC.ac->UseTrigger("Loop")
-               || animC.ac->UseTrigger("Idle");
+        animC.root->SetParent(parent->GetUID());
+        parent->AddChildren(animC.root->GetUID());
     }
 
-    if (!started)
-    {
-        animC.ac->OnStop();
-        animC.ac->OnPlay(false, false);
-    }
+    animC.root->SetLocalPosition(localPos);
+    animC.root->SetEnabledRecursive(true);
 
-    if (auto* ctrl = animC.ac->GetAnimationController())
-    {
-        ctrl->SetTime(0.0f);
-    }
+    // Play animation
+    animC.ac->SetBoneMapping();
+    animC.ac->OnStop();
+    animC.ac->OnPlay(false, false);
 
-    animC.ac->Update(0.0f);
+    if (auto* ctrl = animC.ac->GetAnimationController()) ctrl->SetTime(0.0f);
 
-    GLOG("[FireballTrap] Bomb_animation_S started=%d hasSM=%d isPlaying=%d",
-         (int)started,
-         animC.ac->GetResourceStateMachine()!=nullptr,
-         (int)animC.ac->IsPlaying());
+    animC.ac->Update(0.001f);
+    animCPlaying = true;
 }
-
 
 void FireballTrap::StopBombAnimS()
 {
-    if (!animC.root || !animC.ac) return;
-    animC.ac->OnStop();
-    animC.root->SetEnabled(false);
+    if (!animC.root) return;
+
+    if (animC.ac) animC.ac->OnStop();
+    animC.root->SetEnabledRecursive(false);
+    animC.root->SetLocalPosition(float3(0, -1000, 0));
+
+    animCPlaying = false;
 }

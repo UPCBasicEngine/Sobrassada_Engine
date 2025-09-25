@@ -151,7 +151,6 @@ class FireballTrap : public Script
     void UpdateScheduledVfx(float dt);
     void ClearScheduledVfx();
 
-    bool inspectorInitialized          = false;
     // Prefabs (set via Inspector later)
     GameObject* vfxMainLightPrefab     = nullptr;
     GameObject* vfxLightImpactPrefab   = nullptr;
@@ -191,15 +190,10 @@ class FireballTrap : public Script
 
     // Animations
     GameObject* animCPrefab         = nullptr;
-    float animCDelay                = 0.f;
-    float animCLife                 = 0.f;
-
-    void StartAnimationsRecursive(GameObject* go, UID clip, bool loop);
 
     GameObject* CloneHierarchy(GameObject* src, UID newParentUID);
     void SetEnabledRecursive(GameObject* go, bool enabled);
     void StopAnimationsRecursive(GameObject* go);
-    float ComputeMaxAnimDuration(GameObject* root) const;
     std::string animCName = "Bomb_animation_S"; // MiniBomb
 
     void PlayBombAnimSAt(const float3& localPos);
@@ -212,4 +206,6 @@ class FireballTrap : public Script
     };
 
     OneShotAnim animC;
+    bool animCPlaying = false;
+
 };
