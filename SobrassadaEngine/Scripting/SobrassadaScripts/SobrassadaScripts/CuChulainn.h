@@ -62,7 +62,6 @@ class CuChulainn : public Character
     int GetEnemiesCount() const { return enemiesCont; }
     bool HasblockingTag(GameObject* go);
 
-
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
     void SetDeath(bool death) { isDead = death; }
     void SetHealth(int health) { reservedHealth = health; }
@@ -126,8 +125,9 @@ class CuChulainn : public Character
     void AddRiastrad(int amount);
     void EndCurse();
 
-    bool IsBlockedAhead(const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth);
-
+    bool IsBlockedAhead(
+        const GameObject* ownerGO, const float3& desiredMoveDirection, float lookAheadDistance, float skinWidth
+    );
 
     void SetPosition(const float3& position);
     const std::string GetLogicStateName();
@@ -258,7 +258,13 @@ class CuChulainn : public Character
 
     // Riastrad
     std::string riastradBarName          = "BarFill";
+    std::string riastradEyeName          = "RiastradEye";
+    std::string riastradTriggersName     = "RiastradTriggers";
+    std::string riastradKeyName          = "RiastradKey";
     BarFill* riastradBar                 = nullptr;
+    AbilityIconFill* riastradEye         = nullptr;
+    GameObject* riastradTriggers         = nullptr;
+    GameObject* riastradKey              = nullptr;
     int riastradMeter                    = 0;
     bool isRiastrad                      = false;
     bool desiredTransform                = false;
@@ -294,9 +300,9 @@ class CuChulainn : public Character
     float idleTimer                      = 0.0f;
     float runTimer                       = 0.0f;
     float stepTime                       = 0.367f;
-    bool justDied                         = false;
-    bool pendingGameOver                  = false;
-    bool moveFromCollision                = false;
+    bool justDied                        = false;
+    bool pendingGameOver                 = false;
+    bool moveFromCollision               = false;
 
     int mushrooms                        = 0;
     int mushroomHeal                     = 2;
@@ -313,6 +319,10 @@ class CuChulainn : public Character
     float dashDecalBufferTimer           = 0.0f;
 
     // Heal
+    std::string hudMushroomName1         = "HUDMushroom1";
+    std::string hudMushroomName2         = "HUDMushroom2";
+    std::string hudMushroomName3         = "HUDMushroom3";
+    GameObject* hudMushrooms[3]          = {nullptr};
     bool isHealing                       = false;
     std::string healVfxName              = "HealVfx";
     std::string healParticlesName        = "HealParticles";
