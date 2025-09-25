@@ -24,7 +24,7 @@
 AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Cell width", InspectorField::FieldType::Float, &cellWidth, 0.f, 10000.f});
-    fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 1000.f});
+    fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 10000.f});
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
