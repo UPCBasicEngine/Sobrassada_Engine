@@ -210,6 +210,6 @@ class SOBRASADA_API_ENGINE Scene
     std::map<HashString, std::vector<GameObject*>> tags;
 
     RenderPass* renderPass = nullptr;
-
+    LightprobeManager* lightprobeManager = nullptr;
     std::vector<UID> pendingDeletes;
 };
