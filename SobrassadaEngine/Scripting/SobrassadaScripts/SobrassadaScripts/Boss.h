@@ -152,6 +152,7 @@ class Boss : public Character
     bool actionTriggerDone       = false;
 
     int shieldStrikeLastAction   = 0;
+    float chaseTimer             = 0.0f;
     bool audioPlayed             = false;
 
     // Dash
@@ -190,6 +191,9 @@ class Boss : public Character
     float blastHitTime                               = 0.0f;
 
     // VFX
+    std::string emessiveVFXName                      = "";
+    MeshComponent* emessiveVFXMesh                   = nullptr;
+
     std::string overheadPrepareVFXName               = "";
     ShaderScriptComponent* runesScript               = nullptr;
     MovingUVTransparent* runesUV                     = nullptr;
@@ -238,6 +242,7 @@ class Boss : public Character
     float jumpDuration                               = 0.2f;
     float fallDuration                               = 0.2f;
     float highlightDelay                             = 0.0f;
+    float chaseTimeLimit                             = 0.0f;
 
     // Health UI
     ImageComponent* healthImageComponent             = nullptr;

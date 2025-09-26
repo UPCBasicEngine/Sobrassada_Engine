@@ -39,6 +39,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Close Area Damage", InspectorField::FieldType::Int, &closeAreaDamage, 0, 5});
     fields.push_back({"Spout", InspectorField::FieldType::InputText, &spoutName});
     fields.push_back({"Highlight Delay", InspectorField::FieldType::Float, &highlightDelay, 0.0f, 10.0f});
+    fields.push_back({"Chase Time Limit", InspectorField::FieldType::Float, &chaseTimeLimit, 0.0f, 20.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
     fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
@@ -51,6 +52,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Overhead Dash", InspectorField::FieldType::InputText, &overheadDashVFXName});
     fields.push_back({"Overhead Attack", InspectorField::FieldType::InputText, &overheadAttackVFXName});
     fields.push_back({"Shield Blast", InspectorField::FieldType::InputText, &shieldBlastVFXName});
+    fields.push_back({"Emessive", InspectorField::FieldType::InputText, &emessiveVFXName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Particle"});
     fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
@@ -114,6 +116,15 @@ bool Boss::Init()
         if (spoutLogic) waterSpouts.push_back(spoutLogic);
         else GLOG("Not spout script found for ferdiad");
     }
+
+    GameObject* emessiveVFXObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(emessiveVFXName);
+    if (emessiveVFXObject)
+    {
+        emessiveVFXMesh = emessiveVFXObject->GetComponent<MeshComponent*>();
+        if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
+        else GLOG("Not emessive mesh component found for ferdiad");
+    }
+    else GLOG("Not emessive VFX game object found for ferdiad");
 
     GameObject* overheadPrepareVFX =
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadPrepareVFXName);
@@ -858,7 +869,9 @@ void Boss::ShieldStrikes(float deltaTime)
             agentAI->ResumeMovement();
             animComponent->UseTrigger("Run");
             actionTriggerDone = true;
+            chaseTimer        = 0.0f;
         }
+        else chaseTimer += deltaTime;
 
         agentAI->SetPathNavigation(character->GetLastPosition());
 
@@ -869,9 +882,17 @@ void Boss::ShieldStrikes(float deltaTime)
             else currentAction = BossActions::Combo1;
             actionTriggerDone = false;
         }
+        else if (chaseTimer >= chaseTimeLimit)
+        {
+            agentAI->PauseMovement();
+            stateEnter   = true;
+            currentState = ChooseAlternativeState();
+            return;
+        }
 
         switch (CheckDistance()) // if far change mechanic
         {
+        case BossDistance::Distant:
         case BossDistance::Far:
         case BossDistance::Farther:
             agentAI->PauseMovement();
@@ -899,9 +920,12 @@ void Boss::ShieldStrikes(float deltaTime)
             agentAI->ResumeMovement();
         }
 
-        if (!audioPlayed && audio && attackTimer >= attackHitboxDelay - 0.1f)
+        if (attackTimer >= attackHitboxDelay - 0.1f && !audioPlayed)
         {
-            audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_02);
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_01);
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
+
             audioPlayed = true;
         }
 
@@ -931,9 +955,12 @@ void Boss::ShieldStrikes(float deltaTime)
             agentAI->ResumeMovement();
         }
 
-        if (!audioPlayed && audio && attackTimer >= attackHitboxDelay - 0.1f)
+        if (attackTimer >= attackHitboxDelay - 0.1f && !audioPlayed)
         {
-            audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_02);
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_02);
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
+
             audioPlayed = true;
         }
 
@@ -963,9 +990,12 @@ void Boss::ShieldStrikes(float deltaTime)
             agentAI->ResumeMovement();
         }
 
-        if (!audioPlayed && audio && attackTimer >= attackHitboxDelay - 0.1f)
+        if (attackTimer >= attackHitboxDelay - 0.1f && !audioPlayed)
         {
-            audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_02);
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_03);
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
+
             audioPlayed = true;
         }
 
@@ -991,6 +1021,7 @@ void Boss::ShieldStrikes(float deltaTime)
     }
     else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
     {
+        if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
         weaponCollider->SetEnabled(false);
         agentAI->ResumeMovement();
     }
@@ -1536,6 +1567,9 @@ void Boss::ResetValues(bool changePhase)
     if (weaponCollider) weaponCollider->SetEnabled(false);
     if (closeArea) closeArea->SetEnabled(false);
     if (bigArea) bigArea->SetEnabled(false);
+    if (blastArea) blastArea->SetEnabled(false);
+
+    if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
 
     if (runesScript) runesScript->SetEnabled(false);
     if (runesUV)
@@ -1569,7 +1603,6 @@ void Boss::ResetValues(bool changePhase)
     if (smokeParticle) smokeParticle->StopInstances();
     if (chargeShieldParticle) chargeShieldParticle->StopInstances();
 
-    if (blastArea) blastArea->SetEnabled(false);
     if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
     if (blastSpriteScript) blastSpriteScript->SetEnabled(false);
 
