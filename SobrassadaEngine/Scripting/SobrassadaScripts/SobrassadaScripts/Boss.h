@@ -20,13 +20,13 @@ class AudioSourceComponent;
 
 enum class BossDistance
 {
-    Close,   // 3m
-    Near,    // 4m
-    Medium,  // 6.5m
-    Distant, // 8.5m
-    Far,     // 10m
-    Farther, // 13m
-    Extreme  // 15m
+    None,
+    Close,   // attack range (3m)
+    Near,    // 6m
+    Medium,  // 9m
+    Distant, // 12m
+    Far,     // 15m
+    Farther, // ...
 };
 
 enum class BossStates

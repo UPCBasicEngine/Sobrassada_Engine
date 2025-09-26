@@ -443,7 +443,6 @@ void Boss::OnPlayerEnterLocation()
     waiting = false;
 
     doTaunt = true;
-    // ChooseNextState();
 }
 
 void Boss::OnDeath()
@@ -592,19 +591,11 @@ void Boss::ChooseNextStateFirstPhase()
         shieldStrikesRate  = 15;
         overheadStrikeRate = 100;
         break;
-
-    case BossDistance::Extreme:
-        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
-        // if (distance <= maxDetectionRange) doTaunt = true;
-        // else doIdle = true;
-        // doIdle         = true;
-        break;
     }
 
     int num = uniformDist(rng);
     if (doTaunt)
     {
-        GLOG("DO TAUNT")
         currentState = BossStates::Taunt;
     }
     else if (doIdle)
@@ -666,12 +657,6 @@ void Boss::ChooseNextStateSecondPhase()
         shieldStrikesRate = 10;
         shieldBlastRate   = 80;
         waterSpoutsRate   = 100;
-        break;
-
-    case BossDistance::Extreme:
-        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
-        if (distance <= maxDetectionRange) doTaunt = true;
-        else doIdle = true;
         break;
     }
 
@@ -751,12 +736,6 @@ void Boss::ChooseNextStateThirdPhase()
         shieldBlastRate   = 90;
         waterSpoutsRate   = 100;
         break;
-
-    case BossDistance::Extreme:
-        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
-        if (distance <= maxDetectionRange) doTaunt = true;
-        else doIdle = true;
-        break;
     }
 
     int num = uniformDist(rng);
@@ -793,7 +772,6 @@ void Boss::Idle(float deltaTime)
 {
     if (stateEnter)
     {
-
         // TODO: Randomize the idle duration
         // agentAI->SetSpeed(0.0f, 10.0f);
         if (doIdle) ResetValues(false);
@@ -821,6 +799,7 @@ void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
+        GLOG("DOING TAUNT")
         if (doTaunt) ResetValues(false);
         stateEnter    = false;
         doTaunt       = false;
@@ -832,7 +811,6 @@ void Boss::Taunt(float deltaTime)
     agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
     if (animComponent && animComponent->IsFinished()) Idle(deltaTime);
-    else ChooseNextState();
 }
 
 void Boss::ShieldStrikes(float deltaTime)
@@ -871,7 +849,6 @@ void Boss::ShieldStrikes(float deltaTime)
         {
         case BossDistance::Far:
         case BossDistance::Farther:
-        case BossDistance::Extreme:
             agentAI->PauseMovement();
             ChooseNextState();
             break;
@@ -1363,17 +1340,15 @@ void Boss::DamageAreaLogic()
 
 BossDistance Boss::CheckDistance() const
 {
-    if (character != nullptr)
-    {
-        float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
-        if (distance <= rangeAIAttack) return BossDistance::Close;
-        else if (distance <= rangeAIChase / 3) return BossDistance::Near;
-        else if (distance <= rangeAIChase / 2) return BossDistance::Medium;
-        else if (distance <= rangeAIChase / 1.5f) return BossDistance::Distant;
-        else if (distance <= rangeAIChase / 1.2f) return BossDistance::Far;
-        else if (distance <= rangeAIChase) return BossDistance::Farther;
-    }
-    return BossDistance::Extreme;
+    if (character == nullptr) return BossDistance::None;
+
+    float distance = character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart());
+    if (distance <= rangeAIAttack) return BossDistance::Close;
+    else if (distance <= 6.0f) return BossDistance::Near;
+    else if (distance <= 9.0f) return BossDistance::Medium;
+    else if (distance <= 12.0f) return BossDistance::Distant;
+    else if (distance <= 15.0f) return BossDistance::Far;
+    else return BossDistance::Farther;
 }
 
 void Boss::StopAttacking()
