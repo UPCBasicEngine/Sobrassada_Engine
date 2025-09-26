@@ -17,8 +17,7 @@ uniform layout(location = 1) mat4 inverseViewMatrix;
 uniform layout(location = 2) vec3 cameraPosition;
 
 // USED ONLY IN FULL SCREEN CALCULATION
-uniform layout(location = 3) int NUM_STEPS;
-
+uniform layout(location = 3) bool useNoiseTex;
 uniform layout(location = 4) float fogIntensity;
 uniform layout(location = 5) float extinctionCoefficient;
 uniform layout(location = 6) float frameTime;
@@ -30,7 +29,6 @@ uniform layout(location = 10) float StepSize;
 // DIRECTIONAL LIGHT MATRICES -> MOVE TO UNIFORM OF DIRECTIONAL
 uniform layout(location = 11) mat4 directinal_View_Mat;
 uniform layout(location = 12) mat4 directinal_Projection_Mat;
-uniform layout(location = 13) bool useNoiseTex;
 
 struct PointLight
 {
@@ -531,57 +529,6 @@ bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, in int baseO
 
     return validIntersection;
 }
-
-// ALL SCENE, NO INTERSECTION CALCULATIONS
-
-// void main()
-// {
-//     const ivec2 textureSize = imageSize(transmitanceTexture);
-
-//     if(gl_GlobalInvocationID.x < textureSize.x && gl_GlobalInvocationID.y < textureSize.y)
-//     {
-// 	    ivec2 tileCoord = ivec2(gl_GlobalInvocationID.xy) / TILE_SIZE;
-// 	    int tileIndex = tileCoord.y * numTilesX + tileCoord.x;
-//         int baseOffset = tileIndex * MAX_LIGHTS_PER_TILE;
-
-//         vec2 uvCoords = vec2(gl_GlobalInvocationID.x / float(textureSize.x), gl_GlobalInvocationID.y / float(textureSize.y));
-//         float depth = texture(depthTexture, uvCoords).r;
-        
-//         vec3 worldPosition = GetWorldPosition(depth, uvCoords);
-
-//         vec3 rayDirection = worldPosition - cameraPosition;
-
-//         vec3 marchingStep = rayDirection / float(NUM_STEPS);
-//         float stepSize = length(marchingStep);
-
-//         vec3 currentPosition = cameraPosition + marchingStep * sampleIGN(gl_GlobalInvocationID.xy, frameTime);
-
-//         float accExtintionCoeff = 0.0;
-//         vec3 accInScattering = vec3(0.0);
-
-//         for(int i = 0; i < NUM_STEPS; ++i)
-//         {
-//             accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition) * stepSize;
-//             accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords, baseOffset) * stepSize * exp(-accExtintionCoeff);
-
-//             currentPosition += marchingStep;
-//         }
-
-//         vec3 finalInScattering = accInScattering * fogIntensity;
-
-//         vec4 originalColor = texture(sceneTexture, uvCoords);
-
-//         if(depth < 1.f)
-//         {
-//             imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(originalColor.rgb + finalInScattering, 1.0));
-//         }
-//         else
-//         {
-//             imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), originalColor);
-//         }
-//     }
-// }
-
 
 // SCENE WITH INTERSECTION CALCULATIONS
 void main()

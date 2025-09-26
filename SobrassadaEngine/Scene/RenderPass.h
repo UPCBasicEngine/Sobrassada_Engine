@@ -78,7 +78,6 @@ class RenderPass
 
   public:
     // Volumetric parameters
-    int numStepsVolumetric      = 32;
     float stepSize              = 0.5f;
     float fogIntensity          = 1.f;
     float noiseAmmount          = 0.f;

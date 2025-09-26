@@ -144,7 +144,6 @@ RenderPass::~RenderPass()
 
 void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
-    targetState.AddMember("numStepsVolumetric", numStepsVolumetric, allocator);
     targetState.AddMember("stepSize", stepSize, allocator);
     targetState.AddMember("fogIntensity", fogIntensity, allocator);
     targetState.AddMember("noiseAmmount", noiseAmmount, allocator);
@@ -156,7 +155,6 @@ void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
 
 void RenderPass::LoadData(const rapidjson::Value& initialState)
 {
-    if (initialState.HasMember("numStepsVolumetric")) numStepsVolumetric = initialState["numStepsVolumetric"].GetInt();
     if (initialState.HasMember("stepSize")) stepSize = initialState["stepSize"].GetFloat();
     if (initialState.HasMember("fogIntensity")) fogIntensity = initialState["fogIntensity"].GetFloat();
     if (initialState.HasMember("noiseAmmount")) noiseAmmount = initialState["noiseAmmount"].GetFloat();
@@ -906,7 +904,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     float time = App->GetGameTimer()->GetTime();
 
-    glUniform1i(3, numStepsVolumetric);
+    glUniform1ui(3, useNoiseTexture);
     glUniform1f(4, fogIntensity);
     glUniform1f(5, extinctionCoefficient);
     glUniform1f(6, time);
@@ -914,7 +912,6 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1f(8, anisotropy);
     glUniform1i(9, tilesX);
     glUniform1f(10, stepSize);
-    glUniform1ui(13, useNoiseTexture);
 
     // THIS WILL PROBABLY CHANGE WITH CHANGES TO SHADOWS
     // Compute light
