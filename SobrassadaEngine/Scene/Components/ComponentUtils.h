@@ -97,7 +97,8 @@ enum class VolumetricAreaType : int
 };
 
 constexpr const char* VolumetricAreaTypeStrings[] = {"Box", "Sphere"};
-constexpr int VolumetricAreaTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
+constexpr int VolumetricAreaTypeStringsSize       = sizeof(VolumetricAreaTypeStrings) / sizeof(char*);
+
 
 class ComponentUtils
 {

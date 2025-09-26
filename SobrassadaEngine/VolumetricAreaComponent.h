@@ -4,6 +4,8 @@
 
 #include "Math/float3.h"
 
+static float3 VolumetricAreaDebugColor = float3(0.f, 0.467f, 1.f);
+
 class VolumetricAreaComponent : public Component
 {
   public:
@@ -24,4 +26,6 @@ class VolumetricAreaComponent : public Component
   private:
     // USE X COORDINATE FOR RADIUS IN CASE OF BEING A SPHERE
     float3 size = float3::one;
+    VolumetricAreaType volumeType = VolumetricAreaType::BOX;
+
 };
