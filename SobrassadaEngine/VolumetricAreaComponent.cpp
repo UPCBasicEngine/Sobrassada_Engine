@@ -30,10 +30,12 @@ VolumetricAreaComponent::VolumetricAreaComponent(const rapidjson::Value& initial
 
 VolumetricAreaComponent::~VolumetricAreaComponent()
 {
+    App->GetSceneModule()->GetScene()->GetLightsConfig()->RemoveVolumetricArea(this);
 }
 
 void VolumetricAreaComponent::Init()
 {
+    App->GetSceneModule()->GetScene()->GetLightsConfig()->AddVolumetricArea(this);
 }
 
 void VolumetricAreaComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const

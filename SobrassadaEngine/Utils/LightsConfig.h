@@ -76,11 +76,20 @@ namespace Lights
     constexpr int SpotLightShaderOffset =
         16 - (sizeof(SpotLightShaderData) % 16) == 0 ? 16 : (sizeof(SpotLightShaderData) % 16);
 
+    struct VolumetricAreaShaderData
+    {
+        float4 position;
+        float4 size;
+
+        VolumetricAreaShaderData(const float4& pos, const float4& size) : position(pos), size(size) {}
+    };
+
 } // namespace Lights
 
 class DirectionalLightComponent;
 class PointLightComponent;
 class SpotLightComponent;
+class VolumetricAreaComponent;
 
 class LightsConfig
 {
@@ -103,10 +112,12 @@ class LightsConfig
     void AddDirectionalLight(DirectionalLightComponent* newDirectional);
     void AddPointLight(PointLightComponent* newPoint);
     void AddSpotLight(SpotLightComponent* newSpot);
+    void AddVolumetricArea(VolumetricAreaComponent* newVol);
 
     void RemoveDirectionalLight(DirectionalLightComponent* directional);
     void RemovePointLight(PointLightComponent* point);
     void RemoveSpotLight(SpotLightComponent* spot);
+    void RemoveVolumetricArea(VolumetricAreaComponent* vol);
 
     void SaveData(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
     void LoadData(const rapidjson::Value& lights);
@@ -130,6 +141,7 @@ class LightsConfig
     void SetDirectionalLightShaderData() const;
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;
+    void SetVolumetricAreaShaderData() const;
 
   private:
     UID skyboxUID                          = INVALID_UID;
@@ -168,4 +180,8 @@ class LightsConfig
     int irradianceMapResolution     = 512;
     int prefilteredMapResolution    = 512;
     int environmentBRDFResolution   = 512;
+
+    // VOLUMETRIC AREAS
+    unsigned int volumeAreaBufferId = 0;
+    std::vector<VolumetricAreaComponent*> volumetricAreas;
 };

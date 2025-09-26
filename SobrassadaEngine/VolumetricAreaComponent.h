@@ -23,6 +23,10 @@ class VolumetricAreaComponent : public Component
     void Update(float deltaTime) override;
     void RenderDebug(float deltaTime) override;
 
+
+    const float3& GetSize() const { return size; }
+    VolumetricAreaType GetAreaType() const { return volumeType; }
+
   private:
     // USE X COORDINATE FOR RADIUS IN CASE OF BEING A SPHERE
     float3 size = float3::one;
