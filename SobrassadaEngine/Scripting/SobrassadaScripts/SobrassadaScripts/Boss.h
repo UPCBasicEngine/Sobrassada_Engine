@@ -16,6 +16,7 @@ class ParticleSystemComponent;
 class CapsuleColliderComponent;
 class Spouts;
 class AttackVfxSpritesheet;
+class AudioSourceComponent;
 
 enum class BossDistance
 {
@@ -126,14 +127,15 @@ class Boss : public Character
     const char* GetActionName() const;
 
   private:
-    AIAgentComponent* agentAI = nullptr;
-    BossStates currentState   = BossStates::Idle;
-    BossActions currentAction = BossActions::Idle;
+    AIAgentComponent* agentAI   = nullptr;
+    AudioSourceComponent* audio = nullptr;
+    BossStates currentState     = BossStates::Idle;
+    BossActions currentAction   = BossActions::Idle;
 
-    bool waiting              = true;
-    bool restart              = false;
+    bool waiting                = true;
+    bool restart                = false;
 
-    int phase                 = 1;
+    int phase                   = 1;
     int phase1 = 40, phase2 = 20, phase3 = 0;
     std::array<int, 3> phaseSwap = {phase1, phase2, phase3};
     bool stateEnter              = true;
@@ -142,6 +144,7 @@ class Boss : public Character
     bool actionTriggerDone       = false;
 
     int shieldStrikeLastAction   = 0;
+    bool audioPlayed             = false;
 
     // Dash
     bool isDashing               = false;
@@ -173,9 +176,10 @@ class Boss : public Character
     std::string bigAreaName                          = "";
     GameObject* bigArea                              = nullptr;
     float bigAreaHitboxDelay                         = 1.3f;
-    std::string blastAreaName                   = "";
+    std::string blastAreaName                        = "";
     CapsuleColliderComponent* blastArea              = nullptr;
     float blastHitboxDelay                           = 1.3f;
+    float blastHitTime                               = 0.0f;
 
     // VFX
     std::string overheadPrepareVFXName               = "";

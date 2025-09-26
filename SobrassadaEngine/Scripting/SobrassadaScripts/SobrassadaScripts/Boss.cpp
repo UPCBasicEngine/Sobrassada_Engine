@@ -18,9 +18,12 @@
 #include "Spouts.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+
+#include "Wwise_IDs.h"
 
 Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
@@ -66,8 +69,11 @@ bool Boss::Init()
         speed = agentAI->GetSpeed();
     }
 
-    rng                      = std::mt19937(std::random_device {}());
-    uniformDist              = std::uniform_int_distribution<int>(0, 100);
+    rng         = std::mt19937(std::random_device {}());
+    uniformDist = std::uniform_int_distribution<int>(0, 100);
+
+    audio       = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] Ferdiad: No audio component found");
 
     GameObject* shieldObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldName);
     if (shieldObject)
@@ -884,10 +890,17 @@ void Boss::ShieldStrikes(float deltaTime)
             if (animComponent) animComponent->UseTrigger("Combo1");
             actionTriggerDone      = true;
             shieldStrikeLastAction = 1;
+            audioPlayed            = false;
         }
         else if (!weaponCollider->GetEnabled())
         {
             agentAI->ResumeMovement();
+        }
+
+        if (!audioPlayed && audio && attackTimer >= attackHitboxDelay - 0.1f)
+        {
+            audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_02);
+            audioPlayed = true;
         }
 
         if (animComponent && animComponent->IsFinished())
@@ -909,10 +922,17 @@ void Boss::ShieldStrikes(float deltaTime)
             if (animComponent) animComponent->UseTrigger("Combo2");
             actionTriggerDone      = true;
             shieldStrikeLastAction = 2;
+            audioPlayed            = false;
         }
         else if (!weaponCollider->GetEnabled())
         {
             agentAI->ResumeMovement();
+        }
+
+        if (!audioPlayed && audio && attackTimer >= attackHitboxDelay - 0.1f)
+        {
+            audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_02);
+            audioPlayed = true;
         }
 
         if (animComponent && animComponent->IsFinished())
@@ -934,14 +954,22 @@ void Boss::ShieldStrikes(float deltaTime)
             if (animComponent) animComponent->UseTrigger("Combo3");
             actionTriggerDone      = true;
             shieldStrikeLastAction = 3;
+            audioPlayed            = false;
         }
         else if (!weaponCollider->GetEnabled())
         {
             agentAI->ResumeMovement();
         }
 
+        if (!audioPlayed && audio && attackTimer >= attackHitboxDelay - 0.1f)
+        {
+            audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_02);
+            audioPlayed = true;
+        }
+
         if (animComponent && animComponent->IsFinished())
         {
+            audioPlayed       = false;
             actionTriggerDone = false;
             StopAttacking();
             ChooseNextState();
@@ -1617,8 +1645,6 @@ void Boss::ShieldBlast(float deltaTime)
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-
-        // if (attackTimer >= attackHitboxDelay + attackHitboxDuration) animComponent->OnResume();
 
         if (blastSpritesheet && blastSpritesheet->Finished())
         {
