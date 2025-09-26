@@ -846,7 +846,6 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
         glGenTextures(1, &fogResultTexture);
     }
 
-    // TMP -> CHANGE TO ONLY WHEN FRAMEBUFFER IS RESIZED
     glBindTexture(GL_TEXTURE_2D, fogResultTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
