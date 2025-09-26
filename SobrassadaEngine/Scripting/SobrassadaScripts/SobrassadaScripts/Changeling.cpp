@@ -51,7 +51,8 @@ Changeling::Changeling(GameObject* parent)
         "Max enemies left for final attack", InspectorField::FieldType::Int, &maxEnemiesLeftForFinalAttack, 0, 40
     );
     fields.emplace_back("Peek chance per second", InspectorField::FieldType::Float, &peekChancePerSecond, 0.1f, 10.0f);
-
+    fields.emplace_back("Buried travel speed", InspectorField::FieldType::Float, &buriedTravelSpeed, 0.1f, 10.0f);
+    
     // Herbert specific (Index 1)
     fields.emplace_back("Chase speed", InspectorField::FieldType::Float, &chaseSpeed, 0.1f, 10.0f);
     fields.emplace_back("Chase Acceleration", InspectorField::FieldType::Float, &chaseAcceleration, 0.1f, 10.0f);
@@ -188,6 +189,9 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::DIG_DOWN_TRANSITION:
         UpdateDigDownTransitionState(deltaTime, distanceToPlayerSq);
         break;
+    case ChangelingStates::BURIED_TRAVEL:
+        UpdateBuriedTravelState(deltaTime, distanceToPlayerSq);
+        break;
     case ChangelingStates::IDLE_VISIBLE:
         UpdateIdleVisibleState(deltaTime, distanceToPlayerSq);
         break;
@@ -254,7 +258,8 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
 
     if (animComponent && animComponent->IsFinished())
     {
-        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
+        spottedLocation = distanceToPlayerSq <= maxDetectionRange * maxDetectionRange ? character->GetLastPosition()
+            : float3::nan;
         characterCollider->SetEnabled(false);
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
@@ -277,8 +282,36 @@ void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToP
 {
     if (animComponent && animComponent->IsFinished())
     {
-        spottedLocation = distanceToPlayerSq <= rangeAIChase * rangeAIChase ? character->GetLastPosition() : float3::nan;
         characterCollider->SetEnabled(false);
+        if (distanceToPlayerSq <= maxDetectionRange * maxDetectionRange)
+        {
+            spottedLocation = character->GetLastPosition();
+            stateTimer = SqrtFast(distanceToPlayerSq) / buriedTravelSpeed;
+            currentState = ChangelingStates::BURIED_TRAVEL;
+        } else
+        {
+            spottedLocation = float3::nan;
+            animComponent->UseTrigger("Trigger_BurriedIdle");
+            currentState = ChangelingStates::IDLE_BURIED;
+        }
+    }
+}
+
+void Changeling::UpdateBuriedTravelState(float deltaTime, float distanceToPlayerSq)
+{
+    if (stateTimer <= 0)
+    {
+        float3 resultPos;
+        bool posOverPoly        = false;
+        const float3 searchArea = {3.0f, 1.0f, 3.0f};
+
+        agentAI->GetClosestPointInNavmesh(spottedLocation, searchArea, posOverPoly, resultPos);
+
+        if (posOverPoly)
+        {
+            agentAI->SetPosition(resultPos);
+        }
+        spottedLocation = float3::nan;
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
     }

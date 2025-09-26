@@ -33,17 +33,18 @@ enum class ChangelingStates
     DIG_DOWN_TRANSITION     = 4,
     IDLE_VISIBLE            = 5,
     CHASE                   = 6,
-    DASH_ATTACK_PREPARATION = 7,
-    DASH_ATTACK             = 8,
-    DASH_ATTACK_WIGGLE      = 9,
-    DASH_ATTACK_COOLDOWN    = 10,
-    DASH_CHAIN_ATTACK       = 11,
-    BITE_ATTACK             = 12,
-    BITE_ATTACK_COOLDOWN    = 13,
-    FINAL_ATTACK            = 14,
-    DAMAGED                 = 15,
-    DYING                   = 16,
-    HIGHLIGHTING            = 17,
+    BURIED_TRAVEL           = 7,
+    DASH_ATTACK_PREPARATION = 8,
+    DASH_ATTACK             = 9,
+    DASH_ATTACK_WIGGLE      = 10,
+    DASH_ATTACK_COOLDOWN    = 11,
+    DASH_CHAIN_ATTACK       = 12,
+    BITE_ATTACK             = 13,
+    BITE_ATTACK_COOLDOWN    = 14,
+    FINAL_ATTACK            = 15,
+    DAMAGED                 = 16,
+    DYING                   = 17,
+    HIGHLIGHTING            = 18,
 };
 
 enum class HighlightingStates
@@ -79,6 +80,7 @@ class Changeling : public Character
     void UpdatePeekState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq);
+    void UpdateBuriedTravelState(float deltaTime, float distanceToPlayerSq);
     void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq);
     void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
@@ -160,6 +162,7 @@ class Changeling : public Character
 
     float peekChancePerSecond                   = 0.1f;
     float3 spottedLocation                      = float3::nan;
+    float buriedTravelSpeed                     = 3.5f;
 
     // Default specific
     float chaseSpeed                            = 1.0f;
@@ -169,7 +172,7 @@ class Changeling : public Character
     bool dashRight                              = false;
     unsigned short dashIndex                    = 0;
     float dashAngleDegrees                      = 40.0f;
-    float timeBetweenDashes                     = 2.f;
+    float timeBetweenDashes                     = 1.5f;
 
     // VFX
     // Dig up
