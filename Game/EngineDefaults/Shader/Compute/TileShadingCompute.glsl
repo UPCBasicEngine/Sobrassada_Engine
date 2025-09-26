@@ -204,7 +204,7 @@ void main() {
 		}
 	}
 
-	// CALCULATING SPHERE AREAS
+	// CALCULATING AREAS
 	passCount = (volumeAreaCount + threadCount - 1) / threadCount;
 	for (uint i = 0; i < passCount; i++) {
 		uint areaIndex = i * threadCount + gl_LocalInvocationIndex;
@@ -213,26 +213,25 @@ void main() {
 		}
 
 		VolumetricArea area = volumetricAreas[areaIndex];
-		if(area.position.w == 1)
-		{
-			vec4 position  = vec4(area.position.xyz, 1.0);
-			float radius = area.size.x;
 
-			// We check if the area exists in our frustum
-			float distance = 0.0;
-			for (uint j = 0; j < 6; j++) {
-				distance = dot(position, frustumPlanes[j]) + radius;
+		vec4 position  = vec4(area.position.xyz, 1.0);
+	
+		float radius = area.position.w == 0 ? max(max(area.size.x,area.size.y),area.size.z) : area.size.x;
 
-				// If one of the tests fails, then there is no intersection
-				if (distance <= 0.0) {
-					break;
-				}
+		// We check if the area exists in our frustum
+		float distance = 0.0;
+		for (uint j = 0; j < 6; j++) {
+			distance = dot(position, frustumPlanes[j]) + radius;
+
+			// If one of the tests fails, then there is no intersection
+			if (distance <= 0.0) {
+				break;
 			}
+		}
 
-			if (distance > 0.0) {
-				uint offset = atomicAdd(visibleAreaCount, 1);
-				visibleAreaIndices[offset] = int(areaIndex);
-			}
+		if (distance > 0.0) {
+			uint offset = atomicAdd(visibleAreaCount, 1);
+			visibleAreaIndices[offset] = int(areaIndex);
 		}
 	}
 
