@@ -15,6 +15,7 @@ class MeshComponent;
 class ParticleSystemComponent;
 class CapsuleColliderComponent;
 class Spouts;
+class AttackVfxSpritesheet;
 
 enum class BossDistance
 {
@@ -172,6 +173,7 @@ class Boss : public Character
     std::string bigAreaName                          = "";
     GameObject* bigArea                              = nullptr;
     float bigAreaHitboxDelay                         = 1.3f;
+    std::string blastAreaName                   = "";
     CapsuleColliderComponent* blastArea              = nullptr;
     float blastHitboxDelay                           = 1.3f;
 
@@ -205,14 +207,9 @@ class Boss : public Character
 
     std::string shieldBlastVFXName                   = "";
     MeshComponent* blastPreHitMesh                   = nullptr;
-    ShaderScriptComponent* blastHitScript            = nullptr;
-    MovingUVTransparent* blastHitUV                  = nullptr;
-    ShaderScriptComponent* blastBlackLightsScript    = nullptr;
-    MovingUVTransparent* blastBlackLightsUV          = nullptr;
-    ShaderScriptComponent* blastSphereEnergyScript   = nullptr;
-    MovingUVTransparent* blastSphereEnergyUV         = nullptr;
-    ShaderScriptComponent* blastBlackExpansionScript = nullptr;
-    MovingUVTransparent* blastBlackExpansionUV       = nullptr;
+    MeshComponent* blastSpriteSheetMesh              = nullptr;
+    ShaderScriptComponent* blastSpriteScript         = nullptr;
+    AttackVfxSpritesheet* blastSpritesheet           = nullptr;
 
     // Particle
     std::string atomParticleName                     = "";
@@ -236,8 +233,8 @@ class Boss : public Character
     // Mirage
     int mirage1 = 47, mirage2 = 30, mirage3 = 10;
     std::array<std::reference_wrapper<int>, 3> mirageActivation = {mirage1, mirage2, mirage3};
-    BossMirage* bossMirageScript              = nullptr;
-    bool mirageActivated                      = false;
+    BossMirage* bossMirageScript                                = nullptr;
+    bool mirageActivated                                        = false;
 
     // WaterSpout
     std::vector<Spouts*> waterSpouts;

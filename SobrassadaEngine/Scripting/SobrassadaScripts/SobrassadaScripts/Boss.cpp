@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "AttackVfxSpritesheet.h"
 #include "Boss.h"
 #include "BossMirage.h"
 #include "CameraComponent.h"
@@ -37,8 +38,9 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
     fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
-    fields.push_back({"Close Area", InspectorField::FieldType::InputText, &closeAreaName});
-    fields.push_back({"Big Area", InspectorField::FieldType::InputText, &bigAreaName});
+    fields.push_back({"Overhead Close Area", InspectorField::FieldType::InputText, &closeAreaName});
+    fields.push_back({"Overhead Big Area", InspectorField::FieldType::InputText, &bigAreaName});
+    fields.push_back({"Blast Area", InspectorField::FieldType::InputText, &blastAreaName});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Overhead Prepare", InspectorField::FieldType::InputText, &overheadPrepareVFXName});
@@ -322,85 +324,33 @@ bool Boss::Init()
         }
         else GLOG("Blast pre hit VFX not found for ferdiad");
 
-        GameObject* blastHitObject = shieldBlastVFX->GetChildGameObjectByName("BlastShield_2");
-        if (blastHitObject)
+        GameObject* blastSpriteSheetObject = shieldBlastVFX->GetChildGameObjectByName("BlastSprite");
+        if (blastSpriteSheetObject)
         {
-            MeshComponent* blastHitMesh = blastHitObject->GetComponent<MeshComponent*>();
-            if (blastHitMesh) blastHitMesh->SetEnabled(false);
-            else GLOG("Blast hit mesh not found for ferdiad");
+            blastSpriteSheetMesh = blastSpriteSheetObject->GetComponent<MeshComponent*>();
+            if (blastSpriteSheetMesh) blastSpriteSheetMesh->SetEnabled(false);
+            else GLOG("Blast sprite sheet mesh not found for ferdiad");
 
-            blastHitScript = blastHitObject->GetComponent<ShaderScriptComponent*>();
-            if (blastHitScript)
+            blastSpriteScript = blastSpriteSheetObject->GetComponent<ShaderScriptComponent*>();
+            if (blastSpriteScript)
             {
-                blastHitScript->SetEnabled(false);
+                blastSpriteScript->SetEnabled(false);
 
-                blastHitUV = blastHitScript->GetScriptByType<MovingUVTransparent>();
-                if (!blastHitUV) GLOG("Blast hit script incorrect for ferdiad");
+                blastSpritesheet = blastSpriteScript->GetScriptByType<AttackVfxSpritesheet>();
+                if (!blastSpritesheet) GLOG("Blast sprite sheet script incorrect for ferdiad");
             }
-            else GLOG("Blast hit script not found for ferdiad");
+            else GLOG("Blast sprite sheet script not found for ferdiad");
+        }
+        else GLOG("Blast sprite sheet hit object not found for ferdiad");
 
-            blastArea = blastHitObject->GetComponent<CapsuleColliderComponent*>();
+        GameObject* blastAreaObject = shieldBlastVFX->GetChildGameObjectByName(blastAreaName);
+        if (blastAreaObject)
+        {
+            blastArea = blastAreaObject->GetComponent<CapsuleColliderComponent*>();
             if (blastArea) blastArea->SetEnabled(false);
-            else GLOG("Not blast area object found for ferdiad");
+            else GLOG("Not blast area capsule collider found for ferdiad");
         }
-        else GLOG("Blast hit VFX not found for ferdiad");
-
-        GameObject* blastBlackLights = shieldBlastVFX->GetChildGameObjectByName("BlackLights");
-        if (blastBlackLights)
-        {
-            MeshComponent* blastBlackLightsMesh = blastBlackLights->GetComponent<MeshComponent*>();
-            if (blastBlackLightsMesh) blastBlackLightsMesh->SetEnabled(false);
-            else GLOG("Blast black lights mesh not found for ferdiad");
-
-            blastBlackLightsScript = blastBlackLights->GetComponent<ShaderScriptComponent*>();
-            if (blastBlackLightsScript)
-            {
-                blastBlackLightsScript->SetEnabled(false);
-
-                blastBlackLightsUV = blastBlackLightsScript->GetScriptByType<MovingUVTransparent>();
-                if (!blastBlackLightsUV) GLOG("Blast black lights script incorrect for ferdiad");
-            }
-            else GLOG("Blast black lights script not found for ferdiad");
-        }
-        else GLOG("Blast black lights VFX not found for ferdiad");
-
-        GameObject* blastSphereEnergy = shieldBlastVFX->GetChildGameObjectByName("SphereEnergy");
-        if (blastSphereEnergy)
-        {
-            MeshComponent* blastSphereEnergyMesh = blastSphereEnergy->GetComponent<MeshComponent*>();
-            if (blastSphereEnergyMesh) blastSphereEnergyMesh->SetEnabled(false);
-            else GLOG("Blast sphere energy mesh not found for ferdiad");
-
-            blastSphereEnergyScript = blastSphereEnergy->GetComponent<ShaderScriptComponent*>();
-            if (blastSphereEnergyScript)
-            {
-                blastSphereEnergyScript->SetEnabled(false);
-
-                blastSphereEnergyUV = blastSphereEnergyScript->GetScriptByType<MovingUVTransparent>();
-                if (!blastSphereEnergyUV) GLOG("Blast sphere energy script incorrect for ferdiad");
-            }
-            else GLOG("Blast sphere energy script not found for ferdiad");
-        }
-        else GLOG("Blast sphere energy VFX not found for ferdiad");
-
-        GameObject* blastBlackExpansion = shieldBlastVFX->GetChildGameObjectByName("BlackExpansion");
-        if (blastBlackExpansion)
-        {
-            MeshComponent* blastBlackExpansionMesh = blastBlackExpansion->GetComponent<MeshComponent*>();
-            if (blastBlackExpansionMesh) blastBlackExpansionMesh->SetEnabled(false);
-            else GLOG("Blast black expansion mesh not found for ferdiad");
-
-            blastBlackExpansionScript = blastBlackExpansion->GetComponent<ShaderScriptComponent*>();
-            if (blastBlackExpansionScript)
-            {
-                blastBlackExpansionScript->SetEnabled(false);
-
-                blastBlackExpansionUV = blastBlackExpansionScript->GetScriptByType<MovingUVTransparent>();
-                if (!blastBlackExpansionUV) GLOG("Blast black expansion script incorrect for ferdiad");
-            }
-            else GLOG("Blast black expansion script not found for ferdiad");
-        }
-        else GLOG("Blast black expansion VFX not found for ferdiad");
+        else GLOG("Not blast area object found for ferdiad");
     }
     else GLOG("Shield blast VFX not found for ferdiad");
 
@@ -1593,14 +1543,7 @@ void Boss::ResetValues(bool changePhase)
 
     if (blastArea) blastArea->SetEnabled(false);
     if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
-    if (blastHitScript) blastHitScript->SetEnabled(false);
-    if (blastHitUV) blastHitUV->Reset();
-    if (blastBlackLightsScript) blastBlackLightsScript->SetEnabled(false);
-    if (blastBlackLightsUV) blastBlackLightsUV->Reset();
-    if (blastSphereEnergyScript) blastSphereEnergyScript->SetEnabled(false);
-    if (blastSphereEnergyUV) blastSphereEnergyUV->Reset();
-    if (blastBlackExpansionScript) blastBlackExpansionScript->SetEnabled(false);
-    if (blastBlackExpansionUV) blastBlackExpansionUV->Reset();
+    if (blastSpriteScript) blastSpriteScript->SetEnabled(false);
 
     agentAI->ResetAngularSpeed();
     agentAI->SetFreeMove(false);
@@ -1668,10 +1611,9 @@ void Boss::ShieldBlast(float deltaTime)
 
             if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
             if (blastArea) blastArea->SetEnabled(true);
-            if (blastHitScript) blastHitScript->SetEnabled(true);
-            if (blastBlackLightsScript) blastBlackLightsScript->SetEnabled(true);
-            if (blastSphereEnergyScript) blastSphereEnergyScript->SetEnabled(true);
-            if (blastBlackExpansionScript) blastBlackExpansionScript->SetEnabled(true);
+
+            if (blastSpritesheet) blastSpritesheet->Reset();
+            if (blastSpriteScript) blastSpriteScript->SetEnabled(true);
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
@@ -1681,14 +1623,9 @@ void Boss::ShieldBlast(float deltaTime)
         if (animComponent && animComponent->IsFinished())
         {
             if (blastArea) blastArea->SetEnabled(false);
-            if (blastHitScript) blastHitScript->SetEnabled(false);
-            if (blastHitUV) blastHitUV->Reset();
-            if (blastBlackLightsScript) blastBlackLightsScript->SetEnabled(false);
-            if (blastBlackLightsUV) blastBlackLightsUV->Reset();
-            if (blastSphereEnergyScript) blastSphereEnergyScript->SetEnabled(false);
-            if (blastSphereEnergyUV) blastSphereEnergyUV->Reset();
-            if (blastBlackExpansionScript) blastBlackExpansionScript->SetEnabled(false);
-            if (blastBlackExpansionUV) blastBlackExpansionUV->Reset();
+
+            if (blastSpriteScript) blastSpriteScript->SetEnabled(false);
+            if (blastSpritesheet) blastSpritesheet->Reset();
 
             agentAI->ResetAngularSpeed();
 
