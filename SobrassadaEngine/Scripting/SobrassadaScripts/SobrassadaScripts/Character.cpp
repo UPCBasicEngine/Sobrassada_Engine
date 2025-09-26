@@ -168,7 +168,7 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         }
     }
 
-    if (HashString(otherObject->GetName()) == HashString("BlastShield_2"))
+    if (HashString(otherObject->GetName()) == HashString("BlastArea"))
     {
         TakeDamage(1);
     }

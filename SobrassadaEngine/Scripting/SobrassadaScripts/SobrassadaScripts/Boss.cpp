@@ -1618,16 +1618,19 @@ void Boss::ShieldBlast(float deltaTime)
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-        if (attackTimer >= attackHitboxDelay + attackHitboxDuration) animComponent->OnResume();
+        // if (attackTimer >= attackHitboxDelay + attackHitboxDuration) animComponent->OnResume();
 
-        if (animComponent && animComponent->IsFinished())
+        if (blastSpritesheet && blastSpritesheet->Finished())
         {
+            animComponent->OnResume();
+
             if (blastArea) blastArea->SetEnabled(false);
 
             if (blastSpriteScript) blastSpriteScript->SetEnabled(false);
             if (blastSpritesheet) blastSpritesheet->Reset();
 
             agentAI->ResetAngularSpeed();
+            StopAttacking();
 
             actionTriggerDone = false;
             ChooseNextState();

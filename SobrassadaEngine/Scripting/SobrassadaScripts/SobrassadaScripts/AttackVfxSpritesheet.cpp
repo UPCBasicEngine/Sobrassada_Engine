@@ -29,6 +29,7 @@ AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
     fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
+    fields.push_back({"Only Once", InspectorField::FieldType::Bool, &onlyOnce});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
@@ -113,7 +114,7 @@ bool AttackVfxSpritesheet::Init()
             uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
             uvRange.z = 0.0f;
             uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        } 
+        }
     }
     return true;
 }
@@ -160,6 +161,10 @@ void AttackVfxSpritesheet::Update(float deltaTime)
     if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
     {
         parent->SetEnabled(false);
+    }
+    else if (onlyOnce && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+    {
+        finished = true;
     }
 }
 
@@ -222,4 +227,5 @@ void AttackVfxSpritesheet::Reset()
     uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
     uvRange.z = 0.0f;
     uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+    finished  = false;
 }

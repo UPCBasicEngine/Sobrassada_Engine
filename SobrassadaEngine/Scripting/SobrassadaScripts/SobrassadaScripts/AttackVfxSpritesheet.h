@@ -19,6 +19,8 @@ class AttackVfxSpritesheet : public Script
 
     void Reset() override;
 
+    bool Finished() { return finished; }
+
   private:
     unsigned int shaderProgram  = 0;
 
@@ -44,4 +46,7 @@ class AttackVfxSpritesheet : public Script
 
     bool isOneShot              = false;
     bool isAdditive             = false;
+
+    bool onlyOnce               = false;
+    bool finished               = false;
 };
