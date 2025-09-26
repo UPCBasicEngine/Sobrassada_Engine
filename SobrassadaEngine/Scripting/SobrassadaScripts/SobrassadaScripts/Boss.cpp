@@ -38,6 +38,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Fall Duration", InspectorField::FieldType::Float, &fallDuration, 0.0f, 2.0f});*/
     fields.push_back({"Close Area Damage", InspectorField::FieldType::Int, &closeAreaDamage, 0, 5});
     fields.push_back({"Spout", InspectorField::FieldType::InputText, &spoutName});
+    fields.push_back({"Highlight Delay", InspectorField::FieldType::Float, &highlightDelay, 0.0f, 10.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
     fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
@@ -429,6 +430,19 @@ void Boss::Update(float deltaTime)
     }
 
     if (playerScript && playerScript->GetState() == CharacterStates::DEATH) restart = true;
+
+    if (highlightActivated) highlightTimer += deltaTime;
+    if (highlightActivated && doTaunt && highlightTimer >= highlightDelay)
+    {
+        GLOG("CHOOSING STATE")
+        ChooseNextState();
+    }
+    else if (highlightActivated && highlightTimer >= highlightDelay * 2)
+    {
+        GLOG("FALSE")
+        highlightActivated = false;
+        playedHighlight    = true;
+    }
 }
 
 void Boss::OnPlayerExitLocation()
@@ -443,6 +457,13 @@ void Boss::OnPlayerEnterLocation()
     waiting = false;
 
     doTaunt = true;
+}
+
+void Boss::PlayHighlightSequence()
+{
+    GLOG("START HIGHLIGHT")
+    doTaunt            = true;
+    highlightActivated = true;
 }
 
 void Boss::OnDeath()
@@ -596,6 +617,7 @@ void Boss::ChooseNextStateFirstPhase()
     int num = uniformDist(rng);
     if (doTaunt)
     {
+        GLOG("DO TAUNT")
         currentState = BossStates::Taunt;
     }
     else if (doIdle)
@@ -626,12 +648,13 @@ void Boss::ChooseNextStateSecondPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate = 100;
+        shieldStrikesRate = 90;
+        waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 40;
-        shieldBlastRate   = 80;
+        shieldStrikesRate = 55;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
@@ -642,20 +665,20 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate = 30;
-        shieldBlastRate   = 70;
+        shieldStrikesRate = 25;
+        shieldBlastRate   = 65;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Far:
-        shieldStrikesRate = 20;
+        shieldStrikesRate = 15;
         shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Farther:
-        shieldStrikesRate = 10;
-        shieldBlastRate   = 80;
+        shieldStrikesRate = 5;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
     }
@@ -663,6 +686,7 @@ void Boss::ChooseNextStateSecondPhase()
     int num = uniformDist(rng);
     if (doTaunt)
     {
+        GLOG("DO TAUNT")
         currentState = BossStates::Taunt;
     }
     else if (doIdle)
@@ -698,14 +722,14 @@ void Boss::ChooseNextStateThirdPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate  = 55;
-        overheadStrikeRate = 80;
+        shieldStrikesRate  = 80;
+        overheadStrikeRate = 85;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate  = 60;
-        overheadStrikeRate = 70;
+        shieldStrikesRate  = 70;
+        overheadStrikeRate = 80;
         shieldBlastRate    = 90;
         waterSpoutsRate    = 100;
         break;
@@ -732,9 +756,10 @@ void Boss::ChooseNextStateThirdPhase()
         break;
 
     case BossDistance::Farther:
-        shieldStrikesRate = 10;
-        shieldBlastRate   = 90;
-        waterSpoutsRate   = 100;
+        shieldStrikesRate  = 10;
+        overheadStrikeRate = 20;
+        shieldBlastRate    = 90;
+        waterSpoutsRate    = 100;
         break;
     }
 
@@ -785,11 +810,12 @@ void Boss::Idle(float deltaTime)
 
     if (!waiting)
     {
-        GLOG("CHOOSE NEXT STATE")
+        GLOG("IDLE CHOOSE NEXT STATE")
         ChooseNextState();
     }
-    else
+    else if (playedHighlight)
     {
+        GLOG("LOOKING IDLE")
         agentAI->ResumeMovement();
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
     }
@@ -799,7 +825,7 @@ void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
-        GLOG("DOING TAUNT")
+        GLOG("ENTER TAUNT")
         if (doTaunt) ResetValues(false);
         stateEnter    = false;
         doTaunt       = false;
@@ -808,9 +834,14 @@ void Boss::Taunt(float deltaTime)
 
         if (animComponent) animComponent->UseTrigger("Taunt");
     }
-    agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+    if (playedHighlight) agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-    if (animComponent && animComponent->IsFinished()) Idle(deltaTime);
+    if (animComponent && animComponent->IsFinished())
+    {
+        stateEnter = true;
+        doIdle     = true;
+        ChooseNextState();
+    }
 }
 
 void Boss::ShieldStrikes(float deltaTime)
@@ -1589,12 +1620,19 @@ void Boss::ShieldBlast(float deltaTime)
             attackHitboxDelay    = blastHitboxDelay;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
-            agentAI->SetAngularSpeed(1.0f);
         }
 
-        if (attackTimer >= 0.3f && blastPreHitMesh && !blastPreHitMesh->GetEnabled()) blastPreHitMesh->SetEnabled(true);
+        if (attackTimer >= 0.3f && blastPreHitMesh && !blastPreHitMesh->GetEnabled())
+        {
+            blastPreHitMesh->SetEnabled(true);
+            agentAI->SetAngularSpeed(3.0f);
+        }
 
-        if (attackTimer >= 0.5f) animComponent->OnPause();
+        if (attackTimer >= 0.5f)
+        {
+            animComponent->OnPause();
+            agentAI->SetAngularSpeed(1.0f);
+        }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 

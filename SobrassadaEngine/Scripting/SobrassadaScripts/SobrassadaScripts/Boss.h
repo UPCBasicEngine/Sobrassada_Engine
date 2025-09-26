@@ -45,6 +45,7 @@ enum class BossStates
 
 enum class BossActions
 {
+    None,
     Idle,
     Taunt,
     Chase,
@@ -77,8 +78,11 @@ class Boss : public Character
 
     bool Init() override;
     void Update(float deltaTime) override;
+
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
+
+    void PlayHighlightSequence() override;
 
     GameObject* GetCloseArea() const { return closeArea; }
     int GetCloseAreaDamage() const { return closeAreaDamage; }
@@ -134,6 +138,10 @@ class Boss : public Character
 
     bool waiting                = true;
     bool restart                = false;
+
+    bool highlightActivated     = false;
+    float highlightTimer        = 0.0f;
+    bool playedHighlight        = false;
 
     int phase                   = 1;
     int phase1 = 40, phase2 = 20, phase3 = 0;
@@ -229,6 +237,7 @@ class Boss : public Character
     float heightJump                                 = 4.0f;
     float jumpDuration                               = 0.2f;
     float fallDuration                               = 0.2f;
+    float highlightDelay                             = 0.0f;
 
     // Health UI
     ImageComponent* healthImageComponent             = nullptr;
