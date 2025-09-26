@@ -42,6 +42,7 @@ enum ComponentType : int
     COMPONENT_PARTICLE_SYSTEM,
     COMPONENT_SHADER_SCRIPT,
     COMPONENT_VIDEO,
+    COMPONENT_VOLUMETRIC_AREA,
 };
 
 enum class ColliderType : uint8_t
@@ -89,6 +90,15 @@ enum class ShaderScriptType : int
 constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting", "Post effects", "UI"};
 constexpr int ShaderScriptTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
 
+enum class VolumetricAreaType : int
+{
+    BOX = 0,
+    SPHERE,
+};
+
+constexpr const char* VolumetricAreaTypeStrings[] = {"Box", "Sphere"};
+constexpr int VolumetricAreaTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
+
 class ComponentUtils
 {
   public:
@@ -103,9 +113,9 @@ class ComponentUtils
         ScriptComponent*, CubeColliderComponent*, SphereColliderComponent*, CapsuleColliderComponent*,                 \
         AnimationComponent*, AIAgentComponent*, ImageComponent*, ButtonComponent*, AudioSourceComponent*,              \
         AudioListenerComponent*, BillboardComponent*, CanvasScalerComponent*, SplineComponent*, DecalComponent*,       \
-        TrailComponent*, ParticleSystemComponent*, ShaderScriptComponent*, VideoComponent*
+        TrailComponent*, ParticleSystemComponent*, ShaderScriptComponent*, VideoComponent*, VolumetricAreaComponent*
 
 #define COMPONENTS_NULLPTR                                                                                             \
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,        \
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,    \
-        nullptr, nullptr, nullptr
+        nullptr, nullptr, nullptr, nullptr

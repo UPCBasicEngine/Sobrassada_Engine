@@ -5,6 +5,7 @@
 #include "GameObject.h"
 #include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
@@ -28,7 +29,7 @@
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/VideoComponent.h"
-#include "ShaderScriptComponent.h"
+#include "VolumetricAreaComponent.h"
 
 #include <cstdint>
 
@@ -212,19 +213,26 @@ void ComponentUtils::CreateEmptyComponent(const ComponentType type, const UID ui
         TrailComponent* component                 = new TrailComponent(uid, parent);
         std::get<TrailComponent*>(componentTuple) = component;
         component->Init();
-		break;
-	}  
+        break;
+    }
     case COMPONENT_VIDEO:
     {
         VideoComponent* component                 = new VideoComponent(uid, parent);
         std::get<VideoComponent*>(componentTuple) = component;
         component->Init();
-		break;
-	}
+        break;
+    }
     case COMPONENT_SHADER_SCRIPT:
     {
-        ShaderScriptComponent* component          = new ShaderScriptComponent(uid, parent);
+        ShaderScriptComponent* component                 = new ShaderScriptComponent(uid, parent);
         std::get<ShaderScriptComponent*>(componentTuple) = component;
+        component->Init();
+        break;
+    }
+    case COMPONENT_VOLUMETRIC_AREA:
+    {
+        VolumetricAreaComponent* component                 = new VolumetricAreaComponent(uid, parent);
+        std::get<VolumetricAreaComponent*>(componentTuple) = component;
         component->Init();
         break;
     }
@@ -398,6 +406,12 @@ void ComponentUtils::CreateExistingComponent(const rapidjson::Value& initialStat
         {
             ShaderScriptComponent* component                 = new ShaderScriptComponent(initialState, parent);
             std::get<ShaderScriptComponent*>(componentTuple) = component;
+            break;
+        }
+        case COMPONENT_VOLUMETRIC_AREA:
+        {
+            VolumetricAreaComponent* component                 = new VolumetricAreaComponent(initialState, parent);
+            std::get<VolumetricAreaComponent*>(componentTuple) = component;
             break;
         }
         default:

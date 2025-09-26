@@ -27,7 +27,6 @@
 #include "TextureEditor.h"
 #include "TextureImporter.h"
 #include "WindowModule.h"
-#include "RenderPass.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -74,6 +73,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
         {HashString("Video"),                COMPONENT_VIDEO               },
         {HashString("Shader Script"),        COMPONENT_SHADER_SCRIPT       },
+        {HashString("Volumetric Area"),      COMPONENT_VOLUMETRIC_AREA     },
     };
 
     fullscreen    = FULLSCREEN;

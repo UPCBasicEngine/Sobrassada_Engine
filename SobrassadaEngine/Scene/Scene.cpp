@@ -38,6 +38,7 @@
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
 #include "ShaderScriptModule.h"
+#include "VolumetricAreaComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"

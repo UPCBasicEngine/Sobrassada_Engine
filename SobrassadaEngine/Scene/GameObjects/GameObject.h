@@ -43,6 +43,7 @@ class DecalComponent;
 class ParticleSystemComponent;
 class VideoComponent;
 class ShaderScriptComponent;
+class VolumetricAreaComponent;
 
 enum MobilitySettings
 {
