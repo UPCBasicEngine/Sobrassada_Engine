@@ -13,6 +13,7 @@
 #include "OpenGLModule.h"
 #include "ParticleSystemModule.h"
 #include "ResourceMaterial.h"
+#include "ResourceTexture.h"
 #include "ResourcesModule.h"
 #include "SSAO.h"
 #include "ShaderModule.h"
@@ -135,6 +136,8 @@ RenderPass::~RenderPass()
 
     glDeleteTextures(TotalShadowMaps, &spotShadowMaps[0]);
 
+    if (noiseTexture) App->GetResourcesModule()->ReleaseResource(noiseTexture);
+
     gbuffer     = nullptr;
     framebuffer = nullptr;
 }
@@ -147,6 +150,8 @@ void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("noiseAmmount", noiseAmmount, allocator);
     targetState.AddMember("extinctionCoefficient", extinctionCoefficient, allocator);
     targetState.AddMember("anisotropy", anisotropy, allocator);
+    targetState.AddMember("useNoiseTexture", useNoiseTexture, allocator);
+    targetState.AddMember("noiseTexture", noiseTexture != nullptr ? noiseTexture->GetUID() : INVALID_UID, allocator);
 }
 
 void RenderPass::LoadData(const rapidjson::Value& initialState)
@@ -158,6 +163,13 @@ void RenderPass::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("extinctionCoefficient"))
         extinctionCoefficient = initialState["extinctionCoefficient"].GetFloat();
     if (initialState.HasMember("anisotropy")) anisotropy = initialState["anisotropy"].GetFloat();
+    if (initialState.HasMember("useNoiseTexture")) useNoiseTexture = initialState["useNoiseTexture"].GetBool();
+
+    if (initialState.HasMember("noiseTexture"))
+    {
+        UID textureUID = initialState["noiseTexture"].GetUint64();
+        UpdateVolumetricNoiseTexture(textureUID);
+    }
 }
 
 void RenderPass::Bind() const
@@ -855,6 +867,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBindTextureUnit(1, framebuffer->GetDepthTexture());
     glBindTextureUnit(2, depthTexture);
     glBindTextureUnit(3, framebuffer->GetColorTexture());
+   
+    if (useNoiseTexture && noiseTexture) glBindTextureUnit(4, noiseTexture->GetTextureID());
 
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
@@ -900,6 +914,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1f(8, anisotropy);
     glUniform1i(9, tilesX);
     glUniform1f(10, stepSize);
+    glUniform1ui(13, useNoiseTexture);
 
     // THIS WILL PROBABLY CHANGE WITH CHANGES TO SHADOWS
     // Compute light
@@ -1475,6 +1490,36 @@ void RenderPass::RenderSsaoDebug(SSAO* ssao, CameraComponent* camera, Framebuffe
     glUniform1i(loc, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void RenderPass::UpdateVolumetricNoiseTexture(UID newTextureUID)
+{
+    if (newTextureUID == INVALID_UID || App->GetResourcesModule()->RequestResource(newTextureUID) == nullptr)
+    {
+        newTextureUID = FALLBACK_TEXTURE_UID;
+    }
+
+    if (noiseTexture != nullptr && noiseTexture->GetUID() == newTextureUID) return;
+
+    ResourceTexture* newTexture =
+        dynamic_cast<ResourceTexture*>(App->GetResourcesModule()->RequestResource(newTextureUID));
+
+    if (newTexture != nullptr)
+    {
+
+        App->GetResourcesModule()->ReleaseResource(noiseTexture);
+        noiseTexture = newTexture;
+    }
+}
+
+void RenderPass::RemoveVolumetricNoiseTexture()
+{
+    if (noiseTexture)
+    {
+        App->GetResourcesModule()->ReleaseResource(noiseTexture);
+        useNoiseTexture = false;
+        noiseTexture    = nullptr;
+    }
 }
 
 void RenderPass::RenderShadowMapDebug() const

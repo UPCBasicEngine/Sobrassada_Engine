@@ -13,6 +13,7 @@
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
 #include "ResourceNavmesh.h"
+#include "ResourceTexture.h"
 
 #include "GameObject.h"
 #include "ResourceStateMachine.h"
@@ -563,6 +564,45 @@ void EditorUIModule::FogConfig(bool& fogConfig)
     ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01f, 0.01f, 1.f);
     ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01f, -0.99f, 0.99f);
+
+    ImGui::Checkbox("Use Noise texture", &renderPass->useNoiseTexture);
+
+    if (ImGui::Button("Select texture"))
+    {
+        ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Clear texture"))
+    {
+        renderPass->RemoveVolumetricNoiseTexture();
+    }
+
+    if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+    {
+
+        const UID chosenTexUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+        );
+
+        if (chosenTexUID != INVALID_UID) renderPass->UpdateVolumetricNoiseTexture(chosenTexUID);
+    }
+
+    const ResourceTexture* texture = renderPass->GetResourceTexture();
+
+    if (texture != nullptr)
+    {
+        ImGui::Text("Diffuse Texture");
+        ImGui::Image((ImTextureID)(intptr_t)texture->GetTextureID(), ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", texture->GetTextureWidth(), texture->GetTextureWidth());
+        }
+    }
+    else
+    {
+        renderPass->useNoiseTexture = false;
+    }
 
     ImGui::End();
 }

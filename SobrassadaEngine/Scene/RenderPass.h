@@ -12,6 +12,7 @@ class SSAO;
 class Framebuffer;
 class CameraComponent;
 class DirectionalLightComponent;
+class ResourceTexture;
 
 constexpr int SpotLightShadowMapSize = 1024;
 constexpr int TotalShadowMaps        = 15;
@@ -33,14 +34,18 @@ class RenderPass
         Framebuffer* framebuffer, const std::vector<GameObject*> objectsToRender, CameraComponent* camera,
         float deltaTime
     );
-    
+
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const;
     void LoadData(const rapidjson::Value& initialState);
+
+    void UpdateVolumetricNoiseTexture(UID newTextureUID);
+    void RemoveVolumetricNoiseTexture();
 
     bool IsFXAAEnabled() const { return enableFXAA; }
     bool IsShowBorders() const { return showBorders; }
     float GetGlobalThreshold() const { return globalThreshold; }
     float GetLocalThreshold() const { return localThreshold; }
+    const ResourceTexture* GetResourceTexture() const { return noiseTexture; }
 
     void SetEnabled(bool enable) { enableFXAA = enable; }
     void SetShowBorders(bool show) { showBorders = show; }
@@ -79,6 +84,7 @@ class RenderPass
     float noiseAmmount          = 0.f;
     float extinctionCoefficient = 0.04f;
     float anisotropy            = 0.5f;
+    bool useNoiseTexture        = false;
 
   private:
     GBuffer* gbuffer         = nullptr;
@@ -105,12 +111,13 @@ class RenderPass
     int tilesX;
 
     // Volumetric Fog
-    unsigned int fogResultTexture = 0;
+    unsigned int fogResultTexture                 = 0;
     unsigned int visibleVolumetricAreaIndicesSSBO = 0;
+    ResourceTexture* noiseTexture                 = nullptr;
 
     // FXAA
-    bool enableFXAA               = true;
-    bool showBorders              = false;
-    float globalThreshold         = 0.0312f;
-    float localThreshold          = 0.063f;
+    bool enableFXAA                               = true;
+    bool showBorders                              = false;
+    float globalThreshold                         = 0.0312f;
+    float localThreshold                          = 0.063f;
 };

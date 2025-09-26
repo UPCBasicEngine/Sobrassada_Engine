@@ -10,6 +10,7 @@ uniform layout(binding = 0) writeonly image2D transmitanceTexture;
 uniform layout(binding = 1) sampler2D depthTexture;
 uniform layout(binding = 2) sampler2D directionalLightShadowTexture;
 uniform layout(binding = 3) sampler2D sceneTexture;
+uniform layout(binding = 4) sampler2D noiseTexture;
 
 uniform layout(location = 0) mat4 projection;
 uniform layout(location = 1) mat4 inverseViewMatrix;
@@ -29,6 +30,7 @@ uniform layout(location = 10) float StepSize;
 // DIRECTIONAL LIGHT MATRICES -> MOVE TO UNIFORM OF DIRECTIONAL
 uniform layout(location = 11) mat4 directinal_View_Mat;
 uniform layout(location = 12) mat4 directinal_Projection_Mat;
+uniform layout(location = 13) bool useNoiseTex;
 
 struct PointLight
 {
@@ -171,9 +173,10 @@ bool ValidProjectionCoordinates(vec3 projCoords)
     return projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <= 1.0 && projCoords.z >= 0.0 && projCoords.z <= 1.0;
 }
 
-float CalculateExtinctionCoefficient(vec3 currentPosition)
+float CalculateExtinctionCoefficient(vec3 currentPosition, vec2 uvCoords)
 {
-    return extinctionCoefficient * noise(currentPosition, frameTime) * noiseAmmount;
+    float noise = useNoiseTex ? texture(noiseTexture, uvCoords + frameTime).r : noise(currentPosition, frameTime);
+    return extinctionCoefficient * noise * noiseAmmount;
 }
 
 float ScatteringPhaseFunction(vec3 viewDirection, vec3 lightDirection)
@@ -619,7 +622,7 @@ void main()
 
             for(int i = 0; i < numSteps; ++i)
             {
-                accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition) * StepSize;
+                accExtintionCoeff += CalculateExtinctionCoefficient(currentPosition, uvCoords) * StepSize;
                 accInScattering += CalculateInScattering(currentPosition, rayDirection, uvCoords, baseOffset) * StepSize * exp(-accExtintionCoeff);
 
                 currentPosition += marchingStep;
