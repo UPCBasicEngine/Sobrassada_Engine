@@ -434,12 +434,10 @@ void Boss::Update(float deltaTime)
     if (highlightActivated) highlightTimer += deltaTime;
     if (highlightActivated && doTaunt && highlightTimer >= highlightDelay)
     {
-        GLOG("CHOOSING STATE")
         ChooseNextState();
     }
     else if (highlightActivated && highlightTimer >= highlightDelay * 2)
     {
-        GLOG("FALSE")
         highlightActivated = false;
         playedHighlight    = true;
     }
@@ -457,6 +455,7 @@ void Boss::OnPlayerEnterLocation()
     waiting = false;
 
     doTaunt = true;
+    // agentAI->ResetAngularSpeed(); // in case doTaunt not used
 }
 
 void Boss::PlayHighlightSequence()
@@ -617,7 +616,6 @@ void Boss::ChooseNextStateFirstPhase()
     int num = uniformDist(rng);
     if (doTaunt)
     {
-        GLOG("DO TAUNT")
         currentState = BossStates::Taunt;
     }
     else if (doIdle)
@@ -686,7 +684,6 @@ void Boss::ChooseNextStateSecondPhase()
     int num = uniformDist(rng);
     if (doTaunt)
     {
-        GLOG("DO TAUNT")
         currentState = BossStates::Taunt;
     }
     else if (doIdle)
@@ -810,13 +807,12 @@ void Boss::Idle(float deltaTime)
 
     if (!waiting)
     {
-        GLOG("IDLE CHOOSE NEXT STATE")
         ChooseNextState();
     }
     else if (playedHighlight)
     {
-        GLOG("LOOKING IDLE")
         agentAI->ResumeMovement();
+        if (waiting) agentAI->SetAngularSpeed(0.5f);
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
     }
 }
@@ -825,7 +821,6 @@ void Boss::Taunt(float deltaTime)
 {
     if (stateEnter)
     {
-        GLOG("ENTER TAUNT")
         if (doTaunt) ResetValues(false);
         stateEnter    = false;
         doTaunt       = false;
@@ -838,9 +833,8 @@ void Boss::Taunt(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
-        stateEnter = true;
-        doIdle     = true;
-        ChooseNextState();
+        stateEnter   = true;
+        currentState = BossStates::Idle;
     }
 }
 
