@@ -54,6 +54,19 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
     SetupInspectorFields();
 }
 
+FireballTrap::~FireballTrap()
+{
+    // Clean up animation pool
+    for (auto& anim : miniAnimPool)
+    {
+        if (anim.root)
+        {
+            RecycleGO(anim.root);
+        }
+    }
+    miniAnimPool.clear();
+}
+
 void FireballTrap::SetupInspectorFields()
 {
     // General settings
@@ -118,7 +131,9 @@ void FireballTrap::SetupInspectorFields()
     fields.push_back({"Mini Landing Radius", InspectorField::FieldType::Float, &cfg.miniLandingRadius, 0.f, 3.f});
 
     // Anim prefabs
-    fields.push_back({"Anim MiniBomb Name", InspectorField::FieldType::InputText, &animCName});
+    fields.push_back({"Anim S Name", InspectorField::FieldType::InputText, &animSName});
+    fields.push_back({"Anim N Name", InspectorField::FieldType::InputText, &animNName});
+    fields.push_back({"Anim W Name", InspectorField::FieldType::InputText, &animWName});
 }
 
 bool FireballTrap::Init()
@@ -193,51 +208,25 @@ bool FireballTrap::Init()
     if (vfxIndicatorPrefab) vfxIndicatorPrefab->SetEnabled(false);
     if (miniIndicatorVfxPrefab) miniIndicatorVfxPrefab->SetEnabled(false);
 
-    if (!animCPrefab && !animCName.empty())
+    // Initialize all three animations
+    if (!animSPrefab && !animSName.empty())
     {
-        animCPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animCName);
+        animSPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animSName);
+    }
+    if (!animNPrefab && !animNName.empty())
+    {
+        animNPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animNName);
+    }
+    if (!animWPrefab && !animWName.empty())
+    {
+        animWPrefab = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(animWName);
     }
 
-    animC.root = animCPrefab;
-
-    if (animCPrefab)
-    {
-        // Find the animation component
-        animC.ac = animCPrefab->GetComponent<AnimationComponent*>();
-
-        if (animC.ac && !animC.ac->GetCurrentAnimation())
-        {
-            animC.ac->Init();
-            animC.ac->OnStop();
-        }
-
-        // If not on root, check children
-        if (!animC.ac)
-        {
-            auto v = animCPrefab->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
-            if (!v.empty())
-            {
-                animC.ac = v.front();
-                GLOG("[INFO] Found animation component in child");
-            }
-        }
-
-        if (animC.ac)
-        {
-            GLOG("[INFO] Animation component ready, resource: %llu", animC.ac->GetAnimationResource());
-            if (!animC.ac->GetCurrentAnimation())
-            {
-                animC.ac->Init();
-            }
-        }
-        else
-        {
-            GLOG("[ERROR] No animation component found in prefab");
-        }
-
-        // Make sure it starts disabled
-        animCPrefab->SetEnabledRecursive(false);
-    }
+    // Initialize each animation structure
+    InitAnimation(animS, animSPrefab, animSName);
+    InitAnimation(animN, animNPrefab, animNName);
+    InitAnimation(animW, animWPrefab, animWName);
+    InitMiniAnimationPool();
 
     return true;
 }
@@ -298,15 +287,12 @@ void FireballTrap::Update(float deltaTime)
 
     UpdateScheduledVfx(deltaTime);
 
-    if (animCPlaying && animC.ac)
-    {
-        animC.ac->Update(deltaTime);
-        if (animC.ac->IsFinished())
-        {
-            StopBombAnimS();
-            animCPlaying = false;
-        }
-    }
+    UpdateAnimation(animS, deltaTime);
+    UpdateAnimation(animN, deltaTime);
+    UpdateAnimation(animW, deltaTime);
+
+    // Update mini impact animations
+    UpdateMiniAnimations(deltaTime);
 }
 void FireballTrap::StartAttack()
 {
@@ -411,7 +397,7 @@ void FireballTrap::HandleImpact()
         damageAreaCollider->SetEnabled(true);
     }
 
-    PlayBombAnimSAt(impactLocalPos);
+    PlayBombAnimationsAt(impactLocalPos);
 
     if (!bigBallHitPlayerThisAttack)
     {
@@ -464,6 +450,10 @@ void FireballTrap::DisableDamage()
 {
     if (groundMesh) groundMesh->SetEnabled(false);
     if (damageAreaCollider) damageAreaCollider->SetEnabled(false);
+
+    StopBombAnimations();
+    StopAllMiniAnimations(); // Also stop all mini animations
+
     RecycleGO(currentDecal);
     currentDecal    = nullptr;
     activationState = ACTIVATION_STATE::SLEEPING;
@@ -607,6 +597,14 @@ void FireballTrap::UpdateMinis(float deltaTime)
 
         if (expired)
         {
+            // Play animation at mini position
+            if (pos.y <= 0.f)
+            {
+                float3 landingPos = pos;
+                landingPos.y      = 0.f; 
+                PlayMiniImpactAnimation(landingPos);
+            }
+
             RecycleGO(it->go);
             it = activeMinis.erase(it);
         }
@@ -824,37 +822,241 @@ void FireballTrap::StopAnimationsRecursive(GameObject* go)
     }
 }
 
-void FireballTrap::PlayBombAnimSAt(const float3& localPos)
+void FireballTrap::PlayBombAnimationsAt(const float3& localPos)
 {
-    if (!animC.root || !animC.ac) return;
 
-    if (animC.root->GetParent() != parent->GetUID())
-    {
-        animC.root->SetParent(parent->GetUID());
-        parent->AddChildren(animC.root->GetUID());
-    }
+    const float offset = 0.2f; // Adjust spacing between animations
 
-    animC.root->SetLocalPosition(localPos);
-    animC.root->SetEnabledRecursive(true);
+    // Play BigBomb animation at base position
+    PlayAnimationAt(animS, localPos);
 
-    // Play animation
-    animC.ac->SetBoneMapping();
-    animC.ac->OnStop();
-    animC.ac->OnPlay(false, false);
+    // Play Wind animation slightly north
+    PlayAnimationAt(animN, localPos);
 
-    if (auto* ctrl = animC.ac->GetAnimationController()) ctrl->SetTime(0.0f);
+    // Play Mini animation slightly west
+    PlayAnimationAt(animW, localPos + float3(-offset, 0, 0));
 
-    animC.ac->Update(0.001f);
-    animCPlaying = true;
+    // Alternative: play all at same position
+    // PlayAnimationAt(animS, localPos);
+    // PlayAnimationAt(animN, localPos);
+    // PlayAnimationAt(animW, localPos);
 }
 
-void FireballTrap::StopBombAnimS()
+void FireballTrap::StopBombAnimations()
 {
-    if (!animC.root) return;
+    StopAnimation(animS);
+    StopAnimation(animN);
+    StopAnimation(animW);
+}
 
-    if (animC.ac) animC.ac->OnStop();
-    animC.root->SetEnabledRecursive(false);
-    animC.root->SetLocalPosition(float3(0, -1000, 0));
+void FireballTrap::StopAnimation(OneShotAnim& anim)
+{
+    if (!anim.root) return;
 
-    animCPlaying = false;
+    if (anim.ac) anim.ac->OnStop();
+    anim.root->SetEnabledRecursive(false);
+    anim.root->SetLocalPosition(float3(0, -1000, 0));
+    anim.playing = false;
+}
+
+bool FireballTrap::InitAnimation(OneShotAnim& anim, GameObject* prefab, const std::string& name)
+{
+    if (!prefab) return false;
+
+    anim.root = prefab;
+
+    // Find the animation component
+    anim.ac   = prefab->GetComponent<AnimationComponent*>();
+
+    if (!anim.ac)
+    {
+        auto v = prefab->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+        if (!v.empty())
+        {
+            anim.ac = v.front();
+            GLOG("[INFO] Found animation component in child for %s", name.c_str());
+        }
+    }
+
+    if (anim.ac)
+    {
+        GLOG("[INFO] Animation component ready for %s, resource: %llu", name.c_str(), anim.ac->GetAnimationResource());
+        if (!anim.ac->GetCurrentAnimation())
+        {
+            anim.ac->Init();
+            anim.ac->OnStop();
+        }
+    }
+    else
+    {
+        GLOG("[WARNING] No animation component found for %s", name.c_str());
+    }
+
+    prefab->SetEnabledRecursive(false);
+    anim.playing = false;
+
+    return true;
+}
+
+
+void FireballTrap::UpdateAnimation(OneShotAnim& anim, float deltaTime)
+{
+    if (anim.playing && anim.ac)
+    {
+        anim.ac->Update(deltaTime);
+        if (anim.ac->IsFinished())
+        {
+            StopAnimation(anim);
+        }
+    }
+}
+
+void FireballTrap::PlayAnimationAt(OneShotAnim& anim, const float3& localPos)
+{
+    if (!anim.root || !anim.ac) return;
+
+    if (anim.root->GetParent() != parent->GetUID())
+    {
+        anim.root->SetParent(parent->GetUID());
+        parent->AddChildren(anim.root->GetUID());
+    }
+
+    anim.root->SetLocalPosition(localPos);
+    anim.root->SetEnabledRecursive(true);
+
+    // Play animation
+    anim.ac->SetBoneMapping();
+    anim.ac->OnStop();
+    anim.ac->OnPlay(false, false);
+
+    if (auto* ctrl = anim.ac->GetAnimationController()) ctrl->SetTime(0.0f);
+
+    anim.ac->Update(0.001f);
+    anim.playing = true;
+}
+
+void FireballTrap::InitMiniAnimationPool()
+{
+    if (!animSPrefab) return;
+
+    miniAnimPool.clear();
+    miniAnimPool.reserve(MAX_MINI_ANIMS);
+
+    Scene* scene = AppEngine->GetSceneModule()->GetScene();
+
+    for (size_t i = 0; i < MAX_MINI_ANIMS; ++i)
+    {
+        MiniImpactAnim miniAnim;
+
+        // Clone the animation prefab for each pool entry
+        miniAnim.root = CloneHierarchy(animSPrefab, parent->GetUID());
+
+        if (miniAnim.root)
+        {
+            // Find animation component
+            miniAnim.ac = miniAnim.root->GetComponent<AnimationComponent*>();
+            if (!miniAnim.ac)
+            {
+                auto v = miniAnim.root->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+                if (!v.empty()) miniAnim.ac = v.front();
+            }
+
+            // Initialize animation
+            if (miniAnim.ac)
+            {
+                miniAnim.ac->Init();
+                miniAnim.ac->OnStop();
+            }
+
+            // Start disabled and hidden
+            miniAnim.root->SetEnabledRecursive(false);
+            miniAnim.root->SetLocalPosition(float3(0, -1000, 0));
+            miniAnim.playing = false;
+            miniAnim.timer   = 0.f;
+
+            miniAnimPool.push_back(miniAnim);
+        }
+    }
+
+    GLOG("[INFO] Mini animation pool initialized with %zu animations", miniAnimPool.size());
+}
+
+// Get an available animation from the pool
+FireballTrap::MiniImpactAnim* FireballTrap::GetAvailableMiniAnim()
+{
+    for (auto& anim : miniAnimPool)
+    {
+        if (!anim.playing && anim.root)
+        {
+            return &anim;
+        }
+    }
+    return nullptr; 
+}
+
+// Play animation at mini impact location
+void FireballTrap::PlayMiniImpactAnimation(const float3& localPos)
+{
+    MiniImpactAnim* anim = GetAvailableMiniAnim();
+    if (!anim || !anim->root || !anim->ac) return;
+
+    // Position and enable
+    anim->root->SetLocalPosition(localPos);
+    anim->root->SetEnabledRecursive(true);
+
+    // Play animation
+    anim->ac->SetBoneMapping();
+    anim->ac->OnStop();
+    anim->ac->OnPlay(false, false);
+
+    if (auto* ctrl = anim->ac->GetAnimationController())
+    {
+        ctrl->SetTime(0.0f);
+    }
+
+    anim->ac->Update(0.001f);
+    anim->playing = true;
+    anim->timer   = 0.f;
+}
+
+// Update all mini animations
+void FireballTrap::UpdateMiniAnimations(float deltaTime)
+{
+    for (auto& anim : miniAnimPool)
+    {
+        if (anim.playing && anim.ac)
+        {
+            anim.timer += deltaTime;
+            anim.ac->Update(deltaTime);
+
+            // Stop when finished or lifetime exceeded
+            if (anim.ac->IsFinished() || anim.timer >= anim.lifetime)
+            {
+                anim.ac->OnStop();
+                anim.root->SetEnabledRecursive(false);
+                anim.root->SetLocalPosition(float3(0, -1000, 0));
+                anim.playing = false;
+                anim.timer   = 0.f;
+            }
+        }
+    }
+}
+
+// Stop all mini animations (call when trap resets)
+void FireballTrap::StopAllMiniAnimations()
+{
+    for (auto& anim : miniAnimPool)
+    {
+        if (anim.playing)
+        {
+            if (anim.ac) anim.ac->OnStop();
+            if (anim.root)
+            {
+                anim.root->SetEnabledRecursive(false);
+                anim.root->SetLocalPosition(float3(0, -1000, 0));
+            }
+            anim.playing = false;
+            anim.timer   = 0.f;
+        }
+    }
 }

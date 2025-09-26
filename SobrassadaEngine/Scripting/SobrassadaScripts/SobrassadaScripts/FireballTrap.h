@@ -30,6 +30,7 @@ class FireballTrap : public Script
 
   public:
     FireballTrap(GameObject* parent);
+    ~FireballTrap();
     bool Init() override;
     void Update(float deltaTime) override;
     int GetDamage() const { return cfg.impactDamage; }
@@ -189,23 +190,53 @@ class FireballTrap : public Script
     bool bigBallHitPlayerThisAttack = false;
 
     // Animations
-    GameObject* animCPrefab         = nullptr;
+    GameObject* animSPrefab         = nullptr; // Bomb_animation_S
+    GameObject* animNPrefab         = nullptr; // Bomb_animation_N
+    GameObject* animWPrefab         = nullptr; // Bomb_animation_W
 
     GameObject* CloneHierarchy(GameObject* src, UID newParentUID);
     void SetEnabledRecursive(GameObject* go, bool enabled);
     void StopAnimationsRecursive(GameObject* go);
-    std::string animCName = "Bomb_animation_S"; // MiniBomb
 
-    void PlayBombAnimSAt(const float3& localPos);
-    void StopBombAnimS();
+    std::string animSName = "Bomb_animation_S";
+    std::string animNName = "Bomb_animation_N";
+    std::string animWName = "Bomb_animation_W";
+
+    void PlayBombAnimationsAt(const float3& localPos);
+    void StopBombAnimations();
 
     struct OneShotAnim
     {
         GameObject* root       = nullptr;
         AnimationComponent* ac = nullptr;
+        bool playing           = false;
     };
 
-    OneShotAnim animC;
-    bool animCPlaying = false;
+    OneShotAnim animS; 
+    OneShotAnim animN; 
+    OneShotAnim animW; 
 
+    // Helper to initialize and play a single animation
+    void PlayAnimationAt(OneShotAnim& anim, const float3& localPos);
+    void UpdateAnimation(OneShotAnim& anim, float deltaTime);
+    void StopAnimation(OneShotAnim& anim);
+    bool InitAnimation(OneShotAnim& anim, GameObject* prefab, const std::string& name);
+
+    struct MiniImpactAnim
+    {
+        GameObject* root       = nullptr;
+        AnimationComponent* ac = nullptr;
+        bool playing           = false;
+        float timer            = 0.f;
+        float lifetime         = 5.0f; 
+    };
+
+    std::vector<MiniImpactAnim> miniAnimPool;
+    const size_t MAX_MINI_ANIMS = 12; // Pool size for mini animations
+
+    void PlayMiniImpactAnimation(const float3& localPos);
+    void UpdateMiniAnimations(float deltaTime);
+    void InitMiniAnimationPool();
+    void StopAllMiniAnimations();
+    MiniImpactAnim* GetAvailableMiniAnim();
 };
