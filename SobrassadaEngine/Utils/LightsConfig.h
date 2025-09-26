@@ -129,6 +129,7 @@ class LightsConfig
     DirectionalLightComponent* GetDirectionalLight() { return directionalLight; }
 
     const std::vector<SpotLightComponent*>& GetSpotLights() const { return spotLights; }
+    void SetVolumetricAreaShaderData() const;
 
   private:
     void LoadSkyboxTexture(UID cubemapUID);
@@ -141,7 +142,6 @@ class LightsConfig
     void SetDirectionalLightShaderData() const;
     void SetPointLightsShaderData() const;
     void SetSpotLightsShaderData() const;
-    void SetVolumetricAreaShaderData() const;
 
   private:
     UID skyboxUID                          = INVALID_UID;

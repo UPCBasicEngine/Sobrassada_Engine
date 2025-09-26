@@ -117,6 +117,7 @@ RenderPass::RenderPass()
 RenderPass::~RenderPass()
 {
     glDeleteBuffers(1, &visibleLightIndicesSSBO);
+    glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
 
     glDeleteBuffers(1, &decalVBO);
     glDeleteBuffers(1, &decalEBO);
@@ -203,7 +204,9 @@ void RenderPass::RenderScene(
     glEnable(GL_STENCIL_TEST);
 
     std::vector<VideoComponent*> videosToRender;
-
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::Video check && Render", Optick::Category::Rendering)
+#endif
     for (const auto& gameObject : objectsToRender)
     {
         VideoComponent* video = gameObject->GetComponent<VideoComponent*>();
@@ -246,16 +249,26 @@ void RenderPass::RenderScene(
         return;
     }
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::Geometry PASS", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
         NavMeshPassRender(objectsToRender, camera);
     else GeometryPassRender(objectsToRender, camera);
     glPopDebugGroup();
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::Geometry Shaders", Optick::Category::Rendering)
+#endif
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Custom Shaders Pass");
     App->GetShaderScriptModule()->RenderGeometryPassShaders(0.f, camera);
     glPopDebugGroup();
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::ShadowMap", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
     ShadowMapPassRender(camera, light, objectsToRender);
@@ -263,6 +276,9 @@ void RenderPass::RenderScene(
 
     glViewport(0, 0, width, height);
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::Decals", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
     DecalsPassRender(objectsToRender, camera);
     glPopDebugGroup();
@@ -289,6 +305,10 @@ void RenderPass::RenderScene(
         return;
     }
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::SSAO PASS", Optick::Category::Rendering)
+#endif
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
     SsaoPassRender(camera, gbuffer, ssao);
     glPopDebugGroup();
@@ -297,16 +317,22 @@ void RenderPass::RenderScene(
     SsaoBlurPassRender(ssao);
     glPopDebugGroup();
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::Tile Compute", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::LightPass", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
+    OPTICK_CATEGORY("RenderPass::Render_TransparentPass", Optick::Category::Rendering)
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera);
@@ -316,20 +342,22 @@ void RenderPass::RenderScene(
     App->GetShaderScriptModule()->RenderTransparentPassShaders(0.f, camera);
     glPopDebugGroup();
 
-    // TEMPORAL, ADJUST LATER
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::VolumetricRender", Optick::Category::Rendering)
+#endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
     VolumetricFogPassRender(camera, light);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::PostLightingShaders", Optick::Category::Rendering)
+    OPTICK_CATEGORY("RenderPass::PostLightingShaders", Optick::Category::Rendering)
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
     App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::GameObject::Render_Billboards", Optick::Category::Rendering)
+    OPTICK_CATEGORY("RenderPass::GameObject::Render_Billboards", Optick::Category::Rendering)
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
     glEnable(GL_BLEND);
@@ -457,8 +485,15 @@ void RenderPass::ShadowMapPassRender(
     unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
     glUseProgram(depthReductionProgram);
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::ShadowMap::DepthCompute", Optick::Category::Rendering)
+#endif
+
     while (currentWidth > 1 || currentHeight > 1)
     {
+#ifdef OPTICK
+        OPTICK_CATEGORY("RenderPass::ShadowMap::DepthCompute::Dispatch", Optick::Category::Rendering)
+#endif
         int groupsX = (currentWidth + 7) / 8;
         int groupsY = (currentHeight + 3) / 4;
 
@@ -470,6 +505,10 @@ void RenderPass::ShadowMapPassRender(
 
         glDispatchCompute(groupsX, groupsY, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+#ifdef OPTICK
+        OPTICK_CATEGORY("RenderPass::ShadowMap::DepthCompute::DeleteAndCreateTex", Optick::Category::Rendering)
+#endif
 
         firstPass = false;
         unsigned int newTex;
@@ -483,6 +522,10 @@ void RenderPass::ShadowMapPassRender(
         currentWidth  = groupsX;
         currentHeight = groupsY;
     }
+
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::ShadowMap::LastDepthPass", Optick::Category::Rendering)
+#endif
 
     // Last Pass to make it 1x1
     int groupsX = (currentWidth + 7) / 8;
@@ -507,6 +550,10 @@ void RenderPass::ShadowMapPassRender(
 
     glDeleteTextures(1, &currentInput);
     glDeleteTextures(1, &currentOutput);
+
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::ShadowMap::RenderShadowMap", Optick::Category::Rendering)
+#endif
 
     // Compute the near and far planes based on the min/max depth values
     float nearD;
@@ -603,7 +650,9 @@ void RenderPass::ShadowMapPassRender(
     batchManager->RenderShadowMap(meshesToRender, ubo);
 
     // RENDER SPOTLIGHT SHADOWMAPS
-
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::ShadowMap::Spotlights", Optick::Category::Rendering)
+#endif
     auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
@@ -815,6 +864,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
+    lConfig->SetVolumetricAreaShaderData(); // 8 binding spot
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, visibleVolumetricAreaIndicesSSBO);
 
     // Local size of compute is (16,16,1)
     unsigned int numGroupsX = (width + (16 - 1)) / 16;
@@ -1092,9 +1143,23 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
         currentSize = totalSize;
     }
 
+    if (visibleVolumetricAreaIndicesSSBO == 0 || totalSize != currentSize)
+    {
+        if (visibleVolumetricAreaIndicesSSBO != 0)
+        {
+            glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
+        }
+
+        glGenBuffers(1, &visibleVolumetricAreaIndicesSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleVolumetricAreaIndicesSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
+    }
+
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, visibleLightIndicesSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, visibleVolumetricAreaIndicesSSBO);
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
+    App->GetSceneModule()->GetScene()->GetLightsConfig()->SetVolumetricAreaShaderData();
 
     glDispatchCompute(tilesX, tilesY, 1);
 

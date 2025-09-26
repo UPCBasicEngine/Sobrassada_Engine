@@ -106,6 +106,7 @@ class RenderPass
 
     // Volumetric Fog
     unsigned int fogResultTexture = 0;
+    unsigned int visibleVolumetricAreaIndicesSSBO = 0;
 
     // FXAA
     bool enableFXAA               = true;

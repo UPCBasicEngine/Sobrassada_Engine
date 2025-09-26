@@ -541,7 +541,7 @@ void LightsConfig::SetVolumetricAreaShaderData() const
         if (volumetricAreas[i] && volumetricAreas[i]->IsEffectivelyEnabled())
         {
             volumetrics.emplace_back(Lights::VolumetricAreaShaderData(
-                float4(volumetricAreas[i]->GetGlobalTransform().TranslatePart(), 1.0f),
+                float4(volumetricAreas[i]->GetGlobalTransform().TranslatePart(), (int)volumetricAreas[i]->GetAreaType()),
                 float4(volumetricAreas[i]->GetSize(), 1.0f)
             ));
         }

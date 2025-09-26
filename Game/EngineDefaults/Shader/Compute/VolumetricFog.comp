@@ -56,6 +56,12 @@ struct SpotShadow {
     sampler2D spotShadowMap;
 };
 
+struct VolumetricArea
+{
+	vec4 position;		// xyz = position & w = type -> 0 AABB | 1 SPHERE
+	vec4 size;			// if type == 1 -> radius = size.x
+};
+
 layout(std140, binding = 3) uniform Directional
 {
     vec4 directional_dir;
@@ -80,6 +86,16 @@ layout(std430, binding = 6) readonly buffer VisibleLightIndicesBuffer {
 
 layout(std430, binding = 7) readonly buffer SpotLightShadowBuffer {
     SpotShadow spotShadows[];
+};
+
+readonly layout(std430, binding = 8) buffer VolumeAreas
+{
+	int volumeAreaCount;
+	VolumetricArea volumetricAreas[];
+};
+
+layout(std430, binding = 9) readonly buffer VisibleVolumetricAreaIndicesBuffer {
+	int visibleAreas[];
 };
 
 
@@ -168,6 +184,61 @@ float ScatteringPhaseFunction(vec3 viewDirection, vec3 lightDirection)
     return (1 - k * k) / (4 * M_PI * (1 + k * cos(theta)) * (1 + k * cos(theta)));
 }
 
+bool SolveQuadratic(in float a, in float b, in float c, out float t0, out float t1)
+{
+    float discr = b * b - 4 * a * c;
+
+    if (discr < 0) return false;
+
+    else if (discr == 0) t0 = t1 = - 0.5 * b / a;
+
+    else 
+    {
+        float discrSqrt = sqrt(discr);
+        float q;
+
+        if(b > 0)  q = -0.5 * (b + discrSqrt);
+        else q = -0.5 * (b - discrSqrt); 
+        
+        t0 = q / a;
+        t1 = c / q;
+    }
+
+    if (t0 > t1)
+    {
+        float tmp = t0;
+        t0 = t1;
+        t1 = tmp;
+    }
+    
+    return true;
+}
+
+bool SpehereIntersection(vec3 center, float radius, vec3 rayOrigin, vec3 rayDirection, out float t0, out float t1)
+{
+    vec3 L = rayOrigin - center;
+    float a = dot(rayDirection, rayDirection); // JUST IN CASE THEY ARE NOT NORMALIZED
+    float b = 2.0 * dot(rayDirection, L);
+    float c = dot(L, L) - (radius * radius);
+    
+    if(!SolveQuadratic(a, b, c, t0, t1)) return false;
+
+    if (t0 > t1)
+    {
+        float tmp = t0;
+        t0 = t1;
+        t1 = tmp;
+    }
+
+    if (t0 < 0) 
+    {
+        t0 = t1; // If t0 is negative, let's use t1 instead.
+        if (t0 < 0) return false; // Both t0 and t1 are negative.
+    }
+
+    return true;
+}
+
 vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoords, int baseOffset)
 {
     vec3 light = vec3(0.0);
@@ -175,6 +246,29 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
 
     vec4 currentPosFromLight;
     vec3 projCoords;
+
+    bool volumeIntersection = false;
+
+
+    for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
+    {
+        int areaIndexBuffer = visibleAreas[baseOffset + i];
+
+        if(areaIndexBuffer == -1) break;
+        VolumetricArea area = volumetricAreas[areaIndexBuffer];
+
+        float auxT0, auxT1;
+
+        bool currentCollision = SpehereIntersection(area.position.xyz, area.size.x, currentPosition, rayDirection, auxT0, auxT1);
+
+        if(currentCollision)
+        {
+            volumeIntersection = true;
+            break;
+        }
+    }
+
+    if(!volumeIntersection) return light;
 
     // DIRECTIONAL LIGHT
     // currentPosFromLight = directinal_Projection_Mat * directinal_View_Mat * vec4(currentPosition, 1.0);
@@ -327,61 +421,6 @@ int ConeIntersection(in vec3 conePosition, in vec3 coneDirection, in float coneA
     }
 
     return totalIntersections;
-}
-
-bool SolveQuadratic(in float a, in float b, in float c, out float t0, out float t1)
-{
-    float discr = b * b - 4 * a * c;
-
-    if (discr < 0) return false;
-
-    else if (discr == 0) t0 = t1 = - 0.5 * b / a;
-
-    else 
-    {
-        float discrSqrt = sqrt(discr);
-        float q;
-
-        if(b > 0)  q = -0.5 * (b + discrSqrt);
-        else q = -0.5 * (b - discrSqrt); 
-        
-        t0 = q / a;
-        t1 = c / q;
-    }
-
-    if (t0 > t1)
-    {
-        float tmp = t0;
-        t0 = t1;
-        t1 = tmp;
-    }
-    
-    return true;
-}
-
-bool SpehereIntersection(vec3 center, float radius, vec3 rayOrigin, vec3 rayDirection, out float t0, out float t1)
-{
-    vec3 L = rayOrigin - center;
-    float a = dot(rayDirection, rayDirection); // JUST IN CASE THEY ARE NOT NORMALIZED
-    float b = 2.0 * dot(rayDirection, L);
-    float c = dot(L, L) - (radius * radius);
-    
-    if(!SolveQuadratic(a, b, c, t0, t1)) return false;
-
-    if (t0 > t1)
-    {
-        float tmp = t0;
-        t0 = t1;
-        t1 = tmp;
-    }
-
-    if (t0 < 0) 
-    {
-        t0 = t1; // If t0 is negative, let's use t1 instead.
-        if (t0 < 0) return false; // Both t0 and t1 are negative.
-    }
-
-    return true;
 }
 
 bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, in int baseOffset, out float t0, out float t1)
