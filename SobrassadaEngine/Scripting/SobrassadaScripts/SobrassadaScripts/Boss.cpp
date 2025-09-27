@@ -1091,6 +1091,8 @@ void Boss::OverheadStrike(float deltaTime)
         {
             currentAction     = BossActions::Dash;
             actionTriggerDone = false;
+
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_AOEDASH);
         }
         break;
     }
@@ -1157,6 +1159,7 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
+            audioPlayed       = false;
 
             if (animComponent) animComponent->UseTrigger("Attack");
 
@@ -1321,6 +1324,12 @@ void Boss::DamageAreaLogic()
         if (attackTimer >= 0.3f)
         {
             if (attackEnergyUV) attackEnergyUV->SetPaused(true);
+
+            if (!audioPlayed && audio)
+            {
+                audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_AOEATTACK);
+                audioPlayed = true;
+            }
         }
 
         if (attackTimer >= 0.4f)
