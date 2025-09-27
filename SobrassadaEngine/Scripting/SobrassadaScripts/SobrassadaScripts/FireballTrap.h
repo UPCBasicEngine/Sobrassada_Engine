@@ -250,4 +250,5 @@ class FireballTrap : public Script
         "Bomb_animation_S_1", "Bomb_animation_S_2", "Bomb_animation_S_3", "Bomb_animation_S_4"
     };
     int miniSNext = 0;
+    std::vector<GameObject*> miniBombSymbolVfx;
 };

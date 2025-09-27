@@ -11,6 +11,7 @@
 #include "CuChulainn.h"
 #include "FireballTrap.h"
 #include "GameObject.h"
+#include "MiniFireball.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
@@ -19,7 +20,6 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Wwise_IDs.h"
-#include "MiniFireball.h"
 
 constexpr float TAU                  = 2.0f * PI;
 constexpr float SHADOW_MIN_SCALE     = 0.01f;
@@ -98,8 +98,9 @@ void FireballTrap::SetupInspectorFields()
         {"Mini Indicator VFX (pre-fall)", InspectorField::FieldType::GameObject, &miniIndicatorVfxPrefab, 0.f, 0.f}
     );
     fields.push_back(
-    {"VFX Bomb Indicator Small Symbol", InspectorField::FieldType::GameObject, &vfxBombIndicatorSmallSymbolPrefab, 0.f, 0.f}
-);
+        {"VFX Bomb Indicator Small Symbol", InspectorField::FieldType::GameObject, &vfxBombIndicatorSmallSymbolPrefab,
+         0.f, 0.f}
+    );
     fields.push_back({"Mini Indicator Scale", InspectorField::FieldType::Float, &miniIndicatorVfxScale, 0.05f, 5.0f});
     fields.push_back({"Mini Start Height", InspectorField::FieldType::Float, &cfg.miniStartHeight, 0.f, 5.f});
     fields.push_back({"Mini Up Speed", InspectorField::FieldType::Float, &cfg.miniUpSpeed, 0.f, 20.f});
@@ -503,11 +504,6 @@ void FireballTrap::StartAttack()
         const float3 indicatorScaleVfx = float3(vfxIndicatorWorldRadius);
         ScheduleVfx(vfxIndicator, 0.0f, impactT, vfxPos, indicatorScaleVfx);
     }
-    if (vfxBombIndicatorSmallSymbol)
-    {
-        const float3 symbolScaleVfx = float3(vfxIndicatorWorldRadius);
-        ScheduleVfx(vfxBombIndicatorSmallSymbol, 0.0f, impactT, vfxPos, symbolScaleVfx);
-    }
     dropElapsed     = 0.f;
     activationState = ACTIVATION_STATE::DROPPING;
 }
@@ -546,23 +542,38 @@ void FireballTrap::HandleImpact()
         const float g           = cfg.gravity;
         const float tFall       = (vUp + sqrtf(std::max(0.f, vUp * vUp + 2.f * g * startHeight))) / g;
 
-        // Create mini indicators if needed
-        if (miniIndicatorVfxPrefab)
+        // Create mini indicators and small symbols at mini positions
+        miniIndicatorVfx.clear();
+        miniBombSymbolVfx.clear();
+
+        for (uint32_t i = 0; i < miniCount; ++i)
         {
-            miniIndicatorVfx.clear();
-            for (uint32_t i = 0; i < miniCount; ++i)
+            const float ang = i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER);
+            plannedMiniAngles.push_back(ang);
+
+            const float3 dirXZ = float3(cosf(ang), 0.f, sinf(ang));
+            const float3 pos   = impactLocalPos + dirXZ * cfg.miniLandingRadius;
+
+            // Create mini indicator VFX
+            if (miniIndicatorVfxPrefab)
             {
-                const float ang = i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER);
-                plannedMiniAngles.push_back(ang);
-
-                const float3 dirXZ  = float3(cosf(ang), 0.f, sinf(ang));
-                const float3 pos    = impactLocalPos + dirXZ * cfg.miniLandingRadius;
-
                 GameObject* miniVfx = CloneHierarchy(miniIndicatorVfxPrefab, parent->GetUID());
                 if (miniVfx)
                 {
                     miniIndicatorVfx.push_back(miniVfx);
                     ScheduleVfx(miniVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
+                }
+            }
+
+            // Create bomb symbol at mini position
+            if (vfxBombIndicatorSmallSymbolPrefab)
+            {
+                GameObject* symbolVfx = CloneHierarchy(vfxBombIndicatorSmallSymbolPrefab, parent->GetUID());
+                if (symbolVfx)
+                {
+                    miniBombSymbolVfx.push_back(symbolVfx);
+                    // Schedule with same timing as mini indicator
+                    ScheduleVfx(symbolVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
                 }
             }
         }
@@ -573,7 +584,6 @@ void FireballTrap::HandleImpact()
     {
         // If player was hit, reset the indicator VFX immediately
         if (vfxIndicator) ResetVFX(vfxIndicator);
-        if (vfxBombIndicatorSmallSymbol) ResetVFX(vfxBombIndicatorSmallSymbol);
     }
 
     if (shakeCam)
@@ -617,6 +627,17 @@ void FireballTrap::DisableDamage()
         }
     }
     miniIndicatorVfx.clear();
+
+    // Clean up mini bomb symbols
+    for (auto* vfx : miniBombSymbolVfx)
+    {
+        if (vfx && vfx != vfxBombIndicatorSmallSymbolPrefab)
+        {
+            ResetVFX(vfx);
+            RecycleGO(vfx);
+        }
+    }
+    miniBombSymbolVfx.clear();
 }
 
 void FireballTrap::UpdateFireball(float deltaTime)
@@ -840,7 +861,7 @@ void FireballTrap::ClearScheduledVfx()
         if (e.vfx)
         {
             EnableVFX(e.vfx, false);
-            ResetVFX(e.vfx); 
+            ResetVFX(e.vfx);
             auto meshComps = e.vfx->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
             for (auto* mc : meshComps)
                 mc->SetEnabled(false);
@@ -903,7 +924,7 @@ void FireballTrap::SpawnMiniCluster()
         {
             if (auto* miniScript = sc->GetScriptByType<MiniFireball>())
             {
-                // Random initial rotation 
+                // Random initial rotation
                 float3 randomRot = float3(RandomRange(0.f, 360.f), RandomRange(0.f, 360.f), RandomRange(0.f, 360.f));
                 miniScript->SetInitialRotation(randomRot);
 
@@ -1089,8 +1110,8 @@ void FireballTrap::PlayMiniImpactAnimation(const float3& localPos)
     if (slot.playing) StopAnimation(slot); // reuse if still busy
 
     float3 p = localPos;
-    p.y      = std::max(0.02f, p.y); 
-    PlayAnimationAt(slot, p);        
+    p.y      = std::max(0.02f, p.y);
+    PlayAnimationAt(slot, p);
 }
 
 void FireballTrap::OnPlayerExitLocation()
