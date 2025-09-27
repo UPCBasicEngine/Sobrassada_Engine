@@ -574,6 +574,12 @@ void FireballTrap::HandleImpact()
 
         SpawnMiniCluster();
     }
+    else
+    {
+        // If player was hit, reset the indicator VFX immediately
+        if (vfxIndicator) ResetVFX(vfxIndicator);
+        if (vfxBombIndicatorSmallSymbol) ResetVFX(vfxBombIndicatorSmallSymbol);
+    }
 
     if (shakeCam)
     {
@@ -609,7 +615,11 @@ void FireballTrap::DisableDamage()
     // Clean up mini indicators
     for (auto* vfx : miniIndicatorVfx)
     {
-        if (vfx && vfx != miniIndicatorVfxPrefab) RecycleGO(vfx);
+        if (vfx && vfx != miniIndicatorVfxPrefab)
+        {
+            ResetVFX(vfx);
+            RecycleGO(vfx);
+        }
     }
     miniIndicatorVfx.clear();
 }
@@ -816,6 +826,7 @@ void FireballTrap::UpdateScheduledVfx(float dt)
             if (e.timer >= e.life)
             {
                 EnableVFX(e.vfx, false);
+                ResetVFX(e.vfx);
                 auto meshComps = e.vfx->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
                 for (auto* mc : meshComps)
                     mc->SetEnabled(false);
@@ -834,7 +845,7 @@ void FireballTrap::ClearScheduledVfx()
         if (e.vfx)
         {
             EnableVFX(e.vfx, false);
-
+            ResetVFX(e.vfx); 
             auto meshComps = e.vfx->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
             for (auto* mc : meshComps)
                 mc->SetEnabled(false);
@@ -1085,4 +1096,25 @@ void FireballTrap::PlayMiniImpactAnimation(const float3& localPos)
     float3 p = localPos;
     p.y      = std::max(0.02f, p.y); 
     PlayAnimationAt(slot, p);        
+}
+
+void FireballTrap::OnPlayerExitLocation()
+{
+    // Reset all active VFX when player leaves the area
+    if (vfxMainLight) ResetVFX(vfxMainLight);
+    if (vfxLightImpact) ResetVFX(vfxLightImpact);
+    if (vfxFireImpact) ResetVFX(vfxFireImpact);
+    if (vfxBombGround) ResetVFX(vfxBombGround);
+    if (vfxBlackStain) ResetVFX(vfxBlackStain);
+    if (vfxIndicator) ResetVFX(vfxIndicator);
+    if (vfxBombIndicatorSmallSymbol) ResetVFX(vfxBombIndicatorSmallSymbol);
+
+    for (auto* vfx : miniIndicatorVfx)
+    {
+        if (vfx && vfx != miniIndicatorVfxPrefab) ResetVFX(vfx);
+    }
+
+    // Reset trap state
+    activationState = ACTIVATION_STATE::SLEEPING;
+    ClearScheduledVfx();
 }

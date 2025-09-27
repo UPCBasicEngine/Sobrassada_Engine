@@ -236,6 +236,8 @@ class FireballTrap : public Script
 
     void PlayMiniImpactAnimation(const float3& localPos);
 
+    void OnPlayerExitLocation();
+
     GameObject* CloneHierarchy(GameObject* src, UID newParentUID);
     void StopAnimationsRecursive(GameObject* go);
 
