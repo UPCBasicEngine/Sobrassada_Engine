@@ -5,7 +5,6 @@
 #include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
 #include <array>
-#include <unordered_map>
 #include <vector>
 
 class GameObject;
@@ -16,18 +15,16 @@ class CameraComponent;
 class CubeColliderComponent;
 class ShaderScriptComponent;
 
-// trap lifecycle big ball -> impact -> cooldown
 enum class ACTIVATION_STATE
 {
-    SLEEPING, // waiting, player out of range
-    IDLE,     // armed, counting down to next attack
-    DROPPING, // big fireball falling
-    DAMAGING, // ground is burning, damage collider active
+    SLEEPING,
+    IDLE,
+    DROPPING,
+    DAMAGING,
 };
 
 class FireballTrap : public Script
 {
-
   public:
     FireballTrap(GameObject* parent);
     ~FireballTrap();
@@ -54,11 +51,6 @@ class FireballTrap : public Script
     void OnBigBallHitPlayer() { bigBallHitPlayerThisAttack = true; }
 
   private:
-    std::unordered_map<GameObject*, std::vector<GameObject*>> vfxPools; // key = prefab*
-
-    GameObject* AcquireFromPool(GameObject* prefab);
-    void ReleaseToPool(GameObject* inst);
-
     struct TimedVFX
     {
         GameObject* go = nullptr;
@@ -74,37 +66,34 @@ class FireballTrap : public Script
 
     struct FireballTrapSettings
     {
-        // Activation radius & cooldowns
         float activationRange   = 10.f;
         float minAttackCooldown = 0.5f;
         float maxAttackCooldown = 3.f;
 
-        // Big fireball physics
-        float fallingHeight     = 20.0f; // spawn Y offset
-        float gravity           = 9.81f; // drop acceleration
+        float fallingHeight     = 20.0f;
+        float gravity           = 9.81f;
         float maxFallSpeed      = 20.0f;
-        float rotationSpeed     = 90.0f; // deg/s spin while falling
+        float rotationSpeed     = 90.0f;
         int impactDamage        = 1;
         float bigBurnRadius     = 2.0f;
         float bigBurnDuration   = 3.0f;
 
-        // Arc
         float maxLaunchRadius   = 6.f;
         float launchYawDeg      = 0.0f;
 
-        float miniStartHeight   = 0.5f; // spawn Y of each mini
-        float miniUpSpeed       = 4.5f; // initial up velocity of each mini
-        float miniLandingRadius = 0.4f; // where we expect minis to land (ring radius)
+        float miniStartHeight   = 0.5f;
+        float miniUpSpeed       = 4.5f;
+        float miniLandingRadius = 0.4f;
     };
 
     FireballTrapSettings cfg;
 
     // State Machine
     ACTIVATION_STATE activationState            = ACTIVATION_STATE::SLEEPING;
-    float randomAttackTime                      = 0.f; // seconds until next shot
+    float randomAttackTime                      = 0.f;
     float activatedTime                         = 0.f;
-    float impactElapsed                         = 0.f; // burning timer after impact
-    float dropElapsed                           = 0.f; // time since fireball spawned
+    float impactElapsed                         = 0.f;
+    float dropElapsed                           = 0.f;
 
     // Scene references
     MeshComponent* groundMesh                   = nullptr;
@@ -118,10 +107,9 @@ class FireballTrap : public Script
     GameObject* miniPrototype                   = nullptr;
     GameObject* impactPrefab                    = nullptr;
     GameObject* currentDecal                    = nullptr;
-    uint32_t miniCount                          = 4; // how many minis
+    uint32_t miniCount                          = 4;
     float miniLifeTime                          = 2.f;
 
-    // Mini params
     struct MiniInstance
     {
         GameObject* go;
@@ -133,74 +121,90 @@ class FireballTrap : public Script
     // VFX scheduling
     struct VFXEvent
     {
-        GameObject* prefab   = nullptr;      // source prefab to clone
-        float delay          = 0.f;          // start time relative to StartAttack() (seconds)
-        float life           = 1.f;          // auto-despawn after 'life' seconds
-        float3 localPos      = float3::zero; // placement relative to trap base
-        float3 localScale    = float3::one;
+        GameObject* vfx   = nullptr;
+        float delay       = 0.f;
+        float life        = 1.f;
+        float3 localPos   = float3::zero;
+        float3 localScale = float3::one;
 
-        bool triggered       = false;
-        float timer          = 0.f;
-        GameObject* instance = nullptr;
+        bool triggered    = false;
+        float timer       = 0.f;
+
+        std::vector<ShaderScriptComponent*> shaders;
     };
 
     std::vector<VFXEvent> scheduledVfx;
     float vfxSchedClock = 0.f;
 
-    // API
-    void ScheduleVfx(GameObject* prefab, float delay, float life, const float3& pos, const float3& scale = float3::one);
+    void ScheduleVfx(GameObject* vfx, float delay, float life, const float3& pos, const float3& scale = float3::one);
     void UpdateScheduledVfx(float dt);
     void ClearScheduledVfx();
+    void EnableVFX(GameObject* vfx, bool enable);
+    void ResetVFX(GameObject* vfx);
 
-    // Prefabs (set via Inspector later)
+    // VFX GameObjects (no pooling)
+    GameObject* vfxMainLight   = nullptr;
+    GameObject* vfxLightImpact = nullptr;
+    GameObject* vfxFireImpact  = nullptr;
+    GameObject* vfxBombGround  = nullptr; 
+    GameObject* vfxBlackStain  = nullptr;
+    GameObject* vfxIndicator   = nullptr;
+    GameObject* vfxBombIndicatorSmallSymbol = nullptr;
+    std::vector<GameObject*> miniIndicatorVfx;
+
+
+    // Store mesh components for each VFX
+    std::vector<MeshComponent*> vfxIndicatorMeshes;
+    std::vector<MeshComponent*> vfxMainLightMeshes;
+    std::vector<MeshComponent*> vfxLightImpactMeshes;
+    std::vector<MeshComponent*> vfxFireImpactMeshes;
+    std::vector<MeshComponent*> vfxBombGroundMeshes;
+    std::vector<MeshComponent*> vfxBlackStainMeshes;
+    std::vector<MeshComponent*> vfxBombIndicatorSmallSymbolMeshes;
+
+    // Prefabs (for reference)
     GameObject* vfxMainLightPrefab     = nullptr;
     GameObject* vfxLightImpactPrefab   = nullptr;
     GameObject* vfxFireImpactPrefab    = nullptr;
     GameObject* vfxBombGroundPrefab    = nullptr;
     GameObject* vfxBlackStainPrefab    = nullptr;
+    GameObject* vfxIndicatorPrefab     = nullptr;
+    GameObject* miniIndicatorVfxPrefab = nullptr;
+    GameObject* vfxBombIndicatorSmallSymbolPrefab = nullptr;
 
-    // Delays VFX
+    // VFX Delays
     float vfxMainLightDelay            = 0.00f;
     float vfxLightImpactDelay          = 0.00f;
     float vfxFireImpactDelay           = 0.15f;
     float vfxBombGroundDelay           = 0.35f;
     float vfxBlackStainDelay           = 0.70f;
 
-    // Lifetimes VFX
+    // VFX Lifetimes
     float vfxMainLightLife             = 0.6f;
     float vfxLightImpactLife           = 0.4f;
     float vfxFireImpactLife            = 1.5f;
     float vfxBombGroundLife            = 3.0f;
     float vfxBlackStainLife            = 2.5f;
 
-    // Indicator (where will fall)
-    GameObject* vfxIndicatorPrefab     = nullptr; // prefall indicator VFX
-
-    float3 impactLocalPos              = float3::zero; // XY of impact relative to base
+    float3 impactLocalPos              = float3::zero;
     float3 fireballVelocity            = float3::zero;
     float3 shadowBaseScale             = float3::one;
     float3 lastImpactWorld             = float3::zero;
     float vfxIndicatorWorldRadius      = 0.6f;
 
-    // Mini impact VFX
-    GameObject* miniIndicatorVfxPrefab = nullptr; // prefall indicator for minis
-    float miniIndicatorVfxScale        = 0.4f;    // world radius/scale of the indicator
+    float miniIndicatorVfxScale        = 0.4f;
     std::vector<float> plannedMiniAngles;
 
     bool bigBallHitPlayerThisAttack = false;
 
     // Animations
-    GameObject* animSPrefab         = nullptr; // Bomb_animation_S
-    GameObject* animNPrefab         = nullptr; // Bomb_animation_N
-    GameObject* animWPrefab         = nullptr; // Bomb_animation_W
+    GameObject* animSPrefab         = nullptr;
+    GameObject* animNPrefab         = nullptr;
+    GameObject* animWPrefab         = nullptr;
 
-    GameObject* CloneHierarchy(GameObject* src, UID newParentUID);
-    void SetEnabledRecursive(GameObject* go, bool enabled);
-    void StopAnimationsRecursive(GameObject* go);
-
-    std::string animSName = "Bomb_animation_S";
-    std::string animNName = "Bomb_animation_N";
-    std::string animWName = "Bomb_animation_W";
+    std::string animSName           = "Bomb_animation_S";
+    std::string animNName           = "Bomb_animation_N";
+    std::string animWName           = "Bomb_animation_W";
 
     void PlayBombAnimationsAt(const float3& localPos);
     void StopBombAnimations();
@@ -212,11 +216,10 @@ class FireballTrap : public Script
         bool playing           = false;
     };
 
-    OneShotAnim animS; 
-    OneShotAnim animN; 
-    OneShotAnim animW; 
+    OneShotAnim animS;
+    OneShotAnim animN;
+    OneShotAnim animW;
 
-    // Helper to initialize and play a single animation
     void PlayAnimationAt(OneShotAnim& anim, const float3& localPos);
     void UpdateAnimation(OneShotAnim& anim, float deltaTime);
     void StopAnimation(OneShotAnim& anim);
@@ -228,15 +231,21 @@ class FireballTrap : public Script
         AnimationComponent* ac = nullptr;
         bool playing           = false;
         float timer            = 0.f;
-        float lifetime         = 5.0f; 
+        float lifetime         = 5.0f;
     };
 
-    std::vector<MiniImpactAnim> miniAnimPool;
-    const size_t MAX_MINI_ANIMS = 12; // Pool size for mini animations
-
     void PlayMiniImpactAnimation(const float3& localPos);
-    void UpdateMiniAnimations(float deltaTime);
-    void InitMiniAnimationPool();
-    void StopAllMiniAnimations();
-    MiniImpactAnim* GetAvailableMiniAnim();
+
+    GameObject* CloneHierarchy(GameObject* src, UID newParentUID);
+    void StopAnimationsRecursive(GameObject* go);
+
+    std::vector<ShaderScriptComponent*> indicatorShaders;
+    std::vector<MeshComponent*> indicatorMeshes;
+
+    static constexpr int MINI_SLOTS = 4;
+    OneShotAnim miniS[MINI_SLOTS];
+    std::array<std::string, MINI_SLOTS> miniSNames {
+        "Bomb_animation_S_1", "Bomb_animation_S_2", "Bomb_animation_S_3", "Bomb_animation_S_4"
+    };
+    int miniSNext = 0;
 };
