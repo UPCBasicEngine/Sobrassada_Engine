@@ -554,26 +554,25 @@ void FireballTrap::HandleImpact()
             const float3 dirXZ = float3(cosf(ang), 0.f, sinf(ang));
             const float3 pos   = impactLocalPos + dirXZ * cfg.miniLandingRadius;
 
-            // Create mini indicator VFX
+            // Create mini indicator VFX with larger scale
             if (miniIndicatorVfxPrefab)
             {
                 GameObject* miniVfx = CloneHierarchy(miniIndicatorVfxPrefab, parent->GetUID());
                 if (miniVfx)
                 {
                     miniIndicatorVfx.push_back(miniVfx);
-                    ScheduleVfx(miniVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
+                    ScheduleVfx(miniVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale * 2.0f));
                 }
             }
 
-            // Create bomb symbol at mini position
+            // Create bomb symbol at mini position with larger scale
             if (vfxBombIndicatorSmallSymbolPrefab)
             {
                 GameObject* symbolVfx = CloneHierarchy(vfxBombIndicatorSmallSymbolPrefab, parent->GetUID());
                 if (symbolVfx)
                 {
                     miniBombSymbolVfx.push_back(symbolVfx);
-                    // Schedule with same timing as mini indicator
-                    ScheduleVfx(symbolVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale));
+                    ScheduleVfx(symbolVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale * 2.0f));
                 }
             }
         }
