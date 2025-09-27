@@ -19,7 +19,8 @@ class AttackVfxSpritesheet : public Script
 
     void Reset() override;
 
-    bool Finished() { return finished; }
+    const bool AlmostFinished(int row, int col) const;
+    const bool Finished() const { return finished; }
 
   private:
     unsigned int shaderProgram  = 0;

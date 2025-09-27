@@ -162,7 +162,8 @@ void AttackVfxSpritesheet::Update(float deltaTime)
     {
         parent->SetEnabled(false);
     }
-    else if (onlyOnce && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+
+    if (onlyOnce && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
     {
         finished = true;
     }
@@ -228,4 +229,23 @@ void AttackVfxSpritesheet::Reset()
     uvRange.z = 0.0f;
     uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
     finished  = false;
+}
+
+const bool AttackVfxSpritesheet::AlmostFinished(int specificRow, int specificCol) const
+{
+    int actualRow = static_cast<int>(uvRange.z * otherImage->GetTextureHeight() / cellHeight);
+    int actualCol = static_cast<int>(uvRange.x * otherImage->GetTextureWidth() / cellWidth);
+
+    if (isRowMajor)
+    {
+        if (actualRow > specificRow || actualRow == specificRow && actualCol >= specificCol) return true;
+
+        return false;
+    }
+    else
+    {
+        if (actualCol > specificCol || actualCol == specificCol && actualRow >= specificRow) return true;
+
+        return false;
+    }
 }

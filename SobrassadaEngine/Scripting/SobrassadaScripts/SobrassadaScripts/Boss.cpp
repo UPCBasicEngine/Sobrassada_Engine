@@ -29,6 +29,8 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
     fields.push_back({"Phase Start", InspectorField::FieldType::Int, &phase, 1, 3});
+    fields.push_back({"Phase 2 Change", InspectorField::FieldType::Int, &phase2, 0, 100});
+    fields.push_back({"Phase 3 Change", InspectorField::FieldType::Int, &phase3, 0, 100});
     fields.push_back({"1st Mirage", InspectorField::FieldType::Int, &mirage1, 0, 100});
     fields.push_back({"2nd Mirage", InspectorField::FieldType::Int, &mirage2, 0, 100});
     fields.push_back({"3rd Mirage", InspectorField::FieldType::Int, &mirage3, 0, 100});
@@ -40,6 +42,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Spout", InspectorField::FieldType::InputText, &spoutName});
     fields.push_back({"Highlight Delay", InspectorField::FieldType::Float, &highlightDelay, 0.0f, 10.0f});
     fields.push_back({"Chase Time Limit", InspectorField::FieldType::Float, &chaseTimeLimit, 0.0f, 20.0f});
+    fields.push_back({"Blast Area Disabled", InspectorField::FieldType::Float, &blastAreaDisabledLimit, 0.0f, 5.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Colliders"});
     fields.push_back({"Shield Collider", InspectorField::FieldType::InputText, &shieldName});
@@ -361,13 +364,8 @@ bool Boss::Init()
         }
         else GLOG("Blast sprite sheet hit object not found for ferdiad");
 
-        GameObject* blastAreaObject = shieldBlastVFX->GetChildGameObjectByName(blastAreaName);
-        if (blastAreaObject)
-        {
-            blastArea = blastAreaObject->GetComponent<CapsuleColliderComponent*>();
-            if (blastArea) blastArea->SetEnabled(false);
-            else GLOG("Not blast area capsule collider found for ferdiad");
-        }
+        blastArea = shieldBlastVFX->GetChildGameObjectByName(blastAreaName);
+        if (blastArea) blastArea->SetEnabled(false);
         else GLOG("Not blast area object found for ferdiad");
     }
     else GLOG("Shield blast VFX not found for ferdiad");
@@ -474,6 +472,13 @@ void Boss::PlayHighlightSequence()
     GLOG("START HIGHLIGHT")
     doTaunt            = true;
     highlightActivated = true;
+}
+
+void Boss::DisableBlastArea()
+{
+    if (blastArea) blastArea->SetEnabled(false);
+    blastHit      = true;
+    blastHitTimer = 0.0f;
 }
 
 void Boss::OnDeath()
@@ -1628,6 +1633,9 @@ void Boss::ShieldBlast(float deltaTime)
         stateEnter        = false;
         actionTriggerDone = false;
         currentAction     = BossActions::Load;
+
+        blastHitTimer     = 0.0f;
+        blastHit          = false;
     }
 
     switch (currentAction)
@@ -1693,6 +1701,20 @@ void Boss::ShieldBlast(float deltaTime)
 
             if (blastSpritesheet) blastSpritesheet->Reset();
             if (blastSpriteScript) blastSpriteScript->SetEnabled(true);
+        }
+
+        if (blastSpritesheet && blastSpritesheet->AlmostFinished(6, 5))
+        {
+            blastArea->SetEnabled(false);
+        }
+        else if (blastHit)
+        {
+            blastHitTimer += deltaTime;
+            if (blastHitTimer >= blastAreaDisabledLimit)
+            {
+                if (blastArea) blastArea->SetEnabled(true);
+                blastHit = false;
+            }
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);

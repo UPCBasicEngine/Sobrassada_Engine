@@ -13,7 +13,6 @@ class ShaderScriptComponent;
 class MovingUVTransparent;
 class MeshComponent;
 class ParticleSystemComponent;
-class CapsuleColliderComponent;
 class Spouts;
 class AttackVfxSpritesheet;
 class AudioSourceComponent;
@@ -84,6 +83,8 @@ class Boss : public Character
 
     void PlayHighlightSequence() override;
 
+    void DisableBlastArea();
+
     GameObject* GetCloseArea() const { return closeArea; }
     int GetCloseAreaDamage() const { return closeAreaDamage; }
 
@@ -144,51 +145,48 @@ class Boss : public Character
     bool playedHighlight        = false;
 
     int phase                   = 1;
-    int phase1 = 40, phase2 = 20, phase3 = 0;
-    std::array<int, 3> phaseSwap = {phase1, phase2, phase3};
-    bool stateEnter              = true;
-    bool doIdle                  = false;
-    bool doTaunt                 = false;
-    bool actionTriggerDone       = false;
+    int phase2 = 40, phase3 = 20;
+    std::array<std::reference_wrapper<int>, 2> phaseSwap = {phase2, phase3};
+    bool stateEnter                                      = true;
+    bool doIdle                                          = false;
+    bool doTaunt                                         = false;
+    bool actionTriggerDone                               = false;
 
-    int shieldStrikeLastAction   = 0;
-    float chaseTimer             = 0.0f;
-    bool audioPlayed             = false;
+    // ShieldStrikes
+    std::string shieldName                               = "";
+    int shieldStrikeLastAction                           = 0;
+    float chaseTimer                                     = 0.0f;
+    bool audioPlayed                                     = false;
+
+    // OverheadStrike
+    std::string closeAreaName                            = "";
+    GameObject* closeArea                                = nullptr;
+    std::string bigAreaName                              = "";
+    GameObject* bigArea                                  = nullptr;
+    float bigAreaHitboxDelay                             = 1.3f;
 
     // Dash
-    bool isDashing               = false;
-    float dashSpeed              = 0.0f;
-    float dashTimeRemaining      = 0.0f;
-    float dashDistance           = 0.0f;
-    float3 dashDirection         = float3::zero;
-    float3 dashStartPosLocal     = float3::zero;
+    bool isDashing                                       = false;
+    float dashSpeed                                      = 0.0f;
+    float dashTimeRemaining                              = 0.0f;
+    float dashDistance                                   = 0.0f;
+    float3 dashDirection                                 = float3::zero;
+    float3 dashStartPosLocal                             = float3::zero;
 
     // Jump
-    bool isJumping               = false;
-    float jumpSpeed              = 0.0f;
-    float jumpTimeRemaining      = 0.0f;
-    float3 jumpStartPosLocal     = float3::zero;
+    bool isJumping                                       = false;
+    float jumpSpeed                                      = 0.0f;
+    float jumpTimeRemaining                              = 0.0f;
+    float3 jumpStartPosLocal                             = float3::zero;
 
     // Fall
-    bool isFalling               = false;
-    float fallSpeed              = 0.0f;
-    float fallTimeRemaining      = 0.0f;
-    float3 fallStartPosLocal     = float3::zero;
+    bool isFalling                                       = false;
+    float fallSpeed                                      = 0.0f;
+    float fallTimeRemaining                              = 0.0f;
+    float3 fallStartPosLocal                             = float3::zero;
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;
-
-    // Colliders
-    std::string shieldName                           = "";
-    std::string closeAreaName                        = "";
-    GameObject* closeArea                            = nullptr;
-    std::string bigAreaName                          = "";
-    GameObject* bigArea                              = nullptr;
-    float bigAreaHitboxDelay                         = 1.3f;
-    std::string blastAreaName                        = "";
-    CapsuleColliderComponent* blastArea              = nullptr;
-    float blastHitboxDelay                           = 1.3f;
-    float blastHitTime                               = 0.0f;
 
     // VFX
     std::string emessiveVFXName                      = "";
@@ -236,17 +234,25 @@ class Boss : public Character
     ParticleSystemComponent* chargeShieldParticle    = nullptr;
 
     // Inspector values
-    int closeAreaDamage                              = 2;
-    float dashDuration                               = 0.5f;
+    int closeAreaDamage                              = 3;
+    float dashDuration                               = 0.3f;
     float heightJump                                 = 4.0f;
     float jumpDuration                               = 0.2f;
     float fallDuration                               = 0.2f;
-    float highlightDelay                             = 0.0f;
-    float chaseTimeLimit                             = 0.0f;
+    float highlightDelay                             = 8.0f;
+    float chaseTimeLimit                             = 8.0f;
+    float blastAreaDisabledLimit                     = 0.5f;
 
     // Health UI
     ImageComponent* healthImageComponent             = nullptr;
     UID healthBarImage;
+
+    // ShieldBlast
+    std::string blastAreaName = "";
+    GameObject* blastArea     = nullptr;
+    float blastHitboxDelay    = 1.3f;
+    bool blastHit             = false;
+    float blastHitTimer       = 0.0f;
 
     // Mirage
     int mirage1 = 47, mirage2 = 30, mirage3 = 10;
@@ -258,7 +264,7 @@ class Boss : public Character
     std::vector<Spouts*> waterSpouts;
     std::string spoutName                      = "";
 
-    // Alternative mechanic
+    // Alternate mechanic
     int repeatedState                          = 0;
     const int maxRepeats                       = 2;
     const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};
