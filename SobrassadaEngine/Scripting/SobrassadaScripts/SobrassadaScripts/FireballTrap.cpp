@@ -287,81 +287,76 @@ void FireballTrap::EnableVFX(GameObject* vfx, bool enable)
 {
     if (!vfx) return;
 
-    // Determine which VFX this is and get its mesh list
-    std::vector<MeshComponent*>* meshList = nullptr;
-    const char* vfxName                   = "unknown";
-
-    if (vfx == vfxIndicator)
-    {
-        meshList = &vfxIndicatorMeshes;
-        vfxName  = "Indicator";
-    }
-    else if (vfx == vfxMainLight)
-    {
-        meshList = &vfxMainLightMeshes;
-        vfxName  = "MainLight";
-    }
-
     if (enable)
     {
-        GLOG("[VFX] Enabling %s VFX", vfxName);
-
-        // Check mesh states BEFORE enabling GameObject
-        if (meshList)
-        {
-            for (size_t i = 0; i < meshList->size(); ++i)
-            {
-                auto* mc = (*meshList)[i];
-                GLOG("[VFX] %s Mesh[%zu] BEFORE GO enable: %s", vfxName, i, mc->GetEnabled() ? "ENABLED" : "disabled");
-            }
-        }
-
-        // Enable GameObject
+        // Enable the GameObject
         vfx->SetEnabled(true);
 
-        // Check mesh states AFTER enabling GameObject
-        if (meshList)
+        // Check if the root GameObject has the specific shader scripts
+        if (auto* shaderOnRoot = vfx->GetComponent<ShaderScriptComponent*>())
         {
-            for (size_t i = 0; i < meshList->size(); ++i)
+            bool hasMovingUVShader = false;
+            for (const auto& scriptName : shaderOnRoot->GetAllScriptNames())
             {
-                auto* mc = (*meshList)[i];
-                GLOG("[VFX] %s Mesh[%zu] AFTER GO enable: %s", vfxName, i, mc->GetEnabled() ? "ENABLED" : "disabled");
-
-                // Force disable
-                mc->SetEnabled(false);
-
-                GLOG(
-                    "[VFX] %s Mesh[%zu] AFTER force disable: %s", vfxName, i,
-                    mc->GetEnabled() ? "STILL ENABLED!" : "disabled"
-                );
+                if (scriptName == "MovingUVClipErode" || scriptName == "MovingUVTransparent")
+                {
+                    hasMovingUVShader = true;
+                    break;
+                }
             }
+
+            // Only disable mesh if it has the moving UV shaders
+            if (hasMovingUVShader)
+            {
+                if (auto* meshOnRoot = vfx->GetComponent<MeshComponent*>())
+                {
+                    meshOnRoot->SetEnabled(false);
+                }
+            }
+
+            // Enable the shader scripts
+            shaderOnRoot->SetEnabled(true);
+            shaderOnRoot->SetScriptEnabled("MovingUVClipErode", true);
+            shaderOnRoot->SetScriptEnabled("MovingUVTransparent", true);
         }
 
-        // Enable shaders
-        auto shaders = vfx->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
-        GLOG("[VFX] %s enabling %zu shaders", vfxName, shaders.size());
-        for (auto* ssc : shaders)
+        // Only disable mesh if they have the shader scripts
+        for (UID childUID : vfx->GetChildren())
         {
-            ssc->SetScriptEnabled("MovingUVClipErode", true);
-            ssc->SetScriptEnabled("MovingUVTransparent", true);
+            GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID);
+            if (!child) continue;
+
+            if (auto* childShader = child->GetComponent<ShaderScriptComponent*>())
+            {
+                bool hasMovingUVShader = false;
+                for (const auto& scriptName : childShader->GetAllScriptNames())
+                {
+                    if (scriptName == "MovingUVClipErode" || scriptName == "MovingUVTransparent")
+                    {
+                        hasMovingUVShader = true;
+                        break;
+                    }
+                }
+
+                // Only disable mesh if child has the moving UV shaders
+                if (hasMovingUVShader)
+                {
+                    if (auto* childMesh = child->GetComponent<MeshComponent*>())
+                    {
+                        childMesh->SetEnabled(false);
+                    }
+                }
+
+                // Enable shader scripts
+                childShader->SetEnabled(true);
+                childShader->SetScriptEnabled("MovingUVClipErode", true);
+                childShader->SetScriptEnabled("MovingUVTransparent", true);
+            }
         }
     }
     else
     {
-        GLOG("[VFX] Disabling %s VFX", vfxName);
         vfx->SetEnabled(false);
-
-        // Check if meshes stay disabled
-        if (meshList)
-        {
-            for (size_t i = 0; i < meshList->size(); ++i)
-            {
-                auto* mc = (*meshList)[i];
-                mc->SetEnabled(false);
-                GLOG("[VFX] %s Mesh[%zu] on disable: %s", vfxName, i, mc->GetEnabled() ? "STILL ENABLED!" : "disabled");
-            }
-        }
-
     }
 }
 
