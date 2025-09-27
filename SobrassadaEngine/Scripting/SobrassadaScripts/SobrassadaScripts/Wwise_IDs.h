@@ -33,8 +33,11 @@ namespace AK
         static const AkUniqueID PLAY_SFX_CAVE_03 = 3434634931U;
         static const AkUniqueID PLAY_SFX_CAVE_04 = 3434634932U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEATTACK = 1369065983U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_AOEDASH = 3072215751U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DASHATTACK_01 = 3142736088U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DASHATTACK_02 = 3142736091U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_DEATH = 792711456U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_HURT = 3204841533U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_01 = 3435584311U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_02 = 3435584308U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_03 = 3435584309U;

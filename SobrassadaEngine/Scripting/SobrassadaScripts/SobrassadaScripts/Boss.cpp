@@ -481,6 +481,7 @@ void Boss::OnDeath()
     // TODO: include death sound for the character
     // TODO: animation and particles
     parent->SetEnabled(false);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
 }
 
 void Boss::OnDamageTaken(int amount)
@@ -488,6 +489,7 @@ void Boss::OnDamageTaken(int amount)
     // update healthbar
     // TODO: play boss take damage sound
     // TODO: particles? and animation
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
 }
 
 void Boss::HandleState(float deltaTime)
@@ -1813,7 +1815,8 @@ const std::vector<BossStates>& Boss::GetAvailableStates() const
     case 3:
         return phase3States;
     default:
-        break;
+        GLOG("ERROR: Ferdiad available states")
+        return phase3States;
     }
 }
 
