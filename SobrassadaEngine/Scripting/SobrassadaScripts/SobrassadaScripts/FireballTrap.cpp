@@ -123,6 +123,9 @@ void FireballTrap::SetupInspectorFields()
     fields.push_back({"Anim S Name", InspectorField::FieldType::InputText, &animSName});
     fields.push_back({"Anim N Name", InspectorField::FieldType::InputText, &animNName});
     fields.push_back({"Anim W Name", InspectorField::FieldType::InputText, &animWName});
+    fields.push_back(
+        {"Particle Anticipation Time", InspectorField::FieldType::Float, &particleAnticipationTime, 0.f, 5.f}
+    );
 }
 
 bool FireballTrap::Init()
@@ -1166,27 +1169,38 @@ void FireballTrap::UpdateAnimation(OneShotAnim& anim, float deltaTime)
     if (anim.playing && anim.ac)
     {
         anim.ac->Update(deltaTime);
-        if (anim.ac->IsFinished())
+        if (&anim == &animN && !bombNParticleTriggered && bombNParticleSystem)
         {
-            if (&anim == &animN && bombNParticleSystem)
+            if (auto* ctrl = anim.ac->GetAnimationController())
             {
-                GameObject* psGO =
-                    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(bombNParticleSystem->GetParentUID());
-                if (psGO && anim.root)
+                ResourceAnimation* animResource = ctrl->GetCurrentAnimation();
+                if (animResource)
                 {
-                    // Enable the GameObject first!
-                    psGO->SetEnabled(true);
+                    const float duration    = animResource->GetDuration(); 
+                    const float currentTime = ctrl->GetTime();
 
-                    // Position at animation's location
-                    float3 spawnPos  = anim.root->GetLocalTransform().TranslatePart();
-                    spawnPos.y      += 1.0f; // Adjust height as needed
-                    psGO->SetLocalPosition(spawnPos);
+                    if (currentTime >= duration - particleAnticipationTime)
+                    {
+                        GameObject* psGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(
+                            bombNParticleSystem->GetParentUID()
+                        );
+                        if (psGO && anim.root)
+                        {
+                            psGO->SetEnabled(true);
+                            float3 spawnPos  = anim.root->GetLocalTransform().TranslatePart();
+                            spawnPos.y      += 0.5f;
+                            psGO->SetLocalPosition(spawnPos);
+                            bombNParticleSystem->SpawnAllInstances();
 
-                    // Now spawn the particles
-                    bombNParticleSystem->SpawnAllInstances();
+                            bombNParticleTriggered = true; 
+                        }
+                    }
                 }
             }
+        }
 
+        if (anim.ac->IsFinished())
+        {
             StopAnimation(anim);
         }
     }
@@ -1195,6 +1209,11 @@ void FireballTrap::UpdateAnimation(OneShotAnim& anim, float deltaTime)
 void FireballTrap::PlayAnimationAt(OneShotAnim& anim, const float3& localPos)
 {
     if (!anim.root || !anim.ac) return;
+
+     if (&anim == &animN)
+    {
+        bombNParticleTriggered = false;
+    }
 
     if (anim.root->GetParent() != parent->GetUID())
     {
@@ -1217,11 +1236,11 @@ void FireballTrap::PlayAnimationAt(OneShotAnim& anim, const float3& localPos)
         // Slow down animW specifically
         if (&anim == &animW)
         {
-            ctrl->SetPlaybackSpeed(0.2f); // Half speed = double duration
+            ctrl->SetPlaybackSpeed(0.2f);
         }
         else
         {
-            ctrl->SetPlaybackSpeed(1.0f); // Normal speed for others
+            ctrl->SetPlaybackSpeed(1.0f);
         }
     }
 

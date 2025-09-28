@@ -35,7 +35,7 @@ class FireballTrap : public Script
     void OnPlayerExitLocation();
 
   private:
-    // Configuration 
+    // Configuration
     struct FireballTrapSettings
     {
         float activationRange   = 10.f;
@@ -65,6 +65,7 @@ class FireballTrap : public Script
     float impactElapsed                          = 0.f;
     float dropElapsed                            = 0.f;
     bool bigBallHitPlayerThisAttack              = false;
+    float particleAnticipationTime               = 1.0f; 
 
     MeshComponent* groundMesh                    = nullptr;
     SphereColliderComponent* damageAreaCollider  = nullptr;
@@ -113,7 +114,7 @@ class FireballTrap : public Script
         float life     = 2.f;
         float timer    = 0.f;
         bool active    = false;
-        bool done      = false;  
+        bool done      = false;
     };
 
     static constexpr int EXTRA_VFX_COUNT = 11;
@@ -158,7 +159,6 @@ class FireballTrap : public Script
     float vfxFireImpactLife       = 1.5f;
     float vfxBombGroundLife       = 3.0f;
     float vfxBlackStainLife       = 2.5f;
-    float particleBoltsDelay      = 0.0f;
 
     // VFX Parameters
     float vfxIndicatorWorldRadius = 0.6f;
@@ -195,7 +195,7 @@ class FireballTrap : public Script
     };
     int miniSNext           = 0;
 
-    // Physics State 
+    // Physics State
     float3 impactLocalPos   = float3::zero;
     float3 fireballVelocity = float3::zero;
     float3 shadowBaseScale  = float3::one;
@@ -217,14 +217,14 @@ class FireballTrap : public Script
     float3 RandomSpawnPoint() const;
     CameraMovement* FindShakeCamera() const;
 
-    // VFX Methods 
+    // VFX Methods
     void ScheduleVfx(GameObject* vfx, float delay, float life, const float3& pos, const float3& scale = float3::one);
     void UpdateScheduledVfx(float dt);
     void ClearScheduledVfx();
     void EnableVFX(GameObject* vfx, bool enable);
     void ResetVFX(GameObject* vfx);
 
-    // Animation Methods 
+    // Animation Methods
     bool InitAnimation(OneShotAnim& anim, GameObject* prefab, const std::string& name);
     void PlayAnimationAt(OneShotAnim& anim, const float3& localPos);
     void UpdateAnimation(OneShotAnim& anim, float deltaTime);
@@ -233,4 +233,6 @@ class FireballTrap : public Script
     void PlayBombAnimationsAt(const float3& localPos);
     void StopBombAnimations();
     void PlayMiniImpactAnimation(const float3& localPos);
+
+    bool bombNParticleTriggered = false;
 };
