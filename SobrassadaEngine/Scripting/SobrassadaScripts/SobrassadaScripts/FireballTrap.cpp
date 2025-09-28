@@ -49,6 +49,15 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 
 FireballTrap::~FireballTrap()
 {
+    // Clean up cloned animations
+    if (animS.root) RecycleGO(animS.root);
+    if (animN.root) RecycleGO(animN.root);
+    if (animW.root) RecycleGO(animW.root);
+
+    for (int i = 0; i < MINI_SLOTS; ++i)
+    {
+        if (miniS[i].root) RecycleGO(miniS[i].root);
+    }
 
     // Clean up cloned VFX
     if (vfxMainLight && vfxMainLight != vfxMainLightPrefab) RecycleGO(vfxMainLight);
@@ -271,9 +280,14 @@ bool FireballTrap::Init()
         GameObject* go = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(miniSNames[i]);
         if (go)
         {
-            go->SetEnabledRecursive(false);
-            go->SetLocalPosition(float3(0, -1000, 0));
-            InitAnimation(miniS[i], go, miniSNames[i]);
+            // Clone instead of using directly
+            GameObject* clonedMiniAnim = CloneHierarchy(go, parent->GetUID());
+            if (clonedMiniAnim)
+            {
+                clonedMiniAnim->SetEnabledRecursive(false);
+                clonedMiniAnim->SetLocalPosition(float3(0, -1000, 0));
+                InitAnimation(miniS[i], clonedMiniAnim, miniSNames[i]);
+            }
         }
         else
         {
@@ -1014,14 +1028,24 @@ bool FireballTrap::InitAnimation(OneShotAnim& anim, GameObject* prefab, const st
 {
     if (!prefab) return false;
 
-    anim.root = prefab;
+    // Clone the animation GameObject for this firetrap instance
+    GameObject* clonedAnim = CloneHierarchy(prefab, parent->GetUID());
+    if (!clonedAnim)
+    {
+        GLOG("[ERROR] Failed to clone animation %s", name.c_str());
+        return false;
+    }
+
+    anim.root = clonedAnim;
+    anim.root->SetEnabledRecursive(false);
+    anim.root->SetLocalPosition(float3(0, -1000, 0));
 
     // Find the animation component
-    anim.ac   = prefab->GetComponent<AnimationComponent*>();
+    anim.ac = clonedAnim->GetComponent<AnimationComponent*>();
 
     if (!anim.ac)
     {
-        auto v = prefab->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+        auto v = clonedAnim->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
         if (!v.empty())
         {
             anim.ac = v.front();
@@ -1043,9 +1067,7 @@ bool FireballTrap::InitAnimation(OneShotAnim& anim, GameObject* prefab, const st
         GLOG("[WARNING] No animation component found for %s", name.c_str());
     }
 
-    prefab->SetEnabledRecursive(false);
     anim.playing = false;
-
     return true;
 }
 
