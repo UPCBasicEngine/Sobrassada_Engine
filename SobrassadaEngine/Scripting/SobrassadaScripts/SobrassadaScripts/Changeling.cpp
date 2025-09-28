@@ -105,7 +105,6 @@ bool Changeling::Init()
         dashTrailMeshObject.dashTrailObject->SetEnabled(false);
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
         dashTrailColliderObject->SetEnabled(false);
-    finalAttackObject->SetEnabled(false);
 
     isAttacking   = false;
     attackCdTimer = attackCooldown;
@@ -183,11 +182,12 @@ void Changeling::HandleState(float deltaTime)
     if (!isSetupCorrectly) return;
 
     float distanceToPlayerSq = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
+    bool lastAttack = associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
 
     switch (currentState)
     {
     case ChangelingStates::IDLE_BURIED:
-        UpdateIdleBuriedState(deltaTime, distanceToPlayerSq);
+        UpdateIdleBuriedState(deltaTime, distanceToPlayerSq, lastAttack);
         break;
     case ChangelingStates::PEEK:
         UpdatePeekState(deltaTime, distanceToPlayerSq);
@@ -202,10 +202,10 @@ void Changeling::HandleState(float deltaTime)
         UpdateBuriedTravelState(deltaTime, distanceToPlayerSq);
         break;
     case ChangelingStates::IDLE_VISIBLE:
-        UpdateIdleVisibleState(deltaTime, distanceToPlayerSq);
+        UpdateIdleVisibleState(deltaTime, distanceToPlayerSq, lastAttack);
         break;
     case ChangelingStates::CHASE:
-        UpdateChaseState(deltaTime, distanceToPlayerSq);
+        UpdateChaseState(deltaTime, distanceToPlayerSq, lastAttack);
         break;
     case ChangelingStates::DASH_ATTACK_PREPARATION:
         UpdateDashAttackPreparationState(deltaTime, distanceToPlayerSq);
@@ -228,9 +228,6 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::BITE_ATTACK_COOLDOWN:
         UpdateBiteAttackCooldownState(deltaTime, distanceToPlayerSq);
         break;
-    case ChangelingStates::FINAL_ATTACK:
-        UpdateFinalAttackState(deltaTime, distanceToPlayerSq);
-        break;
     case ChangelingStates::DAMAGED:
         UpdateDamagedState(deltaTime, distanceToPlayerSq);
         break;
@@ -248,14 +245,14 @@ void Changeling::HandleState(float deltaTime)
     stateTimer -= deltaTime;
 }
 
-void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq)
+void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
         randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
     if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
 
-    if (ST_BuryUp(deltaTime, distanceToPlayerSq)) return;
+    if (ST_BuryUp(deltaTime, distanceToPlayerSq, lastAttack)) return;
 
     if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
 }
@@ -276,7 +273,7 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
     }
 }
 
-vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+//vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
 
 void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq)
 {
@@ -328,10 +325,8 @@ void Changeling::UpdateBuriedTravelState(float deltaTime, float distanceToPlayer
     }
 }
 
-void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq)
+void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
-    if (ST_FinalAttack(deltaTime, distanceToPlayerSq)) return;
-
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
         randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
@@ -341,14 +336,14 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
 
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
 
-    if (ST_StartChase(deltaTime, distanceToPlayerSq)) return;
+    if (ST_StartChase(deltaTime, distanceToPlayerSq, lastAttack)) return;
 
     if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
     if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
     currentState = ChangelingStates::DIG_DOWN_TRANSITION;
 }
 
-void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
+void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
@@ -359,7 +354,7 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
 
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
 
-    if (distanceToPlayerSq > rangeAIChase * rangeAIChase)
+    if (!lastAttack && distanceToPlayerSq > rangeAIChase * rangeAIChase)
     {
         agentAI->SetSpeed(0.0f, 10.0f);
         if (animComponent) animComponent->UseTrigger("Trigger_VisibleIdle");
@@ -563,23 +558,6 @@ void Changeling::UpdateBiteAttackCooldownState(float deltaTime, float distanceTo
     if (stateTimer < 0.f && !ST_BiteAttack(deltaTime, distanceToPlayerSq)) currentState = ChangelingStates::IDLE_BURIED;
 }
 
-void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq)
-{
-    if (distanceToPlayerSq <= 3)
-    {
-        finalAttackObject->SetEnabled(true);
-        finalAttackObject->SetLocalPosition(
-            parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart()
-        );
-        Die();
-    }
-    else
-    {
-        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-        agentAI->SetPathNavigation(character->GetLastPosition());
-    }
-}
-
 void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
 {
     if (animComponent && animComponent->IsFinished())
@@ -610,7 +588,6 @@ void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
     if (animComponent && animComponent->IsFinished())
     {
         isDead = true;
-        finalAttackCollider->DeleteRigidBody();
         parentGO->SetEnabled(false);
     }
 }
@@ -669,13 +646,11 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
     }
 }
 
-bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
+bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
-    const bool initFinalAttack =
-        associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
     // Check preconditions
-    if (!initFinalAttack && currentState != ChangelingStates::IDLE_BURIED) return false;
-    if (!initFinalAttack && !spottedLocation.IsFinite()) return false;
+    if (!lastAttack && currentState != ChangelingStates::IDLE_BURIED) return false;
+    if (!lastAttack && !spottedLocation.IsFinite()) return false;
 
     // Implement state transition
     if (stateTimer <= 0.f)
@@ -693,11 +668,11 @@ bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
     return true;
 }
 
-bool Changeling::ST_StartChase(float deltaTime, float distanceToPlayerSq)
+bool Changeling::ST_StartChase(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
     // Check preconditions
     if (currentState != ChangelingStates::IDLE_VISIBLE) return false;
-    if (distanceToPlayerSq > rangeAIChase * rangeAIChase) return false;
+    if (!lastAttack && distanceToPlayerSq > rangeAIChase * rangeAIChase) return false;
 
     // Implement state transition
     const bool bUseAnimation1 = rand() % 2;
@@ -845,25 +820,6 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     return true;
 }
 
-bool Changeling::ST_FinalAttack(float deltaTime, float distanceToPlayerSq)
-{
-    // Check preconditions
-    if (associatedBarrier == nullptr || associatedBarrier->GetEnemiesInArea() > maxEnemiesLeftForFinalAttack)
-        return false;
-    if (currentState != ChangelingStates::IDLE_VISIBLE) return false;
-
-    // Implement state transition
-    const bool bUseAnimation1 = rand() % 2;
-    if (animComponent) animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Run" : "Trigger_Run2");
-
-    agentAI->ResetSpeed();
-    agentAI->SetSpeed(chaseSpeed, chaseAcceleration);
-
-    currentState = ChangelingStates::FINAL_ATTACK;
-
-    return true;
-}
-
 void Changeling::ValidateSetup()
 {
     isSetupCorrectly = true;
@@ -955,18 +911,6 @@ void Changeling::ValidateSetup()
         {
             dashTrailColliderObjects.emplace_back(child);
         }
-        else if (child->GetName() == finalAttackColliderName)
-        {
-            finalAttackObject   = child;
-            finalAttackCollider = child->GetComponent<CapsuleColliderComponent*>();
-        }
-    }
-
-    if (finalAttackCollider == nullptr)
-    {
-        isSetupCorrectly = false;
-        GLOG("[ERROR] Final attack object or collider are nullptr")
-        return;
     }
 
     if (userSelectedVersion == 0 || userSelectedVersion == 3)

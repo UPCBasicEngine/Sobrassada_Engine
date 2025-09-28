@@ -41,10 +41,9 @@ enum class ChangelingStates
     DASH_CHAIN_ATTACK       = 12,
     BITE_ATTACK             = 13,
     BITE_ATTACK_COOLDOWN    = 14,
-    FINAL_ATTACK            = 15,
-    DAMAGED                 = 16,
-    DYING                   = 17,
-    HIGHLIGHTING            = 18,
+    DAMAGED                 = 15,
+    DYING                   = 16,
+    HIGHLIGHTING            = 17,
 };
 
 enum class HighlightingStates
@@ -76,13 +75,13 @@ class Changeling : public Character
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
-    void UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq);
+    void UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq, bool lastAttack);
     void UpdatePeekState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateBuriedTravelState(float deltaTime, float distanceToPlayerSq);
-    void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq);
-    void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
+    void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq, bool lastAttack);
+    void UpdateChaseState(float deltaTime, float distanceToPlayerSq, bool lastAttack);
     void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackWiggleState(float deltaTime, float distanceToPlayerSq);
@@ -90,20 +89,18 @@ class Changeling : public Character
     void UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackCooldownState(float deltaTime, float distanceToPlayerSq);
-    void UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
     void UpdateHighlightState(float deltaTime, float distanceToPlayerSq);
 
-    bool ST_BuryUp(float deltaTime, float distanceToPlayerSq);
-    bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
+    bool ST_BuryUp(float deltaTime, float distanceToPlayerSq, bool lastAttack);
+    bool ST_StartChase(float deltaTime, float distanceToPlayerSq, bool lastAttack);
     bool ST_Damaged();
     bool ST_Peek(float deltaTime, float distanceToPlayerSq);
     bool ST_DashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_AimNextDashChainAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_AimNextDashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
-    bool ST_FinalAttack(float deltaTime, float distanceToPlayerSq);
 
   private:
     void ValidateSetup();
