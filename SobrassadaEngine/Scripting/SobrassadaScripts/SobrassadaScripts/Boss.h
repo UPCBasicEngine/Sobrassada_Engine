@@ -232,6 +232,11 @@ class Boss : public Character
     ParticleSystemComponent* smokeParticle           = nullptr;
     std::string chargeShieldParticleName             = "";
     ParticleSystemComponent* chargeShieldParticle    = nullptr;
+    std::string energyBlastParticleName              = "";
+    ParticleSystemComponent* energyBlastParticle1    = nullptr;
+    ParticleSystemComponent* energyBlastParticle2    = nullptr;
+    ParticleSystemComponent* energyBlastParticle3    = nullptr;
+    ParticleSystemComponent* energyBlastParticle4    = nullptr;
 
     // Inspector values
     int closeAreaDamage                              = 3;

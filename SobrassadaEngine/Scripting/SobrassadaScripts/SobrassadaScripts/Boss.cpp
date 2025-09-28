@@ -61,6 +61,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"Atom", InspectorField::FieldType::InputText, &atomParticleName});
     fields.push_back({"Smoke", InspectorField::FieldType::InputText, &smokeParticleName});
     fields.push_back({"Charge Shield", InspectorField::FieldType::InputText, &chargeShieldParticleName});
+    fields.push_back({"Blast Energy", InspectorField::FieldType::InputText, &energyBlastParticleName});
 }
 
 bool Boss::Init()
@@ -398,6 +399,46 @@ bool Boss::Init()
     }
     else GLOG("Charge shield particle object not found for ferdiad");
 
+    GameObject* energyBlastObject1 =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(1));
+    if (energyBlastObject1)
+    {
+        energyBlastParticle1 = energyBlastObject1->GetComponent<ParticleSystemComponent*>();
+        if (energyBlastParticle1) energyBlastParticle1->StopInstances();
+        else GLOG("Particle component energy blast 1 not found for ferdiad");
+    }
+    else GLOG("Energy blast 1 particle object not found for ferdiad");
+
+    GameObject* energyBlastObject2 =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(2));
+    if (energyBlastObject2)
+    {
+        energyBlastParticle2 = energyBlastObject2->GetComponent<ParticleSystemComponent*>();
+        if (energyBlastParticle2) energyBlastParticle2->StopInstances();
+        else GLOG("Particle component energy blast 2 not found for ferdiad");
+    }
+    else GLOG("Energy blast 2 particle object not found for ferdiad");
+
+    GameObject* energyBlastObject3 =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(3));
+    if (energyBlastObject3)
+    {
+        energyBlastParticle3 = energyBlastObject3->GetComponent<ParticleSystemComponent*>();
+        if (energyBlastParticle3) energyBlastParticle3->StopInstances();
+        else GLOG("Particle component energy blast 3 not found for ferdiad");
+    }
+    else GLOG("Energy blast 3 particle object not found for ferdiad");
+
+    GameObject* energyBlastObject4 =
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(4));
+    if (energyBlastObject4)
+    {
+        energyBlastParticle4 = energyBlastObject4->GetComponent<ParticleSystemComponent*>();
+        if (energyBlastParticle4) energyBlastParticle4->StopInstances();
+        else GLOG("Particle component energy blast 4 not found for ferdiad");
+    }
+    else GLOG("Energy blast 4 particle object not found for ferdiad");
+
     GameObject* arenaGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("arena");
     if (arenaGO)
     {
@@ -698,6 +739,7 @@ void Boss::ChooseNextStateSecondPhase()
         waterSpoutsRate   = 100;
         break;
     }
+    //waterSpoutsRate = -1;
 
     int num = uniformDist(rng);
     if (doTaunt)
@@ -858,7 +900,7 @@ void Boss::Taunt(float deltaTime)
 
 void Boss::ShieldStrikes(float deltaTime)
 {
-    if (!weaponCollider) return;
+    if (!weaponCollider) ChooseNextState();
 
     if (stateEnter)
     {
@@ -1621,6 +1663,10 @@ void Boss::ResetValues(bool changePhase)
 
     if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
     if (blastSpriteScript) blastSpriteScript->SetEnabled(false);
+    if (energyBlastParticle1) energyBlastParticle1->StopInstances();
+    if (energyBlastParticle2) energyBlastParticle2->StopInstances();
+    if (energyBlastParticle3) energyBlastParticle3->StopInstances();
+    if (energyBlastParticle4) energyBlastParticle4->StopInstances();
 
     agentAI->ResetAngularSpeed();
     agentAI->SetFreeMove(false);
@@ -1628,6 +1674,8 @@ void Boss::ResetValues(bool changePhase)
 
 void Boss::ShieldBlast(float deltaTime)
 {
+    if (!blastArea) ChooseNextState();
+
     if (stateEnter)
     {
         stateEnter        = false;
@@ -1701,11 +1749,19 @@ void Boss::ShieldBlast(float deltaTime)
 
             if (blastSpritesheet) blastSpritesheet->Reset();
             if (blastSpriteScript) blastSpriteScript->SetEnabled(true);
+            if (energyBlastParticle1) energyBlastParticle1->Init();
+            if (energyBlastParticle2) energyBlastParticle2->Init();
+            if (energyBlastParticle3) energyBlastParticle3->Init();
+            if (energyBlastParticle4) energyBlastParticle4->Init();
         }
 
         if (blastSpritesheet && blastSpritesheet->AlmostFinished(6, 5))
         {
             blastArea->SetEnabled(false);
+            if (energyBlastParticle1) energyBlastParticle1->StopInstances();
+            if (energyBlastParticle2) energyBlastParticle2->StopInstances();
+            if (energyBlastParticle3) energyBlastParticle3->StopInstances();
+            if (energyBlastParticle4) energyBlastParticle4->StopInstances();
         }
         else if (blastHit)
         {
