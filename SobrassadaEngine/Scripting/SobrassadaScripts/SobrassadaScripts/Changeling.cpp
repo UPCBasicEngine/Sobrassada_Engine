@@ -2,6 +2,8 @@
 
 #include "Application.h"
 #include "Changeling.h"
+
+#include "AttackVfxSpritesheet.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
@@ -10,6 +12,7 @@
 #include "MagicBarrier.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
+#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
@@ -62,9 +65,15 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Time between dashes", InspectorField::FieldType::Float, &timeBetweenDashes, 0.0f, 10.0f);
 
     // VFX
-    fields.emplace_back("VFX_DigUpRocks", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
-    fields.emplace_back("VFX_DigUpHole", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
-
+    fields.emplace_back("Dig up rocks name", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
+    fields.emplace_back("Dig up hole name", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
+    fields.emplace_back("Dash trail vfx name", InspectorField::FieldType::InputText, &vfxDashTrailName);
+    fields.emplace_back("Drop down vfx name", InspectorField::FieldType::InputText, &vfxDropDownName);
+    fields.emplace_back("Dash vfx name", InspectorField::FieldType::InputText, &vfxDashName);
+    fields.emplace_back("Hit vfx name", InspectorField::FieldType::InputText, &vfxHitName);
+    fields.emplace_back("Dig down vfx name", InspectorField::FieldType::InputText, &vfxDigDownName);
+    fields.emplace_back("Bite vfx name", InspectorField::FieldType::InputText, &vfxBiteName);
+    
     // Highlight
     fields.emplace_back("Highlight duration", InspectorField::FieldType::Float, &highlightDuration, 0.1f, 10.0f);
 }
@@ -266,6 +275,8 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
         stateTimer   = absoluteSpottedReactionTime; // Wait reaction time for bury up
     }
 }
+
+vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
 
 void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq)
 {
@@ -1025,6 +1036,32 @@ void Changeling::ValidateSetup()
         {
             vfxDigUpHoleObject = child;
         }
+        else if (child->GetName() == vfxDashTrailName)
+        {
+            if (child->GetComponent<ScriptComponent*>() != nullptr &&
+                child->GetComponent<ScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+                vfxDashTrailObjects.push_back(child);
+        }
+        else if (child->GetName() == vfxDropDownName)
+        {
+            vfxDropDown = child;
+        }
+        else if (child->GetName() == vfxDashName)
+        {
+            vfxDash = child;
+        }
+        else if (child->GetName() == vfxHitName)
+        {
+            vfxHit = child;
+        }
+        else if (child->GetName() == vfxDigDownName)
+        {
+            vfxDigDown = child;
+        }
+        else if (child->GetName() == vfxBiteName)
+        {
+            vfxBite = child;
+        }
     }
 
     if (vfxDigUpRocksObject == nullptr)
@@ -1052,6 +1089,61 @@ void Changeling::ValidateSetup()
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] VFX dig up hole game object has no animation component")
+        return;
+    }
+
+    if (vfxDashTrailObjects.size() < 12)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Not enough vfx dash trail objects found")
+        return;
+    }
+
+    if (vfxDropDown == nullptr && vfxDropDown->GetComponent<ScriptComponent*>() != nullptr &&
+                vfxDropDown->GetComponent<ScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX drop down game object not found or setup incorrectly")
+        return;
+    }
+
+    if (vfxDash == nullptr && vfxDash->GetComponent<ScriptComponent*>() != nullptr &&
+                vfxDash->GetComponent<ScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dash game object not found or setup incorrectly")
+        return;
+    }
+
+    if (vfxHit == nullptr && vfxHit->GetComponent<ScriptComponent*>() != nullptr &&
+                vfxHit->GetComponent<ScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX hit game object not found or setup incorrectly")
+        return;
+    }
+
+    if (vfxDigDown == nullptr && vfxDigDown->GetComponent<ScriptComponent*>() != nullptr &&
+                vfxDigDown->GetComponent<ScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dig down game object not found or setup incorrectly")
+        return;
+    }
+
+    if (vfxBite == nullptr && vfxBite->GetComponent<ScriptComponent*>() != nullptr &&
+                vfxBite->GetComponent<ScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX bite game object not found or setup incorrectly")
+        return;
+    }
+
+    // Animation
+    if (animComponent == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] No animation component found for this game object")
         return;
     }
 

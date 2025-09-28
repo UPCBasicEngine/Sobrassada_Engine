@@ -139,8 +139,6 @@ class Changeling : public Character
     std::vector<ChangelingDashTrailContainer> dashTrailMeshObjects;
     std::vector<GameObject*> dashTrailColliderObjects;
     std::vector<CubeColliderComponent*> dashAreaColliders;
-    GameObject* finalAttackObject;
-    CapsuleColliderComponent* finalAttackCollider;
 
     float stateTimer                  = 0.f;
 
@@ -181,7 +179,26 @@ class Changeling : public Character
 
     std::string vfxDigUpHoleName                = "VFX_DigUpHole";
     GameObject* vfxDigUpHoleObject              = nullptr;
+    
+    std::string vfxDashTrailName        = "VFX_DashTrail";
+    std::vector<GameObject*> vfxDashTrailObjects;
+    
+    std::string vfxDropDownName = "VFX_Drop";
+    GameObject* vfxDropDown              = nullptr;
 
+    std::string vfxDashName = "VFX_Dash";
+    GameObject* vfxDash              = nullptr;
+
+    std::string vfxHitName = "VFX_Hit";
+    GameObject* vfxHit              = nullptr;
+    
+    std::string vfxDigDownName = "VFX_DigDown";
+    GameObject* vfxDigDown              = nullptr;
+    
+    std::string vfxBiteName = "VFX_Bite";
+    GameObject* vfxBite              = nullptr;
+    
+    
     // Audio
     AudioSourceComponent* audioComp             = nullptr;
 };
