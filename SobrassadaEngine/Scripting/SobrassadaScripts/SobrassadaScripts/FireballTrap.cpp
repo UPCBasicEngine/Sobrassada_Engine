@@ -182,7 +182,7 @@ bool FireballTrap::Init()
         {
             child->SetEnabled(false);
             extraVfx[idx].go = child;
-            idx++; 
+            idx++;
         }
     }
 
@@ -424,10 +424,11 @@ void FireballTrap::Update(float deltaTime)
     for (int i = 0; i < EXTRA_VFX_COUNT; ++i)
     {
         TimedVFX& v = extraVfx[i];
-        if (!v.active && vfxClock >= v.delay)
+        if (!v.active && !v.done && vfxClock >= v.delay)
         {
             if (v.go) v.go->SetEnabled(true);
             v.active = true;
+            v.timer  = 0.f;
         }
         if (v.active)
         {
@@ -436,6 +437,7 @@ void FireballTrap::Update(float deltaTime)
             {
                 if (v.go) v.go->SetEnabled(false);
                 v.active = false;
+                v.done   = true;  
             }
         }
     }
@@ -451,9 +453,9 @@ void FireballTrap::Update(float deltaTime)
 
 void FireballTrap::StartAttack()
 {
-    lastImpactWorld  = RandomSpawnPoint();
-    impactLocalPos   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
-    impactLocalPos.y = 0.f;
+    lastImpactWorld            = RandomSpawnPoint();
+    impactLocalPos             = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
+    impactLocalPos.y           = 0.f;
 
     bigBallHitPlayerThisAttack = false;
 
@@ -495,6 +497,7 @@ void FireballTrap::StartAttack()
     {
         extraVfx[i].timer  = 0.f;
         extraVfx[i].active = false;
+        extraVfx[i].done   = false;
         if (extraVfx[i].go) extraVfx[i].go->SetEnabled(false);
     }
 
@@ -509,7 +512,7 @@ void FireballTrap::StartAttack()
     ScheduleVfx(vfxMainLight, impactT + vfxMainLightDelay, vfxMainLightLife, vfxPos, vfxScale);
     ScheduleVfx(vfxLightImpact, impactT + vfxLightImpactDelay, vfxLightImpactLife, vfxPos, vfxScale);
     ScheduleVfx(vfxFireImpact, impactT + vfxFireImpactDelay, vfxFireImpactLife, vfxPos, vfxScale);
-    ScheduleVfx(vfxBombGround, impactT + vfxBombGroundDelay, cfg.bigBurnDuration, vfxPos, vfxScale);
+    ScheduleVfx(vfxBombGround, impactT + vfxBombGroundDelay, vfxBombGroundLife, vfxPos, vfxScale);
 
     if (vfxBlackStain) ScheduleVfx(vfxBlackStain, impactT + vfxBlackStainDelay, vfxBlackStainLife, vfxPos, vfxScale);
 
@@ -540,7 +543,7 @@ void FireballTrap::HandleImpact()
         damageAreaCollider->SetEnabled(true);
     }
 
-        PlayBombAnimationsAt(impactLocalPos);
+    PlayBombAnimationsAt(impactLocalPos);
 
     if (!bigBallHitPlayerThisAttack)
     {
@@ -820,6 +823,7 @@ void FireballTrap::ScheduleVfx(GameObject* vfx, float delay, float life, const f
     event.localScale = scale;
     event.triggered  = false;
     event.timer      = 0.f;
+    event.finished   = false;
 
     event.shaders    = vfx->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
 
@@ -832,7 +836,7 @@ void FireballTrap::UpdateScheduledVfx(float dt)
 
     for (auto& e : scheduledVfx)
     {
-        if (!e.vfx) continue;
+        if (!e.vfx || e.finished) continue;
 
         if (!e.triggered && vfxSchedClock >= e.delay)
         {
@@ -862,9 +866,14 @@ void FireballTrap::UpdateScheduledVfx(float dt)
 
                 e.triggered = false;
                 e.timer     = 0.f;
+                e.finished  = true;
             }
         }
     }
+    scheduledVfx.erase(
+        std::remove_if(scheduledVfx.begin(), scheduledVfx.end(), [](const VFXEvent& e) { return e.finished; }),
+        scheduledVfx.end()
+    );
 }
 
 void FireballTrap::ClearScheduledVfx()

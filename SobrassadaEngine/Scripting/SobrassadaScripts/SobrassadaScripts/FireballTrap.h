@@ -102,6 +102,7 @@ class FireballTrap : public Script
         float3 localScale = float3::one;
         bool triggered    = false;
         float timer       = 0.f;
+        bool finished     = false;
         std::vector<ShaderScriptComponent*> shaders;
     };
 
@@ -112,6 +113,7 @@ class FireballTrap : public Script
         float life     = 2.f;
         float timer    = 0.f;
         bool active    = false;
+        bool done      = false;  
     };
 
     static constexpr int EXTRA_VFX_COUNT = 11;
