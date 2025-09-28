@@ -18,7 +18,7 @@ CoverPointTrigger::CoverPointTrigger(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player Name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Compromise Radius", InspectorField::FieldType::Float, &compromiseRadius, 1.0f, 10.0f});
-    fields.push_back({"Reset Delay", InspectorField::FieldType::Float, &resetDelay, 1.0f, 30.0f});
+    
 }
 
 bool CoverPointTrigger::Init()
@@ -210,15 +210,7 @@ void CoverPointTrigger::Update(float deltaTime)
         }
     }
 
-   if (isCompromised)
-    {
-        float distanceToPlayer = groundPosition.Distance(player->GetPosition());
-        if (distanceToPlayer > compromiseRadius * 1.5f)
-        {
-            GLOG("Player far from cover point %s - RESETTING", parent->GetName().c_str());
-            ResetCoverPoint();
-        }
-    }
+   
 }
 
 void CoverPointTrigger::CompromiseCoverPoint()

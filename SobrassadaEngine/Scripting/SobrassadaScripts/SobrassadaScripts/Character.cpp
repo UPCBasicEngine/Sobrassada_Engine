@@ -123,6 +123,12 @@ bool Character::Init()
             if (colorChange) colorChange->SetEnabled(false);
             else GLOG("[WARNING - %s] No shader script component found", parent->GetName())
         }
+
+            GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
+        if (glowObject) glow = glowObject;
+        if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
+
+       
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();

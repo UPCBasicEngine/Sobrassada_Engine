@@ -20,7 +20,17 @@ enum class ArcherStates
     OVERSHOOTING,
     SEEKING_COVER,
     IN_COVER,
-    POSITIONING_TO_SHOOT
+    POSITIONING_TO_SHOOT,
+    HIGHLIGHTING
+};
+
+enum class ArcherHighlightingStates
+{
+    IDLE      = 0,
+    AIM = 2,
+    BASIC_ATTACK = 3,
+    COOLDOWN = 4,
+    DONE = 5
 };
 
 class Archer : public Character
@@ -32,6 +42,8 @@ class Archer : public Character
     void Update(float deltaTime) override;
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
+    void PlayHighlightSequence() override;
+    void UpdateHighlightState(float deltaTime);
 
   public:
     // Core AI methods
@@ -83,6 +95,7 @@ class Archer : public Character
     const std::string GetLogicStateName();
     const AIAgentComponent* GetAI() { return agentAI; }
     void ActivateGlowVFX();
+   
 
   private:
     // Core components
@@ -97,6 +110,10 @@ class Archer : public Character
     std::string arrowName     = "";
     float3 patrolPoint        = float3::zero;
     bool isStatic             = false;
+    ArcherHighlightingStates currentHighlightingState = ArcherHighlightingStates::IDLE;
+    float stateTimer                            = 0.f;
+    float highlightDuration                     = 3.f;
+
 
     // Combat system
     ArcherProjectile* arrow   = nullptr;
@@ -109,6 +126,9 @@ class Archer : public Character
     float shotTimer            = 0.0f;
     bool hasShot               = false;
     bool hasStartedShooting    = false;
+    float breathTime           = 1.0;
+    float breathDuration       = 0.0f;
+    bool shouldAttack = true;
 
     // Aiming system
     bool isAiming              = false;
@@ -132,7 +152,7 @@ class Archer : public Character
     std::vector<GameObject*> availableCoverPoints;
     std::vector<GameObject*> occupiedCoverPoints;
     GameObject* currentCoverPoint = nullptr;
-    GameObject* currentCover      = nullptr; // Keep for compatibility
+    GameObject* currentCover      = nullptr; 
     float3 coverPosition          = float3::zero;
     float3 shootingPosition       = float3::zero;
     bool isInCover                = false;
@@ -142,10 +162,8 @@ class Archer : public Character
     int flankingFailures          = 0;
     float repositionTimer         = 0.0f;
     float repositionDelay         = 2.0f;
-    float lastChaseDistance       = 999.0f;
-    float chaseStuckTimer         = 0.0f;
-    float losLostTimer            = 0.0f; // Timer para line of sight perdido
-    float aimAttemptTimer         = 0.0f;
+   
+    
 
     // Constants
     float safeShootingDistance    = 12.0f;
@@ -172,4 +190,7 @@ class Archer : public Character
 
     //Dash
     bool isDashing                = false;
+    bool triggeredSequence         = false;
+
+
 };
