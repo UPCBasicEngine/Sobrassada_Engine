@@ -4,6 +4,7 @@
 #include "Script.h"
 #include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
+#include "ParticleSystemComponent.h"
 #include <array>
 #include <vector>
 
@@ -251,4 +252,5 @@ class FireballTrap : public Script
     };
     int miniSNext = 0;
     std::vector<GameObject*> miniBombSymbolVfx;
+    ParticleSystemComponent* bombNParticleSystem = nullptr;
 };

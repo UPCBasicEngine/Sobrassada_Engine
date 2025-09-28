@@ -49,15 +49,6 @@ FireballTrap::FireballTrap(GameObject* parent) : Script(parent)
 
 FireballTrap::~FireballTrap()
 {
-    // Clean up cloned animations
-    if (animS.root) RecycleGO(animS.root);
-    if (animN.root) RecycleGO(animN.root);
-    if (animW.root) RecycleGO(animW.root);
-
-    for (int i = 0; i < MINI_SLOTS; ++i)
-    {
-        if (miniS[i].root) RecycleGO(miniS[i].root);
-    }
 
     // Clean up cloned VFX
     if (vfxMainLight && vfxMainLight != vfxMainLightPrefab) RecycleGO(vfxMainLight);
@@ -173,12 +164,26 @@ bool FireballTrap::Init()
     shakeCam = FindShakeCamera();
 
     int idx  = 0;
-    for (size_t i = 8; i < parent->GetChildren().size() && idx < EXTRA_VFX_COUNT; ++i, ++idx)
+    for (size_t i = 0; i < parent->GetChildren().size(); ++i)
     {
         GameObject* child = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[i]);
         if (!child) continue;
-        child->SetEnabled(false);
-        extraVfx[idx].go = child;
+
+        // Check for particle system FIRST and skip it from extraVfx
+        if (child->GetName() == "VFX_Bomb_Bolts")
+        {
+            bombNParticleSystem = child->GetComponent<ParticleSystemComponent*>();
+            if (!bombNParticleSystem) GLOG("[WARN] Particle system component not found for BombN impact");
+            child->SetEnabled(false);
+            continue; // SKIP this child, don't add to extraVfx
+        }
+
+        if (i >= 8 && idx < EXTRA_VFX_COUNT)
+        {
+            child->SetEnabled(false);
+            extraVfx[idx].go = child;
+            idx++; 
+        }
     }
 
     // Clone VFX objects from prefabs
@@ -280,14 +285,9 @@ bool FireballTrap::Init()
         GameObject* go = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(miniSNames[i]);
         if (go)
         {
-            // Clone instead of using directly
-            GameObject* clonedMiniAnim = CloneHierarchy(go, parent->GetUID());
-            if (clonedMiniAnim)
-            {
-                clonedMiniAnim->SetEnabledRecursive(false);
-                clonedMiniAnim->SetLocalPosition(float3(0, -1000, 0));
-                InitAnimation(miniS[i], clonedMiniAnim, miniSNames[i]);
-            }
+            go->SetEnabledRecursive(false);
+            go->SetLocalPosition(float3(0, -1000, 0));
+            InitAnimation(miniS[i], go, miniSNames[i]);
         }
         else
         {
@@ -451,9 +451,9 @@ void FireballTrap::Update(float deltaTime)
 
 void FireballTrap::StartAttack()
 {
-    lastImpactWorld            = RandomSpawnPoint();
-    impactLocalPos             = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
-    impactLocalPos.y           = 0.f;
+    lastImpactWorld  = RandomSpawnPoint();
+    impactLocalPos   = parent->GetGlobalTransform().Inverted().MulPos(lastImpactWorld);
+    impactLocalPos.y = 0.f;
 
     bigBallHitPlayerThisAttack = false;
 
@@ -540,7 +540,7 @@ void FireballTrap::HandleImpact()
         damageAreaCollider->SetEnabled(true);
     }
 
-    PlayBombAnimationsAt(impactLocalPos);
+        PlayBombAnimationsAt(impactLocalPos);
 
     if (!bigBallHitPlayerThisAttack)
     {
@@ -1028,24 +1028,14 @@ bool FireballTrap::InitAnimation(OneShotAnim& anim, GameObject* prefab, const st
 {
     if (!prefab) return false;
 
-    // Clone the animation GameObject for this firetrap instance
-    GameObject* clonedAnim = CloneHierarchy(prefab, parent->GetUID());
-    if (!clonedAnim)
-    {
-        GLOG("[ERROR] Failed to clone animation %s", name.c_str());
-        return false;
-    }
-
-    anim.root = clonedAnim;
-    anim.root->SetEnabledRecursive(false);
-    anim.root->SetLocalPosition(float3(0, -1000, 0));
+    anim.root = prefab;
 
     // Find the animation component
-    anim.ac = clonedAnim->GetComponent<AnimationComponent*>();
+    anim.ac   = prefab->GetComponent<AnimationComponent*>();
 
     if (!anim.ac)
     {
-        auto v = clonedAnim->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
+        auto v = prefab->GetAllComponentsInChilds<AnimationComponent*>(AppEngine);
         if (!v.empty())
         {
             anim.ac = v.front();
@@ -1067,7 +1057,9 @@ bool FireballTrap::InitAnimation(OneShotAnim& anim, GameObject* prefab, const st
         GLOG("[WARNING] No animation component found for %s", name.c_str());
     }
 
+    prefab->SetEnabledRecursive(false);
     anim.playing = false;
+
     return true;
 }
 
@@ -1078,6 +1070,25 @@ void FireballTrap::UpdateAnimation(OneShotAnim& anim, float deltaTime)
         anim.ac->Update(deltaTime);
         if (anim.ac->IsFinished())
         {
+            if (&anim == &animN && bombNParticleSystem)
+            {
+                GameObject* psGO =
+                    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(bombNParticleSystem->GetParentUID());
+                if (psGO && anim.root)
+                {
+                    // Enable the GameObject first!
+                    psGO->SetEnabled(true);
+
+                    // Position at animation's location
+                    float3 spawnPos  = anim.root->GetLocalTransform().TranslatePart();
+                    spawnPos.y      += 1.0f; // Adjust height as needed
+                    psGO->SetLocalPosition(spawnPos);
+
+                    // Now spawn the particles
+                    bombNParticleSystem->SpawnAllInstances();
+                }
+            }
+
             StopAnimation(anim);
         }
     }
