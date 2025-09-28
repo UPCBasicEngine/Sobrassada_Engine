@@ -571,7 +571,7 @@ void FireballTrap::StartAttack()
         const float ang  = plannedMiniAngles[i];
         const float3 dir = float3(cosf(ang), 0.f, sinf(ang));
         const float3 pos = impactLocalPos + dir * cfg.miniLandingRadius;
-        const float life = impactT + miniTFall;
+        const float life = impactT;
 
         if (miniIndicatorVfxPrefab)
         {
