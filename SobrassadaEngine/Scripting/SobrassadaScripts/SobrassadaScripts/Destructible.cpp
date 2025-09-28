@@ -8,8 +8,11 @@
 #include "Globals.h"
 #include "ParticleSystemComponent.h"
 #include "ResourceStateMachine.h"
+#include "Wwise_IDs.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/MeshComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
+
 #include <Math/MathFunc.h>
 #include <random>
 
@@ -20,7 +23,8 @@ Destructible::Destructible(GameObject* parent)
     fields.emplace_back(
         "Destruction particle system", InspectorField::FieldType::InputText, &destructionParticleSystemName
     );
-    fields.emplace_back("Time for rubble to disappear (s)", InspectorField::FieldType::Float, &timeToDisappear);
+    fields.emplace_back("Time until mesh switch (s)", InspectorField::FieldType::Float, &destructionSpawnDelay);
+    fields.emplace_back("0: Vase, 1: Box, 2: Crystal", InspectorField::FieldType::Int, &destructibleTypeIndex, 0, 2);
 }
 
 bool Destructible::Init()
@@ -35,6 +39,7 @@ bool Destructible::Init()
 
     if (isSetupCorrectly)
     {
+        type = static_cast<DestructibleType>(destructibleTypeIndex);
         destroyedMesh->SetEnabled(false);
         destructionSmoke->SetEnabled(false);
     }
@@ -46,16 +51,12 @@ void Destructible::Update(float deltaTime)
 {
     if (!isDead && isSetupCorrectly && currentState == DestructibleStates::DESTROYED)
     {
-        const float3& localPosition = destroyedMesh->GetPosition();
-        destroyedMesh->SetLocalPosition(
-            float3(localPosition.x, -Pow(1024, (1.f / timeToDisappear) * disappearCounter - 1), localPosition.z)
-        );
-        disappearCounter += deltaTime;
-        if (disappearCounter >= timeToDisappear)
+        destructionSpawnDelayCounter -= deltaTime;
+        if (destructionSpawnDelayCounter <= 0)
         {
+            destroyedMesh->SetEnabled(true);
+
             isDead = true;
-            destroyedMesh->SetEnabled(false);
-            destructionSmoke->SetEnabled(false);
         }
     }
 }
@@ -65,11 +66,24 @@ void Destructible::OnDeath()
     if (isSetupCorrectly)
     {
         currentState = DestructibleStates::DESTROYED;
-
-        defaultMesh->SetEnabled(false);
-        destroyedMesh->SetEnabled(true);
+        destructionSpawnDelayCounter = destructionSpawnDelay;
+        
         destructionSmoke->SetEnabled(true);
         destructionSmoke->Init();
+
+        switch (type) {
+        case DestructibleType::VASE:
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_BREAK_02);
+            break;
+        case DestructibleType::BOX:
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_BREAK_01);
+            break;
+        case DestructibleType::CRYSTAL:
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_BREAK_03);
+            break;
+        }
+
+        defaultMesh->SetEnabled(false);
 
         isDead = false;
     }
@@ -112,6 +126,24 @@ void Destructible::ValidateSetup()
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] Particle system for destruction not found")
+        return;
+    }
+
+    // Validate type input
+    if (destructibleTypeIndex < 0 || destructibleTypeIndex > 2)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Type input needs to be on of [0, 1, 2]")
+        return;
+    }
+
+    
+
+    audioComp = parent->GetComponent<AudioSourceComponent*>();
+    if (audioComp == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Script parent does not contain an audio component")
         return;
     }
 }
