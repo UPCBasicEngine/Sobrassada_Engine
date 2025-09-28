@@ -158,6 +158,7 @@ class FireballTrap : public Script
     float vfxFireImpactLife       = 1.5f;
     float vfxBombGroundLife       = 3.0f;
     float vfxBlackStainLife       = 2.5f;
+    float particleBoltsDelay      = 0.0f;
 
     // VFX Parameters
     float vfxIndicatorWorldRadius = 0.6f;

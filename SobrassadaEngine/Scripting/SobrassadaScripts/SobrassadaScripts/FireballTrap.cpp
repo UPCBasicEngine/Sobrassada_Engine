@@ -376,6 +376,7 @@ void FireballTrap::EnableVFX(GameObject* vfx, bool enable)
         vfx->SetEnabled(false);
     }
 }
+
 void FireballTrap::ResetVFX(GameObject* vfx)
 {
     if (!vfx) return;
@@ -535,12 +536,14 @@ void FireballTrap::StartAttack()
     const float impactT   = fallTime;
     const float3 vfxPos   = impactLocalPos;
     const float3 vfxScale = float3::one;
+    float3 groundVfxPos   = impactLocalPos;
+    groundVfxPos.y        = 0.1f;
 
     ScheduleVfx(vfxMainLight, impactT + vfxMainLightDelay, vfxMainLightLife, vfxPos, vfxScale);
     ScheduleVfx(vfxLightImpact, impactT + vfxLightImpactDelay, vfxLightImpactLife, vfxPos, vfxScale);
     ScheduleVfx(vfxFireImpact, impactT + vfxFireImpactDelay, vfxFireImpactLife, vfxPos, vfxScale);
-    ScheduleVfx(vfxBombGround, impactT + vfxBombGroundDelay, vfxBombGroundLife, vfxPos, vfxScale);
-    if (vfxBlackStain) ScheduleVfx(vfxBlackStain, impactT + vfxBlackStainDelay, vfxBlackStainLife, vfxPos, vfxScale);
+    ScheduleVfx(vfxBombGround, impactT + vfxBombGroundDelay, vfxBombGroundLife, groundVfxPos, vfxScale);
+    ScheduleVfx(vfxBlackStain, impactT + vfxBlackStainDelay, vfxBlackStainLife, groundVfxPos, vfxScale);
 
     // Big-ring indicator (pre-fall)
     if (vfxIndicator)
@@ -599,11 +602,6 @@ void FireballTrap::HandleImpact()
 {
     fireball->SetEnabled(false);
     if (fireballShadow) fireballShadow->SetEnabled(false);
-
-    if (!vfxBlackStain)
-    {
-        if ((currentDecal = RequestImpactDecal())) currentDecal->SetLocalPosition(impactLocalPos);
-    }
 
     if (groundMesh) groundMesh->SetEnabled(true);
     if (damageAreaCollider)
@@ -693,7 +691,6 @@ void FireballTrap::DisableDamage()
     RecycleGO(currentDecal);
     currentDecal    = nullptr;
     activationState = ACTIVATION_STATE::SLEEPING;
-    ClearScheduledVfx();
 
     // Clean up mini indicators
     for (auto* vfx : miniIndicatorVfx)
