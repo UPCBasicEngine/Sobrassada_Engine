@@ -471,6 +471,12 @@ void CuChulainn::Update(float deltaTime)
             ultimateObject->SetEnabled(false);
             ultimateTimer = 0.0f;
             if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+
+            if (playerAnimHeld && animComponent)
+            {
+                animComponent->OnResume();
+                playerAnimHeld = false;
+            }
         }
     }
 
@@ -647,10 +653,10 @@ void CuChulainn::HandleState(float deltaTime)
         else
         {
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
-            if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
-            {
-                return;
-            }
+            //if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+            //{
+            //    return;
+            //}
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
             if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
             if (state == CharacterStates::TRANSFORM)
@@ -1280,12 +1286,32 @@ void CuChulainn::PerformAttack()
             ultimateObject->SetEnabled(true);
             ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            
+            if (ultimateHoldEnabled && animComponent && !playerAnimHeld)
+            {
+                animComponent->OnPause();
+                playerAnimHeld = true;
+            }
 
             UpdateUltimateVfx();
         }
         else if (ultimateObject->IsEnabled())
         {
             AnimationComponent* vfxUltimateAnim = ultimateObject->GetComponent<AnimationComponent*>();
+            
+             if (ultimateHoldEnabled && playerAnimHeld)
+            {
+                float timeLimit = (vfxUltimateAnim && vfxUltimateAnim->GetAnimationController())
+                            ? vfxUltimateAnim->GetAnimationController()->GetTime()
+                            : 0.0f;
+
+                if (!vfxUltimateAnim || vfxUltimateAnim->IsFinished() || timeLimit >= ultimateResumeVfxTime)
+                {
+                    animComponent->OnResume();
+                    playerAnimHeld = false;
+                }
+            }
+            
             if (ultimateSpikes) // Control spikes animation appearance
             {
                 if (vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation())
@@ -1307,6 +1333,7 @@ void CuChulainn::PerformAttack()
             {
                 ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             }
+
 
             //if (vfxUltimateAnim && vfxUltimateAnim->IsFinished())
             //{
@@ -1448,6 +1475,7 @@ void CuChulainn::UltimateAttack()
     ultimateTimer   = 0.0f;
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
+    playerAnimHeld  = false;
 
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
