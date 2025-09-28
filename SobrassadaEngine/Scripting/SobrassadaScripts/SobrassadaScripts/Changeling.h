@@ -185,9 +185,6 @@ class Changeling : public Character
 
     std::string vfxDashName = "VFX_Dash";
     GameObject* vfxDash              = nullptr;
-
-    std::string vfxHitName = "VFX_Hit";
-    GameObject* vfxHit              = nullptr;
     
     std::string vfxDigDownName = "VFX_DigDown";
     GameObject* vfxDigDown              = nullptr;
