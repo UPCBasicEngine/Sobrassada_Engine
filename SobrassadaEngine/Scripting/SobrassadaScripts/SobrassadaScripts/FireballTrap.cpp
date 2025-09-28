@@ -36,6 +36,8 @@ constexpr float CAM_SHAKE_MAG_MAX    = 0.60f;
 
 constexpr float EPS                  = 1e-4f;
 
+constexpr float SHADOW_Y_BIAS        = 0.015f;
+
 static inline float RandomRange(float min, float max)
 {
     static thread_local std::mt19937 rng {std::random_device {}()};
@@ -374,10 +376,17 @@ void FireballTrap::EnableVFX(GameObject* vfx, bool enable)
         vfx->SetEnabled(false);
     }
 }
-
 void FireballTrap::ResetVFX(GameObject* vfx)
 {
     if (!vfx) return;
+
+    if (auto* rootSSC = vfx->GetComponent<ShaderScriptComponent*>())
+    {
+        rootSSC->SetScriptEnabled("MovingUVClipErode", false);
+        rootSSC->ResetScript("MovingUVClipErode");
+        rootSSC->SetScriptEnabled("MovingUVTransparent", false);
+        rootSSC->ResetScript("MovingUVTransparent");
+    }
 
     auto shaders = vfx->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
     for (auto* ssc : shaders)
@@ -482,9 +491,30 @@ void FireballTrap::StartAttack()
 
     if (fireballShadow)
     {
+        ResetVFX(fireballShadow);
         fireballShadow->SetEnabled(true);
+
+        if (auto* rootMesh = fireballShadow->GetComponent<MeshComponent*>()) rootMesh->SetEnabled(true);
+        for (auto* mc : fireballShadow->GetAllComponentsInChilds<MeshComponent*>(AppEngine))
+            mc->SetEnabled(true);
+
+        if (auto* s = fireballShadow->GetComponent<ShaderScriptComponent*>())
+        {
+            s->SetEnabled(true);
+            s->ResetScript("MovingUVTransparent");
+            s->SetScriptEnabled("MovingUVTransparent", true);
+            s->SetScriptEnabled("MovingUVClipErode", false);
+        }
+        for (auto* s : fireballShadow->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine))
+        {
+            s->SetEnabled(true);
+            s->ResetScript("MovingUVTransparent");
+            s->SetScriptEnabled("MovingUVTransparent", true);
+            s->SetScriptEnabled("MovingUVClipErode", false);
+        }
+
         const float3 initScale = shadowBaseScale * SHADOW_MIN_SCALE;
-        const float3 initPos   = float3(spawnLocal.x, 0.f, spawnLocal.z);
+        const float3 initPos   = float3(spawnLocal.x, SHADOW_Y_BIAS, spawnLocal.z);
         fireballShadow->SetLocalTransform(float4x4::FromTRS(initPos, float3x3::identity, initScale));
     }
 
@@ -736,7 +766,7 @@ void FireballTrap::UpdateFireball(float deltaTime)
                 }
             }
 
-            // Hide small symbol on big ring 
+            // Hide small symbol on big ring
             if (vfxBombIndicatorSmallSymbol)
             {
                 for (auto& e : scheduledVfx)
@@ -777,14 +807,13 @@ void FireballTrap::UpdateFireball(float deltaTime)
                 }
             }
         }
-
     }
 
     if (fireballShadow)
     {
         const float shadowScaleInterpolation = 1.f - std::clamp(pos.y / cfg.fallingHeight, 0.f, 1.f);
         const float3 scaleNow  = shadowBaseScale * (SHADOW_MIN_SCALE + shadowScaleInterpolation * SHADOW_MAX_SCALE);
-        const float3 shadowPos = float3(pos.x, 0.f, pos.z);
+        const float3 shadowPos = float3(pos.x, SHADOW_Y_BIAS, pos.z);
         fireballShadow->SetLocalTransform(float4x4::FromTRS(shadowPos, float3x3::identity, scaleNow));
     }
 
