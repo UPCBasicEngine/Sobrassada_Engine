@@ -52,7 +52,7 @@ bool Archer::Init()
     agentAI = parent->GetComponent<AIAgentComponent*>();
     if (agentAI == nullptr)
     {
-        // Optional: handle missing AI component
+      
     }
     else
     {
@@ -1512,7 +1512,7 @@ void Archer::SearchForPlayer()
         return;
     }
 
-    // IMMEDIATE CHASE if player gets close during search (mobile archers only)
+  
     if (!isStatic && distance <= rangeAIChase)
     {
         GLOG("SEARCH -> CHASE: Player detected at close range %.2f", distance);
@@ -1524,7 +1524,7 @@ void Archer::SearchForPlayer()
 
     if (isStatic)
     {
-        // Static archer search behavior
+      
         if (animComponent) animComponent->UseTrigger("aim");
 
         if (distance <= maxDetectionRange)
@@ -1535,7 +1535,7 @@ void Archer::SearchForPlayer()
                 agentAI->LookAtMovement(character->GetLastPosition(), 0.016f);
             }
 
-            // Transition to AIM only if not coming from highlight
+           
             if (distance <= rangeAIAttack && attackCdTimer <= 0.0f)
             {
                 currentState = ArcherStates::AIM;
@@ -1544,13 +1544,13 @@ void Archer::SearchForPlayer()
         else if (agentAI)
         {
             agentAI->SetSpeed(0.0f, 0.0f);
-            // Return to patrol if player moves too far away
+          
             currentState = ArcherStates::PATROL;
         }
     }
     else
     {
-        // Mobile archer search behavior (existing logic)
+       
         if (!isSearching)
         {
             animComponent->UseTrigger("idle");
@@ -1753,7 +1753,7 @@ void Archer::ChangeState()
     const float distance = GetDistanceFromPlayer();
     hasLineOfSight       = CheckLineOfSight();
 
-    // Static archer logic (UNCHANGED FROM ORIGINAL)
+    
     if (isStatic)
     {
         if (distance <= maxDetectionRange)
@@ -1766,13 +1766,13 @@ void Archer::ChangeState()
         return;
     }
 
-    // NEW: Health-based cover seeking (only addition to original logic)
+    
     bool healthCompromised = (currentHealth <= 2);
     bool playerInCover     = IsPlayerInAnyCoverPoint();
 
     if (healthCompromised && !isInCover && currentState != ArcherStates::SEEKING_COVER &&
         currentState != ArcherStates::IN_COVER && currentState != ArcherStates::POSITIONING_TO_SHOOT &&
-        distance > rangeEscape) // Don't seek cover if need to escape
+        distance > rangeEscape) 
     {
         GLOG("ChangeState: SEEKING_COVER - health compromised (%d HP)", currentHealth);
         currentState = ArcherStates::SEEKING_COVER;
@@ -1780,7 +1780,6 @@ void Archer::ChangeState()
         return;
     }
 
-    // NEW: Handle cover states when health is compromised
     if (healthCompromised && (currentState == ArcherStates::SEEKING_COVER || currentState == ArcherStates::IN_COVER ||
                               currentState == ArcherStates::POSITIONING_TO_SHOOT))
     {
@@ -1788,23 +1787,23 @@ void Archer::ChangeState()
         {
             if (playerInCover)
             {
-                // Both in cover - flank
+             
                 currentState = ArcherStates::POSITIONING_TO_SHOOT;
                 return;
             }
             else
             {
-                // Player out of cover - chase aggressively
+             
                 currentState = ArcherStates::CHASE;
                 isInCover    = false;
                 return;
             }
         }
-        // If seeking cover or positioning, let those states continue
+        
         return;
     }
 
-    // ORIGINAL LOGIC RESTORED EXACTLY AS IT WAS
+   
     if (distance <= rangeEscape)
     {
         currentState = ArcherStates::ESCAPE;
