@@ -437,7 +437,7 @@ void FireballTrap::Update(float deltaTime)
             {
                 if (v.go) v.go->SetEnabled(false);
                 v.active = false;
-                v.done   = true;  
+                v.done   = true;
             }
         }
     }
@@ -477,11 +477,8 @@ void FireballTrap::StartAttack()
         extraVfx[0].life  = fallTime + EXTRA_VFX0_LIFE_EPS;
         extraVfx[0].delay = 0.f;
     }
-
     for (int i = 1; i < EXTRA_VFX_COUNT; ++i)
-    {
         extraVfx[i].delay = fallTime + (i - 1) * VFX_CHAIN_STEP;
-    }
 
     if (fireballShadow)
     {
@@ -513,14 +510,57 @@ void FireballTrap::StartAttack()
     ScheduleVfx(vfxLightImpact, impactT + vfxLightImpactDelay, vfxLightImpactLife, vfxPos, vfxScale);
     ScheduleVfx(vfxFireImpact, impactT + vfxFireImpactDelay, vfxFireImpactLife, vfxPos, vfxScale);
     ScheduleVfx(vfxBombGround, impactT + vfxBombGroundDelay, vfxBombGroundLife, vfxPos, vfxScale);
-
     if (vfxBlackStain) ScheduleVfx(vfxBlackStain, impactT + vfxBlackStainDelay, vfxBlackStainLife, vfxPos, vfxScale);
 
+    // Big-ring indicator (pre-fall)
     if (vfxIndicator)
     {
         const float3 indicatorScaleVfx = float3(vfxIndicatorWorldRadius);
         ScheduleVfx(vfxIndicator, 0.0f, impactT, vfxPos, indicatorScaleVfx);
     }
+
+    plannedMiniAngles.clear();
+    const float stepAng = TAU / float(std::max(1u, miniCount));
+    for (uint32_t i = 0; i < miniCount; ++i)
+        plannedMiniAngles.push_back(i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER));
+
+    const float startHeight = cfg.miniStartHeight;
+    const float vUp         = cfg.miniUpSpeed;
+    const float g           = cfg.gravity;
+    const float miniTFall   = (vUp + sqrtf(std::max(0.f, vUp * vUp + 2.f * g * startHeight))) / g;
+
+    for (auto* v : miniIndicatorVfx)
+        if (v && v != miniIndicatorVfxPrefab) RecycleGO(v);
+    for (auto* v : miniBombSymbolVfx)
+        if (v && v != vfxBombIndicatorSmallSymbolPrefab) RecycleGO(v);
+    miniIndicatorVfx.clear();
+    miniBombSymbolVfx.clear();
+
+    for (uint32_t i = 0; i < miniCount; ++i)
+    {
+        const float ang  = plannedMiniAngles[i];
+        const float3 dir = float3(cosf(ang), 0.f, sinf(ang));
+        const float3 pos = impactLocalPos + dir * cfg.miniLandingRadius;
+        const float life = impactT + miniTFall;
+
+        if (miniIndicatorVfxPrefab)
+        {
+            if (GameObject* miniVfx = CloneHierarchy(miniIndicatorVfxPrefab, parent->GetUID()))
+            {
+                miniIndicatorVfx.push_back(miniVfx);
+                ScheduleVfx(miniVfx, 0.0f, life, pos, float3(miniIndicatorVfxScale * 2.0f));
+            }
+        }
+        if (vfxBombIndicatorSmallSymbolPrefab)
+        {
+            if (GameObject* symVfx = CloneHierarchy(vfxBombIndicatorSmallSymbolPrefab, parent->GetUID()))
+            {
+                miniBombSymbolVfx.push_back(symVfx);
+                ScheduleVfx(symVfx, 0.0f, life, pos, float3(miniIndicatorVfxScale * 2.0f));
+            }
+        }
+    }
+
     dropElapsed     = 0.f;
     activationState = ACTIVATION_STATE::DROPPING;
 }
@@ -552,54 +592,46 @@ void FireballTrap::HandleImpact()
         else if (auto* audioCompP = parent->GetComponent<AudioSourceComponent*>())
             audioCompP->EmitEvent(AK::EVENTS::PLAY_SFX_CATAPULT);
 
-        plannedMiniAngles.clear();
-        const float stepAng     = TAU / float(std::max(1u, miniCount));
-        const float startHeight = cfg.miniStartHeight;
-        const float vUp         = cfg.miniUpSpeed;
-        const float g           = cfg.gravity;
-        const float tFall       = (vUp + sqrtf(std::max(0.f, vUp * vUp + 2.f * g * startHeight))) / g;
-
-        // Create mini indicators and small symbols at mini positions
-        miniIndicatorVfx.clear();
-        miniBombSymbolVfx.clear();
-
-        for (uint32_t i = 0; i < miniCount; ++i)
+        if (plannedMiniAngles.size() != miniCount)
         {
-            const float ang = i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER);
-            plannedMiniAngles.push_back(ang);
-
-            const float3 dirXZ = float3(cosf(ang), 0.f, sinf(ang));
-            const float3 pos   = impactLocalPos + dirXZ * cfg.miniLandingRadius;
-
-            // Create mini indicator VFX with larger scale
-            if (miniIndicatorVfxPrefab)
-            {
-                GameObject* miniVfx = CloneHierarchy(miniIndicatorVfxPrefab, parent->GetUID());
-                if (miniVfx)
-                {
-                    miniIndicatorVfx.push_back(miniVfx);
-                    ScheduleVfx(miniVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale * 2.0f));
-                }
-            }
-
-            // Create bomb symbol at mini position with larger scale
-            if (vfxBombIndicatorSmallSymbolPrefab)
-            {
-                GameObject* symbolVfx = CloneHierarchy(vfxBombIndicatorSmallSymbolPrefab, parent->GetUID());
-                if (symbolVfx)
-                {
-                    miniBombSymbolVfx.push_back(symbolVfx);
-                    ScheduleVfx(symbolVfx, vfxSchedClock, tFall, pos, float3(miniIndicatorVfxScale * 2.0f));
-                }
-            }
+            plannedMiniAngles.clear();
+            const float stepAng = TAU / float(std::max(1u, miniCount));
+            for (uint32_t i = 0; i < miniCount; ++i)
+                plannedMiniAngles.push_back(i * stepAng + RandomRange(-MINI_ANGLE_JITTER, MINI_ANGLE_JITTER));
         }
 
         SpawnMiniCluster();
     }
     else
     {
-        // If player was hit, reset the indicator VFX immediately
+        // If player was hit
         if (vfxIndicator) ResetVFX(vfxIndicator);
+
+        for (auto& e : scheduledVfx)
+        {
+            bool isMini = false;
+            for (auto* mv : miniIndicatorVfx)
+                if (e.vfx == mv)
+                {
+                    isMini = true;
+                    break;
+                }
+            if (!isMini)
+                for (auto* sv : miniBombSymbolVfx)
+                    if (e.vfx == sv)
+                    {
+                        isMini = true;
+                        break;
+                    }
+
+            if (e.vfx == vfxIndicator || e.vfx == vfxBombIndicatorSmallSymbol || isMini)
+            {
+                EnableVFX(e.vfx, false);
+                ResetVFX(e.vfx);
+                e.finished  = true;
+                e.triggered = false;
+            }
+        }
     }
 
     if (shakeCam)
@@ -689,7 +721,7 @@ void FireballTrap::UpdateFireball(float deltaTime)
         {
             bigBallHitPlayerThisAttack = true;
 
-            // Hide indicator if player was hit
+            // Hide big indicator immediately
             if (vfxIndicator)
             {
                 for (auto& e : scheduledVfx)
@@ -697,24 +729,55 @@ void FireballTrap::UpdateFireball(float deltaTime)
                     if (e.vfx == vfxIndicator)
                     {
                         EnableVFX(vfxIndicator, false);
-                        e.triggered = true;
-                        break;
+                        ResetVFX(vfxIndicator);
+                        e.finished  = true;
+                        e.triggered = false;
                     }
                 }
             }
 
-            if (vfxIndicator || vfxBombIndicatorSmallSymbol)
+            // Hide small symbol on big ring 
+            if (vfxBombIndicatorSmallSymbol)
             {
                 for (auto& e : scheduledVfx)
                 {
-                    if (e.vfx == vfxIndicator || e.vfx == vfxBombIndicatorSmallSymbol)
+                    if (e.vfx == vfxBombIndicatorSmallSymbol)
                     {
                         EnableVFX(e.vfx, false);
-                        e.triggered = true;
+                        ResetVFX(e.vfx);
+                        e.finished  = true;
+                        e.triggered = false;
                     }
                 }
             }
+
+            for (auto& e : scheduledVfx)
+            {
+                bool isMini = false;
+                for (auto* mv : miniIndicatorVfx)
+                    if (e.vfx == mv)
+                    {
+                        isMini = true;
+                        break;
+                    }
+                if (!isMini)
+                    for (auto* sv : miniBombSymbolVfx)
+                        if (e.vfx == sv)
+                        {
+                            isMini = true;
+                            break;
+                        }
+
+                if (isMini)
+                {
+                    EnableVFX(e.vfx, false);
+                    ResetVFX(e.vfx);
+                    e.finished  = true;
+                    e.triggered = false;
+                }
+            }
         }
+
     }
 
     if (fireballShadow)
