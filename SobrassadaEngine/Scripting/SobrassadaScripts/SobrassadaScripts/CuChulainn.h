@@ -151,6 +151,8 @@ class CuChulainn : public Character
     std::string healthBarName            = "HealthBarFill";
     BarFill* healthBar                   = nullptr;
 
+    bool controlsLocked                   = false;
+
     // Dash
     std::string dashIconName             = "DashCooldown";
     AbilityIconFill* dashIcon            = nullptr;

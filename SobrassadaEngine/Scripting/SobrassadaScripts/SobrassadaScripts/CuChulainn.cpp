@@ -477,6 +477,8 @@ void CuChulainn::Update(float deltaTime)
                 animComponent->OnResume();
                 playerAnimHeld = false;
             }
+
+            controlsLocked = false;
         }
     }
 
@@ -680,6 +682,7 @@ void CuChulainn::HandleState(float deltaTime)
 void CuChulainn::GetInputs()
 {
     if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
+    if (controlsLocked) return;
 
     const InputModule* input   = AppEngine->GetInputModule();
     const KeyState* keyboard   = input->GetKeyboard();
@@ -1476,6 +1479,7 @@ void CuChulainn::UltimateAttack()
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
     playerAnimHeld  = false;
+    controlsLocked  = true;
 
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
