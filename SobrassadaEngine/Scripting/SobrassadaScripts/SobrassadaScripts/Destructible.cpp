@@ -8,10 +8,10 @@
 #include "Globals.h"
 #include "ParticleSystemComponent.h"
 #include "ResourceStateMachine.h"
-#include "Wwise_IDs.h"
 #include "Standalone/AIAgentComponent.h"
-#include "Standalone/MeshComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/MeshComponent.h"
+#include "Wwise_IDs.h"
 
 #include <Math/MathFunc.h>
 #include <random>
@@ -65,13 +65,14 @@ void Destructible::OnDeath()
 {
     if (isSetupCorrectly)
     {
-        currentState = DestructibleStates::DESTROYED;
+        currentState                 = DestructibleStates::DESTROYED;
         destructionSpawnDelayCounter = destructionSpawnDelay;
-        
+
         destructionSmoke->SetEnabled(true);
         destructionSmoke->Init();
 
-        switch (type) {
+        switch (type)
+        {
         case DestructibleType::VASE:
             audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_BREAK_02);
             break;
@@ -136,8 +137,6 @@ void Destructible::ValidateSetup()
         GLOG("[ERROR] Type input needs to be on of [0, 1, 2]")
         return;
     }
-
-    
 
     audioComp = parent->GetComponent<AudioSourceComponent*>();
     if (audioComp == nullptr)
