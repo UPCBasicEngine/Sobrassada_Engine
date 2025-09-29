@@ -739,7 +739,7 @@ void Boss::ChooseNextStateSecondPhase()
         waterSpoutsRate   = 100;
         break;
     }
-    //waterSpoutsRate = -1;
+    // waterSpoutsRate = -1;
 
     int num = uniformDist(rng);
     if (doTaunt)
@@ -963,6 +963,8 @@ void Boss::ShieldStrikes(float deltaTime)
             actionTriggerDone      = true;
             shieldStrikeLastAction = 1;
             audioPlayed            = false;
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
         }
         else if (!weaponCollider->GetEnabled())
         {
@@ -972,8 +974,6 @@ void Boss::ShieldStrikes(float deltaTime)
         if (attackTimer >= attackHitboxDelay - 0.1f && !audioPlayed)
         {
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_NORMALATTACK_01);
-
-            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
 
             audioPlayed = true;
         }
@@ -998,6 +998,8 @@ void Boss::ShieldStrikes(float deltaTime)
             actionTriggerDone      = true;
             shieldStrikeLastAction = 2;
             audioPlayed            = false;
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
         }
         else if (!weaponCollider->GetEnabled())
         {
@@ -1033,6 +1035,8 @@ void Boss::ShieldStrikes(float deltaTime)
             actionTriggerDone      = true;
             shieldStrikeLastAction = 3;
             audioPlayed            = false;
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
         }
         else if (!weaponCollider->GetEnabled())
         {
@@ -1070,9 +1074,9 @@ void Boss::ShieldStrikes(float deltaTime)
     }
     else if (weaponCollider->GetEnabled() && attackTimer >= attackHitboxDelay + attackHitboxDuration)
     {
-        if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
         weaponCollider->SetEnabled(false);
         agentAI->ResumeMovement();
+        if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
     }
 
     agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
@@ -1130,6 +1134,8 @@ void Boss::OverheadStrike(float deltaTime)
             if (animComponent) animComponent->UseTrigger("Jump");
 
             agentAI->SetFreeMove(true);
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
@@ -1182,6 +1188,7 @@ void Boss::OverheadStrike(float deltaTime)
             if (dashShieldExpansionScript) dashShieldExpansionScript->SetEnabled(false);
             if (dashLightsShieldUV) dashLightsShieldUV->Reset();
             if (dashShieldExpansionUV) dashShieldExpansionUV->Reset();
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
         }
         break;
     }
@@ -1206,7 +1213,6 @@ void Boss::OverheadStrike(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
-            audioPlayed       = false;
 
             if (animComponent) animComponent->UseTrigger("Attack");
 
@@ -1221,6 +1227,10 @@ void Boss::OverheadStrike(float deltaTime)
 
             if (atomParticle) atomParticle->Init();
             if (smokeParticle) smokeParticle->Init();
+
+            if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(true);
+
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_AOEATTACK);
         }
 
         DamageAreaLogic();
@@ -1371,12 +1381,6 @@ void Boss::DamageAreaLogic()
         if (attackTimer >= 0.3f)
         {
             if (attackEnergyUV) attackEnergyUV->SetPaused(true);
-
-            if (!audioPlayed && audio)
-            {
-                audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_AOEATTACK);
-                audioPlayed = true;
-            }
         }
 
         if (attackTimer >= 0.4f)
@@ -1391,7 +1395,7 @@ void Boss::DamageAreaLogic()
 
     if (attackTimer >= 0.6f && attackTimer <= attackHitboxDelay)
     {
-        if (chargeShieldParticle) chargeShieldParticle->Init();
+        // if (chargeShieldParticle) chargeShieldParticle->Init();
     }
 
     // --- IMPACT / HITBOX ACTIVE ---
@@ -1416,7 +1420,7 @@ void Boss::DamageAreaLogic()
         if (!bigExpansionScript->GetEnabled() && attackTimer >= bigAreaHitboxDelay - 0.1f)
         {
             if (bigExpansionScript) bigExpansionScript->SetEnabled(true);
-            if (chargeShieldParticle) chargeShieldParticle->StopInstances();
+            // if (chargeShieldParticle) chargeShieldParticle->StopInstances();
         }
 
         if (!bigArea->IsEnabled() && attackTimer >= bigAreaHitboxDelay)
@@ -1447,6 +1451,8 @@ void Boss::DamageAreaLogic()
         if (attackExplosionUV) attackExplosionUV->Reset();
         if (smallExpansionUV) smallExpansionUV->Reset();
         if (bigExpansionUV) bigExpansionUV->Reset();
+
+        if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
 
         ChooseNextState();
     }
