@@ -12,6 +12,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
+#include "Wwise_IDs.h"
 
 #include <algorithm>
 #include <cstring>

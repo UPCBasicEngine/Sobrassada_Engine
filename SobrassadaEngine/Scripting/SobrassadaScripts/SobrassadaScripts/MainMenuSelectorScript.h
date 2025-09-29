@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Script.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include <string>
 #include <vector>
 
@@ -41,4 +42,6 @@ class MainMenuSelectorScript : public Script
     void CachePanel();
     void BuildFromPanel();
     void UpdateSelection();
+
+    AudioSourceComponent* audio = nullptr;
 };

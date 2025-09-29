@@ -13,6 +13,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
+#include "Wwise_IDs.h"
 #include <algorithm>
 #include <cmath>
 
@@ -42,6 +43,9 @@ bool MainMenuSelectorScript::Init()
         UpdateSelection();
         builtOnce = true;
     }
+
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] MainMenuSelectorScript: No audio component found");
 
     return true;
 }
@@ -191,12 +195,14 @@ void MainMenuSelectorScript::Update(float)
         selectedIndex = (selectedIndex + 1) % (int)menuItems.size();
         UpdateSelection();
         stickMoved = true;
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
     }
     else if (moveUp)
     {
         selectedIndex = (selectedIndex - 1 + (int)menuItems.size()) % (int)menuItems.size();
         UpdateSelection();
         stickMoved = true;
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
     }
 
     if (std::fabs(leftStick.y) < 0.3f) stickMoved = false;
@@ -206,6 +212,7 @@ void MainMenuSelectorScript::Update(float)
 
     if (accept)
     {
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
         GameObject* selectedItem = menuItems[selectedIndex];
 
         if (selectedItem->GetName() == "MenuItem_Continue")

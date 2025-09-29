@@ -11,7 +11,9 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
+#include "Wwise_IDs.h"
 #include <algorithm>
 
 extern bool gGameOverActive; // block pause if Game Over is active
@@ -30,6 +32,9 @@ bool PauseMenuScript::Init()
     lastDir       = 0;
     acceptWas     = false;
     upPrev = downPrev = accPrev = false;
+
+    audio                       = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] PauseMenuScript: No audio component found");
 
     return true;
 }
@@ -56,7 +61,7 @@ void PauseMenuScript::Show()
     isOpen    = true;
     builtOnce = true;
 
-    //GLOG("[PAUSE] Show -> panel='%s'", cachedTarget ? cachedTarget->GetName().c_str() : "(null)");
+    // GLOG("[PAUSE] Show -> panel='%s'", cachedTarget ? cachedTarget->GetName().c_str() : "(null)");
 }
 
 void PauseMenuScript::Close()
@@ -69,7 +74,7 @@ void PauseMenuScript::Close()
     isOpen    = false;
     builtOnce = false;
 
-    //GLOG("[PAUSE] Close");
+    // GLOG("[PAUSE] Close");
 }
 
 void PauseMenuScript::Toggle()
@@ -107,7 +112,6 @@ void PauseMenuScript::Update(float)
     if (isOpen) HandleInput();
 }
 
-
 void PauseMenuScript::Save(rapidjson::Value& out, rapidjson::Document::AllocatorType& a)
 {
     out.AddMember("PanelToShow", rapidjson::Value(panelToShowName.c_str(), a), a);
@@ -129,7 +133,7 @@ void PauseMenuScript::CachePanel()
     if (GameObject* go = scene->GetGameObjectByName(panelToShowName))
     {
         cachedTarget = go;
-        //GLOG("[PAUSE] CachePanel -> %s", cachedTarget->GetName().c_str());
+        // GLOG("[PAUSE] CachePanel -> %s", cachedTarget->GetName().c_str());
         return;
     }
 
@@ -207,7 +211,7 @@ void PauseMenuScript::UpdateSelection()
                 child->SetEnabled(i == (size_t)selectedIndex);
         }
     }
-    //GLOG("[PAUSE] UpdateSelection -> sel=%d", selectedIndex);
+    // GLOG("[PAUSE] UpdateSelection -> sel=%d", selectedIndex);
 }
 
 uint64_t PauseMenuScript::GetCurrentTimeMs() const
@@ -289,14 +293,15 @@ void PauseMenuScript::HandleInput()
         const int n   = (int)menuItems.size();
         selectedIndex = (selectedIndex + (dir > 0 ? +1 : -1) + n) % n;
         UpdateSelection();
-        //GLOG("[PAUSE] Nav -> sel=%d", selectedIndex);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
     }
 
     if (accEdge && !menuItems.empty())
     {
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
         GameObject* item       = menuItems[selectedIndex];
         const std::string name = item ? item->GetName() : "(null)";
-        //GLOG("[PAUSE] Accept on '%s'", name.c_str());
+        // GLOG("[PAUSE] Accept on '%s'", name.c_str());
 
         if (name == "MenuItem_Continue")
         {

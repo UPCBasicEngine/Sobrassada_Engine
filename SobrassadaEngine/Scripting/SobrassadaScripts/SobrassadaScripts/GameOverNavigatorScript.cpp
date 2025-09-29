@@ -15,6 +15,7 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
+#include "Wwise_IDs.h"
 
 // Need the complete type for Respawn()
 #include "CuChulainn.h"
@@ -36,6 +37,9 @@ bool GameOverNavigatorScript::Init()
     acceptWas     = false;
     upPrev = downPrev = accPrev = false;
     stickPrev                   = 0;
+
+    audio                       = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] GameOverNavigatorScript: No audio component found");
 
     return true;
 }
@@ -114,12 +118,12 @@ void GameOverNavigatorScript::Update(float)
         const int n   = (int)menuItems.size();
         selectedIndex = (selectedIndex + (dir > 0 ? +1 : -1) + n) % n;
         UpdateSelection();
-        // GLOG: navigation moved selection
-        // GLOG("[GONAV] Nav -> sel=%d", selectedIndex);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
     }
 
     if (accEdge && !menuItems.empty())
     {
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
         GameObject* item       = menuItems[selectedIndex];
         const std::string name = item ? item->GetName() : "(null)";
         // GLOG: accept pressed on current item

@@ -1,5 +1,6 @@
 #pragma once
 #include "Script.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -52,4 +53,6 @@ class GameOverNavigatorScript : public Script
     void LocateGameOverScript();
     void ReadInputs(bool& upHeld, bool& downHeld, bool& acceptHeld, int& stickDir);
     uint64_t GetCurrentTimeMs() const;
+
+    AudioSourceComponent* audio = nullptr;
 };
