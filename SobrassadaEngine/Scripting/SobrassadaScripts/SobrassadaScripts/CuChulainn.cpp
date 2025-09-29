@@ -364,6 +364,31 @@ bool CuChulainn::Init()
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] CuChulainn: No audio component found");
 
+    // Charged attack
+    GameObject* chargeSpritesheet = parent->GetChildGameObjectByName(chargeSpritesheetName1);
+    if (chargeSpritesheet)
+    {
+        chargeVfx1 = chargeSpritesheet->GetComponent<ShaderScriptComponent*>();
+        if (chargeVfx1) chargeVfx1->SetEnabled(false);
+        else GLOG("[WARNING] No charge attack VFX found for CuChulain");
+    }
+
+    chargeSpritesheet = parent->GetChildGameObjectByName(chargeSpritesheetName2);
+    if (chargeSpritesheet)
+    {
+        chargeVfx2 = chargeSpritesheet->GetComponent<ShaderScriptComponent*>();
+        if (chargeVfx2) chargeVfx2->SetEnabled(false);
+        else GLOG("[WARNING] No charge attack VFX found for CuChulain");
+    }
+
+    chargeSpritesheet = parent->GetChildGameObjectByName(chargeSpritesheetName3);
+    if (chargeSpritesheet)
+    {
+        chargeVfx3 = chargeSpritesheet->GetComponent<ShaderScriptComponent*>();
+        if (chargeVfx3) chargeVfx3->SetEnabled(false);
+        else GLOG("[WARNING] No charge attack VFX found for CuChulain");
+    }
+
     // Ultimate
     ultimateGlow = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
     if (!ultimateGlow) GLOG("[WARNING] No ultimate Glow VFX found for CuChulain")
@@ -1698,6 +1723,23 @@ void CuChulainn::ChargeAttack()
     if (state != CharacterStates::CHARGING)
     {
         // GLOG("START CHARGING ATTACK");
+
+        if (chargeVfx1)
+        {
+            chargeVfx1->SetEnabled(true);
+            chargeVfx1->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+        if (chargeVfx2)
+        {
+            chargeVfx2->SetEnabled(true);
+            chargeVfx2->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+        if (chargeVfx3)
+        {
+            chargeVfx3->SetEnabled(true);
+            chargeVfx3->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+
         state       = CharacterStates::CHARGING;
         chargeTimer = isRiastrad ? chargeDuration * 0.5f : chargeDuration;
         character->EnableMovement(false);
@@ -1708,6 +1750,10 @@ void CuChulainn::ChargeAttack()
     {
         desiredChargedAttack = false;
         isChargingAttack     = false;
+
+        if (chargeVfx1) chargeVfx1->SetEnabled(false);
+        if (chargeVfx2) chargeVfx2->SetEnabled(false);
+        if (chargeVfx3) chargeVfx3->SetEnabled(false);
 
         // GLOG("DESIRED CHARGE ATTACK");
 

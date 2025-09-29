@@ -13,6 +13,8 @@ class ImageComponent;
 class BarFill;
 class AbilityIconFill;
 class DamageMask;
+class AttackVfxSpritesheet;
+class ShaderScriptComponent;
 
 enum class CharacterStates
 {
@@ -198,7 +200,13 @@ class CuChulainn : public Character
 
     // Charged attack
     std::string chargedAttackName        = "Charged";
+    std::string chargeSpritesheetName1   = "chargeVFX1";
+    std::string chargeSpritesheetName2   = "chargeVFX2";
+    std::string chargeSpritesheetName3   = "chargeVFX3";
     GameObject* chargedAttackCollider    = nullptr;
+    ShaderScriptComponent* chargeVfx1    = nullptr;
+    ShaderScriptComponent* chargeVfx2    = nullptr;
+    ShaderScriptComponent* chargeVfx3    = nullptr;
     bool isChargingAttack                = false;
     float chargeTimer                    = 0.0f;
     float chargeDuration                 = 1.0f;

@@ -18,6 +18,7 @@ class AttackVfxSpritesheet : public Script
     void Render(float deltaTime, CameraComponent* cameraComp) override;
 
     void Reset() override;
+    void UpdateSprite(float deltaTime);
 
   private:
     unsigned int shaderProgram  = 0;
