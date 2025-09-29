@@ -212,6 +212,16 @@ void CoverPointTrigger::Update(float deltaTime)
         }
     }
 
+    if (isCompromised)
+    {
+        float distanceToPlayer = groundPosition.Distance(player->GetPosition());
+        if (distanceToPlayer > compromiseRadius * 1.5f)
+        {
+            GLOG("Player far from cover point %s - RESETTING", parent->GetName().c_str());
+            ResetCoverPoint();
+        }
+    }
+
    
 }
 
@@ -293,49 +303,7 @@ void CoverPointTrigger::NotifyArchersCompromised()
 
 float3 CoverPointTrigger::GetGroundPosition() const
 {
-    if (!isProjected && !registeredArchers.empty())
-    {
-        Archer* archer = registeredArchers[0];
-        if (!archer || !archer->GetAI())
-        {
-            return groundPosition;
-        }
-
-        const AIAgentComponent* ai                   = archer->GetAI();
-
-        const dtNavMeshQuery* query            = AppEngine->GetPathfinderModule()->GetDetourNavMeshQuery();
-        const ResourceNavMesh* resourceNavMesh = AppEngine->GetPathfinderModule()->GetNavMesh();
-
-        if (!query || !resourceNavMesh)
-        {
-            return groundPosition;
-        }
-
-        const dtNavMesh* navMesh = resourceNavMesh->GetDetourNavMesh();
-
-        if (!navMesh)
-        {
-            return groundPosition;
-        }
-
-        bool posOverPoly        = false;
-        float3 navPosition      = float3::zero;
-        const float3 searchArea = {5.0f, 10.0f, 5.0f};
-
-        ai->GetClosestPointInNavmesh(groundPosition, searchArea, posOverPoly, navPosition);
-
-        if (posOverPoly)
-        {
-            const_cast<CoverPointTrigger*>(this)->groundPosition = navPosition;
-            const_cast<CoverPointTrigger*>(this)->isProjected    = true;
-            GLOG(
-                "LAZY PROJECTED %s to: (%.2f, %.2f, %.2f)", parent->GetName().c_str(), navPosition.x, navPosition.y,
-                navPosition.z
-            );
-        }
-    }
-
-    return groundPosition;
+   return groundPosition;
 }
 
 float3 CoverPointTrigger::GetFlankingPosition(const float3& playerPos) const

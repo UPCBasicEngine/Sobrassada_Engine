@@ -46,7 +46,6 @@ class CoverPointTrigger : public Script
    
     float3 groundPosition  = float3::zero;
 
-    // Archer management
     std::vector<Archer*> registeredArchers;
     bool isProjected    =  false;
 };
