@@ -28,6 +28,9 @@ MovingUVTransparent::MovingUVTransparent(GameObject* parent) : Script(parent)
     fields.push_back({"Start UV Offset", InspectorField::FieldType::Vec2, &uvOffsetStart, -1.f, 1.f});
 
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
+    fields.push_back({"Fade Out", InspectorField::FieldType::Bool, &isFadeOut});
+    fields.push_back({"Fade Out Time", InspectorField::FieldType::Float, &fadeOutTime, 0.f, 10.f});
+    fields.push_back({"Fade Out Duration", InspectorField::FieldType::Float, &fadeOutDuration, 0.f, 10.f});
 }
 
 MovingUVTransparent::~MovingUVTransparent()
@@ -120,6 +123,8 @@ void MovingUVTransparent::Update(float deltaTime)
         float newOffset  = deltaTime * animationSpeed;
         uvOffset.x      += newOffset * uvOffsetDirection.x;
         uvOffset.y      += newOffset * uvOffsetDirection.y;
+
+        if (isFadeOut) fadeOutTimer += deltaTime;
     }
 }
 
@@ -154,6 +159,11 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glUniform1i(9, meshComp->GetHasBones());
         glUniform1ui(10, meshComp->GetBoneIndexOffset());
 
+        float fadeTime = isFadeOut ? fadeOutTime : 1.0f;
+        glUniform1f(7, fadeOutTimer);
+        glUniform1f(8, fadeTime);
+        glUniform1f(11, fadeOutDuration);
+
         glUniform1i(4, 0);
         glUniform1i(5, isAlphaDiscard);
 
@@ -182,5 +192,6 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
 
 void MovingUVTransparent::Reset()
 {
-    uvOffset = uvOffsetStart;
+    uvOffset     = uvOffsetStart;
+    fadeOutTimer = 0.0f;
 }
