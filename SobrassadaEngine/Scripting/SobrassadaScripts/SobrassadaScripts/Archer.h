@@ -190,7 +190,7 @@ class Archer : public Character
 
     //Dash
     bool isDashing                = false;
-    bool triggeredSequence         = false;
+    bool triggeredSequence         = true;
 
 
 };

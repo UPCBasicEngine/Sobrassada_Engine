@@ -1318,6 +1318,11 @@ void Archer::HandleState(float deltaTime)
         break;
     case ArcherStates::HIGHLIGHTING:
         UpdateHighlightState(deltaTime);
+        if (currentHighlightingState == ArcherHighlightingStates::DONE || triggeredSequence)
+        {
+            float distToPlayer = GetDistanceFromPlayer();
+            currentState       = (distToPlayer <= rangeAIAttack) ? ArcherStates::CHASE : ArcherStates::SEARCH;
+        }
         break;
     case ArcherStates::DEATH:
         deathTimer += deltaTime;

@@ -12,6 +12,8 @@
 #include "ScriptComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/AIAgentComponent.h"
+#include "ResourceNavmesh.h"
+#include <PathfinderModule.h>
 
 
 CoverPointTrigger::CoverPointTrigger(GameObject* parent) : Script(parent)
@@ -30,7 +32,7 @@ bool CoverPointTrigger::Init()
         return false;
     }
 
-    // Ensure GameObject has CubeCollider
+    
     CubeColliderComponent* collider = parent->GetComponent<CubeColliderComponent*>();
     if (!collider)
     {
@@ -38,21 +40,21 @@ bool CoverPointTrigger::Init()
         return false;
     }
 
-    // Configure collider as trigger
+  
     collider->generateCallback = true;
     collider->colliderType     = ColliderType::TRIGGER;
 
-    // Set trigger size based on compromiseRadius
+    
     float3 triggerSize         = float3(compromiseRadius, compromiseRadius * 0.5f, compromiseRadius);
     collider->size             = triggerSize;
 
-    // Calculate ground position using raycast
+   
     CalculateGroundPosition();
 
-    // Register with all archers in scene
+  
     RegisterWithArchers();
 
-    // Add this cover point to global available list
+  
     AddToGlobalAvailableList();
 
     GLOG(
@@ -294,23 +296,42 @@ float3 CoverPointTrigger::GetGroundPosition() const
     if (!isProjected && !registeredArchers.empty())
     {
         Archer* archer = registeredArchers[0];
-        if (archer && archer->GetAI())
+        if (!archer || !archer->GetAI())
         {
-            bool posOverPoly        = false;
-            float3 navPosition      = float3::zero;
-            const float3 searchArea = {5.0f, 10.0f, 5.0f};
+            return groundPosition;
+        }
 
-            archer->GetAI()->GetClosestPointInNavmesh(groundPosition, searchArea, posOverPoly, navPosition);
+        const AIAgentComponent* ai                   = archer->GetAI();
 
-            if (posOverPoly)
-            {
-                const_cast<CoverPointTrigger*>(this)->groundPosition = navPosition;
-                const_cast<CoverPointTrigger*>(this)->isProjected    = true;
-                GLOG(
-                    "LAZY PROJECTED %s to: (%.2f, %.2f, %.2f)", parent->GetName().c_str(), navPosition.x, navPosition.y,
-                    navPosition.z
-                );
-            }
+        const dtNavMeshQuery* query            = AppEngine->GetPathfinderModule()->GetDetourNavMeshQuery();
+        const ResourceNavMesh* resourceNavMesh = AppEngine->GetPathfinderModule()->GetNavMesh();
+
+        if (!query || !resourceNavMesh)
+        {
+            return groundPosition;
+        }
+
+        const dtNavMesh* navMesh = resourceNavMesh->GetDetourNavMesh();
+
+        if (!navMesh)
+        {
+            return groundPosition;
+        }
+
+        bool posOverPoly        = false;
+        float3 navPosition      = float3::zero;
+        const float3 searchArea = {5.0f, 10.0f, 5.0f};
+
+        ai->GetClosestPointInNavmesh(groundPosition, searchArea, posOverPoly, navPosition);
+
+        if (posOverPoly)
+        {
+            const_cast<CoverPointTrigger*>(this)->groundPosition = navPosition;
+            const_cast<CoverPointTrigger*>(this)->isProjected    = true;
+            GLOG(
+                "LAZY PROJECTED %s to: (%.2f, %.2f, %.2f)", parent->GetName().c_str(), navPosition.x, navPosition.y,
+                navPosition.z
+            );
         }
     }
 
