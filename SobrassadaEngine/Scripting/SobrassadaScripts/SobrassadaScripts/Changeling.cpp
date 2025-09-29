@@ -391,9 +391,10 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         dashIndex = 0;
         animComponent->UseTrigger("Trigger_Dash");
         audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
-        for (GameObject* vfxDashTrailObject : vfxDashTrailObjects)
+        for (int i = dashIndex * 5; i < (dashIndex + 1) * 5; i++)
         {
-            
+            vfxDashTrailObjects[i]->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDashTrailObjects[i]->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
         }
         if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
