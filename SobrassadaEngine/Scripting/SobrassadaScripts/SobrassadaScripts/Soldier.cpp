@@ -22,6 +22,7 @@
 #include "Wwise_IDs.h"
 #include <random>
 
+
 Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
 {
@@ -118,6 +119,16 @@ bool Soldier::Init()
     }
 
     SelectRandomHelmet();
+
+    bodyObject = parent->GetChildGameObjectByName("Body");
+    if (!bodyObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
+    else
+    {
+        UID materialUID = 1322427414903784;
+        MeshComponent* meshComponent = bodyObject->GetComponent<MeshComponent*>();
+        meshComponent->AddMaterial(materialUID);
+    }
+
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Soldier: No audio component found");
@@ -414,6 +425,10 @@ void Soldier::Attack(float deltaTime)
             
             if ((inFirstWindow || inSecondWindow) && !weaponCollider->GetEnabled())
             {
+                if (meleeVfxObject && !meleeVfxObject->IsEnabled())
+                {
+                    meleeVfxOriginalTransform = meleeVfxObject->GetLocalTransform();
+                }
                 weaponCollider->SetEnabled(true);
                 if (inFirstWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_1);
                 if (inSecondWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_2);
@@ -423,33 +438,30 @@ void Soldier::Attack(float deltaTime)
                     SetAttackVFX();
 
                 }
-                else
+                if (inSecondWindow)
                 {
-                    GLOG("First window is false");
-                    
-                    //if (meleeVfxObject && !meleeVfxObject->IsEnabled())
-                    //{
-                    //    // Obtener la matriz local actual
-                    //    float4x4 local = meleeVfxObject->GetLocalTransform();
+                    if (meleeVfxObject && !meleeVfxObject->IsEnabled())
+                    {
+                        float4x4 local            = meleeVfxOriginalTransform;
+                        local.SetCol3(0, -local.Col3(0));
+                        meleeVfxObject->SetLocalTransform(local);
 
-                    //    // Invertir el eje X (primera columna)
-                    //    local.SetCol3(0, -local.Col3(0));
-
-                    //    // Aplicar la nueva matriz local
-                    //    meleeVfxObject->SetLocalTransform(local);
-
-                    //    meleeVfxObject->SetEnabled(true);
-                    //    meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
-                    //    meleeVfxObject->GetComponent<ShaderScriptComponent*>()
-                    //        ->GetScriptByType<AttackVfxSpritesheet>()
-                    //        ->Reset();
-                    //}
+                        meleeVfxObject->SetEnabled(true);
+                        meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
+                        meleeVfxObject->GetComponent<ShaderScriptComponent*>()
+                            ->GetScriptByType<AttackVfxSpritesheet>()
+                            ->Reset();
+                    }
                 }
             }
             else if (!inFirstWindow && !inSecondWindow)
             {
                 if (weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
-                if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
+                if (meleeVfxObject)
+                {
+                    if (!meleeVfxOriginalTransform.Equals(float4x4::identity, 1e-6f))meleeVfxObject->SetLocalTransform(meleeVfxOriginalTransform);
+                    meleeVfxObject->SetEnabled(false);
+                }
             }
         }
         else // thrust

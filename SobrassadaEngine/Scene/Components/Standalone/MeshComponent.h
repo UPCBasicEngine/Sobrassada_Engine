@@ -11,7 +11,7 @@ class ResourceMesh;
 class ResourceMaterial;
 class GeometryBatch;
 
-class MeshComponent : public Component
+class SOBRASADA_API_ENGINE MeshComponent : public Component
 {
   public:
     MeshComponent(UID uid, GameObject* parent);
