@@ -647,6 +647,9 @@ void Boss::OnDeath()
 {
     // TODO: include death sound for the character
     // TODO: animation and particles
+
+    ResetValues(false);
+
     parent->SetEnabled(false);
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
 }
