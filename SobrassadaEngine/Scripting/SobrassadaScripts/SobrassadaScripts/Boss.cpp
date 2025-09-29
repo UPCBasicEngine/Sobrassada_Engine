@@ -860,8 +860,9 @@ void Boss::ChooseNextStateSecondPhase()
         waterSpoutsRate   = 100;
         break;
     }
-    waterSpoutsRate   = -1;
-    shieldStrikesRate = -1;
+    // FOR TESTING
+    //waterSpoutsRate   = -1;
+    //shieldStrikesRate = -1;
 
     int num           = uniformDist(rng);
     if (doTaunt)
@@ -1913,8 +1914,8 @@ void Boss::ShieldBlast(float deltaTime)
             if (energyBlastParticle3) energyBlastParticle3->Init();
             if (energyBlastParticle4) energyBlastParticle4->Init();
 
-            if (audio) audio->StopAudio();
-            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACKLOOP);
+            //if (audio) audio->StopAudio();
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACK);
         }
 
         if (blastSpritesheet && blastSpritesheet->AlmostFinished(6, 5))
