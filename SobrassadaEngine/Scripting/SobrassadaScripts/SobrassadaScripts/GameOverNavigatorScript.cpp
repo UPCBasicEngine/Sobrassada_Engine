@@ -118,12 +118,12 @@ void GameOverNavigatorScript::Update(float)
         const int n   = (int)menuItems.size();
         selectedIndex = (selectedIndex + (dir > 0 ? +1 : -1) + n) % n;
         UpdateSelection();
-        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
     }
 
     if (accEdge && !menuItems.empty())
     {
-        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
         GameObject* item       = menuItems[selectedIndex];
         const std::string name = item ? item->GetName() : "(null)";
         // GLOG: accept pressed on current item
