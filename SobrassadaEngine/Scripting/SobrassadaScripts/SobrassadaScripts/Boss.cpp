@@ -831,40 +831,39 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 55;
-        shieldBlastRate   = 70;
+        shieldStrikesRate = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate = 30;
+        shieldStrikesRate = 50;
         shieldBlastRate   = 60;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate = 25;
+        shieldStrikesRate = 30;
         shieldBlastRate   = 65;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Far:
-        shieldStrikesRate = 15;
-        shieldBlastRate   = 70;
+        shieldStrikesRate = 20;
+        shieldBlastRate   = 85;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Farther:
-        shieldStrikesRate = 5;
-        shieldBlastRate   = 70;
+        shieldStrikesRate = 10;
+        shieldBlastRate   = 75;
         waterSpoutsRate   = 100;
         break;
     }
     // FOR TESTING
-    //waterSpoutsRate   = -1;
-    //shieldStrikesRate = -1;
+    // waterSpoutsRate   = -1;
+    // shieldStrikesRate = -1;
 
-    int num           = uniformDist(rng);
+    int num = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -902,43 +901,42 @@ void Boss::ChooseNextStateThirdPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate  = 80;
-        overheadStrikeRate = 85;
+        shieldStrikesRate  = 90;
+        overheadStrikeRate = 95;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Near:
         shieldStrikesRate  = 70;
         overheadStrikeRate = 80;
-        shieldBlastRate    = 90;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate  = 30;
-        overheadStrikeRate = 60;
+        shieldStrikesRate  = 35;
+        overheadStrikeRate = 75;
         shieldBlastRate    = 80;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate  = 20;
-        overheadStrikeRate = 55;
-        shieldBlastRate    = 80;
+        shieldStrikesRate  = 15;
+        overheadStrikeRate = 50;
+        shieldBlastRate    = 85;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Far:
         shieldBlastRate    = 10;
         overheadStrikeRate = 40;
-        shieldBlastRate    = 80;
+        shieldBlastRate    = 85;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Farther:
-        shieldStrikesRate  = 10;
-        overheadStrikeRate = 20;
-        shieldBlastRate    = 90;
+        shieldStrikesRate  = 5;
+        overheadStrikeRate = 25;
+        shieldBlastRate    = 85;
         waterSpoutsRate    = 100;
         break;
     }
@@ -1681,6 +1679,7 @@ void Boss::Mirage()
 
 void Boss::WaterSpouts()
 {
+    if (waterSpouts.empty()) ChooseNextState();
 
     if (stateEnter)
     {
@@ -1914,7 +1913,7 @@ void Boss::ShieldBlast(float deltaTime)
             if (energyBlastParticle3) energyBlastParticle3->Init();
             if (energyBlastParticle4) energyBlastParticle4->Init();
 
-            //if (audio) audio->StopAudio();
+            // if (audio) audio->StopAudio();
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACK);
         }
 
