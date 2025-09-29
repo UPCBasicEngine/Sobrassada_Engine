@@ -812,7 +812,7 @@ void Boss::ChooseNextStateSecondPhase()
         waterSpoutsRate   = 100;
         break;
     }
-    waterSpoutsRate = -1;
+    //waterSpoutsRate = -1;
 
     int num         = uniformDist(rng);
     if (doTaunt)
