@@ -50,18 +50,6 @@ void CameraMovement::Update(float deltaTime)
     if (shakeTimer > 0.0f) CameraShake(deltaTime);
 }
 
-void CameraMovement::InitAlternativeTarget(const GameObject* alternativeTarget)
-{
-    defaultTarget = target;
-    target        = alternativeTarget;
-}
-
-void CameraMovement::ResetToDefaultTarget()
-{
-    target        = defaultTarget;
-    defaultTarget = nullptr;
-}
-
 void CameraMovement::SetPosition(const float3& newPos)
 {
     parent->SetLocalPosition(newPos);

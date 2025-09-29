@@ -25,10 +25,8 @@
 #include "Standalone/MeshComponent.h"
 
 #include <SDL_mouse.h>
-#include <future>
 #include <map>
 #include <queue>
-#include <thread>
 #include <tuple>
 #ifdef OPTICK
 #include "optick.h"
@@ -183,33 +181,16 @@ update_status SceneModule::PostUpdate(float deltaTime)
     {
         loadSceneNextFrame = false;
 
-        if (asyncLoadingThread.valid()) // Scene data was previously loaded
+        rapidjson::Document doc;
+        if (FileSystem::LoadJSON(pendingScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
         {
-            CloseScene(true);
-            loadedScene = asyncLoadingThread.get();
-
-            if (loadedScene != nullptr)
-            {
-                // TODO loadedScene->LoadOpenGLReferences();
-                SwitchPlayMode(true);
-            }
+            CloseScene();
+            LoadScene(doc["Scene"], false);
+            SwitchPlayMode(true);
         }
-
-        // In case the async loading failed fall back to normal sequential loading
-        if (!asyncLoadingThread.valid() || loadedScene == nullptr)
+        else
         {
-            rapidjson::Document doc;
-            if (FileSystem::LoadJSON(pendingScenePath.c_str(), doc) && doc.HasMember("Scene") &&
-                doc["Scene"].IsObject())
-            {
-                CloseScene();
-                LoadScene(doc["Scene"], false);
-                SwitchPlayMode(true);
-            }
-            else
-            {
-                GLOG("[ERROR] Couldn't load scene: %s", pendingScenePath.c_str());
-            }
+            GLOG("[ERROR] Couldn't load scene: %s", pendingScenePath.c_str());
         }
     }
 
@@ -246,7 +227,7 @@ void SceneModule::LoadScene(const rapidjson::Value& initialState, const bool for
     loadedScene->Init();
 }
 
-void SceneModule::CloseScene(bool keepResources)
+void SceneModule::CloseScene()
 {
     if (inPlayMode)
     {
@@ -259,7 +240,7 @@ void SceneModule::CloseScene(bool keepResources)
     // TODO Warning dialog before closing scene without saving
     delete loadedScene;
     loadedScene = nullptr;
-    if (!keepResources && App->GetResourcesModule() != nullptr) App->GetResourcesModule()->ShutDown();
+    if (App->GetResourcesModule() != nullptr) App->GetResourcesModule()->ShutDown();
 }
 
 void SceneModule::SwitchPlayMode(bool play)
@@ -486,26 +467,4 @@ void SceneModule::RequestSceneLoad(const std::string& scenePath)
 {
     pendingScenePath   = scenePath;
     loadSceneNextFrame = true;
-}
-
-void SceneModule::InitAsyncScenePreLoad(const std::string& fullScenePath)
-{
-    asyncLoadingThread = std::async(
-        std::launch::async,
-        [&fullScenePath]()
-        {
-            Scene* asyncPreLoadedScene = nullptr;
-            std::this_thread::sleep_for(std::chrono::seconds(5));
-            /*rapidjson::Document doc;
-            if (FileSystem::LoadJSON(fullScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
-            {
-                rapidjson::Value& scene = doc["Scene"];
-                const UID extractedSceneUID = scene["UID"].GetUint64();
-                asyncPreLoadedScene = new Scene(scene, extractedSceneUID);
-                asyncPreLoadedScene->Init();
-            }*/
-
-            return asyncPreLoadedScene;
-        }
-    );
 }

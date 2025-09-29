@@ -41,9 +41,4 @@ class MovingUVTransparent : public Script
     float2 uvOffsetStart        = float2::zero;
 
     MeshComponent* meshComp     = nullptr;
-
-    bool isFadeOut              = false;
-    float fadeOutTime           = 0.0f;
-    float fadeOutTimer          = 0.0f;
-    float fadeOutDuration       = 0.0f;
 };

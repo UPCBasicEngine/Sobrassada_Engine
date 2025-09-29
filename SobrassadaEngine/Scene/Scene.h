@@ -151,8 +151,6 @@ class SOBRASADA_API_ENGINE Scene
     void QueueGameObjectDelete(UID uid);
     void FlushPendingDeletes();
 
-    RenderPass* GetRenderPass() const { return renderPass; }
-
     bool isSceneLoaded = false;
 
   private:
@@ -207,5 +205,5 @@ class SOBRASADA_API_ENGINE Scene
 
     RenderPass* renderPass = nullptr;
 
-    std::vector<UID> pendingDeletes;
+     std::vector<UID> pendingDeletes;
 };

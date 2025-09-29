@@ -7,14 +7,13 @@
 layout(location=4) uniform bool isWireframe;
 layout(location=5) uniform bool isAlphaDiscard;
 layout(location=6) uniform vec3 cameraPos;
-layout(location=7) uniform float time;
-layout(location=8) uniform float fadeOutTime;
-layout(location=11) uniform float fadeOutDuration;
 
 in vec3 pos;
 in vec2 uv;
 in vec3 normal;
 in vec4 tangent;
+
+
 
 out vec4 fragColor;
 
@@ -194,13 +193,7 @@ void main()
     vec4 metallicRoughnessTexColor;
     if(hasMetallic == 1) metallicRoughnessTexColor = pow(texture(sampler2D(metallicTex), uv), vec4(2.2));
     else metallicRoughnessTexColor = vec4(1);
-    float alpha = texColor.a * diffColor.a;
-
-    if (time > fadeOutTime) 
-    {
-        const float fadeFactor = 1.0f - min(1.0f, ((time - fadeOutTime) / fadeOutDuration));
-        alpha *= fadeFactor;
-    }
+    const float alpha = texColor.a * diffColor.a;
 
     if (!isWireframe && isAlphaDiscard)
     {

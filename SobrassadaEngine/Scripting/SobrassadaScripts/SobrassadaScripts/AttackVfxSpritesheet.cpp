@@ -104,16 +104,13 @@ bool AttackVfxSpritesheet::Init()
         if (otherImageUID == INVALID_UID || otherImage || otherImageBindlessUID != INVALID_UID) return true;
 
         otherImage = static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(otherImageUID));
-        if (otherImage)
-        {
-            otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
-            glMakeTextureHandleResidentARB(otherImageBindlessUID);
+        otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
+        glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
-            uvRange.x = 0.0f;
-            uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-            uvRange.z = 0.0f;
-            uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        } 
+        uvRange.x = 0.0f;
+        uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+        uvRange.z = 0.0f;
+        uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
     }
     return true;
 }
@@ -200,11 +197,10 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 
         glBindVertexArray(vao);
 
-        if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
         glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(2.0f, -2.0f);
+        glPolygonOffset(-2.0f, -2.0f);
 
         if (isDoubleSided) glDisable(GL_CULL_FACE);
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);

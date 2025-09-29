@@ -8,7 +8,7 @@
 class Component;
 class GameObject;
 
-struct SOBRASADA_API_ENGINE BulletUserPointer
+struct BulletUserPointer
 {
     BulletUserPointer() = default;
     BulletUserPointer(

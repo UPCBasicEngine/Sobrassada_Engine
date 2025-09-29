@@ -369,8 +369,7 @@ void Character::TakeDamage(int amount)
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
-        if (type != CharacterType::Destructible) playerScript->OnEnemyHit();
-        else playerScript->OnObjectDestroyed();
+        playerScript->OnEnemyHit();
 
         if (onHitPivot)
         {
@@ -477,7 +476,7 @@ void Character::Die()
     isDead = true;
     OnDeath();
 
-    if (type != CharacterType::CuChulainn && type != CharacterType::Destructible) playerScript->OnEnemyDefeated();
+    if (type != CharacterType::CuChulainn) playerScript->OnEnemyDefeated();
 
     if (characterCollider)
     {

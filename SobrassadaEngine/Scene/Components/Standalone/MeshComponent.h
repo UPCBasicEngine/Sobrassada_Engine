@@ -52,7 +52,6 @@ class MeshComponent : public Component
 
     unsigned int GetBoneIndexOffset() const { return boneIndexOffset; }
     bool GetUpdateShaderStorage() const { return updateShaderStorage; }
-    bool GetAdditive() const { return additive; }
 
     void SetBones(const std::vector<GameObject*>& bones, const std::vector<UID> bonesIds)
     {
@@ -102,7 +101,6 @@ class MeshComponent : public Component
     int renderMode               = 0; // 0 = Opaque, 1 = Alpha Blend, 2 = Alpha Discard
 
     bool produceShadows          = true;
-    bool additive                = false;
 
     bool batchWasEnabled         = false;
 

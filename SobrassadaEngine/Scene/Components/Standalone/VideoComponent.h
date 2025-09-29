@@ -30,7 +30,7 @@ class VideoComponent : public Component
 
     void ClearVideo();
     void SOBRASADA_API_ENGINE Play();
-    bool SOBRASADA_API_ENGINE IsPlaying() const { return isPlaying; }
+    bool IsPlaying() const { return isPlaying; }
 
   private:
     bool InitVideo();

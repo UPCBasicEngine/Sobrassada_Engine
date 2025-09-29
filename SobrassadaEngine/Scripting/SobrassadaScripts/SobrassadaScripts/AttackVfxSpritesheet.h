@@ -43,5 +43,4 @@ class AttackVfxSpritesheet : public Script
     UID otherImageBindlessUID   = 0;
 
     bool isOneShot              = false;
-    bool isAdditive             = false;
 };

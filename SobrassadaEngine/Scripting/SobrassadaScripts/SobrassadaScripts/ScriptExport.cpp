@@ -43,7 +43,6 @@
 #include "CoverPointTrigger.h"
 #include "Banshee_v2.h"
 #include "WallCollision.h"
-#include "AsyncSceneLoading.h"
 
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
@@ -57,7 +56,6 @@
 #include "VSyncToggleScript.h"
 
 #include "BossMirage.h"
-#include "HighlightCharacter.h"
 #include "Mirage.h"
 #include "MirageBossDash.h"
 
@@ -112,9 +110,7 @@ constexpr const char* scripts[] = {
     "MirageBossDash",
     "ArcherProjectile",
     "CoverPointTrigger",
-    "GameOverNavigatorScript",
-    "HighlightCharacter",
-    "AsyncSceneLoading"
+    "GameOverNavigatorScript"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -156,9 +152,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
     if (scriptType == "Boss") return new Boss(parent);
-    if (scriptType == "HighlightCharacter") return new HighlightCharacter(parent);
-
-    
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);
@@ -182,7 +175,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MoveGOInSpline") return new MoveGOInSpline(parent);
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
     if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
-    if (scriptType == "AsyncSceneLoading") return new AsyncSceneLoading(parent);
 
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
