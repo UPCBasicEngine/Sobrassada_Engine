@@ -16,6 +16,7 @@ class ParticleSystemComponent;
 class Spouts;
 class AttackVfxSpritesheet;
 class AudioSourceComponent;
+class AnimationComponent;
 
 enum class BossDistance
 {
@@ -221,9 +222,17 @@ class Boss : public Character
 
     std::string shieldBlastVFXName                   = "";
     MeshComponent* blastPreHitMesh                   = nullptr;
-    MeshComponent* blastSpriteSheetMesh              = nullptr;
     ShaderScriptComponent* blastSpriteScript         = nullptr;
     AttackVfxSpritesheet* blastSpritesheet           = nullptr;
+
+    std::string invulnerableVFXName                  = "";
+    AnimationComponent* invulnerableAnimation        = nullptr;
+    ShaderScriptComponent* invulnerableSpriteScript  = nullptr;
+    AttackVfxSpritesheet* invulnerableSpritesheet    = nullptr;
+    ShaderScriptComponent* invulnerableBarrierScript = nullptr;
+    MovingUVTransparent* invulnerableBarrierUV       = nullptr;
+    ShaderScriptComponent* invulnerableAuraScript    = nullptr;
+    MovingUVTransparent* invulnerableAuraUV          = nullptr;
 
     // Particle
     std::string atomParticleName                     = "";
