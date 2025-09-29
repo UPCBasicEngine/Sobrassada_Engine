@@ -103,50 +103,32 @@ RenderPass::~RenderPass()
 
 void RenderPass::Bind() const
 {
-#ifndef GAME
     framebuffer->Bind();
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-
     glViewport(0, 0, width, height);
 }
 
 // Copy Depth to Framebuffer
 void RenderPass::CopyDepth() const
 {
-#ifndef GAME
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
+
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
-#ifndef GAME
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 }
 
 // Copy Depth and Stencil to Framebuffer
 void RenderPass::CopyDepthStencil() const
 {
-#ifndef GAME
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
 
     glBlitFramebuffer(
         0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
     );
 
-#ifndef GAME
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->GetFramebufferID()); // write to default framebuffer
-#else
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 }
 
 void RenderPass::RenderScene(
@@ -302,6 +284,10 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
+    AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
 }
 
@@ -553,7 +539,7 @@ void RenderPass::ShadowMapPassRender(
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
 
-    //batchManager->RenderShadowMap(meshesToRender, ubo);
+    // batchManager->RenderShadowMap(meshesToRender, ubo);
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1020,6 +1006,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 {
     Bind();
 
+    glDepthMask(GL_FALSE);
     BatchManager* batchManager    = App->GetResourcesModule()->GetBatchManager();
 
     const unsigned int program    = App->GetShaderModule()->GetTransparentPassProgram();

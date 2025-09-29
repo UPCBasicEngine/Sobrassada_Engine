@@ -7,6 +7,7 @@
 #include "InputModule.h"
 #include "OpenGLModule.h"
 #include "PhysicsModule.h"
+#include "RenderPass.h"
 
 #include "SDL.h"
 #include "glew.h"

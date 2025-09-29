@@ -42,7 +42,7 @@ class Archer : public Character
     void Update(float deltaTime) override;
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
-    void PlayHighlightSequence();
+    void PlayHighlightSequence() override;
     void UpdateHighlightState(float deltaTime);
 
   public:

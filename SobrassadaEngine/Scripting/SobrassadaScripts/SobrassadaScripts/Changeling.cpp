@@ -76,6 +76,9 @@ Changeling::Changeling(GameObject* parent)
 
     fields.emplace_back("VFX_DigUpRocks", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
     fields.emplace_back("VFX_DigUpHole", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
+
+    // Highlight
+    fields.emplace_back("Highlight duration", InspectorField::FieldType::Float, &highlightDuration, 0.1f, 10.0f);
 }
 
 bool Changeling::Init()
@@ -95,7 +98,7 @@ bool Changeling::Init()
     Character::Init();
 
     version = static_cast<ChangelingVersions>(userSelectedVersion);
-    if (version == ChangelingVersions::RANDOM) randomVersion = ChangelingVersions::SNEAK;
+    if (version == ChangelingVersions::RANDOM) randomVersion = ChangelingVersions::DEFAULT;
 
     agentAI->RecreateAgent();
     agentAI->SetLookForward(true);
@@ -237,6 +240,9 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::DYING:
         UpdateDyingState(deltaTime, distanceToPlayerSq);
         break;
+    case ChangelingStates::HIGHLIGHTING:
+        UpdateHighlightState(deltaTime, distanceToPlayerSq);
+        break;
     case ChangelingStates::NONE:
         currentState = ChangelingStates::IDLE_BURIED;
         break;
@@ -247,7 +253,8 @@ void Changeling::HandleState(float deltaTime)
 
 void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq)
 {
-    if (ShouldSwapStatesOnRandomVersion(deltaTime)) randomVersion = static_cast<ChangelingVersions>(rand() % 3 + 1);
+    if (ShouldSwapStatesOnRandomVersion(deltaTime))
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
     if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
 
@@ -318,7 +325,7 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
 
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
-        randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
 
@@ -344,7 +351,7 @@ void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
-        randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
 
@@ -376,7 +383,7 @@ void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerS
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
-        randomVersion = static_cast<ChangelingVersions>((rand() % 3) + 1);
+        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
 

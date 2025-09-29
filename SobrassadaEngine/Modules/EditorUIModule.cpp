@@ -19,6 +19,7 @@
 #include "ResourcesModule.h"
 #include "SceneImporter.h"
 
+#include "RenderPass.h"
 #include "SceneModule.h"
 #include "Script.h"
 #include "ScriptModule.h"
