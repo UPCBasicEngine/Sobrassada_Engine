@@ -221,9 +221,14 @@ class Boss : public Character
     MovingUVTransparent* smallExpansionUV            = nullptr;
 
     std::string shieldBlastVFXName                   = "";
-    MeshComponent* blastPreHitMesh                   = nullptr;
+    ShaderScriptComponent* blastPreSpriteScript      = nullptr;
+    AttackVfxSpritesheet* blastPreSpritesheet        = nullptr;
     ShaderScriptComponent* blastSpriteScript         = nullptr;
     AttackVfxSpritesheet* blastSpritesheet           = nullptr;
+    ShaderScriptComponent* blastSpriteScript2        = nullptr;
+    AttackVfxSpritesheet* blastSpritesheet2          = nullptr;
+    ShaderScriptComponent* blastEnergySpriteScript   = nullptr;
+    AttackVfxSpritesheet* blastEnergySpritesheet     = nullptr;
 
     std::string invulnerableVFXName                  = "";
     AnimationComponent* invulnerableAnimation        = nullptr;
@@ -264,7 +269,7 @@ class Boss : public Character
     // ShieldBlast
     std::string blastAreaName = "";
     GameObject* blastArea     = nullptr;
-    float blastHitboxDelay    = 2.4f;
+    float blastHitboxDelay    = 1.3f;
     bool blastHit             = false;
     float blastHitTimer       = 0.0f;
 

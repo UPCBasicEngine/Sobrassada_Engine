@@ -338,14 +338,43 @@ bool Boss::Init()
     GameObject* shieldBlastVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldBlastVFXName);
     if (shieldBlastVFX)
     {
-        GameObject* blastPreHitObject = shieldBlastVFX->GetChildGameObjectByName("BlastShield_1");
+        GameObject* blastPreHitObject = shieldBlastVFX->GetChildGameObjectByName("BlastSpritePre");
         if (blastPreHitObject)
         {
-            blastPreHitMesh = blastPreHitObject->GetComponent<MeshComponent*>();
+            MeshComponent* blastPreHitMesh = blastPreHitObject->GetComponent<MeshComponent*>();
             if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
             else GLOG("[WARNING] Blast pre hit mesh not found for ferdiad");
+
+            blastPreSpriteScript = blastPreHitObject->GetComponent<ShaderScriptComponent*>();
+            if (blastPreSpriteScript)
+            {
+                blastPreSpriteScript->SetEnabled(false);
+
+                blastPreSpritesheet = blastPreSpriteScript->GetScriptByType<AttackVfxSpritesheet>();
+                if (!blastPreSpritesheet) GLOG("[WARNING] Blast pre sprite sheet script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Blast pre sprite sheet script not found for ferdiad");
         }
         else GLOG("[WARNING] Blast pre hit VFX not found for ferdiad");
+
+        GameObject* blastSpriteSheetEnergyObject = shieldBlastVFX->GetChildGameObjectByName("BlastSpriteEnergy");
+        if (blastSpriteSheetEnergyObject)
+        {
+            MeshComponent* blastSpriteSheetEnergyMesh = blastSpriteSheetEnergyObject->GetComponent<MeshComponent*>();
+            if (blastSpriteSheetEnergyMesh) blastSpriteSheetEnergyMesh->SetEnabled(false);
+            else GLOG("[WARNING] Blast sprite sheet energy mesh not found for ferdiad");
+
+            blastEnergySpriteScript = blastSpriteSheetEnergyObject->GetComponent<ShaderScriptComponent*>();
+            if (blastEnergySpriteScript)
+            {
+                blastEnergySpriteScript->SetEnabled(false);
+
+                blastEnergySpritesheet = blastEnergySpriteScript->GetScriptByType<AttackVfxSpritesheet>();
+                if (!blastEnergySpritesheet) GLOG("[WARNING] Blast sprite sheet energy script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Blast sprite sheet energy script not found for ferdiad");
+        }
+        else GLOG("[WARNING] Blast sprite sheet energy object not found for ferdiad");
 
         GameObject* blastSpriteSheetObject = shieldBlastVFX->GetChildGameObjectByName("BlastSprite");
         if (blastSpriteSheetObject)
@@ -365,6 +394,25 @@ bool Boss::Init()
             else GLOG("[WARNING] Blast sprite sheet script not found for ferdiad");
         }
         else GLOG("[WARNING] Blast sprite sheet hit object not found for ferdiad");
+
+        GameObject* blastSpriteSheetObject2 = shieldBlastVFX->GetChildGameObjectByName("BlastSprite2");
+        if (blastSpriteSheetObject2)
+        {
+            MeshComponent* blastSpriteSheetMesh2 = blastSpriteSheetObject2->GetComponent<MeshComponent*>();
+            if (blastSpriteSheetMesh2) blastSpriteSheetMesh2->SetEnabled(false);
+            else GLOG("[WARNING] Blast sprite sheet 2 mesh not found for ferdiad");
+
+            blastSpriteScript2 = blastSpriteSheetObject2->GetComponent<ShaderScriptComponent*>();
+            if (blastSpriteScript2)
+            {
+                blastSpriteScript2->SetEnabled(false);
+
+                blastSpritesheet2 = blastSpriteScript2->GetScriptByType<AttackVfxSpritesheet>();
+                if (!blastSpritesheet2) GLOG("[WARNING] Blast sprite sheet 2 script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Blast sprite sheet 2 script not found for ferdiad");
+        }
+        else GLOG("[WARNING] Blast sprite sheet 2 hit object not found for ferdiad");
 
         blastArea = shieldBlastVFX->GetChildGameObjectByName(blastAreaName);
         if (blastArea) blastArea->SetEnabled(false);
@@ -812,9 +860,10 @@ void Boss::ChooseNextStateSecondPhase()
         waterSpoutsRate   = 100;
         break;
     }
-    //waterSpoutsRate = -1;
+    waterSpoutsRate   = -1;
+    shieldStrikesRate = -1;
 
-    int num         = uniformDist(rng);
+    int num           = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1012,16 +1061,20 @@ void Boss::ShieldStrikes(float deltaTime)
             return;
         }
 
-        switch (CheckDistance()) // if far change mechanic
+        if (shieldStrikeLastAction != 0)
         {
-        case BossDistance::Distant:
-        case BossDistance::Far:
-        case BossDistance::Farther:
-            agentAI->PauseMovement();
-            ChooseNextState();
-            break;
-        default:
-            break;
+            switch (CheckDistance()) // if far change mechanic
+            {
+            case BossDistance::Distant:
+            case BossDistance::Far:
+            case BossDistance::Farther:
+                agentAI->PauseMovement();
+                stateEnter   = true;
+                currentState = ChooseAlternativeState();
+                break;
+            default:
+                break;
+            }
         }
         break;
 
@@ -1740,8 +1793,10 @@ void Boss::ResetValues(bool changePhase)
     if (smokeParticle) smokeParticle->StopInstances();
     if (chargeShieldParticle) chargeShieldParticle->StopInstances();
 
-    if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
+    if (blastPreSpriteScript) blastPreSpriteScript->SetEnabled(false);
+    if (blastEnergySpriteScript) blastEnergySpriteScript->SetEnabled(false);
     if (blastSpriteScript) blastSpriteScript->SetEnabled(false);
+    if (blastSpriteScript2) blastSpriteScript2->SetEnabled(false);
     if (energyBlastParticle1) energyBlastParticle1->StopInstances();
     if (energyBlastParticle2) energyBlastParticle2->StopInstances();
     if (energyBlastParticle3) energyBlastParticle3->StopInstances();
@@ -1763,7 +1818,11 @@ void Boss::ShieldBlast(float deltaTime)
 
         blastHitTimer     = 0.0f;
         blastHit          = false;
+
+        if (blastPreSpritesheet) blastPreSpritesheet->Reset();
+        if (blastEnergySpritesheet) blastEnergySpritesheet->Reset();
         if (blastSpritesheet) blastSpritesheet->Reset();
+        if (blastSpritesheet2) blastSpritesheet2->Reset();
     }
 
     switch (currentAction)
@@ -1794,26 +1853,45 @@ void Boss::ShieldBlast(float deltaTime)
             attackHitboxDelay    = blastHitboxDelay;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
+
             audioPlayed = false;
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACKSTART);
         }
 
-        if (attackTimer >= 0.3f && blastPreHitMesh && !blastPreHitMesh->GetEnabled())
+        if (attackTimer >= blastHitboxDelay - 0.2f)
         {
-            blastPreHitMesh->SetEnabled(true);
+            agentAI->SetAngularSpeed(1.0f);
+        }
+        else if (attackTimer >= blastHitboxDelay - 0.4f)
+        {
+            agentAI->SetAngularSpeed(2.0f);
+        }
+        else if (attackTimer >= 0.7f)
+        {
             agentAI->SetAngularSpeed(3.0f);
         }
-
-        if (attackTimer >= 0.5f)
+        else if (attackTimer >= 0.5f)
         {
+            agentAI->SetAngularSpeed(4.0f);
             animComponent->OnPause();
-            agentAI->SetAngularSpeed(1.0f);
+        }
+        else if (attackTimer >= 0.3f)
+        {
+            agentAI->SetAngularSpeed(5.0f);
+            blastPreSpriteScript->SetEnabled(true);
         }
 
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-        if (attackTimer >= attackHitboxDelay)
+        if (blastPreSpritesheet && blastPreSpritesheet->AlmostFinished(6, 3))
         {
+            if (blastEnergySpriteScript) blastEnergySpriteScript->SetEnabled(true);
+        }
+
+        if (blastPreSpritesheet && blastPreSpritesheet->Finished())
+        {
+            if (blastPreSpriteScript) blastPreSpriteScript->SetEnabled(false);
+
             actionTriggerDone = false;
             currentAction     = BossActions::Shoot;
         }
@@ -1826,10 +1904,10 @@ void Boss::ShieldBlast(float deltaTime)
 
             agentAI->SetAngularSpeed(0.5f);
 
-            if (blastPreHitMesh) blastPreHitMesh->SetEnabled(false);
             if (blastArea) blastArea->SetEnabled(true);
 
             if (blastSpriteScript) blastSpriteScript->SetEnabled(true);
+            if (blastSpriteScript2) blastSpriteScript2->SetEnabled(true);
             if (energyBlastParticle1) energyBlastParticle1->Init();
             if (energyBlastParticle2) energyBlastParticle2->Init();
             if (energyBlastParticle3) energyBlastParticle3->Init();
@@ -1865,7 +1943,9 @@ void Boss::ShieldBlast(float deltaTime)
 
             if (blastArea) blastArea->SetEnabled(false);
 
+            if (blastEnergySpriteScript) blastEnergySpriteScript->SetEnabled(false);
             if (blastSpriteScript) blastSpriteScript->SetEnabled(false);
+            if (blastSpriteScript2) blastSpriteScript2->SetEnabled(false);
 
             agentAI->ResetAngularSpeed();
             StopAttacking();
