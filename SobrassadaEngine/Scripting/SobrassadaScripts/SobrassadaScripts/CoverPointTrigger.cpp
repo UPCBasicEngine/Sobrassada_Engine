@@ -299,29 +299,6 @@ void CoverPointTrigger::NotifyArchersCompromised()
 
 float3 CoverPointTrigger::GetGroundPosition() const
 {
-    if (!isProjected && !registeredArchers.empty())
-    {
-        Archer* archer = registeredArchers[0];
-        if (archer && archer->GetAI())
-        {
-            bool posOverPoly        = false;
-            float3 navPosition      = float3::zero;
-            const float3 searchArea = {5.0f, 10.0f, 5.0f};
-
-            archer->GetAI()->GetClosestPointInNavmesh(groundPosition, searchArea, posOverPoly, navPosition);
-
-            if (posOverPoly)
-            {
-                const_cast<CoverPointTrigger*>(this)->groundPosition = navPosition;
-                const_cast<CoverPointTrigger*>(this)->isProjected    = true;
-                GLOG(
-                    "LAZY PROJECTED %s to: (%.2f, %.2f, %.2f)", parent->GetName().c_str(), navPosition.x, navPosition.y,
-                    navPosition.z
-                );
-            }
-        }
-    }
-
     return groundPosition;
 }
 
