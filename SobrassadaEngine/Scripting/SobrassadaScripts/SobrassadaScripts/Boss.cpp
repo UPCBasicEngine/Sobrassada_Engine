@@ -739,9 +739,9 @@ void Boss::ChooseNextStateSecondPhase()
         waterSpoutsRate   = 100;
         break;
     }
-    // waterSpoutsRate = -1;
+    waterSpoutsRate = -1;
 
-    int num = uniformDist(rng);
+    int num         = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1720,6 +1720,8 @@ void Boss::ShieldBlast(float deltaTime)
             attackHitboxDelay    = blastHitboxDelay;
             attackHitboxDuration = 2.0f;
             Character::Attack(deltaTime);
+            audioPlayed = false;
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACKSTART);
         }
 
         if (attackTimer >= 0.3f && blastPreHitMesh && !blastPreHitMesh->GetEnabled())
@@ -1759,6 +1761,9 @@ void Boss::ShieldBlast(float deltaTime)
             if (energyBlastParticle2) energyBlastParticle2->Init();
             if (energyBlastParticle3) energyBlastParticle3->Init();
             if (energyBlastParticle4) energyBlastParticle4->Init();
+
+            if (audio) audio->StopAudio();
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACKLOOP);
         }
 
         if (blastSpritesheet && blastSpritesheet->AlmostFinished(6, 5))

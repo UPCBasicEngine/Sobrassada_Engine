@@ -255,7 +255,7 @@ class Boss : public Character
     // ShieldBlast
     std::string blastAreaName = "";
     GameObject* blastArea     = nullptr;
-    float blastHitboxDelay    = 1.3f;
+    float blastHitboxDelay    = 2.4f;
     bool blastHit             = false;
     float blastHitTimer       = 0.0f;
 
