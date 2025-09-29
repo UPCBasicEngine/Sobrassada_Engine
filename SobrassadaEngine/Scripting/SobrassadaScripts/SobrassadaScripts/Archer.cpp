@@ -134,6 +134,8 @@ bool Archer::Init()
         }
         else GLOG("[WARNING] No arrows found for single shoot archer");
     }
+   
+   
 
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Archer: No audio component found");
@@ -174,7 +176,7 @@ void Archer::Update(float deltaTime)
         return;
     }
 
-    Character::Update(deltaTime);
+   Character::Update(deltaTime);
     repositionTimer += deltaTime;
     breathDuration  += deltaTime;
 
@@ -1416,7 +1418,7 @@ void Archer::PatrolAI()
         return;
     }
 
-    bool valid = false;
+      bool valid = false;
     if (reachedPatrolPoint)
     {
         if (CheckDistanceWithPoint(startPos)) reachedPatrolPoint = false;
@@ -1427,6 +1429,8 @@ void Archer::PatrolAI()
         if (CheckDistanceWithPoint(patrolPoint)) reachedPatrolPoint = true;
         else valid = agentAI->SetPathNavigation(patrolPoint);
     }
+
+    
 }
 
 void Archer::ApplyKnockback()
@@ -1504,6 +1508,7 @@ void Archer::ChaseAI()
         }
     }
 }
+
 
 void Archer::SearchForPlayer()
 {
@@ -1742,6 +1747,8 @@ void Archer::ChangeState()
 {
     if (isDead) return;
 
+ 
+
     if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
     {
         if (currentState != ArcherStates::PATROL)
@@ -1846,7 +1853,6 @@ void Archer::Escape(float deltaTime)
         else
         {
             agentAI->GetClosestPointInNavmesh(currentEscapeTarget, searchArea, posOverPoly, closestPoint);
-
             if (posOverPoly)
             {
                 if (distanceToTarget > 2.0f)
@@ -1947,4 +1953,12 @@ void Archer::Escape(float deltaTime)
 
     agentAI->SetPathNavigation(currentEscapeTarget);
     agentAI->LookAtMovement(currentEscapeTarget, deltaTime);
+    agentAI->SetSpeed(25.0f, 8.0f);
+
+    if (character->GetLastPosition().Distance(parent->GetGlobalTransform().TranslatePart()) >= rangeEscape)
+    {
+        hasEscapeTarget = false;
+        if (animComponent) animComponent->UseTrigger("dashEnd");
+        agentAI->ResetSpeed();
+    }
 }

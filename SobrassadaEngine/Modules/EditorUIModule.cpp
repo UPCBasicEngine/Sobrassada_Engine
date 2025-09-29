@@ -1623,7 +1623,7 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
     if (ImGui::CollapsingHeader("Editor camera"))
     {
         // TODO: ADD CAMERA MODULE AS TEMPORAL MEANWHILO THERE ARE NO GAMEOBJECTS
-        // CameraConfig();
+        CameraConfig();
     }
 
     ImGui::Spacing();
@@ -1642,6 +1642,18 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
     if (ImGui::CollapsingHeader("Physics"))
     {
         PhysicsConfig();
+    }
+
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Height Fog"))
+    {
+        HeightFogSettings();
+    }
+
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("FXAA"))
+    {
+        FXAASettings();
     }
 
     ImGui::End();
@@ -1703,6 +1715,16 @@ void EditorUIModule::WindowConfig(bool& vsync)
 
 void EditorUIModule::CameraConfig() const
 {
+    CameraModule* cam = App->GetCameraModule();
+
+    float nearPlane   = cam->GetNearPlaneDistance();
+    float farPlane    = cam->GetFarPlaneDistance();
+
+    ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Far Plane", &farPlane, 0.1f, 0.1f, 5000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+    cam->SetNear(nearPlane);
+    cam->SetFar(farPlane);
 }
 
 void EditorUIModule::OpenGLConfig()
@@ -1945,6 +1967,43 @@ void EditorUIModule::PhysicsConfig() const
     }
 
     // ImGui::ShowDemoWindow();
+}
+
+void EditorUIModule::HeightFogSettings() const
+{
+    HeightFogParameters heightFog = App->GetSceneModule()->GetScene()->GetRenderPass()->GetHeightFogParameters();
+
+    ImGui::Checkbox("Enable Height Fog", &heightFog.isEnabled);
+    ImGui::Checkbox("Follow Camera Height", &heightFog.followCamera);
+    ImGui::DragFloat(
+        "Density Constant", &heightFog.densityConstant, 0.001f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat(
+        "Height Falloff", &heightFog.heightFalloff, 0.001f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat("Max Fog", &heightFog.maxFog, 0.001f, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat(
+        "Start Height", &heightFog.fogStartHeight, 0.001f, -50.0f, 50.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::ColorEdit3("Fog Color", heightFog.fogColor.ptr());
+
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetHeightFogParameters(heightFog);
+}
+
+void EditorUIModule::FXAASettings() const
+{
+    FXAAParameters fxaa = App->GetSceneModule()->GetScene()->GetRenderPass()->GetFXAAParameters();
+
+    ImGui::Checkbox("Enable FXAA", &fxaa.isEnabled);
+    ImGui::Checkbox("Show borders", &fxaa.showBorders);
+    ImGui::DragFloat(
+        "Global Threshold", &fxaa.globalThreshold, 0.001f, 0.0312f, 0.0833f, "%.4f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat(
+        "Local Threshold", &fxaa.localThreshold, 0.001f, 0.063f, 0.333f, "%.4f", ImGuiSliderFlags_AlwaysClamp
+    );
+
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetFXAAParameters(fxaa);
 }
 
 void EditorUIModule::ShowCaps() const

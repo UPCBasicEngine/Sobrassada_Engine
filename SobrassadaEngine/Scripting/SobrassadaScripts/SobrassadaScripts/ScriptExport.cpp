@@ -110,7 +110,9 @@ constexpr const char* scripts[] = {
     "MirageBossDash",
     "ArcherProjectile",
     "CoverPointTrigger",
-    "GameOverNavigatorScript"
+    "GameOverNavigatorScript",
+    "HighlightCharacter",
+    "AsyncSceneLoading"
 };
 
 constexpr const char* shaderScripts[] = {

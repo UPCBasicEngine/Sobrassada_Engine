@@ -112,6 +112,15 @@ void GameDebugUIModule::GameDebugMenu()
 
     if (openConsole) App->GetEditorUIModule()->Console(openConsole);
 
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    FXAAParameters fxaa = App->GetSceneModule()->GetScene()->GetRenderPass()->GetFXAAParameters();
+    ImGui::Checkbox("Enable FXAA", &fxaa.isEnabled);
+    ImGui::Checkbox("Show borders", &fxaa.showBorders);
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetFXAAParameters(fxaa);
+
     ImGui::Separator();
     ImGui::Spacing();
     ImGui::Spacing();

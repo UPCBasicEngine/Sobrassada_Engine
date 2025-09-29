@@ -12,15 +12,13 @@
 #include "ScriptComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/AIAgentComponent.h"
-#include "ResourceNavmesh.h"
-#include <PathfinderModule.h>
 
 
 CoverPointTrigger::CoverPointTrigger(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Player Name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Compromise Radius", InspectorField::FieldType::Float, &compromiseRadius, 1.0f, 10.0f});
-    
+    fields.push_back({"Reset Delay", InspectorField::FieldType::Float, &resetDelay, 1.0f, 30.0f});
 }
 
 bool CoverPointTrigger::Init()
@@ -212,7 +210,7 @@ void CoverPointTrigger::Update(float deltaTime)
         }
     }
 
-    if (isCompromised)
+   if (isCompromised)
     {
         float distanceToPlayer = groundPosition.Distance(player->GetPosition());
         if (distanceToPlayer > compromiseRadius * 1.5f)
@@ -221,8 +219,6 @@ void CoverPointTrigger::Update(float deltaTime)
             ResetCoverPoint();
         }
     }
-
-   
 }
 
 void CoverPointTrigger::CompromiseCoverPoint()
@@ -303,7 +299,30 @@ void CoverPointTrigger::NotifyArchersCompromised()
 
 float3 CoverPointTrigger::GetGroundPosition() const
 {
-   return groundPosition;
+    if (!isProjected && !registeredArchers.empty())
+    {
+        Archer* archer = registeredArchers[0];
+        if (archer && archer->GetAI())
+        {
+            bool posOverPoly        = false;
+            float3 navPosition      = float3::zero;
+            const float3 searchArea = {5.0f, 10.0f, 5.0f};
+
+            archer->GetAI()->GetClosestPointInNavmesh(groundPosition, searchArea, posOverPoly, navPosition);
+
+            if (posOverPoly)
+            {
+                const_cast<CoverPointTrigger*>(this)->groundPosition = navPosition;
+                const_cast<CoverPointTrigger*>(this)->isProjected    = true;
+                GLOG(
+                    "LAZY PROJECTED %s to: (%.2f, %.2f, %.2f)", parent->GetName().c_str(), navPosition.x, navPosition.y,
+                    navPosition.z
+                );
+            }
+        }
+    }
+
+    return groundPosition;
 }
 
 float3 CoverPointTrigger::GetFlankingPosition(const float3& playerPos) const

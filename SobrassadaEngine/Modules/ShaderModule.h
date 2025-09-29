@@ -44,6 +44,8 @@ class ShaderModule : public Module
     int GetSsaoDebugProgram() const { return ssaoDebugProgram; }
     int GetSsaoBlurProgram() const { return ssaoBlurProgram; }
     int GetVideoProgram() const { return videoProgram; }
+    int GetFXAAProgram() const { return fxaaProgram; }
+    int GetHeightFogProgram() const { return heightFogProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -88,6 +90,8 @@ class ShaderModule : public Module
     int ssaoBlurProgram                = -1;
 
     int videoProgram                   = -1;
+    int fxaaProgram                    = -1;
+    int heightFogProgram               = -1;
 
     std::map<HashString, unsigned int> customShaderPrograms;
 };

@@ -35,15 +35,14 @@ class CoverPointTrigger : public Script
     float3 GetFlankingPosition(const float3& playerPos) const;
 
   private:
-    
+   
     std::string playerName = "CuChulainn";
     float compromiseRadius = 3.0f;
-   
+    float resetDelay       = 5.0f;
 
-    
     GameObject* player     = nullptr;
     bool isCompromised     = false;
-   
+    float resetTimer       = 0.0f;
     float3 groundPosition  = float3::zero;
 
     std::vector<Archer*> registeredArchers;
