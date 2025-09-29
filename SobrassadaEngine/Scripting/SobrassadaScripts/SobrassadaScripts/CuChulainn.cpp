@@ -36,6 +36,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
+#include "UISpritesheet.h"
 
 #include "Math/Quat.h"
 #include "SDL.h"
@@ -301,6 +302,22 @@ bool CuChulainn::Init()
     }
     if (!riastradEye) GLOG("[WARNING] No riastrad Eye Shader Script found for CuChulain");
 
+    riastradEyeObj = scene->GetGameObjectByName(riastradVfxBGName);
+    if (riastradEyeObj)
+    {
+        riastradVfxBG = riastradEyeObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
+    GLOG("[WARNING] No riastrad Eye BG VFX Shader Script found for CuChulain");
+
+    riastradEyeObj = scene->GetGameObjectByName(riastradVfxFGName);
+    if (riastradEyeObj)
+    {
+        riastradVfxFG = riastradEyeObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
+    else GLOG("[WARNING] No riastrad Eye FG VFX Shader Script found for CuChulain");
+
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
     if (!riastradTriggers) GLOG("[WARNING] No riastrad triggers HUD element found")
     else riastradTriggers->SetEnabled(false);
@@ -507,9 +524,11 @@ void CuChulainn::Update(float deltaTime)
     if (isRiastrad && riastradEye)
     {
         riastradEye->SetFillAmount(riastradTimer / riastradDuration);
-        GLOG("Riastard timer: %f", riastradTimer);
-        GLOG("Riastard duration: %f", riastradDuration);
-        GLOG("Riastard eye : %f", riastradTimer / riastradDuration);
+        if (riastradTimer / riastradDuration < 0.1f)
+        {
+            if (riastradVfxFG) riastradVfxFG->GetParent()->SetEnabled(false);
+            if (riastradVfxBG) riastradVfxBG->GetParent()->SetEnabled(false);
+        }
     }
 
     // Dash decal spawn when in middle of dash
@@ -1882,6 +1901,16 @@ void CuChulainn::AddRiastrad(int amount)
     if (riastradMeter == 100)
     {
         if (riastradEye) riastradEye->SetFillAmount(riastradMeter / 100.0f);
+        if (riastradVfxBG)
+        {
+            riastradVfxBG->SetEnabled(true);
+            riastradVfxBG->GetScriptByType<UISpritesheet>()->Reset();
+        }
+        if (riastradVfxFG)
+        {
+            riastradVfxFG->SetEnabled(true);
+            riastradVfxFG->GetScriptByType<UISpritesheet>()->Reset();
+        }
         if (AppEngine->GetInputModule()->IsUsingKeyboard()) riastradKey->SetEnabled(true);
         else riastradTriggers->SetEnabled(true);
     }

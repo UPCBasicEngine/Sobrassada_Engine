@@ -15,6 +15,7 @@ class AbilityIconFill;
 class DamageMask;
 class AttackVfxSpritesheet;
 class ShaderScriptComponent;
+class UISpritesheet;
 
 enum class CharacterStates
 {
@@ -269,8 +270,12 @@ class CuChulainn : public Character
     std::string riastradEyeName          = "RiastradEye";
     std::string riastradTriggersName     = "RiastradTriggers";
     std::string riastradKeyName          = "RiastradKey";
+    std::string riastradVfxBGName        = "EyeBackgroundVFX";
+    std::string riastradVfxFGName        = "EyeForegroundVFX";
     BarFill* riastradBar                 = nullptr;
     AbilityIconFill* riastradEye         = nullptr;
+    ShaderScriptComponent* riastradVfxBG = nullptr;
+    ShaderScriptComponent* riastradVfxFG = nullptr;
     GameObject* riastradTriggers         = nullptr;
     GameObject* riastradKey              = nullptr;
     int riastradMeter                    = 0;
