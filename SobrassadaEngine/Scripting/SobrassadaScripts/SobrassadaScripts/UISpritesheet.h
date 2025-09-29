@@ -28,6 +28,7 @@ class UISpritesheet : public Script
     unsigned int texture         = 0;
 
     bool disableDefaultImage     = true;
+    bool isOneShot               = false;
     float updateRate             = 1.0f;
     float timer                  = 0.0f;
 

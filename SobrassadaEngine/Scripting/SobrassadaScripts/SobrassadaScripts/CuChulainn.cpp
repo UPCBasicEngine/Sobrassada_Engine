@@ -350,6 +350,54 @@ bool CuChulainn::Init()
     if (!hudMushrooms[2]) GLOG("[WARNING] No HUD Mushroom 3 found for CuChulain")
     else hudMushrooms[2]->SetEnabled(false);
 
+    GameObject* obj = scene->GetGameObjectByName(hudMushroomUseName1);
+    if (obj)
+    {
+        hudMushroomsUse[0] = obj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (!hudMushroomsUse[0]) GLOG("[WARNING] No HUD Mushroom Use 1 found for CuChulain")
+    else hudMushroomsUse[0]->SetEnabled(false);
+
+    obj = scene->GetGameObjectByName(hudMushroomUseName2);
+    if (obj)
+    {
+        hudMushroomsUse[1] = obj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (!hudMushroomsUse[1]) GLOG("[WARNING] No HUD Mushroom Use 2 found for CuChulain")
+    else hudMushroomsUse[1]->SetEnabled(false);
+
+    obj = scene->GetGameObjectByName(hudMushroomUseName3);
+    if (obj)
+    {
+        hudMushroomsUse[2] = obj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (!hudMushroomsUse[2]) GLOG("[WARNING] No HUD Mushroom Use 3 found for CuChulain")
+    else hudMushroomsUse[2]->SetEnabled(false);
+
+    obj = scene->GetGameObjectByName(hudMushroomPickName1);
+    if (obj)
+    {
+        hudMushroomsPick[0] = obj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (!hudMushroomsPick[0]) GLOG("[WARNING] No HUD Mushroom Pick 1 found for CuChulain")
+    else hudMushroomsPick[0]->SetEnabled(false);
+
+    obj = scene->GetGameObjectByName(hudMushroomPickName2);
+    if (obj)
+    {
+        hudMushroomsPick[1] = obj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (!hudMushroomsPick[1]) GLOG("[WARNING] No HUD Mushroom Pick 2 found for CuChulain")
+    else hudMushroomsPick[1]->SetEnabled(false);
+
+    obj = scene->GetGameObjectByName(hudMushroomPickName3);
+    if (obj)
+    {
+        hudMushroomsPick[2] = obj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (!hudMushroomsPick[2]) GLOG("[WARNING] No HUD Mushroom Pick 3 found for CuChulain")
+    else hudMushroomsPick[2]->SetEnabled(false);
+
     GameObject* damageMaskObj = scene->GetGameObjectByName(damageMaskName);
     if (damageMaskObj)
     {
@@ -1135,6 +1183,16 @@ void CuChulainn::UpdateTimers(float deltaTime)
         if (curseTimer <= 0.0f) EndCurse();
     }
 
+    if (mushroomToEnable)
+    {
+        enableMushroomTimer -= deltaTime;
+        if (enableMushroomTimer <= 0.0f && (hudMushrooms[mushrooms - 1]))
+        {
+            hudMushrooms[mushrooms - 1]->SetEnabled(true);
+            mushroomToEnable = false;
+        }
+    }
+
     timeStopTimer -= AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
     if (timeStopTimer <= 0.0f) AppEngine->GetGameTimer()->SetTimeScale(1.0f);
 
@@ -1684,7 +1742,13 @@ bool CuChulainn::TakeMushroom()
     bool taken = false;
     if (mushrooms <= 2)
     {
-        if (hudMushrooms[mushrooms]) hudMushrooms[mushrooms]->SetEnabled(true);
+        mushroomToEnable    = true;
+        enableMushroomTimer = 0.25f;
+        if (hudMushroomsPick[mushrooms])
+        {
+            hudMushroomsPick[mushrooms]->SetEnabled(true);
+            hudMushroomsPick[mushrooms]->GetScriptByType<UISpritesheet>()->Reset();
+        }
 
         state      = CharacterStates::TAKE_MUSHROOM;
         taken      = true;
@@ -1710,6 +1774,11 @@ void CuChulainn::UseMushroom()
     isHealing = true;
 
     if (hudMushrooms[mushrooms]) hudMushrooms[mushrooms]->SetEnabled(false);
+    if (hudMushroomsPick[mushrooms])
+    {
+        hudMushroomsUse[mushrooms]->SetEnabled(true);
+        hudMushroomsUse[mushrooms]->GetScriptByType<UISpritesheet>()->Reset();
+    }
 
     if (healVfx)
     {

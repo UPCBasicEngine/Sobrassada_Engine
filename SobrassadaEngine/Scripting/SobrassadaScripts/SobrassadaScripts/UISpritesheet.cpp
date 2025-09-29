@@ -18,6 +18,7 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
+#include "ShaderScriptComponent.h"
 
 #include "glew.h"
 
@@ -28,6 +29,7 @@ UISpritesheet::UISpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 10000.f});
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
+    fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &spritesheetUID});
 }
 
@@ -210,4 +212,9 @@ void UISpritesheet::UpdateSprite(float deltaTime)
         }
     }
     timer = 0.0f;
+
+    if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+    {
+        parent->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
+    }
 }
