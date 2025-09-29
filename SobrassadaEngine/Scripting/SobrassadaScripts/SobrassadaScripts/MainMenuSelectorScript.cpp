@@ -212,17 +212,18 @@ void MainMenuSelectorScript::Update(float)
 
     if (accept)
     {
-        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
         GameObject* selectedItem = menuItems[selectedIndex];
 
         if (selectedItem->GetName() == "MenuItem_Continue")
         {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
             if (gameOverCtrl) gameOverCtrl->Close();
             else if (pauseCtrl) pauseCtrl->Close();
             return;
         }
         else if (selectedItem->GetName() == "MenuItem_Menu")
         {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
             if (pauseCtrl) pauseCtrl->Close();
             AppEngine->GetSceneModule()->GetScene()->SetStopPlaying(true);
             std::string path =
@@ -232,6 +233,7 @@ void MainMenuSelectorScript::Update(float)
         }
         else
         {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
             if (auto* button = selectedItem->GetComponent<ButtonComponent*>()) button->OnClick();
         }
     }
