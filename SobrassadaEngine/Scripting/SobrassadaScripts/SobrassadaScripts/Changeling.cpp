@@ -31,6 +31,7 @@ Changeling::Changeling(GameObject* parent)
 {
     fields.emplace_back("Dash trail object", InspectorField::FieldType::InputText, &dashTrailObjectName);
     fields.emplace_back("Dash trail start mesh", InspectorField::FieldType::InputText, &dashTrailStartMeshName);
+    fields.emplace_back("Dash trail mid base", InspectorField::FieldType::InputText, &dashTrailMidBaseName);
     fields.emplace_back("Dash trail mid mesh", InspectorField::FieldType::InputText, &dashTrailMidMeshName);
     fields.emplace_back("Dash trail end mesh", InspectorField::FieldType::InputText, &dashTrailEndMeshName);
     fields.emplace_back("Dash trail collision", InspectorField::FieldType::InputText, &dashTrailCollisionName);
@@ -344,6 +345,9 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
 
     animComponent->UseTrigger("Trigger_BuryDown");
     audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
+    vfxDigDown->SetEnabled(true);
+    vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+    vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     currentState = ChangelingStates::DIG_DOWN_TRANSITION;
 }
 
@@ -396,6 +400,10 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
             vfxDashTrailObjects[i]->GetComponent<MeshComponent*>()->SetEnabled(false);
             vfxDashTrailObjects[i]->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
         }
+        
+        vfxDash->SetEnabled(true);
+        vfxDash->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDash->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
         if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
             agentAI->SetSpeed(dashSpeed, 1000000);
@@ -422,6 +430,8 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         dashIndex   = 0;
         animComponent->UseTrigger("Trigger_FinishDash");
         vfxDropDown->SetEnabled(true);
+        vfxDropDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDropDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     }
     else
@@ -435,8 +445,11 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
                 parentGO->GetGlobalTransform().TranslatePart(),
             lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
         ));
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildBaseObject->SetLocalTransform(float4x4::FromTRS(
+            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
+        ));
         dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(float4x4::FromTRS(
-            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1)
+            float3::zero, Quat::identity, float3(distanceFromDashStart, 1, 1)
         ));
         dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(float4x4::FromTRS(
             dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
@@ -463,14 +476,25 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
         dashTrailMeshObjects[dashIndex].dashTrailObject->SetEnabled(true);
         dashTrailColliderObjects[dashIndex]->SetEnabled(true);
 
+        for (int i = dashIndex * 5; i < (dashIndex + 1) * 5; i++)
+        {
+            vfxDashTrailObjects[i]->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDashTrailObjects[i]->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+        
+        vfxDash->SetEnabled(true);
+        vfxDash->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDash->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
         animComponent->UseTrigger("Trigger_Dash");
-        if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
+        audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
         currentState = bNextDashUninterrupted ? ChangelingStates::DASH_CHAIN_ATTACK : ChangelingStates::DASH_ATTACK;
     }
 }
 
 void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceToPlayerSq)
 {
+    return;
     if (animComponent->IsFinished())
     {
         const int bUseAnimation1 = rand() % 5;
@@ -537,8 +561,11 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
                 parentGO->GetGlobalTransform().TranslatePart(),
             lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
         ));
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildBaseObject->SetLocalTransform(float4x4::FromTRS(
+            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
+        ));
         dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(float4x4::FromTRS(
-            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1)
+            float3::zero, Quat::identity, float3(distanceFromDashStart, 1, 1)
         ));
         dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(float4x4::FromTRS(
             dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
@@ -815,6 +842,9 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     characterCollider->SetEnabled(true);
     agentAI->SetSpeed(0.0f, 10.0f);
     animComponent->UseTrigger("Trigger_Bite");
+    vfxBite->SetEnabled(true);
+    vfxBite->GetComponent<MeshComponent*>()->SetEnabled(false);
+    vfxBite->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     currentState = ChangelingStates::BITE_ATTACK;
 
     weaponCollider->SetEnabled(true);
@@ -906,9 +936,9 @@ void Changeling::ValidateSetup()
                         }
                     }
                 }
-                else if (dashTrailChild->GetName() == dashTrailMidMeshName)
+                else if (dashTrailChild->GetName() == dashTrailMidBaseName)
                 {
-                    container.dashTrailMidChildMeshObject = dashTrailChild;
+                    container.dashTrailMidChildBaseObject = dashTrailChild;
                     for (const UID dashTrailVFXUID : dashTrailChild->GetChildren())
                     {
                         GameObject* dashTrailVFXChild =
@@ -927,6 +957,9 @@ void Changeling::ValidateSetup()
                                 vfxDashTrailObjects.push_back(dashTrailVFXChild);
                             }
                                 
+                        } else if (dashTrailVFXChild->GetName() == dashTrailMidMeshName)
+                        {
+                            container.dashTrailMidChildMeshObject = dashTrailVFXChild;
                         }
                     }
                 }
@@ -959,6 +992,13 @@ void Changeling::ValidateSetup()
             {
                 isSetupCorrectly = false;
                 GLOG("[ERROR] Dash trail start child game object is nullptr")
+                return;
+            }
+
+            if (container.dashTrailMidChildBaseObject == nullptr)
+            {
+                isSetupCorrectly = false;
+                GLOG("[ERROR] Dash trail mid child base game object is nullptr")
                 return;
             }
 

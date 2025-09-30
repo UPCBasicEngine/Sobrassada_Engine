@@ -19,6 +19,7 @@ enum class ChangelingVersions
 struct ChangelingDashTrailContainer
 {
     GameObject* dashTrailObject               = nullptr;
+    GameObject* dashTrailMidChildBaseObject   = nullptr;
     GameObject* dashTrailMidChildMeshObject   = nullptr;
     GameObject* dashTrailStartChildMeshObject = nullptr;
     GameObject* dashTrailEndChildMeshObject   = nullptr;
@@ -128,6 +129,7 @@ class Changeling : public Character
 
     std::string dashTrailObjectName     = "DashTrailObject";
     std::string dashTrailStartMeshName  = "DashTrailStartMesh";
+    std::string dashTrailMidBaseName    = "DashTrailMid";
     std::string dashTrailMidMeshName    = "DashTrailMidMesh";
     std::string dashTrailEndMeshName    = "DashTrailEndMesh";
     std::string dashTrailCollisionName  = "DashTrailCollision";
