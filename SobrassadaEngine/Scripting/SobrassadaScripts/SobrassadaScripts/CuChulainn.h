@@ -259,7 +259,8 @@ class CuChulainn : public Character
     bool ultimateUnlocked                = false;
     bool playerAnimHeld                   = false;
     bool ultimateHoldEnabled              = true;
-    float ultimateResumeVfxTime           = 1.3f;
+    float ultimateResumeVfxTime           = 1.9f;
+    float vfxTimeUnscaledSec              = 0.0f;
 
     // Riastrad
     std::string riastradBarName          = "BarFill";
