@@ -261,6 +261,7 @@ class CuChulainn : public Character
     bool ultimateHoldEnabled              = true;
     float ultimateResumeVfxTime           = 1.9f;
     float vfxTimeUnscaledSec              = 0.0f;
+    bool ultimateSoundPlayed              = false;
 
     // Riastrad
     std::string riastradBarName          = "BarFill";

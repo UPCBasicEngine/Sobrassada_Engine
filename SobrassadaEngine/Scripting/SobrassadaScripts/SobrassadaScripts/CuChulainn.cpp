@@ -1276,6 +1276,12 @@ void CuChulainn::PerformAttack()
     }
     else if (state == CharacterStates::ULTIMATE)
     {
+        if (!ultimateSoundPlayed && audio && ultimateTimer >= 0.55f)
+        {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
+            ultimateSoundPlayed = true;
+        }
+
         float currentHitboxDelay =
             isRiastrad ? ultimateHitboxDelay / riastradAnimationsSpeedRatio : ultimateHitboxDelay;
         float currentHitboxDuration =
@@ -1296,8 +1302,6 @@ void CuChulainn::PerformAttack()
             {
                 animComponent->OnPause();
                 playerAnimHeld = true;
-                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
-
             }
 
             UpdateUltimateVfx();
@@ -1488,6 +1492,7 @@ void CuChulainn::UltimateAttack()
     desiredUltimate = false;
     playerAnimHeld  = false;
     controlsLocked  = true;
+    ultimateSoundPlayed = false;
 
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
     //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
