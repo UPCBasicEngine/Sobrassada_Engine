@@ -18,6 +18,7 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
+#include "ShaderScriptComponent.h"
 
 #include "glew.h"
 
@@ -227,6 +228,6 @@ void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
 
     if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
     {
-        parent->SetEnabled(false);
+        parent->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
     }
 }

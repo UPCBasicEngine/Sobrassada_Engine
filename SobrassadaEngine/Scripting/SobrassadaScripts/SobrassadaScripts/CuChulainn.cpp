@@ -130,7 +130,6 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
     fields.push_back({"Melee trail object", InspectorField::FieldType::InputText, &meleeTrailName});
-    fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
     fields.push_back({"Melee VFX Horizontal 1", InspectorField::FieldType::InputText, &attackVfxHorizontal1Name});
     fields.push_back({"Melee VFX Vertical 1", InspectorField::FieldType::InputText, &attackVfxVertical1Name});
     fields.push_back({"Melee VFX Horizontal 2", InspectorField::FieldType::InputText, &attackVfxHorizontal2Name});
@@ -210,41 +209,44 @@ bool CuChulainn::Init()
     if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for melee attack in CuChulain")
     else meleeTrailObject->SetEnabled(false);
 
-    meleeVfxObject = scene->GetGameObjectByName(meleeVfxName);
-    if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in CuChulain")
-    else meleeVfxObject->SetEnabled(false);
-
     arrowHitVfxObject = scene->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
 
-    attackVfxHorizontal1 = scene->GetGameObjectByName(attackVfxHorizontal1Name);
-    if (!attackVfxHorizontal1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
-    else attackVfxHorizontal1->SetEnabled(false);
+    GameObject* attackVfxObj = scene->GetGameObjectByName(attackVfxHorizontal1Name);
+    if (attackVfxObj) attackVfxHorizontal1 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
+    if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
+    else GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain");
 
-    attackVfxVertical1 = scene->GetGameObjectByName(attackVfxVertical1Name);
-    if (!attackVfxVertical1) GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain")
-    else attackVfxVertical1->SetEnabled(false);
+    attackVfxObj = scene->GetGameObjectByName(attackVfxVertical1Name);
+    if (attackVfxObj) attackVfxVertical1 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
+    if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
+    else GLOG("[WARNING] No melee VFX 1 found for melee attack in CuChulain");
 
-    attackVfxHorizontal2 = scene->GetGameObjectByName(attackVfxHorizontal2Name);
-    if (!attackVfxHorizontal2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
-    else attackVfxHorizontal2->SetEnabled(false);
+    attackVfxObj = scene->GetGameObjectByName(attackVfxHorizontal2Name);
+    if (attackVfxObj) attackVfxHorizontal2 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
+    if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
+    else GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain");
 
-    attackVfxVertical2 = scene->GetGameObjectByName(attackVfxVertical2Name);
-    if (!attackVfxVertical2) GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain")
-    else attackVfxVertical2->SetEnabled(false);
+    attackVfxObj = scene->GetGameObjectByName(attackVfxVertical2Name);
+    if (attackVfxObj) attackVfxVertical2 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
+    if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
+    else GLOG("[WARNING] No melee VFX 2 found for melee attack in CuChulain");
 
-    attackVfxHorizontal3 = scene->GetGameObjectByName(attackVfxHorizontal3Name);
-    if (!attackVfxHorizontal3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
-    else attackVfxHorizontal3->SetEnabled(false);
+    attackVfxObj = scene->GetGameObjectByName(attackVfxHorizontal3Name);
+    if (attackVfxObj) attackVfxHorizontal3 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
+    if (attackVfxHorizontal3) attackVfxHorizontal3->SetEnabled(false);
+    else GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain");
 
-    attackVfxVertical3 = scene->GetGameObjectByName(attackVfxVertical3Name);
-    if (!attackVfxVertical3) GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain")
-    else attackVfxVertical3->SetEnabled(false);
+    attackVfxObj = scene->GetGameObjectByName(attackVfxVertical3Name);
+    if (attackVfxObj) attackVfxVertical3 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
+    if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+    else GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain");
 
-    attackVfxExplosion = scene->GetGameObjectByName(attackVfxExplosionName);
-    if (!attackVfxExplosion) GLOG("[WARNING] No attack explosion VFX found for melee attack in CuChulain")
-    else attackVfxExplosion->SetEnabled(false);
+    attackVfxObj = scene->GetGameObjectByName(attackVfxExplosionName);
+    if (attackVfxObj) attackVfxExplosion = attackVfxObj->GetComponent<ShaderScriptComponent*>();
+    if (attackVfxExplosion) attackVfxExplosion->SetEnabled(false);
+    else GLOG("[WARNING] No melee VFX 3 found for melee attack in CuChulain");
 
     arrowHitVfxObject = scene->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
@@ -454,6 +456,14 @@ bool CuChulainn::Init()
         else GLOG("[WARNING] No charge attack VFX found for CuChulain");
     }
 
+    chargeSpritesheet = parent->GetChildGameObjectByName(chargeAttackVfxName);
+    if (chargeSpritesheet)
+    {
+        chargedAttackVfx = chargeSpritesheet->GetComponent<ShaderScriptComponent*>();
+        if (chargedAttackVfx) chargedAttackVfx->SetEnabled(false);
+        else GLOG("[WARNING] No charge attack VFX found for CuChulain");
+    }
+
     // Ultimate
     ultimateGlow = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateGlowName);
     if (!ultimateGlow) GLOG("[WARNING] No ultimate Glow VFX found for CuChulain")
@@ -567,16 +577,6 @@ void CuChulainn::Update(float deltaTime)
     if (state == CharacterStates::TRANSFORM)
     {
         if (!riastradCrack->IsEnabled()) EnableRiastradVfx();
-    }
-
-    if (isRiastrad && riastradEye)
-    {
-        riastradEye->SetFillAmount(riastradTimer / riastradDuration);
-        if (riastradTimer / riastradDuration < 0.1f)
-        {
-            if (riastradVfxFG) riastradVfxFG->GetParent()->SetEnabled(false);
-            if (riastradVfxBG) riastradVfxBG->GetParent()->SetEnabled(false);
-        }
     }
 
     // Dash decal spawn when in middle of dash
@@ -736,7 +736,6 @@ void CuChulainn::HandleState(float deltaTime)
         {
             if (isAttacking) comboBufferTimer = 0.1f;
             isAttacking = false;
-            if (meleeVfxObject) meleeVfxObject->SetEnabled(false);
             if (attackVfxHorizontal1) attackVfxHorizontal1->SetEnabled(false);
             if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
             if (attackVfxHorizontal2) attackVfxHorizontal2->SetEnabled(false);
@@ -1323,8 +1322,8 @@ void CuChulainn::PerformAttack()
 
         if (attackTimer > currentVfxDelay)
         {
-            GameObject* vfxHorizontal = nullptr;
-            GameObject* vfxVertical   = nullptr;
+            ShaderScriptComponent* vfxHorizontal = nullptr;
+            ShaderScriptComponent* vfxVertical   = nullptr;
             switch (comboCounter)
             {
             case 0:
@@ -1340,17 +1339,15 @@ void CuChulainn::PerformAttack()
                 break;
             }
 
-            if (vfxHorizontal && !vfxHorizontal->IsEnabled())
+            if (vfxHorizontal && !vfxHorizontal->GetEnabled())
             {
                 vfxHorizontal->SetEnabled(true);
-                vfxHorizontal->GetComponent<MeshComponent*>()->SetEnabled(false);
-                vfxHorizontal->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+                vfxHorizontal->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             }
-            if (vfxVertical && !vfxVertical->IsEnabled())
+            if (vfxVertical && !vfxVertical->GetEnabled())
             {
                 vfxVertical->SetEnabled(true);
-                vfxVertical->GetComponent<MeshComponent*>()->SetEnabled(false);
-                vfxVertical->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+                vfxVertical->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             }
         }
 
@@ -1369,16 +1366,13 @@ void CuChulainn::PerformAttack()
                  attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
-            if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->IsEnabled())
+            if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->GetEnabled())
             {
                 attackVfxExplosion->SetEnabled(true);
                 float3 dir = 2.0f * character->GetFrontDirection();
                 dir.y      = 1.75f;
-                attackVfxExplosion->SetLocalPosition(parent->GetPosition() + dir);
-                attackVfxExplosion->GetComponent<MeshComponent*>()->SetEnabled(false);
-                attackVfxExplosion->GetComponent<ShaderScriptComponent*>()
-                    ->GetScriptByType<AttackVfxSpritesheet>()
-                    ->Reset();
+                attackVfxExplosion->GetParent()->SetLocalPosition(parent->GetPosition() + dir);
+                attackVfxExplosion->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             }
         }
         else if (weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay + currentHitboxDuration)
@@ -1470,7 +1464,6 @@ void CuChulainn::Attack(float deltaTime)
 
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_NORMALATTACK_01);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
-    if (meleeVfxObject) meleeVfxObject->SetEnabled(true);
 
     Character::Attack(deltaTime);
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
@@ -1504,33 +1497,22 @@ void CuChulainn::Attack(float deltaTime)
     LineSegment rightRay2(rightRayOrigin2 - direction * 0.2f, rightRayOrigin2 + direction * 3.0f);
     LineSegment rightRay3(rightRayOrigin3 - direction * 0.2f, rightRayOrigin3 + direction * 3.0f);
 
-    GameObject* centerHit = RaycastController::GetRayIntersectionTrees(
-        centerRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
-    GameObject* leftHit =
-        RaycastController::GetRayIntersectionTrees(leftRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
-    GameObject* leftHit2 =
-        RaycastController::GetRayIntersectionTrees(leftRay2, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
-    GameObject* leftHit3 =
-        RaycastController::GetRayIntersectionTrees(leftRay3, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
+    BulletUserPointer* centerHit = RaycastController::GetRayIntersectionPhysics(centerRay);
 
-    GameObject* rightHit =
-        RaycastController::GetRayIntersectionTrees(rightRay, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree());
-    GameObject* rightHit2 = RaycastController::GetRayIntersectionTrees(
-        rightRay2, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
-    GameObject* rightHit3 = RaycastController::GetRayIntersectionTrees(
-        rightRay3, AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
+    BulletUserPointer* leftHit   = RaycastController::GetRayIntersectionPhysics(leftRay);
+    BulletUserPointer* leftHit2  = RaycastController::GetRayIntersectionPhysics(leftRay2);
+    BulletUserPointer* leftHit3  = RaycastController::GetRayIntersectionPhysics(leftRay3);
+
+    BulletUserPointer* rightHit  = RaycastController::GetRayIntersectionPhysics(rightRay);
+    BulletUserPointer* rightHit2 = RaycastController::GetRayIntersectionPhysics(rightRay2);
+    BulletUserPointer* rightHit3 = RaycastController::GetRayIntersectionPhysics(rightRay3);
 
     if (centerHit || leftHit || leftHit2 || leftHit3 || rightHit || rightHit2 || rightHit3)
     {
-        // GLOG("HIT WITH DYNAMIC OBJECT");
         moveWithAttack = false;
     }
     else
     {
-        // GLOG("NO ONJECT HIT")
         moveWithAttack = true;
     }
 
@@ -1843,17 +1825,19 @@ void CuChulainn::ChargeAttack()
         if (chargeVfx2) chargeVfx2->SetEnabled(false);
         if (chargeVfx3) chargeVfx3->SetEnabled(false);
 
-        // GLOG("DESIRED CHARGE ATTACK");
-
         if (chargeTimer <= 0.0f)
         {
-            GLOG("CHARGED ATTACK")
-
             state              = CharacterStates::CHARGED_ATTACK;
             chargedAttackTimer = 0.0f;
             if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
 
             if (animComponent) animComponent->UseTrigger("Attack");
+
+            if (chargedAttackVfx)
+            {
+                chargedAttackVfx->SetEnabled(true);
+                chargedAttackVfx->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            }
         }
         else
         {
@@ -1896,6 +1880,17 @@ void CuChulainn::ToggleRiastrad()
             riastradVfx->SetLocalPosition(parent->GetLocalTransform().TranslatePart());
         }
 
+        if (riastradVfxBG)
+        {
+            riastradVfxBG->SetEnabled(true);
+            riastradVfxBG->GetScriptByType<UISpritesheet>()->Reset();
+        }
+        if (riastradVfxFG)
+        {
+            riastradVfxFG->SetEnabled(true);
+            riastradVfxFG->GetScriptByType<UISpritesheet>()->Reset();
+        }
+
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
     }
@@ -1905,6 +1900,14 @@ void CuChulainn::ToggleRiastrad()
         isRiastrad = false;
         animComponent->GetResourceStateMachine()->ResetClipsSpeed();
         character->SetMaxSpeed(defaultSpeed);
+
+        if (riastradEye)
+        {
+            riastradEye->SetFillAmount(0);
+
+            if (riastradVfxFG) riastradVfxFG->GetParent()->SetEnabled(false);
+            if (riastradVfxBG) riastradVfxBG->GetParent()->SetEnabled(false);
+        }
 
         // TODO: Remove when VFX
         Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
@@ -1970,16 +1973,7 @@ void CuChulainn::AddRiastrad(int amount)
     if (riastradMeter == 100)
     {
         if (riastradEye) riastradEye->SetFillAmount(riastradMeter / 100.0f);
-        if (riastradVfxBG)
-        {
-            riastradVfxBG->SetEnabled(true);
-            riastradVfxBG->GetScriptByType<UISpritesheet>()->Reset();
-        }
-        if (riastradVfxFG)
-        {
-            riastradVfxFG->SetEnabled(true);
-            riastradVfxFG->GetScriptByType<UISpritesheet>()->Reset();
-        }
+
         if (AppEngine->GetInputModule()->IsUsingKeyboard()) riastradKey->SetEnabled(true);
         else riastradTriggers->SetEnabled(true);
     }
