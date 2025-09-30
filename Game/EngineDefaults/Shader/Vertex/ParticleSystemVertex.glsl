@@ -17,8 +17,6 @@ layout(location=5) uniform float colorIntensity;
 
 flat out vec4 fragParticleColor;
 out vec2 uv;
-// out vec2 uvNext;
-// flat out float blendFactor;
 flat out float fragColorIntensity;
 void main()
 {
@@ -26,29 +24,17 @@ void main()
     float X = mod(trunc(currentFrame + tileOffset), tileSize.x);
     float Y = 1 - trunc((currentFrame + tileOffset) / tileSize.x);
 
-    // float XN = mod(trunc(currentFrame + tileOffset + 1.0), tileSize.x);
-    // float YN = 1 - trunc((currentFrame + tileOffset + 1.0) / tileSize.x);
-
     float xUnit = 1.0 / tileSize.x;
     float yUnit = 1.0 / tileSize.y;
 
     const float U = X / tileSize.x;
-    const float V = 1.0 - (Y / tileSize.y);
-
-    // const float UN = XN / tileSize.x;
-    // const float VN = 1.0 - (YN / tileSize.y);
+    // const float V = 1.0 - (Y / tileSize.y);
+    const float V = (Y / tileSize.y);
 
     const float finalU = mix(U, U + xUnit, vertexUV.x);
     const float finalV = mix(V, V - yUnit, vertexUV.y);
 
-    // const float finalUN = mix(UN, UN + xUnit, vertexUV.x);
-    // const float finalVN = mix(VN, VN - yUnit, vertexUV.y);
-
-    // blendFactor = currentFrame - trunc(currentFrame);
-
     uv = vec2(finalU,finalV);
-
-    // uvNext = vec2(finalUN, finalVN);
 
     fragParticleColor = particleColor;
     fragColorIntensity = colorIntensity;

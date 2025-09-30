@@ -40,7 +40,6 @@ void SpritesheetAddon::Save(rapidjson::Value& targetState, rapidjson::Document::
 void SpritesheetAddon::Init(EmitterInstance* emitterInstance)
 {
     currentFrame = 0.f;
-    playTime     = 0.f;
 
     if (!randomizeOffset) return;
 
@@ -52,7 +51,6 @@ void SpritesheetAddon::Init(EmitterInstance* emitterInstance)
 
 void SpritesheetAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
-    playTime     += deltaTime;
     currentFrame += deltaTime * animationSpeed;
 }
 
