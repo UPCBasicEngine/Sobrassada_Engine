@@ -120,16 +120,6 @@ bool Soldier::Init()
 
     SelectRandomHelmet();
 
-    bodyObject = parent->GetChildGameObjectByName("Body");
-    if (!bodyObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
-    else
-    {
-        UID materialUID = 1322427414903784;
-        MeshComponent* meshComponent = bodyObject->GetComponent<MeshComponent*>();
-        meshComponent->AddMaterial(materialUID);
-    }
-
-
     audio = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Soldier: No audio component found");
 
@@ -621,9 +611,81 @@ void Soldier::SelectRandomHelmet()
 {
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(1, 4);
+    static std::uniform_int_distribution<> dis(1, 2);
 
-    switch (dis(gen))
+    if (dis(gen) == 1)
+    {
+        isRed = true;
+    }
+
+    static std::random_device rd2;
+    static std::mt19937 gen2(rd2());
+    static std::uniform_int_distribution<> dis2(1, 2);
+
+    if (isRed)
+    {
+        bodyObject = parent->GetChildGameObjectByName("Body");
+        if (!bodyObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
+        else
+        {
+            UID materialUID              = 1322427414903784;
+            MeshComponent* meshComponent = bodyObject->GetComponent<MeshComponent*>();
+            meshComponent->AddMaterial(materialUID);
+        }
+
+        switch (dis2(gen2))
+        {
+        case 1:
+            helmet2Object = parent->GetChildGameObjectByName(helmet2Name);
+            if (!helmet2Object) GLOG("[WARNING] No helmet 2 found for  Soldier")
+            else
+            {
+                GLOG("Helmet 2 found for in Soldier")
+                helmet2Object->SetEnabled(true);
+            }
+            break;
+        case 2:
+            helmet3Object = parent->GetChildGameObjectByName(helmet3Name);
+            if (!helmet3Object) GLOG("[WARNING] No helmet 3 found for  Soldier")
+            else
+            {
+                GLOG("Helmet 3 found for in Soldier")
+                helmet3Object->SetEnabled(true);
+            }
+            break;
+        default:
+            break;
+        }
+
+    }
+    else
+    {
+        switch (dis2(gen2))
+        {
+        case 1:
+            helmet1Object = parent->GetChildGameObjectByName(helmet1Name);
+            if (!helmet1Object) GLOG("[WARNING] No helmet 1 found for  Soldier")
+            else
+            {
+                GLOG("Helmet 1 found for in Soldier")
+                helmet1Object->SetEnabled(true);
+            }
+            break;
+        case 2:
+            helmet4Object = parent->GetChildGameObjectByName(helmet4Name);
+            if (!helmet4Object) GLOG("[WARNING] No helmet 4 found for  Soldier")
+            else
+            {
+                GLOG("Helmet 4 found for in Soldier")
+                helmet4Object->SetEnabled(true);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    
+    switch (dis2(gen2))
     {
     case 1:
         helmet1Object = parent->GetChildGameObjectByName(helmet1Name);
@@ -664,6 +726,5 @@ void Soldier::SelectRandomHelmet()
     default:
         break;
     }
-
 
 }

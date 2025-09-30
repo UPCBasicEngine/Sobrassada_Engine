@@ -76,6 +76,7 @@ class Soldier : public Character
     bool thrustAdvance                 = false;
     bool countedInPlayerEnemies        = false;
     float cheeringDistance             = 5.0f;
+    bool isRed                         = false;
 
     int maxEnemiesNearby               = 3;
     std::string meleeTrailName         = "";
