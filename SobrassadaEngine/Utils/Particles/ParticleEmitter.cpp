@@ -259,7 +259,7 @@ void ParticleEmitter::RenderParticles(const float4x4& VP, const float3& rightVec
         if (useSpritesheet)
         {
             SpritesheetAddon* spritesheet = std::get<SpritesheetAddon*>(addonTuple);
-            tileSize                      = float2((float)spritesheet->rows, (float)spritesheet->columns);
+            tileSize                      = float2((float)spritesheet->columns, (float)spritesheet->rows);
             glUniform1f(3, spritesheet->currentFrame);
         }
 
@@ -318,6 +318,9 @@ void ParticleEmitter::RenderEditor()
                 {
                     if (currentBitValue) AddAddon(ParticleAddonType(i));
                     else RemoveAddon(ParticleAddonType(i));
+
+                    // RECALCULATE AABB
+                    owner->UpdateComponentsAABB();
                 }
             }
 
@@ -450,6 +453,19 @@ void ParticleEmitter::RemoveAddon(ParticleAddonType type)
 void ParticleEmitter::Stop()
 {
     owner->Stop();
+}
+
+void ParticleEmitter::UpdateAABB() const
+{
+    if(owner) owner->UpdateComponentsAABB();
+}
+
+void ParticleEmitter::GetParticleValues(ParticleValues& particleValue)
+{
+    std::apply(
+        [&particleValue](auto&... pointer) { ((pointer ? pointer->AssignMaxValues(particleValue) : Nothing()), ...); },
+        addonTuple
+    );
 }
 
 void ParticleEmitter::SetQuadVBO(unsigned int newVbo)

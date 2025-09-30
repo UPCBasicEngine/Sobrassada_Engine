@@ -17,30 +17,42 @@ layout(location=5) uniform float colorIntensity;
 
 flat out vec4 fragParticleColor;
 out vec2 uv;
-out vec2 uvNext;
+// out vec2 uvNext;
 flat out float blendFactor;
 flat out float fragColorIntensity;
 void main()
 {
 
-    const float X = trunc(mod(currentFrame + tileOffset.x, tileSize.x));
-    float Y  = trunc((currentFrame + tileOffset.y) / tileSize.y);
-    Y = tileSize.y - 1 - Y;
+    // const float X = trunc(mod(currentFrame + tileOffset.x, tileSize.x));
+    // float Y  = trunc((currentFrame + tileOffset.y) / tileSize.y);
+    // Y = tileSize.y - 1 - Y;
 
-    const float XNext = trunc(mod(currentFrame + tileOffset.x + 1.f, tileSize.x));
-    float YNext  = trunc((currentFrame + tileOffset.y + 1.f) / tileSize.y);
-    YNext = tileSize.y - 1 - YNext;
+    // const float XNext = trunc(mod(currentFrame + tileOffset.x + 1.f, tileSize.x));
+    // float YNext  = trunc((currentFrame + tileOffset.y + 1.f) / tileSize.y);
+    // YNext = tileSize.y - 1 - YNext;
 
-    const float U = mix(X, X+1, vertexUV.x) / tileSize.x;
-    const float V = mix(Y, Y+1, vertexUV.y) / tileSize.y;
+    // const float U = mix(X, X+1, vertexUV.x) / tileSize.x;
+    // const float V = mix(Y, Y+1, vertexUV.y) / tileSize.y;
 
-    const float UN = mix(X, X+1, vertexUV.x) / tileSize.x;
-    const float VN = mix(Y, Y+1, vertexUV.y) / tileSize.y;
+    // const float UN = mix(X, X+1, vertexUV.x) / tileSize.x;
+    // const float VN = mix(Y, Y+1, vertexUV.y) / tileSize.y;
+
+    float X = mod(trunc(currentFrame), tileSize.x);
+    float Y = 1.0 - trunc(currentFrame / tileSize.x);
+
+    float xUnit = 1.0 / tileSize.x; 
+    float yUnit = 1.0 / tileSize.y;
+
+    const float U = X / tileSize.x;
+    const float V = (Y / tileSize.y);
+
+    const float finalU = mix(U, U + xUnit, vertexUV.x);
+    const float finalV = mix(V, V - yUnit, vertexUV.y);
 
     blendFactor = currentFrame - trunc(currentFrame);
 
-    uv = vec2(U,V);
-    uvNext = vec2(UN, VN);
+    uv = vec2(finalU,finalV);
+    // uvNext = vec2(UN, VN);
 
     fragParticleColor = particleColor;
     fragColorIntensity = colorIntensity;

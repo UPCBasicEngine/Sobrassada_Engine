@@ -68,7 +68,7 @@ void SpritesheetAddon::Init(EmitterInstance* emitterInstance)
 void SpritesheetAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 {
     playTime     += deltaTime;
-    currentFrame  = timePerFrame ? playTime / timePerFrame : 0;
+    currentFrame += deltaTime * animationSpeed;
 }
 
 void SpritesheetAddon::RenderEditorInspector()

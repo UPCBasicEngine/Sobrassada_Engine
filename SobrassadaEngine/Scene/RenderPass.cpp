@@ -622,7 +622,7 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     GLuint fxaaTexture = -1;
 
@@ -661,6 +661,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     fxaaTexture = framebuffer->GetTextureID();
 #endif
 
+    glDepthMask(GL_FALSE);
+
     unsigned int fxaaProgram = App->GetShaderModule()->GetFXAAProgram();
     glUseProgram(fxaaProgram);
 
@@ -673,6 +675,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glUniform1i(3, enableFXAA);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDepthMask(GL_TRUE);
 
 #ifndef GAME
     glDeleteFramebuffers(1, &fxaaFramebuffer);
@@ -1066,7 +1070,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_CULL_FACE);
             glDepthMask(GL_FALSE);

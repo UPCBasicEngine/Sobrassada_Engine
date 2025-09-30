@@ -57,6 +57,9 @@ class ParticleEmitter
     void Stop();
     bool IsAddonCreated(int position) { return createdAddons[position]; }
 
+    void UpdateAABB() const;
+    void GetParticleValues(ParticleValues& particleValue);
+
     const HashString& GetTag() const { return emitterTag; }
     const std::string& GetName() const { return emitterTag.GetString(); }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
