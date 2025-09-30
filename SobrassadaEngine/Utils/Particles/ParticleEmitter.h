@@ -103,7 +103,7 @@ class ParticleEmitter
     ParticleSystem* owner              = nullptr;
 
     std::vector<float3> alivePositions;
-    std::vector<std::pair<int, int>> tileOffsets;
+    std::vector<float> tileOffsets;
     std::vector<float4> particleColors;
     std::vector<float2> particleSize;
     std::vector<float> particleRotation;

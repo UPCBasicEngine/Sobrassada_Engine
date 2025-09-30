@@ -3,7 +3,7 @@
 layout(location=0) in vec3 vertexPosition;
 layout(location=1) in vec2 vertexUV;
 layout(location=2) in vec3 billboardCenter;
-layout(location=3) in vec2 tileOffset;
+layout(location=3) in float tileOffset;
 layout(location=4) in vec4 particleColor;
 layout(location=5) in vec2 billboardSize;
 layout(location=6) in float rotation;
@@ -18,41 +18,37 @@ layout(location=5) uniform float colorIntensity;
 flat out vec4 fragParticleColor;
 out vec2 uv;
 // out vec2 uvNext;
-flat out float blendFactor;
+// flat out float blendFactor;
 flat out float fragColorIntensity;
 void main()
 {
 
-    // const float X = trunc(mod(currentFrame + tileOffset.x, tileSize.x));
-    // float Y  = trunc((currentFrame + tileOffset.y) / tileSize.y);
-    // Y = tileSize.y - 1 - Y;
+    float X = mod(trunc(currentFrame + tileOffset), tileSize.x);
+    float Y = 1 - trunc((currentFrame + tileOffset) / tileSize.x);
 
-    // const float XNext = trunc(mod(currentFrame + tileOffset.x + 1.f, tileSize.x));
-    // float YNext  = trunc((currentFrame + tileOffset.y + 1.f) / tileSize.y);
-    // YNext = tileSize.y - 1 - YNext;
+    // float XN = mod(trunc(currentFrame + tileOffset + 1.0), tileSize.x);
+    // float YN = 1 - trunc((currentFrame + tileOffset + 1.0) / tileSize.x);
 
-    // const float U = mix(X, X+1, vertexUV.x) / tileSize.x;
-    // const float V = mix(Y, Y+1, vertexUV.y) / tileSize.y;
-
-    // const float UN = mix(X, X+1, vertexUV.x) / tileSize.x;
-    // const float VN = mix(Y, Y+1, vertexUV.y) / tileSize.y;
-
-    float X = mod(trunc(currentFrame), tileSize.x);
-    float Y = 1.0 - trunc(currentFrame / tileSize.x);
-
-    float xUnit = 1.0 / tileSize.x; 
+    float xUnit = 1.0 / tileSize.x;
     float yUnit = 1.0 / tileSize.y;
 
     const float U = X / tileSize.x;
-    const float V = (Y / tileSize.y);
+    const float V = 1.0 - (Y / tileSize.y);
+
+    // const float UN = XN / tileSize.x;
+    // const float VN = 1.0 - (YN / tileSize.y);
 
     const float finalU = mix(U, U + xUnit, vertexUV.x);
     const float finalV = mix(V, V - yUnit, vertexUV.y);
 
-    blendFactor = currentFrame - trunc(currentFrame);
+    // const float finalUN = mix(UN, UN + xUnit, vertexUV.x);
+    // const float finalVN = mix(VN, VN - yUnit, vertexUV.y);
+
+    // blendFactor = currentFrame - trunc(currentFrame);
 
     uv = vec2(finalU,finalV);
-    // uvNext = vec2(UN, VN);
+
+    // uvNext = vec2(finalUN, finalVN);
 
     fragParticleColor = particleColor;
     fragColorIntensity = colorIntensity;

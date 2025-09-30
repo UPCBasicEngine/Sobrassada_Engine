@@ -507,7 +507,7 @@ void ParticleEmitter::CreateBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
 
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 2, GL_INT, GL_FALSE, 2 * sizeof(int), (void*)0);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0);
     glVertexAttribDivisor(3, 1);
 
     // Sending particle colors
@@ -613,7 +613,7 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
     for (int i = 0; i < batchedParticles.size(); ++i)
     {
         alivePositions.push_back(batchedParticles[i].position);
-        tileOffsets.push_back(batchedParticles[i].tileOffset);
+        tileOffsets.push_back((float)batchedParticles[i].tileOffset);
         particleColors.push_back(batchedParticles[i].color);
         particleSize.push_back(batchedParticles[i].size);
         particleRotation.push_back(batchedParticles[i].rotation);
@@ -625,7 +625,7 @@ void ParticleEmitter::UpdateParticlesVBO(EmitterInstance* emitterInstance)
         glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * alivePositions.size(), &alivePositions[0], GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleTileOffsetVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(int) * 2 * tileOffsets.size(), &tileOffsets[0], GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * tileOffsets.size(), &tileOffsets[0], GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_ARRAY_BUFFER, particleColorsVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float4) * particleColors.size(), &particleColors[0], GL_DYNAMIC_DRAW);

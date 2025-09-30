@@ -17,17 +17,9 @@ SpritesheetAddon::SpritesheetAddon(const rapidjson::Value& initialState, Particl
     if (initialState.HasMember("Rows")) rows = initialState["Rows"].GetInt();
     if (initialState.HasMember("Columns")) columns = initialState["Columns"].GetInt();
     if (initialState.HasMember("AnimationSpeed")) animationSpeed = initialState["AnimationSpeed"].GetFloat();
-
-    if (initialState.HasMember("MinXTiles")) randomXTiles[0] = initialState["MinXTiles"].GetInt();
-    if (initialState.HasMember("MaxXTiles")) randomXTiles[1] = initialState["MaxXTiles"].GetInt();
-
-    if (initialState.HasMember("MinYTiles")) randomYTiles[0] = initialState["MinYTiles"].GetInt();
-    if (initialState.HasMember("MaxYTiles")) randomYTiles[1] = initialState["MaxYTiles"].GetInt();
     if (initialState.HasMember("RandomizeTiles")) randomizeOffset = initialState["RandomizeTiles"].GetBool();
 
     owner->SetUseSpritesheet(true);
-
-    timePerFrame = animationSpeed != 0 ? (rows * columns) / animationSpeed : 0;
 }
 
 SpritesheetAddon::~SpritesheetAddon()
@@ -42,12 +34,6 @@ void SpritesheetAddon::Save(rapidjson::Value& targetState, rapidjson::Document::
     targetState.AddMember("Rows", rows, allocator);
     targetState.AddMember("Columns", columns, allocator);
     targetState.AddMember("AnimationSpeed", animationSpeed, allocator);
-
-    targetState.AddMember("MinXTiles", randomXTiles[0], allocator);
-    targetState.AddMember("MaxXTiles", randomXTiles[1], allocator);
-    targetState.AddMember("MinYTiles", randomYTiles[0], allocator);
-    targetState.AddMember("MaxYTiles", randomYTiles[1], allocator);
-
     targetState.AddMember("RandomizeTiles", randomizeOffset, allocator);
 }
 
@@ -60,8 +46,7 @@ void SpritesheetAddon::Init(EmitterInstance* emitterInstance)
 
     for (auto& particle : emitterInstance->particles)
     {
-        particle.tileOffset.first  = rng->Int(randomXTiles[0], randomXTiles[1]);
-        particle.tileOffset.second = rng->Int(randomYTiles[0], randomYTiles[1]);
+        particle.tileOffset = rng->Int(0, (rows * columns) - 1);
     }
 }
 
@@ -90,22 +75,9 @@ void SpritesheetAddon::RenderEditorInspector()
         // if (animationSpeed <= 0) animationSpeed = 1.f;
     }
 
-    ImGui::BeginDisabled(!randomizeOffset);
-    if (ImGui::InputInt2("Random X tiles", &randomXTiles[0]))
-    {
-        if (randomXTiles[0] <= 0) randomXTiles[0] = 1;
-        if (randomXTiles[1] <= 0) randomXTiles[1] = 1;
-        else if (randomXTiles[0] > randomXTiles[1]) randomXTiles[1] = randomXTiles[0] + 1;
-    }
-    if (ImGui::InputInt2("Random Y tiles", &randomYTiles[0]))
-    {
-        if (randomYTiles[0] <= 0) randomYTiles[0] = 1;
-        if (randomYTiles[1] <= 0) randomYTiles[1] = 1;
-        else if (randomYTiles[0] > randomYTiles[1]) randomYTiles[1] = randomYTiles[0] + 1;
-    }
-    ImGui::EndDisabled();
+
     ImGui::SameLine();
-    ImGui::Checkbox("##RandomizeOffsets", &randomizeOffset);
+    ImGui::Checkbox("Randomize Offsets", &randomizeOffset);
 
     timePerFrame = animationSpeed != 0 ? (rows * columns) / animationSpeed : 0;
 
@@ -126,13 +98,6 @@ void SpritesheetAddon::Duplicate(ParticleAddon* reference)
         columns        = other->columns;
 
         animationSpeed = other->animationSpeed;
-        timePerFrame   = other->timePerFrame;
-
-        for (int i = 0; i < 2; ++i)
-        {
-            randomXTiles[i] = other->randomXTiles[i];
-            randomYTiles[i] = other->randomYTiles[i];
-        }
 
         randomizeOffset = other->randomizeOffset;
     }
