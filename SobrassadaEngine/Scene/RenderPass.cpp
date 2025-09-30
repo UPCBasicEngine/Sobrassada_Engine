@@ -247,6 +247,10 @@ void RenderPass::RenderScene(
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Height fog Pass");
+    HeightFogPassRender(camera);
+    glPopDebugGroup();
+
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
 #endif
@@ -620,6 +624,43 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void RenderPass::HeightFogPassRender(CameraComponent* camera) const
+{
+    if (!heightFog.isEnabled) return;
+
+    Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetHeightFogProgram();
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+
+    glUniform1f(2, heightFog.densityConstant);
+    glUniform1f(3, heightFog.heightFalloff);
+
+    const float4x4 cameraMatrix = camera ? camera->GetWorldMatrix() : App->GetCameraModule()->GetWorldMatrix();
+    const float3 cameraPos      = camera ? camera->GetCameraPosition() : App->GetCameraModule()->GetCameraPosition();
+    const float4x4 projection = camera ? camera->GetProjectionMatrix() : App->GetCameraModule()->GetProjectionMatrix();
+    glUniform3fv(4, 1, cameraPos.ptr());
+    glUniformMatrix4fv(5, 1, GL_TRUE, cameraMatrix.ptr());
+    glUniformMatrix4fv(6, 1, GL_TRUE, projection.ptr());
+
+    glUniform1f(7, heightFog.maxFog);
+    glUniform3fv(8, 1, heightFog.fogColor.ptr());
+    glUniform1f(9, heightFog.fogStartHeight);
+    glUniform1i(10, heightFog.followCamera);
+
+    glDepthMask(GL_FALSE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDepthMask(GL_TRUE);
+}
+
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
     // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -627,7 +668,7 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     GLuint fxaaTexture = -1;
 
 #ifndef GAME
-    if (!IsFXAAEnabled()) return;
+    if (!fxaaParameters.isEnabled) return;
 
     // Must create a temporal frameBuffer and texture, to avoid reading and drawing to same texture = black screen
     GLuint fxaaFramebuffer = -1;
@@ -646,15 +687,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fxaaFramebuffer);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    CopyDepthStencil();
     Bind();
 #else
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-
-    glBlitFramebuffer(
-        0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST
-    );
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
 
@@ -669,12 +703,14 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, fxaaTexture);
 
-    glUniform1i(0, showBorders);
-    glUniform1f(1, globalThreshold);
-    glUniform1f(2, localThreshold);
-    glUniform1i(3, enableFXAA);
+    glUniform1i(0, fxaaParameters.showBorders);
+    glUniform1f(1, fxaaParameters.globalThreshold);
+    glUniform1f(2, fxaaParameters.localThreshold);
+    glUniform1i(3, fxaaParameters.isEnabled);
 
+    glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    glDepthMask(GL_TRUE);
 
     glDepthMask(GL_TRUE);
 
