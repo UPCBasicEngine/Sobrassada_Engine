@@ -331,7 +331,7 @@ void Changeling::UpdateBuriedTravelState(float deltaTime, float distanceToPlayer
             }
             spottedLocation = float3::nan;
             audioComp->StopAudio();
-            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURY);
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYUP);
             animComponent->GetAnimationController()->Resume();
         } else
         {
@@ -506,7 +506,6 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
 
 void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceToPlayerSq)
 {
-    return;
     if (animComponent->IsFinished())
     {
         const int bUseAnimation1 = rand() % 5;
@@ -649,19 +648,32 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
     case HighlightingStates::IDLE:
         animComponent->UseTrigger("Trigger_BurriedIdle");
         animComponent->UseTrigger("Trigger_BuryUp");
+        audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYUP);
+        vfxDigUpRocksObject->SetEnabled(true);
+        vfxDigUpRocksObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
+        vfxDigUpHoleObject->SetEnabled(true);
+        vfxDigUpHoleObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
         currentHighlightingState = HighlightingStates::BURY_UP;
         break;
     case HighlightingStates::BURY_UP:
         if (animComponent->IsFinished())
         {
+            vfxDigUpRocksObject->SetEnabled(false);
+            vfxDigUpHoleObject->SetEnabled(false);
+            
             animComponent->UseTrigger("Trigger_VisibleIdle");
             animComponent->UseTrigger("Trigger_PrepareDash");
+            vfxDropDown->SetEnabled(true);
+            vfxDropDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDropDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             currentHighlightingState = HighlightingStates::DROP_DOWN;
         }
         break;
     case HighlightingStates::DROP_DOWN:
         if (animComponent->IsFinished())
         {
+            vfxDropDown->SetEnabled(false);
+            
             stateTimer = highlightDuration;
             animComponent->UseTrigger("Trigger_Dash");
             animComponent->UseTrigger("Trigger_Wiggle");
@@ -680,12 +692,17 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
         {
             animComponent->UseTrigger("Trigger_VisibleIdle");
             animComponent->UseTrigger("Trigger_BuryDown");
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
+            vfxDigDown->SetEnabled(true);
+            vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             currentHighlightingState = HighlightingStates::BURY_DOWN;
         }
         break;
     case HighlightingStates::BURY_DOWN:
         if (animComponent->IsFinished())
         {
+            vfxDigDown->SetEnabled(false);
             animComponent->UseTrigger("Trigger_BurriedIdle");
             currentHighlightingState = HighlightingStates::IDLE;
             currentState             = ChangelingStates::IDLE_BURIED;
