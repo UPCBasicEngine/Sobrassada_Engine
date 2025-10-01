@@ -40,6 +40,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_CAVE_04 = 3434634932U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEATTACK = 1369065983U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEDASH = 3072215751U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_AOEEXPANSION = 4190151190U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DASHATTACK_01 = 3142736088U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DASHATTACK_02 = 3142736091U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DEATH = 792711456U;
@@ -48,6 +49,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_02 = 3435584308U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_03 = 3435584309U;
         static const AkUniqueID PLAY_SFX_FERDIAD_RANGEATTACK = 4270586061U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_RANGEATTACKSTART = 3238138479U;
         static const AkUniqueID PLAY_SFX_FERDIAD_WATERSPOUT = 595604230U;
         static const AkUniqueID PLAY_SFX_FIRE_01 = 3889642976U;
         static const AkUniqueID PLAY_SFX_FIRE_02 = 3889642979U;
