@@ -689,8 +689,6 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 
     Bind();
 
-    glDepthMask(GL_FALSE);
-
 #else
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
@@ -717,8 +715,6 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glDeleteFramebuffers(1, &fxaaFramebuffer);
     glDeleteTextures(1, &fxaaTexture);
 #endif
-
-    glDepthMask(GL_TRUE);
 }
 
 void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
