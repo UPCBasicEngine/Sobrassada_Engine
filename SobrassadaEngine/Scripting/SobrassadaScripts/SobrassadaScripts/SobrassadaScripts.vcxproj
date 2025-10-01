@@ -470,6 +470,7 @@
     <ClInclude Include="AbilityIconFill.h" />
     <ClInclude Include="Archer.h" />
     <ClInclude Include="ArcherProjectile.h" />
+    <ClInclude Include="AsyncSceneLoading.h" />
     <ClInclude Include="AttackVfxSpritesheet.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
@@ -479,6 +480,7 @@
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
     <ClInclude Include="ChangeSceneScript.h" />
+    <ClInclude Include="CoverPointTrigger.h" />
     <ClInclude Include="ColorChange.h" />
     <ClInclude Include="DamageMask.h" />
     <ClInclude Include="Destructible.h" />
@@ -494,6 +496,7 @@
     <ClInclude Include="GameOverScript.h" />
     <ClInclude Include="GameSession.h" />
     <ClInclude Include="HealVFXGround.h" />
+    <ClInclude Include="HighlightCharacter.h" />
     <ClInclude Include="MagicBarrier.h" />
     <ClInclude Include="imgui_curve_editor.h" />
     <ClInclude Include="MainMenuSelectorScript.h" />
@@ -2061,6 +2064,7 @@
     <ClCompile Include="AbilityIconFill.cpp" />
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="ArcherProjectile.cpp" />
+    <ClCompile Include="AsyncSceneLoading.cpp" />
     <ClCompile Include="AttackVfxSpritesheet.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />
@@ -2071,6 +2075,7 @@
     <ClCompile Include="Changeling.cpp" />
     <ClCompile Include="ChangeSceneScript.cpp" />
     <ClCompile Include="Character.cpp" />
+    <ClCompile Include="CoverPointTrigger.cpp" />
     <ClCompile Include="ColorChange.cpp" />
     <ClCompile Include="CuChulainn.cpp" />
     <ClCompile Include="DamageMask.cpp" />
@@ -2085,6 +2090,7 @@
     <ClCompile Include="GameOverScript.cpp" />
     <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="HealVFXGround.cpp" />
+    <ClCompile Include="HighlightCharacter.cpp" />
     <ClCompile Include="MagicBarrier.cpp" />
     <ClCompile Include="imgui_curve_editor.cpp" />
     <ClCompile Include="MainMenuSelectorScript.cpp" />

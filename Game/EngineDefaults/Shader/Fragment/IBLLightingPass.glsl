@@ -15,6 +15,7 @@ layout(binding = 6) uniform sampler2D ssao;
 uniform mat4 viewLight;
 uniform mat4 projLight;
 uniform vec3 shadowTint;
+uniform float shadowStrength;
 
 #define TILE_SIZE 16
 #define MAX_LIGHTS_PER_TILE 1024
@@ -159,6 +160,8 @@ vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const
         vec3 projCoords = pos_from_light.xyz / pos_from_light.w;
         projCoords = projCoords * 0.5 + 0.5;
 
+        int samples = 0;
+
         if(projCoords.x >= 0.0 && projCoords.x <= 1.0 &&
         projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
         projCoords.z >= 0.0 && projCoords.z <= 1.0)
@@ -167,22 +170,22 @@ vec3 RenderLight(const vec3 L, const vec3 N, const vec3 Cd, const vec3 Li, const
             float factor = 0.0;
 
             vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-            for (int yOffset = -1; yOffset <= 1; ++yOffset) {
-                for (int xOffset = -1; xOffset <= 1; ++xOffset) {
+            for (int yOffset = -2; yOffset <= 2; ++yOffset) {
+                for (int xOffset = -2; xOffset <= 2; ++xOffset) {
                     vec2 offset = vec2(float(xOffset), float(yOffset)) * texelSize;
                     float sampledDepth = texture(shadowMap, projCoords.xy + offset).r;
 
                     if (projCoords.z - 0.001 > sampledDepth)
                         factor += 1.0;
+
+                    samples++;
                 }
             }
 
-            shadow = factor;
+            shadow = factor / float(samples);
         }
 
-        //diffspec = mix(diffspec, diffspec * vec3(0.56, 0.78, 0.90), shadow);
-        //diffspec = mix(diffspec, diffspec * vec3(0.0, 0.0, 0.0), shadow);
-        diffspec = mix(diffspec, diffspec * shadowTint, shadow);
+        diffspec = mix(diffspec, diffspec * shadowTint, shadow * shadowStrength);
     }
 
     return diffspec;

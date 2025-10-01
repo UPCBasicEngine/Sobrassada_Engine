@@ -23,6 +23,26 @@ struct SpotlightShadow
     uint64_t shadowMap;
     float2 padding;
 };
+class BatchManager;
+
+struct HeightFogParameters
+{
+    bool isEnabled        = false;
+    bool followCamera     = false;
+    float densityConstant = 1.0f;
+    float heightFalloff   = 1.0f;
+    float maxFog          = 1.0f;
+    float fogStartHeight  = 0.0f;
+    float3 fogColor       = float3::one;
+};
+
+struct FXAAParameters
+{
+    bool isEnabled        = true;
+    bool showBorders      = false;
+    float globalThreshold = 0.0312f;
+    float localThreshold  = 0.16f;
+};
 
 class RenderPass
 {
@@ -46,11 +66,11 @@ class RenderPass
     float GetGlobalThreshold() const { return globalThreshold; }
     float GetLocalThreshold() const { return localThreshold; }
     const ResourceTexture* GetResourceTexture() const { return noiseTexture; }
+    HeightFogParameters GetHeightFogParameters() const { return heightFog; }
+    void SetHeightFogParameters(const HeightFogParameters& params) { heightFog = params; }
 
-    void SetEnabled(bool enable) { enableFXAA = enable; }
-    void SetShowBorders(bool show) { showBorders = show; }
-    void SetGlobalThreshold(float newThreshold) { globalThreshold = newThreshold; }
-    void SetLocalThreshold(float newThreshold) { localThreshold = newThreshold; }
+    FXAAParameters GetFXAAParameters() const { return fxaaParameters; }
+    void SetFXAAParameters(const FXAAParameters& params) { fxaaParameters = params; }
 
   private:
     void Bind() const;
@@ -69,6 +89,7 @@ class RenderPass
     void SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const;
     void SsaoBlurPassRender(SSAO* ssao);
     void VolumetricFogPassRender(CameraComponent* camera, DirectionalLightComponent* light);
+    void HeightFogPassRender(CameraComponent* camera) const;
     void AntiAliasingPassRender(Framebuffer* framebuffer) const;
 
     void RenderGBufferDebug(GBuffer* gbuffer) const;
@@ -89,6 +110,7 @@ class RenderPass
     GBuffer* gbuffer         = nullptr;
     SSAO* ssao               = nullptr;
     Framebuffer* framebuffer = nullptr;
+    BatchManager* batchManager = nullptr;
     int width, height;
     int shadowResolution = 4096;
 
@@ -119,4 +141,6 @@ class RenderPass
     bool showBorders                              = false;
     float globalThreshold                         = 0.0312f;
     float localThreshold                          = 0.063f;
+    HeightFogParameters heightFog;
+    FXAAParameters fxaaParameters;
 };
