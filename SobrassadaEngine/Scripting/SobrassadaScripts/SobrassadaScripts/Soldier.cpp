@@ -39,6 +39,7 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Helmet 3 object", InspectorField::FieldType::InputText, &helmet3Name});
     fields.push_back({"Helmet 4 object", InspectorField::FieldType::InputText, &helmet4Name});
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
+    fields.push_back({"Melee 2 VFX object", InspectorField::FieldType::InputText, &melee2VfxName});
     fields.push_back({"Thrust VFX object", InspectorField::FieldType::InputText, &thrustVfxName});
 }
 
@@ -108,6 +109,14 @@ bool Soldier::Init()
     {
         GLOG("MeleVFX found in Soldier")
         meleeVfxObject->SetEnabled(false);
+    }
+
+    melee2VfxObject = parent->GetChildGameObjectByName(melee2VfxName);
+    if (!melee2VfxObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
+    else
+    {
+        GLOG("MeleVFX found in Soldier")
+        melee2VfxObject->SetEnabled(false);
     }
 
     thrustVfxObject = parent->GetChildGameObjectByName(thrustVfxName);
@@ -187,14 +196,15 @@ void Soldier::OnPlayerEnterLocation()
     reachedPatrolPoint = false;
 }
 
-void Soldier::SetAttackVFX()
+void Soldier::SetAttackVFX(GameObject* selectedMeleeVfxObject)
 {
 
-    if (meleeVfxObject && !meleeVfxObject->IsEnabled())
+    if (selectedMeleeVfxObject && !selectedMeleeVfxObject->IsEnabled())
     {
-        meleeVfxObject->SetEnabled(true);
-        meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
-        meleeVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        selectedMeleeVfxObject->SetEnabled(true);
+        selectedMeleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
+        selectedMeleeVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset(
+        );
     }
 }
 
@@ -425,32 +435,24 @@ void Soldier::Attack(float deltaTime)
                 if (inFirstWindow)
                 {
                     GLOG("First window is true");
-                    SetAttackVFX();
+                    SetAttackVFX(meleeVfxObject);
 
                 }
                 if (inSecondWindow)
                 {
-                    if (meleeVfxObject && !meleeVfxObject->IsEnabled())
-                    {
-                        float4x4 local            = meleeVfxOriginalTransform;
-                        local.SetCol3(0, -local.Col3(0));
-                        meleeVfxObject->SetLocalTransform(local);
-
-                        meleeVfxObject->SetEnabled(true);
-                        meleeVfxObject->GetComponent<MeshComponent*>()->SetEnabled(false);
-                        meleeVfxObject->GetComponent<ShaderScriptComponent*>()
-                            ->GetScriptByType<AttackVfxSpritesheet>()
-                            ->Reset();
-                    }
+                    SetAttackVFX(melee2VfxObject);
                 }
             }
             else if (!inFirstWindow && !inSecondWindow)
             {
                 if (weaponCollider->GetEnabled()) weaponCollider->SetEnabled(false);
-                if (meleeVfxObject)
+                if (meleeVfxObject && meleeVfxObject->IsEnabled())
                 {
-                    if (!meleeVfxOriginalTransform.Equals(float4x4::identity, 1e-6f))meleeVfxObject->SetLocalTransform(meleeVfxOriginalTransform);
                     meleeVfxObject->SetEnabled(false);
+                }
+                if (melee2VfxObject && melee2VfxObject->IsEnabled())
+                {
+                    melee2VfxObject->SetEnabled(false);
                 }
             }
         }
@@ -593,7 +595,7 @@ const char* Soldier::ManageAttackAnimations()
             consecutiveAttack = 0;
         }
     }
-
+    attackTrigger = "attack";
     animComponent->UseTrigger(attackTrigger);
 
     return attackTrigger;

@@ -30,7 +30,7 @@ class Soldier : public Character
 
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
-    void SetAttackVFX();
+    void SetAttackVFX(GameObject* meleeVfxObject);
     void DisableAttackVFX();
 
   private:
@@ -91,10 +91,13 @@ class Soldier : public Character
     GameObject* helmet4Object          = nullptr;
     std::string meleeVfxName           = "";
     GameObject* meleeVfxObject         = nullptr;
+    std::string melee2VfxName           = "";
+    GameObject* melee2VfxObject         = nullptr;
     std::string thrustVfxName          = "";
     GameObject* thrustVfxObject        = nullptr;
 
     GameObject* bodyObject             = nullptr;
+    HashString materialPath             = HashString();
 
     float4x4 meleeVfxOriginalTransform = float4x4::identity;
 };
