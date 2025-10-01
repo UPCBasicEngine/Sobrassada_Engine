@@ -60,6 +60,7 @@ class RenderPass
 
     void UpdateVolumetricNoiseTexture(UID newTextureUID);
     void RemoveVolumetricNoiseTexture();
+    void Resize(int width, int height) const;
 
     bool IsFXAAEnabled() const { return enableFXAA; }
     bool IsShowBorders() const { return showBorders; }

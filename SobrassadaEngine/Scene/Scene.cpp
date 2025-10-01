@@ -38,7 +38,6 @@
 #include "ScriptComponent.h"
 #include "ShaderModule.h"
 #include "ShaderScriptModule.h"
-#include "VolumetricAreaComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioListenerComponent.h"
@@ -62,6 +61,7 @@
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/VideoComponent.h"
+#include "VolumetricAreaComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -154,10 +154,10 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         params.heightFalloff   = fog["HeightFalloff"].GetFloat();
         params.fogStartHeight  = fog["FogStartHeight"].GetFloat();
         params.maxFog          = fog["MaxFog"].GetFloat();
-    if (initialState.HasMember("RenderPassConfig") && initialState["RenderPassConfig"].IsObject())
-    {
-        renderPass->LoadData(initialState["RenderPassConfig"]);
-    }
+        if (initialState.HasMember("RenderPassConfig") && initialState["RenderPassConfig"].IsObject())
+        {
+            renderPass->LoadData(initialState["RenderPassConfig"]);
+        }
 
         if (fog.HasMember("FogColor") && fog["FogColor"].IsArray())
         {
@@ -661,6 +661,7 @@ void Scene::RenderSceneToFrameBuffer()
         framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
         App->GetOpenGLModule()->GetGBuffer()->Resize((int)windowSize.x, (int)windowSize.y);
         App->GetOpenGLModule()->GetSsao()->Resize((int)windowSize.x, (int)windowSize.y);
+        renderPass->Resize((int)windowSize.x, (int)windowSize.y);
     }
 
     ImVec2 windowPosition     = ImGui::GetWindowPos();

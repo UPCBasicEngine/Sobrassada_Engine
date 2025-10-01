@@ -554,6 +554,10 @@ void RenderPass::ShadowMapPassRender(
     glDispatchCompute(groupsX, groupsY, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::ShadowMap::LastDepthPass::PostDispatch", Optick::Category::Rendering)
+#endif
+
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     float minMax[4] = {0, 0, 0, 0};
 
@@ -665,8 +669,6 @@ void RenderPass::ShadowMapPassRender(
 
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
-
-    batchManager->RenderShadowMap(meshesToRender, ubo);
 
     // RENDER SPOTLIGHT SHADOWMAPS
 #ifdef OPTICK
@@ -893,29 +895,30 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glDeleteFramebuffers(1, &fxaaFramebuffer);
     glDeleteTextures(1, &fxaaTexture);
 #endif
-
-    glDepthMask(GL_TRUE);
 }
 
 void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLightComponent* light)
 {
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::VolumetricFog", Optick::Category::Rendering)
+#endif
     if (!light) return;
 
     if (fogResultTexture == 0)
     {
         glGenTextures(1, &fogResultTexture);
-    }
 
-    glBindTexture(GL_TEXTURE_2D, fogResultTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    }
 
     glBindImageTexture(0, fogResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
     glBindTextureUnit(1, framebuffer->GetDepthTexture());
     glBindTextureUnit(2, depthTexture);
     glBindTextureUnit(3, framebuffer->GetColorTexture());
-   
+
     if (useNoiseTexture && noiseTexture) glBindTextureUnit(4, noiseTexture->GetTextureID());
 
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
@@ -929,8 +932,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, visibleVolumetricAreaIndicesSSBO);
 
     // Local size of compute is (16,16,1)
-    unsigned int numGroupsX = (width + (16 - 1)) / 16;
-    unsigned int numGroupsY = (height + (16 - 1)) / 16;
+    unsigned int numGroupsX = (width + (8 - 1)) / 8;
+    unsigned int numGroupsY = (height + (8 - 1)) / 8;
 
     float3 cameraPosition;
     float4x4 projection, inverseView;
@@ -981,10 +984,14 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     float3 lightDir = light->GetDirection();
     lightDir.Normalize();
-    float3 lightUp = -lightDir.Cross(float3(1.0, 0.0, 0.0));
-    lightUp.Normalize();
-    float3 lightRight = lightUp.Cross(lightDir);
+
+    float3 worldUp = float3::unitY;
+    if (fabs(lightDir.Dot(worldUp)) > 0.99f) worldUp = float3(1.0f, 0.0f, 0.0f);
+
+    float3 lightRight = worldUp.Cross(lightDir);
     lightRight.Normalize();
+    float3 lightUp = lightDir.Cross(lightRight);
+    lightUp.Normalize();
 
     Frustum shadowfrustum;
 
@@ -1007,7 +1014,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+    //glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     // RENDER COMPUTED TEXTURE ON TOP OF SCENE
 
@@ -1567,6 +1575,17 @@ void RenderPass::RemoveVolumetricNoiseTexture()
         App->GetResourcesModule()->ReleaseResource(noiseTexture);
         useNoiseTexture = false;
         noiseTexture    = nullptr;
+    }
+}
+
+void RenderPass::Resize(int width, int height) const
+{
+    if (fogResultTexture != 0)
+    {
+        glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
 }
 
