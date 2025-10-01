@@ -106,6 +106,7 @@ class RenderPass
     float extinctionCoefficient = 0.04f;
     float anisotropy            = 0.5f;
     bool useNoiseTexture        = false;
+    int blurrPasses             = 10;
 
   private:
     GBuffer* gbuffer           = nullptr;

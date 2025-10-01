@@ -566,6 +566,10 @@ void EditorUIModule::FogConfig(bool& fogConfig)
     ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01f, 0.01f, 1.f);
     ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01f, -0.99f, 0.99f);
+    if (ImGui::DragInt("Blurr passes", &renderPass->blurrPasses, 1, 0, 20))
+    {
+        if (renderPass->blurrPasses < 0) renderPass->blurrPasses = 0;
+    }
 
     ImGui::Checkbox("Use Noise texture", &renderPass->useNoiseTexture);
 

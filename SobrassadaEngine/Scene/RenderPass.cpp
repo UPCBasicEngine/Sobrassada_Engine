@@ -167,6 +167,7 @@ void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("noiseAmmount", noiseAmmount, allocator);
     targetState.AddMember("extinctionCoefficient", extinctionCoefficient, allocator);
     targetState.AddMember("anisotropy", anisotropy, allocator);
+    targetState.AddMember("blurrPasses", blurrPasses, allocator);
     targetState.AddMember("useNoiseTexture", useNoiseTexture, allocator);
     targetState.AddMember("noiseTexture", noiseTexture != nullptr ? noiseTexture->GetUID() : INVALID_UID, allocator);
 }
@@ -179,6 +180,7 @@ void RenderPass::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("extinctionCoefficient"))
         extinctionCoefficient = initialState["extinctionCoefficient"].GetFloat();
     if (initialState.HasMember("anisotropy")) anisotropy = initialState["anisotropy"].GetFloat();
+    if (initialState.HasMember("blurrPasses")) blurrPasses = initialState["blurrPasses"].GetInt();
     if (initialState.HasMember("useNoiseTexture")) useNoiseTexture = initialState["useNoiseTexture"].GetBool();
 
     if (initialState.HasMember("noiseTexture"))
@@ -1039,7 +1041,6 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glDepthMask(GL_FALSE);
 
     bool horizontal = true, firstIteration = true;
-    int blurrPasses           = 5;
 
     unsigned int blurrProgram = App->GetShaderModule()->GetGaussianBlurrProgram();
     glUseProgram(blurrProgram);
