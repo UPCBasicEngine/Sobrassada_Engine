@@ -288,34 +288,48 @@ bool CuChulainn::Init()
     if (!riastradStars) GLOG("[WARNING] No riastrad Stars VFX found for CuChulain")
     else riastradStars->SetEnabled(false);
 
-    GameObject* riastradBarObj = scene->GetGameObjectByName(riastradBarName);
-    if (riastradBarObj)
+    GameObject* riastradObj = scene->GetGameObjectByName(riastradSmokeName);
+    if (riastradObj)
     {
-        ShaderScriptComponent* shaderScript = riastradBarObj->GetComponent<ShaderScriptComponent*>();
+        riastradSmoke = riastradObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradSmoke) riastradSmoke->SetEnabled(false);
+
+    riastradObj = scene->GetGameObjectByName(riastradGroundExplosionName);
+    if (riastradObj)
+    {
+        riastradGroundExplosion = riastradObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradGroundExplosion) riastradGroundExplosion->SetEnabled(false);
+
+    riastradObj = scene->GetGameObjectByName(riastradBarName);
+    if (riastradObj)
+    {
+        ShaderScriptComponent* shaderScript = riastradObj->GetComponent<ShaderScriptComponent*>();
         if (shaderScript) riastradBar = shaderScript->GetScriptByType<BarFill>();
     }
     if (!riastradBar) GLOG("[WARNING] No riastrad Fill Bar Shader Script found for CuChulain");
 
-    GameObject* riastradEyeObj = scene->GetGameObjectByName(riastradEyeName);
-    if (riastradEyeObj)
+    riastradObj = scene->GetGameObjectByName(riastradEyeName);
+    if (riastradObj)
     {
-        ShaderScriptComponent* shaderScript = riastradEyeObj->GetComponent<ShaderScriptComponent*>();
+        ShaderScriptComponent* shaderScript = riastradObj->GetComponent<ShaderScriptComponent*>();
         if (shaderScript) riastradEye = shaderScript->GetScriptByType<AbilityIconFill>();
     }
     if (!riastradEye) GLOG("[WARNING] No riastrad Eye Shader Script found for CuChulain");
 
-    riastradEyeObj = scene->GetGameObjectByName(riastradVfxBGName);
-    if (riastradEyeObj)
+    riastradObj = scene->GetGameObjectByName(riastradVfxBGName);
+    if (riastradObj)
     {
-        riastradVfxBG = riastradEyeObj->GetComponent<ShaderScriptComponent*>();
+        riastradVfxBG = riastradObj->GetComponent<ShaderScriptComponent*>();
     }
     if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
     GLOG("[WARNING] No riastrad Eye BG VFX Shader Script found for CuChulain");
 
-    riastradEyeObj = scene->GetGameObjectByName(riastradVfxFGName);
-    if (riastradEyeObj)
+    riastradObj = scene->GetGameObjectByName(riastradVfxFGName);
+    if (riastradObj)
     {
-        riastradVfxFG = riastradEyeObj->GetComponent<ShaderScriptComponent*>();
+        riastradVfxFG = riastradObj->GetComponent<ShaderScriptComponent*>();
     }
     if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
     else GLOG("[WARNING] No riastrad Eye FG VFX Shader Script found for CuChulain");
@@ -1905,8 +1919,8 @@ void CuChulainn::ToggleRiastrad()
         {
             riastradEye->SetFillAmount(0);
 
-            if (riastradVfxFG) riastradVfxFG->GetParent()->SetEnabled(false);
-            if (riastradVfxBG) riastradVfxBG->GetParent()->SetEnabled(false);
+            if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
+            if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
         }
 
         // TODO: Remove when VFX
@@ -1962,6 +1976,24 @@ void CuChulainn::EnableRiastradVfx()
         riastradStars->SetEnabled(true);
         riastradStars->GetComponent<MeshComponent*>()->SetEnabled(false);
         riastradStars->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+
+    if (riastradSmoke)
+    {
+        const float3 characterPos =
+            parent->GetGlobalTransform().TranslatePart() - parent->GetParentGlobalTransform().TranslatePart();
+
+        const float3 offset = float3(-2.0f, 5.0f, 1.0f);
+
+        riastradSmoke->GetParent()->SetLocalPosition(characterPos + offset);
+        riastradSmoke->SetEnabled(true);
+        riastradSmoke->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
+
+    if (riastradGroundExplosion)
+    {
+        riastradGroundExplosion->SetEnabled(true);
+        riastradGroundExplosion->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     }
 }
 
