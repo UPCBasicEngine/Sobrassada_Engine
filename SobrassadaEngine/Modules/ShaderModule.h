@@ -47,7 +47,7 @@ class ShaderModule : public Module
     int GetFXAAProgram() const { return fxaaProgram; }
     int GetHeightFogProgram() const { return heightFogProgram; }
     int GetVolumetricFogComputeProgram() const { return volumetricFogProgram; }
-    int GetGetFogMergeProgram() const { return fogMergeProgram; }
+    int GetGaussianBlurrProgram() const { return gaussianBlurrProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -96,7 +96,7 @@ class ShaderModule : public Module
     int heightFogProgram               = -1;
 
     unsigned int volumetricFogProgram  = 0;
-    unsigned int fogMergeProgram       = 0;
+    unsigned int gaussianBlurrProgram  = 0;
 
     std::map<HashString, unsigned int> customShaderPrograms;
 };

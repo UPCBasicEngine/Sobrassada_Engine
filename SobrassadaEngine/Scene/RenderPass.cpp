@@ -86,6 +86,22 @@ RenderPass::RenderPass()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    // VOLUMETRIC GAUSS BLURR
+    glGenFramebuffers(2, &blurrFBO[0]);
+    glGenTextures(2, &blurrTextures[0]);
+
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, blurrTextures[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurrTextures[i], 0);
+    }
+
     glGenBuffers(1, &spotShadowSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(SpotlightShadow) * TotalShadowMaps, nullptr, GL_STATIC_DRAW);
@@ -128,6 +144,8 @@ RenderPass::~RenderPass()
     glDeleteFramebuffers(1, &depthFBO);
 
     glDeleteTextures(1, &fogResultTexture);
+    glDeleteFramebuffers(2, &blurrFBO[0]);
+    glDeleteTextures(2, &blurrTextures[0]);
 
     for (int i = 0; i < TotalShadowMaps; ++i)
     {
@@ -914,13 +932,13 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
 
+    glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
+
     glBindImageTexture(0, fogResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
     glBindTextureUnit(1, framebuffer->GetDepthTexture());
     glBindTextureUnit(2, depthTexture);
 
     if (useNoiseTexture && noiseTexture) glBindTextureUnit(3, noiseTexture->GetTextureID());
-
-    glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
     LightsConfig* lConfig = App->GetSceneModule()->GetScene()->GetLightsConfig();
     lConfig->SetLightsShaderData();
@@ -1014,9 +1032,35 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-    // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
+
+    // APPLYING BLURR TO VOLUMETRICS
+    //glDepthMask(GL_FALSE);
+
+    //bool horizontal = true, firstIteration = true;
+    //int blurrPasses           = 10;
+
+    //unsigned int blurrProgram = App->GetShaderModule()->GetGaussianBlurrProgram();
+    //glUseProgram(blurrProgram);
+
+    //for (unsigned int i = 0; i < blurrPasses; i++)
+    //{
+    //    glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[horizontal]);
+    //    glUniform1ui(0, horizontal);
+
+    //    glActiveTexture(GL_TEXTURE0);
+    //    glBindTexture(GL_TEXTURE_2D, firstIteration ? fogResultTexture : blurrTextures[!horizontal]);
+
+    //    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    //    horizontal = !horizontal;
+    //    if (firstIteration) firstIteration = false;
+    //}
 
     // RENDER COMPUTED TEXTURE ON TOP OF SCENE
+
+    Bind();
 
     glDepthMask(GL_FALSE);
 
@@ -1037,19 +1081,6 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisable(GL_BLEND);
-
-    // unsigned int quadProgram = App->GetShaderModule()->GetGetFogMergeProgram();
-
-    // glUseProgram(quadProgram);
-
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, fogResultTexture);
-
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, framebuffer->GetColorTexture());
-
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-
     glDepthMask(GL_TRUE);
 }
 
@@ -1603,6 +1634,18 @@ void RenderPass::Resize(int width, int height) const
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    }
+
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, blurrTextures[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurrTextures[i], 0);
     }
 
     glBindTexture(GL_TEXTURE_2D, 0);
