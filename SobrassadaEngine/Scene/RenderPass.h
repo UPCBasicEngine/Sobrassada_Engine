@@ -108,9 +108,9 @@ class RenderPass
     bool useNoiseTexture        = false;
 
   private:
-    GBuffer* gbuffer         = nullptr;
-    SSAO* ssao               = nullptr;
-    Framebuffer* framebuffer = nullptr;
+    GBuffer* gbuffer           = nullptr;
+    SSAO* ssao                 = nullptr;
+    Framebuffer* framebuffer   = nullptr;
     BatchManager* batchManager = nullptr;
     int width, height;
     int shadowResolution = 4096;

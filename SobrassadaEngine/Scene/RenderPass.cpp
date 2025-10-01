@@ -909,7 +909,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
         glGenTextures(1, &fogResultTexture);
 
         glBindTexture(GL_TEXTURE_2D, fogResultTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
@@ -917,9 +917,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBindImageTexture(0, fogResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
     glBindTextureUnit(1, framebuffer->GetDepthTexture());
     glBindTextureUnit(2, depthTexture);
-    glBindTextureUnit(3, framebuffer->GetColorTexture());
 
-    if (useNoiseTexture && noiseTexture) glBindTextureUnit(4, noiseTexture->GetTextureID());
+    if (useNoiseTexture && noiseTexture) glBindTextureUnit(3, noiseTexture->GetTextureID());
 
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
@@ -932,8 +931,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, visibleVolumetricAreaIndicesSSBO);
 
     // Local size of compute is (16,16,1)
-    unsigned int numGroupsX = (width + (8 - 1)) / 8;
-    unsigned int numGroupsY = (height + (8 - 1)) / 8;
+    unsigned int numGroupsX = (width / 2 + (8 - 1)) / 8;
+    unsigned int numGroupsY = (height / 2 + (8 - 1)) / 8;
 
     float3 cameraPosition;
     float4x4 projection, inverseView;
@@ -1014,12 +1013,16 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
 
     glDispatchCompute(numGroupsX, numGroupsY, 1);
 
-    //glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+    // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     // RENDER COMPUTED TEXTURE ON TOP OF SCENE
 
     glDepthMask(GL_FALSE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+    glBlendEquation(GL_FUNC_ADD);
 
     unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
 
@@ -1032,6 +1035,20 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBindTexture(GL_TEXTURE_2D, fogResultTexture);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDisable(GL_BLEND);
+
+    // unsigned int quadProgram = App->GetShaderModule()->GetGetFogMergeProgram();
+
+    // glUseProgram(quadProgram);
+
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, framebuffer->GetColorTexture());
+
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDepthMask(GL_TRUE);
 }
@@ -1583,10 +1600,12 @@ void RenderPass::Resize(int width, int height) const
     if (fogResultTexture != 0)
     {
         glBindTexture(GL_TEXTURE_2D, fogResultTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void RenderPass::RenderShadowMapDebug() const

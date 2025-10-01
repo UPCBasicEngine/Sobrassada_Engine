@@ -9,8 +9,7 @@
 uniform layout(binding = 0) writeonly image2D transmitanceTexture;
 uniform layout(binding = 1) sampler2D depthTexture;
 uniform layout(binding = 2) sampler2D directionalLightShadowTexture;
-uniform layout(binding = 3) sampler2D sceneTexture;
-uniform layout(binding = 4) sampler2D noiseTexture;
+uniform layout(binding = 3) sampler2D noiseTexture;
 
 uniform layout(location = 0) mat4 projection;
 uniform layout(location = 1) mat4 inverseViewMatrix;
@@ -537,8 +536,6 @@ void main()
         float maxDistance = length(rayDirection);
         rayDirection = rayDirection / maxDistance;
 
-        vec4 originalColor = texture(sceneTexture, uvCoords);
-
         float t0 = maxDistance, t1 = 0.0;
 
         bool intersects = RayIntersectionPoints(cameraPosition, rayDirection, baseOffset, t0, t1);
@@ -566,11 +563,11 @@ void main()
 
             vec3 finalInScattering = accInScattering * fogIntensity;
 
-            imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(originalColor.rgb + finalInScattering, 1.0));
+            imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(finalInScattering, 1.0));
         }
         else
         {
-            imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), originalColor);
+            imageStore(transmitanceTexture, ivec2(gl_GlobalInvocationID.xy), vec4(0.0));
         }
     }
 }
