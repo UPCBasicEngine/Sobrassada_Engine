@@ -8,6 +8,8 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Globals.h"
+#include "LibraryModule.h"
+#include "ResourceAnimation.h"
 #include "ResourceStateMachine.h"
 #include "ShaderScriptComponent.h"
 #include "Soldier.h"
@@ -17,11 +19,9 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
-#include "ResourceAnimation.h"
 
 #include "Wwise_IDs.h"
 #include <random>
-
 
 Soldier::Soldier(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Soldier)
@@ -41,6 +41,7 @@ Soldier::Soldier(GameObject* parent)
     fields.push_back({"Melee VFX object", InspectorField::FieldType::InputText, &meleeVfxName});
     fields.push_back({"Melee 2 VFX object", InspectorField::FieldType::InputText, &melee2VfxName});
     fields.push_back({"Thrust VFX object", InspectorField::FieldType::InputText, &thrustVfxName});
+    fields.push_back({"Alternate material name", InspectorField::FieldType::InputText, &materialName});
 }
 
 bool Soldier::Init()
@@ -422,7 +423,7 @@ void Soldier::Attack(float deltaTime)
                 attackTimer >= attackHitboxDelay && attackTimer <= attackHitboxDelay + attackHitboxDuration;
             float secondDelay   = attackHitboxDelay + attackHitboxDuration + secondAttackDelay;
             bool inSecondWindow = attackTimer >= secondDelay && attackTimer <= secondDelay + attackHitboxDuration;
-            
+
             if ((inFirstWindow || inSecondWindow) && !weaponCollider->GetEnabled())
             {
                 if (meleeVfxObject && !meleeVfxObject->IsEnabled())
@@ -436,7 +437,6 @@ void Soldier::Attack(float deltaTime)
                 {
                     GLOG("First window is true");
                     SetAttackVFX(meleeVfxObject);
-
                 }
                 if (inSecondWindow)
                 {
@@ -595,7 +595,6 @@ const char* Soldier::ManageAttackAnimations()
             consecutiveAttack = 0;
         }
     }
-    attackTrigger = "attack";
     animComponent->UseTrigger(attackTrigger);
 
     return attackTrigger;
@@ -630,9 +629,10 @@ void Soldier::SelectRandomHelmet()
         if (!bodyObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
         else
         {
-            UID materialUID              = 1322427414903784;
+
+            UID materialUID                                     = AppEngine->GetLibraryModule()->GetMaterialUID(materialName);
             MeshComponent* meshComponent = bodyObject->GetComponent<MeshComponent*>();
-            meshComponent->AddMaterial(materialUID);
+            if (materialUID) meshComponent->AddMaterial(materialUID);
         }
 
         switch (dis2(gen2))
@@ -658,7 +658,6 @@ void Soldier::SelectRandomHelmet()
         default:
             break;
         }
-
     }
     else
     {
@@ -686,7 +685,7 @@ void Soldier::SelectRandomHelmet()
             break;
         }
     }
-    
+
     switch (dis2(gen2))
     {
     case 1:
@@ -728,5 +727,4 @@ void Soldier::SelectRandomHelmet()
     default:
         break;
     }
-
 }

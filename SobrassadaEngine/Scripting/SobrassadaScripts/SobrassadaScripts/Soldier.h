@@ -97,7 +97,7 @@ class Soldier : public Character
     GameObject* thrustVfxObject        = nullptr;
 
     GameObject* bodyObject             = nullptr;
-    HashString materialPath             = HashString();
+    std::string materialName            = "";
 
     float4x4 meleeVfxOriginalTransform = float4x4::identity;
 };
