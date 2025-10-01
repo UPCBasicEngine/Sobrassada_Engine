@@ -18,7 +18,7 @@ uniform vec3 shadowTint;
 uniform float shadowStrength;
 
 #define TILE_SIZE 16
-#define MAX_LIGHTS_PER_TILE 1024
+#define MAX_LIGHTS_PER_TILE 250
 
 uniform vec2 screenSize;
 uniform int numTilesX;

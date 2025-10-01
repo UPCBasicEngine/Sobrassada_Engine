@@ -70,8 +70,8 @@ shared uint visibleLightCount;
 shared uint visibleAreaCount;
 shared vec4 frustumPlanes[6];
 // Shared local storage for visible indices, will be written out to the global buffer at the end
-shared int visibleLightIndices[1024];
-shared int visibleAreaIndices[1024];
+shared int visibleLightIndices[250];
+shared int visibleAreaIndices[250];
 shared mat4 viewProjection;
 
 
@@ -239,12 +239,12 @@ void main() {
 
 	// One thread should fill the global light buffer
 	if (gl_LocalInvocationIndex == 0) {
-		uint offset = index * 1024; // Determine bosition in global buffer
+		uint offset = index * 250; // Determine bosition in global buffer
 		for (uint i = 0; i < visibleLightCount; i++) {
 			visibleLightIndicesBuffer.data[offset + i].index = visibleLightIndices[i];
 		}
 
-		if (visibleLightCount != 1024) {
+		if (visibleLightCount != 250) {
 			visibleLightIndicesBuffer.data[offset + visibleLightCount].index = -1;
 		}
 
@@ -252,7 +252,7 @@ void main() {
 			visibleVolumetricAreaIndicesBuffer.data[offset + i].index = visibleAreaIndices[i];
 		}
 
-		if (visibleAreaCount != 1024) {
+		if (visibleAreaCount != 250) {
 			visibleVolumetricAreaIndicesBuffer.data[offset + visibleAreaCount].index = -1;
 		}
 	}

@@ -3,7 +3,7 @@
 #extension GL_ARB_bindless_texture : require
 
 #define M_PI 3.14159265358979323846
-#define MAX_LIGHTS_PER_TILE 1024
+#define MAX_LIGHTS_PER_TILE 250
 #define TILE_SIZE 16
 
 uniform layout(binding = 0) writeonly image2D transmitanceTexture;
@@ -521,12 +521,9 @@ bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, in int baseO
             if(totalIntersections == 1) insideLight = true;
             
         }
-
-        if(insideLight) t0 = 0.0;
-
-        return validIntersection;
+        // return validIntersection;
     }
-
+    if(insideLight) t0 = 0.0;
     return validIntersection;
 }
 

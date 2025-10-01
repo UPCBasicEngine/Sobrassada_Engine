@@ -1172,7 +1172,7 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
 void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer)
 {
     const int TILE_SIZE             = 16;
-    const int MAX_LIGHTS_PER_TILE   = 1024;
+    const int MAX_LIGHTS_PER_TILE   = 250;
 
     tilesX                          = (width + TILE_SIZE - 1) / TILE_SIZE;
     int tilesY                      = (height + TILE_SIZE - 1) / TILE_SIZE;
