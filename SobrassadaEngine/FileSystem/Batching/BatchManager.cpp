@@ -165,8 +165,6 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         it->ResetUpdatedOnce();
         it->Render(batchMeshes);
 
-        if (it->IsDoubleSided()) glEnable(GL_CULL_FACE);
-
         const auto end                             = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<float> elapsed = end - start;
 
@@ -198,11 +196,10 @@ void BatchManager::RenderTransparent(
             GameObject* owner = mesh->GetParent();
             if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
 
-            if(mesh->GetBatch() == it) batchMeshes.push_back(mesh);
+            if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
         }
 
         if (batchMeshes.empty()) return;
-
 
         std::sort(
             batchMeshes.begin(), batchMeshes.end(),
@@ -246,7 +243,6 @@ void BatchManager::RenderTransparent(
 
         if (it->IsAdditive()) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 
         currentBatchMeshes.push_back(batchMeshes[0]);
         glEnable(GL_BLEND);
@@ -297,7 +293,7 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
         for (MeshComponent* mesh : meshesToRender)
         {
             GameObject* owner = mesh->GetParent();
-            if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
+            if (!owner || !owner->IsGloballyEnabled()) continue;
 
             if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
         }
@@ -327,6 +323,14 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
         App->GetOpenGLModule()->AddTrianglesPerSecond(meshTriangles / elapsed.count());
         App->GetOpenGLModule()->AddVerticesCount(vertexCount);
         App->GetOpenGLModule()->AddDrawCallsCount();
+    }  
+}
+
+void BatchManager::SwapOpaqueBuffers()
+{
+    for (GeometryBatch* it : opaqueBatches)
+    {
+        it->SwapBuffers();
     }
 }
 
