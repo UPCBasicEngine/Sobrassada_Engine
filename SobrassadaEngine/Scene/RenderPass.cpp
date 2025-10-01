@@ -1036,27 +1036,28 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
 
     // APPLYING BLURR TO VOLUMETRICS
-    //glDepthMask(GL_FALSE);
+    glDepthMask(GL_FALSE);
 
-    //bool horizontal = true, firstIteration = true;
-    //int blurrPasses           = 10;
+    bool horizontal = true, firstIteration = true;
+    int blurrPasses           = 5;
 
-    //unsigned int blurrProgram = App->GetShaderModule()->GetGaussianBlurrProgram();
-    //glUseProgram(blurrProgram);
+    unsigned int blurrProgram = App->GetShaderModule()->GetGaussianBlurrProgram();
+    glUseProgram(blurrProgram);
+    glViewport(0, 0, width / 2, height / 2);
 
-    //for (unsigned int i = 0; i < blurrPasses; i++)
-    //{
-    //    glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[horizontal]);
-    //    glUniform1ui(0, horizontal);
+    for (unsigned int i = 0; i < blurrPasses; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[horizontal]);
+        glUniform1ui(0, horizontal);
 
-    //    glActiveTexture(GL_TEXTURE0);
-    //    glBindTexture(GL_TEXTURE_2D, firstIteration ? fogResultTexture : blurrTextures[!horizontal]);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, firstIteration ? fogResultTexture : blurrTextures[!horizontal]);
 
-    //    glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    //    horizontal = !horizontal;
-    //    if (firstIteration) firstIteration = false;
-    //}
+        horizontal = !horizontal;
+        if (firstIteration) firstIteration = false;
+    }
 
     // RENDER COMPUTED TEXTURE ON TOP OF SCENE
 
@@ -1076,7 +1077,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1i(loc, 0);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, fogResultTexture);
+    glBindTexture(GL_TEXTURE_2D, blurrTextures[0]);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
