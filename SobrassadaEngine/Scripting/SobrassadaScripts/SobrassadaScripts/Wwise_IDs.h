@@ -54,9 +54,12 @@ namespace AK
         static const AkUniqueID PLAY_SFX_FIRE_01 = 3889642976U;
         static const AkUniqueID PLAY_SFX_FIRE_02 = 3889642979U;
         static const AkUniqueID PLAY_SFX_MC_DASH = 917195537U;
+        static const AkUniqueID PLAY_SFX_MC_DEATH = 3274202945U;
+        static const AkUniqueID PLAY_SFX_MC_HEAL = 1917024799U;
         static const AkUniqueID PLAY_SFX_MC_HIT = 2490745552U;
         static const AkUniqueID PLAY_SFX_MC_HURT = 2204804306U;
         static const AkUniqueID PLAY_SFX_MC_NORMALATTACK_01 = 2177541458U;
+        static const AkUniqueID PLAY_SFX_MC_RANGEATTACK = 1185962832U;
         static const AkUniqueID PLAY_SFX_MC_TRANSFORM = 3477603499U;
         static const AkUniqueID PLAY_SFX_MC_ULTIMATEATTACK = 1030865972U;
         static const AkUniqueID PLAY_SFX_POOKA_ATTACK = 2845739403U;

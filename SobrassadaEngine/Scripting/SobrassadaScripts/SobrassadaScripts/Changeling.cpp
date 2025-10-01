@@ -21,6 +21,7 @@
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Wwise_IDs.h"
+#include "Standalone/AnimController.h"
 #include "Standalone/MeshComponent.h"
 
 #include <Math/MathFunc.h>
@@ -293,15 +294,17 @@ void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq)
 {
-    if (animComponent->IsFinished())
+    if (stateTimer <= 0)
     {
         characterCollider->SetEnabled(false);
         if (distanceToPlayerSq <= maxDetectionRange * maxDetectionRange)
         {
             spottedLocation = character->GetLastPosition();
             stateTimer = SqrtFast(distanceToPlayerSq) / buriedTravelSpeed;
+            animComponent->GetAnimationController()->Pause();
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_UNDERGROUND);
             currentState = ChangelingStates::BURIED_TRAVEL;
-        } else
+        } else if (animComponent->IsFinished())
         {
             spottedLocation = float3::nan;
             animComponent->UseTrigger("Trigger_BurriedIdle");
@@ -314,19 +317,27 @@ void Changeling::UpdateBuriedTravelState(float deltaTime, float distanceToPlayer
 {
     if (stateTimer <= 0)
     {
-        float3 resultPos;
-        bool posOverPoly        = false;
-        const float3 searchArea = {3.0f, 1.0f, 3.0f};
-
-        agentAI->GetClosestPointInNavmesh(spottedLocation, searchArea, posOverPoly, resultPos);
-
-        if (posOverPoly)
+        if (!animComponent->IsFinished())
         {
-            agentAI->SetPosition(resultPos);
+            float3 resultPos;
+            bool posOverPoly        = false;
+            const float3 searchArea = {3.0f, 1.0f, 3.0f};
+
+            agentAI->GetClosestPointInNavmesh(spottedLocation, searchArea, posOverPoly, resultPos);
+
+            if (posOverPoly)
+            {
+                agentAI->SetPosition(resultPos);
+            }
+            spottedLocation = float3::nan;
+            audioComp->StopAudio();
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURY);
+            animComponent->GetAnimationController()->Resume();
+        } else
+        {
+            animComponent->UseTrigger("Trigger_BurriedIdle");
+            currentState = ChangelingStates::IDLE_BURIED;
         }
-        spottedLocation = float3::nan;
-        animComponent->UseTrigger("Trigger_BurriedIdle");
-        currentState = ChangelingStates::IDLE_BURIED;
     }
 }
 
@@ -348,6 +359,7 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
     vfxDigDown->SetEnabled(true);
     vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
     vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    stateTimer = secondsUntilCompletelyBuried;
     currentState = ChangelingStates::DIG_DOWN_TRANSITION;
 }
 

@@ -160,6 +160,7 @@ class Changeling : public Character
     float peekChancePerSecond                   = 0.1f;
     float3 spottedLocation                      = float3::nan;
     float buriedTravelSpeed                     = 3.5f;
+    float secondsUntilCompletelyBuried          = 2.0f;
 
     // Default specific
     float chaseSpeed                            = 1.0f;
