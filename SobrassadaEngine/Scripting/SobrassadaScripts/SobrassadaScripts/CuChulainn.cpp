@@ -1983,7 +1983,7 @@ void CuChulainn::EnableRiastradVfx()
         const float3 characterPos =
             parent->GetGlobalTransform().TranslatePart() - parent->GetParentGlobalTransform().TranslatePart();
 
-        const float3 offset = float3(-2.0f, 5.0f, 1.0f);
+        const float3 offset = float3(-2.0f, 4.0f, 1.5f);
 
         riastradSmoke->GetParent()->SetLocalPosition(characterPos + offset);
         riastradSmoke->SetEnabled(true);
@@ -2016,8 +2016,6 @@ void CuChulainn::AddRiastrad(int amount)
 
 void CuChulainn::OnObjectDestroyed()
 {
-    AppEngine->GetGameTimer()->SetTimeScale(0.0f);
-    timeStopTimer = hitTimeStopDuration;
     AddRiastrad(riastradOnObjectHit);
 }
 
