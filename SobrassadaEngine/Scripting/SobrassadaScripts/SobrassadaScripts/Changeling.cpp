@@ -143,7 +143,7 @@ void Changeling::OnPlayerEnterLocation()
 void Changeling::PlayHighlightSequence()
 {
     // Don´t play the highlight if the pooka is already doing something else
-    if (currentState == ChangelingStates::IDLE_BURIED)
+    if (currentState == ChangelingStates::IDLE_BURIED || currentState == ChangelingStates::PEEK)
     {
         currentState             = ChangelingStates::HIGHLIGHTING;
         currentHighlightingState = HighlightingStates::IDLE;
@@ -677,6 +677,7 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
     switch (currentHighlightingState)
     {
     case HighlightingStates::IDLE:
+        animComponent->UseTrigger("Trigger_BurriedIdle");
         animComponent->UseTrigger("Trigger_BuryUp");
         currentHighlightingState = HighlightingStates::BURY_UP;
         break;

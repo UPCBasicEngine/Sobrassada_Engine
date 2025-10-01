@@ -22,6 +22,9 @@ DirectionalLightComponent::DirectionalLightComponent(const rapidjson::Value& ini
         shadowTint = {shadowArray[0].GetFloat(), shadowArray[1].GetFloat(), shadowArray[2].GetFloat()};
     }
     else shadowTint = float3(0.9f, 0.9f, 0.9f);
+    if (initialState.HasMember("Shadow Strength")) {
+        shadowStrength = initialState["Shadow Strength"].GetFloat();
+    }
 }
 
 DirectionalLightComponent::~DirectionalLightComponent()
@@ -44,6 +47,7 @@ void DirectionalLightComponent::Save(rapidjson::Value& targetState, rapidjson::D
         .PushBack(shadowTint.z, allocator);
 
     targetState.AddMember("Shadow Tint", shadowTintArray, allocator);
+    targetState.AddMember("Shadow Strength", shadowStrength, allocator);
 }
 
 void DirectionalLightComponent::Clone(const Component* other)
@@ -58,6 +62,7 @@ void DirectionalLightComponent::Clone(const Component* other)
         color                                       = otherLight->color;
         drawGizmos                                  = otherLight->drawGizmos;
         shadowTint                                  = otherLight->shadowTint;
+        shadowStrength                              = otherLight->shadowStrength;
     }
     else
     {
@@ -70,6 +75,7 @@ void DirectionalLightComponent::RenderEditorInspector()
     LightComponent::RenderEditorInspector();
 
     ImGui::DragFloat3("Shadow Tint", &shadowTint[0], 0.0f, 1.0f);
+    ImGui::DragFloat("Shadow Strength", &shadowStrength, 0.1f, 0.0f, 5.0f);
 }
 
 void DirectionalLightComponent::RenderDebug(float deltaTime)

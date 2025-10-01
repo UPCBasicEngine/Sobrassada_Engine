@@ -75,8 +75,8 @@
 #include "WindConfig.h"
 
 #include <set>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 
 Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
 {
@@ -88,7 +88,7 @@ Scene::Scene(const char* sceneName) : sceneUID(GenerateUID())
     gameObjectsContainer.insert({sceneGameObject->GetUID(), sceneGameObject});
 
     lightsConfig = new LightsConfig();
-    windConfig = new WindConfig();
+    windConfig   = new WindConfig();
     renderPass   = new RenderPass();
 }
 
@@ -142,6 +142,30 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
     }
 
     renderPass = new RenderPass();
+    if (initialState.HasMember("HeightFogParameters") && initialState["HeightFogParameters"].IsObject())
+    {
+        HeightFogParameters params;
+        const rapidjson::Value& fog = initialState["HeightFogParameters"];
+
+        params.isEnabled            = fog["EnableFog"].GetBool();
+        if (fog.HasMember("FollowCamera")) params.followCamera = fog["FollowCamera"].GetBool();
+        params.densityConstant = fog["DensityConstant"].GetFloat();
+        params.heightFalloff   = fog["HeightFalloff"].GetFloat();
+        params.fogStartHeight  = fog["FogStartHeight"].GetFloat();
+        params.maxFog          = fog["MaxFog"].GetFloat();
+
+        if (fog.HasMember("FogColor") && fog["FogColor"].IsArray())
+        {
+            float3 fogColor = float3::zero;
+            for (int i = 0; i < 3; ++i)
+            {
+                fogColor[i] = fog["FogColor"][i].GetFloat();
+            }
+            params.fogColor = fogColor;
+        }
+
+        renderPass->SetHeightFogParameters(params);
+    }
 
     if (initialState.HasMember("tags") && initialState.HasMember("tagsGO"))
     {
@@ -188,7 +212,7 @@ Scene::~Scene()
     delete renderPass;
 
     lightsConfig = nullptr;
-    windConfig = nullptr;
+    windConfig   = nullptr;
     sceneOctree  = nullptr;
     dynamicTree  = nullptr;
 
@@ -329,6 +353,23 @@ void Scene::Save(
     rapidjson::Value wind(rapidjson::kObjectType);
     windConfig->SaveData(wind, allocator);
     targetState.AddMember("Wind Config", wind, allocator);
+
+    rapidjson::Value fog(rapidjson::kObjectType);
+    HeightFogParameters params = renderPass->GetHeightFogParameters();
+    fog.AddMember("EnableFog", params.isEnabled, allocator);
+    fog.AddMember("FollowCamera", params.followCamera, allocator);
+    fog.AddMember("DensityConstant", params.densityConstant, allocator);
+    fog.AddMember("HeightFalloff", params.heightFalloff, allocator);
+    fog.AddMember("FogStartHeight", params.fogStartHeight, allocator);
+    fog.AddMember("MaxFog", params.maxFog, allocator);
+
+    rapidjson::Value fogColor(rapidjson::kArrayType);
+    for (int i = 0; i < 3; ++i)
+    {
+        fogColor.PushBack(params.fogColor[i], allocator);
+    }
+    fog.AddMember("FogColor", fogColor, allocator);
+    targetState.AddMember("HeightFogParameters", fog, allocator);
 
     // TODO Convert to parameter which can be set later manually instead of saving a scene as default "on scene
     // save"
@@ -1017,7 +1058,7 @@ void Scene::UpdateAllMaterialInstances(const UID materialUID)
     for (const auto& object : gameObjectsContainer)
     {
         MeshComponent* mesh = object.second->GetComponent<MeshComponent*>();
-        if (mesh && mesh->GetResourceMaterial()->GetUID() == materialUID)
+        if (mesh && mesh->GetResourceMaterial() && mesh->GetResourceMaterial()->GetUID() == materialUID)
         {
             mesh->BatchEditorMode();
         }
@@ -1128,7 +1169,7 @@ GameObject* Scene::GetGameObjectByName(const std::string& name)
     return nullptr;
 }
 
-//Loops in the Parent Tree node and try to find targetName GO
+// Loops in the Parent Tree node and try to find targetName GO
 GameObject* Scene::GetGameObjectByParentNameAndTargetName(const std::string& parentName, const std::string& targetName)
 {
     // TODO: Replace gameObject name to a HashString, I've seen it is also compared in some scripts and would improve

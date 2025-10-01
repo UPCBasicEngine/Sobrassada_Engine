@@ -135,11 +135,12 @@ void RenderPass::RenderScene(
     Framebuffer* framebuff, const std::vector<GameObject*> objectsToRender, CameraComponent* camera, float deltaTime
 )
 {
-    ssao        = App->GetOpenGLModule()->GetSsao();
-    gbuffer     = App->GetOpenGLModule()->GetGBuffer();
-    framebuffer = framebuff;
-    width       = framebuffer->GetTextureWidth();
-    height      = framebuffer->GetTextureHeight();
+    ssao         = App->GetOpenGLModule()->GetSsao();
+    gbuffer      = App->GetOpenGLModule()->GetGBuffer();
+    batchManager = App->GetResourcesModule()->GetBatchManager();
+    framebuffer  = framebuff;
+    width        = framebuffer->GetTextureWidth();
+    height       = framebuffer->GetTextureHeight();
     glViewport(0, 0, width, height);
 
     glEnable(GL_STENCIL_TEST);
@@ -247,6 +248,10 @@ void RenderPass::RenderScene(
     LightingPassRender(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Height fog Pass");
+    HeightFogPassRender(camera);
+    glPopDebugGroup();
+
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::GameObject::Render_TransparentPass", Optick::Category::Rendering)
 #endif
@@ -285,6 +290,8 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
     AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
+
+    batchManager->SwapOpaqueBuffers();
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
@@ -297,7 +304,6 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
 
     glDisable(GL_BLEND);
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
     for (const auto& gameObject : objectsToRender)
@@ -332,7 +338,6 @@ void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRend
 
     glDisable(GL_BLEND);
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> navMeshesToRender;
     std::vector<MeshComponent*> nonNavMeshesToRender;
 
@@ -471,6 +476,7 @@ void RenderPass::ShadowMapPassRender(
 
     camera == nullptr ? sphereCenter = App->GetCameraModule()->GetCamera().CenterPoint()
                       : sphereCenter = camera->GetCameraCenter();
+
     float sphereRadius = 0.0f;
     for (int i = 0; i < 8; ++i)
     {
@@ -480,10 +486,14 @@ void RenderPass::ShadowMapPassRender(
 
     float3 lightDir = light->GetDirection();
     lightDir.Normalize();
-    float3 lightUp = -lightDir.Cross(float3(1.0, 0.0, 0.0));
-    lightUp.Normalize();
-    float3 lightRight = lightUp.Cross(lightDir);
+
+    float3 worldUp = float3::unitY;
+    if (fabs(lightDir.Dot(worldUp)) > 0.99f) worldUp = float3(1.0f, 0.0f, 0.0f);
+
+    float3 lightRight = worldUp.Cross(lightDir);
     lightRight.Normalize();
+    float3 lightUp = lightDir.Cross(lightRight);
+    lightUp.Normalize();
 
     Frustum shadowfrustum;
 
@@ -512,9 +522,9 @@ void RenderPass::ShadowMapPassRender(
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glViewport(0, 0, shadowResolution, shadowResolution);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    BatchManager* batchManager = App->GetResourcesModule()->GetBatchManager();
     std::vector<MeshComponent*> meshesToRender;
 
     FrustumPlanes lightFrustum;
@@ -530,12 +540,10 @@ void RenderPass::ShadowMapPassRender(
             meshesToRender.push_back(mesh);
     }
 
-    glViewport(0, 0, shadowResolution, shadowResolution);
+    batchManager->RenderShadowMap(meshesToRender, ubo);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
-
-    // batchManager->RenderShadowMap(meshesToRender, ubo);
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -620,11 +628,52 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void RenderPass::HeightFogPassRender(CameraComponent* camera) const
+{
+    if (!heightFog.isEnabled) return;
+
+    Bind();
+
+    const unsigned int program = App->GetShaderModule()->GetHeightFogProgram();
+    glUseProgram(program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+
+    glUniform1f(2, heightFog.densityConstant);
+    glUniform1f(3, heightFog.heightFalloff);
+
+    const float4x4 cameraMatrix = camera ? camera->GetWorldMatrix() : App->GetCameraModule()->GetWorldMatrix();
+    const float3 cameraPos      = camera ? camera->GetCameraPosition() : App->GetCameraModule()->GetCameraPosition();
+    const float4x4 projection = camera ? camera->GetProjectionMatrix() : App->GetCameraModule()->GetProjectionMatrix();
+    glUniform3fv(4, 1, cameraPos.ptr());
+    glUniformMatrix4fv(5, 1, GL_TRUE, cameraMatrix.ptr());
+    glUniformMatrix4fv(6, 1, GL_TRUE, projection.ptr());
+
+    glUniform1f(7, heightFog.maxFog);
+    glUniform3fv(8, 1, heightFog.fogColor.ptr());
+    glUniform1f(9, heightFog.fogStartHeight);
+    glUniform1i(10, heightFog.followCamera);
+
+    glDepthMask(GL_FALSE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDepthMask(GL_TRUE);
+}
+
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     GLuint fxaaTexture = -1;
 
 #ifndef GAME
+    if (!fxaaParameters.isEnabled) return;
+
     // Must create a temporal frameBuffer and texture, to avoid reading and drawing to same texture = black screen
     GLuint fxaaFramebuffer = -1;
     glGenFramebuffers(1, &fxaaFramebuffer);
@@ -643,6 +692,7 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     Bind();
+
 #else
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
@@ -656,12 +706,14 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, fxaaTexture);
 
-    glUniform1i(0, showBorders);
-    glUniform1f(1, globalThreshold);
-    glUniform1f(2, localThreshold);
-    glUniform1i(3, enableFXAA);
+    glUniform1i(0, fxaaParameters.showBorders);
+    glUniform1f(1, fxaaParameters.globalThreshold);
+    glUniform1f(2, fxaaParameters.localThreshold);
+    glUniform1i(3, fxaaParameters.isEnabled);
 
+    glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    glDepthMask(GL_TRUE);
 
 #ifndef GAME
     glDeleteFramebuffers(1, &fxaaFramebuffer);
@@ -935,6 +987,8 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     {
         float3 shadowTint = light->GetShadowTint();
         glUniform3f(glGetUniformLocation(lightingPassProgram, "shadowTint"), shadowTint.x, shadowTint.y, shadowTint.z);
+        float shadowStrength = light->GetShadowStrength();
+        glUniform1f(glGetUniformLocation(lightingPassProgram, "shadowStrength"), shadowStrength);
     }
 
     glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
@@ -960,7 +1014,6 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
     Bind();
 
     glDepthMask(GL_FALSE);
-    BatchManager* batchManager    = App->GetResourcesModule()->GetBatchManager();
 
     const unsigned int program    = App->GetShaderModule()->GetTransparentPassProgram();
     const unsigned int wPOProgram = App->GetShaderModule()->GetTransparentVPOPassProgram();
@@ -1055,7 +1108,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
             glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glDisable(GL_CULL_FACE);
             glDepthMask(GL_FALSE);
