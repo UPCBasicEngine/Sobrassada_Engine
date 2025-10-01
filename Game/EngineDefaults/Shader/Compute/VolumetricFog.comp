@@ -286,55 +286,6 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
     vec4 currentPosFromLight;
     vec3 projCoords;
 
-    bool volumeIntersection = false;
-
-
-    for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
-    {
-        int areaIndexBuffer = visibleAreas[baseOffset + i];
-
-        if(areaIndexBuffer == -1) break;
-        
-        VolumetricArea area = volumetricAreas[areaIndexBuffer];
-
-        if(area.position.w == 1)
-        {
-            float auxT0, auxT1;
-
-            bool currentCollision = SpehereIntersection(area.position.xyz, area.size.x, currentPosition, rayDirection, auxT0, auxT1);
-
-            if(currentCollision)
-            {
-                volumeIntersection = true;
-                break;
-            }
-        }
-        else
-        {
-            bool currentCollision = BoxIntersection(area.position.xyz, area.size.xyz, currentPosition, rayDirection);
-
-            if(currentCollision)
-            {
-                volumeIntersection = true;
-                break;
-            }
-        }
-    }
-
-    if(!volumeIntersection) return light;
-
-    // DIRECTIONAL LIGHT
-    // currentPosFromLight = directinal_Projection_Mat * directinal_View_Mat * vec4(currentPosition, 1.0);
-    // projCoords = currentPosFromLight.xyz / currentPosFromLight.w;
-    // projCoords = projCoords * 0.5 + 0.5;
-
-    // if(ValidProjectionCoordinates(projCoords))
-    // {
-    //     float dLightVisibility = texture(directionalLightShadowTexture, projCoords.xy).r;
-    //     if(projCoords.z > dLightVisibility )
-    //         light += ScatteringPhaseFunction(-rayDirection, normalize(directional_dir.xyz)) * directional_color.rgb * directional_color.w;
-    // }
-
     for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
     {
         int lightIndexBuffer = visibleIndices[baseOffset + i];
@@ -527,6 +478,45 @@ bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, in int baseO
     return validIntersection;
 }
 
+bool IntersectVolumes(vec3 currentPosition, vec3 rayDirection, vec2 uvCoords, int baseOffset)
+{
+    bool volumeIntersection = false;
+
+    for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
+    {
+        int areaIndexBuffer = visibleAreas[baseOffset + i];
+
+        if(areaIndexBuffer == -1) break;
+        
+        VolumetricArea area = volumetricAreas[areaIndexBuffer];
+
+        if(area.position.w == 1)
+        {
+            float auxT0, auxT1;
+
+            bool currentCollision = SpehereIntersection(area.position.xyz, area.size.x, currentPosition, rayDirection, auxT0, auxT1);
+
+            if(currentCollision)
+            {
+                volumeIntersection = true;
+                break;
+            }
+        }
+        else
+        {
+            bool currentCollision = BoxIntersection(area.position.xyz, area.size.xyz, currentPosition, rayDirection);
+
+            if(currentCollision)
+            {
+                volumeIntersection = true;
+                break;
+            }
+        }
+    }
+
+    return volumeIntersection;
+}
+
 // SCENE WITH INTERSECTION CALCULATIONS
 void main()
 {
@@ -550,9 +540,11 @@ void main()
         vec4 originalColor = texture(sceneTexture, uvCoords);
 
         float t0 = maxDistance, t1 = 0.0;
-        bool intersects = RayIntersectionPoints(cameraPosition, rayDirection, baseOffset, t0, t1);
 
-        if(intersects)
+        bool intersects = RayIntersectionPoints(cameraPosition, rayDirection, baseOffset, t0, t1);
+        bool intersectVolumes = IntersectVolumes(cameraPosition, rayDirection, uvCoords, baseOffset);
+
+        if(intersects && intersectVolumes)
         {
             t0 = max(t0, 0.0);
             t1 = min(t1, maxDistance);
