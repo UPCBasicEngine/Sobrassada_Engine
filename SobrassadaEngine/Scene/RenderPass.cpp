@@ -291,7 +291,7 @@ void RenderPass::RenderScene(
     AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
 
-    batchManager->SwapOpaqueBuffers();
+    batchManager->SwapBuffers();
 }
 
 void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
