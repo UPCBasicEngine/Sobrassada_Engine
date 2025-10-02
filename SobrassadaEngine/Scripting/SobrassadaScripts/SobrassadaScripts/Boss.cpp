@@ -35,6 +35,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
     fields.push_back({"2nd Mirage", InspectorField::FieldType::Int, &mirage2, 0, 100});
     fields.push_back({"3rd Mirage", InspectorField::FieldType::Int, &mirage3, 0, 100});
     fields.push_back({"Dash Duration", InspectorField::FieldType::Float, &dashDuration, 0.0f, 2.0f});
+    fields.push_back({"Step time", InspectorField::FieldType::Float, &stepTime, 0.0f, 1.0f});
     /*fields.push_back({"Height Jump", InspectorField::FieldType::Float, &heightJump, 0.0f, 5.0f});
     fields.push_back({"Jump Duration", InspectorField::FieldType::Float, &jumpDuration, 0.0f, 2.0f});
     fields.push_back({"Fall Duration", InspectorField::FieldType::Float, &fallDuration, 0.0f, 2.0f});*/
@@ -77,10 +78,11 @@ bool Boss::Init()
         speed = agentAI->GetSpeed();
     }
 
-    rng         = std::mt19937(std::random_device {}());
-    uniformDist = std::uniform_int_distribution<int>(0, 100);
+    rng          = std::mt19937(std::random_device {}());
+    uniformDist  = std::uniform_int_distribution<int>(0, 100);
+    uniformSteps = std::uniform_int_distribution<int>(1, 3);
 
-    audio       = parent->GetComponent<AudioSourceComponent*>();
+    audio        = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Ferdiad: No audio component found");
 
     GameObject* shieldObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldName);
@@ -725,6 +727,7 @@ void Boss::UpdateTimers(float deltaTime)
     Character::UpdateTimers(deltaTime);
 
     if (currentState == BossStates::Mirage || currentState == BossStates::ChangePhase) isInvulnerable = true;
+    if (currentAction == BossActions::Chase || currentAction == BossActions::Return) runTimer += deltaTime;
 }
 
 void Boss::ChooseNextState()
@@ -1022,6 +1025,42 @@ void Boss::Taunt(float deltaTime)
     }
 }
 
+void Boss::Run()
+{
+    if (!actionTriggerDone)
+    {
+        runTimer = 0.0f;
+        animComponent->UseTrigger("Run");
+    }
+
+    if (runTimer > stepTime && audio)
+    {
+        int num = uniformSteps(rng);
+        AkUniqueID eventID;
+
+        switch (num)
+        {
+        case 1:
+            eventID = AK::EVENTS::PLAY_SFX_FERDIAD_STEPS_01;
+            break;
+        case 2:
+            eventID = AK::EVENTS::PLAY_SFX_FERDIAD_STEPS_02;
+            break;
+        case 3:
+            eventID = AK::EVENTS::PLAY_SFX_FERDIAD_STEPS_03;
+            break;
+
+        default:
+            GLOG("ERROR: Ferdiad steps audio")
+            break;
+        }
+
+        audio->EmitEvent(eventID);
+
+        runTimer = 0.0f;
+    }
+}
+
 void Boss::ShieldStrikes(float deltaTime)
 {
     if (!weaponCollider) ChooseNextState();
@@ -1040,11 +1079,15 @@ void Boss::ShieldStrikes(float deltaTime)
         if (!actionTriggerDone)
         {
             agentAI->ResumeMovement();
-            animComponent->UseTrigger("Run");
+            Run();
             actionTriggerDone = true;
             chaseTimer        = 0.0f;
         }
-        else chaseTimer += deltaTime;
+        else
+        {
+            Run();
+            chaseTimer += deltaTime;
+        }
 
         agentAI->SetPathNavigation(character->GetLastPosition());
 
@@ -2010,10 +2053,11 @@ void Boss::Restart(float deltaTime)
     case BossActions::Return:
         if (!actionTriggerDone)
         {
+            Run();
             actionTriggerDone = true;
             agentAI->ResumeMovement();
-            animComponent->UseTrigger("Run");
         }
+        else Run();
 
         agentAI->SetPathNavigation(startPos);
 

@@ -101,6 +101,7 @@ class Boss : public Character
 
     void Idle(float deltaTime);
     void Taunt(float deltaTime);
+    void Run();
     void ShieldStrikes(float deltaTime);
 
     void OverheadStrike(float deltaTime);
@@ -140,6 +141,7 @@ class Boss : public Character
 
     bool waiting                = true;
     bool restart                = false;
+    float runTimer              = 0.0f;
 
     bool highlightActivated     = false;
     float highlightTimer        = 0.0f;
@@ -188,6 +190,7 @@ class Boss : public Character
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;
+    std::uniform_int_distribution<int> uniformSteps;
 
     // VFX
     std::string emessiveVFXName                      = "";
@@ -261,6 +264,7 @@ class Boss : public Character
     float highlightDelay                             = 8.0f;
     float chaseTimeLimit                             = 8.0f;
     float blastAreaDisabledLimit                     = 0.5f;
+    float stepTime                                   = 0.5f;
 
     // Health UI
     ImageComponent* healthImageComponent             = nullptr;
