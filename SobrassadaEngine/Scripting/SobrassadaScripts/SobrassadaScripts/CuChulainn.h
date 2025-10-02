@@ -156,7 +156,11 @@ class CuChulainn : public Character
 
     // Dash
     std::string dashIconName                       = "DashCooldown";
+    std::string dashSmokeName1                     = "DashSmoke1";
+    std::string dashSmokeName2                     = "DashSmoke2";
     AbilityIconFill* dashIcon                      = nullptr;
+    ShaderScriptComponent* dashSmoke1              = nullptr;
+    ShaderScriptComponent* dashSmoke2              = nullptr;
     float3 lastDashStartPos                        = float3::zero;
     bool isDashing                                 = false;
     bool wasDashing                                = false;
@@ -361,7 +365,13 @@ class CuChulainn : public Character
     bool mushroomToEnable                          = false;
 
     std::string damageMaskName                     = "DamageMask";
+    std::string damageScratchName1                 = "DamageBR";
+    std::string damageScratchName2                 = "DamageMid1";
+    std::string damageScratchName3                 = "DamageMid2";
+    std::string damageScratchName4                 = "DamageMid3";
+    std::string damageScratchName5                 = "DamageTR";
     DamageMask* damageMask                         = nullptr;
+    ShaderScriptComponent* damageScratch[5]        = {nullptr};
 
     // Curse
     bool isCursed                                  = false;

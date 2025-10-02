@@ -30,6 +30,8 @@ UISpritesheet::UISpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
+    fields.push_back({"Is Fade Out", InspectorField::FieldType::Bool, &isFadeOut});
+    fields.push_back({"Fade Out Duration", InspectorField::FieldType::Float, &fadeOutDuration, 0.0f, 10.0f});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &spritesheetUID});
 }
 
@@ -119,6 +121,9 @@ void UISpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 
     timer += deltaTime;
     glUniform4fv(3, 1, uvRange.ptr());
+    glUniform1f(5, timer);
+    glUniform1f(6, fadeOutTime);
+    glUniform1f(7, fadeOutDuration);
 
     glBindVertexArray(vao);
 
@@ -168,16 +173,25 @@ void UISpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 
 void UISpritesheet::Reset()
 {
-    uvRange.x = 0.0f;
-    uvRange.y = cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
-    uvRange.z = 0.0f;
-    uvRange.w = cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+    uvRange.x   = 0.0f;
+    uvRange.y   = cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
+    uvRange.z   = 0.0f;
+    uvRange.w   = cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+
+    fadeOutTime = 0.0f;
 }
 
 void UISpritesheet::UpdateSprite(float deltaTime)
 {
     timer += deltaTime;
     if (timer < updateRate) return;
+
+    if (isFadeOut && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+    {
+        if (fadeOutTime == 0.0f) fadeOutTime = timer;
+        if (timer - fadeOutTime >= fadeOutDuration) parent->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
+        return;
+    }
 
     if (isRowMajor)
     {

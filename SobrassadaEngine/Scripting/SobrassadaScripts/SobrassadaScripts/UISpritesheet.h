@@ -29,8 +29,11 @@ class UISpritesheet : public Script
 
     bool disableDefaultImage     = true;
     bool isOneShot               = false;
+    bool isFadeOut               = false;
     float updateRate             = 1.0f;
     float timer                  = 0.0f;
+    float fadeOutDuration        = 0.0f;
+    float fadeOutTime            = 0.0f;
 
     bool isRowMajor              = false;
     float cellHeight             = 0.1f;

@@ -260,6 +260,20 @@ bool CuChulainn::Init()
     if (!dashDecal) GLOG("[WARNING] No dash decal found for CuChulain")
     else dashDecal->SetEnabled(false);
 
+    GameObject* dashVfxObj = scene->GetGameObjectByName(dashSmokeName1);
+    if (dashVfxObj)
+    {
+        dashSmoke1 = dashVfxObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (dashSmoke1) dashSmoke1->SetEnabled(false);
+
+    dashVfxObj = scene->GetGameObjectByName(dashSmokeName2);
+    if (dashVfxObj)
+    {
+        dashSmoke2 = dashVfxObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (dashSmoke2) dashSmoke2->SetEnabled(false);
+
     healVfx = scene->GetGameObjectByName(healVfxName);
     if (!healVfx) GLOG("[WARNING] No heal visual found for CuChulain")
     else healVfx->SetEnabled(false);
@@ -426,7 +440,39 @@ bool CuChulainn::Init()
     }
     if (!damageMask) GLOG("[WARNING] No health Fill Bar Shader Script found for CuChulain");
 
+    damageMaskObj = scene->GetGameObjectByName(damageScratchName1);
+    if (damageMaskObj)
+    {
+        damageScratch[0] = damageMaskObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (damageScratch[0]) damageScratch[0]->SetEnabled(false);
+    damageMaskObj = scene->GetGameObjectByName(damageScratchName2);
+    if (damageMaskObj)
+    {
+        damageScratch[1] = damageMaskObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (damageScratch[1]) damageScratch[1]->SetEnabled(false);
+    damageMaskObj = scene->GetGameObjectByName(damageScratchName3);
+    if (damageMaskObj)
+    {
+        damageScratch[2] = damageMaskObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (damageScratch[2]) damageScratch[2]->SetEnabled(false);
+    damageMaskObj = scene->GetGameObjectByName(damageScratchName4);
+    if (damageMaskObj)
+    {
+        damageScratch[3] = damageMaskObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (damageScratch[3]) damageScratch[3]->SetEnabled(false);
+    damageMaskObj = scene->GetGameObjectByName(damageScratchName5);
+    if (damageMaskObj)
+    {
+        damageScratch[4] = damageMaskObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (damageScratch[4]) damageScratch[4]->SetEnabled(false);
+
     GameObject* dashIconObj = scene->GetGameObjectByName(dashIconName);
+
     if (dashIconObj)
     {
         ShaderScriptComponent* shaderScript = dashIconObj->GetComponent<ShaderScriptComponent*>();
@@ -688,12 +734,18 @@ void CuChulainn::OnDamageTaken(int amount)
         }
     }
 
-    if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN)
-        if (damageMask)
-        {
-            damageMask->SetLife(static_cast<float>(currentHealth));
-            damageMask->OnHit();
-        }
+    if (damageMask)
+    {
+        damageMask->SetLife(static_cast<float>(currentHealth));
+        damageMask->OnHit();
+    }
+
+    int randomNum = rand() % 5;
+    if (damageScratch[randomNum])
+    {
+        damageScratch[randomNum]->SetEnabled(true);
+        damageScratch[randomNum]->GetScriptByType<UISpritesheet>()->Reset();
+    }
 
     if (state == CharacterStates::CHARGING || state == CharacterStates::IDLE || state == CharacterStates::RUN ||
         state == CharacterStates::HEAL)
@@ -1309,8 +1361,6 @@ void CuChulainn::Dash()
     desiredDash      = false;
     state            = CharacterStates::DASH;
 
-    // GLOG("DASH");
-
     dashTimer        = isRiastrad ? dashCooldown * 0.75f : dashCooldown;
     lastDashStartPos = parent->GetGlobalTransform().TranslatePart();
     LookAtLeftStick();
@@ -1321,6 +1371,58 @@ void CuChulainn::Dash()
 
     if (animComponent) animComponent->UseTrigger("Dash");
     if (dashTrail) dashTrail->SetEnabled(true);
+    if (dashSmoke1)
+    {
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY;
+
+        const float3 scale        = dashSmoke1->GetParent()->GetLocalTransform().ExtractScale();
+
+        // Rotación que mira en la dirección del personaje
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
+
+        // Rotación adicional de 90° sobre el eje X para mantener el plano vertical
+        const Quat verticalCorrection   = Quat::RotateAxisAngle(float3::unitX, 90.0f * (PI / 180));
+        const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitZ, 90.0f * (PI / 180));
+
+        // Combinamos ambas rotaciones
+        const Quat finalRotation        = lookRotation * verticalCorrection * horizontalCorrection;
+
+        const float4x4 transform        = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS         = parent->GetParentGlobalTransform();
+        const float4x4 localTRS         = parentWS.Inverted() * transform;
+
+        dashSmoke1->GetParent()->SetLocalTransform(localTRS);
+        dashSmoke1->SetEnabled(true);
+        dashSmoke1->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
+    if (dashSmoke2)
+    {
+        const float3 characterPos =
+            parent->GetGlobalTransform().TranslatePart() - parent->GetParentGlobalTransform().TranslatePart();
+        const float3 offset = float3::unitY;
+
+        // const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        // const float3 offset       = float3::unitY * 0.1f;
+        //
+        // const float3 scale        = dashSmoke2->GetParent()->GetLocalTransform().ExtractScale();
+        //
+        // const Quat lookRotation =
+        //     Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
+        //
+        // const Quat finalRotation = lookRotation;
+        //
+        // const float4x4 transform = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+        //
+        // const float4x4 parentWS  = parent->GetParentGlobalTransform();
+        // const float4x4 localTRS  = parentWS.Inverted() * transform;
+
+        dashSmoke2->GetParent()->SetLocalPosition(characterPos + offset);
+        dashSmoke2->SetEnabled(true);
+        dashSmoke2->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
 }
 
 void CuChulainn::PerformAttack()
