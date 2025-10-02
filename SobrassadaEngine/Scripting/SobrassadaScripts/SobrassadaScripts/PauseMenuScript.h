@@ -6,6 +6,7 @@
 #include <vector>
 
 class GameObject;
+class AudioSourceComponent;
 
 class PauseMenuScript : public Script
 {

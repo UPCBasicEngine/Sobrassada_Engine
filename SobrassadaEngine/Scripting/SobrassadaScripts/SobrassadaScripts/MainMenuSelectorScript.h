@@ -1,12 +1,12 @@
 ﻿#pragma once
 #include "Script.h"
-#include "Standalone/Audio/AudioSourceComponent.h"
 #include <string>
 #include <vector>
 
 class GameObject;
 class PauseMenuScript;
 class GameOverScript;
+class AudioSourceComponent;
 
 class MainMenuSelectorScript : public Script
 {

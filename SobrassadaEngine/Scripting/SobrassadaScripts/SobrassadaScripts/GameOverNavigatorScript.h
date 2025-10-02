@@ -1,12 +1,12 @@
 #pragma once
 #include "Script.h"
-#include "Standalone/Audio/AudioSourceComponent.h"
 #include <cstdint>
 #include <string>
 #include <vector>
 
 class GameObject;
 class GameOverScript;
+class AudioSourceComponent;
 
 class GameOverNavigatorScript : public Script
 {

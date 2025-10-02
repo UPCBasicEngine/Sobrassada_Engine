@@ -1,11 +1,11 @@
 #pragma once
 #include "Script.h"
-#include "Standalone/Audio/AudioSourceComponent.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 class GameObject;
+class AudioSourceComponent;
 
 struct TexPair
 {

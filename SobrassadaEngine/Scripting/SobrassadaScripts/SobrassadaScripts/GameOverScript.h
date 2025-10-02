@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "Standalone/Audio/AudioSourceComponent.h"
 
 class GameObject;
+class AudioSourceComponent;
 
 class GameOverScript : public Script
 {
