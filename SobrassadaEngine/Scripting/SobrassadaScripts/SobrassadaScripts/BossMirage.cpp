@@ -1,7 +1,7 @@
 #include "pch.h"
 
-#include "BossMirage.h"
 #include "Application.h"
+#include "BossMirage.h"
 #include "GameObject.h"
 #include "Mirage.h"
 #include "SceneModule.h"
@@ -86,6 +86,8 @@ bool BossMirage::Init()
     buildWaves(sequence1);
     buildWaves(sequence2);
     buildWaves(sequence3);
+
+    sequence3.delayBetweenZones = 1.0f;
 
     return true;
 }

@@ -9,6 +9,7 @@ class SSAO;
 class Framebuffer;
 class CameraComponent;
 class DirectionalLightComponent;
+class BatchManager;
 
 struct HeightFogParameters
 {
@@ -74,6 +75,7 @@ class RenderPass
     GBuffer* gbuffer         = nullptr;
     SSAO* ssao               = nullptr;
     Framebuffer* framebuffer = nullptr;
+    BatchManager* batchManager = nullptr;
     int width, height;
     int shadowResolution = 4096;
 

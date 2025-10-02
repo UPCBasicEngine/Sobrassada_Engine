@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Archer.h"
+#include "ArcherProjectile.h"
 #include "Banshee.h"
 #include "Banshee_v2.h"
 #include "Boss.h"
@@ -24,6 +25,7 @@
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MiniFireball.h"
+#include "MirageVFX.h"
 #include "MoveGOInSpline.h"
 #include "Mushroom.h"
 #include "OptionsMenuSwitcherScript.h"
@@ -31,7 +33,6 @@
 #include "PlayerLocationScript.h"
 #include "PressAnyKeyScript.h"
 #include "Projectile.h"
-#include "ArcherProjectile.h"
 #include "RotateGameObject.h"
 #include "Soldier.h"
 #include "SpawnPoint.h"
@@ -60,6 +61,7 @@
 #include "HighlightCharacter.h"
 #include "Mirage.h"
 #include "MirageBossDash.h"
+#include "BossSpouts.h"
 
 #include <string>
 
@@ -114,16 +116,19 @@ constexpr const char* scripts[] = {
     "CoverPointTrigger",
     "GameOverNavigatorScript",
     "HighlightCharacter",
-    "AsyncSceneLoading"
+    "AsyncSceneLoading",
+    "BossSpouts"
 };
 
 constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
-    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask", "AttackVfxSpritesheet", "MovingUVClipErode",  "ColorChange"
+    "MovingUVPostScript", "MovingUVLight",   "MovingUVTransparent",   "HealGroundHalo",
+    "HealVerticalPlanes", "HealSpikesBurst", "HealGroundSpikesLight", "HealGroundSpikesDark",
+    "HealLightBurst",     "HealSpikesUp",    "RiastradBarFill",       "HealthBarFill",
+    "AbilityIconFill",    "DamageMask",      "AttackVfxSpritesheet",  "MovingUVClipErode",
+    "ColorChange",     "MirageVFX"
 };
 
-Application* AppEngine                = nullptr;
+Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -243,6 +248,13 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Mirage") return new Mirage(parent);
     if (scriptType == "BossMirage") return new BossMirage(parent);
     if (scriptType == "MirageBossDash") return new MirageBossDash(parent);
+    if (scriptType == "BossSpouts") return new BossSpouts(parent);
+
+    if (scriptType == "MirageVFX")
+        return new MirageVFX(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/MirageVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/MirageVFX_Fragment.glsl"
+        );
 
     return nullptr;
 }
