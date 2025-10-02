@@ -1901,7 +1901,6 @@ void Boss::ShieldBlast(float deltaTime)
             Character::Attack(deltaTime);
 
             audioPlayed = false;
-            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACKSTART);
         }
 
         if (attackTimer >= blastHitboxDelay - 0.2f)
@@ -1920,10 +1919,17 @@ void Boss::ShieldBlast(float deltaTime)
         {
             agentAI->SetAngularSpeed(4.0f);
             animComponent->OnPause();
+            if (!audioPlayed && audio)
+            {
+                audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACKSTART);
+
+                audioPlayed = true;
+            }
         }
         else if (attackTimer >= 0.3f)
         {
             agentAI->SetAngularSpeed(5.0f);
+
             blastPreSpriteScript->SetEnabled(true);
         }
 
@@ -1959,7 +1965,6 @@ void Boss::ShieldBlast(float deltaTime)
             if (energyBlastParticle3) energyBlastParticle3->Init();
             if (energyBlastParticle4) energyBlastParticle4->Init();
 
-            // if (audio) audio->StopAudio();
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_RANGEATTACK);
         }
 

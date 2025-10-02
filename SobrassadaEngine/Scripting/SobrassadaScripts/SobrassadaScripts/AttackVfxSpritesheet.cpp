@@ -123,6 +123,7 @@ void AttackVfxSpritesheet::Update(float deltaTime)
 {
     timer += deltaTime;
     if (timer < updateRate) return;
+    else if (finished) return;
 
     if (isRowMajor)
     {
