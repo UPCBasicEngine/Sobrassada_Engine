@@ -25,7 +25,7 @@ HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
     fields.emplace_back("Character to highlight", InspectorField::FieldType::InputText, &characterToHighlightName);
 
     fields.emplace_back(
-        "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.1f, 2.0f
+        "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.0f, 10.0f
     );
     fields.emplace_back("Zoom multiplier", InspectorField::FieldType::Float, &zoomMultiplier, 0.1f, 50.0f);
 }
@@ -138,20 +138,19 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
     playerController->SetInputDown(false);
     AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
     AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
-    
+
     splineComponent->SetPointWorld(
         0, playerCameraPivot->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()
     );
-    splineComponent->SetPointWorld(
-        1, secondSplinePointOffset * (characterToHighlight->GetGlobalTransform().TranslatePart() -
-                    parent->GetGlobalTransform().TranslatePart())
-    );
+
+    float3 vectorToTarget =
+        characterToHighlight->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart();
+    splineComponent->SetPointWorld(1, vectorToTarget - vectorToTarget.Normalized() * secondSplinePointOffset);
+
     Quat cameraOrientation =
         Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
     splineComponent->SetPointWorld(
-        2, secondSplinePointOffset * (characterToHighlight->GetGlobalTransform().TranslatePart() -
-                    parent->GetGlobalTransform().TranslatePart()) +
-               (zoomMultiplier * cameraOrientation.Transform(float3(0, 0, -1)))
+        2, vectorToTarget + zoomMultiplier * cameraOrientation.Transform(float3(0, 0, -1))
     );
     splineMovementTarget->SetEnabled(true);
     cameraMovementScript->InitAlternativeTarget(splineMovementTarget);
