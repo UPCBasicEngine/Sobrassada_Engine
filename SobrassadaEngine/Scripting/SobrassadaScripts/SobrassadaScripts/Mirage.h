@@ -21,10 +21,11 @@ class Mirage : public Script
 
   protected:
     MirageState state            = MirageState::Sleeping;
-    UID mirageWarningImage       = 0;
-    UID mirageDamageImage        = 0;
+
 
     MeshComponent* meshComponent = nullptr;
+    MeshComponent* mirageDisableComponent1 = nullptr;
+    MeshComponent* mirageDisableComponent2 = nullptr;
     int damage                   = 0;
     float warningDelay           = 0.f;
     float damageDuration         = 0.f;
