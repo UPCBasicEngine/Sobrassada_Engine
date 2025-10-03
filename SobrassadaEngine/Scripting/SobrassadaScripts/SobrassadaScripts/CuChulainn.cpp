@@ -639,6 +639,29 @@ void CuChulainn::Update(float deltaTime)
         if (!riastradCrack->IsEnabled()) EnableRiastradVfx();
     }
 
+    if (ultimateObject && ultimateObject->IsEnabled())
+    {
+        AnimationComponent* vfxUltimateAnim = ultimateObject->GetComponent<AnimationComponent*>();
+        // Ultimate VFX finish animation
+        if (vfxUltimateAnim && vfxUltimateAnim->IsFinished())
+        {
+            vfxUltimateAnim->OnStop();
+            if (ultimateSpikes) ultimateSpikes->SetEnabled(false);
+            if (ultimateCrack) ultimateCrack->SetEnabled(false);
+            ultimateObject->SetEnabled(false);
+            ultimateTimer = 0.0f;
+            if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+
+            if (playerAnimHeld && animComponent)
+            {
+                animComponent->OnResume();
+                playerAnimHeld = false;
+            }
+
+            controlsLocked = false;
+        }
+    }
+
     // Dash decal spawn when in middle of dash
     const float dashDecalTriggerDist = 2.0f;
     if (state == CharacterStates::DASH && dashDecal &&
@@ -818,20 +841,10 @@ void CuChulainn::HandleState(float deltaTime)
         else
         {
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
-            if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
-            {
-                // if (ultimateGlow)
-                //     ultimateGlow->SetEnabled(false);
-                // if (ultimateBlur) ultimateBlur->SetEnabled(false);
-                // if (ultimateBrust) ultimateBrust->SetEnabled(false);
-                // if (ultimateCrack1) ultimateCrack1->SetEnabled(false);
-                // if (ultimateCrack2) ultimateCrack2->SetEnabled(false);
-                // if (ultimateHalo) ultimateHalo->SetEnabled(false);
-                // if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
-                // if (ultimateSphere) ultimateSphere->SetEnabled(false);
-                // if (ultimateWarning) ultimateWarning->SetEnabled(false);
-                return;
-            }
+            //if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+            //{
+            //    return;
+            //}
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
             if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
             if (state == CharacterStates::TRANSFORM)
@@ -855,6 +868,7 @@ void CuChulainn::HandleState(float deltaTime)
 void CuChulainn::GetInputs()
 {
     if (AppEngine->GetGameTimer()->GetDeltaTime() <= 0.0f) return;
+    if (controlsLocked) return;
 
     const InputModule* input   = AppEngine->GetInputModule();
     const KeyState* keyboard   = input->GetKeyboard();
@@ -1262,7 +1276,8 @@ void CuChulainn::UpdateTimers(float deltaTime)
     timeStopTimer -= AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
     if (timeStopTimer <= 0.0f) AppEngine->GetGameTimer()->SetTimeScale(1.0f);
 
-    if (state == CharacterStates::ULTIMATE) ultimateTimer += deltaTime;
+    const bool vfxUltimateActive = ultimateObject && ultimateObject->IsEnabled();
+    if (state == CharacterStates::ULTIMATE || vfxUltimateActive) ultimateTimer += deltaTime;
     if (state == CharacterStates::CHARGED_ATTACK) chargedAttackTimer += deltaTime;
     if (state == CharacterStates::IDLE) idleTimer += deltaTime;
     if (state == CharacterStates::RUN) runTimer += deltaTime;
@@ -1499,6 +1514,12 @@ void CuChulainn::PerformAttack()
     }
     else if (state == CharacterStates::ULTIMATE)
     {
+        if (!ultimateSoundPlayed && audio && ultimateTimer >= 0.55f)
+        {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
+            ultimateSoundPlayed = true;
+        }
+
         float currentHitboxDelay =
             isRiastrad ? ultimateHitboxDelay / riastradAnimationsSpeedRatio : ultimateHitboxDelay;
         float currentHitboxDuration =
@@ -1509,42 +1530,68 @@ void CuChulainn::PerformAttack()
         if (!ultimateObject->IsEnabled() && ultimateTimer >= currentAnimationDelay)
         {
             ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
-            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false);
+            ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
             ultimateObject->GetComponent<AnimationComponent*>()->GetAnimationController()->SetTime(0.0f);
             ultimateObject->SetEnabled(true);
             ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+            
+            if (ultimateHoldEnabled && animComponent && !playerAnimHeld)
+            {
+                animComponent->OnPause();
+                playerAnimHeld = true;
+            }
 
             UpdateUltimateVfx();
         }
         else if (ultimateObject->IsEnabled())
         {
+            AnimationComponent* vfxUltimateAnim = ultimateObject->GetComponent<AnimationComponent*>();
+            vfxTimeUnscaledSec                  += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
+
+             if (ultimateHoldEnabled && playerAnimHeld) //control cuchulainn stop animation
+            {
+                float timeLimit = (vfxUltimateAnim && vfxUltimateAnim->GetAnimationController())
+                            ? vfxUltimateAnim->GetAnimationController()->GetTime()
+                            : 0.0f;
+
+                if (!vfxUltimateAnim || vfxUltimateAnim->IsFinished() || timeLimit >= ultimateResumeVfxTime)
+                {
+                    animComponent->OnResume();
+                    playerAnimHeld = false;
+                }
+            }
+            
             if (ultimateSpikes) // Control spikes animation appearance
             {
-                AnimationComponent* ac = ultimateObject->GetComponent<AnimationComponent*>();
-                if (ac && ac->GetCurrentAnimation())
-                {
-                    const float dur  = ac->GetCurrentAnimation()->GetDuration();
-                    const float t    = ac->GetAnimationController()->GetTime();
-                    const float norm = (dur > 0.0f) ? (t / dur) : 0.0f;
+                const bool animReady = vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
+                //const float vfxLocalTimer = max(0.0f, ultimateTimer - currentAnimationDelay);
+                bool show = false;
 
-                    ultimateSpikes->SetEnabled(norm >= 0.15f);
-                    if (ultimateCrack) ultimateCrack->SetEnabled(norm >= 0.15f);
+                if (animReady)
+                {
+                   //const float vfxTimeAnim = vfxUltimateAnim->GetAnimationController()->GetTime();
+                   const float vfxLenAnim        = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
+
+                   const float spikesOff = min(2.12f, vfxLenAnim - 0.05f);
+                   const float vfxLocalTimer     = vfxTimeUnscaledSec;
+                   
+                   show                  = (vfxLocalTimer >= 0.40f) && (vfxLocalTimer < spikesOff);     
                 }
+
+                if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);
+                if (ultimateCrack && ultimateCrack->IsEnabled() != show) ultimateCrack->SetEnabled(show);
             }
             if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
             {
                 ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(true);
             }
-            else if (ultimateTimer >= currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
+            else
             {
-                ultimateObject->SetEnabled(false);
                 ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
-                ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
-                ultimateTimer = 0.f;
-                if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
             }
+
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -1658,6 +1705,9 @@ void CuChulainn::Attack(float deltaTime)
 void CuChulainn::UltimateAttack()
 {
     // GLOG("ULTIMATEEEE");
+    if (ultimateSpikes) ultimateSpikes->SetEnabled(false);
+    if (ultimateCrack) ultimateCrack->SetEnabled(false);
+
     if (state == CharacterStates::AIM && camera)
     {
         camera->EnableAimOffset(false);
@@ -1668,9 +1718,12 @@ void CuChulainn::UltimateAttack()
     ultimateTimer   = 0.0f;
     ultimateCdTimer = ultimateCd;
     desiredUltimate = false;
+    playerAnimHeld  = false;
+    controlsLocked  = true;
+    ultimateSoundPlayed = false;
 
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
+    //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
     if (animComponent) animComponent->UseTrigger("Ultimate");
 }
 
@@ -1681,7 +1734,7 @@ void CuChulainn::UpdateUltimateVfx()
         ultimateBlur->SetEnabled(true);
         if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
         {
-            ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+            //ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
             ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
         }
     }
@@ -1712,6 +1765,10 @@ void CuChulainn::UpdateUltimateVfx()
             ultimateWarning->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
         }
     }
+    if (ultimateCrack) ultimateCrack->SetEnabled(false);
+    if (ultimateSpikes) ultimateSpikes->SetEnabled(false);
+    vfxTimeUnscaledSec = 0.0f;
+
 }
 
 void CuChulainn::Aim(float deltaTime)

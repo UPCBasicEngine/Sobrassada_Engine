@@ -154,6 +154,8 @@ class CuChulainn : public Character
     std::string healthBarName                      = "HealthBarFill";
     BarFill* healthBar                             = nullptr;
 
+    bool controlsLocked                   = false;
+
     // Dash
     std::string dashIconName                       = "DashCooldown";
     std::string dashSmokeName1                     = "DashSmoke1";
@@ -236,38 +238,43 @@ class CuChulainn : public Character
     GameObject* aimShadowObject                    = nullptr;
 
     // Ultimate
-    std::string ultimateIconName                   = "UltimateCooldown";
-    AbilityIconFill* ultimateIcon                  = nullptr;
-    std::string ultimateName                       = "ultimate_attack";
-    std::string ultimateGlowName                   = "ulti_glow";
-    std::string ultimateBlurName                   = "ultimate_mesh_blur";
-    std::string ultimateBrustName                  = "ultimate_mesh_brust";
-    std::string ultimateCrackName                  = "ultimate_mesh_crack2";
-    std::string ultimateHaloName                   = "mesh_halo";
-    std::string ultimateSmokeName                  = "mesh_outer_smoke";
-    std::string ultimateSphereName                 = "mesh_sphere_glow";
-    std::string ultimateWarningName                = "ultimate_mesh_warning";
-    std::string ultimateSpikesName                 = "ult_spike";
-    GameObject* ultimateObject                     = nullptr;
-    GameObject* ultimateGlow                       = nullptr;
-    GameObject* ultimateBlur                       = nullptr;
-    GameObject* ultimateBrust                      = nullptr;
-    GameObject* ultimateCrack                      = nullptr;
-    GameObject* ultimateHalo                       = nullptr;
-    GameObject* ultimateSmoke                      = nullptr;
-    GameObject* ultimateSphere                     = nullptr;
-    GameObject* ultimateWarning                    = nullptr;
-    GameObject* ultimateSpikes                     = nullptr;
-    bool desiredUltimate                           = false;
-    int ultimateDamage                             = 3;
-    float ultimateTimer                            = 0.0f;
-    float ultimateCd                               = 5.0f;
-    float ultimateCdTimer                          = 0.0f;
-    float ultimateBufferTimer                      = 0.0f;
-    float ultimateHitboxDelay                      = 0.2f;
-    float ultimateHitboxDuration                   = 0.4f;
-    float ultimateAnimationDelay                   = 1.0f;
-    bool ultimateUnlocked                          = false;
+    std::string ultimateIconName         = "UltimateCooldown";
+    AbilityIconFill* ultimateIcon        = nullptr;
+    std::string ultimateName             = "ultimate_attack";
+    std::string ultimateGlowName         = "ulti_glow";
+    std::string ultimateBlurName         = "ultimate_mesh_blur";
+    std::string ultimateBrustName        = "ultimate_mesh_brust";
+    std::string ultimateCrackName        = "ultimate_mesh_crack2";
+    std::string ultimateHaloName         = "mesh_halo";
+    std::string ultimateSmokeName        = "mesh_outer_smoke";
+    std::string ultimateSphereName       = "mesh_sphere_glow";
+    std::string ultimateWarningName      = "ultimate_mesh_warning";
+    std::string ultimateSpikesName       = "ult_spike";
+    GameObject* ultimateObject           = nullptr;
+    GameObject* ultimateGlow             = nullptr;
+    GameObject* ultimateBlur             = nullptr;
+    GameObject* ultimateBrust            = nullptr;
+    GameObject* ultimateCrack            = nullptr;
+    GameObject* ultimateHalo             = nullptr;
+    GameObject* ultimateSmoke            = nullptr;
+    GameObject* ultimateSphere           = nullptr;
+    GameObject* ultimateWarning          = nullptr;
+    GameObject* ultimateSpikes           = nullptr;
+    bool desiredUltimate                 = false;
+    int ultimateDamage                   = 0;
+    float ultimateTimer                  = 0.0f;
+    float ultimateCd                     = 5.0f;
+    float ultimateCdTimer                = 0.0f;
+    float ultimateBufferTimer            = 0.0f;
+    float ultimateHitboxDelay            = 0.2f;
+    float ultimateHitboxDuration         = 0.4f;
+    float ultimateAnimationDelay         = 1.0f;
+    bool ultimateUnlocked                = false;
+    bool playerAnimHeld                   = false;
+    bool ultimateHoldEnabled              = true;
+    float ultimateResumeVfxTime           = 1.9f;
+    float vfxTimeUnscaledSec              = 0.0f;
+    bool ultimateSoundPlayed              = false;
 
     // Riastrad
     std::string riastradBarName                    = "BarFill";
