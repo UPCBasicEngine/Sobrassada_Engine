@@ -17,6 +17,8 @@ class Spouts;
 class AttackVfxSpritesheet;
 class AudioSourceComponent;
 class AnimationComponent;
+class BarFill;
+class ImageComponent;
 
 enum class BossDistance
 {
@@ -267,15 +269,17 @@ class Boss : public Character
     float stepTime                                   = 0.5f;
 
     // Health UI
-    ImageComponent* healthImageComponent             = nullptr;
-    UID healthBarImage;
+    std::string healthBarName                        = "";
+    ImageComponent* healthBarBase                    = nullptr;
+    BarFill* healthBarFill                           = nullptr;
+    BarFill* armorBarFill                            = nullptr;
 
     // ShieldBlast
-    std::string blastAreaName = "";
-    GameObject* blastArea     = nullptr;
-    float blastHitboxDelay    = 1.3f;
-    bool blastHit             = false;
-    float blastHitTimer       = 0.0f;
+    std::string blastAreaName                        = "";
+    GameObject* blastArea                            = nullptr;
+    float blastHitboxDelay                           = 1.3f;
+    bool blastHit                                    = false;
+    float blastHitTimer                              = 0.0f;
 
     // Mirage
     int mirage1 = 47, mirage2 = 30, mirage3 = 10;

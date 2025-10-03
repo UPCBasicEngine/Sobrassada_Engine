@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "AttackVfxSpritesheet.h"
+#include "BarFill.h"
 #include "Boss.h"
 #include "BossMirage.h"
 #include "CameraComponent.h"
@@ -22,12 +23,14 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/UI/ImageComponent.h"
 
 #include "Wwise_IDs.h"
 
 Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
+    fields.push_back({"Health Bar", InspectorField::FieldType::InputText, &healthBarName});
     fields.push_back({"Phase Start", InspectorField::FieldType::Int, &phase, 1, 3});
     fields.push_back({"Phase 2 Change", InspectorField::FieldType::Int, &phase2, 0, 100});
     fields.push_back({"Phase 3 Change", InspectorField::FieldType::Int, &phase3, 0, 100});
@@ -84,6 +87,41 @@ bool Boss::Init()
 
     audio        = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Ferdiad: No audio component found");
+
+    GameObject* healthBarObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healthBarName);
+    if (healthBarObject)
+    {
+        healthBarBase = healthBarObject->GetComponent<ImageComponent*>();
+        if (healthBarBase) healthBarBase->SetEnabled(false);
+        else GLOG("[WARNING] Ferdiad: Health bar base image component not found");
+
+        GameObject* healthBarFillObject = healthBarObject->GetChildGameObjectByName("BossHealthBarFill");
+        if (healthBarFillObject)
+        {
+            ShaderScriptComponent* healthBarShader = healthBarObject->GetComponent<ShaderScriptComponent*>();
+            if (healthBarShader)
+            {
+                healthBarFill = healthBarShader->GetScriptByType<BarFill>();
+                if (!healthBarFill) GLOG("[WARNING] Ferdiad: Health bar fill script component not found");
+            }
+            else GLOG("[WARNING] Ferdiad: Health bar fill shader component not found");
+        }
+        else GLOG("[WARNING] Ferdiad: Health bar fill object not found");
+
+        GameObject* armorBarFillObject = healthBarObject->GetChildGameObjectByName("BossArmorBarFill");
+        if (armorBarFillObject)
+        {
+            ShaderScriptComponent* armorBarShader = healthBarObject->GetComponent<ShaderScriptComponent*>();
+            if (armorBarShader)
+            {
+                armorBarFill = armorBarShader->GetScriptByType<BarFill>();
+                if (!armorBarFill) GLOG("[WARNING] Ferdiad: Armor bar fill script component not found");
+            }
+            else GLOG("[WARNING] Ferdiad: Armor bar shader component not found");
+        }
+        else GLOG("[WARNING] Ferdiad: Armor bar fill object not found");
+    }
+    else GLOG("[WARNING] Ferdiad: Health bar base object not found");
 
     GameObject* shieldObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldName);
     if (shieldObject)
@@ -629,6 +667,8 @@ void Boss::OnPlayerEnterLocation()
 
     doTaunt = true;
     // agentAI->ResetAngularSpeed(); // in case doTaunt not used
+
+    healthBarBase->SetEnabled(true);
 }
 
 void Boss::PlayHighlightSequence()
