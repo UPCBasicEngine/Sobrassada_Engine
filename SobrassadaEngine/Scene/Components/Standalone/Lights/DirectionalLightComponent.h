@@ -22,7 +22,9 @@ class DirectionalLightComponent : public LightComponent
 
     const float3 GetDirection() const;
     const float3 GetShadowTint() const { return shadowTint; }
+    const float GetShadowStrength() const { return shadowStrength; }
 
   private:
     float3 shadowTint;
+    float shadowStrength = 1.0f;
 };

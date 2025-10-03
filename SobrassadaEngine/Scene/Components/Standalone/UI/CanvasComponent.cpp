@@ -2,13 +2,13 @@
 
 #include "Application.h"
 #include "ButtonComponent.h"
+#include "CameraComponent.h"
 #include "CameraModule.h"
 #include "CanvasScalerComponent.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
 #include "GameUIModule.h"
 #include "ImageComponent.h"
-#include "CameraComponent.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
 #include "Transform2DComponent.h"
@@ -137,7 +137,6 @@ void CanvasComponent::RenderUI()
         {
             view = gameCamera->GetViewMatrix();
             proj = gameCamera->GetProjectionMatrix();
-
         }
         else
         {
@@ -154,14 +153,16 @@ void CanvasComponent::RenderUI()
     {
         if (!child->IsGloballyEnabled()) continue;
 
+        // Render this GameObject's components in the correct order
         Transform2DComponent* transform = child->GetComponent<Transform2DComponent*>();
         if (transform) transform->RenderWidgets();
 
-        UILabelComponent* uiLabel = child->GetComponent<UILabelComponent*>();
-        if (uiLabel) uiLabel->RenderUI(view, proj);
-
+        // Image should render before label on the same GameObject
         ImageComponent* image = child->GetComponent<ImageComponent*>();
         if (image) image->RenderUI(view, proj);
+
+        UILabelComponent* uiLabel = child->GetComponent<UILabelComponent*>();
+        if (uiLabel) uiLabel->RenderUI(view, proj);
     }
 }
 
@@ -209,8 +210,8 @@ void CanvasComponent::UpdateChildren()
         {
             Transform2DComponent* ta = a->GetComponent<Transform2DComponent*>();
             Transform2DComponent* tb = b->GetComponent<Transform2DComponent*>();
-            int oa   = ta ? ta->orderInCanvas : 0;
-            int ob   = tb ? tb->orderInCanvas : 0;
+            int oa                   = ta ? ta->orderInCanvas : 0;
+            int ob                   = tb ? tb->orderInCanvas : 0;
             return oa < ob;
         }
     );

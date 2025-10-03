@@ -117,14 +117,10 @@ void GameDebugUIModule::GameDebugMenu()
     ImGui::Spacing();
     ImGui::Spacing();
 
-    RenderPass* render = App->GetSceneModule()->GetScene()->GetRenderPass();
-    bool enableFXAA = render->IsFXAAEnabled();
-    ImGui::Checkbox("Enable FXAA", &enableFXAA);
-    render->SetEnabled(enableFXAA);
-
-    bool showBorders = render->IsShowBorders();
-    ImGui::Checkbox("Show borders", &showBorders);
-    render->SetShowBorders(showBorders);
+    FXAAParameters fxaa = App->GetSceneModule()->GetScene()->GetRenderPass()->GetFXAAParameters();
+    ImGui::Checkbox("Enable FXAA", &fxaa.isEnabled);
+    ImGui::Checkbox("Show borders", &fxaa.showBorders);
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetFXAAParameters(fxaa);
 
     ImGui::Separator();
     ImGui::Spacing();

@@ -171,9 +171,18 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         }
     }
 
-    if (HashString(otherObject->GetName()) == HashString("BlastShield_2"))
+    if (HashString(otherObject->GetName()) == HashString("BlastArea"))
     {
-        TakeDamage(1);
+        ScriptComponent* otherScript = otherObject->GetComponentParent<ScriptComponent*>(AppEngine);
+        if (otherScript)
+        {
+            Boss* bossScript = otherScript->GetScriptByType<Boss>();
+            if (bossScript)
+            {
+                bossScript->DisableBlastArea();
+                TakeDamage(1);
+            }
+        }
     }
 }
 
@@ -215,8 +224,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
-                                  playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -250,7 +258,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
 
     CubeColliderComponent* otherWeaponCube = otherObject->GetComponent<CubeColliderComponent*>();
     if (type == CharacterType::CuChulainn && otherWeaponCube && otherWeaponCube->GetEnabled() &&
-        otherObject->GetName() == "DashTrailCollision")
+        HashString(otherObject->GetName()) == HashString("DashTrailCollision"))
     {
         playerScript->StartCurse();
     }

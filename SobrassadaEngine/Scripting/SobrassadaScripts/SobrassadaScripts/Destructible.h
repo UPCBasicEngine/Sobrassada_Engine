@@ -2,6 +2,7 @@
 
 #include "Character.h"
 
+class AudioSourceComponent;
 class MeshComponent;
 class ParticleSystemComponent;
 class GameObject;
@@ -12,6 +13,13 @@ enum class DestructibleStates
     NONE,
     NORMAL,
     DESTROYED
+};
+
+enum class DestructibleType
+{
+    VASE    = 0,
+    BOX     = 1,
+    CRYSTAL = 2,
 };
 
 class Destructible : public Character
@@ -35,11 +43,17 @@ class Destructible : public Character
 
     std::string destroyedMeshName;
     std::string destructionParticleSystemName;
+    int destructibleTypeIndex                 = 1;
 
     MeshComponent* defaultMesh                = nullptr;
     GameObject* destroyedMesh                 = nullptr;
     ParticleSystemComponent* destructionSmoke = nullptr;
 
-    float timeToDisappear                     = 5;
-    float disappearCounter                    = 0;
+    float destructionSpawnDelay               = .1f;
+    float destructionSpawnDelayCounter        = 0;
+
+    DestructibleType type                     = DestructibleType::BOX;
+
+    // Audio
+    AudioSourceComponent* audioComp           = nullptr;
 };

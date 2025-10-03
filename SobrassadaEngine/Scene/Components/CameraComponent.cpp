@@ -4,10 +4,10 @@
 #include "DebugDrawModule.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
-#include "SSAO.h"
 #include "GameObject.h"
 #include "InputModule.h"
 #include "OpenGLModule.h"
+#include "SSAO.h"
 #include "SceneModule.h"
 #include "WindowModule.h"
 
@@ -526,8 +526,8 @@ void CameraComponent::SetFov(float fov)
 {
     camera.horizontalFov = fov * DEGREE_RAD_CONV;
     auto framebuffer     = App->GetOpenGLModule()->GetFramebuffer();
-    const int width            = framebuffer->GetTextureWidth();
-    const int height           = framebuffer->GetTextureHeight();
+    const int width      = framebuffer->GetTextureWidth();
+    const int height     = framebuffer->GetTextureHeight();
     camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
 
     UpdateUBO();

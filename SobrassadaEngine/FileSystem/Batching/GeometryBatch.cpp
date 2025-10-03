@@ -411,8 +411,11 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentWindBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 14, currentWindBuffer, 0, deltaWindDirectionsSize);
     }
+}
 
-    currentBufferIndex = nextBufferIndex;
+void GeometryBatch::SwapBuffers()
+{
+    currentBufferIndex = (currentBufferIndex + 1) % 2;
 }
 
 void GeometryBatch::BindBonesBuffer()

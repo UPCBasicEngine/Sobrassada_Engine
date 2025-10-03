@@ -6,6 +6,7 @@
 #include <vector>
 
 class GameObject;
+class AudioSourceComponent;
 
 class PauseMenuScript : public Script
 {
@@ -40,18 +41,20 @@ class PauseMenuScript : public Script
     std::vector<GameObject*> menuItems;
     std::vector<GameObject*> arrowImages;
 
-    bool isOpen       = false;
-    bool builtOnce    = false;
-    int selectedIndex = 0;
+    bool isOpen                 = false;
+    bool builtOnce              = false;
+    int selectedIndex           = 0;
 
     // input repeat/debounce state
-    uint64_t lastMs   = 0;
-    uint32_t repeatMs = 0;
-    int lastDir       = 0;
-    bool acceptWas    = false;
+    uint64_t lastMs             = 0;
+    uint32_t repeatMs           = 0;
+    int lastDir                 = 0;
+    bool acceptWas              = false;
 
     // previous input edges
-    bool upPrev       = false;
-    bool downPrev     = false;
-    bool accPrev      = false;
+    bool upPrev                 = false;
+    bool downPrev               = false;
+    bool accPrev                = false;
+
+    AudioSourceComponent* audio = nullptr;
 };
