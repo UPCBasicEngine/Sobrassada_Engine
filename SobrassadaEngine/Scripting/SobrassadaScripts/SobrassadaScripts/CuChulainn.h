@@ -151,6 +151,8 @@ class CuChulainn : public Character
     std::string healthBarName            = "HealthBarFill";
     BarFill* healthBar                   = nullptr;
 
+    bool controlsLocked                   = false;
+
     // Dash
     std::string dashIconName             = "DashCooldown";
     AbilityIconFill* dashIcon            = nullptr;
@@ -255,6 +257,11 @@ class CuChulainn : public Character
     float ultimateHitboxDuration         = 0.0f;
     float ultimateAnimationDelay         = 0.0f;
     bool ultimateUnlocked                = false;
+    bool playerAnimHeld                   = false;
+    bool ultimateHoldEnabled              = true;
+    float ultimateResumeVfxTime           = 1.9f;
+    float vfxTimeUnscaledSec              = 0.0f;
+    bool ultimateSoundPlayed              = false;
 
     // Riastrad
     std::string riastradBarName          = "BarFill";
