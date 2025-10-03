@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "AsyncSceneLoading.h"
 #include "Archer.h"
 #include "ArcherProjectile.h"
 #include "Banshee.h"
