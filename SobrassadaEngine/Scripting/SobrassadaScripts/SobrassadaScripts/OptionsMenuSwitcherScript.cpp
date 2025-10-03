@@ -7,6 +7,7 @@
 #include "OptionsMenuSwitcherScript.h"
 #include "Scene.h"
 #include "SceneModule.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Wwise_IDs.h"
 
 const std::unordered_map<std::string, TexPair> OptionsMenuSwitcherScript::panelInput = {

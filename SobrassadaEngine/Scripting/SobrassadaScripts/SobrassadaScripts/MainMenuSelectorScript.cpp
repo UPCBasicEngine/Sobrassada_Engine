@@ -12,6 +12,7 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Wwise_IDs.h"
 #include <algorithm>
@@ -183,12 +184,12 @@ void MainMenuSelectorScript::Update(float)
     const KeyState* padButtons = input->GetControllerButtons();
     const float2& leftStick    = input->GetLeftStick();
 
-    const bool moveDown        = keys[SDL_SCANCODE_DOWN] == KEY_DOWN ||
+    const bool moveDown        = keys[SDL_SCANCODE_DOWN] == KEY_DOWN || keys[SDL_SCANCODE_S] == KEY_DOWN ||
                           padButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_DOWN ||
                           (leftStick.y > 0.5f && !stickMoved);
 
-    const bool moveUp = keys[SDL_SCANCODE_UP] == KEY_DOWN || padButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_DOWN ||
-                        (leftStick.y < -0.5f && !stickMoved);
+    const bool moveUp = keys[SDL_SCANCODE_UP] == KEY_DOWN || keys[SDL_SCANCODE_W] == KEY_DOWN ||
+                        padButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_DOWN || (leftStick.y < -0.5f && !stickMoved);
 
     if (moveDown)
     {

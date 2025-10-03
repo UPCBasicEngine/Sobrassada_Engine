@@ -14,6 +14,7 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
 #include "Wwise_IDs.h"
 
