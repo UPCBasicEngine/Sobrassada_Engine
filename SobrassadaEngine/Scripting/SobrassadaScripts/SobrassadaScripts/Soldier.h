@@ -99,5 +99,7 @@ class Soldier : public Character
     GameObject* bodyObject             = nullptr;
     std::string materialName            = "";
 
+    bool detectAudioPlayed              = false;
+
     float4x4 meleeVfxOriginalTransform = float4x4::identity;
 };

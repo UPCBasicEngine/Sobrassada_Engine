@@ -231,7 +231,7 @@ void Soldier::OnDeath()
         if (animComponent) animComponent->UseTrigger("death2");
     }
     
-    
+    audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_DEATH);
     agentAI->PauseMovement();
     currentState = SoldierStates::DEATH;
     playerScript->RemoveEnemy();
@@ -252,7 +252,7 @@ void Soldier::OnDamageTaken(int amount)
     isStrongKnockback =
         (playerScript &&
          (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM));
-
+    if (currentHealth != 0) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_HURT);
     ApplyKnockback();
     // HashString animStateFromPlayer = GetAnimStateNameFromPlayer();
     // std::string animState               = animStateFromPlayer.GetString();
@@ -297,9 +297,15 @@ void Soldier::HandleState(float deltaTime)
         break;
     case SoldierStates::PLAYER_DETECTION:
         animComponent->UseTrigger("detectPlayer");
+        if (!detectAudioPlayed)
+        {
+            audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_DETECT);
+            detectAudioPlayed = true;
+        }
         if (animComponent->IsFinished())
         {
             currentState = SoldierStates::CHASE;
+            detectAudioPlayed = false;
         }
         break;
     case SoldierStates::CHEERING:
