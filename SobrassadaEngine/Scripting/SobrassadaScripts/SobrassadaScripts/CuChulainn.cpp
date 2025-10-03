@@ -791,7 +791,8 @@ void CuChulainn::HandleState(float deltaTime)
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
              state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
              state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT)
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT &&
+             state != CharacterStates::TAKE_MUSHROOM)
         Move();
 
     // When finished animation, go back to idle state
@@ -1331,7 +1332,7 @@ void CuChulainn::ThrowSpear()
     if (camera) camera->EnableAimOffset(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
     // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
-    animComponent->OnResume();
+    if (animComponent) animComponent->UseTrigger("Ranged");
     aimTimer   = 0.0f;
 
     throwTimer = throwCooldown;
@@ -1726,10 +1727,7 @@ void CuChulainn::Aim(float deltaTime)
         if (animComponent) animComponent->UseTrigger("Ranged");
         if (aimShadowObject) aimShadowObject->SetEnabled(true);
     }
-    desiredAim  = false;
-
-    aimTimer   += deltaTime;
-    if (aimTimer >= 0.07f) animComponent->OnPause();
+    desiredAim = false;
 
     if (AppEngine->GetInputModule()->IsUsingKeyboard()) LookAtMouse();
     else LookAtLeftStick();
@@ -1852,6 +1850,9 @@ bool CuChulainn::TakeMushroom()
         taken      = true;
 
         mushrooms += 1;
+
+        if (animComponent) animComponent->UseTrigger("Pick");
+        character->EnableMovement(false);
     }
 
     desiredTakeMushroom = false;
@@ -1983,12 +1984,22 @@ void CuChulainn::ToggleRiastrad()
 
         if (animComponent) animComponent->UseTrigger("Transform");
 
-        const HashString targetName = HashString("Idle");
+        const HashString idleName = HashString("Idle");
+        const HashString walkName = HashString("Walk");
         for (State& state : animComponent->GetResourceStateMachine()->states)
         {
-            if (state.name == targetName)
+            if (state.name == idleName)
             {
-                state.clipName = riastradIdleName;
+                if (rand() % 2 == 0) state.clipName = riastradIdleName;
+                else state.clipName = riastradIdleName2;
+            }
+            else if (state.name == walkName)
+            {
+                state.clipName = riastradRunName;
+                for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
+                {
+                    if (clip.clipName == state.clipName) clip.animationSpeed = 1.5f;
+                }
             }
         }
 
@@ -2018,12 +2029,21 @@ void CuChulainn::ToggleRiastrad()
         isRiastrad = false;
         character->SetMaxSpeed(defaultSpeed);
 
-        const HashString targetName = HashString("Idle");
+        const HashString idleName = HashString("Idle");
+        const HashString walkName = HashString("Walk");
         for (State& state : animComponent->GetResourceStateMachine()->states)
         {
-            if (state.name == targetName)
+            if (state.name == idleName)
             {
                 state.clipName = defaultIdleName;
+            }
+            else if (state.name == walkName)
+            {
+                state.clipName = defaultRunName;
+                for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
+                {
+                    if (clip.clipName == state.clipName) clip.animationSpeed = 1.0f;
+                }
             }
         }
 
@@ -2034,6 +2054,9 @@ void CuChulainn::ToggleRiastrad()
             if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
             if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
         }
+
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state         = CharacterStates::IDLE;
 
         // TODO: Remove when VFX
         Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
@@ -2173,9 +2196,24 @@ void CuChulainn::StartCurse()
 
     isCursed = true;
     character->SetMaxSpeed(curseSpeed);
-    curseTimer = curseDuration;
-}
+    curseTimer                = curseDuration;
 
+    const HashString walkName = HashString("Walk");
+    for (State& state : animComponent->GetResourceStateMachine()->states)
+    {
+        if (state.name == walkName)
+        {
+            state.clipName = curseRunName;
+            for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
+            {
+                if (clip.clipName == state.clipName) clip.animationSpeed = 3.0f;
+            }
+        }
+    }
+
+    if (animComponent) animComponent->UseTrigger("Idle");
+    state = CharacterStates::IDLE;
+}
 void CuChulainn::ExportState(PlayerState& playerState) const
 {
     playerState.currentHealth    = currentHealth;
@@ -2218,6 +2256,22 @@ void CuChulainn::EndCurse()
 
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
+
+    const HashString walkName = HashString("Walk");
+    for (State& state : animComponent->GetResourceStateMachine()->states)
+    {
+        if (state.name == walkName)
+        {
+            state.clipName = defaultRunName;
+            for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
+            {
+                if (clip.clipName == state.clipName) clip.animationSpeed = 1.0f;
+            }
+        }
+    }
+
+    if (animComponent) animComponent->UseTrigger("Idle");
+    state = CharacterStates::IDLE;
 }
 
 bool CuChulainn::IsBlockedAhead(

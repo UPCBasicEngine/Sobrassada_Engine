@@ -34,7 +34,7 @@ enum class CharacterStates
     TAKE_MUSHROOM,
     HEAL,
     TRANSFORM,
-    HURT
+    HURT,
 };
 
 constexpr const char* BlockerGOTags[] = {"MagicBarrier"};
@@ -164,7 +164,7 @@ class CuChulainn : public Character
     float3 lastDashStartPos                        = float3::zero;
     bool isDashing                                 = false;
     bool wasDashing                                = false;
-    float dashCooldown                             = 2.0f;
+    float dashCooldown                             = 0.5f;
     float dashTimer                                = 0.0f;
     bool desiredDash                               = false;
     float dashBufferTimer                          = 0.0f;
@@ -217,9 +217,9 @@ class CuChulainn : public Character
     float chargeDuration                           = 1.0f;
     bool desiredChargedAttack                      = false;
     float chargedAttackTimer                       = 0.0f;
-    float chargedAttackHitboxDelay                 = 0.0f;
-    float chargedAttackHitboxDuration              = 0.0f;
-    int chargedAttackDamage                        = 0;
+    float chargedAttackHitboxDelay                 = 0.3f;
+    float chargedAttackHitboxDuration              = 0.1f;
+    int chargedAttackDamage                        = 2;
     float attackPressTimer                         = 0.0f;
     float chargeThreshold                          = 0.2f;
 
@@ -259,14 +259,14 @@ class CuChulainn : public Character
     GameObject* ultimateWarning                    = nullptr;
     GameObject* ultimateSpikes                     = nullptr;
     bool desiredUltimate                           = false;
-    int ultimateDamage                             = 0;
+    int ultimateDamage                             = 3;
     float ultimateTimer                            = 0.0f;
-    float ultimateCd                               = 0.0f;
+    float ultimateCd                               = 5.0f;
     float ultimateCdTimer                          = 0.0f;
     float ultimateBufferTimer                      = 0.0f;
-    float ultimateHitboxDelay                      = 0.0f;
-    float ultimateHitboxDuration                   = 0.0f;
-    float ultimateAnimationDelay                   = 0.0f;
+    float ultimateHitboxDelay                      = 0.2f;
+    float ultimateHitboxDuration                   = 0.4f;
+    float ultimateAnimationDelay                   = 1.0f;
     bool ultimateUnlocked                          = false;
 
     // Riastrad
@@ -360,7 +360,7 @@ class CuChulainn : public Character
     GameObject* healParticles                      = nullptr;
     GameObject* healKnockback                      = nullptr;
     float healTimer                                = 0.0f;
-    float healKnockbackDelay                       = 0.0f;
+    float healKnockbackDelay                       = 1.0f;
     float enableMushroomTimer                      = 0.0f;
     bool mushroomToEnable                          = false;
 
@@ -385,7 +385,12 @@ class CuChulainn : public Character
     float deathTimeStopDuration                    = 0.1f;
 
     HashString defaultIdleName                     = HashString("CH_MC_Chu_AllAnimations_AN_MC_Idle");
-    HashString riastradIdleName                    = HashString("CH_MC_Chu_AllAnimations_AN_MC_Falling");
+    HashString riastradIdleName                    = HashString("CH_MC_Chu_AllAnimations_AN_IdleRiastrad");
+    HashString riastradIdleName2                   = HashString("CH_MC_Chu_AllAnimations_AN_IdleRiastrad2");
+
+    HashString defaultRunName                      = HashString("CH_MC_Chu_AllAnimations_AN_Run2");
+    HashString riastradRunName                     = HashString("CH_MC_Chu_AllAnimations_AN_RunRiastrad");
+    HashString curseRunName                        = HashString("CH_MC_Chu_AllAnimations_AN_MC_Chu_Walk_Pooka");
 };
 
 extern CharacterControllerComponent* character;
