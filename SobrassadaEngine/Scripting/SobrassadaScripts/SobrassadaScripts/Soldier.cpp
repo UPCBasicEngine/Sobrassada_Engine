@@ -219,7 +219,19 @@ void Soldier::OnDeath()
     // TODO: include death sound for the character
     // TODO: animation and particles
     isAttacking = false;
-    if (animComponent) animComponent->UseTrigger("death");
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<> dis(1, 2);
+    if (dis(gen) == 1)
+    {
+        if (animComponent) animComponent->UseTrigger("death");
+    }   
+    else
+    {
+        if (animComponent) animComponent->UseTrigger("death2");
+    }
+    
+    
     agentAI->PauseMovement();
     currentState = SoldierStates::DEATH;
     playerScript->RemoveEnemy();
@@ -280,6 +292,7 @@ void Soldier::HandleState(float deltaTime)
         ChaseAI();
         break;
     case SoldierStates::BASIC_ATTACK:
+        agentAI->ResumeMovement();
         if (attackCdTimer <= 0) Attack(deltaTime);
         break;
     case SoldierStates::PLAYER_DETECTION:
@@ -408,13 +421,13 @@ void Soldier::Attack(float deltaTime)
             }
         }
         Character::Attack(deltaTime);
-        agentAI->PauseMovement();
+        //agentAI->PauseMovement();
         thrustAdvance = false;
     }
     else
     {
         if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
-        agentAI->ResumeMovement();
+        //agentAI->ResumeMovement();
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         // Doble attack
         if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
@@ -493,7 +506,7 @@ void Soldier::Attack(float deltaTime)
         // Reset attack state
         if (attackTimer >= attackDuration)
         {
-            agentAI->ResumeMovement();
+            //agentAI->ResumeMovement();
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
             isAttacking   = false;
             attackCdTimer = attackCooldown;
@@ -544,7 +557,13 @@ void Soldier::ChangeState()
         }
     }
 
-    if (distance <= rangeAIAttack) currentState = SoldierStates::BASIC_ATTACK;
+    if (distance <= rangeAIAttack)
+    {
+        agentAI->PauseMovement();
+        currentState = SoldierStates::BASIC_ATTACK;
+        animComponent->UseTrigger("idleCombat");
+        
+    }
     else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
 }
