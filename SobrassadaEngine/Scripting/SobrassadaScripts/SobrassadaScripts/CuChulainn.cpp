@@ -2198,8 +2198,8 @@ void CuChulainn::AddRiastrad(int amount)
     {
         if (riastradEye) riastradEye->SetFillAmount(riastradMeter / 100.0f);
 
-        if (AppEngine->GetInputModule()->IsUsingKeyboard()) riastradKey->SetEnabled(true);
-        else riastradTriggers->SetEnabled(true);
+        if (AppEngine->GetInputModule()->IsUsingKeyboard() && riastradKey) riastradKey->SetEnabled(true);
+        else if (riastradTriggers) riastradTriggers->SetEnabled(true);
     }
 
     if (!riastradBar) return;
