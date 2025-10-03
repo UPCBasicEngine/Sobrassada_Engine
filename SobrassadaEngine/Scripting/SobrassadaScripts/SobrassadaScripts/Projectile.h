@@ -5,6 +5,8 @@
 #include "Math/float3.h"
 
 class CapsuleColliderComponent;
+class MeshComponent;
+class AttackVfxSpritesheet;
 
 class Projectile : public Script
 {
@@ -27,6 +29,13 @@ class Projectile : public Script
 
   private:
     CapsuleColliderComponent* collider = nullptr;
+
+    std::string spritesheetNameV       = "RangedVFX_v";
+    std::string spritesheetNameH       = "RangedVFX_h";
+    MeshComponent* spritesheetMeshV    = nullptr;
+    MeshComponent* spritesheetMeshH    = nullptr;
+    AttackVfxSpritesheet* spritesheetV = nullptr;
+    AttackVfxSpritesheet* spritesheetH = nullptr;
 
     float3 direction                   = float3::zero;
     float speed                        = 10.0f;

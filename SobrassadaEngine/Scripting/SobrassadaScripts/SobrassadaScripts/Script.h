@@ -4,15 +4,15 @@
 #include "Math/float2.h"
 #include "Math/float3.h"
 #include "Math/float4.h"
-#include "rapidjson/document.h"
 #include "imgui.h"
+#include "rapidjson/document.h"
 #include <functional>
 #include <vector>
 
-constexpr int maxScriptCurvePoints = 10;
+constexpr int maxScriptCurvePoints   = 10;
 
 // USE LAST VEC2 TO STORE THE RANGE OF THE CURVE EDITOR
-constexpr int StoreScriptCurvePoints     = maxScriptCurvePoints + 1;
+constexpr int StoreScriptCurvePoints = maxScriptCurvePoints + 1;
 
 class Script;
 class GameObject;
