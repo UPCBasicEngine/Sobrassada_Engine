@@ -114,11 +114,11 @@ void HighlightCharacter::Update(float deltaTime)
     if (isExecuting && splineMovementScript->GetLoopCounter() > 0)
     {
         isExecuting = false;
-        splineMovementTarget->SetEnabled(false);
-        cameraMovementScript->ResetToDefaultTarget();
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(true);
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(true);
-        playerController->SetInputDown(true);
+        //splineMovementTarget->SetEnabled(false);
+        //cameraMovementScript->ResetToDefaultTarget();
+        //AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(true);
+        //AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(true);
+        //playerController->SetInputDown(true);
     }
 }
 
@@ -139,19 +139,27 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
     AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
     AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
 
-    splineComponent->SetPointWorld(
-        0, playerCameraPivot->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()
-    );
-
-    float3 vectorToTarget =
-        characterToHighlight->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart();
-    splineComponent->SetPointWorld(1, vectorToTarget - vectorToTarget.Normalized() * secondSplinePointOffset);
-
+    const float3 highlightVector = (characterToHighlight->GetGlobalTransform().TranslatePart() -
+            parent->GetGlobalTransform().TranslatePart()).Normalized();
     Quat cameraOrientation =
         Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
+    const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
+
+    splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
+    
+    splineComponent->SetPointWorld(1, characterToHighlight->GetGlobalTransform().TranslatePart() - 
+        highlightVector * secondSplinePointOffset + secondSplinePointOffset / 2.f * zoomVector);
+    
     splineComponent->SetPointWorld(
-        2, vectorToTarget + zoomMultiplier * cameraOrientation.Transform(float3(0, 0, -1))
+        2, characterToHighlight->GetGlobalTransform().TranslatePart() +
+        secondSplinePointOffset * zoomVector - secondSplinePointOffset / 2.f * highlightVector
     );
+    
+    splineComponent->SetPointWorld(
+        3, characterToHighlight->GetGlobalTransform().TranslatePart() +
+        zoomMultiplier * zoomVector
+    );
+    
     splineMovementTarget->SetEnabled(true);
     cameraMovementScript->InitAlternativeTarget(splineMovementTarget);
 
