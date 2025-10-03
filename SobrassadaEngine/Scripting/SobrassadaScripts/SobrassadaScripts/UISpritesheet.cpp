@@ -124,6 +124,7 @@ void UISpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
     glUniform1f(5, timer);
     glUniform1f(6, fadeOutTime);
     glUniform1f(7, fadeOutDuration);
+    glUniform1i(8, isFadeOut);
 
     glBindVertexArray(vao);
 

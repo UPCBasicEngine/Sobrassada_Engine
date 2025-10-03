@@ -383,6 +383,9 @@ class CuChulainn : public Character
     float timeStopTimer                            = 0.0f;
     float hitTimeStopDuration                      = 0.05f;
     float deathTimeStopDuration                    = 0.1f;
+
+    HashString defaultIdleName                     = HashString("CH_MC_Chu_AllAnimations_AN_MC_Idle");
+    HashString riastradIdleName                    = HashString("CH_MC_Chu_AllAnimations_AN_MC_Falling");
 };
 
 extern CharacterControllerComponent* character;

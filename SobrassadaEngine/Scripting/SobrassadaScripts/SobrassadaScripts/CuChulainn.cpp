@@ -1881,6 +1881,7 @@ void CuChulainn::UseMushroom()
     if (healVfx)
     {
         healVfx->SetEnabled(true);
+        if (healParticles) healParticles->SetEnabled(false);
         healVfx->SetLocalPosition(parent->GetLocalTransform().TranslatePart());
         Scene* scene = AppEngine->GetSceneModule()->GetScene();
         for (UID child : healVfx->GetChildren())
@@ -1900,16 +1901,12 @@ void CuChulainn::UseMushroom()
     }
 
     healTimer = 0.0f;
-
-    // UpdateMushroomsUI();
 }
 
 void CuChulainn::ChargeAttack()
 {
     if (state != CharacterStates::CHARGING)
     {
-        // GLOG("START CHARGING ATTACK");
-
         if (chargeVfx1)
         {
             chargeVfx1->SetEnabled(true);
@@ -1985,9 +1982,14 @@ void CuChulainn::ToggleRiastrad()
         character->EnableMovement(false);
 
         if (animComponent) animComponent->UseTrigger("Transform");
-        for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
+
+        const HashString targetName = HashString("Idle");
+        for (State& state : animComponent->GetResourceStateMachine()->states)
         {
-            clip.animationSpeed *= riastradAnimationsSpeedRatio;
+            if (state.name == targetName)
+            {
+                state.clipName = riastradIdleName;
+            }
         }
 
         if (riastradVfx)
@@ -2014,8 +2016,16 @@ void CuChulainn::ToggleRiastrad()
     {
         // Stop Riastrad
         isRiastrad = false;
-        animComponent->GetResourceStateMachine()->ResetClipsSpeed();
         character->SetMaxSpeed(defaultSpeed);
+
+        const HashString targetName = HashString("Idle");
+        for (State& state : animComponent->GetResourceStateMachine()->states)
+        {
+            if (state.name == targetName)
+            {
+                state.clipName = defaultIdleName;
+            }
+        }
 
         if (riastradEye)
         {

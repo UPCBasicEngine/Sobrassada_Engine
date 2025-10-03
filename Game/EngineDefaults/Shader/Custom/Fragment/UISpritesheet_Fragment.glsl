@@ -6,6 +6,7 @@ layout(location = 4) uniform uvec2 myTexture;
 layout(location = 5) uniform float time;
 layout(location = 6) uniform float fadeOutTime;
 layout(location = 7) uniform float fadeOutDuration;
+layout(location = 8) uniform bool isFadeOut;
 
 in vec2 uv0;
 
@@ -15,7 +16,7 @@ void main()
 {
     vec4 texColor = texture2D(sampler2D(myTexture), uv0);
 
-    if (time > fadeOutTime) 
+    if (isFadeOut && time > fadeOutTime) 
     {
         const float fadeFactor = 1.0f - min(1.0f, ((time - fadeOutTime) / fadeOutDuration));
         texColor.a *= fadeFactor;
