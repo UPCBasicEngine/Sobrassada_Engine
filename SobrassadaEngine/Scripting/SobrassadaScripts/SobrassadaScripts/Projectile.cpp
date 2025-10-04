@@ -11,8 +11,7 @@
 #include "ShaderScriptComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
-#include "Standalone/Audio/AudioSourceComponent.h"
-#include "Wwise_IDs.h"
+
 
 #include "Math/Quat.h"
 
@@ -56,8 +55,6 @@ bool Projectile::Init()
         GLOG("[WARNING: Projectile Init()] Couldn't find the collider component");
         return false;
     }
-    audio                         = parent->GetComponent<AudioSourceComponent*>();
-    if (!audio) GLOG("[WARNING: Projectile Init()] Couldn't find the audio source component");
 
     GameObject* spritesheetObject = parent->GetChildGameObjectByName(spritesheetNameV);
     if (spritesheetObject)
@@ -101,7 +98,7 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
     this->direction = direction.Normalized();
     frames          = 0;
     if (collider) collider->SetEnabled(false);
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_RANGEATTACK);
+    
 
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
