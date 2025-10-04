@@ -668,7 +668,7 @@ void Boss::OnPlayerEnterLocation()
     doTaunt = true;
     // agentAI->ResetAngularSpeed(); // in case doTaunt not used
 
-    healthBarBase->SetEnabled(true);
+    if (healthBarBase) healthBarBase->SetEnabled(true);
 }
 
 void Boss::PlayHighlightSequence()
@@ -1813,7 +1813,7 @@ void Boss::WaterSpouts()
         break;
 
     default:
-        GLOG("Error: WaterSpouts");
+        GLOG("Error: Ferdiad WaterSpouts");
         break;
     }
 }
@@ -1851,6 +1851,13 @@ void Boss::ResetValues(bool changePhase)
     if (closeArea) closeArea->SetEnabled(false);
     if (bigArea) bigArea->SetEnabled(false);
     if (blastArea) blastArea->SetEnabled(false);
+
+    if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
+
+    if (invulnerableAnimation) invulnerableAnimation->OnStop();
+    if (invulnerableSpriteScript) invulnerableSpriteScript->SetEnabled(false);
+    if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
+    if (invulnerableAuraScript) invulnerableAuraScript->SetEnabled(false);
 
     if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
 
