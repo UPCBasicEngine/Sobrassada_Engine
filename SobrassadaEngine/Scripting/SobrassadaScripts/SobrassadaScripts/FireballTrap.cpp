@@ -12,8 +12,11 @@
 #include "FireballTrap.h"
 #include "GameObject.h"
 #include "MiniFireball.h"
+#include "ParticleSystemComponent.h"
+#include "ResourceAnimation.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
+#include "Standalone/AnimController.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
@@ -1176,7 +1179,7 @@ void FireballTrap::UpdateAnimation(OneShotAnim& anim, float deltaTime)
                 ResourceAnimation* animResource = ctrl->GetCurrentAnimation();
                 if (animResource)
                 {
-                    const float duration    = animResource->GetDuration(); 
+                    const float duration    = animResource->GetDuration();
                     const float currentTime = ctrl->GetTime();
 
                     if (currentTime >= duration - particleAnticipationTime)
@@ -1192,7 +1195,7 @@ void FireballTrap::UpdateAnimation(OneShotAnim& anim, float deltaTime)
                             psGO->SetLocalPosition(spawnPos);
                             bombNParticleSystem->SpawnAllInstances();
 
-                            bombNParticleTriggered = true; 
+                            bombNParticleTriggered = true;
                         }
                     }
                 }
@@ -1210,7 +1213,7 @@ void FireballTrap::PlayAnimationAt(OneShotAnim& anim, const float3& localPos)
 {
     if (!anim.root || !anim.ac) return;
 
-     if (&anim == &animN)
+    if (&anim == &animN)
     {
         bombNParticleTriggered = false;
     }
