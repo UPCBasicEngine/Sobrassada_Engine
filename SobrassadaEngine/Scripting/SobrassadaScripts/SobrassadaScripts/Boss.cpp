@@ -712,7 +712,7 @@ void Boss::OnDamageTaken(int amount)
 
     if (!armorBarFill || !healthBarFill) return;
 
-    if (currentHealth >= phase2)
+    if (currentHealth > phase2)
     {
         armorBarFill->SetFillAmount(
             static_cast<float>(currentHealth - phase2) / static_cast<float>(maxHealth - phase2)
@@ -722,10 +722,12 @@ void Boss::OnDamageTaken(int amount)
     {
         armorBarFill->SetFillAmount(0.0f);
 
+        float fill = static_cast<float>(currentHealth) / static_cast<float>(phase2);
         healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
     }
     else
     {
+        float fill = static_cast<float>(currentHealth) / static_cast<float>(phase2);
         healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
     }
 }

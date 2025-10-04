@@ -560,7 +560,7 @@ void CharacterControllerComponent::CheckDashObstacles()
     if (userPointer)
     {
         hitParent = userPointer->collider->GetParent();
-        GLOG("[CharacterControllerComponent]: Physics Raycast hit!, %s", hitParent->GetName().c_str());
+        //GLOG("[CharacterControllerComponent]: Physics Raycast hit!, %s", hitParent->GetName().c_str());
     }
 
     DebugDrawModule* debug = App->GetDebugDrawModule();
