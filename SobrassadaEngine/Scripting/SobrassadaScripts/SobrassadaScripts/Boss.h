@@ -145,6 +145,8 @@ class Boss : public Character
     bool restart                = false;
     float runTimer              = 0.0f;
 
+    bool firstTimeEntering      = true;
+
     bool highlightActivated     = false;
     float highlightTimer        = 0.0f;
     bool playedHighlight        = false;
@@ -156,6 +158,14 @@ class Boss : public Character
     bool doIdle                                          = false;
     bool doTaunt                                         = false;
     bool actionTriggerDone                               = false;
+
+    // Health UI
+    std::string healthBarName                            = "";
+    ImageComponent* healthBarBase                        = nullptr;
+    ShaderScriptComponent* healthBarShader               = nullptr;
+    BarFill* healthBarFill                               = nullptr;
+    ShaderScriptComponent* armorBarShader                = nullptr;
+    BarFill* armorBarFill                                = nullptr;
 
     // ShieldStrikes
     std::string shieldName                               = "";
@@ -267,12 +277,6 @@ class Boss : public Character
     float chaseTimeLimit                             = 8.0f;
     float blastAreaDisabledLimit                     = 0.5f;
     float stepTime                                   = 0.5f;
-
-    // Health UI
-    std::string healthBarName                        = "";
-    ImageComponent* healthBarBase                    = nullptr;
-    BarFill* healthBarFill                           = nullptr;
-    BarFill* armorBarFill                            = nullptr;
 
     // ShieldBlast
     std::string blastAreaName                        = "";

@@ -98,20 +98,20 @@ bool Boss::Init()
         GameObject* healthBarFillObject = healthBarObject->GetChildGameObjectByName("BossHealthBarFill");
         if (healthBarFillObject)
         {
-            ShaderScriptComponent* healthBarShader = healthBarObject->GetComponent<ShaderScriptComponent*>();
+            healthBarShader = healthBarFillObject->GetComponent<ShaderScriptComponent*>();
             if (healthBarShader)
             {
                 healthBarFill = healthBarShader->GetScriptByType<BarFill>();
                 if (!healthBarFill) GLOG("[WARNING] Ferdiad: Health bar fill script component not found");
             }
-            else GLOG("[WARNING] Ferdiad: Health bar fill shader component not found");
+            else GLOG("[WARNING] Ferdiad: Health bar shader component not found");
         }
         else GLOG("[WARNING] Ferdiad: Health bar fill object not found");
 
         GameObject* armorBarFillObject = healthBarObject->GetChildGameObjectByName("BossArmorBarFill");
         if (armorBarFillObject)
         {
-            ShaderScriptComponent* armorBarShader = healthBarObject->GetComponent<ShaderScriptComponent*>();
+            armorBarShader = armorBarFillObject->GetComponent<ShaderScriptComponent*>();
             if (armorBarShader)
             {
                 armorBarFill = armorBarShader->GetScriptByType<BarFill>();
@@ -668,7 +668,14 @@ void Boss::OnPlayerEnterLocation()
     doTaunt = true;
     // agentAI->ResetAngularSpeed(); // in case doTaunt not used
 
-    if (healthBarBase) healthBarBase->SetEnabled(true);
+    if (firstTimeEntering && healthBarBase)
+    {
+        healthBarBase->SetEnabled(true);
+        if (armorBarFill) armorBarFill->SetFillAmount(1.0f);
+        if (healthBarFill) healthBarFill->SetFillAmount(1.0f);
+
+        firstTimeEntering = false;
+    }
 }
 
 void Boss::PlayHighlightSequence()
@@ -687,21 +694,40 @@ void Boss::DisableBlastArea()
 
 void Boss::OnDeath()
 {
-    // TODO: include death sound for the character
     // TODO: animation and particles
 
     ResetValues(false);
 
     parent->SetEnabled(false);
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
+
+    // if (healthBarBase) healthBarBase->SetEnabled(false); // wait until death animation
 }
 
 void Boss::OnDamageTaken(int amount)
 {
-    // update healthbar
-    // TODO: play boss take damage sound
     // TODO: particles? and animation
+
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
+
+    if (!armorBarFill || !healthBarFill) return;
+
+    if (currentHealth >= phase2)
+    {
+        armorBarFill->SetFillAmount(
+            static_cast<float>(currentHealth - phase2) / static_cast<float>(maxHealth - phase2)
+        );
+    }
+    else if (currentHealth + amount >= phase2)
+    {
+        armorBarFill->SetFillAmount(0.0f);
+
+        healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
+    }
+    else
+    {
+        healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
+    }
 }
 
 void Boss::HandleState(float deltaTime)
