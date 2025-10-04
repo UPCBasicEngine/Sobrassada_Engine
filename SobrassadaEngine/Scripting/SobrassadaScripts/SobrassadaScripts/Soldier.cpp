@@ -259,6 +259,15 @@ void Soldier::OnDamageTaken(int amount)
     // GLOG("Soldier %s damaged with state %s", parent->GetName().c_str(), animState.c_str());
     if (animComponent) animComponent->UseTrigger("damaged");
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
+    if (meleeVfxObject && meleeVfxObject->IsEnabled())
+    {
+        meleeVfxObject->SetEnabled(false);
+    }
+    if (melee2VfxObject && melee2VfxObject->IsEnabled())
+    {
+        melee2VfxObject->SetEnabled(false);
+    }
+    if (thrustVfxObject) thrustVfxObject->SetEnabled(false);
 }
 
 void Soldier::PerformAttack()
