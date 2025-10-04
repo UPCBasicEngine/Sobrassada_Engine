@@ -7,6 +7,7 @@
 class CapsuleColliderComponent;
 class MeshComponent;
 class AttackVfxSpritesheet;
+class AudioSourceComponent;
 
 class Projectile : public Script
 {
@@ -29,6 +30,7 @@ class Projectile : public Script
 
   private:
     CapsuleColliderComponent* collider = nullptr;
+    AudioSourceComponent* audio        = nullptr;
 
     std::string spritesheetNameV       = "RangedVFX_v";
     std::string spritesheetNameH       = "RangedVFX_h";

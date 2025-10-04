@@ -630,6 +630,7 @@ void CuChulainn::Update(float deltaTime)
             healParticles->SetEnabled(true);
             healParticles->GetComponent<ParticleSystemComponent*>()->SpawnAllInstances();
         }
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HEAL);
         Heal(mushroomHeal);
     }
 
@@ -728,6 +729,7 @@ void CuChulainn::OnDeath()
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     if (animComponent) animComponent->UseTrigger("Death");
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DEATH);
 
     isDead          = true;
     pendingGameOver = true;
@@ -740,7 +742,7 @@ void CuChulainn::OnDamageTaken(int amount)
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
+    if (audio && currentHealth >= 1) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
     if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
