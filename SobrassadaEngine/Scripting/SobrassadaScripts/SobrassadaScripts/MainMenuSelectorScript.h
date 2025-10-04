@@ -6,6 +6,7 @@
 class GameObject;
 class PauseMenuScript;
 class GameOverScript;
+class AudioSourceComponent;
 
 class MainMenuSelectorScript : public Script
 {
@@ -41,4 +42,6 @@ class MainMenuSelectorScript : public Script
     void CachePanel();
     void BuildFromPanel();
     void UpdateSelection();
+
+    AudioSourceComponent* audio = nullptr;
 };

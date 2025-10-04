@@ -476,6 +476,7 @@
     <ClInclude Include="Banshee_v2.h" />
     <ClInclude Include="BossMirage.h" />
     <ClInclude Include="Boss.h" />
+    <ClInclude Include="BossSpouts.h" />
     <ClInclude Include="ButtonScript.h" />
     <ClInclude Include="CameraMovement.h" />
     <ClInclude Include="Changeling.h" />
@@ -503,6 +504,7 @@
     <ClInclude Include="MiniFireball.h" />
     <ClInclude Include="Mirage.h" />
     <ClInclude Include="MirageBossDash.h" />
+    <ClInclude Include="MirageVFX.h" />
     <ClInclude Include="MoveGOInSpline.h" />
     <ClInclude Include="MenuChangeSceneScript.h" />
     <ClInclude Include="MovingUVLight.h" />
@@ -526,6 +528,7 @@
     <ClInclude Include="Spouts.h" />
     <ClInclude Include="SwitchScriptTest.h" />
     <ClInclude Include="BarFill.h" />
+    <ClInclude Include="UISpritesheet.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
     <ClInclude Include="WallCollision.h" />
@@ -2070,6 +2073,7 @@
     <ClCompile Include="Banshee_v2.cpp" />
     <ClCompile Include="BossMirage.cpp" />
     <ClCompile Include="Boss.cpp" />
+    <ClCompile Include="BossSpouts.cpp" />
     <ClCompile Include="ButtonScript.cpp" />
     <ClCompile Include="CameraMovement.cpp" />
     <ClCompile Include="Changeling.cpp" />
@@ -2097,6 +2101,7 @@
     <ClCompile Include="MiniFireball.cpp" />
     <ClCompile Include="Mirage.cpp" />
     <ClCompile Include="MirageBossDash.cpp" />
+    <ClCompile Include="MirageVFX.cpp" />
     <ClCompile Include="MoveGOInSpline.cpp" />
     <ClCompile Include="MenuChangeSceneScript.cpp" />
     <ClCompile Include="MovingUVLight.cpp" />
@@ -2133,6 +2138,7 @@
     <ClCompile Include="Spouts.cpp" />
     <ClCompile Include="SwitchScriptTest.cpp" />
     <ClCompile Include="BarFill.cpp" />
+    <ClCompile Include="UISpritesheet.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
     <ClCompile Include="TileFloatScript.cpp" />

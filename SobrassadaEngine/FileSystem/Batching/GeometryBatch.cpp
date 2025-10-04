@@ -212,6 +212,9 @@ void GeometryBatch::LoadData()
             return;
         }
 
+        for (size_t j = 0; j < totalModels.size(); ++j)
+            ptrModels[i][j] = float4x4::identity;
+
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, deltaWindDirections[i]);
 
         glBufferStorage(GL_SHADER_STORAGE_BUFFER, deltaWindDirectionsSize, nullptr, flags);
@@ -238,6 +241,9 @@ void GeometryBatch::LoadData()
             GLOG("Error mapping ssbo bones %d", i);
             return;
         }
+
+        for (size_t j = 0; j < accBonesCount; ++j)
+            ptrBones[i][j] = float4x4::identity;
 
         bonesIndexSize = bonesCount.size() * sizeof(unsigned int);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, bonesIndex);
