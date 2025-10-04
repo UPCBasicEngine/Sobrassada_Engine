@@ -2,6 +2,9 @@
 
 #include "../LightComponent.h"
 
+#include "Geometry/Frustum.h"
+#include "Math/float4x4.h"
+
 #include "rapidjson/document.h"
 
 class SpotLightComponent : public LightComponent
@@ -20,13 +23,27 @@ class SpotLightComponent : public LightComponent
     void Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const override;
     void Clone(const Component* other) override;
 
+    void ParentUpdated() override;
+
     const float3 GetDirection();
     float GetRange() const { return range; }
     float GetInnerAngle() const { return innerAngle; }
     float GetOuterAngle() const { return outerAngle; }
+    int GetShadowGPUIndex() const { return shadowGPUIndex; }
+    float GetRadius() const { return radius; }
+
+    float4x4 GetViewMatrix() const { return spotCamera.ViewMatrix(); }
+    float4x4 GetProjectionMatrix() const { return spotCamera.ProjectionMatrix(); }
+    float4x4 GetViewProjection() const { return spotCamera.ViewProjMatrix(); }
+
+    void SetShadowGPUIndex(int newIndex) { shadowGPUIndex = newIndex; }
 
   private:
     float range;
     float innerAngle;
     float outerAngle;
+    float radius;
+
+    int shadowGPUIndex = -1;
+    Frustum spotCamera;
 };
