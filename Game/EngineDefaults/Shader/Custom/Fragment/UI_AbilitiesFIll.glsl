@@ -10,13 +10,16 @@ layout(location = 4) uniform uvec2 emptyTexture;
 layout(location = 5) uniform uvec2 filledTexture;
 
 // Transition parameters
-layout(location = 6) uniform float fillAmount;
-layout(location = 7) uniform float time;
+layout(location = 6) uniform float prevFillAmount;
+layout(location = 7) uniform float nextFillAmount;
+layout(location = 8) uniform float time;
+layout(location = 9) uniform float startTime;
+layout(location = 10) uniform float transitionTime;
 
 // Wave parameters
-layout(location = 8) uniform float waveAmplitude;
-layout(location = 9) uniform float waveFrequency;
-layout(location = 10) uniform float waveSpeed;
+layout(location = 11) uniform float waveAmplitude;
+layout(location = 12) uniform float waveFrequency;
+layout(location = 13) uniform float waveSpeed;
 
 void main()
 {
@@ -26,6 +29,9 @@ void main()
     {
        discard;
     }
+
+    float t = clamp((time - startTime) / transitionTime, 0.0f, 1.0f);
+    float fillAmount = mix(prevFillAmount, nextFillAmount, t);
 
     float wave = sin(uv0.x * waveFrequency + time * waveSpeed) * waveAmplitude;
     float liquidLevel = fillAmount + wave;

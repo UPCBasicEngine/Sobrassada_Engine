@@ -10,6 +10,7 @@
 #include "CameraComponent.h"
 #include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
+#include "VolumetricAreaComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"

@@ -1,13 +1,14 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "Components/Standalone/UI/ImageComponent.h"
 #include "GameObject.h"
 #include "InputModule.h"
 #include "OptionsMenuSwitcherScript.h"
 #include "Scene.h"
 #include "SceneModule.h"
-#include "Components/Standalone/UI/ImageComponent.h"
-
+#include "Standalone/Audio/AudioSourceComponent.h"
+#include "Wwise_IDs.h"
 
 const std::unordered_map<std::string, TexPair> OptionsMenuSwitcherScript::panelInput = {
     {"OptionsKeyboardPanel",   {1203489876831052, 1295999750777550}},
@@ -25,6 +26,8 @@ bool OptionsMenuSwitcherScript::Init()
     lastKbState = AppEngine->GetInputModule()->IsUsingKeyboard();
     ApplyDeviceTextures(lastKbState);
     ShowOnlyCurrentPanel();
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] OptionsMenuSwitcherScript: No audio component found");
     return true;
 }
 
@@ -38,7 +41,7 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
         initialized = true;
     }
 
-    bool nowKb                     = AppEngine->GetInputModule()->IsUsingKeyboard();
+    bool nowKb = AppEngine->GetInputModule()->IsUsingKeyboard();
     if (nowKb != lastKbState)
     {
         ApplyDeviceTextures(nowKb);
@@ -46,12 +49,14 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
     }
 
     const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
-    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons(); // Afegit per gamepad
+    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
 
     if (keys[SDL_SCANCODE_Q] == KEY_DOWN || keys[SDL_SCANCODE_E] == KEY_DOWN ||
         gamepadButtons[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] == KEY_DOWN ||
         gamepadButtons[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] == KEY_DOWN)
     {
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
+
         // Deactivate current
         GameObject* currentGO = FindPanelByName(panelNames[currentIndex]);
         if (currentGO) currentGO->SetEnabled(false);
@@ -68,6 +73,8 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
 
     if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN || gamepadButtons[SDL_CONTROLLER_BUTTON_B] == KEY_DOWN)
     {
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_03);
+
         // Disable all panels in the options menu
         for (const std::string& name : panelNames)
         {
@@ -83,7 +90,6 @@ void OptionsMenuSwitcherScript::Update(float deltaTime)
         initialized = false;
     }
 }
-
 void OptionsMenuSwitcherScript::ApplyDeviceTextures(bool usingKb)
 {
     for (const std::string& name : panelNames)

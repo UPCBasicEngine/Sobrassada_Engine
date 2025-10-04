@@ -28,11 +28,15 @@ class AbilityIconFill : public Script
     unsigned int texture        = 0;
 
     float fillAmount            = 0.0f;
+    float prevFillAmount        = 0.0f;
 
     float waveAmplitude         = 0.0f;
     float waveFrequency         = 0.0f;
     float waveSpeed             = 0.0f;
+
     float time                  = 0.0f;
+    float transitionTime        = 0.0f;
+    float startTime             = 0.0f;
 
     ImageComponent* imageComp   = nullptr;
     ResourceTexture* otherImage = nullptr;

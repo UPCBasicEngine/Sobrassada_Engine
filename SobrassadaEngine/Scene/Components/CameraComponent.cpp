@@ -56,7 +56,7 @@ CameraComponent::CameraComponent(UID uid, GameObject* parent) : Component(uid, p
         App->GetSceneModule()->GetScene()->SetMainCamera(this);
     }
 
-    previewFramebuffer = new Framebuffer(previewWidth, previewHeight, true);
+    previewFramebuffer = new Framebuffer(previewWidth, previewHeight);
 
     UpdateUBO();
 }
@@ -146,7 +146,7 @@ CameraComponent::CameraComponent(const rapidjson::Value& initialState, GameObjec
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    previewFramebuffer = new Framebuffer(previewWidth, previewHeight, true);
+    previewFramebuffer = new Framebuffer(previewWidth, previewHeight);
 }
 
 CameraComponent::~CameraComponent()
@@ -398,7 +398,7 @@ void CameraComponent::RenderCameraPreview(float deltaTime)
 
         ))
     {
-        ImTextureID texID = (ImTextureID)(intptr_t)previewFramebuffer->GetTextureID();
+        ImTextureID texID = (ImTextureID)(intptr_t)previewFramebuffer->GetColorTexture();
         ImVec2 size((float)previewWidth, (float)previewHeight);
         ImVec2 uv0 = ImVec2(0, 1);
         ImVec2 uv1 = ImVec2(
