@@ -86,21 +86,7 @@ RenderPass::RenderPass()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // VOLUMETRIC GAUSS BLURR
-    glGenFramebuffers(2, &blurrFBO[0]);
-    glGenTextures(2, &blurrTextures[0]);
-
-    for (unsigned int i = 0; i < 2; i++)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[i]);
-        glBindTexture(GL_TEXTURE_2D, blurrTextures[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurrTextures[i], 0);
-    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glGenBuffers(1, &spotShadowSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
@@ -934,6 +920,29 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
 
+    if (blurrFBO[0] == 0)
+    {
+        // VOLUMETRIC GAUSS BLURR
+        glCreateFramebuffers(2, &blurrFBO[0]);
+        glGenTextures(2, &blurrTextures[0]);
+
+        for (unsigned int i = 0; i < 2; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[i]);
+            glBindTexture(GL_TEXTURE_2D, blurrTextures[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width / 2, height / 2, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurrTextures[i], 0);
+
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            {
+                GLOG("ERROR::VolumetricFog::Framebuffer %i is not complete!\n", i);
+            }
+        }
+    }
+
     glUseProgram(App->GetShaderModule()->GetVolumetricFogComputeProgram());
 
     glBindImageTexture(0, fogResultTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
@@ -1078,7 +1087,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1i(loc, 0);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, blurrTextures[0]);
+    glBindTexture(GL_TEXTURE_2D, blurrTextures[!horizontal]);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
