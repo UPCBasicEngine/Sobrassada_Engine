@@ -1,6 +1,7 @@
 #include "CharacterControllerComponent.h"
 
 #include "Application.h"
+#include "BulletUserPointer.h"
 #include "CameraComponent.h"
 #include "CameraModule.h"
 #include "DebugDrawModule.h"
@@ -14,7 +15,6 @@
 #include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "Utils/RaycastController.h"
-#include "BulletUserPointer.h"
 
 #include "Geometry/LineSegment.h"
 #include "Geometry/Plane.h"
@@ -268,10 +268,12 @@ void CharacterControllerComponent::AdjustHeightToNavMesh(float3 currentPos, floa
     filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
     filter.setExcludeFlags(0);
 
-    // These numbers are the distance considering 60 fps as default -> 12.5 * 0.16ms = 0.2f & 1875 * 0.16ms = 30.0 search area.
-    // If lower framerate, the are is bigger because the steps each frame are longer.
-    // If higher framerate, the are is smaller because the steps between frames are way smoother
-    float halfExt[3] = {12.5f * deltaTime, std::max(1875.0f * deltaTime, 30.0f), 12.5f * deltaTime};    // Big Y search because we want to check for navmeshes below to fall
+    // These numbers are the distance considering 60 fps as default -> 12.5 * 0.16ms = 0.2f & 1875 * 0.16ms = 30.0
+    // search area. If lower framerate, the are is bigger because the steps each frame are longer. If higher framerate,
+    // the are is smaller because the steps between frames are way smoother
+    float halfExt[3] = {
+        12.5f * deltaTime, std::max(1875.0f * deltaTime, 30.0f), 12.5f * deltaTime
+    }; // Big Y search because we want to check for navmeshes below to fall
     float nearest[3];
     dtPolyRef newRef = 0;
 
@@ -324,7 +326,7 @@ void CharacterControllerComponent::Move(float deltaTime)
     const float3 offsetXZ   = rotateDirection * currentSpeed * deltaTime;
     const float3 desiredPos = currentPos + offsetXZ;
 
-    // These numbers are the distance considering 60 fps as default -> 25.0 * 0.16ms = 0.4f search area. 
+    // These numbers are the distance considering 60 fps as default -> 25.0 * 0.16ms = 0.4f search area.
     // If lower framerate, the are is bigger because the steps each frame are longer.
     // If higher framerate, the are is smaller because the steps between frames are way smoother
     const float3 searchArea = {25.0f * deltaTime, 25.0f * deltaTime, 25.0f * deltaTime};
@@ -476,12 +478,12 @@ void CharacterControllerComponent::StartDash()
 
 void CharacterControllerComponent::Dash(float deltaTime)
 {
-    dashMoveBlocked         = false;
+    dashMoveBlocked = false;
 
     CheckDashObstacles();
 
-    const float animStep    = std::min(deltaTime, dashTimeRemaining);
-    const float moveStep    = dashMoveBlocked ? 0.0f : animStep;
+    const float animStep = std::min(deltaTime, dashTimeRemaining);
+    const float moveStep = dashMoveBlocked ? 0.0f : animStep;
 
     if (moveStep == 0.0f)
     {
@@ -514,13 +516,13 @@ void CharacterControllerComponent::Dash(float deltaTime)
     {
         // Check if the end of the remaining dash is inside the navmesh in case we are sliding next to the edge
         const float3 currentPos2 = parent->GetGlobalTransform().TranslatePart();
-        const float3 finalPos   = currentPos2 + dashDirection * dashSpeed * dashTimeRemaining;
+        const float3 finalPos    = currentPos2 + dashDirection * dashSpeed * dashTimeRemaining;
 
         const float3 searchArea2 = {12.5f * moveStep, std::max(1875.0f * moveStep, 30.0f), 12.5f * moveStep};
         float3 closestPoint2     = float3::zero;
         bool posOverPoly2        = false;
-        dtStatus status         = GetClosestPointInNavmesh(finalPos, searchArea2, posOverPoly2, closestPoint2);
-        dashToNavmesh           = posOverPoly2 && closestPoint2.y <= finalPos.y + 0.2f;
+        dtStatus status          = GetClosestPointInNavmesh(finalPos, searchArea2, posOverPoly2, closestPoint2);
+        dashToNavmesh            = posOverPoly2 && closestPoint2.y <= finalPos.y + 0.2f;
 
         if (dashToNavmesh) CheckDashObstacles();
     }
@@ -546,15 +548,12 @@ void CharacterControllerComponent::CheckDashObstacles()
     LineSegment rightRay(rightRayOrigin + dashDirection * 0.15f, rightRayOrigin + dashDirection * 3.0f);
     LineSegment leftRay(leftRayOrigin + dashDirection * 0.15f, leftRayOrigin + dashDirection * 3.0f);
 
-    GameObject* centralHit = RaycastController::GetRayIntersectionTrees(
-        centralRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
-    GameObject* rightHit = RaycastController::GetRayIntersectionTrees(
-        rightRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
-    GameObject* leftHit = RaycastController::GetRayIntersectionTrees(
-        leftRay, App->GetSceneModule()->GetScene()->GetOctree(), App->GetSceneModule()->GetScene()->GetDynamicTree()
-    );
+    GameObject* centralHit =
+        RaycastController::GetRayIntersectionTrees(centralRay, App->GetSceneModule()->GetScene()->GetOctree());
+    GameObject* rightHit =
+        RaycastController::GetRayIntersectionTrees(rightRay, App->GetSceneModule()->GetScene()->GetOctree());
+    GameObject* leftHit =
+        RaycastController::GetRayIntersectionTrees(leftRay, App->GetSceneModule()->GetScene()->GetOctree());
 
     GameObject* hitParent          = nullptr;
     BulletUserPointer* userPointer = RaycastController::GetRayIntersectionPhysics(centralRay);
@@ -580,7 +579,7 @@ void CharacterControllerComponent::CheckDashObstacles()
     const float wallOffset = 0.7f;
     float tNear, tFar;
 
-    //Check GO with blocking tags
+    // Check GO with blocking tags
     auto hasDashBlockingTag = [](GameObject* go) -> bool
     {
         if (!go) return false;
@@ -605,12 +604,11 @@ void CharacterControllerComponent::CheckDashObstacles()
     if (!barrierGO) barrierGO = findBlockingAncestor(rightHit);
     if (!barrierGO) barrierGO = findBlockingAncestor(leftHit);
 
-
-    float3 basePos = parent->GetGlobalTransform().TranslatePart();
+    float3 basePos        = parent->GetGlobalTransform().TranslatePart();
     basePos.y            += 0.5f;
-    const float skin     = 0.12f;
-    const float extra    = 0.20f;
-    const float clampLen = std::max(3.0f, dashSpeed * dashTimeRemaining) + extra;
+    const float skin      = 0.12f;
+    const float extra     = 0.20f;
+    const float clampLen  = std::max(3.0f, dashSpeed * dashTimeRemaining) + extra;
 
     LineSegment clampRay(basePos, basePos + dashDirection * clampLen);
     BulletUserPointer* userPointerClamp = RaycastController::GetRayIntersectionPhysics(clampRay);
@@ -621,20 +619,20 @@ void CharacterControllerComponent::CheckDashObstacles()
     if (barrierGO)
     {
         const AABB& box = barrierGO->GetGlobalAABB();
-        
+
         if (box.Contains(basePos))
         {
             dashMoveBlocked = true;
             obstacleInDash  = true;
             return;
         }
-        
+
         if (box.Intersects(clampRay, tNear, tFar))
         {
-            const float3 hitPos    = clampRay.GetPoint(tNear);
+            const float3 hitPos = clampRay.GetPoint(tNear);
 
-            const float skin    = 0.12f; 
-            float forward          = (hitPos - basePos).Dot(dashDirection);
+            const float skin    = 0.12f;
+            float forward       = (hitPos - basePos).Dot(dashDirection);
             float stopDist      = std::max(0.0f, forward - skin);
 
             if (stopDist <= skin)
@@ -646,8 +644,8 @@ void CharacterControllerComponent::CheckDashObstacles()
 
             const float timeToStop = (dashSpeed > 0.0f) ? (stopDist / dashSpeed) : 0.0f;
             dashTimeRemaining      = std::min(dashTimeRemaining, timeToStop);
-            
-            dashMoveBlocked   = false;
+
+            dashMoveBlocked        = false;
             obstacleInDash         = true;
             return;
         }

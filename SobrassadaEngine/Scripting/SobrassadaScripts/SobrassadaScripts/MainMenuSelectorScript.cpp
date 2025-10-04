@@ -12,7 +12,9 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/UI/ButtonComponent.h"
+#include "Wwise_IDs.h"
 #include <algorithm>
 #include <cmath>
 
@@ -42,6 +44,9 @@ bool MainMenuSelectorScript::Init()
         UpdateSelection();
         builtOnce = true;
     }
+
+    audio = parent->GetComponent<AudioSourceComponent*>();
+    if (!audio) GLOG("[WARNING] MainMenuSelectorScript: No audio component found");
 
     return true;
 }
@@ -179,24 +184,26 @@ void MainMenuSelectorScript::Update(float)
     const KeyState* padButtons = input->GetControllerButtons();
     const float2& leftStick    = input->GetLeftStick();
 
-    const bool moveDown        = keys[SDL_SCANCODE_DOWN] == KEY_DOWN ||
+    const bool moveDown        = keys[SDL_SCANCODE_DOWN] == KEY_DOWN || keys[SDL_SCANCODE_S] == KEY_DOWN ||
                           padButtons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_DOWN ||
                           (leftStick.y > 0.5f && !stickMoved);
 
-    const bool moveUp = keys[SDL_SCANCODE_UP] == KEY_DOWN || padButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_DOWN ||
-                        (leftStick.y < -0.5f && !stickMoved);
+    const bool moveUp = keys[SDL_SCANCODE_UP] == KEY_DOWN || keys[SDL_SCANCODE_W] == KEY_DOWN ||
+                        padButtons[SDL_CONTROLLER_BUTTON_DPAD_UP] == KEY_DOWN || (leftStick.y < -0.5f && !stickMoved);
 
     if (moveDown)
     {
         selectedIndex = (selectedIndex + 1) % (int)menuItems.size();
         UpdateSelection();
         stickMoved = true;
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
     }
     else if (moveUp)
     {
         selectedIndex = (selectedIndex - 1 + (int)menuItems.size()) % (int)menuItems.size();
         UpdateSelection();
         stickMoved = true;
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_02);
     }
 
     if (std::fabs(leftStick.y) < 0.3f) stickMoved = false;
@@ -210,12 +217,14 @@ void MainMenuSelectorScript::Update(float)
 
         if (selectedItem->GetName() == "MenuItem_Continue")
         {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
             if (gameOverCtrl) gameOverCtrl->Close();
             else if (pauseCtrl) pauseCtrl->Close();
             return;
         }
         else if (selectedItem->GetName() == "MenuItem_Menu")
         {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
             if (pauseCtrl) pauseCtrl->Close();
             AppEngine->GetSceneModule()->GetScene()->SetStopPlaying(true);
             std::string path =
@@ -225,6 +234,7 @@ void MainMenuSelectorScript::Update(float)
         }
         else
         {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_BUTTON_01);
             if (auto* button = selectedItem->GetComponent<ButtonComponent*>()) button->OnClick();
         }
     }

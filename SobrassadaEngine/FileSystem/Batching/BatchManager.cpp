@@ -199,7 +199,7 @@ void BatchManager::RenderTransparent(
             if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
         }
 
-        if (batchMeshes.empty()) return;
+        if (batchMeshes.empty()) continue;
 
         std::sort(
             batchMeshes.begin(), batchMeshes.end(),
@@ -326,9 +326,13 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
     }  
 }
 
-void BatchManager::SwapOpaqueBuffers()
+void BatchManager::SwapBuffers()
 {
     for (GeometryBatch* it : opaqueBatches)
+    {
+        it->SwapBuffers();
+    }
+    for (GeometryBatch* it : transparentBatches)
     {
         it->SwapBuffers();
     }
