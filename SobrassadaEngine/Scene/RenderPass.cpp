@@ -882,6 +882,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     fxaaTexture = framebuffer->GetTextureID();
 #endif
 
+    glDepthMask(GL_FALSE);
+
     unsigned int fxaaProgram = App->GetShaderModule()->GetFXAAProgram();
     glUseProgram(fxaaProgram);
 
@@ -895,6 +897,8 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 
     glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    glDepthMask(GL_TRUE);
+
     glDepthMask(GL_TRUE);
 
 #ifndef GAME

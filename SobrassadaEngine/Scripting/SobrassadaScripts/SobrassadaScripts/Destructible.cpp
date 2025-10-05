@@ -4,20 +4,23 @@
 
 #include "Application.h"
 #include "Destructible.h"
+
+#include "CuChulainn.h"
 #include "GameObject.h"
 #include "Globals.h"
 #include "ParticleSystemComponent.h"
 #include "ResourceStateMachine.h"
+#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Wwise_IDs.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include <Math/MathFunc.h>
 #include <random>
 
-Destructible::Destructible(GameObject* parent)
-    : Character(parent, 1, -1, -1, -1, -1, -1, -1, -1, CharacterType::Destructible)
+Destructible::Destructible(GameObject* parent): Script(parent)
 {
     fields.emplace_back("Destroyed mesh", InspectorField::FieldType::InputText, &destroyedMeshName);
     fields.emplace_back(
@@ -35,8 +38,6 @@ bool Destructible::Init()
 
     currentState = DestructibleStates::NORMAL;
 
-    Character::Init();
-
     if (isSetupCorrectly)
     {
         type = static_cast<DestructibleType>(destructibleTypeIndex);
@@ -49,22 +50,26 @@ bool Destructible::Init()
 
 void Destructible::Update(float deltaTime)
 {
-    if (!isDead && isSetupCorrectly && currentState == DestructibleStates::DESTROYED)
+    if (isSimulating && isSetupCorrectly && currentState == DestructibleStates::DESTROYED)
     {
         destructionSpawnDelayCounter -= deltaTime;
         if (destructionSpawnDelayCounter <= 0)
         {
             destroyedMesh->SetEnabled(true);
 
-            isDead = true;
+            isSimulating = false;
         }
     }
 }
 
-void Destructible::OnDeath()
+void Destructible::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
-    if (isSetupCorrectly)
+    if (isSetupCorrectly && currentState == DestructibleStates::NORMAL)
     {
+        // Don´t accept the players hitbox as a hit
+        if (otherObject->GetComponent<ScriptComponent*>() != nullptr &&
+            otherObject->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>() != nullptr) return;
+        
         currentState                 = DestructibleStates::DESTROYED;
         destructionSpawnDelayCounter = destructionSpawnDelay;
 
@@ -84,9 +89,10 @@ void Destructible::OnDeath()
             break;
         }
 
+        parent->GetComponent<CapsuleColliderComponent*>()->SetEnabled(false);
         defaultMesh->SetEnabled(false);
 
-        isDead = false;
+        isSimulating = true;
     }
 }
 

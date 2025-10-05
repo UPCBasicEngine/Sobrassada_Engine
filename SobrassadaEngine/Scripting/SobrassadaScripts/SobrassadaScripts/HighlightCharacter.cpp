@@ -17,15 +17,17 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/SplineComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 
 HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
 {
     fields.emplace_back("Player", InspectorField::FieldType::InputText, &playerName);
     fields.emplace_back("Player camera pivot", InspectorField::FieldType::InputText, &playerCameraPivotName);
     fields.emplace_back("Character to highlight", InspectorField::FieldType::InputText, &characterToHighlightName);
+    fields.emplace_back("Highlight focus", InspectorField::FieldType::InputText, &highlightFocusObjectName);
 
     fields.emplace_back(
-        "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.1f, 2.0f
+        "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.0f, 10.0f
     );
     fields.emplace_back("Zoom multiplier", InspectorField::FieldType::Float, &zoomMultiplier, 0.1f, 50.0f);
 }
@@ -77,6 +79,9 @@ bool HighlightCharacter::Init()
         return false;
     }
 
+    highlightFocusObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(highlightFocusObjectName);
+    if (highlightFocusObject == nullptr) highlightFocusObject = characterToHighlight;
+
     for (UID child : AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent())->GetChildren())
     {
         GameObject* childGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(child);
@@ -115,7 +120,7 @@ void HighlightCharacter::Update(float deltaTime)
     {
         isExecuting = false;
         splineMovementTarget->SetEnabled(false);
-        cameraMovementScript->ResetToDefaultTarget();
+        cameraMovementScript->ResetToDefaultTargetAndLookAhead();
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(true);
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(true);
         playerController->SetInputDown(true);
@@ -128,6 +133,7 @@ void HighlightCharacter::OnDestroy()
     playerController     = nullptr;
     cameraMovementScript = nullptr;
     characterToHighlight = nullptr;
+    highlightFocusObject = nullptr;
     Script::OnDestroy();
 }
 
@@ -135,28 +141,44 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
 {
     if (!neverExecuted || otherObject != player) return;
 
-    playerController->SetInputDown(false);
-    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
-    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
-    
-    splineComponent->SetPointWorld(
-        0, playerCameraPivot->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart()
-    );
-    splineComponent->SetPointWorld(
-        1, secondSplinePointOffset * (characterToHighlight->GetGlobalTransform().TranslatePart() -
-                    parent->GetGlobalTransform().TranslatePart())
-    );
-    Quat cameraOrientation =
-        Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
-    splineComponent->SetPointWorld(
-        2, secondSplinePointOffset * (characterToHighlight->GetGlobalTransform().TranslatePart() -
-                    parent->GetGlobalTransform().TranslatePart()) +
-               (zoomMultiplier * cameraOrientation.Transform(float3(0, 0, -1)))
-    );
-    splineMovementTarget->SetEnabled(true);
-    cameraMovementScript->InitAlternativeTarget(splineMovementTarget);
+    if (parent->GetComponent<SphereColliderComponent*>() != nullptr && !parent->GetComponent<CubeColliderComponent*>()->GetEnabled())
+    {
+        parent->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+        parent->GetComponent<CubeColliderComponent*>()->SetEnabled(true);
+    } else
+    {
+        playerController->SetInputDown(false);
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
 
-    characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence();
-    isExecuting   = true;
-    neverExecuted = false;
+        const float3 highlightVector =
+            (highlightFocusObject->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart())
+                .Normalized();
+        Quat cameraOrientation =
+            Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
+        const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
+
+        splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
+
+        splineComponent->SetPointWorld(
+            1, highlightFocusObject->GetGlobalTransform().TranslatePart() - highlightVector * secondSplinePointOffset +
+                   secondSplinePointOffset / 2.f * zoomVector
+        );
+
+        splineComponent->SetPointWorld(
+            2, highlightFocusObject->GetGlobalTransform().TranslatePart() + secondSplinePointOffset * zoomVector -
+                   secondSplinePointOffset / 2.f * highlightVector
+        );
+
+        splineComponent->SetPointWorld(
+            3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
+        );
+
+        splineMovementTarget->SetEnabled(true);
+        cameraMovementScript->InitAlternativeTargetAndLookAhead(splineMovementTarget, 0.f);
+
+        characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence();
+        isExecuting   = true;
+        neverExecuted = false;
+    }
 }
