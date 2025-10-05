@@ -841,10 +841,11 @@ void CuChulainn::HandleState(float deltaTime)
         else
         {
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
-            //if (state == CharacterStates::ULTIMATE && ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
+            // if (state == CharacterStates::ULTIMATE &&
+            // ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
             //{
-            //    return;
-            //}
+            //     return;
+            // }
             if (state == CharacterStates::CHARGED_ATTACK && meleeTrailObject) meleeTrailObject->SetEnabled(false);
             if (state == CharacterStates::HEAL && healKnockback) healKnockback->SetEnabled(false);
             if (state == CharacterStates::TRANSFORM)
@@ -1393,16 +1394,12 @@ void CuChulainn::Dash()
         const float3 offset       = float3::unitY;
 
         const float3 scale        = dashSmoke1->GetParent()->GetLocalTransform().ExtractScale();
-
-        // Rotación que mira en la dirección del personaje
         const Quat lookRotation =
             Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
 
-        // Rotación adicional de 90° sobre el eje X para mantener el plano vertical
         const Quat verticalCorrection   = Quat::RotateAxisAngle(float3::unitX, 90.0f * (PI / 180));
         const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitZ, 90.0f * (PI / 180));
 
-        // Combinamos ambas rotaciones
         const Quat finalRotation        = lookRotation * verticalCorrection * horizontalCorrection;
 
         const float4x4 transform        = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
@@ -1416,26 +1413,22 @@ void CuChulainn::Dash()
     }
     if (dashSmoke2)
     {
-        const float3 characterPos =
-            parent->GetGlobalTransform().TranslatePart() - parent->GetParentGlobalTransform().TranslatePart();
-        const float3 offset = float3::unitY;
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.1f;
 
-        // const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
-        // const float3 offset       = float3::unitY * 0.1f;
-        //
-        // const float3 scale        = dashSmoke2->GetParent()->GetLocalTransform().ExtractScale();
-        //
-        // const Quat lookRotation =
-        //     Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
-        //
-        // const Quat finalRotation = lookRotation;
-        //
-        // const float4x4 transform = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
-        //
-        // const float4x4 parentWS  = parent->GetParentGlobalTransform();
-        // const float4x4 localTRS  = parentWS.Inverted() * transform;
+        const float3 scale        = dashSmoke2->GetParent()->GetLocalTransform().ExtractScale();
 
-        dashSmoke2->GetParent()->SetLocalPosition(characterPos + offset);
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
+
+        const Quat finalRotation = lookRotation;
+
+        const float4x4 transform = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS  = parent->GetParentGlobalTransform();
+        const float4x4 localTRS  = parentWS.Inverted() * transform;
+
+        dashSmoke2->GetParent()->SetLocalTransform(localTRS);
         dashSmoke2->SetEnabled(true);
         dashSmoke2->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     }
@@ -1535,7 +1528,7 @@ void CuChulainn::PerformAttack()
             ultimateObject->SetEnabled(true);
             ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
-            
+
             if (ultimateHoldEnabled && animComponent && !playerAnimHeld)
             {
                 animComponent->OnPause();
@@ -1546,14 +1539,14 @@ void CuChulainn::PerformAttack()
         }
         else if (ultimateObject->IsEnabled())
         {
-            AnimationComponent* vfxUltimateAnim = ultimateObject->GetComponent<AnimationComponent*>();
+            AnimationComponent* vfxUltimateAnim  = ultimateObject->GetComponent<AnimationComponent*>();
             vfxTimeUnscaledSec                  += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
 
-             if (ultimateHoldEnabled && playerAnimHeld) //control cuchulainn stop animation
+            if (ultimateHoldEnabled && playerAnimHeld) // control cuchulainn stop animation
             {
                 float timeLimit = (vfxUltimateAnim && vfxUltimateAnim->GetAnimationController())
-                            ? vfxUltimateAnim->GetAnimationController()->GetTime()
-                            : 0.0f;
+                                    ? vfxUltimateAnim->GetAnimationController()->GetTime()
+                                    : 0.0f;
 
                 if (!vfxUltimateAnim || vfxUltimateAnim->IsFinished() || timeLimit >= ultimateResumeVfxTime)
                 {
@@ -1561,22 +1554,23 @@ void CuChulainn::PerformAttack()
                     playerAnimHeld = false;
                 }
             }
-            
+
             if (ultimateSpikes) // Control spikes animation appearance
             {
-                const bool animReady = vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
-                //const float vfxLocalTimer = max(0.0f, ultimateTimer - currentAnimationDelay);
+                const bool animReady =
+                    vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
+                // const float vfxLocalTimer = max(0.0f, ultimateTimer - currentAnimationDelay);
                 bool show = false;
 
                 if (animReady)
                 {
-                   //const float vfxTimeAnim = vfxUltimateAnim->GetAnimationController()->GetTime();
-                   const float vfxLenAnim        = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
+                    // const float vfxTimeAnim = vfxUltimateAnim->GetAnimationController()->GetTime();
+                    const float vfxLenAnim    = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
 
-                   const float spikesOff = min(2.12f, vfxLenAnim - 0.05f);
-                   const float vfxLocalTimer     = vfxTimeUnscaledSec;
-                   
-                   show                  = (vfxLocalTimer >= 0.40f) && (vfxLocalTimer < spikesOff);     
+                    const float spikesOff     = min(2.12f, vfxLenAnim - 0.05f);
+                    const float vfxLocalTimer = vfxTimeUnscaledSec;
+
+                    show                      = (vfxLocalTimer >= 0.40f) && (vfxLocalTimer < spikesOff);
                 }
 
                 if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);
@@ -1591,7 +1585,6 @@ void CuChulainn::PerformAttack()
             {
                 ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
             }
-
         }
     }
     else if (state == CharacterStates::CHARGED_ATTACK)
@@ -1715,15 +1708,15 @@ void CuChulainn::UltimateAttack()
     }
     state = CharacterStates::ULTIMATE;
     character->EnableMovement(false);
-    ultimateTimer   = 0.0f;
-    ultimateCdTimer = ultimateCd;
-    desiredUltimate = false;
-    playerAnimHeld  = false;
-    controlsLocked  = true;
+    ultimateTimer       = 0.0f;
+    ultimateCdTimer     = ultimateCd;
+    desiredUltimate     = false;
+    playerAnimHeld      = false;
+    controlsLocked      = true;
     ultimateSoundPlayed = false;
 
     if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
-    //if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
+    // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_ULTIMATEATTACK);
     if (animComponent) animComponent->UseTrigger("Ultimate");
 }
 
@@ -1734,7 +1727,7 @@ void CuChulainn::UpdateUltimateVfx()
         ultimateBlur->SetEnabled(true);
         if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
         {
-            //ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+            // ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
             ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
         }
     }
@@ -1768,7 +1761,6 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateCrack) ultimateCrack->SetEnabled(false);
     if (ultimateSpikes) ultimateSpikes->SetEnabled(false);
     vfxTimeUnscaledSec = 0.0f;
-
 }
 
 void CuChulainn::Aim(float deltaTime)
