@@ -22,22 +22,23 @@ enum class DestructibleType
     CRYSTAL = 2,
 };
 
-class Destructible : public Character
+class Destructible : public Script
 {
   public:
     Destructible(GameObject* parent);
-    ~Destructible() noexcept override { parent = nullptr; };
+    ~Destructible() noexcept override { parent = nullptr; }
 
     bool Init() override;
     void Update(float deltaTime) override;
-
-    void OnDeath() override;
+    
+    void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
     void ValidateSetup();
 
   private:
     bool isSetupCorrectly           = false;
+    bool isSimulating               = true;
 
     DestructibleStates currentState = DestructibleStates::NONE;
 

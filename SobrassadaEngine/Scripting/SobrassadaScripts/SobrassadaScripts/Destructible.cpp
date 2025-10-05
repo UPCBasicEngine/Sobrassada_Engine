@@ -16,8 +16,7 @@
 #include <Math/MathFunc.h>
 #include <random>
 
-Destructible::Destructible(GameObject* parent)
-    : Character(parent, 1, -1, -1, -1, -1, -1, -1, -1, CharacterType::Destructible)
+Destructible::Destructible(GameObject* parent): Script(parent)
 {
     fields.emplace_back("Destroyed mesh", InspectorField::FieldType::InputText, &destroyedMeshName);
     fields.emplace_back(
@@ -35,8 +34,6 @@ bool Destructible::Init()
 
     currentState = DestructibleStates::NORMAL;
 
-    Character::Init();
-
     if (isSetupCorrectly)
     {
         type = static_cast<DestructibleType>(destructibleTypeIndex);
@@ -49,19 +46,19 @@ bool Destructible::Init()
 
 void Destructible::Update(float deltaTime)
 {
-    if (!isDead && isSetupCorrectly && currentState == DestructibleStates::DESTROYED)
+    if (isSimulating && isSetupCorrectly && currentState == DestructibleStates::DESTROYED)
     {
         destructionSpawnDelayCounter -= deltaTime;
         if (destructionSpawnDelayCounter <= 0)
         {
             destroyedMesh->SetEnabled(true);
 
-            isDead = true;
+            isSimulating = false;
         }
     }
 }
 
-void Destructible::OnDeath()
+void Destructible::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     if (isSetupCorrectly)
     {
@@ -85,8 +82,6 @@ void Destructible::OnDeath()
         }
 
         defaultMesh->SetEnabled(false);
-
-        isDead = false;
     }
 }
 
