@@ -43,6 +43,7 @@ class DecalComponent;
 class ParticleSystemComponent;
 class VideoComponent;
 class ShaderScriptComponent;
+class VolumetricAreaComponent;
 
 enum MobilitySettings
 {
@@ -113,6 +114,14 @@ class SOBRASADA_API_ENGINE GameObject
 
     void Render(float deltatime, CameraComponent* camera) const;
     void RenderEditor();
+
+    const float3 GetGlobalPostition() const { return globalTransform.TranslatePart(); }
+    const float3x3 GetGlobalRotation() const { return globalTransform.RotatePart(); }
+    const float3 GetGlobalScale() const { return globalTransform.GetScale(); }
+
+    const float3 GetLocalPostition() const { return localTransform.TranslatePart(); }
+    const float3x3 GetLocalRotation() const { return localTransform.RotatePart(); }
+    const float3 GetLocalScale() const { return localTransform.GetScale(); }
 
     const float4x4& GetGlobalTransform() const { return globalTransform; }
     const float4x4& GetLocalTransform() const { return localTransform; }

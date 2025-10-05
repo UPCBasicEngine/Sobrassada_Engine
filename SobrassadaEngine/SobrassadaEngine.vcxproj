@@ -705,6 +705,7 @@
     <ClCompile Include="Utils\Trees\Quadtree.cpp" />
     <ClCompile Include="Utils\Particles\VelocityAddon.cpp" />
     <ClCompile Include="Utils\WindConfig.cpp" />
+    <ClCompile Include="VolumetricAreaComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -889,6 +890,7 @@
     <ClInclude Include="Utils\Trees\Quadtree.h" />
     <ClInclude Include="Utils\Particles\VelocityAddon.h" />
     <ClInclude Include="Utils\WindConfig.h" />
+    <ClInclude Include="VolumetricAreaComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
