@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "EnemySpawnerScript.h"
 #include "GameObject.h"
+#include "MagicBarrier.h"
 #include "Math/float3.h"
 #include "Math/float4x4.h"
 #include "PrefabManager.h"
@@ -10,6 +11,7 @@
 #include "ResourcesModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
+#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 
 EnemySpawnerScript::EnemySpawnerScript(GameObject* parent) : Script(parent)
@@ -56,6 +58,15 @@ void EnemySpawnerScript::OnCollisionEnter(GameObject* other, const float3 normal
         spawnTransform[2][3]    += offset.z;
 
         scene->LoadPrefab(prefabUID, prefab, spawnTransform, true, {}, locationTag);
+    }
+
+    for (GameObject* barrier : *AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(HashString("MagicBarrier")))
+    {
+        if (barrier->HasTag(locationTag))
+        {
+            barrier->GetComponent<ScriptComponent*>()->GetScriptByType<MagicBarrier>()->Init();
+            break;
+        }
     }
 
     if (spawnOnce) spawned = true;
