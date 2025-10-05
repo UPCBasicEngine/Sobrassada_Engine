@@ -250,7 +250,7 @@ void RenderPass::RenderScene(
 
         gbuffer->Unbind();
 
-       #ifdef GAME
+#ifdef GAME
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, width, height);
