@@ -15,6 +15,7 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Wwise_IDs.h"
+#include "Standalone/Physics/CapsuleColliderComponent.h"
 
 #include <Math/MathFunc.h>
 #include <random>
@@ -88,6 +89,7 @@ void Destructible::OnCollisionEnter(GameObject* otherObject, const float3 collis
             break;
         }
 
+        parent->GetComponent<CapsuleColliderComponent*>()->SetEnabled(false);
         defaultMesh->SetEnabled(false);
 
         isSimulating = true;
