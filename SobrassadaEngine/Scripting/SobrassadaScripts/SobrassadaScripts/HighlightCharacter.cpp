@@ -17,6 +17,7 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/SplineComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 
 HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
 {
@@ -140,37 +141,44 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
 {
     if (!neverExecuted || otherObject != player) return;
 
-    playerController->SetInputDown(false);
-    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
-    AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
+    if (parent->GetComponent<SphereColliderComponent*>() != nullptr && !parent->GetComponent<CubeColliderComponent*>()->GetEnabled())
+    {
+        parent->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
+        parent->GetComponent<CubeColliderComponent*>()->SetEnabled(true);
+    } else
+    {
+        playerController->SetInputDown(false);
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
+        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
 
-    const float3 highlightVector =
-        (highlightFocusObject->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart())
-            .Normalized();
-    Quat cameraOrientation =
-        Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
-    const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
+        const float3 highlightVector =
+            (highlightFocusObject->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart())
+                .Normalized();
+        Quat cameraOrientation =
+            Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
+        const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
 
-    splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
+        splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
 
-    splineComponent->SetPointWorld(
-        1, highlightFocusObject->GetGlobalTransform().TranslatePart() - highlightVector * secondSplinePointOffset +
-               secondSplinePointOffset / 2.f * zoomVector
-    );
+        splineComponent->SetPointWorld(
+            1, highlightFocusObject->GetGlobalTransform().TranslatePart() - highlightVector * secondSplinePointOffset +
+                   secondSplinePointOffset / 2.f * zoomVector
+        );
 
-    splineComponent->SetPointWorld(
-        2, highlightFocusObject->GetGlobalTransform().TranslatePart() + secondSplinePointOffset * zoomVector -
-               secondSplinePointOffset / 2.f * highlightVector
-    );
+        splineComponent->SetPointWorld(
+            2, highlightFocusObject->GetGlobalTransform().TranslatePart() + secondSplinePointOffset * zoomVector -
+                   secondSplinePointOffset / 2.f * highlightVector
+        );
 
-    splineComponent->SetPointWorld(
-        3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
-    );
+        splineComponent->SetPointWorld(
+            3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
+        );
 
-    splineMovementTarget->SetEnabled(true);
-    cameraMovementScript->InitAlternativeTargetAndLookAhead(splineMovementTarget, 0.f);
+        splineMovementTarget->SetEnabled(true);
+        cameraMovementScript->InitAlternativeTargetAndLookAhead(splineMovementTarget, 0.f);
 
-    characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence();
-    isExecuting   = true;
-    neverExecuted = false;
+        characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence();
+        isExecuting   = true;
+        neverExecuted = false;
+    }
 }
