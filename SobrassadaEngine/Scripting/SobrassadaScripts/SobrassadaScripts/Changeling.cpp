@@ -671,13 +671,19 @@ void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq
 {
     biteVfxTimer -= deltaTime;
 
-    if (biteVfxTimer < 0.0f && biteVfxTimer > -0.1f && vfxBite && !vfxBite->IsEnabled())
+    if (biteVfxTimer < 0.0f && biteVfxTimer > -0.3f && vfxBite &&
+        !vfxBite->GetComponent<ShaderScriptComponent*>()->GetEnabled())
     {
         const float3 offset = float3::unitY * 0.5f;
         vfxBite->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
         vfxBite->SetEnabled(true);
         vfxBite->GetComponent<MeshComponent*>()->SetEnabled(false);
-        vfxBite->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        ShaderScriptComponent* shader = vfxBite->GetComponent<ShaderScriptComponent*>();
+        if (shader)
+        {
+            shader->SetEnabled(true);
+            shader->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
 
         weaponCollider->SetEnabled(true);
     }
