@@ -37,6 +37,8 @@ class ParticleSystemComponent : public Component
         particleSystemIterator = iterator;
     }
 
+    void UpdateAABB(const float3& minValue, const float3& maxValue);
+
     SOBRASADA_API_ENGINE void SpawnAllInstances();
 
   private:
