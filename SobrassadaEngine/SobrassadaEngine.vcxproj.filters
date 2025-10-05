@@ -622,6 +622,9 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="Utils\WindConfig.cpp" />
+    <ClCompile Include="VolumetricAreaComponent.cpp">
+      <Filter>Scene\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1230,6 +1233,9 @@
     </ClInclude>
     <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />
     <ClInclude Include="Utils\WindConfig.h" />
+    <ClInclude Include="VolumetricAreaComponent.h">
+      <Filter>Scene\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Libs\MathGeoLib\include\Geometry\TriangleMesh_IntersectRay_CPP.inl">

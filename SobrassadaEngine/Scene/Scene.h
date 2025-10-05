@@ -128,6 +128,7 @@ class SOBRASADA_API_ENGINE Scene
         return selectedGameObjectsMobility;
     }
     const std::map<UID, float4x4>& GetMultiselectedObjectsLocals() const { return selectedGameObjectsOgLocals; }
+    RenderPass* GetRenderPass() { return renderPass; }
 
     void SetMainCamera(CameraComponent* camera) { mainCamera = camera; }
     void SetSelectedGameObject(UID newSelectedGameObject) { selectedGameObjectUID = newSelectedGameObject; };
@@ -150,6 +151,8 @@ class SOBRASADA_API_ENGINE Scene
 
     void QueueGameObjectDelete(UID uid);
     void FlushPendingDeletes();
+
+    RenderPass* GetRenderPass() const { return renderPass; }
 
     bool isSceneLoaded = false;
 
@@ -205,5 +208,5 @@ class SOBRASADA_API_ENGINE Scene
 
     RenderPass* renderPass = nullptr;
 
-     std::vector<UID> pendingDeletes;
+    std::vector<UID> pendingDeletes;
 };

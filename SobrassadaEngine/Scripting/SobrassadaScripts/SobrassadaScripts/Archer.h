@@ -28,103 +28,148 @@ class Archer : public Character
   public:
     Archer(GameObject* parent);
     ~Archer() noexcept override { parent = nullptr; };
-
     bool Init() override;
     void Update(float deltaTime) override;
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
 
-  private:
+  public:
+    // Core AI methods
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
-    void OverShooting(float deltaTime);
     void HandleState(float deltaTime) override;
     void Attack(float deltaTime) override;
+    void OverShooting(float deltaTime);
     void Escape(float deltaTime);
     void Aim(float deltaTime);
-    float3 CalculatePredictiveTarget();
     void ChangeState();
     void PatrolAI();
     void ChaseAI();
     void SearchForPlayer();
     void ApplyKnockback();
+ 
+ 
 
+    // Line of sight and positioning
     bool CheckLineOfSight();
-    bool ShouldSeekCover();
-    bool HasNearbyAllies();
-    GameObject* FindNearestCover();
-    float CalculateCoverScore(GameObject* coverObj);
-    float3 FindShootingPosition();
-    float3 FindClearShootingPosition();
-    bool CanShootSafely();
     bool HasLineOfSightFromPosition(float3 fromPos, float3 toPos);
+    float3 CalculatePredictiveTarget();
+    bool CanShootSafely();
+
+    // Streamlined cover system
+    GameObject* FindBestCoverPoint();
     void SeekCover(float deltaTime);
     void StayInCover(float deltaTime);
     void PositionToShoot(float deltaTime);
+    float3 FindShootingPosition();
+
+    // Management methods
+    void ReleaseCoverPoint();
+    void ForceNewCoverPoint();
+    GameObject* GetCurrentCoverPoint();
+    void DebugCoverPoints();
+
+    // Detection methods
+    bool IsPlayerInAnyCoverPoint();
+    float3 CalculateSpreadPosition();
+    std::vector<float3> GetNearbyArcherPositions();
+
+    // Accessors for CoverPointTrigger
+    std::vector<GameObject*>& GetAvailableCoverPoints();
+    std::vector<GameObject*>& GetOccupiedCoverPoints();
+
+    //Debug
+    const std::string GetLogicStateName();
+    const AIAgentComponent* GetAI() { return agentAI; }
+    void ActivateGlowVFX();
 
   private:
-    float rangeEscape          = rangeAIAttack - 1;
-    AIAgentComponent* agentAI  = nullptr;
-    ArcherStates currentState  = ArcherStates::NONE;
-    std::string arrowName      = "";
-    ArcherProjectile* arrow    = nullptr;
-    float3 patrolPoint         = float3::zero;
+    // Core components
+    AIAgentComponent* agentAI   = nullptr;
+    AudioSourceComponent* audio = nullptr;
+    Scene* scene                = nullptr;
+    const std::vector<GameObject*>* walls;
+    const std::vector<GameObject*>* soldiers;
+
+    // State and basic properties
+    ArcherStates currentState = ArcherStates::NONE;
+    std::string arrowName     = "";
+    float3 patrolPoint        = float3::zero;
+    bool isStatic             = false;
+
+    // Combat system
+    ArcherProjectile* arrow   = nullptr;
+    std::vector<ArcherProjectile*> arrowPool;
+    bool hasMultipleShoots     = false;
+    int numberOfShoots         = 1;
+    int currentArrowIndex      = 0;
+    int currentShot            = 0;
+    float shotDelay            = 0.2f;
+    float shotTimer            = 0.0f;
     bool hasShot               = false;
-    float3 currentEscapeTarget = float3::zero;
-    bool hasEscapeTarget       = false;
+    bool hasStartedShooting    = false;
+
+    // Aiming system
+    bool isAiming              = false;
+    float aimTimer             = 0.0f;
+    float aimDuration          = 2.0f;
+
+    // Knockback system
+    bool isKnockback           = false;
     float knockbackForce       = 7.0f;
     float knockbackTime        = 0.2f;
     float knockbackTimer       = 0.0f;
     float3 knockbackDirection  = float3::zero;
-    bool isKnockback           = false;
-    bool isAiming              = false;
-    bool hasMultipleShoots     = false;
-    bool isStatic              = false;
-    int numberOfShoots         = 1;
-    float aimTimer             = 0.0f;
-    float aimDuration          = 2.0f;
-    float deathTimer           = 0.0f;
-    const float DEATH_DURATION = 2.0f;
-    int currentShot            = 0;
-    float shotDelay            = 0.2f;
-    float shotTimer            = 0.0f;
-    bool hasStartedShooting    = false;
-    std::vector<ArcherProjectile*> arrowPool;
-    int currentArrowIndex       = 0;
-    int poolSize                = 5;
 
-    bool hasLineOfSight         = false;
-    float chaseTimer            = 0.0f;
-    float maxChaseTime          = 8.0f;
-    float lastDistanceToPlayer  = 999.0f;
-    float stuckThreshold        = 1.0f;
+    // Escape system
+    float rangeEscape          = rangeAIAttack - 1;
+    float3 currentEscapeTarget = float3::zero;
+    bool hasEscapeTarget       = false;
+    float escapeTimeout        = 0.0f;
 
-    bool isInCover              = false;
-    bool seekingCover           = false;
-    GameObject* currentCover    = nullptr;
-    float3 coverPosition        = float3::zero;
+    // Streamlined cover system
+    std::vector<GameObject*> availableCoverPoints;
+    std::vector<GameObject*> occupiedCoverPoints;
+    GameObject* currentCoverPoint = nullptr;
+    GameObject* currentCover      = nullptr; // Keep for compatibility
+    float3 coverPosition          = float3::zero;
+    float3 shootingPosition       = float3::zero;
+    bool isInCover                = false;
+    bool seekingCover             = false;
 
-    float3 shootingPosition     = float3::zero;
-    float coverSeekRange        = 8.0f;
-    float coverRadius           = 3.0f;
-    float safeShootingDistance  = 12.0f;
-    float repositionTimer       = 0.0f;
-    float repositionDelay       = 2.0f;
-    float allyDetectionRange    = 6.0f;
+    // AI behavior tuning
+    int flankingFailures          = 0;
+    float repositionTimer         = 0.0f;
+    float repositionDelay         = 2.0f;
+    float lastChaseDistance       = 999.0f;
+    float chaseStuckTimer         = 0.0f;
+    float losLostTimer            = 0.0f; // Timer para line of sight perdido
+    float aimAttemptTimer         = 0.0f;
 
-    float repositionTimeout     = 2.0f;
-    bool isRepositioning        = false;
-    float3 repositionTarget     = float3::zero;
-    AudioSourceComponent* audio = nullptr;
-    const std::vector<GameObject*>* walls;
-    const std::vector<GameObject*>* soldiers;
-    Scene* scene                = nullptr;
+    // Constants
+    float safeShootingDistance    = 12.0f;
+    float deathTimer              = 0.0f;
+    const float DEATH_DURATION    = 2.0f;
 
-    // Hit VFX
-    std::string archerHitVFX    = "HitArcher";
-    GameObject* archerVfxObject = nullptr;
-    bool hitVfxIsActive         = false;
-    float hitVfxDuration        = 0.2f;
-    float hitVfxTimer           = 0.0f;
+    // VFX
+    std::string archerHitVFX      = "HitArcher";
+    GameObject* archerVfxObject   = nullptr;
+    bool hitVfxIsActive           = false;
+    float hitVfxDuration          = 0.5f;
+    float hitVfxTimer             = 0.0f;
+
+    //VFX Glow Arrow
+    std::string glowHitVFX      = "Glow";
+    GameObject* glowVfxObject   = nullptr;
+    bool glowVfxIsActive           = false;
+    float glowVfxDuration          = 1.0f;
+    float glowTimer            =   0.0f;
+
+    // Line of sight tracking
+    bool hasLineOfSight           = false;
+    int flankingAttempts          = 0;
+
+    //Dash
+    bool isDashing                = false;
 };

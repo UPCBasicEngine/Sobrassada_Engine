@@ -40,6 +40,7 @@ class GeometryBatch
     const bool IsTransparent() const { return isTransparent; }
     const bool IsAlpha() const { return isAlpha; }
     const bool IsDoubleSided() const { return isDoubleSided; }
+    const bool IsAdditive() const { return additive; }
     const bool DoApplyWind() const { return doApplyWind; }
     const float GetVCoord0() const { return vCoord0; }
     const float GetVCoord1() const { return vCoord1; }
@@ -59,6 +60,8 @@ class GeometryBatch
 
     void SOBRASADA_API_ENGINE BindBonesBuffer();
     void SOBRASADA_API_ENGINE UnbindBonesBuffer();
+
+    void SwapBuffers();
 
   private:
     void LockBuffer();
@@ -112,6 +115,7 @@ class GeometryBatch
     bool isTransparent            = false;
     bool isAlpha                  = false;
     bool isDoubleSided            = false;
+    bool additive                 = false;
     bool doApplyWind              = false;
     float vCoord0                 = 0.0f;
     float vCoord1                 = 1.0f;

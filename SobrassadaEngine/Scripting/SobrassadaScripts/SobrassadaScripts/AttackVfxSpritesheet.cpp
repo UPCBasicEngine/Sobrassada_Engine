@@ -18,16 +18,19 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
+#include "ShaderScriptComponent.h"
 
 #include "glew.h"
 
 AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Cell width", InspectorField::FieldType::Float, &cellWidth, 0.f, 10000.f});
-    fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 1000.f});
+    fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 10000.f});
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
+    fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
+    fields.push_back({"Only Once", InspectorField::FieldType::Bool, &onlyOnce});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
@@ -103,18 +106,109 @@ bool AttackVfxSpritesheet::Init()
         if (otherImageUID == INVALID_UID || otherImage || otherImageBindlessUID != INVALID_UID) return true;
 
         otherImage = static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(otherImageUID));
-        otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
-        glMakeTextureHandleResidentARB(otherImageBindlessUID);
+        if (otherImage)
+        {
+            otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
+            glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
-        uvRange.x = 0.0f;
-        uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-        uvRange.z = 0.0f;
-        uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.x = 0.0f;
+            uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.z = 0.0f;
+            uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+        }
     }
     return true;
 }
 
 void AttackVfxSpritesheet::Update(float deltaTime)
+{
+    // This sometimes doesn't get called, so logic is in the render
+}
+
+void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
+{
+    UpdateSprite(deltaTime);
+
+    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
+    {
+        float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
+
+        basicModelMatrix = meshComp->GetCombinedMatrix();
+
+        if (cameraComp)
+        {
+            projectionMatrix = cameraComp->GetProjectionMatrix();
+            viewMatrix       = cameraComp->GetViewMatrix();
+        }
+        else
+        {
+            projectionMatrix = AppEngine->GetCameraModule()->GetProjectionMatrix();
+            viewMatrix       = AppEngine->GetCameraModule()->GetViewMatrix();
+        }
+
+        glUseProgram(shaderProgram);
+
+        glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
+        glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
+        glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
+        glUniform4fv(3, 1, uvRange.ptr());
+        glUniform1i(9, meshComp->GetHasBones());
+        glUniform1ui(10, meshComp->GetBoneIndexOffset());
+
+        GeometryBatch* batch = meshComp->GetBatch();
+        if (batch) batch->BindBonesBuffer();
+
+        GLuint lower  = static_cast<GLuint>(otherImageBindlessUID & 0xFFFFFFFF);
+        GLuint higher = static_cast<GLuint>(otherImageBindlessUID >> 32);
+        glUniform2ui(4, lower, higher);
+
+        glBindVertexArray(vao);
+
+        if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, -2.0f);
+
+        if (isDoubleSided) glDisable(GL_CULL_FACE);
+        AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+        if (isDoubleSided) glEnable(GL_CULL_FACE);
+
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        if (batch) batch->UnbindBonesBuffer();
+        glBindVertexArray(0);
+    }
+}
+
+void AttackVfxSpritesheet::Reset()
+{
+    uvRange.x = 0.0f;
+    uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+    uvRange.z = 0.0f;
+    uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+    finished  = false;
+}
+
+const bool AttackVfxSpritesheet::AlmostFinished(int specificRow, int specificCol) const
+{
+    int actualRow = static_cast<int>(uvRange.z * otherImage->GetTextureHeight() / cellHeight);
+    int actualCol = static_cast<int>(uvRange.x * otherImage->GetTextureWidth() / cellWidth);
+
+    if (isRowMajor)
+    {
+        if (actualRow > specificRow || actualRow == specificRow && actualCol >= specificCol) return true;
+
+        return false;
+    }
+    else
+    {
+        if (actualCol > specificCol || actualCol == specificCol && actualRow >= specificRow) return true;
+
+        return false;
+    }
+}
+
+void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
 {
     timer += deltaTime;
     if (timer < updateRate) return;
@@ -152,64 +246,9 @@ void AttackVfxSpritesheet::Update(float deltaTime)
         }
     }
     timer = 0.0f;
-}
 
-void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
-{
-    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
+    if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
     {
-        float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
-
-        basicModelMatrix = meshComp->GetCombinedMatrix();
-
-        if (cameraComp)
-        {
-            projectionMatrix = cameraComp->GetProjectionMatrix();
-            viewMatrix       = cameraComp->GetViewMatrix();
-        }
-        else
-        {
-            projectionMatrix = AppEngine->GetCameraModule()->GetProjectionMatrix();
-            viewMatrix       = AppEngine->GetCameraModule()->GetViewMatrix();
-        }
-
-        glUseProgram(shaderProgram);
-
-        glUniformMatrix4fv(0, 1, GL_TRUE, &projectionMatrix[0][0]);
-        glUniformMatrix4fv(1, 1, GL_TRUE, &viewMatrix[0][0]);
-        glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
-        glUniform4fv(3, 1, uvRange.ptr());
-        glUniform1i(9, meshComp->GetHasBones());
-        glUniform1ui(10, meshComp->GetBoneIndexOffset());
-
-        GeometryBatch* batch = meshComp->GetBatch();
-        if (batch) batch->BindBonesBuffer();
-
-        GLuint lower  = static_cast<GLuint>(otherImageBindlessUID & 0xFFFFFFFF);
-        GLuint higher = static_cast<GLuint>(otherImageBindlessUID >> 32);
-        glUniform2ui(4, lower, higher);
-
-        glBindVertexArray(vao);
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-10.0f, -10.0f);
-
-        if (isDoubleSided) glDisable(GL_CULL_FACE);
-        AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-        if (isDoubleSided) glEnable(GL_CULL_FACE);
-
-        glDisable(GL_POLYGON_OFFSET_FILL);
-        if (batch) batch->UnbindBonesBuffer();
-        glBindVertexArray(0);
+        parent->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
     }
-}
-
-void AttackVfxSpritesheet::Reset()
-{
-    uvRange.x = 0.0f;
-    uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-    uvRange.z = 0.0f;
-    uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
 }

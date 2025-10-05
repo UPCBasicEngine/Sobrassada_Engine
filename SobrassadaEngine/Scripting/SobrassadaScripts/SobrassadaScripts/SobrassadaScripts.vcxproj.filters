@@ -214,8 +214,32 @@
     <ClInclude Include="GameSession.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="GameOverNavigatorScript.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorChange.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
     <ClInclude Include="ArcherProjectile.h">
       <Filter>Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="CoverPointTrigger.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncSceneLoading.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="HighlightCharacter.h">
+      <Filter>Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="UISpritesheet.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="BossSpouts.h">
+      <Filter>Characters\Boss</Filter>
+	  </ClInclude>
+    <ClInclude Include="MirageVFX.h">
+      <Filter>ShaderScripts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -888,9 +912,6 @@
     <ClCompile Include="EnemySpawnerScript.cpp">
       <Filter>Characters\Enemies</Filter>
     </ClCompile>
-    <ClCompile Include="GameOverScript.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="PlayerLocationScript.cpp">
       <Filter>Environment</Filter>
     </ClCompile>
@@ -963,8 +984,35 @@
     <ClCompile Include="GameSession.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="GameOverNavigatorScript.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverScript.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorChange.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
     <ClCompile Include="ArcherProjectile.cpp">
       <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="CoverPointTrigger.cpp">
+      <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="HighlightCharacter.cpp">
+      <Filter>Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncSceneLoading.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="UISpritesheet.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="BossSpouts.cpp">
+      <Filter>Characters\Boss</Filter>
+	</ClCompile>
+    <ClCompile Include="MirageVFX.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

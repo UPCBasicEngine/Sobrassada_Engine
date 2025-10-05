@@ -43,13 +43,14 @@ class SOBRASADA_API_ENGINE LibraryModule : public Module
     bool LoadScene(const char* fileName, bool reload = false) const;
 
     bool LoadLibraryMaps(const std::string& projectPath);
-    void GetImportOptions(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions) const;
+    void GetImportOptions(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions);
     UID GetUIDFromMetaFile(const std::string& path) const;
-    void SearchImportOptionsFromUID(
-        UID uid, const std::string& path, rapidjson::Document& doc, rapidjson::Value& importOptions
-    ) const;
+    void SearchImportOptionsFromUID(UID uid, rapidjson::Document& doc, rapidjson::Value& importOptions);
     UID AssignFiletypeUID(UID originalUID, FileType fileType);
     void DeletePrefabFiles(UID prefabUID);
+
+    // Deletes the metadata cache so its regenerated with the next call to access it
+    void InvalidateMetadataCache();
 
     void AddTexture(UID textureUID, const std::string& ddsPath);
     void AddMesh(UID meshUID, const std::string& matPath);
@@ -86,6 +87,10 @@ class SOBRASADA_API_ENGINE LibraryModule : public Module
     const std::unordered_map<UID, HashString>& GetAllNamesMap() const { return namesMap; }
 
   private:
+    void CreateCacheForMetadata(const std::string& path);
+
+    std::unordered_map<UID, std::string> cachedMetadataDocuments;
+
     // maps for user visuals | name -> UID
     std::unordered_map<HashString, UID> textureMap;
     std::unordered_map<HashString, UID> materialMap;

@@ -4,10 +4,10 @@
 #include "DebugDrawModule.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
-#include "SSAO.h"
 #include "GameObject.h"
 #include "InputModule.h"
 #include "OpenGLModule.h"
+#include "SSAO.h"
 #include "SceneModule.h"
 #include "WindowModule.h"
 
@@ -56,7 +56,7 @@ CameraComponent::CameraComponent(UID uid, GameObject* parent) : Component(uid, p
         App->GetSceneModule()->GetScene()->SetMainCamera(this);
     }
 
-    previewFramebuffer = new Framebuffer(previewWidth, previewHeight, true);
+    previewFramebuffer = new Framebuffer(previewWidth, previewHeight);
 
     UpdateUBO();
 }
@@ -146,7 +146,7 @@ CameraComponent::CameraComponent(const rapidjson::Value& initialState, GameObjec
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    previewFramebuffer = new Framebuffer(previewWidth, previewHeight, true);
+    previewFramebuffer = new Framebuffer(previewWidth, previewHeight);
 }
 
 CameraComponent::~CameraComponent()
@@ -398,7 +398,7 @@ void CameraComponent::RenderCameraPreview(float deltaTime)
 
         ))
     {
-        ImTextureID texID = (ImTextureID)(intptr_t)previewFramebuffer->GetTextureID();
+        ImTextureID texID = (ImTextureID)(intptr_t)previewFramebuffer->GetColorTexture();
         ImVec2 size((float)previewWidth, (float)previewHeight);
         ImVec2 uv0 = ImVec2(0, 1);
         ImVec2 uv1 = ImVec2(
@@ -526,8 +526,8 @@ void CameraComponent::SetFov(float fov)
 {
     camera.horizontalFov = fov * DEGREE_RAD_CONV;
     auto framebuffer     = App->GetOpenGLModule()->GetFramebuffer();
-    const int width            = framebuffer->GetTextureWidth();
-    const int height           = framebuffer->GetTextureHeight();
+    const int width      = framebuffer->GetTextureWidth();
+    const int height     = framebuffer->GetTextureHeight();
     camera.verticalFov   = 2.0f * atanf(tanf(camera.horizontalFov * 0.5f) * ((float)height / (float)width));
 
     UpdateUBO();

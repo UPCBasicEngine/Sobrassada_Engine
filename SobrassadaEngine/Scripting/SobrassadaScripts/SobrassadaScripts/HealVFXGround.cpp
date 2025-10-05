@@ -147,6 +147,7 @@ void HealVFXGround::Render(float deltaTime, CameraComponent* cameraComp)
         float3 cameraPos = float3::zero;
         if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
         else cameraPos = cameraComp->GetCameraPosition();
+        glUniform1f(9, deltaTime);
 
         glUniform3fv(6, 1, &cameraPos[0]);
         glUniform1f(7, frameTimer);

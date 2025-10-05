@@ -41,6 +41,7 @@ class CameraComponent : public Component
     unsigned int GetUbo() const { return ubo; }
     const float4x4 GetProjectionMatrix() const { return camera.ProjectionMatrix(); }
     const float4x4 GetViewMatrix() const { return camera.ViewMatrix(); }
+    const float4x4 GetWorldMatrix() const { return camera.WorldMatrix(); }
     const int GetFrustumType() const { return (camera.type == OrthographicFrustum) ? 1 : 0; }
     Framebuffer* GetFramebuffer() { return previewFramebuffer; }
     float GetNearPlaneDistance() const { return camera.nearPlaneDistance; }

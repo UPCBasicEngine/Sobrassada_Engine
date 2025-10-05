@@ -18,6 +18,10 @@ class AttackVfxSpritesheet : public Script
     void Render(float deltaTime, CameraComponent* cameraComp) override;
 
     void Reset() override;
+    void UpdateSprite(float deltaTime);
+
+    const bool AlmostFinished(int row, int col) const;
+    const bool Finished() const { return finished; }
 
   private:
     unsigned int shaderProgram  = 0;
@@ -41,4 +45,10 @@ class AttackVfxSpritesheet : public Script
     ResourceTexture* otherImage = nullptr;
     UID otherImageUID           = 0;
     UID otherImageBindlessUID   = 0;
+
+    bool isOneShot              = false;
+    bool isAdditive             = false;
+
+    bool onlyOnce               = false;
+    bool finished               = false;
 };

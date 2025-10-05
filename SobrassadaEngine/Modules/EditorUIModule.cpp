@@ -13,12 +13,14 @@
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
 #include "ResourceNavmesh.h"
+#include "ResourceTexture.h"
 
 #include "GameObject.h"
 #include "ResourceStateMachine.h"
 #include "ResourcesModule.h"
 #include "SceneImporter.h"
 
+#include "RenderPass.h"
 #include "SceneModule.h"
 #include "Script.h"
 #include "ScriptModule.h"
@@ -72,6 +74,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
         {HashString("Video"),                COMPONENT_VIDEO               },
         {HashString("Shader Script"),        COMPONENT_SHADER_SCRIPT       },
+        {HashString("Volumetric Area"),      COMPONENT_VOLUMETRIC_AREA     },
     };
 
     fullscreen    = FULLSCREEN;
@@ -284,6 +287,8 @@ void EditorUIModule::Draw()
 
     if (crowdControl) CrowdControl(crowdControl);
 
+    if (fogConfig) FogConfig(fogConfig);
+
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
 
@@ -350,6 +355,7 @@ void EditorUIModule::MainMenu()
             if (ImGui::MenuItem("Lights Config", "", lightConfig)) lightConfig = !lightConfig;
             if (ImGui::MenuItem("Navmesh", "", navmesh)) navmesh = !navmesh;
             if (ImGui::MenuItem("Crowd Control", "", crowdControl)) crowdControl = !crowdControl;
+            if (ImGui::MenuItem("Fog Config", "", fogConfig)) fogConfig = !fogConfig;
             ImGui::EndDisabled();
 
             ImGui::EndMenu();
@@ -538,6 +544,71 @@ void EditorUIModule::CrowdControl(bool& crowdControl)
     ImGui::Begin("Crowd Control", &crowdControl, ImGuiWindowFlags_None);
 
     App->GetPathfinderModule()->RenderCrowdEditor();
+
+    ImGui::End();
+}
+
+void EditorUIModule::FogConfig(bool& fogConfig)
+{
+    if (!fogConfig || !App->GetSceneModule()->IsSceneLoaded()) return;
+
+    RenderPass* renderPass = App->GetSceneModule()->GetScene()->GetRenderPass();
+
+    if (!renderPass) return;
+
+    ImGui::Begin("Fog Config", &fogConfig, ImGuiWindowFlags_None);
+
+    if (ImGui::DragFloat("Step Size", &renderPass->stepSize, 0.05f, 0.4f, 1.f))
+    {
+        if (renderPass->stepSize < 0.4f) renderPass->stepSize = 0.4f;
+    }
+    ImGui::DragFloat("Fog intensity", &renderPass->fogIntensity, 0.01f, 0.0f, 1.f);
+    ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
+    ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01f, 0.01f, 1.f);
+    ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01f, -0.99f, 0.99f);
+    if (ImGui::DragInt("Blurr passes", &renderPass->blurrPasses, 1, 0, 250))
+    {
+        if (renderPass->blurrPasses < 0) renderPass->blurrPasses = 0;
+    }
+
+    ImGui::Checkbox("Use Noise texture", &renderPass->useNoiseTexture);
+
+    if (ImGui::Button("Select texture"))
+    {
+        ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Clear texture"))
+    {
+        renderPass->RemoveVolumetricNoiseTexture();
+    }
+
+    if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+    {
+
+        const UID chosenTexUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+        );
+
+        if (chosenTexUID != INVALID_UID) renderPass->UpdateVolumetricNoiseTexture(chosenTexUID);
+    }
+
+    const ResourceTexture* texture = renderPass->GetResourceTexture();
+
+    if (texture != nullptr)
+    {
+        ImGui::Text("Diffuse Texture");
+        ImGui::Image((ImTextureID)(intptr_t)texture->GetTextureID(), ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", texture->GetTextureWidth(), texture->GetTextureWidth());
+        }
+    }
+    else
+    {
+        renderPass->useNoiseTexture = false;
+    }
 
     ImGui::End();
 }
@@ -1623,7 +1694,7 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
     if (ImGui::CollapsingHeader("Editor camera"))
     {
         // TODO: ADD CAMERA MODULE AS TEMPORAL MEANWHILO THERE ARE NO GAMEOBJECTS
-        // CameraConfig();
+        CameraConfig();
     }
 
     ImGui::Spacing();
@@ -1642,6 +1713,18 @@ void EditorUIModule::EditorSettings(bool& editorSettingsMenu)
     if (ImGui::CollapsingHeader("Physics"))
     {
         PhysicsConfig();
+    }
+
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Height Fog"))
+    {
+        HeightFogSettings();
+    }
+
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("FXAA"))
+    {
+        FXAASettings();
     }
 
     ImGui::End();
@@ -1703,6 +1786,16 @@ void EditorUIModule::WindowConfig(bool& vsync)
 
 void EditorUIModule::CameraConfig() const
 {
+    CameraModule* cam = App->GetCameraModule();
+
+    float nearPlane   = cam->GetNearPlaneDistance();
+    float farPlane    = cam->GetFarPlaneDistance();
+
+    ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.1f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat("Far Plane", &farPlane, 0.1f, 0.1f, 5000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+    cam->SetNear(nearPlane);
+    cam->SetFar(farPlane);
 }
 
 void EditorUIModule::OpenGLConfig()
@@ -1945,6 +2038,43 @@ void EditorUIModule::PhysicsConfig() const
     }
 
     // ImGui::ShowDemoWindow();
+}
+
+void EditorUIModule::HeightFogSettings() const
+{
+    HeightFogParameters heightFog = App->GetSceneModule()->GetScene()->GetRenderPass()->GetHeightFogParameters();
+
+    ImGui::Checkbox("Enable Height Fog", &heightFog.isEnabled);
+    ImGui::Checkbox("Follow Camera Height", &heightFog.followCamera);
+    ImGui::DragFloat(
+        "Density Constant", &heightFog.densityConstant, 0.001f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat(
+        "Height Falloff", &heightFog.heightFalloff, 0.001f, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat("Max Fog", &heightFog.maxFog, 0.001f, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragFloat(
+        "Start Height", &heightFog.fogStartHeight, 0.001f, -50.0f, 50.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::ColorEdit3("Fog Color", heightFog.fogColor.ptr());
+
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetHeightFogParameters(heightFog);
+}
+
+void EditorUIModule::FXAASettings() const
+{
+    FXAAParameters fxaa = App->GetSceneModule()->GetScene()->GetRenderPass()->GetFXAAParameters();
+
+    ImGui::Checkbox("Enable FXAA", &fxaa.isEnabled);
+    ImGui::Checkbox("Show borders", &fxaa.showBorders);
+    ImGui::DragFloat(
+        "Global Threshold", &fxaa.globalThreshold, 0.001f, 0.0312f, 0.0833f, "%.4f", ImGuiSliderFlags_AlwaysClamp
+    );
+    ImGui::DragFloat(
+        "Local Threshold", &fxaa.localThreshold, 0.001f, 0.063f, 0.333f, "%.4f", ImGuiSliderFlags_AlwaysClamp
+    );
+
+    App->GetSceneModule()->GetScene()->GetRenderPass()->SetFXAAParameters(fxaa);
 }
 
 void EditorUIModule::ShowCaps() const

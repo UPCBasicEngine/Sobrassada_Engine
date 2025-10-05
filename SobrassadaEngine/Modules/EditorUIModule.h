@@ -127,6 +127,8 @@ class EditorUIModule : public Module
     void GameTimerConfig() const;
     void HardwareConfig() const;
     void PhysicsConfig() const;
+    void HeightFogSettings() const;
+    void FXAASettings() const;
     void ShowCaps() const;
 
     void ImportDialog(bool& import);
@@ -137,6 +139,8 @@ class EditorUIModule : public Module
     void About(bool& aboutMenu);
     void Navmesh(bool& navmesh);
     void CrowdControl(bool& crowdControl);
+
+    void FogConfig(bool& fogConfig);
 
     std::string FormatWithCommas(unsigned int number) const;
 
@@ -169,6 +173,7 @@ class EditorUIModule : public Module
     bool closeApplication   = false;
     bool navmesh            = false;
     bool crowdControl       = false;
+    bool fogConfig          = false;
 
     int maximumPlotData     = 50;
     std::deque<float> framerate;

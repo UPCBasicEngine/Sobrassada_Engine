@@ -15,6 +15,8 @@ class CameraMovement : public Script
     bool Init() override;
     void Update(float deltaTime) override;
 
+    void InitAlternativeTarget(const GameObject* alternativeTarget);
+    void ResetToDefaultTarget();
     void EnableAimOffset(bool enable) { aimOffsetEnabled = enable; }
     void SetPosition(const float3& newPos);
     void StartShake(float duration, float intensity, float smoothness = 0);
@@ -26,6 +28,7 @@ class CameraMovement : public Script
   private:
     std::string targetName;
     const GameObject* target                       = nullptr;
+    const GameObject* defaultTarget                = nullptr;
     const CharacterControllerComponent* controller = nullptr;
 
     float3 finalPosition                           = float3::zero;

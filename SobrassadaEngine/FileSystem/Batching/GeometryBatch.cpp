@@ -34,6 +34,7 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     isNavmeshValid      = component->GetParent()->IsNavMeshValid();
     isAlpha             = component->GetRenderMode() == 2;
     isDoubleSided       = component->GetResourceMaterial()->IsDoubleSided();
+    additive            = component->GetAdditive();
     doApplyWind         = component->GetResourceMaterial()->DoApplyWind();
     vCoord0             = component->GetResourceMaterial()->GetVCoord0();
     vCoord1             = component->GetResourceMaterial()->GetVCoord1();
@@ -211,6 +212,9 @@ void GeometryBatch::LoadData()
             return;
         }
 
+        for (size_t j = 0; j < totalModels.size(); ++j)
+            ptrModels[i][j] = float4x4::identity;
+
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, deltaWindDirections[i]);
 
         glBufferStorage(GL_SHADER_STORAGE_BUFFER, deltaWindDirectionsSize, nullptr, flags);
@@ -237,6 +241,9 @@ void GeometryBatch::LoadData()
             GLOG("Error mapping ssbo bones %d", i);
             return;
         }
+
+        for (size_t j = 0; j < accBonesCount; ++j)
+            ptrBones[i][j] = float4x4::identity;
 
         bonesIndexSize = bonesCount.size() * sizeof(unsigned int);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, bonesIndex);
@@ -410,8 +417,11 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentWindBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 14, currentWindBuffer, 0, deltaWindDirectionsSize);
     }
+}
 
-    currentBufferIndex = nextBufferIndex;
+void GeometryBatch::SwapBuffers()
+{
+    currentBufferIndex = (currentBufferIndex + 1) % 2;
 }
 
 void GeometryBatch::BindBonesBuffer()
