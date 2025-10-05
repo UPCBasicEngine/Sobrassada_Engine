@@ -46,14 +46,10 @@ void EnemySpawnerScript::OnCollisionEnter(GameObject* other, const float3 normal
 
     Scene* scene           = AppEngine->GetSceneModule()->GetScene();
 
-    UID parentUID          = parent->GetParent();
-    GameObject* spawnRoot  = (parentUID != INVALID_UID) ? scene->GetGameObjectByUID(parentUID) : nullptr;
-    float4x4 baseTransform = spawnRoot ? spawnRoot->GetGlobalTransform() : parent->GetGlobalTransform();
-
     for (int i = 0; i < spawnAmount; ++i)
     {
         float3 offset            = float3(i * 2.0f, 0, 0);
-        float4x4 spawnTransform  = baseTransform;
+        float4x4 spawnTransform  = float4x4(parent->GetGlobalTransform());
 
         spawnTransform[0][3]    += offset.x;
         spawnTransform[1][3]    += offset.y;
