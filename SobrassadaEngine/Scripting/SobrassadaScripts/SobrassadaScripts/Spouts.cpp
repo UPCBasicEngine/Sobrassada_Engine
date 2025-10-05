@@ -119,7 +119,11 @@ void Spouts::Update(float deltaTime)
     }
     else if (activationState == ACTIVATION_STATE::DAMAGING)
     {
-        float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+        if (!bossControlled)
+        {
+            float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+        }
+
         waterMesh->SetEnabled(true);
         shaderScript->SetScriptEnabled("MovingUVTransparent", true);
         shaderWaterMesh->SetEnabled(false);
