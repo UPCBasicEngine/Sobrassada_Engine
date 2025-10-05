@@ -113,6 +113,7 @@ bool Changeling::Init()
     vfxDash->SetEnabled(false);
     vfxDigDown->SetEnabled(false);
     vfxBite->SetEnabled(false);
+    vfxDig->SetEnabled(false);
 
     isAttacking   = false;
     attackCdTimer = attackCooldown;
@@ -295,6 +296,18 @@ void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq)
 {
+    if (stateTimer < 1.3f && stateTimer > 0.8f && !vfxDig->IsEnabled())
+    {
+        const float3 dir    = parent->GetGlobalTransform().WorldZ();
+        const float3 offset = float3(dir.x * 0.8f, 0.25f, dir.z * 0.8f);
+
+        vfxDig->SetLocalPosition(
+            parent->GetGlobalTransform().TranslatePart() + offset - parent->GetParentGlobalTransform().TranslatePart()
+        );
+        vfxDig->SetEnabled(true);
+        vfxDig->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDig->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
     if (stateTimer <= 0)
     {
         characterCollider->SetEnabled(false);
@@ -359,9 +372,11 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
 
     animComponent->UseTrigger("Trigger_BuryDown");
     audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
+
     vfxDigDown->SetEnabled(true);
     vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
     vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
     stateTimer   = secondsUntilCompletelyBuried;
     currentState = ChangelingStates::DIG_DOWN_TRANSITION;
 }
@@ -419,9 +434,28 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
                 ->Reset();
         }
 
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.45f;
+        const float3 scale        = vfxDash->GetLocalTransform().ExtractScale();
+
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, parent->GetGlobalTransform().WorldZ(), float3::unitY, float3::unitY);
+
+        const Quat verticalCorrection   = Quat::RotateAxisAngle(float3::unitX, 90.0f * (PI / 180));
+        const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitZ, 90.0f * (PI / 180));
+
+        const Quat finalRotation        = lookRotation * verticalCorrection * horizontalCorrection;
+
+        const float4x4 transform        = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS         = parent->GetParentGlobalTransform();
+        const float4x4 localTRS         = parentWS.Inverted() * transform;
+
+        vfxDash->SetLocalTransform(localTRS);
         vfxDash->SetEnabled(true);
         vfxDash->GetComponent<MeshComponent*>()->SetEnabled(false);
         vfxDash->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
         if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
             agentAI->SetSpeed(dashSpeed, 1000000);
@@ -447,10 +481,23 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         stateTimer  = attackCooldown;
         dashIndex   = 0;
         animComponent->UseTrigger("Trigger_FinishDash");
-        currentState        = ChangelingStates::DASH_ATTACK_COOLDOWN;
+        currentState              = ChangelingStates::DASH_ATTACK_COOLDOWN;
 
-        const float3 offset = float3::unitY * 0.6f;
-        vfxDropDown->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.2f;
+        const float3 scale        = vfxDropDown->GetLocalTransform().ExtractScale();
+
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, parent->GetGlobalTransform().WorldZ(), float3::unitY, float3::unitY);
+
+        const Quat finalRotation = lookRotation;
+
+        const float4x4 transform = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS  = parent->GetParentGlobalTransform();
+        const float4x4 localTRS  = parentWS.Inverted() * transform;
+
+        vfxDropDown->SetLocalTransform(localTRS);
         vfxDropDown->SetEnabled(true);
         vfxDropDown->GetComponent<MeshComponent*>()->SetEnabled(false);
         vfxDropDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
@@ -506,6 +553,24 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
                 ->Reset();
         }
 
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.45f;
+        const float3 scale        = vfxDash->GetLocalTransform().ExtractScale();
+
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, parent->GetGlobalTransform().WorldZ(), float3::unitY, float3::unitY);
+
+        const Quat verticalCorrection   = Quat::RotateAxisAngle(float3::unitX, 90.0f * (PI / 180));
+        const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitZ, 90.0f * (PI / 180));
+
+        const Quat finalRotation        = lookRotation * verticalCorrection * horizontalCorrection;
+
+        const float4x4 transform        = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS         = parent->GetParentGlobalTransform();
+        const float4x4 localTRS         = parentWS.Inverted() * transform;
+
+        vfxDash->SetLocalTransform(localTRS);
         vfxDash->SetEnabled(true);
         vfxDash->GetComponent<MeshComponent*>()->SetEnabled(false);
         vfxDash->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
@@ -604,6 +669,19 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq)
 {
+    biteVfxTimer -= deltaTime;
+
+    if (biteVfxTimer < 0.0f && biteVfxTimer > -0.1f && vfxBite && !vfxBite->IsEnabled())
+    {
+        const float3 offset = float3::unitY * 0.5f;
+        vfxBite->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
+        vfxBite->SetEnabled(true);
+        vfxBite->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxBite->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
+        weaponCollider->SetEnabled(true);
+    }
+
     if (animComponent->IsFinished())
     {
         stateTimer = biteAttackCooldown;
@@ -885,13 +963,7 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     animComponent->UseTrigger("Trigger_Bite");
     currentState = ChangelingStates::BITE_ATTACK;
 
-    const float3 offset = float3::unitY * 0.5f;
-    vfxBite->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
-    vfxBite->SetEnabled(true);
-    vfxBite->GetComponent<MeshComponent*>()->SetEnabled(false);
-    vfxBite->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
-
-    weaponCollider->SetEnabled(true);
+    biteVfxTimer = 0.4f;
 
     Character::Attack(deltaTime);
 
@@ -1076,6 +1148,14 @@ void Changeling::ValidateSetup()
         {
             vfxBite = child;
         }
+        else if (child->GetName() == vfxDashName)
+        {
+            vfxDash = child;
+        }
+        else if (child->GetName() == vfxDigName)
+        {
+            vfxDig = child;
+        }
     }
 
     if (userSelectedVersion == 0 || userSelectedVersion == 3)
@@ -1144,10 +1224,6 @@ void Changeling::ValidateSetup()
         else if (child->GetName() == vfxDigUpHoleName)
         {
             vfxDigUpHoleObject = child;
-        }
-        else if (child->GetName() == vfxDashName)
-        {
-            vfxDash = child;
         }
         else if (child->GetName() == vfxDigDownName)
         {

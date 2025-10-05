@@ -172,6 +172,8 @@ class Changeling : public Character
     float dashAngleDegrees                      = 40.0f;
     float timeBetweenDashes                     = 1.5f;
 
+    float biteVfxTimer                          = 0.0f;
+
     // VFX
     // Dig up
     std::string vfxDigUpRocksName               = "VFX_DigUpRocks";
@@ -194,6 +196,9 @@ class Changeling : public Character
 
     std::string vfxBiteName         = "VFX_Bite";
     GameObject* vfxBite             = nullptr;
+
+    std::string vfxDigName          = "VFX_Dig";
+    GameObject* vfxDig              = nullptr;
 
     // Audio
     AudioSourceComponent* audioComp = nullptr;

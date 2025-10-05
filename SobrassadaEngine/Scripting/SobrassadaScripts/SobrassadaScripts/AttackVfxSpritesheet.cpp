@@ -30,6 +30,13 @@ AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
     fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Spritesheet Variations"});
+    fields.push_back({"Number of variations to use", InspectorField::FieldType::Int, &variationsToUse});
+    fields.push_back({"Variation 1", InspectorField::FieldType::Resource, &variationsUID1});
+    fields.push_back({"Variation 2", InspectorField::FieldType::Resource, &variationsUID2});
+    fields.push_back({"Variation 3", InspectorField::FieldType::Resource, &variationsUID3});
+    fields.push_back({"Variation 4", InspectorField::FieldType::Resource, &variationsUID4});
 }
 
 AttackVfxSpritesheet::~AttackVfxSpritesheet()
@@ -40,6 +47,12 @@ AttackVfxSpritesheet::~AttackVfxSpritesheet()
 
     glMakeTextureHandleNonResidentARB(otherImageBindlessUID);
     AppEngine->GetResourcesModule()->ReleaseResource(otherImage);
+
+    for (int i = 0; i < variationsToUse; ++i)
+    {
+        glMakeTextureHandleNonResidentARB(variationsBindlessUID[i]);
+        AppEngine->GetResourcesModule()->ReleaseResource(variations[i]);
+    }
 }
 
 bool AttackVfxSpritesheet::Init()
@@ -109,17 +122,33 @@ bool AttackVfxSpritesheet::Init()
             otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
             glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
-            uvRange.x = 0.0f;
-            uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-            uvRange.z = 0.0f;
-            uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        } 
+            ResetUVs(otherImage);
+        }
+
+        UID variationsUID[4] = {variationsUID1, variationsUID2, variationsUID3, variationsUID4};
+
+        for (int i = 0; i < variationsToUse; ++i)
+        {
+            variations[i] =
+                static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(variationsUID[i]));
+
+            if (variations[i])
+            {
+                variationsBindlessUID[i] = glGetTextureHandleARB(variations[i]->GetTextureID());
+                glMakeTextureHandleResidentARB(variationsBindlessUID[i]);
+            }
+        }
+
+        // Start using the default image
+        currentImageUID = otherImageBindlessUID;
     }
     return true;
 }
 
 void AttackVfxSpritesheet::Update(float deltaTime)
 {
+    if (!otherImage) return;
+
     timer += deltaTime;
     if (timer < updateRate) return;
 
@@ -194,8 +223,8 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
         GeometryBatch* batch = meshComp->GetBatch();
         if (batch) batch->BindBonesBuffer();
 
-        GLuint lower  = static_cast<GLuint>(otherImageBindlessUID & 0xFFFFFFFF);
-        GLuint higher = static_cast<GLuint>(otherImageBindlessUID >> 32);
+        GLuint lower  = static_cast<GLuint>(currentImageUID & 0xFFFFFFFF);
+        GLuint higher = static_cast<GLuint>(currentImageUID >> 32);
         glUniform2ui(4, lower, higher);
 
         glBindVertexArray(vao);
@@ -218,8 +247,33 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 
 void AttackVfxSpritesheet::Reset()
 {
+    if (variationsToUse > 0)
+    {
+        int idx = rand() % (variationsToUse + 1);
+        GLOG("IDX: %d", idx);
+        if (idx == variationsToUse)
+        {
+            currentImageUID = otherImageBindlessUID;
+            ResetUVs(otherImage);
+        }
+        else
+        {
+            currentImageUID = variationsBindlessUID[idx];
+            ResetUVs(variations[idx]);
+        }
+    }
+    else
+    {
+        ResetUVs(otherImage);
+    }
+}
+
+void AttackVfxSpritesheet::ResetUVs(ResourceTexture* tex)
+{
+    if (!tex) return;
+
     uvRange.x = 0.0f;
-    uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+    uvRange.y = cellWidth / static_cast<float>(tex->GetTextureWidth());
     uvRange.z = 0.0f;
-    uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+    uvRange.w = cellHeight / static_cast<float>(tex->GetTextureHeight());
 }
