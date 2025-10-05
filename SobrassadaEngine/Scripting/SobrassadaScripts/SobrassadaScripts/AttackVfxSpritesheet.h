@@ -18,6 +18,10 @@ class AttackVfxSpritesheet : public Script
     void Render(float deltaTime, CameraComponent* cameraComp) override;
 
     void Reset() override;
+    void UpdateSprite(float deltaTime);
+
+    const bool AlmostFinished(int row, int col) const;
+    const bool Finished() const { return finished; }
 
   private:
     void ResetUVs(ResourceTexture* tex);
@@ -56,4 +60,7 @@ class AttackVfxSpritesheet : public Script
     UID variationsBindlessUID[4];
 
     UID currentImageUID = 0;
+
+    bool onlyOnce               = false;
+    bool finished               = false;
 };

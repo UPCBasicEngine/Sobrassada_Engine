@@ -57,6 +57,9 @@ class ParticleEmitter
     void Stop();
     bool IsAddonCreated(int position) { return createdAddons[position]; }
 
+    void UpdateAABB() const;
+    void GetParticleValues(ParticleValues& particleValue);
+
     const HashString& GetTag() const { return emitterTag; }
     const std::string& GetName() const { return emitterTag.GetString(); }
     std::tuple<ADDON_TYPES>& GetAddonsTuple() { return addonTuple; }
@@ -100,7 +103,7 @@ class ParticleEmitter
     ParticleSystem* owner              = nullptr;
 
     std::vector<float3> alivePositions;
-    std::vector<std::pair<int, int>> tileOffsets;
+    std::vector<float> tileOffsets;
     std::vector<float4> particleColors;
     std::vector<float2> particleSize;
     std::vector<float> particleRotation;

@@ -13,17 +13,20 @@ class ShaderScriptComponent;
 class MovingUVTransparent;
 class MeshComponent;
 class ParticleSystemComponent;
-class CapsuleColliderComponent;
+class Spouts;
+class AttackVfxSpritesheet;
+class AudioSourceComponent;
+class AnimationComponent;
 
 enum class BossDistance
 {
-    Close,   // 3m
-    Near,    // 4m
-    Medium,  // 6.5m
-    Distant, // 8.5m
-    Far,     // 10m
-    Farther, // 13m
-    Extreme  // 15m
+    None,
+    Close,   // attack range (3m)
+    Near,    // 6m
+    Medium,  // 9m
+    Distant, // 12m
+    Far,     // 15m
+    Farther, // ...
 };
 
 enum class BossStates
@@ -37,10 +40,12 @@ enum class BossStates
     ChangePhase,
     WaterSpouts,
     ShieldBlast,
+    Restart,
 };
 
 enum class BossActions
 {
+    None,
     Idle,
     Taunt,
     Chase,
@@ -57,10 +62,12 @@ enum class BossActions
     Start, // Mirage
     Charge,
     End,
-    WaterSpouts,
+    WaterSpoutCharge, // WaterSpout
+    WaterSpoutHit,
     Load, // ShieldBlast
     PreShoot,
     Shoot,
+    Return,
 };
 
 class Boss : public Character
@@ -71,6 +78,13 @@ class Boss : public Character
 
     bool Init() override;
     void Update(float deltaTime) override;
+
+    void OnPlayerExitLocation() override;
+    void OnPlayerEnterLocation() override;
+
+    void PlayHighlightSequence() override;
+
+    void DisableBlastArea();
 
     GameObject* GetCloseArea() const { return closeArea; }
     int GetCloseAreaDamage() const { return closeAreaDamage; }
@@ -85,7 +99,7 @@ class Boss : public Character
     void ChooseNextStateSecondPhase();
     void ChooseNextStateThirdPhase();
 
-    void Idle();
+    void Idle(float deltaTime);
     void Taunt(float deltaTime);
     void ShieldStrikes(float deltaTime);
 
@@ -107,62 +121,78 @@ class Boss : public Character
 
     void ShieldBlast(float deltaTime);
 
+    void WaterSpouts();
+
     void SetState(BossStates newState);
     BossStates ChooseAlternativeState() const;
+
+    void Restart(float deltaTime);
 
     const std::vector<BossStates>& GetAvailableStates() const;
     const char* GetStateName() const;
     const char* GetActionName() const;
 
   private:
-    AIAgentComponent* agentAI = nullptr;
-    BossStates currentState   = BossStates::Idle;
-    BossActions currentAction = BossActions::Idle;
+    AIAgentComponent* agentAI   = nullptr;
+    AudioSourceComponent* audio = nullptr;
+    BossStates currentState     = BossStates::Idle;
+    BossActions currentAction   = BossActions::Idle;
 
-    int phase                 = 1;
-    int phase1 = 40, phase2 = 20, phase3 = 0;
-    std::array<int, 3> phaseSwap = {phase1, phase2, phase3};
-    bool stateEnter              = true;
-    bool doIdle                  = false;
-    bool doTaunt                 = false;
-    bool actionTriggerDone       = false;
+    bool waiting                = true;
+    bool restart                = false;
 
-    int shieldStrikeLastAction   = 0;
+    bool highlightActivated     = false;
+    float highlightTimer        = 0.0f;
+    bool playedHighlight        = false;
+
+    int phase                   = 1;
+    int phase2 = 40, phase3 = 20;
+    std::array<std::reference_wrapper<int>, 2> phaseSwap = {phase2, phase3};
+    bool stateEnter                                      = true;
+    bool doIdle                                          = false;
+    bool doTaunt                                         = false;
+    bool actionTriggerDone                               = false;
+
+    // ShieldStrikes
+    std::string shieldName                               = "";
+    int shieldStrikeLastAction                           = 0;
+    float chaseTimer                                     = 0.0f;
+    bool audioPlayed                                     = false;
+
+    // OverheadStrike
+    std::string closeAreaName                            = "";
+    GameObject* closeArea                                = nullptr;
+    std::string bigAreaName                              = "";
+    GameObject* bigArea                                  = nullptr;
+    float bigAreaHitboxDelay                             = 1.3f;
 
     // Dash
-    bool isDashing               = false;
-    float dashSpeed              = 0.0f;
-    float dashTimeRemaining      = 0.0f;
-    float dashDistance           = 0.0f;
-    float3 dashDirection         = float3::zero;
-    float3 dashStartPosLocal     = float3::zero;
+    bool isDashing                                       = false;
+    float dashSpeed                                      = 0.0f;
+    float dashTimeRemaining                              = 0.0f;
+    float dashDistance                                   = 0.0f;
+    float3 dashDirection                                 = float3::zero;
+    float3 dashStartPosLocal                             = float3::zero;
 
     // Jump
-    bool isJumping               = false;
-    float jumpSpeed              = 0.0f;
-    float jumpTimeRemaining      = 0.0f;
-    float3 jumpStartPosLocal     = float3::zero;
+    bool isJumping                                       = false;
+    float jumpSpeed                                      = 0.0f;
+    float jumpTimeRemaining                              = 0.0f;
+    float3 jumpStartPosLocal                             = float3::zero;
 
     // Fall
-    bool isFalling               = false;
-    float fallSpeed              = 0.0f;
-    float fallTimeRemaining      = 0.0f;
-    float3 fallStartPosLocal     = float3::zero;
+    bool isFalling                                       = false;
+    float fallSpeed                                      = 0.0f;
+    float fallTimeRemaining                              = 0.0f;
+    float3 fallStartPosLocal                             = float3::zero;
 
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;
 
-    // Colliders
-    std::string shieldName                           = "";
-    std::string closeAreaName                        = "";
-    GameObject* closeArea                            = nullptr;
-    std::string bigAreaName                          = "";
-    GameObject* bigArea                              = nullptr;
-    float bigAreaHitboxDelay                         = 1.3f;
-    CapsuleColliderComponent* blastArea              = nullptr;
-    float blastHitboxDelay                           = 1.3f;
-
     // VFX
+    std::string emessiveVFXName                      = "";
+    MeshComponent* emessiveVFXMesh                   = nullptr;
+
     std::string overheadPrepareVFXName               = "";
     ShaderScriptComponent* runesScript               = nullptr;
     MovingUVTransparent* runesUV                     = nullptr;
@@ -191,15 +221,23 @@ class Boss : public Character
     MovingUVTransparent* smallExpansionUV            = nullptr;
 
     std::string shieldBlastVFXName                   = "";
-    MeshComponent* blastPreHitMesh                   = nullptr;
-    ShaderScriptComponent* blastHitScript            = nullptr;
-    MovingUVTransparent* blastHitUV                  = nullptr;
-    ShaderScriptComponent* blastBlackLightsScript    = nullptr;
-    MovingUVTransparent* blastBlackLightsUV          = nullptr;
-    ShaderScriptComponent* blastSphereEnergyScript   = nullptr;
-    MovingUVTransparent* blastSphereEnergyUV         = nullptr;
-    ShaderScriptComponent* blastBlackExpansionScript = nullptr;
-    MovingUVTransparent* blastBlackExpansionUV       = nullptr;
+    ShaderScriptComponent* blastPreSpriteScript      = nullptr;
+    AttackVfxSpritesheet* blastPreSpritesheet        = nullptr;
+    ShaderScriptComponent* blastSpriteScript         = nullptr;
+    AttackVfxSpritesheet* blastSpritesheet           = nullptr;
+    ShaderScriptComponent* blastSpriteScript2        = nullptr;
+    AttackVfxSpritesheet* blastSpritesheet2          = nullptr;
+    ShaderScriptComponent* blastEnergySpriteScript   = nullptr;
+    AttackVfxSpritesheet* blastEnergySpritesheet     = nullptr;
+
+    std::string invulnerableVFXName                  = "";
+    AnimationComponent* invulnerableAnimation        = nullptr;
+    ShaderScriptComponent* invulnerableSpriteScript  = nullptr;
+    AttackVfxSpritesheet* invulnerableSpritesheet    = nullptr;
+    ShaderScriptComponent* invulnerableBarrierScript = nullptr;
+    MovingUVTransparent* invulnerableBarrierUV       = nullptr;
+    ShaderScriptComponent* invulnerableAuraScript    = nullptr;
+    MovingUVTransparent* invulnerableAuraUV          = nullptr;
 
     // Particle
     std::string atomParticleName                     = "";
@@ -208,30 +246,51 @@ class Boss : public Character
     ParticleSystemComponent* smokeParticle           = nullptr;
     std::string chargeShieldParticleName             = "";
     ParticleSystemComponent* chargeShieldParticle    = nullptr;
+    std::string energyBlastParticleName              = "";
+    ParticleSystemComponent* energyBlastParticle1    = nullptr;
+    ParticleSystemComponent* energyBlastParticle2    = nullptr;
+    ParticleSystemComponent* energyBlastParticle3    = nullptr;
+    ParticleSystemComponent* energyBlastParticle4    = nullptr;
 
     // Inspector values
-    int closeAreaDamage                              = 2;
-    float dashDuration                               = 0.5f;
+    int closeAreaDamage                              = 3;
+    float dashDuration                               = 0.3f;
     float heightJump                                 = 4.0f;
     float jumpDuration                               = 0.2f;
     float fallDuration                               = 0.2f;
+    float highlightDelay                             = 8.0f;
+    float chaseTimeLimit                             = 8.0f;
+    float blastAreaDisabledLimit                     = 0.5f;
 
     // Health UI
     ImageComponent* healthImageComponent             = nullptr;
     UID healthBarImage;
 
-    // Mirage
-    const int mirage1 = 50, mirage2 = 30, mirage3 = 10;
-    const std::array<int, 3> mirageActivation  = {mirage1, mirage2, mirage3};
-    BossMirage* bossMirageScript               = nullptr;
-    bool mirageActivated                       = false;
+    // ShieldBlast
+    std::string blastAreaName = "";
+    GameObject* blastArea     = nullptr;
+    float blastHitboxDelay    = 1.3f;
+    bool blastHit             = false;
+    float blastHitTimer       = 0.0f;
 
+    // Mirage
+    int mirage1 = 47, mirage2 = 30, mirage3 = 10;
+    std::array<std::reference_wrapper<int>, 3> mirageActivation = {mirage1, mirage2, mirage3};
+    BossMirage* bossMirageScript                                = nullptr;
+    bool mirageActivated                                        = false;
+
+    // WaterSpout
+    std::vector<Spouts*> waterSpouts;
+    std::string spoutName                      = "";
+
+    // Alternate mechanic
     int repeatedState                          = 0;
     const int maxRepeats                       = 2;
-
     const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};
-    const std::vector<BossStates> phase2States = {BossStates::ShieldStrikes, BossStates::ShieldBlast};
+    const std::vector<BossStates> phase2States = {
+        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::WaterSpouts
+    };
     const std::vector<BossStates> phase3States = {
-        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike
+        BossStates::ShieldStrikes, BossStates::ShieldBlast, BossStates::OverheadStrike, BossStates::WaterSpouts
     };
 };

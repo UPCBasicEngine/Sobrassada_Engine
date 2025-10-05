@@ -61,6 +61,7 @@
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/VideoComponent.h"
+#include "VolumetricAreaComponent.h"
 
 #include "SDL_mouse.h"
 #include "glew.h"
@@ -153,6 +154,10 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
         params.heightFalloff   = fog["HeightFalloff"].GetFloat();
         params.fogStartHeight  = fog["FogStartHeight"].GetFloat();
         params.maxFog          = fog["MaxFog"].GetFloat();
+        if (initialState.HasMember("RenderPassConfig") && initialState["RenderPassConfig"].IsObject())
+        {
+            renderPass->LoadData(initialState["RenderPassConfig"]);
+        }
 
         if (fog.HasMember("FogColor") && fog["FogColor"].IsArray())
         {
@@ -370,6 +375,11 @@ void Scene::Save(
     }
     fog.AddMember("FogColor", fogColor, allocator);
     targetState.AddMember("HeightFogParameters", fog, allocator);
+
+    // Save RenderPass Data
+    rapidjson::Value render(rapidjson::kObjectType);
+    renderPass->Save(render, allocator);
+    targetState.AddMember("RenderPassConfig", render, allocator);
 
     // TODO Convert to parameter which can be set later manually instead of saving a scene as default "on scene
     // save"
@@ -629,7 +639,7 @@ void Scene::RenderSceneToFrameBuffer()
     ImGui::SetCursorPos(ImVec2(0.f, 0.f));
 
     ImGui::Image(
-        (ImTextureID)framebuffer->GetTextureID(),
+        (ImTextureID)framebuffer->GetColorTexture(),
         ImVec2((float)framebuffer->GetTextureWidth(), (float)framebuffer->GetTextureHeight()), ImVec2(0.f, 1.f),
         ImVec2(1.f, 0.f)
     );
@@ -651,6 +661,7 @@ void Scene::RenderSceneToFrameBuffer()
         framebuffer->Resize((int)windowSize.x, (int)windowSize.y);
         App->GetOpenGLModule()->GetGBuffer()->Resize((int)windowSize.x, (int)windowSize.y);
         App->GetOpenGLModule()->GetSsao()->Resize((int)windowSize.x, (int)windowSize.y);
+        renderPass->Resize((int)windowSize.x, (int)windowSize.y);
     }
 
     ImVec2 windowPosition     = ImGui::GetWindowPos();
@@ -1640,7 +1651,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
             else oldPrefabInstances.push_back(gameObject.second);
         }
     }
-    GLOG("Instances to override: %d", instancesToOverride);
+    //GLOG("Instances to override: %d", instancesToOverride);
     if (instancesToOverride == 0)
     {
         App->GetResourcesModule()->ReleaseResource(prefab);

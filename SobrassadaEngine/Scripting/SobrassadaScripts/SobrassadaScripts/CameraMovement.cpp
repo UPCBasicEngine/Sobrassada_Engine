@@ -50,16 +50,20 @@ void CameraMovement::Update(float deltaTime)
     if (shakeTimer > 0.0f) CameraShake(deltaTime);
 }
 
-void CameraMovement::InitAlternativeTarget(const GameObject* alternativeTarget)
+void CameraMovement::InitAlternativeTargetAndLookAhead(const GameObject* alternativeTarget, float intensity)
 {
-    defaultTarget = target;
-    target        = alternativeTarget;
+    defaultTarget             = target;
+    target                    = alternativeTarget;
+    defaultLookAheadIntensity = lookAheadIntensity;
+    lookAheadIntensity        = intensity;
 }
 
-void CameraMovement::ResetToDefaultTarget()
+void CameraMovement::ResetToDefaultTargetAndLookAhead()
 {
-    target        = defaultTarget;
-    defaultTarget = nullptr;
+    target                    = defaultTarget;
+    defaultTarget             = nullptr;
+    lookAheadIntensity        = defaultLookAheadIntensity;
+    defaultLookAheadIntensity = 0.0f;
 }
 
 void CameraMovement::SetPosition(const float3& newPos)

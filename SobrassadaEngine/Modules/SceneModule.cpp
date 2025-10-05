@@ -174,6 +174,7 @@ update_status SceneModule::PostUpdate(float deltaTime)
         }
 
         loadedScene->ClearObjectsToUpdate();
+        loadedScene->GetLightsConfig()->ResetSpotShadowIndexes();
     }
 
 #ifdef OPTICK

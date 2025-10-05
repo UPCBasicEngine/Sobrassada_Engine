@@ -26,8 +26,5 @@ class SpritesheetAddon : public ParticleAddon
     float timePerFrame   = 0.f;
     float playTime       = 0.f;
 
-    int randomXTiles[2]  = {1, 1};
-    int randomYTiles[2]  = {1, 1};
-
     bool randomizeOffset = false;
 };

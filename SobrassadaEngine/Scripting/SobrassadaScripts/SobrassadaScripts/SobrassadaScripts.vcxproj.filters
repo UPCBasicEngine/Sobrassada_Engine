@@ -232,6 +232,15 @@
     <ClInclude Include="HighlightCharacter.h">
       <Filter>Characters</Filter>
     </ClInclude>
+    <ClInclude Include="UISpritesheet.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="BossSpouts.h">
+      <Filter>Characters\Boss</Filter>
+	  </ClInclude>
+    <ClInclude Include="MirageVFX.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -995,6 +1004,15 @@
     </ClCompile>
     <ClCompile Include="AsyncSceneLoading.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="UISpritesheet.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="BossSpouts.cpp">
+      <Filter>Characters\Boss</Filter>
+	</ClCompile>
+    <ClCompile Include="MirageVFX.cpp">
+      <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -53,8 +53,9 @@ struct SpotLight
 	vec3 direction;	
 	float innerAngle;
 	float outerAngle;
+	int spotShadowIndex;
+    float radius;
 };
-
 
 // UBOs
 layout(std140, binding = 2) uniform Ambient

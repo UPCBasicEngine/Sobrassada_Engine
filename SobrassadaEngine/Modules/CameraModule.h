@@ -36,7 +36,7 @@ class CameraModule : public Module
     void LoadCameraPosition(const rapidjson::Value* initialState);
 
     const float4x4& GetWorldMatrix() { return isCameraDetached ? detachedCamera.WorldMatrix() : camera.WorldMatrix(); }
-    const float4x4& GetProjectionMatrix() { return isCameraDetached ? detachedProjectionMatrix : camera.ProjectionMatrix(); }
+    const float4x4 GetProjectionMatrix() { return isCameraDetached ? detachedProjectionMatrix : camera.ProjectionMatrix(); }
     const float4x4& GetViewMatrix() { return isCameraDetached ? detachedViewMatrix : viewMatrix; }
     const float4x4& GetFrustumViewMatrix() { return viewMatrix; }
     const float4x4& GetFrustumProjectionMatrix() { return projectionMatrix; }
