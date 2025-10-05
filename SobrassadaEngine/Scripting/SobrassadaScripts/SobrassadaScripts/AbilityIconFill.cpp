@@ -14,10 +14,10 @@
 #include "OpenGLModule.h"
 #include "ResourceMaterial.h"
 #include "ResourceMesh.h"
+#include "ResourcesModule.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
-#include "ResourcesModule.h"
 
 #include "glew.h"
 
@@ -26,6 +26,7 @@ AbilityIconFill::AbilityIconFill(GameObject* parent) : Script(parent)
     fields.push_back({"Wave Amplitude", InspectorField::FieldType::Float, &waveAmplitude, 0.f, 1.0f});
     fields.push_back({"Wave Frequency", InspectorField::FieldType::Float, &waveFrequency, 0.f, 100.0f});
     fields.push_back({"Wave Speed", InspectorField::FieldType::Float, &waveSpeed, 0.f, 100.0f});
+    fields.push_back({"Transition time", InspectorField::FieldType::Float, &transitionTime, 0.f, 10.0f});
     fields.push_back({"Other Image", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
@@ -71,12 +72,12 @@ bool AbilityIconFill::Init()
     // Init other texture
     if (otherImageUID == INVALID_UID || otherImage || otherImageBindlessUID != INVALID_UID) return true;
 
-    otherImage =
-        static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(otherImageUID) 
-        );
-
-    otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
-    glMakeTextureHandleResidentARB(otherImageBindlessUID);
+    otherImage = static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(otherImageUID));
+    if (otherImage)
+    {
+        otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
+        glMakeTextureHandleResidentARB(otherImageBindlessUID);
+    }
 
     return true;
 }
@@ -94,7 +95,7 @@ void AbilityIconFill::Render(float deltaTime, CameraComponent* cameraComp)
     float3 startPos                   = float3(transform2D->GetRenderingPosition(), 0);
 
     float4x4 view                     = float4x4::identity;
-    float4x4 proj = float4x4::D3DOrthoProjLH(
+    float4x4 proj                     = float4x4::D3DOrthoProjLH(
         -1, 1, transform2D->GetParentCanvas()->GetWidth(), transform2D->GetParentCanvas()->GetHeight()
     );
 
@@ -107,12 +108,15 @@ void AbilityIconFill::Render(float deltaTime, CameraComponent* cameraComp)
     glUniform3fv(3, 1, imageComp->GetColor().ptr());
 
     time += deltaTime;
-    glUniform1f(6, fillAmount);
-    glUniform1f(7, time);
+    glUniform1f(6, prevFillAmount);
+    glUniform1f(7, fillAmount);
+    glUniform1f(8, time);
+    glUniform1f(9, startTime);
+    glUniform1f(10, transitionTime);
 
-    glUniform1f(8, waveAmplitude);
-    glUniform1f(9, waveFrequency);
-    glUniform1f(10, waveSpeed);
+    glUniform1f(11, waveAmplitude);
+    glUniform1f(12, waveFrequency);
+    glUniform1f(13, waveSpeed);
 
     glBindVertexArray(vao);
 
@@ -150,13 +154,13 @@ void AbilityIconFill::Render(float deltaTime, CameraComponent* cameraComp)
         1.0f
     };
 
-    GLuint lower = static_cast<GLuint>(otherImageBindlessUID & 0xFFFFFFFF);
+    GLuint lower  = static_cast<GLuint>(otherImageBindlessUID & 0xFFFFFFFF);
     GLuint higher = static_cast<GLuint>(otherImageBindlessUID >> 32);
     glUniform2ui(4, lower, higher);
 
     lower  = static_cast<GLuint>(imageComp->GetTextureUID() & 0xFFFFFFFF);
     higher = static_cast<GLuint>(imageComp->GetTextureUID() >> 32);
-    glUniform2ui(5, lower, higher);   
+    glUniform2ui(5, lower, higher);
 
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     AppEngine->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 6);
@@ -170,5 +174,7 @@ void AbilityIconFill::Reset()
 
 void AbilityIconFill::SetFillAmount(float newFill)
 {
-    fillAmount = newFill;
+    prevFillAmount = fillAmount;
+    fillAmount     = newFill;
+    startTime      = time;
 }

@@ -1,13 +1,13 @@
 #include "StateMachineEditor.h"
 
 #include "Application.h"
+#include "AudioModule.h"
 #include "Components/Standalone/AnimationComponent.h"
 #include "FileSystem/StateMachineManager.h"
 #include "LibraryModule.h"
+#include "ResourceAnimation.h"
 #include "ResourcesModule.h"
 #include "StateNode.h"
-#include "AudioModule.h"
-#include "ResourceAnimation.h"
 
 StateMachineEditor::StateMachineEditor(const std::string& editorName, UID uid, ResourceStateMachine* stateMachine)
     : EngineEditorBase(editorName, uid), uid(uid), resource(stateMachine)
@@ -280,8 +280,11 @@ void StateMachineEditor::ShowInspector()
     std::vector<std::string> animationNames;
     animationNames.reserve(animMap.size());
 
+    std::string srch = searchText;
+
     for (const auto& [name, uid] : animMap)
     {
+        if (!srch.empty() && name.GetString().find(srch) == std::string::npos) continue;
         animationNames.push_back(name.GetString());
     }
 
@@ -297,6 +300,7 @@ void StateMachineEditor::ShowInspector()
         }
     }
 
+    ImGui::InputText("Search", searchText, IM_ARRAYSIZE(searchText));
     if (ImGui::Combo(
             "Associated Clip", &currentClipIndex,
             [](void* data, int idx, const char** out_text)
@@ -327,13 +331,13 @@ void StateMachineEditor::ShowInspector()
     const Clip* clip = resource->GetClip(selectedNode->GetClipName());
     if (clip)
     {
-        bool loopBuffer = clip->loop;
+        bool loopBuffer     = clip->loop;
         float editableSpeed = clip->animationSpeed;
-        
+
         ImGui::Text("Clip UID: %llu", clip->animationResourceUID);
-        
+
         ImGui::Text("Clip Name: %s", clip->clipName.GetString().c_str());
-        if(ImGui::SliderFloat("Clip Speed: %f", &editableSpeed, 0.0f, 2.0f, "%.2f"))
+        if (ImGui::SliderFloat("Clip Speed: %f", &editableSpeed, 0.0f, 2.0f, "%.2f"))
         {
             resource->SetClipSpeed(selectedNode->GetClipName(), editableSpeed);
         }
@@ -343,7 +347,8 @@ void StateMachineEditor::ShowInspector()
             {
                 resource->EditClipInfo(
                     clip->clipName.GetString(), clip->animationResourceUID, clip->clipName.GetString(), loopBuffer,
-                clip->animationSpeed);
+                    clip->animationSpeed
+                );
             }
         }
     }
@@ -377,7 +382,7 @@ void StateMachineEditor::ShowInspector()
 
         float clipLen = (clipRes) ? clipRes->GetDuration() : 1.0f;
         float timeSec = trg.keyTimeNorm * clipLen;
-        
+
         if (ImGui::DragFloat("Time (sec)", &timeSec, 0.01f, 0.0f, clipLen, "%.3f"))
             trg.keyTimeNorm = std::clamp(timeSec / clipLen, 0.0f, 1.0f);
 
@@ -626,7 +631,7 @@ void StateMachineEditor::BuildGraph()
         }
     }
 
-    //GLOG("Total links in graph after adding them: %d", graph->getLinks().size());
+    // GLOG("Total links in graph after adding them: %d", graph->getLinks().size());
     resource->SetDefaultState(0);
 }
 
@@ -651,7 +656,7 @@ void StateMachineEditor::DetectNewTransitions()
 
                 if (!resource->GetTransition(fromState, toState))
                 {
-                    //GLOG("Creating transition from %s to %s", fromState.c_str(), toState.c_str());
+                    // GLOG("Creating transition from %s to %s", fromState.c_str(), toState.c_str());
                     resource->AddTransition(fromState, toState, "Trigger", 200);
                     // availableTriggers.push_back("Trigger");
                 }
@@ -781,13 +786,13 @@ void StateMachineEditor::ShowLoadPopup()
 
             if (selectedUID != 0)
             {
-                //GLOG("Loading State Machine: %s", selectedName.c_str());
+                // GLOG("Loading State Machine: %s", selectedName.c_str());
 
                 ResourceStateMachine* stateMachine =
                     (ResourceStateMachine*)App->GetResourcesModule()->RequestResource(selectedUID);
                 if (stateMachine)
                 {
-                    //GLOG("Successfully loaded State Machine: %s", selectedName.c_str());
+                    // GLOG("Successfully loaded State Machine: %s", selectedName.c_str());
                     resource = stateMachine;
                     BuildGraph();
                     ImGui::CloseCurrentPopup();

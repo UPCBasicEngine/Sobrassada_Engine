@@ -18,17 +18,19 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
+#include "ShaderScriptComponent.h"
 
 #include "glew.h"
 
 AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Cell width", InspectorField::FieldType::Float, &cellWidth, 0.f, 10000.f});
-    fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 1000.f});
+    fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 10000.f});
     fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
     fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
+    fields.push_back({"Only Once", InspectorField::FieldType::Bool, &onlyOnce});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
@@ -113,58 +115,20 @@ bool AttackVfxSpritesheet::Init()
             uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
             uvRange.z = 0.0f;
             uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        } 
+        }
     }
     return true;
 }
 
 void AttackVfxSpritesheet::Update(float deltaTime)
 {
-    timer += deltaTime;
-    if (timer < updateRate) return;
-
-    if (isRowMajor)
-    {
-        if (uvRange.y >= 1.0f)
-        {
-            uvRange.x  = 0.0f;
-            uvRange.y  = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-
-            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        }
-        else
-        {
-            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-        }
-    }
-    else
-    {
-        if (uvRange.w >= 1.0f)
-        {
-            uvRange.z  = 0.0f;
-            uvRange.w  = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-
-            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-        }
-        else
-        {
-            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-        }
-    }
-    timer = 0.0f;
-
-    if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
-    {
-        parent->SetEnabled(false);
-    }
+    // This sometimes doesn't get called, so logic is in the render
 }
 
 void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 {
+    UpdateSprite(deltaTime);
+
     if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
@@ -222,4 +186,69 @@ void AttackVfxSpritesheet::Reset()
     uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
     uvRange.z = 0.0f;
     uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+    finished  = false;
+}
+
+const bool AttackVfxSpritesheet::AlmostFinished(int specificRow, int specificCol) const
+{
+    int actualRow = static_cast<int>(uvRange.z * otherImage->GetTextureHeight() / cellHeight);
+    int actualCol = static_cast<int>(uvRange.x * otherImage->GetTextureWidth() / cellWidth);
+
+    if (isRowMajor)
+    {
+        if (actualRow > specificRow || actualRow == specificRow && actualCol >= specificCol) return true;
+
+        return false;
+    }
+    else
+    {
+        if (actualCol > specificCol || actualCol == specificCol && actualRow >= specificRow) return true;
+
+        return false;
+    }
+}
+
+void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
+{
+    timer += deltaTime;
+    if (timer < updateRate) return;
+
+    if (isRowMajor)
+    {
+        if (uvRange.y >= 1.0f)
+        {
+            uvRange.x  = 0.0f;
+            uvRange.y  = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+
+            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+        }
+        else
+        {
+            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+        }
+    }
+    else
+    {
+        if (uvRange.w >= 1.0f)
+        {
+            uvRange.z  = 0.0f;
+            uvRange.w  = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+
+            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+        }
+        else
+        {
+            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+        }
+    }
+    timer = 0.0f;
+
+    if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+    {
+        parent->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
+    }
 }
