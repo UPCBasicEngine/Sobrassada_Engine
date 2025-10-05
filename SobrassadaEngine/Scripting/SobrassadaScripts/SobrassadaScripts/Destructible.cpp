@@ -60,7 +60,7 @@ void Destructible::Update(float deltaTime)
 
 void Destructible::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
-    if (isSetupCorrectly)
+    if (isSetupCorrectly && currentState == DestructibleStates::NORMAL)
     {
         currentState                 = DestructibleStates::DESTROYED;
         destructionSpawnDelayCounter = destructionSpawnDelay;
@@ -82,6 +82,8 @@ void Destructible::OnCollisionEnter(GameObject* otherObject, const float3 collis
         }
 
         defaultMesh->SetEnabled(false);
+
+        isSimulating = true;
     }
 }
 

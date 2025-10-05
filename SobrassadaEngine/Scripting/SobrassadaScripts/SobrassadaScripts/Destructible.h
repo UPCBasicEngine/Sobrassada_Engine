@@ -38,7 +38,7 @@ class Destructible : public Script
 
   private:
     bool isSetupCorrectly           = false;
-    bool isSimulating               = true;
+    bool isSimulating               = false;
 
     DestructibleStates currentState = DestructibleStates::NONE;
 
