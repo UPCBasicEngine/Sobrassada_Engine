@@ -48,6 +48,7 @@ class InputModule : public Module
     const std::pair<KeyState, float>& GetLeftTrigger() const { return leftTrigger; }
     const std::pair<KeyState, float>& GetRightTrigger() const { return rightTrigger; }
 
+    bool SOBRASADA_API_ENGINE IsControllerConnected() const { return controllers[0] != nullptr; }
     bool IsUsingKeyboard() const { return isUsingKeyboard; }
     void SOBRASADA_API_ENGINE ClearTransientStates(); 
 
