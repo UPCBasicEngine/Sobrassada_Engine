@@ -4,10 +4,13 @@
 
 #include "Application.h"
 #include "Destructible.h"
+
+#include "CuChulainn.h"
 #include "GameObject.h"
 #include "Globals.h"
 #include "ParticleSystemComponent.h"
 #include "ResourceStateMachine.h"
+#include "ScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/MeshComponent.h"
@@ -62,6 +65,10 @@ void Destructible::OnCollisionEnter(GameObject* otherObject, const float3 collis
 {
     if (isSetupCorrectly && currentState == DestructibleStates::NORMAL)
     {
+        // Don´t accept the players hitbox as a hit
+        if (otherObject->GetComponent<ScriptComponent*>() != nullptr &&
+            otherObject->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>() != nullptr) return;
+        
         currentState                 = DestructibleStates::DESTROYED;
         destructionSpawnDelayCounter = destructionSpawnDelay;
 
