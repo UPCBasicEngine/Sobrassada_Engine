@@ -16,16 +16,19 @@ class SpawnUI : public Script
     void OnCollisionExit(GameObject* otherObject, ColliderLayer layer) override;
 
   private:
-    SphereColliderComponent* trigger = nullptr;
-    ImageComponent* imageUI             = nullptr;
-    ImageComponent* alternativeImageUI        = nullptr;
-    bool triggerOnce = false;
-    float hideAfterSeconds = 0.f;
-    std::string objectUIName         = "";
-    std::string alternativeObjectUIName; 
-    bool unlockAbility                  = false;
-    std::string nameAbility     = "";
+    SphereColliderComponent* trigger       = nullptr;
+    ImageComponent* imageUI                = nullptr;
+    ImageComponent* xboxAlternativeImageUI = nullptr;
+    ImageComponent* psAlternativeImageUI   = nullptr;
+    bool triggerOnce                       = false;
+    float hideAfterSeconds                 = 0.f;
+    std::string objectUIName;
+    std::string xboxAlternativeObjectUIName;
+    std::string psAlternativeObjectUIName;
 
-    float timer = 0.f;
+    bool unlockAbility      = false;
+    std::string nameAbility = "";
+
+    float timer             = 0.f;
     bool updating;
 };
