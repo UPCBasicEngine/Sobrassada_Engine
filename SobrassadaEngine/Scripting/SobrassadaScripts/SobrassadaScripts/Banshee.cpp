@@ -13,12 +13,14 @@
 #include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 
+#include "Wwise_IDs.h"
 #include "imgui_curve_editor.h"
 
 Banshee::Banshee(GameObject* parent)
@@ -254,6 +256,8 @@ bool Banshee::Init()
     normalizedDist = std::uniform_real_distribution<float>(0.0f, 1.0f);
     invisibleDist  = std::uniform_real_distribution<float>(invisibleTimeRange[0], invisibleTimeRange[1]);
 
+    audioSource    = parent->GetComponent<AudioSourceComponent*>();
+
     return true;
 }
 
@@ -375,6 +379,8 @@ void Banshee::OnDeath()
 void Banshee::OnDamageTaken(int amount)
 {
     // if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
+
+    if (audioSource) audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_HURT);
 
     for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
     {
@@ -544,6 +550,8 @@ void Banshee::TakeDamage(int amount)
             shaderComp->SetEnabled(true);
         }
 
+        if (audioSource) audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_DEATH);
+
         animComponent->UseTrigger("Death");
         currentState = BansheeStates::Dead;
         return;
@@ -619,8 +627,8 @@ void Banshee::Attack(float deltaTime)
         }
         else if (elapsedTeleportVFX > teleportVFXDuration && !teleportedToPos)
         {
-            teleportWarningScreamGO->SetEnabled(true);
             GoToAttackPosition();
+            teleportWarningScreamGO->SetEnabled(true);
             teleportedToPos = true;
             return;
         }
@@ -662,6 +670,7 @@ void Banshee::Attack(float deltaTime)
 
             elapsedWarning = 0.f;
             screamAreaWarningGO->SetEnabled(true);
+            if (audioSource) audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_ATTACK);
         }
 
         // Slowly rotate towards player while charging the attack
@@ -918,8 +927,8 @@ void Banshee::SlowArea(float deltaTime)
         }
         else if (elapsedTeleportVFX >= teleportVFXDuration && !teleportedToPos)
         {
-            teleportWarningSlowGO->SetEnabled(true);
             GoToAttackPosition();
+            teleportWarningSlowGO->SetEnabled(true);
             teleportedToPos = true;
             return;
         }
@@ -952,6 +961,8 @@ void Banshee::SlowArea(float deltaTime)
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
+
+            audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_ATTACK);
 
             UpdateLastPlayerPosition();
             MoveSlowAreaToPlayer();

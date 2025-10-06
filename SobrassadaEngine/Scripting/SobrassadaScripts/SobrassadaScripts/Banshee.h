@@ -16,6 +16,7 @@ class CapsuleColliderComponent;
 class ShaderScriptComponent;
 class ResourceMaterial;
 class ParticleSystemComponent;
+class AudioSourceComponent;
 
 enum class BansheeStates : int
 {
@@ -132,4 +133,6 @@ class Banshee : public Character
     ParticleSystemComponent* chaseParticleSystem = nullptr;
     std::vector<ShaderScriptComponent*> hitVFXShaderComponents;
     std::vector<ShaderScriptComponent*> deathVFXShaderComponents;
+
+    AudioSourceComponent* audioSource = nullptr;
 };
