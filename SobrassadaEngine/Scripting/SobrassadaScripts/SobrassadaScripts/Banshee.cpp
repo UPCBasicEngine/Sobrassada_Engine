@@ -176,9 +176,14 @@ bool Banshee::Init()
                 }
             }
         }
-        else if (currentGO->GetName() == "PS_BansheeHit")
+        // else if (currentGO->GetName() == "PS_BansheeHit")
+        //{
+        //     hitParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+        // }
+        else if (currentGO->GetName() == "PS_BansheeChase")
         {
-            hitParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+            chaseParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+            chaseParticleSystem->StopInstances();
         }
         else if (currentGO->GetName() == "VFX_Death_Spritesheet")
         {
@@ -522,6 +527,7 @@ void Banshee::TakeDamage(int amount)
         break;
     default:
     {
+        chaseParticleSystem->StopInstances();
         isSearching = false;
         animComponent->UseTrigger("Hit");
         currentState = BansheeStates::Hit;
@@ -558,9 +564,14 @@ void Banshee::ChasePlayer()
 
         if (attackToPerform < 0.5f) currentState = BansheeStates::Attack;
         else currentState = BansheeStates::SlowArea;
+
+        chaseParticleSystem->StopInstances();
     }
     else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
+    {
         currentState = BansheeStates::Search;
+        chaseParticleSystem->StopInstances();
+    }
 }
 
 void Banshee::Attack(float deltaTime)
@@ -695,11 +706,11 @@ void Banshee::Attack(float deltaTime)
             // FORWARD SCREAM ENABLE
 
             forwardScreamCollider->SetEnabled(true);
-            //float3 front = (parent->GetLocalTransform() * float4(float3::unitZ, 0)).xyz().Normalized();
-            //float3 dir   = 4.0f * front;
-            //dir.y        = 1.232f;
+            // float3 front = (parent->GetLocalTransform() * float4(float3::unitZ, 0)).xyz().Normalized();
+            // float3 dir   = 4.0f * front;
+            // dir.y        = 1.232f;
 
-            //forwardScreamCollider->GetParent()->SetLocalPosition(parent->GetLocalPostition() + dir);
+            // forwardScreamCollider->GetParent()->SetLocalPosition(parent->GetLocalPostition() + dir);
 
             for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
             {
@@ -780,7 +791,11 @@ void Banshee::ChangeState()
         if (attackToPerform < 0.5f) currentState = BansheeStates::Attack;
         else currentState = BansheeStates::SlowArea;
     }
-    else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
+    else if (distance <= rangeAIChase)
+    {
+        currentState = BansheeStates::Chase;
+        chaseParticleSystem->SpawnAllInstances();
+    }
     else currentState = BansheeStates::Search;
 }
 
@@ -800,6 +815,7 @@ void Banshee::SearchForPlayer()
             isSearching = false;
             agentAI->ResetSpeed();
             currentState = BansheeStates::Chase;
+            chaseParticleSystem->SpawnAllInstances();
             return;
         }
 
