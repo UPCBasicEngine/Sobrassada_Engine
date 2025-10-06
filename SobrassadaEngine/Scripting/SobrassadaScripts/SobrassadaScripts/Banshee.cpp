@@ -105,52 +105,6 @@ bool Banshee::Init()
 
             weapon->SetEnabled(false);
         }
-        else if (currentGO->GetName() == "VFX_Banshee_shoutStart")
-        {
-            shoutStartAnim             = currentGO->GetComponent<AnimationComponent*>();
-
-            shoutStartShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
-            auto meshComponents        = currentGO->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
-
-            for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-            }
-
-            for (MeshComponent* meshComp : meshComponents)
-            {
-                if (meshComp->GetParent()->GetName() == "mesh_stars")
-                {
-                    shoutStartMeshComponents.push_back(meshComp);
-                }
-            }
-
-            shoutStartAnim->GetParent()->SetEnabled(false);
-        }
-        else if (currentGO->GetName() == "VFX_Banshee_shoutBase")
-        {
-            shoutBaseAnim             = currentGO->GetComponent<AnimationComponent*>();
-
-            shoutBaseShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
-            auto meshComponents       = currentGO->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
-
-            for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-            }
-
-            for (MeshComponent* meshComp : meshComponents)
-            {
-                if (meshComp->GetParent()->GetName() == "mesh_general_glow_1")
-                    shoutBaseMeshComponents.push_back(meshComp);
-                else if (meshComp->GetParent()->GetName() == "mesh_general_glow_2")
-                    shoutBaseMeshComponents.push_back(meshComp);
-                else if (meshComp->GetParent()->GetName() == "mesh_dark_glow")
-                    shoutBaseMeshComponents.push_back(meshComp);
-            }
-
-            shoutBaseAnim->GetParent()->SetEnabled(false);
-        }
         else if (currentGO->GetName() == "SlowArea")
         {
             slowAreaGO          = currentGO;
@@ -234,16 +188,25 @@ bool Banshee::Init()
         }
         else if (currentGO->GetName() == "VFX_Ground_Ring")
         {
-            groundRing                 = currentGO;
-
             groundRingShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
 
             for (auto& shaderComponent : groundRingShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
+        }
+        else if (currentGO->GetName() == "ScreamWarning")
+        {
+            screamAreaWarningGO = currentGO;
 
-            groundRing->SetEnabled(false);
+            float3 translation, scale;
+            Quat rotation;
+
+            screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+            float4x4 starTransform =
+                float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+            screamAreaWarningGO->SetLocalTransform(starTransform);
+            screamAreaWarningGO->SetEnabled(false);
         }
     }
 
@@ -291,41 +254,35 @@ void Banshee::OnPlayerExitLocation()
         mesh->SetEnabled(true);
         characterCollider->SetEnabled(true);
 
-        for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-        {
-            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-        {
-            shaderComponent->ResetScript("MovingUVTransparent");
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
-        {
-            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
-        {
-            shaderComponent->ResetScript("MovingUVTransparent");
-        }
-
         weapon->SetEnabled(false);
 
-        shoutStartAnim->UseTrigger("Reset");
-        shoutStartAnim->GetParent()->SetEnabled(false);
-
-        shoutBaseAnim->GetParent()->SetEnabled(false);
-        // forwardScream->SetEnabled(false);
-
+        // FORWARD SCREAM
         forwardScreamCollider->SetEnabled(false);
         for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
         {
             shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
         }
 
-        // groundRing->SetEnabled(false);
+        // GROUND RING
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        float3 translation, scale;
+        Quat rotation;
+
+        screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+        float4x4 starTransform =
+            float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+        screamAreaWarningGO->SetLocalTransform(starTransform);
+        screamAreaWarningGO->SetEnabled(false);
 
         teleportWarningScreamGO->SetEnabled(false);
 
@@ -446,42 +403,35 @@ void Banshee::TakeDamage(int amount)
         animComponent->UseTrigger("Hit");
         currentState = BansheeStates::Hit;
 
-        shoutStartAnim->UseTrigger("Reset");
-
-        for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-        {
-            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-        {
-            shaderComponent->ResetScript("MovingUVTransparent");
-        }
-
-        shoutStartAnim->GetParent()->SetEnabled(false);
-
-        for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
-        {
-            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
-        {
-            shaderComponent->ResetScript("MovingUVTransparent");
-        }
-
         weapon->SetEnabled(false);
 
-        shoutBaseAnim->GetParent()->SetEnabled(false);
-        // forwardScream->SetEnabled(false);
-
+        // FORWARD SCREAM
         forwardScreamCollider->SetEnabled(false);
         for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
         {
             shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
         }
 
-        // groundRing->SetEnabled(false);
+        // GROUND RING
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        float3 translation, scale;
+        Quat rotation;
+
+        screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+        float4x4 starTransform =
+            float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+        screamAreaWarningGO->SetLocalTransform(starTransform);
+        screamAreaWarningGO->SetEnabled(false);
 
         slowAreaGO->SetEnabled(false);
 
@@ -628,58 +578,53 @@ void Banshee::Attack(float deltaTime)
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
 
-            shoutStartAnim->GetParent()->SetEnabled(true);
-
-            for (MeshComponent* meshComp : shoutStartMeshComponents)
-            {
-                meshComp->SetEnabled(false);
-            }
-
-            shoutStartAnim->UseTrigger("Reset");
-            shoutStartAnim->OnPlay(false);
-
             slowAreaGO->SetEnabled(true);
             slowAreaGO->SetLocalPosition(float3::zero);
 
             elapsedWarning = 0.f;
+            screamAreaWarningGO->SetEnabled(true);
         }
 
         // Slowly rotate towards player while charging the attack
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
         {
-            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+            elapsedWarning += deltaTime;
 
-            if (elapsedWarning < warningDuration) elapsedWarning += deltaTime;
-            else
-            {
-                for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-                {
-                    shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
-                }
-            }
+            // SCALING WARNING OVER TIME
+            float3 translation, scale;
+            Quat rotation;
+
+            screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+
+            float interpolationValue = min(elapsedWarning / warningDuration, 1.f);
+
+            float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+
+            scale                    = float3(finalScale, 1.f, finalScale);
+
+            float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
+            screamAreaWarningGO->SetLocalTransform(starTransform);
+
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
         {
+            // Reseting scale.
+            float3 translation, scale;
+            Quat rotation;
+
+            screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+            float4x4 starTransform =
+                float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+            screamAreaWarningGO->SetLocalTransform(starTransform);
+            screamAreaWarningGO->SetEnabled(false);
+
             animComponent->UseTrigger("Scream");
 
             weapon->SetEnabled(true);
-            // SHOUT START DISABLE
-            for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-            }
 
-            for (ShaderScriptComponent* shaderComponent : shoutStartShaderComponents)
-            {
-                shaderComponent->ResetScript("MovingUVTransparent");
-            }
-
-            shoutStartAnim->GetParent()->SetEnabled(false);
-
-            // SHOUT BASE ENABLE
-            shoutBaseAnim->GetParent()->SetEnabled(true);
-            // forwardScream->SetEnabled(true);
+            // FORWARD SCREAM ENABLE
 
             forwardScreamCollider->SetEnabled(true);
             for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
@@ -687,21 +632,9 @@ void Banshee::Attack(float deltaTime)
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
             }
 
-            // groundRing->SetEnabled(true);
+            // GROUND RING ENABLE
 
             for (auto& shaderComponent : groundRingShaderComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
-            }
-
-            shoutBaseAnim->OnPlay(false);
-
-            for (MeshComponent* meshComp : shoutBaseMeshComponents)
-            {
-                meshComp->SetEnabled(false);
-            }
-
-            for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
             }
@@ -722,30 +655,7 @@ void Banshee::Attack(float deltaTime)
 
             elapsedMainScream = 0.f;
 
-            shoutBaseAnim->OnStop();
-
-            for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-            }
-
-            for (ShaderScriptComponent* shaderComponent : shoutBaseShaderComponents)
-            {
-                shaderComponent->ResetScript("MovingUVTransparent");
-            }
-
-            for (auto& shaderComponent : groundRingShaderComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-            }
-
-            for (auto& shaderComponent : groundRingShaderComponents)
-            {
-                shaderComponent->ResetScript("MovingUVTransparent");
-            }
-
-            shoutBaseAnim->GetParent()->SetEnabled(false);
-            // forwardScream->SetEnabled(false);
+            // FORWARD SCREAM DISABLE
 
             forwardScreamCollider->SetEnabled(false);
             for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
@@ -753,7 +663,17 @@ void Banshee::Attack(float deltaTime)
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
 
-            // groundRing->SetEnabled(false);
+            // GROUND RING DISABLE
+           
+            for (auto& shaderComponent : groundRingShaderComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            for (auto& shaderComponent : groundRingShaderComponents)
+            {
+                shaderComponent->ResetScript("MovingUVTransparent");
+            }
 
             slowAreaGO->SetEnabled(false);
         }

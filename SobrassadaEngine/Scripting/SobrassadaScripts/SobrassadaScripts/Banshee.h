@@ -87,10 +87,7 @@ class Banshee : public Character
     bool firstSearch                   = false;
     bool hasMoved                      = false;
 
-    AnimationComponent* shoutStartAnim = nullptr;
-    AnimationComponent* shoutBaseAnim  = nullptr;
-
-    GameObject* groundRing             = nullptr;
+    GameObject* screamAreaWarningGO    = nullptr;
 
     GameObject* slowAreaGO             = nullptr;
     GameObject* slowAreaInGO           = nullptr;
@@ -107,16 +104,11 @@ class Banshee : public Character
     float slowAreaInStartHeight        = 0.45f;
     float slowWarningStartHeight       = 0.45f;
 
-    std::vector<ShaderScriptComponent*> shoutStartShaderComponents;
-    std::vector<ShaderScriptComponent*> shoutBaseShaderComponents;
-
     std::vector<ShaderScriptComponent*> forwardScreamShaderComponents;
     CapsuleColliderComponent* forwardScreamCollider = nullptr;
 
+    GameObject* groundRing                          = nullptr;
     std::vector<ShaderScriptComponent*> groundRingShaderComponents;
-
-    std::vector<MeshComponent*> shoutStartMeshComponents;
-    std::vector<MeshComponent*> shoutBaseMeshComponents;
 
     ImVec2 curveEditorPoints[StoreScriptCurvePoints];
 
