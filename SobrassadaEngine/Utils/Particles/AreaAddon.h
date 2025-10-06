@@ -29,13 +29,15 @@ class AreaAddon : public ParticleAddon
     void UpdateShapesTransforms(const float4x4& globalTransform);
     void AssignPositionDirection(Particle& particle);
 
+    void AssignMaxValues(ParticleValues& particleValue) override;
+
   private:
     void ManageShapeSwitch(ParticleAreaShape previousShape);
 
-    void RenderCubeEditor();
-    void RenderCircleEditor();
-    void RenderSphereEditor();
-    void RenderConeEditor();
+    void RenderCubeEditor(bool& anyChange);
+    void RenderCircleEditor(bool& anyChange);
+    void RenderSphereEditor(bool& anyChange);
+    void RenderConeEditor(bool& anyChange);
 
     void RecalculateConeTopRadius();
 

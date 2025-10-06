@@ -15,6 +15,7 @@ MagicBarrier::MagicBarrier(GameObject* parent) : Script(parent)
 
 bool MagicBarrier::Init()
 {
+    enemiesInArea = 0;
     areaTag = HashString(areaTagString);
 
     if (const auto taggedGameObjects = AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(areaTag))

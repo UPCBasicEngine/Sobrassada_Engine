@@ -2,6 +2,7 @@
 
 #include "EmitterInstance.h"
 #include "Interpolation.h"
+#include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
 // #include "imgui.h"
@@ -235,6 +236,8 @@ void VelocityAddon::RenderEditorInspector()
 {
     if (!IsEnabled()) return;
 
+    bool anyChange = false;
+
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Velocity Addon");
 
     // RENDER EDITOR STARTS
@@ -259,7 +262,11 @@ void VelocityAddon::RenderEditorInspector()
         {
             for (int i = 0; i < InterpolationAddonStringsSize; ++i)
             {
-                if (ImGui::Selectable(InterpolationAddonStrings[i])) speedXInterpolation = ParticleInterpolationType(i);
+                if (ImGui::Selectable(InterpolationAddonStrings[i]))
+                {
+                    speedXInterpolation = ParticleInterpolationType(i);
+                    anyChange           = true;
+                }
             }
             ImGui::EndCombo();
         }
@@ -272,10 +279,10 @@ void VelocityAddon::RenderEditorInspector()
 
             if (randomizeXSpeed)
             {
-                ImGui::InputFloat("##MinLXSpeed", &xSpeed[0]);
+                if (ImGui::InputFloat("##MinLXSpeed", &xSpeed[0])) anyChange = true;
                 ImGui::SameLine();
             }
-            ImGui::InputFloat("##MaxXSpeed", &xSpeed[1]);
+            if (ImGui::InputFloat("##MaxXSpeed", &xSpeed[1])) anyChange = true;
             ImGui::SameLine();
             ImGui::Text("X Speed");
             ImGui::SameLine();
@@ -286,18 +293,19 @@ void VelocityAddon::RenderEditorInspector()
         }
         case ParticleInterpolationType::BEZIER_SINGLE:
         {
-            ImGui::Bezier("xBezier", bezierX);
-            ImGui::InputFloat2("X Range", &xSpeed[0]);
+            if (ImGui::Bezier("xBezier", bezierX)) anyChange = true;
+            if (ImGui::InputFloat2("X Range", &xSpeed[0])) anyChange = true;
             break;
         }
         case ParticleInterpolationType::CURVE_EDITOR:
         {
-            ImGui::Curve(
-                "X Vel. Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPointsX, &curveEditorIndexX,
-                ImVec2(0.f, xSpeed.x), ImVec2(1.f, xSpeed.y)
-            );
+            if (ImGui::Curve(
+                    "X Vel. Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPointsX, &curveEditorIndexX,
+                    ImVec2(0.f, xSpeed.x), ImVec2(1.f, xSpeed.y)
+                ))
+                anyChange = true;
 
-            ImGui::InputFloat2("X Vel. Range", &xSpeed[0]);
+            if (ImGui::InputFloat2("X Vel. Range", &xSpeed[0])) anyChange = true;
             ImGui::SameLine();
             if (ImGui::Button("Reset Points##XVel")) ResetCurveEditorPoints(curveEditorPointsX);
             break;
@@ -315,7 +323,11 @@ void VelocityAddon::RenderEditorInspector()
         {
             for (int i = 0; i < InterpolationAddonStringsSize; ++i)
             {
-                if (ImGui::Selectable(InterpolationAddonStrings[i])) speedYInterpolation = ParticleInterpolationType(i);
+                if (ImGui::Selectable(InterpolationAddonStrings[i]))
+                {
+                    speedYInterpolation = ParticleInterpolationType(i);
+                    anyChange           = true;
+                }
             }
             ImGui::EndCombo();
         }
@@ -328,10 +340,10 @@ void VelocityAddon::RenderEditorInspector()
 
             if (randomizeYSpeed)
             {
-                ImGui::InputFloat("##MinLYSpeed", &ySpeed[0]);
+                if (ImGui::InputFloat("##MinLYSpeed", &ySpeed[0])) anyChange = true;
                 ImGui::SameLine();
             }
-            ImGui::InputFloat("##MaxYSpeed", &ySpeed[1]);
+            if (ImGui::InputFloat("##MaxYSpeed", &ySpeed[1])) anyChange = true;
             ImGui::SameLine();
             ImGui::Text("Y Speed");
             ImGui::SameLine();
@@ -342,18 +354,19 @@ void VelocityAddon::RenderEditorInspector()
         }
         case ParticleInterpolationType::BEZIER_SINGLE:
         {
-            ImGui::Bezier("yBezier", bezierY);
-            ImGui::InputFloat2("Y Range", &ySpeed[0]);
+            if (ImGui::Bezier("yBezier", bezierY)) anyChange = true;
+            if (ImGui::InputFloat2("Y Range", &ySpeed[0])) anyChange = true;
             break;
         }
         case ParticleInterpolationType::CURVE_EDITOR:
         {
-            ImGui::Curve(
-                "Y Vel. Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPointsY, &curveEditorIndexY,
-                ImVec2(0.f, ySpeed.x), ImVec2(1.f, ySpeed.y)
-            );
+            if (ImGui::Curve(
+                    "Y Vel. Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPointsY, &curveEditorIndexY,
+                    ImVec2(0.f, ySpeed.x), ImVec2(1.f, ySpeed.y)
+                ))
+                anyChange = true;
 
-            ImGui::InputFloat2("Y Vel. Range", &ySpeed[0]);
+            if (ImGui::InputFloat2("Y Vel. Range", &ySpeed[0])) anyChange = true;
             ImGui::SameLine();
             if (ImGui::Button("Reset Points##YVel")) ResetCurveEditorPoints(curveEditorPointsY);
             break;
@@ -371,7 +384,11 @@ void VelocityAddon::RenderEditorInspector()
         {
             for (int i = 0; i < InterpolationAddonStringsSize; ++i)
             {
-                if (ImGui::Selectable(InterpolationAddonStrings[i])) speedZInterpoaltion = ParticleInterpolationType(i);
+                if (ImGui::Selectable(InterpolationAddonStrings[i]))
+                {
+                    speedZInterpoaltion = ParticleInterpolationType(i);
+                    anyChange           = true;
+                }
             }
             ImGui::EndCombo();
         }
@@ -384,10 +401,10 @@ void VelocityAddon::RenderEditorInspector()
 
             if (randomizeZSpeed)
             {
-                ImGui::InputFloat("##MinLZSpeed", &zSpeed[0]);
+                if (ImGui::InputFloat("##MinLZSpeed", &zSpeed[0])) anyChange = true;
                 ImGui::SameLine();
             }
-            ImGui::InputFloat("##MaxZSpeed", &zSpeed[1]);
+            if (ImGui::InputFloat("##MaxZSpeed", &zSpeed[1])) anyChange = true;
             ImGui::SameLine();
             ImGui::Text("Z Speed");
             ImGui::SameLine();
@@ -398,18 +415,19 @@ void VelocityAddon::RenderEditorInspector()
         }
         case ParticleInterpolationType::BEZIER_SINGLE:
         {
-            ImGui::Bezier("zBezier", bezierZ);
-            ImGui::InputFloat2("Z Range", &zSpeed[0]);
+            if (ImGui::Bezier("zBezier", bezierZ)) anyChange = true;
+            if (ImGui::InputFloat2("Z Range", &zSpeed[0])) anyChange = true;
             break;
         }
         case ParticleInterpolationType::CURVE_EDITOR:
         {
-            ImGui::Curve(
-                "Z Vel. Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPointsZ, &curveEditorIndexZ,
-                ImVec2(0.f, zSpeed.x), ImVec2(1.f, zSpeed.y)
-            );
+            if (ImGui::Curve(
+                    "Z Vel. Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPointsZ, &curveEditorIndexZ,
+                    ImVec2(0.f, zSpeed.x), ImVec2(1.f, zSpeed.y)
+                ))
+                anyChange = true;
 
-            ImGui::InputFloat2("Z Vel. Range", &zSpeed[0]);
+            if (ImGui::InputFloat2("Z Vel. Range", &zSpeed[0])) anyChange = true;
             ImGui::SameLine();
             if (ImGui::Button("Reset Points##ZVel")) ResetCurveEditorPoints(curveEditorPointsZ);
             break;
@@ -418,6 +436,8 @@ void VelocityAddon::RenderEditorInspector()
             break;
         }
     }
+
+    if (anyChange) owner->UpdateAABB();
 
     // RENDER EDITOR ENDS
 
@@ -460,6 +480,89 @@ void VelocityAddon::Duplicate(ParticleAddon* reference)
 
         gravity      = other->gravity;
         gravityValue = other->gravityValue;
+    }
+}
+
+void VelocityAddon::AssignMaxValues(ParticleValues& particleValue)
+{
+    switch (speedXInterpolation)
+    {
+    case ParticleInterpolationType::FIXED_VALUES:
+    case ParticleInterpolationType::BEZIER_SINGLE:
+    {
+        float maxValue = fmax(abs(xSpeed[0]), abs(xSpeed[1]));
+        if (particleValue.speed.x < maxValue) particleValue.speed.x = maxValue;
+        break;
+    }
+    case ParticleInterpolationType::CURVE_EDITOR:
+    {
+        float maxValue = particleValue.speed.x;
+
+        for (int i = 0; i < MaxCurveEditorPoints; ++i)
+        {
+            if (curveEditorPointsX[i].x == ImGui::CurveTerminator) break;
+
+            if (maxValue < abs(curveEditorPointsX[i].y)) maxValue = abs(curveEditorPointsX[i].y);
+        }
+        particleValue.speed.x = maxValue;
+        break;
+    }
+    default:
+        break;
+    }
+
+    switch (speedYInterpolation)
+    {
+    case ParticleInterpolationType::FIXED_VALUES:
+    case ParticleInterpolationType::BEZIER_SINGLE:
+    {
+        float maxValue = fmax(abs(ySpeed[0]), abs(ySpeed[1]));
+        if (particleValue.speed.y < maxValue) particleValue.speed.y = maxValue;
+        break;
+    }
+    case ParticleInterpolationType::CURVE_EDITOR:
+    {
+        float maxValue = particleValue.speed.y;
+
+        for (int i = 0; i < MaxCurveEditorPoints; ++i)
+        {
+            if (curveEditorPointsY[i].x == ImGui::CurveTerminator) break;
+
+            if (maxValue < abs(curveEditorPointsY[i].y)) maxValue = abs(curveEditorPointsY[i].y);
+        }
+
+        particleValue.speed.y = maxValue;
+        break;
+    }
+    default:
+        break;
+    }
+
+    switch (speedZInterpoaltion)
+    {
+    case ParticleInterpolationType::FIXED_VALUES:
+    case ParticleInterpolationType::BEZIER_SINGLE:
+    {
+        float maxValue = fmax(abs(zSpeed[0]), abs(zSpeed[1]));
+        if (particleValue.speed.z < maxValue) particleValue.speed.z = maxValue;
+        break;
+    }
+    case ParticleInterpolationType::CURVE_EDITOR:
+    {
+        float maxValue = particleValue.speed.z;
+
+        for (int i = 0; i < MaxCurveEditorPoints; ++i)
+        {
+            if (curveEditorPointsZ[i].x == ImGui::CurveTerminator) break;
+
+            if (maxValue < abs(curveEditorPointsZ[i].y)) maxValue = abs(curveEditorPointsZ[i].y);
+        }
+
+        particleValue.speed.z = maxValue;
+        break;
+    }
+    default:
+        break;
     }
 }
 
