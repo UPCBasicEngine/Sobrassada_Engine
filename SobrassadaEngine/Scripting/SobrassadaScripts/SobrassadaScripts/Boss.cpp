@@ -23,6 +23,8 @@
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
+#include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 
 #include "Wwise_IDs.h"
@@ -81,11 +83,12 @@ bool Boss::Init()
         speed = agentAI->GetSpeed();
     }
 
-    rng          = std::mt19937(std::random_device {}());
-    uniformDist  = std::uniform_int_distribution<int>(0, 100);
-    uniformSteps = std::uniform_int_distribution<int>(1, 3);
+    rng           = std::mt19937(std::random_device {}());
+    uniformDist   = std::uniform_int_distribution<int>(0, 100);
+    uniformSteps  = std::uniform_int_distribution<int>(1, 3);
+    uniformGetHit = std::uniform_int_distribution<int>(1, 2);
 
-    audio        = parent->GetComponent<AudioSourceComponent*>();
+    audio         = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Ferdiad: No audio component found");
 
     GameObject* healthBarObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healthBarName);
@@ -698,7 +701,37 @@ void Boss::OnDeath()
 
     ResetValues(false);
 
-    parent->SetEnabled(false);
+    if (closeArea)
+    {
+        SphereColliderComponent* closeAreaCollider = closeArea->GetComponent<SphereColliderComponent*>();
+        if (closeAreaCollider)
+        {
+            closeAreaCollider->DeleteRigidBody();
+            closeAreaCollider->SetEnabled(false);
+        }
+    }
+
+    if (bigArea)
+    {
+        SphereColliderComponent* bigAreaCollider = bigArea->GetComponent<SphereColliderComponent*>();
+        if (bigAreaCollider)
+        {
+            bigAreaCollider->DeleteRigidBody();
+            bigAreaCollider->SetEnabled(false);
+        }
+    }
+
+    if (blastArea)
+    {
+        CubeColliderComponent* blastAreaCollider = blastArea->GetComponent<CubeColliderComponent*>();
+        if (blastAreaCollider)
+        {
+            blastAreaCollider->DeleteRigidBody();
+            blastAreaCollider->SetEnabled(false);
+        }
+    }
+
+    // parent->SetEnabled(false);
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
 
     // if (healthBarBase) healthBarBase->SetEnabled(false); // wait until death animation
@@ -709,6 +742,62 @@ void Boss::OnDamageTaken(int amount)
     // TODO: particles? and animation
 
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
+
+    if (currentAction == BossActions::Idle || currentAction == BossActions::Chase ||
+        currentAction == BossActions::Waiting)
+    {
+        agentAI->PauseMovement();
+
+        float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
+
+        float dot      = hitCollisionNormal.Dot(forward);
+
+        int num        = uniformGetHit(rng);
+
+        if (dot == 0.0f)
+        {
+            dot = (num == 1) ? 1.0f : -1.0f;
+        }
+
+        if (dot > 0.0f)
+        {
+            switch (num)
+            {
+            case 1:
+                GLOG("GetHit1");
+                if (animComponent) animComponent->UseTrigger("GetHit1");
+                currentAction = BossActions::GetHit1;
+                break;
+            case 2:
+                GLOG("GetHit2");
+                if (animComponent) animComponent->UseTrigger("GetHit2");
+                currentAction = BossActions::GetHit2;
+                break;
+            default:
+                GLOG("ERROR: Ferdiad forward hit anim");
+                break;
+            }
+        }
+        else
+        {
+            switch (num)
+            {
+            case 1:
+                GLOG("GetHit1Behind");
+                if (animComponent) animComponent->UseTrigger("GetHit1Behind");
+                currentAction = BossActions::GetHit1Behind;
+                break;
+            case 2:
+                GLOG("GetHit2Behind");
+                if (animComponent) animComponent->UseTrigger("GetHit2Behind");
+                currentAction = BossActions::GetHit2Behind;
+                break;
+            default:
+                GLOG("ERROR: Ferdiad forward hit anim");
+                break;
+            }
+        }
+    }
 
     if (!armorBarFill || !healthBarFill) return;
 
@@ -1297,6 +1386,20 @@ void Boss::ShieldStrikes(float deltaTime)
             ChooseNextState();
         }
         break;
+
+    case BossActions::GetHit1:
+    case BossActions::GetHit2:
+    case BossActions::GetHit1Behind:
+    case BossActions::GetHit2Behind:
+        if (animComponent && animComponent->IsFinished())
+        {
+            agentAI->ResumeMovement();
+            currentAction = BossActions::Chase;
+            runTimer      = 0.0f;
+            if (animComponent) animComponent->UseTrigger("Run");
+        }
+        break;
+
     default:
         GLOG("Error: ShieldStrikes");
         break;
@@ -1501,6 +1604,15 @@ void Boss::OverheadStrike(float deltaTime)
 
     case BossActions::Waiting:
         if (animComponent && animComponent->IsFinished()) animComponent->UseTrigger("Idle");
+
+        DamageAreaLogic();
+        break;
+
+    case BossActions::GetHit1:
+    case BossActions::GetHit2:
+    case BossActions::GetHit1Behind:
+    case BossActions::GetHit2Behind:
+        if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Waiting;
 
         DamageAreaLogic();
         break;
@@ -2317,6 +2429,18 @@ const char* Boss::GetActionName() const
 
     case BossActions::Return:
         return "Return";
+
+    case BossActions::GetHit1:
+        return "GetHit1";
+
+    case BossActions::GetHit2:
+        return "GetHit2";
+
+    case BossActions::GetHit1Behind:
+        return "GetHit1Behind";
+
+    case BossActions::GetHit2Behind:
+        return "GetHit2Behind";
 
     default:
         return "ERROR: NO ACTION";

@@ -50,8 +50,8 @@ enum class BossActions
     None,
     Idle,
     Taunt,
-    Chase,
-    Combo1, // ShieldStrikes
+    Chase, // ShieldStrikes
+    Combo1,
     Combo2,
     Combo3,
     Prepare, // OverheadStrike
@@ -69,7 +69,11 @@ enum class BossActions
     Load, // ShieldBlast
     PreShoot,
     Shoot,
-    Return,
+    Return,  // Restart
+    GetHit1, // Hit actions
+    GetHit2,
+    GetHit1Behind,
+    GetHit2Behind,
 };
 
 class Boss : public Character
@@ -203,6 +207,7 @@ class Boss : public Character
     std::mt19937 rng;
     std::uniform_int_distribution<int> uniformDist;
     std::uniform_int_distribution<int> uniformSteps;
+    std::uniform_int_distribution<int> uniformGetHit;
 
     // VFX
     std::string emessiveVFXName                      = "";
