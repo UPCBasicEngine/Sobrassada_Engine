@@ -74,6 +74,9 @@ namespace AK
         static const AkUniqueID PLAY_SFX_POOKA_HURT = 1906970548U;
         static const AkUniqueID PLAY_SFX_POOKA_UNDERGROUND = 2238694366U;
         static const AkUniqueID PLAY_SFX_SOLDIER_ATTACK = 3285336459U;
+        static const AkUniqueID PLAY_SFX_SOLDIER_DEATH = 3100543291U;
+        static const AkUniqueID PLAY_SFX_SOLDIER_DETECT = 1046414234U;
+        static const AkUniqueID PLAY_SFX_SOLDIER_HURT = 1754859444U;
         static const AkUniqueID PLAY_SFX_SOLDIER_SLASH_1 = 3272153282U;
         static const AkUniqueID PLAY_SFX_SOLDIER_SLASH_2 = 3272153281U;
         static const AkUniqueID PLAY_SFX_SOLDIER_THRUST = 1691226597U;

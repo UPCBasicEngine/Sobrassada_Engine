@@ -13,6 +13,7 @@
 #include "PhysicsModule.h"
 #include "ProjectModule.h"
 #include "ResourceNavmesh.h"
+#include "ResourceTexture.h"
 
 #include "GameObject.h"
 #include "ResourceStateMachine.h"
@@ -73,6 +74,7 @@ EditorUIModule::EditorUIModule() : width(0), height(0)
         {HashString("Particle System"),      COMPONENT_PARTICLE_SYSTEM     },
         {HashString("Video"),                COMPONENT_VIDEO               },
         {HashString("Shader Script"),        COMPONENT_SHADER_SCRIPT       },
+        {HashString("Volumetric Area"),      COMPONENT_VOLUMETRIC_AREA     },
     };
 
     fullscreen    = FULLSCREEN;
@@ -285,6 +287,8 @@ void EditorUIModule::Draw()
 
     if (crowdControl) CrowdControl(crowdControl);
 
+    if (fogConfig) FogConfig(fogConfig);
+
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
 
@@ -351,6 +355,7 @@ void EditorUIModule::MainMenu()
             if (ImGui::MenuItem("Lights Config", "", lightConfig)) lightConfig = !lightConfig;
             if (ImGui::MenuItem("Navmesh", "", navmesh)) navmesh = !navmesh;
             if (ImGui::MenuItem("Crowd Control", "", crowdControl)) crowdControl = !crowdControl;
+            if (ImGui::MenuItem("Fog Config", "", fogConfig)) fogConfig = !fogConfig;
             ImGui::EndDisabled();
 
             ImGui::EndMenu();
@@ -539,6 +544,71 @@ void EditorUIModule::CrowdControl(bool& crowdControl)
     ImGui::Begin("Crowd Control", &crowdControl, ImGuiWindowFlags_None);
 
     App->GetPathfinderModule()->RenderCrowdEditor();
+
+    ImGui::End();
+}
+
+void EditorUIModule::FogConfig(bool& fogConfig)
+{
+    if (!fogConfig || !App->GetSceneModule()->IsSceneLoaded()) return;
+
+    RenderPass* renderPass = App->GetSceneModule()->GetScene()->GetRenderPass();
+
+    if (!renderPass) return;
+
+    ImGui::Begin("Fog Config", &fogConfig, ImGuiWindowFlags_None);
+
+    if (ImGui::DragFloat("Step Size", &renderPass->stepSize, 0.05f, 0.4f, 1.f))
+    {
+        if (renderPass->stepSize < 0.4f) renderPass->stepSize = 0.4f;
+    }
+    ImGui::DragFloat("Fog intensity", &renderPass->fogIntensity, 0.01f, 0.0f, 1.f);
+    ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
+    ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01f, 0.01f, 1.f);
+    ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01f, -0.99f, 0.99f);
+    if (ImGui::DragInt("Blurr passes", &renderPass->blurrPasses, 1, 0, 250))
+    {
+        if (renderPass->blurrPasses < 0) renderPass->blurrPasses = 0;
+    }
+
+    ImGui::Checkbox("Use Noise texture", &renderPass->useNoiseTexture);
+
+    if (ImGui::Button("Select texture"))
+    {
+        ImGui::OpenPopup(CONSTANT_TEXTURE_SELECT_DIALOG_ID);
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Clear texture"))
+    {
+        renderPass->RemoveVolumetricNoiseTexture();
+    }
+
+    if (ImGui::IsPopupOpen(CONSTANT_TEXTURE_SELECT_DIALOG_ID))
+    {
+
+        const UID chosenTexUID = App->GetEditorUIModule()->RenderResourceSelectDialog<UID>(
+            CONSTANT_TEXTURE_SELECT_DIALOG_ID, App->GetLibraryModule()->GetTextureMap(), INVALID_UID
+        );
+
+        if (chosenTexUID != INVALID_UID) renderPass->UpdateVolumetricNoiseTexture(chosenTexUID);
+    }
+
+    const ResourceTexture* texture = renderPass->GetResourceTexture();
+
+    if (texture != nullptr)
+    {
+        ImGui::Text("Diffuse Texture");
+        ImGui::Image((ImTextureID)(intptr_t)texture->GetTextureID(), ImVec2(256, 256));
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Texture Dimensions: %d, %d", texture->GetTextureWidth(), texture->GetTextureWidth());
+        }
+    }
+    else
+    {
+        renderPass->useNoiseTexture = false;
+    }
 
     ImGui::End();
 }

@@ -1,8 +1,19 @@
 #pragma once
 
+#include "Math/float2.h"
+#include "Math/float3.h"
 #include "rapidjson/document.h"
 
 class ParticleEmitter;
+
+// USED FOR CALCULATING MAX ABSOLUTE VALUE OF PARAMETRS TO CREATE BOUNDING BOX
+struct ParticleValues
+{
+    float3 size       = float3(0.f, 0.f, 1.f);
+    float lifeTime    = 0.f;
+    float3 speed      = float3::zero;
+    float3 areaOffset = float3::zero;
+};
 
 enum class ParticleAddonType : int
 {
@@ -14,8 +25,8 @@ enum class ParticleAddonType : int
     AREA,
 };
 
-constexpr const char* AddonTypeStrings[]          = {"None", "Base", "Velocity", "Spritesheet", "Color", "Area"};
-constexpr const int AddonTypeStringsSize          = sizeof(AddonTypeStrings) / sizeof(char*);
+constexpr const char* AddonTypeStrings[] = {"None", "Base", "Velocity", "Spritesheet", "Color", "Area"};
+constexpr const int AddonTypeStringsSize = sizeof(AddonTypeStrings) / sizeof(char*);
 
 enum class ParticleInterpolationType : int
 {

@@ -55,6 +55,10 @@ bool ShaderModule::Init()
     fxaaProgram           = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, FXAA_FRAGMENT_SHADER_PATH);
     heightFogProgram      = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, HEIGHT_FOG_SHADER_PATH);
 
+    volumetricFogProgram  = CreateComputeProgram(VOLUMETRIC_FOG_COMPUTE_SHADER_PATH);
+    gaussianBlurrProgram =
+        CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, "./EngineDefaults/Shader/Fragment/GaussianBlurr.frag");
+
     return true;
 }
 
@@ -89,6 +93,8 @@ bool ShaderModule::ShutDown()
     glDeleteProgram(videoProgram);
     glDeleteProgram(fxaaProgram);
     glDeleteProgram(heightFogProgram);
+    glDeleteProgram(volumetricFogProgram);
+    glDeleteProgram(gaussianBlurrProgram);
 
     for (auto& shaderIterator : customShaderPrograms)
     {

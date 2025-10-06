@@ -20,6 +20,7 @@ class BaseAddon : public ParticleAddon
     void Update(float deltaTime, EmitterInstance* emitterInstance) override;
     void RenderEditorInspector() override;
     void Duplicate(ParticleAddon* reference) override;
+    void AssignMaxValues(ParticleValues& particleValue) override;
 
   private:
     void ResetCurveEditorPoints(ImVec2* pointsToReset);

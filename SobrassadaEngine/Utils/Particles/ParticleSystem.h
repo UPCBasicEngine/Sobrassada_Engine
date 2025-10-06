@@ -3,6 +3,8 @@
 #include "HashString.h"
 
 #include "rapidjson/document.h"
+#include "Math/float3.h"
+
 #include <list>
 #include <utility>
 #include <vector>
@@ -10,11 +12,12 @@
 namespace math
 {
     class float4x4;
-    class float3;
 } // namespace math
 
 class ParticleSystemComponent;
 class ParticleEmitter;
+
+struct ParticleValues;
 
 class ParticleSystem
 {
@@ -39,10 +42,16 @@ class ParticleSystem
     void SortEmitters();
     void Stop();
 
+    void UpdateComponentsAABB();
+
     const HashString& GetTag() const { return particleSystemTag; }
+
+    const float3& GetMaxValue() const { return maxValue; }
+    const float3& GetMinValue() const { return minValue; }
 
   private:
     void UpdateComponents();
+    void CalculateMinMaxValues();
 
     // ONLY USE WHEN COPYING ANOTHER PS WHICH MEANS ITS CREATED FROM SCRATCH AND NO EMITTERS ARE PRESENT IN THIS PS
     void DuplicateEmitter(ParticleEmitter* reference);
@@ -55,4 +64,7 @@ class ParticleSystem
 
     std::vector<std::pair<HashString, ParticleEmitter*>> emitters;
     std::list<ParticleSystemComponent*> linkedComponents;
+
+    float3 maxValue = float3::zero;
+    float3 minValue = float3::zero;
 };

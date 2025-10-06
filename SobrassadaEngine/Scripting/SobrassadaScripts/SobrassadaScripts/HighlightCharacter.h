@@ -20,11 +20,13 @@ class HighlightCharacter : public Script
     std::string playerName            = "walk";
     std::string playerCameraPivotName = "Camera Pivot";
     std::string characterToHighlightName;
+    std::string highlightFocusObjectName;
 
     float secondSplinePointOffset                  = 0.85f;
     float zoomMultiplier                           = 30.0f;
 
     bool isSetupCorrectly                          = true;
+    bool setupTargetOnCollision                    = false;
     bool isExecuting                               = false;
     bool neverExecuted                             = true;
 
@@ -33,6 +35,7 @@ class HighlightCharacter : public Script
     GameObject* playerCameraPivot                  = nullptr;
     CameraMovement* cameraMovementScript           = nullptr;
     GameObject* characterToHighlight               = nullptr;
+    GameObject* highlightFocusObject               = nullptr;
     SplineComponent* splineComponent               = nullptr;
     GameObject* splineMovementTarget               = nullptr;
     MoveGOInSpline* splineMovementScript           = nullptr;

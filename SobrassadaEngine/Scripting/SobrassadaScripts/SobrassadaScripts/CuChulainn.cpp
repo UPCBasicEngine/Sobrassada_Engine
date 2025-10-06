@@ -1390,16 +1390,12 @@ void CuChulainn::Dash()
         const float3 offset       = float3::unitY;
 
         const float3 scale        = dashSmoke1->GetParent()->GetLocalTransform().ExtractScale();
-
-        // Rotación que mira en la dirección del personaje
         const Quat lookRotation =
             Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
 
-        // Rotación adicional de 90° sobre el eje X para mantener el plano vertical
         const Quat verticalCorrection   = Quat::RotateAxisAngle(float3::unitX, 90.0f * (PI / 180));
         const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitZ, 90.0f * (PI / 180));
 
-        // Combinamos ambas rotaciones
         const Quat finalRotation        = lookRotation * verticalCorrection * horizontalCorrection;
 
         const float4x4 transform        = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
@@ -1413,26 +1409,22 @@ void CuChulainn::Dash()
     }
     if (dashSmoke2)
     {
-        const float3 characterPos =
-            parent->GetGlobalTransform().TranslatePart() - parent->GetParentGlobalTransform().TranslatePart();
-        const float3 offset = float3::unitY;
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.1f;
 
-        // const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
-        // const float3 offset       = float3::unitY * 0.1f;
-        //
-        // const float3 scale        = dashSmoke2->GetParent()->GetLocalTransform().ExtractScale();
-        //
-        // const Quat lookRotation =
-        //     Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
-        //
-        // const Quat finalRotation = lookRotation;
-        //
-        // const float4x4 transform = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
-        //
-        // const float4x4 parentWS  = parent->GetParentGlobalTransform();
-        // const float4x4 localTRS  = parentWS.Inverted() * transform;
+        const float3 scale        = dashSmoke2->GetParent()->GetLocalTransform().ExtractScale();
 
-        dashSmoke2->GetParent()->SetLocalPosition(characterPos + offset);
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
+
+        const Quat finalRotation = lookRotation;
+
+        const float4x4 transform = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS  = parent->GetParentGlobalTransform();
+        const float4x4 localTRS  = parentWS.Inverted() * transform;
+
+        dashSmoke2->GetParent()->SetLocalTransform(localTRS);
         dashSmoke2->SetEnabled(true);
         dashSmoke2->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     }
