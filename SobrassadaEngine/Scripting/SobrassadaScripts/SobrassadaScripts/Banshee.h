@@ -121,5 +121,6 @@ class Banshee : public Character
     float3 lastPlayerPosition                  = float3::zero;
 
     ParticleSystemComponent* hitParticleSystem = nullptr;
+    std::vector<ShaderScriptComponent*> hitVFXShaderComponents;
     std::vector<ShaderScriptComponent*> deathVFXShaderComponents;
 };

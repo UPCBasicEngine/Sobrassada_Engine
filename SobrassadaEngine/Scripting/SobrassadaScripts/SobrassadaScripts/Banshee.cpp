@@ -183,6 +183,15 @@ bool Banshee::Init()
                 shaderComp->SetEnabled(false);
             }
         }
+        else if (currentGO->GetName() == "VFX_Hit_Spritesheet")
+        {
+            hitVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(false);
+            }
+        }
         else if (currentGO->GetName() == "VFX_Forward_Shout")
         {
             forwardScreamShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
@@ -343,6 +352,12 @@ void Banshee::OnDeath()
 void Banshee::OnDamageTaken(int amount)
 {
     if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
+
+    for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
+    {
+        shaderComp->SetEnabled(true);
+        shaderComp->ResetScript("AttackVfxSpritesheet");
+    }
 }
 
 void Banshee::PerformAttack()
