@@ -31,6 +31,17 @@ AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
     fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
     fields.push_back({"Only Once", InspectorField::FieldType::Bool, &onlyOnce});
+    
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Row column parameters"});
+    fields.push_back({"Use row columns", InspectorField::FieldType::Bool, &useRowCol});
+    fields.push_back({"Rows", InspectorField::FieldType::Int, &rows, 1, 100});
+    fields.push_back({"Colums", InspectorField::FieldType::Int, &cols, 1, 100});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Animation duration parameters"});
+    fields.push_back({"Use animation duration", InspectorField::FieldType::Bool, &useAnimDuration});
+    fields.push_back({"Animation Duration", InspectorField::FieldType::Float, &animationDuration, 0.1f, 100.f});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Texture resource"});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 }
 
@@ -111,11 +122,30 @@ bool AttackVfxSpritesheet::Init()
             otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
             glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
-            uvRange.x = 0.0f;
-            uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-            uvRange.z = 0.0f;
-            uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            if (!useRowCol)
+            {
+                uvRange.x = 0.0f;
+                uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+                uvRange.z = 0.0f;
+                uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+
+                step.x    = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+                step.y    = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            }
+            else
+            {
+                uvRange.x = 0.0f;
+                uvRange.y = 1.0f / float(cols);
+                uvRange.z = 0.0f;
+                uvRange.w = 1.0f / float(rows);
+
+                step.x    = 1.0f / float(cols);
+                step.y    = 1.0f / float(rows);
+            }
         }
+
+        if (animationDuration <= 0.f) animationDuration = 0.1f;
+
     }
     return true;
 }
@@ -182,17 +212,34 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 
 void AttackVfxSpritesheet::Reset()
 {
-    uvRange.x = 0.0f;
-    uvRange.y = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-    uvRange.z = 0.0f;
-    uvRange.w = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-    finished  = false;
+    if (!useRowCol)
+    {
+        uvRange.x = 0.0f;
+        uvRange.y = step.x;
+        uvRange.z = 0.0f;
+        uvRange.w = step.y;
+    }
+    else
+    {
+        uvRange.x = 0.0f;
+        uvRange.y = step.x;
+        uvRange.z = 0.0f;
+        uvRange.w = step.y;
+    }
+
+    finished = false;
 }
 
 const bool AttackVfxSpritesheet::AlmostFinished(int specificRow, int specificCol) const
 {
     int actualRow = static_cast<int>(uvRange.z * otherImage->GetTextureHeight() / cellHeight);
     int actualCol = static_cast<int>(uvRange.x * otherImage->GetTextureWidth() / cellWidth);
+
+    if (useRowCol)
+    {
+        actualRow = int(uvRange.z * float(rows));
+        actualCol = int(uvRange.x * float(cols));
+    }
 
     if (isRowMajor)
     {
@@ -211,22 +258,36 @@ const bool AttackVfxSpritesheet::AlmostFinished(int specificRow, int specificCol
 void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
 {
     timer += deltaTime;
-    if (timer < updateRate) return;
+    if (!useAnimDuration)
+    {
+        if (timer < updateRate) return;
+    }
+    else
+    {
+        if (timer < (animationDuration / float(rows * cols))) return;
+    }
 
     if (isRowMajor)
     {
         if (uvRange.y >= 1.0f)
         {
             uvRange.x  = 0.0f;
-            uvRange.y  = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            // uvRange.y  = cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.y  = step.x;
 
-            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            /*uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());*/
+
+            uvRange.z += step.y;
+            uvRange.w += step.y;
         }
         else
         {
-            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            /*uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());*/
+
+            uvRange.x += step.x;
+            uvRange.y += step.x;
         }
     }
     else
@@ -234,17 +295,25 @@ void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
         if (uvRange.w >= 1.0f)
         {
             uvRange.z  = 0.0f;
-            uvRange.w  = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            // uvRange.w  = cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            uvRange.w  = step.y;
 
-            uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
-            uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            // uvRange.x += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+            // uvRange.y += cellWidth / static_cast<float>(otherImage->GetTextureWidth());
+
+            uvRange.x += step.x;
+            uvRange.y += step.x;
         }
         else
         {
-            uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
-            uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            // uvRange.z += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+            // uvRange.w += cellHeight / static_cast<float>(otherImage->GetTextureHeight());
+
+            uvRange.z += step.y;
+            uvRange.w += step.y;
         }
     }
+
     timer = 0.0f;
 
     if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)

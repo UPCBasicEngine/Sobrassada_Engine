@@ -174,9 +174,14 @@ bool Banshee::Init()
         {
             hitParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
         }
-        else if (currentGO->GetName() == "PS_BansheeDeath")
+        else if (currentGO->GetName() == "VFX_Death_Spritesheet")
         {
-            deathParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+            deathVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComp : deathVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(false);
+            }
         }
         else if (currentGO->GetName() == "VFX_Forward_Shout")
         {
@@ -493,7 +498,12 @@ void Banshee::TakeDamage(int amount)
 
     if ((currentHealth - amount) <= 0)
     {
-        if (deathParticleSystem) deathParticleSystem->SpawnAllInstances();
+        
+        for (ShaderScriptComponent* shaderComp : deathVFXShaderComponents)
+        {
+            shaderComp->SetEnabled(true);
+        }
+
         animComponent->UseTrigger("Death");
         currentState = BansheeStates::Dead;
         return;

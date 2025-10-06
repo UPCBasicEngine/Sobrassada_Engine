@@ -40,6 +40,8 @@ class AttackVfxSpritesheet : public Script
     float cellWidth             = 0.1f;
     float4 uvRange              = float4::zero;
 
+    float2 step                 = float2::zero;
+
     MeshComponent* meshComp     = nullptr;
 
     ResourceTexture* otherImage = nullptr;
@@ -51,4 +53,11 @@ class AttackVfxSpritesheet : public Script
 
     bool onlyOnce               = false;
     bool finished               = false;
+
+    bool useRowCol              = false;
+    int rows                    = 1;
+    int cols                    = 1;
+
+    bool useAnimDuration        = false;
+    float animationDuration     = 0.1f;
 };
