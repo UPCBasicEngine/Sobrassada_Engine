@@ -590,7 +590,7 @@ bool CuChulainn::Init()
 
     for (int i = 0; i < mushrooms; ++i)
     {
-        hudMushrooms[i]->SetEnabled(true);
+        if (hudMushrooms[i])hudMushrooms[i]->SetEnabled(true);
     }
 
     return true;
