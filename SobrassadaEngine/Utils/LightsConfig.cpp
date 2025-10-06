@@ -15,6 +15,7 @@
 #include "Standalone/Lights/PointLightComponent.h"
 #include "Standalone/Lights/SpotLightComponent.h"
 #include "TextureImporter.h"
+#include "VolumetricAreaComponent.h"
 
 #include "glew.h"
 #include "imgui.h"
@@ -32,6 +33,8 @@ LightsConfig::~LightsConfig()
     glDeleteBuffers(1, &directionalBufferId);
     glDeleteBuffers(1, &pointBufferId);
     glDeleteBuffers(1, &spotBufferId);
+
+    glDeleteBuffers(1, &volumeAreaBufferId);
 
     glDeleteVertexArrays(1, &skyboxVao);
     glDeleteBuffers(1, &skyboxVbo);
@@ -114,6 +117,14 @@ void LightsConfig::IsHDRTexture(const std::string& name)
 {
     if (name.find("_HDR") != std::string::npos) isHDRTexture = true;
     else isHDRTexture = false;
+}
+
+void LightsConfig::ResetSpotShadowIndexes()
+{
+    for (SpotLightComponent* spot : spotLights)
+    {
+        spot->SetShadowGPUIndex(-1);
+    }
 }
 
 void LightsConfig::RenderSkybox(const float4x4& projection, const float4x4& view) const
@@ -419,6 +430,8 @@ void LightsConfig::InitLightBuffers()
     glGenBuffers(1, &pointBufferId);
     glGenBuffers(1, &spotBufferId);
 
+    glGenBuffers(1, &volumeAreaBufferId);
+
     // Then get all lights an resize each buffer accordingly
     GetAllSceneLights();
 }
@@ -501,7 +514,8 @@ void LightsConfig::SetSpotLightsShaderData() const
             spots.emplace_back(Lights::SpotLightShaderData(
                 float4(spotLights[i]->GetGlobalTransform().TranslatePart(), spotLights[i]->GetRange()),
                 float4(spotLights[i]->GetColor(), spotLights[i]->GetIntensity()), float3(spotLights[i]->GetDirection()),
-                spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle()
+                spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle(), spotLights[i]->GetShadowGPUIndex(),
+                spotLights[i]->GetRadius()
             ));
         }
     }
@@ -514,9 +528,35 @@ void LightsConfig::SetSpotLightsShaderData() const
     for (const Lights::SpotLightShaderData& light : spots)
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::SpotLightShaderData), &light);
-        offset += sizeof(Lights::SpotLightShaderData) + 12;
+        offset += sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset;
     }
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, spotBufferId);
+}
+
+void LightsConfig::SetVolumetricAreaShaderData() const
+{
+    std::vector<Lights::VolumetricAreaShaderData> volumetrics;
+    for (int i = 0; i < volumetricAreas.size(); ++i)
+    {
+        if (volumetricAreas[i] && volumetricAreas[i]->IsEffectivelyEnabled())
+        {
+            volumetrics.emplace_back(Lights::VolumetricAreaShaderData(
+                float4(volumetricAreas[i]->GetGlobalTransform().TranslatePart(), (int)volumetricAreas[i]->GetAreaType()),
+                float4(volumetricAreas[i]->GetSize(), 1.0f)
+            ));
+        }
+    }
+
+    int count = static_cast<int>(volumetricAreas.size());
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, volumeAreaBufferId);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &count);
+    int offset = 16; // Byte start offset for the point light array in the SSBO
+    for (const Lights::VolumetricAreaShaderData& vol : volumetrics)
+    {
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizeof(Lights::VolumetricAreaShaderData), &vol);
+        offset += sizeof(Lights::VolumetricAreaShaderData);
+    }
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, volumeAreaBufferId);
 }
 
 void LightsConfig::AddDirectionalLight(DirectionalLightComponent* newDirectional)
@@ -565,13 +605,29 @@ void LightsConfig::AddSpotLight(SpotLightComponent* newSpot)
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     int bufferSize = static_cast<int>(
-        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16
+        (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16
     ); // 12 bytes offset between spotlights
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
     /*GLOG(
         "Add spot light with uid: %d. Spot lights count: %d. Buffer size: %d", newSpot->GetUID(), spotLights.size(),
         bufferSize
     );*/
+}
+
+void LightsConfig::AddVolumetricArea(VolumetricAreaComponent* newVol)
+{
+    // Check that the gameObject is in the current scene (to avoid including prefab lights)
+    if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(newVol->GetParentUID()) == nullptr)
+    {
+        GLOG("The gameObject is not in the current scene, probably a prefab");
+        return;
+    }
+
+    volumetricAreas.push_back(newVol);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, volumeAreaBufferId);
+    int bufferSize = static_cast<int>(sizeof(Lights::VolumetricAreaShaderData) * volumetricAreas.size() + 16);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 }
 
 void LightsConfig::RemoveDirectionalLight(DirectionalLightComponent* directional)
@@ -640,11 +696,34 @@ void LightsConfig::RemoveSpotLight(SpotLightComponent* spot)
     // Resize lights buffer
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     int bufferSize = static_cast<int>(
-        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16
+        (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16
     ); // 12 bytes offset between spotlights
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 
     // GLOG("Spot lights size: %d. Buffer size: %d", spotLights.size(), bufferSize);
+}
+
+void LightsConfig::RemoveVolumetricArea(VolumetricAreaComponent* vol)
+{
+    // Check that the gameObject is in the current scene (to avoid including prefab lights)
+    if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(vol->GetParentUID()) == nullptr)
+    {
+        GLOG("The gameObject is not in the current scene, probably a prefab");
+        return;
+    }
+
+    // GLOG("Remove point light with UID: %d", point->GetUID());
+    for (int i = 0; i < volumetricAreas.size(); ++i)
+    {
+        if (volumetricAreas[i] == vol)
+        {
+            volumetricAreas.erase(volumetricAreas.begin() + i);
+        }
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, volumeAreaBufferId);
+    int bufferSize = static_cast<int>(sizeof(Lights::PointLightShaderData) * volumetricAreas.size() + 16);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 }
 
 void LightsConfig::GetAllSceneLights()
@@ -658,11 +737,11 @@ void LightsConfig::GetAllSceneLights()
         directionalLight      = dirLights.empty() ? nullptr : dirLights[0];
 
         // Point
-        //pointLights           = scene->GetEnabledComponentsOfType<PointLightComponent*>();
+        // pointLights           = scene->GetEnabledComponentsOfType<PointLightComponent*>();
         // GLOG("Point lights count: %d", pointLights.size());
 
         // Spot
-        //spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
+        // spotLights            = scene->GetEnabledComponentsOfType<SpotLightComponent*>();
         // GLOG("Spot lights count: %d", spotLights.size());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, pointBufferId);
@@ -671,11 +750,17 @@ void LightsConfig::GetAllSceneLights()
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
         size_t spotBufferSize =
-            (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16; // 12 bytes offset between spotlights
+            (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() +
+            16; // 8 bytes offset between spotlights
         glBufferData(GL_SHADER_STORAGE_BUFFER, spotBufferSize, nullptr, GL_STATIC_DRAW);
 
         glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(Lights::DirectionalLightShaderData), nullptr, GL_STATIC_DRAW);
+
+        // VOLUME AREAS
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, volumeAreaBufferId);
+        size_t volumetricBufferSize = sizeof(Lights::VolumetricAreaShaderData) * volumetricAreas.size() + 16;
+        glBufferData(GL_SHADER_STORAGE_BUFFER, volumetricBufferSize, nullptr, GL_STATIC_DRAW);
     }
 }
 
@@ -715,8 +800,7 @@ void LightsConfig::GetAllSpotLights(const std::vector<Component*>& components)
 
     // Maybe make function to do this because it's called like 3 times
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
-    size_t bufferSize =
-        (sizeof(Lights::SpotLightShaderData) + 12) * spotLights.size() + 16; // 12 bytes offset between spotlights
+    size_t bufferSize = (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16;
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 }
 

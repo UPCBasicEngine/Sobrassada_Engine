@@ -345,6 +345,8 @@ void BaseAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
 void BaseAddon::RenderEditorInspector()
 {
+    bool anyChange = false;
+
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Base Addon");
 
     ImGui::PushItemWidth(100);
@@ -355,7 +357,7 @@ void BaseAddon::RenderEditorInspector()
     ImGui::Checkbox("Respawn", &respawnLoop);
     ImGui::EndDisabled();
 
-    ImGui::InputFloat("Duration", &duration, 0.05f, 1.f);
+    if (ImGui::InputFloat("Duration", &duration, 0.05f, 1.f)) anyChange = true;
     if (ImGui::InputInt("Emitting rate", &particlesPerSecond, 5, 10))
     {
         particlesPerSecond = particlesPerSecond < 1 ? 1 : particlesPerSecond;
@@ -369,12 +371,12 @@ void BaseAddon::RenderEditorInspector()
 
     if (randomLifetime)
     {
-        ImGui::InputFloat("##MinLifetime", &minLifetime);
+        if (ImGui::InputFloat("##MinLifetime", &minLifetime)) anyChange = true;
         ImGui::SameLine();
     }
-    ImGui::InputFloat("##MaxLifetime", &maxLifetime);
+    if (ImGui::InputFloat("##MaxLifetime", &maxLifetime)) anyChange = true;
     ImGui::SameLine();
-    ImGui::Text("Lifetime");
+    (ImGui::Text("Lifetime"));
     ImGui::SameLine();
     ImGui::Checkbox("Rand##Lifetime", &randomLifetime);
 
@@ -401,7 +403,11 @@ void BaseAddon::RenderEditorInspector()
         {
             for (int i = 0; i < InterpolationAddonStringsSize; ++i)
             {
-                if (ImGui::Selectable(InterpolationAddonStrings[i])) sizeInterpolation = ParticleInterpolationType(i);
+                if (ImGui::Selectable(InterpolationAddonStrings[i]))
+                {
+                    sizeInterpolation = ParticleInterpolationType(i);
+                    anyChange         = true;
+                }
             }
             ImGui::EndCombo();
         }
@@ -413,10 +419,10 @@ void BaseAddon::RenderEditorInspector()
             ImGui::PushItemWidth(100);
             if (randomizeSizeCombined)
             {
-                ImGui::InputFloat("##MinSizeCombined", &combinedSize[0]);
+                if (ImGui::InputFloat("##MinSizeCombined", &combinedSize[0])) anyChange = true;
                 ImGui::SameLine();
             }
-            ImGui::InputFloat("##MaxSizeCombined", &combinedSize[1]);
+            if (ImGui::InputFloat("##MaxSizeCombined", &combinedSize[1])) anyChange = true;
             ImGui::SameLine();
             ImGui::Text("Combined Size");
             ImGui::SameLine();
@@ -428,8 +434,8 @@ void BaseAddon::RenderEditorInspector()
         }
         case ParticleInterpolationType::BEZIER_SINGLE:
         {
-            ImGui::Bezier("SizeBezier##Combined", sizeBezierCombined);
-            ImGui::InputFloat2("Particle Range", &combinedSize[0]);
+            if (ImGui::Bezier("SizeBezier##Combined", sizeBezierCombined)) anyChange = true;
+            if (ImGui::InputFloat2("Particle Range", &combinedSize[0])) anyChange = true;
 
             break;
         }
@@ -437,15 +443,18 @@ void BaseAddon::RenderEditorInspector()
         {
             ImGui::Spacing();
 
-            ImGui::Curve(
-                "Combined Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPoints, &curveEditorIndex,
-                ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
-            );
+            if (ImGui::Curve(
+                    "Combined Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorPoints, &curveEditorIndex,
+                    ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
+                ))
+                anyChange = true;
 
             if (ImGui::InputFloat2("Combined Size", &curveEditorValueRange[0]))
             {
                 if (combinedSize.x < 0) combinedSize.x = 0;
                 if (combinedSize.y < 0) combinedSize.y = 0;
+
+                anyChange = true;
             }
             ImGui::SameLine();
             if (ImGui::Button("Reset Points")) ResetCurveEditorPoints(curveEditorPoints);
@@ -465,7 +474,10 @@ void BaseAddon::RenderEditorInspector()
                 for (int i = 0; i < InterpolationAddonStringsSize; ++i)
                 {
                     if (ImGui::Selectable(InterpolationAddonStrings[i]))
+                    {
                         sizeInterpolationX = ParticleInterpolationType(i);
+                        anyChange          = true;
+                    }
                 }
                 ImGui::EndCombo();
             }
@@ -477,10 +489,10 @@ void BaseAddon::RenderEditorInspector()
                 ImGui::PushItemWidth(100);
                 if (randomizeSizeX)
                 {
-                    ImGui::InputFloat("##MinSizeX", &sizeValuesX[0]);
+                    if (ImGui::InputFloat("##MinSizeX", &sizeValuesX[0])) anyChange = true;
                     ImGui::SameLine();
                 }
-                ImGui::InputFloat("##MaxSizeX", &sizeValuesX[1]);
+                if (ImGui::InputFloat("##MaxSizeX", &sizeValuesX[1])) anyChange = true;
                 ImGui::SameLine();
                 ImGui::Text("X Size");
                 ImGui::SameLine();
@@ -491,21 +503,24 @@ void BaseAddon::RenderEditorInspector()
             }
             case ParticleInterpolationType::BEZIER_SINGLE:
             {
-                ImGui::Bezier("SizeBezier##X", sizeBezierX);
-                ImGui::InputFloat2("X Particle Range", &sizeValuesX[0]);
+                if (ImGui::Bezier("SizeBezier##X", sizeBezierX)) anyChange = true;
+                if (ImGui::InputFloat2("X Particle Range", &sizeValuesX[0])) anyChange = true;
                 break;
             }
             case ParticleInterpolationType::CURVE_EDITOR:
             {
-                ImGui::Curve(
-                    "X Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorXPoints, &curveEditorIndexX,
-                    ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
-                );
+                if (ImGui::Curve(
+                        "X Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorXPoints, &curveEditorIndexX,
+                        ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
+                    ))
+                    anyChange = true;
 
                 if (ImGui::InputFloat2("X Size Range", &sizeValuesX[0]))
                 {
                     if (sizeValuesX.x < 0) sizeValuesX.x = 0;
                     if (sizeValuesX.y < 0) sizeValuesX.y = 0;
+
+                    anyChange = true;
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Reset Points##X")) ResetCurveEditorPoints(curveEditorXPoints);
@@ -526,7 +541,10 @@ void BaseAddon::RenderEditorInspector()
                 for (int i = 0; i < InterpolationAddonStringsSize; ++i)
                 {
                     if (ImGui::Selectable(InterpolationAddonStrings[i]))
+                    {
                         sizeInterpolationY = ParticleInterpolationType(i);
+                        anyChange          = true;
+                    }
                 }
                 ImGui::EndCombo();
             }
@@ -538,10 +556,10 @@ void BaseAddon::RenderEditorInspector()
                 ImGui::PushItemWidth(100);
                 if (randomizeSizeY)
                 {
-                    ImGui::InputFloat("##MinSizeY", &sizeValuesY[0]);
+                    if (ImGui::InputFloat("##MinSizeY", &sizeValuesY[0])) anyChange = true;
                     ImGui::SameLine();
                 }
-                ImGui::InputFloat("##MaxSizeY", &sizeValuesY[1]);
+                if (ImGui::InputFloat("##MaxSizeY", &sizeValuesY[1])) anyChange = true;
                 ImGui::SameLine();
                 ImGui::Text("Y Size");
                 ImGui::SameLine();
@@ -552,21 +570,23 @@ void BaseAddon::RenderEditorInspector()
             }
             case ParticleInterpolationType::BEZIER_SINGLE:
             {
-                ImGui::Bezier("SizeBezier#Y", sizeBezierY);
-                ImGui::InputFloat2("Y Particle Range", &sizeValuesY[0]);
+                if (ImGui::Bezier("SizeBezier#Y", sizeBezierY)) anyChange = true;
+                if (ImGui::InputFloat2("Y Particle Range", &sizeValuesY[0])) anyChange = true;
                 break;
             }
             case ParticleInterpolationType::CURVE_EDITOR:
             {
-                ImGui::Curve(
-                    "Y Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorYPoints, &curveEditorIndexX,
-                    ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
-                );
+                if (ImGui::Curve(
+                        "Y Size Curve", ImVec2(400, 100), MaxCurveEditorPoints, curveEditorYPoints, &curveEditorIndexX,
+                        ImVec2(0.f, curveEditorValueRange.x), ImVec2(1.f, curveEditorValueRange.y)
+                    ))
+                    anyChange = true;
 
                 if (ImGui::InputFloat2("Y Size Range", &sizeValuesY[0]))
                 {
                     if (sizeValuesY.x < 0) sizeValuesY.x = 0;
                     if (sizeValuesY.y < 0) sizeValuesY.y = 0;
+                    anyChange = true;
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Reset Points##Y")) ResetCurveEditorPoints(curveEditorYPoints);
@@ -578,6 +598,8 @@ void BaseAddon::RenderEditorInspector()
             }
         }
     }
+
+    if (anyChange) owner->UpdateAABB();
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -631,6 +653,74 @@ void BaseAddon::Duplicate(ParticleAddon* reference)
 
         particlesPerSecond = other->particlesPerSecond;
         burst              = other->burst;
+    }
+}
+
+void BaseAddon::AssignMaxValues(ParticleValues& particleValue)
+{
+    particleValue.lifeTime = !loop ? fmin(maxLifetime, duration) : maxLifetime;
+
+    if (!updateXYApart)
+    {
+        switch (sizeInterpolation)
+        {
+        case ParticleInterpolationType::FIXED_VALUES:
+        case ParticleInterpolationType::BEZIER_SINGLE:
+        {
+            if (particleValue.size.x < combinedSize[1]) particleValue.size.x = combinedSize[1];
+            if (particleValue.size.y < combinedSize[1]) particleValue.size.y = combinedSize[1];
+            break;
+        }
+        case ParticleInterpolationType::CURVE_EDITOR:
+        {
+            float value = ImGui::CurveValue(1.f, MaxCurveEditorPoints, curveEditorPoints);
+            if (particleValue.size.x < value) particleValue.size.x = value;
+            if (particleValue.size.y < value) particleValue.size.y = value;
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    else
+    {
+        // X Values
+        switch (sizeInterpolationX)
+        {
+        case ParticleInterpolationType::FIXED_VALUES:
+        case ParticleInterpolationType::BEZIER_SINGLE:
+        {
+            if (particleValue.size.x < sizeValuesX[1]) particleValue.size.x = sizeValuesX[1];
+            break;
+        }
+        case ParticleInterpolationType::CURVE_EDITOR:
+        {
+            float value = ImGui::CurveValue(1.f, MaxCurveEditorPoints, curveEditorXPoints);
+            if (particleValue.size.x < value) particleValue.size.x = value;
+            break;
+        }
+        default:
+            break;
+        }
+
+        // Y Values
+        switch (sizeInterpolationY)
+        {
+        case ParticleInterpolationType::FIXED_VALUES:
+        case ParticleInterpolationType::BEZIER_SINGLE:
+        {
+            if (particleValue.size.y < sizeValuesY[1]) particleValue.size.y = sizeValuesY[1];
+            break;
+        }
+        case ParticleInterpolationType::CURVE_EDITOR:
+        {
+            float value = ImGui::CurveValue(1.f, MaxCurveEditorPoints, curveEditorYPoints);
+            if (particleValue.size.y < value) particleValue.size.y = value;
+            break;
+        }
+        default:
+            break;
+        }
     }
 }
 

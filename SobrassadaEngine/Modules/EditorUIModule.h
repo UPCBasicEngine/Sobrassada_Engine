@@ -140,6 +140,8 @@ class EditorUIModule : public Module
     void Navmesh(bool& navmesh);
     void CrowdControl(bool& crowdControl);
 
+    void FogConfig(bool& fogConfig);
+
     std::string FormatWithCommas(unsigned int number) const;
 
     void OpenEditor(EngineEditorBase* editorToOpen);
@@ -171,6 +173,7 @@ class EditorUIModule : public Module
     bool closeApplication   = false;
     bool navmesh            = false;
     bool crowdControl       = false;
+    bool fogConfig          = false;
 
     int maximumPlotData     = 50;
     std::deque<float> framerate;

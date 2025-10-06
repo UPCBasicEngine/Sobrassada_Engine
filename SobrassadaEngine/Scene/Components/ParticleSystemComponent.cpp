@@ -2,6 +2,7 @@
 
 #include "Application.h"
 #include "EmitterInstance.h"
+#include "GameObject.h"
 #include "ParticleSystem.h"
 #include "ParticleSystemModule.h"
 
@@ -60,7 +61,6 @@ void ParticleSystemComponent::Update(float deltaTime)
         for (auto& emitter : emitterInstances)
             emitter.Update(deltaTime);
     }
-   
 }
 
 void ParticleSystemComponent::RenderDebug(float deltaTime)
@@ -128,7 +128,7 @@ void ParticleSystemComponent::RenderEditorInspector()
             emitter.Spawn();
     }
 
-    if(ImGui::Button("Stop playing"))
+    if (ImGui::Button("Stop playing"))
     {
         StopInstances();
     }
@@ -205,6 +205,12 @@ void ParticleSystemComponent::SetParticleSystem(ParticleSystem* newParticleSyste
 {
     particleSystem    = newParticleSystem;
     particleSystemTag = newParticleSystem->GetTag();
+}
+
+void ParticleSystemComponent::UpdateAABB(const float3& minValue, const float3& maxValue)
+{
+    localComponentAABB = AABB(minValue, maxValue);
+    parent->OnAABBUpdated();
 }
 
 void ParticleSystemComponent::SpawnAllInstances()

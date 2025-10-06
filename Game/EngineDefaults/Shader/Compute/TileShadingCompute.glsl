@@ -13,6 +13,14 @@ struct SpotLight
 	vec3 direction;	
 	float innerAngle;
 	float outerAngle;
+	int spotShadowIndex;
+    float radius;
+};
+
+struct VolumetricArea
+{
+	vec4 position;		// xyz = position & w = type -> 0 AABB | 1 SPHERE
+	vec4 size;			// if type == 1 -> radius = size.x
 };
 
 readonly layout(std430, binding = 4) buffer PointLights
@@ -25,6 +33,12 @@ readonly layout(std430, binding = 5) buffer SpotLights
 {
 	int spotLightsCount;
 	SpotLight spotLights[];
+};
+
+readonly layout(std430, binding = 8) buffer VolumeAreas
+{
+	int volumeAreaCount;
+	VolumetricArea volumetricAreas[];
 };
 
 layout(std140, row_major, binding = 0) uniform CameraMatrices
@@ -41,6 +55,10 @@ layout(std430, binding = 1) writeonly buffer VisibleLightIndicesBuffer {
 	VisibleIndex data[];
 } visibleLightIndicesBuffer;
 
+layout(std430, binding = 3) writeonly buffer VisibleVolumetricAreaIndicesBuffer {
+	VisibleIndex data[];
+} visibleVolumetricAreaIndicesBuffer;
+
 // Uniforms
 uniform sampler2D depthMap;
 uniform ivec2 screenSize;
@@ -49,9 +67,11 @@ uniform ivec2 screenSize;
 shared uint minDepthInt;
 shared uint maxDepthInt;
 shared uint visibleLightCount;
+shared uint visibleAreaCount;
 shared vec4 frustumPlanes[6];
 // Shared local storage for visible indices, will be written out to the global buffer at the end
-shared int visibleLightIndices[1024];
+shared int visibleLightIndices[250];
+shared int visibleAreaIndices[250];
 shared mat4 viewProjection;
 
 
@@ -68,6 +88,7 @@ void main() {
 		minDepthInt = 0xFFFFFFFF;
 		maxDepthInt = 0;
 		visibleLightCount = 0;
+		visibleAreaCount = 0;
 		viewProjection = projMatrix * viewMatrix;
 	}
 
@@ -183,17 +204,56 @@ void main() {
 		}
 	}
 
+	// CALCULATING AREAS
+	passCount = (volumeAreaCount + threadCount - 1) / threadCount;
+	for (uint i = 0; i < passCount; i++) {
+		uint areaIndex = i * threadCount + gl_LocalInvocationIndex;
+		if (areaIndex >= volumeAreaCount) {
+			break;
+		}
+
+		VolumetricArea area = volumetricAreas[areaIndex];
+
+		vec4 position  = vec4(area.position.xyz, 1.0);
+	
+		float radius = area.position.w == 0 ? max(max(area.size.x,area.size.y),area.size.z) : area.size.x;
+
+		// We check if the area exists in our frustum
+		float distance = 0.0;
+		for (uint j = 0; j < 6; j++) {
+			distance = dot(position, frustumPlanes[j]) + radius;
+
+			// If one of the tests fails, then there is no intersection
+			if (distance <= 0.0) {
+				break;
+			}
+		}
+
+		if (distance > 0.0) {
+			uint offset = atomicAdd(visibleAreaCount, 1);
+			visibleAreaIndices[offset] = int(areaIndex);
+		}
+	}
+
 	barrier();
 
 	// One thread should fill the global light buffer
 	if (gl_LocalInvocationIndex == 0) {
-		uint offset = index * 1024; // Determine bosition in global buffer
+		uint offset = index * 250; // Determine bosition in global buffer
 		for (uint i = 0; i < visibleLightCount; i++) {
 			visibleLightIndicesBuffer.data[offset + i].index = visibleLightIndices[i];
 		}
 
-		if (visibleLightCount != 1024) {
+		if (visibleLightCount != 250) {
 			visibleLightIndicesBuffer.data[offset + visibleLightCount].index = -1;
+		}
+
+		for (uint i = 0; i < visibleAreaCount; i++) {
+			visibleVolumetricAreaIndicesBuffer.data[offset + i].index = visibleAreaIndices[i];
+		}
+
+		if (visibleAreaCount != 250) {
+			visibleVolumetricAreaIndicesBuffer.data[offset + visibleAreaCount].index = -1;
 		}
 	}
 }
