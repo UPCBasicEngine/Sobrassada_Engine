@@ -27,6 +27,8 @@ namespace AK
         static const AkUniqueID PLAY_SFX_ARCHER_OVERSHOOTING = 2850888511U;
         static const AkUniqueID PLAY_SFX_ARCHER_TRI_ATTACK = 4195834484U;
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
+        static const AkUniqueID PLAY_SFX_BANSHEE_DEATH = 1421284353U;
+        static const AkUniqueID PLAY_SFX_BANSHEE_HURT = 1031600530U;
         static const AkUniqueID PLAY_SFX_BREAK_01 = 2634635063U;
         static const AkUniqueID PLAY_SFX_BREAK_02 = 2634635060U;
         static const AkUniqueID PLAY_SFX_BREAK_03 = 2634635061U;
@@ -50,6 +52,9 @@ namespace AK
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_03 = 3435584309U;
         static const AkUniqueID PLAY_SFX_FERDIAD_RANGEATTACK = 4270586061U;
         static const AkUniqueID PLAY_SFX_FERDIAD_RANGEATTACKSTART = 3238138479U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_STEPS_01 = 2955844247U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_STEPS_02 = 2955844244U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_STEPS_03 = 2955844245U;
         static const AkUniqueID PLAY_SFX_FERDIAD_WATERSPOUT = 595604230U;
         static const AkUniqueID PLAY_SFX_FIRE_01 = 3889642976U;
         static const AkUniqueID PLAY_SFX_FIRE_02 = 3889642979U;
@@ -88,6 +93,39 @@ namespace AK
         static const AkUniqueID PLAY_TORCH = 2025845440U;
         static const AkUniqueID PLAY_TUTORIAL_THEME = 1202310014U;
     } // namespace EVENTS
+
+    namespace STATES
+    {
+        namespace GAMESTATE
+        {
+            static const AkUniqueID GROUP = 4091656514U;
+
+            namespace STATE
+            {
+                static const AkUniqueID COMBAT = 2764240573U;
+                static const AkUniqueID EXPLORING = 1823678183U;
+                static const AkUniqueID IDLE = 1874288895U;
+                static const AkUniqueID NONE = 748895195U;
+                static const AkUniqueID RIASTRAD = 3083217571U;
+            } // namespace STATE
+        } // namespace GAMESTATE
+
+        namespace LEVEL
+        {
+            static const AkUniqueID GROUP = 2782712965U;
+
+            namespace STATE
+            {
+                static const AkUniqueID BOSS = 1560169506U;
+                static const AkUniqueID LEVEL1 = 2678230382U;
+                static const AkUniqueID LEVEL2 = 2678230381U;
+                static const AkUniqueID MAINMENU = 3604647259U;
+                static const AkUniqueID NONE = 748895195U;
+                static const AkUniqueID TUTORIAL = 3762955427U;
+            } // namespace STATE
+        } // namespace LEVEL
+
+    } // namespace STATES
 
     namespace GAME_PARAMETERS
     {
