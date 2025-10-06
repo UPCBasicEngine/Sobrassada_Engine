@@ -835,7 +835,7 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     glUseProgram(program);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+    glBindTexture(GL_TEXTURE_2D, framebuffer->GetDepthTexture());
 
     glUniform1f(2, heightFog.densityConstant);
     glUniform1f(3, heightFog.heightFalloff);
