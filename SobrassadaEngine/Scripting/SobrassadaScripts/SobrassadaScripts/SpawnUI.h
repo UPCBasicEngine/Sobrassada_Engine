@@ -12,13 +12,23 @@ class SpawnUI : public Script
     SpawnUI(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
-    void OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
+    void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
+    void OnCollisionExit(GameObject* otherObject, ColliderLayer layer) override;
 
   private:
-    SphereColliderComponent* trigger = nullptr;
-    ImageComponent* imageUI             = nullptr;
-    std::string objectUIName         = "";
-    bool onCollision                 = false;
-    bool unlockAbility                  = false;
-    std::string nameAbility     = "";
+    SphereColliderComponent* trigger       = nullptr;
+    ImageComponent* imageUI                = nullptr;
+    ImageComponent* xboxAlternativeImageUI = nullptr;
+    ImageComponent* psAlternativeImageUI   = nullptr;
+    bool triggerOnce                       = false;
+    float hideAfterSeconds                 = 0.f;
+    std::string objectUIName;
+    std::string xboxAlternativeObjectUIName;
+    std::string psAlternativeObjectUIName;
+
+    bool unlockAbility      = false;
+    std::string nameAbility = "";
+
+    float timer             = 0.f;
+    bool updating;
 };

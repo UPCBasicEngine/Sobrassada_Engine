@@ -250,7 +250,11 @@ void RenderPass::RenderScene(
 
         gbuffer->Unbind();
 
-        Bind();
+#ifdef GAME
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         const unsigned int program = App->GetShaderModule()->GetQuadProgram();
         glUseProgram(program);
@@ -261,6 +265,17 @@ void RenderPass::RenderScene(
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+#else
+       
+        Bind();
+        const unsigned int program = App->GetShaderModule()->GetQuadProgram();
+        glUseProgram(program);
+        unsigned int loc = glGetUniformLocation(program, "u_Texture");
+        glUniform1i(loc, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+#endif
 
         glPopDebugGroup();
         return;
