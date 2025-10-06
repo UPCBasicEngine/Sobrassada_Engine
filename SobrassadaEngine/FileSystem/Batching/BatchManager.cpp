@@ -201,6 +201,9 @@ void BatchManager::RenderTransparent(
 
         if (batchMeshes.empty()) continue;
 
+        it->UpdateBuffers(batchMeshes);
+        it->SwapBuffers();
+
         std::sort(
             batchMeshes.begin(), batchMeshes.end(),
             [camera](MeshComponent* a, MeshComponent* b)
@@ -323,7 +326,7 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
         App->GetOpenGLModule()->AddTrianglesPerSecond(meshTriangles / elapsed.count());
         App->GetOpenGLModule()->AddVerticesCount(vertexCount);
         App->GetOpenGLModule()->AddDrawCallsCount();
-    }  
+    }
 }
 
 void BatchManager::SwapBuffers()
