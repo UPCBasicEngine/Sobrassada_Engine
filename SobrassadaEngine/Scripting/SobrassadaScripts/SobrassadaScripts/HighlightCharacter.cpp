@@ -24,6 +24,7 @@ HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
     fields.emplace_back("Player", InspectorField::FieldType::InputText, &playerName);
     fields.emplace_back("Player camera pivot", InspectorField::FieldType::InputText, &playerCameraPivotName);
     fields.emplace_back("Character to highlight", InspectorField::FieldType::InputText, &characterToHighlightName);
+    fields.emplace_back("Setup character on collision", InspectorField::FieldType::Bool, &setupTargetOnCollision);
     fields.emplace_back("Highlight focus", InspectorField::FieldType::InputText, &highlightFocusObjectName);
 
     fields.emplace_back(
@@ -68,19 +69,22 @@ bool HighlightCharacter::Init()
         return false;
     }
 
-    characterToHighlight = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(characterToHighlightName);
-    if (characterToHighlight == nullptr)
+    if (!setupTargetOnCollision)
     {
-        isSetupCorrectly = false;
-        GLOG(
-            "[WARNING] HighlightCharacter: No character to highlight found by the name '%s'",
-            characterToHighlightName.c_str()
-        )
-        return false;
-    }
+        characterToHighlight = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(characterToHighlightName);
+        if (characterToHighlight == nullptr)
+        {
+            isSetupCorrectly = false;
+            GLOG(
+                "[WARNING] HighlightCharacter: No character to highlight found by the name '%s'",
+                characterToHighlightName.c_str()
+            )
+            return false;
+        }
 
-    highlightFocusObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(highlightFocusObjectName);
-    if (highlightFocusObject == nullptr) highlightFocusObject = characterToHighlight;
+        highlightFocusObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(highlightFocusObjectName);
+        if (highlightFocusObject == nullptr) highlightFocusObject = characterToHighlight;
+    }
 
     for (UID child : AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent())->GetChildren())
     {
@@ -147,6 +151,24 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
         parent->GetComponent<CubeColliderComponent*>()->SetEnabled(true);
     } else
     {
+        if (setupTargetOnCollision)
+        {
+            characterToHighlight = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(characterToHighlightName);
+            if (characterToHighlight == nullptr)
+            {
+                isSetupCorrectly = false;
+                GLOG(
+                    "[WARNING] HighlightCharacter: No character to highlight found by the name '%s'",
+                    characterToHighlightName.c_str()
+                )
+                neverExecuted = false;
+                return;
+            }
+
+            highlightFocusObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(highlightFocusObjectName);
+            if (highlightFocusObject == nullptr) highlightFocusObject = characterToHighlight;
+        }
+        
         playerController->SetInputDown(false);
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
