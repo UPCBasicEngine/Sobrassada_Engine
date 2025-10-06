@@ -26,6 +26,7 @@ class HighlightCharacter : public Script
     float zoomMultiplier                           = 30.0f;
 
     bool isSetupCorrectly                          = true;
+    bool setupTargetOnCollision                    = false;
     bool isExecuting                               = false;
     bool neverExecuted                             = true;
 
