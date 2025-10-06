@@ -247,6 +247,8 @@ class CuChulainn : public Character
     std::string ultimateCrackName                  = "ultimate_mesh_crack2";
     std::string ultimateWarningName                = "ultimate_mesh_warning";
     std::string ultimateSpikesName                 = "ult_spike";
+    std::string ultimateExplosionName                 = "UltimateExplosion";
+
     GameObject* ultimateObject                     = nullptr;
     GameObject* ultimateGlow                       = nullptr;
     GameObject* ultimateBlur                       = nullptr;
@@ -254,6 +256,8 @@ class CuChulainn : public Character
     GameObject* ultimateCrack                      = nullptr;
     GameObject* ultimateWarning                    = nullptr;
     GameObject* ultimateSpikes                     = nullptr;
+    GameObject* ultimateExplosion                     = nullptr;
+    ShaderScriptComponent* ultimateSmoke           = nullptr;
     bool desiredUltimate                           = false;
     int ultimateDamage                             = 0;
     float ultimateTimer                            = 0.0f;

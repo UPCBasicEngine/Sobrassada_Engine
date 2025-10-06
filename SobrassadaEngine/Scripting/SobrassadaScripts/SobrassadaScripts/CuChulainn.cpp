@@ -549,7 +549,17 @@ bool CuChulainn::Init()
 
     ultimateSpikes = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateSpikesName);
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
-    else ultimateSpikes->SetEnabled(false); 
+    else ultimateSpikes->SetEnabled(false);
+
+    ultimateExplosion      = scene->GetGameObjectByName(ultimateExplosionName);
+    ultimateExplosion->SetEnabled(true);
+    if (ultimateExplosion)
+    {
+        ultimateSmoke = ultimateExplosion->GetComponent<ShaderScriptComponent*>();
+    }
+    if (ultimateSmoke) ultimateSmoke->SetEnabled(false);
+    if (ultimateExplosion->GetComponent<MeshComponent*>())
+        ultimateExplosion->GetComponent<MeshComponent*>()->SetEnabled(false);
 
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
@@ -1547,8 +1557,7 @@ void CuChulainn::PerformAttack()
                 animComponent->OnPause();
                 playerAnimHeld = true;
             }
-
-            
+ 
         }
         else if (ultimateObject->IsEnabled())
         {
@@ -1740,6 +1749,18 @@ void CuChulainn::UltimateAttack()
 
 void CuChulainn::UpdateUltimateVfx()
 {
+    if (ultimateSmoke)
+    {
+        /*const float3 characterPos =
+            parent->GetGlobalTransform().TranslatePart() - parent->GetParentGlobalTransform().TranslatePart();
+
+        const float3 offset = float3(-2.0f, 4.0f, 1.5f);
+
+        ultimateSmoke->GetParent()->SetLocalPosition(characterPos + offset);*/
+        ultimateSmoke->SetEnabled(true);
+        ultimateSmoke->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
+
     if (ultimateBlur)
     {
         ultimateBlur->SetEnabled(true);
