@@ -174,6 +174,10 @@ bool Banshee::Init()
         {
             hitParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
         }
+        else if (currentGO->GetName() == "PS_BansheeDeath")
+        {
+            deathParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+        }
         else if (currentGO->GetName() == "VFX_Forward_Shout")
         {
             forwardScreamShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
@@ -489,7 +493,7 @@ void Banshee::TakeDamage(int amount)
 
     if ((currentHealth - amount) <= 0)
     {
-        if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
+        if (deathParticleSystem) deathParticleSystem->SpawnAllInstances();
         animComponent->UseTrigger("Death");
         currentState = BansheeStates::Dead;
         return;
@@ -664,7 +668,7 @@ void Banshee::Attack(float deltaTime)
             }
 
             // GROUND RING DISABLE
-           
+
             for (auto& shaderComponent : groundRingShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
