@@ -135,7 +135,7 @@ bool Character::Init()
 
 void Character::Update(float deltaTime)
 {
-    if (isDead) return;
+    if (isDead && type != CharacterType::Boss) return;
 
     if (!characterCollider || !weaponCollider || !weapon) return;
 

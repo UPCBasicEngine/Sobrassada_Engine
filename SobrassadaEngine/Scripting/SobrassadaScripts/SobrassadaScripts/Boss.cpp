@@ -620,7 +620,7 @@ bool Boss::Init()
 
 void Boss::Update(float deltaTime)
 {
-    if (agentAI == nullptr || isDead) return;
+    if (!agentAI || stopLogic) return;
 
     Character::Update(deltaTime);
 
@@ -697,44 +697,8 @@ void Boss::DisableBlastArea()
 
 void Boss::OnDeath()
 {
-    // TODO: animation and particles
-
-    ResetValues(false);
-
-    if (closeArea)
-    {
-        SphereColliderComponent* closeAreaCollider = closeArea->GetComponent<SphereColliderComponent*>();
-        if (closeAreaCollider)
-        {
-            closeAreaCollider->DeleteRigidBody();
-            closeAreaCollider->SetEnabled(false);
-        }
-    }
-
-    if (bigArea)
-    {
-        SphereColliderComponent* bigAreaCollider = bigArea->GetComponent<SphereColliderComponent*>();
-        if (bigAreaCollider)
-        {
-            bigAreaCollider->DeleteRigidBody();
-            bigAreaCollider->SetEnabled(false);
-        }
-    }
-
-    if (blastArea)
-    {
-        CubeColliderComponent* blastAreaCollider = blastArea->GetComponent<CubeColliderComponent*>();
-        if (blastAreaCollider)
-        {
-            blastAreaCollider->DeleteRigidBody();
-            blastAreaCollider->SetEnabled(false);
-        }
-    }
-
-    // parent->SetEnabled(false);
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
-
-    // if (healthBarBase) healthBarBase->SetEnabled(false); // wait until death animation
+    stateEnter   = true;
+    currentState = BossStates::Death;
 }
 
 void Boss::OnDamageTaken(int amount)
@@ -869,6 +833,10 @@ void Boss::HandleState(float deltaTime)
 
     case BossStates::Restart:
         Restart(deltaTime);
+        break;
+
+    case BossStates::Death:
+        Death(deltaTime);
         break;
 
     default:
@@ -1128,6 +1096,80 @@ void Boss::ChooseNextStateThirdPhase()
         else if (num <= waterSpoutsRate)
         {
             SetState(BossStates::WaterSpouts);
+        }
+    }
+}
+
+void Boss::Death(float deltaTime)
+{
+    if (stateEnter)
+    {
+        stateEnter        = false;
+        actionTriggerDone = false;
+        currentAction     = BossActions::Death;
+    }
+
+    switch (currentAction)
+    {
+    case BossActions::Death:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+
+            agentAI->PauseMovement();
+
+            if (playerScript) playerScript->RemoveEnemy();
+
+            ResetValues(false);
+
+            DeleteColliders();
+
+            if (animComponent) animComponent->UseTrigger("Death");
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
+        }
+
+        if (animComponent && animComponent->IsFinished())
+        {
+            if (healthBarBase) healthBarBase->SetEnabled(false);
+            currentAction     = BossActions::None;
+            actionTriggerDone = false;
+            stopLogic         = true;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void Boss::DeleteColliders()
+{
+    if (closeArea)
+    {
+        SphereColliderComponent* closeAreaCollider = closeArea->GetComponent<SphereColliderComponent*>();
+        if (closeAreaCollider)
+        {
+            closeAreaCollider->DeleteRigidBody();
+            closeAreaCollider->SetEnabled(false);
+        }
+    }
+
+    if (bigArea)
+    {
+        SphereColliderComponent* bigAreaCollider = bigArea->GetComponent<SphereColliderComponent*>();
+        if (bigAreaCollider)
+        {
+            bigAreaCollider->DeleteRigidBody();
+            bigAreaCollider->SetEnabled(false);
+        }
+    }
+
+    if (blastArea)
+    {
+        CubeColliderComponent* blastAreaCollider = blastArea->GetComponent<CubeColliderComponent*>();
+        if (blastAreaCollider)
+        {
+            blastAreaCollider->DeleteRigidBody();
+            blastAreaCollider->SetEnabled(false);
         }
     }
 }
@@ -1614,7 +1656,6 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::GetHit2Behind:
         if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Waiting;
 
-        DamageAreaLogic();
         break;
 
     default:

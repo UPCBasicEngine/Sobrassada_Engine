@@ -43,6 +43,7 @@ enum class BossStates
     WaterSpouts,
     ShieldBlast,
     Restart,
+    Death,
 };
 
 enum class BossActions
@@ -74,6 +75,7 @@ enum class BossActions
     GetHit2,
     GetHit1Behind,
     GetHit2Behind,
+    Death,
 };
 
 class Boss : public Character
@@ -100,10 +102,14 @@ class Boss : public Character
     void OnDamageTaken(int amount) override;
     void HandleState(float deltaTime) override;
     void UpdateTimers(float deltaTime) override;
+
     void ChooseNextState();
     void ChooseNextStateFirstPhase();
     void ChooseNextStateSecondPhase();
     void ChooseNextStateThirdPhase();
+
+    void Death(float deltaTime);
+    void DeleteColliders();
 
     void Idle(float deltaTime);
     void Taunt(float deltaTime);
@@ -162,6 +168,7 @@ class Boss : public Character
     bool doIdle                                          = false;
     bool doTaunt                                         = false;
     bool actionTriggerDone                               = false;
+    bool stopLogic                                       = false;
 
     // Health UI
     std::string healthBarName                            = "";
