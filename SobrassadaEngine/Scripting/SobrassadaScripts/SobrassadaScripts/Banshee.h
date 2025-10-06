@@ -70,6 +70,10 @@ class Banshee : public Character
     float attackAngularSpeed   = 0.0f;
     bool isInvisible           = false;
 
+    float teleportVFXDuration  = 0.5f;
+    float elapsedTeleportVFX   = 0.0f;
+    bool teleportedToPos       = false;
+
     float warningDuration      = 0.2f;
     float elapsedWarning       = 0.f;
 
@@ -84,25 +88,25 @@ class Banshee : public Character
     std::uniform_real_distribution<float> normalizedDist;
     std::uniform_real_distribution<float> invisibleDist;
 
-    bool firstSearch                   = false;
-    bool hasMoved                      = false;
+    bool firstSearch                = false;
+    bool hasMoved                   = false;
 
-    GameObject* screamAreaWarningGO    = nullptr;
+    GameObject* screamAreaWarningGO = nullptr;
 
-    GameObject* slowAreaGO             = nullptr;
-    GameObject* slowAreaInGO           = nullptr;
-    GameObject* slowAreaWarningGO      = nullptr;
-    int slowAreaDamage                 = 1;
-    float slowAreaWaringDuration       = 1.f;
-    float elapsedSlowAreaWaring        = 0.f;
-    float slowAreaWaringMaxScale       = 5.f;
+    GameObject* slowAreaGO          = nullptr;
+    GameObject* slowAreaInGO        = nullptr;
+    GameObject* slowAreaWarningGO   = nullptr;
+    int slowAreaDamage              = 1;
+    float slowAreaWaringDuration    = 1.f;
+    float elapsedSlowAreaWaring     = 0.f;
+    float slowAreaWaringMaxScale    = 5.f;
 
-    float elapsedSlowArea              = 0.f;
-    float slowAreaDuration             = 1.f;
+    float elapsedSlowArea           = 0.f;
+    float slowAreaDuration          = 1.f;
 
-    float slowAreaStartHeight          = 0.5f;
-    float slowAreaInStartHeight        = 0.45f;
-    float slowWarningStartHeight       = 0.45f;
+    float slowAreaStartHeight       = 0.5f;
+    float slowAreaInStartHeight     = 0.45f;
+    float slowWarningStartHeight    = 0.45f;
 
     std::vector<ShaderScriptComponent*> forwardScreamShaderComponents;
     CapsuleColliderComponent* forwardScreamCollider = nullptr;
@@ -112,8 +116,9 @@ class Banshee : public Character
 
     ImVec2 curveEditorPoints[StoreScriptCurvePoints];
 
-    GameObject* teleportWarningScreamGO        = nullptr;
-    GameObject* teleportWarningSlowGO          = nullptr;
+    GameObject* teleportWarningScreamGO = nullptr;
+    GameObject* teleportWarningSlowGO   = nullptr;
+    std::vector<ShaderScriptComponent*> teleportVFXShaderComponents;
 
     const float4 screamWarningColor            = float4(0.89f, 0.243f, 0.243f, 1.f);
     const float4 slowWarningColor              = float4(0.243f, 0.369f, 0.89f, 1.f);

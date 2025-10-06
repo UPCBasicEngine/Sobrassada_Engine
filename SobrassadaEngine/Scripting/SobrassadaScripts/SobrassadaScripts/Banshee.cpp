@@ -37,6 +37,7 @@ Banshee::Banshee(GameObject* parent)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Invisibility parameters"});
     fields.push_back({"Invisible time range", InspectorField::FieldType::Vec2, &invisibleTimeRange, 0.0f, 10.0f});
+    fields.push_back({"Teleport VFX duration", InspectorField::FieldType::Float, &teleportVFXDuration, 0.1f, 10.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Scream parameters"});
     fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 10.0f});
@@ -188,6 +189,15 @@ bool Banshee::Init()
             hitVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
 
             for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(false);
+            }
+        }
+        else if (currentGO->GetName() == "VFX_Teleport_Spritesheet")
+        {
+            teleportVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComp : teleportVFXShaderComponents)
             {
                 shaderComp->SetEnabled(false);
             }
@@ -351,7 +361,7 @@ void Banshee::OnDeath()
 
 void Banshee::OnDamageTaken(int amount)
 {
-    if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
+    // if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
 
     for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
     {
@@ -513,7 +523,7 @@ void Banshee::TakeDamage(int amount)
 
     if ((currentHealth - amount) <= 0)
     {
-        
+
         for (ShaderScriptComponent* shaderComp : deathVFXShaderComponents)
         {
             shaderComp->SetEnabled(true);
@@ -565,16 +575,35 @@ void Banshee::Attack(float deltaTime)
         if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished() &&
             !isInvisible)
         {
-            currentInvisibleTime = invisibleDist(rng);
+            // Teleport VFX
+            for (ShaderScriptComponent* shaderComp : teleportVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(true);
+                shaderComp->ResetScript("AttackVfxSpritesheet");
+            }
+
+            currentInvisibleTime = invisibleDist(rng) + teleportVFXDuration;
             isInvisible          = true;
             mesh->SetEnabled(false);
             characterCollider->SetEnabled(false);
 
-            GoToAttackPosition();
+            elapsedTeleportVFX = 0.0f;
 
-            teleportWarningScreamGO->SetEnabled(true);
+            teleportedToPos    = false;
         }
-        if (attackTimer < currentInvisibleTime)
+        if (elapsedTeleportVFX < teleportVFXDuration)
+        {
+            elapsedTeleportVFX += deltaTime;
+            return;
+        }
+        else if (elapsedTeleportVFX > teleportVFXDuration && !teleportedToPos)
+        {
+            teleportWarningScreamGO->SetEnabled(true);
+            GoToAttackPosition();
+            teleportedToPos = true;
+            return;
+        }
+        else if (attackTimer < currentInvisibleTime)
         {
             // SCALING WARNING OVER TIME
             float3 translation, scale;
@@ -833,16 +862,35 @@ void Banshee::SlowArea(float deltaTime)
         if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished() &&
             !isInvisible)
         {
-            currentInvisibleTime = invisibleDist(rng);
+            // Teleport VFX
+            for (ShaderScriptComponent* shaderComp : teleportVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(true);
+                shaderComp->ResetScript("AttackVfxSpritesheet");
+            }
+
+            currentInvisibleTime = invisibleDist(rng) + teleportVFXDuration;
             isInvisible          = true;
 
             mesh->SetEnabled(false);
             characterCollider->SetEnabled(false);
-            GoToAttackPosition();
 
-            teleportWarningSlowGO->SetEnabled(true);
+            elapsedTeleportVFX = 0.0f;
+            teleportedToPos    = false;
         }
-        if (attackTimer < currentInvisibleTime)
+        if (elapsedTeleportVFX < teleportVFXDuration)
+        {
+            elapsedTeleportVFX += deltaTime;
+            return;
+        }
+        else if (elapsedTeleportVFX > teleportVFXDuration && !teleportedToPos)
+        {
+            GoToAttackPosition();
+            teleportWarningSlowGO->SetEnabled(true);
+            teleportedToPos = true;
+            return;
+        }
+        else if (attackTimer < currentInvisibleTime)
         {
             // SCALING WARNING OVER TIME
             float3 translation, scale;
