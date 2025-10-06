@@ -433,7 +433,6 @@ void Soldier::Attack(float deltaTime)
 
             if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
             {
-                attackHitboxDelay += 0.4f;
                 attackDuration     = attackHitboxDelay + 2 * attackHitboxDuration + secondAttackDelay + 0.1f;
             }
             else
