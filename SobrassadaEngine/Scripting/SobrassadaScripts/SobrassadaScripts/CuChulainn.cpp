@@ -1555,7 +1555,7 @@ void CuChulainn::PerformAttack()
             AnimationComponent* vfxUltimateAnim = ultimateObject->GetComponent<AnimationComponent*>();
             vfxTimeUnscaledSec                  += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
 
-             if (ultimateHoldEnabled && playerAnimHeld) //control cuchulainn stop animation
+            if (ultimateHoldEnabled && playerAnimHeld) //control cuchulainn stop animation
             {
                 float timeLimit = (vfxUltimateAnim && vfxUltimateAnim->GetAnimationController())
                             ? vfxUltimateAnim->GetAnimationController()->GetTime()
@@ -1573,13 +1573,10 @@ void CuChulainn::PerformAttack()
             if (ultimateSpikes) // Control spikes animation appearance
             {
                 const bool animReady = vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
-                //const float vfxLocalTimer = max(0.0f, ultimateTimer - currentAnimationDelay);
-                bool show = false;
-                bool blurShow = false;
+                bool show, blurShow, warningShow = false;
 
                 if (animReady)
                 {
-                   //const float vfxTimeAnim = vfxUltimateAnim->GetAnimationController()->GetTime();
                    const float vfxLenAnim        = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
 
                    const float spikesOff         = min(2.12f, vfxLenAnim - 0.05f) / ultimateSpeed;
@@ -1587,11 +1584,13 @@ void CuChulainn::PerformAttack()
                    
                    show = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
                    blurShow = vfxLocalTimer >= 0.19f / ultimateSpeed;
+                   warningShow                   = vfxLocalTimer <= 0.4f / ultimateSpeed;
                 }
 
                 if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);
                 if (ultimateCrack && ultimateCrack->IsEnabled() != show) ultimateCrack->SetEnabled(show);
                 if (blurShow) ultimateBlur->GetComponent<ShaderScriptComponent*>()->SetEnabled(true);
+                if (!warningShow) ultimateWarning->SetEnabled(false);
             }
             if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
