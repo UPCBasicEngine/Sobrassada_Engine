@@ -168,7 +168,11 @@ class Boss : public Character
     bool doIdle                                          = false;
     bool doTaunt                                         = false;
     bool actionTriggerDone                               = false;
+
     bool stopLogic                                       = false;
+    float timerToChangeScene                             = 0.0f;
+    std::string changeSceneName                          = "";
+    GameObject* changeScene                              = nullptr;
 
     // Health UI
     std::string healthBarName                            = "";
@@ -289,6 +293,7 @@ class Boss : public Character
     float chaseTimeLimit                             = 8.0f;
     float blastAreaDisabledLimit                     = 0.5f;
     float stepTime                                   = 0.5f;
+    float delayToChangeScene                         = 5.0f;
 
     // ShieldBlast
     std::string blastAreaName                        = "";

@@ -32,6 +32,8 @@
 Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
+    fields.push_back({"Change Scene", InspectorField::FieldType::InputText, &changeSceneName});
+    fields.push_back({"Time to ChangeScene", InspectorField::FieldType::Float, &delayToChangeScene, 0.0f, 20.0f});
     fields.push_back({"Health Bar", InspectorField::FieldType::InputText, &healthBarName});
     fields.push_back({"Phase Start", InspectorField::FieldType::Int, &phase, 1, 3});
     fields.push_back({"Phase 2 Change", InspectorField::FieldType::Int, &phase2, 0, 100});
@@ -91,6 +93,10 @@ bool Boss::Init()
     audio         = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Ferdiad: No audio component found");
 
+    changeScene = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(changeSceneName);
+    if (changeScene) changeScene->SetEnabled(false);
+    else GLOG("[WARNING] Ferdiad: Change scene object not found")
+
     GameObject* healthBarObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healthBarName);
     if (healthBarObject)
     {
@@ -133,6 +139,7 @@ bool Boss::Init()
         if (weaponCollider) weaponCollider->SetEnabled(false);
         else GLOG("[WARNING] Ferdiad without shield collider");
     }
+    else GLOG("[WARNING] Ferdiad shield object by name not found");
 
     closeArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(closeAreaName);
     if (closeArea) closeArea->SetEnabled(false);
@@ -620,6 +627,12 @@ bool Boss::Init()
 
 void Boss::Update(float deltaTime)
 {
+    if (stopLogic && changeScene && !changeScene->IsEnabled())
+    {
+        timerToChangeScene += deltaTime;
+        if (timerToChangeScene >= delayToChangeScene) changeScene->SetEnabled(true);
+    }
+
     if (!agentAI || stopLogic) return;
 
     Character::Update(deltaTime);
@@ -771,14 +784,10 @@ void Boss::OnDamageTaken(int amount)
             static_cast<float>(currentHealth - phase2) / static_cast<float>(maxHealth - phase2)
         );
     }
-    else if (currentHealth + amount >= phase2)
+    else
     {
         armorBarFill->SetFillAmount(0.0f);
 
-        healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
-    }
-    else
-    {
         healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
     }
 }
@@ -1130,10 +1139,9 @@ void Boss::Death(float deltaTime)
 
         if (animComponent && animComponent->IsFinished())
         {
+            stopLogic = true;
+
             if (healthBarBase) healthBarBase->SetEnabled(false);
-            currentAction     = BossActions::None;
-            actionTriggerDone = false;
-            stopLogic         = true;
         }
         break;
     default:
@@ -2179,8 +2187,6 @@ void Boss::ShieldBlast(float deltaTime)
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
-
-            agentAI->SetAngularSpeed(0.5f);
 
             if (blastArea) blastArea->SetEnabled(true);
 
