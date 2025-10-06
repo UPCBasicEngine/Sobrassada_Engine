@@ -118,6 +118,11 @@ bool Banshee::Init()
             slowAreaInStartHeight = slowAreaInGO->GetLocalTransform().TranslatePart().y;
             slowAreaInGO->SetEnabled(false);
         }
+        else if (currentGO->GetName() == "VFX_SlowAreaRing")
+        {
+            slowAreaRing = currentGO->GetComponent<ShaderScriptComponent*>();
+            slowAreaRing->SetEnabled(false);
+        }
         else if (currentGO->GetName() == "SlowAreaWarning")
         {
             slowAreaWarningGO = currentGO;
@@ -206,13 +211,15 @@ bool Banshee::Init()
         {
             forwardScreamShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
 
-            forwardScreamCollider         = currentGO->GetComponent<CapsuleColliderComponent*>();
-            forwardScreamCollider->SetEnabled(false);
-
             for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
+        }
+        else if (currentGO->GetName() == "ForwardScreamCollider")
+        {
+            forwardScreamCollider = currentGO->GetComponent<CapsuleColliderComponent*>();
+            forwardScreamCollider->SetEnabled(false);
         }
         else if (currentGO->GetName() == "VFX_Ground_Ring")
         {
@@ -329,6 +336,7 @@ void Banshee::OnPlayerExitLocation()
 
         slowAreaGO->SetEnabled(false);
         slowAreaInGO->SetEnabled(false);
+        slowAreaRing->SetEnabled(false);
 
         float3 translation, scale;
         Quat rotation;
@@ -492,6 +500,7 @@ void Banshee::TakeDamage(int amount)
 
         slowAreaGO->SetEnabled(false);
         slowAreaInGO->SetEnabled(false);
+        slowAreaRing->SetEnabled(false);
 
         float3 translation, scale;
         Quat rotation;
@@ -569,6 +578,7 @@ void Banshee::Attack(float deltaTime)
 
         isInvisible = false;
         animComponent->UseTrigger("Teleport");
+        teleportWarningScreamGO->SetEnabled(false);
     }
     else
     {
@@ -685,6 +695,12 @@ void Banshee::Attack(float deltaTime)
             // FORWARD SCREAM ENABLE
 
             forwardScreamCollider->SetEnabled(true);
+            //float3 front = (parent->GetLocalTransform() * float4(float3::unitZ, 0)).xyz().Normalized();
+            //float3 dir   = 4.0f * front;
+            //dir.y        = 1.232f;
+
+            //forwardScreamCollider->GetParent()->SetLocalPosition(parent->GetLocalPostition() + dir);
+
             for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
@@ -856,6 +872,7 @@ void Banshee::SlowArea(float deltaTime)
 
         isInvisible = false;
         animComponent->UseTrigger("Teleport");
+        teleportWarningSlowGO->SetEnabled(false);
     }
     else
     {
@@ -883,10 +900,10 @@ void Banshee::SlowArea(float deltaTime)
             elapsedTeleportVFX += deltaTime;
             return;
         }
-        else if (elapsedTeleportVFX > teleportVFXDuration && !teleportedToPos)
+        else if (elapsedTeleportVFX >= teleportVFXDuration && !teleportedToPos)
         {
-            GoToAttackPosition();
             teleportWarningSlowGO->SetEnabled(true);
+            GoToAttackPosition();
             teleportedToPos = true;
             return;
         }
@@ -966,6 +983,9 @@ void Banshee::SlowArea(float deltaTime)
             animComponent->UseTrigger("SlowArea");
             slowAreaInGO->SetEnabled(true);
 
+            slowAreaRing->SetEnabled(true);
+            slowAreaRing->ResetScript("true");
+
             elapsedSlowArea = 0.f;
         }
         else if (animComponent->GetCurrentStateName() == HashString("SlowArea") && elapsedSlowArea < slowAreaDuration)
@@ -975,6 +995,7 @@ void Banshee::SlowArea(float deltaTime)
         {
             slowAreaGO->SetEnabled(false);
             slowAreaInGO->SetEnabled(false);
+            slowAreaRing->SetEnabled(false);
             animComponent->UseTrigger("ScreamOut");
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
@@ -1018,6 +1039,12 @@ void Banshee::MoveSlowAreaToPlayer()
         scale
     );
     slowAreaWarningGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+
+    slowAreaRing->GetParent()->GetGlobalTransform().Decompose(translate, rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowRingStartHeight, lastPlayerPosition.z), rotation, scale
+    );
+    slowAreaRing->GetParent()->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
 }
 
 void Banshee::UpdateLastPlayerPosition()
