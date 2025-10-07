@@ -84,6 +84,7 @@ void Mirage::Update(float deltaTime)
                 bossDash->setState(BossDashStates::OverheadStrike);
                 bossDash->setAction(BossDashActions::Prepare);
                 bossDash->setStateBool(true);
+                
             }
         }
         break;
@@ -92,9 +93,13 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
+        if (stateTimer >= 1 && !dashdone)
+        {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DASHATTACK_02);
+            dashdone = true;
+        }
         if (stateTimer >= damageDuration)
         {
-
             state = MirageState::Sleeping;
             parent->SetEnabled(false);
         }

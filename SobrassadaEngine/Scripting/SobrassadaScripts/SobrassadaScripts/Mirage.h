@@ -27,6 +27,8 @@ class Mirage : public Script
     MeshComponent* meshComponent = nullptr;
     MeshComponent* mirageDisableComponent1 = nullptr;
     MeshComponent* mirageDisableComponent2 = nullptr;
+
+    bool dashdone                          = false;
     int damage                   = 0;
     float warningDelay           = 0.f;
     float damageDuration         = 0.f;
