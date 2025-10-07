@@ -38,6 +38,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_internal.h"
 // imguizmo include after imgui
+#include "AudioModule.h"
 #include "ImGuizmo.h"
 #include <algorithm>
 #include <cstring>
@@ -1154,6 +1155,28 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                 curveEditorPoints[0].x = ImGui::CurveTerminator;
             }
         }
+        case InspectorField::FieldType::Audio:
+            uint32_t* audioData = static_cast<uint32_t*>(field.data);
+            std::string name    = "-";
+            for (const auto& event : App->GetAudioModule()->GetEventsMap())
+            {
+                if (event.second == *audioData)
+                {
+                    name = event.first.GetString();
+                    break;
+                }
+            }
+            ImGui::Text(name.c_str());
+            ImGui::SameLine();
+            if (ImGui::Button(field.name.c_str()))
+            {
+                ImGui::OpenPopup((field.name + CONSTANT_EVENT_SELECT_DIALOG_ID).c_str());
+            }
+            *audioData = App->GetEditorUIModule()->RenderResourceSelectDialog<uint32_t>(
+                (field.name + CONSTANT_EVENT_SELECT_DIALOG_ID).c_str(), App->GetAudioModule()->GetEventsMap(),
+                *audioData
+            );
+            break;
         }
     }
 }
