@@ -742,6 +742,8 @@ void RenderPass::ShadowMapPassRender(
         batchManager->RenderShadowMap(meshesToRender, ubo);
     }
 
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
