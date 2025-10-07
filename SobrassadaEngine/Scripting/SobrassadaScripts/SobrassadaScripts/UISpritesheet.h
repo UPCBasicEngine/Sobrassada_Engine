@@ -44,4 +44,9 @@ class UISpritesheet : public Script
     ResourceTexture* spritesheet = nullptr;
     UID spritesheetUID           = 0;
     UID spritesheetBindlessUID   = 0;
+
+    float2 step                  = float2::zero;
+    bool useRowCol               = false;
+    int rows                     = 1;
+    int cols                     = 1;
 };
