@@ -241,6 +241,9 @@
     <ClInclude Include="MirageVFX.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="MirageHumanVFX.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -1012,6 +1015,9 @@
       <Filter>Characters\Boss</Filter>
 	</ClCompile>
     <ClCompile Include="MirageVFX.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="MirageHumanVFX.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>
