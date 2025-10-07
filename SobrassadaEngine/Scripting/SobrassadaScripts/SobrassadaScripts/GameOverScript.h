@@ -5,6 +5,7 @@
 #include <vector>
 
 class GameObject;
+class AudioSourceComponent;
 
 class GameOverScript : public Script
 {
@@ -45,9 +46,11 @@ class GameOverScript : public Script
     std::vector<GameObject*> menuItems;
     std::vector<GameObject*> arrowImages;
 
-    int selectedIndex  = 0;
-    bool builtOnce     = false;
-    bool gameOverShown = false;
+    int selectedIndex           = 0;
+    bool builtOnce              = false;
+    bool gameOverShown          = false;
+
+    AudioSourceComponent* audio = nullptr;
 };
 
 // Global flag

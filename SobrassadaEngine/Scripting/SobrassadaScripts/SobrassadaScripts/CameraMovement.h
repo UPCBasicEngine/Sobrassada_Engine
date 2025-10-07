@@ -15,8 +15,8 @@ class CameraMovement : public Script
     bool Init() override;
     void Update(float deltaTime) override;
 
-    void InitAlternativeTarget(const GameObject* alternativeTarget);
-    void ResetToDefaultTarget();
+    void InitAlternativeTargetAndLookAhead(const GameObject* alternativeTarget, float intensity);
+    void ResetToDefaultTargetAndLookAhead();
     void EnableAimOffset(bool enable) { aimOffsetEnabled = enable; }
     void SetPosition(const float3& newPos);
     void StartShake(float duration, float intensity, float smoothness = 0);
@@ -38,6 +38,7 @@ class CameraMovement : public Script
     float aimOffsetIntensity                       = 0.0f;
 
     bool lookAheadEnabled                          = false;
+    float defaultLookAheadIntensity                = 0.0f;
     float lookAheadIntensity                       = 0.0f;
     float currentLookAhead                         = 0.0f;
     float lookAheadSmoothness                      = 0.0f;

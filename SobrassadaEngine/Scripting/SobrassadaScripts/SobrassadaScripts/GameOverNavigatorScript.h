@@ -6,6 +6,7 @@
 
 class GameObject;
 class GameOverScript;
+class AudioSourceComponent;
 
 class GameOverNavigatorScript : public Script
 {
@@ -52,4 +53,6 @@ class GameOverNavigatorScript : public Script
     void LocateGameOverScript();
     void ReadInputs(bool& upHeld, bool& downHeld, bool& acceptHeld, int& stickDir);
     uint64_t GetCurrentTimeMs() const;
+
+    AudioSourceComponent* audio = nullptr;
 };

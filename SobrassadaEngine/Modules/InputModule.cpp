@@ -278,6 +278,15 @@ void InputModule::OnControllerDisconnected()
     }
 }
 
+bool InputModule::IsPlaystationControllerConnected() const
+{
+    if (controllers[0] == nullptr) return false;
+
+    return SDL_GameControllerGetType(controllers[0]) == SDL_CONTROLLER_TYPE_PS3 ||
+           SDL_GameControllerGetType(controllers[0]) == SDL_CONTROLLER_TYPE_PS4 ||
+           SDL_GameControllerGetType(controllers[0]) == SDL_CONTROLLER_TYPE_PS5;
+}
+
 void InputModule::ClearTransientStates()
 {
     // KEY_DOWN and KEY_UP to KEY_IDLE

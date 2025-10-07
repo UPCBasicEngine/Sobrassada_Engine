@@ -75,15 +75,9 @@ void MoveGOInSpline::Update(float deltaTime)
         else if (t < 0.f) t += 1.f;
     }
 
-    float3 localPos;
-    Quat localRot;
-    spline->EvaluateTransform(t, localPos, localRot);
-
-    GameObject* splineGO = spline->GetParent();
-    const float4x4& splineGlob = splineGO->GetGlobalTransform();
-
-    float3 worldPos            = splineGlob.TransformPos(localPos);
-    Quat worldRot              = Quat(splineGlob) * localRot;
+    float3 worldPos;
+    Quat worldRot;
+    spline->EvaluateTransform(t, worldPos, worldRot);
     
     const float4x4& parentGlob = parent->GetParentGlobalTransform();
 

@@ -61,6 +61,8 @@ class GeometryBatch
     void SOBRASADA_API_ENGINE BindBonesBuffer();
     void SOBRASADA_API_ENGINE UnbindBonesBuffer();
 
+    void SwapBuffers();
+
   private:
     void LockBuffer();
     void UpdateBuffers(const std::vector<MeshComponent*>& meshesToRender);

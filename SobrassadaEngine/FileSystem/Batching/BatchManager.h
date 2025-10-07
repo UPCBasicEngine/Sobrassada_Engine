@@ -21,6 +21,7 @@ class BatchManager
         const std::vector<MeshComponent*>& meshesToRender, const unsigned int program, CameraComponent* camera
     );
     void RenderShadowMap(const std::vector<MeshComponent*>& meshesToRender, unsigned int cameraUBO);
+    void SwapBuffers();
 
     GeometryBatch* RequestBatch(const MeshComponent* mesh);
 

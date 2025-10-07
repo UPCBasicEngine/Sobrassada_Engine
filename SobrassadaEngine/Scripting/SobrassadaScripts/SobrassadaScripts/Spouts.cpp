@@ -15,6 +15,7 @@
 Spouts::Spouts(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Enable Rune", InspectorField::FieldType::Bool, &enableRune});
+    fields.push_back({"Boss Controlled", InspectorField::FieldType::Bool, &bossControlled});
     fields.push_back({"Activation Range", InspectorField::FieldType::Float, &activationRange, 0.0f, 100.0f});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &damage, 0, 5});
     fields.push_back({"Charging Duration", InspectorField::FieldType::Float, &chargingDuration, 0.01f, 10.0f});
@@ -29,8 +30,16 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
         {"Rotation Speed Blue Waves", InspectorField::FieldType::Float, &rotationSpeedBlueWaves, 0.0f, 180.0f}
     );
     fields.push_back({"Explosion Duration", InspectorField::FieldType::Float, &explosionDuration, 0.01f, 0.5f});
-    fields.push_back({"Water Spout Duration", InspectorField::FieldType::Float, &spoutWaterTimer, 0.01f, 10.0f});
+    fields.push_back({"Water Spout Duration", InspectorField::FieldType::Float, &spoutWaterTimer, 0.01f, 100.0f});
     fields.push_back({"Character", InspectorField::FieldType::GameObject, &character});
+    fields.push_back(
+        {"Trigger Spout",
+         [this](Script* self)
+         {
+             GLOG("Triggering spout");
+             ForceActivate();
+         }}
+    );
 }
 
 bool Spouts::Init()
@@ -66,17 +75,21 @@ void Spouts::Update(float deltaTime)
     {
         if (character == nullptr) return;
 
-        if (enableRune) rune->SetEnabled(true);
-
         damageCollider->SetEnabled(false);
-        float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
-        if (distance <= activationRange)
+
+        if (!bossControlled)
         {
-            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
-            activationState = ACTIVATION_STATE::CHARGING;
-            rune->SetEnabled(false);
-            tornadoWater->SetEnabled(true);
-            chargingTimer = 0.0f;
+            if (enableRune) rune->SetEnabled(true);
+
+            float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+            if (distance <= activationRange)
+            {
+                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
+                activationState = ACTIVATION_STATE::CHARGING;
+                rune->SetEnabled(false);
+                tornadoWater->SetEnabled(true);
+                chargingTimer = 0.0f;
+            }
         }
     }
     else if (activationState == ACTIVATION_STATE::CHARGING)
@@ -107,7 +120,11 @@ void Spouts::Update(float deltaTime)
     }
     else if (activationState == ACTIVATION_STATE::DAMAGING)
     {
-        float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+        if (!bossControlled)
+        {
+            float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+        }
+
         waterMesh->SetEnabled(true);
         shaderScript->SetScriptEnabled("MovingUVTransparent", true);
         shaderWaterMesh->SetEnabled(false);
@@ -122,7 +139,10 @@ void Spouts::Update(float deltaTime)
         explosionScript->SetScriptEnabled("MovingUVTransparent", true);
         shaderExplosionMesh->SetEnabled(false);
 
-        particles->Init();
+        if (!bossControlled)
+        {
+            particles->Init();
+        }
 
         // Tornado Water
         float3 translation, scale;
@@ -135,10 +155,8 @@ void Spouts::Update(float deltaTime)
 
         activationState = ACTIVATION_STATE::COOLDOWN;
         chargingTimer   = 0.0f;
-        if (distance <= activationRange)
-        {
-            damageCollider->SetEnabled(true);
-        }
+
+        damageCollider->SetEnabled(true);
     }
     else if (activationState == ACTIVATION_STATE::COOLDOWN)
     {
@@ -172,5 +190,19 @@ void Spouts::Update(float deltaTime)
 
             if (chargingTimer >= spoutWaterTimer + 2.0f) activationState = ACTIVATION_STATE::SLEEPING;
         }
+    }
+}
+
+void Spouts::ForceActivate()
+{
+    if (activationState == ACTIVATION_STATE::SLEEPING)
+    {
+        damageCollider->SetEnabled(false);
+        GLOG("Force Activation");
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
+        activationState = ACTIVATION_STATE::CHARGING;
+        if (rune) rune->SetEnabled(false);
+        if (tornadoWater) tornadoWater->SetEnabled(true);
+        chargingTimer = 0.0f;
     }
 }

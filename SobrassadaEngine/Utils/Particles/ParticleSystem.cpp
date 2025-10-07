@@ -3,7 +3,6 @@
 #include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
 
-#include "Math/float3.h"
 #include "Math/float4x4.h"
 #include <algorithm>
 
@@ -31,6 +30,8 @@ ParticleSystem::ParticleSystem(
     component->SetParticleSystem(this);
 
     UpdateComponents();
+
+    UpdateComponentsAABB();
 
     SortEmitters();
 }
@@ -62,6 +63,8 @@ ParticleSystem::ParticleSystem(
     component->SetParticleSystem(this);
     component->ReloadEmitterInstances(emitters);
 
+    UpdateComponentsAABB();
+
     SortEmitters();
 }
 
@@ -71,9 +74,7 @@ ParticleSystem::~ParticleSystem()
 
 void ParticleSystem::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
-    targetState.AddMember(
-        "ParticleSystemTag", rapidjson::Value(particleSystemTag.c_str(), allocator), allocator
-    );
+    targetState.AddMember("ParticleSystemTag", rapidjson::Value(particleSystemTag.c_str(), allocator), allocator);
 
     rapidjson::Value emittersArrayJSON(rapidjson::kArrayType);
 
@@ -119,6 +120,8 @@ void ParticleSystem::AddEmitter(const std::string& newEmitterName)
 
     UpdateComponents();
 
+    UpdateComponentsAABB();
+
     SortEmitters();
 }
 
@@ -149,6 +152,8 @@ void ParticleSystem::RemoveEmitter(const HashString& newEmitterTag)
 
     UpdateComponents();
 
+    UpdateComponentsAABB();
+
     SortEmitters();
 }
 
@@ -158,6 +163,7 @@ void ParticleSystem::AddComponent(ParticleSystemComponent* component)
     component->SetParticleIterator(componentIterator);
     component->SetParticleSystem(this);
     component->ReloadEmitterInstances(emitters);
+    component->UpdateAABB(minValue, maxValue);
 }
 
 void ParticleSystem::RemoveComponent(std::list<ParticleSystemComponent*>::iterator componentIterator)
@@ -182,10 +188,38 @@ void ParticleSystem::Stop()
     }
 }
 
+void ParticleSystem::UpdateComponentsAABB()
+{
+    CalculateMinMaxValues();
+
+    for (auto component : linkedComponents)
+    {
+        component->UpdateAABB(minValue, maxValue);
+    }
+}
+
 void ParticleSystem::UpdateComponents()
 {
     for (auto component : linkedComponents)
     {
         component->ReloadEmitterInstances(emitters);
     }
+}
+
+void ParticleSystem::CalculateMinMaxValues()
+{
+    ParticleValues particleValue;
+
+    for (auto& emitter : emitters)
+    {
+        emitter.second->GetParticleValues(particleValue);
+    }
+
+    float maxSize      = fmax(fmax(particleValue.size.x, particleValue.size.y), particleValue.size.z);
+    particleValue.size = float3(maxSize);
+
+    float3 maxLocation = (particleValue.speed.Mul(float3::one.Normalized())) * particleValue.lifeTime;
+
+    maxValue           = particleValue.areaOffset + maxLocation + (particleValue.size / 2.0);
+    minValue           = -maxValue;
 }

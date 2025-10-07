@@ -43,5 +43,7 @@ class StateMachineEditor : public EngineEditorBase
     bool saveInitialized       = false;
     int selectedIndex          = -1;
     std::vector<std::string> allStateMachineNames;
-    char newTriggerName[64] = "";
+    char newTriggerName[64]   = "";
+
+    char searchText[64] = "";
 };

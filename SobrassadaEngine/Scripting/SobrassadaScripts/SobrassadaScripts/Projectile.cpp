@@ -2,12 +2,16 @@
 
 #include "Projectile.h"
 
+#include "AttackVfxSpritesheet.h"
 #include "CameraComponent.h"
 #include "Character.h"
 #include "CuChulainn.h"
 #include "GameObject.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+
 
 #include "Math/Quat.h"
 
@@ -38,6 +42,9 @@ Projectile::Projectile(GameObject* parent) : Script(parent)
     fields.push_back({"Speed", InspectorField::FieldType::Float, &speed, 0.0f, 100.0f});
     fields.push_back({"Range", InspectorField::FieldType::Float, &range, 0.0f, 100.0f});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &damage, 0, 10});
+
+    fields.push_back({"Spritesheet vertical name", InspectorField::FieldType::InputText, &spritesheetNameV});
+    fields.push_back({"Spritesheet horizotnal name", InspectorField::FieldType::InputText, &spritesheetNameH});
 }
 
 bool Projectile::Init()
@@ -48,6 +55,35 @@ bool Projectile::Init()
         GLOG("[WARNING: Projectile Init()] Couldn't find the collider component");
         return false;
     }
+
+    GameObject* spritesheetObject = parent->GetChildGameObjectByName(spritesheetNameV);
+    if (spritesheetObject)
+    {
+        spritesheetMeshV = spritesheetObject->GetComponent<MeshComponent*>();
+        if (!spritesheetMeshV) GLOG("[WARNING: Projectile Init()] Couldn't find the mesh component");
+
+        ShaderScriptComponent* shader = spritesheetObject->GetComponent<ShaderScriptComponent*>();
+        if (shader)
+        {
+            spritesheetV = shader->GetScriptByType<AttackVfxSpritesheet>();
+        }
+    }
+    if (!spritesheetV) GLOG("[WARNING: Projectile Init()] Couldn't find the spritesheet component");
+
+    spritesheetObject = parent->GetChildGameObjectByName(spritesheetNameH);
+    if (spritesheetObject)
+    {
+        spritesheetMeshH = spritesheetObject->GetComponent<MeshComponent*>();
+        if (!spritesheetMeshH) GLOG("[WARNING: Projectile Init()] Couldn't find the mesh component");
+
+        ShaderScriptComponent* shader = spritesheetObject->GetComponent<ShaderScriptComponent*>();
+        if (shader)
+        {
+            spritesheetH = shader->GetScriptByType<AttackVfxSpritesheet>();
+        }
+    }
+    if (!spritesheetH) GLOG("[WARNING: Projectile Init()] Couldn't find the spritesheet component");
+
     return true;
 }
 
@@ -58,15 +94,16 @@ void Projectile::Update(float deltaTime)
 
 void Projectile::Shoot(const float3& origin, const float3& direction)
 {
-    startPos        = origin;
+    startPos        = origin + (float3::unitY * 0.5f);
     this->direction = direction.Normalized();
     frames          = 0;
     if (collider) collider->SetEnabled(false);
+    
 
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
     const Quat rotation      = Quat::LookAt(float3::unitZ, this->direction, float3::unitY, float3::unitY);
-    const float4x4 transform = float4x4::FromTRS(origin, rotation, scale);
+    const float4x4 transform = float4x4::FromTRS(startPos, rotation, scale);
 
     const float4x4 parentWS  = parent->GetParentGlobalTransform();
     const float4x4 localTRS  = parentWS.Inverted() * transform;
@@ -74,6 +111,11 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
     parent->SetLocalTransform(localTRS);
 
     parent->SetEnabledRecursive(true);
+
+    if (spritesheetMeshV) spritesheetMeshV->SetEnabled(false);
+    if (spritesheetMeshH) spritesheetMeshH->SetEnabled(false);
+    if (spritesheetV) spritesheetV->Reset();
+    if (spritesheetH) spritesheetH->Reset();
 }
 
 void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)

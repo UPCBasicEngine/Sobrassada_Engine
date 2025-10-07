@@ -82,6 +82,8 @@ void AreaAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
 void AreaAddon::RenderEditorInspector()
 {
+    bool anyChange = false;
+
     ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Area Addon");
 
     if (ImGui::BeginCombo("Current shape", AreaAddonStrings[(int)currentShape]))
@@ -93,6 +95,8 @@ void AreaAddon::RenderEditorInspector()
             {
                 currentShape = ParticleAreaShape(i);
                 ManageShapeSwitch(previousShape);
+
+                anyChange = true;
             }
         }
 
@@ -106,20 +110,22 @@ void AreaAddon::RenderEditorInspector()
     case ParticleAreaShape::NONE:
         break;
     case ParticleAreaShape::CUBE:
-        RenderCubeEditor();
+        RenderCubeEditor(anyChange);
         break;
     case ParticleAreaShape::CIRCLE:
-        RenderCircleEditor();
+        RenderCircleEditor(anyChange);
         break;
     case ParticleAreaShape::SPHERE:
-        RenderSphereEditor();
+        RenderSphereEditor(anyChange);
         break;
     case ParticleAreaShape::CONE:
-        RenderConeEditor();
+        RenderConeEditor(anyChange);
         break;
     default:
         break;
     }
+
+    if (anyChange) owner->UpdateAABB();
 
     ImGui::PopItemWidth();
 }
@@ -263,6 +269,40 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
     particle.direction = newDirection.Normalized();
 }
 
+void AreaAddon::AssignMaxValues(ParticleValues& particleValue)
+{
+    switch (currentShape)
+    {
+    case ParticleAreaShape::CUBE:
+    {
+        if (particleValue.areaOffset.x < cubeSize.x) particleValue.areaOffset.x = cubeSize.x;
+        if (particleValue.areaOffset.y < cubeSize.y) particleValue.areaOffset.y = cubeSize.y;
+        if (particleValue.areaOffset.z < cubeSize.z) particleValue.areaOffset.z = cubeSize.z;
+
+        break;
+    }
+
+    case ParticleAreaShape::CIRCLE:
+    case ParticleAreaShape::SPHERE:
+    {
+        if (particleValue.areaOffset.x < baseRadius) particleValue.areaOffset.x = baseRadius;
+        if (particleValue.areaOffset.y < baseRadius) particleValue.areaOffset.y = baseRadius;
+        if (particleValue.areaOffset.z < baseRadius) particleValue.areaOffset.z = baseRadius;
+
+        break;
+    }
+    case ParticleAreaShape::CONE:
+    {
+        float maxValue = fmax(coneLength / 2.0, baseRadius);
+
+        if (particleValue.areaOffset.x < maxValue) particleValue.areaOffset.x = maxValue;
+        if (particleValue.areaOffset.y < maxValue) particleValue.areaOffset.y = maxValue;
+        if (particleValue.areaOffset.z < maxValue) particleValue.areaOffset.z = maxValue;
+        break;
+    }
+    }
+}
+
 void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
 {
     if (previousShape == currentShape) return;
@@ -296,11 +336,12 @@ void AreaAddon::ManageShapeSwitch(ParticleAreaShape previousShape)
     currentSpawn = ParticleAreaSpawn::SURFACE;
 }
 
-void AreaAddon::RenderCubeEditor()
+void AreaAddon::RenderCubeEditor(bool& anyChange)
 {
     if (ImGui::DragFloat3("Cube Size", &cubeSize[0], 0.01f, 0.f, 50.f, "%.2f"))
     {
-        cube.r = cubeSize;
+        cube.r    = cubeSize;
+        anyChange = true;
     }
 
     if (ImGui::BeginCombo("Spawn location", AreaAddonSpawnStrings[(int)currentSpawn]))
@@ -313,19 +354,21 @@ void AreaAddon::RenderCubeEditor()
     }
 }
 
-void AreaAddon::RenderCircleEditor()
+void AreaAddon::RenderCircleEditor(bool& anyChange)
 {
     if (ImGui::DragFloat("Circle Radius", &baseRadius, 0.01f, 0.f, 50.f, "%.2f"))
     {
-        circle.r = baseRadius;
+        circle.r  = baseRadius;
+        anyChange = true;
     }
 }
 
-void AreaAddon::RenderSphereEditor()
+void AreaAddon::RenderSphereEditor(bool& anyChange)
 {
     if (ImGui::DragFloat("Sphere Radius", &baseRadius, 0.01f, 0.f, 50.f, "%.2f"))
     {
-        sphere.r = baseRadius;
+        sphere.r  = baseRadius;
+        anyChange = true;
     }
 
     if (ImGui::BeginCombo("Spawn location", AreaAddonSpawnStrings[(int)currentSpawn]))
@@ -338,16 +381,25 @@ void AreaAddon::RenderSphereEditor()
     }
 }
 
-void AreaAddon::RenderConeEditor()
+void AreaAddon::RenderConeEditor(bool& anyChange)
 {
     if (ImGui::DragFloat("Base Radius", &baseRadius, 0.01f, 0.f, 50.f, "%.2f"))
     {
         circle.r = baseRadius;
         RecalculateConeTopRadius();
+        anyChange = true;
     }
 
-    if (ImGui::DragFloat("Cone angle", &coneAngle, 0.05f, 0.f, 90.f, "%.2f")) RecalculateConeTopRadius();
-    if (ImGui::DragFloat("Cone length", &coneLength, 0.01f, 0.f, 50.f, "%.2f")) RecalculateConeTopRadius();
+    if (ImGui::DragFloat("Cone angle", &coneAngle, 0.05f, 0.f, 90.f, "%.2f"))
+    {
+        RecalculateConeTopRadius();
+        anyChange = true;
+    }
+    if (ImGui::DragFloat("Cone length", &coneLength, 0.01f, 0.f, 50.f, "%.2f"))
+    {
+        RecalculateConeTopRadius();
+        anyChange = true;
+    }
 }
 
 void AreaAddon::RecalculateConeTopRadius()

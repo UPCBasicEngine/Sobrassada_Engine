@@ -3,7 +3,7 @@
 class Framebuffer
 {
   public:
-    Framebuffer(int witdh, int height, bool useRbo);
+    Framebuffer(int witdh, int height);
     ~Framebuffer();
 
     void Bind();
@@ -12,7 +12,8 @@ class Framebuffer
     void CheckResize();
 
     unsigned int GetFramebufferID() const { return fbo; };
-    unsigned int GetTextureID() const { return framebufferTexture; }
+    unsigned int GetColorTexture() const { return framebufferTexture; }
+    unsigned int GetDepthTexture() const { return framebufferDepthTexture; }
     unsigned int GetTextureWidth() const { return textureWidth; }
     unsigned int GetTextureHeight() const { return textureHeight; }
 
@@ -21,8 +22,9 @@ class Framebuffer
     void CreateTexture(int width, int height);
 
   private:
-    unsigned int fbo = 0, rbo = 0;
-    unsigned int framebufferTexture = 0;
+    unsigned int fbo                     = 0;
+    unsigned int framebufferTexture      = 0;
+    unsigned int framebufferDepthTexture = 0;
     int textureWidth = 0, textureHeight = 0;
-    bool shouldResize = false, useRbo = false;
+    bool shouldResize = false;
 };

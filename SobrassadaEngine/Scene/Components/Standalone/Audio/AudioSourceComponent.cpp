@@ -197,7 +197,7 @@ void AudioSourceComponent::UpdateEventsNames()
 
 void AudioSourceComponent::StopAudio() const
 {
-    AK::SoundEngine::StopPlayingID(playingEvent);
+    AK::SoundEngine::ExecuteActionOnPlayingID(AK::SoundEngine::AkActionOnEventType_Stop, playingEvent);
 }
 
 void AudioSourceComponent::StopAllAudio() const

@@ -140,6 +140,7 @@ class Character : public Script
 
     std::string glowName                         = "Glow";
     GameObject* glow                            = nullptr;
+    float3 hitCollisionNormal                   = float3::zero;
 
     // Level
     MagicBarrier* associatedBarrier             = nullptr;

@@ -81,15 +81,8 @@ void ButtonComponent::Init()
         if (parentCanvas == nullptr) GLOG("[WARNING] Button has no parent canvas, it won't be rendered");
     }
 
-    // Get the image
     image = parent->GetComponent<ImageComponent*>();
-    if (image == nullptr)
-    {
-        parent->CreateComponent(COMPONENT_IMAGE);
-        image = parent->GetComponent<ImageComponent*>();
-    }
 }
-
 void ButtonComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
 {
     Component::Save(targetState, allocator);
@@ -157,10 +150,18 @@ void ButtonComponent::RenderEditorInspector()
     ImGui::SeparatorText("Button");
 
     if (ImGui::Checkbox("Interactable", &isInteractable)) OnInteractionChange();
-    if (ImGui::ColorEdit3("Default color", defaultColor.ptr())) image->SetColor(defaultColor);
+    if (ImGui::ColorEdit3("Default color", defaultColor.ptr()))
+    {
+        if (image) image->SetColor(defaultColor);
+    }
     ImGui::ColorEdit3("Hover color", hoverColor.ptr());
     ImGui::ColorEdit3("Clicked color", clickedColor.ptr());
     ImGui::ColorEdit3("Disabled color", disabledColor.ptr());
+    if (!image)
+    {
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "No Image component attached");
+        ImGui::TextWrapped("Add an Image component to see visual feedback");
+    }
 }
 
 bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
@@ -171,7 +172,6 @@ bool ButtonComponent::UpdateMousePosition(const float2& mousePos, bool dismiss)
     {
         if (!isHovered)
         {
-            // On mouse enter
             if (image) image->SetColor(hoverColor);
             isHovered = true;
         }
@@ -211,7 +211,7 @@ bool ButtonComponent::IsWithinBounds(const float2& pos) const
     const float3 localRotated =
         parent->GetGlobalTransform().RotatePart().Inverted() * float3(localPos.x, localPos.y, 0.0f);
 
-    //GLOG("Converted mouse pos: %f %F", localRotated.x, localRotated.y);
+    // GLOG("Converted mouse pos: %f %F", localRotated.x, localRotated.y);
 
     // Check if it is inside the button's AABB in local space
     return abs(localRotated.x) <= transform2D->size.x * 0.5f && abs(localRotated.y) <= transform2D->size.y * 0.5f;

@@ -22,6 +22,7 @@ class ParticleAddon
     virtual void RenderEditorInspector()                                   = 0;
     virtual void RenderDebug(GameObject* parent) {};
     virtual void Duplicate(ParticleAddon* reference) = 0;
+    virtual void AssignMaxValues(ParticleValues& values) {};
 
     ParticleAddonType GetType() const { return addonType; };
     bool IsEnabled() const { return isEnabled; }

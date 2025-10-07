@@ -21,8 +21,8 @@ class ResourceTexture : public Resource
     static void ConvertMetadata(const DirectX::TexMetadata& metadata, OpenGLMetadata& outMetadata);
 
     unsigned int GetTextureID() const { return textureID; }
-    int GetTextureWidth() { return (int)metadata.width; }
-    int GetTextureHeight() { return (int)metadata.height; }
+    int GetTextureWidth() const { return (int)metadata.width; }
+    int GetTextureHeight() const { return (int)metadata.height; }
     int GetMipMapLevels() const { return static_cast<int>(metadata.mipLevels); }
 
     void SetTextureID(unsigned int id) { textureID = id; }
