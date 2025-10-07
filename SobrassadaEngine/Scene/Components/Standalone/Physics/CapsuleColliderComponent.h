@@ -35,6 +35,7 @@ class CapsuleColliderComponent : public Component
 
     void SOBRASADA_API_ENGINE DeleteRigidBody();
 
+    void SetGenerateCallbacks(bool newGenCallback) { generateCallback = newGenCallback; };
     void SetEnabled(bool newEnabled) override;
 
   private:
