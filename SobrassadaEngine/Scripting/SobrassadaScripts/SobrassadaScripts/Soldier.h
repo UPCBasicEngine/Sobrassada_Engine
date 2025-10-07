@@ -5,6 +5,7 @@
 class GameObject;
 class AIAgentComponent;
 class AudioSourceComponent;
+class MeshComponent;
 
 enum class SoldierStates
 {
@@ -29,6 +30,8 @@ class Soldier : public Character
 
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
+    void SetAttackVFX(GameObject* meleeVfxObject);
+    void DisableAttackVFX();
 
   private:
     void OnDeath() override;
@@ -45,33 +48,58 @@ class Soldier : public Character
     void SearchForPlayer();
     void SetOnWaiting();
     const char* ManageAttackAnimations();
+    void SelectRandomHelmet();
 
   private:
-    AIAgentComponent* agentAI        = nullptr;
-    SoldierStates currentState       = SoldierStates::NONE;
+    AIAgentComponent* agentAI          = nullptr;
+    SoldierStates currentState         = SoldierStates::NONE;
 
-    AudioSourceComponent* audio      = nullptr;
+    AudioSourceComponent* audio        = nullptr;
+    MeshComponent* mesh                = nullptr;
 
-    float3 patrolPoint               = float3::zero;
+    float3 patrolPoint                 = float3::zero;
 
-    float knockbackForce             = 7.0f;
-    float knockbackTime              = 0.2f;
-    float knockbackTimer             = 0.0f;
-    float3 knockbackDirection        = float3::zero;
-    bool isKnockback                 = false;
-    bool isStrongKnockback           = false;
-    int consecutiveAttack            = 0;
-    int consecutiveThrust            = 0;
-    float secondAttackDelay          = 0.6f;
-    const char* currentAttackTrigger = nullptr;
-    float originalAttackDuration     = 0.0f;
-    float originalAttackHitboxDelay  = 0.0f;
-    float deathTimer                 = 0.0f;
-    float chaseSpeed                 = 2.0f;
-    bool thrustAdvance               = false;
-    bool countedInPlayerEnemies      = false;
-    float cheeringDistance           = 5.0f;
-    int maxEnemiesNearby   = 3;
-    std::string meleeTrailName       = "";
-    GameObject* meleeTrailObject     = nullptr;
+    float knockbackForce               = 7.0f;
+    float knockbackTime                = 0.2f;
+    float knockbackTimer               = 0.0f;
+    float3 knockbackDirection          = float3::zero;
+    bool isKnockback                   = false;
+    bool isStrongKnockback             = false;
+    int consecutiveAttack              = 0;
+    int consecutiveThrust              = 0;
+    float secondAttackDelay            = 0.6f;
+    const char* currentAttackTrigger   = nullptr;
+    float originalAttackDuration       = 0.0f;
+    float originalAttackHitboxDelay    = 0.0f;
+    float deathTimer                   = 0.0f;
+    float chaseSpeed                   = 2.0f;
+    bool thrustAdvance                 = false;
+    bool countedInPlayerEnemies        = false;
+    float cheeringDistance             = 5.0f;
+    bool isRed                         = false;
+
+    int maxEnemiesNearby               = 3;
+    std::string meleeTrailName         = "";
+    GameObject* meleeTrailObject       = nullptr;
+    std::string helmet1Name            = "";
+    GameObject* helmet1Object          = nullptr;
+    std::string helmet2Name            = "";
+    GameObject* helmet2Object          = nullptr;
+    std::string helmet3Name            = "";
+    GameObject* helmet3Object          = nullptr;
+    std::string helmet4Name            = "";
+    GameObject* helmet4Object          = nullptr;
+    std::string meleeVfxName           = "";
+    GameObject* meleeVfxObject         = nullptr;
+    std::string melee2VfxName           = "";
+    GameObject* melee2VfxObject         = nullptr;
+    std::string thrustVfxName          = "";
+    GameObject* thrustVfxObject        = nullptr;
+
+    GameObject* bodyObject             = nullptr;
+    std::string materialName            = "";
+
+    bool detectAudioPlayed              = false;
+
+    float4x4 meleeVfxOriginalTransform = float4x4::identity;
 };

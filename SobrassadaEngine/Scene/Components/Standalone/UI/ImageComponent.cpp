@@ -100,6 +100,12 @@ void ImageComponent::Clone(const Component* other)
 
         color                            = otherImage->color;
         texture                          = otherImage->texture;
+        if (!texture)
+        {
+            GLOG("Clone image component texture nullptr")
+            return;
+        }
+
         texture->AddReference();
         bindlessUID = glGetTextureHandleARB(texture->GetTextureID());
         glMakeTextureHandleResidentARB(bindlessUID);

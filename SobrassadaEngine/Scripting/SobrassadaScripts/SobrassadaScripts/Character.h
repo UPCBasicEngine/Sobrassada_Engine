@@ -137,6 +137,8 @@ class Character : public Script
     MeshComponent* mesh                         = nullptr;
     ShaderScriptComponent* colorChange          = nullptr;
 
+    float3 hitCollisionNormal                   = float3::zero;
+
     // Level
     MagicBarrier* associatedBarrier             = nullptr;
 };
