@@ -109,6 +109,7 @@ namespace AK
                 static const AkUniqueID COMBAT = 2764240573U;
                 static const AkUniqueID EXPLORING = 1823678183U;
                 static const AkUniqueID MENU = 2607556080U;
+                static const AkUniqueID NONE = 748895195U;
                 static const AkUniqueID RIASTRAD = 3083217571U;
             } // namespace STATE
         } // namespace GAMESTATE
@@ -124,6 +125,7 @@ namespace AK
                 static const AkUniqueID LEVEL2OUTSKIRTS = 1927850271U;
                 static const AkUniqueID LEVEL2WATERFALL = 1545618385U;
                 static const AkUniqueID MAINMENU = 3604647259U;
+                static const AkUniqueID NONE = 748895195U;
                 static const AkUniqueID TUTORIAL = 3762955427U;
             } // namespace STATE
         } // namespace LEVEL

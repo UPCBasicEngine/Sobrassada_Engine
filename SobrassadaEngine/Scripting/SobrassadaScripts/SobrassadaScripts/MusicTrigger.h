@@ -22,5 +22,7 @@ class MusicTrigger : public Script
     // Audio
     AudioSourceComponent* audioComp = nullptr;
 
-    AkUniqueID audioToEmit;
+    AkUniqueID firstAudioEvent = 0;
+    AkUniqueID secondAudioEvent = 0;
+    AkUniqueID thirdAudioEvent = 0;
 };

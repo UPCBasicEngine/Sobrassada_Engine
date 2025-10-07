@@ -1157,22 +1157,24 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
         }
         case InspectorField::FieldType::Audio:
             uint32_t* audioData = static_cast<uint32_t*>(field.data);
-            ImGui::SeparatorText("Audio Source");
+            std::string name = "-";
             for (const auto& event : App->GetAudioModule()->GetEventsMap())
             {
                 if (event.second == *audioData)
                 {
-                    ImGui::Text(event.first.GetString().c_str());
+                    name = event.first.GetString();
                     break;
                 }
             }
+            ImGui::Text(name.c_str());
             ImGui::SameLine();
-            if (ImGui::Button("Select default event"))
+            if (ImGui::Button(field.name.c_str()))
             {
-                ImGui::OpenPopup(CONSTANT_EVENT_SELECT_DIALOG_ID);
+                ImGui::OpenPopup((field.name + CONSTANT_EVENT_SELECT_DIALOG_ID).c_str());
             }
             *audioData = App->GetEditorUIModule()->RenderResourceSelectDialog<uint32_t>(
-                CONSTANT_EVENT_SELECT_DIALOG_ID, App->GetAudioModule()->GetEventsMap(), *audioData
+                (field.name + CONSTANT_EVENT_SELECT_DIALOG_ID).c_str(),
+                App->GetAudioModule()->GetEventsMap(), *audioData
             );
             break;
         }
