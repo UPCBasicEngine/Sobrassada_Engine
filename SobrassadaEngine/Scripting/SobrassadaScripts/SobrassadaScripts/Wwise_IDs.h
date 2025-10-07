@@ -13,10 +13,7 @@ namespace AK
 {
     namespace EVENTS
     {
-        static const AkUniqueID PLAY_FIRST_THEME = 1086074370U;
-        static const AkUniqueID PLAY_FOREST = 207755397U;
-        static const AkUniqueID PLAY_LEVEL1_AMBIENT_THEME = 1262494734U;
-        static const AkUniqueID PLAY_LEVEL1_FIGHT_THEME = 2666170724U;
+        static const AkUniqueID PLAY_BACKGROUND_MUSIC = 65769146U;
         static const AkUniqueID PLAY_LOAD1 = 2715237991U;
         static const AkUniqueID PLAY_LOAD2 = 2715237988U;
         static const AkUniqueID PLAY_LOAD3 = 2715237989U;
@@ -27,6 +24,8 @@ namespace AK
         static const AkUniqueID PLAY_SFX_ARCHER_OVERSHOOTING = 2850888511U;
         static const AkUniqueID PLAY_SFX_ARCHER_TRI_ATTACK = 4195834484U;
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
+        static const AkUniqueID PLAY_SFX_BANSHEE_DEATH = 1421284353U;
+        static const AkUniqueID PLAY_SFX_BANSHEE_HURT = 1031600530U;
         static const AkUniqueID PLAY_SFX_BREAK_01 = 2634635063U;
         static const AkUniqueID PLAY_SFX_BREAK_02 = 2634635060U;
         static const AkUniqueID PLAY_SFX_BREAK_03 = 2634635061U;
@@ -92,8 +91,54 @@ namespace AK
         static const AkUniqueID PLAY_SFX_WIND_01 = 4018713014U;
         static const AkUniqueID PLAY_SFX_WIND_02 = 4018713013U;
         static const AkUniqueID PLAY_TORCH = 2025845440U;
-        static const AkUniqueID PLAY_TUTORIAL_THEME = 1202310014U;
+        static const AkUniqueID SET_GAMESTATE_COMBAT = 2438311370U;
+        static const AkUniqueID SET_GAMESTATE_EXPLORING = 1734839042U;
+        static const AkUniqueID SET_GAMESTATE_MENU = 1779817015U;
+        static const AkUniqueID SET_GAMESTATE_NONE = 112984344U;
+        static const AkUniqueID SET_GAMESTATE_RIASTRAD = 2841888884U;
+        static const AkUniqueID SET_LEVELSTATE_BOSS = 1134927265U;
+        static const AkUniqueID SET_LEVELSTATE_LEVEL1 = 3630582617U;
+        static const AkUniqueID SET_LEVELSTATE_LEVEL2OUTSKIRTS = 358656214U;
+        static const AkUniqueID SET_LEVELSTATE_LEVEL2WATERFALL = 2301017940U;
+        static const AkUniqueID SET_LEVELSTATE_MAINMENU = 327831964U;
+        static const AkUniqueID SET_LEVELSTATE_NONE = 2746918576U;
+        static const AkUniqueID SET_LEVELSTATE_TUTORIAL = 3078324916U;
+        static const AkUniqueID STOP_BACKGROUND_MUSIC = 467769552U;
     } // namespace EVENTS
+
+    namespace STATES
+    {
+        namespace GAMESTATE
+        {
+            static const AkUniqueID GROUP = 4091656514U;
+
+            namespace STATE
+            {
+                static const AkUniqueID COMBAT = 2764240573U;
+                static const AkUniqueID EXPLORING = 1823678183U;
+                static const AkUniqueID MENU = 2607556080U;
+                static const AkUniqueID NONE = 748895195U;
+                static const AkUniqueID RIASTRAD = 3083217571U;
+            } // namespace STATE
+        } // namespace GAMESTATE
+
+        namespace LEVELSTATE
+        {
+            static const AkUniqueID GROUP = 3473087568U;
+
+            namespace STATE
+            {
+                static const AkUniqueID BOSS = 1560169506U;
+                static const AkUniqueID LEVEL1 = 2678230382U;
+                static const AkUniqueID LEVEL2OUTSKIRTS = 1927850271U;
+                static const AkUniqueID LEVEL2WATERFALL = 1545618385U;
+                static const AkUniqueID MAINMENU = 3604647259U;
+                static const AkUniqueID NONE = 748895195U;
+                static const AkUniqueID TUTORIAL = 3762955427U;
+            } // namespace STATE
+        } // namespace LEVELSTATE
+
+    } // namespace STATES
 
     namespace GAME_PARAMETERS
     {

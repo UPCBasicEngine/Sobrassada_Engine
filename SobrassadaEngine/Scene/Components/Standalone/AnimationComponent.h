@@ -46,6 +46,7 @@ class SOBRASADA_API_ENGINE AnimationComponent : public Component
     bool IsPlaying() const;
     bool IsFinished() const;
 
+    void SetDefaultPlaybackSpeed(float s) { defaultTime = s; }
     void SetAnimationResource(UID animResource);
     void UpdateBoneHierarchy(GameObject* bone);
     void SetBoneMapping();

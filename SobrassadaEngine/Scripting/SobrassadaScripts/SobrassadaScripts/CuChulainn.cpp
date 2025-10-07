@@ -81,6 +81,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
     fields.push_back({"Ultimate Animation delay", InspectorField::FieldType::Float, &ultimateAnimationDelay, 0.0f, 5.0f}
     );
+    fields.push_back({"Ultimate Animation speed", InspectorField::FieldType::Float, &ultimateSpeed, 0.1f, 5.0f}
+    );
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
@@ -556,12 +558,12 @@ bool CuChulainn::Init()
     else ultimateCrack->SetEnabled(false);
 
     ultimateWarning = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateWarningName);
-    if (!ultimateWarning) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
+    if (!ultimateWarning) GLOG("[WARNING] No ultimate warning VFX found for CuChulain")
     else ultimateWarning->SetEnabled(false);
 
     ultimateSpikes = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateSpikesName);
-    if (!ultimateSpikes) GLOG("[WARNING] No ultimate Sphere VFX found for CuChulain")
-    else ultimateSpikes->SetEnabled(false);
+    if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
+    else ultimateSpikes->SetEnabled(false); 
 
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
@@ -644,6 +646,7 @@ void CuChulainn::Update(float deltaTime)
             healParticles->SetEnabled(true);
             healParticles->GetComponent<ParticleSystemComponent*>()->SpawnAllInstances();
         }
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HEAL);
         Heal(mushroomHeal);
     }
 
@@ -742,6 +745,7 @@ void CuChulainn::OnDeath()
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     if (animComponent) animComponent->UseTrigger("Death");
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DEATH);
 
     isDead          = true;
     pendingGameOver = true;
@@ -754,7 +758,7 @@ void CuChulainn::OnDamageTaken(int amount)
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
+    if (audio && currentHealth >= 1) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
     if (arrowVfxIsActive && arrowHitVfxObject && !arrowHitVfxObject->IsEnabled())
@@ -1361,7 +1365,7 @@ void CuChulainn::ThrowSpear()
 {
     if (camera) camera->EnableAimOffset(false);
     if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
-    // if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_DASH);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_RANGEATTACK);
     if (animComponent) animComponent->UseTrigger("Ranged");
     aimTimer   = 0.0f;
 
@@ -1536,10 +1540,12 @@ void CuChulainn::PerformAttack()
 
         if (!ultimateObject->IsEnabled() && ultimateTimer >= currentAnimationDelay)
         {
+            ultimateObject->GetComponent<AnimationComponent*>()->SetDefaultPlaybackSpeed(ultimateSpeed);
             ultimateObject->GetComponent<AnimationComponent*>()->OnStop();
             ultimateObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
             ultimateObject->GetComponent<AnimationComponent*>()->GetAnimationController()->SetTime(0.0f);
             ultimateObject->SetEnabled(true);
+            UpdateUltimateVfx();
             ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
 
@@ -1549,46 +1555,49 @@ void CuChulainn::PerformAttack()
                 playerAnimHeld = true;
             }
 
-            UpdateUltimateVfx();
+            
         }
         else if (ultimateObject->IsEnabled())
         {
             AnimationComponent* vfxUltimateAnim  = ultimateObject->GetComponent<AnimationComponent*>();
             vfxTimeUnscaledSec                  += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
 
-            if (ultimateHoldEnabled && playerAnimHeld) // control cuchulainn stop animation
+            if (ultimateHoldEnabled && playerAnimHeld) //control cuchulainn stop animation
             {
                 float timeLimit = (vfxUltimateAnim && vfxUltimateAnim->GetAnimationController())
                                     ? vfxUltimateAnim->GetAnimationController()->GetTime()
                                     : 0.0f;
 
-                if (!vfxUltimateAnim || vfxUltimateAnim->IsFinished() || timeLimit >= ultimateResumeVfxTime)
+                if (!vfxUltimateAnim || vfxUltimateAnim->IsFinished() ||
+                    timeLimit >= ultimateResumeVfxTime / ultimateSpeed)
                 {
                     animComponent->OnResume();
                     playerAnimHeld = false;
                 }
+
             }
 
             if (ultimateSpikes) // Control spikes animation appearance
             {
-                const bool animReady =
-                    vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
-                // const float vfxLocalTimer = max(0.0f, ultimateTimer - currentAnimationDelay);
-                bool show = false;
+                const bool animReady = vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
+                bool show, blurShow, warningShow = false;
 
                 if (animReady)
                 {
-                    // const float vfxTimeAnim = vfxUltimateAnim->GetAnimationController()->GetTime();
-                    const float vfxLenAnim    = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
+                   const float vfxLenAnim        = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
 
-                    const float spikesOff     = min(2.12f, vfxLenAnim - 0.05f);
-                    const float vfxLocalTimer = vfxTimeUnscaledSec;
-
-                    show                      = (vfxLocalTimer >= 0.40f) && (vfxLocalTimer < spikesOff);
+                   const float spikesOff         = min(2.12f, vfxLenAnim - 0.05f) / ultimateSpeed;
+                   const float vfxLocalTimer     = vfxTimeUnscaledSec;
+                   
+                   show = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
+                   blurShow = vfxLocalTimer >= 0.19f / ultimateSpeed;
+                   warningShow                   = vfxLocalTimer <= 0.4f / ultimateSpeed;
                 }
 
                 if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);
                 if (ultimateCrack && ultimateCrack->IsEnabled() != show) ultimateCrack->SetEnabled(show);
+                if (blurShow) ultimateBlur->GetComponent<ShaderScriptComponent*>()->SetEnabled(true);
+                if (!warningShow) ultimateWarning->SetEnabled(false);
             }
             if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
@@ -1741,8 +1750,9 @@ void CuChulainn::UpdateUltimateVfx()
         ultimateBlur->SetEnabled(true);
         if (ultimateBlur->GetComponent<ShaderScriptComponent*>())
         {
-            // ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
+            ultimateBlur->GetComponent<MeshComponent*>()->SetEnabled(false);
             ultimateBlur->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+            ultimateBlur->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
         }
     }
     if (ultimateBrust)
