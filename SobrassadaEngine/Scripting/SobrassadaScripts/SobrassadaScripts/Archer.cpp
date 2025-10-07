@@ -1459,7 +1459,7 @@ void Archer::ChaseAI()
         float distance = GetDistanceFromPlayer();
 
         agentAI->ResetSpeed();
-        agentAI->SetSpeed(10.0, 10.0f);
+        agentAI->SetSpeed(5.0, 5.0f);
         agentAI->SetLookForward(true);
 
         if (distance <= rangeEscape)
@@ -1948,7 +1948,7 @@ void Archer::Escape(float deltaTime)
     }
     else
     {
-        agentAI->SetSpeed(35.0f, 12.0f);
+        agentAI->SetSpeed(25.0f, 8.0f);
         if (animComponent) animComponent->UseTrigger("dashStart");
         GLOG("ESCAPE: Starting dash to new target");
     }
