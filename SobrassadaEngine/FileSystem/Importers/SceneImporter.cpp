@@ -248,6 +248,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedAssetPath.c_str());
             }
         }
+
         const std::string convertedScenePath = projectFilePath + SCENES_PATH;
         if (!FileSystem::IsDirectory(convertedScenePath.c_str()))
         {
@@ -256,6 +257,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedScenePath.c_str());
             }
         }
+
         const std::string convertedModelAssetsPath = projectFilePath + MODELS_ASSETS_PATH;
         if (!FileSystem::IsDirectory(convertedModelAssetsPath.c_str()))
         {
@@ -264,6 +266,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedModelAssetsPath.c_str());
             }
         }
+
         const std::string convertedMetadataPath = projectFilePath + METADATA_PATH;
         if (!FileSystem::IsDirectory(convertedMetadataPath.c_str()))
         {
@@ -272,6 +275,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedMetadataPath.c_str());
             }
         }
+
         const std::string convertedPrefabAssetsPath = projectFilePath + PREFABS_ASSETS_PATH;
         if (!FileSystem::IsDirectory(convertedPrefabAssetsPath.c_str()))
         {
@@ -280,6 +284,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedPrefabAssetsPath.c_str());
             }
         }
+
         const std::string convertedStateMachinePath = projectFilePath + STATEMACHINES_ASSETS_PATH;
         if (!FileSystem::IsDirectory(convertedStateMachinePath.c_str()))
         {
@@ -315,14 +320,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedAnimationsPath.c_str());
             }
         }
-        const std::string convertedAudioPath = projectFilePath + AUDIO_PATH;
-        if (!FileSystem::IsDirectory(convertedAudioPath.c_str()))
-        {
-            if (!FileSystem::CreateDirectories(convertedAudioPath.c_str()))
-            {
-                GLOG("Failed to create directory: %s", convertedAudioPath.c_str());
-            }
-        }
+
         const std::string convertedBonesPath = projectFilePath + MODELS_LIB_PATH;
         if (!FileSystem::IsDirectory(convertedBonesPath.c_str()))
         {
@@ -331,6 +329,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedBonesPath.c_str());
             }
         }
+
         const std::string convertedMeshesPath = projectFilePath + MESHES_PATH;
         if (!FileSystem::IsDirectory(convertedMeshesPath.c_str()))
         {
@@ -339,6 +338,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedMeshesPath.c_str());
             }
         }
+
         const std::string convertedPlayScenePath = projectFilePath + SCENES_PLAY_PATH;
         if (!FileSystem::IsDirectory(convertedPlayScenePath.c_str()))
         {
@@ -347,6 +347,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedPlayScenePath.c_str());
             }
         }
+
         const std::string convertedTexturesPath = projectFilePath + TEXTURES_PATH;
         if (!FileSystem::IsDirectory(convertedTexturesPath.c_str()))
         {
@@ -355,6 +356,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedTexturesPath.c_str());
             }
         }
+
         const std::string convertedMaterialsPath = projectFilePath + MATERIALS_PATH;
         if (!FileSystem::IsDirectory(convertedMaterialsPath.c_str()))
         {
@@ -363,6 +365,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedMaterialsPath.c_str());
             }
         }
+
         const std::string convertedPrefabLibraryPath = projectFilePath + PREFABS_LIB_PATH;
         if (!FileSystem::IsDirectory(convertedPrefabLibraryPath.c_str()))
         {
@@ -371,6 +374,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedPrefabLibraryPath.c_str());
             }
         }
+
         const std::string convertedStateMachineLibraryPath = projectFilePath + STATEMACHINES_LIB_PATH;
         if (!FileSystem::IsDirectory(convertedStateMachineLibraryPath.c_str()))
         {
@@ -379,6 +383,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedStateMachineLibraryPath.c_str());
             }
         }
+
         const std::string convertedFontsPath = projectFilePath + FONTS_PATH;
         if (!FileSystem::IsDirectory(convertedFontsPath.c_str()))
         {
@@ -387,6 +392,7 @@ namespace SceneImporter
                 GLOG("Failed to create directory: %s", convertedFontsPath.c_str());
             }
         }
+
         const std::string convertedNavmeshesPath = projectFilePath + NAVMESHES_PATH;
         if (!FileSystem::IsDirectory(convertedNavmeshesPath.c_str()))
         {
