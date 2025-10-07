@@ -816,12 +816,14 @@ void Boss::HandleState(float deltaTime)
 {
     if (!mirageActivated && currentHealth <= mirageActivation[phase - 1])
     {
+        lastState    = currentState;
         stateEnter   = true;
         currentState = BossStates::Mirage;
     }
 
     if (phase != 3 && currentHealth <= phaseSwap[phase - 1])
     {
+        lastState    = currentState;
         stateEnter   = true;
         currentState = BossStates::ChangePhase;
     }
@@ -922,7 +924,8 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate = 100;
+        shieldStrikesRate = 95;
+        overheadStrikeRate = 100;
         break;
 
     case BossDistance::Near:
@@ -931,12 +934,12 @@ void Boss::ChooseNextStateFirstPhase()
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate  = 60;
+        shieldStrikesRate  = 50;
         overheadStrikeRate = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate  = 50;
+        shieldStrikesRate  = 40;
         overheadStrikeRate = 100;
         break;
 
@@ -989,19 +992,20 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 70;
+        shieldStrikesRate = 60;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Medium:
         shieldStrikesRate = 50;
-        shieldBlastRate   = 60;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
         shieldStrikesRate = 30;
-        shieldBlastRate   = 65;
+        shieldBlastRate   = 75;
         waterSpoutsRate   = 100;
         break;
 
@@ -1019,9 +1023,10 @@ void Boss::ChooseNextStateSecondPhase()
     }
     // FOR TESTING
     // waterSpoutsRate   = -1;
-    // shieldStrikesRate = -1;
+    //shieldStrikesRate = -1;
+    //shieldBlastRate   = -1;
 
-    int num = uniformDist(rng);
+    int num           = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1059,27 +1064,28 @@ void Boss::ChooseNextStateThirdPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate  = 90;
-        overheadStrikeRate = 95;
+        shieldStrikesRate  = 80;
+        overheadStrikeRate = 85;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate  = 70;
-        overheadStrikeRate = 80;
+        shieldStrikesRate  = 50;
+        overheadStrikeRate = 70;
+        shieldBlastRate    = 80;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate  = 35;
-        overheadStrikeRate = 75;
+        shieldStrikesRate  = 30;
+        overheadStrikeRate = 60;
         shieldBlastRate    = 80;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Distant:
         shieldStrikesRate  = 15;
-        overheadStrikeRate = 50;
+        overheadStrikeRate = 45;
         shieldBlastRate    = 85;
         waterSpoutsRate    = 100;
         break;
@@ -2272,7 +2278,15 @@ void Boss::ShieldBlast(float deltaTime)
 
 void Boss::SetState(BossStates newState)
 {
-    if (newState == currentState)
+    BossStates actualState = currentState;
+    if (actualState == BossStates::Mirage || actualState == BossStates::ChangePhase) actualState = lastState;
+
+    if (currentState == BossStates::WaterSpouts && newState == currentState)
+    {
+        repeatedState = maxRepeats;
+    }
+
+    if (newState == actualState)
     {
         repeatedState++;
         if (repeatedState >= maxRepeats)
