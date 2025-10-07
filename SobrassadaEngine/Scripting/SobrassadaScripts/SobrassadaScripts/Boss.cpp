@@ -470,77 +470,95 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Shield blast VFX not found for ferdiad");
 
+    GameObject* invulnerableVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(invulnerableVFXName);
+    if (invulnerableVFX)
     {
-        GameObject* invulnerableVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(invulnerableVFXName);
-        if (invulnerableVFX)
+        GameObject* invulnerablePlaneWaterAnimationObject =
+            invulnerableVFX->GetChildGameObjectByName("PlaneWaterAnimation");
+        if (invulnerablePlaneWaterAnimationObject)
         {
-            GameObject* invulnerableAnimationObject = invulnerableVFX->GetChildGameObjectByName("Armature");
-            if (invulnerableAnimationObject)
-            {
-                invulnerableAnimation = invulnerableAnimationObject->GetComponent<AnimationComponent*>();
-                if (!invulnerableAnimation) GLOG("[WARNING] Invulnerable animation component not found for ferdiad");
-            }
-            else GLOG("[WARNING] Invulnerable animation not found for ferdiad");
+            invulnerablePlaneWaterMesh = invulnerablePlaneWaterAnimationObject->GetComponent<MeshComponent*>();
+            if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
+            else GLOG("[WARNING] Invulnerable plane water mesh not found for ferdiad");
 
-            GameObject* invulnerableSpriteObject = invulnerableVFX->GetChildGameObjectByName("InvulnerableSprite");
-            if (invulnerableSpriteObject)
-            {
-                MeshComponent* invulnerableSpriteMesh = invulnerableSpriteObject->GetComponent<MeshComponent*>();
-                if (invulnerableSpriteMesh) invulnerableSpriteMesh->SetEnabled(false);
-                else GLOG("[WARNING] Invulnerable sprite sheet mesh not found for ferdiad");
-
-                invulnerableSpriteScript = invulnerableSpriteObject->GetComponent<ShaderScriptComponent*>();
-                if (invulnerableSpriteScript)
-                {
-                    invulnerableSpriteScript->SetEnabled(false);
-
-                    invulnerableSpritesheet = invulnerableSpriteScript->GetScriptByType<AttackVfxSpritesheet>();
-                    if (!invulnerableSpritesheet) GLOG("Invulnerable sprite sheet script incorrect for ferdiad");
-                }
-                else GLOG("[WARNING] Invulnerable sprite sheet script not found for ferdiad");
-            }
-            else GLOG("[WARNING] Invulnerable sprite sheet object not found for ferdiad");
-
-            GameObject* energyBarrierObject = invulnerableVFX->GetChildGameObjectByName("EnergyBarrier");
-            if (energyBarrierObject)
-            {
-                MeshComponent* energyBarrierMesh = energyBarrierObject->GetComponent<MeshComponent*>();
-                if (energyBarrierMesh) energyBarrierMesh->SetEnabled(false);
-                else GLOG("[WARNING] Energy barrier mesh not found for ferdiad");
-
-                invulnerableBarrierScript = energyBarrierObject->GetComponent<ShaderScriptComponent*>();
-                if (invulnerableBarrierScript)
-                {
-                    invulnerableBarrierScript->SetEnabled(false);
-
-                    invulnerableBarrierUV = invulnerableBarrierScript->GetScriptByType<MovingUVTransparent>();
-                    if (!invulnerableBarrierUV) GLOG("[WARNING] Invulnerable barrier script incorrect for ferdiad");
-                }
-                else GLOG("[WARNING] Invulnerable barrier script not found for ferdiad");
-            }
-            else GLOG("[WARNING] Invulnerable barrier VFX object not found for ferdiad");
-
-            GameObject* auraBarrierObject = invulnerableVFX->GetChildGameObjectByName("AuraBarrier");
-            if (auraBarrierObject)
-            {
-                MeshComponent* auraBarrierMesh = auraBarrierObject->GetComponent<MeshComponent*>();
-                if (auraBarrierMesh) auraBarrierMesh->SetEnabled(false);
-                else GLOG("[WARNING] Aura barrier mesh not found for ferdiad");
-
-                invulnerableAuraScript = auraBarrierObject->GetComponent<ShaderScriptComponent*>();
-                if (invulnerableAuraScript)
-                {
-                    invulnerableAuraScript->SetEnabled(false);
-
-                    invulnerableAuraUV = invulnerableAuraScript->GetScriptByType<MovingUVTransparent>();
-                    if (!invulnerableAuraUV) GLOG("[WARNING] Invulnerable aura script incorrect for ferdiad");
-                }
-                else GLOG("[WARNING] Invulnerable aura script not found for ferdiad");
-            }
-            else GLOG("[WARNING] Invulnerable aura VFX object not found for ferdiad");
+            invulnerablePlaneWaterAnimation =
+                invulnerablePlaneWaterAnimationObject->GetComponent<AnimationComponent*>();
+            if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
+            else GLOG("[WARNING] Invulnerable plane water animation component not found for ferdiad");
         }
-        else GLOG("[WARNING] Invulnerable VFX game object not found for ferdiad");
+        else GLOG("[WARNING] Invulnerable plane water animation object not found for ferdiad");
+
+        GameObject* energyBarrierObject = invulnerableVFX->GetChildGameObjectByName("EnergyBarrierVFX");
+        if (energyBarrierObject)
+        {
+            MeshComponent* energyBarrierMesh = energyBarrierObject->GetComponent<MeshComponent*>();
+            if (energyBarrierMesh) energyBarrierMesh->SetEnabled(false);
+            else GLOG("[WARNING] Energy barrier mesh not found for ferdiad");
+
+            invulnerableBarrierScript = energyBarrierObject->GetComponent<ShaderScriptComponent*>();
+            if (invulnerableBarrierScript)
+            {
+                invulnerableBarrierScript->SetEnabled(false);
+
+                invulnerableBarrierUV = invulnerableBarrierScript->GetScriptByType<MovingUVTransparent>();
+                if (!invulnerableBarrierUV) GLOG("[WARNING] Invulnerable barrier script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Invulnerable barrier script not found for ferdiad");
+        }
+        else GLOG("[WARNING] Invulnerable barrier VFX object not found for ferdiad");
+
+        GameObject* invulnerableShieldAnimationObject = invulnerableVFX->GetChildGameObjectByName("ShieldAnimation");
+        if (invulnerableShieldAnimationObject)
+        {
+            invulnerableShieldMesh = invulnerableShieldAnimationObject->GetComponent<MeshComponent*>();
+            if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
+            else GLOG("[WARNING] Invulnerable shield mesh not found for ferdiad");
+
+            invulnerableShieldAnimation = invulnerableShieldAnimationObject->GetComponent<AnimationComponent*>();
+            if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
+            else GLOG("[WARNING] Invulnerable shield animation component not found for ferdiad");
+        }
+        else GLOG("[WARNING] Invulnerable shield animation not found for ferdiad");
+
+        GameObject* noisefallObject = invulnerableVFX->GetChildGameObjectByName("WaterNoisefallVFX");
+        if (noisefallObject)
+        {
+            MeshComponent* noisefallMesh = noisefallObject->GetComponent<MeshComponent*>();
+            if (noisefallMesh) noisefallMesh->SetEnabled(false);
+            else GLOG("[WARNING] Invulnerable noisefall mesh not found for ferdiad");
+
+            invulnerableNoisefallScript = noisefallObject->GetComponent<ShaderScriptComponent*>();
+            if (invulnerableNoisefallScript)
+            {
+                invulnerableNoisefallScript->SetEnabled(false);
+
+                invulnerableNoisefallUV = invulnerableNoisefallScript->GetScriptByType<MovingUVTransparent>();
+                if (!invulnerableNoisefallUV) GLOG("[WARNING] Invulnerable noisefall script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Invulnerable noisefall script not found for ferdiad");
+        }
+        else GLOG("[WARNING] Invulnerable noisefall VFX object not found for ferdiad");
+
+        GameObject* wavesObject = invulnerableVFX->GetChildGameObjectByName("WavesWaterVFX");
+        if (wavesObject)
+        {
+            MeshComponent* wavesMesh = wavesObject->GetComponent<MeshComponent*>();
+            if (wavesMesh) wavesMesh->SetEnabled(false);
+            else GLOG("[WARNING] Invulnerable waves mesh not found for ferdiad");
+
+            invulnerableWavesScript = wavesObject->GetComponent<ShaderScriptComponent*>();
+            if (invulnerableWavesScript)
+            {
+                invulnerableWavesScript->SetEnabled(false);
+
+                invulnerableWavesUV = invulnerableWavesScript->GetScriptByType<MovingUVTransparent>();
+                if (!invulnerableWavesUV) GLOG("[WARNING] Invulnerable waves script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Invulnerable waves script not found for ferdiad");
+        }
+        else GLOG("[WARNING] Invulnerable waves VFX object not found for ferdiad");
     }
+    else GLOG("[WARNING] Invulnerable VFX game object not found for ferdiad");
 
     GameObject* atomObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
     if (atomObject)
@@ -672,13 +690,11 @@ void Boss::Update(float deltaTime)
 
 void Boss::OnPlayerExitLocation()
 {
-    GLOG("EXIT")
     waiting = true;
 }
 
 void Boss::OnPlayerEnterLocation()
 {
-    GLOG("ENTER")
     waiting = false;
 
     doTaunt = true;
@@ -696,7 +712,6 @@ void Boss::OnPlayerEnterLocation()
 
 void Boss::PlayHighlightSequence()
 {
-    GLOG("START HIGHLIGHT")
     doTaunt            = true;
     highlightActivated = true;
 }
@@ -741,12 +756,10 @@ void Boss::OnDamageTaken(int amount)
             switch (num)
             {
             case 1:
-                GLOG("GetHit1");
                 if (animComponent) animComponent->UseTrigger("GetHit1");
                 currentAction = BossActions::GetHit1;
                 break;
             case 2:
-                GLOG("GetHit2");
                 if (animComponent) animComponent->UseTrigger("GetHit2");
                 currentAction = BossActions::GetHit2;
                 break;
@@ -760,12 +773,10 @@ void Boss::OnDamageTaken(int amount)
             switch (num)
             {
             case 1:
-                GLOG("GetHit1Behind");
                 if (animComponent) animComponent->UseTrigger("GetHit1Behind");
                 currentAction = BossActions::GetHit1Behind;
                 break;
             case 2:
-                GLOG("GetHit2Behind");
                 if (animComponent) animComponent->UseTrigger("GetHit2Behind");
                 currentAction = BossActions::GetHit2Behind;
                 break;
@@ -1674,26 +1685,26 @@ void Boss::OverheadStrike(float deltaTime)
 
 void Boss::StartDash()
 {
-    isDashing        = true;
+    isDashing         = true;
 
-    float3 bossPos   = parent->GetGlobalTransform().TranslatePart();
-    float3 playerPos = character->GetLastPosition();
+    float3 bossPos    = parent->GetGlobalTransform().TranslatePart();
+    float3 playerPos  = character->GetLastPosition();
 
-    bossPos.y        = 0.0f;
-    playerPos.y      = 0.0f;
+    bossPos.y         = 0.0f;
+    playerPos.y       = 0.0f;
 
-    dashDistance     = (playerPos - bossPos).Length();
-    dashDirection    = (playerPos - bossPos).Normalized();
+    dashDistance      = (playerPos - bossPos).Length();
+    dashDirection     = (playerPos - bossPos).Normalized();
 
-    GLOG("Distance: %.2f", dashDistance);
-    GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
+    // GLOG("Distance: %.2f", dashDistance);
+    // GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
 
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
 
     dashStartPosLocal = parent->GetLocalTransform().TranslatePart();
 
-    GLOG("Speed: %.2f", dashSpeed);
+    // GLOG("Speed: %.2f", dashSpeed);
 }
 
 void Boss::Dash(float deltaTime)
@@ -1872,22 +1883,25 @@ void Boss::Mirage()
 {
     if (stateEnter)
     {
-        GLOG("[BOSS] - Mirage");
-
         ResetValues(false);
         mirageActivated = true;
         stateEnter      = false;
         agentAI->PauseMovement();
         currentAction = BossActions::Start;
 
-        if (invulnerableSpritesheet) invulnerableSpritesheet->Reset();
-        if (invulnerableBarrierUV) invulnerableBarrierUV->Reset();
-        if (invulnerableAuraUV) invulnerableAuraUV->Reset();
+        if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
+        if (invulnerableWavesUV) invulnerableWavesUV->Reset();
 
-        if (invulnerableAnimation) invulnerableAnimation->OnPlay(true);
-        if (invulnerableSpriteScript) invulnerableSpriteScript->SetEnabled(true);
+        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
+        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
+
         if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
-        if (invulnerableAuraScript) invulnerableAuraScript->SetEnabled(true);
+
+        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
+        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
+
+        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
+        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
     }
 
     switch (currentAction)
@@ -1917,7 +1931,6 @@ void Boss::Mirage()
 
         if ((int)bossMirageScript->GetSequenceState() == 0)
         {
-            GLOG("Leaving Mirage")
             currentAction     = BossActions::End;
             actionTriggerDone = false;
         }
@@ -1932,10 +1945,16 @@ void Boss::Mirage()
 
         if (animComponent && animComponent->IsFinished())
         {
-            if (invulnerableAnimation) invulnerableAnimation->OnStop();
-            if (invulnerableSpriteScript) invulnerableSpriteScript->SetEnabled(false);
+            if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
+            if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
+
             if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-            if (invulnerableAuraScript) invulnerableAuraScript->SetEnabled(false);
+
+            if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
+            if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
+
+            if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
+            if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
 
             agentAI->ResumeMovement();
             actionTriggerDone = false;
@@ -2041,17 +2060,15 @@ void Boss::ResetValues(bool changePhase)
 
     if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
 
-    if (invulnerableAnimation) invulnerableAnimation->OnStop();
-    if (invulnerableSpriteScript) invulnerableSpriteScript->SetEnabled(false);
+    if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
+    if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
     if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-    if (invulnerableAuraScript) invulnerableAuraScript->SetEnabled(false);
+    if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
+    if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
+    if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
+    if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
 
     if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
-
-    if (invulnerableAnimation) invulnerableAnimation->OnStop();
-    if (invulnerableSpriteScript) invulnerableSpriteScript->SetEnabled(false);
-    if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-    if (invulnerableAuraScript) invulnerableAuraScript->SetEnabled(false);
 
     if (runesScript) runesScript->SetEnabled(false);
     if (runesUV) runesUV->SetPaused(false);
@@ -2300,7 +2317,6 @@ void Boss::Restart(float deltaTime)
 
         if (CheckDistanceWithPoint(startPos))
         {
-            GLOG("POINT REACHED");
             actionTriggerDone = false;
             doIdle            = true;
             waiting           = true;
@@ -2328,24 +2344,31 @@ void Boss::ChangePhase()
         currentAction = BossActions::Taunt;
         if (animComponent) animComponent->UseTrigger("Taunt");
 
-        if (invulnerableSpritesheet) invulnerableSpritesheet->Reset();
-        if (invulnerableBarrierUV) invulnerableBarrierUV->Reset();
-        if (invulnerableAuraUV) invulnerableAuraUV->Reset();
+        if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
+        if (invulnerableWavesUV) invulnerableWavesUV->Reset();
 
-        if (invulnerableAnimation) invulnerableAnimation->OnPlay(true);
-        if (invulnerableSpriteScript) invulnerableSpriteScript->SetEnabled(true);
+        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
+        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
+
         if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
-        if (invulnerableAuraScript) invulnerableAuraScript->SetEnabled(true);
+
+        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
+        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
+
+        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
+        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
     }
 
     if (animComponent && animComponent->IsFinished())
     {
-        if (invulnerableAnimation) invulnerableAnimation->OnStop();
-        if (invulnerableSpriteScript) invulnerableSpriteScript->SetEnabled(false);
+        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
+        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
         if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-        if (invulnerableAuraScript) invulnerableAuraScript->SetEnabled(false);
+        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
+        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
+        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
+        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
 
-        GLOG("ChangePhase Finished")
         agentAI->ResumeMovement();
 
         ChooseNextState();

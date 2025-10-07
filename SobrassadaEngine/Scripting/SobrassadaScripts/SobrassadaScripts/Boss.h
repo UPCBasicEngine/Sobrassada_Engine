@@ -221,86 +221,89 @@ class Boss : public Character
     std::uniform_int_distribution<int> uniformGetHit;
 
     // VFX
-    std::string emessiveVFXName                      = "";
-    MeshComponent* emessiveVFXMesh                   = nullptr;
+    std::string emessiveVFXName                         = "";
+    MeshComponent* emessiveVFXMesh                      = nullptr;
 
-    std::string overheadPrepareVFXName               = "";
-    ShaderScriptComponent* runesScript               = nullptr;
-    MovingUVTransparent* runesUV                     = nullptr;
-    ShaderScriptComponent* runesLightsScript         = nullptr;
-    MovingUVTransparent* runesLightsUV               = nullptr;
+    std::string overheadPrepareVFXName                  = "";
+    ShaderScriptComponent* runesScript                  = nullptr;
+    MovingUVTransparent* runesUV                        = nullptr;
+    ShaderScriptComponent* runesLightsScript            = nullptr;
+    MovingUVTransparent* runesLightsUV                  = nullptr;
 
-    std::string overheadDashVFXName                  = "";
-    MeshComponent* dashGroundMesh                    = nullptr;
-    MeshComponent* dashEnergyMesh                    = nullptr;
-    ShaderScriptComponent* dashLightsShieldScript    = nullptr;
-    MovingUVTransparent* dashLightsShieldUV          = nullptr;
-    ShaderScriptComponent* dashShieldExpansionScript = nullptr;
-    MovingUVTransparent* dashShieldExpansionUV       = nullptr;
+    std::string overheadDashVFXName                     = "";
+    MeshComponent* dashGroundMesh                       = nullptr;
+    MeshComponent* dashEnergyMesh                       = nullptr;
+    ShaderScriptComponent* dashLightsShieldScript       = nullptr;
+    MovingUVTransparent* dashLightsShieldUV             = nullptr;
+    ShaderScriptComponent* dashShieldExpansionScript    = nullptr;
+    MovingUVTransparent* dashShieldExpansionUV          = nullptr;
 
-    std::string overheadAttackVFXName                = "";
-    ShaderScriptComponent* attackLightingsScript     = nullptr;
-    MovingUVTransparent* attackLightingsUV           = nullptr;
-    ShaderScriptComponent* attackEnergyScript        = nullptr;
-    MovingUVTransparent* attackEnergyUV              = nullptr;
+    std::string overheadAttackVFXName                   = "";
+    ShaderScriptComponent* attackLightingsScript        = nullptr;
+    MovingUVTransparent* attackLightingsUV              = nullptr;
+    ShaderScriptComponent* attackEnergyScript           = nullptr;
+    MovingUVTransparent* attackEnergyUV                 = nullptr;
 
-    ShaderScriptComponent* attackExplosionScript     = nullptr;
-    MovingUVTransparent* attackExplosionUV           = nullptr;
-    ShaderScriptComponent* bigExpansionScript        = nullptr;
-    MovingUVTransparent* bigExpansionUV              = nullptr;
-    ShaderScriptComponent* smallExpansionScript      = nullptr;
-    MovingUVTransparent* smallExpansionUV            = nullptr;
+    ShaderScriptComponent* attackExplosionScript        = nullptr;
+    MovingUVTransparent* attackExplosionUV              = nullptr;
+    ShaderScriptComponent* bigExpansionScript           = nullptr;
+    MovingUVTransparent* bigExpansionUV                 = nullptr;
+    ShaderScriptComponent* smallExpansionScript         = nullptr;
+    MovingUVTransparent* smallExpansionUV               = nullptr;
 
-    std::string shieldBlastVFXName                   = "";
-    ShaderScriptComponent* blastPreSpriteScript      = nullptr;
-    AttackVfxSpritesheet* blastPreSpritesheet        = nullptr;
-    ShaderScriptComponent* blastSpriteScript         = nullptr;
-    AttackVfxSpritesheet* blastSpritesheet           = nullptr;
-    ShaderScriptComponent* blastSpriteScript2        = nullptr;
-    AttackVfxSpritesheet* blastSpritesheet2          = nullptr;
-    ShaderScriptComponent* blastEnergySpriteScript   = nullptr;
-    AttackVfxSpritesheet* blastEnergySpritesheet     = nullptr;
+    std::string shieldBlastVFXName                      = "";
+    ShaderScriptComponent* blastPreSpriteScript         = nullptr;
+    AttackVfxSpritesheet* blastPreSpritesheet           = nullptr;
+    ShaderScriptComponent* blastSpriteScript            = nullptr;
+    AttackVfxSpritesheet* blastSpritesheet              = nullptr;
+    ShaderScriptComponent* blastSpriteScript2           = nullptr;
+    AttackVfxSpritesheet* blastSpritesheet2             = nullptr;
+    ShaderScriptComponent* blastEnergySpriteScript      = nullptr;
+    AttackVfxSpritesheet* blastEnergySpritesheet        = nullptr;
 
-    std::string invulnerableVFXName                  = "";
-    AnimationComponent* invulnerableAnimation        = nullptr;
-    ShaderScriptComponent* invulnerableSpriteScript  = nullptr;
-    AttackVfxSpritesheet* invulnerableSpritesheet    = nullptr;
-    ShaderScriptComponent* invulnerableBarrierScript = nullptr;
-    MovingUVTransparent* invulnerableBarrierUV       = nullptr;
-    ShaderScriptComponent* invulnerableAuraScript    = nullptr;
-    MovingUVTransparent* invulnerableAuraUV          = nullptr;
+    std::string invulnerableVFXName                     = "";
+    MeshComponent* invulnerablePlaneWaterMesh           = nullptr;
+    AnimationComponent* invulnerablePlaneWaterAnimation = nullptr;
+    ShaderScriptComponent* invulnerableBarrierScript    = nullptr;
+    MovingUVTransparent* invulnerableBarrierUV          = nullptr;
+    MeshComponent* invulnerableShieldMesh               = nullptr;
+    AnimationComponent* invulnerableShieldAnimation     = nullptr;
+    ShaderScriptComponent* invulnerableNoisefallScript  = nullptr;
+    MovingUVTransparent* invulnerableNoisefallUV        = nullptr;
+    ShaderScriptComponent* invulnerableWavesScript      = nullptr;
+    MovingUVTransparent* invulnerableWavesUV            = nullptr;
 
     // Particle
-    std::string atomParticleName                     = "";
-    ParticleSystemComponent* atomParticle            = nullptr;
-    std::string smokeParticleName                    = "";
-    ParticleSystemComponent* smokeParticle           = nullptr;
-    std::string chargeShieldParticleName             = "";
-    ParticleSystemComponent* chargeShieldParticle    = nullptr;
-    std::string energyBlastParticleName              = "";
-    ParticleSystemComponent* energyBlastParticle1    = nullptr;
-    ParticleSystemComponent* energyBlastParticle2    = nullptr;
-    ParticleSystemComponent* energyBlastParticle3    = nullptr;
-    ParticleSystemComponent* energyBlastParticle4    = nullptr;
+    std::string atomParticleName                        = "";
+    ParticleSystemComponent* atomParticle               = nullptr;
+    std::string smokeParticleName                       = "";
+    ParticleSystemComponent* smokeParticle              = nullptr;
+    std::string chargeShieldParticleName                = "";
+    ParticleSystemComponent* chargeShieldParticle       = nullptr;
+    std::string energyBlastParticleName                 = "";
+    ParticleSystemComponent* energyBlastParticle1       = nullptr;
+    ParticleSystemComponent* energyBlastParticle2       = nullptr;
+    ParticleSystemComponent* energyBlastParticle3       = nullptr;
+    ParticleSystemComponent* energyBlastParticle4       = nullptr;
 
     // Inspector values
-    int closeAreaDamage                              = 3;
-    float dashDuration                               = 0.3f;
-    float heightJump                                 = 4.0f;
-    float jumpDuration                               = 0.2f;
-    float fallDuration                               = 0.2f;
-    float highlightDelay                             = 8.0f;
-    float chaseTimeLimit                             = 8.0f;
-    float blastAreaDisabledLimit                     = 0.5f;
-    float stepTime                                   = 0.5f;
-    float delayToChangeScene                         = 5.0f;
+    int closeAreaDamage                                 = 3;
+    float dashDuration                                  = 0.3f;
+    float heightJump                                    = 4.0f;
+    float jumpDuration                                  = 0.2f;
+    float fallDuration                                  = 0.2f;
+    float highlightDelay                                = 8.0f;
+    float chaseTimeLimit                                = 8.0f;
+    float blastAreaDisabledLimit                        = 0.5f;
+    float stepTime                                      = 0.5f;
+    float delayToChangeScene                            = 5.0f;
 
     // ShieldBlast
-    std::string blastAreaName                        = "";
-    GameObject* blastArea                            = nullptr;
-    float blastHitboxDelay                           = 1.3f;
-    bool blastHit                                    = false;
-    float blastHitTimer                              = 0.0f;
+    std::string blastAreaName                           = "";
+    GameObject* blastArea                               = nullptr;
+    float blastHitboxDelay                              = 1.3f;
+    bool blastHit                                       = false;
+    float blastHitTimer                                 = 0.0f;
 
     // Mirage
     int mirage1 = 47, mirage2 = 30, mirage3 = 10;
