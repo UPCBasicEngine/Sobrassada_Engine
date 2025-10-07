@@ -75,7 +75,7 @@ void DirectionalLightComponent::RenderEditorInspector()
     LightComponent::RenderEditorInspector();
 
     ImGui::DragFloat3("Shadow Tint", &shadowTint[0], 0.0f, 1.0f);
-    ImGui::DragFloat("Shadow Strength", &shadowStrength, 0.1f, 0.0f, 5.0f);
+    ImGui::DragFloat("Shadow Strength", &shadowStrength, 0.1f, 0.0f, 10.0f);
 }
 
 void DirectionalLightComponent::RenderDebug(float deltaTime)
