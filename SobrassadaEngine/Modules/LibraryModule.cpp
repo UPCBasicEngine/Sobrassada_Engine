@@ -33,8 +33,12 @@ bool LibraryModule::Init()
     if (App->GetProjectModule()->IsProjectLoaded())
     {
         const std::string& engineDefaultPath = ENGINE_DEFAULT_ASSETS;
+#ifndef GAME
         SceneImporter::CreateLibraryDirectories(App->GetProjectModule()->GetLoadedProjectPath());
         SceneImporter::CreateLibraryDirectories(engineDefaultPath);
+#endif
+        CopyMetadata(App->GetProjectModule()->GetLoadedProjectPath());
+        CopyMetadata(engineDefaultPath);
         LoadLibraryMaps(App->GetProjectModule()->GetLoadedProjectPath());
         LoadLibraryMaps(engineDefaultPath);
     }
@@ -136,7 +140,7 @@ bool LibraryModule::LoadScene(const char* file, bool reload) const
 
 bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
 {
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(projectPath + METADATA_PATH))
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(projectPath + METADATA_LIB_PATH))
     {
         if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
         {
@@ -318,6 +322,12 @@ void LibraryModule::DeletePrefabFiles(UID prefabUID)
 
     FileSystem::Delete(metaPath.c_str());
 
+    const std::string metaLibPath = App->GetProjectModule()->GetLoadedProjectPath() + METADATA_LIB_PATH +
+                                    std::to_string((int)ResourceType::Prefab) + FILENAME_SEPARATOR +
+                                    GetResourceName(prefabUID) + META_EXTENSION;
+
+    FileSystem::Delete(metaLibPath.c_str());
+
     const std::string assetPath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_ASSETS_PATH +
                                   GetResourceName(prefabUID) + PREFAB_EXTENSION;
 
@@ -481,7 +491,7 @@ const std::string& LibraryModule::GetResourcePath(UID resourceID) const
 
 void LibraryModule::CreateCacheForMetadata(const std::string& path)
 {
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_PATH))
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_LIB_PATH))
     {
         if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
         {
@@ -497,6 +507,14 @@ void LibraryModule::CreateCacheForMetadata(const std::string& path)
             }
         }
     }
+}
+
+void LibraryModule::CopyMetadata(const std::string& path)
+{
+    const std::string source      = path + METADATA_PATH;
+    const std::string destination = path + METADATA_LIB_PATH;
+
+    FileSystem::Copy(source.c_str(), destination.c_str(), true);
 }
 
 const std::string& LibraryModule::GetResourceName(UID resourceID) const

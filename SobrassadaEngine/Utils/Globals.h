@@ -100,6 +100,7 @@ constexpr const char* NAVMESH_ASSETS_PATH               = "Assets/Navmeshes/";
 constexpr const char* VIDEOS_ASSETS_PATH                = "Assets/Videos/";
 
 constexpr const char* LIBRARY_PATH                      = "Library/";
+constexpr const char* METADATA_LIB_PATH                = "Library/Metadata/";
 constexpr const char* ANIMATIONS_PATH                   = "Library/Animations/";
 constexpr const char* AUDIO_PATH                        = "Library/Audio/";
 constexpr const char* MODELS_LIB_PATH                   = "Library/Models/";

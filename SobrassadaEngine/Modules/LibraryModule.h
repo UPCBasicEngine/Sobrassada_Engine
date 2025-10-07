@@ -88,6 +88,7 @@ class SOBRASADA_API_ENGINE LibraryModule : public Module
 
   private:
     void CreateCacheForMetadata(const std::string& path);
+    void CopyMetadata(const std::string& path);
 
     std::unordered_map<UID, std::string> cachedMetadataDocuments;
 

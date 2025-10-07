@@ -60,8 +60,7 @@ namespace SceneImporter
             {
                 std::vector<std::pair<UID, UID>> primitives;
 
-                if (srcNode.mesh >= gltfMeshes.size())
-                    gltfMeshes.resize(srcNode.mesh + 1);
+                if (srcNode.mesh >= gltfMeshes.size()) gltfMeshes.resize(srcNode.mesh + 1);
                 const tinygltf::Mesh& srcMesh    = model.meshes[srcNode.mesh];
                 const float4x4& defaultTransform = MeshImporter::GetNodeTransform(srcNode);
                 int primitiveCounter             = 0;
@@ -75,7 +74,7 @@ namespace SceneImporter
                     matIndex   = primitive.material;
                     if (matIndex == -1)
                     {
-                        //GLOG("Material index invalid for mesh: %s. Using default material.", name.c_str());
+                        // GLOG("Material index invalid for mesh: %s. Using default material.", name.c_str());
                         matUID = DEFAULT_MATERIAL_UID;
                     }
                     else if (matIndices.find(matIndex) == matIndices.end())
@@ -95,14 +94,14 @@ namespace SceneImporter
                     primitiveCounter++;
 
                     primitives.emplace_back(meshUID, matUID);
-                    //GLOG("New primitive with mesh UID: %d and Material UID: %d", meshUID, matUID);
+                    // GLOG("New primitive with mesh UID: %d and Material UID: %d", meshUID, matUID);
                 }
 
                 gltfMeshes[srcNode.mesh] = primitives;
             }
         }
 
-        //GLOG("Total .gltf meshes: %d", gltfMeshes.size());
+        // GLOG("Total .gltf meshes: %d", gltfMeshes.size());
 
         // Import Model
         ModelImporter::ImportModel(model, gltfMeshes, filePath, targetFilePath);
@@ -209,7 +208,7 @@ namespace SceneImporter
         if (!importOptions.IsObject()) return;
 
         tinygltf::Model model = LoadModelGLTF(filePath.c_str());
-         int animIndex = importOptions.HasMember("animationIndex") ? importOptions["animationIndex"].GetInt() : 0;
+        int animIndex = importOptions.HasMember("animationIndex") ? importOptions["animationIndex"].GetInt() : 0;
 
         // ONLY IMPORT ANIMATION IF INDEX IS INSIDE ANIMATION RANGE
         if (model.animations.size() > animIndex)
@@ -290,12 +289,21 @@ namespace SceneImporter
             }
         }
 
-        const std::string convertedNavmeshPath    = projectFilePath + NAVMESH_ASSETS_PATH;
+        const std::string convertedNavmeshPath = projectFilePath + NAVMESH_ASSETS_PATH;
         if (!FileSystem::IsDirectory(convertedNavmeshPath.c_str()))
         {
             if (!FileSystem::CreateDirectories(convertedNavmeshPath.c_str()))
             {
                 GLOG("Failed to create directory: %s", convertedNavmeshPath.c_str());
+            }
+        }
+
+        const std::string convertedAssetsLibraryPath = projectFilePath + METADATA_LIB_PATH;
+        if (!FileSystem::IsDirectory(convertedAssetsLibraryPath.c_str()))
+        {
+            if (!FileSystem::CreateDirectories(convertedAssetsLibraryPath.c_str()))
+            {
+                GLOG("Failed to create directory: %s", convertedAssetsLibraryPath.c_str());
             }
         }
 
