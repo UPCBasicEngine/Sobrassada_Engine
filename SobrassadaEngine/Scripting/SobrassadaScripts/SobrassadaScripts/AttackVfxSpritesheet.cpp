@@ -255,6 +255,7 @@ void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
 
     timer += deltaTime;
     if (timer < updateRate) return;
+    else if (finished) return;
 
     if (isRowMajor)
     {
@@ -293,6 +294,11 @@ void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
     if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
     {
         parent->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
+    }
+
+    if (onlyOnce && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
+    {
+        finished = true;
     }
 }
 
