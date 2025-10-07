@@ -31,7 +31,7 @@ AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Double sided", InspectorField::FieldType::Bool, &isDoubleSided});
     fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
     fields.push_back({"Only Once", InspectorField::FieldType::Bool, &onlyOnce});
-    
+
     fields.push_back({InspectorField::FieldType::Text, (void*)"Row column parameters"});
     fields.push_back({"Use row columns", InspectorField::FieldType::Bool, &useRowCol});
     fields.push_back({"Rows", InspectorField::FieldType::Int, &rows, 1, 100});
@@ -135,26 +135,6 @@ bool AttackVfxSpritesheet::Init()
             otherImageBindlessUID = glGetTextureHandleARB(otherImage->GetTextureID());
             glMakeTextureHandleResidentARB(otherImageBindlessUID);
 
-            ResetUVs(otherImage);
-        }
-
-        UID variationsUID[4] = {variationsUID1, variationsUID2, variationsUID3, variationsUID4};
-
-        for (int i = 0; i < variationsToUse; ++i)
-        {
-            variations[i] =
-                static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(variationsUID[i]));
-
-            if (variations[i])
-            {
-                variationsBindlessUID[i] = glGetTextureHandleARB(variations[i]->GetTextureID());
-                glMakeTextureHandleResidentARB(variationsBindlessUID[i]);
-            }
-        }
-
-        // Start using the default image
-        currentImageUID = otherImageBindlessUID;
-    }
             if (!useRowCol)
             {
                 uvRange.x = 0.0f;
@@ -175,11 +155,29 @@ bool AttackVfxSpritesheet::Init()
                 step.x    = 1.0f / float(cols);
                 step.y    = 1.0f / float(rows);
             }
+
+            ResetUVs(otherImage);
         }
 
-        if (animationDuration <= 0.f) animationDuration = 0.1f;
+        UID variationsUID[4] = {variationsUID1, variationsUID2, variationsUID3, variationsUID4};
 
+        for (int i = 0; i < variationsToUse; ++i)
+        {
+            variations[i] =
+                static_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(variationsUID[i]));
+
+            if (variations[i])
+            {
+                variationsBindlessUID[i] = glGetTextureHandleARB(variations[i]->GetTextureID());
+                glMakeTextureHandleResidentARB(variationsBindlessUID[i]);
+            }
+        }
+
+        // Start using the default image
+        currentImageUID = otherImageBindlessUID;
     }
+
+    if (animationDuration <= 0.f) animationDuration = 0.1f;
     return true;
 }
 
@@ -387,9 +385,19 @@ void AttackVfxSpritesheet::ResetUVs(ResourceTexture* tex)
 {
     if (!tex) return;
 
+    if (useRowCol)
+    {
+        uvRange.y = 1.0f / float(cols);
+        uvRange.w = 1.0f / float(rows);
+    }
+    else
+    {
+        uvRange.y = cellWidth / static_cast<float>(tex->GetTextureWidth());
+        uvRange.w = cellHeight / static_cast<float>(tex->GetTextureHeight());
+    }
+
     uvRange.x = 0.0f;
-    uvRange.y = cellWidth / static_cast<float>(tex->GetTextureWidth());
     uvRange.z = 0.0f;
-    uvRange.w = cellHeight / static_cast<float>(tex->GetTextureHeight());
-    finished = false;
+
+    finished  = false;
 }

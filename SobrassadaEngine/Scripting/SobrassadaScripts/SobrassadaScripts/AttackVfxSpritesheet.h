@@ -50,7 +50,6 @@ class AttackVfxSpritesheet : public Script
 
     float2 step                 = float2::zero;
 
-    MeshComponent* meshComp     = nullptr;
     bool isOneShot                 = false;
     bool isAdditive                = false;
 
