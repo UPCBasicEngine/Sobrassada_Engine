@@ -75,20 +75,21 @@ void Spouts::Update(float deltaTime)
     {
         if (character == nullptr) return;
 
+        damageCollider->SetEnabled(false);
+
         if (!bossControlled)
         {
             if (enableRune) rune->SetEnabled(true);
-        }
 
-        damageCollider->SetEnabled(false);
-        float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
-        if (distance <= activationRange)
-        {
-            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
-            activationState = ACTIVATION_STATE::CHARGING;
-            rune->SetEnabled(false);
-            tornadoWater->SetEnabled(true);
-            chargingTimer = 0.0f;
+            float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+            if (distance <= activationRange)
+            {
+                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
+                activationState = ACTIVATION_STATE::CHARGING;
+                rune->SetEnabled(false);
+                tornadoWater->SetEnabled(true);
+                chargingTimer = 0.0f;
+            }
         }
     }
     else if (activationState == ACTIVATION_STATE::CHARGING)
@@ -119,7 +120,11 @@ void Spouts::Update(float deltaTime)
     }
     else if (activationState == ACTIVATION_STATE::DAMAGING)
     {
-        float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+        if (!bossControlled)
+        {
+            float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
+        }
+
         waterMesh->SetEnabled(true);
         shaderScript->SetScriptEnabled("MovingUVTransparent", true);
         shaderWaterMesh->SetEnabled(false);
@@ -192,6 +197,7 @@ void Spouts::ForceActivate()
 {
     if (activationState == ACTIVATION_STATE::SLEEPING)
     {
+        damageCollider->SetEnabled(false);
         GLOG("Force Activation");
         if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
         activationState = ACTIVATION_STATE::CHARGING;

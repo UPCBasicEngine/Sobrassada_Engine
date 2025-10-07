@@ -24,6 +24,8 @@ namespace AK
         static const AkUniqueID PLAY_SFX_ARCHER_OVERSHOOTING = 2850888511U;
         static const AkUniqueID PLAY_SFX_ARCHER_TRI_ATTACK = 4195834484U;
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
+        static const AkUniqueID PLAY_SFX_BANSHEE_DEATH = 1421284353U;
+        static const AkUniqueID PLAY_SFX_BANSHEE_HURT = 1031600530U;
         static const AkUniqueID PLAY_SFX_BREAK_01 = 2634635063U;
         static const AkUniqueID PLAY_SFX_BREAK_02 = 2634635060U;
         static const AkUniqueID PLAY_SFX_BREAK_03 = 2634635061U;
