@@ -250,7 +250,11 @@ void RenderPass::RenderScene(
 
         gbuffer->Unbind();
 
-        Bind();
+#ifdef GAME
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         const unsigned int program = App->GetShaderModule()->GetQuadProgram();
         glUseProgram(program);
@@ -261,6 +265,17 @@ void RenderPass::RenderScene(
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+#else
+       
+        Bind();
+        const unsigned int program = App->GetShaderModule()->GetQuadProgram();
+        glUseProgram(program);
+        unsigned int loc = glGetUniformLocation(program, "u_Texture");
+        glUniform1i(loc, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+#endif
 
         glPopDebugGroup();
         return;
@@ -727,6 +742,8 @@ void RenderPass::ShadowMapPassRender(
         batchManager->RenderShadowMap(meshesToRender, ubo);
     }
 
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -820,7 +837,7 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     glUseProgram(program);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
+    glBindTexture(GL_TEXTURE_2D, framebuffer->GetDepthTexture());
 
     glUniform1f(2, heightFog.densityConstant);
     glUniform1f(3, heightFog.heightFalloff);
@@ -879,7 +896,7 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
 
-    fxaaTexture = framebuffer->GetTextureID();
+    fxaaTexture = framebuffer->GetColorTexture();
 #endif
 
     glDepthMask(GL_FALSE);
@@ -1662,8 +1679,8 @@ void RenderPass::Resize(int width, int height) const
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurrTextures[i], 0);
     }
-
     glBindTexture(GL_TEXTURE_2D, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void RenderPass::RenderShadowMapDebug() const

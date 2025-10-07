@@ -12,6 +12,7 @@
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 
+
 #include "Math/Quat.h"
 
 static bool IsInsideCameraView(const float3& worldPosition, float screenEdgeMargin = 0.05f)
@@ -97,6 +98,7 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
     this->direction = direction.Normalized();
     frames          = 0;
     if (collider) collider->SetEnabled(false);
+    
 
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();

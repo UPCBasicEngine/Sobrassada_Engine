@@ -59,7 +59,7 @@ Character::Character(
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 25.0f});
-        fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
+        fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 30.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
         fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
         fields.push_back({"On Hit VFX Duration", InspectorField::FieldType::Float, &onHitVfxDuration, 0.0f, 1.0f});
@@ -98,35 +98,35 @@ bool Character::Init()
         else weaponCollider->SetEnabled(false);
     }
 
-   if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
-   {
-       onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
-       // if (!onHitPivot) GLOG("[WARNING - %s] No on hit Pivot found for enemy", parent->GetName().c_str())
-   
-       onHitVfx1  = parent->GetChildGameObjectByName(onHitVfx1Name);
-       if (onHitVfx1) onHitVfx1->SetEnabled(false);
-       // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
-   
-       onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
-       if (onHitVfx2) onHitVfx2->SetEnabled(false);
-       // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
-   
-       GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
-       if (meshObject)
-       {
-           mesh = meshObject->GetComponent<MeshComponent*>();
-           if (mesh) mesh->SetEnabled(true);
-           // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
-   
-           colorChange = meshObject->GetComponent<ShaderScriptComponent*>();
-           if (colorChange) colorChange->SetEnabled(false);
-           // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
-       }
-       else
-       {
-           GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
-       }
-   }
+    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
+    {
+        onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
+        // if (!onHitPivot) GLOG("[WARNING - %s] No on hit Pivot found for enemy", parent->GetName().c_str())
+
+        onHitVfx1  = parent->GetChildGameObjectByName(onHitVfx1Name);
+        if (onHitVfx1) onHitVfx1->SetEnabled(false);
+        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
+
+        onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
+        if (onHitVfx2) onHitVfx2->SetEnabled(false);
+        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
+
+        GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
+        if (meshObject)
+        {
+            mesh = meshObject->GetComponent<MeshComponent*>();
+            if (mesh) mesh->SetEnabled(true);
+            // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+            colorChange = meshObject->GetComponent<ShaderScriptComponent*>();
+            if (colorChange) colorChange->SetEnabled(false);
+            // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+        }
+        else
+        {
+            GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
+        }
+    }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
 
@@ -135,7 +135,7 @@ bool Character::Init()
 
 void Character::Update(float deltaTime)
 {
-    if (isDead) return;
+    if (isDead && type != CharacterType::Boss) return;
 
     if (!characterCollider || !weaponCollider || !weapon) return;
 
@@ -192,6 +192,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
     // GLOG("COLLISION %s with %s", parent->GetName().c_str(), otherObject->GetName().c_str())
 
     // ---- Damage Collisions ----
+
+    if (type == CharacterType::Boss) hitCollisionNormal = collisionNormal;
 
     // Melee check
     CapsuleColliderComponent* otherWeapon      = otherObject->GetComponent<CapsuleColliderComponent*>();

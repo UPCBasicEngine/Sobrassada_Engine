@@ -2,6 +2,8 @@
 
 #include "Application.h"
 #include "Changeling.h"
+
+#include "AttackVfxSpritesheet.h"
 #include "Component.h"
 #include "CuChulainn.h"
 #include "DebugDrawModule.h"
@@ -10,10 +12,14 @@
 #include "MagicBarrier.h"
 #include "Projectile.h"
 #include "ResourceStateMachine.h"
+#include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
+#include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Wwise_IDs.h"
@@ -26,6 +32,7 @@ Changeling::Changeling(GameObject* parent)
 {
     fields.emplace_back("Dash trail object", InspectorField::FieldType::InputText, &dashTrailObjectName);
     fields.emplace_back("Dash trail start mesh", InspectorField::FieldType::InputText, &dashTrailStartMeshName);
+    fields.emplace_back("Dash trail mid base", InspectorField::FieldType::InputText, &dashTrailMidBaseName);
     fields.emplace_back("Dash trail mid mesh", InspectorField::FieldType::InputText, &dashTrailMidMeshName);
     fields.emplace_back("Dash trail end mesh", InspectorField::FieldType::InputText, &dashTrailEndMeshName);
     fields.emplace_back("Dash trail collision", InspectorField::FieldType::InputText, &dashTrailCollisionName);
@@ -41,7 +48,7 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back("Dash speed", InspectorField::FieldType::Float, &dashSpeed, 0.1f, 100.0f);
     fields.emplace_back("Min dash distance", InspectorField::FieldType::Float, &minDashDistance, 0.1f, 100.0f);
 
-    // Version selection (0 random, 1 default, 2 sneak, 3 block)
+    // Version selection (0 random, 1 default, 2 block)
     fields.emplace_back("Version (0: Random)", InspectorField::FieldType::Int, &userSelectedVersion, 0, 2);
     fields.emplace_back(
         "Swap states chance per second (Only with version 0)", InspectorField::FieldType::Float,
@@ -50,32 +57,25 @@ Changeling::Changeling(GameObject* parent)
     fields.emplace_back(
         "Max enemies left for final attack", InspectorField::FieldType::Int, &maxEnemiesLeftForFinalAttack, 0, 40
     );
+    fields.emplace_back("Peek chance per second", InspectorField::FieldType::Float, &peekChancePerSecond, 0.1f, 10.0f);
+    fields.emplace_back("Buried travel speed", InspectorField::FieldType::Float, &buriedTravelSpeed, 0.1f, 10.0f);
 
     // Herbert specific (Index 1)
     fields.emplace_back("Chase speed", InspectorField::FieldType::Float, &chaseSpeed, 0.1f, 10.0f);
     fields.emplace_back("Chase Acceleration", InspectorField::FieldType::Float, &chaseAcceleration, 0.1f, 10.0f);
-
-    // Sepp specific (Index 2)
-    fields.emplace_back(
-        "Max sneak angle degrees", InspectorField::FieldType::Float, &maxSneakAngleDegrees, 1.0f, 180.0f
-    );
-    fields.emplace_back("Min sneak speed", InspectorField::FieldType::Float, &minSneakSpeed, 0.001f, 10.0f);
-    fields.emplace_back("Max sneak speed", InspectorField::FieldType::Float, &maxSneakSpeed, 0.1f, 10.0f);
-    fields.emplace_back(
-        "Distance to player for max sneak speed", InspectorField::FieldType::Float, &distanceToPlayerForMaxSneakSpeed,
-        0.1f, 10.0f
-    );
-    fields.emplace_back("Sneak Acceleration", InspectorField::FieldType::Float, &sneakAcceleration, 0.1f, 10.0f);
-    fields.emplace_back("Peek chance per second", InspectorField::FieldType::Float, &peekChancePerSecond, 0.1f, 10.0f);
 
     // Giacomo specific (Index 3)
     fields.emplace_back("Dash angle degrees", InspectorField::FieldType::Float, &dashAngleDegrees, 0.0f, 180.0f);
     fields.emplace_back("Time between dashes", InspectorField::FieldType::Float, &timeBetweenDashes, 0.0f, 10.0f);
 
     // VFX
-
-    fields.emplace_back("VFX_DigUpRocks", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
-    fields.emplace_back("VFX_DigUpHole", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
+    fields.emplace_back("Dig up rocks name", InspectorField::FieldType::InputText, &vfxDigUpRocksName);
+    fields.emplace_back("Dig up hole name", InspectorField::FieldType::InputText, &vfxDigUpHoleName);
+    fields.emplace_back("Dash trail vfx name", InspectorField::FieldType::InputText, &vfxDashTrailName);
+    fields.emplace_back("Drop down vfx name", InspectorField::FieldType::InputText, &vfxDropDownName);
+    fields.emplace_back("Dash vfx name", InspectorField::FieldType::InputText, &vfxDashName);
+    fields.emplace_back("Dig down vfx name", InspectorField::FieldType::InputText, &vfxDigDownName);
+    fields.emplace_back("Bite vfx name", InspectorField::FieldType::InputText, &vfxBiteName);
 
     // Highlight
     fields.emplace_back("Highlight duration", InspectorField::FieldType::Float, &highlightDuration, 0.1f, 10.0f);
@@ -108,7 +108,12 @@ bool Changeling::Init()
         dashTrailMeshObject.dashTrailObject->SetEnabled(false);
     for (auto dashTrailColliderObject : dashTrailColliderObjects)
         dashTrailColliderObject->SetEnabled(false);
-    finalAttackObject->SetEnabled(false);
+
+    vfxDropDown->SetEnabled(false);
+    vfxDash->SetEnabled(false);
+    vfxDigDown->SetEnabled(false);
+    vfxBite->SetEnabled(false);
+    vfxDig->SetEnabled(false);
 
     isAttacking   = false;
     attackCdTimer = attackCooldown;
@@ -163,8 +168,8 @@ void Changeling::OnDeath()
         dashTrailColliderObject->SetEnabled(false);
     }
 
-    if (animComponent) animComponent->UseTrigger("Trigger_VisibleIdle");
-    if (animComponent) animComponent->UseTrigger("Trigger_Die");
+    animComponent->UseTrigger("Trigger_VisibleIdle");
+    animComponent->UseTrigger("Trigger_Die");
     audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DEATH);
     agentAI->SetSpeed(0, 10);
     currentState = ChangelingStates::DYING;
@@ -186,11 +191,13 @@ void Changeling::HandleState(float deltaTime)
     if (!isSetupCorrectly) return;
 
     float distanceToPlayerSq = character->GetLastPosition().DistanceSq(parent->GetGlobalTransform().TranslatePart());
+    bool lastAttack =
+        associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
 
     switch (currentState)
     {
     case ChangelingStates::IDLE_BURIED:
-        UpdateIdleBuriedState(deltaTime, distanceToPlayerSq);
+        UpdateIdleBuriedState(deltaTime, distanceToPlayerSq, lastAttack);
         break;
     case ChangelingStates::PEEK:
         UpdatePeekState(deltaTime, distanceToPlayerSq);
@@ -201,14 +208,14 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::DIG_DOWN_TRANSITION:
         UpdateDigDownTransitionState(deltaTime, distanceToPlayerSq);
         break;
+    case ChangelingStates::BURIED_TRAVEL:
+        UpdateBuriedTravelState(deltaTime, distanceToPlayerSq);
+        break;
     case ChangelingStates::IDLE_VISIBLE:
-        UpdateIdleVisibleState(deltaTime, distanceToPlayerSq);
+        UpdateIdleVisibleState(deltaTime, distanceToPlayerSq, lastAttack);
         break;
     case ChangelingStates::CHASE:
-        UpdateChaseState(deltaTime, distanceToPlayerSq);
-        break;
-    case ChangelingStates::BURIED_CHASE:
-        UpdateBuriedChaseState(deltaTime, distanceToPlayerSq);
+        UpdateChaseState(deltaTime, distanceToPlayerSq, lastAttack);
         break;
     case ChangelingStates::DASH_ATTACK_PREPARATION:
         UpdateDashAttackPreparationState(deltaTime, distanceToPlayerSq);
@@ -231,9 +238,6 @@ void Changeling::HandleState(float deltaTime)
     case ChangelingStates::BITE_ATTACK_COOLDOWN:
         UpdateBiteAttackCooldownState(deltaTime, distanceToPlayerSq);
         break;
-    case ChangelingStates::FINAL_ATTACK:
-        UpdateFinalAttackState(deltaTime, distanceToPlayerSq);
-        break;
     case ChangelingStates::DAMAGED:
         UpdateDamagedState(deltaTime, distanceToPlayerSq);
         break;
@@ -251,15 +255,14 @@ void Changeling::HandleState(float deltaTime)
     stateTimer -= deltaTime;
 }
 
-void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq)
+void Changeling::UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
         randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
     if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
 
-    if (ST_BuryUp(deltaTime, distanceToPlayerSq)) return;
-    if (ST_StartBuriedChase(deltaTime, distanceToPlayerSq)) return;
+    if (ST_BuryUp(deltaTime, distanceToPlayerSq, lastAttack)) return;
 
     if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
 }
@@ -269,18 +272,10 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
     if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-    if (animComponent && animComponent->IsFinished())
+    if (animComponent->IsFinished())
     {
-        if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
-        {
-            spottedLocation         = character->GetLastPosition();
-            spottedViewingDirection = character->GetFrontDirection();
-        }
-        else
-        {
-            spottedLocation         = float3::nan;
-            spottedViewingDirection = float3::nan;
-        }
+        spottedLocation =
+            distanceToPlayerSq <= maxDetectionRange * maxDetectionRange ? character->GetLastPosition() : float3::nan;
         characterCollider->SetEnabled(false);
         animComponent->UseTrigger("Trigger_BurriedIdle");
         currentState = ChangelingStates::IDLE_BURIED;
@@ -290,7 +285,7 @@ void Changeling::UpdatePeekState(float deltaTime, float distanceToPlayerSq)
 
 void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq)
 {
-    if (animComponent && animComponent->IsFinished())
+    if (animComponent->IsFinished())
     {
         vfxDigUpRocksObject->SetEnabled(false);
         vfxDigUpHoleObject->SetEnabled(false);
@@ -301,129 +296,112 @@ void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq)
 {
-    if (animComponent && animComponent->IsFinished())
+    if (stateTimer < 1.3f && stateTimer > 0.8f && !vfxDig->IsEnabled())
     {
-        if (distanceToPlayerSq <= rangeAIChase * rangeAIChase)
+        const float3 dir    = parent->GetGlobalTransform().WorldZ();
+        const float3 offset = float3(dir.x * 0.8f, 0.25f, dir.z * 0.8f);
+
+        vfxDig->SetLocalPosition(
+            parent->GetGlobalTransform().TranslatePart() + offset - parent->GetParentGlobalTransform().TranslatePart()
+        );
+        vfxDig->SetEnabled(true);
+        vfxDig->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDig->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
+    if (stateTimer <= 0)
+    {
+        characterCollider->SetEnabled(false);
+        if (distanceToPlayerSq <= maxDetectionRange * maxDetectionRange)
         {
-            spottedLocation         = character->GetLastPosition();
-            spottedViewingDirection = character->GetFrontDirection();
+            spottedLocation = character->GetLastPosition();
+            stateTimer      = SqrtFast(distanceToPlayerSq) / buriedTravelSpeed;
+            animComponent->GetAnimationController()->Pause();
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_UNDERGROUND);
+            currentState = ChangelingStates::BURIED_TRAVEL;
+        }
+        else if (animComponent->IsFinished())
+        {
+            spottedLocation = float3::nan;
+            animComponent->UseTrigger("Trigger_BurriedIdle");
+            currentState = ChangelingStates::IDLE_BURIED;
+        }
+    }
+}
+
+void Changeling::UpdateBuriedTravelState(float deltaTime, float distanceToPlayerSq)
+{
+    if (stateTimer <= 0)
+    {
+        if (!animComponent->IsFinished())
+        {
+            float3 resultPos;
+            bool posOverPoly        = false;
+            const float3 searchArea = {3.0f, 1.0f, 3.0f};
+
+            agentAI->GetClosestPointInNavmesh(spottedLocation, searchArea, posOverPoly, resultPos);
+
+            if (posOverPoly)
+            {
+                agentAI->SetPosition(resultPos);
+            }
+            spottedLocation = float3::nan;
+            audioComp->StopAudio();
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYUP);
+            animComponent->GetAnimationController()->Resume();
         }
         else
         {
-            spottedLocation         = float3::nan;
-            spottedViewingDirection = float3::nan;
+            animComponent->UseTrigger("Trigger_BurriedIdle");
+            currentState = ChangelingStates::IDLE_BURIED;
         }
-        characterCollider->SetEnabled(false);
-        animComponent->UseTrigger("Trigger_BurriedIdle");
-        currentState = ChangelingStates::IDLE_BURIED;
     }
 }
 
-void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq)
+void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
-    if (ST_FinalAttack(deltaTime, distanceToPlayerSq)) return;
-
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
         randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
-
-        if (randomVersion == ChangelingVersions::SNEAK)
-        {
-            agentAI->SetSpeed(0.0f, 10.0f);
-            if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
-            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
-            currentState = ChangelingStates::DIG_DOWN_TRANSITION;
-        }
     }
 
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
 
-    if (ST_StartChase(deltaTime, distanceToPlayerSq)) return;
+    if (ST_StartChase(deltaTime, distanceToPlayerSq, lastAttack)) return;
 
-    if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
-    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
+    animComponent->UseTrigger("Trigger_BuryDown");
+    audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
+
+    vfxDigDown->SetEnabled(true);
+    vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+    vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
+    stateTimer   = secondsUntilCompletelyBuried;
     currentState = ChangelingStates::DIG_DOWN_TRANSITION;
 }
 
-void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq)
+void Changeling::UpdateChaseState(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
     if (ShouldSwapStatesOnRandomVersion(deltaTime))
     {
         randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
 
         GLOG("[INFO] Swapping to random version: %d", randomVersion)
-
-        if (randomVersion == ChangelingVersions::SNEAK)
-        {
-            agentAI->SetSpeed(0.0f, 10.0f);
-            if (animComponent) animComponent->UseTrigger("Trigger_BuryDown");
-            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
-            currentState = ChangelingStates::DIG_DOWN_TRANSITION;
-        }
     }
 
     if (ST_DashAttack(deltaTime, distanceToPlayerSq)) return;
 
-    if (distanceToPlayerSq > rangeAIChase * rangeAIChase)
+    if (!lastAttack && distanceToPlayerSq > rangeAIChase * rangeAIChase)
     {
         agentAI->SetSpeed(0.0f, 10.0f);
-        if (animComponent) animComponent->UseTrigger("Trigger_VisibleIdle");
+        animComponent->UseTrigger("Trigger_VisibleIdle");
         currentState = ChangelingStates::IDLE_VISIBLE;
     }
     else
     {
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         agentAI->SetPathNavigation(character->GetLastPosition());
-    }
-}
-
-void Changeling::UpdateBuriedChaseState(float deltaTime, float distanceToPlayerSq)
-{
-    if (ShouldSwapStatesOnRandomVersion(deltaTime))
-    {
-        randomVersion = rand() % 2 == 0 ? ChangelingVersions::DEFAULT : ChangelingVersions::BLOCK;
-
-        GLOG("[INFO] Swapping to random version: %d", randomVersion)
-
-        if (randomVersion != ChangelingVersions::SNEAK)
-        {
-            agentAI->SetSpeed(0.0f, 10.0f);
-            currentState = ChangelingStates::IDLE_BURIED;
-        }
-    }
-
-    agentAI->LookAtMovement(spottedLocation, deltaTime);
-
-    if (ST_BiteAttack(deltaTime, distanceToPlayerSq)) return;
-
-    if (ST_Peek(deltaTime, distanceToPlayerSq)) return;
-
-    const float3 directionToPlayer  = (spottedLocation - parent->GetGlobalTransform().TranslatePart()).Normalized();
-    const float angleToPlayerVision = spottedViewingDirection.AngleBetween(directionToPlayer) * RAD_DEGREE_CONV;
-    if (angleToPlayerVision < maxSneakAngleDegrees)
-    {
-        const float lerpFactor =
-            max(min((distanceToPlayerSq - Pow(distanceToPlayerForMaxSneakSpeed, 2)) /
-                        Pow(maxDetectionRange - distanceToPlayerForMaxSneakSpeed, 2),
-                    1),
-                0);
-
-        const float currentSneakSpeed = minSneakSpeed + (maxSneakSpeed - minSneakSpeed) * (1 - lerpFactor);
-
-        agentAI->SetSpeed(currentSneakSpeed, sneakAcceleration);
-        agentAI->SetPathNavigation(spottedLocation);
-    }
-    else
-    {
-        agentAI->SetSpeed(0, 10);
-    }
-
-    if (spottedLocation.Distance(parent->GetGlobalTransform().TranslatePart()) < 0.5f)
-    {
-        agentAI->SetSpeed(0.0f, 10.0f);
-        currentState = ChangelingStates::IDLE_BURIED;
     }
 }
 
@@ -437,7 +415,7 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
     }
     else agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
 
-    if (animComponent && animComponent->IsFinished())
+    if (animComponent->IsFinished())
     {
         Character::Attack(deltaTime);
 
@@ -447,6 +425,37 @@ void Changeling::UpdateDashAttackPreparationState(float deltaTime, float distanc
         dashIndex = 0;
         animComponent->UseTrigger("Trigger_Dash");
         audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
+        for (int i = dashIndex * 5; i < (dashIndex + 1) * 5; i++)
+        {
+            vfxDashTrailObjects[i]->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDashTrailObjects[i]
+                ->GetComponent<ShaderScriptComponent*>()
+                ->GetScriptByType<AttackVfxSpritesheet>()
+                ->Reset();
+        }
+
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.45f;
+        const float3 scale        = vfxDash->GetLocalTransform().ExtractScale();
+
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, parent->GetGlobalTransform().WorldZ(), float3::unitY, float3::unitY);
+
+        const Quat verticalCorrection   = Quat::RotateAxisAngle(float3::unitX, 90.0f * (PI / 180));
+        const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitZ, 90.0f * (PI / 180));
+
+        const Quat finalRotation        = lookRotation * verticalCorrection * horizontalCorrection;
+
+        const float4x4 transform        = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS         = parent->GetParentGlobalTransform();
+        const float4x4 localTRS         = parentWS.Inverted() * transform;
+
+        vfxDash->SetLocalTransform(localTRS);
+        vfxDash->SetEnabled(true);
+        vfxDash->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDash->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
         if (ST_AimNextDashChainAttack(deltaTime, distanceToPlayerSq))
         {
             agentAI->SetSpeed(dashSpeed, 1000000);
@@ -471,8 +480,27 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
         isAttacking = false;
         stateTimer  = attackCooldown;
         dashIndex   = 0;
-        if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
-        currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
+        animComponent->UseTrigger("Trigger_FinishDash");
+        currentState              = ChangelingStates::DASH_ATTACK_COOLDOWN;
+
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.2f;
+        const float3 scale        = vfxDropDown->GetLocalTransform().ExtractScale();
+
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, parent->GetGlobalTransform().WorldZ(), float3::unitY, float3::unitY);
+
+        const Quat finalRotation = lookRotation;
+
+        const float4x4 transform = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS  = parent->GetParentGlobalTransform();
+        const float4x4 localTRS  = parentWS.Inverted() * transform;
+
+        vfxDropDown->SetLocalTransform(localTRS);
+        vfxDropDown->SetEnabled(true);
+        vfxDropDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDropDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     }
     else
     {
@@ -485,9 +513,12 @@ void Changeling::UpdateDashAttackState(float deltaTime, float distanceToPlayerSq
                 parentGO->GetGlobalTransform().TranslatePart(),
             lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
         ));
-        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(float4x4::FromTRS(
-            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1)
-        ));
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildBaseObject->SetLocalTransform(
+            float4x4::FromTRS(lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
+        );
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
+            float4x4::FromTRS(float3::zero, Quat::identity, float3(distanceFromDashStart, 1, 1))
+        );
         dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(float4x4::FromTRS(
             dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
             lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
@@ -513,15 +544,46 @@ void Changeling::UpdateDashAttackWiggleState(float deltaTime, float distanceToPl
         dashTrailMeshObjects[dashIndex].dashTrailObject->SetEnabled(true);
         dashTrailColliderObjects[dashIndex]->SetEnabled(true);
 
+        for (int i = dashIndex * 5; i < (dashIndex + 1) * 5; i++)
+        {
+            vfxDashTrailObjects[i]->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDashTrailObjects[i]
+                ->GetComponent<ShaderScriptComponent*>()
+                ->GetScriptByType<AttackVfxSpritesheet>()
+                ->Reset();
+        }
+
+        const float3 characterPos = parent->GetGlobalTransform().TranslatePart();
+        const float3 offset       = float3::unitY * 0.45f;
+        const float3 scale        = vfxDash->GetLocalTransform().ExtractScale();
+
+        const Quat lookRotation =
+            Quat::LookAt(float3::unitZ, parent->GetGlobalTransform().WorldZ(), float3::unitY, float3::unitY);
+
+        const Quat verticalCorrection   = Quat::RotateAxisAngle(float3::unitX, 90.0f * (PI / 180));
+        const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitZ, 90.0f * (PI / 180));
+
+        const Quat finalRotation        = lookRotation * verticalCorrection * horizontalCorrection;
+
+        const float4x4 transform        = float4x4::FromTRS(characterPos + offset, finalRotation, scale);
+
+        const float4x4 parentWS         = parent->GetParentGlobalTransform();
+        const float4x4 localTRS         = parentWS.Inverted() * transform;
+
+        vfxDash->SetLocalTransform(localTRS);
+        vfxDash->SetEnabled(true);
+        vfxDash->GetComponent<MeshComponent*>()->SetEnabled(false);
+        vfxDash->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
         animComponent->UseTrigger("Trigger_Dash");
-        if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
+        audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_DASH);
         currentState = bNextDashUninterrupted ? ChangelingStates::DASH_CHAIN_ATTACK : ChangelingStates::DASH_ATTACK;
     }
 }
 
 void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceToPlayerSq)
 {
-    if (animComponent && animComponent->IsFinished())
+    if (animComponent->IsFinished())
     {
         const int bUseAnimation1 = rand() % 5;
         animComponent->UseTrigger(
@@ -529,6 +591,7 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
             : bUseAnimation1 == 1 ? "Trigger_Scream2"
                                   : "Trigger_VisibleIdle"
         );
+        vfxDropDown->SetEnabled(false);
     }
     if (stateTimer < 0.f)
     {
@@ -542,7 +605,7 @@ void Changeling::UpdateDashAttackCooldownState(float deltaTime, float distanceTo
 
         agentAI->ResetSpeed();
 
-        if (animComponent) animComponent->UseTrigger("Trigger_VisibleIdle");
+        animComponent->UseTrigger("Trigger_VisibleIdle");
         currentState = ChangelingStates::IDLE_VISIBLE;
     }
 }
@@ -563,7 +626,7 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
             agentAI->SetSpeed(0, 10);
             stateTimer   = timeBetweenDashes;
             currentState = ChangelingStates::DASH_ATTACK_WIGGLE;
-            if (animComponent) animComponent->UseTrigger("Trigger_Wiggle");
+            animComponent->UseTrigger("Trigger_Wiggle");
         }
         else
         {
@@ -571,7 +634,7 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
             isAttacking = false;
             stateTimer  = attackCooldown;
             dashIndex   = 0;
-            if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
+            animComponent->UseTrigger("Trigger_FinishDash");
             currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
         }
     }
@@ -586,9 +649,12 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
                 parentGO->GetGlobalTransform().TranslatePart(),
             lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
         ));
-        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(float4x4::FromTRS(
-            lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(distanceFromDashStart, 1, 1)
-        ));
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildBaseObject->SetLocalTransform(
+            float4x4::FromTRS(lerpTranslation, lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1))
+        );
+        dashTrailMeshObjects[dashIndex].dashTrailMidChildMeshObject->SetLocalTransform(
+            float4x4::FromTRS(float3::zero, Quat::identity, float3(distanceFromDashStart, 1, 1))
+        );
         dashTrailMeshObjects[dashIndex].dashTrailEndChildMeshObject->SetLocalTransform(float4x4::FromTRS(
             dashStart.TranslatePart() - parentGO->GetGlobalTransform().TranslatePart(),
             lerpRotation * Quat::FromEulerXYZ(0, PI / 2.f, 0), float3(1, 1, 1)
@@ -603,7 +669,26 @@ void Changeling::UpdateDashChainAttackState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq)
 {
-    if (animComponent && animComponent->IsFinished())
+    biteVfxTimer -= deltaTime;
+
+    if (biteVfxTimer < 0.0f && biteVfxTimer > -0.3f && vfxBite &&
+        !vfxBite->GetComponent<ShaderScriptComponent*>()->GetEnabled())
+    {
+        const float3 offset = float3::unitY * 0.5f;
+        vfxBite->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
+        vfxBite->SetEnabled(true);
+        vfxBite->GetComponent<MeshComponent*>()->SetEnabled(false);
+        ShaderScriptComponent* shader = vfxBite->GetComponent<ShaderScriptComponent*>();
+        if (shader)
+        {
+            shader->SetEnabled(true);
+            shader->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+
+        weaponCollider->SetEnabled(true);
+    }
+
+    if (animComponent->IsFinished())
     {
         stateTimer = biteAttackCooldown;
         characterCollider->SetEnabled(false);
@@ -618,26 +703,9 @@ void Changeling::UpdateBiteAttackCooldownState(float deltaTime, float distanceTo
     if (stateTimer < 0.f && !ST_BiteAttack(deltaTime, distanceToPlayerSq)) currentState = ChangelingStates::IDLE_BURIED;
 }
 
-void Changeling::UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq)
-{
-    if (distanceToPlayerSq <= 3)
-    {
-        finalAttackObject->SetEnabled(true);
-        finalAttackObject->SetLocalPosition(
-            parent->GetGlobalTransform().TranslatePart() - parentGO->GetGlobalTransform().TranslatePart()
-        );
-        Die();
-    }
-    else
-    {
-        agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
-        agentAI->SetPathNavigation(character->GetLastPosition());
-    }
-}
-
 void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
 {
-    if (animComponent && animComponent->IsFinished())
+    if (animComponent->IsFinished())
     {
         currentState      = stateAfterDamaged;
         stateAfterDamaged = ChangelingStates::NONE;
@@ -645,7 +713,7 @@ void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
         if (currentState == ChangelingStates::IDLE_BURIED)
         {
             characterCollider->SetEnabled(false);
-            if (animComponent) animComponent->UseTrigger("Trigger_BurriedIdle");
+            animComponent->UseTrigger("Trigger_BurriedIdle");
         }
         else // currentState == IDLE_VISIBLE
         {
@@ -655,43 +723,53 @@ void Changeling::UpdateDamagedState(float deltaTime, float distanceToPlayerSq)
             for (auto dashTrailColliderObject : dashTrailColliderObjects)
                 dashTrailColliderObject->SetEnabled(false);
 
-            if (animComponent) animComponent->UseTrigger("Trigger_VisibleIdle");
+            animComponent->UseTrigger("Trigger_VisibleIdle");
         }
     }
 }
 
 void Changeling::UpdateDyingState(float deltaTime, float distanceToPlayerSq)
 {
-    if (animComponent && animComponent->IsFinished())
+    if (animComponent->IsFinished())
     {
         isDead = true;
-        finalAttackCollider->DeleteRigidBody();
         parentGO->SetEnabled(false);
     }
 }
 
 void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
 {
-    if (!animComponent) currentState = ChangelingStates::IDLE_BURIED;
-
     switch (currentHighlightingState)
     {
     case HighlightingStates::IDLE:
         animComponent->UseTrigger("Trigger_BurriedIdle");
         animComponent->UseTrigger("Trigger_BuryUp");
+        audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYUP);
+        vfxDigUpRocksObject->SetEnabled(true);
+        vfxDigUpRocksObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
+        vfxDigUpHoleObject->SetEnabled(true);
+        vfxDigUpHoleObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
         currentHighlightingState = HighlightingStates::BURY_UP;
         break;
     case HighlightingStates::BURY_UP:
         if (animComponent->IsFinished())
         {
+            vfxDigUpRocksObject->SetEnabled(false);
+            vfxDigUpHoleObject->SetEnabled(false);
+
             animComponent->UseTrigger("Trigger_VisibleIdle");
             animComponent->UseTrigger("Trigger_PrepareDash");
+            vfxDropDown->SetEnabled(true);
+            vfxDropDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDropDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             currentHighlightingState = HighlightingStates::DROP_DOWN;
         }
         break;
     case HighlightingStates::DROP_DOWN:
         if (animComponent->IsFinished())
         {
+            vfxDropDown->SetEnabled(false);
+
             stateTimer = highlightDuration;
             animComponent->UseTrigger("Trigger_Dash");
             animComponent->UseTrigger("Trigger_Wiggle");
@@ -710,12 +788,17 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
         {
             animComponent->UseTrigger("Trigger_VisibleIdle");
             animComponent->UseTrigger("Trigger_BuryDown");
+            audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
+            vfxDigDown->SetEnabled(true);
+            vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
+            vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             currentHighlightingState = HighlightingStates::BURY_DOWN;
         }
         break;
     case HighlightingStates::BURY_DOWN:
         if (animComponent->IsFinished())
         {
+            vfxDigDown->SetEnabled(false);
             animComponent->UseTrigger("Trigger_BurriedIdle");
             currentHighlightingState = HighlightingStates::IDLE;
             currentState             = ChangelingStates::IDLE_BURIED;
@@ -724,15 +807,11 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
     }
 }
 
-bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
+bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
-    const bool initFinalAttack =
-        associatedBarrier != nullptr && associatedBarrier->GetEnemiesInArea() <= maxEnemiesLeftForFinalAttack;
     // Check preconditions
-    if (!initFinalAttack && (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK))
-        return false;
-    if (!initFinalAttack && currentState != ChangelingStates::IDLE_BURIED) return false;
-    if (!initFinalAttack && !spottedLocation.IsFinite()) return false;
+    if (!lastAttack && currentState != ChangelingStates::IDLE_BURIED) return false;
+    if (!lastAttack && !spottedLocation.IsFinite()) return false;
 
     // Implement state transition
     if (stateTimer <= 0.f)
@@ -742,42 +821,28 @@ bool Changeling::ST_BuryUp(float deltaTime, float distanceToPlayerSq)
         vfxDigUpHoleObject->SetEnabled(true);
         vfxDigUpHoleObject->GetComponent<AnimationComponent*>()->OnPlay(false, false);
         characterCollider->SetEnabled(true);
-        if (animComponent) animComponent->UseTrigger("Trigger_BuryUp");
-        if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYUP);
+        animComponent->UseTrigger("Trigger_BuryUp");
+        audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYUP);
         currentState = ChangelingStates::DIG_UP_TRANSITION;
     }
 
     return true;
 }
 
-bool Changeling::ST_StartChase(float deltaTime, float distanceToPlayerSq)
+bool Changeling::ST_StartChase(float deltaTime, float distanceToPlayerSq, bool lastAttack)
 {
     // Check preconditions
     if (currentState != ChangelingStates::IDLE_VISIBLE) return false;
-    if (distanceToPlayerSq > rangeAIChase * rangeAIChase) return false;
+    if (!lastAttack && distanceToPlayerSq > rangeAIChase * rangeAIChase) return false;
 
     // Implement state transition
     const bool bUseAnimation1 = rand() % 2;
-    if (animComponent) animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Run" : "Trigger_Run2");
+    animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Run" : "Trigger_Run2");
 
     agentAI->ResetSpeed();
     agentAI->SetSpeed(chaseSpeed, chaseAcceleration);
 
     currentState = ChangelingStates::CHASE;
-
-    return true;
-}
-
-bool Changeling::ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq)
-{
-    // Check preconditions
-    if (currentState != ChangelingStates::IDLE_BURIED) return false;
-    if (version != ChangelingVersions::SNEAK && randomVersion != ChangelingVersions::SNEAK) return false;
-    if (!spottedLocation.IsFinite()) return false;
-
-    // Implement state transition
-    agentAI->ResetSpeed();
-    currentState = ChangelingStates::BURIED_CHASE;
 
     return true;
 }
@@ -797,12 +862,9 @@ bool Changeling::ST_Damaged()
 
         weaponCollider->SetEnabled(false);
 
-        if (animComponent)
-        {
-            const bool bUseAnimation1 = rand() % 2;
-            if (!animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Hit" : "Trigger_Hit2"))
-                animComponent->UseTrigger("Trigger_HitUnderground");
-        }
+        const bool bUseAnimation1 = rand() % 2;
+        if (!animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Hit" : "Trigger_Hit2"))
+            animComponent->UseTrigger("Trigger_HitUnderground");
     }
     audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_HURT);
 
@@ -812,7 +874,7 @@ bool Changeling::ST_Damaged()
 bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BURIED_CHASE) return false;
+    if (currentState != ChangelingStates::IDLE_BURIED) return false;
 
     // Implement state transition
     const int randomValue = max(1, (int)round(1.0f / (peekChancePerSecond * deltaTime)));
@@ -822,7 +884,7 @@ bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 
     characterCollider->SetEnabled(true);
     agentAI->SetSpeed(0.0f, 10.0f);
-    if (animComponent) animComponent->UseTrigger("Trigger_Peek");
+    animComponent->UseTrigger("Trigger_Peek");
     currentState = ChangelingStates::PEEK;
 
     return true;
@@ -831,8 +893,7 @@ bool Changeling::ST_Peek(float deltaTime, float distanceToPlayerSq)
 bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
-    if (version != ChangelingVersions::SNEAK && distanceToPlayerSq > rangeAIAttack * rangeAIAttack) return false;
-    if (version == ChangelingVersions::SNEAK || randomVersion == ChangelingVersions::SNEAK) return false;
+    if (distanceToPlayerSq > rangeAIAttack * rangeAIAttack) return false;
     if (currentState != ChangelingStates::CHASE && currentState != ChangelingStates::DASH_ATTACK_COOLDOWN) return false;
 
     // Reset parameters
@@ -842,7 +903,7 @@ bool Changeling::ST_DashAttack(float deltaTime, float distanceToPlayerSq)
 
     // Implement state transition
 
-    if (animComponent) animComponent->UseTrigger("Trigger_PrepareDash");
+    animComponent->UseTrigger("Trigger_PrepareDash");
     currentState = ChangelingStates::DASH_ATTACK_PREPARATION;
 
     agentAI->SetLookForward(false);
@@ -869,7 +930,7 @@ bool Changeling::ST_AimNextDashChainAttack(float deltaTime, float distanceToPlay
         weaponCollider->SetEnabled(false);
         isAttacking = false;
         stateTimer  = attackCooldown;
-        if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
+        animComponent->UseTrigger("Trigger_FinishDash");
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
     }
 
@@ -884,7 +945,7 @@ bool Changeling::ST_AimNextDashAttack(float deltaTime, float distanceToPlayerSq)
     {
         isAttacking = false;
         stateTimer  = attackCooldown;
-        if (animComponent) animComponent->UseTrigger("Trigger_FinishDash");
+        animComponent->UseTrigger("Trigger_FinishDash");
         currentState = ChangelingStates::DASH_ATTACK_COOLDOWN;
         return false;
     }
@@ -899,40 +960,20 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
 {
     // Check preconditions
     if (distanceToPlayerSq > biteAttackRadius * biteAttackRadius) return false;
-    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BURIED_CHASE &&
-        currentState != ChangelingStates::BITE_ATTACK_COOLDOWN)
+    if (currentState != ChangelingStates::IDLE_BURIED && currentState != ChangelingStates::BITE_ATTACK_COOLDOWN)
         return false;
 
     // Implement state transition
     characterCollider->SetEnabled(true);
     agentAI->SetSpeed(0.0f, 10.0f);
-    if (animComponent) animComponent->UseTrigger("Trigger_Bite");
+    animComponent->UseTrigger("Trigger_Bite");
     currentState = ChangelingStates::BITE_ATTACK;
 
-    weaponCollider->SetEnabled(true);
+    biteVfxTimer = 0.4f;
 
     Character::Attack(deltaTime);
 
-    if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_ATTACK);
-
-    return true;
-}
-
-bool Changeling::ST_FinalAttack(float deltaTime, float distanceToPlayerSq)
-{
-    // Check preconditions
-    if (associatedBarrier == nullptr || associatedBarrier->GetEnemiesInArea() > maxEnemiesLeftForFinalAttack)
-        return false;
-    if (currentState != ChangelingStates::IDLE_VISIBLE) return false;
-
-    // Implement state transition
-    const bool bUseAnimation1 = rand() % 2;
-    if (animComponent) animComponent->UseTrigger(bUseAnimation1 ? "Trigger_Run" : "Trigger_Run2");
-
-    agentAI->ResetSpeed();
-    agentAI->SetSpeed(chaseSpeed, chaseAcceleration);
-
-    currentState = ChangelingStates::FINAL_ATTACK;
+    audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_ATTACK);
 
     return true;
 }
@@ -942,10 +983,10 @@ void Changeling::ValidateSetup()
     isSetupCorrectly = true;
 
     // Validate variant input
-    if (userSelectedVersion < 0 || userSelectedVersion > 3)
+    if (userSelectedVersion < 0 || userSelectedVersion > 2)
     {
         isSetupCorrectly = false;
-        GLOG("[ERROR] Variant input for changeling needs to be on of [0, 1, 2, 3]")
+        GLOG("[ERROR] Variant input for changeling needs to be on of [0, 1, 2]")
         return;
     }
 
@@ -994,17 +1035,94 @@ void Changeling::ValidateSetup()
                 }
 
                 if (dashTrailChild->GetName() == dashTrailStartMeshName)
+                {
                     container.dashTrailStartChildMeshObject = dashTrailChild;
-                else if (dashTrailChild->GetName() == dashTrailMidMeshName)
-                    container.dashTrailMidChildMeshObject = dashTrailChild;
+                    for (const UID dashTrailVFXUID : dashTrailChild->GetChildren())
+                    {
+                        GameObject* dashTrailVFXChild =
+                            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(dashTrailVFXUID);
+                        if (dashTrailVFXChild == nullptr)
+                        {
+                            isSetupCorrectly = false;
+                            GLOG("[ERROR] Dash trail vfx child game object is nullptr")
+                            return;
+                        }
+                        if (dashTrailVFXChild->GetName() == vfxDashTrailName)
+                        {
+                            if (dashTrailVFXChild->GetComponent<ShaderScriptComponent*>() != nullptr &&
+                                dashTrailVFXChild->GetComponent<ShaderScriptComponent*>()
+                                        ->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+                            {
+                                vfxDashTrailObjects.push_back(dashTrailVFXChild);
+                            }
+                        }
+                    }
+                }
+                else if (dashTrailChild->GetName() == dashTrailMidBaseName)
+                {
+                    container.dashTrailMidChildBaseObject = dashTrailChild;
+                    for (const UID dashTrailVFXUID : dashTrailChild->GetChildren())
+                    {
+                        GameObject* dashTrailVFXChild =
+                            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(dashTrailVFXUID);
+                        if (dashTrailVFXChild == nullptr)
+                        {
+                            isSetupCorrectly = false;
+                            GLOG("[ERROR] Dash trail vfx child game object is nullptr")
+                            return;
+                        }
+                        if (dashTrailVFXChild->GetName() == vfxDashTrailName)
+                        {
+                            if (dashTrailVFXChild->GetComponent<ShaderScriptComponent*>() != nullptr &&
+                                dashTrailVFXChild->GetComponent<ShaderScriptComponent*>()
+                                        ->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+                            {
+                                vfxDashTrailObjects.push_back(dashTrailVFXChild);
+                            }
+                        }
+                        else if (dashTrailVFXChild->GetName() == dashTrailMidMeshName)
+                        {
+                            container.dashTrailMidChildMeshObject = dashTrailVFXChild;
+                        }
+                    }
+                }
                 else if (dashTrailChild->GetName() == dashTrailEndMeshName)
+                {
                     container.dashTrailEndChildMeshObject = dashTrailChild;
+                    for (const UID dashTrailVFXUID : dashTrailChild->GetChildren())
+                    {
+                        GameObject* dashTrailVFXChild =
+                            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(dashTrailVFXUID);
+                        if (dashTrailVFXChild == nullptr)
+                        {
+                            isSetupCorrectly = false;
+                            GLOG("[ERROR] Dash trail vfx child game object is nullptr")
+                            return;
+                        }
+                        if (dashTrailVFXChild->GetName() == vfxDashTrailName)
+                        {
+                            if (dashTrailVFXChild->GetComponent<ShaderScriptComponent*>() != nullptr &&
+                                dashTrailVFXChild->GetComponent<ShaderScriptComponent*>()
+                                        ->GetScriptByType<AttackVfxSpritesheet>() != nullptr)
+                            {
+                                vfxDashTrailObjects.push_back(dashTrailVFXChild);
+                            }
+                        }
+                    }
+                }
             }
 
             if (container.dashTrailStartChildMeshObject == nullptr)
             {
                 isSetupCorrectly = false;
                 GLOG("[ERROR] Dash trail start child game object is nullptr")
+                return;
+            }
+
+            if (container.dashTrailMidChildBaseObject == nullptr)
+            {
+                isSetupCorrectly = false;
+                GLOG("[ERROR] Dash trail mid child base game object is nullptr")
                 return;
             }
 
@@ -1028,18 +1146,22 @@ void Changeling::ValidateSetup()
         {
             dashTrailColliderObjects.emplace_back(child);
         }
-        else if (child->GetName() == finalAttackColliderName)
+        else if (child->GetName() == vfxDropDownName)
         {
-            finalAttackObject   = child;
-            finalAttackCollider = child->GetComponent<CapsuleColliderComponent*>();
+            vfxDropDown = child;
         }
-    }
-
-    if (finalAttackCollider == nullptr)
-    {
-        isSetupCorrectly = false;
-        GLOG("[ERROR] Final attack object or collider are nullptr")
-        return;
+        else if (child->GetName() == vfxBiteName)
+        {
+            vfxBite = child;
+        }
+        else if (child->GetName() == vfxDashName)
+        {
+            vfxDash = child;
+        }
+        else if (child->GetName() == vfxDigName)
+        {
+            vfxDig = child;
+        }
     }
 
     if (userSelectedVersion == 0 || userSelectedVersion == 3)
@@ -1109,6 +1231,10 @@ void Changeling::ValidateSetup()
         {
             vfxDigUpHoleObject = child;
         }
+        else if (child->GetName() == vfxDigDownName)
+        {
+            vfxDigDown = child;
+        }
     }
 
     if (vfxDigUpRocksObject == nullptr)
@@ -1136,6 +1262,45 @@ void Changeling::ValidateSetup()
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] VFX dig up hole game object has no animation component")
+        return;
+    }
+
+    if (vfxDashTrailObjects.size() < 20)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Not enough vfx dash trail objects found")
+        return;
+    }
+
+    if (vfxDropDown == nullptr || vfxDropDown->GetComponent<ShaderScriptComponent*>() == nullptr ||
+        vfxDropDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX drop down game object not found or setup incorrectly")
+        return;
+    }
+
+    if (vfxDash == nullptr || vfxDash->GetComponent<ShaderScriptComponent*>() == nullptr ||
+        vfxDash->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dash game object not found or setup incorrectly")
+        return;
+    }
+
+    if (vfxDigDown == nullptr || vfxDigDown->GetComponent<ShaderScriptComponent*>() == nullptr ||
+        vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX dig down game object not found or setup incorrectly")
+        return;
+    }
+
+    if (vfxBite == nullptr || vfxBite->GetComponent<ShaderScriptComponent*>() == nullptr ||
+        vfxBite->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] VFX bite game object not found or setup incorrectly")
         return;
     }
 
