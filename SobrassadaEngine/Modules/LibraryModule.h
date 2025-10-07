@@ -30,7 +30,7 @@ enum class FileType
     Navmesh
 };
 
-class LibraryModule : public Module
+class SOBRASADA_API_ENGINE LibraryModule : public Module
 {
 
   public:

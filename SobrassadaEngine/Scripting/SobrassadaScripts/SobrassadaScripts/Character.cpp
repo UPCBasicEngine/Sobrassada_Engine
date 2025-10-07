@@ -59,7 +59,7 @@ Character::Character(
     {
         fields.push_back({"AI Chase Range", InspectorField::FieldType::Float, &rangeAIChase, 0.0f, 20.0f});
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 25.0f});
-        fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 15.0f});
+        fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 30.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
         fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
         fields.push_back({"On Hit VFX Duration", InspectorField::FieldType::Float, &onHitVfxDuration, 0.0f, 1.0f});
