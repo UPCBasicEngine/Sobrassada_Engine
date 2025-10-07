@@ -90,6 +90,7 @@ constexpr const char* DEBUG_DLL_PATH                    = "..\\SobrassadaEngine\
 constexpr const char* RELEASE_DLL_PATH                  = "..\\SobrassadaEngine\\x64\\Release\\SobrassadaScripts.dll";
 
 constexpr const char* ENGINE_DEFAULT_ASSETS             = "EngineDefaults/";
+constexpr const char* VIDEOS_ASSETS_PATH                = "Videos/";
 constexpr const char* ASSETS_PATH                       = "Assets/";
 constexpr const char* SCENES_PATH                       = "Assets/Scenes/";
 constexpr const char* METADATA_PATH                     = "Assets/Metadata/";
@@ -110,7 +111,6 @@ constexpr const char* STATEMACHINES_LIB_PATH            = "Library/StateMachines
 constexpr const char* PREFABS_LIB_PATH                  = "Library/Prefabs/";
 constexpr const char* FONTS_PATH                        = "Library/Fonts/";
 constexpr const char* NAVMESHES_PATH                    = "Library/Navmeshes/";
-constexpr const char* VIDEOS_ASSETS_PATH                = "Library/Videos/";
 
 constexpr const char* ASSET_EXTENSION                   = ".gltf";
 constexpr const char* MESH_EXTENSION                    = ".sobrassada";
@@ -129,7 +129,7 @@ constexpr const char* VIDEOS_EXTENSION                  = ".mp4";
 constexpr int MAX_COMPONENT_NAME_LENGTH                 = 64;
 
 // Soundbanks
-constexpr const char* WINDOWS_BANKS_PATH                = "Library\\Soundbanks\\Windows\\";
+constexpr const char* WINDOWS_BANKS_PATH                = "Soundbanks\\Windows\\";
 constexpr const wchar_t* BANKNAME_INIT                  = L"Init.bnk";
 constexpr const wchar_t* BANKNAME_MAIN                  = L"main.bnk";
 constexpr const char* BANKMETA_MAIN                     = "main.json";
