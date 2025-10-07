@@ -62,6 +62,8 @@
 #include "Mirage.h"
 #include "MirageBossDash.h"
 #include "BossSpouts.h"
+#include "MusicManager.h"
+#include "MusicTrigger.h"
 
 #include <string>
 
@@ -117,7 +119,9 @@ constexpr const char* scripts[] = {
     "GameOverNavigatorScript",
     "HighlightCharacter",
     "AsyncSceneLoading",
-    "BossSpouts"
+    "BossSpouts",
+    "MusicManager",
+    "MusicTrigger"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
@@ -175,6 +179,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MagicBarrier") return new MagicBarrier(parent);
     if (scriptType == "WallCollision") return new WallCollision(parent);
     if (scriptType == "CoverPointTrigger") return new CoverPointTrigger(parent);
+    if (scriptType == "MusicManager") return new MusicManager(parent);
+    if (scriptType == "MusicTrigger") return new MusicTrigger(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
