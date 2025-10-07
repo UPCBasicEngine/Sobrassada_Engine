@@ -550,8 +550,6 @@ void Banshee::TakeDamage(int amount)
             shaderComp->SetEnabled(true);
         }
 
-        if (audioSource) audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_DEATH);
-
         animComponent->UseTrigger("Death");
         currentState = BansheeStates::Dead;
         return;
@@ -876,6 +874,12 @@ void Banshee::TeleportToOrigin()
 
 void Banshee::HandleDeath()
 {
+    if (audioSource && !playedDeathSound)
+    {
+        audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_DEATH);
+        playedDeathSound = true;
+    }
+
     if (animComponent->GetCurrentStateName() == HashString("Death") && animComponent->IsFinished())
     {
         currentHealth = 0;

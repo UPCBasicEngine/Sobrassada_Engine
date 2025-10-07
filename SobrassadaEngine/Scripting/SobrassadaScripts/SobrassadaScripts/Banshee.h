@@ -75,6 +75,8 @@ class Banshee : public Character
     float elapsedTeleportVFX   = 0.0f;
     bool teleportedToPos       = false;
 
+    bool playedDeathSound      = false;
+
     float warningDuration      = 0.2f;
     float elapsedWarning       = 0.f;
 
@@ -124,12 +126,12 @@ class Banshee : public Character
     GameObject* teleportWarningSlowGO   = nullptr;
     std::vector<ShaderScriptComponent*> teleportVFXShaderComponents;
 
-    const float4 screamWarningColor            = float4(0.89f, 0.243f, 0.243f, 1.f);
-    const float4 slowWarningColor              = float4(0.243f, 0.369f, 0.89f, 1.f);
+    const float4 screamWarningColor              = float4(0.89f, 0.243f, 0.243f, 1.f);
+    const float4 slowWarningColor                = float4(0.243f, 0.369f, 0.89f, 1.f);
 
-    float3 lastPlayerPosition                  = float3::zero;
+    float3 lastPlayerPosition                    = float3::zero;
 
-    //ParticleSystemComponent* hitParticleSystem = nullptr;
+    // ParticleSystemComponent* hitParticleSystem = nullptr;
     ParticleSystemComponent* chaseParticleSystem = nullptr;
     std::vector<ShaderScriptComponent*> hitVFXShaderComponents;
     std::vector<ShaderScriptComponent*> deathVFXShaderComponents;
