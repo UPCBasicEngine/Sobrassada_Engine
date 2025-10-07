@@ -7,11 +7,11 @@
 #include "Character.h"
 #include "CuChulainn.h"
 #include "GameObject.h"
+#include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
-
 
 #include "Math/Quat.h"
 
@@ -45,6 +45,7 @@ Projectile::Projectile(GameObject* parent) : Script(parent)
 
     fields.push_back({"Spritesheet vertical name", InspectorField::FieldType::InputText, &spritesheetNameV});
     fields.push_back({"Spritesheet horizotnal name", InspectorField::FieldType::InputText, &spritesheetNameH});
+    fields.push_back({"Particles", InspectorField::FieldType::InputText, &particlesName});
 }
 
 bool Projectile::Init()
@@ -84,6 +85,9 @@ bool Projectile::Init()
     }
     if (!spritesheetH) GLOG("[WARNING: Projectile Init()] Couldn't find the spritesheet component");
 
+    particles = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(particlesName);
+    if (!particles) GLOG("[WARNING: Projectile Init()] Couldn't find the particles component");
+
     return true;
 }
 
@@ -98,7 +102,6 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
     this->direction = direction.Normalized();
     frames          = 0;
     if (collider) collider->SetEnabled(false);
-    
 
     // Rotate spear object
     const float3 scale       = parent->GetLocalTransform().ExtractScale();
@@ -116,17 +119,51 @@ void Projectile::Shoot(const float3& origin, const float3& direction)
     if (spritesheetMeshH) spritesheetMeshH->SetEnabled(false);
     if (spritesheetV) spritesheetV->Reset();
     if (spritesheetH) spritesheetH->Reset();
+
+    if (particles)
+    {
+        particles->GetComponent<ParticleSystemComponent*>()->SpawnAllInstances();
+
+        for (UID child :
+             AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(particles->GetChildren()[0])->GetChildren())
+        {
+            ParticleSystemComponent* system = AppEngine->GetSceneModule()
+                                                  ->GetScene()
+                                                  ->GetGameObjectByUID(child)
+                                                  ->GetComponent<ParticleSystemComponent*>();
+            if (system)
+            {
+                system->SpawnAllInstances();
+            }
+        }
+    }
 }
 
 void Projectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     // GLOG("Collision in projectile with: %s", otherObject->GetName().c_str());
 
+    if (particles)
+    {
+        particles->GetComponent<ParticleSystemComponent*>()->StopInstances();
+
+        for (UID child :
+             AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(particles->GetChildren()[0])->GetChildren())
+        {
+            ParticleSystemComponent* system = AppEngine->GetSceneModule()
+                                                  ->GetScene()
+                                                  ->GetGameObjectByUID(child)
+                                                  ->GetComponent<ParticleSystemComponent*>();
+            if (system)
+            {
+                system->StopInstances();
+            }
+        }
+    }
+
     // If collides with a character don't disable, do that in the character onCollision
     ScriptComponent* script = otherObject->GetComponent<ScriptComponent*>();
     if (script && script->GetScriptByType<Character>()) return;
-
-    parent->SetEnabled(false);
 }
 
 void Projectile::Hit(GameObject* otherObject)
@@ -157,6 +194,26 @@ void Projectile::Move(float deltaTime)
 
     if (worldPos.Distance(startPos) > range || !IsInsideCameraView(worldPos, 0.0f))
     {
+        if (particles)
+        {
+            particles->GetComponent<ParticleSystemComponent*>()->StopInstances();
+
+            for (UID child : AppEngine->GetSceneModule()
+                                 ->GetScene()
+                                 ->GetGameObjectByUID(particles->GetChildren()[0])
+                                 ->GetChildren())
+            {
+                ParticleSystemComponent* system = AppEngine->GetSceneModule()
+                                                      ->GetScene()
+                                                      ->GetGameObjectByUID(child)
+                                                      ->GetComponent<ParticleSystemComponent*>();
+                if (system)
+                {
+                    system->StopInstances();
+                }
+            }
+        }
+
         parent->SetEnabled(false);
     }
 }

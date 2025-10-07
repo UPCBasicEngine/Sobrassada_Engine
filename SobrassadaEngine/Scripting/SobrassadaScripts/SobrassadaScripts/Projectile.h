@@ -47,4 +47,7 @@ class Projectile : public Script
     float frames                       = 0.0f;
 
     bool hasHitTarget                  = false;
+
+    std::string particlesName          = "Spear_PS";
+    GameObject* particles              = nullptr;
 };
