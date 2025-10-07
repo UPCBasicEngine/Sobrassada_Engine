@@ -237,9 +237,15 @@
     </ClInclude>
     <ClInclude Include="BossSpouts.h">
       <Filter>Characters\Boss</Filter>
-	  </ClInclude>
+    </ClInclude>
     <ClInclude Include="MirageVFX.h">
       <Filter>ShaderScripts</Filter>
+    </ClInclude>
+    <ClInclude Include="MusicManager.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="MusicTrigger.h">
+      <Filter>Environment</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1010,9 +1016,15 @@
     </ClCompile>
     <ClCompile Include="BossSpouts.cpp">
       <Filter>Characters\Boss</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="MirageVFX.cpp">
       <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="MusicManager.cpp">
+      <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="MusicTrigger.cpp">
+      <Filter>Environment</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

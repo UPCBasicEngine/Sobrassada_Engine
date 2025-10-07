@@ -12,17 +12,16 @@ class MusicTrigger : public Script
 
     bool Init() override;
     void Update(float deltaTime) override {}
-    
+
     void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
-    
-    bool isSetupCorrectly               = false;
-    
+    bool isSetupCorrectly           = false;
+
     // Audio
     AudioSourceComponent* audioComp = nullptr;
 
-    AkUniqueID firstAudioEvent = 0;
-    AkUniqueID secondAudioEvent = 0;
-    AkUniqueID thirdAudioEvent = 0;
+    AkUniqueID firstAudioEvent      = 0;
+    AkUniqueID secondAudioEvent     = 0;
+    AkUniqueID thirdAudioEvent      = 0;
 };

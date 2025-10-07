@@ -15,15 +15,13 @@ class MusicManager : public Script
 
     void OnPlayerRespawn() const;
 
-private:
+  private:
+    bool isSetupCorrectly              = false;
 
-    bool isSetupCorrectly               = false;
-    
     // Audio
-    AudioSourceComponent* audioComp = nullptr;
+    AudioSourceComponent* audioComp    = nullptr;
 
-    AkUniqueID firstRespawnAudioEvent = 0;
+    AkUniqueID firstRespawnAudioEvent  = 0;
     AkUniqueID secondRespawnAudioEvent = 0;
-    AkUniqueID thirdRespawnAudioEvent = 0;
-
+    AkUniqueID thirdRespawnAudioEvent  = 0;
 };
