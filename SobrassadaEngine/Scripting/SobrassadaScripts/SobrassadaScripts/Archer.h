@@ -126,7 +126,7 @@ class Archer : public Character
     float shotTimer            = 0.0f;
     bool hasShot               = false;
     bool hasStartedShooting    = false;
-    float breathTime           = 1.0;
+    float breathTime           = 0.5;
     float breathDuration       = 0.0f;
     bool shouldAttack = true;
 

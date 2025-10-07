@@ -1092,6 +1092,8 @@ void Archer::OnDeath()
     isAttacking  = false;
     currentState = ArcherStates::DEATH;
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
+    if (agentAI) agentAI->SetSpeed(0.0f, 0.0f);
+    
     if (animComponent)
     {
 
