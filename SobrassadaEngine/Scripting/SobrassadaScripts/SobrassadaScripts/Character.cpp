@@ -126,6 +126,12 @@ bool Character::Init()
         {
             GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
         }
+
+            GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
+        if (glowObject) glow = glowObject;
+        if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
+
+       
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();

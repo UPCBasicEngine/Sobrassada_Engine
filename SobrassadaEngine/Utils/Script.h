@@ -32,7 +32,8 @@ struct InspectorField
         Button,
         Resource,
         Spacing,
-        CurveEditor
+        CurveEditor,
+        Audio
     };
 
     std::string name;

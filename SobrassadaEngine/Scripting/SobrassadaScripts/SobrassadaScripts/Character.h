@@ -68,6 +68,7 @@ class Character : public Script
     PlayerDistances CheckDistanceWithPlayer() const;
     bool CheckDistanceWithPoint(const float3& point) const;
     void RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color);
+    GameObject* GetGlowEffect() { return glow; }
     virtual void Die();
 
   private:
@@ -137,6 +138,8 @@ class Character : public Script
     MeshComponent* mesh                         = nullptr;
     ShaderScriptComponent* colorChange          = nullptr;
 
+    std::string glowName                         = "Glow";
+    GameObject* glow                            = nullptr;
     float3 hitCollisionNormal                   = float3::zero;
 
     // Level
