@@ -4,6 +4,7 @@
 
 class MeshComponent;
 class MirageBossDash;
+class AudioSourceComponent;
 
 enum class MirageState
 {
@@ -34,4 +35,5 @@ class Mirage : public Script
 
     float3 endPoint;
     MirageBossDash* bossDash     = nullptr;
+    AudioSourceComponent* audio = nullptr;
 };
