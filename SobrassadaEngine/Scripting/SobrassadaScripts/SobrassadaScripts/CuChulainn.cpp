@@ -348,6 +348,20 @@ bool CuChulainn::Init()
     if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
     else GLOG("[WARNING] No riastrad Eye FG VFX Shader Script found for CuChulain");
 
+    riastradObj = scene->GetGameObjectByName(riastradFireUpName);
+    if (riastradObj)
+    {
+        riastradFireUp = riastradObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradFireUp) riastradFireUp->SetEnabled(false);
+
+    riastradObj = scene->GetGameObjectByName(riastradFireDownName);
+    if (riastradObj)
+    {
+        riastradFireDown = riastradObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradFireDown) riastradFireDown->SetEnabled(false);
+
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
     if (!riastradTriggers) GLOG("[WARNING] No riastrad triggers HUD element found")
     else riastradTriggers->SetEnabled(false);
@@ -811,7 +825,11 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT && state != CharacterStates::TAKE_MUSHROOM)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT &&
+             state != CharacterStates::TAKE_MUSHROOM)
         Move();
 
     // When finished animation, go back to idle state
@@ -1483,7 +1501,8 @@ void CuChulainn::PerformAttack()
             if (!IsBlockedAhead(parent, character->GetFrontDirection(), max(0.55f, adaptedDistance), skin))
                 character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
             if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->GetEnabled())
@@ -2097,6 +2116,8 @@ void CuChulainn::ToggleRiastrad()
 
             if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
             if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
+            if (riastradFireUp) riastradFireUp->SetEnabled(false);
+            if (riastradFireDown) riastradFireDown->SetEnabled(false);
         }
 
         if (animComponent) animComponent->UseTrigger("Idle");
@@ -2155,6 +2176,17 @@ void CuChulainn::EnableRiastradVfx()
         riastradStars->SetEnabled(true);
         riastradStars->GetComponent<MeshComponent*>()->SetEnabled(false);
         riastradStars->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+
+    if (riastradFireUp)
+    {
+        riastradFireUp->SetEnabled(true);
+        riastradFireUp->GetScriptByType<UISpritesheet>()->Reset();
+    }
+    if (riastradFireDown)
+    {
+        riastradFireDown->SetEnabled(true);
+        riastradFireDown->GetScriptByType<UISpritesheet>()->Reset();
     }
 
     if (riastradSmoke)
