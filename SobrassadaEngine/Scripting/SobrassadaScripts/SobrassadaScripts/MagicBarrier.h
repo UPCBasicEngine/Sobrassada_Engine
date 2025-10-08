@@ -2,6 +2,9 @@
 #include "HashString.h"
 #include "Script.h"
 
+#include <AK/SoundEngine/Common/AkTypes.h>
+
+class AudioSourceComponent;
 class GameObject;
 
 class MagicBarrier : public Script
@@ -20,5 +23,10 @@ class MagicBarrier : public Script
   private:
     std::string areaTagString;
     HashString areaTag;
-    int enemiesInArea = 0;
+    int enemiesInArea               = 0;
+
+    // Audio
+    AudioSourceComponent* audioComp = nullptr;
+
+    AkUniqueID gameStateAudioEvent  = 0;
 };
