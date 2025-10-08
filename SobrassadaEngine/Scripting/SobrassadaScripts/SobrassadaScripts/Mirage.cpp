@@ -6,7 +6,8 @@
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Standalone\MeshComponent.h"
-
+#include "Standalone/Audio/AudioSourceComponent.h"
+#include "Wwise_IDs.h"
 
 Mirage::Mirage(GameObject* parent) : Script(parent)
 {
@@ -41,6 +42,8 @@ bool Mirage::Init()
     bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
     endPoint                    = secondChild->GetLocalTransform().TranslatePart();
 
+    audio                       = parent->GetComponent<AudioSourceComponent*>();
+
     bossDash->setEndPoint(endPoint);
 
     parent->SetEnabled(false);
@@ -55,6 +58,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Sleeping:
     {
         parent->SetEnabled(true);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_PREPAREMIRAGE);
         mirageDisableComponent1->SetEnabled(false);
         mirageDisableComponent2->SetEnabled(false);
         state      = MirageState::Warning;
@@ -80,6 +84,7 @@ void Mirage::Update(float deltaTime)
                 bossDash->setState(BossDashStates::OverheadStrike);
                 bossDash->setAction(BossDashActions::Prepare);
                 bossDash->setStateBool(true);
+                
             }
         }
         break;
@@ -88,9 +93,13 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
+        if (stateTimer >= 1 && !dashdone)
+        {
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DASHATTACK_02);
+            dashdone = true;
+        }
         if (stateTimer >= damageDuration)
         {
-
             state = MirageState::Sleeping;
             parent->SetEnabled(false);
         }
