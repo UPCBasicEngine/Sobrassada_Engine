@@ -12,16 +12,21 @@ class MusicManager : public Script
 
     bool Init() override;
     void Update(float deltaTime) override {}
+    void OnDestroy() override;
 
-    void OnPlayerRespawn() const;
+    void OnPlayerRespawn();
+    void SetCachedGameStateID(AkUniqueID stateID) { cachedGameStateID = stateID; }
+    void ResetToCachedGameState() const;
 
   private:
-    bool isSetupCorrectly              = false;
+    bool isSetupCorrectly           = false;
+
+    AkUniqueID cachedGameStateID    = 0;
 
     // Audio
-    AudioSourceComponent* audioComp    = nullptr;
+    AudioSourceComponent* audioComp = nullptr;
 
-    AkUniqueID firstRespawnAudioEvent  = 0;
-    AkUniqueID secondRespawnAudioEvent = 0;
-    AkUniqueID thirdRespawnAudioEvent  = 0;
+    AkUniqueID levelStateAudioEvent = 0;
+    AkUniqueID gameStateAudioEvent  = 0;
+    AkUniqueID additionalAudioEvent = 0;
 };

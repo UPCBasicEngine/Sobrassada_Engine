@@ -3,6 +3,7 @@
 
 #include <AK/SoundEngine/Common/AkTypes.h>
 
+class MusicManager;
 class AudioSourceComponent;
 
 class MusicTrigger : public Script
@@ -12,16 +13,19 @@ class MusicTrigger : public Script
 
     bool Init() override;
     void Update(float deltaTime) override {}
+    void OnDestroy() override;
 
     void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
-    bool isSetupCorrectly           = false;
+    bool isSetupCorrectly            = false;
+
+    MusicManager* cachedMusicManager = nullptr;
 
     // Audio
-    AudioSourceComponent* audioComp = nullptr;
+    AudioSourceComponent* audioComp  = nullptr;
 
-    AkUniqueID firstAudioEvent      = 0;
-    AkUniqueID secondAudioEvent     = 0;
-    AkUniqueID thirdAudioEvent      = 0;
+    AkUniqueID levelStateAudioEvent  = 0;
+    AkUniqueID gameStateAudioEvent   = 0;
+    AkUniqueID additionalAudioEvent  = 0;
 };
