@@ -23,6 +23,11 @@ bool MusicManager::Init()
         GLOG("[ERROR] Script parent does not contain an audio component")
         return false;
     }
+
+    if (firstRespawnAudioEvent != 0) audioComp->EmitEvent(firstRespawnAudioEvent);
+    if (secondRespawnAudioEvent != 0) audioComp->EmitEvent(secondRespawnAudioEvent);
+    if (thirdRespawnAudioEvent != 0) audioComp->EmitEvent(thirdRespawnAudioEvent);
+    
     return true;
 }
 
