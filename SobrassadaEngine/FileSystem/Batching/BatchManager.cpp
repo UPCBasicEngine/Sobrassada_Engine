@@ -201,9 +201,6 @@ void BatchManager::RenderTransparent(
 
         if (batchMeshes.empty()) continue;
 
-        it->UpdateBuffers(batchMeshes);
-        it->SwapBuffers();
-
         std::sort(
             batchMeshes.begin(), batchMeshes.end(),
             [camera](MeshComponent* a, MeshComponent* b)
@@ -230,6 +227,9 @@ void BatchManager::RenderTransparent(
                 }
             }
         );
+
+        it->UpdateBuffers(batchMeshes);
+        it->SwapBuffers();
 
         const auto start = std::chrono::high_resolution_clock::now();
 
@@ -332,13 +332,9 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
 void BatchManager::SwapBuffers()
 {
     for (GeometryBatch* it : opaqueBatches)
-    {
         it->SwapBuffers();
-    }
     for (GeometryBatch* it : transparentBatches)
-    {
         it->SwapBuffers();
-    }
 }
 
 // We can change that now

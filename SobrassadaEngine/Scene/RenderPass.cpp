@@ -251,7 +251,7 @@ void RenderPass::RenderScene(
         gbuffer->Unbind();
 
 #ifdef GAME
-        
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -266,7 +266,7 @@ void RenderPass::RenderScene(
         glBindTexture(GL_TEXTURE_2D, gbuffer->diffuseTexture);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 #else
-       
+
         Bind();
         const unsigned int program = App->GetShaderModule()->GetQuadProgram();
         glUseProgram(program);
@@ -1135,7 +1135,11 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
         groupedDecals[uid].push_back(decal);
     }
 
-    if (groupedDecals.empty()) return;
+    if (groupedDecals.empty())
+    {
+        gbuffer->Unbind();
+        return;
+    }
 
     const unsigned int program = App->GetShaderModule()->GetDecalProgram();
 
@@ -1213,25 +1217,6 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, decalSSBO);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-        /*
-        We cant check if we are inside of the decal with instancing (the camera is far away, so we should'nt have any
-        problem)
-
-        float3 cameraPos;
-        if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
-        else cameraPos = camera->GetCameraPosition();
-        float3 localCameraPos = (invModel * float4(cameraPos, 1.0f)).xyz();
-
-        bool insideDecalBox =
-            abs(localCameraPos.x) <= 0.5f && abs(localCameraPos.y) <= 0.5f && abs(localCameraPos.z) <= 0.5f;
-
-
-        if (insideDecalBox)
-        {
-            glDisable(GL_DEPTH_TEST);
-            glFrontFace(GL_CW);
-        }*/
-
         glBindVertexArray(decalVAO);
 
         glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, (GLsizei)models.size());
@@ -1241,12 +1226,11 @@ void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRende
         glDeleteBuffers(1, &decalSSBO);
     }
 
-    glEnable(GL_CULL_FACE);
-    glDepthMask(GL_TRUE);
-    glFrontFace(GL_CCW);
-    glEnable(GL_DEPTH_TEST);
-
     gbuffer->Unbind();
+
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer)
@@ -1679,8 +1663,8 @@ void RenderPass::Resize(int width, int height) const
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurrTextures[i], 0);
     }
-
     glBindTexture(GL_TEXTURE_2D, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void RenderPass::RenderShadowMapDebug() const
