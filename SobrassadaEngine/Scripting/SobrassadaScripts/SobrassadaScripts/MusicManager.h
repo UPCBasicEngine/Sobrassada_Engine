@@ -19,14 +19,14 @@ class MusicManager : public Script
     void ResetToCachedGameState() const;
 
   private:
-    bool isSetupCorrectly              = false;
+    bool isSetupCorrectly           = false;
 
-    AkUniqueID cachedGameStateID = 0;
+    AkUniqueID cachedGameStateID    = 0;
 
     // Audio
-    AudioSourceComponent* audioComp    = nullptr;
+    AudioSourceComponent* audioComp = nullptr;
 
-    AkUniqueID levelStateAudioEvent  = 0;
-    AkUniqueID gameStateAudioEvent = 0;
-    AkUniqueID additionalAudioEvent  = 0;
+    AkUniqueID levelStateAudioEvent = 0;
+    AkUniqueID gameStateAudioEvent  = 0;
+    AkUniqueID additionalAudioEvent = 0;
 };

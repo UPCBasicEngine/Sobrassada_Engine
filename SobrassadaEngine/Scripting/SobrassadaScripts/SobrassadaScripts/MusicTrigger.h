@@ -18,14 +18,14 @@ class MusicTrigger : public Script
     void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
-    bool isSetupCorrectly               = false;
+    bool isSetupCorrectly            = false;
 
-    MusicManager* cachedMusicManager    = nullptr;
+    MusicManager* cachedMusicManager = nullptr;
 
     // Audio
-    AudioSourceComponent* audioComp     = nullptr;
+    AudioSourceComponent* audioComp  = nullptr;
 
-    AkUniqueID levelStateAudioEvent     = 0;
-    AkUniqueID gameStateAudioEvent      = 0;
-    AkUniqueID additionalAudioEvent     = 0;
+    AkUniqueID levelStateAudioEvent  = 0;
+    AkUniqueID gameStateAudioEvent   = 0;
+    AkUniqueID additionalAudioEvent  = 0;
 };

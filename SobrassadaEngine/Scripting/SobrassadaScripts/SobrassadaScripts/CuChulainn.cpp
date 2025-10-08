@@ -82,8 +82,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
     fields.push_back({"Ultimate Animation delay", InspectorField::FieldType::Float, &ultimateAnimationDelay, 0.0f, 5.0f}
     );
-    fields.push_back({"Ultimate Animation speed", InspectorField::FieldType::Float, &ultimateSpeed, 0.1f, 5.0f}
-    );
+    fields.push_back({"Ultimate Animation speed", InspectorField::FieldType::Float, &ultimateSpeed, 0.1f, 5.0f});
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
@@ -564,7 +563,7 @@ bool CuChulainn::Init()
 
     ultimateSpikes = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateSpikesName);
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
-    else ultimateSpikes->SetEnabled(false); 
+    else ultimateSpikes->SetEnabled(false);
 
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
@@ -1555,15 +1554,13 @@ void CuChulainn::PerformAttack()
                 animComponent->OnPause();
                 playerAnimHeld = true;
             }
-
-            
         }
         else if (ultimateObject->IsEnabled())
         {
             AnimationComponent* vfxUltimateAnim  = ultimateObject->GetComponent<AnimationComponent*>();
             vfxTimeUnscaledSec                  += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
 
-            if (ultimateHoldEnabled && playerAnimHeld) //control cuchulainn stop animation
+            if (ultimateHoldEnabled && playerAnimHeld) // control cuchulainn stop animation
             {
                 float timeLimit = (vfxUltimateAnim && vfxUltimateAnim->GetAnimationController())
                                     ? vfxUltimateAnim->GetAnimationController()->GetTime()
@@ -1575,24 +1572,24 @@ void CuChulainn::PerformAttack()
                     animComponent->OnResume();
                     playerAnimHeld = false;
                 }
-
             }
 
             if (ultimateSpikes) // Control spikes animation appearance
             {
-                const bool animReady = vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
+                const bool animReady =
+                    vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
                 bool show, blurShow, warningShow = false;
 
                 if (animReady)
                 {
-                   const float vfxLenAnim        = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
+                    const float vfxLenAnim    = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
 
-                   const float spikesOff         = min(2.12f, vfxLenAnim - 0.05f) / ultimateSpeed;
-                   const float vfxLocalTimer     = vfxTimeUnscaledSec;
-                   
-                   show = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
-                   blurShow = vfxLocalTimer >= 0.19f / ultimateSpeed;
-                   warningShow                   = vfxLocalTimer <= 0.4f / ultimateSpeed;
+                    const float spikesOff     = min(2.12f, vfxLenAnim - 0.05f) / ultimateSpeed;
+                    const float vfxLocalTimer = vfxTimeUnscaledSec;
+
+                    show                      = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
+                    blurShow                  = vfxLocalTimer >= 0.19f / ultimateSpeed;
+                    warningShow               = vfxLocalTimer <= 0.4f / ultimateSpeed;
                 }
 
                 if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);

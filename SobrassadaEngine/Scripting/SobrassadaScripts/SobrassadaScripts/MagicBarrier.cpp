@@ -8,8 +8,8 @@
 #include "MusicManager.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
-#include "Wwise_IDs.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Wwise_IDs.h"
 
 MagicBarrier::MagicBarrier(GameObject* parent) : Script(parent)
 {
@@ -27,9 +27,9 @@ bool MagicBarrier::Init()
         GLOG("[ERROR] Script parent does not contain an audio component")
         return false;
     }
-    
+
     enemiesInArea = 0;
-    areaTag = HashString(areaTagString);
+    areaTag       = HashString(areaTagString);
 
     if (const auto taggedGameObjects = AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(areaTag))
     {
@@ -59,7 +59,9 @@ void MagicBarrier::EnemyDied()
             GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
             if (musicManager != nullptr)
             {
-                musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->SetCachedGameStateID(gameStateAudioEvent);
+                musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->SetCachedGameStateID(
+                    gameStateAudioEvent
+                );
             }
             audioComp->EmitEvent(gameStateAudioEvent);
         }

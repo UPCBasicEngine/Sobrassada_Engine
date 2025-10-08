@@ -1176,7 +1176,7 @@ void EditorUIModule::DrawScriptInspector(const std::vector<InspectorField>& fiel
                 (field.name + CONSTANT_EVENT_SELECT_DIALOG_ID).c_str(), App->GetAudioModule()->GetEventsMap(),
                 *audioData
             );
-            
+
             ImGui::SameLine();
             ImGui::PushID((field.name + "_Close").c_str());
             if (ImGui::Button("Delete"))

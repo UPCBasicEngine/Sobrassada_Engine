@@ -7,8 +7,8 @@
 #include "GameObject.h"
 #include "MusicManager.h"
 #include "ScriptComponent.h"
-#include "Wwise_IDs.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Wwise_IDs.h"
 
 MusicTrigger::MusicTrigger(GameObject* parent) : Script(parent)
 {
@@ -32,7 +32,7 @@ bool MusicTrigger::Init()
         GLOG("[ERROR] Script parents parent does not contain a music manager script")
         return false;
     }
-    
+
     // Audio
     audioComp = parent->GetComponent<AudioSourceComponent*>();
     if (audioComp == nullptr)

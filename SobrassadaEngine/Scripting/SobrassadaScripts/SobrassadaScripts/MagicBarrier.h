@@ -23,10 +23,10 @@ class MagicBarrier : public Script
   private:
     std::string areaTagString;
     HashString areaTag;
-    int enemiesInArea = 0;
-    
+    int enemiesInArea               = 0;
+
     // Audio
-    AudioSourceComponent* audioComp    = nullptr;
-    
+    AudioSourceComponent* audioComp = nullptr;
+
     AkUniqueID gameStateAudioEvent  = 0;
 };

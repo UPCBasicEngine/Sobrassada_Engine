@@ -1,10 +1,10 @@
 
 #include "pch.h"
 
-#include "MusicManager.h"
 #include "GameObject.h"
-#include "Wwise_IDs.h"
+#include "MusicManager.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Wwise_IDs.h"
 
 #include <AK/SoundEngine/Common/AkSoundEngine.h>
 
@@ -34,7 +34,7 @@ bool MusicManager::Init()
         cachedGameStateID = gameStateAudioEvent;
     }
     if (additionalAudioEvent != 0) audioComp->EmitEvent(additionalAudioEvent);
-    
+
     return true;
 }
 

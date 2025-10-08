@@ -61,7 +61,7 @@ void PauseMenuScript::Show()
     if (auto* t = AppEngine->GetGameTimer(); t && !t->IsPaused()) t->TogglePause();
     isOpen    = true;
     builtOnce = true;
-    
+
     if (audio != nullptr)
     {
         GLOG("Switching Gamestate to menu")
@@ -315,7 +315,8 @@ void PauseMenuScript::HandleInput()
             GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
             if (musicManager != nullptr)
             {
-                musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->ResetToCachedGameState();
+                musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->ResetToCachedGameState(
+                );
             }
             Close();
             return;
