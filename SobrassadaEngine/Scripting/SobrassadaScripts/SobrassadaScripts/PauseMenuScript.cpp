@@ -81,6 +81,10 @@ void PauseMenuScript::Close()
     isOpen    = false;
     builtOnce = false;
 
+    GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
+    if (musicManager != nullptr)
+        musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->ResetToCachedGameState();
+
     // GLOG("[PAUSE] Close");
 }
 
@@ -312,12 +316,6 @@ void PauseMenuScript::HandleInput()
 
         if (name == "MenuItem_Continue")
         {
-            GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
-            if (musicManager != nullptr)
-            {
-                musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->ResetToCachedGameState(
-                );
-            }
             Close();
             return;
         }
