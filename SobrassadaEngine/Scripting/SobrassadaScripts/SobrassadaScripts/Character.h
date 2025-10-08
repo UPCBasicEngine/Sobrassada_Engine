@@ -140,7 +140,6 @@ class Character : public Script
 
     std::string glowName                         = "Glow";
     GameObject* glow                            = nullptr;
-    float3 hitCollisionNormal                   = float3::zero;
 
     float3 hitCollisionNormal                   = float3::zero;
 
