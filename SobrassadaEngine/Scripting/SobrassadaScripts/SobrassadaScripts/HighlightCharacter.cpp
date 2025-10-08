@@ -26,7 +26,9 @@ HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
     fields.emplace_back("Character to highlight", InspectorField::FieldType::InputText, &characterToHighlightName);
     fields.emplace_back("Setup character on collision", InspectorField::FieldType::Bool, &setupTargetOnCollision);
     fields.emplace_back("Highlight focus", InspectorField::FieldType::InputText, &highlightFocusObjectName);
-
+    fields.emplace_back("Hide player", InspectorField::FieldType::Bool, &hidePlayerWhileZooming);
+    fields.emplace_back("Use only zoom", InspectorField::FieldType::Bool, &useOnlyZoom);
+    
     fields.emplace_back(
         "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.0f, 10.0f
     );
@@ -125,8 +127,11 @@ void HighlightCharacter::Update(float deltaTime)
         isExecuting = false;
         splineMovementTarget->SetEnabled(false);
         cameraMovementScript->ResetToDefaultTargetAndLookAhead();
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(true);
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(true);
+        if (hidePlayerWhileZooming)
+        {
+            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(true);
+            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(true);
+        }
         playerController->SetInputDown(true);
     }
 }
@@ -170,8 +175,12 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
         }
         
         playerController->SetInputDown(false);
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
+
+        if (hidePlayerWhileZooming)
+        {
+            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
+            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
+        }
 
         const float3 highlightVector =
             (highlightFocusObject->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart())
@@ -180,18 +189,32 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
             Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
         const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
 
-        splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
+        if (useOnlyZoom)
+        {
+            splineComponent->SetPointWorld(0, highlightFocusObject->GetGlobalTransform().TranslatePart());
+            splineComponent->SetPointWorld(
+            1, highlightFocusObject->GetGlobalTransform().TranslatePart() + .3f * zoomMultiplier * zoomVector
+            );
+            splineComponent->SetPointWorld(
+            2, highlightFocusObject->GetGlobalTransform().TranslatePart() + .6f * zoomMultiplier * zoomVector
+            );
+            splineComponent->SetPointWorld(
+            3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
+            );
+        } else
+        {
+            splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
 
-        splineComponent->SetPointWorld(
-            1, highlightFocusObject->GetGlobalTransform().TranslatePart() - highlightVector * secondSplinePointOffset +
-                   secondSplinePointOffset / 2.f * zoomVector
-        );
-
-        splineComponent->SetPointWorld(
+            splineComponent->SetPointWorld(
+                1, highlightFocusObject->GetGlobalTransform().TranslatePart() - highlightVector * secondSplinePointOffset +
+                       secondSplinePointOffset / 2.f * zoomVector
+            );
+            splineComponent->SetPointWorld(
             2, highlightFocusObject->GetGlobalTransform().TranslatePart() + secondSplinePointOffset * zoomVector -
                    secondSplinePointOffset / 2.f * highlightVector
-        );
-
+            );
+        }
+        
         splineComponent->SetPointWorld(
             3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
         );
