@@ -91,7 +91,7 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
                             std::to_string(sceneUID) + SCENE_EXTENSION;
         else
             sceneFilePath =
-                App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + sceneName + SCENE_EXTENSION;
+                App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH + sceneName + SCENE_EXTENSION;
 
         unsigned int bytesWritten = (unsigned int
         )FileSystem::Save(sceneFilePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
