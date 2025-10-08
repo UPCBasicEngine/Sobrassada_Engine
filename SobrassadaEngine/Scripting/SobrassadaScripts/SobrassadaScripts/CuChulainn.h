@@ -278,10 +278,14 @@ class CuChulainn : public Character
     std::string riastradKeyName                    = "RiastradKey";
     std::string riastradVfxBGName                  = "EyeBackgroundVFX";
     std::string riastradVfxFGName                  = "EyeForegroundVFX";
+    std::string riastradFireUpName                 = "RiastradFireUp";
+    std::string riastradFireDownName               = "RiastradFireDown";
     BarFill* riastradBar                           = nullptr;
     AbilityIconFill* riastradEye                   = nullptr;
     ShaderScriptComponent* riastradVfxBG           = nullptr;
     ShaderScriptComponent* riastradVfxFG           = nullptr;
+    ShaderScriptComponent* riastradFireUp          = nullptr;
+    ShaderScriptComponent* riastradFireDown        = nullptr;
     GameObject* riastradTriggers                   = nullptr;
     GameObject* riastradKey                        = nullptr;
     int riastradMeter                              = 0;
