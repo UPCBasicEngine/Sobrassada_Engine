@@ -228,6 +228,9 @@ void BatchManager::RenderTransparent(
             }
         );
 
+        it->UpdateBuffers(batchMeshes);
+        it->SwapBuffers();
+
         const auto start = std::chrono::high_resolution_clock::now();
 
         glUseProgram(program);
@@ -323,19 +326,15 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
         App->GetOpenGLModule()->AddTrianglesPerSecond(meshTriangles / elapsed.count());
         App->GetOpenGLModule()->AddVerticesCount(vertexCount);
         App->GetOpenGLModule()->AddDrawCallsCount();
-    }  
+    }
 }
 
 void BatchManager::SwapBuffers()
 {
     for (GeometryBatch* it : opaqueBatches)
-    {
         it->SwapBuffers();
-    }
     for (GeometryBatch* it : transparentBatches)
-    {
         it->SwapBuffers();
-    }
 }
 
 // We can change that now

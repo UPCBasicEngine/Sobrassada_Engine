@@ -7,13 +7,21 @@
 #include "GameObject.h"
 #include "GameTimer.h"
 #include "Interpolation.h"
+#include "ParticleSystemComponent.h"
+#include "ResourceMaterial.h"
+#include "ResourcesModule.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+
+#include "Wwise_IDs.h"
+#include "imgui_curve_editor.h"
 
 Banshee::Banshee(GameObject* parent)
     : Character(
@@ -29,10 +37,38 @@ Banshee::Banshee(GameObject* parent)
           CharacterType::Banshee
       )
 {
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Invisibility parameters"});
     fields.push_back({"Invisible time range", InspectorField::FieldType::Vec2, &invisibleTimeRange, 0.0f, 10.0f});
+    fields.push_back({"Teleport VFX duration", InspectorField::FieldType::Float, &teleportVFXDuration, 0.1f, 10.0f});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Scream parameters"});
     fields.push_back({"Attack Angular Speed", InspectorField::FieldType::Float, &attackAngularSpeed, 0.0f, 10.0f});
     fields.push_back({"Main scream duration", InspectorField::FieldType::Float, &mainScreamDuration, 0.1f, 10.0f});
     fields.push_back({"Warning duration", InspectorField::FieldType::Float, &warningDuration, 0.1f, 10.0f});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Slow area parameters"});
+    fields.push_back({"Slow Area Damage", InspectorField::FieldType::Int, &slowAreaDamage, 0, 10});
+    fields.push_back(
+        {"Slow Area Warning Duration", InspectorField::FieldType::Float, &slowAreaWaringDuration, 0.f, 10.f}
+    );
+    fields.push_back(
+        {"Slow Area Warning Max Scale", InspectorField::FieldType::Float, &slowAreaWaringMaxScale, 0.f, 10.f}
+    );
+    fields.push_back({"Slow area duration", InspectorField::FieldType::Float, &slowAreaDuration, 0.f, 10.f});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Teleport warning size curve"});
+    for (int i = 0; i < maxScriptCurvePoints; ++i)
+    {
+        curveEditorPoints[i].x = (float)i / 10.f;
+        curveEditorPoints[i].y = (float)i / 10.f;
+    }
+
+    curveEditorPoints[maxScriptCurvePoints].x = 0.f;
+    curveEditorPoints[maxScriptCurvePoints].y = 1.f;
+
+    curveEditorPoints[0].x                    = ImGui::CurveTerminator;
+
+    fields.push_back({"Teleport warning Size", InspectorField::FieldType::CurveEditor, &curveEditorPoints, 0.f, 10.f});
 }
 
 bool Banshee::Init()
@@ -72,42 +108,155 @@ bool Banshee::Init()
 
             weapon->SetEnabled(false);
         }
-        else if (currentGO->GetName() == "VFX_Banshee_shoutBase")
+        else if (currentGO->GetName() == "SlowArea")
         {
-            shoutBaseComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+            slowAreaGO          = currentGO;
+            slowAreaStartHeight = slowAreaGO->GetLocalTransform().TranslatePart().y;
+            slowAreaGO->SetEnabled(false);
+        }
+        else if (currentGO->GetName() == "SlowAreaIn")
+        {
+            slowAreaInGO          = currentGO;
+            slowAreaInStartHeight = slowAreaInGO->GetLocalTransform().TranslatePart().y;
+            slowAreaInGO->SetEnabled(false);
+        }
+        else if (currentGO->GetName() == "VFX_SlowAreaRing")
+        {
+            slowAreaRing = currentGO->GetComponent<ShaderScriptComponent*>();
+            slowAreaRing->SetEnabled(false);
+        }
+        else if (currentGO->GetName() == "SlowAreaWarning")
+        {
+            slowAreaWarningGO = currentGO;
 
-            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            float3 translation, scale;
+            Quat rotation;
+
+            slowAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+            float4x4 starTransform =
+                float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+            slowAreaWarningGO->SetLocalTransform(starTransform);
+            slowAreaWarningGO->SetEnabled(false);
+
+            slowWarningStartHeight = translation.y;
+        }
+        else if (currentGO->GetName() == "TeleportWarning")
+        {
+            teleportWarningScreamGO = currentGO;
+            teleportWarningScreamGO->SetEnabled(false);
+
+            MeshComponent* mesh = teleportWarningScreamGO->GetComponent<MeshComponent*>();
+            if (mesh)
+            {
+                const ResourceMaterial* constMat = mesh->GetResourceMaterial();
+                if (constMat)
+                {
+                    ResourceMaterial* teleportWarningScreamMaterial = dynamic_cast<ResourceMaterial*>(
+                        AppEngine->GetResourcesModule()->RequestResource(constMat->GetUID())
+                    );
+
+                    teleportWarningScreamMaterial->SetDiffColor(screamWarningColor);
+                }
+            }
+        }
+        else if (currentGO->GetName() == "TeleportWarningSlow")
+        {
+            teleportWarningSlowGO = currentGO;
+            teleportWarningSlowGO->SetEnabled(false);
+
+            MeshComponent* mesh = teleportWarningSlowGO->GetComponent<MeshComponent*>();
+            if (mesh)
+            {
+                const ResourceMaterial* constMat = mesh->GetResourceMaterial();
+                if (constMat)
+                {
+                    ResourceMaterial* teleportWarningSlowMaterial = dynamic_cast<ResourceMaterial*>(
+                        AppEngine->GetResourcesModule()->RequestResource(constMat->GetUID())
+                    );
+
+                    teleportWarningSlowMaterial->SetDiffColor(slowWarningColor);
+                }
+            }
+        }
+        // else if (currentGO->GetName() == "PS_BansheeHit")
+        //{
+        //     hitParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+        // }
+        else if (currentGO->GetName() == "PS_BansheeChase")
+        {
+            chaseParticleSystem = currentGO->GetComponent<ParticleSystemComponent*>();
+            chaseParticleSystem->StopInstances();
+        }
+        else if (currentGO->GetName() == "VFX_Death_Spritesheet")
+        {
+            deathVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComp : deathVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(false);
+            }
+        }
+        else if (currentGO->GetName() == "VFX_Hit_Spritesheet")
+        {
+            hitVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(false);
+            }
+        }
+        else if (currentGO->GetName() == "VFX_Teleport_Spritesheet")
+        {
+            teleportVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComp : teleportVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(false);
+            }
+        }
+        else if (currentGO->GetName() == "VFX_Forward_Shout")
+        {
+            forwardScreamShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
         }
-        else if (currentGO->GetName() == "VFX_Banshee_shoutStart")
+        else if (currentGO->GetName() == "ForwardScreamCollider")
         {
-            shoutStartComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+            forwardScreamCollider = currentGO->GetComponent<CapsuleColliderComponent*>();
+            forwardScreamCollider->SetEnabled(false);
+        }
+        else if (currentGO->GetName() == "VFX_Ground_Ring")
+        {
+            groundRingShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
 
-            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            for (auto& shaderComponent : groundRingShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
+        }
+        else if (currentGO->GetName() == "ScreamWarning")
+        {
+            screamAreaWarningGO = currentGO;
 
-            // Take warning star mesh and control mesh scale over time for anim
-            std::vector<MeshComponent*> shoutStartMeshes =
-                currentGO->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
+            float3 translation, scale;
+            Quat rotation;
 
-            for (MeshComponent* currentMesh : shoutStartMeshes)
-            {
-                if (currentMesh->GetParent()->GetName() == "WarningStar")
-                {
-                    meshWarningStar = currentMesh;
-                    meshWarningStar->SetEnabled(false);
-                }
-            }
+            screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+            float4x4 starTransform =
+                float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+            screamAreaWarningGO->SetLocalTransform(starTransform);
+            screamAreaWarningGO->SetEnabled(false);
         }
     }
 
     rng            = std::mt19937(std::random_device {}());
     normalizedDist = std::uniform_real_distribution<float>(0.0f, 1.0f);
     invisibleDist  = std::uniform_real_distribution<float>(invisibleTimeRange[0], invisibleTimeRange[1]);
+
+    audioSource    = parent->GetComponent<AudioSourceComponent*>();
 
     return true;
 }
@@ -138,7 +287,6 @@ void Banshee::Update(float deltaTime)
 
 void Banshee::OnPlayerExitLocation()
 {
-
     switch (currentState)
     {
     case BansheeStates::Search:
@@ -146,29 +294,69 @@ void Banshee::OnPlayerExitLocation()
         break;
     case BansheeStates::Attack:
     {
-        for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-        {
-            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-        {
-            shaderComponent->ResetScript("MovingUVTransparent");
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
-        {
-            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-        }
-
-        for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
-        {
-            shaderComponent->ResetScript("MovingUVTransparent");
-        }
-
-        if (meshWarningStar) meshWarningStar->SetEnabled(false);
+        isInvisible = false;
+        mesh->SetEnabled(true);
+        characterCollider->SetEnabled(true);
 
         weapon->SetEnabled(false);
+
+        // FORWARD SCREAM
+        forwardScreamCollider->SetEnabled(false);
+        for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        // GROUND RING
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        float3 translation, scale;
+        Quat rotation;
+
+        screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+        float4x4 starTransform =
+            float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+        screamAreaWarningGO->SetLocalTransform(starTransform);
+        screamAreaWarningGO->SetEnabled(false);
+
+        teleportWarningScreamGO->SetEnabled(false);
+
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->ResetAngularSpeed();
+        agentAI->SetLookForward(true);
+
+        break;
+    }
+    case BansheeStates::SlowArea:
+    {
+        isInvisible = false;
+        mesh->SetEnabled(true);
+        characterCollider->SetEnabled(true);
+
+        slowAreaGO->SetEnabled(false);
+        slowAreaInGO->SetEnabled(false);
+        slowAreaRing->SetEnabled(false);
+
+        float3 translation, scale;
+        Quat rotation;
+
+        slowAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+        float4x4 starTransform =
+            float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+        slowAreaWarningGO->SetLocalTransform(starTransform);
+        slowAreaWarningGO->SetEnabled(false);
+
+        teleportWarningSlowGO->SetEnabled(false);
 
         isAttacking = false;
         agentAI->ResetSpeed();
@@ -190,6 +378,15 @@ void Banshee::OnDeath()
 
 void Banshee::OnDamageTaken(int amount)
 {
+    // if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
+
+    if (audioSource) audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_HURT);
+
+    for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
+    {
+        shaderComp->SetEnabled(true);
+        shaderComp->ResetScript("AttackVfxSpritesheet");
+    }
 }
 
 void Banshee::PerformAttack()
@@ -214,7 +411,7 @@ void Banshee::HandleState(float deltaTime)
         break;
 
     case BansheeStates::Attack:
-        if (attackCdTimer <= 0) Attack(deltaTime);
+        Attack(deltaTime);
         break;
 
     case BansheeStates::Hit:
@@ -222,6 +419,7 @@ void Banshee::HandleState(float deltaTime)
         {
             animComponent->UseTrigger("Idle");
             currentState = BansheeStates::Idle;
+
             agentAI->ResumeMovement();
             ChangeState();
         }
@@ -235,11 +433,129 @@ void Banshee::HandleState(float deltaTime)
         TeleportToOrigin();
         break;
 
+    case BansheeStates::SlowArea:
+        SlowArea(deltaTime);
+        break;
+
     default:
         currentState = BansheeStates::Idle;
         ChangeState();
         break;
     }
+}
+
+void Banshee::TakeDamage(int amount)
+{
+    if (isInvisible) return;
+
+    switch (currentState)
+    {
+    case BansheeStates::Attack:
+
+    {
+        animComponent->UseTrigger("Hit");
+        currentState = BansheeStates::Hit;
+
+        weapon->SetEnabled(false);
+
+        // FORWARD SCREAM
+        forwardScreamCollider->SetEnabled(false);
+        for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        // GROUND RING
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+        }
+
+        for (auto& shaderComponent : groundRingShaderComponents)
+        {
+            shaderComponent->ResetScript("MovingUVTransparent");
+        }
+
+        float3 translation, scale;
+        Quat rotation;
+
+        screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+        float4x4 starTransform =
+            float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+        screamAreaWarningGO->SetLocalTransform(starTransform);
+        screamAreaWarningGO->SetEnabled(false);
+
+        slowAreaGO->SetEnabled(false);
+
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->ResetAngularSpeed();
+        agentAI->SetLookForward(true);
+    }
+
+    break;
+    case BansheeStates::Hit:
+        if (animComponent->GetCurrentStateName() == HashString("Hit") && animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Idle");
+            currentState = BansheeStates::Idle;
+
+            agentAI->ResumeMovement();
+        }
+        break;
+    case BansheeStates::SlowArea:
+    {
+        animComponent->UseTrigger("Hit");
+        currentState = BansheeStates::Hit;
+
+        slowAreaGO->SetEnabled(false);
+        slowAreaInGO->SetEnabled(false);
+        slowAreaRing->SetEnabled(false);
+
+        float3 translation, scale;
+        Quat rotation;
+
+        slowAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+        float4x4 starTransform =
+            float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+        slowAreaWarningGO->SetLocalTransform(starTransform);
+        slowAreaWarningGO->SetEnabled(false);
+
+        isAttacking = false;
+        agentAI->ResetSpeed();
+        agentAI->ResetAngularSpeed();
+        agentAI->SetLookForward(true);
+
+        break;
+    }
+    case BansheeStates::Dead:
+        break;
+    default:
+    {
+        chaseParticleSystem->StopInstances();
+        isSearching = false;
+        animComponent->UseTrigger("Hit");
+        currentState = BansheeStates::Hit;
+        agentAI->PauseMovement();
+        break;
+    }
+    }
+
+    if ((currentHealth - amount) <= 0)
+    {
+
+        for (ShaderScriptComponent* shaderComp : deathVFXShaderComponents)
+        {
+            shaderComp->SetEnabled(true);
+        }
+
+        animComponent->UseTrigger("Death");
+        currentState = BansheeStates::Dead;
+        return;
+    }
+
+    Character::TakeDamage(amount);
 }
 
 void Banshee::ChasePlayer()
@@ -248,11 +564,20 @@ void Banshee::ChasePlayer()
 
     hasMoved = true;
     if (animComponent) animComponent->UseTrigger("Chase");
-    // if (animComponent && animComponent->GetCurrentStateName() != HashString("Idle"))
-    // animComponent->UseTrigger("Chase");
-    if (CheckDistanceWithPlayer() <= PlayerDistances::Close) currentState = BansheeStates::Attack;
+    if (CheckDistanceWithPlayer() <= PlayerDistances::Close)
+    {
+        float attackToPerform = normalizedDist(rng);
+
+        if (attackToPerform < 0.5f) currentState = BansheeStates::Attack;
+        else currentState = BansheeStates::SlowArea;
+
+        chaseParticleSystem->StopInstances();
+    }
     else if (!agentAI->SetPathNavigation(character->GetLastPosition()) || GetDistanceFromPlayer() > maxDetectionRange)
+    {
         currentState = BansheeStates::Search;
+        chaseParticleSystem->StopInstances();
+    }
 }
 
 void Banshee::Attack(float deltaTime)
@@ -270,82 +595,143 @@ void Banshee::Attack(float deltaTime)
 
         isInvisible = false;
         animComponent->UseTrigger("Teleport");
+        teleportWarningScreamGO->SetEnabled(false);
     }
     else
     {
-        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished())
+        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished() &&
+            !isInvisible)
         {
-            currentInvisibleTime = invisibleDist(rng);
+            // Teleport VFX
+            for (ShaderScriptComponent* shaderComp : teleportVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(true);
+                shaderComp->ResetScript("AttackVfxSpritesheet");
+            }
+
+            currentInvisibleTime = invisibleDist(rng) + teleportVFXDuration;
             isInvisible          = true;
             mesh->SetEnabled(false);
+            characterCollider->SetEnabled(false);
+
+            elapsedTeleportVFX = 0.0f;
+
+            teleportedToPos    = false;
         }
-        if (attackTimer < currentInvisibleTime) return;
+        if (elapsedTeleportVFX < teleportVFXDuration)
+        {
+            elapsedTeleportVFX += deltaTime;
+            return;
+        }
+        else if (elapsedTeleportVFX > teleportVFXDuration && !teleportedToPos)
+        {
+            GoToAttackPosition();
+            teleportWarningScreamGO->SetEnabled(true);
+            teleportedToPos = true;
+            return;
+        }
+        else if (attackTimer < currentInvisibleTime)
+        {
+            // SCALING WARNING OVER TIME
+            float3 translation, scale;
+            Quat rotation;
+
+            teleportWarningScreamGO->GetLocalTransform().Decompose(translation, rotation, scale);
+
+            float interpolationValue = min(attackTimer / currentInvisibleTime, 1.f);
+
+            float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
+
+            scale                    = float3(finalScale, 1.f, finalScale);
+
+            float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
+            teleportWarningScreamGO->SetLocalTransform(starTransform);
+
+            return;
+        }
 
         if (isInvisible)
         {
+            teleportWarningScreamGO->SetEnabled(false);
+
             // Tp to player and enable
-            GoToAttackPosition();
+            // GoToAttackPosition();
+
             mesh->SetEnabled(true);
+            characterCollider->SetEnabled(true);
             isInvisible = false;
             agentAI->SetAngularSpeed(attackAngularSpeed);
             animComponent->UseTrigger("ScreamIn");
 
+            slowAreaGO->SetEnabled(true);
+            slowAreaGO->SetLocalPosition(float3::zero);
+
             elapsedWarning = 0.f;
-            if (meshWarningStar) meshWarningStar->SetEnabled(true);
+            screamAreaWarningGO->SetEnabled(true);
+            if (audioSource) audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_ATTACK);
         }
 
         // Slowly rotate towards player while charging the attack
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
         {
-            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+            elapsedWarning += deltaTime;
 
+            // SCALING WARNING OVER TIME
             float3 translation, scale;
             Quat rotation;
 
-            meshWarningStar->GetParent()->GetLocalTransform().Decompose(translation, rotation, scale);
+            screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
 
             float interpolationValue = min(elapsedWarning / warningDuration, 1.f);
 
-            float finalScale         = Interpolation::Lerp(1.f, 0.f, interpolationValue);
+            float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+
             scale                    = float3(finalScale, 1.f, finalScale);
 
             float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
-            meshWarningStar->GetParent()->SetLocalTransform(starTransform);
+            screamAreaWarningGO->SetLocalTransform(starTransform);
 
-            if (elapsedWarning < warningDuration) elapsedWarning += deltaTime;
-            else
-            {
-                float4x4 starTransform = float4x4::FromTRS(translation, rotation, float3::one);
-                meshWarningStar->GetParent()->SetLocalTransform(starTransform);
-                if (meshWarningStar) meshWarningStar->SetEnabled(false);
-
-                for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-                {
-                    shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
-                }
-            }
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
         {
+            // Reseting scale.
+            float3 translation, scale;
+            Quat rotation;
+
+            screamAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+            float4x4 starTransform =
+                float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+            screamAreaWarningGO->SetLocalTransform(starTransform);
+            screamAreaWarningGO->SetEnabled(false);
+
             animComponent->UseTrigger("Scream");
 
             weapon->SetEnabled(true);
 
-            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-            {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
-            }
+            // FORWARD SCREAM ENABLE
 
-            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-            {
-                shaderComponent->ResetScript("MovingUVTransparent");
-            }
+            forwardScreamCollider->SetEnabled(true);
+            // float3 front = (parent->GetLocalTransform() * float4(float3::unitZ, 0)).xyz().Normalized();
+            // float3 dir   = 4.0f * front;
+            // dir.y        = 1.232f;
 
-            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            // forwardScreamCollider->GetParent()->SetLocalPosition(parent->GetLocalPostition() + dir);
+
+            for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
             }
+
+            // GROUND RING ENABLE
+
+            for (auto& shaderComponent : groundRingShaderComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", true);
+            }
+
+            elapsedMainScream = 0.f;
         }
 
         else if (animComponent->GetCurrentStateName() == HashString("Scream") && elapsedMainScream < mainScreamDuration)
@@ -354,21 +740,34 @@ void Banshee::Attack(float deltaTime)
         else if (animComponent->GetCurrentStateName() == HashString("Scream") &&
                  elapsedMainScream >= mainScreamDuration)
         {
+
             animComponent->UseTrigger("ScreamOut");
 
             weapon->SetEnabled(false);
 
             elapsedMainScream = 0.f;
 
-            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            // FORWARD SCREAM DISABLE
+
+            forwardScreamCollider->SetEnabled(false);
+            for (ShaderScriptComponent* shaderComponent : forwardScreamShaderComponents)
             {
                 shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
             }
 
-            for (ShaderScriptComponent* shaderComponent : shoutBaseComponents)
+            // GROUND RING DISABLE
+
+            for (auto& shaderComponent : groundRingShaderComponents)
+            {
+                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+            }
+
+            for (auto& shaderComponent : groundRingShaderComponents)
             {
                 shaderComponent->ResetScript("MovingUVTransparent");
             }
+
+            slowAreaGO->SetEnabled(false);
         }
         else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
         {
@@ -390,12 +789,20 @@ void Banshee::ChangeState()
         currentState = BansheeStates::Idle;
         return;
     }
-    // const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-    // bool playerInLocation            = parent->HasTag(playerLocation);
 
     const float distance = GetDistanceFromPlayer();
-    if (distance <= rangeAIAttack) currentState = BansheeStates::Attack;
-    else if (distance <= rangeAIChase) currentState = BansheeStates::Chase;
+    if (distance <= rangeAIAttack)
+    {
+        float attackToPerform = normalizedDist(rng);
+
+        if (attackToPerform < 0.5f) currentState = BansheeStates::Attack;
+        else currentState = BansheeStates::SlowArea;
+    }
+    else if (distance <= rangeAIChase)
+    {
+        currentState = BansheeStates::Chase;
+        chaseParticleSystem->SpawnAllInstances();
+    }
     else currentState = BansheeStates::Search;
 }
 
@@ -415,6 +822,7 @@ void Banshee::SearchForPlayer()
             isSearching = false;
             agentAI->ResetSpeed();
             currentState = BansheeStates::Chase;
+            chaseParticleSystem->SpawnAllInstances();
             return;
         }
 
@@ -466,6 +874,12 @@ void Banshee::TeleportToOrigin()
 
 void Banshee::HandleDeath()
 {
+    if (audioSource && !playedDeathSound)
+    {
+        audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_DEATH);
+        playedDeathSound = true;
+    }
+
     if (animComponent->GetCurrentStateName() == HashString("Death") && animComponent->IsFinished())
     {
         currentHealth = 0;
@@ -473,63 +887,204 @@ void Banshee::HandleDeath()
     }
 }
 
-void Banshee::TakeDamage(int amount)
+void Banshee::SlowArea(float deltaTime)
 {
-    if (isInvisible) return;
+    if (!slowAreaGO) return;
 
-    switch (currentState)
+    if (!isAttacking)
     {
-    case BansheeStates::Attack:
+        hasMoved = true;
+        agentAI->SetLookForward(false);
 
-        if (animComponent->GetCurrentStateName() == HashString("ScreamIn") ||
-            animComponent->GetCurrentStateName() == HashString("Teleport"))
+        Character::Attack(deltaTime);
+        agentAI->SetSpeed(0.0f, 0.0f);
+
+        isInvisible = false;
+        animComponent->UseTrigger("Teleport");
+        teleportWarningSlowGO->SetEnabled(false);
+    }
+    else
+    {
+        if (animComponent->GetCurrentStateName() == HashString("Teleport") && animComponent->IsFinished() &&
+            !isInvisible)
         {
-            animComponent->UseTrigger("Hit");
-            currentState = BansheeStates::Hit;
-
-            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
+            // Teleport VFX
+            for (ShaderScriptComponent* shaderComp : teleportVFXShaderComponents)
             {
-                shaderComponent->SetScriptEnabled("MovingUVTransparent", false);
+                shaderComp->SetEnabled(true);
+                shaderComp->ResetScript("AttackVfxSpritesheet");
             }
 
-            for (ShaderScriptComponent* shaderComponent : shoutStartComponents)
-            {
-                shaderComponent->ResetScript("MovingUVTransparent");
-            }
+            currentInvisibleTime = invisibleDist(rng) + teleportVFXDuration;
+            isInvisible          = true;
 
-            if (meshWarningStar) meshWarningStar->SetEnabled(false);
+            mesh->SetEnabled(false);
+            characterCollider->SetEnabled(false);
 
-            isAttacking = false;
+            elapsedTeleportVFX = 0.0f;
+            teleportedToPos    = false;
+        }
+        if (elapsedTeleportVFX < teleportVFXDuration)
+        {
+            elapsedTeleportVFX += deltaTime;
+            return;
+        }
+        else if (elapsedTeleportVFX >= teleportVFXDuration && !teleportedToPos)
+        {
+            GoToAttackPosition();
+            teleportWarningSlowGO->SetEnabled(true);
+            teleportedToPos = true;
+            return;
+        }
+        else if (attackTimer < currentInvisibleTime)
+        {
+            // SCALING WARNING OVER TIME
+            float3 translation, scale;
+            Quat rotation;
+
+            teleportWarningSlowGO->GetLocalTransform().Decompose(translation, rotation, scale);
+
+            float interpolationValue = min(attackTimer / currentInvisibleTime, 1.f);
+
+            float finalScale         = ImGui::CurveValue(interpolationValue, maxScriptCurvePoints, curveEditorPoints);
+
+            scale                    = float3(finalScale, 1.f, finalScale);
+
+            float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
+            teleportWarningSlowGO->SetLocalTransform(starTransform);
+
+            return;
+        }
+
+        if (isInvisible)
+        {
+            teleportWarningSlowGO->SetEnabled(false);
+
+            mesh->SetEnabled(true);
+            characterCollider->SetEnabled(true);
+            isInvisible = false;
+            agentAI->SetAngularSpeed(attackAngularSpeed);
+            animComponent->UseTrigger("ScreamIn");
+
+            audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_ATTACK);
+
+            UpdateLastPlayerPosition();
+            MoveSlowAreaToPlayer();
+
+            elapsedSlowAreaWaring = 0.f;
+            slowAreaWarningGO->SetEnabled(true);
+            slowAreaGO->SetEnabled(true);
+        }
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && !animComponent->IsFinished())
+        {
+            elapsedSlowAreaWaring += deltaTime;
+
+            // SCALING WARNING OVER TIME
+            float3 translation, scale;
+            Quat rotation;
+
+            slowAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+
+            float interpolationValue = min(elapsedSlowAreaWaring / slowAreaWaringDuration, 1.f);
+
+            float finalScale         = Interpolation::Lerp(slowAreaWaringMaxScale, 0.1f, interpolationValue);
+
+            scale                    = float3(finalScale, 1.f, finalScale);
+
+            float4x4 starTransform   = float4x4::FromTRS(translation, rotation, scale);
+            slowAreaWarningGO->SetLocalTransform(starTransform);
+
+            agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
+
+            MoveSlowAreaToPlayer();
+        }
+
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamIn") && animComponent->IsFinished())
+        {
+            // Reseting scale.
+            float3 translation, scale;
+            Quat rotation;
+
+            slowAreaWarningGO->GetLocalTransform().Decompose(translation, rotation, scale);
+            float4x4 starTransform =
+                float4x4::FromTRS(translation, rotation, float3(slowAreaWaringMaxScale, 1.f, slowAreaWaringMaxScale));
+            slowAreaWarningGO->SetLocalTransform(starTransform);
+            slowAreaWarningGO->SetEnabled(false);
+
+            animComponent->UseTrigger("SlowArea");
+            slowAreaInGO->SetEnabled(true);
+
+            slowAreaRing->SetEnabled(true);
+            slowAreaRing->ResetScript("true");
+
+            elapsedSlowArea = 0.f;
+        }
+        else if (animComponent->GetCurrentStateName() == HashString("SlowArea") && elapsedSlowArea < slowAreaDuration)
+            elapsedSlowArea += deltaTime;
+
+        else if (animComponent->GetCurrentStateName() == HashString("SlowArea") && elapsedSlowArea >= slowAreaDuration)
+        {
+            slowAreaGO->SetEnabled(false);
+            slowAreaInGO->SetEnabled(false);
+            slowAreaRing->SetEnabled(false);
+            animComponent->UseTrigger("ScreamOut");
+        }
+        else if (animComponent->GetCurrentStateName() == HashString("ScreamOut") && animComponent->IsFinished())
+        {
+            isAttacking  = false;
+            currentState = BansheeStates::Idle;
+            animComponent->UseTrigger("Idle");
+
             agentAI->ResetSpeed();
             agentAI->ResetAngularSpeed();
             agentAI->SetLookForward(true);
         }
-
-        break;
-    case BansheeStates::Hit:
-        if (animComponent->GetCurrentStateName() == HashString("Hit") && animComponent->IsFinished())
-        {
-            animComponent->UseTrigger("Idle");
-            currentState = BansheeStates::Idle;
-            agentAI->ResumeMovement();
-        }
-        break;
-    case BansheeStates::Dead:
-        break;
-    default:
-        isSearching = false;
-        animComponent->UseTrigger("Hit");
-        currentState = BansheeStates::Hit;
-        agentAI->PauseMovement();
-        break;
     }
+}
 
-    if ((currentHealth - amount) <= 0)
+void Banshee::MoveSlowAreaToPlayer()
+{
+    if (!character) return;
+
+    float3 translate, scale;
+    Quat rotation;
+
+    float4x4 parentInvertedGlobal = parent->GetGlobalTransform().Inverted();
+
+    slowAreaGO->GetGlobalTransform().Decompose(translate, rotation, scale);
+    float4x4 newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowAreaStartHeight, lastPlayerPosition.z), rotation, scale
+    );
+    slowAreaGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+
+    slowAreaInGO->GetGlobalTransform().Decompose(translate, rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowAreaInStartHeight, lastPlayerPosition.z), rotation,
+        scale
+    );
+    slowAreaInGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+
+    slowAreaWarningGO->GetGlobalTransform().Decompose(translate, rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowWarningStartHeight, lastPlayerPosition.z), rotation,
+        scale
+    );
+    slowAreaWarningGO->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+
+    slowAreaRing->GetParent()->GetGlobalTransform().Decompose(translate, rotation, scale);
+    newGlobalTransform = float4x4::FromTRS(
+        float3(lastPlayerPosition.x, lastPlayerPosition.y + slowRingStartHeight, lastPlayerPosition.z), rotation, scale
+    );
+    slowAreaRing->GetParent()->SetLocalTransform(parentInvertedGlobal * newGlobalTransform);
+}
+
+void Banshee::UpdateLastPlayerPosition()
+{
+    if (!character)
     {
-        animComponent->UseTrigger("Death");
-        currentState = BansheeStates::Dead;
+        lastPlayerPosition = parent->GetGlobalTransform().TranslatePart();
         return;
     }
 
-    Character::TakeDamage(amount);
+    lastPlayerPosition = character->GetLastPosition();
 }

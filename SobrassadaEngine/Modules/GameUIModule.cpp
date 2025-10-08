@@ -79,6 +79,10 @@ update_status GameUIModule::Render(float deltaTime)
 {
     glDisable(GL_DEPTH_TEST);
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Custom Pre UI Shaders Pass");
+    App->GetShaderScriptModule()->RenderPreUiPassShaders(deltaTime);
+    glPopDebugGroup();
+
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Game UI Pass");
     for (CanvasComponent* canvas : canvases)
     {

@@ -145,7 +145,7 @@ void SpotLightComponent::RenderEditorInspector()
 
     ImGui::Text("Spot light parameters");
 
-    if (ImGui::SliderFloat("Range", &range, 0.0f, 100.0f))
+    if (ImGui::SliderFloat("Range", &range, 0.0f, 200.0f))
     {
         spotCamera.farPlaneDistance = range;
     }

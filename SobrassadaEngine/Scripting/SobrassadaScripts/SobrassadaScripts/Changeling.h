@@ -13,13 +13,13 @@ enum class ChangelingVersions
 {
     RANDOM,
     DEFAULT,
-    SNEAK,
     BLOCK,
 };
 
 struct ChangelingDashTrailContainer
 {
     GameObject* dashTrailObject               = nullptr;
+    GameObject* dashTrailMidChildBaseObject   = nullptr;
     GameObject* dashTrailMidChildMeshObject   = nullptr;
     GameObject* dashTrailStartChildMeshObject = nullptr;
     GameObject* dashTrailEndChildMeshObject   = nullptr;
@@ -34,7 +34,7 @@ enum class ChangelingStates
     DIG_DOWN_TRANSITION     = 4,
     IDLE_VISIBLE            = 5,
     CHASE                   = 6,
-    BURIED_CHASE            = 7,
+    BURIED_TRAVEL           = 7,
     DASH_ATTACK_PREPARATION = 8,
     DASH_ATTACK             = 9,
     DASH_ATTACK_WIGGLE      = 10,
@@ -42,10 +42,9 @@ enum class ChangelingStates
     DASH_CHAIN_ATTACK       = 12,
     BITE_ATTACK             = 13,
     BITE_ATTACK_COOLDOWN    = 14,
-    FINAL_ATTACK            = 15,
-    DAMAGED                 = 16,
-    DYING                   = 17,
-    HIGHLIGHTING            = 18,
+    DAMAGED                 = 15,
+    DYING                   = 16,
+    HIGHLIGHTING            = 17,
 };
 
 enum class HighlightingStates
@@ -77,13 +76,13 @@ class Changeling : public Character
     void OnDamageTaken(int amount) override;
     void PerformAttack() override;
     void HandleState(float deltaTime) override;
-    void UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq);
+    void UpdateIdleBuriedState(float deltaTime, float distanceToPlayerSq, bool lastAttack);
     void UpdatePeekState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigUpTransitionState(float deltaTime, float distanceToPlayerSq);
     void UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq);
-    void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq);
-    void UpdateChaseState(float deltaTime, float distanceToPlayerSq);
-    void UpdateBuriedChaseState(float deltaTime, float distanceToPlayerSq);
+    void UpdateBuriedTravelState(float deltaTime, float distanceToPlayerSq);
+    void UpdateIdleVisibleState(float deltaTime, float distanceToPlayerSq, bool lastAttack);
+    void UpdateChaseState(float deltaTime, float distanceToPlayerSq, bool lastAttack);
     void UpdateDashAttackPreparationState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDashAttackWiggleState(float deltaTime, float distanceToPlayerSq);
@@ -91,21 +90,18 @@ class Changeling : public Character
     void UpdateDashChainAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateBiteAttackCooldownState(float deltaTime, float distanceToPlayerSq);
-    void UpdateFinalAttackState(float deltaTime, float distanceToPlayerSq);
     void UpdateDamagedState(float deltaTime, float distanceToPlayerSq);
     void UpdateDyingState(float deltaTime, float distanceToPlayerSq);
     void UpdateHighlightState(float deltaTime, float distanceToPlayerSq);
 
-    bool ST_BuryUp(float deltaTime, float distanceToPlayerSq);
-    bool ST_StartChase(float deltaTime, float distanceToPlayerSq);
-    bool ST_StartBuriedChase(float deltaTime, float distanceToPlayerSq);
+    bool ST_BuryUp(float deltaTime, float distanceToPlayerSq, bool lastAttack);
+    bool ST_StartChase(float deltaTime, float distanceToPlayerSq, bool lastAttack);
     bool ST_Damaged();
     bool ST_Peek(float deltaTime, float distanceToPlayerSq);
     bool ST_DashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_AimNextDashChainAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_AimNextDashAttack(float deltaTime, float distanceToPlayerSq);
     bool ST_BiteAttack(float deltaTime, float distanceToPlayerSq);
-    bool ST_FinalAttack(float deltaTime, float distanceToPlayerSq);
 
   private:
     void ValidateSetup();
@@ -133,6 +129,7 @@ class Changeling : public Character
 
     std::string dashTrailObjectName     = "DashTrailObject";
     std::string dashTrailStartMeshName  = "DashTrailStartMesh";
+    std::string dashTrailMidBaseName    = "DashTrailMid";
     std::string dashTrailMidMeshName    = "DashTrailMidMesh";
     std::string dashTrailEndMeshName    = "DashTrailEndMesh";
     std::string dashTrailCollisionName  = "DashTrailCollision";
@@ -141,8 +138,6 @@ class Changeling : public Character
     std::vector<ChangelingDashTrailContainer> dashTrailMeshObjects;
     std::vector<GameObject*> dashTrailColliderObjects;
     std::vector<CubeColliderComponent*> dashAreaColliders;
-    GameObject* finalAttackObject;
-    CapsuleColliderComponent* finalAttackCollider;
 
     float stateTimer                  = 0.f;
 
@@ -162,25 +157,22 @@ class Changeling : public Character
     HighlightingStates currentHighlightingState = HighlightingStates::IDLE;
     float highlightDuration                     = 3.f;
 
+    float peekChancePerSecond                   = 0.1f;
+    float3 spottedLocation                      = float3::nan;
+    float buriedTravelSpeed                     = 3.5f;
+    float secondsUntilCompletelyBuried          = 2.0f;
+
     // Default specific
     float chaseSpeed                            = 1.0f;
     float chaseAcceleration                     = 4.0f;
-
-    // Sneak specific
-    float maxSneakAngleDegrees                  = 45.0f;
-    float minSneakSpeed                         = 0.25f;
-    float maxSneakSpeed                         = 1.0f;
-    float distanceToPlayerForMaxSneakSpeed      = 0.0f;
-    float sneakAcceleration                     = 4.0f;
-    float peekChancePerSecond                   = 0.1f;
-    float3 spottedLocation                      = float3::nan;
-    float3 spottedViewingDirection              = float3::nan;
 
     // Block specific
     bool dashRight                              = false;
     unsigned short dashIndex                    = 0;
     float dashAngleDegrees                      = 40.0f;
-    float timeBetweenDashes                     = 2.f;
+    float timeBetweenDashes                     = 1.5f;
+
+    float biteVfxTimer                          = 0.0f;
 
     // VFX
     // Dig up
@@ -190,6 +182,24 @@ class Changeling : public Character
     std::string vfxDigUpHoleName                = "VFX_DigUpHole";
     GameObject* vfxDigUpHoleObject              = nullptr;
 
+    std::string vfxDashTrailName                = "VFX_DashTrail";
+    std::vector<GameObject*> vfxDashTrailObjects;
+
+    std::string vfxDropDownName     = "VFX_Drop";
+    GameObject* vfxDropDown         = nullptr;
+
+    std::string vfxDashName         = "VFX_Dash";
+    GameObject* vfxDash             = nullptr;
+
+    std::string vfxDigDownName      = "VFX_DigDown";
+    GameObject* vfxDigDown          = nullptr;
+
+    std::string vfxBiteName         = "VFX_Bite";
+    GameObject* vfxBite             = nullptr;
+
+    std::string vfxDigName          = "VFX_Dig";
+    GameObject* vfxDig              = nullptr;
+
     // Audio
-    AudioSourceComponent* audioComp             = nullptr;
+    AudioSourceComponent* audioComp = nullptr;
 };

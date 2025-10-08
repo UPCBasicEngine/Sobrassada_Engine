@@ -164,7 +164,10 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
                 scriptData.AddMember(name, arr, allocator);
 
                 break;
-            }
+            };
+            case InspectorField::FieldType::Audio:
+                scriptData.AddMember(name, *(uint32_t*)field.data, allocator);
+                break;
             }
         }
 
