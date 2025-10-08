@@ -527,7 +527,7 @@ void LibraryModule::CopyScenes(const std::string& path) const
 
 void LibraryModule::CopyScene(const std::string& pathFile) const
 {
-    const std::string destination = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
+    const std::string destination = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
 
     FileSystem::Copy(pathFile.c_str(), destination.c_str());
 }
