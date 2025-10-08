@@ -15,6 +15,7 @@
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
+#include "MusicManager.h"
 #include "ParticleSystemComponent.h"
 #include "ProjectModule.h"
 #include "Projectile.h"
@@ -2095,6 +2096,8 @@ void CuChulainn::ToggleRiastrad()
 
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
+
+        if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
     }
     else
     {
@@ -2141,6 +2144,12 @@ void CuChulainn::ToggleRiastrad()
             float4 newColor       = mat->GetMaterial().diffColor;
             newColor              = float4::one;
             mat->SetDiffColor(newColor);
+        }
+
+        GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
+        if (musicManager != nullptr)
+        {
+            musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->ResetToCachedGameState();
         }
     }
 }

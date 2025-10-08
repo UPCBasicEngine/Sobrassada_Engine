@@ -28,5 +28,5 @@ class MagicBarrier : public Script
     // Audio
     AudioSourceComponent* audioComp    = nullptr;
     
-    AkUniqueID onRemovalAudioEvent  = 0;
+    AkUniqueID gameStateAudioEvent  = 0;
 };

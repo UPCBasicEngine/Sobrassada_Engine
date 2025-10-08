@@ -18,6 +18,7 @@
 #include "RaycastController.h"
 #include "ResourcesModule.h"
 #include "ScriptComponent.h"
+#include "Scripting/SobrassadaScripts/SobrassadaScripts/Wwise_IDs.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Lights/DirectionalLightComponent.h"
 #include "Standalone/Lights/PointLightComponent.h"
@@ -255,6 +256,11 @@ void SceneModule::CloseScene(bool keepResources)
                                std::to_string(loadedScene->GetSceneUID()) + SCENE_EXTENSION;
         FileSystem::Delete(tmpScene.c_str());
         inPlayMode = false;
+    }
+
+    if (loadedScene != nullptr)
+    {
+        AK::SoundEngine::PostEvent(AK::EVENTS::STOP_BACKGROUND_MUSIC, 0);
     }
 
     // TODO Warning dialog before closing scene without saving

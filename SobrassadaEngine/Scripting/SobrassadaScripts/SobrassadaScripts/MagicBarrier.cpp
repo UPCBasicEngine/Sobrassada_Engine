@@ -5,14 +5,16 @@
 
 #include "Character.h"
 #include "GameObject.h"
+#include "MusicManager.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Wwise_IDs.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 
 MagicBarrier::MagicBarrier(GameObject* parent) : Script(parent)
 {
     fields.emplace_back("Area tag", InspectorField::FieldType::InputText, &areaTagString);
-    fields.emplace_back("Removal audio event", InspectorField::FieldType::Audio, &onRemovalAudioEvent);
+    fields.emplace_back("Game state audio event", InspectorField::FieldType::Audio, &gameStateAudioEvent);
 }
 
 bool MagicBarrier::Init()
@@ -52,7 +54,15 @@ void MagicBarrier::EnemyDied()
     enemiesInArea--;
     if (enemiesInArea <= 0)
     {
+        if (audioComp != nullptr && gameStateAudioEvent != 0)
+        {
+            GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
+            if (musicManager != nullptr)
+            {
+                musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->SetCachedGameStateID(gameStateAudioEvent);
+            }
+            audioComp->EmitEvent(gameStateAudioEvent);
+        }
         parent->SetEnabledRecursive(false);
-        if (audioComp != nullptr && onRemovalAudioEvent != 0) audioComp->EmitEvent(onRemovalAudioEvent);
     }
 }

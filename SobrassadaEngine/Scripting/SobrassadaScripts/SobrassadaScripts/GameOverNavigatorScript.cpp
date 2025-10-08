@@ -63,6 +63,7 @@ void GameOverNavigatorScript::Update(float)
         builtOnce = true;
         // GLOG: first time build completed
         // GLOG("[GONAV] Built -> items=%zu arrows=%zu", menuItems.size(), arrowImages.size());
+        if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_MENU);
     }
 
     // ensure exactly one arrow is enabled
