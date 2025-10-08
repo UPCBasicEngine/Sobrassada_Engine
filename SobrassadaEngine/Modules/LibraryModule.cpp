@@ -33,11 +33,13 @@ bool LibraryModule::Init()
     if (App->GetProjectModule()->IsProjectLoaded())
     {
         const std::string& engineDefaultPath = ENGINE_DEFAULT_ASSETS;
+#ifndef GAME
         SceneImporter::CreateLibraryDirectories(App->GetProjectModule()->GetLoadedProjectPath());
         SceneImporter::CreateLibraryDirectories(engineDefaultPath);
         CopyScenes(App->GetProjectModule()->GetLoadedProjectPath());
         CopyMetadata(App->GetProjectModule()->GetLoadedProjectPath());
         CopyMetadata(engineDefaultPath);
+#endif
         LoadLibraryMaps(App->GetProjectModule()->GetLoadedProjectPath());
         LoadLibraryMaps(engineDefaultPath);
     }
@@ -118,7 +120,7 @@ bool LibraryModule::LoadScene(const char* file, bool reload) const
 
     const std::string path = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
 
-    bool loaded = FileSystem::LoadJSON((path + std::string(file)).c_str(), doc);
+    bool loaded            = FileSystem::LoadJSON((path + std::string(file)).c_str(), doc);
 
     if (!loaded)
     {
