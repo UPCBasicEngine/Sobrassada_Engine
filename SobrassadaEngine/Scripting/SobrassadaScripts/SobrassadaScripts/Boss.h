@@ -316,6 +316,7 @@ class Boss : public Character
     std::string spoutName                      = "";
 
     // Alternate mechanic
+    BossStates lastState                       = BossStates::None;
     int repeatedState                          = 0;
     const int maxRepeats                       = 2;
     const std::vector<BossStates> phase1States = {BossStates::ShieldStrikes, BossStates::OverheadStrike};

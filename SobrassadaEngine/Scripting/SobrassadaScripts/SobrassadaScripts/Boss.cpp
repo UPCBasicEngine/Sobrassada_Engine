@@ -738,52 +738,61 @@ void Boss::OnDamageTaken(int amount)
     if (currentAction == BossActions::Idle || currentAction == BossActions::Chase ||
         currentAction == BossActions::Waiting)
     {
-        agentAI->PauseMovement();
+        int num = uniformSteps(rng);
 
-        float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
-
-        float dot      = hitCollisionNormal.Dot(forward);
-
-        int num        = uniformGetHit(rng);
-
-        if (dot == 0.0f)
+        if (num == 1)
         {
-            dot = (num == 1) ? 1.0f : -1.0f;
-        }
+            agentAI->PauseMovement();
 
-        if (dot > 0.0f)
-        {
-            switch (num)
+            float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
+
+            float dot      = hitCollisionNormal.Dot(forward);
+
+            num            = uniformGetHit(rng);
+
+            if (dot == 0.0f)
             {
-            case 1:
-                if (animComponent) animComponent->UseTrigger("GetHit1");
-                currentAction = BossActions::GetHit1;
-                break;
-            case 2:
-                if (animComponent) animComponent->UseTrigger("GetHit2");
-                currentAction = BossActions::GetHit2;
-                break;
-            default:
-                GLOG("ERROR: Ferdiad forward hit anim");
-                break;
+                dot = (num == 1) ? 1.0f : -1.0f;
+            }
+
+            if (dot > 0.0f)
+            {
+                switch (num)
+                {
+                case 1:
+                    if (animComponent) animComponent->UseTrigger("GetHit1");
+                    currentAction = BossActions::GetHit1;
+                    break;
+                case 2:
+                    if (animComponent) animComponent->UseTrigger("GetHit2");
+                    currentAction = BossActions::GetHit2;
+                    break;
+                default:
+                    GLOG("ERROR: Ferdiad forward hit anim");
+                    break;
+                }
+            }
+            else
+            {
+                switch (num)
+                {
+                case 1:
+                    if (animComponent) animComponent->UseTrigger("GetHit1Behind");
+                    currentAction = BossActions::GetHit1Behind;
+                    break;
+                case 2:
+                    if (animComponent) animComponent->UseTrigger("GetHit2Behind");
+                    currentAction = BossActions::GetHit2Behind;
+                    break;
+                default:
+                    GLOG("ERROR: Ferdiad forward hit anim");
+                    break;
+                }
             }
         }
         else
         {
-            switch (num)
-            {
-            case 1:
-                if (animComponent) animComponent->UseTrigger("GetHit1Behind");
-                currentAction = BossActions::GetHit1Behind;
-                break;
-            case 2:
-                if (animComponent) animComponent->UseTrigger("GetHit2Behind");
-                currentAction = BossActions::GetHit2Behind;
-                break;
-            default:
-                GLOG("ERROR: Ferdiad forward hit anim");
-                break;
-            }
+            GLOG("NOPE %d", num)
         }
     }
 
@@ -807,12 +816,14 @@ void Boss::HandleState(float deltaTime)
 {
     if (!mirageActivated && currentHealth <= mirageActivation[phase - 1])
     {
+        lastState    = currentState;
         stateEnter   = true;
         currentState = BossStates::Mirage;
     }
 
     if (phase != 3 && currentHealth <= phaseSwap[phase - 1])
     {
+        lastState    = currentState;
         stateEnter   = true;
         currentState = BossStates::ChangePhase;
     }
@@ -913,7 +924,8 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate = 100;
+        shieldStrikesRate = 95;
+        overheadStrikeRate = 100;
         break;
 
     case BossDistance::Near:
@@ -922,12 +934,12 @@ void Boss::ChooseNextStateFirstPhase()
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate  = 60;
+        shieldStrikesRate  = 50;
         overheadStrikeRate = 100;
         break;
 
     case BossDistance::Distant:
-        shieldStrikesRate  = 50;
+        shieldStrikesRate  = 40;
         overheadStrikeRate = 100;
         break;
 
@@ -980,19 +992,20 @@ void Boss::ChooseNextStateSecondPhase()
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate = 70;
+        shieldStrikesRate = 60;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Medium:
         shieldStrikesRate = 50;
-        shieldBlastRate   = 60;
+        shieldBlastRate   = 70;
         waterSpoutsRate   = 100;
         break;
 
     case BossDistance::Distant:
         shieldStrikesRate = 30;
-        shieldBlastRate   = 65;
+        shieldBlastRate   = 75;
         waterSpoutsRate   = 100;
         break;
 
@@ -1010,9 +1023,10 @@ void Boss::ChooseNextStateSecondPhase()
     }
     // FOR TESTING
     // waterSpoutsRate   = -1;
-    // shieldStrikesRate = -1;
+    //shieldStrikesRate = -1;
+    //shieldBlastRate   = -1;
 
-    int num = uniformDist(rng);
+    int num           = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1050,27 +1064,28 @@ void Boss::ChooseNextStateThirdPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate  = 90;
-        overheadStrikeRate = 95;
+        shieldStrikesRate  = 80;
+        overheadStrikeRate = 85;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Near:
-        shieldStrikesRate  = 70;
-        overheadStrikeRate = 80;
+        shieldStrikesRate  = 50;
+        overheadStrikeRate = 70;
+        shieldBlastRate    = 80;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Medium:
-        shieldStrikesRate  = 35;
-        overheadStrikeRate = 75;
+        shieldStrikesRate  = 30;
+        overheadStrikeRate = 60;
         shieldBlastRate    = 80;
         waterSpoutsRate    = 100;
         break;
 
     case BossDistance::Distant:
         shieldStrikesRate  = 15;
-        overheadStrikeRate = 50;
+        overheadStrikeRate = 45;
         shieldBlastRate    = 85;
         waterSpoutsRate    = 100;
         break;
@@ -2263,7 +2278,15 @@ void Boss::ShieldBlast(float deltaTime)
 
 void Boss::SetState(BossStates newState)
 {
-    if (newState == currentState)
+    BossStates actualState = currentState;
+    if (actualState == BossStates::Mirage || actualState == BossStates::ChangePhase) actualState = lastState;
+
+    if (currentState == BossStates::WaterSpouts && newState == currentState)
+    {
+        repeatedState = maxRepeats;
+    }
+
+    if (newState == actualState)
     {
         repeatedState++;
         if (repeatedState >= maxRepeats)
