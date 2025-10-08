@@ -110,7 +110,7 @@ bool EditorUIModule::Init()
     width                 = App->GetWindowModule()->GetWidth();
     height                = App->GetWindowModule()->GetHeight();
 
-    scenesPath            = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+    scenesPath            = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
     fileDialogCurrentPath = App->GetProjectModule()->GetLoadedProjectPath();
 
     return true;
