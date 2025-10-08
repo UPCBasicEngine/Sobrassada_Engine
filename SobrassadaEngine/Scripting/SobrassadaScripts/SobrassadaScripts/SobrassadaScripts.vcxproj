@@ -512,6 +512,8 @@
     <ClInclude Include="MovingUVTransparent.h" />
     <ClInclude Include="MovingUVClipErode.h" />
     <ClInclude Include="Mushroom.h" />
+    <ClInclude Include="MusicManager.h" />
+    <ClInclude Include="MusicTrigger.h" />
     <ClInclude Include="OptionsMenuSwitcherScript.h" />
     <ClInclude Include="PauseMenuScript.h" />
     <ClInclude Include="GodMode.h" />
@@ -2110,6 +2112,8 @@
     <ClCompile Include="MovingUVTransparent.cpp" />
     <ClCompile Include="MovingUVClipErode.cpp" />
     <ClCompile Include="Mushroom.cpp" />
+    <ClCompile Include="MusicManager.cpp" />
+    <ClCompile Include="MusicTrigger.cpp" />
     <ClCompile Include="OptionsMenuSwitcherScript.cpp" />
     <ClCompile Include="PauseMenuScript.cpp" />
     <ClCompile Include="GodMode.cpp" />

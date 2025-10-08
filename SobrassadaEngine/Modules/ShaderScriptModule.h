@@ -29,6 +29,7 @@ class ShaderScriptModule : public Module
     void RenderTransparentPassShaders(float deltaTime, CameraComponent* camera);
     void RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera);
     void RenderPostEffectsPassShaders(float deltaTime, CameraComponent* camera);
+    void RenderPreUiPassShaders(float deltaTime);
     void RenderUiPassShaders(float deltaTime);
 
   private:
@@ -36,5 +37,6 @@ class ShaderScriptModule : public Module
     std::vector<std::pair<ShaderScriptComponent*, unsigned int>> transparentComponents;
     std::vector<std::pair<ShaderScriptComponent*, unsigned int>> postLightingComponents;
     std::vector<std::pair<ShaderScriptComponent*, unsigned int>> postEffectsComponents;
+    std::vector<std::pair<ShaderScriptComponent*, unsigned int>> preUiComponents;
     std::vector<std::pair<ShaderScriptComponent*, unsigned int>> uiComponents;
 };

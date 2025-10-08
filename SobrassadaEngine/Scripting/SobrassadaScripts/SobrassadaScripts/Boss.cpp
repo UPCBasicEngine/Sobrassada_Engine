@@ -1163,6 +1163,34 @@ void Boss::Death(float deltaTime)
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
         }
 
+void Boss::Death(float deltaTime)
+{
+    if (stateEnter)
+    {
+        stateEnter        = false;
+        actionTriggerDone = false;
+        currentAction     = BossActions::Death;
+    }
+
+    switch (currentAction)
+    {
+    case BossActions::Death:
+        if (!actionTriggerDone)
+        {
+            actionTriggerDone = true;
+
+            agentAI->PauseMovement();
+
+            if (playerScript) playerScript->RemoveEnemy();
+
+            ResetValues(false);
+
+            DeleteColliders();
+
+            if (animComponent) animComponent->UseTrigger("Death");
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
+        }
+
         if (animComponent && animComponent->IsFinished())
         {
             stopLogic = true;

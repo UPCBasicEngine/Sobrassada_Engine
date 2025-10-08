@@ -6,6 +6,8 @@
 #include "Globals.h"
 #include "InputModule.h"
 #include "PauseMenuScript.h"
+
+#include "MusicManager.h"
 #include "ProjectModule.h"
 #include "SDL.h"
 #include "Scene.h"
@@ -16,6 +18,7 @@
 #include "Wwise_IDs.h"
 #include <algorithm>
 
+class MusicManager;
 extern bool gGameOverActive; // block pause if Game Over is active
 
 bool PauseMenuScript::Init()
@@ -43,13 +46,11 @@ void PauseMenuScript::Show()
 {
     if (gGameOverActive) return; // do not open pause on Game Over
     if (isOpen) return;
-
     CachePanel();
     if (cachedTarget)
     {
         cachedTarget->SetEnabledRecursive(true);
         cachedTarget->UpdateTransformForGOBranch();
-
         // initial render/setup
         BuildFromPanel();
         selectedIndex = 0;
@@ -60,6 +61,12 @@ void PauseMenuScript::Show()
     if (auto* t = AppEngine->GetGameTimer(); t && !t->IsPaused()) t->TogglePause();
     isOpen    = true;
     builtOnce = true;
+
+    if (audio != nullptr)
+    {
+        GLOG("Switching Gamestate to menu")
+        audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_MENU);
+    }
 
     // GLOG("[PAUSE] Show -> panel='%s'", cachedTarget ? cachedTarget->GetName().c_str() : "(null)");
 }
@@ -73,6 +80,10 @@ void PauseMenuScript::Close()
 
     isOpen    = false;
     builtOnce = false;
+
+    GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
+    if (musicManager != nullptr)
+        musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->ResetToCachedGameState();
 
     // GLOG("[PAUSE] Close");
 }

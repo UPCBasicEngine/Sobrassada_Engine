@@ -3,7 +3,7 @@
 #include "Application.h"
 #include "ArcherProjectile.h"
 #include "AttackVfxSpritesheet.h"
-#include "Banshee_v2.h"
+#include "Banshee.h"
 #include "Boss.h"
 #include "CameraComponent.h"
 #include "Character.h"
@@ -126,6 +126,12 @@ bool Character::Init()
         {
             GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
         }
+
+            GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
+        if (glowObject) glow = glowObject;
+        if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
+
+       
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -236,9 +242,9 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         if (enemyScript && enemyScript->GetCharacterType() == CharacterType::Banshee)
         {
             CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
-            Banshee_v2* bansheeScript = otherScript->GetScriptByType<Banshee_v2>();
+            Banshee* bansheeScript   = otherScript->GetScriptByType<Banshee>();
 
-            if (playerScript && bansheeScript && bansheeScript->GetState() == Banshee_v2_States::SlowArea)
+            if (playerScript && bansheeScript && bansheeScript->GetState() == BansheeStates::SlowArea)
             {
                 playerScript->StartCurse();
                 TakeDamage(bansheeScript->GetSlowAreaDamage());

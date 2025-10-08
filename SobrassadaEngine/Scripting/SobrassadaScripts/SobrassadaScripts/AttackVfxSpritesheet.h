@@ -48,6 +48,8 @@ class AttackVfxSpritesheet : public Script
     UID otherImageUID              = 0;
     UID otherImageBindlessUID      = 0;
 
+    float2 step                 = float2::zero;
+
     bool isOneShot                 = false;
     bool isAdditive                = false;
 
@@ -63,4 +65,11 @@ class AttackVfxSpritesheet : public Script
 
     bool onlyOnce               = false;
     bool finished               = false;
+
+    bool useRowCol              = false;
+    int rows                    = 1;
+    int cols                    = 1;
+
+    bool useAnimDuration        = false;
+    float animationDuration     = 0.1f;
 };

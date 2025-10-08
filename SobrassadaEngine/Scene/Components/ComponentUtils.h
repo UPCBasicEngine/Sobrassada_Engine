@@ -68,7 +68,7 @@ enum class ColliderLayer : uint8_t
     WALL
 };
 
-constexpr const char* ColliderLayerStrings[] = {"World Objects", "Triggers",          "Enemies", "Player",
+constexpr const char* ColliderLayerStrings[] = {"World Objects",     "Triggers",         "Enemies", "Player",
                                                 "Player projectile", "Enemy projectile", "Wall"};
 
 typedef Delegate<void, GameObject*, float3, ColliderLayer> CollisionDelegate;
@@ -84,10 +84,12 @@ enum class ShaderScriptType : int
     TRANSPARENT_PASS,
     POST_LIGHTING_PASS,
     POST_EFFECTS_PASS,
-    UI_PASS
+    UI_PASS,
+    PRE_UI_PASS
 };
 
-constexpr const char* ShaderScriptTypeStrings[] = {"Opaque", "Transparent", "Post lighting", "Post effects", "UI"};
+constexpr const char* ShaderScriptTypeStrings[] = {"Opaque",       "Transparent", "Post lighting",
+                                                   "Post effects", "UI",          "Pre UI"};
 constexpr int ShaderScriptTypeStringsSize       = sizeof(ShaderScriptTypeStrings) / sizeof(char*);
 
 enum class VolumetricAreaType : int
@@ -98,7 +100,6 @@ enum class VolumetricAreaType : int
 
 constexpr const char* VolumetricAreaTypeStrings[] = {"Box", "Sphere"};
 constexpr int VolumetricAreaTypeStringsSize       = sizeof(VolumetricAreaTypeStrings) / sizeof(char*);
-
 
 class ComponentUtils
 {
