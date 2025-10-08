@@ -57,6 +57,7 @@ class GeometryBatch
     const unsigned int GetVertexCount() const { return totalVertexCount; }
     const unsigned int GetIndexCount() const { return totalIndexCount; }
     void ResetUpdatedOnce() { updatedOnce = false; }
+    void UpdateBuffers(const std::vector<MeshComponent*>& meshesToRender);
 
     void SOBRASADA_API_ENGINE BindBonesBuffer();
     void SOBRASADA_API_ENGINE UnbindBonesBuffer();
@@ -65,7 +66,6 @@ class GeometryBatch
 
   private:
     void LockBuffer();
-    void UpdateBuffers(const std::vector<MeshComponent*>& meshesToRender);
     void WaitBuffer();
 
     void GenerateCommands(const std::vector<MeshComponent*>& meshes, std::vector<Command>& commands);
