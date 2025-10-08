@@ -7,14 +7,25 @@
 #include "GameObject.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 
 MagicBarrier::MagicBarrier(GameObject* parent) : Script(parent)
 {
     fields.emplace_back("Area tag", InspectorField::FieldType::InputText, &areaTagString);
+    fields.emplace_back("Removal audio event", InspectorField::FieldType::Audio, &onRemovalAudioEvent);
 }
 
 bool MagicBarrier::Init()
 {
+    // Audio
+    audioComp = parent->GetComponent<AudioSourceComponent*>();
+    if (audioComp == nullptr)
+    {
+        parent->SetEnabled(false);
+        GLOG("[ERROR] Script parent does not contain an audio component")
+        return false;
+    }
+    
     enemiesInArea = 0;
     areaTag = HashString(areaTagString);
 
@@ -42,5 +53,6 @@ void MagicBarrier::EnemyDied()
     if (enemiesInArea <= 0)
     {
         parent->SetEnabledRecursive(false);
+        if (audioComp != nullptr && onRemovalAudioEvent != 0) audioComp->EmitEvent(onRemovalAudioEvent);
     }
 }
