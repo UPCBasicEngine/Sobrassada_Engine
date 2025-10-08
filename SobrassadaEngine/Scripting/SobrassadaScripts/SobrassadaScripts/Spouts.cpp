@@ -147,9 +147,10 @@ void Spouts::Update(float deltaTime)
 
         if (!bossControlled)
         {
+            particleGOB->SetEnabled(true);
             particles_bot->Init();
         }
-
+        particleGOT->SetEnabled(true);
         particles_top->Init();
 
         // Tornado Water
@@ -186,7 +187,7 @@ void Spouts::Update(float deltaTime)
         float4x4 waterMeshTransform = waterMesh->GetLocalTransform();
         waterMeshTransform          = waterMeshTransform * float4x4::RotateY(rotationCylinder * deltaTime);
         waterMesh->SetLocalTransform(waterMeshTransform);
-        
+
         chargingTimer += deltaTime;
 
         if (chargingTimer >= explosionDuration) explosion->SetEnabled(false);
@@ -196,6 +197,8 @@ void Spouts::Update(float deltaTime)
             tornadoWater->SetEnabled(false);
             waterMesh->SetEnabled(false);
             blueWaves->SetEnabled(false);
+            particleGOB->SetEnabled(false);
+            particleGOT->SetEnabled(false);
             shaderScript->ResetScript("MovingUVTransparent");
 
             damageCollider->SetEnabled(false);
