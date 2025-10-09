@@ -221,6 +221,7 @@ void Spouts::Update(float deltaTime)
 
 void Spouts::DisableCollider()
 {
+    if (!bossControlled) return;
     damageCollider->SetEnabled(false);
     damageTimer = 0.0f;
     damageGiven = true;

@@ -192,8 +192,11 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
     Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
     if (spoutsScript)
     {
-        TakeDamage(spoutsScript->GetDamage());
-        spoutsScript->DisableCollider();
+        if (!spoutsScript->bossControlled)
+        {
+            TakeDamage(spoutsScript->GetDamage());
+            spoutsScript->DisableCollider();
+        }
     }
 }
 
@@ -314,6 +317,15 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
             {
                 TakeDamage(fireballScript->GetDamage());
                 damageCollider->SetEnabled(false);
+            }
+        }
+
+        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+        if (spoutsScript)
+        {
+            if (spoutsScript->bossControlled)
+            {
+                TakeDamage(spoutsScript->GetDamage());
             }
         }
     }
