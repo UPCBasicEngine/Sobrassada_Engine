@@ -35,6 +35,7 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
         {"Rotation Speed Tornado After", InspectorField::FieldType::Float, &rotationSpeedTornadoAfter, 0.0f, 180.0f}
     );
     fields.push_back({"Water Spout Duration", InspectorField::FieldType::Float, &spoutWaterTimer, 0.01f, 100.0f});
+    fields.push_back({"Damage Cooldown", InspectorField::FieldType::Float, &damageCooldown, 0.0f, 5.0f});
     fields.push_back({"Character", InspectorField::FieldType::GameObject, &character});
     fields.push_back(
         {"Trigger Spout",
@@ -77,6 +78,16 @@ bool Spouts::Init()
 
 void Spouts::Update(float deltaTime)
 {
+    if (damageGiven)
+    {
+        damageTimer += deltaTime;
+        if (damageTimer >= damageCooldown)
+        {
+            damageGiven = false;
+            damageCollider->SetEnabled(true);
+        }
+    }
+
     if (activationState == ACTIVATION_STATE::SLEEPING)
     {
         if (character == nullptr) return;
@@ -206,6 +217,13 @@ void Spouts::Update(float deltaTime)
             if (chargingTimer >= spoutWaterTimer + 2.0f) activationState = ACTIVATION_STATE::SLEEPING;
         }
     }
+}
+
+void Spouts::DisableCollider()
+{
+    damageCollider->SetEnabled(false);
+    damageTimer = 0.0f;
+    damageGiven = true;
 }
 
 void Spouts::ForceActivate()

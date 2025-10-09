@@ -24,6 +24,7 @@ class Spouts : public Script
     void Update(float deltaTime) override;
     int GetDamage() { return damage; }
     void ForceActivate();
+    void DisableCollider();
 
   private:
     bool enableRune                         = false;
@@ -42,6 +43,10 @@ class Spouts : public Script
     float rotationCylinder                  = 90.0f;
     float rotationSpeedTornadoAfter         = 90.0f;
     float explosionDuration                 = 0.01f;
+
+    float damageTimer                       = 0.0f;
+    float damageCooldown                    = 0.5f;
+    bool damageGiven                        = false;
 
     GameObject* character                   = nullptr;
     GameObject* whiteWaves                  = nullptr;

@@ -127,11 +127,9 @@ bool Character::Init()
             GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
         }
 
-            GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
+        GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
         if (glowObject) glow = glowObject;
         if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
-
-       
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -190,6 +188,13 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             }
         }
     }
+
+    Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+    if (spoutsScript)
+    {
+        TakeDamage(spoutsScript->GetDamage());
+        spoutsScript->DisableCollider();
+    }
 }
 
 void Character::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
@@ -232,7 +237,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
+                                  playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -241,7 +247,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         // Banshee slow area
         if (enemyScript && enemyScript->GetCharacterType() == CharacterType::Banshee)
         {
-            CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
+            CuChulainn* playerScript = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
             Banshee* bansheeScript   = otherScript->GetScriptByType<Banshee>();
 
             if (playerScript && bansheeScript && bansheeScript->GetState() == BansheeStates::SlowArea)
@@ -309,12 +315,6 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 TakeDamage(fireballScript->GetDamage());
                 damageCollider->SetEnabled(false);
             }
-        }
-
-        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
-        if (spoutsScript)
-        {
-            TakeDamage(spoutsScript->GetDamage());
         }
     }
 }
