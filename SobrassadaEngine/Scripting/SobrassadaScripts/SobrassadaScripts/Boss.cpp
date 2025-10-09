@@ -1149,13 +1149,13 @@ void Boss::Death(float deltaTime)
     case BossActions::Death:
         if (!actionTriggerDone)
         {
+            ResetValues(false);
+
             actionTriggerDone = true;
 
             agentAI->PauseMovement();
 
             if (playerScript) playerScript->RemoveEnemy();
-
-            ResetValues(false);
 
             DeleteColliders();
 
