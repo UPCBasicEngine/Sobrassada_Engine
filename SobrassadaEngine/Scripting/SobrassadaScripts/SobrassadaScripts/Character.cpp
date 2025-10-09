@@ -173,6 +173,16 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         {
             arrowProj->Hit(otherObject);
         }
+
+        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+        if (spoutsScript)
+        {
+            if (!spoutsScript->bossControlled)
+            {
+                TakeDamage(spoutsScript->GetDamage());
+                spoutsScript->DisableCollider();
+            }
+        }
     }
 
     if (HashString(otherObject->GetName()) == HashString("BlastArea"))
@@ -186,16 +196,6 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
                 bossScript->DisableBlastArea();
                 TakeDamage(1);
             }
-        }
-    }
-
-    Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
-    if (spoutsScript)
-    {
-        if (!spoutsScript->bossControlled)
-        {
-            TakeDamage(spoutsScript->GetDamage());
-            spoutsScript->DisableCollider();
         }
     }
 }
@@ -240,8 +240,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
-                                  playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
