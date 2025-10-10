@@ -227,7 +227,6 @@ void RenderPass::RenderScene(
     transparentMeshesToRender.clear();
     vertexOffsetMeshesToRender.clear();
     videosToRender.clear();
-    trailsToRender.clear();
     decalsToRender.clear();
     groupedDecals.clear();
 
@@ -260,10 +259,6 @@ void RenderPass::RenderScene(
 
         const UID uid = decal->GetResourceMaterial()->GetUID();
         groupedDecals[uid].push_back(decal);
-
-        // Trails
-        TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
-        if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
     }
 
 #ifdef OPTICK
@@ -1468,6 +1463,15 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             );
         }
         batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
+
+        //Trails does not want to be renderer if I put it in the first for
+        std::vector<TrailComponent*> trailsToRender;
+        for (const auto& gameObject : objectsToRender)
+        {
+            // Trails
+            TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
+            if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
+        }
 
         glEnable(GL_BLEND);
         // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

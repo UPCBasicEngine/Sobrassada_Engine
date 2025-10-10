@@ -10,7 +10,6 @@
 class GameObject;
 class MeshComponent;
 class DecalComponent;
-class TrailComponent;
 class VideoComponent;
 class GBuffer;
 class SSAO;
@@ -119,7 +118,6 @@ class RenderPass
     std::vector<MeshComponent*> opaqueMeshesToRender;
     std::vector<DecalComponent*> decalsToRender;
     std::unordered_map<UID, std::vector<DecalComponent*>> groupedDecals;
-    std::vector<TrailComponent*> trailsToRender;
 
     std::vector<MeshComponent*> transparentMeshesToRender;
     std::vector<MeshComponent*> vertexOffsetMeshesToRender;
