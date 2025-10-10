@@ -488,7 +488,7 @@ void CreateDepthReductionTexture(unsigned int& texture, int width, int height)
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, width, height);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -516,37 +516,23 @@ void RenderPass::ShadowMapPassRender(
     int currentWidth                   = gBufferwidth;
     int currentHeight                  = gBufferheight;
 
-    bool firstPass                     = true;
-
     unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
     glUseProgram(depthReductionProgram);
 
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::DepthCompute", Optick::Category::Rendering)
-#endif
+    glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
     while (currentWidth > 1 || currentHeight > 1)
     {
-#ifdef OPTICK
-        OPTICK_CATEGORY("RenderPass::ShadowMap::DepthCompute::Dispatch", Optick::Category::Rendering)
-#endif
         int groupsX = (currentWidth + 7) / 8;
         int groupsY = (currentHeight + 3) / 4;
 
-        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glBindTextureUnit(0, currentInput);
 
         glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
-        glUniform1i(glGetUniformLocation(depthReductionProgram, "firstPass"), firstPass);
 
         glDispatchCompute(groupsX, groupsY, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
-#ifdef OPTICK
-        OPTICK_CATEGORY("RenderPass::ShadowMap::DepthCompute::DeleteAndCreateTex", Optick::Category::Rendering)
-#endif
-
-        firstPass = false;
         unsigned int newTex;
         CreateDepthReductionTexture(newTex, groupsX, groupsY);
         glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -559,10 +545,6 @@ void RenderPass::ShadowMapPassRender(
         currentHeight = groupsY;
     }
 
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::LastDepthPass", Optick::Category::Rendering)
-#endif
-
     // Last Pass to make it 1x1
     int groupsX = (currentWidth + 7) / 8;
     int groupsY = (currentHeight + 3) / 4;
@@ -574,10 +556,6 @@ void RenderPass::ShadowMapPassRender(
 
     glDispatchCompute(groupsX, groupsY, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::LastDepthPass::PostDispatch", Optick::Category::Rendering)
-#endif
 
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     float minMax[4] = {0, 0, 0, 0};
@@ -592,7 +570,7 @@ void RenderPass::ShadowMapPassRender(
     glDeleteTextures(1, &currentOutput);
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::RenderShadowMap", Optick::Category::Rendering)
+    OPTICK_CATEGORY("RenderPass::ShadowMap::ComputeShadowMap", Optick::Category::Rendering)
 #endif
 
     // Compute the near and far planes based on the min/max depth values
@@ -675,6 +653,9 @@ void RenderPass::ShadowMapPassRender(
     FrustumPlanes lightFrustum;
     lightFrustum.UpdateFrustumPlanes(lightView, lightProj);
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::ShadowMap::ShadowMapCulling", Optick::Category::Rendering)
+#endif
     std::vector<GameObject*> shadowObjectsToRender;
     App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
 
