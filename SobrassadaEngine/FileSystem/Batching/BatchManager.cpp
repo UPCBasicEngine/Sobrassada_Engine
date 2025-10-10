@@ -129,12 +129,12 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         if (batch->GetIsSpecular())
         {
             program = batch->DoApplyWind() ? App->GetShaderModule()->GetSpecularGeometryVPOPassProgram()
-                                        : App->GetShaderModule()->GetSpecularGeometryPassProgram();
+                                           : App->GetShaderModule()->GetSpecularGeometryPassProgram();
         }
         else
         {
             program = batch->DoApplyWind() ? App->GetShaderModule()->GetMetallicGeometryVPOPassProgram()
-                                        : App->GetShaderModule()->GetMetallicGeometryPassProgram();
+                                           : App->GetShaderModule()->GetMetallicGeometryPassProgram();
         }
 
         glUseProgram(program);
@@ -168,12 +168,12 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                     batch->UseCentralPivot(), batch->UseWindGravity()
                 );
                 glUniform4f(
-                    glGetUniformLocation(program, "windAmplitudes"), batch->GetWindXAmplitude(), batch->GetWindYAmplitude(),
-                    batch->GetWindZAmplitude(), batch->UseConstantMovement()
+                    glGetUniformLocation(program, "windAmplitudes"), batch->GetWindXAmplitude(),
+                    batch->GetWindYAmplitude(), batch->GetWindZAmplitude(), batch->UseConstantMovement()
                 );
                 glUniform4f(
-                    glGetUniformLocation(program, "windFrequency"), batch->GetWindXFrequency(), batch->GetWindYFrequency(),
-                    batch->GetWindZFrequency(), batch->GetWindTimeScale()
+                    glGetUniformLocation(program, "windFrequency"), batch->GetWindXFrequency(),
+                    batch->GetWindYFrequency(), batch->GetWindZFrequency(), batch->GetWindTimeScale()
                 );
             }
         }
@@ -211,21 +211,47 @@ void BatchManager::RenderTransparent(
     OPTICK_CATEGORY("BatchManager::RenderTransparent", Optick::Category::Rendering)
 #endif
 
+    if (meshesToRender.empty()) return;
+
+    std::unordered_map<GeometryBatch*, std::vector<MeshComponent*>> grouped;
+    grouped.reserve(meshesToRender.size());
+
+    for (MeshComponent* mesh : meshesToRender)
+    {
+        if (!mesh) continue;
+        GameObject* owner = mesh->GetParent();
+        if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
+
+        GeometryBatch* b = mesh->GetBatch();
+        if (!b) continue;
+
+        auto& vec = grouped[b];
+        if (vec.empty()) vec.reserve(8);
+        vec.push_back(mesh);
+    }
+
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    for (GeometryBatch* it : transparentBatches)
+    glUseProgram(program);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+    glUniformBlockBinding(program, blockIdx, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    const auto passStart    = std::chrono::high_resolution_clock::now();
+    uint64_t totalTriangles = 0;
+    uint64_t totalVertices  = 0;
+
+    for (GeometryBatch* batch : transparentBatches)
     {
-        std::vector<MeshComponent*> batchMeshes;
-        for (MeshComponent* mesh : meshesToRender)
-        {
-            GameObject* owner = mesh->GetParent();
-            if (!owner || (!owner->IsGloballyEnabled() && !mesh->GetUpdateShaderStorage())) continue;
+        auto it = grouped.find(batch);
+        if (it == grouped.end()) continue;
 
-            if (mesh->GetBatch() == it) batchMeshes.push_back(mesh);
-        }
-
+        std::vector<MeshComponent*>& batchMeshes = it->second;
         if (batchMeshes.empty()) continue;
 
         std::sort(
@@ -255,35 +281,22 @@ void BatchManager::RenderTransparent(
             }
         );
 
-        it->UpdateBuffers(batchMeshes);
-        it->SwapBuffers();
-
-        const auto start = std::chrono::high_resolution_clock::now();
-
-        glUseProgram(program);
-
-        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-        unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-        glUniformBlockBinding(program, blockIdx, 0);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glEnable(GL_BLEND);
+        if (batch->IsAdditive()) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         GeometryBatch* currentBatch = batchMeshes[0]->GetBatch();
         std::vector<MeshComponent*> currentBatchMeshes;
+        currentBatchMeshes.reserve(batchMeshes.size());
 
-        if (it->IsAdditive()) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_CULL_FACE);
 
-        currentBatchMeshes.push_back(batchMeshes[0]);
-        glEnable(GL_BLEND);
+        const auto start = std::chrono::high_resolution_clock::now();
 
-        if (batchMeshes[0]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
-
-        for (size_t i = 1; i < batchMeshes.size(); ++i)
+        for (MeshComponent* mesh : batchMeshes)
         {
-            MeshComponent* mesh  = batchMeshes[i];
-            GeometryBatch* batch = mesh->GetBatch();
-            if (batch == currentBatch)
+            GeometryBatch* meshBatch = mesh->GetBatch();
+            if (meshBatch == currentBatch)
             {
                 currentBatchMeshes.push_back(mesh);
             }
@@ -293,9 +306,7 @@ void BatchManager::RenderTransparent(
                 currentBatch->Render(currentBatchMeshes);
                 currentBatchMeshes.clear();
 
-                if (batchMeshes[i]->GetResourceMaterial()->IsDoubleSided()) glDisable(GL_CULL_FACE);
-                else glEnable(GL_CULL_FACE);
-                currentBatch = batch;
+                currentBatch = meshBatch;
                 currentBatchMeshes.push_back(mesh);
             }
         }
@@ -304,12 +315,26 @@ void BatchManager::RenderTransparent(
         {
             currentBatch->ResetUpdatedOnce();
             currentBatch->Render(currentBatchMeshes);
-            currentBatchMeshes.clear();
         }
+
+        const unsigned int vertexCount  = batch->GetVertexCount();
+        totalVertices                  += vertexCount;
+        totalTriangles                 += (vertexCount / 3);
     }
+
+    const auto passEnd                         = std::chrono::high_resolution_clock::now();
+    const std::chrono::duration<float> elapsed = passEnd - passStart;
+    if (elapsed.count() > 0.0f)
+    {
+        App->GetOpenGLModule()->AddTrianglesPerSecond(static_cast<unsigned int>(totalTriangles / elapsed.count()));
+    }
+    App->GetOpenGLModule()->AddVerticesCount(static_cast<unsigned int>(totalVertices));
+    App->GetOpenGLModule()->AddDrawCallsCount();
 
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, 0);
+    glUseProgram(0);
 }
 
 void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRender, unsigned int cameraUBO)
