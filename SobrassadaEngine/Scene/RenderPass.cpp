@@ -23,7 +23,6 @@
 #include "Standalone/Lights/SpotLightComponent.h"
 #include "Standalone/MeshComponent.h"
 #include "Standalone/TrailComponent.h"
-
 #include "Standalone/VideoComponent.h"
 
 #ifdef OPTICK
@@ -38,6 +37,10 @@
 
 RenderPass::RenderPass()
 {
+    opaqueMeshesToRender.reserve(1000);
+    transparentMeshesToRender.reserve(200);
+    vertexOffsetMeshesToRender.reserve(200);
+
     glGenFramebuffers(1, &depthFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
 
@@ -220,16 +223,52 @@ void RenderPass::RenderScene(
 
     glEnable(GL_STENCIL_TEST);
 
-    std::vector<VideoComponent*> videosToRender;
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Video check && Render", Optick::Category::Rendering)
-#endif
+    opaqueMeshesToRender.clear();
+    transparentMeshesToRender.clear();
+    vertexOffsetMeshesToRender.clear();
+    videosToRender.clear();
+    trailsToRender.clear();
+    decalsToRender.clear();
+    groupedDecals.clear();
+
     for (const auto& gameObject : objectsToRender)
     {
+        // Meshes
+        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
+        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr &&
+            mesh->GetRenderMode() != 1)
+            opaqueMeshesToRender.push_back(mesh);
+
+        else if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
+                 mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
+        {
+            if (mesh->GetResourceMaterial() != nullptr && mesh->GetResourceMaterial()->DoApplyWind())
+                vertexOffsetMeshesToRender.push_back(mesh);
+            else transparentMeshesToRender.push_back(mesh);
+        }
+
+        // Videos
         VideoComponent* video = gameObject->GetComponent<VideoComponent*>();
         if (video != nullptr && video->IsEffectivelyEnabled() && video->IsPlaying()) videosToRender.push_back(video);
+
+        // Decals
+        DecalComponent* decal = gameObject->GetComponent<DecalComponent*>();
+
+        if (decal == nullptr) continue;
+        if (decal->GetResourceMaterial() == nullptr) continue;
+        if (!decal->IsEffectivelyEnabled()) continue;
+
+        const UID uid = decal->GetResourceMaterial()->GetUID();
+        groupedDecals[uid].push_back(decal);
+
+        // Trails
+        TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
+        if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
     }
 
+#ifdef OPTICK
+    OPTICK_CATEGORY("RenderPass::Video Render", Optick::Category::Rendering)
+#endif
     if (videosToRender.size() != 0)
     {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Video Pass");
@@ -287,7 +326,7 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
         NavMeshPassRender(objectsToRender, camera);
-    else GeometryPassRender(objectsToRender, camera);
+    else GeometryPassRender(camera);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -312,7 +351,7 @@ void RenderPass::RenderScene(
     OPTICK_CATEGORY("RenderPass::Decals", Optick::Category::Rendering)
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
-    DecalsPassRender(objectsToRender, camera);
+    DecalsPassRender(camera);
     glPopDebugGroup();
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_GBUFFERS)))
@@ -416,7 +455,7 @@ void RenderPass::RenderScene(
     batchManager->SwapBuffers();
 }
 
-void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
+void RenderPass::GeometryPassRender(CameraComponent* camera) const
 {
     gbuffer->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -426,24 +465,13 @@ void RenderPass::GeometryPassRender(const std::vector<GameObject*>& objectsToRen
 
     glDisable(GL_BLEND);
 
-    std::vector<MeshComponent*> meshesToRender;
-
-    for (const auto& gameObject : objectsToRender)
-    {
-        MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-
-        if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) && mesh->GetBatch() != nullptr &&
-            mesh->GetRenderMode() != 1)
-            meshesToRender.push_back(mesh);
-    }
-
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
         App->GetOpenGLModule()->SetRenderWireframe(true);
-        batchManager->Render(meshesToRender, camera, true);
+        batchManager->Render(opaqueMeshesToRender, camera, true);
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
-    else batchManager->Render(meshesToRender, camera, false);
+    else batchManager->Render(opaqueMeshesToRender, camera, false);
 
     glEnable(GL_BLEND);
 
@@ -1097,30 +1125,11 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glDepthMask(GL_TRUE);
 }
 
-void RenderPass::DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
+void RenderPass::DecalsPassRender(CameraComponent* camera) const
 {
+    if (groupedDecals.empty()) return;
+
     gbuffer->Bind();
-
-    std::vector<DecalComponent*> decalsToRender;
-    std::unordered_map<UID, std::vector<DecalComponent*>> groupedDecals;
-
-    for (const auto& gameObject : objectsToRender)
-    {
-        DecalComponent* decal = gameObject->GetComponent<DecalComponent*>();
-
-        if (decal == nullptr) continue;
-        if (decal->GetResourceMaterial() == nullptr) continue;
-        if (!decal->IsEffectivelyEnabled()) continue;
-
-        const UID uid = decal->GetResourceMaterial()->GetUID();
-        groupedDecals[uid].push_back(decal);
-    }
-
-    if (groupedDecals.empty())
-    {
-        gbuffer->Unbind();
-        return;
-    }
 
     const unsigned int program = App->GetShaderModule()->GetDecalProgram();
 
@@ -1426,83 +1435,61 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         App->GetOpenGLModule()->SetRenderWireframe(false);
     }
 
+    else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
+    {
+        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        App->GetOpenGLModule()->SetRenderWireframe(true);
+        batchManager->RenderTransparent(transparentMeshesToRender, program, camera);
+        App->GetOpenGLModule()->SetRenderWireframe(false);
+    }
+
     else
     {
-        std::vector<MeshComponent*> meshesToRender;
-        std::vector<MeshComponent*> vertexOffsetMeshesToRender;
-        std::vector<TrailComponent*> trailsToRender;
+        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
 
-        for (const auto& gameObject : objectsToRender)
+        batchManager->RenderTransparent(transparentMeshesToRender, program, camera);
+
+        glUseProgram(wPOProgram);
+
+        glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
+        glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+
+        WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+        if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
         {
-            MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
-            if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
-                mesh->GetBatch() != nullptr && mesh->GetRenderMode() == 1)
-            {
-                if (mesh->GetResourceMaterial() != nullptr && mesh->GetResourceMaterial()->DoApplyWind())
-                    vertexOffsetMeshesToRender.push_back(mesh);
-                else meshesToRender.push_back(mesh);
-            }
-
-            TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
-            if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
+            const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+            glUniform4f(
+                glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x, windDirection.y, windDirection.z,
+                windDirection.w
+            );
+            glUniform4f(
+                glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
+                windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()), windConfig->GetGustSpeed()
+            );
         }
+        batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
 
-        if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
-        {
-            glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
-            App->GetOpenGLModule()->SetRenderWireframe(true);
-            batchManager->RenderTransparent(meshesToRender, program, camera);
-            App->GetOpenGLModule()->SetRenderWireframe(false);
-        }
-        else
-        {
-            glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        glEnable(GL_BLEND);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_CULL_FACE);
+        glDepthMask(GL_FALSE);
 
-            batchManager->RenderTransparent(meshesToRender, program, camera);
+        const unsigned int program = App->GetShaderModule()->GetTrailProgram();
+        glUseProgram(program);
 
-            glUseProgram(wPOProgram);
+        unsigned int cameraUBO;
+        if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
+        else cameraUBO = camera->GetUbo();
 
-            glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
-            glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+        unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+        glUniformBlockBinding(program, blockIdx, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-            WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
-            if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
-            {
-                const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
-                glUniform4f(
-                    glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x, windDirection.y,
-                    windDirection.z, windDirection.w
-                );
-                glUniform4f(
-                    glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
-                    windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
-                    windConfig->GetGustSpeed()
-                );
-            }
-            batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
-
-            glEnable(GL_BLEND);
-            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            glDisable(GL_CULL_FACE);
-            glDepthMask(GL_FALSE);
-
-            const unsigned int program = App->GetShaderModule()->GetTrailProgram();
-            glUseProgram(program);
-
-            unsigned int cameraUBO;
-            if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
-            else cameraUBO = camera->GetUbo();
-
-            glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-            unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-            glUniformBlockBinding(program, blockIdx, 0);
-            glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-            for (const auto& trail : trailsToRender)
-                trail->Render(0, nullptr);
-        }
+        for (const auto& trail : trailsToRender)
+            trail->Render(0, nullptr);
     }
 
     glDepthMask(GL_TRUE);
