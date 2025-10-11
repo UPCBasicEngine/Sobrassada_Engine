@@ -41,6 +41,12 @@ RenderPass::RenderPass()
     transparentMeshesToRender.reserve(200);
     vertexOffsetMeshesToRender.reserve(200);
 
+    glGenBuffers(1, &depthReadPBO);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
+    glBufferData(GL_PIXEL_PACK_BUFFER, sizeof(float) * 4, nullptr, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    depthPBOInitialized = true;
+
     glGenFramebuffers(1, &depthFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
 
@@ -528,6 +534,19 @@ void RenderPass::ShadowMapPassRender(
 {
     if (light == nullptr) return;
 
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
+    float* ptr = (float*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+    if (ptr)
+    {
+        lastFrameMinDepth = ptr[0];
+        lastFrameMaxDepth = ptr[1];
+        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    }
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+#ifdef OPTICK
+    OPTICK_PUSH("RenderPass::ShadowMap::DepthReduction");
+#endif
     // Compute shader to find min/max values
     int gBufferwidth          = gbuffer->GetScreenWidth();
     int gBufferheight         = gbuffer->GetScreenHeight();
@@ -568,6 +587,9 @@ void RenderPass::ShadowMapPassRender(
         currentHeight = groupsY;
     }
 
+#ifdef OPTICK
+    OPTICK_PUSH("RenderPass::ShadowMap::DepthReductionLastPass");
+#endif
     // Last Pass to make it 1x1
     int groupsX = (currentWidth + 7) / 8;
     int groupsY = (currentHeight + 3) / 4;
@@ -583,14 +605,28 @@ void RenderPass::ShadowMapPassRender(
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     float minMax[4] = {0, 0, 0, 0};
 
+#ifdef OPTICK
+    OPTICK_PUSH("RenderPass::ShadowMap::ReadingFromGPU");
+#endif
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
     glBindTexture(GL_TEXTURE_2D, currentOutput);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, minMax);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0); // offset 0 en el PBO
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-    float minDepth = minMax[0];
-    float maxDepth = minMax[1];
+#ifdef OPTICK
+    OPTICK_POP();
+#endif
+
+    float minDepth = lastFrameMinDepth;
+    float maxDepth = lastFrameMaxDepth;
 
     glDeleteTextures(1, &currentInput);
     glDeleteTextures(1, &currentOutput);
+
+#ifdef OPTICK
+    OPTICK_POP();
+    OPTICK_POP();
+#endif
 
 #ifdef OPTICK
     OPTICK_CATEGORY("RenderPass::ShadowMap::ComputeShadowMap", Optick::Category::Rendering)

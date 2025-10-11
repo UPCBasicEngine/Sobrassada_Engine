@@ -137,6 +137,11 @@ class RenderPass
     float4x4 lightView;
     float4x4 lightProj;
 
+    unsigned int depthReadPBO                       = 0;
+    bool depthPBOInitialized                        = false;
+    float lastFrameMinDepth                         = 0.0f;
+    float lastFrameMaxDepth                         = 1.0f;
+
     // SpotLight Shadows
     unsigned int spotShadowMaps[TotalShadowMaps]    = {0};
     unsigned int spotShadowMapsGPU[TotalShadowMaps] = {0};
