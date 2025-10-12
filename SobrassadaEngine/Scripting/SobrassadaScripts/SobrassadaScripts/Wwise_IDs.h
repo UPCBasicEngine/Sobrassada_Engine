@@ -14,6 +14,7 @@ namespace AK
     namespace EVENTS
     {
         static const AkUniqueID PLAY_BACKGROUND_MUSIC = 65769146U;
+        static const AkUniqueID PLAY_INTROAUDIO = 669282958U;
         static const AkUniqueID PLAY_LOAD1 = 2715237991U;
         static const AkUniqueID PLAY_LOAD2 = 2715237988U;
         static const AkUniqueID PLAY_LOAD3 = 2715237989U;
