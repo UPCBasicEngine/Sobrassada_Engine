@@ -2140,8 +2140,11 @@ void CuChulainn::ToggleRiastrad()
             if (riastradFireDown) riastradFireDown->SetEnabled(false);
         }
 
-        if (animComponent) animComponent->UseTrigger("Idle");
-        state         = CharacterStates::IDLE;
+        if (state == CharacterStates::RUN)
+        {
+            if (animComponent) animComponent->UseTrigger("Idle");
+            state = CharacterStates::IDLE;
+        }
 
         // TODO: Remove when VFX
         Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
@@ -2313,8 +2316,11 @@ void CuChulainn::StartCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 void CuChulainn::ExportState(PlayerState& playerState) const
 {
@@ -2372,8 +2378,11 @@ void CuChulainn::EndCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 
 bool CuChulainn::IsBlockedAhead(
