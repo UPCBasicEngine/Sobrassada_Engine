@@ -830,7 +830,10 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
     else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT && state != CharacterStates::TAKE_MUSHROOM)
+    {
         Move();
+        controlsLocked = false;
+    }
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
@@ -1876,6 +1879,7 @@ void CuChulainn::Respawn()
     currentHealth  = maxHealth;
     reservedHealth = maxHealth;
     state          = CharacterStates::RESPAWN;
+    controlsLocked = true;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
