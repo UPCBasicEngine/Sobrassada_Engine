@@ -752,6 +752,9 @@ void CuChulainn::OnDeath()
     if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
     if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
     if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+    if (chargeVfx1) chargeVfx1->SetEnabled(false);
+    if (chargeVfx2) chargeVfx2->SetEnabled(false);
+    if (chargeVfx3) chargeVfx3->SetEnabled(false);
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     if (animComponent) animComponent->UseTrigger("Death");
