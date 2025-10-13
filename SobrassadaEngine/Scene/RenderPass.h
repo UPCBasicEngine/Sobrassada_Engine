@@ -6,11 +6,14 @@
 
 #include "rapidjson/document.h"
 #include <unordered_map>
+#include <unordered_set>
 
 class GameObject;
 class MeshComponent;
 class DecalComponent;
 class VideoComponent;
+class TrailComponent;
+class ShaderScriptComponent;
 class GBuffer;
 class SSAO;
 class Framebuffer;
@@ -116,8 +119,9 @@ class RenderPass
   private:
     std::vector<VideoComponent*> videosToRender;
     std::vector<MeshComponent*> opaqueMeshesToRender;
-    std::vector<DecalComponent*> decalsToRender;
+    std::unordered_set<ShaderScriptComponent*> shadersToRender;
     std::unordered_map<UID, std::vector<DecalComponent*>> groupedDecals;
+    std::vector<TrailComponent*> trailsToRender;
 
     std::vector<MeshComponent*> transparentMeshesToRender;
     std::vector<MeshComponent*> vertexOffsetMeshesToRender;

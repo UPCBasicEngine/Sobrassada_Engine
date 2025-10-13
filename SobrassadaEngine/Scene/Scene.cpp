@@ -182,7 +182,7 @@ Scene::Scene(const rapidjson::Value& initialState, UID loadedSceneUID) : sceneUI
             HashString newTag = HashString(tagDataArray[i].GetString());
             CreateTag(std::move(newTag));
 
-            for (int j = 0; j < tagGODataArray[i].Size(); ++j)
+            for (rapidjson::SizeType j = 0; j < tagGODataArray[i].Size(); ++j)
             {
                 RequestTag(
                     HashString(tagDataArray[i].GetString()), GetGameObjectByUID(tagGODataArray[i][j].GetUint64())

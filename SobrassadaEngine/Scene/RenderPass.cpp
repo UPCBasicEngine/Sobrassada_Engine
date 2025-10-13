@@ -233,8 +233,9 @@ void RenderPass::RenderScene(
     transparentMeshesToRender.clear();
     vertexOffsetMeshesToRender.clear();
     videosToRender.clear();
-    decalsToRender.clear();
     groupedDecals.clear();
+    shadersToRender.clear();
+    trailsToRender.clear();
 
     for (const auto& gameObject : objectsToRender)
     {
@@ -256,15 +257,25 @@ void RenderPass::RenderScene(
         VideoComponent* video = gameObject->GetComponent<VideoComponent*>();
         if (video != nullptr && video->IsEffectivelyEnabled() && video->IsPlaying()) videosToRender.push_back(video);
 
+        // Trails
+        TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
+        if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
+
+        // Shader Scripts
+        ShaderScriptComponent* shaderScript = gameObject->GetComponent<ShaderScriptComponent*>();
+        if (shaderScript != nullptr) shadersToRender.insert(shaderScript);
+
         // Decals
         DecalComponent* decal = gameObject->GetComponent<DecalComponent*>();
 
-        if (decal == nullptr) continue;
-        if (decal->GetResourceMaterial() == nullptr) continue;
-        if (!decal->IsEffectivelyEnabled()) continue;
-
-        const UID uid = decal->GetResourceMaterial()->GetUID();
-        groupedDecals[uid].push_back(decal);
+        if (decal != nullptr)
+        {
+            if (decal->GetResourceMaterial() != nullptr && decal->IsEffectivelyEnabled())
+            {
+                const UID uid = decal->GetResourceMaterial()->GetUID();
+                groupedDecals[uid].push_back(decal);
+            }
+        }
     }
 
 #ifdef OPTICK
@@ -335,7 +346,7 @@ void RenderPass::RenderScene(
 #endif
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Custom Shaders Pass");
-    App->GetShaderScriptModule()->RenderGeometryPassShaders(0.f, camera);
+    App->GetShaderScriptModule()->RenderGeometryPassShaders(0.f, camera, shadersToRender);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -415,7 +426,7 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Custom Shader Pass");
-    App->GetShaderScriptModule()->RenderTransparentPassShaders(0.f, camera);
+    App->GetShaderScriptModule()->RenderTransparentPassShaders(0.f, camera, shadersToRender);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -429,7 +440,7 @@ void RenderPass::RenderScene(
     OPTICK_CATEGORY("RenderPass::PostLightingShaders", Optick::Category::Rendering)
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
-    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera);
+    App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera, shadersToRender);
     glPopDebugGroup();
 
 #ifdef OPTICK
@@ -446,7 +457,7 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
-    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera);
+    App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera, shadersToRender);
     glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
@@ -1499,15 +1510,6 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             );
         }
         batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
-
-        //Trails does not want to be renderer if I put it in the first for
-        std::vector<TrailComponent*> trailsToRender;
-        for (const auto& gameObject : objectsToRender)
-        {
-            // Trails
-            TrailComponent* trail = gameObject->GetComponent<TrailComponent*>();
-            if (trail != nullptr && trail->GetEnabled()) trailsToRender.push_back(trail);
-        }
 
         glEnable(GL_BLEND);
         // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
