@@ -124,7 +124,6 @@ TrailComponent::~TrailComponent()
     glDeleteVertexArrays(1, &vao);
     if (spline) spline->ClearPoints();
     spline = nullptr;
-    delete gradient;
     gradient = nullptr;
 }
 
