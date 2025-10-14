@@ -269,6 +269,12 @@ bool VideoComponent::UpdateFrame()
 
 void VideoComponent::ClearVideo()
 {
+    if (videoTexture && videoTexture->GetTextureID() != 0)
+    {
+        unsigned int texID = videoTexture->GetTextureID();
+        glDeleteTextures(1, &texID);
+        videoTexture->SetTextureID(0);
+    }
     if (packet)
     {
         av_packet_free(&packet);
