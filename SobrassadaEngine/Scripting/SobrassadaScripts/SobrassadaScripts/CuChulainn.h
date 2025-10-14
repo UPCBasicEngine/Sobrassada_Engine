@@ -148,6 +148,14 @@ class CuChulainn : public Character
     Projectile* spear                              = nullptr;
     GameObject* spearCharacter                     = nullptr;
 
+    std::string footstepName1                      = "Footstep1";
+    std::string footstepName2                      = "Footstep2";
+    std::string footstepName3                      = "Footstep3";
+    std::string footstepName4                      = "Footstep4";
+    ShaderScriptComponent* footsteps[4]            = {nullptr};
+    int stepIndex                                  = 0;
+    bool isRightFoot                               = false;
+
     float defaultSpeed                             = 7.0f;
     float inputBuffer                              = 0.5f;
 
@@ -326,7 +334,7 @@ class CuChulainn : public Character
     bool godMode                                   = false;
     float idleTimer                                = 0.0f;
     float runTimer                                 = 0.0f;
-    float stepTime                                 = 0.367f;
+    float stepTime                                 = 0.4f;
     bool justDied                                  = false;
     bool pendingGameOver                           = false;
     bool moveFromCollision                         = false;

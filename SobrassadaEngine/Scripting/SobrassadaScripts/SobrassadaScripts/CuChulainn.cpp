@@ -191,6 +191,22 @@ bool CuChulainn::Init()
     if (!spearCharacter) GLOG("[WARNING] No spear (non projectile) found for CuChualin")
     else spearCharacter->SetEnabled(true);
 
+    GameObject* stepObj = scene->GetGameObjectByName(footstepName1);
+    if (stepObj) footsteps[0] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[0]) footsteps[0]->SetEnabled(false);
+
+    stepObj = scene->GetGameObjectByName(footstepName2);
+    if (stepObj) footsteps[1] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[1]) footsteps[1]->SetEnabled(false);
+
+    stepObj = scene->GetGameObjectByName(footstepName3);
+    if (stepObj) footsteps[2] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[2]) footsteps[2]->SetEnabled(false);
+
+    stepObj = scene->GetGameObjectByName(footstepName4);
+    if (stepObj) footsteps[3] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[3]) footsteps[3]->SetEnabled(false);
+
     chargedAttackCollider = scene->GetGameObjectByName(chargedAttackName);
     if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
@@ -829,7 +845,11 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT && state != CharacterStates::TAKE_MUSHROOM)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT &&
+             state != CharacterStates::TAKE_MUSHROOM)
         Move();
 
     // When finished animation, go back to idle state
@@ -1501,7 +1521,8 @@ void CuChulainn::PerformAttack()
             if (!IsBlockedAhead(parent, character->GetFrontDirection(), max(0.55f, adaptedDistance), skin))
                 character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
             if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->GetEnabled())
@@ -1814,6 +1835,8 @@ void CuChulainn::Move()
             state    = CharacterStates::RUN;
             runTimer = 0.0f;
             if (animComponent) animComponent->UseTrigger("Walk");
+
+            isRightFoot = false;
         }
 
         if (runTimer > stepTime && audio)
@@ -1835,6 +1858,31 @@ void CuChulainn::Move()
                 else if (object->HasTag(HashString("Rock"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_ROCK;
 
                 if (audio) audio->EmitEvent(eventId);
+
+                const float3 lateralDirection = character->GetFrontDirection().Cross(float3::unitY).Normalized();
+                const float3 horizontalOffset = isRightFoot ? lateralDirection * 0.2f : -lateralDirection * 0.2f;
+                const float3 verticalOffset   = float3::unitY * 0.1f;
+
+                const Quat stepRotation =
+                    Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
+                const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitY, 180.0f * (PI / 180));
+                const Quat finalRotation        = stepRotation * horizontalCorrection;
+
+                const float3 scale              = footsteps[stepIndex]->GetParent()->GetLocalTransform().ExtractScale();
+
+                const float4x4 transform =
+                    float4x4::FromTRS(parent->GetGlobalPostition() + verticalOffset + horizontalOffset, finalRotation, scale);
+
+                const float4x4 parentWorld = parent->GetParentGlobalTransform();
+                const float4x4 localTRS    = parentWorld.Inverted() * transform;
+
+                footsteps[stepIndex]->GetParent()->SetLocalTransform(localTRS);
+                footsteps[stepIndex]->SetEnabled(true);
+                footsteps[stepIndex]->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
+                isRightFoot  = !isRightFoot;
+                stepIndex   += 1;
+                if (stepIndex == 4) stepIndex = 0;
             }
 
             runTimer = 0.0f;

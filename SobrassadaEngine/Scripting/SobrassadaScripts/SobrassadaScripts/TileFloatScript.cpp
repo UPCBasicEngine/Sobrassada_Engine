@@ -50,9 +50,11 @@ bool TileFloatScript::Init()
     currentRotationQuat              = startQuat;
 
     parent->SetLocalTransform(startTransform);
+    parent->AddTag(HashString("Rock"));
 
     //GLOG("Initiating TileFloatScript");
     return true;
+
 }
 
 void TileFloatScript::Update(float deltaTime)
