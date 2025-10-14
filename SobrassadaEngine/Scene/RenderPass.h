@@ -5,8 +5,15 @@
 #include "math/float4x4.h"
 
 #include "rapidjson/document.h"
+#include <unordered_map>
+#include <unordered_set>
 
 class GameObject;
+class MeshComponent;
+class DecalComponent;
+class VideoComponent;
+class TrailComponent;
+class ShaderScriptComponent;
 class GBuffer;
 class SSAO;
 class Framebuffer;
@@ -23,6 +30,7 @@ struct SpotlightShadow
     uint64_t shadowMap;
     float2 padding;
 };
+
 class BatchManager;
 
 struct HeightFogParameters
@@ -78,12 +86,12 @@ class RenderPass
     void CopyDepth() const;
     void CopyDepthStencil() const;
 
-    void GeometryPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void GeometryPassRender(CameraComponent* camera) const;
     void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
     void ShadowMapPassRender(
         CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
     );
-    void DecalsPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void DecalsPassRender(CameraComponent* camera) const;
     void TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer);
     void LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer) const;
     void TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
@@ -108,6 +116,15 @@ class RenderPass
     int blurrPasses             = 10;
 
   private:
+    std::vector<VideoComponent*> videosToRender;
+    std::vector<MeshComponent*> opaqueMeshesToRender;
+    std::unordered_set<ShaderScriptComponent*> shadersToRender;
+    std::unordered_map<UID, std::vector<DecalComponent*>> groupedDecals;
+    std::vector<TrailComponent*> trailsToRender;
+
+    std::vector<MeshComponent*> transparentMeshesToRender;
+    std::vector<MeshComponent*> vertexOffsetMeshesToRender;
+
     GBuffer* gbuffer           = nullptr;
     SSAO* ssao                 = nullptr;
     Framebuffer* framebuffer   = nullptr;
@@ -122,6 +139,11 @@ class RenderPass
     unsigned int depthTexture, depthFBO, spotShadowSSBO;
     float4x4 lightView;
     float4x4 lightProj;
+
+    unsigned int depthReadPBO                       = 0;
+    bool depthPBOInitialized                        = false;
+    float lastFrameMinDepth                         = 0.0f;
+    float lastFrameMaxDepth                         = 1.0f;
 
     // SpotLight Shadows
     unsigned int spotShadowMaps[TotalShadowMaps]    = {0};

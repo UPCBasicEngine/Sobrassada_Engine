@@ -124,6 +124,7 @@ TrailComponent::~TrailComponent()
     glDeleteVertexArrays(1, &vao);
     if (spline) spline->ClearPoints();
     spline = nullptr;
+    gradient = nullptr;
 }
 
 void TrailComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
