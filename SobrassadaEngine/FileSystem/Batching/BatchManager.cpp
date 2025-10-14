@@ -193,10 +193,10 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
 
     if (elapsed.count() > 0.0f)
     {
-        App->GetOpenGLModule()->AddTrianglesPerSecond(static_cast<unsigned int>(totalTriangles / elapsed.count()));
+        App->GetOpenGLModule()->AddTrianglesPerSecond(static_cast<float>(totalTriangles) / elapsed.count());
     }
 
-    App->GetOpenGLModule()->AddVerticesCount(static_cast<unsigned int>(totalVertices));
+    App->GetOpenGLModule()->AddVerticesCount(static_cast<int>(totalVertices));
     App->GetOpenGLModule()->AddDrawCallsCount();
 
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, 0);
@@ -326,9 +326,9 @@ void BatchManager::RenderTransparent(
     const std::chrono::duration<float> elapsed = passEnd - passStart;
     if (elapsed.count() > 0.0f)
     {
-        App->GetOpenGLModule()->AddTrianglesPerSecond(static_cast<unsigned int>(totalTriangles / elapsed.count()));
+        App->GetOpenGLModule()->AddTrianglesPerSecond(static_cast<float>(totalTriangles) / elapsed.count());
     }
-    App->GetOpenGLModule()->AddVerticesCount(static_cast<unsigned int>(totalVertices));
+    App->GetOpenGLModule()->AddVerticesCount(static_cast<int>(totalVertices));
     App->GetOpenGLModule()->AddDrawCallsCount();
 
     glEnable(GL_CULL_FACE);
@@ -399,10 +399,10 @@ void BatchManager::RenderShadowMap(const std::vector<MeshComponent*>& meshesToRe
 
     if (elapsed.count() > 0.0f)
     {
-        App->GetOpenGLModule()->AddTrianglesPerSecond(static_cast<unsigned int>(totalTriangles / elapsed.count()));
+        App->GetOpenGLModule()->AddTrianglesPerSecond(static_cast<float>(totalTriangles) / elapsed.count());
     }
 
-    App->GetOpenGLModule()->AddVerticesCount(static_cast<unsigned int>(totalVertices));
+    App->GetOpenGLModule()->AddVerticesCount(static_cast<int>(totalVertices));
     App->GetOpenGLModule()->AddDrawCallsCount();
 
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, 0);
