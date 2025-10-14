@@ -101,6 +101,12 @@ void Script::Load(const rapidjson::Value& initialState)
                 }
             }
             break;
+        case InspectorField::FieldType::Audio:
+            if (value.IsUint64())
+            {
+                *(uint32_t*)field.data = value.GetUint64();
+            }
+            break;
         }
     }
 }
@@ -166,6 +172,9 @@ void Script::CloneFields(const std::vector<InspectorField>& otherFields)
 
             break;
         }
+        case InspectorField::FieldType::Audio:
+            *(uint32_t*)fields[i].data = *(uint32_t*)otherFields[i].data;
+            break;
         }
     }
 }

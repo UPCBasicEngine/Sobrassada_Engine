@@ -14,6 +14,7 @@ namespace AK
     namespace EVENTS
     {
         static const AkUniqueID PLAY_BACKGROUND_MUSIC = 65769146U;
+        static const AkUniqueID PLAY_INTROAUDIO = 669282958U;
         static const AkUniqueID PLAY_LOAD1 = 2715237991U;
         static const AkUniqueID PLAY_LOAD2 = 2715237988U;
         static const AkUniqueID PLAY_LOAD3 = 2715237989U;
@@ -47,6 +48,8 @@ namespace AK
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_01 = 3435584311U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_02 = 3435584308U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_03 = 3435584309U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_PREPAREMIRAGE = 2963552522U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_PREPAREWATERSPOUT = 1155832603U;
         static const AkUniqueID PLAY_SFX_FERDIAD_RANGEATTACK = 4270586061U;
         static const AkUniqueID PLAY_SFX_FERDIAD_RANGEATTACKSTART = 3238138479U;
         static const AkUniqueID PLAY_SFX_FERDIAD_STEPS_01 = 2955844247U;

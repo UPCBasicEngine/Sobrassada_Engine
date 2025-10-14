@@ -88,6 +88,8 @@ void Destructible::OnCollisionEnter(GameObject* otherObject, const float3 collis
             audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_BREAK_03);
             break;
         }
+        
+        playerScript->OnObjectDestroyed();
 
         parent->GetComponent<CapsuleColliderComponent*>()->SetEnabled(false);
         defaultMesh->SetEnabled(false);

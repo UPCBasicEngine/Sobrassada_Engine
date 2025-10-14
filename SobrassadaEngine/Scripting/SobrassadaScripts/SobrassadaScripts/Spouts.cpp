@@ -30,7 +30,12 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
         {"Rotation Speed Blue Waves", InspectorField::FieldType::Float, &rotationSpeedBlueWaves, 0.0f, 180.0f}
     );
     fields.push_back({"Explosion Duration", InspectorField::FieldType::Float, &explosionDuration, 0.01f, 0.5f});
+    fields.push_back({"Rotation Speed Cylinder", InspectorField::FieldType::Float, &rotationCylinder, 0.0f, 180.0f});
+    fields.push_back(
+        {"Rotation Speed Tornado After", InspectorField::FieldType::Float, &rotationSpeedTornadoAfter, 0.0f, 180.0f}
+    );
     fields.push_back({"Water Spout Duration", InspectorField::FieldType::Float, &spoutWaterTimer, 0.01f, 100.0f});
+    fields.push_back({"Damage Cooldown", InspectorField::FieldType::Float, &damageCooldown, 0.0f, 5.0f});
     fields.push_back({"Character", InspectorField::FieldType::GameObject, &character});
     fields.push_back(
         {"Trigger Spout",
@@ -49,8 +54,9 @@ bool Spouts::Init()
     blueWaves            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[2]);
     waterMesh            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[3]);
     explosion            = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[4]);
-    particleGO           = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[5]);
+    particleGOB          = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[5]);
     rune                 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[6]);
+    particleGOT          = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[7]);
 
     damageCollider       = parent->GetComponent<SphereColliderComponent*>();
 
@@ -63,7 +69,8 @@ bool Spouts::Init()
     shaderwhiteWavesMesh = whiteWaves->GetComponent<MeshComponent*>();
     whiteWavesScript     = whiteWaves->GetComponent<ShaderScriptComponent*>();
 
-    particles            = particleGO->GetComponent<ParticleSystemComponent*>();
+    particles_bot        = particleGOB->GetComponent<ParticleSystemComponent*>();
+    particles_top        = particleGOT->GetComponent<ParticleSystemComponent*>();
     audio                = parent->GetComponent<AudioSourceComponent*>();
 
     return true;
@@ -71,6 +78,16 @@ bool Spouts::Init()
 
 void Spouts::Update(float deltaTime)
 {
+    if (damageGiven)
+    {
+        damageTimer += deltaTime;
+        if (damageTimer >= damageCooldown)
+        {
+            damageGiven = false;
+            damageCollider->SetEnabled(true);
+        }
+    }
+
     if (activationState == ACTIVATION_STATE::SLEEPING)
     {
         if (character == nullptr) return;
@@ -141,8 +158,11 @@ void Spouts::Update(float deltaTime)
 
         if (!bossControlled)
         {
-            particles->Init();
+            particleGOB->SetEnabled(true);
+            particles_bot->Init();
         }
+        particleGOT->SetEnabled(true);
+        particles_top->Init();
 
         // Tornado Water
         float3 translation, scale;
@@ -167,13 +187,17 @@ void Spouts::Update(float deltaTime)
 
         // Tornado Water
         float4x4 transformTornado = tornadoWater->GetLocalTransform();
-        transformTornado          = transformTornado * float4x4::RotateZ(rotationSpeedWhiteWaves * deltaTime);
+        transformTornado          = transformTornado * float4x4::RotateZ(rotationSpeedTornadoAfter * deltaTime);
         tornadoWater->SetLocalTransform(transformTornado);
 
         // Blue Water Waves
         float4x4 blueWavesTransform = blueWaves->GetLocalTransform();
         blueWavesTransform          = blueWavesTransform * float4x4::RotateY(rotationSpeedBlueWaves * deltaTime);
         blueWaves->SetLocalTransform(blueWavesTransform);
+
+        float4x4 waterMeshTransform = waterMesh->GetLocalTransform();
+        waterMeshTransform          = waterMeshTransform * float4x4::RotateY(rotationCylinder * deltaTime);
+        waterMesh->SetLocalTransform(waterMeshTransform);
 
         chargingTimer += deltaTime;
 
@@ -184,6 +208,8 @@ void Spouts::Update(float deltaTime)
             tornadoWater->SetEnabled(false);
             waterMesh->SetEnabled(false);
             blueWaves->SetEnabled(false);
+            particleGOB->SetEnabled(false);
+            particleGOT->SetEnabled(false);
             shaderScript->ResetScript("MovingUVTransparent");
 
             damageCollider->SetEnabled(false);
@@ -191,6 +217,14 @@ void Spouts::Update(float deltaTime)
             if (chargingTimer >= spoutWaterTimer + 2.0f) activationState = ACTIVATION_STATE::SLEEPING;
         }
     }
+}
+
+void Spouts::DisableCollider()
+{
+    if (bossControlled) return;
+    damageCollider->SetEnabled(false);
+    damageTimer = 0.0f;
+    damageGiven = true;
 }
 
 void Spouts::ForceActivate()

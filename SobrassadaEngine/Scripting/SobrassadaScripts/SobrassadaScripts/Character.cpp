@@ -126,6 +126,10 @@ bool Character::Init()
         {
             GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
         }
+
+        GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
+        if (glowObject) glow = glowObject;
+        if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -168,6 +172,16 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
         if (arrowProj)
         {
             arrowProj->Hit(otherObject);
+        }
+
+        Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
+        if (spoutsScript)
+        {
+            if (!spoutsScript->bossControlled)
+            {
+                TakeDamage(spoutsScript->GetDamage());
+                spoutsScript->DisableCollider();
+            }
         }
     }
 
@@ -235,7 +249,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         // Banshee slow area
         if (enemyScript && enemyScript->GetCharacterType() == CharacterType::Banshee)
         {
-            CuChulainn* playerScript  = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
+            CuChulainn* playerScript = parent->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
             Banshee* bansheeScript   = otherScript->GetScriptByType<Banshee>();
 
             if (playerScript && bansheeScript && bansheeScript->GetState() == BansheeStates::SlowArea)
@@ -308,7 +322,10 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
         if (spoutsScript)
         {
-            TakeDamage(spoutsScript->GetDamage());
+            if (spoutsScript->bossControlled)
+            {
+                TakeDamage(spoutsScript->GetDamage());
+            }
         }
     }
 }

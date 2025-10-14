@@ -15,6 +15,7 @@
 #include "GameTimer.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
+#include "MusicManager.h"
 #include "ParticleSystemComponent.h"
 #include "ProjectModule.h"
 #include "Projectile.h"
@@ -81,8 +82,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate cooldown", InspectorField::FieldType::Float, &ultimateCd, 0.0f, 5.0f});
     fields.push_back({"Ultimate Animation delay", InspectorField::FieldType::Float, &ultimateAnimationDelay, 0.0f, 5.0f}
     );
-    fields.push_back({"Ultimate Animation speed", InspectorField::FieldType::Float, &ultimateSpeed, 0.1f, 5.0f}
-    );
+    fields.push_back({"Ultimate Animation speed", InspectorField::FieldType::Float, &ultimateSpeed, 0.1f, 5.0f});
     fields.push_back({"Ultimate hitbox delay", InspectorField::FieldType::Float, &ultimateHitboxDelay, 0.0f, 5.0f});
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
@@ -350,6 +350,20 @@ bool CuChulainn::Init()
     if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
     else GLOG("[WARNING] No riastrad Eye FG VFX Shader Script found for CuChulain");
 
+    riastradObj = scene->GetGameObjectByName(riastradFireUpName);
+    if (riastradObj)
+    {
+        riastradFireUp = riastradObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradFireUp) riastradFireUp->SetEnabled(false);
+
+    riastradObj = scene->GetGameObjectByName(riastradFireDownName);
+    if (riastradObj)
+    {
+        riastradFireDown = riastradObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (riastradFireDown) riastradFireDown->SetEnabled(false);
+
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
     if (!riastradTriggers) GLOG("[WARNING] No riastrad triggers HUD element found")
     else riastradTriggers->SetEnabled(false);
@@ -549,7 +563,7 @@ bool CuChulainn::Init()
 
     ultimateSpikes = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateSpikesName);
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
-    else ultimateSpikes->SetEnabled(false); 
+    else ultimateSpikes->SetEnabled(false);
 
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
@@ -1535,15 +1549,13 @@ void CuChulainn::PerformAttack()
                 animComponent->OnPause();
                 playerAnimHeld = true;
             }
-
-            
         }
         else if (ultimateObject->IsEnabled())
         {
             AnimationComponent* vfxUltimateAnim  = ultimateObject->GetComponent<AnimationComponent*>();
             vfxTimeUnscaledSec                  += AppEngine->GetGameTimer()->GetUnscaledDeltaTime() / 1000.0f;
 
-            if (ultimateHoldEnabled && playerAnimHeld) //control cuchulainn stop animation
+            if (ultimateHoldEnabled && playerAnimHeld) // control cuchulainn stop animation
             {
                 float timeLimit = (vfxUltimateAnim && vfxUltimateAnim->GetAnimationController())
                                     ? vfxUltimateAnim->GetAnimationController()->GetTime()
@@ -1560,19 +1572,20 @@ void CuChulainn::PerformAttack()
 
             if (ultimateSpikes) // Control spikes animation appearance
             {
-                const bool animReady = vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
+                const bool animReady =
+                    vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
                 bool show, blurShow, warningShow = false;
 
                 if (animReady)
                 {
-                   const float vfxLenAnim        = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
+                    const float vfxLenAnim    = vfxUltimateAnim->GetCurrentAnimation()->GetDuration();
 
-                   const float spikesOff         = min(2.12f, vfxLenAnim - 0.05f) / ultimateSpeed;
-                   const float vfxLocalTimer     = vfxTimeUnscaledSec;
-                   
-                   show = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
-                   blurShow = vfxLocalTimer >= 0.19f / ultimateSpeed;
-                   warningShow                   = vfxLocalTimer <= 0.4f / ultimateSpeed;
+                    const float spikesOff     = min(2.12f, vfxLenAnim - 0.05f) / ultimateSpeed;
+                    const float vfxLocalTimer = vfxTimeUnscaledSec;
+
+                    show                      = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
+                    blurShow                  = vfxLocalTimer >= 0.19f / ultimateSpeed;
+                    warningShow               = vfxLocalTimer <= 0.4f / ultimateSpeed;
                 }
 
                 if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);
@@ -2076,6 +2089,8 @@ void CuChulainn::ToggleRiastrad()
 
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
+
+        if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
     }
     else
     {
@@ -2107,6 +2122,8 @@ void CuChulainn::ToggleRiastrad()
 
             if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
             if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
+            if (riastradFireUp) riastradFireUp->SetEnabled(false);
+            if (riastradFireDown) riastradFireDown->SetEnabled(false);
         }
 
         if (animComponent) animComponent->UseTrigger("Idle");
@@ -2120,6 +2137,12 @@ void CuChulainn::ToggleRiastrad()
             float4 newColor       = mat->GetMaterial().diffColor;
             newColor              = float4::one;
             mat->SetDiffColor(newColor);
+        }
+
+        GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
+        if (musicManager != nullptr)
+        {
+            musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->ResetToCachedGameState();
         }
     }
 }
@@ -2165,6 +2188,17 @@ void CuChulainn::EnableRiastradVfx()
         riastradStars->SetEnabled(true);
         riastradStars->GetComponent<MeshComponent*>()->SetEnabled(false);
         riastradStars->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
+    }
+
+    if (riastradFireUp)
+    {
+        riastradFireUp->SetEnabled(true);
+        riastradFireUp->GetScriptByType<UISpritesheet>()->Reset();
+    }
+    if (riastradFireDown)
+    {
+        riastradFireDown->SetEnabled(true);
+        riastradFireDown->GetScriptByType<UISpritesheet>()->Reset();
     }
 
     if (riastradSmoke)

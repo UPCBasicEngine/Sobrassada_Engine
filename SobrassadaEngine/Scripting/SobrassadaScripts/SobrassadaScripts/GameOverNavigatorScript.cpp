@@ -20,6 +20,7 @@
 
 // Need the complete type for Respawn()
 #include "CuChulainn.h"
+#include "MusicManager.h"
 
 // global player declared in CuChulainn.cpp
 extern CuChulainn* playerScript;
@@ -62,6 +63,7 @@ void GameOverNavigatorScript::Update(float)
         builtOnce = true;
         // GLOG: first time build completed
         // GLOG("[GONAV] Built -> items=%zu arrows=%zu", menuItems.size(), arrowImages.size());
+        if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_MENU);
     }
 
     // ensure exactly one arrow is enabled
@@ -133,7 +135,15 @@ void GameOverNavigatorScript::Update(float)
         if (name == "MenuItem_Continue")
         {
             if (goController) goController->Close();
-            if (playerScript) playerScript->Respawn(); // immediate respawn
+            if (playerScript)
+            {
+                GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
+                if (musicManager != nullptr)
+                {
+                    musicManager->GetComponent<ScriptComponent*>()->GetScriptByType<MusicManager>()->OnPlayerRespawn();
+                }
+                playerScript->Respawn(); // immediate respawn
+            }
             builtOnce = false;
             return;
         }

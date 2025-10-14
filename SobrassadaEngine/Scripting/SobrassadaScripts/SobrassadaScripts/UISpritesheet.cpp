@@ -33,6 +33,11 @@ UISpritesheet::UISpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Is Fade Out", InspectorField::FieldType::Bool, &isFadeOut});
     fields.push_back({"Fade Out Duration", InspectorField::FieldType::Float, &fadeOutDuration, 0.0f, 10.0f});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &spritesheetUID});
+
+    fields.push_back({InspectorField::FieldType::Text, (void*)"Row column parameters"});
+    fields.push_back({"Use row columns", InspectorField::FieldType::Bool, &useRowCol});
+    fields.push_back({"Rows", InspectorField::FieldType::Int, &rows, 1, 100});
+    fields.push_back({"Colums", InspectorField::FieldType::Int, &cols, 1, 100});
 }
 
 UISpritesheet::~UISpritesheet()
@@ -83,10 +88,26 @@ bool UISpritesheet::Init()
         spritesheetBindlessUID = glGetTextureHandleARB(spritesheet->GetTextureID());
         glMakeTextureHandleResidentARB(spritesheetBindlessUID);
 
-        uvRange.x = 0.0f;
-        uvRange.y = cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
-        uvRange.z = 0.0f;
-        uvRange.w = cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+        if (!useRowCol)
+        {
+            uvRange.x = 0.0f;
+            uvRange.y = cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
+            uvRange.z = 0.0f;
+            uvRange.w = cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+
+            step.x    = cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
+            step.y    = cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+        }
+        else
+        {
+            uvRange.x = 0.0f;
+            uvRange.y = 1.0f / float(cols);
+            uvRange.z = 0.0f;
+            uvRange.w = 1.0f / float(rows);
+
+            step.x    = 1.0f / float(cols);
+            step.y    = 1.0f / float(rows);
+        }
     }
 
     return true;
@@ -174,10 +195,20 @@ void UISpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 
 void UISpritesheet::Reset()
 {
-    uvRange.x   = 0.0f;
-    uvRange.y   = cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
-    uvRange.z   = 0.0f;
-    uvRange.w   = cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+    if (!useRowCol)
+    {
+        uvRange.x = 0.0f;
+        uvRange.y = step.x;
+        uvRange.z = 0.0f;
+        uvRange.w = step.y;
+    }
+    else
+    {
+        uvRange.x = 0.0f;
+        uvRange.y = step.x;
+        uvRange.z = 0.0f;
+        uvRange.w = step.y;
+    }
 
     fadeOutTime = 0.0f;
 }
@@ -199,15 +230,15 @@ void UISpritesheet::UpdateSprite(float deltaTime)
         if (uvRange.y >= 1.0f)
         {
             uvRange.x  = 0.0f;
-            uvRange.y  = cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
+            uvRange.y  = step.x;
 
-            uvRange.z += cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
-            uvRange.w += cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+            uvRange.z += step.y;
+            uvRange.w += step.y;
         }
         else
         {
-            uvRange.x += cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
-            uvRange.y += cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
+            uvRange.x += step.x;
+            uvRange.y += step.x;
         }
     }
     else
@@ -215,17 +246,18 @@ void UISpritesheet::UpdateSprite(float deltaTime)
         if (uvRange.w >= 1.0f)
         {
             uvRange.z  = 0.0f;
-            uvRange.w  = cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+            uvRange.w  = step.y;
 
-            uvRange.x += cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
-            uvRange.y += cellWidth / static_cast<float>(spritesheet->GetTextureWidth());
+            uvRange.x += step.x;
+            uvRange.y += step.x;
         }
         else
         {
-            uvRange.z += cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
-            uvRange.w += cellHeight / static_cast<float>(spritesheet->GetTextureHeight());
+            uvRange.z += step.y;
+            uvRange.w += step.y;
         }
     }
+
     timer = 0.0f;
 
     if (isOneShot && uvRange.y >= 1.0f && uvRange.w >= 1.0f)

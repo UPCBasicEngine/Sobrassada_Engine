@@ -187,7 +187,7 @@ void ArcherProjectile::Move(float deltaTime)
         return;
     }
 
-    if (frames > 60 && !IsInsideCameraView(worldPos, 0.5f))
+    if (frames > 60 && !IsInsideCameraView(worldPos, 2.5f))
     {
         GLOG("Archer arrow stopped - out of camera view");
         StopProjectile();

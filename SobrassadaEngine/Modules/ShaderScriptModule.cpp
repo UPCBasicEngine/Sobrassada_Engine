@@ -50,6 +50,9 @@ void ShaderScriptModule::AddShaderScript(
     case ShaderScriptType::POST_EFFECTS_PASS:
         postEffectsComponents.push_back({component, scriptIndex});
         break;
+    case ShaderScriptType::PRE_UI_PASS:
+        preUiComponents.push_back({component, scriptIndex});
+        break;
     case ShaderScriptType::UI_PASS:
         uiComponents.push_back({component, scriptIndex});
         break;
@@ -77,6 +80,9 @@ void ShaderScriptModule::ShaderScriptTypeChange(
         break;
     case ShaderScriptType::POST_EFFECTS_PASS:
         originalVector = &postEffectsComponents;
+        break;
+    case ShaderScriptType::PRE_UI_PASS:
+        originalVector = &preUiComponents;
         break;
     case ShaderScriptType::UI_PASS:
         originalVector = &uiComponents;
@@ -115,6 +121,9 @@ void ShaderScriptModule::ShaderScriptTypeChange(
             break;
         case ShaderScriptType::POST_EFFECTS_PASS:
             destinationVector = &postEffectsComponents;
+            break;
+        case ShaderScriptType::PRE_UI_PASS:
+            destinationVector = &preUiComponents;
             break;
         case ShaderScriptType::UI_PASS:
             destinationVector = &uiComponents;
@@ -192,6 +201,21 @@ void ShaderScriptModule::ComponentDeleted(ShaderScriptComponent* component)
 
     iteratorsToRemove.clear();
 
+    for (auto iterator = preUiComponents.begin(); iterator != preUiComponents.end(); ++iterator)
+    {
+        if (iterator->first == component)
+        {
+            iteratorsToRemove.push_back(iterator);
+        }
+    }
+
+    for (auto& iterator : iteratorsToRemove)
+    {
+        preUiComponents.erase(iterator);
+    }
+
+    iteratorsToRemove.clear();
+
     for (auto iterator = uiComponents.begin(); iterator != uiComponents.end(); ++iterator)
     {
         if (iterator->first == component)
@@ -230,6 +254,9 @@ void ShaderScriptModule::ComponentDeletedScript(ShaderScriptComponent* component
         case ShaderScriptType::POST_EFFECTS_PASS:
             postEffectsComponents.push_back({component, i});
             break;
+        case ShaderScriptType::PRE_UI_PASS:
+            preUiComponents.push_back({component, i});
+            break;
         case ShaderScriptType::UI_PASS:
             uiComponents.push_back({component, i});
             break;
@@ -239,7 +266,9 @@ void ShaderScriptModule::ComponentDeletedScript(ShaderScriptComponent* component
     }
 }
 
-void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderGeometryPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     GBuffer* gbuffer = App->GetOpenGLModule()->GetGBuffer();
 
@@ -254,6 +283,7 @@ void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraCompon
 
     for (auto& shaderPair : geometryPassComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 
@@ -262,7 +292,9 @@ void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraCompon
     gbuffer->Unbind();
 }
 
-void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderTransparentPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     glDepthMask(GL_FALSE);
     // SORT MESHES TO CAMERA DISTABCE
@@ -306,6 +338,7 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
 
     for (auto& shaderPair : transparentComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 
@@ -313,19 +346,50 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
     glDepthMask(GL_TRUE);
 }
 
-void ShaderScriptModule::RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderPostLightingPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     for (auto& shaderPair : postLightingComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 }
 
-void ShaderScriptModule::RenderPostEffectsPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderPostEffectsPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     for (auto& shaderPair : postEffectsComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
+    }
+}
+
+void ShaderScriptModule::RenderPreUiPassShaders(float deltaTime)
+{
+    std::vector<std::pair<int, std::pair<ShaderScriptComponent*, unsigned int>>> orderedPreUIShaders;
+
+    // Sort the UI Shader Scripts by their order in canvas
+    for (auto& shaderPair : preUiComponents)
+    {
+        int idx                           = 0;
+
+        Transform2DComponent* transform2d = shaderPair.first->GetParent()->GetComponent<Transform2DComponent*>();
+        if (transform2d) idx = transform2d->orderInCanvas;
+
+        orderedPreUIShaders.emplace_back(idx, shaderPair);
+    }
+
+    std::sort(
+        orderedPreUIShaders.begin(), orderedPreUIShaders.end(), [](auto& a, auto& b) { return a.first < b.first; }
+    );
+
+    for (const auto& shader : orderedPreUIShaders)
+    {
+        shader.second.first->RenderScript(deltaTime, nullptr, shader.second.second);
     }
 }
 

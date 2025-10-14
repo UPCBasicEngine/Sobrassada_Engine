@@ -213,7 +213,7 @@ void GeometryBatch::LoadData()
         }
 
         for (size_t j = 0; j < totalModels.size(); ++j)
-            ptrModels[i][j] = float4x4::identity;
+            ptrModels[i][j] = totalModels[j];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, deltaWindDirections[i]);
 

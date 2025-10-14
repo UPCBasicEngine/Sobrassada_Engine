@@ -19,15 +19,17 @@ class Spouts : public Script
     };
 
   public:
+    bool bossControlled = false;
+
     Spouts(GameObject* parent);
     bool Init() override;
     void Update(float deltaTime) override;
     int GetDamage() { return damage; }
     void ForceActivate();
+    void DisableCollider();
 
   private:
     bool enableRune                         = false;
-    bool bossControlled                     = false;
     float activationRange                   = 10.0f;
     int damage                              = 1;
     float chargingDuration                  = 1.0f;
@@ -39,7 +41,13 @@ class Spouts : public Script
     float initialScaleTornado               = 9.0f;
     float rotationSpeedTornado              = 90.0f;
     float rotationSpeedBlueWaves            = 90.0f;
+    float rotationCylinder                  = 90.0f;
+    float rotationSpeedTornadoAfter         = 90.0f;
     float explosionDuration                 = 0.01f;
+
+    float damageTimer                       = 0.0f;
+    float damageCooldown                    = 0.5f;
+    bool damageGiven                        = false;
 
     GameObject* character                   = nullptr;
     GameObject* whiteWaves                  = nullptr;
@@ -47,8 +55,9 @@ class Spouts : public Script
     GameObject* blueWaves                   = nullptr;
     GameObject* explosion                   = nullptr;
     GameObject* waterMesh                   = nullptr;
-    GameObject* particleGO                  = nullptr;
+    GameObject* particleGOB                 = nullptr;
     GameObject* rune                        = nullptr;
+    GameObject* particleGOT                 = nullptr;
 
     ShaderScriptComponent* whiteWavesScript = nullptr;
     MeshComponent* shaderwhiteWavesMesh     = nullptr;
@@ -60,7 +69,8 @@ class Spouts : public Script
     MeshComponent* shaderExplosionMesh      = nullptr;
 
     SphereColliderComponent* damageCollider = nullptr;
-    ParticleSystemComponent* particles      = nullptr;
+    ParticleSystemComponent* particles_bot  = nullptr;
+    ParticleSystemComponent* particles_top  = nullptr;
 
     AudioSourceComponent* audio             = nullptr;
     ACTIVATION_STATE activationState        = SLEEPING;

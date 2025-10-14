@@ -27,6 +27,7 @@
 #include "MainMenuSelectorScript.h"
 #include "MenuChangeSceneScript.h"
 #include "MiniFireball.h"
+#include "MirageHumanVFX.h"
 #include "MirageVFX.h"
 #include "MoveGOInSpline.h"
 #include "Mushroom.h"
@@ -62,6 +63,8 @@
 #include "Mirage.h"
 #include "MirageBossDash.h"
 #include "BossSpouts.h"
+#include "MusicManager.h"
+#include "MusicTrigger.h"
 
 #include <string>
 
@@ -117,7 +120,9 @@ constexpr const char* scripts[] = {
     "GameOverNavigatorScript",
     "HighlightCharacter",
     "AsyncSceneLoading",
-    "BossSpouts"
+    "BossSpouts",
+    "MusicManager",
+    "MusicTrigger"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
@@ -125,9 +130,10 @@ constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight
                                          "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
                                          "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
                                          "AbilityIconFill",       "DamageMask",           "AttackVfxSpritesheet",
-                                         "MovingUVClipErode",     "ColorChange",          "UISpritesheet", "MirageVFX"};
+                                         "MovingUVClipErode",     "ColorChange",          "UISpritesheet", "MirageVFX",
+                                         "MirageHumanVFX"};
 
-Application* AppEngine = nullptr;
+Application* AppEngine                = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -175,6 +181,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "MagicBarrier") return new MagicBarrier(parent);
     if (scriptType == "WallCollision") return new WallCollision(parent);
     if (scriptType == "CoverPointTrigger") return new CoverPointTrigger(parent);
+    if (scriptType == "MusicManager") return new MusicManager(parent);
+    if (scriptType == "MusicTrigger") return new MusicTrigger(parent);
 
     /* Utils */
     if (scriptType == "RotateGameObjectScript") return new RotateGameObject(parent);
@@ -252,6 +260,11 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
         return new MirageVFX(
             parent, "./EngineDefaults/Shader/Custom/Vertex/MirageVFX_Vertex.glsl",
             "./EngineDefaults/Shader/Custom/Fragment/MirageVFX_Fragment.glsl"
+        );
+    if (scriptType == "MirageHumanVFX")
+        return new MirageHumanVFX(
+            parent, "./EngineDefaults/Shader/Custom/Vertex/MirageVFX_Vertex.glsl",
+            "./EngineDefaults/Shader/Custom/Fragment/MirageHumanVFX_Fragment.glsl"
         );
 
     return nullptr;
