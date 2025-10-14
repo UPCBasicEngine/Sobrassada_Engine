@@ -21,7 +21,7 @@ uniform layout(location = 4) float fogIntensity;
 uniform layout(location = 5) float extinctionCoefficient;
 uniform layout(location = 6) float frameTime;
 uniform layout(location = 7) float noiseAmmount;
-// uniform layout(location = 8) float anisotropy;
+// uniform layout(location = 8) float anisotropy; -> MOVED TO EACH SPOTLIGHT FOR BETTER CUSTOMIZATION
 uniform layout(location = 9) int numTilesX;
 uniform layout(location = 10) float StepSize;
 
@@ -88,15 +88,15 @@ layout(std430, binding = 7) readonly buffer SpotLightShadowBuffer {
     SpotShadow spotShadows[];
 };
 
-readonly layout(std430, binding = 8) buffer VolumeAreas
-{
-	int volumeAreaCount;
-	VolumetricArea volumetricAreas[];
-};
+// readonly layout(std430, binding = 8) buffer VolumeAreas
+// {
+// 	int volumeAreaCount;
+// 	VolumetricArea volumetricAreas[];
+// };
 
-layout(std430, binding = 9) readonly buffer VisibleVolumetricAreaIndicesBuffer {
-	int visibleAreas[];
-};
+// layout(std430, binding = 9) readonly buffer VisibleVolumetricAreaIndicesBuffer {
+// 	int visibleAreas[];
+// };
 
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -478,44 +478,46 @@ bool RayIntersectionPoints(in vec3 rayOrigin, in vec3 rayDirection, in int baseO
     return validIntersection;
 }
 
-bool IntersectVolumes(vec3 currentPosition, vec3 rayDirection, vec2 uvCoords, int baseOffset)
-{
-    bool volumeIntersection = false;
+// INTERSECTION WITH VOLUMES SET IN THE SCENE -> NOT USED IN THE END
 
-    for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
-    {
-        int areaIndexBuffer = visibleAreas[baseOffset + i];
+// bool IntersectVolumes(vec3 currentPosition, vec3 rayDirection, vec2 uvCoords, int baseOffset)
+// {
+//     bool volumeIntersection = false;
 
-        if(areaIndexBuffer == -1) break;
+//     for(int i = 0; i < MAX_LIGHTS_PER_TILE; ++i)
+//     {
+//         int areaIndexBuffer = visibleAreas[baseOffset + i];
+
+//         if(areaIndexBuffer == -1) break;
         
-        VolumetricArea area = volumetricAreas[areaIndexBuffer];
+//         VolumetricArea area = volumetricAreas[areaIndexBuffer];
 
-        if(area.position.w == 1)
-        {
-            float auxT0, auxT1;
+//         if(area.position.w == 1)
+//         {
+//             float auxT0, auxT1;
 
-            bool currentCollision = SpehereIntersection(area.position.xyz, area.size.x, currentPosition, rayDirection, auxT0, auxT1);
+//             bool currentCollision = SpehereIntersection(area.position.xyz, area.size.x, currentPosition, rayDirection, auxT0, auxT1);
 
-            if(currentCollision)
-            {
-                volumeIntersection = true;
-                break;
-            }
-        }
-        else
-        {
-            bool currentCollision = BoxIntersection(area.position.xyz, area.size.xyz, currentPosition, rayDirection);
+//             if(currentCollision)
+//             {
+//                 volumeIntersection = true;
+//                 break;
+//             }
+//         }
+//         else
+//         {
+//             bool currentCollision = BoxIntersection(area.position.xyz, area.size.xyz, currentPosition, rayDirection);
 
-            if(currentCollision)
-            {
-                volumeIntersection = true;
-                break;
-            }
-        }
-    }
+//             if(currentCollision)
+//             {
+//                 volumeIntersection = true;
+//                 break;
+//             }
+//         }
+//     }
 
-    return volumeIntersection;
-}
+//     return volumeIntersection;
+// }
 
 // SCENE WITH INTERSECTION CALCULATIONS
 void main()

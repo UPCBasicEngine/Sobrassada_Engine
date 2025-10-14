@@ -156,7 +156,7 @@ class RenderPass
 
     // Volumetric Fog
     unsigned int fogResultTexture                 = 0;
-    unsigned int visibleVolumetricAreaIndicesSSBO = 0;
+    //unsigned int visibleVolumetricAreaIndicesSSBO = 0;
     unsigned int blurrFBO[2]                      = {0};
     unsigned int blurrTextures[2]                 = {0};
     ResourceTexture* noiseTexture                 = nullptr;
