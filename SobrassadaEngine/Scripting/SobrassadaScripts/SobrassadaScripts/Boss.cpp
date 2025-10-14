@@ -738,51 +738,57 @@ void Boss::OnDamageTaken(int amount)
     if (currentAction == BossActions::Idle || currentAction == BossActions::Chase ||
         currentAction == BossActions::Waiting)
     {
-        agentAI->PauseMovement();
 
-        float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
+        int num = uniformSteps(rng);
 
-        float dot      = hitCollisionNormal.Dot(forward);
-
-        int num        = uniformGetHit(rng);
-
-        if (dot == 0.0f)
+        if (num == 1)
         {
-            dot = (num == 1) ? 1.0f : -1.0f;
-        }
+            agentAI->PauseMovement();
 
-        if (dot > 0.0f)
-        {
-            switch (num)
+            float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
+
+            float dot      = hitCollisionNormal.Dot(forward);
+
+            int num        = uniformGetHit(rng);
+
+            if (dot == 0.0f)
             {
-            case 1:
-                if (animComponent) animComponent->UseTrigger("GetHit1");
-                currentAction = BossActions::GetHit1;
-                break;
-            case 2:
-                if (animComponent) animComponent->UseTrigger("GetHit2");
-                currentAction = BossActions::GetHit2;
-                break;
-            default:
-                GLOG("ERROR: Ferdiad forward hit anim");
-                break;
+                dot = (num == 1) ? 1.0f : -1.0f;
             }
-        }
-        else
-        {
-            switch (num)
+
+            if (dot > 0.0f)
             {
-            case 1:
-                if (animComponent) animComponent->UseTrigger("GetHit1Behind");
-                currentAction = BossActions::GetHit1Behind;
-                break;
-            case 2:
-                if (animComponent) animComponent->UseTrigger("GetHit2Behind");
-                currentAction = BossActions::GetHit2Behind;
-                break;
-            default:
-                GLOG("ERROR: Ferdiad forward hit anim");
-                break;
+                switch (num)
+                {
+                case 1:
+                    if (animComponent) animComponent->UseTrigger("GetHit1");
+                    currentAction = BossActions::GetHit1;
+                    break;
+                case 2:
+                    if (animComponent) animComponent->UseTrigger("GetHit2");
+                    currentAction = BossActions::GetHit2;
+                    break;
+                default:
+                    GLOG("ERROR: Ferdiad forward hit anim");
+                    break;
+                }
+            }
+            else
+            {
+                switch (num)
+                {
+                case 1:
+                    if (animComponent) animComponent->UseTrigger("GetHit1Behind");
+                    currentAction = BossActions::GetHit1Behind;
+                    break;
+                case 2:
+                    if (animComponent) animComponent->UseTrigger("GetHit2Behind");
+                    currentAction = BossActions::GetHit2Behind;
+                    break;
+                default:
+                    GLOG("ERROR: Ferdiad forward hit anim");
+                    break;
+                }
             }
         }
     }
@@ -915,7 +921,7 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate = 95;
+        shieldStrikesRate  = 95;
         overheadStrikeRate = 100;
         break;
 
@@ -1014,10 +1020,10 @@ void Boss::ChooseNextStateSecondPhase()
     }
     // FOR TESTING
     // waterSpoutsRate   = -1;
-    //shieldStrikesRate = -1;
-    //shieldBlastRate   = -1;
+    // shieldStrikesRate = -1;
+    // shieldBlastRate   = -1;
 
-    int num           = uniformDist(rng);
+    int num = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1140,13 +1146,13 @@ void Boss::Death(float deltaTime)
     case BossActions::Death:
         if (!actionTriggerDone)
         {
+            ResetValues(false);
+
             actionTriggerDone = true;
 
             agentAI->PauseMovement();
 
             if (playerScript) playerScript->RemoveEnemy();
-
-            ResetValues(false);
 
             DeleteColliders();
 
