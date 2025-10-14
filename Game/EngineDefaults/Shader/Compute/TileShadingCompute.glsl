@@ -15,6 +15,7 @@ struct SpotLight
 	float outerAngle;
 	int spotShadowIndex;
     float radius;
+    float anisotropy;
 };
 
 struct VolumetricArea

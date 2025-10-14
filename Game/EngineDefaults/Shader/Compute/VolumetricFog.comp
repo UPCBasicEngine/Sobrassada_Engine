@@ -21,7 +21,7 @@ uniform layout(location = 4) float fogIntensity;
 uniform layout(location = 5) float extinctionCoefficient;
 uniform layout(location = 6) float frameTime;
 uniform layout(location = 7) float noiseAmmount;
-uniform layout(location = 8) float anisotropy;
+// uniform layout(location = 8) float anisotropy;
 uniform layout(location = 9) int numTilesX;
 uniform layout(location = 10) float StepSize;
 
@@ -44,6 +44,7 @@ struct SpotLight
 	float outerAngle;
 	int spotShadowIndex;
     float radius;
+    float anisotropy;
 };
 
 struct VisibleIndex {
@@ -176,7 +177,7 @@ float CalculateExtinctionCoefficient(vec3 currentPosition, vec2 uvCoords)
     return extinctionCoefficient * noise * noiseAmmount;
 }
 
-float ScatteringPhaseFunction(vec3 viewDirection, vec3 lightDirection)
+float ScatteringPhaseFunction(vec3 viewDirection, vec3 lightDirection, float anisotropy)
 {
     float k = 1.55 * anisotropy - 0.55 * anisotropy * anisotropy * anisotropy;
     float theta = dot(viewDirection, lightDirection);
@@ -313,7 +314,7 @@ vec3 CalculateInScattering(vec3 currentPosition, vec3 rayDirection, vec2 uvCoord
                     const float attenuation = SpotLightAttenuation(realIndex, currentPosition);
                     const vec3 spotColor = spotLights[realIndex].color.rgb * spotLights[realIndex].color.a * attenuation;
 
-                    float spotScattering = ScatteringPhaseFunction(-rayDirection, normalize(spotLights[realIndex].direction));
+                    float spotScattering = ScatteringPhaseFunction(-rayDirection, normalize(spotLights[realIndex].direction), spotLights[realIndex].anisotropy);
 
                     light += spotColor * spotScattering;
                 }
@@ -539,9 +540,10 @@ void main()
         float t0 = maxDistance, t1 = 0.0;
 
         bool intersects = RayIntersectionPoints(cameraPosition, rayDirection, baseOffset, t0, t1);
-        bool intersectVolumes = IntersectVolumes(cameraPosition, rayDirection, uvCoords, baseOffset);
+        // bool intersectVolumes = IntersectVolumes(cameraPosition, rayDirection, uvCoords, baseOffset);
 
-        if(intersects && intersectVolumes)
+        // if(intersects && intersectVolumes)
+        if(intersects)
         {
             t0 = max(t0, 0.0);
             t1 = min(t1, maxDistance);

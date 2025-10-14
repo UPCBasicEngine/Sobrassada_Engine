@@ -152,7 +152,6 @@ void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("fogIntensity", fogIntensity, allocator);
     targetState.AddMember("noiseAmmount", noiseAmmount, allocator);
     targetState.AddMember("extinctionCoefficient", extinctionCoefficient, allocator);
-    targetState.AddMember("anisotropy", anisotropy, allocator);
     targetState.AddMember("blurrPasses", blurrPasses, allocator);
     targetState.AddMember("useNoiseTexture", useNoiseTexture, allocator);
     targetState.AddMember("noiseTexture", noiseTexture != nullptr ? noiseTexture->GetUID() : INVALID_UID, allocator);
@@ -165,7 +164,6 @@ void RenderPass::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("noiseAmmount")) noiseAmmount = initialState["noiseAmmount"].GetFloat();
     if (initialState.HasMember("extinctionCoefficient"))
         extinctionCoefficient = initialState["extinctionCoefficient"].GetFloat();
-    if (initialState.HasMember("anisotropy")) anisotropy = initialState["anisotropy"].GetFloat();
     if (initialState.HasMember("blurrPasses")) blurrPasses = initialState["blurrPasses"].GetInt();
     if (initialState.HasMember("useNoiseTexture")) useNoiseTexture = initialState["useNoiseTexture"].GetBool();
 
@@ -701,7 +699,7 @@ void RenderPass::ShadowMapPassRender(
 
     for (int i = 0; i < TotalShadowMaps && i < spotLights.size(); ++i)
     {
-        if (!spotLights[i]) continue;
+        if (!spotLights[i] || (spotLights[i] && !spotLights[i]->GetRenderVolumetric())) continue;
 
         meshesToRender.clear();
         shadowObjectsToRender.clear();
@@ -1011,7 +1009,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1f(5, extinctionCoefficient);
     glUniform1f(6, time);
     glUniform1f(7, noiseAmmount);
-    glUniform1f(8, anisotropy);
+    // glUniform1f(8, anisotropy);
     glUniform1i(9, tilesX);
     glUniform1f(10, stepSize);
 

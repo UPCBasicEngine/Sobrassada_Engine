@@ -104,7 +104,6 @@ class RenderPass
     float fogIntensity          = 1.f;
     float noiseAmmount          = 0.f;
     float extinctionCoefficient = 0.04f;
-    float anisotropy            = 0.5f;
     bool useNoiseTexture        = false;
     int blurrPasses             = 10;
 
