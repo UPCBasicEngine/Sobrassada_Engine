@@ -296,17 +296,16 @@ void Changeling::UpdateDigUpTransitionState(float deltaTime, float distanceToPla
 
 void Changeling::UpdateDigDownTransitionState(float deltaTime, float distanceToPlayerSq)
 {
-    if (stateTimer < 1.3f && stateTimer > 0.8f && !vfxDig->IsEnabled())
+    if (stateTimer < 1.3f && stateTimer > 0.8f && !vfxDig->GetEnabled())
     {
         const float3 dir    = parent->GetGlobalTransform().WorldZ();
         const float3 offset = float3(dir.x * 0.8f, 0.25f, dir.z * 0.8f);
 
-        vfxDig->SetLocalPosition(
+        vfxDig->GetParent()->SetLocalPosition(
             parent->GetGlobalTransform().TranslatePart() + offset - parent->GetParentGlobalTransform().TranslatePart()
         );
         vfxDig->SetEnabled(true);
-        vfxDig->GetComponent<MeshComponent*>()->SetEnabled(false);
-        vfxDig->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        vfxDig->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     }
     if (stateTimer <= 0)
     {
@@ -374,8 +373,7 @@ void Changeling::UpdateIdleVisibleState(float deltaTime, float distanceToPlayerS
     audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
 
     vfxDigDown->SetEnabled(true);
-    vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
-    vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    vfxDigDown->GetScriptByType<AttackVfxSpritesheet>()->Reset();
 
     stateTimer   = secondsUntilCompletelyBuried;
     currentState = ChangelingStates::DIG_DOWN_TRANSITION;
@@ -671,19 +669,12 @@ void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq
 {
     biteVfxTimer -= deltaTime;
 
-    if (biteVfxTimer < 0.0f && biteVfxTimer > -0.3f && vfxBite &&
-        !vfxBite->GetComponent<ShaderScriptComponent*>()->GetEnabled())
+    if (biteVfxTimer < 0.0f && biteVfxTimer > -0.3f && vfxBite && !vfxBite->GetEnabled())
     {
         const float3 offset = float3::unitY * 0.5f;
-        vfxBite->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
+        vfxBite->GetParent()->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
         vfxBite->SetEnabled(true);
-        vfxBite->GetComponent<MeshComponent*>()->SetEnabled(false);
-        ShaderScriptComponent* shader = vfxBite->GetComponent<ShaderScriptComponent*>();
-        if (shader)
-        {
-            shader->SetEnabled(true);
-            shader->GetScriptByType<AttackVfxSpritesheet>()->Reset();
-        }
+        vfxBite->GetScriptByType<AttackVfxSpritesheet>()->Reset();
 
         weaponCollider->SetEnabled(true);
     }
@@ -790,12 +781,25 @@ void Changeling::UpdateHighlightState(float deltaTime, float distanceToPlayerSq)
             animComponent->UseTrigger("Trigger_BuryDown");
             audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_POOKA_BURYDOWN);
             vfxDigDown->SetEnabled(true);
-            vfxDigDown->GetComponent<MeshComponent*>()->SetEnabled(false);
-            vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+            vfxDigDown->GetScriptByType<AttackVfxSpritesheet>()->Reset();
             currentHighlightingState = HighlightingStates::BURY_DOWN;
         }
         break;
     case HighlightingStates::BURY_DOWN:
+        highlightDigTimer += deltaTime;
+
+        if (highlightDigTimer > 0.5f && highlightDigTimer < 0.8f && !vfxDig->GetEnabled())
+        {
+            const float3 dir    = parent->GetGlobalTransform().WorldZ();
+            const float3 offset = float3(dir.x * 0.8f, 0.25f, dir.z * 0.8f);
+            vfxDig->GetParent()->SetLocalPosition(
+                parent->GetGlobalTransform().TranslatePart() + offset -
+                parent->GetParentGlobalTransform().TranslatePart()
+            );
+            vfxDig->SetEnabled(true);
+            vfxDig->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+        }
+
         if (animComponent->IsFinished())
         {
             vfxDigDown->SetEnabled(false);
@@ -1152,7 +1156,7 @@ void Changeling::ValidateSetup()
         }
         else if (child->GetName() == vfxBiteName)
         {
-            vfxBite = child;
+            vfxBite = child->GetComponent<ShaderScriptComponent*>();
         }
         else if (child->GetName() == vfxDashName)
         {
@@ -1160,7 +1164,7 @@ void Changeling::ValidateSetup()
         }
         else if (child->GetName() == vfxDigName)
         {
-            vfxDig = child;
+            vfxDig = child->GetComponent<ShaderScriptComponent*>();
         }
     }
 
@@ -1233,7 +1237,7 @@ void Changeling::ValidateSetup()
         }
         else if (child->GetName() == vfxDigDownName)
         {
-            vfxDigDown = child;
+            vfxDigDown = child->GetComponent<ShaderScriptComponent*>();
         }
     }
 
@@ -1288,16 +1292,14 @@ void Changeling::ValidateSetup()
         return;
     }
 
-    if (vfxDigDown == nullptr || vfxDigDown->GetComponent<ShaderScriptComponent*>() == nullptr ||
-        vfxDigDown->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
+    if (vfxDigDown == nullptr || vfxDigDown->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] VFX dig down game object not found or setup incorrectly")
         return;
     }
 
-    if (vfxBite == nullptr || vfxBite->GetComponent<ShaderScriptComponent*>() == nullptr ||
-        vfxBite->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
+    if (vfxBite == nullptr || vfxBite->GetScriptByType<AttackVfxSpritesheet>() == nullptr)
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] VFX bite game object not found or setup incorrectly")
