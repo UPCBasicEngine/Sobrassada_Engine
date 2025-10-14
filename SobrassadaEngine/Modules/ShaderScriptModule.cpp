@@ -266,7 +266,9 @@ void ShaderScriptModule::ComponentDeletedScript(ShaderScriptComponent* component
     }
 }
 
-void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderGeometryPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     GBuffer* gbuffer = App->GetOpenGLModule()->GetGBuffer();
 
@@ -281,6 +283,7 @@ void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraCompon
 
     for (auto& shaderPair : geometryPassComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 
@@ -289,7 +292,9 @@ void ShaderScriptModule::RenderGeometryPassShaders(float deltaTime, CameraCompon
     gbuffer->Unbind();
 }
 
-void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderTransparentPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     glDepthMask(GL_FALSE);
     // SORT MESHES TO CAMERA DISTABCE
@@ -333,6 +338,7 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
 
     for (auto& shaderPair : transparentComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 
@@ -340,18 +346,24 @@ void ShaderScriptModule::RenderTransparentPassShaders(float deltaTime, CameraCom
     glDepthMask(GL_TRUE);
 }
 
-void ShaderScriptModule::RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderPostLightingPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     for (auto& shaderPair : postLightingComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 }
 
-void ShaderScriptModule::RenderPostEffectsPassShaders(float deltaTime, CameraComponent* camera)
+void ShaderScriptModule::RenderPostEffectsPassShaders(
+    float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender
+)
 {
     for (auto& shaderPair : postEffectsComponents)
     {
+        if (shadersToRender.find(shaderPair.first) == shadersToRender.end()) continue;
         shaderPair.first->RenderScript(deltaTime, camera, shaderPair.second);
     }
 }
