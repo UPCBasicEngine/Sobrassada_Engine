@@ -266,3 +266,17 @@ void Spouts::ForceDeactivate()
     activationState = ACTIVATION_STATE::SLEEPING;
 
 }
+
+void Spouts::ResetUVs()
+{
+    GLOG("Resetting UVs for water shaders");
+
+    if (shaderScript) shaderScript->ResetScript("MovingUVTransparent");
+    if (whiteWavesScript) whiteWavesScript->ResetScript("MovingUVTransparent");
+    if (explosionScript) explosionScript->ResetScript("MovingUVTransparent");
+
+    // Re-enable them again immediately to restart animation
+    if (shaderScript) shaderScript->SetScriptEnabled("MovingUVTransparent", true);
+    if (whiteWavesScript) whiteWavesScript->SetScriptEnabled("MovingUVTransparent", true);
+    if (explosionScript) explosionScript->SetScriptEnabled("MovingUVTransparent", true);
+}

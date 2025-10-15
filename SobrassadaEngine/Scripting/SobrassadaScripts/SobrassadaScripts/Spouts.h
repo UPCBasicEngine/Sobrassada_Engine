@@ -28,6 +28,7 @@ class Spouts : public Script
     void ForceActivate();
     void ForceDeactivate();
     void DisableCollider();
+    void ResetUVs();
 
   private:
     bool enableRune                         = false;
