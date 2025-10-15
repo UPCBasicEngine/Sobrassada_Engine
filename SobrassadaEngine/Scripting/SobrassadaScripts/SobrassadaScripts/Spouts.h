@@ -26,6 +26,7 @@ class Spouts : public Script
     void Update(float deltaTime) override;
     int GetDamage() { return damage; }
     void ForceActivate();
+    void ForceDeactivate();
     void DisableCollider();
 
   private:

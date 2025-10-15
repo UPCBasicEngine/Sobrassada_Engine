@@ -240,3 +240,29 @@ void Spouts::ForceActivate()
         chargingTimer = 0.0f;
     }
 }
+
+void Spouts::ForceDeactivate()
+{
+    GLOG(" Boss force deactivation");
+
+    if (whiteWaves) whiteWaves->SetEnabled(false);
+    if (tornadoWater) tornadoWater->SetEnabled(false);
+    if (waterMesh) waterMesh->SetEnabled(false);
+    if (blueWaves) blueWaves->SetEnabled(false);
+    if (explosion) explosion->SetEnabled(false);
+    if (particleGOB) particleGOB->SetEnabled(false);
+    if (particleGOT) particleGOT->SetEnabled(false);
+
+    if (shaderScript) shaderScript->ResetScript("MovingUVTransparent");
+    if (whiteWavesScript) whiteWavesScript->ResetScript("MovingUVTransparent");
+    if (explosionScript) explosionScript->ResetScript("MovingUVTransparent");
+
+    if (damageCollider) damageCollider->SetEnabled(false);
+    damageGiven     = false;
+    damageTimer     = 0.0f;
+
+
+    chargingTimer   = 0.0f;
+    activationState = ACTIVATION_STATE::SLEEPING;
+
+}

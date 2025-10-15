@@ -1936,6 +1936,11 @@ void Boss::Mirage()
             actionTriggerDone = true;
             animComponent->UseTrigger("Charge");
 
+            for (Spouts* spout : waterSpouts)
+            {
+                if (spout) spout->ForceDeactivate();
+            }
+
             bossMirageScript->StartSequence(phase);
         }
 
@@ -1997,6 +2002,7 @@ void Boss::WaterSpouts()
         {
             agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("WaterSpoutCharge");
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_PREPAREWATERSPOUT);
             actionTriggerDone = true;
         }
 
