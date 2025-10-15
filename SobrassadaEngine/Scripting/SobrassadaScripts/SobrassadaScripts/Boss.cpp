@@ -741,7 +741,7 @@ void Boss::OnDamageTaken(int amount)
 
         int num = uniformSteps(rng);
 
-        if (num == 1)
+        if (num == 1) // 33% of triggering anim
         {
             agentAI->PauseMovement();
 
