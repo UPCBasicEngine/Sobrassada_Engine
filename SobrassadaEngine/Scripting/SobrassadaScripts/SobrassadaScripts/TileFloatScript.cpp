@@ -2,15 +2,11 @@
 
 #include "TileFloatScript.h"
 
-#include "Application.h"
-#include "CameraModule.h"
 #include "CuChulainn.h"
 #include "EditorUIModule.h"
 #include "GameObject.h"
-#include "ImGui.h"
-#include "LibraryModule.h"
-#include "Wwise_IDs.h"
 #include "Standalone/CharacterControllerComponent.h"
+#include "Wwise_IDs.h"
 
 #include "Math/float4x4.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
@@ -36,27 +32,26 @@ TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
     );
 }
 
-
 bool TileFloatScript::Init()
 {
 
     // get final (correct) position, and move the tile to start (rotated, moved and scaled) position
     const float4x4& originalTransform = parent->GetLocalTransform();
-    finalPosition                    = originalTransform.TranslatePart();
-    finalRotation                    = Quat(originalTransform.RotatePart());
-    finalScale                       = originalTransform.GetScale();
+    finalPosition                     = originalTransform.TranslatePart();
+    finalRotation                     = Quat(originalTransform.RotatePart());
+    finalScale                        = originalTransform.GetScale();
 
-    startQuat                        = Quat::FromEulerXYZ(startRotation.x, startRotation.y, startRotation.z);
+    startQuat                         = Quat::FromEulerXYZ(startRotation.x, startRotation.y, startRotation.z);
 
-    const float4x4 startTransform    = float4x4::FromTRS(startPosition, startQuat, startScale);
-    currentRotationQuat              = startQuat;
+    const float4x4 startTransform     = float4x4::FromTRS(startPosition, startQuat, startScale);
+    currentRotationQuat               = startQuat;
 
     parent->SetLocalTransform(startTransform);
 
     // Audio
     audioComp = parent->GetComponent<AudioSourceComponent*>();
 
-    //GLOG("Initiating TileFloatScript");
+    // GLOG("Initiating TileFloatScript");
     return true;
 }
 
@@ -66,17 +61,19 @@ void TileFloatScript::Update(float deltaTime)
 
     if (!isActive)
     {
-        const float distanceSq = character->GetLastPosition().DistanceSq(finalPosition + parent->GetParentGlobalTransform().TranslatePart());
+        const float distanceSq =
+            character->GetLastPosition().DistanceSq(finalPosition + parent->GetParentGlobalTransform().TranslatePart());
 
         isActive = distanceSq < minDistanceToPlayer * minDistanceToPlayer;
 
         if (isActive && audioComp != nullptr) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_TILES);
-    } else
+    }
+    else
     {
-        risingCounter += deltaTime / (10.0f / speed);
+        risingCounter          += deltaTime / (10.0f / speed);
 
-        const float3& currentT   = parent->GetPosition();
-        const float3& currentS   = parent->GetScale();
+        const float3& currentT  = parent->GetPosition();
+        const float3& currentS  = parent->GetScale();
 
         // Ensure shortest path
         if (QuaternionDot(currentRotationQuat, finalRotation) < 0.0f)
@@ -84,8 +81,8 @@ void TileFloatScript::Update(float deltaTime)
             finalRotation = Quat(-finalRotation.x, -finalRotation.y, -finalRotation.z, -finalRotation.w);
         }
 
-        const float dot = std::clamp(QuaternionDot(currentRotationQuat, finalRotation), -1.0f, 1.0f);
-        const float angle        = acos(dot) * 2.0f;
+        const float dot   = std::clamp(QuaternionDot(currentRotationQuat, finalRotation), -1.0f, 1.0f);
+        const float angle = acos(dot) * 2.0f;
 
         // Snap to final transform if very close
         if (risingCounter >= 1.0f)
