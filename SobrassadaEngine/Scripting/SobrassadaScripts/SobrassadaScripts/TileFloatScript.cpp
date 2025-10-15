@@ -9,13 +9,15 @@
 #include "GameObject.h"
 #include "ImGui.h"
 #include "LibraryModule.h"
+#include "Wwise_IDs.h"
 #include "Standalone/CharacterControllerComponent.h"
 
 #include "Math/float4x4.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
 
 TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Speed", InspectorField::FieldType::Int, &speed, 0, 100});
+    fields.push_back({"Speed", InspectorField::FieldType::Float, &speed, 1, 10});
     fields.push_back({"MinDistanceToPlayer", InspectorField::FieldType::Float, &minDistanceToPlayer, -100.0f, 100.0f});
     fields.push_back({"Starting Position", InspectorField::FieldType::Vec3, &startPosition, -100.0, 100.0f});
     fields.push_back({"Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, -100.0, 100.0f});
@@ -51,59 +53,55 @@ bool TileFloatScript::Init()
 
     parent->SetLocalTransform(startTransform);
 
+    // Audio
+    audioComp = parent->GetComponent<AudioSourceComponent*>();
+
     //GLOG("Initiating TileFloatScript");
     return true;
 }
 
 void TileFloatScript::Update(float deltaTime)
 {
-    if (!character) return;
+    if (isFinished || !character) return;
 
-    const float distance = character->GetLastPosition().Distance(finalPosition + parent->GetParentGlobalTransform().TranslatePart());
-    // Disable when far away (for performance)
-    isActive             = (distance <= minDistanceToPlayer * 2);
-    if (!isActive) return;
-
-    const bool goingToFinal = distance <= minDistanceToPlayer;
-
-    float factor            = max(distance, 0.1f);
-    float adjustedSpeed     = speed * deltaTime * (1.0f / factor);
-    adjustedSpeed           = std::clamp(adjustedSpeed, 0.0f, 1.0f);
-
-    const float3& currentT   = parent->GetPosition();
-    const float3& currentS   = parent->GetScale();
-
-    const float3 targetT    = goingToFinal ? finalPosition : startPosition;
-    const float3 targetS    = goingToFinal ? finalScale : startScale;
-    Quat targetQuat         = goingToFinal ? finalRotation : startQuat;
-
-    // Ensure shortest path
-    if (QuaternionDot(currentRotationQuat, targetQuat) < 0.0f)
+    if (!isActive)
     {
-        targetQuat = Quat(-targetQuat.x, -targetQuat.y, -targetQuat.z, -targetQuat.w);
-    }
+        const float distanceSq = character->GetLastPosition().DistanceSq(finalPosition + parent->GetParentGlobalTransform().TranslatePart());
 
-    float dot                = QuaternionDot(currentRotationQuat, targetQuat);
-    dot                      = std::clamp(dot, -1.0f, 1.0f);
-    const float angle        = acos(dot) * 2.0f;
+        isActive = distanceSq < minDistanceToPlayer * minDistanceToPlayer;
 
-    const bool positionClose = currentT.DistanceSq(targetT) < positionThreshold;
-    const bool scaleClose    = currentS.DistanceSq(targetS) < scaleThreshold;
-    const bool rotationClose = angle < rotationSnapThreshold;
-
-    // Snap to final transform if very close
-    if (positionClose && scaleClose && rotationClose)
+        if (isActive && audioComp != nullptr) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_TILES);
+    } else
     {
-        currentRotationQuat       = targetQuat;
-        float4x4 snappedTransform = float4x4::FromTRS(targetT, currentRotationQuat, targetS);
-        parent->SetLocalTransform(snappedTransform);
-        return;
+        risingCounter += deltaTime / (10.0f / speed);
+
+        const float3& currentT   = parent->GetPosition();
+        const float3& currentS   = parent->GetScale();
+
+        // Ensure shortest path
+        if (QuaternionDot(currentRotationQuat, finalRotation) < 0.0f)
+        {
+            finalRotation = Quat(-finalRotation.x, -finalRotation.y, -finalRotation.z, -finalRotation.w);
+        }
+
+        const float dot = std::clamp(QuaternionDot(currentRotationQuat, finalRotation), -1.0f, 1.0f);
+        const float angle        = acos(dot) * 2.0f;
+
+        // Snap to final transform if very close
+        if (risingCounter >= 1.0f)
+        {
+            currentRotationQuat       = finalRotation;
+            float4x4 snappedTransform = float4x4::FromTRS(finalPosition, currentRotationQuat, finalScale);
+            parent->SetLocalTransform(snappedTransform);
+            isFinished = true;
+            return;
+        }
+
+        const float3 newT           = Lerp(currentT, finalPosition, risingCounter);
+        const float3 newS           = Lerp(currentS, finalScale, risingCounter);
+        currentRotationQuat         = Quat::Slerp(currentRotationQuat, finalRotation, risingCounter).Normalized();
+
+        const float4x4 newTransform = float4x4::FromTRS(newT, currentRotationQuat, newS);
+        parent->SetLocalTransform(newTransform);
     }
-
-    const float3 newT           = Lerp(currentT, targetT, adjustedSpeed);
-    const float3 newS           = Lerp(currentS, targetS, adjustedSpeed);
-    currentRotationQuat         = Quat::Slerp(currentRotationQuat, targetQuat, adjustedSpeed).Normalized();
-
-    const float4x4 newTransform = float4x4::FromTRS(newT, currentRotationQuat, newS);
-    parent->SetLocalTransform(newTransform);
 }
