@@ -738,61 +738,52 @@ void Boss::OnDamageTaken(int amount)
     if (currentAction == BossActions::Idle || currentAction == BossActions::Chase ||
         currentAction == BossActions::Waiting)
     {
-        int num = uniformSteps(rng);
+        agentAI->PauseMovement();
 
-        if (num == 1)
+        float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
+
+        float dot      = hitCollisionNormal.Dot(forward);
+
+        int num        = uniformGetHit(rng);
+
+        if (dot == 0.0f)
         {
-            agentAI->PauseMovement();
+            dot = (num == 1) ? 1.0f : -1.0f;
+        }
 
-            float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
-
-            float dot      = hitCollisionNormal.Dot(forward);
-
-            num            = uniformGetHit(rng);
-
-            if (dot == 0.0f)
+        if (dot > 0.0f)
+        {
+            switch (num)
             {
-                dot = (num == 1) ? 1.0f : -1.0f;
-            }
-
-            if (dot > 0.0f)
-            {
-                switch (num)
-                {
-                case 1:
-                    if (animComponent) animComponent->UseTrigger("GetHit1");
-                    currentAction = BossActions::GetHit1;
-                    break;
-                case 2:
-                    if (animComponent) animComponent->UseTrigger("GetHit2");
-                    currentAction = BossActions::GetHit2;
-                    break;
-                default:
-                    GLOG("ERROR: Ferdiad forward hit anim");
-                    break;
-                }
-            }
-            else
-            {
-                switch (num)
-                {
-                case 1:
-                    if (animComponent) animComponent->UseTrigger("GetHit1Behind");
-                    currentAction = BossActions::GetHit1Behind;
-                    break;
-                case 2:
-                    if (animComponent) animComponent->UseTrigger("GetHit2Behind");
-                    currentAction = BossActions::GetHit2Behind;
-                    break;
-                default:
-                    GLOG("ERROR: Ferdiad forward hit anim");
-                    break;
-                }
+            case 1:
+                if (animComponent) animComponent->UseTrigger("GetHit1");
+                currentAction = BossActions::GetHit1;
+                break;
+            case 2:
+                if (animComponent) animComponent->UseTrigger("GetHit2");
+                currentAction = BossActions::GetHit2;
+                break;
+            default:
+                GLOG("ERROR: Ferdiad forward hit anim");
+                break;
             }
         }
         else
         {
-            GLOG("NOPE %d", num)
+            switch (num)
+            {
+            case 1:
+                if (animComponent) animComponent->UseTrigger("GetHit1Behind");
+                currentAction = BossActions::GetHit1Behind;
+                break;
+            case 2:
+                if (animComponent) animComponent->UseTrigger("GetHit2Behind");
+                currentAction = BossActions::GetHit2Behind;
+                break;
+            default:
+                GLOG("ERROR: Ferdiad forward hit anim");
+                break;
+            }
         }
     }
 
@@ -1149,13 +1140,13 @@ void Boss::Death(float deltaTime)
     case BossActions::Death:
         if (!actionTriggerDone)
         {
-            ResetValues(false);
-
             actionTriggerDone = true;
 
             agentAI->PauseMovement();
 
             if (playerScript) playerScript->RemoveEnemy();
+
+            ResetValues(false);
 
             DeleteColliders();
 

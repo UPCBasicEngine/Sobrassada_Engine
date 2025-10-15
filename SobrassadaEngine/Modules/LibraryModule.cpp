@@ -33,8 +33,13 @@ bool LibraryModule::Init()
     if (App->GetProjectModule()->IsProjectLoaded())
     {
         const std::string& engineDefaultPath = ENGINE_DEFAULT_ASSETS;
+#ifndef GAME
         SceneImporter::CreateLibraryDirectories(App->GetProjectModule()->GetLoadedProjectPath());
         SceneImporter::CreateLibraryDirectories(engineDefaultPath);
+        CopyScenes(App->GetProjectModule()->GetLoadedProjectPath());
+        CopyMetadata(App->GetProjectModule()->GetLoadedProjectPath());
+        CopyMetadata(engineDefaultPath);
+#endif
         LoadLibraryMaps(App->GetProjectModule()->GetLoadedProjectPath());
         LoadLibraryMaps(engineDefaultPath);
     }
@@ -87,7 +92,8 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
             sceneFilePath = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH +
                             std::to_string(sceneUID) + SCENE_EXTENSION;
         else
-            sceneFilePath = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + sceneName + SCENE_EXTENSION;
+            sceneFilePath =
+                App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH + sceneName + SCENE_EXTENSION;
 
         unsigned int bytesWritten = (unsigned int
         )FileSystem::Save(sceneFilePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
@@ -96,6 +102,8 @@ bool LibraryModule::SaveScene(const char* path, SaveMode saveMode) const
             GLOG("Failed to save scene file: %s", sceneName.c_str());
             return false;
         }
+
+        if (saveMode != SaveMode::SavePlayMode) CopyScene(sceneFilePath);
 
         // GLOG("%s saved as scene", sceneName.c_str());
         return true;
@@ -110,11 +118,9 @@ bool LibraryModule::LoadScene(const char* file, bool reload) const
 {
     rapidjson::Document doc;
 
-    std::string path;
-    if (reload) path = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
-    else path = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+    const std::string path = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
 
-    bool loaded = FileSystem::LoadJSON((path + std::string(file)).c_str(), doc);
+    bool loaded            = FileSystem::LoadJSON((path + std::string(file)).c_str(), doc);
 
     if (!loaded)
     {
@@ -136,7 +142,7 @@ bool LibraryModule::LoadScene(const char* file, bool reload) const
 
 bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
 {
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(projectPath + METADATA_PATH))
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(projectPath + METADATA_LIB_PATH))
     {
         if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
         {
@@ -318,6 +324,12 @@ void LibraryModule::DeletePrefabFiles(UID prefabUID)
 
     FileSystem::Delete(metaPath.c_str());
 
+    const std::string metaLibPath = App->GetProjectModule()->GetLoadedProjectPath() + METADATA_LIB_PATH +
+                                    std::to_string((int)ResourceType::Prefab) + FILENAME_SEPARATOR +
+                                    GetResourceName(prefabUID) + META_EXTENSION;
+
+    FileSystem::Delete(metaLibPath.c_str());
+
     const std::string assetPath = App->GetProjectModule()->GetLoadedProjectPath() + PREFABS_ASSETS_PATH +
                                   GetResourceName(prefabUID) + PREFAB_EXTENSION;
 
@@ -481,7 +493,7 @@ const std::string& LibraryModule::GetResourcePath(UID resourceID) const
 
 void LibraryModule::CreateCacheForMetadata(const std::string& path)
 {
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_PATH))
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(path + METADATA_LIB_PATH))
     {
         if (entry.is_regular_file() && (FileSystem::GetFileExtension(entry.path().string()) == META_EXTENSION))
         {
@@ -497,6 +509,29 @@ void LibraryModule::CreateCacheForMetadata(const std::string& path)
             }
         }
     }
+}
+
+void LibraryModule::CopyMetadata(const std::string& path) const
+{
+    const std::string source      = path + METADATA_PATH;
+    const std::string destination = path + METADATA_LIB_PATH;
+
+    FileSystem::Copy(source.c_str(), destination.c_str(), true);
+}
+
+void LibraryModule::CopyScenes(const std::string& path) const
+{
+    const std::string source      = path + SCENES_PATH;
+    const std::string destination = path + SCENES_PLAY_PATH;
+
+    FileSystem::Copy(source.c_str(), destination.c_str(), true);
+}
+
+void LibraryModule::CopyScene(const std::string& pathFile) const
+{
+    const std::string destination = App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+
+    FileSystem::Copy(pathFile.c_str(), destination.c_str());
 }
 
 const std::string& LibraryModule::GetResourceName(UID resourceID) const
