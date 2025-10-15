@@ -76,6 +76,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
 bool Boss::Init()
 {
     Character::Init();
+
     agentAI = parent->GetComponent<AIAgentComponent*>();
     if (agentAI == nullptr) GLOG("[WARNING] AIAgent component not found for Boss")
     else
@@ -132,7 +133,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Ferdiad: Health bar base object not found");
 
-    GameObject* shieldObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldName);
+    GameObject* shieldObject = parent->GetChildGameObjectByName(shieldName);
     if (shieldObject)
     {
         weaponCollider = shieldObject->GetComponent<CapsuleColliderComponent*>();
@@ -141,11 +142,11 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Ferdiad shield object by name not found");
 
-    closeArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(closeAreaName);
+    closeArea = parent->GetChildGameObjectByName(closeAreaName);
     if (closeArea) closeArea->SetEnabled(false);
     else GLOG("[WARNING] Not close area object found for ferdiad");
 
-    bigArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(bigAreaName);
+    bigArea = parent->GetChildGameObjectByName(bigAreaName);
     if (bigArea) bigArea->SetEnabled(false);
     else GLOG("[WARNING] Not big area object found for ferdiad");
 
@@ -172,7 +173,7 @@ bool Boss::Init()
         else GLOG("[WARNING] Not spout script found for ferdiad");
     }
 
-    GameObject* emessiveVFXObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(emessiveVFXName);
+    GameObject* emessiveVFXObject = parent->GetChildGameObjectByName(emessiveVFXName);
     if (emessiveVFXObject)
     {
         emessiveVFXMesh = emessiveVFXObject->GetComponent<MeshComponent*>();
@@ -181,8 +182,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Not emessive VFX game object found for ferdiad");
 
-    GameObject* overheadPrepareVFX =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadPrepareVFXName);
+    GameObject* overheadPrepareVFX = parent->GetChildGameObjectByName(overheadPrepareVFXName);
     if (overheadPrepareVFX)
     {
         GameObject* runesLightsObject = overheadPrepareVFX->GetChildGameObjectByName("Cyl_Charger_Lights");
@@ -224,7 +224,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Overhead prepare VFX not found for ferdiad");
 
-    GameObject* overheadDashVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadDashVFXName);
+    GameObject* overheadDashVFX = parent->GetChildGameObjectByName(overheadDashVFXName);
     if (overheadDashVFX)
     {
         GameObject* dashGroundObject = overheadDashVFX->GetChildGameObjectByName("Dash_Energy_Ground");
@@ -285,7 +285,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Overhead dash VFX not found for ferdiad");
 
-    GameObject* overheadAttackVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadAttackVFXName);
+    GameObject* overheadAttackVFX = parent->GetChildGameObjectByName(overheadAttackVFXName);
     if (overheadAttackVFX)
     {
         GameObject* attackExplosionObject = overheadAttackVFX->GetChildGameObjectByName("Cyl_Explosion");
@@ -385,7 +385,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Overhead attack VFX not found for ferdiad");
 
-    GameObject* shieldBlastVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldBlastVFXName);
+    GameObject* shieldBlastVFX = parent->GetChildGameObjectByName(shieldBlastVFXName);
     if (shieldBlastVFX)
     {
         GameObject* blastPreHitObject = shieldBlastVFX->GetChildGameObjectByName("BlastSpritePre");
@@ -470,7 +470,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Shield blast VFX not found for ferdiad");
 
-    GameObject* invulnerableVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(invulnerableVFXName);
+    GameObject* invulnerableVFX = parent->GetChildGameObjectByName(invulnerableVFXName);
     if (invulnerableVFX)
     {
         GameObject* invulnerablePlaneWaterAnimationObject =
@@ -560,7 +560,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Invulnerable VFX game object not found for ferdiad");
 
-    GameObject* atomObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
+    GameObject* atomObject = parent->GetChildGameObjectByName(atomParticleName);
     if (atomObject)
     {
         atomParticle = atomObject->GetComponent<ParticleSystemComponent*>();
@@ -569,7 +569,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Atom particle object not found for ferdiad");
 
-    GameObject* smokeObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(smokeParticleName);
+    GameObject* smokeObject = parent->GetChildGameObjectByName(smokeParticleName);
     if (smokeObject)
     {
         smokeParticle = smokeObject->GetComponent<ParticleSystemComponent*>();
@@ -578,8 +578,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Smoke particle object not found for ferdiad");
 
-    GameObject* chargeShieldObject =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargeShieldParticleName);
+    GameObject* chargeShieldObject = parent->GetChildGameObjectByName(chargeShieldParticleName);
     if (chargeShieldObject)
     {
         chargeShieldParticle = chargeShieldObject->GetComponent<ParticleSystemComponent*>();
@@ -588,8 +587,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Charge shield particle object not found for ferdiad");
 
-    GameObject* energyBlastObject1 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(1));
+    GameObject* energyBlastObject1 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(1));
     if (energyBlastObject1)
     {
         energyBlastParticle1 = energyBlastObject1->GetComponent<ParticleSystemComponent*>();
@@ -598,8 +596,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Energy blast 1 particle object not found for ferdiad");
 
-    GameObject* energyBlastObject2 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(2));
+    GameObject* energyBlastObject2 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(2));
     if (energyBlastObject2)
     {
         energyBlastParticle2 = energyBlastObject2->GetComponent<ParticleSystemComponent*>();
@@ -608,8 +605,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Energy blast 2 particle object not found for ferdiad");
 
-    GameObject* energyBlastObject3 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(3));
+    GameObject* energyBlastObject3 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(3));
     if (energyBlastObject3)
     {
         energyBlastParticle3 = energyBlastObject3->GetComponent<ParticleSystemComponent*>();
@@ -618,8 +614,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Energy blast 3 particle object not found for ferdiad");
 
-    GameObject* energyBlastObject4 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(4));
+    GameObject* energyBlastObject4 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(4));
     if (energyBlastObject4)
     {
         energyBlastParticle4 = energyBlastObject4->GetComponent<ParticleSystemComponent*>();
