@@ -1547,11 +1547,7 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
 
-            if (ultimateHoldEnabled && animComponent && !playerAnimHeld)
-            {
-                animComponent->OnPause();
-                playerAnimHeld = true;
-            }
+            
         }
         else if (ultimateObject->IsEnabled())
         {
@@ -1576,7 +1572,7 @@ void CuChulainn::PerformAttack()
             {
                 const bool animReady =
                     vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
-                bool show, blurShow, warningShow = false;
+                bool show, blurShow, warningShow, holdPlayer = false;
 
                 if (animReady)
                 {
@@ -1588,12 +1584,18 @@ void CuChulainn::PerformAttack()
                     show                      = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
                     blurShow                  = vfxLocalTimer >= 0.19f / ultimateSpeed;
                     warningShow               = vfxLocalTimer <= 0.4f / ultimateSpeed;
+                    holdPlayer                = (vfxLocalTimer >= 0.60f / ultimateSpeed) && (vfxLocalTimer <= ultimateResumeVfxTime/ultimateSpeed);
                 }
 
                 if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);
                 if (ultimateCrack && ultimateCrack->IsEnabled() != show) ultimateCrack->SetEnabled(show);
                 if (blurShow) ultimateBlur->GetComponent<ShaderScriptComponent*>()->SetEnabled(true);
                 if (!warningShow) ultimateWarning->SetEnabled(false);
+                if (ultimateHoldEnabled && animComponent && !playerAnimHeld && holdPlayer)
+                {
+                    animComponent->OnPause();
+                    playerAnimHeld = true;
+                }
             }
             if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
