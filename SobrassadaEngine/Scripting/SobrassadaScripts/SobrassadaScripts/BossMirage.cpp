@@ -166,7 +166,7 @@ std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::
             if (scriptComp && scriptComp->GetScriptByType<Mirage>())
             {
                 result.push_back(child);
-                GLOG("Checking child: %s | Active: %s", child->GetName().c_str(), child->IsEnabled() ? "Yes" : "No");
+                // GLOG("Checking child: %s | Active: %s", child->GetName().c_str(), child->IsEnabled() ? "Yes" : "No");
             }
         }
         break; // found the correct parent object

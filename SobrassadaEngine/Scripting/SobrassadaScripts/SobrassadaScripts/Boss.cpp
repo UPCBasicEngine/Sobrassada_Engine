@@ -731,12 +731,15 @@ void Boss::OnDamageTaken(int amount)
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
 
     if (currentAction == BossActions::Idle || currentAction == BossActions::Chase ||
-        currentAction == BossActions::Waiting)
+        currentAction == BossActions::Waiting || currentAction == BossActions::Recover ||
+        currentState == BossStates::Taunt)
     {
+        int num;
 
-        int num = uniformSteps(rng);
+        if (currentAction == BossActions::Chase) num = uniformSteps(rng); // 33% of triggering anim
+        else num = 1;
 
-        if (num == 1) // 33% of triggering anim
+        if (num == 1)
         {
             agentAI->PauseMovement();
 
