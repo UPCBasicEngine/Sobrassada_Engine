@@ -5,6 +5,7 @@
 
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 class ShaderScriptComponent;
 class CameraComponent;
@@ -25,10 +26,10 @@ class ShaderScriptModule : public Module
     void ComponentDeleted(ShaderScriptComponent* component);
     void ComponentDeletedScript(ShaderScriptComponent* component);
 
-    void RenderGeometryPassShaders(float deltaTime, CameraComponent* camera);
-    void RenderTransparentPassShaders(float deltaTime, CameraComponent* camera);
-    void RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera);
-    void RenderPostEffectsPassShaders(float deltaTime, CameraComponent* camera);
+    void RenderGeometryPassShaders(float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender);
+    void RenderTransparentPassShaders(float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender);
+    void RenderPostLightingPassShaders(float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender);
+    void RenderPostEffectsPassShaders(float deltaTime, CameraComponent* camera, std::unordered_set<ShaderScriptComponent*>& shadersToRender);
     void RenderPreUiPassShaders(float deltaTime);
     void RenderUiPassShaders(float deltaTime);
 

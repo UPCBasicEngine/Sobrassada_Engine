@@ -90,6 +90,7 @@ constexpr const char* DEBUG_DLL_PATH                    = "..\\SobrassadaEngine\
 constexpr const char* RELEASE_DLL_PATH                  = "..\\SobrassadaEngine\\x64\\Release\\SobrassadaScripts.dll";
 
 constexpr const char* ENGINE_DEFAULT_ASSETS             = "EngineDefaults/";
+constexpr const char* VIDEOS_ASSETS_PATH                = "Videos/";
 constexpr const char* ASSETS_PATH                       = "Assets/";
 constexpr const char* SCENES_PATH                       = "Assets/Scenes/";
 constexpr const char* METADATA_PATH                     = "Assets/Metadata/";
@@ -97,11 +98,10 @@ constexpr const char* PREFABS_ASSETS_PATH               = "Assets/Prefabs/";
 constexpr const char* MODELS_ASSETS_PATH                = "Assets/Models/";
 constexpr const char* STATEMACHINES_ASSETS_PATH         = "Assets/StateMachines/";
 constexpr const char* NAVMESH_ASSETS_PATH               = "Assets/Navmeshes/";
-constexpr const char* VIDEOS_ASSETS_PATH                = "Assets/Videos/";
 
 constexpr const char* LIBRARY_PATH                      = "Library/";
+constexpr const char* METADATA_LIB_PATH                 = "Library/Metadata/";
 constexpr const char* ANIMATIONS_PATH                   = "Library/Animations/";
-constexpr const char* AUDIO_PATH                        = "Library/Audio/";
 constexpr const char* MODELS_LIB_PATH                   = "Library/Models/";
 constexpr const char* MESHES_PATH                       = "Library/Meshes/";
 constexpr const char* SCENES_PLAY_PATH                  = "Library/Scenes/";
@@ -129,7 +129,7 @@ constexpr const char* VIDEOS_EXTENSION                  = ".mp4";
 constexpr int MAX_COMPONENT_NAME_LENGTH                 = 64;
 
 // Soundbanks
-constexpr const char* WINDOWS_BANKS_PATH                = "Assets\\Soundbanks\\Windows\\";
+constexpr const char* WINDOWS_BANKS_PATH                = "Soundbanks\\Windows\\";
 constexpr const wchar_t* BANKNAME_INIT                  = L"Init.bnk";
 constexpr const wchar_t* BANKNAME_MAIN                  = L"main.bnk";
 constexpr const char* BANKMETA_MAIN                     = "main.json";

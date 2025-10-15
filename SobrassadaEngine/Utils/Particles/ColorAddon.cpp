@@ -40,6 +40,7 @@ ColorAddon::ColorAddon(const rapidjson::Value& initialState, ParticleEmitter* ow
 ColorAddon::~ColorAddon()
 {
     delete gradient;
+    gradient = nullptr;
 }
 
 void ColorAddon::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const

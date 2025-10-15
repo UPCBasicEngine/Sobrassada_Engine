@@ -21,7 +21,7 @@ ChangeSceneScript::ChangeSceneScript(GameObject* parent) : Script(parent)
 bool ChangeSceneScript::Init()
 {
     player        = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(playerName);
-    scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+    scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
     fullScenePath = scenesPath + targetSceneName + SCENE_EXTENSION;
 
     if (!player)

@@ -1567,6 +1567,7 @@ void CuChulainn::PerformAttack()
                     animComponent->OnResume();
                     playerAnimHeld = false;
                 }
+
             }
 
             if (ultimateSpikes) // Control spikes animation appearance
