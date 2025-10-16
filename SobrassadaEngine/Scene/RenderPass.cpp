@@ -1422,7 +1422,8 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
     glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
-
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
+    
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisable(GL_STENCIL_TEST);
