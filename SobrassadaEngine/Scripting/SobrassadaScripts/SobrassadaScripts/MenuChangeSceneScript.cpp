@@ -17,7 +17,7 @@ MenuChangeSceneScript::MenuChangeSceneScript(GameObject* parent) : Script(parent
 bool MenuChangeSceneScript::Init()
 {
     inputDelayFrames = 10;
-    scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH;
+    scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
     fullScenePath = scenesPath + targetSceneName + SCENE_EXTENSION;
     return true;
 }
