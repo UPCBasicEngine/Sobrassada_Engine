@@ -609,6 +609,12 @@ bool CuChulainn::Init()
         }
     }
 
+    gooShoeRight = parent->GetChildGameObjectByName(gooShoeRightName);
+    if (gooShoeRight) gooShoeRight->SetEnabled(false);
+
+    gooShoeLeft = parent->GetChildGameObjectByName(gooShoeLeftName);
+    if (gooShoeLeft) gooShoeLeft->SetEnabled(false);
+
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
     {
@@ -2223,16 +2229,6 @@ void CuChulainn::ToggleRiastrad()
         if (animComponent) animComponent->UseTrigger("Idle");
         state         = CharacterStates::IDLE;
 
-        // TODO: Remove when VFX
-        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-        if (res)
-        {
-            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-            float4 newColor       = mat->GetMaterial().diffColor;
-            newColor              = float4::one;
-            mat->SetDiffColor(newColor);
-        }
-
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
         if (musicManager != nullptr)
         {
@@ -2247,17 +2243,6 @@ void CuChulainn::EnableRiastradVfx()
 
     // Reuse charge attack collider (If needed different size, create another)
     chargedAttackCollider->SetEnabled(true);
-
-    // TODO: Remove when VFX. For now it turns red
-    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-    if (res)
-    {
-        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-        float4 newColor       = mat->GetMaterial().diffColor;
-        newColor.y            = 0.0f;
-        newColor.z            = 0.0f;
-        mat->SetDiffColor(newColor);
-    }
 
     if (riastradCrack)
     {
@@ -2367,17 +2352,6 @@ void CuChulainn::StartCurse()
 {
     if (isRiastrad) return;
 
-    // TODO: Remove when VFX
-    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-    if (res)
-    {
-        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-        float4 newColor       = mat->GetMaterial().diffColor;
-        newColor.y            = 0.0f;
-        newColor.x            = 0.6f;
-        mat->SetDiffColor(newColor);
-    }
-
     isCursed = true;
     character->SetMaxSpeed(curseSpeed);
     curseTimer = curseDuration;
@@ -2390,6 +2364,9 @@ void CuChulainn::StartCurse()
             shader->GetScriptByType<UISpritesheet>()->Reset();
         }
     }
+
+    if (gooShoeRight) gooShoeRight->SetEnabled(true);
+    if (gooShoeLeft) gooShoeLeft->SetEnabled(true);
 
     const HashString walkName = HashString("Walk");
     for (State& state : animComponent->GetResourceStateMachine()->states)
@@ -2437,16 +2414,6 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
 
 void CuChulainn::EndCurse()
 {
-    // TODO: Remove when VFX
-    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-    if (res)
-    {
-        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-        float4 newColor       = mat->GetMaterial().diffColor;
-        newColor              = float4::one;
-        mat->SetDiffColor(newColor);
-    }
-
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
 
@@ -2462,6 +2429,9 @@ void CuChulainn::EndCurse()
             }
         }
     }
+
+    if (gooShoeRight) gooShoeRight->SetEnabled(false);
+    if (gooShoeLeft) gooShoeLeft->SetEnabled(false);
 
     if (animComponent) animComponent->UseTrigger("Idle");
     state = CharacterStates::IDLE;

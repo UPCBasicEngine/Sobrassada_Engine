@@ -330,7 +330,11 @@ class CuChulainn : public Character
 
     // Curse
     std::string curseParentName                    = "CurseVFX";
+    std::string gooShoeRightName                   = "GooShoeRight";
+    std::string gooShoeLeftName                    = "GooShoeLeft";
     ShaderScriptComponent* curseScreenVfx[4]       = {nullptr};
+    GameObject* gooShoeRight                       = nullptr;
+    GameObject* gooShoeLeft                        = nullptr;
 
     float3 spawnPos                                = float3::zero;
     AudioSourceComponent* audio                    = nullptr;
