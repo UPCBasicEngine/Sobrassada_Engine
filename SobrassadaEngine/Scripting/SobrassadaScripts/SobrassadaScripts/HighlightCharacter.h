@@ -46,5 +46,5 @@ class HighlightCharacter : public Script
     GameObject* splineMovementTarget               = nullptr;
     MoveGOInSpline* splineMovementScript           = nullptr;
 
-    NameDisplay* nameDisplay = nullptr;
+    NameDisplay* nameDisplay                       = nullptr;
 };

@@ -1,7 +1,6 @@
 #pragma once
 #include "Script.h"
 
-
 class NameDisplay : public Script
 {
   public:
@@ -13,18 +12,16 @@ class NameDisplay : public Script
     void ShowWithDelay();
 
   private:
-
     void Show();
 
-private:
-
-    bool isSetupCorrectly = true;
-    bool childrenVisible = false;
-    bool showed = true;
+  private:
+    bool isSetupCorrectly  = true;
+    bool childrenVisible   = false;
+    bool showed            = true;
 
     bool showAutomatically = false;
-    float showDelay = 2.0f;
-    float showDuration = 5.0f;
+    float showDelay        = 2.0f;
+    float showDuration     = 5.0f;
 
-    float showCounter = 0.0f;
+    float showCounter      = 0.0f;
 };

@@ -17,8 +17,8 @@
 #include "ScriptComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
-#include "Standalone/SplineComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
+#include "Standalone/SplineComponent.h"
 
 HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
 {
@@ -29,9 +29,9 @@ HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
     fields.emplace_back("Highlight focus", InspectorField::FieldType::InputText, &highlightFocusObjectName);
     fields.emplace_back("Hide player", InspectorField::FieldType::Bool, &hidePlayerWhileZooming);
     fields.emplace_back("Use only zoom", InspectorField::FieldType::Bool, &useOnlyZoom);
-    
+
     fields.emplace_back("Name display name", InspectorField::FieldType::InputText, &nameDisplayName);
-    
+
     fields.emplace_back(
         "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.0f, 10.0f
     );
@@ -135,7 +135,7 @@ bool HighlightCharacter::Init()
         GLOG("[WARNING] HighlightCharacter: Name display go doesn´t contain name display script")
         return false;
     }
-        
+
     return true;
 }
 
@@ -169,15 +169,18 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
 {
     if (!neverExecuted || otherObject != player || !isSetupCorrectly) return;
 
-    if (parent->GetComponent<SphereColliderComponent*>() != nullptr && !parent->GetComponent<CubeColliderComponent*>()->GetEnabled())
+    if (parent->GetComponent<SphereColliderComponent*>() != nullptr &&
+        !parent->GetComponent<CubeColliderComponent*>()->GetEnabled())
     {
         parent->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
         parent->GetComponent<CubeColliderComponent*>()->SetEnabled(true);
-    } else
+    }
+    else
     {
         if (setupTargetOnCollision)
         {
-            characterToHighlight = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(characterToHighlightName);
+            characterToHighlight =
+                AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(characterToHighlightName);
             if (characterToHighlight == nullptr)
             {
                 isSetupCorrectly = false;
@@ -189,10 +192,11 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
                 return;
             }
 
-            highlightFocusObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(highlightFocusObjectName);
+            highlightFocusObject =
+                AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(highlightFocusObjectName);
             if (highlightFocusObject == nullptr) highlightFocusObject = characterToHighlight;
         }
-        
+
         playerController->SetInputDown(false);
 
         if (hidePlayerWhileZooming)
@@ -204,36 +208,38 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
         const float3 highlightVector =
             (highlightFocusObject->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart())
                 .Normalized();
-        Quat cameraOrientation =
-            Quat(AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart());
+        Quat cameraOrientation = Quat(
+            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart()
+        );
         const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
 
         if (useOnlyZoom)
         {
             splineComponent->SetPointWorld(
-            0, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
+                0, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
             );
             splineComponent->SetPointWorld(
-            1, highlightFocusObject->GetGlobalTransform().TranslatePart() + .6f * zoomMultiplier * zoomVector
+                1, highlightFocusObject->GetGlobalTransform().TranslatePart() + .6f * zoomMultiplier * zoomVector
             );
             splineComponent->SetPointWorld(
-            2, highlightFocusObject->GetGlobalTransform().TranslatePart() + .3f * zoomMultiplier * zoomVector
+                2, highlightFocusObject->GetGlobalTransform().TranslatePart() + .3f * zoomMultiplier * zoomVector
             );
             splineComponent->SetPointWorld(3, characterToHighlight->GetGlobalTransform().TranslatePart());
-        } else
+        }
+        else
         {
             splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
 
             splineComponent->SetPointWorld(
-                1, highlightFocusObject->GetGlobalTransform().TranslatePart() - highlightVector * secondSplinePointOffset +
-                       secondSplinePointOffset / 2.f * zoomVector
+                1, highlightFocusObject->GetGlobalTransform().TranslatePart() -
+                       highlightVector * secondSplinePointOffset + secondSplinePointOffset / 2.f * zoomVector
             );
             splineComponent->SetPointWorld(
-            2, highlightFocusObject->GetGlobalTransform().TranslatePart() + secondSplinePointOffset * zoomVector -
-                   secondSplinePointOffset / 2.f * highlightVector
+                2, highlightFocusObject->GetGlobalTransform().TranslatePart() + secondSplinePointOffset * zoomVector -
+                       secondSplinePointOffset / 2.f * highlightVector
             );
             splineComponent->SetPointWorld(
-            3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
+                3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
             );
         }
 

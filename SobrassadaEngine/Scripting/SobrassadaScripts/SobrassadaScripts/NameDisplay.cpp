@@ -2,10 +2,10 @@
 
 #include "pch.h"
 
-#include "NameDisplay.h"
 #include "GameObject.h"
+#include "NameDisplay.h"
 
-NameDisplay::NameDisplay(GameObject* parent): Script(parent)
+NameDisplay::NameDisplay(GameObject* parent) : Script(parent)
 {
     fields.emplace_back("Show automatically", InspectorField::FieldType::Bool, &showAutomatically);
     fields.emplace_back("Show delay", InspectorField::FieldType::Float, &showDelay, 0, 10);
@@ -21,11 +21,11 @@ bool NameDisplay::Init()
         return false;
     }
 
-    for (UID childUID: parent->GetChildren())
+    for (UID childUID : parent->GetChildren())
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID)->SetEnabled(false);
-    
+
     if (showAutomatically) ShowWithDelay();
-    
+
     return true;
 }
 
@@ -37,11 +37,11 @@ void NameDisplay::Update(float deltaTime)
     {
         if (childrenVisible)
         {
-            for (UID childUID: parent->GetChildren())
+            for (UID childUID : parent->GetChildren())
                 AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID)->SetEnabled(false);
             showed = true;
-        } else
-            Show();
+        }
+        else Show();
     }
 
     showCounter -= deltaTime;
@@ -50,18 +50,17 @@ void NameDisplay::Update(float deltaTime)
 void NameDisplay::ShowWithDelay()
 {
     showCounter = showDelay;
-    showed = false;
+    showed      = false;
 }
 
 void NameDisplay::Show()
 {
     if (isSetupCorrectly)
     {
-        for (UID childUID: parent->GetChildren())
+        for (UID childUID : parent->GetChildren())
             AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID)->SetEnabled(true);
-        showed = false;
-        showCounter = showDuration;
+        showed          = false;
+        showCounter     = showDuration;
         childrenVisible = true;
     }
 }
-

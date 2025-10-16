@@ -1,11 +1,10 @@
-#include "pch.h"
 #include "MoveGOInSpline.h"
+#include "pch.h"
 
 #include "Application.h"
 #include "GameObject.h"
 #include "SceneModule.h"
 #include "Standalone/SplineComponent.h"
-
 
 MoveGOInSpline::MoveGOInSpline(GameObject* parent) : Script(parent)
 {
@@ -16,9 +15,9 @@ MoveGOInSpline::MoveGOInSpline(GameObject* parent) : Script(parent)
 bool MoveGOInSpline::Init()
 {
     spline = FindSpline();
-    
+
     if (!spline) GLOG("[MoveGOInSpline] GameObject '%s' did not found spline.", parent->GetName().c_str());
-    
+
     return true;
 }
 
@@ -31,25 +30,25 @@ void MoveGOInSpline::Update(float deltaTime)
     }
     if (speed <= 0.0f) return;
 
-    float segSpeed = spline->EvaluateSpeed(t) * speed;
+    float segSpeed     = spline->EvaluateSpeed(t) * speed;
 
     const int ptCount  = static_cast<int>(spline->GetNumPoints());
     const bool isLoop  = spline->IsLoop();
     const int segCount = isLoop ? ptCount : ptCount - 1;
 
     float segFloat     = t * segCount;
-    int idxStart           = static_cast<int>(floorf(segFloat));
-    
+    int idxStart       = static_cast<int>(floorf(segFloat));
+
     if (isLoop) idxStart %= ptCount;
 
     int idxEnd    = isLoop ? (idxStart + 1) % ptCount : (std::min)(idxStart + 1, ptCount - 1);
-    
+
     float3 pStart = spline->GetPointWorld(idxStart);
     float3 pEnd   = spline->GetPointWorld(idxEnd);
     float segLen  = (pEnd - pStart).Length();
 
     if (segLen < 0.0001f) segLen = 0.0001f;
-    
+
     float deltaT = (segSpeed * deltaTime) / (segLen * segCount);
 
     if (pingPong && !isLoop)
@@ -86,19 +85,18 @@ void MoveGOInSpline::Update(float deltaTime)
     float3 worldPos;
     Quat worldRot;
     spline->EvaluateTransform(t, worldPos, worldRot);
-    
+
     const float4x4& parentGlob = parent->GetParentGlobalTransform();
 
     float4x4 worldM            = float4x4::FromTRS(worldPos, worldRot.ToFloat4x4(), float3::one);
-    
+
     float4x4 localM            = parentGlob.Inverted() * worldM;
     parent->SetLocalTransform(localM);
-
 }
 
 SplineComponent* MoveGOInSpline::FindSpline()
 {
-    UID parentUID = parent->GetParent();
+    UID parentUID      = parent->GetParent();
     GameObject* parent = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parentUID);
 
     if (!parent) return nullptr;
@@ -118,8 +116,6 @@ SplineComponent* MoveGOInSpline::FindSpline()
             return spline;
         }
     }
-    
+
     return nullptr;
 }
-
-
