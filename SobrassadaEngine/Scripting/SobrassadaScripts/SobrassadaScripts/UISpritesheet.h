@@ -34,6 +34,7 @@ class UISpritesheet : public Script
     float timer                  = 0.0f;
     float fadeOutDuration        = 0.0f;
     float fadeOutTime            = 0.0f;
+    float fadeOutStart           = 0.0f;
 
     bool isRowMajor              = false;
     float cellHeight             = 0.1f;

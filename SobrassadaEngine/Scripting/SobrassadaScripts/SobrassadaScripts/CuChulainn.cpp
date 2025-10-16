@@ -581,6 +581,22 @@ bool CuChulainn::Init()
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
     else ultimateSpikes->SetEnabled(false);
 
+    // Curse
+    GameObject* curseParent = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(curseParentName);
+    if (curseParent)
+    {
+        int idx = 0;
+        for (UID uid : curseParent->GetChildren())
+        {
+            curseScreenVfx[idx] =
+                AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(uid)->GetComponent<ShaderScriptComponent*>(
+                );
+
+            if (curseScreenVfx[idx]) curseScreenVfx[idx]->SetEnabled(false);
+            ++idx;
+        }
+    }
+
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
     {
@@ -874,6 +890,7 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::RUN) return;
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
             // if (state == CharacterStates::ULTIMATE &&
             // ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
@@ -1826,19 +1843,19 @@ void CuChulainn::Move()
 
     const bool actuallyMoving = character->IsMoving();
     const bool wantsMove      = moveFromCollision;
-    const bool runCondition   = wantsMove || character->GetSpeed() > 0.5f;
+    const bool runCondition   = wantsMove || actuallyMoving;
 
-    if (runCondition)
+    if (actuallyMoving)
     {
         if (state != CharacterStates::RUN)
         {
             state    = CharacterStates::RUN;
-            runTimer = 0.0f;
+            runTimer = -0.06f;
             if (animComponent) animComponent->UseTrigger("Walk");
 
             isRightFoot = false;
         }
-
+        
         if (runTimer > stepTime && audio)
         {
             LineSegment ray(
@@ -1859,32 +1876,40 @@ void CuChulainn::Move()
 
                 if (audio) audio->EmitEvent(eventId);
 
-                const float3 lateralDirection = character->GetFrontDirection().Cross(float3::unitY).Normalized();
-                const float3 horizontalOffset = isRightFoot ? lateralDirection * 0.2f : -lateralDirection * 0.2f;
-                const float3 verticalOffset   = float3::unitY * 0.1f;
+                if (footsteps[stepIndex])
+                {
+                    const float3 lateralDirection = character->GetFrontDirection().Cross(float3::unitY).Normalized();
+                    const float3 horizontalOffset = isRightFoot ? lateralDirection * 0.1f : -lateralDirection * 0.1f;
+                    const float3 verticalOffset   = float3::unitY * 0.1f;
 
-                const Quat stepRotation =
-                    Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
-                const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitY, 180.0f * (PI / 180));
-                const Quat finalRotation        = stepRotation * horizontalCorrection;
+                    const Quat stepRotation =
+                        Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
+                    const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitY, 180.0f * (PI / 180));
+                    Quat finalRotation        = stepRotation * horizontalCorrection;
+                    if (!isRightFoot)
+                    {
+                        const Quat zRotation = Quat::RotateAxisAngle(float3::unitZ, 180.0f * (PI / 180));
+                        finalRotation        = finalRotation * zRotation;
+                    }
 
-                const float3 scale              = footsteps[stepIndex]->GetParent()->GetLocalTransform().ExtractScale();
+                    const float3 scale       = footsteps[stepIndex]->GetParent()->GetLocalTransform().ExtractScale();
 
-                const float4x4 transform =
-                    float4x4::FromTRS(parent->GetGlobalPostition() + verticalOffset + horizontalOffset, finalRotation, scale);
+                    const float4x4 transform = float4x4::FromTRS(
+                        parent->GetGlobalPostition() + verticalOffset + horizontalOffset, finalRotation, scale
+                    );
 
-                const float4x4 parentWorld = parent->GetParentGlobalTransform();
-                const float4x4 localTRS    = parentWorld.Inverted() * transform;
+                    const float4x4 parentWorld = parent->GetParentGlobalTransform();
+                    const float4x4 localTRS    = parentWorld.Inverted() * transform;
 
-                footsteps[stepIndex]->GetParent()->SetLocalTransform(localTRS);
-                footsteps[stepIndex]->SetEnabled(true);
-                footsteps[stepIndex]->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+                    footsteps[stepIndex]->GetParent()->SetLocalTransform(localTRS);
+                    footsteps[stepIndex]->SetEnabled(true);
+                    footsteps[stepIndex]->GetScriptByType<AttackVfxSpritesheet>()->Reset();
 
-                isRightFoot  = !isRightFoot;
-                stepIndex   += 1;
-                if (stepIndex == 4) stepIndex = 0;
+                    isRightFoot  = !isRightFoot;
+                    stepIndex   += 1;
+                    if (stepIndex == 4) stepIndex = 0;
+                }
             }
-
             runTimer = 0.0f;
         }
     }
@@ -2318,6 +2343,8 @@ void CuChulainn::OnArrowHit()
 
 void CuChulainn::StartCurse()
 {
+    if (isRiastrad) return;
+
     // TODO: Remove when VFX
     Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
     if (res)
@@ -2331,7 +2358,16 @@ void CuChulainn::StartCurse()
 
     isCursed = true;
     character->SetMaxSpeed(curseSpeed);
-    curseTimer                = curseDuration;
+    curseTimer = curseDuration;
+
+    for (ShaderScriptComponent* shader : curseScreenVfx)
+    {
+        if (shader)
+        {
+            shader->SetEnabled(true);
+            shader->GetScriptByType<UISpritesheet>()->Reset();
+        }
+    }
 
     const HashString walkName = HashString("Walk");
     for (State& state : animComponent->GetResourceStateMachine()->states)

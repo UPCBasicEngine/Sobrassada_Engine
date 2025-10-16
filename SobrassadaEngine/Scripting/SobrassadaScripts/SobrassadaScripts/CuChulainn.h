@@ -325,6 +325,10 @@ class CuChulainn : public Character
     ShaderScriptComponent* riastradSmoke           = nullptr;
     ShaderScriptComponent* riastradGroundExplosion = nullptr;
 
+    // Curse
+    std::string curseParentName                    = "CurseVFX";
+    ShaderScriptComponent* curseScreenVfx[4]       = {nullptr};
+
     float3 spawnPos                                = float3::zero;
     AudioSourceComponent* audio                    = nullptr;
 
