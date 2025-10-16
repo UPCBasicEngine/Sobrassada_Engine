@@ -167,7 +167,7 @@ void HighlightCharacter::OnDestroy()
 
 void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
-    if (!neverExecuted || otherObject != player) return;
+    if (!neverExecuted || otherObject != player || !isSetupCorrectly) return;
 
     if (parent->GetComponent<SphereColliderComponent*>() != nullptr && !parent->GetComponent<CubeColliderComponent*>()->GetEnabled())
     {
@@ -210,16 +210,16 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
 
         if (useOnlyZoom)
         {
-            splineComponent->SetPointWorld(0, highlightFocusObject->GetGlobalTransform().TranslatePart());
             splineComponent->SetPointWorld(
-            1, highlightFocusObject->GetGlobalTransform().TranslatePart() + .3f * zoomMultiplier * zoomVector
+            0, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
             );
             splineComponent->SetPointWorld(
-            2, highlightFocusObject->GetGlobalTransform().TranslatePart() + .6f * zoomMultiplier * zoomVector
+            1, highlightFocusObject->GetGlobalTransform().TranslatePart() + .6f * zoomMultiplier * zoomVector
             );
             splineComponent->SetPointWorld(
-            3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
+            2, highlightFocusObject->GetGlobalTransform().TranslatePart() + .3f * zoomMultiplier * zoomVector
             );
+            splineComponent->SetPointWorld(3, characterToHighlight->GetGlobalTransform().TranslatePart());
         } else
         {
             splineComponent->SetPointWorld(0, playerCameraPivot->GetGlobalTransform().TranslatePart());
@@ -232,11 +232,10 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
             2, highlightFocusObject->GetGlobalTransform().TranslatePart() + secondSplinePointOffset * zoomVector -
                    secondSplinePointOffset / 2.f * highlightVector
             );
-        }
-        
-        splineComponent->SetPointWorld(
+            splineComponent->SetPointWorld(
             3, highlightFocusObject->GetGlobalTransform().TranslatePart() + zoomMultiplier * zoomVector
-        );
+            );
+        }
 
         splineMovementTarget->SetEnabled(true);
         cameraMovementScript->InitAlternativeTargetAndLookAhead(splineMovementTarget, 0.f);

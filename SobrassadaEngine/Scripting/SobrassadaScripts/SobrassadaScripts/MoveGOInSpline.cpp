@@ -71,8 +71,16 @@ void MoveGOInSpline::Update(float deltaTime)
     else
     {
         t += deltaT;
-        if (t > 1.f) t -= 1.f;
-        else if (t < 0.f) t += 1.f;
+        if (t > 1.f)
+        {
+            t -= 1.f;
+            loopCounter++;
+        }
+        else if (t < 0.f)
+        {
+            t += 1.f;
+            loopCounter++;
+        }
     }
 
     float3 worldPos;
