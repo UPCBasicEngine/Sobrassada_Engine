@@ -18,9 +18,6 @@ class TileFloatScript : public Script
     float3 finalPosition, finalScale, startPosition, startRotation;
     float3 startScale               = float3(1.0f, 1.0f, 1.0f);
     float minDistanceToPlayer       = 10.0f;
-    float positionThreshold         = 0.0001f;
-    float scaleThreshold            = 0.0001f;
-    float rotationSnapThreshold     = 0.01f;
     bool isActive                   = false;
     bool isFinished                 = false;
 

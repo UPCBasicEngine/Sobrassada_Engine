@@ -7,28 +7,30 @@
 #include "GameObject.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Wwise_IDs.h"
+#include "imgui_curve_editor.h"
 
 #include "Math/float4x4.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 
+#include <Math/MathFunc.h>
+
 TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Speed", InspectorField::FieldType::Float, &speed, 1, 10});
-    fields.push_back({"MinDistanceToPlayer", InspectorField::FieldType::Float, &minDistanceToPlayer, -100.0f, 100.0f});
-    fields.push_back({"Starting Position", InspectorField::FieldType::Vec3, &startPosition, -100.0, 100.0f});
-    fields.push_back({"Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, -100.0, 100.0f});
-    fields.push_back({"Starting Scale", InspectorField::FieldType::Vec3, &startScale, -100.0, 100.0f});
-    fields.push_back(
-        {"Set Start Transform",
-         [this](Script* self)
-         {
-             const float4x4& currentTransform = this->parent->GetLocalTransform();
+    fields.emplace_back("Speed", InspectorField::FieldType::Float, &speed, 1, 10);
+    fields.emplace_back("MinDistanceToPlayer", InspectorField::FieldType::Float, &minDistanceToPlayer, -100.0f, 100.0f);
+    fields.emplace_back("Starting Position", InspectorField::FieldType::Vec3, &startPosition, -100.0, 100.0f);
+    fields.emplace_back("Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, -100.0, 100.0f);
+    fields.emplace_back("Starting Scale", InspectorField::FieldType::Vec3, &startScale, -100.0, 100.0f);
+    fields.emplace_back("Set Start Transform",
+                        [this](Script* self)
+                        {
+                            const float4x4& currentTransform = this->parent->GetLocalTransform();
 
-             this->startPosition              = currentTransform.TranslatePart();
-             this->startRotation              = currentTransform.RotatePart().ToEulerXYZ();
-             this->startScale                 = currentTransform.GetScale();
-             Quat rotQuat                     = Quat(currentTransform.RotatePart());
-         }}
+                            this->startPosition              = currentTransform.TranslatePart();
+                            this->startRotation              = currentTransform.RotatePart().ToEulerXYZ();
+                            this->startScale                 = currentTransform.GetScale();
+                            Quat rotQuat                     = Quat(currentTransform.RotatePart());
+                        }
     );
 }
 
@@ -71,18 +73,13 @@ void TileFloatScript::Update(float deltaTime)
     else
     {
         risingCounter          += deltaTime / (10.0f / speed);
-
-        const float3& currentT  = parent->GetPosition();
-        const float3& currentS  = parent->GetScale();
-
+        const float alpha = risingCounter < .5f ? 4 * Pow(risingCounter, 3) : 1 - Pow(-2 * risingCounter + 2, 3) / 2;
+        
         // Ensure shortest path
         if (QuaternionDot(currentRotationQuat, finalRotation) < 0.0f)
         {
             finalRotation = Quat(-finalRotation.x, -finalRotation.y, -finalRotation.z, -finalRotation.w);
         }
-
-        const float dot   = std::clamp(QuaternionDot(currentRotationQuat, finalRotation), -1.0f, 1.0f);
-        const float angle = acos(dot) * 2.0f;
 
         // Snap to final transform if very close
         if (risingCounter >= 1.0f)
@@ -94,9 +91,9 @@ void TileFloatScript::Update(float deltaTime)
             return;
         }
 
-        const float3 newT           = Lerp(currentT, finalPosition, risingCounter);
-        const float3 newS           = Lerp(currentS, finalScale, risingCounter);
-        currentRotationQuat         = Quat::Slerp(currentRotationQuat, finalRotation, risingCounter).Normalized();
+        const float3 newT           = Lerp(parent->GetPosition(), finalPosition, alpha);
+        const float3 newS           = Lerp(parent->GetScale(), finalScale, alpha);
+        currentRotationQuat         = Quat::Slerp(currentRotationQuat, finalRotation, alpha).Normalized();
 
         const float4x4 newTransform = float4x4::FromTRS(newT, currentRotationQuat, newS);
         parent->SetLocalTransform(newTransform);
