@@ -21,16 +21,17 @@ TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
     fields.emplace_back("Starting Position", InspectorField::FieldType::Vec3, &startPosition, -100.0, 100.0f);
     fields.emplace_back("Starting Rotation", InspectorField::FieldType::Vec3, &startRotation, -100.0, 100.0f);
     fields.emplace_back("Starting Scale", InspectorField::FieldType::Vec3, &startScale, -100.0, 100.0f);
-    fields.emplace_back("Set Start Transform",
-                        [this](Script* self)
-                        {
-                            const float4x4& currentTransform = this->parent->GetLocalTransform();
+    fields.emplace_back(
+        "Set Start Transform",
+        [this](Script* self)
+        {
+            const float4x4& currentTransform = this->parent->GetLocalTransform();
 
-                            this->startPosition              = currentTransform.TranslatePart();
-                            this->startRotation              = currentTransform.RotatePart().ToEulerXYZ();
-                            this->startScale                 = currentTransform.GetScale();
-                            Quat rotQuat                     = Quat(currentTransform.RotatePart());
-                        }
+            this->startPosition              = currentTransform.TranslatePart();
+            this->startRotation              = currentTransform.RotatePart().ToEulerXYZ();
+            this->startScale                 = currentTransform.GetScale();
+            Quat rotQuat                     = Quat(currentTransform.RotatePart());
+        }
     );
 }
 
@@ -72,9 +73,9 @@ void TileFloatScript::Update(float deltaTime)
     }
     else
     {
-        risingCounter          += deltaTime / (10.0f / speed);
-        const float alpha = risingCounter < .5f ? 4 * Pow(risingCounter, 3) : 1 - Pow(-2 * risingCounter + 2, 3) / 2;
-        
+        risingCounter     += deltaTime / (10.0f / speed);
+        const float alpha  = risingCounter < .5f ? 4 * Pow(risingCounter, 3) : 1 - Pow(-2 * risingCounter + 2, 3) / 2;
+
         // Ensure shortest path
         if (QuaternionDot(currentRotationQuat, finalRotation) < 0.0f)
         {
