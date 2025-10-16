@@ -9,6 +9,7 @@
 #include "GameObject.h"
 #include "Globals.h"
 #include "MoveGOInSpline.h"
+#include "NameDisplay.h"
 #include "ProjectModule.h"
 #include "SavePlayerData.h"
 #include "Scene.h"
@@ -28,6 +29,8 @@ HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
     fields.emplace_back("Highlight focus", InspectorField::FieldType::InputText, &highlightFocusObjectName);
     fields.emplace_back("Hide player", InspectorField::FieldType::Bool, &hidePlayerWhileZooming);
     fields.emplace_back("Use only zoom", InspectorField::FieldType::Bool, &useOnlyZoom);
+    
+    fields.emplace_back("Name display name", InspectorField::FieldType::InputText, &nameDisplayName);
     
     fields.emplace_back(
         "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.0f, 10.0f
@@ -117,6 +120,22 @@ bool HighlightCharacter::Init()
 
     splineMovementTarget->SetEnabled(false);
 
+    GameObject* nameDisplayGO = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(nameDisplayName);
+    if (nameDisplayGO == nullptr || nameDisplayGO->GetComponent<ScriptComponent*>() == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[WARNING] HighlightCharacter: No name display go found")
+        return false;
+    }
+
+    nameDisplay = nameDisplayGO->GetComponent<ScriptComponent*>()->GetScriptByType<NameDisplay>();
+    if (nameDisplay == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[WARNING] HighlightCharacter: Name display go doesn´t contain name display script")
+        return false;
+    }
+        
     return true;
 }
 
@@ -221,6 +240,8 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
 
         splineMovementTarget->SetEnabled(true);
         cameraMovementScript->InitAlternativeTargetAndLookAhead(splineMovementTarget, 0.f);
+
+        nameDisplay->ShowWithDelay();
 
         characterToHighlight->GetComponent<ScriptComponent*>()->GetScriptByType<Character>()->PlayHighlightSequence();
         isExecuting   = true;

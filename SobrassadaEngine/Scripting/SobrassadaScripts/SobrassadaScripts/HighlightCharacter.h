@@ -1,6 +1,7 @@
 #pragma once
 #include "Script.h"
 
+class NameDisplay;
 class MoveGOInSpline;
 class SplineComponent;
 class CameraMovement;
@@ -22,6 +23,8 @@ class HighlightCharacter : public Script
     std::string characterToHighlightName;
     std::string highlightFocusObjectName;
 
+    std::string nameDisplayName;
+
     float secondSplinePointOffset                  = 0.85f;
     float zoomMultiplier                           = 30.0f;
 
@@ -42,4 +45,6 @@ class HighlightCharacter : public Script
     SplineComponent* splineComponent               = nullptr;
     GameObject* splineMovementTarget               = nullptr;
     MoveGOInSpline* splineMovementScript           = nullptr;
+
+    NameDisplay* nameDisplay = nullptr;
 };

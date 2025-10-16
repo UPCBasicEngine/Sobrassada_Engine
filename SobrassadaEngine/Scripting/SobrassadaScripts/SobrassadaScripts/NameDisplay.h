@@ -10,13 +10,17 @@ class NameDisplay : public Script
     bool Init() override;
     void Update(float deltaTime) override;
 
-    void Show();
+    void ShowWithDelay();
 
   private:
 
+    void Show();
+
+private:
+
     bool isSetupCorrectly = true;
     bool childrenVisible = false;
-    bool showed = false;
+    bool showed = true;
 
     bool showAutomatically = false;
     float showDelay = 2.0f;

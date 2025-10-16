@@ -24,7 +24,7 @@ bool NameDisplay::Init()
     for (UID childUID: parent->GetChildren())
         AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(childUID)->SetEnabled(false);
     
-    if (showAutomatically) showCounter = showDelay;
+    if (showAutomatically) ShowWithDelay();
     
     return true;
 }
@@ -45,6 +45,12 @@ void NameDisplay::Update(float deltaTime)
     }
 
     showCounter -= deltaTime;
+}
+
+void NameDisplay::ShowWithDelay()
+{
+    showCounter = showDelay;
+    showed = false;
 }
 
 void NameDisplay::Show()
