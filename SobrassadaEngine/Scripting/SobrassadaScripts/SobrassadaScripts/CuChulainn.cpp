@@ -380,6 +380,18 @@ bool CuChulainn::Init()
     }
     if (riastradFireDown) riastradFireDown->SetEnabled(false);
 
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesName);
+    if (riastradObj)
+    {
+        int idx = 0;
+        for (UID child : riastradObj->GetChildren())
+        {
+            riastradPartices[idx] = scene->GetGameObjectByUID(child)->GetComponent<ParticleSystemComponent*>();
+            if (riastradPartices[idx]) riastradPartices[idx]->StopInstances();
+            ++idx;
+        }
+    }
+
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
     if (!riastradTriggers) GLOG("[WARNING] No riastrad triggers HUD element found")
     else riastradTriggers->SetEnabled(false);
@@ -1855,7 +1867,7 @@ void CuChulainn::Move()
 
             isRightFoot = false;
         }
-        
+
         if (runTimer > stepTime && audio)
         {
             LineSegment ray(
@@ -1885,7 +1897,7 @@ void CuChulainn::Move()
                     const Quat stepRotation =
                         Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
                     const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitY, 180.0f * (PI / 180));
-                    Quat finalRotation        = stepRotation * horizontalCorrection;
+                    Quat finalRotation              = stepRotation * horizontalCorrection;
                     if (!isRightFoot)
                     {
                         const Quat zRotation = Quat::RotateAxisAngle(float3::unitZ, 180.0f * (PI / 180));
@@ -2159,6 +2171,11 @@ void CuChulainn::ToggleRiastrad()
             riastradVfxFG->GetScriptByType<UISpritesheet>()->Reset();
         }
 
+        for (ParticleSystemComponent* particle : riastradPartices)
+        {
+            if (particle) particle->SpawnAllInstances();
+        }
+
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
 
@@ -2186,6 +2203,11 @@ void CuChulainn::ToggleRiastrad()
                     if (clip.clipName == state.clipName) clip.animationSpeed = 1.0f;
                 }
             }
+        }
+
+        for (ParticleSystemComponent* particle : riastradPartices)
+        {
+            if (particle) particle->StopInstances();
         }
 
         if (riastradEye)
