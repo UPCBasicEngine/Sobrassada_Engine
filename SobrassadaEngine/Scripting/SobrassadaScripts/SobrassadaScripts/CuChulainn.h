@@ -290,6 +290,7 @@ class CuChulainn : public Character
     std::string riastradFireUpName                 = "RiastradFireUp";
     std::string riastradFireDownName               = "RiastradFireDown";
     std::string riastradParticlesName              = "RiastradParticles";
+    std::string riastradTrailName                  = "RiastradTrail";
     BarFill* riastradBar                           = nullptr;
     AbilityIconFill* riastradEye                   = nullptr;
     ShaderScriptComponent* riastradVfxBG           = nullptr;
@@ -298,7 +299,8 @@ class CuChulainn : public Character
     ShaderScriptComponent* riastradFireDown        = nullptr;
     GameObject* riastradTriggers                   = nullptr;
     GameObject* riastradKey                        = nullptr;
-    ParticleSystemComponent* riastradPartices[4]   = {nullptr};
+    GameObject* riastradTrail                      = nullptr;
+    ParticleSystemComponent* riastradPartices[5]   = {nullptr};
     int riastradMeter                              = 0;
     bool isRiastrad                                = false;
     bool desiredTransform                          = false;

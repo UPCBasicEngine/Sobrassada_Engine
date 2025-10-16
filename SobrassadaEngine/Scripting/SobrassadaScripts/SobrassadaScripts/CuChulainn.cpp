@@ -380,6 +380,9 @@ bool CuChulainn::Init()
     }
     if (riastradFireDown) riastradFireDown->SetEnabled(false);
 
+    riastradTrail = scene->GetGameObjectByName(riastradTrailName);
+    if (riastradObj) riastradTrail->SetEnabled(false);
+
     riastradObj = parent->GetChildGameObjectByName(riastradParticlesName);
     if (riastradObj)
     {
@@ -1623,7 +1626,6 @@ void CuChulainn::PerformAttack()
                     animComponent->OnResume();
                     playerAnimHeld = false;
                 }
-
             }
 
             if (ultimateSpikes) // Control spikes animation appearance
@@ -1869,7 +1871,7 @@ void CuChulainn::Move()
         if (state != CharacterStates::RUN)
         {
             state    = CharacterStates::RUN;
-            runTimer = -0.06f;
+            runTimer = isCursed ? 0.25f : -0.06f;
             if (animComponent) animComponent->UseTrigger("Walk");
 
             isRightFoot = false;
@@ -1897,9 +1899,11 @@ void CuChulainn::Move()
 
                 if (footsteps[stepIndex])
                 {
+                    const float hOffset           = (isRiastrad || isCursed) ? 0.2f : 0.1f;
                     const float3 lateralDirection = character->GetFrontDirection().Cross(float3::unitY).Normalized();
-                    const float3 horizontalOffset = isRightFoot ? lateralDirection * 0.1f : -lateralDirection * 0.1f;
-                    const float3 verticalOffset   = float3::unitY * 0.1f;
+                    const float3 horizontalOffset =
+                        isRightFoot ? lateralDirection * hOffset : -lateralDirection * hOffset;
+                    const float3 verticalOffset = float3::unitY * 0.1f;
 
                     const Quat stepRotation =
                         Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
@@ -2178,13 +2182,13 @@ void CuChulainn::ToggleRiastrad()
             riastradVfxFG->GetScriptByType<UISpritesheet>()->Reset();
         }
 
-        for (ParticleSystemComponent* particle : riastradPartices)
-        {
-            if (particle) particle->SpawnAllInstances();
-        }
-
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
+
+        attackDamage                 = 2;
+
+        const float riastradStepTime = 0.2f;
+        stepTime                     = riastradStepTime;
 
         if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
     }
@@ -2194,8 +2198,12 @@ void CuChulainn::ToggleRiastrad()
         isRiastrad = false;
         character->SetMaxSpeed(defaultSpeed);
 
-        const HashString idleName = HashString("Idle");
-        const HashString walkName = HashString("Walk");
+        attackDamage                = 1;
+        const float defaultStepTime = 0.4f;
+        stepTime                    = defaultStepTime;
+
+        const HashString idleName   = HashString("Idle");
+        const HashString walkName   = HashString("Walk");
         for (State& state : animComponent->GetResourceStateMachine()->states)
         {
             if (state.name == idleName)
@@ -2216,6 +2224,7 @@ void CuChulainn::ToggleRiastrad()
         {
             if (particle) particle->StopInstances();
         }
+        if (riastradTrail) riastradTrail->SetEnabled(false);
 
         if (riastradEye)
         {
@@ -2228,7 +2237,7 @@ void CuChulainn::ToggleRiastrad()
         }
 
         if (animComponent) animComponent->UseTrigger("Idle");
-        state         = CharacterStates::IDLE;
+        state                    = CharacterStates::IDLE;
 
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
         if (musicManager != nullptr)
@@ -2280,6 +2289,12 @@ void CuChulainn::EnableRiastradVfx()
         riastradFireDown->SetEnabled(true);
         riastradFireDown->GetScriptByType<UISpritesheet>()->Reset();
     }
+
+    for (ParticleSystemComponent* particle : riastradPartices)
+    {
+        if (particle) particle->SpawnAllInstances();
+    }
+    if (riastradTrail) riastradTrail->SetEnabled(true);
 
     if (riastradSmoke)
     {
@@ -2368,6 +2383,8 @@ void CuChulainn::StartCurse()
 
     if (gooShoeRight) gooShoeRight->SetEnabled(true);
     if (gooShoeLeft) gooShoeLeft->SetEnabled(true);
+    const float curseStepTime = 0.3f;
+    stepTime                  = curseStepTime;
 
     const HashString walkName = HashString("Walk");
     for (State& state : animComponent->GetResourceStateMachine()->states)
@@ -2433,6 +2450,8 @@ void CuChulainn::EndCurse()
 
     if (gooShoeRight) gooShoeRight->SetEnabled(false);
     if (gooShoeLeft) gooShoeLeft->SetEnabled(false);
+    const float defaultStepTime = 0.4f;
+    stepTime                    = defaultStepTime;
 
     if (animComponent) animComponent->UseTrigger("Idle");
     state = CharacterStates::IDLE;
