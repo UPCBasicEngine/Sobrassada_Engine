@@ -179,8 +179,6 @@ class Boss : public Character
     ImageComponent* healthBarBase                        = nullptr;
     ShaderScriptComponent* healthBarShader               = nullptr;
     BarFill* healthBarFill                               = nullptr;
-    ShaderScriptComponent* armorBarShader                = nullptr;
-    BarFill* armorBarFill                                = nullptr;
 
     // ShieldStrikes
     std::string shieldName                               = "";

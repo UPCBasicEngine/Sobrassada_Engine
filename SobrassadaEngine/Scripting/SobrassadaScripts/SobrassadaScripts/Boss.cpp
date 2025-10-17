@@ -117,19 +117,6 @@ bool Boss::Init()
             else GLOG("[WARNING] Ferdiad: Health bar shader component not found");
         }
         else GLOG("[WARNING] Ferdiad: Health bar fill object not found");
-
-        GameObject* armorBarFillObject = healthBarObject->GetChildGameObjectByName("BossArmorBarFill");
-        if (armorBarFillObject)
-        {
-            armorBarShader = armorBarFillObject->GetComponent<ShaderScriptComponent*>();
-            if (armorBarShader)
-            {
-                armorBarFill = armorBarShader->GetScriptByType<BarFill>();
-                if (!armorBarFill) GLOG("[WARNING] Ferdiad: Armor bar fill script component not found");
-            }
-            else GLOG("[WARNING] Ferdiad: Armor bar shader component not found");
-        }
-        else GLOG("[WARNING] Ferdiad: Armor bar fill object not found");
     }
     else GLOG("[WARNING] Ferdiad: Health bar base object not found");
 
@@ -698,7 +685,6 @@ void Boss::OnPlayerEnterLocation()
     if (firstTimeEntering && healthBarBase)
     {
         healthBarBase->SetEnabled(true);
-        if (armorBarFill) armorBarFill->SetFillAmount(1.0f);
         if (healthBarFill) healthBarFill->SetFillAmount(1.0f);
 
         firstTimeEntering = false;
@@ -791,20 +777,7 @@ void Boss::OnDamageTaken(int amount)
         }
     }
 
-    if (!armorBarFill || !healthBarFill) return;
-
-    if (currentHealth > phase2)
-    {
-        armorBarFill->SetFillAmount(
-            static_cast<float>(currentHealth - phase2) / static_cast<float>(maxHealth - phase2)
-        );
-    }
-    else
-    {
-        armorBarFill->SetFillAmount(0.0f);
-
-        healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
-    }
+    if (healthBarFill) healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 }
 
 void Boss::HandleState(float deltaTime)
