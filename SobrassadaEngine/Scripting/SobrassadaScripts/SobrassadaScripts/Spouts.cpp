@@ -243,8 +243,6 @@ void Spouts::ForceActivate()
 
 void Spouts::ForceDeactivate()
 {
-    GLOG(" Boss force deactivation");
-
     if (whiteWaves) whiteWaves->SetEnabled(false);
     if (tornadoWater) tornadoWater->SetEnabled(false);
     if (waterMesh) waterMesh->SetEnabled(false);
@@ -269,8 +267,6 @@ void Spouts::ForceDeactivate()
 
 void Spouts::ResetUVs()
 {
-    GLOG("Resetting UVs for water shaders");
-
     if (shaderScript) shaderScript->ResetScript("MovingUVTransparent");
     if (whiteWavesScript) whiteWavesScript->ResetScript("MovingUVTransparent");
     if (explosionScript) explosionScript->ResetScript("MovingUVTransparent");

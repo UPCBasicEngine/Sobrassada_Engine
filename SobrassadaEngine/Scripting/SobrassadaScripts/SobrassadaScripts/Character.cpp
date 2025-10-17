@@ -62,8 +62,13 @@ Character::Character(
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 30.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
         fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
-        if (type == CharacterType::Boss)
+        if (type == CharacterType::Boss || type == CharacterType::Soldier)
             fields.push_back({"Mesh 2 name", InspectorField::FieldType::InputText, &mesh2Name});
+        if (type == CharacterType::Boss)
+        {
+            fields.push_back({"Mesh 3 name", InspectorField::FieldType::InputText, &mesh3Name});
+            fields.push_back({"Mesh 4 name", InspectorField::FieldType::InputText, &mesh4Name});
+        }
         fields.push_back({"On Hit VFX Duration", InspectorField::FieldType::Float, &onHitVfxDuration, 0.0f, 1.0f});
         fields.push_back({"On Hit Pivot Name", InspectorField::FieldType::InputText, &onHitPivotName});
         fields.push_back({"On Hit VFX 1", InspectorField::FieldType::InputText, &onHitVfx1Name});
@@ -145,6 +150,44 @@ bool Character::Init()
             else
             {
                 GLOG("[WARNING - %s] No mesh 2 object found in children", parent->GetName().c_str())
+            }
+        }
+
+        if (!mesh3Name.empty())
+        {
+            GameObject* mesh3Object = parent->GetChildGameObjectByName(mesh3Name);
+            if (mesh3Object)
+            {
+                mesh3 = mesh3Object->GetComponent<MeshComponent*>();
+                if (mesh3) mesh3->SetEnabled(true);
+                // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+                color3Change = mesh3Object->GetComponent<ShaderScriptComponent*>();
+                if (color3Change) color3Change->SetEnabled(false);
+                // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+            }
+            else
+            {
+                GLOG("[WARNING - %s] No mesh 3 object found in children", parent->GetName().c_str())
+            }
+        }
+
+        if (!mesh4Name.empty())
+        {
+            GameObject* mesh4Object = parent->GetChildGameObjectByName(mesh4Name);
+            if (mesh4Object)
+            {
+                mesh4 = mesh4Object->GetComponent<MeshComponent*>();
+                if (mesh4) mesh4->SetEnabled(true);
+                // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+                color4Change = mesh4Object->GetComponent<ShaderScriptComponent*>();
+                if (color4Change) color4Change->SetEnabled(false);
+                // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+            }
+            else
+            {
+                GLOG("[WARNING - %s] No mesh 4 object found in children", parent->GetName().c_str())
             }
         }
 
@@ -395,6 +438,16 @@ void Character::UpdateTimers(float deltaTime)
             color2Change->SetEnabled(false);
             isHit = false;
         }
+        if (mesh3 && mesh3->GetEnabled() && color3Change && color3Change->GetEnabled())
+        {
+            color3Change->SetEnabled(false);
+            isHit = false;
+        }
+        if (mesh4 && mesh4->GetEnabled() && color4Change && color4Change->GetEnabled())
+        {
+            color4Change->SetEnabled(false);
+            isHit = false;
+        }
 
         if (onHitVfxTimer < 0.0f)
         {
@@ -403,6 +456,8 @@ void Character::UpdateTimers(float deltaTime)
 
             if (mesh && !mesh->GetEnabled()) mesh->SetEnabled(true);
             if (mesh2 && !mesh2->GetEnabled()) mesh2->SetEnabled(true);
+            if (mesh3 && !mesh3->GetEnabled()) mesh3->SetEnabled(true);
+            if (mesh4 && !mesh4->GetEnabled()) mesh4->SetEnabled(true);
         }
     }
 }
@@ -467,6 +522,18 @@ void Character::TakeDamage(int amount)
         {
             mesh2->SetEnabled(false);
             color2Change->SetEnabled(true);
+        }
+
+        if (color3Change && mesh3)
+        {
+            mesh3->SetEnabled(false);
+            color3Change->SetEnabled(true);
+        }
+
+        if (color4Change && mesh4)
+        {
+            mesh4->SetEnabled(false);
+            color4Change->SetEnabled(true);
         }
 
         isHit         = true;

@@ -128,6 +128,8 @@ class Boss : public Character
     BossDistance CheckDistance() const;
     void StopAttacking();
 
+    void EnableInvulnerable();
+    void DisableInvulnerable();
     void Mirage();
     void ChangePhase();
     void ResetValues(bool isForMirage = false);
@@ -283,6 +285,7 @@ class Boss : public Character
     ParticleSystemComponent* energyBlastParticle2       = nullptr;
     ParticleSystemComponent* energyBlastParticle3       = nullptr;
     ParticleSystemComponent* energyBlastParticle4       = nullptr;
+    GameObject* invulnerableArea                        = nullptr;
 
     // Inspector values
     int closeAreaDamage                                 = 3;

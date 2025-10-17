@@ -140,6 +140,12 @@ class Character : public Script
     std::string mesh2Name                       = "";
     MeshComponent* mesh2                        = nullptr;
     ShaderScriptComponent* color2Change         = nullptr;
+    std::string mesh3Name                       = "";
+    MeshComponent* mesh3                        = nullptr;
+    ShaderScriptComponent* color3Change         = nullptr;
+    std::string mesh4Name                       = "";
+    MeshComponent* mesh4                        = nullptr;
+    ShaderScriptComponent* color4Change         = nullptr;
 
     std::string glowName                        = "Glow";
     GameObject* glow                            = nullptr;

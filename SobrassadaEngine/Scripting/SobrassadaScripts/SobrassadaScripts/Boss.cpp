@@ -544,6 +544,10 @@ bool Boss::Init()
             else GLOG("[WARNING] Invulnerable waves script not found for ferdiad");
         }
         else GLOG("[WARNING] Invulnerable waves VFX object not found for ferdiad");
+
+        invulnerableArea = invulnerableVFX->GetChildGameObjectByName("BlockArea");
+        if (invulnerableArea) invulnerableArea->SetEnabled(false);
+        else GLOG("[WARNING] Invulnerable block area object not found for ferdiad");
     }
     else GLOG("[WARNING] Invulnerable VFX game object not found for ferdiad");
 
@@ -672,11 +676,15 @@ void Boss::Update(float deltaTime)
 
 void Boss::OnPlayerExitLocation()
 {
+    GLOG("Exit");
+
     waiting = true;
 }
 
 void Boss::OnPlayerEnterLocation()
 {
+    GLOG("Enter");
+
     waiting = false;
 
     doTaunt = true;
@@ -1668,26 +1676,26 @@ void Boss::OverheadStrike(float deltaTime)
 
 void Boss::StartDash()
 {
-    isDashing         = true;
+    isDashing        = true;
 
-    float3 bossPos    = parent->GetGlobalTransform().TranslatePart();
-    float3 playerPos  = character->GetLastPosition();
+    float3 bossPos   = parent->GetGlobalTransform().TranslatePart();
+    float3 playerPos = character->GetLastPosition();
 
-    bossPos.y         = 0.0f;
-    playerPos.y       = 0.0f;
+    bossPos.y        = 0.0f;
+    playerPos.y      = 0.0f;
 
-    dashDistance      = (playerPos - bossPos).Length();
-    dashDirection     = (playerPos - bossPos).Normalized();
+    dashDistance     = (playerPos - bossPos).Length();
+    dashDirection    = (playerPos - bossPos).Normalized();
 
-    // GLOG("Distance: %.2f", dashDistance);
-    // GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
+    GLOG("Distance: %.2f", dashDistance);
+    GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
 
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
 
     dashStartPosLocal = parent->GetLocalTransform().TranslatePart();
 
-    // GLOG("Speed: %.2f", dashSpeed);
+    GLOG("Speed: %.2f", dashSpeed);
 }
 
 void Boss::Dash(float deltaTime)
@@ -1862,6 +1870,40 @@ void Boss::StopAttacking()
     attackCdTimer = attackCooldown;
 }
 
+void Boss::EnableInvulnerable()
+{
+    if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
+    if (invulnerableWavesUV) invulnerableWavesUV->Reset();
+
+    if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
+    if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
+
+    if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
+
+    if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
+    if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
+
+    if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
+    if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
+    if (invulnerableArea) invulnerableArea->SetEnabled(true);
+}
+
+void Boss::DisableInvulnerable()
+{
+    if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
+    if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
+
+    if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
+
+    if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
+    if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
+
+    if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
+    if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
+
+    if (invulnerableArea) invulnerableArea->SetEnabled(false);
+}
+
 void Boss::Mirage()
 {
     if (stateEnter)
@@ -1872,19 +1914,7 @@ void Boss::Mirage()
         agentAI->PauseMovement();
         currentAction = BossActions::Start;
 
-        if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
-        if (invulnerableWavesUV) invulnerableWavesUV->Reset();
-
-        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
-        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
-
-        if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
-
-        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
-        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
-
-        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
-        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
+        EnableInvulnerable();
     }
 
     switch (currentAction)
@@ -1909,11 +1939,6 @@ void Boss::Mirage()
             actionTriggerDone = true;
             animComponent->UseTrigger("Charge");
 
-            for (Spouts* spout : waterSpouts)
-            {
-                if (spout) spout->ForceDeactivate();
-            }
-
             bossMirageScript->StartSequence(phase);
         }
 
@@ -1933,16 +1958,7 @@ void Boss::Mirage()
 
         if (animComponent && animComponent->IsFinished())
         {
-            if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
-            if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
-
-            if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-
-            if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
-            if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
-
-            if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
-            if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
+            DisableInvulnerable();
 
             agentAI->ResumeMovement();
             actionTriggerDone = false;
@@ -2040,12 +2056,18 @@ void Boss::ResetValues(bool changePhase)
 
     animComponent->OnResume();
 
+    for (Spouts* spout : waterSpouts)
+    {
+        if (spout) spout->ForceDeactivate();
+    }
+
     if (changePhase) mirageActivated = false;
 
     if (weaponCollider) weaponCollider->SetEnabled(false);
     if (closeArea) closeArea->SetEnabled(false);
     if (bigArea) bigArea->SetEnabled(false);
     if (blastArea) blastArea->SetEnabled(false);
+    if (invulnerableArea) invulnerableArea->SetEnabled(false);
 
     if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
 
@@ -2192,6 +2214,8 @@ void Boss::ShieldBlast(float deltaTime)
     case BossActions::Shoot:
         if (!actionTriggerDone)
         {
+            agentAI->SetAngularSpeed(0.7f);
+
             actionTriggerDone = true;
 
             if (blastArea) blastArea->SetEnabled(true);
@@ -2341,30 +2365,12 @@ void Boss::ChangePhase()
         currentAction = BossActions::Taunt;
         if (animComponent) animComponent->UseTrigger("Taunt");
 
-        if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
-        if (invulnerableWavesUV) invulnerableWavesUV->Reset();
-
-        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
-        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
-
-        if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
-
-        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
-        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
-
-        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
-        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
+        EnableInvulnerable();
     }
 
     if (animComponent && animComponent->IsFinished())
     {
-        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
-        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
-        if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
-        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
-        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
-        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
+        DisableInvulnerable();
 
         agentAI->ResumeMovement();
 
