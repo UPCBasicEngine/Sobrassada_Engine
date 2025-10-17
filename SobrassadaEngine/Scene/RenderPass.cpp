@@ -129,7 +129,7 @@ RenderPass::RenderPass()
 RenderPass::~RenderPass()
 {
     glDeleteBuffers(1, &visibleLightIndicesSSBO);
-    glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
+    // glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
 
     glDeleteBuffers(1, &decalVBO);
     glDeleteBuffers(1, &decalEBO);
@@ -161,7 +161,6 @@ void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("fogIntensity", fogIntensity, allocator);
     targetState.AddMember("noiseAmmount", noiseAmmount, allocator);
     targetState.AddMember("extinctionCoefficient", extinctionCoefficient, allocator);
-    targetState.AddMember("anisotropy", anisotropy, allocator);
     targetState.AddMember("blurrPasses", blurrPasses, allocator);
     targetState.AddMember("useNoiseTexture", useNoiseTexture, allocator);
     targetState.AddMember("noiseTexture", noiseTexture != nullptr ? noiseTexture->GetUID() : INVALID_UID, allocator);
@@ -174,7 +173,6 @@ void RenderPass::LoadData(const rapidjson::Value& initialState)
     if (initialState.HasMember("noiseAmmount")) noiseAmmount = initialState["noiseAmmount"].GetFloat();
     if (initialState.HasMember("extinctionCoefficient"))
         extinctionCoefficient = initialState["extinctionCoefficient"].GetFloat();
-    if (initialState.HasMember("anisotropy")) anisotropy = initialState["anisotropy"].GetFloat();
     if (initialState.HasMember("blurrPasses")) blurrPasses = initialState["blurrPasses"].GetInt();
     if (initialState.HasMember("useNoiseTexture")) useNoiseTexture = initialState["useNoiseTexture"].GetBool();
 
@@ -752,7 +750,7 @@ void RenderPass::ShadowMapPassRender(
 
     for (int i = 0; i < TotalShadowMaps && i < spotLights.size(); ++i)
     {
-        if (!spotLights[i]) continue;
+        if (!spotLights[i] || (spotLights[i] && !spotLights[i]->GetRenderVolumetric())) continue;
 
         meshesToRender.clear();
         shadowObjectsToRender.clear();
@@ -1029,7 +1027,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
     lConfig->SetVolumetricAreaShaderData(); // 8 binding spot
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, visibleVolumetricAreaIndicesSSBO);
+    // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, visibleVolumetricAreaIndicesSSBO);
 
     // Local size of compute is (16,16,1)
     unsigned int numGroupsX = (width / 2 + (8 - 1)) / 8;
@@ -1062,7 +1060,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUniform1f(5, extinctionCoefficient);
     glUniform1f(6, time);
     glUniform1f(7, noiseAmmount);
-    glUniform1f(8, anisotropy);
+    // glUniform1f(8, anisotropy);
     glUniform1i(9, tilesX);
     glUniform1f(10, stepSize);
 
@@ -1308,23 +1306,23 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
         currentSize = totalSize;
     }
 
-    if (visibleVolumetricAreaIndicesSSBO == 0 || totalSize != currentSize)
-    {
-        if (visibleVolumetricAreaIndicesSSBO != 0)
-        {
-            glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
-        }
+    // if (visibleVolumetricAreaIndicesSSBO == 0 || totalSize != currentSize)
+    //{
+    //     if (visibleVolumetricAreaIndicesSSBO != 0)
+    //     {
+    //         glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
+    //     }
 
-        glGenBuffers(1, &visibleVolumetricAreaIndicesSSBO);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleVolumetricAreaIndicesSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
-    }
+    //    glGenBuffers(1, &visibleVolumetricAreaIndicesSSBO);
+    //    glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleVolumetricAreaIndicesSSBO);
+    //    glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
+    //}
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, visibleLightIndicesSSBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, visibleVolumetricAreaIndicesSSBO);
+    // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, visibleVolumetricAreaIndicesSSBO);
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
-    App->GetSceneModule()->GetScene()->GetLightsConfig()->SetVolumetricAreaShaderData();
+    //App->GetSceneModule()->GetScene()->GetLightsConfig()->SetVolumetricAreaShaderData();
 
     glDispatchCompute(tilesX, tilesY, 1);
 

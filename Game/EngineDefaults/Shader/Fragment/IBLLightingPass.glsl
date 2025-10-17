@@ -50,6 +50,7 @@ struct SpotLight
 	float outerAngle;
 	int spotShadowIndex;
     float radius;
+    float anisotropy;
 };
 
 layout(std430, binding = 6) readonly buffer VisibleLightIndicesBuffer {
