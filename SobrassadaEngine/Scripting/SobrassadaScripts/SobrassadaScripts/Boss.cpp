@@ -660,7 +660,12 @@ void Boss::Update(float deltaTime)
         RenderDebug(logs, float3(1.0f, 0.5f, 0.0f));
     }
 
-    if (playerScript && playerScript->GetState() == CharacterStates::DEATH) restart = true;
+    if (playerScript && playerScript->GetState() == CharacterStates::DEATH && currentState != BossStates::Restart)
+        restart = true;
+
+    if (playerScript &&
+        (playerScript->GetState() == CharacterStates::RESPAWN || playerScript->GetState() == CharacterStates::DEATH))
+        waiting = true;
 
     if (highlightActivated) highlightTimer += deltaTime;
     if (highlightActivated && doTaunt && highlightTimer >= highlightDelay)
@@ -2340,7 +2345,10 @@ void Boss::Restart(float deltaTime)
         {
             actionTriggerDone = false;
             doIdle            = true;
-            waiting           = true;
+            ChooseNextState();
+        }
+        else if (!waiting)
+        {
             ChooseNextState();
         }
         break;
