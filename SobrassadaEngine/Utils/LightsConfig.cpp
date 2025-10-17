@@ -515,7 +515,7 @@ void LightsConfig::SetSpotLightsShaderData() const
                 float4(spotLights[i]->GetGlobalTransform().TranslatePart(), spotLights[i]->GetRange()),
                 float4(spotLights[i]->GetColor(), spotLights[i]->GetIntensity()), float3(spotLights[i]->GetDirection()),
                 spotLights[i]->GetInnerAngle(), spotLights[i]->GetOuterAngle(), spotLights[i]->GetShadowGPUIndex(),
-                spotLights[i]->GetRadius()
+                spotLights[i]->GetRadius(), spotLights[i]->GetAnisotropy()
             ));
         }
     }
@@ -607,7 +607,7 @@ void LightsConfig::AddSpotLight(SpotLightComponent* newSpot)
     int bufferSize = static_cast<int>(
         (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16
     ); // 12 bytes offset between spotlights
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
     /*GLOG(
         "Add spot light with uid: %d. Spot lights count: %d. Buffer size: %d", newSpot->GetUID(), spotLights.size(),
         bufferSize
@@ -698,7 +698,7 @@ void LightsConfig::RemoveSpotLight(SpotLightComponent* spot)
     int bufferSize = static_cast<int>(
         (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16
     ); // 12 bytes offset between spotlights
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
 
     // GLOG("Spot lights size: %d. Buffer size: %d", spotLights.size(), bufferSize);
 }
@@ -752,7 +752,7 @@ void LightsConfig::GetAllSceneLights()
         size_t spotBufferSize =
             (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() +
             16; // 8 bytes offset between spotlights
-        glBufferData(GL_SHADER_STORAGE_BUFFER, spotBufferSize, nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, spotBufferSize, nullptr, GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_UNIFORM_BUFFER, directionalBufferId);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(Lights::DirectionalLightShaderData), nullptr, GL_STATIC_DRAW);
@@ -801,7 +801,7 @@ void LightsConfig::GetAllSpotLights(const std::vector<Component*>& components)
     // Maybe make function to do this because it's called like 3 times
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotBufferId);
     size_t bufferSize = (sizeof(Lights::SpotLightShaderData) + Lights::SpotLightShaderOffset) * spotLights.size() + 16;
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
 }
 
 void LightsConfig::GetDirectionalLight(const std::vector<Component*>& components)

@@ -59,6 +59,7 @@ class ParticleEmitter
 
     void UpdateAABB() const;
     void GetParticleValues(ParticleValues& particleValue);
+    bool GetLinkToParent() const { return linkToParent; };
 
     const HashString& GetTag() const { return emitterTag; }
     const std::string& GetName() const { return emitterTag.GetString(); }
@@ -89,6 +90,7 @@ class ParticleEmitter
 
     int renderPriority                 = 0;
     bool useSpritesheet                = false;
+    bool linkToParent                  = false;
 
     EmitterBlendingMode blendingMode   = EmitterBlendingMode::ALPHA;
     float colorIntensity               = 1.f;

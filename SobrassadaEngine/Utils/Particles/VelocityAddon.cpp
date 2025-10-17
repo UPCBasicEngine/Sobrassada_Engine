@@ -1,6 +1,7 @@
 #include "VelocityAddon.h"
 
 #include "EmitterInstance.h"
+#include "GameObject.h"
 #include "Interpolation.h"
 #include "ParticleEmitter.h"
 #include "ParticleSystemComponent.h"
@@ -226,7 +227,14 @@ void VelocityAddon::Update(float deltaTime, EmitterInstance* emitterInstance)
 
         UpdateParticleVelocity(particle, valueOverLifetime);
 
-        particle.position = particle.position.Add(particle.direction.Mul((particle.velocity * deltaTime)));
+        if (owner->GetLinkToParent())
+        {
+            particle.localPosition =
+                particle.localPosition.Add(particle.direction.Mul((particle.velocity * deltaTime)));
+            particle.position = emitterInstance->GetOwner()->GetParent()->GetGlobalPostition() + particle.localPosition;
+        }
+
+        else particle.position = particle.position.Add(particle.direction.Mul((particle.velocity * deltaTime)));
 
         if (gravity) particle.position -= (float3::unitY * gravity * deltaTime);
     }

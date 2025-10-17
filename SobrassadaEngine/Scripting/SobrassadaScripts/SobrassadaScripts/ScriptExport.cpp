@@ -65,6 +65,7 @@
 #include "BossSpouts.h"
 #include "MusicManager.h"
 #include "MusicTrigger.h"
+#include "NameDisplay.h"
 
 #include <string>
 
@@ -122,7 +123,8 @@ constexpr const char* scripts[] = {
     "AsyncSceneLoading",
     "BossSpouts",
     "MusicManager",
-    "MusicTrigger"
+    "MusicTrigger",
+    "NameDisplay"
 };
 
 constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
@@ -154,6 +156,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "SpawnUI") return new SpawnUI(parent);
     if (scriptType == "MenuChangeSceneScript") return new MenuChangeSceneScript(parent);
     if (scriptType == "GameOverScript") return new GameOverScript(parent);
+    if (scriptType == "NameDisplay") return new NameDisplay(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
