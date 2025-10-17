@@ -30,12 +30,12 @@ void main()
     // Should never be both active at same time. If it happens it's a logic problem
     if (isFadingIn) 
     {
-        const float fadeFactor = min(fadeInOpacity, ((timer - fadeInStart) / fadeInDuration));
+        const float fadeFactor = max(fadeOutOpacity, min(fadeInOpacity, ((timer - fadeInStart) / fadeInDuration)));
         alpha = fadeFactor;
     }
     if (isFadingOut) 
     {
-        const float fadeFactor = max(fadeOutOpacity, 1.0f - min(1.0f, ((timer - fadeOutStart) / fadeOutDuration)));
+        const float fadeFactor = max(fadeOutOpacity, fadeInOpacity - min(fadeInOpacity, ((timer - fadeOutStart) / fadeOutDuration)));
         alpha = fadeFactor;
     }
     

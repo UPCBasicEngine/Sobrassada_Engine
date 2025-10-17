@@ -1042,7 +1042,7 @@ void CuChulainn::GetInputs()
     }
 
     // TODO: DELETE; JUST FOR TESTING FADEINOUT UI
-    if (keyboard[SDL_SCANCODE_F11] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
     {
         const std::string testName = "FadeInOut";
         AppEngine->GetSceneModule()
@@ -1053,7 +1053,7 @@ void CuChulainn::GetInputs()
             ->FadeIn();
     }
 
-    if (keyboard[SDL_SCANCODE_F12] == KEY_DOWN)
+    if (keyboard[SDL_SCANCODE_2] == KEY_DOWN)
     {
         const std::string testName = "FadeInOut";
         AppEngine->GetSceneModule()
