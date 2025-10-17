@@ -389,10 +389,24 @@ bool CuChulainn::Init()
         int idx = 0;
         for (UID child : riastradObj->GetChildren())
         {
-            riastradPartices[idx] = scene->GetGameObjectByUID(child)->GetComponent<ParticleSystemComponent*>();
-            if (riastradPartices[idx]) riastradPartices[idx]->StopInstances();
+            riastradParticles[idx] = scene->GetGameObjectByUID(child)->GetComponent<ParticleSystemComponent*>();
+            if (riastradParticles[idx]) riastradParticles[idx]->StopInstances();
             ++idx;
         }
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesRightName);
+    if (riastradObj)
+    {
+        riastradParticles[6] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[6]) riastradParticles[6]->StopInstances();
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesLeftName);
+    if (riastradObj)
+    {
+        riastradParticles[7] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[7]) riastradParticles[7]->StopInstances();
     }
 
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
@@ -2220,7 +2234,7 @@ void CuChulainn::ToggleRiastrad()
             }
         }
 
-        for (ParticleSystemComponent* particle : riastradPartices)
+        for (ParticleSystemComponent* particle : riastradParticles)
         {
             if (particle) particle->StopInstances();
         }
@@ -2290,7 +2304,7 @@ void CuChulainn::EnableRiastradVfx()
         riastradFireDown->GetScriptByType<UISpritesheet>()->Reset();
     }
 
-    for (ParticleSystemComponent* particle : riastradPartices)
+    for (ParticleSystemComponent* particle : riastradParticles)
     {
         if (particle) particle->SpawnAllInstances();
     }
@@ -2399,6 +2413,12 @@ void CuChulainn::StartCurse()
         }
     }
 
+    for (ShaderScriptComponent* footstep : footsteps)
+    {
+        const int gooStepsIdx = 0;
+        footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(gooStepsIdx);
+    }
+
     if (animComponent) animComponent->UseTrigger("Idle");
     state = CharacterStates::IDLE;
 }
@@ -2452,6 +2472,12 @@ void CuChulainn::EndCurse()
     if (gooShoeLeft) gooShoeLeft->SetEnabled(false);
     const float defaultStepTime = 0.4f;
     stepTime                    = defaultStepTime;
+
+    for (ShaderScriptComponent* footstep : footsteps)
+    {
+        const int defaultStepsIdx = -1;
+        footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(defaultStepsIdx);
+    }
 
     if (animComponent) animComponent->UseTrigger("Idle");
     state = CharacterStates::IDLE;
