@@ -265,7 +265,8 @@ void AreaAddon::AssignPositionDirection(Particle& particle)
         break;
     }
 
-    particle.position  = newPosition;
+    if (owner->GetLinkToParent()) particle.localPosition = lastInverseGlobalTransform.MulPos(newPosition);
+    else particle.position  = newPosition;
     particle.direction = newDirection.Normalized();
 }
 
@@ -293,7 +294,7 @@ void AreaAddon::AssignMaxValues(ParticleValues& particleValue)
     }
     case ParticleAreaShape::CONE:
     {
-        float maxValue = fmax(coneLength / 2.0, baseRadius);
+        float maxValue = fmax(coneLength / 2.0f, baseRadius);
 
         if (particleValue.areaOffset.x < maxValue) particleValue.areaOffset.x = maxValue;
         if (particleValue.areaOffset.y < maxValue) particleValue.areaOffset.y = maxValue;
@@ -419,4 +420,5 @@ void AreaAddon::UpdateShapesTransforms(const float4x4& globalTransform)
     sphere.r            = baseRadius;
 
     lastGlobalTransform = globalTransform;
+    lastInverseGlobalTransform = globalTransform.Inverted();
 }
