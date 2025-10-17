@@ -39,7 +39,7 @@ void BossSpouts::Update(float deltaTime)
     spout->SetLocalPosition(float3(x, y, z));
 
     // reset uvs every full rotation
-    if (uvAngle >= PI * 1.5)
+    if (uvAngle >= PI * 1.0f)
     {
         uvAngle = 0.0f;
 

@@ -229,16 +229,15 @@ void Spouts::DisableCollider()
 
 void Spouts::ForceActivate()
 {
-    if (activationState == ACTIVATION_STATE::SLEEPING)
-    {
-        damageCollider->SetEnabled(false);
-        GLOG("Force Activation");
-        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
-        activationState = ACTIVATION_STATE::CHARGING;
-        if (rune) rune->SetEnabled(false);
-        if (tornadoWater) tornadoWater->SetEnabled(true);
-        chargingTimer = 0.0f;
-    }
+    GLOG("Force Activation");
+
+    ResetUVs();
+    damageCollider->SetEnabled(false);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
+    activationState = ACTIVATION_STATE::CHARGING;
+    if (rune) rune->SetEnabled(false);
+    if (tornadoWater) tornadoWater->SetEnabled(true);
+    chargingTimer = 0.0f;
 }
 
 void Spouts::ForceDeactivate()
@@ -259,10 +258,8 @@ void Spouts::ForceDeactivate()
     damageGiven     = false;
     damageTimer     = 0.0f;
 
-
     chargingTimer   = 0.0f;
     activationState = ACTIVATION_STATE::SLEEPING;
-
 }
 
 void Spouts::ResetUVs()
