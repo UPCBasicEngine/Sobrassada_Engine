@@ -381,7 +381,7 @@ bool CuChulainn::Init()
     if (riastradFireDown) riastradFireDown->SetEnabled(false);
 
     riastradTrail = scene->GetGameObjectByName(riastradTrailName);
-    if (riastradObj) riastradTrail->SetEnabled(false);
+    if (riastradTrail) riastradTrail->SetEnabled(false);
 
     riastradObj = parent->GetChildGameObjectByName(riastradParticlesName);
     if (riastradObj)
@@ -1452,6 +1452,20 @@ void CuChulainn::ThrowSpear()
     if (aimShadowObject) aimShadowObject->SetEnabled(false);
 
     spear->Shoot(parent->GetGlobalTransform().TranslatePart(), character->GetFrontDirection());
+
+    // Rotate the character to compensate animation wrong rotation
+    const float3 scale            = parent->GetLocalTransform().ExtractScale();
+    
+    const Quat extraRotation      = Quat::RotateY(0.5236f);
+    const float3 rotatedDirection = extraRotation * parent->GetGlobalTransform().Col(2).xyz();
+    const Quat rotation           = Quat::LookAt(float3::unitZ, rotatedDirection, float3::unitY, float3::unitY);
+    
+    const float4x4 transform      = float4x4::FromTRS(parent->GetGlobalTransform().TranslatePart(), rotation, scale);
+    
+    const float4x4 parentWS       = parent->GetParentGlobalTransform();
+    const float4x4 localTRS       = parentWS.Inverted() * transform;
+    
+    parent->SetLocalTransform(localTRS);
 }
 
 void CuChulainn::Dash()
