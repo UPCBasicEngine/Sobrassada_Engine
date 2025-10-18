@@ -1107,6 +1107,11 @@ void CuChulainn::GetInputs()
     {
         StartCurse();
     }
+
+    if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
+    {
+        PlayHighlightSequence();
+    }
 }
 
 bool CuChulainn::CanDash() const
@@ -2518,6 +2523,13 @@ bool CuChulainn::IsBlockedAhead(
     };
 
     return hitsBlockAtHeight(0.2f) || hitsBlockAtHeight(0.9f);
+}
+
+void CuChulainn::PlayHighlightSequence()
+{
+    state = CharacterStates::RESPAWN;
+    if (animComponent) animComponent->UseTrigger("Respawn");
+    character->EnableMovement(false);
 }
 
 const std::string CuChulainn::GetLogicStateName()

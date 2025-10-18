@@ -91,6 +91,8 @@ class CuChulainn : public Character
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
 
+    void PlayHighlightSequence();
+
   private:
     void OnDeath() override;
     void OnDamageTaken(int amount) override;
