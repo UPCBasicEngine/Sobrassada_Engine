@@ -347,6 +347,10 @@ void Soldier::HandleState(float deltaTime)
             ChangeState();
         }
         break;
+    case SoldierStates::HIGHLIGHTING:
+        animComponent->UseTrigger("cheer");
+        if (GetDistanceFromPlayer() <= rangeAIChase) currentState = SoldierStates::PLAYER_DETECTION;
+        break;
     default:
         GLOG("No state provided to Soldier");
         currentState = SoldierStates::PATROL;
@@ -363,16 +367,25 @@ void Soldier::HandleState(float deltaTime)
 void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
+    //GLOG("Player location tag: %s", playerLocation.GetString().c_str());
     bool playerInLocation            = parent->HasTag(playerLocation);
     if (!playerScript->IsDead())
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
         {
-            currentState = SoldierStates::PLAYER_DETECTION;
+            if (playerInLocation || playerFounded)
+            {
+                currentState  = SoldierStates::PLAYER_DETECTION;
+                playerFounded = true;
+            }
         }
-        else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close)
         {
-            currentState = SoldierStates::BASIC_ATTACK;
+            if (playerInLocation || playerFounded)
+            {
+                currentState  = SoldierStates::BASIC_ATTACK;
+                playerFounded = true;
+            }
         }
     }
 
@@ -781,4 +794,9 @@ void Soldier::SelectRandomHelmet()
     default:
         break;
     }
+}
+
+void Soldier::PlayHighlightSequence()
+{
+     currentState             = SoldierStates::HIGHLIGHTING;
 }

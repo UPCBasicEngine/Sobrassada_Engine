@@ -22,8 +22,9 @@ bool PlayerLocationScript::Init()
 
 void PlayerLocationScript::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
+    if (layer != ColliderLayer::PLAYER) return;
     AppEngine->GetSceneModule()->GetScene()->SetPlayerPosition(locationTag);
-
+    GLOG("Player entered location: %s", locationTag.GetString().c_str());
     auto taggedGameObjects = AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(locationTag);
     if (taggedGameObjects)
     {
@@ -42,7 +43,7 @@ void PlayerLocationScript::OnCollisionEnter(GameObject* otherObject, const float
 void PlayerLocationScript::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
 {
     AppEngine->GetSceneModule()->GetScene()->SetPlayerPosition(HashString(""));
-
+    GLOG("Player exited location: %s", locationTag.GetString().c_str());
     auto taggedGameObjects = AppEngine->GetSceneModule()->GetScene()->GetTaggedGameObjects(locationTag);
     if (taggedGameObjects)
     {

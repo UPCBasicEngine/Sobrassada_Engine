@@ -16,7 +16,8 @@ enum class SoldierStates
     BASIC_ATTACK,
     DEATH,
     PLAYER_DETECTION,
-    CHEERING
+    CHEERING,
+    HIGHLIGHTING
 };
 
 class Soldier : public Character
@@ -30,6 +31,8 @@ class Soldier : public Character
 
     void OnPlayerExitLocation() override;
     void OnPlayerEnterLocation() override;
+
+    void PlayHighlightSequence() override;
     void SetAttackVFX(GameObject* meleeVfxObject);
     void DisableAttackVFX();
 
@@ -77,6 +80,9 @@ class Soldier : public Character
     bool countedInPlayerEnemies        = false;
     float cheeringDistance             = 5.0f;
     bool isRed                         = false;
+    bool playerFounded                  = false;
+
+    float highlightDuration             = 3.f;
 
     int maxEnemiesNearby               = 3;
     std::string meleeTrailName         = "";
