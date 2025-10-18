@@ -8,6 +8,7 @@ class AudioSourceComponent;
 class GameObject;
 class AIAgentComponent;
 class Projectile;
+class ShaderScriptComponent;
 
 enum class ChangelingVersions
 {
@@ -173,6 +174,7 @@ class Changeling : public Character
     float timeBetweenDashes                     = 1.5f;
 
     float biteVfxTimer                          = 0.0f;
+    float highlightDigTimer                     = 0.0f;
 
     // VFX
     // Dig up
@@ -185,21 +187,21 @@ class Changeling : public Character
     std::string vfxDashTrailName                = "VFX_DashTrail";
     std::vector<GameObject*> vfxDashTrailObjects;
 
-    std::string vfxDropDownName     = "VFX_Drop";
-    GameObject* vfxDropDown         = nullptr;
+    std::string vfxDropDownName       = "VFX_Drop";
+    GameObject* vfxDropDown           = nullptr;
 
-    std::string vfxDashName         = "VFX_Dash";
-    GameObject* vfxDash             = nullptr;
+    std::string vfxDashName           = "VFX_Dash";
+    GameObject* vfxDash               = nullptr;
 
-    std::string vfxDigDownName      = "VFX_DigDown";
-    GameObject* vfxDigDown          = nullptr;
+    std::string vfxDigDownName        = "VFX_DigDown";
+    ShaderScriptComponent* vfxDigDown = nullptr;
 
-    std::string vfxBiteName         = "VFX_Bite";
-    GameObject* vfxBite             = nullptr;
+    std::string vfxBiteName           = "VFX_Bite";
+    ShaderScriptComponent* vfxBite    = nullptr;
 
-    std::string vfxDigName          = "VFX_Dig";
-    GameObject* vfxDig              = nullptr;
+    std::string vfxDigName            = "VFX_Dig";
+    ShaderScriptComponent* vfxDig     = nullptr;
 
     // Audio
-    AudioSourceComponent* audioComp = nullptr;
+    AudioSourceComponent* audioComp   = nullptr;
 };
