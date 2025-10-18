@@ -675,8 +675,6 @@ void Changeling::UpdateBiteAttackState(float deltaTime, float distanceToPlayerSq
         vfxBite->GetParent()->SetLocalPosition(parent->GetLocalTransform().TranslatePart() + offset);
         vfxBite->SetEnabled(true);
         vfxBite->GetScriptByType<AttackVfxSpritesheet>()->Reset();
-
-        weaponCollider->SetEnabled(true);
     }
 
     if (animComponent->IsFinished())
@@ -974,6 +972,7 @@ bool Changeling::ST_BiteAttack(float deltaTime, float distanceToPlayerSq)
     currentState = ChangelingStates::BITE_ATTACK;
 
     biteVfxTimer = 0.4f;
+    weaponCollider->SetEnabled(true);
 
     Character::Attack(deltaTime);
 
