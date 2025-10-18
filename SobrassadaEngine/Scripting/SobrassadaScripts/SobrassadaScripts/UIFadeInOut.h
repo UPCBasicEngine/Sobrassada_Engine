@@ -45,6 +45,8 @@ class UIFadeInOut : public Script
     float fadeOutDuration       = 0.0f;
     float fadeOutOpacity        = 0.0f;
 
-    float automaticFadeInStart  = 0.0f;
-    float automaticFadeOutStart = 0.0f;
+    bool hasFadedIn             = false;
+    bool hasFadedOut            = false;
+    float automaticFadeInStart  = -1.0f;
+    float automaticFadeOutStart = -1.0f;
 };

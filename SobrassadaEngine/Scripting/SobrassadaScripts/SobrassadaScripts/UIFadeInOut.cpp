@@ -103,8 +103,8 @@ void UIFadeInOut::Render(float deltaTime, CameraComponent* cameraComp)
     if (isFadingIn && timer - fadeInStart > fadeInDuration) isFadingIn = false;
     if (isFadingOut && timer - fadeOutStart > fadeOutDuration) isFadingOut = false;
 
-    if (fadeInAuto && timer > automaticFadeInStart) FadeIn();
-    if (fadeOutAuto && timer > automaticFadeOutStart) FadeOut();
+    if (!hasFadedIn && fadeInAuto && timer > automaticFadeInStart) FadeIn();
+    if (!hasFadedOut && fadeOutAuto && timer > automaticFadeOutStart) FadeOut();
 
     glUniform1f(4, timer);
 
@@ -169,14 +169,17 @@ void UIFadeInOut::Render(float deltaTime, CameraComponent* cameraComp)
 
 void UIFadeInOut::Reset()
 {
-    timer = 0.0f;
-    isVisible   = startVisible;
+    timer        = 0.0f;
+    isVisible    = startVisible;
 
-    isFadingIn  = false;
-    fadeInStart = 0.0f;
+    isFadingIn   = false;
+    fadeInStart  = 0.0f;
 
-    isFadingOut = false;
+    isFadingOut  = false;
     fadeOutStart = 0.0f;
+
+    hasFadedIn   = false;
+    hasFadedOut  = false;
 }
 
 void UIFadeInOut::FadeIn()
@@ -185,14 +188,14 @@ void UIFadeInOut::FadeIn()
     isFadingIn  = true;
     fadeInStart = timer;
 
-    fadeInAuto  = false; // False to avoid repeat if it's set automatic
+    hasFadedIn  = true;
 }
 
 void UIFadeInOut::FadeOut()
 {
-    isVisible   = false;
-    isFadingOut = true;
+    isVisible    = false;
+    isFadingOut  = true;
     fadeOutStart = timer;
 
-    fadeOutAuto = false; // False to avoid repeat if it's set automatic
+    hasFadedOut  = true;
 }

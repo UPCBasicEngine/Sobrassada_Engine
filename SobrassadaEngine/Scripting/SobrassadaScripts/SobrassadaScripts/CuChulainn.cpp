@@ -1041,7 +1041,7 @@ void CuChulainn::GetInputs()
         StartCurse();
     }
 
-    // TODO: DELETE; JUST FOR TESTING FADEINOUT UI
+    // TODO: DELETE, JUST FOR TESTING FADEINOUT UI
     if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
     {
         const std::string testName = "FadeInOut";
@@ -1062,6 +1062,17 @@ void CuChulainn::GetInputs()
             ->GetComponent<ShaderScriptComponent*>()
             ->GetScriptByType<UIFadeInOut>()
             ->FadeOut();
+    }
+
+    if (keyboard[SDL_SCANCODE_3] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->Reset();
     }
 }
 
