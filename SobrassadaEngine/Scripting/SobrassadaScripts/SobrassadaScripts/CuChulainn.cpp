@@ -395,19 +395,36 @@ bool CuChulainn::Init()
         }
     }
 
-    riastradObj = parent->GetChildGameObjectByName(riastradParticlesRightName);
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesRightArmName);
+    if (riastradObj)
+    {
+        riastradParticles[4] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[4]) riastradParticles[4]->StopInstances();
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesLeftArmName);
+    if (riastradObj)
+    {
+        riastradParticles[5] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[5]) riastradParticles[5]->StopInstances();
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesRightLegName);
     if (riastradObj)
     {
         riastradParticles[6] = riastradObj->GetComponent<ParticleSystemComponent*>();
         if (riastradParticles[6]) riastradParticles[6]->StopInstances();
     }
 
-    riastradObj = parent->GetChildGameObjectByName(riastradParticlesLeftName);
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesLeftLegName);
     if (riastradObj)
     {
         riastradParticles[7] = riastradObj->GetComponent<ParticleSystemComponent*>();
         if (riastradParticles[7]) riastradParticles[7]->StopInstances();
     }
+
+    riastradLight = parent->GetChildGameObjectByName(riastradLightName);
+    if (riastradLight) riastradLight->SetEnabled(false);
 
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
     if (!riastradTriggers) GLOG("[WARNING] No riastrad triggers HUD element found")
@@ -1455,16 +1472,16 @@ void CuChulainn::ThrowSpear()
 
     // Rotate the character to compensate animation wrong rotation
     const float3 scale            = parent->GetLocalTransform().ExtractScale();
-    
+
     const Quat extraRotation      = Quat::RotateY(0.5236f);
     const float3 rotatedDirection = extraRotation * parent->GetGlobalTransform().Col(2).xyz();
     const Quat rotation           = Quat::LookAt(float3::unitZ, rotatedDirection, float3::unitY, float3::unitY);
-    
+
     const float4x4 transform      = float4x4::FromTRS(parent->GetGlobalTransform().TranslatePart(), rotation, scale);
-    
+
     const float4x4 parentWS       = parent->GetParentGlobalTransform();
     const float4x4 localTRS       = parentWS.Inverted() * transform;
-    
+
     parent->SetLocalTransform(localTRS);
 }
 
@@ -2258,6 +2275,7 @@ void CuChulainn::ToggleRiastrad()
             if (particle) particle->StopInstances();
         }
         if (riastradTrail) riastradTrail->SetEnabled(false);
+        if (riastradLight) riastradLight->SetEnabled(false);
 
         if (riastradEye)
         {
@@ -2328,6 +2346,7 @@ void CuChulainn::EnableRiastradVfx()
         if (particle) particle->SpawnAllInstances();
     }
     if (riastradTrail) riastradTrail->SetEnabled(true);
+    if (riastradLight) riastradLight->SetEnabled(true);
 
     if (riastradSmoke)
     {
