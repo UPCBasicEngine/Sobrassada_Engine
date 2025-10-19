@@ -23,7 +23,7 @@ bool AsyncSceneLoading::Init()
     }
 
     fullScenePath =
-        AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + targetSceneName + SCENE_EXTENSION;
+        AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH + targetSceneName + SCENE_EXTENSION;
 
     videoComponent->Play();
     if (useAsyncLoading) AppEngine->GetSceneModule()->InitAsyncScenePreLoad(fullScenePath);

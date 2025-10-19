@@ -1,7 +1,7 @@
 #include "FileSystem.h"
 
-#include "rapidjson/istreamwrapper.h"
 #include "DetourAlloc.h"
+#include "rapidjson/istreamwrapper.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -44,7 +44,7 @@ namespace FileSystem
             return 0;
         }
     }
-    //Needs special allocation and C-style loading
+    // Needs special allocation and C-style loading
     unsigned int LoadForDetour(const char* filePath, char** buffer)
     {
         std::ifstream file(filePath, std::ios::in | std::ios::ate | std::ios::binary);
@@ -80,7 +80,6 @@ namespace FileSystem
             return 0;
         }
     }
-
 
     bool LoadJSON(const char* scenePath, rapidjson::Document& doc)
     {
@@ -127,7 +126,7 @@ namespace FileSystem
         return size;
     }
 
-    bool Copy(const char* sourceFilePath, const char* destinationFilePath)
+    bool Copy(const char* sourceFilePath, const char* destinationFilePath, bool recursiveCopy)
     {
         if (!Exists(sourceFilePath))
         {
@@ -136,9 +135,11 @@ namespace FileSystem
         }
 
         std::error_code errorCode;
-        std::filesystem::copy(
-            sourceFilePath, destinationFilePath, std::filesystem::copy_options::update_existing, errorCode
-        );
+
+        auto options = std::filesystem::copy_options::update_existing;
+        if (recursiveCopy) options |= std::filesystem::copy_options::recursive;
+
+        std::filesystem::copy(sourceFilePath, destinationFilePath, options, errorCode);
 
         if (errorCode)
         {

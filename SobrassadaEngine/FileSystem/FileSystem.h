@@ -12,7 +12,7 @@ namespace FileSystem
     unsigned int LoadForDetour(const char* filePath, char** buffer);
     bool SOBRASADA_API_ENGINE LoadJSON(const char* scenePath, rapidjson::Document& doc);
     unsigned int Save(const char* filePath, const void* buffer, unsigned int size, bool asBinary = true, bool append = false);
-    bool Copy(const char* sourceFilePath, const char* destinationFilePath);
+    bool Copy(const char* sourceFilePath, const char* destinationFilePath, bool recursiveCopy = false);
 
     void GetDrives(std::vector<std::string>& drives);
     void SplitAccumulatedPath(const std::string& path, std::vector<std::string>& accPaths);
