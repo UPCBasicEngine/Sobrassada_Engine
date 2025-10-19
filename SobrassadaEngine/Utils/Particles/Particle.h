@@ -12,6 +12,7 @@ struct Particle
     Particle(float3 newPosition) : position(newPosition) {};
 
     float3 position       = float3::zero;
+    float3 localPosition  = float3::zero;
     float3 velocity       = float3::zero;
     float3 direction      = float3::one.Normalized();
 

@@ -134,7 +134,7 @@ update_status SceneModule::PostUpdate(float deltaTime)
         {
 
             App->GetLibraryModule()->SaveScene(
-                (App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH).c_str(), SaveMode::Save
+                (App->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH).c_str(), SaveMode::Save
             );
         }
 

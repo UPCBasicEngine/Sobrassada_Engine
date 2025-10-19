@@ -318,8 +318,7 @@ void AttackVfxSpritesheet::UpdateSprite(float deltaTime)
     {
         if (timer < (animationDuration / float(rows * cols))) return;
     }
-    if (timer < updateRate) return;
-    else if (finished) return;
+    if (finished) return;
 
     if (isRowMajor)
     {

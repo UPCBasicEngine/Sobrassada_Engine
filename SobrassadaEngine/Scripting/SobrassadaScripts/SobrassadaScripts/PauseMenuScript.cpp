@@ -324,7 +324,7 @@ void PauseMenuScript::HandleInput()
             Close();
             AppEngine->GetSceneModule()->GetScene()->SetStopPlaying(true);
             std::string path =
-                AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PATH + "SCENE_MainMenu.scene";
+                AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH + "SCENE_MainMenu.scene";
             AppEngine->GetSceneModule()->RequestSceneLoad(path);
             return;
         }

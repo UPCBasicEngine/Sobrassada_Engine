@@ -168,6 +168,7 @@ ParticleEmitter::ParticleEmitter(const rapidjson::Value& initialState, ParticleS
     if (initialState.HasMember("blendingMode"))
         blendingMode = EmitterBlendingMode(initialState["blendingMode"].GetInt());
     if (initialState.HasMember("colorIntensity")) colorIntensity = initialState["colorIntensity"].GetFloat();
+    if (initialState.HasMember("linkToParent")) linkToParent = initialState["linkToParent"].GetBool();
 }
 
 ParticleEmitter::~ParticleEmitter()
@@ -198,6 +199,7 @@ void ParticleEmitter::Save(rapidjson::Value& targetState, rapidjson::Document::A
     targetState.AddMember("RenderPriority", renderPriority, allocator);
     targetState.AddMember("blendingMode", (int)blendingMode, allocator);
     targetState.AddMember("colorIntensity", colorIntensity, allocator);
+    targetState.AddMember("linkToParent", linkToParent, allocator);
 }
 
 void ParticleEmitter::Update(float deltaTime, EmitterInstance* emitterInstance)
@@ -354,6 +356,8 @@ void ParticleEmitter::RenderEditor()
     {
         if (colorIntensity < 0.f) colorIntensity = 0.f;
     }
+
+    ImGui::Checkbox("Link to parent", &linkToParent);
 
     ImGui::Spacing();
 

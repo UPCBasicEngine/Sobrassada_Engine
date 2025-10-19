@@ -44,4 +44,11 @@ void MetaFile::Save(const std::string& name, const std::string& assetPath) const
         (unsigned int)FileSystem::Save(savePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
 
     if (bytesWritten == 0) GLOG("Failed to save meta file: %s", assetPath.c_str());
+
+    savePath = App->GetProjectModule()->GetLoadedProjectPath() + METADATA_LIB_PATH + std::to_string(prefix) +
+               FILENAME_SEPARATOR + name + META_EXTENSION;
+    bytesWritten =
+        (unsigned int)FileSystem::Save(savePath.c_str(), buffer.GetString(), (unsigned int)buffer.GetSize(), false);
+
+    if (bytesWritten == 0) GLOG("Failed to save meta file: %s", assetPath.c_str());
 }
