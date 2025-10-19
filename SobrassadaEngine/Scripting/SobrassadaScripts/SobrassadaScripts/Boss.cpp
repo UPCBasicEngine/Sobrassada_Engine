@@ -725,9 +725,7 @@ void Boss::OnDeath()
 
 void Boss::OnDamageTaken(int amount)
 {
-    // TODO: particles? and animation
-
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HIT);
 
     if (currentAction == BossActions::Idle || currentAction == BossActions::Chase ||
         currentAction == BossActions::Waiting || currentAction == BossActions::Recover ||
@@ -787,6 +785,8 @@ void Boss::OnDamageTaken(int amount)
                     break;
                 }
             }
+
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
         }
     }
 
@@ -1914,12 +1914,10 @@ void Boss::Mirage()
     if (stateEnter)
     {
         ResetValues(false);
+
         mirageActivated = true;
         stateEnter      = false;
-        agentAI->PauseMovement();
         currentAction = BossActions::Start;
-
-        EnableInvulnerable();
     }
 
     switch (currentAction)
@@ -1928,7 +1926,12 @@ void Boss::Mirage()
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
+
+            agentAI->PauseMovement();
             animComponent->UseTrigger("Start");
+
+            EnableInvulnerable();
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_CHARGE);
         }
 
         if (animComponent && animComponent->IsFinished())
@@ -1964,6 +1967,8 @@ void Boss::Mirage()
         if (animComponent && animComponent->IsFinished())
         {
             DisableInvulnerable();
+            if (audio) audio->StopAudio();
+            
 
             agentAI->ResumeMovement();
             actionTriggerDone = false;
@@ -2024,7 +2029,7 @@ void Boss::WaterSpouts()
             agentAI->ResumeMovement();
             actionTriggerDone = false;
 
-            ChooseNextState(); // go back to AI loop
+            ChooseNextState();
         }
         break;
 
@@ -2369,16 +2374,17 @@ void Boss::ChangePhase()
 
         agentAI->PauseMovement();
 
-        // TODO: anim changePhase
         currentAction = BossActions::Taunt;
         if (animComponent) animComponent->UseTrigger("Taunt");
 
         EnableInvulnerable();
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_CHARGE);
     }
 
     if (animComponent && animComponent->IsFinished())
     {
         DisableInvulnerable();
+        if (audio) audio->StopAudio();
 
         agentAI->ResumeMovement();
 
