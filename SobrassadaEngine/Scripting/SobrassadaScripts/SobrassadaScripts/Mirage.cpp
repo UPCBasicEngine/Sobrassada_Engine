@@ -1,13 +1,16 @@
 #include "pch.h"
+
 #include "Mirage.h"
 #include "Application.h"
 #include "GameObject.h"
 #include "MirageBossDash.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
+#include "ShaderScriptComponent.h"
 #include "Standalone\MeshComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Wwise_IDs.h"
+#include "MirageVFX.h"
 
 Mirage::Mirage(GameObject* parent) : Script(parent)
 {
@@ -42,6 +45,9 @@ bool Mirage::Init()
     bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
     endPoint                    = secondChild->GetLocalTransform().TranslatePart();
 
+    mirageFireComponent         = fourthChild->GetComponent<ShaderScriptComponent*>();
+    firescript                  = mirageFireComponent->GetScriptByType<MirageVFX>();
+
     audio                       = parent->GetComponent<AudioSourceComponent*>();
 
     bossDash->setEndPoint(endPoint);
@@ -58,6 +64,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Sleeping:
     {
         parent->SetEnabled(true);
+        firescript->SetAllColors(float3(0.984f, 0.690f, 0.231f)); //GOLD
         if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_PREPAREMIRAGE);
         mirageDisableComponent1->SetEnabled(false);
         mirageDisableComponent2->SetEnabled(false);
@@ -93,6 +100,9 @@ void Mirage::Update(float deltaTime)
     case MirageState::Damaging:
     {
         stateTimer += deltaTime;
+
+        firescript->SetAllColors(float3(0.188f, 0.357f, 0.733f)); //BLUE
+
         if (stateTimer >= 1 && !dashdone)
         {
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DASHATTACK_02);

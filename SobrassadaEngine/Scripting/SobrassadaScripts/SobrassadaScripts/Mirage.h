@@ -5,6 +5,8 @@
 class MeshComponent;
 class MirageBossDash;
 class AudioSourceComponent;
+class ShaderScriptComponent;
+class MirageVFX;
 
 enum class MirageState
 {
@@ -27,6 +29,7 @@ class Mirage : public Script
     MeshComponent* meshComponent = nullptr;
     MeshComponent* mirageDisableComponent1 = nullptr;
     MeshComponent* mirageDisableComponent2 = nullptr;
+    ShaderScriptComponent* mirageFireComponent = nullptr;
 
     bool dashdone                          = false;
     int damage                   = 0;
@@ -37,5 +40,8 @@ class Mirage : public Script
 
     float3 endPoint;
     MirageBossDash* bossDash     = nullptr;
+    MirageVFX* firescript = nullptr;
     AudioSourceComponent* audio = nullptr;
+
+
 };
