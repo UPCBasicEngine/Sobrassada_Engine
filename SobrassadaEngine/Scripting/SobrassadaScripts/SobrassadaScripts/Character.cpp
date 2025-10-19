@@ -130,6 +130,10 @@ bool Character::Init()
         GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
         if (glowObject) glow = glowObject;
         if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
+
+        GameObject* hitObject = parent->GetChildGameObjectByName(hitName);
+        if (hitObject) hit = hitObject;
+        if (!hitObject) GLOG("[WARNING - %s] No hit object found in children", parent->GetName())
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();

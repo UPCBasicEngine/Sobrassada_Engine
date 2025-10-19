@@ -79,6 +79,7 @@ class CuChulainn : public Character
     void OnObjectDestroyed();
     void OnEnemyHit();
     void OnEnemyDefeated();
+    void ActivateArrowMark();
 
     void ActivateAbility(std::string abilityName);
     void OnArrowHit();
@@ -202,6 +203,14 @@ class CuChulainn : public Character
     float arrowHitVfxDuration                      = 0.2f;
     float arrowHitVfxTimer                         = 0.0f;
     bool arrowVfxIsActive                          = false;
+
+     // Arrow Mark VFX
+    GameObject* markVfxObject                      = nullptr;
+    std::string markVfxName                        = "ArrowMark";
+    float markVfxDuration                          = 0.5f;
+    float markVfxTimer                             = 0.0f;
+    bool markVfxIsActive                           = false;
+
 
     // Charged attack
     std::string chargedAttackName                  = "Charged";

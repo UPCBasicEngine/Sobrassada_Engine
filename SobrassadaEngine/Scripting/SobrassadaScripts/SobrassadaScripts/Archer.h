@@ -18,10 +18,9 @@ enum class ArcherStates
     BASIC_ATTACK,
     DEATH,
     OVERSHOOTING,
-    SEEKING_COVER,
-    IN_COVER,
-    POSITIONING_TO_SHOOT,
-    HIGHLIGHTING
+    DANGER, 
+    HIGHLIGHTING,
+    PREAIM
 };
 
 enum class ArcherHighlightingStates
@@ -55,11 +54,14 @@ class Archer : public Character
     void OverShooting(float deltaTime);
     void Escape(float deltaTime);
     void Aim(float deltaTime);
+    void PreAim(float deltaTime);
     void ChangeState();
     void PatrolAI();
     void ChaseAI();
+    void DangerRetreat(float deltaTime);
     void SearchForPlayer();
     void ApplyKnockback();
+    bool IsNavmeshPathClear(float3 from, float3 to);
  
  
 
@@ -69,32 +71,22 @@ class Archer : public Character
     float3 CalculatePredictiveTarget();
     bool CanShootSafely();
 
-    // Streamlined cover system
-    GameObject* FindBestCoverPoint();
-    void SeekCover(float deltaTime);
-    void StayInCover(float deltaTime);
-    void PositionToShoot(float deltaTime);
-    float3 FindShootingPosition();
+   
 
-    // Management methods
-    void ReleaseCoverPoint();
-    void ForceNewCoverPoint();
-    GameObject* GetCurrentCoverPoint();
-    void DebugCoverPoints();
+  
 
     // Detection methods
-    bool IsPlayerInAnyCoverPoint();
     float3 CalculateSpreadPosition();
     std::vector<float3> GetNearbyArcherPositions();
 
-    // Accessors for CoverPointTrigger
-    std::vector<GameObject*>& GetAvailableCoverPoints();
-    std::vector<GameObject*>& GetOccupiedCoverPoints();
+
 
     //Debug
     const std::string GetLogicStateName();
     const AIAgentComponent* GetAI() { return agentAI; }
     void ActivateGlowVFX();
+    void ActivateHitVFX();
+
    
 
   private:
@@ -172,7 +164,7 @@ class Archer : public Character
 
     // VFX
     std::string archerHitVFX      = "HitArcher";
-    GameObject* archerVfxObject   = nullptr;
+    GameObject* hitVfxObject   = nullptr;
     bool hitVfxIsActive           = false;
     float hitVfxDuration          = 0.5f;
     float hitVfxTimer             = 0.0f;
@@ -184,13 +176,29 @@ class Archer : public Character
     float glowVfxDuration          = 1.0f;
     float glowTimer            =   0.0f;
 
+    
+    float preAimDuration           = 0.8f; 
+    float preAimTimer              = 0.0f;
+    bool isPreAiming               = false;
+   
+    //Danger Zone
+    float dangerTimer                  = 0.0f;
+    float dangerDuration               = 2.0f; 
+    float3 dangerEscapeTarget          = float3::zero;
+    bool hasDangerTarget               = false;
+    
+
     // Line of sight tracking
     bool hasLineOfSight           = false;
     int flankingAttempts          = 0;
 
     //Dash
     bool isDashing                = false;
-    bool triggeredSequence         = true;
+    
+
+  const static bool triggered          = true;
+  float3 lastDangerPosition          = float3::zero;
+  float dangerStuckTimer             = 0.0f;
 
 
 };

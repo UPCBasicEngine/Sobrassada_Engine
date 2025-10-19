@@ -141,6 +141,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Attack VFX Explosion", InspectorField::FieldType::InputText, &attackVfxExplosionName});
     fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
     fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
+    fields.push_back({"Mark Arrow VFX object", InspectorField::FieldType::InputText, &markVfxName});
+    fields.push_back({"Mark Arrow VFX duration", InspectorField::FieldType::Float, &markVfxDuration, 0.1f, 5.0f});
 
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
@@ -214,6 +216,10 @@ bool CuChulainn::Init()
     arrowHitVfxObject = scene->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
+
+    markVfxObject = scene->GetGameObjectByName(markVfxName);
+    if (!markVfxObject) GLOG("[WARNING] No arrow MARK particles found for marks in CuChulain")
+    else markVfxObject->SetEnabled(false);
 
     GameObject* attackVfxObj = scene->GetGameObjectByName(attackVfxHorizontal1Name);
     if (attackVfxObj) attackVfxHorizontal1 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
@@ -1176,6 +1182,20 @@ void CuChulainn::UpdateTimers(float deltaTime)
         }
     }
 
+    //mark arrow
+     if (markVfxIsActive && markVfxObject && markVfxObject->IsEnabled())
+    {
+         GLOG("MARK TIMER ENTER");
+        markVfxTimer += deltaTime;
+        if (markVfxTimer >= markVfxDuration)
+        {
+            GLOG("DEACTIVATING VFX MARK");
+            markVfxObject->SetEnabled(false);
+            markVfxTimer = 0.0f;
+            markVfxIsActive = false;
+        }
+    }
+
     // Dash decal
     dashDecalBufferTimer -= deltaTime;
     if (dashDecalBufferTimer < 0.0f)
@@ -1780,8 +1800,33 @@ void CuChulainn::UpdateUltimateVfx()
     vfxTimeUnscaledSec = 0.0f;
 }
 
+void CuChulainn::ActivateArrowMark()
+{
+    if (!markVfxObject)
+    {
+        GLOG("VFX: ERROR - glowVfxObject is NULL!");
+        return;
+    }
+
+    markVfxTimer       = 0.0f;
+   markVfxIsActive = true;
+    markVfxObject->SetEnabled(true);
+
+    ParticleSystemComponent* particleSystem = markVfxObject->GetComponent<ParticleSystemComponent*>();
+    if (particleSystem)
+    {
+        particleSystem->SpawnAllInstances();
+        GLOG("VFX: Glow particles spawned at archer position");
+    }
+    else
+    {
+        GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", markVfxObject->GetName().c_str());
+    }
+}
+
 void CuChulainn::Aim(float deltaTime)
 {
+ 
     if (!spear) return;
 
     if (state != CharacterStates::AIM)

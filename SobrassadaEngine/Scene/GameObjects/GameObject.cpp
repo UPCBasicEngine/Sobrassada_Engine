@@ -1509,7 +1509,7 @@ void GameObject::SetEnabledRecursive(bool value)
             child->SetEnabledRecursive(value);
 }
 
-GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
+GameObject* GameObject::GetChildGameObjectByName(const std::string& name) 
 {
     std::stack<UID> nodesToVisit;
     for (UID childUID : children)

@@ -485,3 +485,39 @@ void AIAgentComponent::MoveTo(float distance, float3 rotateDirection)
 
     SetPosition(closestPoint - parent->GetParentGlobalTransform().TranslatePart());
 }
+
+bool AIAgentComponent::RaycastNavmesh(const float3& start, const float3& end, float& hitT) const
+{
+    if (!navMeshQuery) return false;
+
+    dtQueryFilter filter;
+    filter.setIncludeFlags(SAMPLE_POLYFLAGS_WALK);
+    filter.setExcludeFlags(0);
+
+    float halfExtents[3] = {2.0f, 4.0f, 2.0f};
+    dtPolyRef startRef   = 0;
+    float nearestPt[3];
+
+    dtStatus status = navMeshQuery->findNearestPoly(start.ptr(), halfExtents, &filter, &startRef, nearestPt);
+
+    if (dtStatusFailed(status) || startRef == 0)
+    {
+        return false;
+    }
+
+    float t            = 0.0f;
+    float hitNormal[3] = {0};
+    dtPolyRef path[256];
+    int pathCount = 0;
+
+    status        = navMeshQuery->raycast(
+        startRef, start.ptr(), end.ptr(), &filter,
+        &t, 
+        hitNormal, path, &pathCount, 256
+    );
+
+    hitT = t;
+
+   
+    return dtStatusSucceed(status);
+}
