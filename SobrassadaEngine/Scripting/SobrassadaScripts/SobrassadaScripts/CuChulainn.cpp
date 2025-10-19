@@ -1774,9 +1774,9 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateWarning)
     {
         ultimateWarning->SetEnabled(true);
+        ultimateWarning->GetComponent<MeshComponent*>()->SetEnabled(false);
         if (ultimateWarning->GetComponent<ShaderScriptComponent*>())
         {
-            ultimateWarning->GetComponent<MeshComponent*>()->SetEnabled(false);
             ultimateWarning->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
         }
     }
@@ -1810,7 +1810,7 @@ void CuChulainn::Move()
 
     const bool actuallyMoving = character->IsMoving();
     const bool wantsMove      = moveFromCollision;
-    const bool runCondition   = wantsMove || character->GetSpeed() > 0.5f;
+    const bool runCondition   = wantsMove || (character->GetInputDown() && character->GetSpeed() > 0.5f);
 
     if (runCondition)
     {
@@ -2240,6 +2240,19 @@ void CuChulainn::AddRiastrad(int amount)
 
     if (!riastradBar) return;
     riastradBar->SetFillAmount(riastradMeter / 100.0f);
+}
+
+void CuChulainn::ResetState()
+{
+    moveFromCollision = false;
+    if (character)
+    {
+        character->SetDirection(float3::zero);
+        character->SetIsRunning(false);
+        //character->EnableMovement(false);
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 
 void CuChulainn::OnObjectDestroyed()

@@ -175,6 +175,8 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
         }
         
         playerController->SetInputDown(false);
+        if (player->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>())
+            player->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>()->ResetState();
 
         if (hidePlayerWhileZooming)
         {
