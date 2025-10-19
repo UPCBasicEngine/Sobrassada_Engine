@@ -27,6 +27,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_BANSHEE_ATTACK = 2747797885U;
         static const AkUniqueID PLAY_SFX_BANSHEE_DEATH = 1421284353U;
         static const AkUniqueID PLAY_SFX_BANSHEE_HURT = 1031600530U;
+        static const AkUniqueID PLAY_SFX_BARRIER = 3063927795U;
         static const AkUniqueID PLAY_SFX_BREAK_01 = 2634635063U;
         static const AkUniqueID PLAY_SFX_BREAK_02 = 2634635060U;
         static const AkUniqueID PLAY_SFX_BREAK_03 = 2634635061U;
@@ -41,9 +42,11 @@ namespace AK
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEATTACK = 1369065983U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEDASH = 3072215751U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEEXPANSION = 4190151190U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_CHARGE = 3973826166U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DASHATTACK_01 = 3142736088U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DASHATTACK_02 = 3142736091U;
         static const AkUniqueID PLAY_SFX_FERDIAD_DEATH = 792711456U;
+        static const AkUniqueID PLAY_SFX_FERDIAD_HIT = 1982951601U;
         static const AkUniqueID PLAY_SFX_FERDIAD_HURT = 3204841533U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_01 = 3435584311U;
         static const AkUniqueID PLAY_SFX_FERDIAD_NORMALATTACK_02 = 3435584308U;
@@ -85,6 +88,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_STEPS_GRASS = 879946080U;
         static const AkUniqueID PLAY_SFX_STEPS_ROCK = 2099665009U;
         static const AkUniqueID PLAY_SFX_STEPS_WOOD = 2418067177U;
+        static const AkUniqueID PLAY_SFX_TILES = 3436776357U;
         static const AkUniqueID PLAY_SFX_TREEOFLIFE_02 = 3055317224U;
         static const AkUniqueID PLAY_SFX_TREEOFLIFE_03 = 3055317225U;
         static const AkUniqueID PLAY_SFX_WATER_01 = 3212841747U;
