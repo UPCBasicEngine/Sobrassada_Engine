@@ -18,6 +18,8 @@ SpawnUI::SpawnUI(GameObject* parent) : Script(parent)
         {"Alternative object UI Name (PS)", InspectorField::FieldType::InputText, &psAlternativeObjectUIName}
     );
     fields.push_back({"Trigger once", InspectorField::FieldType::Bool, &triggerOnce});
+
+    fields.push_back({"Show ui after (s)", InspectorField::FieldType::Float, &showDelay, 0.f, 30.f});
     fields.push_back(
         {"Hide ui after (s) (0 = don´t hide)", InspectorField::FieldType::Float, &hideAfterSeconds, 0.f, 30.f}
     );
@@ -59,6 +61,17 @@ bool SpawnUI::Init()
 void SpawnUI::Update(float deltaTime)
 {
     if (!updating || !trigger || !imageUI) return;
+
+    if (delayedShowing)
+    {
+        timer -= deltaTime;
+        if (timer <= 0.f)
+        {
+            ShowUI();
+        }
+        return;
+    }
+
     if (hideAfterSeconds > 0.f)
     {
         timer -= deltaTime;
@@ -75,7 +88,26 @@ void SpawnUI::Update(float deltaTime)
 void SpawnUI::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     // triggers only collision with Player
+    cachedCollisionObject = otherObject;
+    timer                 = showDelay;
+    updating              = true;
+    delayedShowing        = true;
 
+    if (showDelay == 0) ShowUI();
+}
+
+void SpawnUI::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
+{
+    if (hideAfterSeconds == 0 && imageUI != nullptr) imageUI->SetEnabled(false);
+    if (hideAfterSeconds == 0 && xboxAlternativeImageUI != nullptr) xboxAlternativeImageUI->SetEnabled(false);
+    if (hideAfterSeconds == 0 && psAlternativeImageUI != nullptr) psAlternativeImageUI->SetEnabled(false);
+    if (triggerOnce) trigger->SetEnabled(false);
+
+    if (hideAfterSeconds == 0) updating = false;
+}
+
+void SpawnUI::ShowUI()
+{
     if (imageUI != nullptr)
     {
 
@@ -87,20 +119,11 @@ void SpawnUI::OnCollisionEnter(GameObject* otherObject, const float3 collisionNo
         else imageUI->SetEnabled(true);
     }
 
-    timer = hideAfterSeconds;
+    timer          = hideAfterSeconds;
+    delayedShowing = false;
 
     if (unlockAbility)
-        otherObject->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>()->ActivateAbility(nameAbility);
-
-    updating = true;
-}
-
-void SpawnUI::OnCollisionExit(GameObject* otherObject, ColliderLayer layer)
-{
-    if (hideAfterSeconds == 0 && imageUI != nullptr) imageUI->SetEnabled(false);
-    if (hideAfterSeconds == 0 && xboxAlternativeImageUI != nullptr) xboxAlternativeImageUI->SetEnabled(false);
-    if (hideAfterSeconds == 0 && psAlternativeImageUI != nullptr) psAlternativeImageUI->SetEnabled(false);
-    if (triggerOnce) trigger->SetEnabled(false);
-
-    if (hideAfterSeconds == 0) updating = false;
+        cachedCollisionObject->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>()->ActivateAbility(
+            nameAbility
+        );
 }

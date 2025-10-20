@@ -37,6 +37,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
+#include "UIFadeInOut.h"
 #include "UISpritesheet.h"
 
 #include "Math/Quat.h"

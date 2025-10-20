@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include "AsyncSceneLoading.h"
 #include "Archer.h"
 #include "ArcherProjectile.h"
+#include "AsyncSceneLoading.h"
 #include "Banshee.h"
 #include "Banshee_v2.h"
 #include "Boss.h"
@@ -55,16 +55,18 @@
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
 #include "MovingUVTransparent.h"
+#include "UIFadeInOut.h"
 #include "UISpritesheet.h"
 #include "VSyncToggleScript.h"
 
 #include "BossMirage.h"
+#include "BossSpouts.h"
 #include "HighlightCharacter.h"
 #include "Mirage.h"
 #include "MirageBossDash.h"
-#include "BossSpouts.h"
 #include "MusicManager.h"
 #include "MusicTrigger.h"
+#include "NameDisplay.h"
 
 #include <string>
 
@@ -122,18 +124,19 @@ constexpr const char* scripts[] = {
     "AsyncSceneLoading",
     "BossSpouts",
     "MusicManager",
-    "MusicTrigger"
+    "MusicTrigger",
+    "NameDisplay"
 };
 
-constexpr const char* shaderScripts[] = {"MovingUVPostScript",    "MovingUVLight",        "MovingUVTransparent",
-                                         "HealGroundHalo",        "HealVerticalPlanes",   "HealSpikesBurst",
-                                         "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst",
-                                         "HealSpikesUp",          "RiastradBarFill",      "HealthBarFill",
-                                         "AbilityIconFill",       "DamageMask",           "AttackVfxSpritesheet",
-                                         "MovingUVClipErode",     "ColorChange",          "UISpritesheet", "MirageVFX",
-                                         "MirageHumanVFX"};
+constexpr const char* shaderScripts[] = {
+    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
+    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
+    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask",     "AttackVfxSpritesheet",
+    "MovingUVClipErode",  "ColorChange",           "UISpritesheet",        "MirageVFX",      "UIFadeInOut",
+    "MirageHumanVFX"
+};
 
-Application* AppEngine                = nullptr;
+Application* AppEngine = nullptr;
 extern "C" SOBRASSADA_API void InitSobrassadaScripts(Application* App)
 {
     // GLOG("Sobrassada Scripts Initialized");
@@ -154,6 +157,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "SpawnUI") return new SpawnUI(parent);
     if (scriptType == "MenuChangeSceneScript") return new MenuChangeSceneScript(parent);
     if (scriptType == "GameOverScript") return new GameOverScript(parent);
+    if (scriptType == "NameDisplay") return new NameDisplay(parent);
 
     /* Characters */
     if (scriptType == "CuChulainnScript") return new CuChulainn(parent);
@@ -249,6 +253,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
             "./EngineDefaults/Shader/Custom/Fragment/HealVFX/Heal_SpikesUp.glsl"
         );
     if (scriptType == "UISpritesheet") return new UISpritesheet(parent);
+    if (scriptType == "UIFadeInOut") return new UIFadeInOut(parent);
 
     /*Boss*/
     if (scriptType == "Mirage") return new Mirage(parent);
