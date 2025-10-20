@@ -532,6 +532,7 @@
     <ClInclude Include="Spouts.h" />
     <ClInclude Include="SwitchScriptTest.h" />
     <ClInclude Include="BarFill.h" />
+    <ClInclude Include="UIFadeInOut.h" />
     <ClInclude Include="UISpritesheet.h" />
     <ClInclude Include="VSyncToggleScript.h" />
     <ClInclude Include="Soldier.h" />
@@ -2146,6 +2147,7 @@
     <ClCompile Include="Spouts.cpp" />
     <ClCompile Include="SwitchScriptTest.cpp" />
     <ClCompile Include="BarFill.cpp" />
+    <ClCompile Include="UIFadeInOut.cpp" />
     <ClCompile Include="UISpritesheet.cpp" />
     <ClCompile Include="VSyncToggleScript.cpp" />
     <ClCompile Include="Soldier.cpp" />
