@@ -2160,7 +2160,7 @@ void CuChulainn::ChargeAttack()
         }
 
         state       = CharacterStates::CHARGING;
-        chargeTimer = isRiastrad ? chargeDuration * 0.5f : chargeDuration;
+        chargeTimer = chargeDuration;
         character->EnableMovement(false);
 
         if (animComponent) animComponent->UseTrigger("Charge");
@@ -2515,6 +2515,11 @@ void CuChulainn::EndCurse()
 {
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
+
+    for (ShaderScriptComponent* shader : curseScreenVfx)
+    {
+        if (shader && shader->GetEnabled()) shader->SetEnabled(false);
+    }
 
     const HashString walkName = HashString("Walk");
     for (State& state : animComponent->GetResourceStateMachine()->states)
