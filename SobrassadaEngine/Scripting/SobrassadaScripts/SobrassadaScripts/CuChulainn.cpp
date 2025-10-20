@@ -207,6 +207,20 @@ bool CuChulainn::Init()
     if (stepObj) footsteps[3] = stepObj->GetComponent<ShaderScriptComponent*>();
     if (footsteps[3]) footsteps[3]->SetEnabled(false);
 
+    stepObj = scene->GetGameObjectByName(footstepParticles1Name);
+    if (stepObj)
+    {
+        footstepParticles1 = stepObj->GetComponent<ParticleSystemComponent*>();
+        if (footstepParticles1) footstepParticles1->StopInstances();
+    }
+
+    stepObj = scene->GetGameObjectByName(footstepParticles2Name);
+    if (stepObj)
+    {
+        footstepParticles2 = stepObj->GetComponent<ParticleSystemComponent*>();
+        if (footstepParticles2) footstepParticles2->StopInstances();
+    }
+
     chargedAttackCollider = scene->GetGameObjectByName(chargedAttackName);
     if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
@@ -1769,15 +1783,16 @@ void CuChulainn::Attack(float deltaTime)
     const float3 leftRayOrigin2   = position - lateralDirection * 0.6f;
     const float3 leftRayOrigin3   = position - lateralDirection * 0.9f;
 
-    LineSegment centerRay(position + direction * 0.075f, position + direction * 3.0f);
+    const float rayLength         = 2.0f;
+    LineSegment centerRay(position + direction * 0.075f, position + direction * rayLength);
 
-    LineSegment leftRay(leftRayOrigin, leftRayOrigin + direction * 3.0f);
-    LineSegment leftRay2(leftRayOrigin2 - direction * 0.2f, leftRayOrigin2 + direction * 3.0f);
-    LineSegment leftRay3(leftRayOrigin3 - direction * 0.2f, leftRayOrigin3 + direction * 3.0f);
+    LineSegment leftRay(leftRayOrigin, leftRayOrigin + direction * rayLength);
+    LineSegment leftRay2(leftRayOrigin2 - direction * 0.2f, leftRayOrigin2 + direction * rayLength);
+    LineSegment leftRay3(leftRayOrigin3 - direction * 0.2f, leftRayOrigin3 + direction * rayLength);
 
-    LineSegment rightRay(rightRayOrigin, rightRayOrigin + direction * 3.0f);
-    LineSegment rightRay2(rightRayOrigin2 - direction * 0.2f, rightRayOrigin2 + direction * 3.0f);
-    LineSegment rightRay3(rightRayOrigin3 - direction * 0.2f, rightRayOrigin3 + direction * 3.0f);
+    LineSegment rightRay(rightRayOrigin, rightRayOrigin + direction * rayLength);
+    LineSegment rightRay2(rightRayOrigin2 - direction * 0.2f, rightRayOrigin2 + direction * rayLength);
+    LineSegment rightRay3(rightRayOrigin3 - direction * 0.2f, rightRayOrigin3 + direction * rayLength);
 
     BulletUserPointer* centerHit = RaycastController::GetRayIntersectionPhysics(centerRay);
 
@@ -1977,6 +1992,14 @@ void CuChulainn::Move()
                     footsteps[stepIndex]->GetParent()->SetLocalTransform(localTRS);
                     footsteps[stepIndex]->SetEnabled(true);
                     footsteps[stepIndex]->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
+                    ParticleSystemComponent* steps = isRightFoot ? footstepParticles1 : footstepParticles2;
+
+                    steps->GetParent()->SetLocalPosition(
+                        parent->GetGlobalPostition() + verticalOffset * 4.0f -
+                        parent->GetParentGlobalTransform().TranslatePart()
+                    );
+                    steps->SpawnAllInstances();
 
                     isRightFoot  = !isRightFoot;
                     stepIndex   += 1;

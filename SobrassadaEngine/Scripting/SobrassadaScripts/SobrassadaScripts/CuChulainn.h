@@ -155,7 +155,11 @@ class CuChulainn : public Character
     std::string footstepName2                      = "Footstep2";
     std::string footstepName3                      = "Footstep3";
     std::string footstepName4                      = "Footstep4";
+    std::string footstepParticles1Name              = "FootstepParticles1";
+    std::string footstepParticles2Name              = "FootstepParticles2";
     ShaderScriptComponent* footsteps[4]            = {nullptr};
+    ParticleSystemComponent* footstepParticles1     = nullptr;
+    ParticleSystemComponent* footstepParticles2     = nullptr;
     int stepIndex                                  = 0;
     bool isRightFoot                               = false;
 
