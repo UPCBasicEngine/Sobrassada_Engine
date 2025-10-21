@@ -168,8 +168,8 @@ bool EditorUIModule::Init()
     colors[ImGuiCol_DockingPreview]       = ImVec4(0.45f, 0.55f, 0.80f, 0.6f);
     colors[ImGuiCol_DockingEmptyBg]       = ImVec4(0.10f, 0.10f, 0.12f, 1.0f);
 
-    colors[ImGuiCol_CheckMark]            = ImVec4(1.0f, 0.447f, 0.0f, 1.0f);
-    colors[ImGuiCol_SliderGrab]           = ImVec4(1.0f, 0.447f, 0.0f, 1.0f);
+    colors[ImGuiCol_CheckMark]            = ImVec4(0.45f, 0.55f, 0.80f, 1.0f);
+    colors[ImGuiCol_SliderGrab]           = ImVec4(0.45f, 0.55f, 0.80f, 1.0f);
     colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.55f, 0.65f, 0.90f, 1.0f);
 
     colors[ImGuiCol_Separator]            = ImVec4(0.25f, 0.25f, 0.28f, 1.0f);
