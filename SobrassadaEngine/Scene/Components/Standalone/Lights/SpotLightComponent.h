@@ -31,6 +31,8 @@ class SpotLightComponent : public LightComponent
     float GetOuterAngle() const { return outerAngle; }
     int GetShadowGPUIndex() const { return shadowGPUIndex; }
     float GetRadius() const { return radius; }
+    bool GetRenderVolumetric() const { return renderVolumetrics; }
+    float GetAnisotropy() const { return anisotropy; }
 
     float4x4 GetViewMatrix() const { return spotCamera.ViewMatrix(); }
     float4x4 GetProjectionMatrix() const { return spotCamera.ProjectionMatrix(); }
@@ -43,7 +45,9 @@ class SpotLightComponent : public LightComponent
     float innerAngle;
     float outerAngle;
     float radius;
+    bool renderVolumetrics = false;
+    float anisotropy       = 0.5f;
 
-    int shadowGPUIndex = -1;
+    int shadowGPUIndex     = -1;
     Frustum spotCamera;
 };

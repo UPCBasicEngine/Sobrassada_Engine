@@ -37,6 +37,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
+#include "UIFadeInOut.h"
 #include "UISpritesheet.h"
 
 #include "Math/Quat.h"
@@ -829,7 +830,11 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT && state != CharacterStates::TAKE_MUSHROOM)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
+             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
+             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
+             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT &&
+             state != CharacterStates::TAKE_MUSHROOM)
         Move();
 
     // When finished animation, go back to idle state
@@ -1034,6 +1039,40 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
     {
         StartCurse();
+    }
+
+    // TODO: DELETE, JUST FOR TESTING FADEINOUT UI
+    if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->FadeIn();
+    }
+
+    if (keyboard[SDL_SCANCODE_2] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->FadeOut();
+    }
+
+    if (keyboard[SDL_SCANCODE_3] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->Reset();
     }
 }
 
@@ -1501,7 +1540,8 @@ void CuChulainn::PerformAttack()
             if (!IsBlockedAhead(parent, character->GetFrontDirection(), max(0.55f, adaptedDistance), skin))
                 character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
             if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->GetEnabled())
@@ -1567,7 +1607,6 @@ void CuChulainn::PerformAttack()
                     animComponent->OnResume();
                     playerAnimHeld = false;
                 }
-
             }
 
             if (ultimateSpikes) // Control spikes animation appearance

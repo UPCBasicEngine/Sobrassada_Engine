@@ -48,6 +48,14 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
     {
         outerAngle = initialState["OuterAngle"].GetFloat();
     }
+    if (initialState.HasMember("renderVolumetrics"))
+    {
+        renderVolumetrics = initialState["renderVolumetrics"].GetBool();
+    }
+    if (initialState.HasMember("anisotropy"))
+    {
+        anisotropy = initialState["anisotropy"].GetFloat();
+    }
 
     // if (!camera) camera = new CameraComponent(GenerateUID(), parent);
 
@@ -88,6 +96,8 @@ void SpotLightComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember("Range", range, allocator);
     targetState.AddMember("InnerAngle", innerAngle, allocator);
     targetState.AddMember("OuterAngle", outerAngle, allocator);
+    targetState.AddMember("renderVolumetrics", renderVolumetrics, allocator);
+    targetState.AddMember("anisotropy", anisotropy, allocator);
 }
 
 void SpotLightComponent::Clone(const Component* other)
@@ -122,6 +132,9 @@ void SpotLightComponent::Clone(const Component* other)
         spotCamera.verticalFov               = 2.0f * outerAngle * DEGREE_RAD_CONV;
 
         radius                               = otherLight->radius;
+
+        renderVolumetrics                    = otherLight->renderVolumetrics;
+        anisotropy                           = otherLight->anisotropy;
     }
     else
     {
@@ -172,6 +185,11 @@ void SpotLightComponent::RenderEditorInspector()
         const float outerRads    = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
         radius                   = range * tan(outerRads);
     }
+
+    ImGui::Text("Volumetrics parameters");
+
+    ImGui::Checkbox("Render volumetrics", &renderVolumetrics);
+    ImGui::DragFloat("Spot Anisotropy", &anisotropy, 0.01f, -0.99f, 0.99f);
 }
 
 void SpotLightComponent::RenderDebug(float deltaTime)
