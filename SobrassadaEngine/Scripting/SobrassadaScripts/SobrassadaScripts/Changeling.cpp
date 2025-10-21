@@ -1030,7 +1030,7 @@ void Changeling::ValidateSetup()
         return;
     }
 
-    if (vfxDashTrailObjects.size() < 20)
+    if (vfxDashTrailObjects.size() < 5)
     {
         isSetupCorrectly = false;
         GLOG("[ERROR] Not enough vfx dash trail objects found")
