@@ -63,6 +63,8 @@ class CuChulainn : public Character
     bool IsDashUnlocked() const { return dashUnlocked; }
     bool IsUltimateUnlocked() const { return ultimateUnlocked; }
     int GetEnemiesCount() const { return enemiesCont; }
+    int GetRiastradOnDamageTaken() const { return riastradOnDamageTaken; }
+
     bool HasblockingTag(GameObject* go);
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
@@ -89,6 +91,7 @@ class CuChulainn : public Character
     void ApplySavedState(const PlayerState& playerState);
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
+    void AddRiastrad(int amount);
 
   private:
     void OnDeath() override;
@@ -125,7 +128,6 @@ class CuChulainn : public Character
     void Move();
     void ChargeAttack();
     void ToggleRiastrad();
-    void AddRiastrad(int amount);
     void EndCurse();
 
     bool IsBlockedAhead(

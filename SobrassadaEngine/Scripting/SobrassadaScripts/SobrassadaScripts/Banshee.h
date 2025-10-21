@@ -46,6 +46,7 @@ class Banshee : public Character
 
     BansheeStates GetState() const { return currentState; }
     int GetSlowAreaDamage() const { return slowAreaDamage; }
+    int GetSlowAreaRiastradReduction() const { return slowAreaRiastradReduction; }
 
   private:
     void OnDeath() override;
@@ -102,6 +103,7 @@ class Banshee : public Character
     ShaderScriptComponent* slowAreaRing = nullptr;
 
     int slowAreaDamage                  = 1;
+    int slowAreaRiastradReduction       = 5;
     float slowAreaWaringDuration        = 1.f;
     float elapsedSlowAreaWaring         = 0.f;
     float slowAreaWaringMaxScale        = 5.f;

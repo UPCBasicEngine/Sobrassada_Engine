@@ -2263,6 +2263,7 @@ void CuChulainn::AddRiastrad(int amount)
 {
     riastradMeter += amount;
     if (riastradMeter > 100) riastradMeter = 100;
+    if (riastradMeter < 0) riastradMeter = 0;
 
     if (riastradMeter == 100)
     {

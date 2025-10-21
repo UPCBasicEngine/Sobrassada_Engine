@@ -55,6 +55,7 @@ Banshee::Banshee(GameObject* parent)
         {"Slow Area Warning Max Scale", InspectorField::FieldType::Float, &slowAreaWaringMaxScale, 0.f, 10.f}
     );
     fields.push_back({"Slow area duration", InspectorField::FieldType::Float, &slowAreaDuration, 0.f, 10.f});
+    fields.push_back({"Slow area riastrad reduction", InspectorField::FieldType::Int, &slowAreaRiastradReduction, 1.f, 100.f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Teleport warning size curve"});
     for (int i = 0; i < maxScriptCurvePoints; ++i)

@@ -240,7 +240,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
+                                  playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -254,8 +255,10 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
 
             if (playerScript && bansheeScript && bansheeScript->GetState() == BansheeStates::SlowArea)
             {
-                playerScript->StartCurse();
                 TakeDamage(bansheeScript->GetSlowAreaDamage());
+                playerScript->AddRiastrad(
+                    -(bansheeScript->GetSlowAreaRiastradReduction() + playerScript->GetRiastradOnDamageTaken())
+                );
                 return;
             }
         }
