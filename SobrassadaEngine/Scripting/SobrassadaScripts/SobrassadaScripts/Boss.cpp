@@ -935,7 +935,9 @@ void Boss::ChooseNextStateFirstPhase()
         break;
     }
 
-    int num = uniformDist(rng);
+    shieldStrikesRate = -1;
+
+    int num           = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1671,6 +1673,7 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::GetHit2Behind:
         if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Waiting;
 
+        DamageAreaLogic();
         break;
 
     default:
@@ -1917,7 +1920,7 @@ void Boss::Mirage()
 
         mirageActivated = true;
         stateEnter      = false;
-        currentAction = BossActions::Start;
+        currentAction   = BossActions::Start;
     }
 
     switch (currentAction)
@@ -1968,7 +1971,6 @@ void Boss::Mirage()
         {
             DisableInvulnerable();
             if (audio) audio->StopAudio();
-            
 
             agentAI->ResumeMovement();
             actionTriggerDone = false;
