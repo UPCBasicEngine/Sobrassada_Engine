@@ -2224,7 +2224,7 @@ void Boss::ShieldBlast(float deltaTime)
     case BossActions::Shoot:
         if (!actionTriggerDone)
         {
-            agentAI->SetAngularSpeed(0.7f);
+            agentAI->SetAngularSpeed(0.6f);
 
             actionTriggerDone = true;
 
