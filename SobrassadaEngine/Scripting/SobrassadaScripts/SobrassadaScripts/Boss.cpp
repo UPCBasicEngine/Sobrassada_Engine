@@ -1195,8 +1195,6 @@ void Boss::Idle(float deltaTime)
 {
     if (stateEnter)
     {
-        // TODO: Randomize the idle duration
-        // agentAI->SetSpeed(0.0f, 10.0f);
         if (doIdle) ResetValues(false);
         stateEnter    = false;
         doIdle        = false;
