@@ -1965,6 +1965,7 @@ bool CuChulainn::TakeMushroom()
         mushrooms += 1;
 
         if (animComponent) animComponent->UseTrigger("Pick");
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_LIFEMUSHROOMS);
         character->EnableMovement(false);
     }
 
