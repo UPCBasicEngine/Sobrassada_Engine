@@ -759,6 +759,8 @@ void CuChulainn::OnDamageTaken(int amount)
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 
+    if (state == CharacterStates::CHARGING && audio) audio->StopAudio();
+
     if (audio && currentHealth >= 1) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
@@ -1428,6 +1430,11 @@ void CuChulainn::Dash()
         comboBufferTimer = character->GetDashDuration() + 0.1f;
         isAttacking      = false;
     }
+    else if (state == CharacterStates::CHARGING)
+    {
+        if (audio) audio->StopAudio();
+    }
+
     desiredDash      = false;
     state            = CharacterStates::DASH;
 
@@ -2035,6 +2042,7 @@ void CuChulainn::ChargeAttack()
         character->EnableMovement(false);
 
         if (animComponent) animComponent->UseTrigger("Charge");
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_CHARGEDATTACKSTART);
     }
     else if (desiredChargedAttack)
     {
@@ -2052,6 +2060,7 @@ void CuChulainn::ChargeAttack()
             if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
 
             if (animComponent) animComponent->UseTrigger("Attack");
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_CHARGEDATTACK);
 
             if (chargedAttackVfx)
             {
@@ -2065,6 +2074,7 @@ void CuChulainn::ChargeAttack()
             character->EnableMovement(true);
             state = CharacterStates::IDLE;
             if (animComponent) animComponent->UseTrigger("Idle");
+            if (audio) audio->StopAudio();
         }
     }
 }
@@ -2129,7 +2139,11 @@ void CuChulainn::ToggleRiastrad()
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
 
-        if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
+        if (audio)
+        {
+            audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
+            audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_TRANSFORM);
+        }
     }
     else
     {
@@ -2267,6 +2281,7 @@ void CuChulainn::AddRiastrad(int amount)
     if (riastradMeter == 100)
     {
         if (riastradEye) riastradEye->SetFillAmount(riastradMeter / 100.0f);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_RIASTRADCHARGED);
 
         if (AppEngine->GetInputModule()->IsUsingKeyboard() && riastradKey) riastradKey->SetEnabled(true);
         else if (riastradTriggers) riastradTriggers->SetEnabled(true);
