@@ -958,7 +958,10 @@ void RenderPass::BloomPassRender() const
 
     GLint locIntensity = glGetUniformLocation(bloomProgram, "bloomIntensity");
     glUniform1f(locIntensity, bloomIntensity);
+
+    glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    glDepthMask(GL_TRUE);
 }
 
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
@@ -996,8 +999,6 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     fxaaTexture = framebuffer->GetColorTexture();
 #endif
 
-    glDepthMask(GL_FALSE);
-
     unsigned int fxaaProgram = App->GetShaderModule()->GetFXAAProgram();
     glUseProgram(fxaaProgram);
 
@@ -1011,8 +1012,6 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 
     glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
-    glDepthMask(GL_TRUE);
-
     glDepthMask(GL_TRUE);
 
 #ifndef GAME
