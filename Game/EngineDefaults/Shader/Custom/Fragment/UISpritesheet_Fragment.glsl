@@ -22,7 +22,7 @@ void main()
         texColor.a *= fadeFactor;
     }
     
-    if (texColor.a < 0.1f) {
+    if (texColor.a < 0.01f) {
         texColor.a;
     }
 

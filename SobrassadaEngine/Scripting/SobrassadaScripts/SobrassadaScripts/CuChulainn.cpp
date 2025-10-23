@@ -263,17 +263,24 @@ bool CuChulainn::Init()
     if (!dashDecal) GLOG("[WARNING] No dash decal found for CuChulain")
     else dashDecal->SetEnabled(false);
 
-    GameObject* dashVfxObj = scene->GetGameObjectByName(dashSmokeName1);
-    if (dashVfxObj)
+    GameObject* vfxObj = scene->GetGameObjectByName(onHitVfxName);
+    if (vfxObj)
     {
-        dashSmoke1 = dashVfxObj->GetComponent<ShaderScriptComponent*>();
+        onHitVfx = vfxObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (onHitVfx) onHitVfx->SetEnabled(false);
+
+    vfxObj = scene->GetGameObjectByName(dashSmokeName1);
+    if (vfxObj)
+    {
+        dashSmoke1 = vfxObj->GetComponent<ShaderScriptComponent*>();
     }
     if (dashSmoke1) dashSmoke1->SetEnabled(false);
 
-    dashVfxObj = scene->GetGameObjectByName(dashSmokeName2);
-    if (dashVfxObj)
+    vfxObj = scene->GetGameObjectByName(dashSmokeName2);
+    if (vfxObj)
     {
-        dashSmoke2 = dashVfxObj->GetComponent<ShaderScriptComponent*>();
+        dashSmoke2 = vfxObj->GetComponent<ShaderScriptComponent*>();
     }
     if (dashSmoke2) dashSmoke2->SetEnabled(false);
 
@@ -354,16 +361,9 @@ bool CuChulainn::Init()
     riastradObj = scene->GetGameObjectByName(riastradFireUpName);
     if (riastradObj)
     {
-        riastradFireUp = riastradObj->GetComponent<ShaderScriptComponent*>();
+        riastradFire = riastradObj->GetComponent<ShaderScriptComponent*>();
     }
-    if (riastradFireUp) riastradFireUp->SetEnabled(false);
-
-    riastradObj = scene->GetGameObjectByName(riastradFireDownName);
-    if (riastradObj)
-    {
-        riastradFireDown = riastradObj->GetComponent<ShaderScriptComponent*>();
-    }
-    if (riastradFireDown) riastradFireDown->SetEnabled(false);
+    if (riastradFire) riastradFire->SetEnabled(false);
 
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
     if (!riastradTriggers) GLOG("[WARNING] No riastrad triggers HUD element found")
@@ -760,6 +760,15 @@ void CuChulainn::OnDamageTaken(int amount)
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 
     if (state == CharacterStates::CHARGING && audio) audio->StopAudio();
+    if (onHitVfx)
+    {
+        float3 offset = float3::unitY + float3::unitZ * 0.4f - float3::unitX * 0.4f;
+        onHitVfx->GetParent()->SetLocalPosition(
+            parent->GetGlobalPostition() + offset - parent->GetParentGlobalTransform().TranslatePart()
+        );
+        onHitVfx->SetEnabled(true);
+        onHitVfx->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
 
     if (audio && currentHealth >= 1) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
@@ -803,9 +812,6 @@ void CuChulainn::OnDamageTaken(int amount)
             character->EnableMovement(false);
         }
     }
-
-    // TODO: Test if hitstop when hit feels nice
-    // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
 }
 
 void CuChulainn::OnHealed(int amount)
@@ -1041,40 +1047,6 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
     {
         StartCurse();
-    }
-
-    // TODO: DELETE, JUST FOR TESTING FADEINOUT UI
-    if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
-    {
-        const std::string testName = "FadeInOut";
-        AppEngine->GetSceneModule()
-            ->GetScene()
-            ->GetGameObjectByName(testName)
-            ->GetComponent<ShaderScriptComponent*>()
-            ->GetScriptByType<UIFadeInOut>()
-            ->FadeIn();
-    }
-
-    if (keyboard[SDL_SCANCODE_2] == KEY_DOWN)
-    {
-        const std::string testName = "FadeInOut";
-        AppEngine->GetSceneModule()
-            ->GetScene()
-            ->GetGameObjectByName(testName)
-            ->GetComponent<ShaderScriptComponent*>()
-            ->GetScriptByType<UIFadeInOut>()
-            ->FadeOut();
-    }
-
-    if (keyboard[SDL_SCANCODE_3] == KEY_DOWN)
-    {
-        const std::string testName = "FadeInOut";
-        AppEngine->GetSceneModule()
-            ->GetScene()
-            ->GetGameObjectByName(testName)
-            ->GetComponent<ShaderScriptComponent*>()
-            ->GetScriptByType<UIFadeInOut>()
-            ->Reset();
     }
 }
 
@@ -2176,8 +2148,7 @@ void CuChulainn::ToggleRiastrad()
 
             if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
             if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
-            if (riastradFireUp) riastradFireUp->SetEnabled(false);
-            if (riastradFireDown) riastradFireDown->SetEnabled(false);
+            if (riastradFire) riastradFire->GetScriptByType<UISpritesheet>()->SetFadeOut(true);
         }
 
         if (animComponent) animComponent->UseTrigger("Idle");
@@ -2244,15 +2215,11 @@ void CuChulainn::EnableRiastradVfx()
         riastradStars->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
 
-    if (riastradFireUp)
+    if (riastradFire)
     {
-        riastradFireUp->SetEnabled(true);
-        riastradFireUp->GetScriptByType<UISpritesheet>()->Reset();
-    }
-    if (riastradFireDown)
-    {
-        riastradFireDown->SetEnabled(true);
-        riastradFireDown->GetScriptByType<UISpritesheet>()->Reset();
+        riastradFire->SetEnabled(true);
+        riastradFire->GetScriptByType<UISpritesheet>()->SetFadeOut(false);
+        riastradFire->GetScriptByType<UISpritesheet>()->Reset();
     }
 
     if (riastradSmoke)
