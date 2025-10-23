@@ -54,6 +54,7 @@ bool ShaderModule::Init()
     videoProgram          = CreateShaderProgram(VIDEO_VERTEX_SHADER_PATH, VIDEO_FRAGMENT_SHADER_PATH);
     fxaaProgram           = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, FXAA_FRAGMENT_SHADER_PATH);
     heightFogProgram      = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, HEIGHT_FOG_SHADER_PATH);
+    bloomProgram          = CreateShaderProgram(QUAD_VERTEX_SHADER_PATH, BLOOM_SHADER_PATH);
 
     volumetricFogProgram  = CreateComputeProgram(VOLUMETRIC_FOG_COMPUTE_SHADER_PATH);
     gaussianBlurrProgram =
