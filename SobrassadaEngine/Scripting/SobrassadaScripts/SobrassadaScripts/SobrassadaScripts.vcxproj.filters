@@ -250,6 +250,12 @@
     <ClInclude Include="MirageHumanVFX.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="NameDisplay.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="UIFadeInOut.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -1030,6 +1036,12 @@
       <Filter>Environment</Filter>
     </ClCompile>
     <ClCompile Include="MirageHumanVFX.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="NameDisplay.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UIFadeInOut.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>

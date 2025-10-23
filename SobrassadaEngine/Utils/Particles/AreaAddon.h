@@ -42,21 +42,22 @@ class AreaAddon : public ParticleAddon
     void RecalculateConeTopRadius();
 
   private:
-    ParticleAreaShape currentShape = ParticleAreaShape::NONE;
-    ParticleAreaSpawn currentSpawn = ParticleAreaSpawn::NONE;
+    ParticleAreaShape currentShape      = ParticleAreaShape::NONE;
+    ParticleAreaSpawn currentSpawn      = ParticleAreaSpawn::NONE;
 
     // Circle, Shpere radius, cone radius
-    float baseRadius               = 1.f;
+    float baseRadius                    = 1.f;
 
     // Cone top radius
-    float topRadius                = 1.f;
+    float topRadius                     = 1.f;
 
     // Cone angle
-    float coneAngle                = 35.f;
-    float coneLength               = 1.f;
+    float coneAngle                     = 35.f;
+    float coneLength                    = 1.f;
 
-    float3 cubeSize                = float3::one;
-    float4x4 lastGlobalTransform   = float4x4::identity;
+    float3 cubeSize                     = float3::one;
+    float4x4 lastGlobalTransform        = float4x4::identity;
+    float4x4 lastInverseGlobalTransform = float4x4::identity;
 
     Circle circle;
     OBB cube;

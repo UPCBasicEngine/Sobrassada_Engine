@@ -61,14 +61,14 @@ namespace Lights
         float outerAngle;
         int shadowGPUIndex;
         float radius;
-        float padding;
+        float anisotropy;
 
         SpotLightShaderData(
             const float4& pos, const float4& color, const float3& dir, const float inner, const float outer,
-            int shadowGPUIndex, float radius
+            int shadowGPUIndex, float radius, float anisotropy
         )
             : position(pos), color(color), direction(dir), innerAngle(inner), outerAngle(outer),
-              shadowGPUIndex(shadowGPUIndex), radius(radius), padding(-1)
+              shadowGPUIndex(shadowGPUIndex), radius(radius), anisotropy(anisotropy)
         {
         }
     };
