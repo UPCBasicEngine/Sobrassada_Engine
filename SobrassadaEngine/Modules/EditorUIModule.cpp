@@ -624,12 +624,11 @@ void EditorUIModule::FogConfig(bool& fogConfig)
 
     if (ImGui::DragFloat("Step Size", &renderPass->stepSize, 0.05f, 0.4f, 1.f))
     {
-        if (renderPass->stepSize < 0.4f) renderPass->stepSize = 0.4f;
+        if (renderPass->stepSize < 0.1f) renderPass->stepSize = 0.4f;
     }
     ImGui::DragFloat("Fog intensity", &renderPass->fogIntensity, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Noise ammount", &renderPass->noiseAmmount, 0.01f, 0.0f, 1.f);
     ImGui::DragFloat("Extinction Coefficient", &renderPass->extinctionCoefficient, 0.01f, 0.01f, 1.f);
-    ImGui::DragFloat("Anisotropy", &renderPass->anisotropy, 0.01f, -0.99f, 0.99f);
     if (ImGui::DragInt("Blurr passes", &renderPass->blurrPasses, 1, 0, 250))
     {
         if (renderPass->blurrPasses < 0) renderPass->blurrPasses = 0;
