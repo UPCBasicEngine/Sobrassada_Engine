@@ -85,7 +85,7 @@ class Archer : public Character
     const std::string GetLogicStateName();
     const AIAgentComponent* GetAI() { return agentAI; }
     void ActivateGlowVFX();
-    void ActivateHitVFX();
+    //void ActivateHitVFX();
 
    
 

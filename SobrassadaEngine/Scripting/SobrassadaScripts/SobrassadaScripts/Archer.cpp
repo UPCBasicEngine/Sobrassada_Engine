@@ -20,6 +20,9 @@
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/CharacterControllerComponent.h"
 #include "Standalone/Physics/CapsuleColliderComponent.h"
+#include "Standalone/MeshComponent.h"
+#include "AttackVfxSpritesheet.h"
+#include "ShaderScriptComponent.h"
 #include "Wwise_IDs.h"
 #include <cmath>
 
@@ -446,40 +449,77 @@ void Archer::ActivateGlowVFX()
     }
 }
 
-void Archer::ActivateHitVFX()
-{
- 
-    if (hitVfxObject)
-    {
-        GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
-
-        hitVfxTimer    = 0.0f;
-        hitVfxIsActive = true;
-        hitVfxObject->SetEnabled(true);
-
-        ParticleSystemComponent* particleSystem = hitVfxObject->GetComponent<ParticleSystemComponent*>();
-        if (particleSystem)
-        {
-            if (currentHealth >= 2)
-                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_HURT);
-
-            if (currentHealth <= 0)
-                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
-                
-          
-            particleSystem->SpawnAllInstances();
-            GLOG("VFX: Hit particles spawned");
-        }
-        else
-        {
-            GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", hitVfxObject->GetName().c_str());
-        }
-    }
-    else
-    {
-        GLOG("VFX: ERROR - archerVfxObject is NULL!");
-    }
-}
+//void Archer::ActivateHitVFX()
+//{
+// 
+//    if (hitVfxObject)
+//    {
+//        GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
+//
+//       GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
+//        hitVfxTimer    = 0.0f;
+//        hitVfxIsActive = true;
+//
+//        // Verificar cada paso
+//        hitVfxObject->SetEnabled(true);
+//        GLOG("VFX: Object enabled");
+//
+//        // Verificar MeshComponent
+//        auto meshComp = hitVfxObject->GetComponent<MeshComponent*>(); 
+//        if (meshComp != nullptr)
+//        {
+//            meshComp->SetEnabled(false);
+//            GLOG("VFX: MeshComponent disabled successfully");
+//        }
+//        else
+//        {
+//            GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
+//        }
+//
+//        // Verificar ShaderScriptComponent
+//        auto shaderScriptComp = hitVfxObject->GetComponent<ShaderScriptComponent*>();
+//        if (shaderScriptComp != nullptr)
+//        {
+//            GLOG("VFX: ShaderScriptComponent found");
+//
+//            auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
+//            if (attackVfxScript)
+//            {
+//                attackVfxScript->Reset();
+//                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
+//            }
+//            else
+//            {
+//                GLOG("VFX: ERROR - AttackVfxSpritesheet script not found!");
+//            }
+//        }
+//        else
+//        {
+//            GLOG("VFX: ERROR - No ShaderScriptComponent found on %s", hitVfxObject->GetName().c_str());
+//        }
+//        /*ParticleSystemComponent* particleSystem = hitVfxObject->GetComponent<ParticleSystemComponent*>();
+//        if (particleSystem)
+//        {
+//            if (currentHealth >= 2)
+//                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_HURT);
+//
+//            if (currentHealth <= 0)
+//                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
+//                
+//          
+//            particleSystem->SpawnAllInstances();
+//            GLOG("VFX: Hit particles spawned");
+//        }
+//        else
+//        {
+//            GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", hitVfxObject->GetName().c_str());
+//        }*/
+//    }
+//    else
+//    {
+//        GLOG("VFX: ERROR - archerVfxObject is NULL!");
+//    }
+//}
 
 
 
@@ -740,12 +780,23 @@ void Archer::OnDeath()
 {
     isAttacking  = false;
     currentState = ArcherStates::DEATH;
+
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
-    if (agentAI) agentAI->SetSpeed(0.0f, 0.0f);
-    
+
+   
+    if (agentAI)
+    {
+        agentAI->PauseMovement(); 
+        agentAI->SetSpeed(0.0f, 0.0f);
+    }
+
+   
+    hasEscapeTarget = false;
+    hasDangerTarget = false;
+    isAiming        = false;
+
     if (animComponent)
     {
-
         GLOG("TRIGGERING die ANIMATION");
         animComponent->UseTrigger("die");
     }
@@ -769,7 +820,7 @@ void Archer::OnDamageTaken(int amount)
     knockbackTimer = knockbackTime;
     ApplyKnockback();
 
-   ActivateHitVFX();
+   //ActivateHitVFX();
 
     if (animComponent)
     {
@@ -1091,7 +1142,7 @@ void Archer::ChaseAI()
         float distance = GetDistanceFromPlayer();
 
         agentAI->ResetSpeed();
-        agentAI->SetSpeed(10.0, 5.0f);
+        agentAI->SetSpeed(5.0, 5.0f);
         agentAI->SetLookForward(true);
 
         if (distance <= rangeEscape)
@@ -1101,30 +1152,33 @@ void Archer::ChaseAI()
             return;
         }
 
-        if (distance <= rangeAIAttack && attackCdTimer <= 0.0f)
+       
+        const float AIM_THRESHOLD = rangeAIAttack - 0.5f; 
+        if (distance <= AIM_THRESHOLD && attackCdTimer <= 0.0f)
         {
             GLOG("CHASE -> AIM (in close attack range)");
             currentState = ArcherStates::AIM;
             return;
         }
 
+       
         bool pathSet                      = false;
         float3 targetPosition             = float3::zero;
 
-       
         std::vector<float3> nearbyArchers = GetNearbyArcherPositions();
         if (nearbyArchers.size() > 0)
         {
             targetPosition = CalculateSpreadPosition();
-         
-            if (targetPosition.Distance(parent->GetPosition()) > 0.5f &&   
-                IsNavmeshPathClear(parent->GetPosition(), targetPosition)) 
+
+            if (targetPosition.Distance(parent->GetPosition()) > 0.5f &&
+                IsNavmeshPathClear(parent->GetPosition(), targetPosition))
             {
                 pathSet = agentAI->SetPathNavigation(targetPosition);
                 GLOG("CHASE: Using spread position - Result: %s", pathSet ? "SUCCESS" : "FAILED");
             }
         }
 
+      
         if (!pathSet)
         {
             targetPosition = character->GetLastPosition();
@@ -1132,10 +1186,12 @@ void Archer::ChaseAI()
             GLOG("CHASE: Using direct player position - Result: %s", pathSet ? "SUCCESS" : "FAILED");
         }
 
+       
         if (!pathSet)
         {
-            agentAI->LookAtMovement(character->GetLastPosition(), 0.016f);
-            GLOG("CHASE: No valid path, only rotating");
+         
+            agentAI->SetPathNavigation(character->GetLastPosition());
+            GLOG("CHASE: Forcing direct navigation");
         }
     }
 }
@@ -1178,22 +1234,22 @@ void Archer::DangerRetreat(float deltaTime)
         }
     }
 
-    // ✅ Detectar si está trabado (no se mueve)
+   
     if (hasDangerTarget)
     {
         float movement = archerPos.Distance(lastDangerPosition);
 
-        if (movement < 0.1f * deltaTime) // Casi no se movió
+        if (movement < 0.1f * deltaTime) 
         {
             dangerStuckTimer += deltaTime;
 
-            if (dangerStuckTimer >= 0.5f) // Trabado por 0.5 segundos
+            if (dangerStuckTimer >= 0.5f) 
             {
                 GLOG("DANGER: Stuck! Finding new escape point");
                 hasDangerTarget  = false;
                 dangerStuckTimer = 0.0f;
 
-                // Si ya estamos a distancia razonable, quedarse quieto
+                
                 if (distToPlayer >= 6.0f)
                 {
                     GLOG("DANGER: Stuck but safe distance (%.2f), staying here", distToPlayer);
@@ -1204,13 +1260,13 @@ void Archer::DangerRetreat(float deltaTime)
         }
         else
         {
-            dangerStuckTimer = 0.0f; // Se está moviendo, resetear
+            dangerStuckTimer = 0.0f; 
         }
     }
 
     lastDangerPosition = archerPos;
 
-    // Buscar nuevo punto de escape
+   
     if (!hasDangerTarget)
     {
         float3 escapeDir        = (archerPos - playerPos).Normalized();
@@ -1222,7 +1278,7 @@ void Archer::DangerRetreat(float deltaTime)
 
         bool found              = false;
 
-        // Probar diferentes ángulos
+       
         for (int i = 0; i < 12; i++)
         {
             float angle = angleStep * i;
@@ -1237,14 +1293,10 @@ void Archer::DangerRetreat(float deltaTime)
             float3 navPos       = float3::zero;
             agentAI->GetClosestPointInNavmesh(candidatePos, searchArea, posOverPoly, navPos);
 
-            // ✅ VALIDACIONES:
-            // 1. Está en navmesh
-            // 2. Está cerca del punto deseado
-            // 3. Nos aleja del jugador
-            // 4. Camino despejado (sin edificios en medio)
+           
             if (posOverPoly && candidatePos.Distance(navPos) <= 2.0f &&
                 navPos.Distance(playerPos) > distToPlayer + 1.0f &&
-                IsNavmeshPathClear(archerPos, navPos)) // ← VALIDACIÓN CLAVE
+                IsNavmeshPathClear(archerPos, navPos)) 
             {
                 dangerEscapeTarget = navPos;
                 hasDangerTarget    = true;
@@ -1256,14 +1308,14 @@ void Archer::DangerRetreat(float deltaTime)
 
         if (!found)
         {
-            // Si no hay ruta y estamos a distancia razonable, quedarse quieto
+            
             if (distToPlayer >= 6.0f)
             {
                 GLOG("DANGER: No route but safe (%.2f), holding position", distToPlayer);
                 agentAI->SetSpeed(0.0f, 0.0f);
                 return;
             }
-            // Último recurso: moverse lateral
+           
             float3 perpDir     = float3(-escapeDir.z, 0.0f, escapeDir.x);
             dangerEscapeTarget = archerPos + perpDir * 3.0f;
             hasDangerTarget    = true;
@@ -1273,14 +1325,14 @@ void Archer::DangerRetreat(float deltaTime)
         agentAI->SetLookForward(true);
     }
 
-    // Moverse hacia el objetivo (Recast maneja obstáculos)
+   
     if (hasDangerTarget)
     {
         agentAI->SetPathNavigation(dangerEscapeTarget);
 
         float distToTarget = archerPos.Distance(dangerEscapeTarget);
 
-        // Si llegamos o estamos suficientemente lejos del jugador
+       
         if (distToTarget <= 1.5f || distToPlayer >= 9.0f)
         {
             GLOG("DANGER: Escape complete");
