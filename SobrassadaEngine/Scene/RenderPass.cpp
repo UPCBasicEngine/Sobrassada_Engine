@@ -931,7 +931,7 @@ void RenderPass::BloomPassRender() const
     glUseProgram(blurrProgram);
     glViewport(0, 0, width / 2, height / 2);
 
-    for (int i = 0; i < blurrPasses; i++)
+    for (int i = 0; i < 6; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[horizontal]);
         glUniform1ui(0, horizontal);
