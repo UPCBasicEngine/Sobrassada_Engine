@@ -369,6 +369,25 @@ bool Boss::Init()
             else GLOG("[WARNING] Small expansion script not found for ferdiad");
         }
         else GLOG("[WARNING] Small expansion VFX not found for ferdiad");
+
+        GameObject* impactSpriteObject = overheadAttackVFX->GetChildGameObjectByName("ImpactSprite");
+        if (impactSpriteObject)
+        {
+            MeshComponent* impactSpriteMesh = impactSpriteObject->GetComponent<MeshComponent*>();
+            if (impactSpriteMesh) impactSpriteMesh->SetEnabled(false);
+            else GLOG("[WARNING] Impact sprite mesh not found for ferdiad");
+
+            impactSpriteScript = impactSpriteObject->GetComponent<ShaderScriptComponent*>();
+            if (impactSpriteScript)
+            {
+                impactSpriteScript->SetEnabled(false);
+
+                impactSpriteSheet = impactSpriteScript->GetScriptByType<AttackVfxSpritesheet>();
+                if (!impactSpriteSheet) GLOG("[WARNING] Impact sprite script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Impact sprite script not found for ferdiad");
+        }
+        else GLOG("[WARNING] Impact sprite VFX not found for ferdiad");
     }
     else GLOG("[WARNING] Overhead attack VFX not found for ferdiad");
 
@@ -1498,6 +1517,7 @@ void Boss::OverheadStrike(float deltaTime)
         if (attackExplosionUV) attackExplosionUV->Reset();
         if (smallExpansionUV) smallExpansionUV->Reset();
         if (bigExpansionUV) bigExpansionUV->Reset();
+        if (impactSpriteSheet) impactSpriteSheet->Reset();
     }
 
     switch (currentAction)
@@ -1819,6 +1839,7 @@ void Boss::DamageAreaLogic()
 
             if (attackExplosionScript) attackExplosionScript->SetEnabled(true);
             if (smallExpansionScript) smallExpansionScript->SetEnabled(true);
+            if (impactSpriteScript) impactSpriteScript->SetEnabled(true);
         }
 
         if (attackTimer >= attackHitboxDelay + 0.2f)
@@ -1838,6 +1859,11 @@ void Boss::DamageAreaLogic()
 
             if (smallExpansionScript) smallExpansionScript->SetEnabled(false);
         }
+    }
+
+    if (impactSpriteSheet && impactSpriteSheet->Finished())
+    {
+        impactSpriteScript->SetEnabled(false);
     }
 
     // --- END OF ATTACK ---
@@ -2110,6 +2136,7 @@ void Boss::ResetValues(bool changePhase)
     if (atomParticle) atomParticle->StopInstances();
     if (smokeParticle) smokeParticle->StopInstances();
     if (chargeShieldParticle) chargeShieldParticle->StopInstances();
+    if (impactSpriteScript) impactSpriteScript->SetEnabled(false);
 
     if (blastPreSpriteScript) blastPreSpriteScript->SetEnabled(false);
     if (blastEnergySpriteScript) blastEnergySpriteScript->SetEnabled(false);
