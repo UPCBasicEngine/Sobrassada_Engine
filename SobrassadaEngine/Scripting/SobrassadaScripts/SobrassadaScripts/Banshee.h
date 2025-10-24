@@ -138,5 +138,9 @@ class Banshee : public Character
     std::vector<ShaderScriptComponent*> hitVFXShaderComponents;
     std::vector<ShaderScriptComponent*> deathVFXShaderComponents;
 
+    GameObject* aftermathGO   = nullptr;
+    std::vector<ShaderScriptComponent*> aftermathVFXShaderComponents;
+    float3 localCollisionDebug        = float3::one;
+
     AudioSourceComponent* audioSource = nullptr;
 };

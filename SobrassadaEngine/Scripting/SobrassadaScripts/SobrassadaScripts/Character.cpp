@@ -207,7 +207,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
 
     // ---- Damage Collisions ----
 
-    if (type == CharacterType::Boss) hitCollisionNormal = collisionNormal;
+    // if (type == CharacterType::Boss) hitCollisionNormal = collisionNormal;
+    hitCollisionNormal                         = otherObject->GetGlobalTransform().WorldZ().Normalized();
 
     // Melee check
     CapsuleColliderComponent* otherWeapon      = otherObject->GetComponent<CapsuleColliderComponent*>();

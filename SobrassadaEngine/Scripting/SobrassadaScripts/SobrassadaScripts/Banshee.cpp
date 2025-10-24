@@ -55,7 +55,9 @@ Banshee::Banshee(GameObject* parent)
         {"Slow Area Warning Max Scale", InspectorField::FieldType::Float, &slowAreaWaringMaxScale, 0.f, 10.f}
     );
     fields.push_back({"Slow area duration", InspectorField::FieldType::Float, &slowAreaDuration, 0.f, 10.f});
-    fields.push_back({"Slow area riastrad reduction", InspectorField::FieldType::Int, &slowAreaRiastradReduction, 1.f, 100.f});
+    fields.push_back(
+        {"Slow area riastrad reduction", InspectorField::FieldType::Int, &slowAreaRiastradReduction, 1.f, 100.f}
+    );
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Teleport warning size curve"});
     for (int i = 0; i < maxScriptCurvePoints; ++i)
@@ -206,6 +208,16 @@ bool Banshee::Init()
                 shaderComp->SetEnabled(false);
             }
         }
+        else if (currentGO->GetName() == "VFX_Hit_Aftermath")
+        {
+            aftermathGO                  = currentGO;
+            aftermathVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
+
+            for (ShaderScriptComponent* shaderComp : aftermathVFXShaderComponents)
+            {
+                shaderComp->SetEnabled(false);
+            }
+        }
         else if (currentGO->GetName() == "VFX_Teleport_Spritesheet")
         {
             teleportVFXShaderComponents = currentGO->GetAllComponentsInChilds<ShaderScriptComponent*>(AppEngine);
@@ -283,6 +295,8 @@ void Banshee::Update(float deltaTime)
         };
 
         RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
+
+        AppEngine->GetDebugDrawModule()->DrawArrow(float3::one, 2.0f * hitCollisionNormal, float3::one, 1.0f);
     }
 }
 
@@ -381,9 +395,37 @@ void Banshee::OnDamageTaken(int amount)
 {
     // if (hitParticleSystem) hitParticleSystem->SpawnAllInstances();
 
+    // MOVE AFTERMATH VFX TO CORRECT POSITION, THEN ADD CORRECT ROTATION
+    float3 localCollisionNormal =
+        aftermathGO->GetGlobalTransform().Inverted().MulDir(hitCollisionNormal.Normalized()).Normalized();
+    float3 localCollisionProj  = float3(localCollisionNormal.x, 0, localCollisionNormal.z).Normalized();
+
+    float3 forward             = -aftermathGO->GetLocalTransform().WorldX().Normalized();
+    float3 forwardProj         = float3(forward.x, 0, forward.z).Normalized();
+
+    // float dot                  = forward.Dot(localCollisionNormal);
+    float dot                  = forwardProj.Dot(localCollisionProj);
+
+    // float angle                = dot < 0 ? acos(dot) : -acos(dot);
+    float angle                = acos(dot);
+    // float angle                = -acos(dot);
+
+    float3 newPos              = float3(0, 1.2f, 0);
+    Quat rotation              = Quat::FromEulerXYZ(0.f, angle, 0.f);
+
+    float4x4 newLocalTransform = float4x4::FromTRS(newPos, rotation, float3::one);
+
+    aftermathGO->SetLocalTransform(newLocalTransform);
+
     if (audioSource) audioSource->EmitEvent(AK::EVENTS::PLAY_SFX_BANSHEE_HURT);
 
     for (ShaderScriptComponent* shaderComp : hitVFXShaderComponents)
+    {
+        shaderComp->SetEnabled(true);
+        shaderComp->ResetScript("AttackVfxSpritesheet");
+    }
+
+    for (ShaderScriptComponent* shaderComp : aftermathVFXShaderComponents)
     {
         shaderComp->SetEnabled(true);
         shaderComp->ResetScript("AttackVfxSpritesheet");
@@ -400,6 +442,10 @@ void Banshee::HandleState(float deltaTime)
     {
     case BansheeStates::Idle:
         if (animComponent) animComponent->UseTrigger("Idle");
+        if (aftermathGO)
+        {
+            aftermathGO->SetLocalTransform(float4x4::identity);
+        }
         ChangeState();
         break;
 
