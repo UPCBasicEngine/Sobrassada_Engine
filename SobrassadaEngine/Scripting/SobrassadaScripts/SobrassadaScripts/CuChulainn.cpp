@@ -37,6 +37,7 @@
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
 #include "Standalone/UI/Transform2DComponent.h"
+#include "UIFadeInOut.h"
 #include "UISpritesheet.h"
 
 #include "Math/Quat.h"
@@ -656,6 +657,16 @@ void CuChulainn::Update(float deltaTime)
         if (!riastradCrack->IsEnabled()) EnableRiastradVfx();
     }
 
+    if (state != CharacterStates::AIM && aimShadowObject && aimShadowObject->IsEnabled())
+        aimShadowObject->SetEnabled(false);
+
+    if (state != CharacterStates::CHARGING)
+    {
+        if (chargeVfx1 && chargeVfx1->GetEnabled()) chargeVfx1->SetEnabled(false);
+        if (chargeVfx2 && chargeVfx2->GetEnabled()) chargeVfx2->SetEnabled(false);
+        if (chargeVfx3 && chargeVfx3->GetEnabled()) chargeVfx3->SetEnabled(false);
+    }
+
     if (ultimateObject && ultimateObject->IsEnabled())
     {
         AnimationComponent* vfxUltimateAnim = ultimateObject->GetComponent<AnimationComponent*>();
@@ -742,6 +753,9 @@ void CuChulainn::OnDeath()
     if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
     if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
     if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+    if (chargeVfx1) chargeVfx1->SetEnabled(false);
+    if (chargeVfx2) chargeVfx2->SetEnabled(false);
+    if (chargeVfx3) chargeVfx3->SetEnabled(false);
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     if (animComponent) animComponent->UseTrigger("Death");
@@ -1037,6 +1051,40 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
     {
         StartCurse();
+    }
+
+    // TODO: DELETE, JUST FOR TESTING FADEINOUT UI
+    if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->FadeIn();
+    }
+
+    if (keyboard[SDL_SCANCODE_2] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->FadeOut();
+    }
+
+    if (keyboard[SDL_SCANCODE_3] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->Reset();
     }
 }
 
@@ -1504,7 +1552,8 @@ void CuChulainn::PerformAttack()
             if (!IsBlockedAhead(parent, character->GetFrontDirection(), max(0.55f, adaptedDistance), skin))
                 character->MoveTo(distance);
         }
-        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay && attackTimer < currentHitboxDelay + currentHitboxDuration)
+        else if (!weaponCollider->GetEnabled() && attackTimer >= currentHitboxDelay &&
+                 attackTimer < currentHitboxDelay + currentHitboxDuration)
         {
             weaponCollider->SetEnabled(true);
             if (comboCounter == 2 && attackVfxExplosion && !attackVfxExplosion->GetEnabled())
@@ -1566,7 +1615,6 @@ void CuChulainn::PerformAttack()
                     animComponent->OnResume();
                     playerAnimHeld = false;
                 }
-
             }
 
             if (ultimateSpikes) // Control spikes animation appearance
@@ -2132,8 +2180,11 @@ void CuChulainn::ToggleRiastrad()
             if (riastradFireDown) riastradFireDown->SetEnabled(false);
         }
 
-        if (animComponent) animComponent->UseTrigger("Idle");
-        state         = CharacterStates::IDLE;
+        if (state == CharacterStates::RUN)
+        {
+            if (animComponent) animComponent->UseTrigger("Idle");
+            state = CharacterStates::IDLE;
+        }
 
         // TODO: Remove when VFX
         Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
@@ -2318,8 +2369,11 @@ void CuChulainn::StartCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 void CuChulainn::ExportState(PlayerState& playerState) const
 {
@@ -2377,8 +2431,11 @@ void CuChulainn::EndCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 
 bool CuChulainn::IsBlockedAhead(

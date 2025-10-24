@@ -541,7 +541,7 @@ void CharacterControllerComponent::CheckDashObstacles()
 
     const float3 lateralDirection  = dashDirection.Cross(float3::unitY).Normalized();
     float3 currentPos              = parent->GetGlobalTransform().TranslatePart();
-    currentPos.y                  += 0.5f;
+    currentPos.y                  += 0.75f;
     float3 rightRayOrigin          = currentPos + lateralDirection * 0.2f;
     float3 leftRayOrigin           = currentPos - lateralDirection * 0.2f;
 
@@ -561,7 +561,7 @@ void CharacterControllerComponent::CheckDashObstacles()
     if (userPointer)
     {
         hitParent = userPointer->collider->GetParent();
-        //GLOG("[CharacterControllerComponent]: Physics Raycast hit!, %s", hitParent->GetName().c_str());
+        // GLOG("[CharacterControllerComponent]: Physics Raycast hit!, %s", hitParent->GetName().c_str());
     }
 
     DebugDrawModule* debug = App->GetDebugDrawModule();
@@ -651,61 +651,66 @@ void CharacterControllerComponent::CheckDashObstacles()
             return;
         }
     }
-
-    if (centralHit != nullptr)
+    else
     {
-        const AABB& box = centralHit->GetGlobalAABB();
-        if (box.Intersects(centralRay, tNear, tFar))
+        if (centralHit)
         {
-            // Check whether the obstacle is a walkable area
-            const float3 searchArea = {0.001f, 0.001f, 0.001f};
-            float3 closestPoint     = float3::zero;
-            const float* pos        = centralRay.GetPoint(tNear).ptr();
-            const float3 searchPos  = {pos[0], pos[1], pos[2]};
-            bool posOverPoly        = false;
+            GLOG("HIT IN CENTRAL WITH: %s", centralHit->GetName().c_str());
+            const AABB& box = centralHit->GetGlobalAABB();
+            if (box.Intersects(centralRay, tNear, tFar))
+            {
+                // Check whether the obstacle is a walkable area
+                const float3 searchArea = {0.001f, 0.001f, 0.001f};
+                float3 closestPoint     = float3::zero;
+                const float* pos        = centralRay.GetPoint(tNear).ptr();
+                const float3 searchPos  = {pos[0], pos[1], pos[2]};
+                bool posOverPoly        = false;
 
-            dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
-            obstacleInDash          = !posOverPoly;
-            // GLOG("Hit with central. Dash to navmesh? %d", dashToNavmesh);
-            return;
+                dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
+                obstacleInDash          = !posOverPoly;
+                // GLOG("Hit with central. Dash to navmesh? %d", dashToNavmesh);
+                return;
+            }
         }
-    }
 
-    if (rightHit != nullptr && !barrierGO)
-    {
-        const AABB& box = rightHit->GetGlobalAABB();
-        if (box.Intersects(rightRay, tNear, tFar))
+        if (rightHit)
         {
-            // Check whether the obstacle is a walkable area
-            const float3 searchArea = {0.001f, 0.001f, 0.001f};
-            float3 closestPoint     = float3::zero;
-            const float* pos        = rightRay.GetPoint(tNear).ptr();
-            const float3 searchPos  = {pos[0], pos[1], pos[2]};
-            bool posOverPoly        = false;
+            GLOG("HIT IN RIGHT WITH: %s", rightHit->GetName().c_str());
+            const AABB& box = rightHit->GetGlobalAABB();
+            if (box.Intersects(rightRay, tNear, tFar))
+            {
+                // Check whether the obstacle is a walkable area
+                const float3 searchArea = {0.001f, 0.001f, 0.001f};
+                float3 closestPoint     = float3::zero;
+                const float* pos        = rightRay.GetPoint(tNear).ptr();
+                const float3 searchPos  = {pos[0], pos[1], pos[2]};
+                bool posOverPoly        = false;
 
-            dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
-            obstacleInDash          = !posOverPoly;
-            // GLOG("Hit with right. Dash to navmesh? %d", dashToNavmesh);
-            parent->SetLocalPosition(parent->GetPosition() - lateralDirection * 0.2f);
+                dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
+                obstacleInDash          = !posOverPoly;
+                // GLOG("Hit with right. Dash to navmesh? %d", dashToNavmesh);
+                parent->SetLocalPosition(parent->GetPosition() - lateralDirection * 0.2f);
+            }
         }
-    }
 
-    if (leftHit != nullptr && !barrierGO)
-    {
-        const AABB& box = leftHit->GetGlobalAABB();
-        if (box.Intersects(leftRay, tNear, tFar))
+        if (leftHit)
         {
-            // Check whether the obstacle is a walkable area
-            const float3 searchArea = {0.001f, 0.001f, 0.001f};
-            float3 closestPoint     = float3::zero;
-            const float* pos        = leftRay.GetPoint(tNear).ptr();
-            const float3 searchPos  = {pos[0], pos[1], pos[2]};
-            bool posOverPoly        = false;
+            GLOG("HIT IN LEFT WITH: %s", leftHit->GetName().c_str());
+            const AABB& box = leftHit->GetGlobalAABB();
+            if (box.Intersects(leftRay, tNear, tFar))
+            {
+                // Check whether the obstacle is a walkable area
+                const float3 searchArea = {0.001f, 0.001f, 0.001f};
+                float3 closestPoint     = float3::zero;
+                const float* pos        = leftRay.GetPoint(tNear).ptr();
+                const float3 searchPos  = {pos[0], pos[1], pos[2]};
+                bool posOverPoly        = false;
 
-            dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
-            obstacleInDash          = !posOverPoly;
-            // GLOG("Hit with left. Dash to navmesh? %d", dashToNavmesh);
-            parent->SetLocalPosition(parent->GetPosition() + lateralDirection * 0.2f);
+                dtStatus status         = GetClosestPointInNavmesh(searchPos, searchArea, posOverPoly, closestPoint);
+                obstacleInDash          = !posOverPoly;
+                // GLOG("Hit with left. Dash to navmesh? %d", dashToNavmesh);
+                parent->SetLocalPosition(parent->GetPosition() + lateralDirection * 0.2f);
+            }
         }
     }
 }

@@ -199,7 +199,7 @@ class CuChulainn : public Character
 
     // Arrow Hit VFX
     GameObject* arrowHitVfxObject                  = nullptr;
-    std::string arrowHitVfxName                    = "";
+    std::string arrowHitVfxName                    = "ArrowHit";
     float arrowHitVfxDuration                      = 0.2f;
     float arrowHitVfxTimer                         = 0.0f;
     bool arrowVfxIsActive                          = false;
