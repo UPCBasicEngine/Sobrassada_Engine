@@ -1651,7 +1651,7 @@ void Scene::OverridePrefabs(const UID prefabUID)
             else oldPrefabInstances.push_back(gameObject.second);
         }
     }
-    //GLOG("Instances to override: %d", instancesToOverride);
+    // GLOG("Instances to override: %d", instancesToOverride);
     if (instancesToOverride == 0)
     {
         App->GetResourcesModule()->ReleaseResource(prefab);
