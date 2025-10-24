@@ -71,6 +71,7 @@ AttackVfxSpritesheet::~AttackVfxSpritesheet()
 
 bool AttackVfxSpritesheet::Init()
 {
+    if (isInitialized) return true;
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
         "./EngineDefaults/Shader/Custom/Vertex/AttackVfx_Vertex.glsl",
         "./EngineDefaults/Shader/Custom/Fragment/AttackVfx_Fragment.glsl"
@@ -179,6 +180,7 @@ bool AttackVfxSpritesheet::Init()
     }
 
     if (animationDuration <= 0.f) animationDuration = 0.1f;
+    isInitialized = true;
     return true;
 }
 
@@ -191,7 +193,7 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 {
     UpdateSprite(deltaTime);
 
-    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
+    if (shaderProgram && indexCount > 0 && meshComp)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 

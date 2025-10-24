@@ -23,11 +23,13 @@ class AttackVfxSpritesheet : public Script
     const bool AlmostFinished(int row, int col) const;
     const bool Finished() const { return finished; }
     void SetVariationToUse(int variation) { variationIndex = variation; }
+    bool IsInitialized() const { return isInitialized; }
 
   private:
     void ResetUVs(ResourceTexture* tex);
 
     unsigned int shaderProgram     = 0;
+    bool isInitialized             = false;
 
     unsigned int vao               = 0;
     unsigned int vbo               = 0;
