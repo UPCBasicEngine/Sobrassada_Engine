@@ -630,6 +630,8 @@ void CuChulainn::Update(float deltaTime)
         }
 
         if (deathTimer > 4.0f && !gGameOverActive) Respawn();
+
+        Character::UpdateTimers(deltaTime);
     }
 
     if (isDead || !character) return;
@@ -762,7 +764,7 @@ void CuChulainn::OnDamageTaken(int amount)
     if (state == CharacterStates::CHARGING && audio) audio->StopAudio();
     if (onHitVfx)
     {
-        float3 offset = float3::unitY + float3::unitZ * 0.4f - float3::unitX * 0.4f;
+        float3 offset = float3::unitY + float3::unitZ * 0.7f - float3::unitX * 0.1f;
         onHitVfx->GetParent()->SetLocalPosition(
             parent->GetGlobalPostition() + offset - parent->GetParentGlobalTransform().TranslatePart()
         );
