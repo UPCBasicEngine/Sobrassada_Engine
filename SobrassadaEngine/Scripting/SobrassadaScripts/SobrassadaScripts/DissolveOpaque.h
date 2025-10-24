@@ -23,7 +23,6 @@ class DissolveOpaque : public Script
     unsigned int vao              = 0;
     unsigned int vbo              = 0;
     unsigned int ebo              = 0;
-    unsigned int materialBuffer   = 0;
 
     float timer                   = 0.f;
     float dissolveDuration        = 1.f;

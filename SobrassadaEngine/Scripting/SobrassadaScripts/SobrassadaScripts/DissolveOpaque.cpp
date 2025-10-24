@@ -30,7 +30,6 @@ DissolveOpaque::~DissolveOpaque()
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(1, &materialBuffer);
 }
 
 bool DissolveOpaque::Init()
@@ -51,7 +50,6 @@ bool DissolveOpaque::Init()
         glGenVertexArrays(1, &vao);
         glGenBuffers(1, &vbo);
         glGenBuffers(1, &ebo);
-        glGenBuffers(1, &materialBuffer);
 
         glBindVertexArray(vao);
 
@@ -93,18 +91,7 @@ bool DissolveOpaque::Init()
         meshComp->SetUpdateShaderStorage(true);
     }
 
-    const ResourceMaterial* rmat = meshComp ? meshComp->GetResourceMaterial() : nullptr;
-    if (rmat)
-    {
-        isAlphaDiscard  = rmat->IsAlphaDiscard();
-
-        MaterialGPU mat = rmat->GetMaterial();
-
-        glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
-    }
-
-    if (meshComp && noiseTexture && rmat && shaderProgram) properlyInitialized = true;
+    if (meshComp && noiseTexture && shaderProgram) properlyInitialized = true;
 
     return properlyInitialized;
 }
