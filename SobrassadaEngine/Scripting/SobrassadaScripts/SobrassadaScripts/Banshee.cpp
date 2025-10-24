@@ -282,21 +282,41 @@ void Banshee::Update(float deltaTime)
 
     if (AppEngine->GetDebugDrawModule()->GetDebugOptionValue((int)DebugOptions::RENDER_DEBUG_VISUALS))
     {
-        const std::string life         = "Health: " + std::to_string(currentHealth);
-        const std::string animState    = "Anim state: " + stateName.GetString();
+        const std::string life           = "Health: " + std::to_string(currentHealth);
+        const std::string animState      = "Anim state: " + stateName.GetString();
 
-        std::string currentStateString = BansheeStateStrings[(int)currentState];
-        const std::string logicState   = "Logic state: " + currentStateString;
+        std::string currentStateString   = BansheeStateStrings[(int)currentState];
+        const std::string logicState     = "Logic state: " + currentStateString;
+        const std::string aftermathAngle = "Aftermath Angle: " + std::to_string(degreeAftermathAngle * RAD_DEGREE_CONV);
+        const std::string aftermathDot   = "Aftermath Dot: " + std::to_string(aftermathDotProtuct);
 
         std::vector<std::pair<std::string, float2>> logs {
-            {life,       float2(-50.0f, -140.0f)},
-            {animState,  float2(-80.0f, -160.0f)},
-            {logicState, float2(-80.0f, -180.0f)},
+            {life,           float2(-50.0f, -140.0f)},
+            {animState,      float2(-80.0f, -160.0f)},
+            {logicState,     float2(-80.0f, -180.0f)},
+            {aftermathAngle, float2(-80.0f, -200.0f)},
+            {aftermathDot,   float2(-80.0f, -220.0f)},
         };
 
-        RenderDebug(logs, float3(1.0f, 0.0f, 0.0f));
+        RenderDebug(logs, BansheeDebugColor);
 
-        AppEngine->GetDebugDrawModule()->DrawArrow(float3::one, 2.0f * hitCollisionNormal, float3::one, 1.0f);
+        // COLLISION NORMAL -> BansheeCollisionNormalColor
+        // AppEngine->GetDebugDrawModule()->DrawArrow(
+        //    parent->GetGlobalPostition(), parent->GetGlobalPostition() + (2.0f * hitCollisionNormal),
+        //    BansheeCollisionNormalColor, 1.0f
+        //);
+
+        // HIT OBJECT FRONT -> BANSHEE DEBUG COLOR
+        AppEngine->GetDebugDrawModule()->DrawArrow(
+            parent->GetGlobalPostition(), parent->GetGlobalPostition() + (2.0f * hitGOFront), BansheeDebugColor, 1.0f
+        );
+
+        // AFTERMATH COLOR -> BansheeAftermathDebugColor
+        AppEngine->GetDebugDrawModule()->DrawArrow(
+            parent->GetGlobalPostition(),
+            parent->GetGlobalPostition() + (2.0f * -aftermathGO->GetGlobalTransform().WorldX().Normalized()),
+            BansheeAftermathDebugColor, 1.0f
+        );
     }
 }
 
@@ -397,21 +417,18 @@ void Banshee::OnDamageTaken(int amount)
 
     // MOVE AFTERMATH VFX TO CORRECT POSITION, THEN ADD CORRECT ROTATION
     float3 localCollisionNormal =
-        aftermathGO->GetGlobalTransform().Inverted().MulDir(hitCollisionNormal.Normalized()).Normalized();
+        aftermathGO->GetGlobalTransform().Inverted().MulDir(hitGOFront.Normalized()).Normalized();
     float3 localCollisionProj  = float3(localCollisionNormal.x, 0, localCollisionNormal.z).Normalized();
 
     float3 forward             = -aftermathGO->GetLocalTransform().WorldX().Normalized();
     float3 forwardProj         = float3(forward.x, 0, forward.z).Normalized();
 
-    // float dot                  = forward.Dot(localCollisionNormal);
-    float dot                  = forwardProj.Dot(localCollisionProj);
+    aftermathDotProtuct        = forwardProj.Dot(localCollisionProj);
 
-    // float angle                = dot < 0 ? acos(dot) : -acos(dot);
-    float angle                = acos(dot);
-    // float angle                = -acos(dot);
+    degreeAftermathAngle       = acos(aftermathDotProtuct);
 
     float3 newPos              = float3(0, 1.2f, 0);
-    Quat rotation              = Quat::FromEulerXYZ(0.f, angle, 0.f);
+    Quat rotation              = Quat::FromEulerXYZ(0.f, degreeAftermathAngle, 0.f);
 
     float4x4 newLocalTransform = float4x4::FromTRS(newPos, rotation, float3::one);
 
@@ -442,10 +459,6 @@ void Banshee::HandleState(float deltaTime)
     {
     case BansheeStates::Idle:
         if (animComponent) animComponent->UseTrigger("Idle");
-        if (aftermathGO)
-        {
-            aftermathGO->SetLocalTransform(float4x4::identity);
-        }
         ChangeState();
         break;
 
