@@ -608,6 +608,14 @@ bool CuChulainn::Init()
     {
         if (hudMushrooms[i]) hudMushrooms[i]->SetEnabled(true);
     }
+    std::string currentScenename = AppEngine->GetSceneModule()->GetScene()->GetSceneName();
+    if (currentScenename == "SCENE_Tutorial" && animComponent)
+    {
+        animComponent->UseTrigger("Respawn");
+        controlsLocked = true;
+        character->EnableMovement(false);
+        state = CharacterStates::RESPAWN;
+    }
 
     return true;
 }
@@ -633,6 +641,18 @@ void CuChulainn::Update(float deltaTime)
 
     if (isDead || !character) return;
 
+    if (state == CharacterStates::RESPAWN)
+    {
+        if (animComponent && animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Idle");
+            state          = CharacterStates::IDLE;
+
+            controlsLocked = false;
+            character->EnableMovement(true);
+        }
+    }
+    
     if (character->GetInputDown()) GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
