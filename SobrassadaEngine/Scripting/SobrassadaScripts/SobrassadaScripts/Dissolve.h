@@ -1,0 +1,40 @@
+#pragma once
+
+#include "Script.h"
+
+class ResourceTexture;
+class MeshComponent;
+
+class Dissolve : public Script
+{
+  public:
+    Dissolve(GameObject* parent);
+    ~Dissolve() override;
+
+    bool Init() override;
+    void Update(float deltaTime) override;
+    void Render(float deltaTime, CameraComponent* cameraComp) override;
+
+    void Reset() override;
+
+  private:
+    unsigned int shaderProgram    = 0;
+
+    unsigned int vao              = 0;
+    unsigned int vbo              = 0;
+    unsigned int ebo              = 0;
+    unsigned int materialBuffer   = 0;
+
+    float timer                   = 0.f;
+    float dissolveDuration        = 1.f;
+
+    UID noiseTextureUID           = 0;
+    bool isFinished               = false;
+    bool properlyInitialized      = false;
+
+    ResourceTexture* noiseTexture = nullptr;
+    MeshComponent* meshComp       = nullptr;
+    unsigned int indexCount       = 0;
+
+    bool isAlphaDiscard           = false;
+};
