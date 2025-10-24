@@ -1,6 +1,7 @@
 #pragma once
 #include "Script.h"
 
+class UIFadeInOut;
 class GameObject;
 
 class ChangeSceneScript : public Script
@@ -10,7 +11,7 @@ class ChangeSceneScript : public Script
     virtual ~ChangeSceneScript() noexcept override { parent = nullptr; }
 
     bool Init() override;
-    void Update(float deltaTime) override {}
+    void Update(float deltaTime) override;
     void OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer) override;
 
   private:
@@ -18,5 +19,12 @@ class ChangeSceneScript : public Script
     std::string targetSceneName = "";
     std::string scenesPath      = "";
     std::string fullScenePath   = "";
+
+    std::string fadeOutGameObjectName     = "SceneFadeOut";
+    
     GameObject* player          = nullptr;
+    UIFadeInOut* optionalFadeOutScript = nullptr;
+
+    bool changeSceneTriggered = false;
+    float timer;
 };
