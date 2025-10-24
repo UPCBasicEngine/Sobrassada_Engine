@@ -1,8 +1,8 @@
 #include "VideoComponent.h"
 #include "Application.h"
+#include "ProjectModule.h"
 #include "ResourceTexture.h"
 #include "ShaderModule.h"
-#include "ProjectModule.h"
 #include "imgui.h"
 #include <glew.h>
 
@@ -52,6 +52,8 @@ VideoComponent::VideoComponent(const rapidjson::Value& initialState, GameObject*
         videoName[sizeof(videoName) - 1] = '\0';
     }
 
+    if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
+
     constexpr float quadVertices[]       = {-1.0f, -1.0f, 0.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 1.0f,
                                             1.0f,  1.0f,  1.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f};
 
@@ -82,12 +84,8 @@ VideoComponent::~VideoComponent()
 {
     ClearVideo();
 
-    if (videoTexture)
-    {
-        unsigned int texture = videoTexture->GetTextureID();
-        glDeleteTextures(1, &texture);
-        delete videoTexture;
-    }
+    delete videoTexture;
+    videoTexture = nullptr;
 
     glDeleteBuffers(1, &EBO);
     glDeleteBuffers(1, &VBO);
@@ -99,6 +97,7 @@ void VideoComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
     Component::Save(targetState, allocator);
 
     targetState.AddMember("Video Name", rapidjson::Value(videoName, allocator), allocator);
+    targetState.AddMember("Loop", loop, allocator);
 }
 
 void VideoComponent::Clone(const Component* other)
@@ -133,7 +132,7 @@ void VideoComponent::Update(float deltaTime)
 
 void VideoComponent::Render(float deltaTime, CameraComponent* camera)
 {
-    if (!videoTexture || videoTexture->GetTextureID() == 0) return;
+    if (!videoTexture || videoTexture->GetTextureID() == 0 || !isPlaying) return;
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, videoTexture->GetTextureID());
@@ -157,6 +156,7 @@ void VideoComponent::RenderDebug(float deltaTime)
 void VideoComponent::RenderEditorInspector()
 {
     ImGui::InputText("Video Name", videoName, IM_ARRAYSIZE(videoName));
+    ImGui::Checkbox("Loop", &loop);
 
     if (ImGui::Button("Play"))
     {
@@ -165,6 +165,7 @@ void VideoComponent::RenderEditorInspector()
 
     if (ImGui::Button("Stop"))
     {
+        ClearVideo();
         timeSinceLastFrame = 0.0f;
         isPlaying          = false;
     }
@@ -263,7 +264,17 @@ bool VideoComponent::UpdateFrame()
         }
         av_packet_unref(packet);
     }
-    isPlaying = false;
+
+    if (loop)
+    {
+        av_seek_frame(formatCtx, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
+        avcodec_flush_buffers(codecCtx);
+    }
+    else
+    {
+        isPlaying = false;
+    }
+
     return false;
 }
 
@@ -287,10 +298,13 @@ void VideoComponent::ClearVideo()
     }
     if (rgbFrame)
     {
-        av_free(frameBuffer);
+        if (frameBuffer)
+        {
+            av_free(frameBuffer);
+            frameBuffer = nullptr;
+        }
         av_frame_free(&rgbFrame);
-        rgbFrame    = nullptr;
-        frameBuffer = nullptr;
+        rgbFrame = nullptr;
     }
     if (codecCtx)
     {

@@ -28,7 +28,7 @@ class VideoComponent : public Component
     void RenderEditorInspector() override;
     void ParentUpdated() override;
 
-    void ClearVideo();
+    void SOBRASADA_API_ENGINE ClearVideo();
     void SOBRASADA_API_ENGINE Play();
     bool SOBRASADA_API_ENGINE IsPlaying() const { return isPlaying; }
 
@@ -58,4 +58,5 @@ class VideoComponent : public Component
     unsigned int VAO, VBO, EBO;
 
     bool isPlaying = false;
+    bool loop = false;
 };
