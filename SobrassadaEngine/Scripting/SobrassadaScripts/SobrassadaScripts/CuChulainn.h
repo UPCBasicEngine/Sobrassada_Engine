@@ -75,6 +75,7 @@ class CuChulainn : public Character
         if (enemiesCont != 0) enemiesCont--;
         GLOG("Enemy out. Total unique enemies colliding: %zu", enemiesCont);
     }
+    void ResetState();
 
     void OnObjectDestroyed();
     void OnEnemyHit();
@@ -266,7 +267,7 @@ class CuChulainn : public Character
     bool ultimateUnlocked                          = false;
     bool playerAnimHeld                            = false;
     bool ultimateHoldEnabled                       = true;
-    float ultimateResumeVfxTime                    = 2.0f;
+    float ultimateResumeVfxTime                    = 1.5f;
     float vfxTimeUnscaledSec                       = 0.0f;
     bool ultimateSoundPlayed                       = false;
     float ultimateSpeed                            = 1.3f;
