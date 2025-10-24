@@ -6,6 +6,9 @@ layout(binding=0) uniform sampler2D noiseTexture;
 
 layout(location=3) uniform float dissolveAmmount;
 layout(location=4) uniform int baseIndex;
+layout(location=5) uniform float glowRange;
+layout(location=6) uniform float glowFallof;
+layout(location=7) uniform vec4 glowColor;
 
 in vec3 pos;
 in vec2 uv;
@@ -53,18 +56,6 @@ mat3 CreateTBN()
 
 void main()
 {
-    // const Material mat = materials[baseIndex];
-
-    // vec4 texColor = texture(sampler2D(mat.diffuseTex), uv);
-
-    // float noiseSample = texture2D(noiseTexture, uv).r;
-
-    // float isVisible = (noiseSample * 0.99) - dissolveAmmount;
-    
-    // if(isVisible < 0) discard;
-
-    // fragColor = texColor;
-
     float noiseSample = texture2D(noiseTexture, uv).r;
     float isVisible = (noiseSample * 0.99) - dissolveAmmount;
     
@@ -95,5 +86,9 @@ void main()
     }
     gNormal = vec4(N,0);
     vec3 emissiveColor = pow(texture(sampler2D(mat.emmisiveTex), uv).rgb, vec3(2.2f)) * vec3(mat.emissiveIntensity);
-    gEmissive = vec4(emissiveColor, 1.0);
+
+    float isGlowing = smoothstep(glowRange + glowFallof, glowRange, isVisible);
+    vec4 glowEmissive = isGlowing * glowColor;
+
+    gEmissive = vec4(emissiveColor + glowEmissive.rgb, 1.0);
 }

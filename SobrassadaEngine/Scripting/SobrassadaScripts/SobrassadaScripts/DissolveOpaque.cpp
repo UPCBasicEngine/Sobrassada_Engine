@@ -23,6 +23,11 @@ DissolveOpaque::DissolveOpaque(GameObject* parent) : Script(parent)
     fields.push_back({"Noise texture", InspectorField::FieldType::Resource, &noiseTextureUID});
 
     fields.push_back({"Animation Duration", InspectorField::FieldType::Float, &dissolveDuration, 0.1f, 100.f});
+
+    fields.push_back({"Glow Range", InspectorField::FieldType::Float, &glowRange, 0.f, 0.5f});
+    fields.push_back({"Glow Fallof", InspectorField::FieldType::Float, &glowFallof, 0.f, 1.f});
+
+    fields.push_back({"Glow Color", InspectorField::FieldType::Color, &glowColor});
 }
 
 DissolveOpaque::~DissolveOpaque()
@@ -135,6 +140,11 @@ void DissolveOpaque::Render(float deltaTime, CameraComponent* cameraComp)
 
         glUniform1f(3, timer / dissolveDuration);
         glUniform1i(4, meshComp->GetBaseIndex());
+        glUniform1f(5, glowRange);
+        glUniform1f(6, glowFallof);
+
+        float4 color = float4(glowColor, 1.f);
+        glUniform4fv(7, 1, &color[0]);
 
         glUniform1i(9, meshComp->GetHasBones());
         glUniform1ui(10, meshComp->GetBoneIndexOffset());

@@ -2,6 +2,8 @@
 
 #include "Script.h"
 
+#include "Math/float3.h"
+
 class ResourceTexture;
 class MeshComponent;
 
@@ -36,4 +38,8 @@ class DissolveOpaque : public Script
     unsigned int indexCount       = 0;
 
     bool isAlphaDiscard           = false;
+
+    float glowRange               = 0.1f;
+    float glowFallof              = 0.1f;
+    float3 glowColor              = float3::one;
 };
