@@ -657,6 +657,16 @@ void CuChulainn::Update(float deltaTime)
         if (!riastradCrack->IsEnabled()) EnableRiastradVfx();
     }
 
+    if (state != CharacterStates::AIM && aimShadowObject && aimShadowObject->IsEnabled())
+        aimShadowObject->SetEnabled(false);
+
+    if (state != CharacterStates::CHARGING)
+    {
+        if (chargeVfx1 && chargeVfx1->GetEnabled()) chargeVfx1->SetEnabled(false);
+        if (chargeVfx2 && chargeVfx2->GetEnabled()) chargeVfx2->SetEnabled(false);
+        if (chargeVfx3 && chargeVfx3->GetEnabled()) chargeVfx3->SetEnabled(false);
+    }
+
     if (ultimateObject && ultimateObject->IsEnabled())
     {
         AnimationComponent* vfxUltimateAnim = ultimateObject->GetComponent<AnimationComponent*>();
@@ -743,6 +753,9 @@ void CuChulainn::OnDeath()
     if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
     if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
     if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+    if (chargeVfx1) chargeVfx1->SetEnabled(false);
+    if (chargeVfx2) chargeVfx2->SetEnabled(false);
+    if (chargeVfx3) chargeVfx3->SetEnabled(false);
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     if (animComponent) animComponent->UseTrigger("Death");
@@ -2165,8 +2178,11 @@ void CuChulainn::ToggleRiastrad()
             if (riastradFireDown) riastradFireDown->SetEnabled(false);
         }
 
-        if (animComponent) animComponent->UseTrigger("Idle");
-        state         = CharacterStates::IDLE;
+        if (state == CharacterStates::RUN)
+        {
+            if (animComponent) animComponent->UseTrigger("Idle");
+            state = CharacterStates::IDLE;
+        }
 
         // TODO: Remove when VFX
         Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
@@ -2339,8 +2355,11 @@ void CuChulainn::StartCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 void CuChulainn::ExportState(PlayerState& playerState) const
 {
@@ -2398,8 +2417,11 @@ void CuChulainn::EndCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 
 bool CuChulainn::IsBlockedAhead(

@@ -109,6 +109,10 @@ bool Soldier::Init()
     else
     {
         GLOG("MeleVFX found in Soldier")
+        if (!meleeVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->IsInitialized())
+        {
+            meleeVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Init();
+        }
         meleeVfxObject->SetEnabled(false);
     }
 
@@ -117,6 +121,12 @@ bool Soldier::Init()
     else
     {
         GLOG("MeleVFX found in Soldier")
+        if (!melee2VfxObject->GetComponent<ShaderScriptComponent*>()
+                 ->GetScriptByType<AttackVfxSpritesheet>()
+                 ->IsInitialized())
+        {
+            melee2VfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Init();
+        }
         melee2VfxObject->SetEnabled(false);
     }
 
@@ -125,6 +135,12 @@ bool Soldier::Init()
     else
     {
         GLOG("MeleVFX found in Soldier")
+        if (!thrustVfxObject->GetComponent<ShaderScriptComponent*>()
+                 ->GetScriptByType<AttackVfxSpritesheet>()
+                 ->IsInitialized())
+        {
+            thrustVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Init();
+        }
         thrustVfxObject->SetEnabled(false);
     }
 
@@ -231,12 +247,12 @@ void Soldier::OnDeath()
     if (dis(gen) == 1)
     {
         if (animComponent) animComponent->UseTrigger("death");
-    }   
+    }
     else
     {
         if (animComponent) animComponent->UseTrigger("death2");
     }
-    
+
     audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_DEATH);
     agentAI->PauseMovement();
     currentState = SoldierStates::DEATH;
@@ -319,7 +335,7 @@ void Soldier::HandleState(float deltaTime)
         }
         if (animComponent->IsFinished())
         {
-            currentState = SoldierStates::CHASE;
+            currentState      = SoldierStates::CHASE;
             detectAudioPlayed = false;
         }
         break;
@@ -330,6 +346,10 @@ void Soldier::HandleState(float deltaTime)
             agentAI->ResetSpeed();
             ChangeState();
         }
+        break;
+    case SoldierStates::HIGHLIGHTING:
+        animComponent->UseTrigger("cheer");
+        if (GetDistanceFromPlayer() <= rangeAIChase) currentState = SoldierStates::PLAYER_DETECTION;
         break;
     default:
         GLOG("No state provided to Soldier");
@@ -347,17 +367,26 @@ void Soldier::HandleState(float deltaTime)
 void Soldier::PatrolAI(float deltaTime)
 {
     const HashString& playerLocation = AppEngine->GetSceneModule()->GetScene()->GetPlayerLocation();
-    // GLOG("Player location: %s", playerLocation.GetString().c_str());
+    //GLOG("Player location tag: %s", playerLocation.GetString().c_str());
     bool playerInLocation            = parent->HasTag(playerLocation);
-
     if (!playerScript->IsDead())
     {
-        if (CheckDistanceWithPlayer() == PlayerDistances::Medium && playerInLocation)
+        if (CheckDistanceWithPlayer() == PlayerDistances::Medium)
         {
-            currentState = SoldierStates::PLAYER_DETECTION;
+            if (playerInLocation || playerFounded)
+            {
+                currentState  = SoldierStates::PLAYER_DETECTION;
+                playerFounded = true;
+            }
         }
-        else if (CheckDistanceWithPlayer() == PlayerDistances::Close && playerInLocation)
-            currentState = SoldierStates::BASIC_ATTACK;
+        else if (CheckDistanceWithPlayer() == PlayerDistances::Close)
+        {
+            if (playerInLocation || playerFounded)
+            {
+                currentState  = SoldierStates::BASIC_ATTACK;
+                playerFounded = true;
+            }
+        }
     }
 
     bool valid = false;
@@ -433,7 +462,7 @@ void Soldier::Attack(float deltaTime)
 
             if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
             {
-                attackDuration     = attackHitboxDelay + 2 * attackHitboxDuration + secondAttackDelay + 0.1f;
+                attackDuration = attackHitboxDelay + 2 * attackHitboxDuration + secondAttackDelay + 0.1f;
             }
             else
             {
@@ -441,13 +470,13 @@ void Soldier::Attack(float deltaTime)
             }
         }
         Character::Attack(deltaTime);
-        //agentAI->PauseMovement();
+        // agentAI->PauseMovement();
         thrustAdvance = false;
     }
     else
     {
         if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
-        //agentAI->ResumeMovement();
+        // agentAI->ResumeMovement();
         agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
         // Doble attack
         if (currentAttackTrigger && strcmp(currentAttackTrigger, "attack") == 0)
@@ -526,7 +555,7 @@ void Soldier::Attack(float deltaTime)
         // Reset attack state
         if (attackTimer >= attackDuration)
         {
-            //agentAI->ResumeMovement();
+            // agentAI->ResumeMovement();
             agentAI->LookAtMovement(character->GetLastPosition(), deltaTime);
             isAttacking   = false;
             attackCdTimer = attackCooldown;
@@ -582,7 +611,6 @@ void Soldier::ChangeState()
         agentAI->PauseMovement();
         currentState = SoldierStates::BASIC_ATTACK;
         animComponent->UseTrigger("idleCombat");
-        
     }
     else if (distance <= rangeAIChase) currentState = SoldierStates::CHASE;
     else if (distance > maxDetectionRange) currentState = SoldierStates::SEARCH;
@@ -669,7 +697,7 @@ void Soldier::SelectRandomHelmet()
         else
         {
 
-            UID materialUID                                     = AppEngine->GetLibraryModule()->GetMaterialUID(materialName);
+            UID materialUID              = AppEngine->GetLibraryModule()->GetMaterialUID(materialName);
             MeshComponent* meshComponent = bodyObject->GetComponent<MeshComponent*>();
             if (materialUID) meshComponent->AddMaterial(materialUID);
         }
@@ -766,4 +794,9 @@ void Soldier::SelectRandomHelmet()
     default:
         break;
     }
+}
+
+void Soldier::PlayHighlightSequence()
+{
+     currentState             = SoldierStates::HIGHLIGHTING;
 }
