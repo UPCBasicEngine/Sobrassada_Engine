@@ -485,7 +485,7 @@
     <ClInclude Include="ColorChange.h" />
     <ClInclude Include="DamageMask.h" />
     <ClInclude Include="Destructible.h" />
-    <ClInclude Include="Dissolve.h" />
+    <ClInclude Include="DissolveOpaque.h" />
     <ClInclude Include="EnemySpawnerScript.h" />
     <ClInclude Include="ExitGameScript.h" />
     <ClInclude Include="Character.h" />
@@ -2090,7 +2090,7 @@
     <ClCompile Include="CuChulainn.cpp" />
     <ClCompile Include="DamageMask.cpp" />
     <ClCompile Include="Destructible.cpp" />
-    <ClCompile Include="Dissolve.cpp" />
+    <ClCompile Include="DissolveOpaque.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EnemySpawnerScript.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />

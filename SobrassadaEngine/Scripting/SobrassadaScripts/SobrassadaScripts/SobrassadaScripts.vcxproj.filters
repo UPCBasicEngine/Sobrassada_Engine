@@ -256,7 +256,7 @@
     <ClInclude Include="UIFadeInOut.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
-    <ClInclude Include="Dissolve.h">
+    <ClInclude Include="DissolveOpaque.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1047,7 +1047,7 @@
     <ClCompile Include="UIFadeInOut.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
-    <ClCompile Include="Dissolve.cpp">
+    <ClCompile Include="DissolveOpaque.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>

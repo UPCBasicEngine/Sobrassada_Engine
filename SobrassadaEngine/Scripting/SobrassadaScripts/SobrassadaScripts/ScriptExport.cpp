@@ -50,7 +50,7 @@
 #include "BarFill.h"
 #include "ColorChange.h"
 #include "DamageMask.h"
-#include "Dissolve.h"
+#include "DissolveOpaque.h"
 #include "MovingUVClipErode.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
@@ -149,7 +149,7 @@ constexpr const char* shaderScripts[] = {
     "MirageVFX",
     "UIFadeInOut",
     "MirageHumanVFX",
-    "Dissolve"
+    "DissolveOpaque"
 };
 
 Application* AppEngine = nullptr;
@@ -269,7 +269,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
         );
     if (scriptType == "UISpritesheet") return new UISpritesheet(parent);
     if (scriptType == "UIFadeInOut") return new UIFadeInOut(parent);
-    if (scriptType == "Dissolve") return new Dissolve(parent);
+    if (scriptType == "DissolveOpaque") return new DissolveOpaque(parent);
 
     /*Boss*/
     if (scriptType == "Mirage") return new Mirage(parent);

@@ -5,11 +5,11 @@
 class ResourceTexture;
 class MeshComponent;
 
-class Dissolve : public Script
+class DissolveOpaque : public Script
 {
   public:
-    Dissolve(GameObject* parent);
-    ~Dissolve() override;
+    DissolveOpaque(GameObject* parent);
+    ~DissolveOpaque() override;
 
     bool Init() override;
     void Update(float deltaTime) override;

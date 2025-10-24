@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "Dissolve.h"
+#include "DissolveOpaque.h"
 
 #include "Application.h"
 #include "CameraComponent.h"
@@ -17,7 +17,7 @@
 
 #include "glew.h"
 
-Dissolve::Dissolve(GameObject* parent) : Script(parent)
+DissolveOpaque::DissolveOpaque(GameObject* parent) : Script(parent)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Noise texture resource"});
     fields.push_back({"Noise texture", InspectorField::FieldType::Resource, &noiseTextureUID});
@@ -25,7 +25,7 @@ Dissolve::Dissolve(GameObject* parent) : Script(parent)
     fields.push_back({"Animation Duration", InspectorField::FieldType::Float, &dissolveDuration, 0.1f, 100.f});
 }
 
-Dissolve::~Dissolve()
+DissolveOpaque::~DissolveOpaque()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
@@ -33,10 +33,11 @@ Dissolve::~Dissolve()
     glDeleteBuffers(1, &materialBuffer);
 }
 
-bool Dissolve::Init()
+bool DissolveOpaque::Init()
 {
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
-        "./EngineDefaults/Shader/Custom/Vertex/Dissolve.vert", "./EngineDefaults/Shader/Custom/Fragment/Dissolve.frag"
+        "./EngineDefaults/Shader/Custom/Vertex/DissolveOpaque.vert",
+        "./EngineDefaults/Shader/Custom/Fragment/DissolveOpaque.frag"
     );
 
     noiseTexture = dynamic_cast<ResourceTexture*>(AppEngine->GetResourcesModule()->RequestResource(noiseTextureUID));
@@ -108,7 +109,7 @@ bool Dissolve::Init()
     return properlyInitialized;
 }
 
-void Dissolve::Update(float deltaTime)
+void DissolveOpaque::Update(float deltaTime)
 {
     timer += deltaTime;
     if (timer >= dissolveDuration)
@@ -118,12 +119,11 @@ void Dissolve::Update(float deltaTime)
     }
 }
 
-void Dissolve::Render(float deltaTime, CameraComponent* cameraComp)
+void DissolveOpaque::Render(float deltaTime, CameraComponent* cameraComp)
 {
     if (!isFinished && properlyInitialized && shaderProgram)
     {
         if (meshComp->IsEnabled()) meshComp->SetEnabled(false);
-            
 
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
@@ -147,12 +147,17 @@ void Dissolve::Render(float deltaTime, CameraComponent* cameraComp)
         glUniformMatrix4fv(2, 1, GL_TRUE, &basicModelMatrix[0][0]);
 
         glUniform1f(3, timer / dissolveDuration);
+        glUniform1i(4, meshComp->GetBaseIndex());
 
         glUniform1i(9, meshComp->GetHasBones());
         glUniform1ui(10, meshComp->GetBoneIndexOffset());
 
         GeometryBatch* batch = meshComp->GetBatch();
-        if (batch) batch->BindBonesBuffer();
+        if (batch)
+        {
+            batch->BindBonesBuffer();
+            batch->BindMaterialsBuffer();
+        }
 
         glBindVertexArray(vao);
 
@@ -161,12 +166,16 @@ void Dissolve::Render(float deltaTime, CameraComponent* cameraComp)
 
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
-        if (batch) batch->UnbindBonesBuffer();
+        if (batch)
+        {
+            batch->UnbindBonesBuffer();
+            batch->UnbindMaterialsBuffer();
+        }
         glBindVertexArray(0);
     }
 }
 
-void Dissolve::Reset()
+void DissolveOpaque::Reset()
 {
     timer      = 0;
     isFinished = false;
