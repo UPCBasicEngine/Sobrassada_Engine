@@ -196,7 +196,7 @@ class Archer : public Character
     bool isDashing                = false;
     
 
-  const static bool triggered          = true;
+    static bool triggered;
   float3 lastDangerPosition          = float3::zero;
   float dangerStuckTimer             = 0.0f;
 

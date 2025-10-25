@@ -50,6 +50,7 @@ bool Archer::Init()
     soldiers     = scene->GetTaggedGameObjects(HashString("Soldier"));
     currentState = ArcherStates::PATROL;
     Character::Init();
+    Archer::triggered                              = true;
 
      const std::vector<GameObject*>* allCoverPoints = scene->GetTaggedGameObjects(HashString("CoverPoint"));
 
@@ -769,6 +770,7 @@ void Archer::UpdateHighlightState(float deltaTime)
             currentHighlightingState = ArcherHighlightingStates::IDLE;
             currentState             = ArcherStates::PATROL;
             currentStateTime         = 0.0f;
+            Archer::triggered        = true;
             break;
         }
     }
