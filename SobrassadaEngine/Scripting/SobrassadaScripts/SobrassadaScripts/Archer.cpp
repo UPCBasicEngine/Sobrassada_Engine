@@ -25,7 +25,7 @@
 #include "ShaderScriptComponent.h"
 #include "Wwise_IDs.h"
 #include <cmath>
-
+bool Archer::triggered = false;
 Archer::Archer(GameObject* parent)
     : Character(parent, 3, 1, 0.5f, 1.0f, 1.0f, 2.0f, 10.0f, 15.0f, CharacterType::Archer)
 {
@@ -50,7 +50,7 @@ bool Archer::Init()
     soldiers     = scene->GetTaggedGameObjects(HashString("Soldier"));
     currentState = ArcherStates::PATROL;
     Character::Init();
-    Archer::triggered                              = true;
+    
 
      const std::vector<GameObject*>* allCoverPoints = scene->GetTaggedGameObjects(HashString("CoverPoint"));
 
