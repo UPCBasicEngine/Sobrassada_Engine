@@ -19,6 +19,7 @@ class AsyncSceneLoading : public Script
 private:
     std::string targetSceneName;
     bool useAsyncLoading = true;
+    float minimumPlayTimeBeforeSkip = 1.0f;
 
     std::string fullScenePath;
     bool isSetupCorrectly          = true;

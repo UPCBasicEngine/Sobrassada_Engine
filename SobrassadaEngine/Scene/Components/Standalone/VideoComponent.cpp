@@ -130,6 +130,7 @@ void VideoComponent::Update(float deltaTime)
 {
     if (autoPlay && !isPlaying && !hasPlayed && App->GetSceneModule()->GetInPlayMode()) Play();
     timeSinceLastFrame += deltaTime;
+    timeSinceVideoStart += deltaTime;
     if (timeSinceLastFrame >= frameDelay)
     {
         if (UpdateFrame()) timeSinceLastFrame = 0.0f;
@@ -239,6 +240,7 @@ bool VideoComponent::InitVideo()
     frameDelay          = 1.0 / av_q2d(formatCtx->streams[videoStreamIndex]->avg_frame_rate);
 
     timeSinceLastFrame  = 0.0f;
+    timeSinceVideoStart = 0.0f;
     isPlaying           = true;
 
     return true;

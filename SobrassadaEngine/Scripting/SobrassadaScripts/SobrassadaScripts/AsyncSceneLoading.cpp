@@ -9,8 +9,9 @@
 
 AsyncSceneLoading::AsyncSceneLoading(GameObject* parent) : Script(parent)
 {
-    fields.push_back({"Use async loading", InspectorField::FieldType::Bool, &useAsyncLoading});
+    fields.emplace_back("Use async loading", InspectorField::FieldType::Bool, &useAsyncLoading);
     fields.emplace_back("Target Scene Name", InspectorField::FieldType::InputText, &targetSceneName);
+    fields.emplace_back("Minimum play time before skip", InspectorField::FieldType::Float, &minimumPlayTimeBeforeSkip, 0, 10);
 }
 
 bool AsyncSceneLoading::Init()
@@ -42,6 +43,12 @@ void AsyncSceneLoading::Update(float deltaTime)
 
 bool AsyncSceneLoading::SkipCutscene() const
 {
+    if (videoComponent->GetTimeSinceVideoStart() < minimumPlayTimeBeforeSkip)
+    {
+        GLOG("Blocked skip cutscene")
+        return false;
+    }
+    
     const InputModule* input   = AppEngine->GetInputModule();
     const KeyState* keyboard   = input->GetKeyboard();
     const KeyState* controller = input->GetControllerButtons();
