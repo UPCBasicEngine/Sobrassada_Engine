@@ -28,9 +28,10 @@ class VideoComponent : public Component
     void RenderEditorInspector() override;
     void ParentUpdated() override;
 
-    void ClearVideo();
+    void SOBRASADA_API_ENGINE ClearVideo();
     void SOBRASADA_API_ENGINE Play();
     bool SOBRASADA_API_ENGINE IsPlaying() const { return isPlaying; }
+    float SOBRASADA_API_ENGINE GetTimeSinceVideoStart() const { return timeSinceVideoStart; }
 
   private:
     bool InitVideo();
@@ -57,5 +58,10 @@ class VideoComponent : public Component
 
     unsigned int VAO, VBO, EBO;
 
+    bool autoPlay = false;
     bool isPlaying = false;
+    bool loop = false;
+    bool hasPlayed = false;
+
+    float timeSinceVideoStart = 0.0f;
 };
