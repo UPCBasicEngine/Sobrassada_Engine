@@ -28,6 +28,8 @@
 #include "Standalone/UI/ImageComponent.h"
 
 #include "Wwise_IDs.h"
+#include <Math/MathFunc.h>
+#include <Math/Quat.h>
 
 Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
@@ -370,7 +372,7 @@ bool Boss::Init()
         }
         else GLOG("[WARNING] Small expansion VFX not found for ferdiad");
 
-        GameObject* impactSpriteObject = overheadAttackVFX->GetChildGameObjectByName("ImpactSprite");
+        impactSpriteObject = overheadAttackVFX->GetChildGameObjectByName("ImpactSprite");
         if (impactSpriteObject)
         {
             MeshComponent* impactSpriteMesh = impactSpriteObject->GetComponent<MeshComponent*>();
@@ -1864,6 +1866,21 @@ void Boss::DamageAreaLogic()
     if (impactSpriteSheet && impactSpriteSheet->Finished())
     {
         impactSpriteScript->SetEnabled(false);
+
+        float4x4 localTransform  = impactSpriteObject->GetLocalTransform();
+
+        float3 euler             = localTransform.RotatePart().ToEulerXYZ();
+
+        euler.y                 += 45.0f * DEGREE_RAD_CONV;
+
+        Quat newRot              = Quat::FromEulerXYZ(euler.x, euler.y, euler.z);
+
+        float3 pos, scale;
+        Quat oldRot;
+        localTransform.Decompose(pos, oldRot, scale);
+
+        const float4x4 newTransform = float4x4::FromTRS(pos, newRot, scale);
+        impactSpriteObject->SetJustLocalTransform(newTransform);
     }
 
     // --- END OF ATTACK ---

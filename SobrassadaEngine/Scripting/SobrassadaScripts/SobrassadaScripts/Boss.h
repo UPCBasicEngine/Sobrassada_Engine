@@ -250,6 +250,7 @@ class Boss : public Character
     MovingUVTransparent* bigExpansionUV                 = nullptr;
     ShaderScriptComponent* smallExpansionScript         = nullptr;
     MovingUVTransparent* smallExpansionUV               = nullptr;
+    GameObject* impactSpriteObject                      = nullptr;
     ShaderScriptComponent* impactSpriteScript           = nullptr;
     AttackVfxSpritesheet* impactSpriteSheet             = nullptr;
 
