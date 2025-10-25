@@ -1808,7 +1808,8 @@ void CuChulainn::ActivateArrowMark()
         GLOG("VFX: ERROR - glowVfxObject is NULL!");
         return;
     }
-
+    float3 playerPos = character->GetLastPosition();
+    SetArrowMark(playerPos);
     markVfxTimer       = 0.0f;
    markVfxIsActive = true;
     markVfxObject->SetEnabled(true);
@@ -1823,6 +1824,16 @@ void CuChulainn::ActivateArrowMark()
     {
         GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", markVfxObject->GetName().c_str());
     }
+}
+
+void CuChulainn::SetArrowMark(float3 posArrow)
+{
+    if (!markVfxObject)
+    {
+        GLOG("VFX: ERROR - markObject is NULL!");
+        return;
+    }
+    markVfxObject->SetPosition(posArrow);
 }
 
 void CuChulainn::Aim(float deltaTime)
