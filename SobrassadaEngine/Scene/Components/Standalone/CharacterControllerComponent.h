@@ -29,7 +29,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     void Move(float deltaTime);
     void LookAtMovement(const float3& moveDir, float deltaTime);
     void Rotate(float rotationDirection, float deltaTime);
-    void SetDirection(float3& direction);
+    void SetDirection(const float3& direction);
     void LookAt(const float3& direction);
     void MoveTo(float speed);
 

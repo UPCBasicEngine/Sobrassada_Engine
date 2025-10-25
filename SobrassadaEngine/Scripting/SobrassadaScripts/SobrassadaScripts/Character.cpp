@@ -172,12 +172,6 @@ void Character::OnCollision(GameObject* otherObject, const float3 collisionNorma
             }
         }
 
-        ArcherProjectile* arrowProj = otherScript->GetScriptByType<ArcherProjectile>();
-        if (arrowProj)
-        {
-            arrowProj->Hit(otherObject);
-        }
-
         Spouts* spoutsScript = otherScript->GetScriptByType<Spouts>();
         if (spoutsScript)
         {
@@ -304,10 +298,8 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
                 CuChulainn* player = static_cast<CuChulainn*>(this);
                 player->OnArrowHit();
             }
-
             TakeDamage(archerProjectile->GetDamage());
-            otherWeapon->SetEnabled(false);
-            otherObject->SetEnabled(false);
+            archerProjectile->Reset();
         }
 
         // Trap check

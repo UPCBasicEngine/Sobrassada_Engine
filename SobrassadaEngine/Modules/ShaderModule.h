@@ -48,6 +48,7 @@ class ShaderModule : public Module
     int GetHeightFogProgram() const { return heightFogProgram; }
     int GetVolumetricFogComputeProgram() const { return volumetricFogProgram; }
     int GetGaussianBlurrProgram() const { return gaussianBlurrProgram; }
+    int GetBloomProgram() const { return bloomProgram; }
 
   private:
     char* LoadShaderSource(const char* shaderPath);
@@ -94,6 +95,7 @@ class ShaderModule : public Module
     int videoProgram                   = -1;
     int fxaaProgram                    = -1;
     int heightFogProgram               = -1;
+    int bloomProgram                   = -1;
 
     unsigned int volumetricFogProgram  = 0;
     unsigned int gaussianBlurrProgram  = 0;

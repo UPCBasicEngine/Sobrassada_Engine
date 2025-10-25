@@ -141,6 +141,7 @@ class EditorUIModule : public Module
     void CrowdControl(bool& crowdControl);
 
     void FogConfig(bool& fogConfig);
+    void PostProcessing(bool& postProcess);
 
     std::string FormatWithCommas(unsigned int number) const;
 
@@ -174,6 +175,7 @@ class EditorUIModule : public Module
     bool navmesh            = false;
     bool crowdControl       = false;
     bool fogConfig          = false;
+    bool postProcessConfig  = false;
 
     int maximumPlotData     = 50;
     std::deque<float> framerate;
