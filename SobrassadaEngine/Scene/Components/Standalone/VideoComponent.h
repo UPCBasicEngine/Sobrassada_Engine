@@ -57,6 +57,8 @@ class VideoComponent : public Component
 
     unsigned int VAO, VBO, EBO;
 
+    bool autoPlay = false;
     bool isPlaying = false;
     bool loop = false;
+    bool hasPlayed = false;
 };

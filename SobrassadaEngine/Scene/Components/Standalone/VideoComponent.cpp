@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "ProjectModule.h"
 #include "ResourceTexture.h"
+#include "SceneModule.h"
 #include "ShaderModule.h"
 #include "imgui.h"
 #include <glew.h>
@@ -53,6 +54,9 @@ VideoComponent::VideoComponent(const rapidjson::Value& initialState, GameObject*
     }
 
     if (initialState.HasMember("Loop")) loop = initialState["Loop"].GetBool();
+    if (initialState.HasMember("AutoPlay")) autoPlay = initialState["AutoPlay"].GetBool();
+
+    
 
     constexpr float quadVertices[]       = {-1.0f, -1.0f, 0.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 1.0f,
                                             1.0f,  1.0f,  1.0f, 0.0f, -1.0f, 1.0f,  0.0f, 0.0f};
@@ -98,6 +102,7 @@ void VideoComponent::Save(rapidjson::Value& targetState, rapidjson::Document::Al
 
     targetState.AddMember("Video Name", rapidjson::Value(videoName, allocator), allocator);
     targetState.AddMember("Loop", loop, allocator);
+    targetState.AddMember("AutoPlay", autoPlay, allocator);
 }
 
 void VideoComponent::Clone(const Component* other)
@@ -123,6 +128,7 @@ void VideoComponent::Clone(const Component* other)
 
 void VideoComponent::Update(float deltaTime)
 {
+    if (autoPlay && !isPlaying && !hasPlayed && App->GetSceneModule()->GetInPlayMode()) Play();
     timeSinceLastFrame += deltaTime;
     if (timeSinceLastFrame >= frameDelay)
     {
@@ -157,6 +163,7 @@ void VideoComponent::RenderEditorInspector()
 {
     ImGui::InputText("Video Name", videoName, IM_ARRAYSIZE(videoName));
     ImGui::Checkbox("Loop", &loop);
+    ImGui::Checkbox("Auto play", &autoPlay);
 
     if (ImGui::Button("Play"))
     {
@@ -335,4 +342,5 @@ void VideoComponent::Play()
     }
 
     InitVideo();
+    hasPlayed = true;
 }
