@@ -1028,7 +1028,52 @@ void CuChulainn::GetInputs()
         if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
     }
 
-    moveFromCollision = (direction.Length() >= 0.55f);
+    bool newIsRunning = isRiastrad ? true : (direction.Length() >= 0.55f);
+    if (!isCursed && !isRiastrad)
+    {
+        if (newIsRunning && !moveFromCollision)
+        {
+            GLOG("Start running");
+            const HashString walkStateName = HashString("Walk");
+            for (State& state : animComponent->GetResourceStateMachine()->states)
+            {
+                if (state.name == walkStateName)
+                {
+                    state.clipName = defaultRunName;
+                }
+            }
+            if (state == CharacterStates::RUN)
+            {
+                if (animComponent) animComponent->UseTrigger("Idle");
+                state = CharacterStates::IDLE;
+            }
+
+            const float defaultStepTime = 0.4f;
+            stepTime                    = defaultStepTime;
+        }
+        else if (!newIsRunning && moveFromCollision)
+        {
+            GLOG("Stop running");
+            const HashString walkStateName = HashString("Walk");
+            for (State& state : animComponent->GetResourceStateMachine()->states)
+            {
+                if (state.name == walkStateName)
+                {
+                    state.clipName = walkAnimName;
+                }
+            }
+            if (state == CharacterStates::RUN)
+            {
+                if (animComponent) animComponent->UseTrigger("Idle");
+                state = CharacterStates::IDLE;
+            }
+
+            const float walkStepTime = 0.6f;
+            stepTime                 = walkStepTime;
+        }
+    }
+
+    moveFromCollision = newIsRunning;
     character->SetIsRunning(moveFromCollision);
 
     direction                     = camFront * direction.z + camRight * direction.x;
@@ -1950,7 +1995,9 @@ void CuChulainn::Move()
         if (state != CharacterStates::RUN)
         {
             state    = CharacterStates::RUN;
-            runTimer = isCursed ? 0.25f : -0.06f;
+            runTimer = -0.06f;
+            if (isCursed) runTimer = 0.0f;
+            else if (!moveFromCollision) runTimer = -0.15f;
             if (animComponent) animComponent->UseTrigger("Walk");
 
             isRightFoot = false;
@@ -1978,17 +2025,22 @@ void CuChulainn::Move()
 
                 if (footsteps[stepIndex])
                 {
-                    const float hOffset           = (isRiastrad || isCursed) ? 0.2f : 0.1f;
+                    const bool isRightFootReal    = (moveFromCollision && !isCursed) ? isRightFoot : !isRightFoot;
+
+                    const float hOffset           = isRiastrad ? 0.2f : (!moveFromCollision || isCursed) ? 0.28f : 0.1f;
                     const float3 lateralDirection = character->GetFrontDirection().Cross(float3::unitY).Normalized();
                     const float3 horizontalOffset =
-                        isRightFoot ? lateralDirection * hOffset : -lateralDirection * hOffset;
+                        isRightFootReal ? lateralDirection * hOffset : -lateralDirection * hOffset;
                     const float3 verticalOffset = float3::unitY * 0.1f;
+                    const float3 aheadOffset    = isCursed           ? character->GetFrontDirection() * 0.4f
+                                                : !moveFromCollision ? character->GetFrontDirection() * 0.23f
+                                                                     : float3::zero;
 
                     const Quat stepRotation =
                         Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
                     const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitY, 180.0f * (PI / 180));
                     Quat finalRotation              = stepRotation * horizontalCorrection;
-                    if (!isRightFoot)
+                    if (!isRightFootReal)
                     {
                         const Quat zRotation = Quat::RotateAxisAngle(float3::unitZ, 180.0f * (PI / 180));
                         finalRotation        = finalRotation * zRotation;
@@ -1997,7 +2049,8 @@ void CuChulainn::Move()
                     const float3 scale       = footsteps[stepIndex]->GetParent()->GetLocalTransform().ExtractScale();
 
                     const float4x4 transform = float4x4::FromTRS(
-                        parent->GetGlobalPostition() + verticalOffset + horizontalOffset, finalRotation, scale
+                        parent->GetGlobalPostition() + verticalOffset + horizontalOffset + aheadOffset, finalRotation,
+                        scale
                     );
 
                     const float4x4 parentWorld = parent->GetParentGlobalTransform();
@@ -2007,10 +2060,10 @@ void CuChulainn::Move()
                     footsteps[stepIndex]->SetEnabled(true);
                     footsteps[stepIndex]->GetScriptByType<AttackVfxSpritesheet>()->Reset();
 
-                    ParticleSystemComponent* steps = isRightFoot ? footstepParticles1 : footstepParticles2;
+                    ParticleSystemComponent* steps = isRightFootReal ? footstepParticles1 : footstepParticles2;
 
                     steps->GetParent()->SetLocalPosition(
-                        parent->GetGlobalPostition() + verticalOffset * 4.0f -
+                        parent->GetGlobalPostition() + verticalOffset * 4.0f + horizontalOffset + aheadOffset -
                         parent->GetParentGlobalTransform().TranslatePart()
                     );
                     steps->SpawnAllInstances();
@@ -2327,7 +2380,7 @@ void CuChulainn::ToggleRiastrad()
         if (state == CharacterStates::RUN)
         {
             if (animComponent) animComponent->UseTrigger("Idle");
-            state                    = CharacterStates::IDLE;
+            state = CharacterStates::IDLE;
         }
 
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
@@ -2475,7 +2528,7 @@ void CuChulainn::StartCurse()
 
     if (gooShoeRight) gooShoeRight->SetEnabled(true);
     if (gooShoeLeft) gooShoeLeft->SetEnabled(true);
-    const float curseStepTime = 0.3f;
+    const float curseStepTime = 0.475f;
     stepTime                  = curseStepTime;
 
     const HashString walkName = HashString("Walk");
@@ -2486,7 +2539,7 @@ void CuChulainn::StartCurse()
             state.clipName = curseRunName;
             for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
             {
-                if (clip.clipName == state.clipName) clip.animationSpeed = 3.0f;
+                if (clip.clipName == state.clipName) clip.animationSpeed = 2.0f;
             }
         }
     }
