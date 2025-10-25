@@ -146,9 +146,8 @@ bool Banshee::Init()
         else if (currentGO->GetName() == "TeleportWarning")
         {
             teleportWarningScreamGO = currentGO;
-            teleportWarningScreamGO->SetEnabled(false);
 
-            MeshComponent* mesh = teleportWarningScreamGO->GetComponent<MeshComponent*>();
+            MeshComponent* mesh     = teleportWarningScreamGO->GetComponent<MeshComponent*>();
             if (mesh)
             {
                 const ResourceMaterial* constMat = mesh->GetResourceMaterial();
@@ -161,13 +160,14 @@ bool Banshee::Init()
                     teleportWarningScreamMaterial->SetDiffColor(screamWarningColor);
                 }
             }
+
+            teleportWarningScreamGO->SetEnabled(false);
         }
         else if (currentGO->GetName() == "TeleportWarningSlow")
         {
             teleportWarningSlowGO = currentGO;
-            teleportWarningSlowGO->SetEnabled(false);
 
-            MeshComponent* mesh = teleportWarningSlowGO->GetComponent<MeshComponent*>();
+            MeshComponent* mesh   = teleportWarningSlowGO->GetComponent<MeshComponent*>();
             if (mesh)
             {
                 const ResourceMaterial* constMat = mesh->GetResourceMaterial();
@@ -180,6 +180,8 @@ bool Banshee::Init()
                     teleportWarningSlowMaterial->SetDiffColor(slowWarningColor);
                 }
             }
+
+            teleportWarningSlowGO->SetEnabled(false);
         }
         // else if (currentGO->GetName() == "PS_BansheeHit")
         //{
@@ -270,6 +272,8 @@ bool Banshee::Init()
     invisibleDist  = std::uniform_real_distribution<float>(invisibleTimeRange[0], invisibleTimeRange[1]);
 
     audioSource    = parent->GetComponent<AudioSourceComponent*>();
+
+    meshScripts->SetScriptEnabled("DissolveOpaque", false);
 
     return true;
 }
@@ -408,7 +412,19 @@ void Banshee::OnPlayerExitLocation()
 
 void Banshee::OnDeath()
 {
-    parent->SetEnabled(false);
+    for (ShaderScriptComponent* shaderComp : deathVFXShaderComponents)
+    {
+        shaderComp->SetEnabled(true);
+    }
+
+    if (!meshScripts->GetScriptEnabled("DissolveOpaque"))
+    {
+        meshScripts->SetScriptEnabled("ColorChange", false);
+        meshScripts->SetScriptEnabled("DissolveOpaque", true);
+    }
+
+    animComponent->UseTrigger("Death");
+    currentState = BansheeStates::Dead;
 }
 
 void Banshee::OnDamageTaken(int amount)
@@ -552,6 +568,8 @@ void Banshee::TakeDamage(int amount)
         agentAI->ResetSpeed();
         agentAI->ResetAngularSpeed();
         agentAI->SetLookForward(true);
+
+        teleportWarningScreamGO->SetEnabled(false);
     }
 
     break;
@@ -587,6 +605,8 @@ void Banshee::TakeDamage(int amount)
         agentAI->ResetAngularSpeed();
         agentAI->SetLookForward(true);
 
+        teleportWarningSlowGO->SetEnabled(false);
+
         break;
     }
     case BansheeStates::Dead:
@@ -602,7 +622,7 @@ void Banshee::TakeDamage(int amount)
     }
     }
 
-    if ((currentHealth - amount) <= 0)
+    /*if ((currentHealth - amount) <= 0)
     {
 
         for (ShaderScriptComponent* shaderComp : deathVFXShaderComponents)
@@ -610,10 +630,16 @@ void Banshee::TakeDamage(int amount)
             shaderComp->SetEnabled(true);
         }
 
+        if (!meshScripts->GetScriptEnabled("DissolveOpaque"))
+        {
+            meshScripts->SetScriptEnabled("ColorChange", false);
+            meshScripts->SetScriptEnabled("DissolveOpaque", true);
+        }
+
         animComponent->UseTrigger("Death");
         currentState = BansheeStates::Dead;
         return;
-    }
+    }*/
 
     Character::TakeDamage(amount);
 }
@@ -653,9 +679,9 @@ void Banshee::Attack(float deltaTime)
         Character::Attack(deltaTime);
         agentAI->SetSpeed(0.0f, 0.0f);
 
+        teleportWarningScreamGO->SetEnabled(false);
         isInvisible = false;
         animComponent->UseTrigger("Teleport");
-        teleportWarningScreamGO->SetEnabled(false);
     }
     else
     {
@@ -677,6 +703,8 @@ void Banshee::Attack(float deltaTime)
             elapsedTeleportVFX = 0.0f;
 
             teleportedToPos    = false;
+
+            teleportWarningScreamGO->SetEnabled(false);
         }
         if (elapsedTeleportVFX < teleportVFXDuration)
         {
@@ -686,12 +714,12 @@ void Banshee::Attack(float deltaTime)
         else if (elapsedTeleportVFX > teleportVFXDuration && !teleportedToPos)
         {
             GoToAttackPosition();
-            teleportWarningScreamGO->SetEnabled(true);
             teleportedToPos = true;
             return;
         }
         else if (attackTimer < currentInvisibleTime)
         {
+            if (!teleportWarningScreamGO->IsEnabled()) teleportWarningScreamGO->SetEnabled(true);
             // SCALING WARNING OVER TIME
             float3 translation, scale;
             Quat rotation;
@@ -943,7 +971,7 @@ void Banshee::HandleDeath()
     if (animComponent->GetCurrentStateName() == HashString("Death") && animComponent->IsFinished())
     {
         currentHealth = 0;
-        Character::Die();
+        mesh->SetEnabled(false);
     }
 }
 
@@ -983,6 +1011,8 @@ void Banshee::SlowArea(float deltaTime)
 
             elapsedTeleportVFX = 0.0f;
             teleportedToPos    = false;
+
+            teleportWarningSlowGO->SetEnabled(false);
         }
         if (elapsedTeleportVFX < teleportVFXDuration)
         {
@@ -992,12 +1022,13 @@ void Banshee::SlowArea(float deltaTime)
         else if (elapsedTeleportVFX >= teleportVFXDuration && !teleportedToPos)
         {
             GoToAttackPosition();
-            teleportWarningSlowGO->SetEnabled(true);
             teleportedToPos = true;
             return;
         }
         else if (attackTimer < currentInvisibleTime)
         {
+            if (!teleportWarningSlowGO->IsEnabled()) teleportWarningSlowGO->SetEnabled(true);
+
             // SCALING WARNING OVER TIME
             float3 translation, scale;
             Quat rotation;

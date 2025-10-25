@@ -35,6 +35,7 @@ class ShaderScriptComponent : public Component
     const std::vector<Script*>& GetScriptInstances() const { return scriptInstances; }
     const std::vector<ShaderScriptType>& GetScriptRenderTypes() const { return shaderScriptRenderType; }
     const std::vector<std::string>& GetAllScriptNames() const { return scriptNames; }
+    bool SOBRASADA_API_ENGINE GetScriptEnabled(const std::string& scriptName) const;
 
     template <typename T> T* GetScriptByType()
     {

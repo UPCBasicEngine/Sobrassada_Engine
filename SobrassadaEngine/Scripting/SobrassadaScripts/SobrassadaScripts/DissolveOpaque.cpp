@@ -92,7 +92,7 @@ bool DissolveOpaque::Init()
 
         indexCount = (unsigned int)rmesh->GetIndices().size();
 
-        meshComp->SetEnabled(false);
+        //meshComp->SetEnabled(false);
         meshComp->SetUpdateShaderStorage(true);
     }
 
@@ -107,7 +107,6 @@ void DissolveOpaque::Update(float deltaTime)
     if (timer >= dissolveDuration)
     {
         isFinished = true;
-        meshComp->SetEnabled(true);
     }
 }
 
@@ -176,5 +175,5 @@ void DissolveOpaque::Reset()
 {
     timer      = 0;
     isFinished = false;
-    meshComp->SetEnabled(true);
+    //if (meshComp) meshComp->SetEnabled(true);
 }
