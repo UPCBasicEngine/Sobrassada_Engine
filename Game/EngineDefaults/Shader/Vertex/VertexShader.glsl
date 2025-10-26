@@ -102,10 +102,11 @@ void main()
             float scaledWindSpeed = combinedWindSpeed;
 
             vec3 sinOffsetPos = bool(windAmplitudes.w) ? vec3(0, 0, 0) : pos;
+            float locationSinOffset = (model[3][0] + model[3][1] + model[3][2]) / 3 * scaledWindSpeed;
 
-            float offsetX = sin((sinOffsetPos.x + scaledTime + 1.0 - adaptedYUV) * windFrequency.x) * adaptedYUV * scaledWindSpeed * windAmplitudes.x;
-            float offsetY = sin((sinOffsetPos.y + scaledTime + 1.0 - adaptedYUV) * windFrequency.y) * adaptedYUV * scaledWindSpeed * windAmplitudes.y;
-            float offsetZ = sin((sinOffsetPos.z + scaledTime + 1.0 - adaptedYUV) * windFrequency.z) * adaptedYUV * scaledWindSpeed * windAmplitudes.z;
+            float offsetX = sin((sinOffsetPos.x + scaledTime + 1.0 - adaptedYUV) * windFrequency.x + locationSinOffset) * adaptedYUV * scaledWindSpeed * windAmplitudes.x;
+            float offsetY = sin((sinOffsetPos.y + scaledTime + 1.0 - adaptedYUV) * windFrequency.y + locationSinOffset) * adaptedYUV * scaledWindSpeed * windAmplitudes.y;
+            float offsetZ = sin((sinOffsetPos.z + scaledTime + 1.0 - adaptedYUV) * windFrequency.z + locationSinOffset) * adaptedYUV * scaledWindSpeed * windAmplitudes.z;
 
             vec3 offset = vec3(offsetX, offsetY, offsetZ);
 

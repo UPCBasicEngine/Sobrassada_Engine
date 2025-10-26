@@ -38,8 +38,23 @@ TileFloatScript::TileFloatScript(GameObject* parent) : Script(parent)
 bool TileFloatScript::Init()
 {
 
+    if (parent->GetChildren().empty())
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] No movable tile as child found")
+        return false;
+    }
+
+    tileToMove = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[0]);
+    if (tileToMove == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Tile game object not found")
+        return false;
+    }
+
     // get final (correct) position, and move the tile to start (rotated, moved and scaled) position
-    const float4x4& originalTransform = parent->GetLocalTransform();
+    const float4x4& originalTransform = tileToMove->GetLocalTransform();
     finalPosition                     = originalTransform.TranslatePart();
     finalRotation                     = Quat(originalTransform.RotatePart());
     finalScale                        = originalTransform.GetScale();
@@ -49,10 +64,10 @@ bool TileFloatScript::Init()
     const float4x4 startTransform     = float4x4::FromTRS(startPosition, startQuat, startScale);
     currentRotationQuat               = startQuat;
 
-    parent->SetLocalTransform(startTransform);
+    tileToMove->SetLocalTransform(startTransform);
 
     // Audio
-    audioComp = parent->GetComponent<AudioSourceComponent*>();
+    audioComp = tileToMove->GetComponent<AudioSourceComponent*>();
 
     // GLOG("Initiating TileFloatScript");
     return true;
@@ -60,12 +75,12 @@ bool TileFloatScript::Init()
 
 void TileFloatScript::Update(float deltaTime)
 {
-    if (isFinished || !character) return;
+    if (!isSetupCorrectly || isFinished || !character) return;
 
     if (!isActive)
     {
         const float distanceSq =
-            character->GetLastPosition().DistanceSq(finalPosition + parent->GetParentGlobalTransform().TranslatePart());
+            character->GetLastPosition().DistanceSq(finalPosition + parent->GetGlobalTransform().TranslatePart());
 
         isActive = distanceSq < minDistanceToPlayer * minDistanceToPlayer;
 
@@ -87,16 +102,16 @@ void TileFloatScript::Update(float deltaTime)
         {
             currentRotationQuat       = finalRotation;
             float4x4 snappedTransform = float4x4::FromTRS(finalPosition, currentRotationQuat, finalScale);
-            parent->SetLocalTransform(snappedTransform);
+            tileToMove->SetLocalTransform(snappedTransform);
             isFinished = true;
             return;
         }
 
-        const float3 newT           = Lerp(parent->GetPosition(), finalPosition, alpha);
-        const float3 newS           = Lerp(parent->GetScale(), finalScale, alpha);
+        const float3 newT           = Lerp(tileToMove->GetPosition(), finalPosition, alpha);
+        const float3 newS           = Lerp(tileToMove->GetScale(), finalScale, alpha);
         currentRotationQuat         = Quat::Slerp(currentRotationQuat, finalRotation, alpha).Normalized();
 
         const float4x4 newTransform = float4x4::FromTRS(newT, currentRotationQuat, newS);
-        parent->SetLocalTransform(newTransform);
+        tileToMove->SetLocalTransform(newTransform);
     }
 }

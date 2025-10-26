@@ -609,6 +609,14 @@ bool CuChulainn::Init()
     {
         if (hudMushrooms[i]) hudMushrooms[i]->SetEnabled(true);
     }
+    std::string currentScenename = AppEngine->GetSceneModule()->GetScene()->GetSceneName();
+    if (currentScenename == "SCENE_Tutorial" && animComponent)
+    {
+        animComponent->UseTrigger("Respawn");
+        controlsLocked = true;
+        character->EnableMovement(false);
+        state = CharacterStates::RESPAWN;
+    }
 
     return true;
 }
@@ -636,6 +644,18 @@ void CuChulainn::Update(float deltaTime)
 
     if (isDead || !character) return;
 
+    if (state == CharacterStates::RESPAWN)
+    {
+        if (animComponent && animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Idle");
+            state          = CharacterStates::IDLE;
+
+            controlsLocked = false;
+            character->EnableMovement(true);
+        }
+    }
+    
     if (character->GetInputDown()) GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
@@ -657,6 +677,16 @@ void CuChulainn::Update(float deltaTime)
     if (state == CharacterStates::TRANSFORM)
     {
         if (!riastradCrack->IsEnabled()) EnableRiastradVfx();
+    }
+
+    if (state != CharacterStates::AIM && aimShadowObject && aimShadowObject->IsEnabled())
+        aimShadowObject->SetEnabled(false);
+
+    if (state != CharacterStates::CHARGING)
+    {
+        if (chargeVfx1 && chargeVfx1->GetEnabled()) chargeVfx1->SetEnabled(false);
+        if (chargeVfx2 && chargeVfx2->GetEnabled()) chargeVfx2->SetEnabled(false);
+        if (chargeVfx3 && chargeVfx3->GetEnabled()) chargeVfx3->SetEnabled(false);
     }
 
     if (ultimateObject && ultimateObject->IsEnabled())
@@ -745,6 +775,9 @@ void CuChulainn::OnDeath()
     if (attackVfxVertical1) attackVfxVertical1->SetEnabled(false);
     if (attackVfxVertical2) attackVfxVertical2->SetEnabled(false);
     if (attackVfxVertical3) attackVfxVertical3->SetEnabled(false);
+    if (chargeVfx1) chargeVfx1->SetEnabled(false);
+    if (chargeVfx2) chargeVfx2->SetEnabled(false);
+    if (chargeVfx3) chargeVfx3->SetEnabled(false);
 
     if (state == CharacterStates::AIM && camera) camera->EnableAimOffset(false);
     if (animComponent) animComponent->UseTrigger("Death");
@@ -840,12 +873,11 @@ void CuChulainn::HandleState(float deltaTime)
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
-    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN &&
-             state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE &&
-             state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING &&
-             state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT &&
-             state != CharacterStates::TAKE_MUSHROOM)
+    else if (state != CharacterStates::BASIC_ATTACK && !character->IsDashing() && state != CharacterStates::RESPAWN && state != CharacterStates::AIM && state != CharacterStates::FALL && state != CharacterStates::ULTIMATE && state != CharacterStates::CHARGED_ATTACK && state != CharacterStates::CHARGING && state != CharacterStates::HEAL && state != CharacterStates::TRANSFORM && state != CharacterStates::HURT && state != CharacterStates::TAKE_MUSHROOM)
+    {
         Move();
+        controlsLocked = false;
+    }
 
     // When finished animation, go back to idle state
     if (animComponent && animComponent->IsFinished())
@@ -1565,11 +1597,7 @@ void CuChulainn::PerformAttack()
             ultimateObject->GetComponent<AnimationComponent*>()->Update(0.0f);
             ultimateObject->GetComponent<SphereColliderComponent*>()->SetEnabled(false);
 
-            if (ultimateHoldEnabled && animComponent && !playerAnimHeld)
-            {
-                animComponent->OnPause();
-                playerAnimHeld = true;
-            }
+            
         }
         else if (ultimateObject->IsEnabled())
         {
@@ -1594,7 +1622,7 @@ void CuChulainn::PerformAttack()
             {
                 const bool animReady =
                     vfxUltimateAnim && vfxUltimateAnim->GetCurrentAnimation() && !vfxUltimateAnim->IsFinished();
-                bool show, blurShow, warningShow = false;
+                bool show, blurShow, warningShow, holdPlayer = false;
 
                 if (animReady)
                 {
@@ -1606,12 +1634,18 @@ void CuChulainn::PerformAttack()
                     show                      = (vfxLocalTimer >= 0.40f / ultimateSpeed) && (vfxLocalTimer < spikesOff);
                     blurShow                  = vfxLocalTimer >= 0.19f / ultimateSpeed;
                     warningShow               = vfxLocalTimer <= 0.4f / ultimateSpeed;
+                    holdPlayer                = (vfxLocalTimer >= 0.60f / ultimateSpeed) && (vfxLocalTimer <= ultimateResumeVfxTime/ultimateSpeed);
                 }
 
                 if (ultimateSpikes->IsEnabled() != show) ultimateSpikes->SetEnabled(show);
                 if (ultimateCrack && ultimateCrack->IsEnabled() != show) ultimateCrack->SetEnabled(show);
                 if (blurShow) ultimateBlur->GetComponent<ShaderScriptComponent*>()->SetEnabled(true);
                 if (!warningShow) ultimateWarning->SetEnabled(false);
+                if (ultimateHoldEnabled && animComponent && !playerAnimHeld && holdPlayer)
+                {
+                    animComponent->OnPause();
+                    playerAnimHeld = true;
+                }
             }
             if (ultimateTimer >= currentHitboxDelay + currentAnimationDelay &&
                 ultimateTimer < currentHitboxDelay + currentHitboxDuration + currentAnimationDelay)
@@ -1790,9 +1824,9 @@ void CuChulainn::UpdateUltimateVfx()
     if (ultimateWarning)
     {
         ultimateWarning->SetEnabled(true);
+        ultimateWarning->GetComponent<MeshComponent*>()->SetEnabled(false);
         if (ultimateWarning->GetComponent<ShaderScriptComponent*>())
         {
-            ultimateWarning->GetComponent<MeshComponent*>()->SetEnabled(false);
             ultimateWarning->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
         }
     }
@@ -1826,7 +1860,7 @@ void CuChulainn::Move()
 
     const bool actuallyMoving = character->IsMoving();
     const bool wantsMove      = moveFromCollision;
-    const bool runCondition   = wantsMove || character->GetSpeed() > 0.5f;
+    const bool runCondition   = wantsMove || (character->GetInputDown() && character->GetSpeed() > 0.5f);
 
     if (runCondition)
     {
@@ -1897,6 +1931,7 @@ void CuChulainn::Respawn()
     currentHealth  = maxHealth;
     reservedHealth = maxHealth;
     state          = CharacterStates::RESPAWN;
+    controlsLocked = true;
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
@@ -2153,8 +2188,11 @@ void CuChulainn::ToggleRiastrad()
             if (riastradFire) riastradFire->GetScriptByType<UISpritesheet>()->SetFadeOut(true);
         }
 
-        if (animComponent) animComponent->UseTrigger("Idle");
-        state         = CharacterStates::IDLE;
+        if (state == CharacterStates::RUN)
+        {
+            if (animComponent) animComponent->UseTrigger("Idle");
+            state = CharacterStates::IDLE;
+        }
 
         // TODO: Remove when VFX
         Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
@@ -2261,6 +2299,19 @@ void CuChulainn::AddRiastrad(int amount)
     riastradBar->SetFillAmount(riastradMeter / 100.0f);
 }
 
+void CuChulainn::ResetState()
+{
+    moveFromCollision = false;
+    if (character)
+    {
+        character->SetDirection(float3::zero);
+        character->SetIsRunning(false);
+        //character->EnableMovement(false);
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
+}
+
 void CuChulainn::OnObjectDestroyed()
 {
     AddRiastrad(riastradOnObjectHit);
@@ -2323,8 +2374,11 @@ void CuChulainn::StartCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 void CuChulainn::ExportState(PlayerState& playerState) const
 {
@@ -2382,8 +2436,11 @@ void CuChulainn::EndCurse()
         }
     }
 
-    if (animComponent) animComponent->UseTrigger("Idle");
-    state = CharacterStates::IDLE;
+    if (state == CharacterStates::RUN)
+    {
+        if (animComponent) animComponent->UseTrigger("Idle");
+        state = CharacterStates::IDLE;
+    }
 }
 
 bool CuChulainn::IsBlockedAhead(

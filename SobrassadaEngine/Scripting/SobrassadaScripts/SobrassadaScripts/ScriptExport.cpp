@@ -49,6 +49,7 @@
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
+#include "BasicAnimationController.h"
 #include "ColorChange.h"
 #include "DamageMask.h"
 #include "MovingUVClipErode.h"
@@ -125,7 +126,8 @@ constexpr const char* scripts[] = {
     "BossSpouts",
     "MusicManager",
     "MusicTrigger",
-    "NameDisplay"
+    "NameDisplay",
+    "BasicAnimationController"
 };
 
 constexpr const char* shaderScripts[] = {
@@ -197,7 +199,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
     if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
     if (scriptType == "AsyncSceneLoading") return new AsyncSceneLoading(parent);
-
+    if (scriptType == "BasicAnimationController") return new BasicAnimationController(parent);
+    
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
