@@ -63,6 +63,8 @@ class CuChulainn : public Character
     bool IsDashUnlocked() const { return dashUnlocked; }
     bool IsUltimateUnlocked() const { return ultimateUnlocked; }
     int GetEnemiesCount() const { return enemiesCont; }
+    int GetRiastradOnDamageTaken() const { return riastradOnDamageTaken; }
+
     bool HasblockingTag(GameObject* go);
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
@@ -75,6 +77,7 @@ class CuChulainn : public Character
         if (enemiesCont != 0) enemiesCont--;
         GLOG("Enemy out. Total unique enemies colliding: %zu", enemiesCont);
     }
+    void ResetState();
 
     void OnObjectDestroyed();
     void OnEnemyHit();
@@ -89,6 +92,7 @@ class CuChulainn : public Character
     void ApplySavedState(const PlayerState& playerState);
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
+    void AddRiastrad(int amount);
 
   private:
     void OnDeath() override;
@@ -125,7 +129,6 @@ class CuChulainn : public Character
     void Move();
     void ChargeAttack();
     void ToggleRiastrad();
-    void AddRiastrad(int amount);
     void EndCurse();
 
     bool IsBlockedAhead(
@@ -198,7 +201,7 @@ class CuChulainn : public Character
 
     // Arrow Hit VFX
     GameObject* arrowHitVfxObject                  = nullptr;
-    std::string arrowHitVfxName                    = "";
+    std::string arrowHitVfxName                    = "ArrowHit";
     float arrowHitVfxDuration                      = 0.2f;
     float arrowHitVfxTimer                         = 0.0f;
     bool arrowVfxIsActive                          = false;
@@ -266,7 +269,7 @@ class CuChulainn : public Character
     bool ultimateUnlocked                          = false;
     bool playerAnimHeld                            = false;
     bool ultimateHoldEnabled                       = true;
-    float ultimateResumeVfxTime                    = 2.0f;
+    float ultimateResumeVfxTime                    = 1.5f;
     float vfxTimeUnscaledSec                       = 0.0f;
     bool ultimateSoundPlayed                       = false;
     float ultimateSpeed                            = 1.3f;
