@@ -136,12 +136,13 @@ class Character : public Script
 
     std::string meshName                        = "";
     MeshComponent* mesh                         = nullptr;
-    ShaderScriptComponent* colorChange          = nullptr;
+    ShaderScriptComponent* meshScripts          = nullptr;
 
-    std::string glowName                         = "Glow";
+    std::string glowName                        = "Glow";
     GameObject* glow                            = nullptr;
 
     float3 hitCollisionNormal                   = float3::zero;
+    float3 hitGOFront                           = float3::zero;
 
     // Level
     MagicBarrier* associatedBarrier             = nullptr;
