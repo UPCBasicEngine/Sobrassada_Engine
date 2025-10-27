@@ -31,7 +31,8 @@ enum class CharacterType
     Destructible,
     Changeling,
     Boss,
-    Mirage
+    Mirage,
+    Crow
 };
 
 class Character : public Script
