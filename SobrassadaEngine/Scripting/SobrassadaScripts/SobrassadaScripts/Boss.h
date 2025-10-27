@@ -19,6 +19,7 @@ class AudioSourceComponent;
 class AnimationComponent;
 class BarFill;
 class ImageComponent;
+class UIFadeInOut;
 
 enum class BossDistance
 {
@@ -158,6 +159,7 @@ class Boss : public Character
     float runTimer              = 0.0f;
 
     bool firstTimeEntering      = true;
+    bool waitForBarFill         = false;
 
     bool highlightActivated     = false;
     float highlightTimer        = 0.0f;
@@ -179,6 +181,7 @@ class Boss : public Character
     // Health UI
     std::string healthBarName                            = "";
     ImageComponent* healthBarBase                        = nullptr;
+    UIFadeInOut* fadeInOutHealthBar                      = nullptr;
     ShaderScriptComponent* healthBarShader               = nullptr;
     BarFill* healthBarFill                               = nullptr;
 

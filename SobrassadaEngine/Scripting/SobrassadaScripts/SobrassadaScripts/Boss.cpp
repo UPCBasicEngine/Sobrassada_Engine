@@ -26,6 +26,7 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
+#include "UIFadeInOut.h"
 
 #include "Wwise_IDs.h"
 #include <Math/MathFunc.h>
@@ -107,6 +108,14 @@ bool Boss::Init()
         if (healthBarBase) healthBarBase->SetEnabled(false);
         else GLOG("[WARNING] Ferdiad: Health bar base image component not found");
 
+        ShaderScriptComponent* healthBarFadeObject = healthBarObject->GetComponent<ShaderScriptComponent*>();
+        if (healthBarFadeObject)
+        {
+            fadeInOutHealthBar = healthBarFadeObject->GetScriptByType<UIFadeInOut>();
+            if (!fadeInOutHealthBar) GLOG("[WARNING] Ferdiad: Health bar fade in out script incorrect");
+        }
+        else GLOG("[WARNING] Ferdiad: Health bar fade in/out shader component not found");
+
         GameObject* healthBarFillObject = healthBarObject->GetChildGameObjectByName("BossHealthBarFill");
         if (healthBarFillObject)
         {
@@ -114,7 +123,7 @@ bool Boss::Init()
             if (healthBarShader)
             {
                 healthBarFill = healthBarShader->GetScriptByType<BarFill>();
-                if (!healthBarFill) GLOG("[WARNING] Ferdiad: Health bar fill script component not found");
+                if (!healthBarFill) GLOG("[WARNING] Ferdiad: Health bar fill script incorrect");
             }
             else GLOG("[WARNING] Ferdiad: Health bar shader component not found");
         }
@@ -652,6 +661,13 @@ bool Boss::Init()
 
 void Boss::Update(float deltaTime)
 {
+    if (waitForBarFill && fadeInOutHealthBar && !fadeInOutHealthBar->GetFadingIn())
+    {
+        if (healthBarFill) healthBarFill->SetFillAmount(1.0f);
+
+        waitForBarFill = false;
+    }
+
     if (stopLogic && changeScene && !changeScene->IsEnabled())
     {
         timerToChangeScene += deltaTime;
@@ -716,12 +732,12 @@ void Boss::OnPlayerEnterLocation()
     doTaunt = true;
     // agentAI->ResetAngularSpeed(); // in case doTaunt not used
 
-    if (firstTimeEntering && healthBarBase)
+    if (firstTimeEntering && fadeInOutHealthBar)
     {
-        healthBarBase->SetEnabled(true);
-        if (healthBarFill) healthBarFill->SetFillAmount(1.0f);
+        fadeInOutHealthBar->FadeIn();
 
         firstTimeEntering = false;
+        waitForBarFill    = true;
     }
 }
 
@@ -1704,26 +1720,26 @@ void Boss::OverheadStrike(float deltaTime)
 
 void Boss::StartDash()
 {
-    isDashing        = true;
+    isDashing         = true;
 
-    float3 bossPos   = parent->GetGlobalTransform().TranslatePart();
-    float3 playerPos = character->GetLastPosition();
+    float3 bossPos    = parent->GetGlobalTransform().TranslatePart();
+    float3 playerPos  = character->GetLastPosition();
 
-    bossPos.y        = 0.0f;
-    playerPos.y      = 0.0f;
+    bossPos.y         = 0.0f;
+    playerPos.y       = 0.0f;
 
-    dashDistance     = (playerPos - bossPos).Length();
-    dashDirection    = (playerPos - bossPos).Normalized();
+    dashDistance      = (playerPos - bossPos).Length();
+    dashDirection     = (playerPos - bossPos).Normalized();
 
-    GLOG("Distance: %.2f", dashDistance);
-    GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
+    // GLOG("Distance: %.2f", dashDistance);
+    // GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
 
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
 
     dashStartPosLocal = parent->GetLocalTransform().TranslatePart();
 
-    GLOG("Speed: %.2f", dashSpeed);
+    // GLOG("Speed: %.2f", dashSpeed);
 }
 
 void Boss::Dash(float deltaTime)
