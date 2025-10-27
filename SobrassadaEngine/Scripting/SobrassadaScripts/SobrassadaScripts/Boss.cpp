@@ -104,7 +104,7 @@ bool Boss::Init()
     GameObject* healthBarObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healthBarName);
     if (healthBarObject)
     {
-        healthBarBase = healthBarObject->GetComponent<ImageComponent*>();
+        ImageComponent* healthBarBase = healthBarObject->GetComponent<ImageComponent*>();
         if (healthBarBase) healthBarBase->SetEnabled(false);
         else GLOG("[WARNING] Ferdiad: Health bar base image component not found");
 
@@ -1187,7 +1187,7 @@ void Boss::Death(float deltaTime)
         {
             stopLogic = true;
 
-            if (healthBarBase) healthBarBase->SetEnabled(false);
+            if (fadeInOutHealthBar) fadeInOutHealthBar->FadeOut();
         }
         break;
     default:

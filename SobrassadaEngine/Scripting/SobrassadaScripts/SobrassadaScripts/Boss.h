@@ -180,7 +180,6 @@ class Boss : public Character
 
     // Health UI
     std::string healthBarName                            = "";
-    ImageComponent* healthBarBase                        = nullptr;
     UIFadeInOut* fadeInOutHealthBar                      = nullptr;
     ShaderScriptComponent* healthBarShader               = nullptr;
     BarFill* healthBarFill                               = nullptr;
