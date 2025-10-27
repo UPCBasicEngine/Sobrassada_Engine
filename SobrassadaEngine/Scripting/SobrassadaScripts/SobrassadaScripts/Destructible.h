@@ -12,7 +12,8 @@ enum class DestructibleStates
 {
     NONE,
     NORMAL,
-    DESTROYED
+    DESTROYED,
+    DESPAWNED
 };
 
 enum class DestructibleType
@@ -39,6 +40,8 @@ class Destructible : public Script
   private:
     bool isSetupCorrectly           = false;
     bool isSimulating               = false;
+    bool isWaitingToDespawn         = false;
+    bool isDespawning               = false;
 
     DestructibleStates currentState = DestructibleStates::NONE;
 
@@ -52,8 +55,14 @@ class Destructible : public Script
 
     float destructionSpawnDelay               = .1f;
     float destructionSpawnDelayCounter        = 0;
+    float destructionDespawnDelay             = 4.0f;
+    float destructionDespawnDelayCounter      = 0;
+    float timeToDisappear                     = 3.0f;
+    float disappearCounter                    = 0;
 
     DestructibleType type                     = DestructibleType::BOX;
+
+    float origDestroyedMeshHeight             = 0.0f;
 
     // Audio
     AudioSourceComponent* audioComp           = nullptr;

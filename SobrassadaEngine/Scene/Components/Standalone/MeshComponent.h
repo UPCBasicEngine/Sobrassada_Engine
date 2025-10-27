@@ -50,6 +50,7 @@ class SOBRASADA_API_ENGINE MeshComponent : public Component
     bool GetProduceShadows() const { return produceShadows; }
     bool GetBatchWasEnabled() { return batchWasEnabled; }
 
+    unsigned int GetBaseIndex() const { return baseIndex; }
     unsigned int GetBoneIndexOffset() const { return boneIndexOffset; }
     bool GetUpdateShaderStorage() const { return updateShaderStorage; }
     bool GetAdditive() const { return additive; }
@@ -75,6 +76,7 @@ class SOBRASADA_API_ENGINE MeshComponent : public Component
         batchWasEnabled = false;
     }
 
+    void SetBaseIndex(unsigned int newBaseIndex) { baseIndex = newBaseIndex; }
     void SetBoneIndexOffset(unsigned int newIndexOffset) { boneIndexOffset = newIndexOffset; }
     void SetUpdateShaderStorage(bool newUpdate) { updateShaderStorage = newUpdate; }
 
@@ -106,6 +108,8 @@ class SOBRASADA_API_ENGINE MeshComponent : public Component
 
     bool batchWasEnabled         = false;
 
+    // CUSTOM SHADER / BATCH DATA
+    unsigned int baseIndex = 0;
     unsigned int boneIndexOffset = 0;
     bool updateShaderStorage     = false;
 };

@@ -62,6 +62,9 @@ class GeometryBatch
     void SOBRASADA_API_ENGINE BindBonesBuffer();
     void SOBRASADA_API_ENGINE UnbindBonesBuffer();
 
+    void SOBRASADA_API_ENGINE BindMaterialsBuffer();
+    void SOBRASADA_API_ENGINE UnbindMaterialsBuffer();
+
     void SwapBuffers();
 
   private:

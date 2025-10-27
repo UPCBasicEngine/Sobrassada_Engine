@@ -256,6 +256,9 @@
     <ClInclude Include="UIFadeInOut.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="DissolveOpaque.h">
+      <Filter>ShaderScripts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -1042,6 +1045,9 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="UIFadeInOut.cpp">
+      <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="DissolveOpaque.cpp">
       <Filter>ShaderScripts</Filter>
     </ClCompile>
   </ItemGroup>

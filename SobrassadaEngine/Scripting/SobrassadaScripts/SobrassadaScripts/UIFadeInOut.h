@@ -24,6 +24,8 @@ class UIFadeInOut : public Script
     bool GetFadingIn() const { return isFadingIn; }
     bool GetFadingOut() const { return isFadingOut; }
 
+    float GetFadeInDuration() const { return fadeInDuration; }
+
   private:
     unsigned int shaderProgram  = 0;
 

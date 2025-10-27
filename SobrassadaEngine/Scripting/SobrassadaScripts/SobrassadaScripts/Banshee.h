@@ -4,6 +4,7 @@
 
 #include "Math/float2.h"
 #include "Math/float4.h"
+#include "Math/float4x4.h"
 #include "imgui.h"
 #include <random>
 #include <vector>
@@ -33,6 +34,10 @@ enum class BansheeStates : int
 constexpr const char* BansheeStateStrings[] = {"Idle", "Search", "Chase",          "Attack",
                                                "Hit",  "Dead",   "TeleportOrigin", "SlowArea"};
 
+const float3 BansheeDebugColor              = float3(0.663f, 0.631f, 0.878f);
+const float3 BansheeCollisionNormalColor    = float3(0.922f, 0.565f, 0.341f);
+const float3 BansheeAftermathDebugColor     = float3(1.f, 0.f, 0.f);
+
 class Banshee : public Character
 {
   public:
@@ -46,6 +51,7 @@ class Banshee : public Character
 
     BansheeStates GetState() const { return currentState; }
     int GetSlowAreaDamage() const { return slowAreaDamage; }
+    int GetSlowAreaRiastradReduction() const { return slowAreaRiastradReduction; }
 
   private:
     void OnDeath() override;
@@ -102,6 +108,7 @@ class Banshee : public Character
     ShaderScriptComponent* slowAreaRing = nullptr;
 
     int slowAreaDamage                  = 1;
+    int slowAreaRiastradReduction       = 5;
     float slowAreaWaringDuration        = 1.f;
     float elapsedSlowAreaWaring         = 0.f;
     float slowAreaWaringMaxScale        = 5.f;
@@ -135,6 +142,12 @@ class Banshee : public Character
     ParticleSystemComponent* chaseParticleSystem = nullptr;
     std::vector<ShaderScriptComponent*> hitVFXShaderComponents;
     std::vector<ShaderScriptComponent*> deathVFXShaderComponents;
+
+    GameObject* aftermathGO = nullptr;
+    std::vector<ShaderScriptComponent*> aftermathVFXShaderComponents;
+    float3 localCollisionDebug        = float3::one;
+    float degreeAftermathAngle        = 0.f;
+    float aftermathDotProtuct                  = 0.f;
 
     AudioSourceComponent* audioSource = nullptr;
 };

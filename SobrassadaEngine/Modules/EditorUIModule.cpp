@@ -353,6 +353,8 @@ void EditorUIModule::Draw()
 
     if (fogConfig) FogConfig(fogConfig);
 
+    if (postProcessConfig) PostProcessing(postProcessConfig);
+
     if (editorSettingsMenu) EditorSettings(editorSettingsMenu);
 }
 
@@ -420,6 +422,7 @@ void EditorUIModule::MainMenu()
             if (ImGui::MenuItem("Navmesh", "", navmesh)) navmesh = !navmesh;
             if (ImGui::MenuItem("Crowd Control", "", crowdControl)) crowdControl = !crowdControl;
             if (ImGui::MenuItem("Fog Config", "", fogConfig)) fogConfig = !fogConfig;
+            if (ImGui::MenuItem("Post Process", "", postProcessConfig)) postProcessConfig = !postProcessConfig;
             ImGui::EndDisabled();
 
             ImGui::EndMenu();
@@ -672,6 +675,22 @@ void EditorUIModule::FogConfig(bool& fogConfig)
     {
         renderPass->useNoiseTexture = false;
     }
+
+    ImGui::End();
+}
+
+void EditorUIModule::PostProcessing(bool& postProcess)
+{
+    if (!postProcess || !App->GetSceneModule()->IsSceneLoaded()) return;
+
+    RenderPass* renderPass = App->GetSceneModule()->GetScene()->GetRenderPass();
+
+    if (!renderPass) return;
+
+    ImGui::Begin("Post Processing", &postProcess, ImGuiWindowFlags_None);
+
+    ImGui::Checkbox("Bloom Enabled", &renderPass->bloomEnabled);
+    ImGui::DragFloat("Bloom Intensity", &renderPass->bloomIntensity, 0.1f, 0.0f, 10.f);
 
     ImGui::End();
 }

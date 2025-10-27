@@ -43,7 +43,7 @@ void main()
         discard;
     }
 
-    texColor.a = alpha;
+    texColor.a = min(alpha, texColor.a);
 
     fragColor = texColor;
 }
