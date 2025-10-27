@@ -1867,18 +1867,16 @@ void Boss::DamageAreaLogic()
     {
         impactSpriteScript->SetEnabled(false);
 
-        float4x4 localTransform  = impactSpriteObject->GetLocalTransform();
+        const float4x4 localTransform = impactSpriteObject->GetLocalTransform();
 
-        float3 euler             = localTransform.RotatePart().ToEulerXYZ();
-
-        euler.y                 += 45.0f * DEGREE_RAD_CONV;
-
-        Quat newRot              = Quat::FromEulerXYZ(euler.x, euler.y, euler.z);
+        const float angle             = 45.0f;
+        const Quat angleRot           = Quat::RotateY(angle);
 
         float3 pos, scale;
         Quat oldRot;
         localTransform.Decompose(pos, oldRot, scale);
 
+        const Quat newRot           = oldRot * angleRot;
         const float4x4 newTransform = float4x4::FromTRS(pos, newRot, scale);
         impactSpriteObject->SetJustLocalTransform(newTransform);
     }
