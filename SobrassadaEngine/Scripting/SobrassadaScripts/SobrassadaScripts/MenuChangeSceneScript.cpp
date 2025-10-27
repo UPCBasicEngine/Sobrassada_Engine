@@ -1,46 +1,64 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "Delegate.h"
 #include "FileSystem/FileSystem.h"
+#include "GameObject.h"
+#include "GameSession.h"
 #include "Globals.h"
-#include "InputModule.h"
 #include "MenuChangeSceneScript.h"
 #include "ProjectModule.h"
 #include "SceneModule.h"
-#include "GameSession.h"
+#include "Standalone/UI/ButtonComponent.h"
 
 MenuChangeSceneScript::MenuChangeSceneScript(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Target Scene Name", InspectorField::FieldType::InputText, &targetSceneName});
 }
 
+MenuChangeSceneScript::~MenuChangeSceneScript() noexcept
+{
+    if (hasRegisteredCallback && parent)
+    {
+        ButtonComponent* button = parent->GetComponent<ButtonComponent*>();
+        if (button) button->RemoveOnClickCallback(delegateID);
+    }
+    parent = nullptr;
+}
+
 bool MenuChangeSceneScript::Init()
 {
-    inputDelayFrames = 10;
-    scenesPath    = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
-    fullScenePath = scenesPath + targetSceneName + SCENE_EXTENSION;
+    scenesPath              = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
+    fullScenePath           = scenesPath + targetSceneName + SCENE_EXTENSION;
+
+    // Remove the extra * from the template parameter
+    ButtonComponent* button = parent->GetComponent<ButtonComponent*>();
+    if (button)
+    {
+        std::function<void(void)> function = std::bind(&MenuChangeSceneScript::OnClick, this);
+        Delegate<void> delegate(function);
+        delegateID            = button->AddOnClickCallback(delegate);
+        hasRegisteredCallback = true;
+    }
+
     return true;
 }
 
 void MenuChangeSceneScript::Update(float deltaTime)
 {
+}
+
+void MenuChangeSceneScript::OnClick()
+{
     if (sceneLoaded) return;
 
-    if (inputDelayFrames > 0)
-    {
-        --inputDelayFrames;
-        return;
-    }
+    sceneLoaded = true;
+    if (targetSceneName == "SCENE_Tutorial") gNewGame = true;
+    AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
+}
 
-    const KeyState* keys           = AppEngine->GetInputModule()->GetKeyboard();
-    const KeyState* gamepadButtons = AppEngine->GetInputModule()->GetControllerButtons();
-
-    if (keys[SDL_SCANCODE_RETURN] == KEY_DOWN || keys[SDL_SCANCODE_SPACE] == KEY_DOWN ||
-        gamepadButtons[SDL_CONTROLLER_BUTTON_A] == KEY_DOWN)
-    {
-        sceneLoaded = true;
-        if (targetSceneName == "SCENE_Tutorial") gNewGame = true;
-
-        AppEngine->GetSceneModule()->RequestSceneLoad(fullScenePath);
-    }
+void MenuChangeSceneScript::OnDestroy()
+{
+    hasRegisteredCallback = false;
+    delegateID            = {};
 }
