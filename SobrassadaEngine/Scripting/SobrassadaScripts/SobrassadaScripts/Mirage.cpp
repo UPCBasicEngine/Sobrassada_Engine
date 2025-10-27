@@ -1,16 +1,17 @@
 #include "pch.h"
 
-#include "Mirage.h"
 #include "Application.h"
 #include "GameObject.h"
+#include "LibraryModule.h"
+#include "Mirage.h"
 #include "MirageBossDash.h"
+#include "MirageVFX.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
-#include "Standalone\MeshComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone\MeshComponent.h"
 #include "Wwise_IDs.h"
-#include "MirageVFX.h"
 
 Mirage::Mirage(GameObject* parent) : Script(parent)
 {
@@ -21,9 +22,10 @@ Mirage::Mirage(GameObject* parent) : Script(parent)
     fields.push_back({"Weight Order", InspectorField::FieldType::Int, &weightOrder, 0, 100});
 }
 
+//this is so ugly but it works
 bool Mirage::Init()
 {
-    Scene* scene = AppEngine->GetSceneModule()->GetScene();
+    Scene* scene                = AppEngine->GetSceneModule()->GetScene();
 
     state                       = MirageState::Sleeping;
     stateTimer                  = 0.0f;
@@ -39,8 +41,13 @@ bool Mirage::Init()
     GameObject* thirdChild      = scene->GetGameObjectByUID(children[2]);
     GameObject* fourthChild     = scene->GetGameObjectByUID(children[3]);
 
+    std::vector<UID> childChild = thirdChild->GetChildren();
+
+    GameObject* thirdChildChild = scene->GetGameObjectByUID(childChild[0]);
+
     mirageDisableComponent1     = thirdChild->GetComponent<MeshComponent*>();
     mirageDisableComponent2     = fourthChild->GetComponent<MeshComponent*>();
+    mirageArrow                 = thirdChildChild->GetComponent<MeshComponent*>();
 
     bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
     endPoint                    = secondChild->GetLocalTransform().TranslatePart();
@@ -51,6 +58,13 @@ bool Mirage::Init()
     audio                       = parent->GetComponent<AudioSourceComponent*>();
 
     bossDash->setEndPoint(endPoint);
+
+    matMirageArrowBlue  = AppEngine->GetLibraryModule()->GetMaterialUID("m_mirage_plane_arrow_2");
+    matMirageBorderBlue = AppEngine->GetLibraryModule()->GetMaterialUID("m_mirage_plane_border_2");
+
+    if (matMirageArrowBlue == INVALID_UID) GLOG("Mirage arrow materials not found in library!");
+
+    if (matMirageBorderBlue == INVALID_UID) GLOG("Mirage border materials not found in library!");
 
     parent->SetEnabled(false);
 
@@ -64,7 +78,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Sleeping:
     {
         parent->SetEnabled(true);
-        firescript->SetAllColors(float3(0.984f, 0.690f, 0.231f)); //GOLD
+        firescript->SetAllColors(float3(0.984f, 0.690f, 0.231f)); // GOLD
         if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_PREPAREMIRAGE);
         mirageDisableComponent1->SetEnabled(false);
         mirageDisableComponent2->SetEnabled(false);
@@ -80,7 +94,6 @@ void Mirage::Update(float deltaTime)
         stateTimer += deltaTime;
         GLOG("Activating gameobject");
 
-
         if (stateTimer >= warningDelay)
         {
             state      = MirageState::Damaging;
@@ -91,7 +104,6 @@ void Mirage::Update(float deltaTime)
                 bossDash->setState(BossDashStates::OverheadStrike);
                 bossDash->setAction(BossDashActions::Prepare);
                 bossDash->setStateBool(true);
-                
             }
         }
         break;
@@ -101,7 +113,10 @@ void Mirage::Update(float deltaTime)
     {
         stateTimer += deltaTime;
 
-        firescript->SetAllColors(float3(0.188f, 0.357f, 0.733f)); //BLUE
+        firescript->SetAllColors(float3(0.188f, 0.357f, 0.733f)); // BLUE
+
+        mirageDisableComponent1->AddMaterial(matMirageBorderBlue);
+        mirageArrow->AddMaterial(matMirageArrowBlue);
 
         if (stateTimer >= 1 && !dashdone)
         {
