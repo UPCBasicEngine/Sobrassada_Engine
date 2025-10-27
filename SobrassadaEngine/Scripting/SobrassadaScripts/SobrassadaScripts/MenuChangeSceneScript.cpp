@@ -31,7 +31,6 @@ bool MenuChangeSceneScript::Init()
     scenesPath              = AppEngine->GetProjectModule()->GetLoadedProjectPath() + SCENES_PLAY_PATH;
     fullScenePath           = scenesPath + targetSceneName + SCENE_EXTENSION;
 
-    // Remove the extra * from the template parameter
     ButtonComponent* button = parent->GetComponent<ButtonComponent*>();
     if (button)
     {
