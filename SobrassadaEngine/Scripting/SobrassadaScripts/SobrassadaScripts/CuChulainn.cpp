@@ -707,6 +707,14 @@ bool CuChulainn::Init()
     {
         if (hudMushrooms[i]) hudMushrooms[i]->SetEnabled(true);
     }
+    std::string currentScenename = AppEngine->GetSceneModule()->GetScene()->GetSceneName();
+    if (currentScenename == "SCENE_Tutorial" && animComponent)
+    {
+        animComponent->UseTrigger("Respawn");
+        controlsLocked = true;
+        character->EnableMovement(false);
+        state = CharacterStates::RESPAWN;
+    }
 
     return true;
 }
@@ -732,6 +740,18 @@ void CuChulainn::Update(float deltaTime)
 
     if (isDead || !character) return;
 
+    if (state == CharacterStates::RESPAWN)
+    {
+        if (animComponent && animComponent->IsFinished())
+        {
+            animComponent->UseTrigger("Idle");
+            state          = CharacterStates::IDLE;
+
+            controlsLocked = false;
+            character->EnableMovement(true);
+        }
+    }
+    
     if (character->GetInputDown()) GetInputs();
     Character::Update(deltaTime);
     PerformAttack();
@@ -2466,6 +2486,7 @@ void CuChulainn::AddRiastrad(int amount)
 {
     riastradMeter += amount;
     if (riastradMeter > 100) riastradMeter = 100;
+    if (riastradMeter < 0) riastradMeter = 0;
 
     if (riastradMeter == 100)
     {

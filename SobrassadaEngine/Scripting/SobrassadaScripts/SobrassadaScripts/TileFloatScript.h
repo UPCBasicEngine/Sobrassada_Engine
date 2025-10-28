@@ -13,7 +13,9 @@ class TileFloatScript : public Script
     inline float QuaternionDot(const Quat& a, const Quat& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 
   private:
-    float speed = 1.5f;
+    bool isSetupCorrectly  = true;
+    
+    float speed = 10.0f;
     Quat finalRotation, startQuat, currentRotationQuat;
     float3 finalPosition, finalScale, startPosition, startRotation;
     float3 startScale               = float3(1.0f, 1.0f, 1.0f);
@@ -22,6 +24,8 @@ class TileFloatScript : public Script
     bool isFinished                 = false;
 
     float risingCounter             = 0.f;
+
+    GameObject* tileToMove          = nullptr;
 
     // Audio
     AudioSourceComponent* audioComp = nullptr;

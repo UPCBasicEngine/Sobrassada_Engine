@@ -474,6 +474,7 @@
     <ClInclude Include="AttackVfxSpritesheet.h" />
     <ClInclude Include="Banshee.h" />
     <ClInclude Include="Banshee_v2.h" />
+    <ClInclude Include="BasicAnimationController.h" />
     <ClInclude Include="BossMirage.h" />
     <ClInclude Include="Boss.h" />
     <ClInclude Include="BossSpouts.h" />
@@ -485,6 +486,7 @@
     <ClInclude Include="ColorChange.h" />
     <ClInclude Include="DamageMask.h" />
     <ClInclude Include="Destructible.h" />
+    <ClInclude Include="DissolveOpaque.h" />
     <ClInclude Include="EnemySpawnerScript.h" />
     <ClInclude Include="ExitGameScript.h" />
     <ClInclude Include="Character.h" />
@@ -2076,6 +2078,7 @@
     <ClCompile Include="AttackVfxSpritesheet.cpp" />
     <ClCompile Include="Banshee.cpp" />
     <ClCompile Include="Banshee_v2.cpp" />
+    <ClCompile Include="BasicAnimationController.cpp" />
     <ClCompile Include="BossMirage.cpp" />
     <ClCompile Include="Boss.cpp" />
     <ClCompile Include="BossSpouts.cpp" />
@@ -2089,6 +2092,7 @@
     <ClCompile Include="CuChulainn.cpp" />
     <ClCompile Include="DamageMask.cpp" />
     <ClCompile Include="Destructible.cpp" />
+    <ClCompile Include="DissolveOpaque.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EnemySpawnerScript.cpp" />
     <ClCompile Include="ExitGameScript.cpp" />

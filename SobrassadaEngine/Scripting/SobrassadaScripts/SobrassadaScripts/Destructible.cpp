@@ -28,6 +28,8 @@ Destructible::Destructible(GameObject* parent): Script(parent)
     );
     fields.emplace_back("Time until mesh switch (s)", InspectorField::FieldType::Float, &destructionSpawnDelay);
     fields.emplace_back("0: Vase, 1: Box, 2: Crystal", InspectorField::FieldType::Int, &destructibleTypeIndex, 0, 2);
+    fields.emplace_back("Time until destroyed mesh disappears (s)", InspectorField::FieldType::Float, &destructionDespawnDelay, 0, 10);
+    fields.emplace_back("Time for rubble to disappear (s)", InspectorField::FieldType::Float, &timeToDisappear, 0, 10);
 }
 
 bool Destructible::Init()
@@ -43,6 +45,7 @@ bool Destructible::Init()
         type = static_cast<DestructibleType>(destructibleTypeIndex);
         destroyedMesh->SetEnabled(false);
         destructionSmoke->SetEnabled(false);
+        origDestroyedMeshHeight = destroyedMesh->GetLocalPostition().y;
     }
 
     return isSetupCorrectly;
@@ -50,15 +53,44 @@ bool Destructible::Init()
 
 void Destructible::Update(float deltaTime)
 {
-    if (isSimulating && isSetupCorrectly && currentState == DestructibleStates::DESTROYED)
+    if (isSetupCorrectly && currentState == DestructibleStates::DESTROYED)
     {
-        destructionSpawnDelayCounter -= deltaTime;
-        if (destructionSpawnDelayCounter <= 0)
+        if (isSimulating)
         {
-            destroyedMesh->SetEnabled(true);
+            destructionSpawnDelayCounter -= deltaTime;
+            if (destructionSpawnDelayCounter <= 0)
+            {
+                destroyedMesh->SetEnabled(true);
 
-            isSimulating = false;
+                isSimulating = false;
+
+                destructionDespawnDelayCounter = destructionDespawnDelay;
+                isWaitingToDespawn = true;
+            }
+        } else if (isWaitingToDespawn)
+        {
+            destructionDespawnDelayCounter -= deltaTime;
+            if (destructionDespawnDelayCounter <= 0)
+            {
+                isWaitingToDespawn = false;
+
+                isDespawning = true;
+            }
+        } else if (isDespawning)
+        {
+            const float3& localPosition = destroyedMesh->GetPosition();
+            destroyedMesh->SetLocalPosition(
+                float3(localPosition.x, origDestroyedMeshHeight -
+                    Pow(1024, (1.f / timeToDisappear) * disappearCounter - 1), localPosition.z)
+            );
+            disappearCounter += deltaTime;
+            if (disappearCounter >= timeToDisappear)
+            {
+                parent->SetEnabled(false);
+                currentState = DestructibleStates::DESPAWNED;
+            }
         }
+        
     }
 }
 
@@ -129,6 +161,13 @@ void Destructible::ValidateSetup()
         {
             destructionSmoke = child->GetComponent<ParticleSystemComponent*>();
         }
+    }
+
+    if (destroyedMesh == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Destroyed mesh for destruction not found")
+        return;
     }
 
     if (destructionSmoke == nullptr)

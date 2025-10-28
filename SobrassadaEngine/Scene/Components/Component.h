@@ -23,7 +23,7 @@ class SOBRASADA_API_ENGINE Component
 
     virtual void Update(float deltaTime)       = 0;
     virtual void Render(float deltaTime, CameraComponent* camera) {};
-    virtual void RenderDebug(float deltaTime)  = 0;
+    virtual void RenderDebug(float deltaTime) = 0;
     virtual bool RenderGizmo();
     virtual void RenderEditorInspector();
     virtual void ParentUpdated() { return; };
@@ -41,6 +41,7 @@ class SOBRASADA_API_ENGINE Component
 
     const float4x4& GetGlobalTransform() const;
     bool IsEffectivelyEnabled() const;
+    bool IsEnabled() const { return enabled; };
 
     virtual void SetEnabled(bool newEnabled)
     {

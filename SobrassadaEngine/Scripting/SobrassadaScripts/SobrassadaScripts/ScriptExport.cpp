@@ -4,7 +4,6 @@
 #include "ArcherProjectile.h"
 #include "AsyncSceneLoading.h"
 #include "Banshee.h"
-#include "Banshee_v2.h"
 #include "Boss.h"
 #include "ButtonScript.h"
 #include "CameraMovement.h"
@@ -49,8 +48,10 @@
 #include "AbilityIconFill.h"
 #include "AttackVfxSpritesheet.h"
 #include "BarFill.h"
+#include "BasicAnimationController.h"
 #include "ColorChange.h"
 #include "DamageMask.h"
+#include "DissolveOpaque.h"
 #include "MovingUVClipErode.h"
 #include "MovingUVLight.h"
 #include "MovingUVPostScript.h"
@@ -111,7 +112,6 @@ constexpr const char* scripts[] = {
     "SwitchScriptTest",
     "Destructible",
     "MagicBarrier",
-    "Banshee_v2",
     "WallCollision",
     "Mirage",
     "BossMirage",
@@ -125,15 +125,33 @@ constexpr const char* scripts[] = {
     "BossSpouts",
     "MusicManager",
     "MusicTrigger",
-    "NameDisplay"
+    "NameDisplay",
+    "BasicAnimationController"
 };
 
 constexpr const char* shaderScripts[] = {
-    "MovingUVPostScript", "MovingUVLight",         "MovingUVTransparent",  "HealGroundHalo", "HealVerticalPlanes",
-    "HealSpikesBurst",    "HealGroundSpikesLight", "HealGroundSpikesDark", "HealLightBurst", "HealSpikesUp",
-    "RiastradBarFill",    "HealthBarFill",         "AbilityIconFill",      "DamageMask",     "AttackVfxSpritesheet",
-    "MovingUVClipErode",  "ColorChange",           "UISpritesheet",        "MirageVFX",      "UIFadeInOut",
-    "MirageHumanVFX"
+    "MovingUVPostScript",
+    "MovingUVLight",
+    "MovingUVTransparent",
+    "HealGroundHalo",
+    "HealVerticalPlanes",
+    "HealSpikesBurst",
+    "HealGroundSpikesLight",
+    "HealGroundSpikesDark",
+    "HealLightBurst",
+    "HealSpikesUp",
+    "RiastradBarFill",
+    "HealthBarFill",
+    "AbilityIconFill",
+    "DamageMask",
+    "AttackVfxSpritesheet",
+    "MovingUVClipErode",
+    "ColorChange",
+    "UISpritesheet",
+    "MirageVFX",
+    "UIFadeInOut",
+    "MirageHumanVFX",
+    "DissolveOpaque"
 };
 
 Application* AppEngine = nullptr;
@@ -168,7 +186,6 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Banshee") return new Banshee(parent);
     if (scriptType == "Archer") return new Archer(parent);
     if (scriptType == "Changeling") return new Changeling(parent);
-    if (scriptType == "Banshee_v2") return new Banshee_v2(parent);
     if (scriptType == "Boss") return new Boss(parent);
     if (scriptType == "HighlightCharacter") return new HighlightCharacter(parent);
 
@@ -197,7 +214,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "SwitchScriptTest") return new SwitchScriptTest(parent);
     if (scriptType == "GameOverNavigatorScript") return new GameOverNavigatorScript(parent);
     if (scriptType == "AsyncSceneLoading") return new AsyncSceneLoading(parent);
-
+    if (scriptType == "BasicAnimationController") return new BasicAnimationController(parent);
+    
     /* Render Scripts */
     if (scriptType == "MovingUVPostScript") return new MovingUVPostScript(parent);
     if (scriptType == "MovingUVLight") return new MovingUVLight(parent);
@@ -254,6 +272,7 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
         );
     if (scriptType == "UISpritesheet") return new UISpritesheet(parent);
     if (scriptType == "UIFadeInOut") return new UIFadeInOut(parent);
+    if (scriptType == "DissolveOpaque") return new DissolveOpaque(parent);
 
     /*Boss*/
     if (scriptType == "Mirage") return new Mirage(parent);
