@@ -40,6 +40,7 @@ RenderPass::RenderPass()
     opaqueMeshesToRender.reserve(1000);
     transparentMeshesToRender.reserve(200);
     vertexOffsetMeshesToRender.reserve(200);
+    spotToRender.reserve(TotalShadowMaps);
 
     glGenBuffers(1, &depthReadPBO);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
@@ -238,7 +239,8 @@ void RenderPass::RenderScene(
     groupedDecals.clear();
     shadersToRender.clear();
     trailsToRender.clear();
-
+    spotToRender.clear();
+    
     for (const auto& gameObject : objectsToRender)
     {
         // Meshes
@@ -278,6 +280,11 @@ void RenderPass::RenderScene(
                 groupedDecals[uid].push_back(decal);
             }
         }
+
+        // Spot lights
+
+        SpotLightComponent* spot = gameObject->GetComponent<SpotLightComponent*>();
+        if (spot && spot->GetRenderVolumetric()) spotToRender.push_back(spot);
     }
 
 #ifdef OPTICK
@@ -753,27 +760,17 @@ void RenderPass::ShadowMapPassRender(
     OPTICK_CATEGORY("RenderPass::ShadowMap::Spotlights", Optick::Category::Rendering)
 #endif
 
-    std::vector<SpotLightComponent*> spotLights;
-    spotLights.reserve(TotalShadowMaps);
-
-    for (GameObject* currentGO : objectsToRender)
-    {
-        SpotLightComponent* spot = currentGO->GetComponent<SpotLightComponent*>();
-        if (spot && spot->GetRenderVolumetric()) spotLights.push_back(spot);
-        if (spotLights.size() == TotalShadowMaps) break;
-    }
-
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
 
-    for (int i = 0; i < TotalShadowMaps && i < spotLights.size(); ++i)
+    for (int i = 0; i < TotalShadowMaps && i < spotToRender.size(); ++i)
     {
-        if (!spotLights[i] || (spotLights[i] && !spotLights[i]->GetRenderVolumetric())) continue;
+        if (!spotToRender[i] || (spotToRender[i] && !spotToRender[i]->GetRenderVolumetric())) continue;
 
         meshesToRender.clear();
         shadowObjectsToRender.clear();
 
-        lightFrustum.UpdateFrustumPlanes(spotLights[i]->GetViewMatrix(), spotLights[i]->GetProjectionMatrix());
+        lightFrustum.UpdateFrustumPlanes(spotToRender[i]->GetViewMatrix(), spotToRender[i]->GetProjectionMatrix());
         App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
 
         for (const auto& gameObject : shadowObjectsToRender)
@@ -790,17 +787,17 @@ void RenderPass::ShadowMapPassRender(
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, spotShadowMaps[i], 0);
         glClear(GL_DEPTH_BUFFER_BIT);
 
-        lightmatrices.viewMatrix       = spotLights[i]->GetViewMatrix();
-        lightmatrices.projectionMatrix = spotLights[i]->GetProjectionMatrix();
+        lightmatrices.viewMatrix       = spotToRender[i]->GetViewMatrix();
+        lightmatrices.projectionMatrix = spotToRender[i]->GetProjectionMatrix();
 
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         // LOADING SPOTLIGHT SHADOW TO SSBO
-        spotLights[i]->SetShadowGPUIndex(i);
+        spotToRender[i]->SetShadowGPUIndex(i);
         SpotlightShadow currentShadow;
-        currentShadow.viewProjection = spotLights[i]->GetViewProjection().Transposed();
+        currentShadow.viewProjection = spotToRender[i]->GetViewProjection().Transposed();
         currentShadow.shadowMap      = spotShadowMapsGPU[i];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
