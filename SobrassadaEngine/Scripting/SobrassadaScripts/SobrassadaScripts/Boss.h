@@ -143,29 +143,33 @@ class Boss : public Character
     BossStates ChooseAlternativeState() const;
 
     void Restart(float deltaTime);
+    void ChangeMusic() const;
 
     const std::vector<BossStates>& GetAvailableStates() const;
     const char* GetStateName() const;
     const char* GetActionName() const;
 
   private:
-    AIAgentComponent* agentAI   = nullptr;
-    AudioSourceComponent* audio = nullptr;
-    BossStates currentState     = BossStates::Idle;
-    BossActions currentAction   = BossActions::Idle;
+    AIAgentComponent* agentAI               = nullptr;
+    AudioSourceComponent* audio             = nullptr;
+    BossStates currentState                 = BossStates::Idle;
+    BossActions currentAction               = BossActions::Idle;
 
-    bool waiting                = true;
-    bool restart                = false;
-    float runTimer              = 0.0f;
+    bool waiting                            = true;
+    bool restart                            = false;
+    float runTimer                          = 0.0f;
 
-    bool firstTimeEntering      = true;
-    bool waitForBarFill         = false;
+    bool firstTimeEntering                  = true;
+    bool waitForBarFill                     = false;
 
-    bool highlightActivated     = false;
-    float highlightTimer        = 0.0f;
-    bool playedHighlight        = false;
+    std::string musicManagerName            = "";
+    AudioSourceComponent* musicManagerAudio = nullptr;
 
-    int phase                   = 1;
+    bool highlightActivated                 = false;
+    float highlightTimer                    = 0.0f;
+    bool playedHighlight                    = false;
+
+    int phase                               = 1;
     int phase2 = 40, phase3 = 20;
     std::array<std::reference_wrapper<int>, 2> phaseSwap = {phase2, phase3};
     bool stateEnter                                      = true;

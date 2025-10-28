@@ -61,13 +61,18 @@ namespace AK
         static const AkUniqueID PLAY_SFX_FERDIAD_WATERSPOUT = 595604230U;
         static const AkUniqueID PLAY_SFX_FIRE_01 = 3889642976U;
         static const AkUniqueID PLAY_SFX_FIRE_02 = 3889642979U;
+        static const AkUniqueID PLAY_SFX_MC_CHARGEDATTACK = 580927347U;
+        static const AkUniqueID PLAY_SFX_MC_CHARGEDATTACKSTART = 226111913U;
         static const AkUniqueID PLAY_SFX_MC_DASH = 917195537U;
         static const AkUniqueID PLAY_SFX_MC_DEATH = 3274202945U;
         static const AkUniqueID PLAY_SFX_MC_HEAL = 1917024799U;
         static const AkUniqueID PLAY_SFX_MC_HIT = 2490745552U;
         static const AkUniqueID PLAY_SFX_MC_HURT = 2204804306U;
+        static const AkUniqueID PLAY_SFX_MC_LIFEMUSHROOMS = 1317156644U;
         static const AkUniqueID PLAY_SFX_MC_NORMALATTACK_01 = 2177541458U;
         static const AkUniqueID PLAY_SFX_MC_RANGEATTACK = 1185962832U;
+        static const AkUniqueID PLAY_SFX_MC_RIASTRAD = 2257090739U;
+        static const AkUniqueID PLAY_SFX_MC_RIASTRADCHARGED = 811454753U;
         static const AkUniqueID PLAY_SFX_MC_TRANSFORM = 3477603499U;
         static const AkUniqueID PLAY_SFX_MC_ULTIMATEATTACK = 1030865972U;
         static const AkUniqueID PLAY_SFX_POOKA_ATTACK = 2845739403U;
@@ -104,6 +109,11 @@ namespace AK
         static const AkUniqueID SET_GAMESTATE_NONE = 112984344U;
         static const AkUniqueID SET_GAMESTATE_RIASTRAD = 2841888884U;
         static const AkUniqueID SET_LEVELSTATE_BOSS = 1134927265U;
+        static const AkUniqueID SET_LEVELSTATE_BOSS_INTRO = 141253522U;
+        static const AkUniqueID SET_LEVELSTATE_BOSS_OUTRO = 1662324865U;
+        static const AkUniqueID SET_LEVELSTATE_BOSS_PHASE1 = 3815065290U;
+        static const AkUniqueID SET_LEVELSTATE_BOSS_PHASE2 = 3815065289U;
+        static const AkUniqueID SET_LEVELSTATE_BOSS_PHASE3 = 3815065288U;
         static const AkUniqueID SET_LEVELSTATE_LEVEL1 = 3630582617U;
         static const AkUniqueID SET_LEVELSTATE_LEVEL2OUTSKIRTS = 358656214U;
         static const AkUniqueID SET_LEVELSTATE_LEVEL2WATERFALL = 2301017940U;
@@ -136,6 +146,11 @@ namespace AK
             namespace STATE
             {
                 static const AkUniqueID BOSS = 1560169506U;
+                static const AkUniqueID BOSSINTRO = 58265312U;
+                static const AkUniqueID BOSSOUTRO = 3375704039U;
+                static const AkUniqueID BOSSPHASE1 = 851884604U;
+                static const AkUniqueID BOSSPHASE2 = 851884607U;
+                static const AkUniqueID BOSSPHASE3 = 851884606U;
                 static const AkUniqueID LEVEL1 = 2678230382U;
                 static const AkUniqueID LEVEL2OUTSKIRTS = 1927850271U;
                 static const AkUniqueID LEVEL2WATERFALL = 1545618385U;

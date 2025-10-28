@@ -35,6 +35,7 @@
 Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
+    fields.push_back({"Music Manager", InspectorField::FieldType::InputText, &musicManagerName});
     fields.push_back({"Change Scene", InspectorField::FieldType::InputText, &changeSceneName});
     fields.push_back({"Time to ChangeScene", InspectorField::FieldType::Float, &delayToChangeScene, 0.0f, 20.0f});
     fields.push_back({"Health Bar", InspectorField::FieldType::InputText, &healthBarName});
@@ -96,6 +97,14 @@ bool Boss::Init()
 
     audio         = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Ferdiad: No audio component found");
+
+    GameObject* musicManagerObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(musicManagerName);
+    if (musicManagerObject)
+    {
+        musicManagerAudio = musicManagerObject->GetComponent<AudioSourceComponent*>();
+        if (!musicManagerAudio) GLOG("[WARNING] Ferdiad: Music manager audio component not found")
+    }
+    else GLOG("[WARNING] Ferdiad: Music manager scene object not found")
 
     changeScene = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(changeSceneName);
     if (changeScene) changeScene->SetEnabled(false);
@@ -1181,6 +1190,7 @@ void Boss::Death(float deltaTime)
 
             if (animComponent) animComponent->UseTrigger("Death");
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
+            ChangeMusic();
         }
 
         if (animComponent && animComponent->IsFinished())
@@ -1269,6 +1279,8 @@ void Boss::Taunt(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
+        ChangeMusic();
+
         stateEnter   = true;
         currentState = BossStates::Idle;
     }
@@ -2422,6 +2434,45 @@ void Boss::Restart(float deltaTime)
     }
 }
 
+void Boss::ChangeMusic() const
+{
+    if (!musicManagerAudio) return;
+
+    AkUniqueID eventID;
+
+    if (isDead)
+    {
+        GLOG("OUTRO")
+        eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_OUTRO;
+    }
+    else
+    {
+        switch (phase)
+        {
+        case 1:
+            GLOG("PHASE 1")
+            eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE1;
+            break;
+
+        case 2:
+            GLOG("PHASE 2")
+            eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE2;
+            break;
+
+        case 3:
+            GLOG("PHASE 3")
+            eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE3;
+            break;
+
+        default:
+            GLOG("Error: ChangeMusic")
+            break;
+        }
+    }
+
+    musicManagerAudio->EmitEvent(eventID);
+}
+
 void Boss::ChangePhase()
 {
     if (stateEnter)
@@ -2436,7 +2487,9 @@ void Boss::ChangePhase()
         if (animComponent) animComponent->UseTrigger("Taunt");
 
         EnableInvulnerable();
+
         if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_CHARGE);
+        ChangeMusic();
     }
 
     if (animComponent && animComponent->IsFinished())
