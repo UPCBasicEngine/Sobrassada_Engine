@@ -7,6 +7,7 @@
 #include "SceneModule.h"
 #include "MoveGOInSpline.h"
 #include "ScriptComponent.h"
+#include "Standalone/SplineComponent.h"
 
 Crow::Crow(GameObject* parent)
     : Character(
@@ -18,8 +19,10 @@ bool Crow::Init()
 {
     Character::Init();
     EnterState(CrowStates::IDLE);
+    
     moveGOSpline = parent->GetComponent<ScriptComponent*>()->GetScriptByType<MoveGOInSpline>();
     if (moveGOSpline) moveGOSpline->SetEnabled(false);
+
     return true;
 }
 
@@ -28,6 +31,9 @@ void Crow::Update(float deltaTime)
     if (isDead) return;
 
     HandleState(deltaTime);
+
+    EndRoute();
+
     UpdateTimers(deltaTime);
 }
 
@@ -78,6 +84,29 @@ void Crow::EnterState(CrowStates next)
     }
 }
 
+void Crow::EndRoute()
+{
+    spline         = moveGOSpline->GetSpline();
+
+    pointSplineEnd = spline->GetPointLocal(spline->GetNumPoints() - 1);
+
+    if (!spline) return;
+
+    auto comparePositions = [](const auto& a, const auto& b, float eps = 0.1f) noexcept
+    {
+        const float dx = a.x - b.x;
+        const float dy = a.y - b.y;
+        const float dz = a.z - b.z;
+
+        bool samePos   = false;
+
+        if (dx <= eps && dy <= eps && dz <= eps) samePos = true;
+        return samePos;
+    };
+
+    if (comparePositions(parent->GetPosition(), pointSplineEnd)) EnterState(CrowStates::IDLE);
+}
+
 void Crow::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
     if (layer != ColliderLayer::PLAYER) return;
@@ -85,8 +114,8 @@ void Crow::OnCollisionEnter(GameObject* otherObject, const float3 collisionNorma
     EnterState(CrowStates::TAKE_OFF);
     stateTimer   = 0.0f;
     playerNear   = true;
-    if (moveGOSpline) moveGOSpline->SetEnabled(true);
     
+    if (moveGOSpline) moveGOSpline->SetEnabled(true);
 }
 
 void Crow::SetState(CrowStates next)

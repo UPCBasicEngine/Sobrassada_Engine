@@ -16,7 +16,7 @@ class MoveGOInSpline : public Script
     int GetLoopCounter() const { return loopCounter; }
 
     void SetEnabled(const bool newEnabled) { enabled = newEnabled; }
-
+    SplineComponent* GetSpline() { return spline; }
   private:
     SplineComponent* FindSpline();
 

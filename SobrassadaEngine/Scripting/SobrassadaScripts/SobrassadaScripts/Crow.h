@@ -3,6 +3,7 @@
 
 class AudioSourceComponent;
 class MoveGOInSpline;
+class SplineComponent;
 
 enum class CrowStates
 {
@@ -30,6 +31,7 @@ class Crow : public Character
   private:
     void HandleState(float deltaTime) override;
     void EnterState(CrowStates next);
+    void EndRoute();
 
   private:
     CrowStates currentState = CrowStates::NONE;
@@ -44,4 +46,6 @@ class Crow : public Character
     float stateTimer        = 0.f;
     AudioSourceComponent* audioComp = nullptr;
     MoveGOInSpline* moveGOSpline    = nullptr;
+    SplineComponent* spline         = nullptr;
+    float3 pointSplineEnd           = float3::zero;
 };
