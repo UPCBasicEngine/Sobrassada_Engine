@@ -2562,7 +2562,7 @@ void CuChulainn::StartCurse()
     for (ShaderScriptComponent* footstep : footsteps)
     {
         const int gooStepsIdx = 0;
-        footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(gooStepsIdx);
+        if (footstep) footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(gooStepsIdx);
     }
 
     if (state == CharacterStates::RUN)
@@ -2630,7 +2630,7 @@ void CuChulainn::EndCurse()
     for (ShaderScriptComponent* footstep : footsteps)
     {
         const int defaultStepsIdx = -1;
-        footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(defaultStepsIdx);
+        if (footstep) footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(defaultStepsIdx);
     }
 
     if (state == CharacterStates::RUN)
