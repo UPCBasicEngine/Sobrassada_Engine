@@ -11,10 +11,10 @@
 #include "Wwise_IDs.h"
 
 const std::unordered_map<std::string, TexPair> OptionsMenuSwitcherScript::panelInput = {
-    {"OptionsKeyboardPanel",   {1203489876831052, 1295999750777550}},
-    {"OptionsControllerPanel", {1202209373146889, 1270492191063579}},
-    {"OptionsAudioPanel",      {1207353832276846, 1250092281844907}},
-    {"OptionsVideoPanel",      {1204790345600293, 1206017489546089}}
+    {"OptionsKeyboardPanel",   {1278436117788934, 1287683267315071}},
+    {"OptionsControllerPanel", {1230396278142429, 1250063660912517}},
+    {"OptionsAudioPanel",      {1237641698321974, 1297996796145711}},
+    {"OptionsVideoPanel",      {1280356785905581, 1201613404976085}}
 };
 
 const std::vector<std::string> OptionsMenuSwitcherScript::panelNames = {
