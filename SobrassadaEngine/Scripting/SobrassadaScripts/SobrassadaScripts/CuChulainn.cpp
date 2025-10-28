@@ -192,6 +192,36 @@ bool CuChulainn::Init()
     if (!spearCharacter) GLOG("[WARNING] No spear (non projectile) found for CuChualin")
     else spearCharacter->SetEnabled(true);
 
+    GameObject* stepObj = scene->GetGameObjectByName(footstepName1);
+    if (stepObj) footsteps[0] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[0]) footsteps[0]->SetEnabled(false);
+
+    stepObj = scene->GetGameObjectByName(footstepName2);
+    if (stepObj) footsteps[1] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[1]) footsteps[1]->SetEnabled(false);
+
+    stepObj = scene->GetGameObjectByName(footstepName3);
+    if (stepObj) footsteps[2] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[2]) footsteps[2]->SetEnabled(false);
+
+    stepObj = scene->GetGameObjectByName(footstepName4);
+    if (stepObj) footsteps[3] = stepObj->GetComponent<ShaderScriptComponent*>();
+    if (footsteps[3]) footsteps[3]->SetEnabled(false);
+
+    stepObj = scene->GetGameObjectByName(footstepParticles1Name);
+    if (stepObj)
+    {
+        footstepParticles1 = stepObj->GetComponent<ParticleSystemComponent*>();
+        if (footstepParticles1) footstepParticles1->StopInstances();
+    }
+
+    stepObj = scene->GetGameObjectByName(footstepParticles2Name);
+    if (stepObj)
+    {
+        footstepParticles2 = stepObj->GetComponent<ParticleSystemComponent*>();
+        if (footstepParticles2) footstepParticles2->StopInstances();
+    }
+
     chargedAttackCollider = scene->GetGameObjectByName(chargedAttackName);
     if (!chargedAttackCollider) GLOG("[WARNING] No charge attack found for CuChualin")
     else chargedAttackCollider->SetEnabled(false);
@@ -364,6 +394,52 @@ bool CuChulainn::Init()
         riastradFireDown = riastradObj->GetComponent<ShaderScriptComponent*>();
     }
     if (riastradFireDown) riastradFireDown->SetEnabled(false);
+
+    riastradTrail = scene->GetGameObjectByName(riastradTrailName);
+    if (riastradTrail) riastradTrail->SetEnabled(false);
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesName);
+    if (riastradObj)
+    {
+        int idx = 0;
+        for (UID child : riastradObj->GetChildren())
+        {
+            riastradParticles[idx] = scene->GetGameObjectByUID(child)->GetComponent<ParticleSystemComponent*>();
+            if (riastradParticles[idx]) riastradParticles[idx]->StopInstances();
+            ++idx;
+        }
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesRightArmName);
+    if (riastradObj)
+    {
+        riastradParticles[4] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[4]) riastradParticles[4]->StopInstances();
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesLeftArmName);
+    if (riastradObj)
+    {
+        riastradParticles[5] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[5]) riastradParticles[5]->StopInstances();
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesRightLegName);
+    if (riastradObj)
+    {
+        riastradParticles[6] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[6]) riastradParticles[6]->StopInstances();
+    }
+
+    riastradObj = parent->GetChildGameObjectByName(riastradParticlesLeftLegName);
+    if (riastradObj)
+    {
+        riastradParticles[7] = riastradObj->GetComponent<ParticleSystemComponent*>();
+        if (riastradParticles[7]) riastradParticles[7]->StopInstances();
+    }
+
+    riastradLight = parent->GetChildGameObjectByName(riastradLightName);
+    if (riastradLight) riastradLight->SetEnabled(false);
 
     riastradTriggers = scene->GetGameObjectByName(riastradTriggersName);
     if (!riastradTriggers) GLOG("[WARNING] No riastrad triggers HUD element found")
@@ -565,6 +641,28 @@ bool CuChulainn::Init()
     ultimateSpikes = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateSpikesName);
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
     else ultimateSpikes->SetEnabled(false);
+
+    // Curse
+    GameObject* curseParent = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(curseParentName);
+    if (curseParent)
+    {
+        int idx = 0;
+        for (UID uid : curseParent->GetChildren())
+        {
+            curseScreenVfx[idx] =
+                AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(uid)->GetComponent<ShaderScriptComponent*>(
+                );
+
+            if (curseScreenVfx[idx]) curseScreenVfx[idx]->SetEnabled(false);
+            ++idx;
+        }
+    }
+
+    gooShoeRight = parent->GetChildGameObjectByName(gooShoeRightName);
+    if (gooShoeRight) gooShoeRight->SetEnabled(false);
+
+    gooShoeLeft = parent->GetChildGameObjectByName(gooShoeLeftName);
+    if (gooShoeLeft) gooShoeLeft->SetEnabled(false);
 
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
@@ -891,6 +989,7 @@ void CuChulainn::HandleState(float deltaTime)
         }
         else
         {
+            if (state == CharacterStates::RUN) return;
             if (state == CharacterStates::HEAL && healVfx) healVfx->SetEnabled(false);
             // if (state == CharacterStates::ULTIMATE &&
             // ultimateObject->GetComponent<AnimationComponent*>()->IsPlaying())
@@ -948,7 +1047,52 @@ void CuChulainn::GetInputs()
         if (controller[SDL_CONTROLLER_BUTTON_DPAD_DOWN] == KEY_REPEAT) direction.z = 1.0f;
     }
 
-    moveFromCollision = (direction.Length() >= 0.55f);
+    bool newIsRunning = isRiastrad ? true : (direction.Length() >= 0.55f);
+    if (!isCursed && !isRiastrad)
+    {
+        if (newIsRunning && !moveFromCollision)
+        {
+            GLOG("Start running");
+            const HashString walkStateName = HashString("Walk");
+            for (State& state : animComponent->GetResourceStateMachine()->states)
+            {
+                if (state.name == walkStateName)
+                {
+                    state.clipName = defaultRunName;
+                }
+            }
+            if (state == CharacterStates::RUN)
+            {
+                if (animComponent) animComponent->UseTrigger("Idle");
+                state = CharacterStates::IDLE;
+            }
+
+            const float defaultStepTime = 0.4f;
+            stepTime                    = defaultStepTime;
+        }
+        else if (!newIsRunning && moveFromCollision)
+        {
+            GLOG("Stop running");
+            const HashString walkStateName = HashString("Walk");
+            for (State& state : animComponent->GetResourceStateMachine()->states)
+            {
+                if (state.name == walkStateName)
+                {
+                    state.clipName = walkAnimName;
+                }
+            }
+            if (state == CharacterStates::RUN)
+            {
+                if (animComponent) animComponent->UseTrigger("Idle");
+                state = CharacterStates::IDLE;
+            }
+
+            const float walkStepTime = 0.6f;
+            stepTime                 = walkStepTime;
+        }
+    }
+
+    moveFromCollision = newIsRunning;
     character->SetIsRunning(moveFromCollision);
 
     direction                     = camFront * direction.z + camRight * direction.x;
@@ -1071,6 +1215,40 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
     {
         StartCurse();
+    }
+
+    if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
+    {
+        PlayHighlightSequence();
+    }
+}
+
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->FadeIn();
+    }
+
+    if (keyboard[SDL_SCANCODE_2] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->FadeOut();
+    }
+
+    if (keyboard[SDL_SCANCODE_3] == KEY_DOWN)
+    {
+        const std::string testName = "FadeInOut";
+        AppEngine->GetSceneModule()
+            ->GetScene()
+            ->GetGameObjectByName(testName)
+            ->GetComponent<ShaderScriptComponent*>()
+            ->GetScriptByType<UIFadeInOut>()
+            ->Reset();
     }
 }
 
@@ -1412,6 +1590,20 @@ void CuChulainn::ThrowSpear()
     if (aimShadowObject) aimShadowObject->SetEnabled(false);
 
     spear->Shoot(parent->GetGlobalTransform().TranslatePart(), character->GetFrontDirection());
+
+    // Rotate the character to compensate animation wrong rotation
+    const float3 scale            = parent->GetLocalTransform().ExtractScale();
+
+    const Quat extraRotation      = Quat::RotateY(0.5236f);
+    const float3 rotatedDirection = extraRotation * parent->GetGlobalTransform().Col(2).xyz();
+    const Quat rotation           = Quat::LookAt(float3::unitZ, rotatedDirection, float3::unitY, float3::unitY);
+
+    const float4x4 transform      = float4x4::FromTRS(parent->GetGlobalTransform().TranslatePart(), rotation, scale);
+
+    const float4x4 parentWS       = parent->GetParentGlobalTransform();
+    const float4x4 localTRS       = parentWS.Inverted() * transform;
+
+    parent->SetLocalTransform(localTRS);
 }
 
 void CuChulainn::Dash()
@@ -1700,15 +1892,16 @@ void CuChulainn::Attack(float deltaTime)
     const float3 leftRayOrigin2   = position - lateralDirection * 0.6f;
     const float3 leftRayOrigin3   = position - lateralDirection * 0.9f;
 
-    LineSegment centerRay(position + direction * 0.075f, position + direction * 3.0f);
+    const float rayLength         = 2.0f;
+    LineSegment centerRay(position + direction * 0.075f, position + direction * rayLength);
 
-    LineSegment leftRay(leftRayOrigin, leftRayOrigin + direction * 3.0f);
-    LineSegment leftRay2(leftRayOrigin2 - direction * 0.2f, leftRayOrigin2 + direction * 3.0f);
-    LineSegment leftRay3(leftRayOrigin3 - direction * 0.2f, leftRayOrigin3 + direction * 3.0f);
+    LineSegment leftRay(leftRayOrigin, leftRayOrigin + direction * rayLength);
+    LineSegment leftRay2(leftRayOrigin2 - direction * 0.2f, leftRayOrigin2 + direction * rayLength);
+    LineSegment leftRay3(leftRayOrigin3 - direction * 0.2f, leftRayOrigin3 + direction * rayLength);
 
-    LineSegment rightRay(rightRayOrigin, rightRayOrigin + direction * 3.0f);
-    LineSegment rightRay2(rightRayOrigin2 - direction * 0.2f, rightRayOrigin2 + direction * 3.0f);
-    LineSegment rightRay3(rightRayOrigin3 - direction * 0.2f, rightRayOrigin3 + direction * 3.0f);
+    LineSegment rightRay(rightRayOrigin, rightRayOrigin + direction * rayLength);
+    LineSegment rightRay2(rightRayOrigin2 - direction * 0.2f, rightRayOrigin2 + direction * rayLength);
+    LineSegment rightRay3(rightRayOrigin3 - direction * 0.2f, rightRayOrigin3 + direction * rayLength);
 
     BulletUserPointer* centerHit = RaycastController::GetRayIntersectionPhysics(centerRay);
 
@@ -1847,13 +2040,17 @@ void CuChulainn::Move()
     const bool wantsMove      = moveFromCollision;
     const bool runCondition   = wantsMove || (character->GetInputDown() && character->GetSpeed() > 0.5f);
 
-    if (runCondition)
+    if (actuallyMoving)
     {
         if (state != CharacterStates::RUN)
         {
             state    = CharacterStates::RUN;
-            runTimer = 0.0f;
+            runTimer = -0.06f;
+            if (isCursed) runTimer = 0.0f;
+            else if (!moveFromCollision) runTimer = -0.15f;
             if (animComponent) animComponent->UseTrigger("Walk");
+
+            isRightFoot = false;
         }
 
         if (runTimer > stepTime && audio)
@@ -1875,8 +2072,57 @@ void CuChulainn::Move()
                 else if (object->HasTag(HashString("Rock"))) eventId = AK::EVENTS::PLAY_SFX_STEPS_ROCK;
 
                 if (audio) audio->EmitEvent(eventId);
-            }
 
+                if (footsteps[stepIndex])
+                {
+                    const bool isRightFootReal    = (moveFromCollision && !isCursed) ? isRightFoot : !isRightFoot;
+
+                    const float hOffset           = isRiastrad ? 0.2f : (!moveFromCollision || isCursed) ? 0.28f : 0.1f;
+                    const float3 lateralDirection = character->GetFrontDirection().Cross(float3::unitY).Normalized();
+                    const float3 horizontalOffset =
+                        isRightFootReal ? lateralDirection * hOffset : -lateralDirection * hOffset;
+                    const float3 verticalOffset = float3::unitY * 0.1f;
+                    const float3 aheadOffset    = isCursed           ? character->GetFrontDirection() * 0.4f
+                                                : !moveFromCollision ? character->GetFrontDirection() * 0.23f
+                                                                     : float3::zero;
+
+                    const Quat stepRotation =
+                        Quat::LookAt(float3::unitZ, character->GetFrontDirection(), float3::unitY, float3::unitY);
+                    const Quat horizontalCorrection = Quat::RotateAxisAngle(float3::unitY, 180.0f * (PI / 180));
+                    Quat finalRotation              = stepRotation * horizontalCorrection;
+                    if (!isRightFootReal)
+                    {
+                        const Quat zRotation = Quat::RotateAxisAngle(float3::unitZ, 180.0f * (PI / 180));
+                        finalRotation        = finalRotation * zRotation;
+                    }
+
+                    const float3 scale       = footsteps[stepIndex]->GetParent()->GetLocalTransform().ExtractScale();
+
+                    const float4x4 transform = float4x4::FromTRS(
+                        parent->GetGlobalPostition() + verticalOffset + horizontalOffset + aheadOffset, finalRotation,
+                        scale
+                    );
+
+                    const float4x4 parentWorld = parent->GetParentGlobalTransform();
+                    const float4x4 localTRS    = parentWorld.Inverted() * transform;
+
+                    footsteps[stepIndex]->GetParent()->SetLocalTransform(localTRS);
+                    footsteps[stepIndex]->SetEnabled(true);
+                    footsteps[stepIndex]->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+
+                    ParticleSystemComponent* steps = isRightFootReal ? footstepParticles1 : footstepParticles2;
+
+                    steps->GetParent()->SetLocalPosition(
+                        parent->GetGlobalPostition() + verticalOffset * 4.0f + horizontalOffset + aheadOffset -
+                        parent->GetParentGlobalTransform().TranslatePart()
+                    );
+                    steps->SpawnAllInstances();
+
+                    isRightFoot  = !isRightFoot;
+                    stepIndex   += 1;
+                    if (stepIndex == 4) stepIndex = 0;
+                }
+            }
             runTimer = 0.0f;
         }
     }
@@ -2032,7 +2278,7 @@ void CuChulainn::ChargeAttack()
         }
 
         state       = CharacterStates::CHARGING;
-        chargeTimer = isRiastrad ? chargeDuration * 0.5f : chargeDuration;
+        chargeTimer = chargeDuration;
         character->EnableMovement(false);
 
         if (animComponent) animComponent->UseTrigger("Charge");
@@ -2130,6 +2376,11 @@ void CuChulainn::ToggleRiastrad()
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
 
+        attackDamage                 = 2;
+
+        const float riastradStepTime = 0.2f;
+        stepTime                     = riastradStepTime;
+
         if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
     }
     else
@@ -2138,8 +2389,12 @@ void CuChulainn::ToggleRiastrad()
         isRiastrad = false;
         character->SetMaxSpeed(defaultSpeed);
 
-        const HashString idleName = HashString("Idle");
-        const HashString walkName = HashString("Walk");
+        attackDamage                = 1;
+        const float defaultStepTime = 0.4f;
+        stepTime                    = defaultStepTime;
+
+        const HashString idleName   = HashString("Idle");
+        const HashString walkName   = HashString("Walk");
         for (State& state : animComponent->GetResourceStateMachine()->states)
         {
             if (state.name == idleName)
@@ -2155,6 +2410,13 @@ void CuChulainn::ToggleRiastrad()
                 }
             }
         }
+
+        for (ParticleSystemComponent* particle : riastradParticles)
+        {
+            if (particle) particle->StopInstances();
+        }
+        if (riastradTrail) riastradTrail->SetEnabled(false);
+        if (riastradLight) riastradLight->SetEnabled(false);
 
         if (riastradEye)
         {
@@ -2172,16 +2434,6 @@ void CuChulainn::ToggleRiastrad()
             state = CharacterStates::IDLE;
         }
 
-        // TODO: Remove when VFX
-        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-        if (res)
-        {
-            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-            float4 newColor       = mat->GetMaterial().diffColor;
-            newColor              = float4::one;
-            mat->SetDiffColor(newColor);
-        }
-
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
         if (musicManager != nullptr)
         {
@@ -2196,17 +2448,6 @@ void CuChulainn::EnableRiastradVfx()
 
     // Reuse charge attack collider (If needed different size, create another)
     chargedAttackCollider->SetEnabled(true);
-
-    // TODO: Remove when VFX. For now it turns red
-    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-    if (res)
-    {
-        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-        float4 newColor       = mat->GetMaterial().diffColor;
-        newColor.y            = 0.0f;
-        newColor.z            = 0.0f;
-        mat->SetDiffColor(newColor);
-    }
 
     if (riastradCrack)
     {
@@ -2243,6 +2484,13 @@ void CuChulainn::EnableRiastradVfx()
         riastradFireDown->SetEnabled(true);
         riastradFireDown->GetScriptByType<UISpritesheet>()->Reset();
     }
+
+    for (ParticleSystemComponent* particle : riastradParticles)
+    {
+        if (particle) particle->SpawnAllInstances();
+    }
+    if (riastradTrail) riastradTrail->SetEnabled(true);
+    if (riastradLight) riastradLight->SetEnabled(true);
 
     if (riastradSmoke)
     {
@@ -2328,20 +2576,25 @@ void CuChulainn::OnArrowHit()
 
 void CuChulainn::StartCurse()
 {
-    // TODO: Remove when VFX
-    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-    if (res)
-    {
-        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-        float4 newColor       = mat->GetMaterial().diffColor;
-        newColor.y            = 0.0f;
-        newColor.x            = 0.6f;
-        mat->SetDiffColor(newColor);
-    }
+    if (isRiastrad) return;
 
     isCursed = true;
     character->SetMaxSpeed(curseSpeed);
-    curseTimer                = curseDuration;
+    curseTimer = curseDuration;
+
+    for (ShaderScriptComponent* shader : curseScreenVfx)
+    {
+        if (shader)
+        {
+            shader->SetEnabled(true);
+            shader->GetScriptByType<UISpritesheet>()->Reset();
+        }
+    }
+
+    if (gooShoeRight) gooShoeRight->SetEnabled(true);
+    if (gooShoeLeft) gooShoeLeft->SetEnabled(true);
+    const float curseStepTime = 0.475f;
+    stepTime                  = curseStepTime;
 
     const HashString walkName = HashString("Walk");
     for (State& state : animComponent->GetResourceStateMachine()->states)
@@ -2351,9 +2604,15 @@ void CuChulainn::StartCurse()
             state.clipName = curseRunName;
             for (Clip& clip : animComponent->GetResourceStateMachine()->clips)
             {
-                if (clip.clipName == state.clipName) clip.animationSpeed = 3.0f;
+                if (clip.clipName == state.clipName) clip.animationSpeed = 2.0f;
             }
         }
+    }
+
+    for (ShaderScriptComponent* footstep : footsteps)
+    {
+        const int gooStepsIdx = 0;
+        if (footstep) footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(gooStepsIdx);
     }
 
     if (state == CharacterStates::RUN)
@@ -2392,18 +2651,13 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
 
 void CuChulainn::EndCurse()
 {
-    // TODO: Remove when VFX
-    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-    if (res)
-    {
-        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-        float4 newColor       = mat->GetMaterial().diffColor;
-        newColor              = float4::one;
-        mat->SetDiffColor(newColor);
-    }
-
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
+
+    for (ShaderScriptComponent* shader : curseScreenVfx)
+    {
+        if (shader && shader->GetEnabled()) shader->SetEnabled(false);
+    }
 
     const HashString walkName = HashString("Walk");
     for (State& state : animComponent->GetResourceStateMachine()->states)
@@ -2416,6 +2670,17 @@ void CuChulainn::EndCurse()
                 if (clip.clipName == state.clipName) clip.animationSpeed = 1.0f;
             }
         }
+    }
+
+    if (gooShoeRight) gooShoeRight->SetEnabled(false);
+    if (gooShoeLeft) gooShoeLeft->SetEnabled(false);
+    const float defaultStepTime = 0.4f;
+    stepTime                    = defaultStepTime;
+
+    for (ShaderScriptComponent* footstep : footsteps)
+    {
+        const int defaultStepsIdx = -1;
+        if (footstep) footstep->GetScriptByType<AttackVfxSpritesheet>()->SetVariationToUse(defaultStepsIdx);
     }
 
     if (state == CharacterStates::RUN)
@@ -2460,6 +2725,13 @@ bool CuChulainn::IsBlockedAhead(
     };
 
     return hitsBlockAtHeight(0.2f) || hitsBlockAtHeight(0.9f);
+}
+
+void CuChulainn::PlayHighlightSequence()
+{
+    state = CharacterStates::RESPAWN;
+    if (animComponent) animComponent->UseTrigger("Respawn");
+    character->EnableMovement(false);
 }
 
 const std::string CuChulainn::GetLogicStateName()
