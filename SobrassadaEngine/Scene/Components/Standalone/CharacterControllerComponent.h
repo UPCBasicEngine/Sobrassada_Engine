@@ -6,7 +6,7 @@
 
 class dtNavMeshQuery;
 
-using dtPolyRef = unsigned int;
+using dtPolyRef                           = unsigned int;
 
 constexpr const char* DashBlockerGOTags[] = {"MagicBarrier"};
 
@@ -74,7 +74,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     float3 velocitySamples[VELOCITY_SAMPLES] = {float3::zero};
     int velocitySampleIndex                  = 0;
 
-    float walkSpeed                          = 3.0f;
+    float walkSpeed                          = 1.0f;
     float maxSpeed                           = 7.0f;
     float maxAngularSpeed                    = 0.0f;
     float acceleration                       = 10.0f;
@@ -84,9 +84,9 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
 
     dtNavMeshQuery* navMeshQuery             = nullptr;
 
-    float gravity                = -40.0f;
-    float verticalSpeed          = 0.0f;
-    float maxFallSpeed           = -30.0f;
+    float gravity                            = -40.0f;
+    float verticalSpeed                      = 0.0f;
+    float maxFallSpeed                       = -30.0f;
 
     bool inputDown                           = true;
     bool isRotating                          = false;
@@ -105,7 +105,7 @@ class SOBRASADA_API_ENGINE CharacterControllerComponent : public Component
     bool dashToNavmesh                       = false;
     bool obstacleInDash                      = false;
 
-    bool isRunning               = false;
-    bool preciseDash             = true;
+    bool isRunning                           = false;
+    bool preciseDash                         = true;
     bool dashMoveBlocked                     = false;
 };
