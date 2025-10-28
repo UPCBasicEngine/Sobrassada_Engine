@@ -752,7 +752,17 @@ void RenderPass::ShadowMapPassRender(
 #ifdef OPTICK
     OPTICK_CATEGORY("RenderPass::ShadowMap::Spotlights", Optick::Category::Rendering)
 #endif
-    auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
+
+    std::vector<SpotLightComponent*> spotLights;
+    spotLights.reserve(TotalShadowMaps);
+
+    for (GameObject* currentGO : objectsToRender)
+    {
+        SpotLightComponent* spot = currentGO->GetComponent<SpotLightComponent*>();
+        if (spot && spot->GetRenderVolumetric()) spotLights.push_back(spot);
+        if (spotLights.size() == TotalShadowMaps) break;
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
 
