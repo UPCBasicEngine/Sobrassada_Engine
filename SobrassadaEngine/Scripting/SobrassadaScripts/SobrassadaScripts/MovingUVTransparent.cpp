@@ -38,7 +38,6 @@ MovingUVTransparent::~MovingUVTransparent()
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(1, &materialBuffer);
 }
 
 bool MovingUVTransparent::Init()
@@ -59,7 +58,6 @@ bool MovingUVTransparent::Init()
             glGenVertexArrays(1, &vao);
             glGenBuffers(1, &vbo);
             glGenBuffers(1, &ebo);
-            glGenBuffers(1, &materialBuffer);
 
             glBindVertexArray(vao);
 
@@ -96,17 +94,6 @@ bool MovingUVTransparent::Init()
             glBindVertexArray(0);
 
             indexCount = (unsigned int)rmesh->GetIndices().size();
-        }
-
-        const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
-        if (rmat)
-        {
-            isAlphaDiscard  = rmat->IsAlphaDiscard();
-
-            MaterialGPU mat = rmat->GetMaterial();
-
-            glBindBuffer(GL_UNIFORM_BUFFER, materialBuffer);
-            glBufferData(GL_UNIFORM_BUFFER, sizeof(mat), &mat, GL_STATIC_DRAW);
         }
 
         meshComp->SetEnabled(false);
@@ -162,15 +149,18 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         float fadeTime = isFadeOut ? fadeOutTime : 1.0f;
         glUniform1f(7, fadeOutTimer);
         glUniform1f(8, fadeTime);
-        glUniform1f(11, fadeOutDuration);
+        glUniform1f(15, fadeOutDuration);
+        glUniform1i(16, meshComp->GetBaseIndex());
 
         glUniform1i(4, 0);
         glUniform1i(5, isAlphaDiscard);
 
-        glBindBufferBase(GL_UNIFORM_BUFFER, 6, materialBuffer);
-
         GeometryBatch* batch = meshComp->GetBatch();
-        if (batch) batch->BindBonesBuffer();
+        if (batch)
+        {
+            batch->BindBonesBuffer();
+            batch->BindMaterialsBuffer();
+        }
 
         float3 cameraPos = float3::zero;
         if (cameraComp == nullptr) cameraPos = AppEngine->GetCameraModule()->GetCameraPosition();
@@ -184,7 +174,11 @@ void MovingUVTransparent::Render(float deltaTime, CameraComponent* cameraComp)
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
         if (isDoubleSided) glEnable(GL_CULL_FACE);
 
-        if (batch) batch->UnbindBonesBuffer();
+        if (batch)
+        {
+            batch->UnbindBonesBuffer();
+            batch->UnbindMaterialsBuffer();
+        }
 
         glBindVertexArray(0);
     }
