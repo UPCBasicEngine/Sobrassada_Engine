@@ -8,6 +8,9 @@
 #include "MoveGOInSpline.h"
 #include "ScriptComponent.h"
 #include "Standalone/SplineComponent.h"
+#include "Standalone/Audio/AudioSourceComponent.h"
+#include "Standalone/Physics/CubeColliderComponent.h"
+#include "Wwise_IDs.h"
 
 Crow::Crow(GameObject* parent)
     : Character(
@@ -22,6 +25,8 @@ bool Crow::Init()
     
     moveGOSpline = parent->GetComponent<ScriptComponent*>()->GetScriptByType<MoveGOInSpline>();
     if (moveGOSpline) moveGOSpline->SetEnabled(false);
+
+    audioComp = parent->GetComponent<AudioSourceComponent*>();
 
     return true;
 }
@@ -42,8 +47,11 @@ void Crow::HandleState(float deltaTime)
     switch (currentState)
     {
     case CrowStates::TAKE_OFF:
-        if (animComponent && playerNear && animComponent->IsFinished()) 
+        if (animComponent && playerNear && animComponent->IsFinished())
+        {
+            if (audioComp) audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_CROW_DOUBLECAW);
             EnterState(CrowStates::FLY);
+        } 
         break;
 
     case CrowStates::IDLE:
@@ -116,6 +124,8 @@ void Crow::OnCollisionEnter(GameObject* otherObject, const float3 collisionNorma
     playerNear   = true;
     
     if (moveGOSpline) moveGOSpline->SetEnabled(true);
+
+    parent->GetComponent<CubeColliderComponent*>()->SetEnabled(false);
 }
 
 void Crow::SetState(CrowStates next)
