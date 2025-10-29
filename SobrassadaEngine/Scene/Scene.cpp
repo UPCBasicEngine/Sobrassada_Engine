@@ -1082,7 +1082,7 @@ void Scene::CreateStaticSpatialDataStruct()
     float3 octreeCenter = float3::zero;
     float octreeLength  = 2000;
     int nodeCapacity    = 10;
-    sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity, false);
+    sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {
@@ -1102,7 +1102,7 @@ void Scene::CreateDynamicSpatialDataStruct()
     float3 center    = float3::zero;
     float length     = 2000;
     int nodeCapacity = 15;
-    dynamicTree      = new Octree(center, length, nodeCapacity, true);
+    dynamicTree      = new Octree(center, length, nodeCapacity);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {
