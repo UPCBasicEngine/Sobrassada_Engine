@@ -48,4 +48,6 @@ class Crow : public Character
     MoveGOInSpline* moveGOSpline    = nullptr;
     SplineComponent* spline         = nullptr;
     float3 pointSplineEnd           = float3::zero;
+
+    bool endRouteDisable            = false;
 };

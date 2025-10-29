@@ -16,12 +16,15 @@ Crow::Crow(GameObject* parent)
     : Character(
           parent, 1, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, CharacterType::Crow)
 {
+    fields.push_back({"Disable end route?", InspectorField::FieldType::Bool, &endRouteDisable});
 }
 
 bool Crow::Init()
 {
     Character::Init();
     EnterState(CrowStates::IDLE);
+
+    parentGO     = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetParent());
     
     moveGOSpline = parent->GetComponent<ScriptComponent*>()->GetScriptByType<MoveGOInSpline>();
     if (moveGOSpline) moveGOSpline->SetEnabled(false);
@@ -112,7 +115,14 @@ void Crow::EndRoute()
         return samePos;
     };
 
-    if (comparePositions(parent->GetPosition(), pointSplineEnd)) EnterState(CrowStates::IDLE);
+    if (comparePositions(parent->GetPosition(), pointSplineEnd))
+    {
+        if (!endRouteDisable) EnterState(CrowStates::IDLE);
+        else
+        {
+            if (parentGO) parentGO->SetEnabled(false);
+        }
+    }
 }
 
 void Crow::OnCollisionEnter(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
