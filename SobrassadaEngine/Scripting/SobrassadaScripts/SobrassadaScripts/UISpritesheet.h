@@ -18,6 +18,9 @@ class UISpritesheet : public Script
     void Render(float deltaTime, CameraComponent* cameraComp) override;
     void Reset() override;
 
+    void SetFadeOut(bool fade) { isFadeOut = fade; };
+
+  private:
     void UpdateSprite(float deltaTime);
 
   private:
