@@ -293,17 +293,24 @@ bool CuChulainn::Init()
     if (!dashDecal) GLOG("[WARNING] No dash decal found for CuChulain")
     else dashDecal->SetEnabled(false);
 
-    GameObject* dashVfxObj = scene->GetGameObjectByName(dashSmokeName1);
-    if (dashVfxObj)
+    GameObject* vfxObj = scene->GetGameObjectByName(onHitVfxName);
+    if (vfxObj)
     {
-        dashSmoke1 = dashVfxObj->GetComponent<ShaderScriptComponent*>();
+        onHitVfx = vfxObj->GetComponent<ShaderScriptComponent*>();
+    }
+    if (onHitVfx) onHitVfx->SetEnabled(false);
+
+    vfxObj = scene->GetGameObjectByName(dashSmokeName1);
+    if (vfxObj)
+    {
+        dashSmoke1 = vfxObj->GetComponent<ShaderScriptComponent*>();
     }
     if (dashSmoke1) dashSmoke1->SetEnabled(false);
 
-    dashVfxObj = scene->GetGameObjectByName(dashSmokeName2);
-    if (dashVfxObj)
+    vfxObj = scene->GetGameObjectByName(dashSmokeName2);
+    if (vfxObj)
     {
-        dashSmoke2 = dashVfxObj->GetComponent<ShaderScriptComponent*>();
+        dashSmoke2 = vfxObj->GetComponent<ShaderScriptComponent*>();
     }
     if (dashSmoke2) dashSmoke2->SetEnabled(false);
 
@@ -384,16 +391,9 @@ bool CuChulainn::Init()
     riastradObj = scene->GetGameObjectByName(riastradFireUpName);
     if (riastradObj)
     {
-        riastradFireUp = riastradObj->GetComponent<ShaderScriptComponent*>();
+        riastradFire = riastradObj->GetComponent<ShaderScriptComponent*>();
     }
-    if (riastradFireUp) riastradFireUp->SetEnabled(false);
-
-    riastradObj = scene->GetGameObjectByName(riastradFireDownName);
-    if (riastradObj)
-    {
-        riastradFireDown = riastradObj->GetComponent<ShaderScriptComponent*>();
-    }
-    if (riastradFireDown) riastradFireDown->SetEnabled(false);
+    if (riastradFire) riastradFire->SetEnabled(false);
 
     riastradTrail = scene->GetGameObjectByName(riastradTrailName);
     if (riastradTrail) riastradTrail->SetEnabled(false);
@@ -736,6 +736,8 @@ void CuChulainn::Update(float deltaTime)
         }
 
         if (deathTimer > 4.0f && !gGameOverActive) Respawn();
+
+        Character::UpdateTimers(deltaTime);
     }
 
     if (isDead || !character) return;
@@ -890,6 +892,17 @@ void CuChulainn::OnDamageTaken(int amount)
 
     if (healthBar) healthBar->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 
+    if (state == CharacterStates::CHARGING && audio) audio->StopAudio();
+    if (onHitVfx)
+    {
+        float3 offset = float3::unitY + float3::unitZ * 0.7f - float3::unitX * 0.1f;
+        onHitVfx->GetParent()->SetLocalPosition(
+            parent->GetGlobalPostition() + offset - parent->GetParentGlobalTransform().TranslatePart()
+        );
+        onHitVfx->SetEnabled(true);
+        onHitVfx->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
+
     if (audio && currentHealth >= 1) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_HURT);
     AddRiastrad(riastradOnDamageTaken);
 
@@ -932,9 +945,6 @@ void CuChulainn::OnDamageTaken(int amount)
             character->EnableMovement(false);
         }
     }
-
-    // TODO: Test if hitstop when hit feels nice
-    // AppEngine->GetGameTimer()->SetTimeScale(0.0f);
 }
 
 void CuChulainn::OnHealed(int amount)
@@ -1215,11 +1225,6 @@ void CuChulainn::GetInputs()
     if (keyboard[SDL_SCANCODE_F9] == KEY_DOWN)
     {
         StartCurse();
-    }
-
-    if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
-    {
-        PlayHighlightSequence();
     }
 }
 
@@ -1589,6 +1594,11 @@ void CuChulainn::Dash()
         comboBufferTimer = character->GetDashDuration() + 0.1f;
         isAttacking      = false;
     }
+    else if (state == CharacterStates::CHARGING)
+    {
+        if (audio) audio->StopAudio();
+    }
+
     desiredDash      = false;
     state            = CharacterStates::DASH;
 
@@ -2176,6 +2186,7 @@ bool CuChulainn::TakeMushroom()
         mushrooms += 1;
 
         if (animComponent) animComponent->UseTrigger("Pick");
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_LIFEMUSHROOMS);
         character->EnableMovement(false);
     }
 
@@ -2253,6 +2264,7 @@ void CuChulainn::ChargeAttack()
         character->EnableMovement(false);
 
         if (animComponent) animComponent->UseTrigger("Charge");
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_CHARGEDATTACKSTART);
     }
     else if (desiredChargedAttack)
     {
@@ -2270,6 +2282,7 @@ void CuChulainn::ChargeAttack()
             if (meleeTrailObject) meleeTrailObject->SetEnabled(true);
 
             if (animComponent) animComponent->UseTrigger("Attack");
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_CHARGEDATTACK);
 
             if (chargedAttackVfx)
             {
@@ -2283,6 +2296,7 @@ void CuChulainn::ChargeAttack()
             character->EnableMovement(true);
             state = CharacterStates::IDLE;
             if (animComponent) animComponent->UseTrigger("Idle");
+            if (audio) audio->StopAudio();
         }
     }
 }
@@ -2347,12 +2361,16 @@ void CuChulainn::ToggleRiastrad()
         riastradKey->SetEnabled(false);
         riastradTriggers->SetEnabled(false);
 
+        if (audio)
+        {
+            audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
+            audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_TRANSFORM);
+        }
+        
         attackDamage                 = 2;
 
         const float riastradStepTime = 0.2f;
         stepTime                     = riastradStepTime;
-
-        if (audio != nullptr) audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_RIASTRAD);
     }
     else
     {
@@ -2395,8 +2413,7 @@ void CuChulainn::ToggleRiastrad()
 
             if (riastradVfxFG) riastradVfxFG->SetEnabled(false);
             if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
-            if (riastradFireUp) riastradFireUp->SetEnabled(false);
-            if (riastradFireDown) riastradFireDown->SetEnabled(false);
+            if (riastradFire) riastradFire->GetScriptByType<UISpritesheet>()->SetFadeOut(true);
         }
 
         if (state == CharacterStates::RUN)
@@ -2445,15 +2462,11 @@ void CuChulainn::EnableRiastradVfx()
         riastradStars->GetComponent<ShaderScriptComponent*>()->GetScriptByType<MovingUVTransparent>()->Reset();
     }
 
-    if (riastradFireUp)
+    if (riastradFire)
     {
-        riastradFireUp->SetEnabled(true);
-        riastradFireUp->GetScriptByType<UISpritesheet>()->Reset();
-    }
-    if (riastradFireDown)
-    {
-        riastradFireDown->SetEnabled(true);
-        riastradFireDown->GetScriptByType<UISpritesheet>()->Reset();
+        riastradFire->SetEnabled(true);
+        riastradFire->GetScriptByType<UISpritesheet>()->SetFadeOut(false);
+        riastradFire->GetScriptByType<UISpritesheet>()->Reset();
     }
 
     for (ParticleSystemComponent* particle : riastradParticles)
@@ -2491,6 +2504,7 @@ void CuChulainn::AddRiastrad(int amount)
     if (riastradMeter == 100)
     {
         if (riastradEye) riastradEye->SetFillAmount(riastradMeter / 100.0f);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_RIASTRADCHARGED);
 
         if (AppEngine->GetInputModule()->IsUsingKeyboard() && riastradKey) riastradKey->SetEnabled(true);
         else if (riastradTriggers) riastradTriggers->SetEnabled(true);

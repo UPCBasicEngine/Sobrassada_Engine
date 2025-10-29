@@ -112,6 +112,7 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
                 break;
             }
             case InspectorField::FieldType::Vec3:
+            case InspectorField::FieldType::Color:
             {
                 float3* vec = (float3*)field.data;
                 rapidjson::Value arr(rapidjson::kArrayType);

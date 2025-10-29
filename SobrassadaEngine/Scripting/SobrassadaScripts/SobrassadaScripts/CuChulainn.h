@@ -173,6 +173,8 @@ class CuChulainn : public Character
     BarFill* healthBar                             = nullptr;
 
     bool controlsLocked                            = false;
+    std::string onHitVfxName                       = "OnHitVfx";
+    ShaderScriptComponent* onHitVfx                = nullptr;
 
     // Dash
     std::string dashIconName                       = "DashCooldown";
@@ -296,8 +298,7 @@ class CuChulainn : public Character
     std::string riastradKeyName                    = "RiastradKey";
     std::string riastradVfxBGName                  = "EyeBackgroundVFX";
     std::string riastradVfxFGName                  = "EyeForegroundVFX";
-    std::string riastradFireUpName                 = "RiastradFireUp";
-    std::string riastradFireDownName               = "RiastradFireDown";
+    std::string riastradFireUpName                 = "RiastradFire";
     std::string riastradParticlesName              = "RiastradParticles";
     std::string riastradParticlesRightArmName      = "RiastradFlamesRightArm";
     std::string riastradParticlesLeftArmName       = "RiastradFlamesLeftArm";
@@ -309,8 +310,7 @@ class CuChulainn : public Character
     AbilityIconFill* riastradEye                   = nullptr;
     ShaderScriptComponent* riastradVfxBG           = nullptr;
     ShaderScriptComponent* riastradVfxFG           = nullptr;
-    ShaderScriptComponent* riastradFireUp          = nullptr;
-    ShaderScriptComponent* riastradFireDown        = nullptr;
+    ShaderScriptComponent* riastradFire            = nullptr;
     GameObject* riastradTriggers                   = nullptr;
     GameObject* riastradKey                        = nullptr;
     GameObject* riastradTrail                      = nullptr;
