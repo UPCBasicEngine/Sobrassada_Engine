@@ -104,8 +104,8 @@ bool Character::Init()
         mesh = meshObject->GetComponent<MeshComponent*>();
         if (mesh) mesh->SetEnabled(true);
 
-        colorChange = meshObject->GetComponent<ShaderScriptComponent*>();
-        if (colorChange) colorChange->SetEnabled(false);
+        meshScripts = meshObject->GetComponent<ShaderScriptComponent*>();
+        if (meshScripts) meshScripts->SetEnabled(false);
     }
     else
     {
@@ -121,23 +121,6 @@ bool Character::Init()
 
         onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
         if (onHitVfx2) onHitVfx2->SetEnabled(false);
-        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
-
-        GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
-        if (meshObject)
-        {
-            mesh = meshObject->GetComponent<MeshComponent*>();
-            if (mesh) mesh->SetEnabled(true);
-            // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
-
-            meshScripts = meshObject->GetComponent<ShaderScriptComponent*>();
-            if (meshScripts) meshScripts->SetEnabled(false);
-            // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
-        }
-        else
-        {
-            GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
-        }
 
         GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
         if (glowObject) glow = glowObject;
@@ -372,22 +355,15 @@ void Character::UpdateTimers(float deltaTime)
     {
         onHitVfxTimer -= deltaTime;
 
-        // Do this in the next frame after enabling the mesh to avoid popping
-        if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
-        {
-            meshScripts->SetEnabled(false);
-            isHit = false;
-        }
-
         if (onHitVfxTimer < 0.0f)
         {
             if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
             if (onHitVfx2 && onHitVfx2->IsEnabled()) onHitVfx2->SetEnabled(false);
 
             // Do this in the next frame after enabling the mesh to avoid popping
-            if (mesh && mesh->GetEnabled() && colorChange && colorChange->GetEnabled())
+            if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
             {
-                colorChange->SetEnabled(false);
+                meshScripts->SetEnabled(false);
                 isHit = false;
             }
 
@@ -407,10 +383,10 @@ void Character::TakeDamage(int amount)
 
     OnDamageTaken(amount);
 
-    if (colorChange && mesh)
+    if (meshScripts && mesh)
     {
         mesh->SetEnabled(false);
-        colorChange->SetEnabled(true);
+        meshScripts->SetEnabled(true);
     }
 
     isHit = true;
@@ -453,16 +429,7 @@ void Character::TakeDamage(int amount)
             onHitVfx2->SetEnabled(true);
             onHitVfx2->GetComponent<MeshComponent*>()->SetEnabled(false);
             onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
-        }
-
-        if (meshScripts && mesh)
-        {
-            mesh->SetEnabled(false);
-            meshScripts->SetEnabled(true);
-        }
-
-        isHit         = true;
-        onHitVfxTimer = onHitVfxDuration;
+        }        
     }
 
     if (currentHealth <= 0) Die();
