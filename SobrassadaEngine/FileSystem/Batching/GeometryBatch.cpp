@@ -367,6 +367,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
             }
 
             // SETTING BONE INDEX FOR USE IN SHADER SCRIPTS
+            component->SetBaseIndex((unsigned int)index);
             component->SetBoneIndexOffset((unsigned int)accBones);
         }
         glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
@@ -437,6 +438,17 @@ void GeometryBatch::UnbindBonesBuffer()
     const GLuint currentBuffer = bones[currentBufferIndex];
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, 0);
+}
+
+void SOBRASADA_API_ENGINE GeometryBatch::BindMaterialsBuffer()
+{
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, materials);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, materials);
+}
+
+void SOBRASADA_API_ENGINE GeometryBatch::UnbindMaterialsBuffer()
+{
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, 0);
 }
 
 void GeometryBatch::LockBuffer()

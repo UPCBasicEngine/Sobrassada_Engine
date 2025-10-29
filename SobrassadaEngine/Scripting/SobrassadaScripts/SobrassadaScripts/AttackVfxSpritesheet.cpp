@@ -45,6 +45,7 @@ AttackVfxSpritesheet::AttackVfxSpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &otherImageUID});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Spritesheet Variations"});
+    fields.push_back({"Variations are random", InspectorField::FieldType::Bool, &randomVariation});
     fields.push_back({"Number of variations to use", InspectorField::FieldType::Int, &variationsToUse});
     fields.push_back({"Variation 1", InspectorField::FieldType::Resource, &variationsUID1});
     fields.push_back({"Variation 2", InspectorField::FieldType::Resource, &variationsUID2});
@@ -70,6 +71,7 @@ AttackVfxSpritesheet::~AttackVfxSpritesheet()
 
 bool AttackVfxSpritesheet::Init()
 {
+    if (isInitialized) return true;
     shaderProgram = AppEngine->GetShaderModule()->RequestShaderProgram(
         "./EngineDefaults/Shader/Custom/Vertex/AttackVfx_Vertex.glsl",
         "./EngineDefaults/Shader/Custom/Fragment/AttackVfx_Fragment.glsl"
@@ -178,6 +180,7 @@ bool AttackVfxSpritesheet::Init()
     }
 
     if (animationDuration <= 0.f) animationDuration = 0.1f;
+    isInitialized = true;
     return true;
 }
 
@@ -190,7 +193,7 @@ void AttackVfxSpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
 {
     UpdateSprite(deltaTime);
 
-    if (shaderProgram && indexCount > 0 && meshComp && meshComp->GetBatch())
+    if (shaderProgram && indexCount > 0 && meshComp)
     {
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
@@ -261,18 +264,34 @@ void AttackVfxSpritesheet::Reset()
     finished = false;
     if (variationsToUse > 0)
     {
-        int idx = rand() % (variationsToUse + 1);
-        GLOG("IDX: %d", idx);
-        if (idx == variationsToUse)
+        if (randomVariation)
         {
-            currentImageUID = otherImageBindlessUID;
-            ResetUVs(otherImage);
+            int idx = rand() % (variationsToUse + 1);
+            GLOG("IDX: %d", idx);
+            if (idx == variationsToUse)
+            {
+                currentImageUID = otherImageBindlessUID;
+                ResetUVs(otherImage);
+            }
+            else
+            {
+                currentImageUID = variationsBindlessUID[idx];
+                ResetUVs(variations[idx]);
+            }
         }
         else
         {
-            currentImageUID = variationsBindlessUID[idx];
-            ResetUVs(variations[idx]);
-        }
+            if (variationIndex < 0)
+            {
+                currentImageUID = otherImageBindlessUID;
+                ResetUVs(otherImage);
+            }
+            else
+            {
+                currentImageUID = variationsBindlessUID[variationIndex];
+                ResetUVs(variations[variationIndex]);
+            }
+        } 
     }
     else
     {

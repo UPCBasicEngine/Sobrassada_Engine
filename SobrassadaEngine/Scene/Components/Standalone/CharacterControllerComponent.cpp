@@ -417,16 +417,17 @@ void CharacterControllerComponent::Rotate(float rotationDirection, float deltaTi
     parent->UpdateTransformForGOBranch();
 }
 
-void CharacterControllerComponent::SetDirection(float3& direction)
+void CharacterControllerComponent::SetDirection(const float3& direction)
 {
     if (!movementEnabled) return;
 
     targetDirection = direction;
     if (direction.LengthSq() > 0.001f)
     {
-        direction.Normalize();
-        targetDirection = direction;
-        rotateDirection = direction;
+        float3 dir = direction;
+        dir.Normalize();
+        targetDirection = dir;
+        rotateDirection = dir;
         isRotating      = true;
     }
 }

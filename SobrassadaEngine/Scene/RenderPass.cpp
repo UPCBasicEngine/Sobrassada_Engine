@@ -163,6 +163,8 @@ void RenderPass::Save(rapidjson::Value& targetState, rapidjson::Document::Alloca
     targetState.AddMember("extinctionCoefficient", extinctionCoefficient, allocator);
     targetState.AddMember("blurrPasses", blurrPasses, allocator);
     targetState.AddMember("useNoiseTexture", useNoiseTexture, allocator);
+    targetState.AddMember("bloomEnabled", bloomEnabled, allocator);
+    targetState.AddMember("bloomIntensity", bloomIntensity, allocator);
     targetState.AddMember("noiseTexture", noiseTexture != nullptr ? noiseTexture->GetUID() : INVALID_UID, allocator);
 }
 
@@ -175,6 +177,8 @@ void RenderPass::LoadData(const rapidjson::Value& initialState)
         extinctionCoefficient = initialState["extinctionCoefficient"].GetFloat();
     if (initialState.HasMember("blurrPasses")) blurrPasses = initialState["blurrPasses"].GetInt();
     if (initialState.HasMember("useNoiseTexture")) useNoiseTexture = initialState["useNoiseTexture"].GetBool();
+    if (initialState.HasMember("bloomEnabled")) bloomEnabled = initialState["bloomEnabled"].GetBool();
+    if (initialState.HasMember("bloomIntensity")) bloomIntensity = initialState["bloomIntensity"].GetFloat();
 
     if (initialState.HasMember("noiseTexture"))
     {
@@ -456,6 +460,10 @@ void RenderPass::RenderScene(
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post effects Pass");
     App->GetShaderScriptModule()->RenderPostEffectsPassShaders(deltaTime, camera, shadersToRender);
+    glPopDebugGroup();
+
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Bloom Pass");
+    BloomPassRender();
     glPopDebugGroup();
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
@@ -913,6 +921,49 @@ void RenderPass::HeightFogPassRender(CameraComponent* camera) const
     glDepthMask(GL_TRUE);
 }
 
+void RenderPass::BloomPassRender() const
+{
+    if (!bloomEnabled) return;
+
+    bool horizontal = true, firstIteration = true;
+
+    const unsigned int blurrProgram = App->GetShaderModule()->GetGaussianBlurrProgram();
+    glUseProgram(blurrProgram);
+    glViewport(0, 0, width / 2, height / 2);
+
+    for (int i = 0; i < 6; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[horizontal]);
+        glUniform1ui(0, horizontal);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, firstIteration ? gbuffer->emissiveTexture : blurrTextures[!horizontal]);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        horizontal = !horizontal;
+        if (firstIteration) firstIteration = false;
+    }
+
+    Bind();
+
+    const unsigned int bloomProgram = App->GetShaderModule()->GetBloomProgram();
+    glUseProgram(bloomProgram);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, framebuffer->GetColorTexture());
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, blurrTextures[!horizontal]);
+
+    GLint locIntensity = glGetUniformLocation(bloomProgram, "bloomIntensity");
+    glUniform1f(locIntensity, bloomIntensity);
+
+    glDepthMask(GL_FALSE);
+    App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
+    glDepthMask(GL_TRUE);
+}
+
 void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 {
     // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -948,8 +999,6 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
     fxaaTexture = framebuffer->GetColorTexture();
 #endif
 
-    glDepthMask(GL_FALSE);
-
     unsigned int fxaaProgram = App->GetShaderModule()->GetFXAAProgram();
     glUseProgram(fxaaProgram);
 
@@ -963,8 +1012,6 @@ void RenderPass::AntiAliasingPassRender(Framebuffer* framebuffer) const
 
     glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
-    glDepthMask(GL_TRUE);
-
     glDepthMask(GL_TRUE);
 
 #ifndef GAME
@@ -1125,7 +1172,7 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glUseProgram(blurrProgram);
     glViewport(0, 0, width / 2, height / 2);
 
-    for (unsigned int i = 0; i < blurrPasses; i++)
+    for (int i = 0; i < blurrPasses; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, blurrFBO[horizontal]);
         glUniform1ui(0, horizontal);
@@ -1322,7 +1369,7 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
     // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, visibleVolumetricAreaIndicesSSBO);
 
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
-    //App->GetSceneModule()->GetScene()->GetLightsConfig()->SetVolumetricAreaShaderData();
+    // App->GetSceneModule()->GetScene()->GetLightsConfig()->SetVolumetricAreaShaderData();
 
     glDispatchCompute(tilesX, tilesY, 1);
 
@@ -1421,7 +1468,7 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
     glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
-    
+
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisable(GL_STENCIL_TEST);

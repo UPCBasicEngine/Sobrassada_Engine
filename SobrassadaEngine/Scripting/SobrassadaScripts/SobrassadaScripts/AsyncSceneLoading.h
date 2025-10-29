@@ -13,8 +13,13 @@ class AsyncSceneLoading : public Script
     void Update(float deltaTime) override;
 
   private:
+
+    bool SkipCutscene() const;
+
+private:
     std::string targetSceneName;
     bool useAsyncLoading = true;
+    float minimumPlayTimeBeforeSkip = 1.0f;
 
     std::string fullScenePath;
     bool isSetupCorrectly          = true;

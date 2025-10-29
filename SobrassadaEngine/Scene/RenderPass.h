@@ -99,6 +99,7 @@ class RenderPass
     void SsaoBlurPassRender(SSAO* ssao);
     void VolumetricFogPassRender(CameraComponent* camera, DirectionalLightComponent* light);
     void HeightFogPassRender(CameraComponent* camera) const;
+    void BloomPassRender() const;
     void AntiAliasingPassRender(Framebuffer* framebuffer) const;
 
     void RenderGBufferDebug(GBuffer* gbuffer) const;
@@ -114,6 +115,10 @@ class RenderPass
     float extinctionCoefficient = 0.04f;
     bool useNoiseTexture        = false;
     int blurrPasses             = 10;
+
+    // Bloom parameters
+    bool bloomEnabled           = true;
+    float bloomIntensity        = 1.0f;
 
   private:
     std::vector<VideoComponent*> videosToRender;
@@ -155,17 +160,17 @@ class RenderPass
     int tilesX;
 
     // Volumetric Fog
-    unsigned int fogResultTexture                 = 0;
-    //unsigned int visibleVolumetricAreaIndicesSSBO = 0;
-    unsigned int blurrFBO[2]                      = {0};
-    unsigned int blurrTextures[2]                 = {0};
-    ResourceTexture* noiseTexture                 = nullptr;
+    unsigned int fogResultTexture = 0;
+    // unsigned int visibleVolumetricAreaIndicesSSBO = 0;
+    unsigned int blurrFBO[2]      = {0};
+    unsigned int blurrTextures[2] = {0};
+    ResourceTexture* noiseTexture = nullptr;
 
     // FXAA
-    bool enableFXAA                               = true;
-    bool showBorders                              = false;
-    float globalThreshold                         = 0.0312f;
-    float localThreshold                          = 0.063f;
+    bool enableFXAA               = true;
+    bool showBorders              = false;
+    float globalThreshold         = 0.0312f;
+    float localThreshold          = 0.063f;
     HeightFogParameters heightFog;
     FXAAParameters fxaaParameters;
 };

@@ -22,11 +22,14 @@ class AttackVfxSpritesheet : public Script
 
     const bool AlmostFinished(int row, int col) const;
     const bool Finished() const { return finished; }
+    void SetVariationToUse(int variation) { variationIndex = variation; }
+    bool IsInitialized() const { return isInitialized; }
 
   private:
     void ResetUVs(ResourceTexture* tex);
 
     unsigned int shaderProgram     = 0;
+    bool isInitialized             = false;
 
     unsigned int vao               = 0;
     unsigned int vbo               = 0;
@@ -48,28 +51,30 @@ class AttackVfxSpritesheet : public Script
     UID otherImageUID              = 0;
     UID otherImageBindlessUID      = 0;
 
-    float2 step                 = float2::zero;
+    float2 step                    = float2::zero;
 
     bool isOneShot                 = false;
     bool isAdditive                = false;
 
+    bool randomVariation           = true;
+    int variationIndex             = -1;
     int variationsToUse            = 0;
     ResourceTexture* variations[4] = {nullptr};
-    UID variationsUID1;
-    UID variationsUID2;
-    UID variationsUID3;
-    UID variationsUID4;
-    UID variationsBindlessUID[4];
+    UID variationsUID1             = 0;
+    UID variationsUID2             = 0;
+    UID variationsUID3             = 0;
+    UID variationsUID4             = 0;
+    UID variationsBindlessUID[4]   = {0};
 
-    UID currentImageUID = 0;
+    UID currentImageUID            = 0;
 
-    bool onlyOnce               = false;
-    bool finished               = false;
+    bool onlyOnce                  = false;
+    bool finished                  = false;
 
-    bool useRowCol              = false;
-    int rows                    = 1;
-    int cols                    = 1;
+    bool useRowCol                 = false;
+    int rows                       = 1;
+    int cols                       = 1;
 
-    bool useAnimDuration        = false;
-    float animationDuration     = 0.1f;
+    bool useAnimDuration           = false;
+    float animationDuration        = 0.1f;
 };
