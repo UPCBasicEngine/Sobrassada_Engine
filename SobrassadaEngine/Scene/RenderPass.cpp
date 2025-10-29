@@ -41,9 +41,13 @@ RenderPass::RenderPass()
     transparentMeshesToRender.reserve(200);
     vertexOffsetMeshesToRender.reserve(200);
 
-    glGenBuffers(1, &depthReadPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, sizeof(float) * 4, nullptr, GL_STREAM_READ);
+    glGenBuffers(2, depthReadPBO);
+    for (int i = 0; i < 2; ++i)
+    {
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[i]);
+        glBufferData(GL_PIXEL_PACK_BUFFER, 4 * sizeof(float), nullptr, GL_STREAM_READ);
+    }
+
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     depthPBOInitialized = true;
 
@@ -129,6 +133,7 @@ RenderPass::RenderPass()
 RenderPass::~RenderPass()
 {
     glDeleteBuffers(1, &visibleLightIndicesSSBO);
+    glDeleteBuffers(2, depthReadPBO);
     // glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
 
     glDeleteBuffers(1, &decalVBO);
@@ -551,7 +556,10 @@ void RenderPass::ShadowMapPassRender(
 {
     if (light == nullptr) return;
 
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
+    int readPBOIndex = currentPBOIndex;
+    int writePBOIndex = 1 - currentPBOIndex;
+
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[readPBOIndex]);
     float* ptr = (float*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
     if (ptr)
     {
@@ -620,15 +628,16 @@ void RenderPass::ShadowMapPassRender(
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    float minMax[4] = {0, 0, 0, 0};
 
 #ifdef OPTICK
     OPTICK_PUSH("RenderPass::ShadowMap::ReadingFromGPU");
 #endif
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[writePBOIndex]);
     glBindTexture(GL_TEXTURE_2D, currentOutput);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0); // offset 0 en el PBO
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    currentPBOIndex = writePBOIndex;
 
 #ifdef OPTICK
     OPTICK_POP();
@@ -755,18 +764,19 @@ void RenderPass::ShadowMapPassRender(
     auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
+    std::vector<GameObject*> shadowObjectsToRenderSpot;
 
     for (int i = 0; i < TotalShadowMaps && i < spotLights.size(); ++i)
     {
         if (!spotLights[i] || (spotLights[i] && !spotLights[i]->GetRenderVolumetric())) continue;
 
         meshesToRender.clear();
-        shadowObjectsToRender.clear();
+        shadowObjectsToRenderSpot.clear();
 
         lightFrustum.UpdateFrustumPlanes(spotLights[i]->GetViewMatrix(), spotLights[i]->GetProjectionMatrix());
-        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
+        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum_Cached(shadowObjectsToRenderSpot, lightFrustum, shadowObjectsToRender);
 
-        for (const auto& gameObject : shadowObjectsToRender)
+        for (const auto& gameObject : shadowObjectsToRenderSpot)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
             if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&

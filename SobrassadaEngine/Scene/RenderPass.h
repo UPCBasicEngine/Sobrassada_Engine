@@ -145,7 +145,8 @@ class RenderPass
     float4x4 lightView;
     float4x4 lightProj;
 
-    unsigned int depthReadPBO                       = 0;
+    unsigned int depthReadPBO[2]                    = {0u, 0u};
+    int currentPBOIndex                             = 0;
     bool depthPBOInitialized                        = false;
     float lastFrameMinDepth                         = 0.0f;
     float lastFrameMaxDepth                         = 1.0f;

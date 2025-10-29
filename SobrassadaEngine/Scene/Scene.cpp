@@ -1082,7 +1082,7 @@ void Scene::CreateStaticSpatialDataStruct()
     float3 octreeCenter = float3::zero;
     float octreeLength  = 2000;
     int nodeCapacity    = 10;
-    sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
+    sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity, false);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {
@@ -1102,7 +1102,7 @@ void Scene::CreateDynamicSpatialDataStruct()
     float3 center    = float3::zero;
     float length     = 2000;
     int nodeCapacity = 15;
-    dynamicTree      = new Octree(center, length, nodeCapacity);
+    dynamicTree      = new Octree(center, length, nodeCapacity, true);
 
     for (const auto& objectIterator : gameObjectsContainer)
     {
@@ -1149,6 +1149,26 @@ void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects
     {
         OBB objectOBB = gameObject->GetGlobalOBB();
 
+        if (frustumPlanes.Intersects(objectOBB))
+        {
+            outRenderGameObjects.push_back(gameObject);
+        }
+    }
+}
+
+void Scene::CheckObjectsInFrustum_Cached(
+    std::vector<GameObject*>& outRenderGameObjects, 
+    FrustumPlanes frustumPlanes,
+    const std::vector<GameObject*>& candidateObjects) const
+{
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::CheckObjectsInFrustum_Cached", Optick::Category::GameLogic)
+#endif
+    
+    // NO hacer octree query, solo check sobre candidatos
+    for (auto gameObject : candidateObjects)
+    {
+        OBB objectOBB = gameObject->GetGlobalOBB();
         if (frustumPlanes.Intersects(objectOBB))
         {
             outRenderGameObjects.push_back(gameObject);
