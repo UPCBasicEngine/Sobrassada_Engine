@@ -117,6 +117,7 @@ void ShaderScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Docum
                 scriptData.AddMember(name, arr, allocator);
                 break;
             }
+            case InspectorField::FieldType::Color:
             case InspectorField::FieldType::Vec3:
             case InspectorField::FieldType::Color:
             {
@@ -367,7 +368,7 @@ bool ShaderScriptComponent::CreateScript(const std::string& scriptType, ShaderSc
 
     if (renderType != ShaderScriptType::NONE) shaderScriptRenderType.push_back(renderType);
     else shaderScriptRenderType.push_back(ShaderScriptType::GEOMERTY_PASS);
-    
+
     unsigned int scriptIndex = (unsigned int)scriptInstances.size() - 1;
     App->GetShaderScriptModule()->AddShaderScript(this, scriptIndex, shaderScriptRenderType[scriptIndex]);
 
@@ -379,7 +380,7 @@ void ShaderScriptComponent::DeleteScript(const int index)
     if (index >= scriptInstances.size()) return;
 
     if (scriptInstances[index]) App->GetScriptModule()->DestroyScript(scriptInstances[index]);
-    
+
     App->GetShaderScriptModule()->ComponentDeletedScript(this);
 
     scriptInstances.erase(scriptInstances.begin() + index);
@@ -390,7 +391,6 @@ void ShaderScriptComponent::DeleteScript(const int index)
     scriptInitialized.erase(scriptInitialized.begin() + index);
     scriptWasEnabledLastFrame.erase(scriptWasEnabledLastFrame.begin() + index);
     shaderScriptRenderType.erase(shaderScriptRenderType.begin() + index);
-
 }
 
 void ShaderScriptComponent::DeleteAllScripts()
@@ -427,6 +427,19 @@ void ShaderScriptComponent::ResetScript(const std::string& scriptName)
             return;
         }
     }
+}
+
+bool SOBRASADA_API_ENGINE ShaderScriptComponent::GetScriptEnabled(const std::string& scriptName) const
+{
+    for (int i = 0; i < scriptNames.size(); ++i)
+    {
+        if (scriptName == scriptNames[i])
+        {
+            return scriptEnabled[i];
+        }
+    }
+
+    return false;
 }
 
 void ShaderScriptComponent::SetComponentEnabled(bool value)

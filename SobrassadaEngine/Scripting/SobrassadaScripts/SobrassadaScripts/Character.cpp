@@ -121,6 +121,23 @@ bool Character::Init()
 
         onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
         if (onHitVfx2) onHitVfx2->SetEnabled(false);
+        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
+
+        GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
+        if (meshObject)
+        {
+            mesh = meshObject->GetComponent<MeshComponent*>();
+            if (mesh) mesh->SetEnabled(true);
+            // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+            meshScripts = meshObject->GetComponent<ShaderScriptComponent*>();
+            if (meshScripts) meshScripts->SetEnabled(false);
+            // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+        }
+        else
+        {
+            GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
+        }
 
         GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
         if (glowObject) glow = glowObject;
@@ -196,7 +213,9 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
 
     // ---- Damage Collisions ----
 
-    if (type == CharacterType::Boss) hitCollisionNormal = collisionNormal;
+    // if (type == CharacterType::Boss) hitCollisionNormal = collisionNormal;
+    hitGOFront                                 = otherObject->GetGlobalTransform().WorldZ().Normalized();
+    hitCollisionNormal                         = collisionNormal.Normalized();
 
     // Melee check
     CapsuleColliderComponent* otherWeapon      = otherObject->GetComponent<CapsuleColliderComponent*>();
@@ -244,8 +263,10 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
 
             if (playerScript && bansheeScript && bansheeScript->GetState() == BansheeStates::SlowArea)
             {
-                playerScript->StartCurse();
                 TakeDamage(bansheeScript->GetSlowAreaDamage());
+                playerScript->AddRiastrad(
+                    -(bansheeScript->GetSlowAreaRiastradReduction() + playerScript->GetRiastradOnDamageTaken())
+                );
                 return;
             }
         }
@@ -351,6 +372,13 @@ void Character::UpdateTimers(float deltaTime)
     {
         onHitVfxTimer -= deltaTime;
 
+        // Do this in the next frame after enabling the mesh to avoid popping
+        if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
+        {
+            meshScripts->SetEnabled(false);
+            isHit = false;
+        }
+
         if (onHitVfxTimer < 0.0f)
         {
             if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
@@ -426,6 +454,15 @@ void Character::TakeDamage(int amount)
             onHitVfx2->GetComponent<MeshComponent*>()->SetEnabled(false);
             onHitVfx2->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Reset();
         }
+
+        if (meshScripts && mesh)
+        {
+            mesh->SetEnabled(false);
+            meshScripts->SetEnabled(true);
+        }
+
+        isHit         = true;
+        onHitVfxTimer = onHitVfxDuration;
     }
 
     if (currentHealth <= 0) Die();
