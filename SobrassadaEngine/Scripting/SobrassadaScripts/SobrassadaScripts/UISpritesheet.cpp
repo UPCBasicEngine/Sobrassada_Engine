@@ -27,11 +27,12 @@ UISpritesheet::UISpritesheet(GameObject* parent) : Script(parent)
     fields.push_back({"Disable default image", InspectorField::FieldType::Bool, &disableDefaultImage});
     fields.push_back({"Cell width", InspectorField::FieldType::Float, &cellWidth, 0.f, 10000.f});
     fields.push_back({"Cell height", InspectorField::FieldType::Float, &cellHeight, 0.f, 10000.f});
-    fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 1.0f});
+    fields.push_back({"Update Rate", InspectorField::FieldType::Float, &updateRate, 0.0f, 10.0f});
     fields.push_back({"Row major", InspectorField::FieldType::Bool, &isRowMajor});
     fields.push_back({"Is One Shot", InspectorField::FieldType::Bool, &isOneShot});
     fields.push_back({"Is Fade Out", InspectorField::FieldType::Bool, &isFadeOut});
     fields.push_back({"Fade Out Duration", InspectorField::FieldType::Float, &fadeOutDuration, 0.0f, 10.0f});
+    fields.push_back({"Fade Out Start", InspectorField::FieldType::Float, &fadeOutStart, 0.0f, 10.0f});
     fields.push_back({"Texture", InspectorField::FieldType::Resource, &spritesheetUID});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Row column parameters"});
@@ -146,6 +147,7 @@ void UISpritesheet::Render(float deltaTime, CameraComponent* cameraComp)
     glUniform1f(6, fadeOutTime);
     glUniform1f(7, fadeOutDuration);
     glUniform1i(8, isFadeOut);
+    glUniform1i(9, fadeOutStart);
 
     glBindVertexArray(vao);
 
@@ -220,7 +222,7 @@ void UISpritesheet::UpdateSprite(float deltaTime)
 
     if (isFadeOut && uvRange.y >= 1.0f && uvRange.w >= 1.0f)
     {
-        if (fadeOutTime == 0.0f) fadeOutTime = timer;
+        if (fadeOutTime == 0.0f) fadeOutTime = timer + fadeOutStart;
         if (timer - fadeOutTime >= fadeOutDuration) parent->GetComponent<ShaderScriptComponent*>()->SetEnabled(false);
         return;
     }

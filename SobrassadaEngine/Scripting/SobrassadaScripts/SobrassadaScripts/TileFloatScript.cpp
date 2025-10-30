@@ -65,12 +65,14 @@ bool TileFloatScript::Init()
     currentRotationQuat               = startQuat;
 
     tileToMove->SetLocalTransform(startTransform);
+    tileToMove->AddTag(HashString("Rock"));
 
     // Audio
     audioComp = tileToMove->GetComponent<AudioSourceComponent*>();
 
     // GLOG("Initiating TileFloatScript");
     return true;
+
 }
 
 void TileFloatScript::Update(float deltaTime)
