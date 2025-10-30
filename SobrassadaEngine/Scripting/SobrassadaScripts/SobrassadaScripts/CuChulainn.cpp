@@ -1114,6 +1114,12 @@ void CuChulainn::GetInputs()
     }
 }
 
+float3 CuChulainn::GetMark() const
+{
+
+    return markVfxObject->GetPosition();
+}
+
 bool CuChulainn::CanDash() const
 {
     if (!dashUnlocked) return false; // When tutorial map is correctly fixed, put this to make progression

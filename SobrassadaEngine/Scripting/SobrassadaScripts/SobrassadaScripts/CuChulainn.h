@@ -92,6 +92,7 @@ class CuChulainn : public Character
     void ApplySavedState(const PlayerState& playerState);
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
+    float3 GetMark() const;
 
   private:
     void OnDeath() override;
@@ -112,6 +113,7 @@ class CuChulainn : public Character
     bool CanChargeAttack() const;
     bool CanTransform() const;
     void GetInputs();
+   
 
     void LookAtMouse();
     void LookAtRightStick();

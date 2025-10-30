@@ -838,7 +838,19 @@ void Archer::PerformAttack()
 
 void Archer::OverShooting(float deltaTime)
 {
-
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        hasShot     = false;
+        isAttacking = false;
+        attackTimer = 0.0f;
+        agentAI->ResumeMovement();
+        agentAI->SetSpeed(0.0f, 0.0f);
+        if (animComponent) animComponent->UseTrigger("idle");
+        isAiming     = false;
+        aimTimer     = 0.0f;
+        currentState = ArcherStates::PATROL;
+        return;
+    }
     if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
     {
         hasShot            = false;
@@ -1144,7 +1156,7 @@ void Archer::ChaseAI()
         float distance = GetDistanceFromPlayer();
 
         agentAI->ResetSpeed();
-        agentAI->SetSpeed(5.0, 5.0f);
+        agentAI->SetSpeed(4.0, 10.0f);
         agentAI->SetLookForward(true);
 
         if (distance <= rangeEscape)
@@ -1323,7 +1335,7 @@ void Archer::DangerRetreat(float deltaTime)
             hasDangerTarget    = true;
         }
 
-        agentAI->SetSpeed(15.0f, 3.0f);
+        agentAI->SetSpeed(7.0f, 10.0f);
         agentAI->SetLookForward(true);
     }
 
@@ -1428,6 +1440,17 @@ void Archer::Aim(float deltaTime)
     {
         isAiming = false;
         aimTimer = 0.0f;
+        agentAI->ResumeMovement();
+        agentAI->SetSpeed(0.0f, 0.0f);
+        if (animComponent) animComponent->UseTrigger("idle");
+        agentAI->SetLookForward(true);
+        currentState = ArcherStates::PATROL;
+        return;
+    }
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        isAiming = false;
+        aimTimer = 0.0f;
         agentAI->SetLookForward(true);
         agentAI->ResetSpeed();
         currentState = ArcherStates::PATROL;
@@ -1521,7 +1544,7 @@ float3 Archer::CalculatePredictiveTarget()
 {
     if (!character) return float3::zero;
 
-    float3 playerPos      = character->GetLastPosition();
+    float3 playerPos      = +playerScript->GetMark();
     float3 playerVelocity = character->GetVelocity();
 
     if (!character->IsMoving()) return playerPos;
@@ -1543,6 +1566,19 @@ float3 Archer::CalculatePredictiveTarget()
 
 void Archer::Attack(float deltaTime)
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        hasShot     = false;
+        isAttacking = false;
+        attackTimer = 0.0f;
+        agentAI->ResumeMovement();
+        agentAI->SetSpeed(0.0f, 0.0f);
+        if (animComponent) animComponent->UseTrigger("idle");
+        isAiming     = false;
+        aimTimer     = 0.0f;
+        currentState = ArcherStates::PATROL;
+        return;
+    }
     if (shouldAttack)
     {
         if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
@@ -1764,7 +1800,7 @@ void Archer::Escape(float deltaTime)
             GLOG("ESCAPE: Using fallback direction");
         }
 
-        agentAI->SetSpeed(20.0f, 5.0f);
+        agentAI->SetSpeed(7.0f, 10.0f);
         agentAI->SetLookForward(true);
     }
 
