@@ -10,6 +10,7 @@
 #include "Standalone/SplineComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
+#include "ParticleSystemComponent.h"
 #include "Wwise_IDs.h"
 
 Crow::Crow(GameObject* parent)
@@ -17,6 +18,7 @@ Crow::Crow(GameObject* parent)
           parent, 1, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, CharacterType::Crow)
 {
     fields.push_back({"Disable end route?", InspectorField::FieldType::Bool, &endRouteDisable});
+    fields.push_back({"VFX Particle Feathers", InspectorField::FieldType::InputText, &nameVFXFeathers});
 }
 
 bool Crow::Init()
@@ -28,6 +30,16 @@ bool Crow::Init()
     
     moveGOSpline = parent->GetComponent<ScriptComponent*>()->GetScriptByType<MoveGOInSpline>();
     if (moveGOSpline) moveGOSpline->SetEnabled(false);
+
+    if (!nameVFXFeathers.empty())
+    {
+        feathers = AppEngine->GetSceneModule()
+                       ->GetScene()
+                       ->GetGameObjectByName(nameVFXFeathers)
+                       ->GetComponent<ParticleSystemComponent*>();
+        
+        feathers->StopInstances();
+    }
 
     audioComp = parent->GetComponent<AudioSourceComponent*>();
 
@@ -83,6 +95,7 @@ void Crow::EnterState(CrowStates next)
 
     case CrowStates::TAKE_OFF:
         animComponent->UseTrigger(takeOffTriggerName.c_str());
+        if (feathers) feathers->Init();
         break;
 
     case CrowStates::FLY:
