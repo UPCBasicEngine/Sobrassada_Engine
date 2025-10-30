@@ -1221,8 +1221,8 @@ void Archer::DangerRetreat(float deltaTime)
     float distToPlayer = archerPos.Distance(playerPos);
 
     if (animComponent) animComponent->UseTrigger("run");
-
-    // Si ya estamos lejos, salir
+    agentAI->SetLookForward(true);
+   
     if (distToPlayer >= 10.0f)
     {
         hasDangerTarget  = false;
@@ -1233,7 +1233,7 @@ void Archer::DangerRetreat(float deltaTime)
         return;
     }
 
-    // Si el ultimate terminó
+    
     if (playerScript && playerScript->GetState() != CharacterStates::ULTIMATE)
     {
         dangerTimer += deltaTime;
@@ -1335,8 +1335,7 @@ void Archer::DangerRetreat(float deltaTime)
             hasDangerTarget    = true;
         }
 
-        agentAI->SetSpeed(7.0f, 10.0f);
-        agentAI->SetLookForward(true);
+        agentAI->SetSpeed(8.0f, 10.0f);
     }
 
    
@@ -1544,7 +1543,7 @@ float3 Archer::CalculatePredictiveTarget()
 {
     if (!character) return float3::zero;
 
-    float3 playerPos      = +playerScript->GetMark();
+    float3 playerPos      = playerScript->GetMark();
     float3 playerVelocity = character->GetVelocity();
 
     if (!character->IsMoving()) return playerPos;
@@ -1717,7 +1716,7 @@ void Archer::Escape(float deltaTime)
     float distToPlayer = character->GetLastPosition().Distance(archerPos);
 
     if (animComponent) animComponent->UseTrigger("run");
-
+    agentAI->SetLookForward(true);
     
     if (distToPlayer >= rangeEscape + 2.0f)
     {
@@ -1801,7 +1800,7 @@ void Archer::Escape(float deltaTime)
         }
 
         agentAI->SetSpeed(7.0f, 10.0f);
-        agentAI->SetLookForward(true);
+      
     }
 
    
