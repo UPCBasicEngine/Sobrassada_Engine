@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "math/float2.h"
 #include "math/float4x4.h"
+#include "glew.h"
 
 #include "rapidjson/document.h"
 #include <unordered_map>
@@ -88,6 +89,7 @@ class RenderPass
 
     void GeometryPassRender(CameraComponent* camera) const;
     void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void DepthReduction(unsigned int depthTexture, int gBufferwidth, int gBufferheight);
     void ShadowMapPassRender(
         CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
     );
@@ -147,9 +149,13 @@ class RenderPass
 
     unsigned int depthReadPBO[2]                    = {0u, 0u};
     int currentPBOIndex                             = 0;
-    bool depthPBOInitialized                        = false;
     float lastFrameMinDepth                         = 0.0f;
     float lastFrameMaxDepth                         = 1.0f;
+    GLsync depthFences[2]                           = {0, 0};
+    std::vector<unsigned int> reductionTextures;
+    std::vector<float2> reductionSizes;
+    int lastReductionSize[2]                         = {0, 0};
+    float* mappedPBO[2] = {nullptr, nullptr};
 
     // SpotLight Shadows
     unsigned int spotShadowMaps[TotalShadowMaps]    = {0};

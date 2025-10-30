@@ -45,11 +45,16 @@ RenderPass::RenderPass()
     for (int i = 0; i < 2; ++i)
     {
         glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[i]);
-        glBufferData(GL_PIXEL_PACK_BUFFER, 4 * sizeof(float), nullptr, GL_STREAM_READ);
+        glBufferStorage(
+            GL_PIXEL_PACK_BUFFER, 4 * sizeof(float), nullptr,
+            GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+        );
+        mappedPBO[i] = (float*)glMapBufferRange(
+            GL_PIXEL_PACK_BUFFER, 0, 4 * sizeof(float), GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+        );
     }
 
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-    depthPBOInitialized = true;
 
     glGenFramebuffers(1, &depthFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
@@ -132,6 +137,17 @@ RenderPass::RenderPass()
 
 RenderPass::~RenderPass()
 {
+    for (int i = 0; i < 2; ++i)
+    {
+        if (mappedPBO[i])
+        {
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[i]);
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+            mappedPBO[i] = nullptr;
+        }
+    }
+    glDeleteBuffers(2, depthReadPBO);
+
     glDeleteBuffers(1, &visibleLightIndicesSSBO);
     glDeleteBuffers(2, depthReadPBO);
     // glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
@@ -285,11 +301,11 @@ void RenderPass::RenderScene(
         }
     }
 
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Video Render", Optick::Category::Rendering)
-#endif
     if (videosToRender.size() != 0)
     {
+#ifdef OPTICK
+        OPTICK_PUSH("RenderPass::Video Render")
+#endif
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Video Pass");
         gbuffer->Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -336,11 +352,14 @@ void RenderPass::RenderScene(
 #endif
 
         glPopDebugGroup();
+#ifdef OPTICK
+        OPTICK_POP();
+#endif
         return;
     }
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Geometry PASS", Optick::Category::Rendering)
+    OPTICK_PUSH("RenderPass::Geometry PASS")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
@@ -349,7 +368,8 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Geometry Shaders", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Geometry Shaders")
 #endif
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Custom Shaders Pass");
@@ -357,7 +377,8 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::ShadowMap")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
@@ -367,7 +388,8 @@ void RenderPass::RenderScene(
     glViewport(0, 0, width, height);
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Decals", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Decals")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
     DecalsPassRender(camera);
@@ -396,7 +418,8 @@ void RenderPass::RenderScene(
     }
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::SSAO PASS", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::SSAO PASS")
 #endif
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
@@ -408,14 +431,16 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Tile Compute", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Tile Compute")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::LightPass", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::LightPass")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
@@ -426,7 +451,8 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Render_TransparentPass", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Render_TransparentPass")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera);
@@ -437,21 +463,24 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::VolumetricRender", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::VolumetricRender")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
     VolumetricFogPassRender(camera, light);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::PostLightingShaders", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::PostLightingShaders")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
     App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera, shadersToRender);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::GameObject::Render_Billboards", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::GameObject::Render_Billboards")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
     glEnable(GL_BLEND);
@@ -474,6 +503,10 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
     AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
+
+#ifdef OPTICK
+    OPTICK_POP();
+#endif
 
     batchManager->SwapBuffers();
 }
@@ -534,20 +567,88 @@ void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRend
     glEnable(GL_BLEND);
 }
 
-void CreateDepthReductionTexture(unsigned int& texture, int width, int height)
+void RenderPass::DepthReduction(unsigned int depthTexture, int gBufferwidth, int gBufferheight)
 {
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, width, height);
+    if (lastReductionSize[0] != gBufferwidth && lastReductionSize[1] != gBufferheight)
+    {
+        int w = gBufferwidth;
+        int h = gBufferheight;
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        for (unsigned int tex : reductionTextures)
+        {
+            glDeleteTextures(1, &tex);
+        }
+        reductionSizes.clear();
+        reductionTextures.clear();
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        while (w > 1 || h > 1)
+        {
+            int groupsX = (w + 7) / 8;
+            int groupsY = (h + 3) / 4;
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+            unsigned int tex;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, groupsX, groupsY);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+            reductionTextures.push_back(tex);
+            float2 reductionSize;
+            reductionSize.x = static_cast<float>(groupsX);
+            reductionSize.y = static_cast<float>(groupsY);
+            reductionSizes.push_back(reductionSize);
+
+            w = groupsX;
+            h = groupsY;
+        }
+
+        lastReductionSize[0] = gBufferwidth;
+        lastReductionSize[1] = gBufferheight;
+    }
+
+    // Compute shader to find min/max values
+    unsigned int currentInput          = depthTexture;
+
+    int currentWidth                   = gBufferwidth;
+    int currentHeight                  = gBufferheight;
+
+    unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
+    glUseProgram(depthReductionProgram);
+    unsigned int inSizeLoc = glGetUniformLocation(depthReductionProgram, "inSize");
+
+    for (size_t i = 0; i < reductionTextures.size(); ++i)
+    {
+        unsigned int currentOutput = reductionTextures[i];
+        int groupsX                = reductionSizes[i].x;
+        int groupsY                = reductionSizes[i].y;
+
+        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+        glBindTextureUnit(0, currentInput);
+        glUniform2i(inSizeLoc, currentWidth, currentHeight);
+
+        glDispatchCompute(groupsX, groupsY, 1);
+        // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+        currentInput  = currentOutput;
+        currentWidth  = groupsX;
+        currentHeight = groupsY;
+    }
+
+    int writePBOIndex = 1 - currentPBOIndex;
+
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[writePBOIndex]);
+    glBindTexture(GL_TEXTURE_2D, currentInput);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0); // offset 0 en el PBO
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    currentPBOIndex = writePBOIndex;
 }
 
 void RenderPass::ShadowMapPassRender(
@@ -556,107 +657,37 @@ void RenderPass::ShadowMapPassRender(
 {
     if (light == nullptr) return;
 
-    int readPBOIndex = currentPBOIndex;
-    int writePBOIndex = 1 - currentPBOIndex;
+#ifdef OPTICK
+    OPTICK_PUSH("RenderPass::ShadowMap::Directional")
+#endif
+    int readPBOIndex = 1 - currentPBOIndex;
 
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[readPBOIndex]);
-    float* ptr = (float*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-    if (ptr)
+    if (mappedPBO[readPBOIndex])
     {
-        lastFrameMinDepth = ptr[0];
-        lastFrameMaxDepth = ptr[1];
-        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+        lastFrameMinDepth = mappedPBO[readPBOIndex][0];
+        lastFrameMaxDepth = mappedPBO[readPBOIndex][1];
     }
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    // glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[readPBOIndex]);
+    // float* ptr = (float*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+    // if (ptr)
+    //{
+    //     lastFrameMinDepth = ptr[0];
+    //     lastFrameMaxDepth = ptr[1];
+    //     glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    // }
+    // glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
 #ifdef OPTICK
     OPTICK_PUSH("RenderPass::ShadowMap::DepthReduction");
 #endif
-    // Compute shader to find min/max values
-    int gBufferwidth          = gbuffer->GetScreenWidth();
-    int gBufferheight         = gbuffer->GetScreenHeight();
-
-    unsigned int currentInput = gbuffer->GetDepthTexture();
-    unsigned int currentOutput;
-    CreateDepthReductionTexture(currentOutput, gBufferwidth, gBufferheight);
-
-    int currentWidth                   = gBufferwidth;
-    int currentHeight                  = gBufferheight;
-
-    unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
-    glUseProgram(depthReductionProgram);
-
-    glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-    while (currentWidth > 1 || currentHeight > 1)
-    {
-        int groupsX = (currentWidth + 7) / 8;
-        int groupsY = (currentHeight + 3) / 4;
-
-        glBindTextureUnit(0, currentInput);
-
-        glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
-
-        glDispatchCompute(groupsX, groupsY, 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-        unsigned int newTex;
-        CreateDepthReductionTexture(newTex, groupsX, groupsY);
-        glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-        if (currentInput != gbuffer->GetDepthTexture()) glDeleteTextures(1, &currentInput);
-        currentInput  = currentOutput;
-        currentOutput = newTex;
-
-        currentWidth  = groupsX;
-        currentHeight = groupsY;
-    }
-
-#ifdef OPTICK
-    OPTICK_PUSH("RenderPass::ShadowMap::DepthReductionLastPass");
-#endif
-    // Last Pass to make it 1x1
-    int groupsX = (currentWidth + 7) / 8;
-    int groupsY = (currentHeight + 3) / 4;
-
-    glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    glBindTextureUnit(0, currentInput);
-
-    glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
-
-    glDispatchCompute(groupsX, groupsY, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-#ifdef OPTICK
-    OPTICK_PUSH("RenderPass::ShadowMap::ReadingFromGPU");
-#endif
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[writePBOIndex]);
-    glBindTexture(GL_TEXTURE_2D, currentOutput);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0); // offset 0 en el PBO
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
-    currentPBOIndex = writePBOIndex;
-
+    DepthReduction(gbuffer->GetDepthTexture(), gbuffer->GetScreenWidth(), gbuffer->GetScreenHeight());
 #ifdef OPTICK
     OPTICK_POP();
 #endif
 
     float minDepth = lastFrameMinDepth;
     float maxDepth = lastFrameMaxDepth;
-
-    glDeleteTextures(1, &currentInput);
-    glDeleteTextures(1, &currentOutput);
-
-#ifdef OPTICK
-    OPTICK_POP();
-    OPTICK_POP();
-#endif
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::ComputeShadowMap", Optick::Category::Rendering)
-#endif
 
     // Compute the near and far planes based on the min/max depth values
     float nearD;
@@ -738,9 +769,6 @@ void RenderPass::ShadowMapPassRender(
     FrustumPlanes lightFrustum;
     lightFrustum.UpdateFrustumPlanes(lightView, lightProj);
 
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::ShadowMapCulling", Optick::Category::Rendering)
-#endif
     std::vector<GameObject*> shadowObjectsToRender;
     App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
 
@@ -759,7 +787,8 @@ void RenderPass::ShadowMapPassRender(
 
     // RENDER SPOTLIGHT SHADOWMAPS
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::Spotlights", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::ShadowMap::Spotlights")
 #endif
     auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
@@ -774,7 +803,9 @@ void RenderPass::ShadowMapPassRender(
         shadowObjectsToRenderSpot.clear();
 
         lightFrustum.UpdateFrustumPlanes(spotLights[i]->GetViewMatrix(), spotLights[i]->GetProjectionMatrix());
-        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum_Cached(shadowObjectsToRenderSpot, lightFrustum, shadowObjectsToRender);
+        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum_Cached(
+            shadowObjectsToRenderSpot, lightFrustum, shadowObjectsToRender
+        );
 
         for (const auto& gameObject : shadowObjectsToRenderSpot)
         {
@@ -813,6 +844,10 @@ void RenderPass::ShadowMapPassRender(
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+#ifdef OPTICK
+    OPTICK_POP();
+#endif
 }
 
 void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const
