@@ -97,30 +97,31 @@ void Crow::EnterState(CrowStates next)
 
 void Crow::EndRoute()
 {
-    spline         = moveGOSpline->GetSpline();
+    if (!moveGOSpline || currentState != CrowStates::FLY) return;
+
+    spline = moveGOSpline->GetSpline();
+    if (!spline) return;
 
     pointSplineEnd = spline->GetPointLocal(spline->GetNumPoints() - 1);
 
-    if (!spline) return;
-
     auto comparePositions = [](const auto& a, const auto& b, float eps = 0.1f) noexcept
-    {
-        const float dx = a.x - b.x;
-        const float dy = a.y - b.y;
-        const float dz = a.z - b.z;
-
-        bool samePos   = false;
-
-        if (dx <= eps && dy <= eps && dz <= eps) samePos = true;
-        return samePos;
+    { 
+            return fabsf(a.x - b.x) <= eps &&
+                fabsf(a.y - b.y) <= eps &&
+                fabsf(a.z - b.z) <= eps;
     };
 
     if (comparePositions(parent->GetPosition(), pointSplineEnd))
     {
-        if (!endRouteDisable) EnterState(CrowStates::IDLE);
+        if (!endRouteDisable)
+        {
+            moveGOSpline->SetEnabled(false);
+            EnterState(CrowStates::IDLE);
+        }
         else
         {
-            if (parentGO) parentGO->SetEnabled(false);
+            if (parentGO) 
+                parentGO->SetEnabled(false);
         }
     }
 }
