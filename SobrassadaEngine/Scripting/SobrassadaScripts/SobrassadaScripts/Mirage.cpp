@@ -22,6 +22,8 @@ Mirage::Mirage(GameObject* parent) : Script(parent)
     fields.push_back({"Weight Order", InspectorField::FieldType::Int, &weightOrder, 0, 100});
 }
 
+//1 ferdiad 2 endpoint 3 arrow 4 fire 5 border
+// 
 //this is so ugly but it works
 bool Mirage::Init()
 {
@@ -40,6 +42,7 @@ bool Mirage::Init()
 
     GameObject* thirdChild      = scene->GetGameObjectByUID(children[2]);
     GameObject* fourthChild     = scene->GetGameObjectByUID(children[3]);
+    //GameObject* fifthChild     = scene->GetGameObjectByUID(children[4]);
 
     std::vector<UID> childChild = thirdChild->GetChildren();
 
@@ -48,6 +51,7 @@ bool Mirage::Init()
     mirageDisableComponent1     = thirdChild->GetComponent<MeshComponent*>();
     mirageDisableComponent2     = fourthChild->GetComponent<MeshComponent*>();
     mirageArrow                 = thirdChildChild->GetComponent<MeshComponent*>();
+    //mirageArrow                 = thirdChild->GetComponent<MeshComponent*>();
 
     bossDash                    = scriptComp->GetScriptByType<MirageBossDash>();
     endPoint                    = secondChild->GetLocalTransform().TranslatePart();
@@ -80,7 +84,7 @@ void Mirage::Update(float deltaTime)
         parent->SetEnabled(true);
         firescript->SetAllColors(float3(0.984f, 0.690f, 0.231f)); // GOLD
         if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_PREPAREMIRAGE);
-        mirageDisableComponent1->SetEnabled(false);
+        //mirageDisableComponent1->SetEnabled(false);
         mirageDisableComponent2->SetEnabled(false);
         state      = MirageState::Warning;
         stateTimer = 0.0f;
