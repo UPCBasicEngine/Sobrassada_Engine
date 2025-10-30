@@ -430,27 +430,22 @@ void Character::UpdateTimers(float deltaTime)
                 meshScripts->SetEnabled(false);
                 isHit = false;
             }
-        // Do this in the next frame after enabling the mesh to avoid popping
-        if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
-        {
-            meshScripts->SetEnabled(false);
-            isHit = false;
-        }
-        if (mesh2 && mesh2->GetEnabled() && color2Change && color2Change->GetEnabled())
-        {
-            color2Change->SetEnabled(false);
-            isHit = false;
-        }
-        if (mesh3 && mesh3->GetEnabled() && color3Change && color3Change->GetEnabled())
-        {
-            color3Change->SetEnabled(false);
-            isHit = false;
-        }
-        if (mesh4 && mesh4->GetEnabled() && color4Change && color4Change->GetEnabled())
-        {
-            color4Change->SetEnabled(false);
-            isHit = false;
-        }
+
+            if (mesh2 && mesh2->GetEnabled() && color2Change && color2Change->GetEnabled())
+            {
+                color2Change->SetEnabled(false);
+                isHit = false;
+            }
+            if (mesh3 && mesh3->GetEnabled() && color3Change && color3Change->GetEnabled())
+            {
+                color3Change->SetEnabled(false);
+                isHit = false;
+            }
+            if (mesh4 && mesh4->GetEnabled() && color4Change && color4Change->GetEnabled())
+            {
+                color4Change->SetEnabled(false);
+                isHit = false;
+            }
 
             if (mesh && !mesh->GetEnabled()) mesh->SetEnabled(true);
             if (mesh2 && !mesh2->GetEnabled()) mesh2->SetEnabled(true);
@@ -477,7 +472,7 @@ void Character::TakeDamage(int amount)
         meshScripts->SetEnabled(true);
     }
 
-    isHit = true;
+    isHit         = true;
     onHitVfxTimer = onHitVfxDuration;
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)

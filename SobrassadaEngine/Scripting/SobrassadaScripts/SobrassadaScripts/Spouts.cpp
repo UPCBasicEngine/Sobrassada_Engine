@@ -73,8 +73,8 @@ bool Spouts::Init()
 
     particles_bot        = particleGOB->GetComponent<ParticleSystemComponent*>();
     particles_top        = particleGOT->GetComponent<ParticleSystemComponent*>();
-    runeParticles        = runeParticlesGO->GetComponent<ParticleSystemComponent*>();
-    audio                = parent->GetComponent<AudioSourceComponent*>();
+    if (runeParticlesGO) runeParticles = runeParticlesGO->GetComponent<ParticleSystemComponent*>();
+    audio = parent->GetComponent<AudioSourceComponent*>();
 
     return true;
 }
