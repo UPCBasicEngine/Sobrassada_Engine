@@ -26,7 +26,7 @@ class Mirage : public Script
     MirageState state                          = MirageState::Sleeping;
 
     MeshComponent* meshComponent               = nullptr;
-    MeshComponent* mirageDisableComponent1     = nullptr;
+    MeshComponent* mirageBorder                = nullptr;
     MeshComponent* mirageDisableComponent2     = nullptr;
     MeshComponent* mirageArrow                 = nullptr;
     ShaderScriptComponent* mirageFireComponent = nullptr;
