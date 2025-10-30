@@ -19,6 +19,7 @@ class AudioSourceComponent;
 class AnimationComponent;
 class BarFill;
 class ImageComponent;
+class UIFadeInOut;
 
 enum class BossDistance
 {
@@ -128,6 +129,8 @@ class Boss : public Character
     BossDistance CheckDistance() const;
     void StopAttacking();
 
+    void EnableInvulnerable();
+    void DisableInvulnerable();
     void Mirage();
     void ChangePhase();
     void ResetValues(bool isForMirage = false);
@@ -140,28 +143,33 @@ class Boss : public Character
     BossStates ChooseAlternativeState() const;
 
     void Restart(float deltaTime);
+    void ChangeMusic() const;
 
     const std::vector<BossStates>& GetAvailableStates() const;
     const char* GetStateName() const;
     const char* GetActionName() const;
 
   private:
-    AIAgentComponent* agentAI   = nullptr;
-    AudioSourceComponent* audio = nullptr;
-    BossStates currentState     = BossStates::Idle;
-    BossActions currentAction   = BossActions::Idle;
+    AIAgentComponent* agentAI               = nullptr;
+    AudioSourceComponent* audio             = nullptr;
+    BossStates currentState                 = BossStates::Idle;
+    BossActions currentAction               = BossActions::Idle;
 
-    bool waiting                = true;
-    bool restart                = false;
-    float runTimer              = 0.0f;
+    bool waiting                            = true;
+    bool restart                            = false;
+    float runTimer                          = 0.0f;
 
-    bool firstTimeEntering      = true;
+    bool firstTimeEntering                  = true;
+    bool waitForBarFill                     = false;
 
-    bool highlightActivated     = false;
-    float highlightTimer        = 0.0f;
-    bool playedHighlight        = false;
+    std::string musicManagerName            = "";
+    AudioSourceComponent* musicManagerAudio = nullptr;
 
-    int phase                   = 1;
+    bool highlightActivated                 = false;
+    float highlightTimer                    = 0.0f;
+    bool playedHighlight                    = false;
+
+    int phase                               = 1;
     int phase2 = 40, phase3 = 20;
     std::array<std::reference_wrapper<int>, 2> phaseSwap = {phase2, phase3};
     bool stateEnter                                      = true;
@@ -176,11 +184,9 @@ class Boss : public Character
 
     // Health UI
     std::string healthBarName                            = "";
-    ImageComponent* healthBarBase                        = nullptr;
+    UIFadeInOut* fadeInOutHealthBar                      = nullptr;
     ShaderScriptComponent* healthBarShader               = nullptr;
     BarFill* healthBarFill                               = nullptr;
-    ShaderScriptComponent* armorBarShader                = nullptr;
-    BarFill* armorBarFill                                = nullptr;
 
     // ShieldStrikes
     std::string shieldName                               = "";
@@ -250,6 +256,9 @@ class Boss : public Character
     MovingUVTransparent* bigExpansionUV                 = nullptr;
     ShaderScriptComponent* smallExpansionScript         = nullptr;
     MovingUVTransparent* smallExpansionUV               = nullptr;
+    GameObject* impactSpriteObject                      = nullptr;
+    ShaderScriptComponent* impactSpriteScript           = nullptr;
+    AttackVfxSpritesheet* impactSpriteSheet             = nullptr;
 
     std::string shieldBlastVFXName                      = "";
     ShaderScriptComponent* blastPreSpriteScript         = nullptr;
@@ -285,6 +294,7 @@ class Boss : public Character
     ParticleSystemComponent* energyBlastParticle2       = nullptr;
     ParticleSystemComponent* energyBlastParticle3       = nullptr;
     ParticleSystemComponent* energyBlastParticle4       = nullptr;
+    GameObject* invulnerableArea                        = nullptr;
 
     // Inspector values
     int closeAreaDamage                                 = 3;
