@@ -53,20 +53,23 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
-    glGenBuffers(2, models);
-    glGenBuffers(2, deltaWindDirections);
+    glGenBuffers(3, models);
+    glGenBuffers(3, deltaWindDirections);
     if (hasBones)
     {
-        glGenBuffers(2, bones);
+        glGenBuffers(3, bones);
         glGenBuffers(1, &bonesIndex);
     }
     glGenBuffers(1, &materials);
     gSync[0]     = nullptr;
     gSync[1]     = nullptr;
+    gSync[2]     = nullptr;
     ptrModels[0] = nullptr;
     ptrModels[1] = nullptr;
+    ptrModels[2] = nullptr;
     ptrBones[0]  = nullptr;
     ptrBones[1]  = nullptr;
+    ptrBones[2]  = nullptr;
 }
 
 GeometryBatch::~GeometryBatch()
@@ -92,7 +95,7 @@ GeometryBatch::~GeometryBatch()
 
 void GeometryBatch::CleanUp()
 {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         if (gSync[i])
         {
@@ -199,7 +202,7 @@ void GeometryBatch::LoadData()
     deltaWindDirectionsSize = totalModels.size() * sizeof(float4);
 
     const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
 
@@ -335,10 +338,15 @@ void GeometryBatch::WaitBuffer()
 {
     if (gSync[currentBufferIndex])
     {
-        while (1)
+        GLenum result = glClientWaitSync(gSync[currentBufferIndex], GL_SYNC_FLUSH_COMMANDS_BIT, 1000000);
+        if (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED)
         {
-            GLenum waitReturn = glClientWaitSync(gSync[currentBufferIndex], GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-            if (waitReturn == GL_ALREADY_SIGNALED || waitReturn == GL_CONDITION_SATISFIED) return;
+            glDeleteSync(gSync[currentBufferIndex]);
+            gSync[currentBufferIndex] = nullptr;
+        }
+        else if (result == GL_TIMEOUT_EXPIRED)
+        {
+            GLOG("WARNING: WaitBuffer timeout on buffer %d", currentBufferIndex);
         }
     }
 }
@@ -346,7 +354,7 @@ void GeometryBatch::WaitBuffer()
 void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRender)
 {
     updatedOnce               = true;
-    const int nextBufferIndex = (currentBufferIndex + 1) % 2;
+    const int nextBufferIndex = (currentBufferIndex + 1) % 3;
 
     if (hasBones)
     {
@@ -422,7 +430,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
 
 void GeometryBatch::SwapBuffers()
 {
-    currentBufferIndex = (currentBufferIndex + 1) % 2;
+    currentBufferIndex = (currentBufferIndex + 1) % 3;
 }
 
 void GeometryBatch::BindBonesBuffer()
