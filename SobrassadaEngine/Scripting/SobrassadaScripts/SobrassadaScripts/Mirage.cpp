@@ -16,13 +16,13 @@
 Mirage::Mirage(GameObject* parent) : Script(parent)
 {
 
-    fields.push_back({"Delay Before Damage", InspectorField::FieldType::Float, &warningDelay, 0.0f, 10.0f});
-    fields.push_back({"Damage Duration", InspectorField::FieldType::Float, &damageDuration, 0.0f, 10.0f});
+    fields.push_back({"Delay Before Damage", InspectorField::FieldType::Float, &warningDelay, 0.0f, 20.0f});
+    fields.push_back({"Damage Duration", InspectorField::FieldType::Float, &damageDuration, 0.0f, 20.0f});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &damage, 0, 100});
     fields.push_back({"Weight Order", InspectorField::FieldType::Int, &weightOrder, 0, 100});
 }
 
-// 1 ferdiad 2 endpoint 3 arrow 4 fire 5 border
+// 1 ferdiad 2 endpoint 3 border 4 fire 5 arrow
 //
 // this is so ugly but it works
 bool Mirage::Init()

@@ -98,12 +98,17 @@ void BossMirage::Update(float deltaTime)
     {
         timeSinceLastActivation += deltaTime;
 
-        if (sequence == &sequence2 && currentWeightOrder >= 4)
+        if (sequence == &sequence2 && currentWeightOrder >= 4 && currentWeightOrder < 15)
         {
-            sequence->delayBetweenZones = 0.3f;
+            sequence->delayBetweenZones = 1.3f;
         }
 
-        if (timeSinceLastActivation >= sequence->delayBetweenZones + 1)
+        if (sequence == &sequence3)
+        {
+            sequence->delayBetweenZones = 0.7f;
+        }
+
+        if (timeSinceLastActivation >= sequence->delayBetweenZones)
         {
             auto it = sequence->waves.find(currentWeightOrder);
             if (it != sequence->waves.end())
