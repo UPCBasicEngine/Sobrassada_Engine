@@ -26,12 +26,16 @@
 #include "Standalone/Physics/CubeColliderComponent.h"
 #include "Standalone/Physics/SphereColliderComponent.h"
 #include "Standalone/UI/ImageComponent.h"
+#include "UIFadeInOut.h"
 
 #include "Wwise_IDs.h"
+#include <Math/MathFunc.h>
+#include <Math/Quat.h>
 
 Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f, 15.0f, 20.0f, CharacterType::Boss)
 {
     fields.push_back({InspectorField::FieldType::Text, (void*)"Ferdiad specific"});
+    fields.push_back({"Music Manager", InspectorField::FieldType::InputText, &musicManagerName});
     fields.push_back({"Change Scene", InspectorField::FieldType::InputText, &changeSceneName});
     fields.push_back({"Time to ChangeScene", InspectorField::FieldType::Float, &delayToChangeScene, 0.0f, 20.0f});
     fields.push_back({"Health Bar", InspectorField::FieldType::InputText, &healthBarName});
@@ -76,6 +80,7 @@ Boss::Boss(GameObject* parent) : Character(parent, 54, 1, 0.5f, 1.0f, 1.0f, 3.0f
 bool Boss::Init()
 {
     Character::Init();
+
     agentAI = parent->GetComponent<AIAgentComponent*>();
     if (agentAI == nullptr) GLOG("[WARNING] AIAgent component not found for Boss")
     else
@@ -93,6 +98,14 @@ bool Boss::Init()
     audio         = parent->GetComponent<AudioSourceComponent*>();
     if (!audio) GLOG("[WARNING] Ferdiad: No audio component found");
 
+    GameObject* musicManagerObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(musicManagerName);
+    if (musicManagerObject)
+    {
+        musicManagerAudio = musicManagerObject->GetComponent<AudioSourceComponent*>();
+        if (!musicManagerAudio) GLOG("[WARNING] Ferdiad: Music manager audio component not found")
+    }
+    else GLOG("[WARNING] Ferdiad: Music manager scene object not found")
+
     changeScene = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(changeSceneName);
     if (changeScene) changeScene->SetEnabled(false);
     else GLOG("[WARNING] Ferdiad: Change scene object not found")
@@ -100,9 +113,17 @@ bool Boss::Init()
     GameObject* healthBarObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(healthBarName);
     if (healthBarObject)
     {
-        healthBarBase = healthBarObject->GetComponent<ImageComponent*>();
+        ImageComponent* healthBarBase = healthBarObject->GetComponent<ImageComponent*>();
         if (healthBarBase) healthBarBase->SetEnabled(false);
         else GLOG("[WARNING] Ferdiad: Health bar base image component not found");
+
+        ShaderScriptComponent* healthBarFadeObject = healthBarObject->GetComponent<ShaderScriptComponent*>();
+        if (healthBarFadeObject)
+        {
+            fadeInOutHealthBar = healthBarFadeObject->GetScriptByType<UIFadeInOut>();
+            if (!fadeInOutHealthBar) GLOG("[WARNING] Ferdiad: Health bar fade in out script incorrect");
+        }
+        else GLOG("[WARNING] Ferdiad: Health bar fade in/out shader component not found");
 
         GameObject* healthBarFillObject = healthBarObject->GetChildGameObjectByName("BossHealthBarFill");
         if (healthBarFillObject)
@@ -111,28 +132,15 @@ bool Boss::Init()
             if (healthBarShader)
             {
                 healthBarFill = healthBarShader->GetScriptByType<BarFill>();
-                if (!healthBarFill) GLOG("[WARNING] Ferdiad: Health bar fill script component not found");
+                if (!healthBarFill) GLOG("[WARNING] Ferdiad: Health bar fill script incorrect");
             }
             else GLOG("[WARNING] Ferdiad: Health bar shader component not found");
         }
         else GLOG("[WARNING] Ferdiad: Health bar fill object not found");
-
-        GameObject* armorBarFillObject = healthBarObject->GetChildGameObjectByName("BossArmorBarFill");
-        if (armorBarFillObject)
-        {
-            armorBarShader = armorBarFillObject->GetComponent<ShaderScriptComponent*>();
-            if (armorBarShader)
-            {
-                armorBarFill = armorBarShader->GetScriptByType<BarFill>();
-                if (!armorBarFill) GLOG("[WARNING] Ferdiad: Armor bar fill script component not found");
-            }
-            else GLOG("[WARNING] Ferdiad: Armor bar shader component not found");
-        }
-        else GLOG("[WARNING] Ferdiad: Armor bar fill object not found");
     }
     else GLOG("[WARNING] Ferdiad: Health bar base object not found");
 
-    GameObject* shieldObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldName);
+    GameObject* shieldObject = parent->GetChildGameObjectByName(shieldName);
     if (shieldObject)
     {
         weaponCollider = shieldObject->GetComponent<CapsuleColliderComponent*>();
@@ -141,11 +149,11 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Ferdiad shield object by name not found");
 
-    closeArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(closeAreaName);
+    closeArea = parent->GetChildGameObjectByName(closeAreaName);
     if (closeArea) closeArea->SetEnabled(false);
     else GLOG("[WARNING] Not close area object found for ferdiad");
 
-    bigArea = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(bigAreaName);
+    bigArea = parent->GetChildGameObjectByName(bigAreaName);
     if (bigArea) bigArea->SetEnabled(false);
     else GLOG("[WARNING] Not big area object found for ferdiad");
 
@@ -172,7 +180,7 @@ bool Boss::Init()
         else GLOG("[WARNING] Not spout script found for ferdiad");
     }
 
-    GameObject* emessiveVFXObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(emessiveVFXName);
+    GameObject* emessiveVFXObject = parent->GetChildGameObjectByName(emessiveVFXName);
     if (emessiveVFXObject)
     {
         emessiveVFXMesh = emessiveVFXObject->GetComponent<MeshComponent*>();
@@ -181,8 +189,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Not emessive VFX game object found for ferdiad");
 
-    GameObject* overheadPrepareVFX =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadPrepareVFXName);
+    GameObject* overheadPrepareVFX = parent->GetChildGameObjectByName(overheadPrepareVFXName);
     if (overheadPrepareVFX)
     {
         GameObject* runesLightsObject = overheadPrepareVFX->GetChildGameObjectByName("Cyl_Charger_Lights");
@@ -224,7 +231,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Overhead prepare VFX not found for ferdiad");
 
-    GameObject* overheadDashVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadDashVFXName);
+    GameObject* overheadDashVFX = parent->GetChildGameObjectByName(overheadDashVFXName);
     if (overheadDashVFX)
     {
         GameObject* dashGroundObject = overheadDashVFX->GetChildGameObjectByName("Dash_Energy_Ground");
@@ -285,7 +292,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Overhead dash VFX not found for ferdiad");
 
-    GameObject* overheadAttackVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(overheadAttackVFXName);
+    GameObject* overheadAttackVFX = parent->GetChildGameObjectByName(overheadAttackVFXName);
     if (overheadAttackVFX)
     {
         GameObject* attackExplosionObject = overheadAttackVFX->GetChildGameObjectByName("Cyl_Explosion");
@@ -382,10 +389,29 @@ bool Boss::Init()
             else GLOG("[WARNING] Small expansion script not found for ferdiad");
         }
         else GLOG("[WARNING] Small expansion VFX not found for ferdiad");
+
+        impactSpriteObject = overheadAttackVFX->GetChildGameObjectByName("ImpactSprite");
+        if (impactSpriteObject)
+        {
+            MeshComponent* impactSpriteMesh = impactSpriteObject->GetComponent<MeshComponent*>();
+            if (impactSpriteMesh) impactSpriteMesh->SetEnabled(false);
+            else GLOG("[WARNING] Impact sprite mesh not found for ferdiad");
+
+            impactSpriteScript = impactSpriteObject->GetComponent<ShaderScriptComponent*>();
+            if (impactSpriteScript)
+            {
+                impactSpriteScript->SetEnabled(false);
+
+                impactSpriteSheet = impactSpriteScript->GetScriptByType<AttackVfxSpritesheet>();
+                if (!impactSpriteSheet) GLOG("[WARNING] Impact sprite script incorrect for ferdiad");
+            }
+            else GLOG("[WARNING] Impact sprite script not found for ferdiad");
+        }
+        else GLOG("[WARNING] Impact sprite VFX not found for ferdiad");
     }
     else GLOG("[WARNING] Overhead attack VFX not found for ferdiad");
 
-    GameObject* shieldBlastVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(shieldBlastVFXName);
+    GameObject* shieldBlastVFX = parent->GetChildGameObjectByName(shieldBlastVFXName);
     if (shieldBlastVFX)
     {
         GameObject* blastPreHitObject = shieldBlastVFX->GetChildGameObjectByName("BlastSpritePre");
@@ -470,7 +496,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Shield blast VFX not found for ferdiad");
 
-    GameObject* invulnerableVFX = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(invulnerableVFXName);
+    GameObject* invulnerableVFX = parent->GetChildGameObjectByName(invulnerableVFXName);
     if (invulnerableVFX)
     {
         GameObject* invulnerablePlaneWaterAnimationObject =
@@ -557,10 +583,14 @@ bool Boss::Init()
             else GLOG("[WARNING] Invulnerable waves script not found for ferdiad");
         }
         else GLOG("[WARNING] Invulnerable waves VFX object not found for ferdiad");
+
+        invulnerableArea = invulnerableVFX->GetChildGameObjectByName("BlockArea");
+        if (invulnerableArea) invulnerableArea->SetEnabled(false);
+        else GLOG("[WARNING] Invulnerable block area object not found for ferdiad");
     }
     else GLOG("[WARNING] Invulnerable VFX game object not found for ferdiad");
 
-    GameObject* atomObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(atomParticleName);
+    GameObject* atomObject = parent->GetChildGameObjectByName(atomParticleName);
     if (atomObject)
     {
         atomParticle = atomObject->GetComponent<ParticleSystemComponent*>();
@@ -569,7 +599,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Atom particle object not found for ferdiad");
 
-    GameObject* smokeObject = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(smokeParticleName);
+    GameObject* smokeObject = parent->GetChildGameObjectByName(smokeParticleName);
     if (smokeObject)
     {
         smokeParticle = smokeObject->GetComponent<ParticleSystemComponent*>();
@@ -578,8 +608,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Smoke particle object not found for ferdiad");
 
-    GameObject* chargeShieldObject =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(chargeShieldParticleName);
+    GameObject* chargeShieldObject = parent->GetChildGameObjectByName(chargeShieldParticleName);
     if (chargeShieldObject)
     {
         chargeShieldParticle = chargeShieldObject->GetComponent<ParticleSystemComponent*>();
@@ -588,8 +617,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Charge shield particle object not found for ferdiad");
 
-    GameObject* energyBlastObject1 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(1));
+    GameObject* energyBlastObject1 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(1));
     if (energyBlastObject1)
     {
         energyBlastParticle1 = energyBlastObject1->GetComponent<ParticleSystemComponent*>();
@@ -598,8 +626,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Energy blast 1 particle object not found for ferdiad");
 
-    GameObject* energyBlastObject2 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(2));
+    GameObject* energyBlastObject2 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(2));
     if (energyBlastObject2)
     {
         energyBlastParticle2 = energyBlastObject2->GetComponent<ParticleSystemComponent*>();
@@ -608,8 +635,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Energy blast 2 particle object not found for ferdiad");
 
-    GameObject* energyBlastObject3 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(3));
+    GameObject* energyBlastObject3 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(3));
     if (energyBlastObject3)
     {
         energyBlastParticle3 = energyBlastObject3->GetComponent<ParticleSystemComponent*>();
@@ -618,8 +644,7 @@ bool Boss::Init()
     }
     else GLOG("[WARNING] Energy blast 3 particle object not found for ferdiad");
 
-    GameObject* energyBlastObject4 =
-        AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(energyBlastParticleName + std::to_string(4));
+    GameObject* energyBlastObject4 = parent->GetChildGameObjectByName(energyBlastParticleName + std::to_string(4));
     if (energyBlastObject4)
     {
         energyBlastParticle4 = energyBlastObject4->GetComponent<ParticleSystemComponent*>();
@@ -645,6 +670,13 @@ bool Boss::Init()
 
 void Boss::Update(float deltaTime)
 {
+    if (waitForBarFill && fadeInOutHealthBar && !fadeInOutHealthBar->GetFadingIn())
+    {
+        if (healthBarFill) healthBarFill->SetFillAmount(1.0f);
+
+        waitForBarFill = false;
+    }
+
     if (stopLogic && changeScene && !changeScene->IsEnabled())
     {
         timerToChangeScene += deltaTime;
@@ -674,7 +706,12 @@ void Boss::Update(float deltaTime)
         RenderDebug(logs, float3(1.0f, 0.5f, 0.0f));
     }
 
-    if (playerScript && playerScript->GetState() == CharacterStates::DEATH) restart = true;
+    if (playerScript && playerScript->GetState() == CharacterStates::DEATH && currentState != BossStates::Restart)
+        restart = true;
+
+    if (playerScript &&
+        (playerScript->GetState() == CharacterStates::RESPAWN || playerScript->GetState() == CharacterStates::DEATH))
+        waiting = true;
 
     if (highlightActivated) highlightTimer += deltaTime;
     if (highlightActivated && doTaunt && highlightTimer >= highlightDelay)
@@ -690,23 +727,26 @@ void Boss::Update(float deltaTime)
 
 void Boss::OnPlayerExitLocation()
 {
+    GLOG("Exit");
+
     waiting = true;
 }
 
 void Boss::OnPlayerEnterLocation()
 {
+    GLOG("Enter");
+
     waiting = false;
 
     doTaunt = true;
     // agentAI->ResetAngularSpeed(); // in case doTaunt not used
 
-    if (firstTimeEntering && healthBarBase)
+    if (firstTimeEntering && fadeInOutHealthBar)
     {
-        healthBarBase->SetEnabled(true);
-        if (armorBarFill) armorBarFill->SetFillAmount(1.0f);
-        if (healthBarFill) healthBarFill->SetFillAmount(1.0f);
+        fadeInOutHealthBar->FadeIn();
 
         firstTimeEntering = false;
+        waitForBarFill    = true;
     }
 }
 
@@ -731,76 +771,72 @@ void Boss::OnDeath()
 
 void Boss::OnDamageTaken(int amount)
 {
-    // TODO: particles? and animation
-
-    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HIT);
 
     if (currentAction == BossActions::Idle || currentAction == BossActions::Chase ||
-        currentAction == BossActions::Waiting)
+        currentAction == BossActions::Waiting || currentAction == BossActions::Recover ||
+        currentState == BossStates::Taunt)
     {
-        agentAI->PauseMovement();
+        int num;
 
-        float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
+        if (currentAction == BossActions::Chase) num = uniformSteps(rng); // 33% of triggering anim
+        else num = 1;
 
-        float dot      = hitCollisionNormal.Dot(forward);
-
-        int num        = uniformGetHit(rng);
-
-        if (dot == 0.0f)
+        if (num == 1)
         {
-            dot = (num == 1) ? 1.0f : -1.0f;
-        }
+            agentAI->PauseMovement();
 
-        if (dot > 0.0f)
-        {
-            switch (num)
+            float3 forward = -parent->GetGlobalTransform().WorldZ().Normalized();
+
+            float dot      = hitCollisionNormal.Dot(forward);
+
+            int num        = uniformGetHit(rng);
+
+            if (dot == 0.0f)
             {
-            case 1:
-                if (animComponent) animComponent->UseTrigger("GetHit1");
-                currentAction = BossActions::GetHit1;
-                break;
-            case 2:
-                if (animComponent) animComponent->UseTrigger("GetHit2");
-                currentAction = BossActions::GetHit2;
-                break;
-            default:
-                GLOG("ERROR: Ferdiad forward hit anim");
-                break;
+                dot = (num == 1) ? 1.0f : -1.0f;
             }
-        }
-        else
-        {
-            switch (num)
+
+            if (dot > 0.0f)
             {
-            case 1:
-                if (animComponent) animComponent->UseTrigger("GetHit1Behind");
-                currentAction = BossActions::GetHit1Behind;
-                break;
-            case 2:
-                if (animComponent) animComponent->UseTrigger("GetHit2Behind");
-                currentAction = BossActions::GetHit2Behind;
-                break;
-            default:
-                GLOG("ERROR: Ferdiad forward hit anim");
-                break;
+                switch (num)
+                {
+                case 1:
+                    if (animComponent) animComponent->UseTrigger("GetHit1");
+                    currentAction = BossActions::GetHit1;
+                    break;
+                case 2:
+                    if (animComponent) animComponent->UseTrigger("GetHit2");
+                    currentAction = BossActions::GetHit2;
+                    break;
+                default:
+                    GLOG("ERROR: Ferdiad forward hit anim");
+                    break;
+                }
             }
+            else
+            {
+                switch (num)
+                {
+                case 1:
+                    if (animComponent) animComponent->UseTrigger("GetHit1Behind");
+                    currentAction = BossActions::GetHit1Behind;
+                    break;
+                case 2:
+                    if (animComponent) animComponent->UseTrigger("GetHit2Behind");
+                    currentAction = BossActions::GetHit2Behind;
+                    break;
+                default:
+                    GLOG("ERROR: Ferdiad forward hit anim");
+                    break;
+                }
+            }
+
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_HURT);
         }
     }
 
-    if (!armorBarFill || !healthBarFill) return;
-
-    if (currentHealth > phase2)
-    {
-        armorBarFill->SetFillAmount(
-            static_cast<float>(currentHealth - phase2) / static_cast<float>(maxHealth - phase2)
-        );
-    }
-    else
-    {
-        armorBarFill->SetFillAmount(0.0f);
-
-        healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(phase2));
-    }
+    if (healthBarFill) healthBarFill->SetFillAmount(static_cast<float>(currentHealth) / static_cast<float>(maxHealth));
 }
 
 void Boss::HandleState(float deltaTime)
@@ -915,7 +951,7 @@ void Boss::ChooseNextStateFirstPhase()
     switch (CheckDistance())
     {
     case BossDistance::Close:
-        shieldStrikesRate = 95;
+        shieldStrikesRate  = 95;
         overheadStrikeRate = 100;
         break;
 
@@ -945,7 +981,9 @@ void Boss::ChooseNextStateFirstPhase()
         break;
     }
 
-    int num = uniformDist(rng);
+    shieldStrikesRate = -1;
+
+    int num           = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1014,10 +1052,10 @@ void Boss::ChooseNextStateSecondPhase()
     }
     // FOR TESTING
     // waterSpoutsRate   = -1;
-    //shieldStrikesRate = -1;
-    //shieldBlastRate   = -1;
+    // shieldStrikesRate = -1;
+    // shieldBlastRate   = -1;
 
-    int num           = uniformDist(rng);
+    int num = uniformDist(rng);
     if (doTaunt)
     {
         currentState = BossStates::Taunt;
@@ -1140,25 +1178,26 @@ void Boss::Death(float deltaTime)
     case BossActions::Death:
         if (!actionTriggerDone)
         {
+            ResetValues(false);
+
             actionTriggerDone = true;
 
             agentAI->PauseMovement();
 
             if (playerScript) playerScript->RemoveEnemy();
 
-            ResetValues(false);
-
             DeleteColliders();
 
             if (animComponent) animComponent->UseTrigger("Death");
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
+            ChangeMusic();
         }
 
         if (animComponent && animComponent->IsFinished())
         {
             stopLogic = true;
 
-            if (healthBarBase) healthBarBase->SetEnabled(false);
+            if (fadeInOutHealthBar) fadeInOutHealthBar->FadeOut();
         }
         break;
     default:
@@ -1203,8 +1242,6 @@ void Boss::Idle(float deltaTime)
 {
     if (stateEnter)
     {
-        // TODO: Randomize the idle duration
-        // agentAI->SetSpeed(0.0f, 10.0f);
         if (doIdle) ResetValues(false);
         stateEnter    = false;
         doIdle        = false;
@@ -1242,6 +1279,8 @@ void Boss::Taunt(float deltaTime)
 
     if (animComponent && animComponent->IsFinished())
     {
+        ChangeMusic();
+
         stateEnter   = true;
         currentState = BossStates::Idle;
     }
@@ -1508,6 +1547,7 @@ void Boss::OverheadStrike(float deltaTime)
         if (attackExplosionUV) attackExplosionUV->Reset();
         if (smallExpansionUV) smallExpansionUV->Reset();
         if (bigExpansionUV) bigExpansionUV->Reset();
+        if (impactSpriteSheet) impactSpriteSheet->Reset();
     }
 
     switch (currentAction)
@@ -1681,6 +1721,7 @@ void Boss::OverheadStrike(float deltaTime)
     case BossActions::GetHit2Behind:
         if (animComponent && animComponent->IsFinished()) currentAction = BossActions::Waiting;
 
+        DamageAreaLogic();
         break;
 
     default:
@@ -1828,6 +1869,7 @@ void Boss::DamageAreaLogic()
 
             if (attackExplosionScript) attackExplosionScript->SetEnabled(true);
             if (smallExpansionScript) smallExpansionScript->SetEnabled(true);
+            if (impactSpriteScript) impactSpriteScript->SetEnabled(true);
         }
 
         if (attackTimer >= attackHitboxDelay + 0.2f)
@@ -1847,6 +1889,24 @@ void Boss::DamageAreaLogic()
 
             if (smallExpansionScript) smallExpansionScript->SetEnabled(false);
         }
+    }
+
+    if (impactSpriteSheet && impactSpriteSheet->Finished())
+    {
+        impactSpriteScript->SetEnabled(false);
+
+        const float4x4 localTransform = impactSpriteObject->GetLocalTransform();
+
+        const float angle             = 45.0f;
+        const Quat angleRot           = Quat::RotateY(angle);
+
+        float3 pos, scale;
+        Quat oldRot;
+        localTransform.Decompose(pos, oldRot, scale);
+
+        const Quat newRot           = oldRot * angleRot;
+        const float4x4 newTransform = float4x4::FromTRS(pos, newRot, scale);
+        impactSpriteObject->SetJustLocalTransform(newTransform);
     }
 
     // --- END OF ATTACK ---
@@ -1885,29 +1945,49 @@ void Boss::StopAttacking()
     attackCdTimer = attackCooldown;
 }
 
+void Boss::EnableInvulnerable()
+{
+    if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
+    if (invulnerableWavesUV) invulnerableWavesUV->Reset();
+
+    if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
+    if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
+
+    if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
+
+    if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
+    if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
+
+    if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
+    if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
+    if (invulnerableArea) invulnerableArea->SetEnabled(true);
+}
+
+void Boss::DisableInvulnerable()
+{
+    if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
+    if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
+
+    if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
+
+    if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
+    if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
+
+    if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
+    if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
+
+    if (invulnerableArea) invulnerableArea->SetEnabled(false);
+}
+
 void Boss::Mirage()
 {
     if (stateEnter)
     {
         ResetValues(false);
+
         mirageActivated = true;
         stateEnter      = false;
-        agentAI->PauseMovement();
-        currentAction = BossActions::Start;
-
-        if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
-        if (invulnerableWavesUV) invulnerableWavesUV->Reset();
-
-        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
-        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
-
-        if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
-
-        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
-        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
-
-        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
-        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
+        currentAction   = BossActions::Start;
     }
 
     switch (currentAction)
@@ -1916,7 +1996,12 @@ void Boss::Mirage()
         if (!actionTriggerDone)
         {
             actionTriggerDone = true;
+
+            agentAI->PauseMovement();
             animComponent->UseTrigger("Start");
+
+            EnableInvulnerable();
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_CHARGE);
         }
 
         if (animComponent && animComponent->IsFinished())
@@ -1951,16 +2036,8 @@ void Boss::Mirage()
 
         if (animComponent && animComponent->IsFinished())
         {
-            if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
-            if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
-
-            if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-
-            if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
-            if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
-
-            if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
-            if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
+            DisableInvulnerable();
+            if (audio) audio->StopAudio();
 
             agentAI->ResumeMovement();
             actionTriggerDone = false;
@@ -1993,6 +2070,7 @@ void Boss::WaterSpouts()
         {
             agentAI->PauseMovement();
             if (animComponent) animComponent->UseTrigger("WaterSpoutCharge");
+            if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_PREPAREWATERSPOUT);
             actionTriggerDone = true;
         }
 
@@ -2020,7 +2098,7 @@ void Boss::WaterSpouts()
             agentAI->ResumeMovement();
             actionTriggerDone = false;
 
-            ChooseNextState(); // go back to AI loop
+            ChooseNextState();
         }
         break;
 
@@ -2057,12 +2135,18 @@ void Boss::ResetValues(bool changePhase)
 
     animComponent->OnResume();
 
+    for (Spouts* spout : waterSpouts)
+    {
+        if (spout) spout->ForceDeactivate();
+    }
+
     if (changePhase) mirageActivated = false;
 
     if (weaponCollider) weaponCollider->SetEnabled(false);
     if (closeArea) closeArea->SetEnabled(false);
     if (bigArea) bigArea->SetEnabled(false);
     if (blastArea) blastArea->SetEnabled(false);
+    if (invulnerableArea) invulnerableArea->SetEnabled(false);
 
     if (emessiveVFXMesh) emessiveVFXMesh->SetEnabled(false);
 
@@ -2095,6 +2179,7 @@ void Boss::ResetValues(bool changePhase)
     if (atomParticle) atomParticle->StopInstances();
     if (smokeParticle) smokeParticle->StopInstances();
     if (chargeShieldParticle) chargeShieldParticle->StopInstances();
+    if (impactSpriteScript) impactSpriteScript->SetEnabled(false);
 
     if (blastPreSpriteScript) blastPreSpriteScript->SetEnabled(false);
     if (blastEnergySpriteScript) blastEnergySpriteScript->SetEnabled(false);
@@ -2209,6 +2294,8 @@ void Boss::ShieldBlast(float deltaTime)
     case BossActions::Shoot:
         if (!actionTriggerDone)
         {
+            agentAI->SetAngularSpeed(0.6f);
+
             actionTriggerDone = true;
 
             if (blastArea) blastArea->SetEnabled(true);
@@ -2333,7 +2420,10 @@ void Boss::Restart(float deltaTime)
         {
             actionTriggerDone = false;
             doIdle            = true;
-            waiting           = true;
+            ChooseNextState();
+        }
+        else if (!waiting)
+        {
             ChooseNextState();
         }
         break;
@@ -2342,6 +2432,45 @@ void Boss::Restart(float deltaTime)
         GLOG("ERROR: Restart");
         break;
     }
+}
+
+void Boss::ChangeMusic() const
+{
+    if (!musicManagerAudio) return;
+
+    AkUniqueID eventID;
+
+    if (isDead)
+    {
+        GLOG("OUTRO")
+        eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_OUTRO;
+    }
+    else
+    {
+        switch (phase)
+        {
+        case 1:
+            GLOG("PHASE 1")
+            eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE1;
+            break;
+
+        case 2:
+            GLOG("PHASE 2")
+            eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE2;
+            break;
+
+        case 3:
+            GLOG("PHASE 3")
+            eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE3;
+            break;
+
+        default:
+            GLOG("Error: ChangeMusic")
+            break;
+        }
+    }
+
+    musicManagerAudio->EmitEvent(eventID);
 }
 
 void Boss::ChangePhase()
@@ -2354,34 +2483,19 @@ void Boss::ChangePhase()
 
         agentAI->PauseMovement();
 
-        // TODO: anim changePhase
         currentAction = BossActions::Taunt;
         if (animComponent) animComponent->UseTrigger("Taunt");
 
-        if (invulnerableNoisefallUV) invulnerableNoisefallUV->Reset();
-        if (invulnerableWavesUV) invulnerableWavesUV->Reset();
+        EnableInvulnerable();
 
-        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(true);
-        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnPlay(true);
-
-        if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(true);
-
-        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(true);
-        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnPlay(true);
-
-        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(true);
-        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(true);
+        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_CHARGE);
+        ChangeMusic();
     }
 
     if (animComponent && animComponent->IsFinished())
     {
-        if (invulnerablePlaneWaterMesh) invulnerablePlaneWaterMesh->SetEnabled(false);
-        if (invulnerablePlaneWaterAnimation) invulnerablePlaneWaterAnimation->OnStop();
-        if (invulnerableBarrierScript) invulnerableBarrierScript->SetEnabled(false);
-        if (invulnerableShieldMesh) invulnerableShieldMesh->SetEnabled(false);
-        if (invulnerableShieldAnimation) invulnerableShieldAnimation->OnStop();
-        if (invulnerableNoisefallScript) invulnerableNoisefallScript->SetEnabled(false);
-        if (invulnerableWavesScript) invulnerableWavesScript->SetEnabled(false);
+        DisableInvulnerable();
+        if (audio) audio->StopAudio();
 
         agentAI->ResumeMovement();
 

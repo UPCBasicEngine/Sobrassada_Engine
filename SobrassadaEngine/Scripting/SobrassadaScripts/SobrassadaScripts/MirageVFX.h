@@ -15,7 +15,7 @@ class MirageVFX : public Script
     bool Init() override;
     void Update(float deltaTime) override;
     void Render(float deltaTime, CameraComponent* cameraComp) override;
-
+    void SetAllColors(const float3& newColor);
     void Reset() override;
 
   private:
