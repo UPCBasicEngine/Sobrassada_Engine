@@ -105,7 +105,7 @@ void BossMirage::Update(float deltaTime)
 
         if (sequence == &sequence3)
         {
-            sequence->delayBetweenZones = 0.7f;
+            sequence->delayBetweenZones = 2.0f;
         }
 
         if (timeSinceLastActivation >= sequence->delayBetweenZones)
