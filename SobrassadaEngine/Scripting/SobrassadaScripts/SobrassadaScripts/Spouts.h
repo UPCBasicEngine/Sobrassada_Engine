@@ -26,7 +26,9 @@ class Spouts : public Script
     void Update(float deltaTime) override;
     int GetDamage() { return damage; }
     void ForceActivate();
+    void ForceDeactivate();
     void DisableCollider();
+    void ResetUVs();
 
   private:
     bool enableRune                         = false;
