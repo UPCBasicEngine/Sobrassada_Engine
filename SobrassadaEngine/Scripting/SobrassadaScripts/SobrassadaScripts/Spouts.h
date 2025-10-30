@@ -32,6 +32,7 @@ class Spouts : public Script
 
   private:
     bool enableRune                         = false;
+    bool enableParticlesRune                = false;
     float activationRange                   = 10.0f;
     int damage                              = 1;
     float chargingDuration                  = 1.0f;
@@ -60,6 +61,7 @@ class Spouts : public Script
     GameObject* particleGOB                 = nullptr;
     GameObject* rune                        = nullptr;
     GameObject* particleGOT                 = nullptr;
+    GameObject* runeParticlesGO             = nullptr;
 
     ShaderScriptComponent* whiteWavesScript = nullptr;
     MeshComponent* shaderwhiteWavesMesh     = nullptr;
@@ -73,6 +75,7 @@ class Spouts : public Script
     SphereColliderComponent* damageCollider = nullptr;
     ParticleSystemComponent* particles_bot  = nullptr;
     ParticleSystemComponent* particles_top  = nullptr;
+    ParticleSystemComponent* runeParticles  = nullptr;
 
     AudioSourceComponent* audio             = nullptr;
     ACTIVATION_STATE activationState        = SLEEPING;

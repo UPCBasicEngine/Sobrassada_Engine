@@ -54,6 +54,7 @@ Character::Character(
     fields.push_back({"Attack Hitbox Duration", InspectorField::FieldType::Float, &attackHitboxDuration, 0.0f, 5.0f});
 
     fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
+    fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
@@ -105,34 +106,29 @@ bool Character::Init()
         else weaponCollider->SetEnabled(false);
     }
 
+    GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
+    if (meshObject)
+    {
+        mesh = meshObject->GetComponent<MeshComponent*>();
+        if (mesh) mesh->SetEnabled(true);
+
+        meshScripts = meshObject->GetComponent<ShaderScriptComponent*>();
+        if (meshScripts) meshScripts->SetEnabled(false);
+    }
+    else
+    {
+        GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
+    }
+
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
         onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
-        // if (!onHitPivot) GLOG("[WARNING - %s] No on hit Pivot found for enemy", parent->GetName().c_str())
 
         onHitVfx1  = parent->GetChildGameObjectByName(onHitVfx1Name);
         if (onHitVfx1) onHitVfx1->SetEnabled(false);
-        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
 
         onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
         if (onHitVfx2) onHitVfx2->SetEnabled(false);
-        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
-
-        GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
-        if (meshObject)
-        {
-            mesh = meshObject->GetComponent<MeshComponent*>();
-            if (mesh) mesh->SetEnabled(true);
-            // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
-
-            meshScripts = meshObject->GetComponent<ShaderScriptComponent*>();
-            if (meshScripts) meshScripts->SetEnabled(false);
-            // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
-        }
-        else
-        {
-            GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
-        }
 
         if (!mesh2Name.empty())
         {
@@ -419,10 +415,21 @@ void Character::UpdateTimers(float deltaTime)
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
 
-    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage && isHit)
+    if (isHit)
     {
         onHitVfxTimer -= deltaTime;
 
+        if (onHitVfxTimer < 0.0f)
+        {
+            if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
+            if (onHitVfx2 && onHitVfx2->IsEnabled()) onHitVfx2->SetEnabled(false);
+
+            // Do this in the next frame after enabling the mesh to avoid popping
+            if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
+            {
+                meshScripts->SetEnabled(false);
+                isHit = false;
+            }
         // Do this in the next frame after enabling the mesh to avoid popping
         if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
         {
@@ -445,11 +452,6 @@ void Character::UpdateTimers(float deltaTime)
             isHit = false;
         }
 
-        if (onHitVfxTimer < 0.0f)
-        {
-            if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
-            if (onHitVfx2 && onHitVfx2->IsEnabled()) onHitVfx2->SetEnabled(false);
-
             if (mesh && !mesh->GetEnabled()) mesh->SetEnabled(true);
             if (mesh2 && !mesh2->GetEnabled()) mesh2->SetEnabled(true);
             if (mesh3 && !mesh3->GetEnabled()) mesh3->SetEnabled(true);
@@ -468,6 +470,15 @@ void Character::TakeDamage(int amount)
     invulnerabilityTimer  = invulnerableDuration;
 
     OnDamageTaken(amount);
+
+    if (meshScripts && mesh)
+    {
+        mesh->SetEnabled(false);
+        meshScripts->SetEnabled(true);
+    }
+
+    isHit = true;
+    onHitVfxTimer = onHitVfxDuration;
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
