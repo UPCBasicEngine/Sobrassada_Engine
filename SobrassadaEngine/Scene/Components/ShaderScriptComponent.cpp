@@ -117,8 +117,8 @@ void ShaderScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Docum
                 scriptData.AddMember(name, arr, allocator);
                 break;
             }
-            case InspectorField::FieldType::Color:
             case InspectorField::FieldType::Vec3:
+            case InspectorField::FieldType::Color:
             {
                 float3* vec = (float3*)field.data;
                 rapidjson::Value arr(rapidjson::kArrayType);

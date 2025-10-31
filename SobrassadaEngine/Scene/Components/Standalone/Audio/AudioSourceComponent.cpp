@@ -37,6 +37,7 @@ void AudioSourceComponent::Init()
     App->GetAudioModule()->AddAudioSource(this);
     SetInitValues();
     isInited = true;
+    initVolume = volume;
 }
 
 void AudioSourceComponent::Save(rapidjson::Value& targetState, rapidjson::Document::AllocatorType& allocator) const
@@ -203,4 +204,10 @@ void AudioSourceComponent::StopAudio() const
 void AudioSourceComponent::StopAllAudio() const
 {
     App->GetAudioModule()->StopAllAudio();
+}
+
+void AudioSourceComponent::ResetVolume()
+{
+    volume = initVolume;
+    AK::SoundEngine::SetRTPCValue("Volume", volume, parent->GetUID());
 }
