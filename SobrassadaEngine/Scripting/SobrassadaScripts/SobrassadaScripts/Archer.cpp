@@ -175,7 +175,35 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+    if (currentState != ArcherStates::DEATH && currentState != ArcherStates::PATROL)
+    {
+        if (playerScript && (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN))
+        {
+            GLOG("UPDATE: Player dead, forcing PATROL from state: %s", GetLogicStateName().c_str());
 
+           
+            agentAI->SetSpeed(0.0f, 0.0f);
+            agentAI->SetLookForward(true);
+
+          
+            isAttacking      = false;
+            isAiming         = false;
+            hasShot          = false;
+            isKnockback      = false;
+            hasEscapeTarget  = false;
+            hasDangerTarget  = false;
+            seekingCover     = false;
+            isInCover        = false;
+            currentCover     = nullptr;
+            dangerStuckTimer = 0.0f;
+            dangerTimer      = 0.0f;
+
+           
+            currentState     = ArcherStates::PATROL;
+
+            if (animComponent) animComponent->UseTrigger("idle");
+        }
+    }
     if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
     {
         parent->SetEnabled(false);
@@ -207,8 +235,9 @@ void Archer::Update(float deltaTime)
         return;
     }
 
-    if (currentState != ArcherStates::DANGER && currentState != ArcherStates::DEATH &&
-        currentState != ArcherStates::ESCAPE)
+    if  (currentState != ArcherStates::DANGER && currentState != ArcherStates::DEATH &&
+            currentState != ArcherStates::ESCAPE && currentState != ArcherStates::AIM &&
+            currentState != ArcherStates::PREAIM && currentState != ArcherStates::BASIC_ATTACK)
     {
         float distToPlayer = GetDistanceFromPlayer();
 
@@ -450,77 +479,77 @@ void Archer::ActivateGlowVFX()
     }
 }
 
-//void Archer::ActivateHitVFX()
-//{
-// 
-//    if (hitVfxObject)
-//    {
-//        GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
-//
-//       GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
-//        hitVfxTimer    = 0.0f;
-//        hitVfxIsActive = true;
-//
-//        // Verificar cada paso
-//        hitVfxObject->SetEnabled(true);
-//        GLOG("VFX: Object enabled");
-//
-//        // Verificar MeshComponent
-//        auto meshComp = hitVfxObject->GetComponent<MeshComponent*>(); 
-//        if (meshComp != nullptr)
-//        {
-//            meshComp->SetEnabled(false);
-//            GLOG("VFX: MeshComponent disabled successfully");
-//        }
-//        else
-//        {
-//            GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
-//        }
-//
-//        // Verificar ShaderScriptComponent
-//        auto shaderScriptComp = hitVfxObject->GetComponent<ShaderScriptComponent*>();
-//        if (shaderScriptComp != nullptr)
-//        {
-//            GLOG("VFX: ShaderScriptComponent found");
-//
-//            auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
-//            if (attackVfxScript)
-//            {
-//                attackVfxScript->Reset();
-//                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
-//            }
-//            else
-//            {
-//                GLOG("VFX: ERROR - AttackVfxSpritesheet script not found!");
-//            }
-//        }
-//        else
-//        {
-//            GLOG("VFX: ERROR - No ShaderScriptComponent found on %s", hitVfxObject->GetName().c_str());
-//        }
-//        /*ParticleSystemComponent* particleSystem = hitVfxObject->GetComponent<ParticleSystemComponent*>();
-//        if (particleSystem)
-//        {
-//            if (currentHealth >= 2)
-//                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_HURT);
-//
-//            if (currentHealth <= 0)
-//                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
-//                
-//          
-//            particleSystem->SpawnAllInstances();
-//            GLOG("VFX: Hit particles spawned");
-//        }
-//        else
-//        {
-//            GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", hitVfxObject->GetName().c_str());
-//        }*/
-//    }
-//    else
-//    {
-//        GLOG("VFX: ERROR - archerVfxObject is NULL!");
-//    }
-//}
+void Archer::ActivateHitVFX()
+{
+ 
+    if (hitVfxObject)
+    {
+        GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
+
+       GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
+        hitVfxTimer    = 0.0f;
+        hitVfxIsActive = true;
+
+        // Verificar cada paso
+        hitVfxObject->SetEnabled(true);
+        GLOG("VFX: Object enabled");
+
+        // Verificar MeshComponent
+        auto meshComp = hitVfxObject->GetComponent<MeshComponent*>(); 
+        if (meshComp != nullptr)
+        {
+            meshComp->SetEnabled(false);
+            GLOG("VFX: MeshComponent disabled successfully");
+        }
+        else
+        {
+            GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
+        }
+
+        // Verificar ShaderScriptComponent
+        auto shaderScriptComp = hitVfxObject->GetComponent<ShaderScriptComponent*>();
+        if (shaderScriptComp != nullptr)
+        {
+            GLOG("VFX: ShaderScriptComponent found");
+
+            auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
+            if (attackVfxScript)
+            {
+                attackVfxScript->Reset();
+                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
+            }
+            else
+            {
+                GLOG("VFX: ERROR - AttackVfxSpritesheet script not found!");
+            }
+        }
+        else
+        {
+            GLOG("VFX: ERROR - No ShaderScriptComponent found on %s", hitVfxObject->GetName().c_str());
+        }
+        /*ParticleSystemComponent* particleSystem = hitVfxObject->GetComponent<ParticleSystemComponent*>();
+        if (particleSystem)
+        {
+            if (currentHealth >= 2)
+                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_HURT);
+
+            if (currentHealth <= 0)
+                if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
+                
+          
+            particleSystem->SpawnAllInstances();
+            GLOG("VFX: Hit particles spawned");
+        }
+        else
+        {
+            GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", hitVfxObject->GetName().c_str());
+        }*/
+    }
+    else
+    {
+        GLOG("VFX: ERROR - archerVfxObject is NULL!");
+    }
+}
 
 
 
@@ -780,7 +809,12 @@ void Archer::UpdateHighlightState(float deltaTime)
 
 void Archer::OnDeath()
 {
-    isAttacking  = false;
+    hasEscapeTarget = false;
+    hasDangerTarget = false;
+    isAiming        = false;
+    isAttacking     = false;
+    hasShot         = false;
+    isKnockback     = false;
     currentState = ArcherStates::DEATH;
 
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
@@ -792,10 +826,7 @@ void Archer::OnDeath()
         agentAI->SetSpeed(0.0f, 0.0f);
     }
 
-   
-    hasEscapeTarget = false;
-    hasDangerTarget = false;
-    isAiming        = false;
+  
 
     if (animComponent)
     {
@@ -822,7 +853,7 @@ void Archer::OnDamageTaken(int amount)
     knockbackTimer = knockbackTime;
     ApplyKnockback();
 
-   //ActivateHitVFX();
+   ActivateHitVFX();
 
     if (animComponent)
     {
@@ -838,34 +869,6 @@ void Archer::PerformAttack()
 
 void Archer::OverShooting(float deltaTime)
 {
-    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
-    {
-        hasShot     = false;
-        isAttacking = false;
-        attackTimer = 0.0f;
-        agentAI->ResumeMovement();
-        agentAI->SetSpeed(0.0f, 0.0f);
-        if (animComponent) animComponent->UseTrigger("idle");
-        isAiming     = false;
-        aimTimer     = 0.0f;
-        currentState = ArcherStates::PATROL;
-        return;
-    }
-    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
-    {
-        hasShot            = false;
-        isAttacking        = false;
-        hasStartedShooting = false;
-        currentShot        = 0;
-        shotTimer          = 0.0f;
-        attackCdTimer      = attackCooldown;
-        agentAI->ResetSpeed();
-        agentAI->SetLookForward(true);
-        isAiming     = false;
-        aimTimer     = 0.0f;
-        currentState = ArcherStates::PATROL;
-        return;
-    }
 
     if (!weaponCollider) return;
 
@@ -1033,6 +1036,12 @@ void Archer::HandleState(float deltaTime)
 
 void Archer::PatrolAI()
 {
+    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
+    {
+        agentAI->SetSpeed(0.0f, 0.0f);
+        if (animComponent) animComponent->UseTrigger("idle");
+        return;
+    }
 
     if (!playerScript->IsDead() && playerScript->GetState() != CharacterStates::RESPAWN)
     {
@@ -1086,12 +1095,7 @@ void Archer::PatrolAI()
         }
     }
 
-    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
-    {
-        agentAI->SetSpeed(0.0f, 0.0f);
-        if (animComponent) animComponent->UseTrigger("idle");
-        return;
-    }
+   
 
     if (isStatic)
     {
@@ -1143,11 +1147,6 @@ bool Archer::IsNavmeshPathClear(float3 from, float3 to)
 
 void Archer::ChaseAI()
 {
-    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
-    {
-        currentState = ArcherStates::PATROL;
-        return;
-    }
 
     if (animComponent) animComponent->UseTrigger("run");
 
@@ -1156,7 +1155,7 @@ void Archer::ChaseAI()
         float distance = GetDistanceFromPlayer();
 
         agentAI->ResetSpeed();
-        agentAI->SetSpeed(4.0, 10.0f);
+        agentAI->SetSpeed(5.0, 10.0f);
         agentAI->SetLookForward(true);
 
         if (distance <= rangeEscape)
@@ -1215,7 +1214,6 @@ void Archer::ChaseAI()
 void Archer::DangerRetreat(float deltaTime)
 {
     if (!agentAI || !character) return;
-
     float3 archerPos   = parent->GetGlobalTransform().TranslatePart();
     float3 playerPos   = character->GetLastPosition();
     float distToPlayer = archerPos.Distance(playerPos);
@@ -1335,7 +1333,7 @@ void Archer::DangerRetreat(float deltaTime)
             hasDangerTarget    = true;
         }
 
-        agentAI->SetSpeed(8.0f, 10.0f);
+        agentAI->SetSpeed(7.0f, 10.0f);
     }
 
    
@@ -1362,14 +1360,6 @@ void Archer::DangerRetreat(float deltaTime)
 void Archer::SearchForPlayer()
 {
     float distance = GetDistanceFromPlayer();
-
-    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
-    {
-        isSearching  = false;
-        currentState = ArcherStates::PATROL;
-        agentAI->ResetSpeed();
-        return;
-    }
 
   
     if (!isStatic && distance <= rangeAIChase)
@@ -1435,17 +1425,6 @@ void Archer::SearchForPlayer()
 
 void Archer::Aim(float deltaTime)
 {
-    if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
-    {
-        isAiming = false;
-        aimTimer = 0.0f;
-        agentAI->ResumeMovement();
-        agentAI->SetSpeed(0.0f, 0.0f);
-        if (animComponent) animComponent->UseTrigger("idle");
-        agentAI->SetLookForward(true);
-        currentState = ArcherStates::PATROL;
-        return;
-    }
     if (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN)
     {
         isAiming = false;
@@ -1670,6 +1649,7 @@ void Archer::ChangeState()
         {
             GLOG("Player dead - switching to patrol");
             currentState = ArcherStates::PATROL;
+            agentAI->SetLookForward(true);
             seekingCover = false;
             isInCover    = false;
             currentCover = nullptr;
@@ -1697,15 +1677,31 @@ void Archer::ChangeState()
 
     if (distance <= rangeEscape)
     {
+        agentAI->SetLookForward(true);
         currentState = ArcherStates::ESCAPE;
         isInCover    = false;
         seekingCover = false;
         currentCover = nullptr;
     }
     else if (distance < rangeAIAttack && hasLineOfSight) currentState = ArcherStates::PREAIM;
-    else if (distance >= rangeAIChase) currentState = ArcherStates::CHASE;
-    else if (distance > maxDetectionRange) currentState = ArcherStates::SEARCH;
-    else currentState = ArcherStates::PATROL;
+    else if (distance >= rangeAIChase)
+    {
+        currentState = ArcherStates::CHASE;
+        agentAI->SetLookForward(true);
+    }
+   
+    else if (distance > maxDetectionRange)
+    {
+        currentState = ArcherStates::SEARCH;
+        agentAI->SetLookForward(true);
+    }
+   
+    else
+    {
+        agentAI->SetLookForward(true);
+        currentState = ArcherStates::PATROL;
+    }
+   
 }
 
 void Archer::Escape(float deltaTime)
@@ -1799,7 +1795,7 @@ void Archer::Escape(float deltaTime)
             GLOG("ESCAPE: Using fallback direction");
         }
 
-        agentAI->SetSpeed(7.0f, 10.0f);
+        agentAI->SetSpeed(6.0f, 10.0f);
       
     }
 
