@@ -10,7 +10,6 @@
 #include "CameraComponent.h"
 #include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
-#include "VolumetricAreaComponent.h"
 #include "ShaderScriptComponent.h"
 #include "Standalone/AIAgentComponent.h"
 #include "Standalone/AnimationComponent.h"
@@ -35,6 +34,7 @@
 #include "Standalone/UI/Transform2DComponent.h"
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/VideoComponent.h"
+#include "VolumetricAreaComponent.h"
 
 #include "imgui.h"
 #include <queue>
@@ -287,7 +287,6 @@ GameObject::~GameObject()
     App->GetSceneModule()->GetScene()->RemoveTransformUpdatedGameObject(this);
 
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
-
 }
 
 void GameObject::LoadData(const rapidjson::Value& initialState)
@@ -762,7 +761,7 @@ void GameObject::RenderEditorInspector(bool drawGizmo)
 
 void GameObject::UpdateTransformForGOBranch()
 {
-    //if (!IsGloballyEnabled()) return;
+    // if (!IsGloballyEnabled()) return;
     App->GetSceneModule()->AddGameObjectToUpdateComponents(this);
     std::stack<UID> childrenBuffer;
     childrenBuffer.push(uid);
@@ -802,7 +801,8 @@ void GameObject::OnTransformUpdated()
     else
     {
         App->GetSceneModule()->GetScene()->SetDynamicModified();
-        App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
+        if (!globalAABB.IsDegenerate() && globalAABB.IsFinite() && !globalAABB.Size().IsZero())
+            App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
     }
 }
 
@@ -1532,7 +1532,7 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         GameObject* current = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
         if (!current) continue;
 
-        //GLOG("GameObject %s", current->GetName().c_str());
+        // GLOG("GameObject %s", current->GetName().c_str());
         if (current->GetName() == name) return current;
 
         for (UID grandChildUID : current->children)
