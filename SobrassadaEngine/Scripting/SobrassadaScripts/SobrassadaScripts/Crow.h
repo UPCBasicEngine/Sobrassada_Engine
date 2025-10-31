@@ -4,7 +4,7 @@
 class AudioSourceComponent;
 class MoveGOInSpline;
 class SplineComponent;
-class ParticleSystemComponent;
+//class ParticleSystemComponent;
 
 
 enum class CrowStates
@@ -51,9 +51,9 @@ class Crow : public Character
     MoveGOInSpline* moveGOSpline    = nullptr;
     SplineComponent* spline         = nullptr;
     float3 pointSplineEnd           = float3::zero;
-    ParticleSystemComponent* feathers = nullptr;
+    //ParticleSystemComponent* feathers = nullptr;
 
-    std::string nameVFXFeathers       = "";
+    //std::string nameVFXFeathers       = "";
 
     bool endRouteDisable            = false;
 };

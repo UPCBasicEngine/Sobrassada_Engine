@@ -18,7 +18,7 @@ Crow::Crow(GameObject* parent)
           parent, 1, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, CharacterType::Crow)
 {
     fields.push_back({"Disable end route?", InspectorField::FieldType::Bool, &endRouteDisable});
-    fields.push_back({"VFX Particle Feathers", InspectorField::FieldType::InputText, &nameVFXFeathers});
+    //fields.push_back({"VFX Particle Feathers", InspectorField::FieldType::InputText, &nameVFXFeathers});
 }
 
 bool Crow::Init()
@@ -31,15 +31,15 @@ bool Crow::Init()
     moveGOSpline = parent->GetComponent<ScriptComponent*>()->GetScriptByType<MoveGOInSpline>();
     if (moveGOSpline) moveGOSpline->SetEnabled(false);
 
-    if (!nameVFXFeathers.empty())
-    {
-        feathers = AppEngine->GetSceneModule()
-                       ->GetScene()
-                       ->GetGameObjectByName(nameVFXFeathers)
-                       ->GetComponent<ParticleSystemComponent*>();
-        
-        feathers->StopInstances();
-    }
+    //if (!nameVFXFeathers.empty())
+    //{
+    //    feathers = AppEngine->GetSceneModule()
+    //                   ->GetScene()
+    //                   ->GetGameObjectByName(nameVFXFeathers)
+    //                   ->GetComponent<ParticleSystemComponent*>();
+    //    
+    //    if(feathers) feathers->StopInstances();
+    //}
 
     audioComp = parent->GetComponent<AudioSourceComponent*>();
 
@@ -91,11 +91,12 @@ void Crow::EnterState(CrowStates next)
     case CrowStates::IDLE:
         animComponent->UseTrigger(idleTriggerName.c_str());
         playerNear = false;
+        //feathers->StopInstances();
         break;
 
     case CrowStates::TAKE_OFF:
         animComponent->UseTrigger(takeOffTriggerName.c_str());
-        if (feathers) feathers->Init();
+        //if (feathers) feathers->Init();
         break;
 
     case CrowStates::FLY:
@@ -130,6 +131,7 @@ void Crow::EndRoute()
         {
             moveGOSpline->SetEnabled(false);
             EnterState(CrowStates::IDLE);
+            //if(feathers) feathers->StopInstances();
         }
         else
         {
