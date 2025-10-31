@@ -154,6 +154,8 @@ class Archer : public Character
     int flankingFailures          = 0;
     float repositionTimer         = 0.0f;
     float repositionDelay         = 2.0f;
+    float3 targetSpreadPosition        = float3::zero;
+    bool hasSpreadPosition             = false;
    
     
 

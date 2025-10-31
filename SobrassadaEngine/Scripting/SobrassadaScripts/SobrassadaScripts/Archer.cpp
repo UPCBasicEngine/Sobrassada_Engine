@@ -270,6 +270,21 @@ void Archer::Update(float deltaTime)
     repositionTimer += deltaTime;
     breathDuration  += deltaTime;
 
+    if (currentState == ArcherStates::CHASE && repositionTimer >= 2.0f)
+    {
+        std::vector<float3> nearbyArchers = GetNearbyArcherPositions();
+        if (nearbyArchers.size() > 0)
+        {
+            targetSpreadPosition = CalculateSpreadPosition();
+            hasSpreadPosition    = true;
+        }
+        else
+        {
+            hasSpreadPosition = false;
+        }
+        repositionTimer = 0.0f;
+    }
+
     if (breathDuration >= breathTime) shouldAttack = true;
 
     if (hitVfxIsActive && hitVfxObject)
@@ -984,6 +999,7 @@ void Archer::HandleState(float deltaTime)
         break;
     case ArcherStates::PATROL:
         PatrolAI();
+        if (animComponent) animComponent->UseTrigger("idle");
         break;
     case ArcherStates::CHASE:
         ChaseAI();
@@ -1148,8 +1164,7 @@ bool Archer::IsNavmeshPathClear(float3 from, float3 to)
 
 void Archer::ChaseAI()
 {
-
-    if (animComponent) animComponent->UseTrigger("run");
+  if (animComponent) animComponent->UseTrigger("run");
 
     if (character != nullptr)
     {
@@ -1161,51 +1176,27 @@ void Archer::ChaseAI()
 
         if (distance <= rangeEscape)
         {
-            GLOG("CHASE -> ESCAPE (too close)");
             currentState = ArcherStates::ESCAPE;
             return;
         }
 
-       
-        const float AIM_THRESHOLD = rangeAIAttack - 0.5f; 
+        const float AIM_THRESHOLD = rangeAIAttack - 0.5f;
         if (distance <= AIM_THRESHOLD && attackCdTimer <= 0.0f)
         {
-            GLOG("CHASE -> AIM (in close attack range)");
             currentState = ArcherStates::AIM;
             return;
         }
 
-       
-        bool pathSet                      = false;
-        float3 targetPosition             = float3::zero;
+        bool pathSet = false;
 
-        std::vector<float3> nearbyArchers = GetNearbyArcherPositions();
-        if (nearbyArchers.size() > 0)
+        if (hasSpreadPosition)
         {
-            targetPosition = CalculateSpreadPosition();
-
-            if (targetPosition.Distance(parent->GetPosition()) > 0.5f &&
-                IsNavmeshPathClear(parent->GetPosition(), targetPosition))
-            {
-                pathSet = agentAI->SetPathNavigation(targetPosition);
-                GLOG("CHASE: Using spread position - Result: %s", pathSet ? "SUCCESS" : "FAILED");
-            }
+            pathSet = agentAI->SetPathNavigation(targetSpreadPosition);
         }
 
-      
         if (!pathSet)
         {
-            targetPosition = character->GetLastPosition();
-            pathSet        = agentAI->SetPathNavigation(targetPosition);
-            GLOG("CHASE: Using direct player position - Result: %s", pathSet ? "SUCCESS" : "FAILED");
-        }
-
-       
-        if (!pathSet)
-        {
-         
             agentAI->SetPathNavigation(character->GetLastPosition());
-            GLOG("CHASE: Forcing direct navigation");
         }
     }
 }
