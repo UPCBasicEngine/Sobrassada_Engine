@@ -9,14 +9,14 @@
 
 DynamicOctreeNode::~DynamicOctreeNode()
 {
+    //for (auto& element : elements)
+    //    element.gameObject->SetDynamicNode(nullptr);
+
     for (auto& child : children)
     {
         delete child;
         child = nullptr;
     }
-
-    for (auto& element : elements)
-        element.gameObject->SetDynamicNode(nullptr);
 }
 
 void DynamicOctreeNode::Subdivide()
@@ -389,7 +389,7 @@ const std::vector<LineSegment>& DynamicOctree::GetDrawLines()
     return drawLines;
 }
 
-void DynamicOctree::UpdateTree(std::vector<GameObject*> movedGameObjects)
+void DynamicOctree::UpdateTree(std::set<GameObject*> movedGameObjects)
 {
     // CHECK IF GO HAS MOVED OUT OF ITS CONTAINER NODE AND REMOVE
 
@@ -399,8 +399,12 @@ void DynamicOctree::UpdateTree(std::vector<GameObject*> movedGameObjects)
     for (GameObject* gameObject : movedGameObjects)
     {
         DynamicOctreeNode* node = gameObject->GetDynamicNode();
+        AABB objectBB           = gameObject->GetGlobalAABB();
 
-        if (node && !node->Intersects(gameObject->GetGlobalAABB()))
+        if (gameObject->IsStatic() || !objectBB.IsFinite() || objectBB.IsDegenerate() || objectBB.Size().IsZero())
+            continue;
+
+        if (node && !node->Intersects(objectBB))
         {
             if (RemoveElement(gameObject, true))
             {

@@ -2032,7 +2032,8 @@ void CuChulainn::Move()
             );
             GameObject* object = RaycastController::GetRayIntersectionTrees(
                 ray, AppEngine->GetSceneModule()->GetScene()->GetOctree(),
-                AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
+                //AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
+                AppEngine->GetSceneModule()->GetScene()->GetDynamicOctree()
             );
 
             if (object)

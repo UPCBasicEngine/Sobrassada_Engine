@@ -161,7 +161,8 @@ class SOBRASADA_API_ENGINE Scene
 
     bool isSceneLoaded = false;
 
-    void AddTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.push_back(gameObject); };
+    void AddTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.insert(gameObject); };
+    void RemoveTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.erase(gameObject); };
     void ClearTransformTransformUpdatedGameObjects() { transformUpdatedGameObjects.clear(); };
 
   private:
@@ -203,7 +204,7 @@ class SOBRASADA_API_ENGINE Scene
     std::vector<GameObject*> gameObjectsToUpdateComponents;
 
     // FOR DYNAMIC OCTREE
-    std::vector<GameObject*> transformUpdatedGameObjects;
+    std::set<GameObject*> transformUpdatedGameObjects;
 
     std::set<UID> toUpdateGameObjectsSet;
     std::vector<GameObject*> toUpdateGameObjects;

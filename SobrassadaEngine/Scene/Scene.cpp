@@ -208,6 +208,8 @@ Scene::~Scene()
 
     selectedGameObjects.clear();
 
+    transformUpdatedGameObjects.clear();
+
     App->GetParticleModule()->ClearParticleSystems();
 
     App->GetPathfinderModule()->ClearNavMesh();
@@ -282,7 +284,7 @@ void Scene::Init()
     toUpdateGameObjects.reserve(gameObjectsContainer.size());
 
     UpdateStaticSpatialStructure();
-    UpdateDynamicSpatialStructure();
+    //UpdateDynamicSpatialStructure();
     CreateDynamicOctree();
 
     isSceneLoaded = true;
@@ -1169,11 +1171,7 @@ void Scene::UpdateDynamicOctree()
 {
     dynamicOctree->UpdateTree(transformUpdatedGameObjects);
 
-
     transformUpdatedGameObjects.clear();
-    /*delete dynamicOctree;*/
-
-    //CreateDynamicOctree();
 }
 
 void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
@@ -1185,7 +1183,9 @@ void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects
 
     sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
-    dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+    //dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+
+    dynamicOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
     for (auto gameObject : queriedObjects)
     {

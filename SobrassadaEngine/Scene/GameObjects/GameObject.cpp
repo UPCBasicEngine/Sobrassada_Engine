@@ -284,7 +284,10 @@ GameObject::~GameObject()
         App->GetSceneModule()->GetScene()->RemoveFromTag(tags[i], this);
     }
 
+    App->GetSceneModule()->GetScene()->RemoveTransformUpdatedGameObject(this);
+
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
+
 }
 
 void GameObject::LoadData(const rapidjson::Value& initialState)

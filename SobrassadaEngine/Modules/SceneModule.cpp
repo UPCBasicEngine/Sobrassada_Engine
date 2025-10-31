@@ -312,7 +312,8 @@ void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* ke
         keyboard[SDL_SCANCODE_LSHIFT])
     {
         GameObject* selectedObject = RaycastController::GetRayIntersectionTrees(
-            App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
+             App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicOctree()
+            //App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
         );
 
         if (selectedObject != nullptr)
@@ -325,7 +326,8 @@ void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* ke
     else if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN && !keyboard[SDL_SCANCODE_LALT])
     {
         GameObject* selectedObject = RaycastController::GetRayIntersectionTrees(
-            App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
+             App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicOctree()
+            //App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
         );
 
         if (selectedObject != nullptr) loadedScene->SetSelectedGameObject(selectedObject->GetUID());
@@ -474,6 +476,8 @@ void SceneModule::HandleObjectDeletion()
 
 void SceneModule::HandleTreesUpdates()
 {
+    if (loadSceneNextFrame) return;
+
 #ifdef OPTICK
     OPTICK_CATEGORY("Application::HandleTreesUpdates", Optick::Category::GameLogic)
 #endif
@@ -484,8 +488,8 @@ void SceneModule::HandleTreesUpdates()
         }
         if (loadedScene->IsDynamicModified())
         {
-            loadedScene->UpdateDynamicSpatialStructure();
-            loadedScene->UpdateDynamicOctree();
+            //loadedScene->UpdateDynamicSpatialStructure();
+             loadedScene->UpdateDynamicOctree();
         }
 
         loadedScene->UpdateGameObjectsComponents();
