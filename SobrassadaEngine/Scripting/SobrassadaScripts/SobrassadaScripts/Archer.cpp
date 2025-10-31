@@ -175,7 +175,7 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
-    if (currentState != ArcherStates::DEATH && currentState != ArcherStates::PATROL)
+    if (currentState != ArcherStates::DEATH)
     {
         if (playerScript && (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN))
         {
@@ -202,6 +202,7 @@ void Archer::Update(float deltaTime)
             currentState     = ArcherStates::PATROL;
 
             if (animComponent) animComponent->UseTrigger("idle");
+            return;
         }
     }
     if (currentState == ArcherStates::DEATH && animComponent && animComponent->IsFinished())
@@ -1042,7 +1043,7 @@ void Archer::PatrolAI()
         if (animComponent) animComponent->UseTrigger("idle");
         return;
     }
-
+   
     if (!playerScript->IsDead() && playerScript->GetState() != CharacterStates::RESPAWN)
     {
         float distance = GetDistanceFromPlayer();
