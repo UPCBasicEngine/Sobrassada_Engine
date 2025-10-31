@@ -6,6 +6,10 @@
 #include <stack>
 #include <vector>
 
+#ifdef OPTICK
+#include "optick.h"
+#endif
+
 class GameObject;
 
 struct DynamicOctreeElement
