@@ -16,6 +16,7 @@ class DamageMask;
 class AttackVfxSpritesheet;
 class ShaderScriptComponent;
 class UISpritesheet;
+class ParticleSystemComponent;
 
 enum class CharacterStates
 {
@@ -63,6 +64,8 @@ class CuChulainn : public Character
     bool IsDashUnlocked() const { return dashUnlocked; }
     bool IsUltimateUnlocked() const { return ultimateUnlocked; }
     int GetEnemiesCount() const { return enemiesCont; }
+    int GetRiastradOnDamageTaken() const { return riastradOnDamageTaken; }
+
     bool HasblockingTag(GameObject* go);
 
     void SetSpawnPosition(const float3& newPos) { spawnPos = newPos; }
@@ -93,6 +96,9 @@ class CuChulainn : public Character
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
     float3 GetMark() const;
+    void AddRiastrad(int amount);
+
+    void PlayHighlightSequence();
 
   private:
     void OnDeath() override;
@@ -130,7 +136,6 @@ class CuChulainn : public Character
     void Move();
     void ChargeAttack();
     void ToggleRiastrad();
-    void AddRiastrad(int amount);
     void EndCurse();
 
     bool IsBlockedAhead(
@@ -153,6 +158,18 @@ class CuChulainn : public Character
     Projectile* spear                              = nullptr;
     GameObject* spearCharacter                     = nullptr;
 
+    std::string footstepName1                      = "Footstep1";
+    std::string footstepName2                      = "Footstep2";
+    std::string footstepName3                      = "Footstep3";
+    std::string footstepName4                      = "Footstep4";
+    std::string footstepParticles1Name             = "FootstepParticles1";
+    std::string footstepParticles2Name             = "FootstepParticles2";
+    ShaderScriptComponent* footsteps[4]            = {nullptr};
+    ParticleSystemComponent* footstepParticles1    = nullptr;
+    ParticleSystemComponent* footstepParticles2    = nullptr;
+    int stepIndex                                  = 0;
+    bool isRightFoot                               = false;
+
     float defaultSpeed                             = 7.0f;
     float inputBuffer                              = 0.5f;
 
@@ -160,6 +177,8 @@ class CuChulainn : public Character
     BarFill* healthBar                             = nullptr;
 
     bool controlsLocked                            = false;
+    std::string onHitVfxName                       = "OnHitVfx";
+    ShaderScriptComponent* onHitVfx                = nullptr;
 
     // Dash
     std::string dashIconName                       = "DashCooldown";
@@ -291,16 +310,24 @@ class CuChulainn : public Character
     std::string riastradKeyName                    = "RiastradKey";
     std::string riastradVfxBGName                  = "EyeBackgroundVFX";
     std::string riastradVfxFGName                  = "EyeForegroundVFX";
-    std::string riastradFireUpName                 = "RiastradFireUp";
-    std::string riastradFireDownName               = "RiastradFireDown";
+    std::string riastradFireUpName                 = "RiastradFire";
+    std::string riastradParticlesName              = "RiastradParticles";
+    std::string riastradParticlesRightArmName      = "RiastradFlamesRightArm";
+    std::string riastradParticlesLeftArmName       = "RiastradFlamesLeftArm";
+    std::string riastradParticlesRightLegName      = "RiastradFlamesRightLeg";
+    std::string riastradParticlesLeftLegName       = "RiastradFlamesLeftLeg";
+    std::string riastradTrailName                  = "RiastradTrail";
+    std::string riastradLightName                  = "RiastradLight";
     BarFill* riastradBar                           = nullptr;
     AbilityIconFill* riastradEye                   = nullptr;
     ShaderScriptComponent* riastradVfxBG           = nullptr;
     ShaderScriptComponent* riastradVfxFG           = nullptr;
-    ShaderScriptComponent* riastradFireUp          = nullptr;
-    ShaderScriptComponent* riastradFireDown        = nullptr;
+    ShaderScriptComponent* riastradFire            = nullptr;
     GameObject* riastradTriggers                   = nullptr;
     GameObject* riastradKey                        = nullptr;
+    GameObject* riastradTrail                      = nullptr;
+    GameObject* riastradLight                      = nullptr;
+    ParticleSystemComponent* riastradParticles[8]  = {nullptr};
     int riastradMeter                              = 0;
     bool isRiastrad                                = false;
     bool desiredTransform                          = false;
@@ -330,6 +357,14 @@ class CuChulainn : public Character
     ShaderScriptComponent* riastradSmoke           = nullptr;
     ShaderScriptComponent* riastradGroundExplosion = nullptr;
 
+    // Curse
+    std::string curseParentName                    = "CurseVFX";
+    std::string gooShoeRightName                   = "GooShoeRight";
+    std::string gooShoeLeftName                    = "GooShoeLeft";
+    ShaderScriptComponent* curseScreenVfx[4]       = {nullptr};
+    GameObject* gooShoeRight                       = nullptr;
+    GameObject* gooShoeLeft                        = nullptr;
+
     float3 spawnPos                                = float3::zero;
     AudioSourceComponent* audio                    = nullptr;
 
@@ -339,10 +374,10 @@ class CuChulainn : public Character
     bool godMode                                   = false;
     float idleTimer                                = 0.0f;
     float runTimer                                 = 0.0f;
-    float stepTime                                 = 0.367f;
+    float stepTime                                 = 0.4f;
     bool justDied                                  = false;
     bool pendingGameOver                           = false;
-    bool moveFromCollision                         = false;
+    bool moveFromCollision                         = true;
 
     int mushrooms                                  = 0;
     int mushroomHeal                               = 2;
@@ -394,8 +429,8 @@ class CuChulainn : public Character
 
     // Curse
     bool isCursed                                  = false;
-    float curseSpeed                               = 4.0f;
-    float curseDuration                            = 5.0f;
+    float curseSpeed                               = 1.0f;
+    float curseDuration                            = 4.0f;
     float curseTimer                               = 0.0f;
     UID playerMaterial                             = 0;
 
@@ -408,6 +443,7 @@ class CuChulainn : public Character
     HashString riastradIdleName2                   = HashString("CH_MC_Chu_AllAnimations_AN_IdleRiastrad2");
 
     HashString defaultRunName                      = HashString("CH_MC_Chu_AllAnimations_AN_Run2");
+    HashString walkAnimName                            = HashString("CH_MC_Chu_AllAnimations_AN_WalkNormal");
     HashString riastradRunName                     = HashString("CH_MC_Chu_AllAnimations_AN_RunRiastrad");
     HashString curseRunName                        = HashString("CH_MC_Chu_AllAnimations_AN_MC_Chu_Walk_Pooka");
 };

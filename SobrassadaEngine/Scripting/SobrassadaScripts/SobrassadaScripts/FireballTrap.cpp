@@ -542,14 +542,12 @@ void FireballTrap::StartAttack()
     const float impactT   = fallTime;
     const float3 vfxPos   = impactLocalPos;
     const float3 vfxScale = float3::one;
-    float3 groundVfxPos   = impactLocalPos;
-    groundVfxPos.y        = 0.1f;
 
     ScheduleVfx(vfxMainLight, impactT + vfxMainLightDelay, vfxMainLightLife, vfxPos, vfxScale);
     ScheduleVfx(vfxLightImpact, impactT + vfxLightImpactDelay, vfxLightImpactLife, vfxPos, vfxScale);
     ScheduleVfx(vfxFireImpact, impactT + vfxFireImpactDelay, vfxFireImpactLife, vfxPos, vfxScale);
-    ScheduleVfx(vfxBombGround, impactT + vfxBombGroundDelay, vfxBombGroundLife, groundVfxPos, vfxScale);
-    ScheduleVfx(vfxBlackStain, impactT + vfxBlackStainDelay, vfxBlackStainLife, groundVfxPos, vfxScale);
+    ScheduleVfx(vfxBombGround, impactT + vfxBombGroundDelay, vfxBombGroundLife, vfxPos, vfxScale);
+    ScheduleVfx(vfxBlackStain, impactT + vfxBlackStainDelay, vfxBlackStainLife, vfxPos, vfxScale);
 
     // Big-ring indicator (pre-fall)
     if (vfxIndicator)

@@ -98,6 +98,16 @@ void BossMirage::Update(float deltaTime)
     {
         timeSinceLastActivation += deltaTime;
 
+        if (sequence == &sequence2 && currentWeightOrder >= 4 && currentWeightOrder < 15)
+        {
+            sequence->delayBetweenZones = 1.3f;
+        }
+
+        if (sequence == &sequence3)
+        {
+            sequence->delayBetweenZones = 2.0f;
+        }
+
         if (timeSinceLastActivation >= sequence->delayBetweenZones)
         {
             auto it = sequence->waves.find(currentWeightOrder);
@@ -166,7 +176,7 @@ std::vector<GameObject*> BossMirage::GetMirageChildren(Scene* scene, const std::
             if (scriptComp && scriptComp->GetScriptByType<Mirage>())
             {
                 result.push_back(child);
-                GLOG("Checking child: %s | Active: %s", child->GetName().c_str(), child->IsEnabled() ? "Yes" : "No");
+                // GLOG("Checking child: %s | Active: %s", child->GetName().c_str(), child->IsEnabled() ? "Yes" : "No");
             }
         }
         break; // found the correct parent object

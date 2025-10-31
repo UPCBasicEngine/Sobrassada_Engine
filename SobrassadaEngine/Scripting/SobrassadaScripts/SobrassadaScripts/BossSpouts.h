@@ -16,5 +16,6 @@ class BossSpouts : public Script
     float speed          = 1.0f;                 
     float verticalOffset = 0.0f;                
     float angle          = 0.0f; 
+    float uvAngle        = 0.0f;
     GameObject* spout    = nullptr;
 };
