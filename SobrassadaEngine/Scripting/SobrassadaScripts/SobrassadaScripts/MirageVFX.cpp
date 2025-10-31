@@ -154,3 +154,8 @@ void MirageVFX::Reset()
 {
     frameTimer = 0.0f;
 }
+
+void MirageVFX ::SetAllColors(const float3& newColor)
+{
+    color1 = color2 = color3 = color4 = newColor;
+}

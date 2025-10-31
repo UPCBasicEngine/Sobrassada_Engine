@@ -163,6 +163,13 @@ void Destructible::ValidateSetup()
         }
     }
 
+    if (destroyedMesh == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[ERROR] Destroyed mesh for destruction not found")
+        return;
+    }
+
     if (destructionSmoke == nullptr)
     {
         isSetupCorrectly = false;

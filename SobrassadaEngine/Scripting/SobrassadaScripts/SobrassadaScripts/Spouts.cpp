@@ -15,6 +15,7 @@
 Spouts::Spouts(GameObject* parent) : Script(parent)
 {
     fields.push_back({"Enable Rune", InspectorField::FieldType::Bool, &enableRune});
+    fields.push_back({"Enable Particles Rune", InspectorField::FieldType::Bool, &enableParticlesRune});
     fields.push_back({"Boss Controlled", InspectorField::FieldType::Bool, &bossControlled});
     fields.push_back({"Activation Range", InspectorField::FieldType::Float, &activationRange, 0.0f, 100.0f});
     fields.push_back({"Damage", InspectorField::FieldType::Int, &damage, 0, 5});
@@ -57,6 +58,7 @@ bool Spouts::Init()
     particleGOB          = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[5]);
     rune                 = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[6]);
     particleGOT          = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[7]);
+    runeParticlesGO      = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByUID(parent->GetChildren()[8]);
 
     damageCollider       = parent->GetComponent<SphereColliderComponent*>();
 
@@ -71,7 +73,8 @@ bool Spouts::Init()
 
     particles_bot        = particleGOB->GetComponent<ParticleSystemComponent*>();
     particles_top        = particleGOT->GetComponent<ParticleSystemComponent*>();
-    audio                = parent->GetComponent<AudioSourceComponent*>();
+    if (runeParticlesGO) runeParticles = runeParticlesGO->GetComponent<ParticleSystemComponent*>();
+    audio = parent->GetComponent<AudioSourceComponent*>();
 
     return true;
 }
@@ -97,6 +100,7 @@ void Spouts::Update(float deltaTime)
         if (!bossControlled)
         {
             if (enableRune) rune->SetEnabled(true);
+            if (enableParticlesRune) runeParticlesGO->SetEnabled(true);
 
             float distance = character->GetGlobalTransform().TranslatePart().DistanceSq(parent->GetPosition());
             if (distance <= activationRange)
@@ -104,6 +108,7 @@ void Spouts::Update(float deltaTime)
                 if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
                 activationState = ACTIVATION_STATE::CHARGING;
                 rune->SetEnabled(false);
+                runeParticlesGO->SetEnabled(false);
                 tornadoWater->SetEnabled(true);
                 chargingTimer = 0.0f;
             }
@@ -229,14 +234,47 @@ void Spouts::DisableCollider()
 
 void Spouts::ForceActivate()
 {
-    if (activationState == ACTIVATION_STATE::SLEEPING)
-    {
-        damageCollider->SetEnabled(false);
-        GLOG("Force Activation");
-        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
-        activationState = ACTIVATION_STATE::CHARGING;
-        if (rune) rune->SetEnabled(false);
-        if (tornadoWater) tornadoWater->SetEnabled(true);
-        chargingTimer = 0.0f;
-    }
+    GLOG("Force Activation");
+
+    ResetUVs();
+    damageCollider->SetEnabled(false);
+    if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_WATER_SPOUTS);
+    activationState = ACTIVATION_STATE::CHARGING;
+    if (rune) rune->SetEnabled(false);
+    if (tornadoWater) tornadoWater->SetEnabled(true);
+    chargingTimer = 0.0f;
+}
+
+void Spouts::ForceDeactivate()
+{
+    if (whiteWaves) whiteWaves->SetEnabled(false);
+    if (tornadoWater) tornadoWater->SetEnabled(false);
+    if (waterMesh) waterMesh->SetEnabled(false);
+    if (blueWaves) blueWaves->SetEnabled(false);
+    if (explosion) explosion->SetEnabled(false);
+    if (particleGOB) particleGOB->SetEnabled(false);
+    if (particleGOT) particleGOT->SetEnabled(false);
+
+    if (shaderScript) shaderScript->ResetScript("MovingUVTransparent");
+    if (whiteWavesScript) whiteWavesScript->ResetScript("MovingUVTransparent");
+    if (explosionScript) explosionScript->ResetScript("MovingUVTransparent");
+
+    if (damageCollider) damageCollider->SetEnabled(false);
+    damageGiven     = false;
+    damageTimer     = 0.0f;
+
+    chargingTimer   = 0.0f;
+    activationState = ACTIVATION_STATE::SLEEPING;
+}
+
+void Spouts::ResetUVs()
+{
+    if (shaderScript) shaderScript->ResetScript("MovingUVTransparent");
+    if (whiteWavesScript) whiteWavesScript->ResetScript("MovingUVTransparent");
+    if (explosionScript) explosionScript->ResetScript("MovingUVTransparent");
+
+    // Re-enable them again immediately to restart animation
+    if (shaderScript) shaderScript->SetScriptEnabled("MovingUVTransparent", true);
+    if (whiteWavesScript) whiteWavesScript->SetScriptEnabled("MovingUVTransparent", true);
+    if (explosionScript) explosionScript->SetScriptEnabled("MovingUVTransparent", true);
 }

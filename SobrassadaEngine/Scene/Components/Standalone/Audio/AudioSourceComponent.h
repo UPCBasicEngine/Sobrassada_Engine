@@ -40,6 +40,8 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     void StopAudio() const;
     void StopAllAudio() const;
 
+    void ResetVolume();
+
     const std::string& GetEventName() const { return defaultEventName; }
 
   private:
@@ -49,9 +51,10 @@ class SOBRASADA_API_ENGINE AudioSourceComponent : public Component
     AkUniqueID defaultEvent;
     AkPlayingID playingEvent;
 
-    float volume         = 1;
+    float volume         = 1.0f;
+    float initVolume     = 1.0f;
     float pitch          = 0.5f;
-    float spatialization = 0;
+    float spatialization = 0.0f;
     bool isPlaying       = false;
 
     bool isInited        = false;

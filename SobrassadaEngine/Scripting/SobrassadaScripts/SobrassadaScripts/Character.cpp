@@ -54,6 +54,7 @@ Character::Character(
     fields.push_back({"Attack Hitbox Duration", InspectorField::FieldType::Float, &attackHitboxDuration, 0.0f, 5.0f});
 
     fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
+    fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
@@ -62,6 +63,13 @@ Character::Character(
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 30.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
         fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
+        if (type == CharacterType::Boss || type == CharacterType::Soldier)
+            fields.push_back({"Mesh 2 name", InspectorField::FieldType::InputText, &mesh2Name});
+        if (type == CharacterType::Boss)
+        {
+            fields.push_back({"Mesh 3 name", InspectorField::FieldType::InputText, &mesh3Name});
+            fields.push_back({"Mesh 4 name", InspectorField::FieldType::InputText, &mesh4Name});
+        }
         fields.push_back({"On Hit VFX Duration", InspectorField::FieldType::Float, &onHitVfxDuration, 0.0f, 1.0f});
         fields.push_back({"On Hit Pivot Name", InspectorField::FieldType::InputText, &onHitPivotName});
         fields.push_back({"On Hit VFX 1", InspectorField::FieldType::InputText, &onHitVfx1Name});
@@ -98,33 +106,85 @@ bool Character::Init()
         else weaponCollider->SetEnabled(false);
     }
 
+    GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
+    if (meshObject)
+    {
+        mesh = meshObject->GetComponent<MeshComponent*>();
+        if (mesh) mesh->SetEnabled(true);
+
+        meshScripts = meshObject->GetComponent<ShaderScriptComponent*>();
+        if (meshScripts) meshScripts->SetEnabled(false);
+    }
+    else
+    {
+        GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
+    }
+
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
         onHitPivot = parent->GetChildGameObjectByName(onHitPivotName);
-        // if (!onHitPivot) GLOG("[WARNING - %s] No on hit Pivot found for enemy", parent->GetName().c_str())
 
         onHitVfx1  = parent->GetChildGameObjectByName(onHitVfx1Name);
         if (onHitVfx1) onHitVfx1->SetEnabled(false);
-        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
 
         onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
         if (onHitVfx2) onHitVfx2->SetEnabled(false);
-        // else GLOG("[WARNING - %s] No on hit VFX found for enemy", parent->GetName().c_str())
 
-        GameObject* meshObject = parent->GetChildGameObjectByName(meshName);
-        if (meshObject)
+        if (!mesh2Name.empty())
         {
-            mesh = meshObject->GetComponent<MeshComponent*>();
-            if (mesh) mesh->SetEnabled(true);
-            // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+            GameObject* mesh2Object = parent->GetChildGameObjectByName(mesh2Name);
+            if (mesh2Object)
+            {
+                mesh2 = mesh2Object->GetComponent<MeshComponent*>();
+                if (mesh2) mesh2->SetEnabled(true);
+                // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
 
-            meshScripts = meshObject->GetComponent<ShaderScriptComponent*>();
-            if (meshScripts) meshScripts->SetEnabled(false);
-            // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+                color2Change = mesh2Object->GetComponent<ShaderScriptComponent*>();
+                if (color2Change) color2Change->SetEnabled(false);
+                // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+            }
+            else
+            {
+                GLOG("[WARNING - %s] No mesh 2 object found in children", parent->GetName().c_str())
+            }
         }
-        else
+
+        if (!mesh3Name.empty())
         {
-            GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
+            GameObject* mesh3Object = parent->GetChildGameObjectByName(mesh3Name);
+            if (mesh3Object)
+            {
+                mesh3 = mesh3Object->GetComponent<MeshComponent*>();
+                if (mesh3) mesh3->SetEnabled(true);
+                // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+                color3Change = mesh3Object->GetComponent<ShaderScriptComponent*>();
+                if (color3Change) color3Change->SetEnabled(false);
+                // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+            }
+            else
+            {
+                GLOG("[WARNING - %s] No mesh 3 object found in children", parent->GetName().c_str())
+            }
+        }
+
+        if (!mesh4Name.empty())
+        {
+            GameObject* mesh4Object = parent->GetChildGameObjectByName(mesh4Name);
+            if (mesh4Object)
+            {
+                mesh4 = mesh4Object->GetComponent<MeshComponent*>();
+                if (mesh4) mesh4->SetEnabled(true);
+                // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+                color4Change = mesh4Object->GetComponent<ShaderScriptComponent*>();
+                if (color4Change) color4Change->SetEnabled(false);
+                // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+            }
+            else
+            {
+                GLOG("[WARNING - %s] No mesh 4 object found in children", parent->GetName().c_str())
+            }
         }
 
         GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
@@ -236,8 +296,7 @@ void Character::OnCollisionEnter(GameObject* otherObject, const float3 collision
         }
 
         // Heal & Riastrad knockback check
-        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL ||
-                                  playerScript->GetState() == CharacterStates::TRANSFORM))
+        else if (playerScript && (playerScript->GetState() == CharacterStates::HEAL || playerScript->GetState() == CharacterStates::TRANSFORM))
         {
             TakeDamage(0);
         }
@@ -356,23 +415,42 @@ void Character::UpdateTimers(float deltaTime)
     searchTimer -= deltaTime;
     if (searchTimer < 0.0f) searchTimer = 0.0f;
 
-    if (type != CharacterType::CuChulainn && type != CharacterType::Mirage && isHit)
+    if (isHit)
     {
         onHitVfxTimer -= deltaTime;
-
-        // Do this in the next frame after enabling the mesh to avoid popping
-        if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
-        {
-            meshScripts->SetEnabled(false);
-            isHit = false;
-        }
 
         if (onHitVfxTimer < 0.0f)
         {
             if (onHitVfx1 && onHitVfx1->IsEnabled()) onHitVfx1->SetEnabled(false);
             if (onHitVfx2 && onHitVfx2->IsEnabled()) onHitVfx2->SetEnabled(false);
 
+            // Do this in the next frame after enabling the mesh to avoid popping
+            if (mesh && mesh->GetEnabled() && meshScripts && meshScripts->GetEnabled())
+            {
+                meshScripts->SetEnabled(false);
+                isHit = false;
+            }
+
+            if (mesh2 && mesh2->GetEnabled() && color2Change && color2Change->GetEnabled())
+            {
+                color2Change->SetEnabled(false);
+                isHit = false;
+            }
+            if (mesh3 && mesh3->GetEnabled() && color3Change && color3Change->GetEnabled())
+            {
+                color3Change->SetEnabled(false);
+                isHit = false;
+            }
+            if (mesh4 && mesh4->GetEnabled() && color4Change && color4Change->GetEnabled())
+            {
+                color4Change->SetEnabled(false);
+                isHit = false;
+            }
+
             if (mesh && !mesh->GetEnabled()) mesh->SetEnabled(true);
+            if (mesh2 && !mesh2->GetEnabled()) mesh2->SetEnabled(true);
+            if (mesh3 && !mesh3->GetEnabled()) mesh3->SetEnabled(true);
+            if (mesh4 && !mesh4->GetEnabled()) mesh4->SetEnabled(true);
         }
     }
 }
@@ -387,6 +465,15 @@ void Character::TakeDamage(int amount)
     invulnerabilityTimer  = invulnerableDuration;
 
     OnDamageTaken(amount);
+
+    if (meshScripts && mesh)
+    {
+        mesh->SetEnabled(false);
+        meshScripts->SetEnabled(true);
+    }
+
+    isHit         = true;
+    onHitVfxTimer = onHitVfxDuration;
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
@@ -431,6 +518,24 @@ void Character::TakeDamage(int amount)
         {
             mesh->SetEnabled(false);
             meshScripts->SetEnabled(true);
+        }
+
+        if (color2Change && mesh2)
+        {
+            mesh2->SetEnabled(false);
+            color2Change->SetEnabled(true);
+        }
+
+        if (color3Change && mesh3)
+        {
+            mesh3->SetEnabled(false);
+            color3Change->SetEnabled(true);
+        }
+
+        if (color4Change && mesh4)
+        {
+            mesh4->SetEnabled(false);
+            color4Change->SetEnabled(true);
         }
 
         isHit         = true;
