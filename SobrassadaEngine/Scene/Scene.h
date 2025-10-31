@@ -131,7 +131,7 @@ class SOBRASADA_API_ENGINE Scene
         return selectedGameObjectsMobility;
     }
     const std::map<UID, float4x4>& GetMultiselectedObjectsLocals() const { return selectedGameObjectsOgLocals; }
-    
+
     UID GetNavmeshUID() const { return navmeshUID; }
     RenderPass* GetRenderPass() { return renderPass; }
 
@@ -160,6 +160,9 @@ class SOBRASADA_API_ENGINE Scene
     RenderPass* GetRenderPass() const { return renderPass; }
 
     bool isSceneLoaded = false;
+
+    void AddTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.push_back(gameObject); };
+    void ClearTransformTransformUpdatedGameObjects() { transformUpdatedGameObjects.clear(); };
 
   private:
     void CreateStaticSpatialDataStruct();
@@ -198,6 +201,9 @@ class SOBRASADA_API_ENGINE Scene
     bool dynamicModified                         = false;
 
     std::vector<GameObject*> gameObjectsToUpdateComponents;
+
+    // FOR DYNAMIC OCTREE
+    std::vector<GameObject*> transformUpdatedGameObjects;
 
     std::set<UID> toUpdateGameObjectsSet;
     std::vector<GameObject*> toUpdateGameObjects;

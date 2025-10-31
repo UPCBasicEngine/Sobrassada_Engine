@@ -14,6 +14,9 @@ DynamicOctreeNode::~DynamicOctreeNode()
         delete child;
         child = nullptr;
     }
+
+    for (auto& element : elements)
+        element.gameObject->SetDynamicNode(nullptr);
 }
 
 void DynamicOctreeNode::Subdivide()
@@ -66,6 +69,8 @@ void DynamicOctreeNode::Subdivide()
 bool DynamicOctreeNode::InsertElement(DynamicOctreeElement& elementToAdd)
 {
     // ADD CURRENT REFERENCE TO GAME OBJECT IF NEEDED
+    elementToAdd.gameObject->SetDynamicNode(this);
+
     elements.push_back(elementToAdd);
 
     return true;
@@ -88,6 +93,7 @@ bool DynamicOctreeNode::RemoveElement(DynamicOctreeElement& elementToRemove)
 
     if (offset > -1)
     {
+        elementToRemove.gameObject->SetDynamicNode(nullptr);
         elements.erase(elements.begin() + offset);
         return true;
     }
@@ -164,51 +170,66 @@ bool DynamicOctree::InsertElement(GameObject* gameObject)
     return false;
 }
 
-bool DynamicOctree::RemoveElement(GameObject* gameObject)
+bool DynamicOctree::RemoveElement(GameObject* gameObject, bool goTransformed)
 {
     if (gameObject == nullptr) return false;
 
     bool removed = false;
-    std::stack<DynamicOctreeNode*> nodesToVisit;
-    nodesToVisit.push(rootNode);
+    std::map<DynamicOctreeNode*, std::pair<bool, int>> nodeStates;
+
+    DynamicOctreeNode* currentNode     = nullptr;
 
     const AABB objectBoundingBox       = gameObject->GetGlobalAABB();
     DynamicOctreeElement octreeElement = DynamicOctreeElement(objectBoundingBox, gameObject);
 
-    std::map<DynamicOctreeNode*, std::pair<bool, int>> nodeStates;
-
-    DynamicOctreeNode* currentNode = nullptr;
-
-    while (!nodesToVisit.empty() && !removed)
+    if (goTransformed)
     {
-        currentNode = nodesToVisit.top();
-        nodesToVisit.pop();
-
-        if (currentNode->Intersects(objectBoundingBox))
+        currentNode = gameObject->GetDynamicNode();
+        if (currentNode && currentNode->RemoveElement(octreeElement))
         {
-            if (currentNode->IsLeaf())
-            {
-                if (currentNode->HasElement(octreeElement))
-                {
-                    --totalElements;
-                    removed = currentNode->RemoveElement(octreeElement);
+            removed = true;
 
-                    // SAVE CURRENT STATE TO LATER CHECK IF MERGEABLE
-                    if (currentNode->elements.size() <= currentNode->elementsCapacity)
-                        nodeStates.insert({currentNode, std::make_pair(true, (int)currentNode->elements.size())});
-                    else nodeStates.insert({currentNode, std::make_pair(false, (int)currentNode->elements.size())});
+            if (currentNode->elements.size() <= currentNode->elementsCapacity)
+                nodeStates.insert({currentNode, std::make_pair(true, (int)currentNode->elements.size())});
+            else nodeStates.insert({currentNode, std::make_pair(false, (int)currentNode->elements.size())});
+        }
+    }
+    else
+    {
+        std::stack<DynamicOctreeNode*> nodesToVisit;
+        nodesToVisit.push(rootNode);
+
+        while (!nodesToVisit.empty() && !removed)
+        {
+            currentNode = nodesToVisit.top();
+            nodesToVisit.pop();
+
+            if (currentNode->Intersects(objectBoundingBox))
+            {
+                if (currentNode->IsLeaf())
+                {
+                    if (currentNode->HasElement(octreeElement))
+                    {
+                        --totalElements;
+                        removed = currentNode->RemoveElement(octreeElement);
+
+                        // SAVE CURRENT STATE TO LATER CHECK IF MERGEABLE
+                        if (currentNode->elements.size() <= currentNode->elementsCapacity)
+                            nodeStates.insert({currentNode, std::make_pair(true, (int)currentNode->elements.size())});
+                        else nodeStates.insert({currentNode, std::make_pair(false, (int)currentNode->elements.size())});
+                    }
+                    else
+                    {
+                        if (currentNode->elements.size() <= currentNode->elementsCapacity)
+                            nodeStates.insert({currentNode, std::make_pair(true, (int)currentNode->elements.size())});
+                        else nodeStates.insert({currentNode, std::make_pair(false, (int)currentNode->elements.size())});
+                    }
                 }
                 else
                 {
-                    if (currentNode->elements.size() <= currentNode->elementsCapacity)
-                        nodeStates.insert({currentNode, std::make_pair(true, (int)currentNode->elements.size())});
-                    else nodeStates.insert({currentNode, std::make_pair(false, (int)currentNode->elements.size())});
+                    for (auto child : currentNode->children)
+                        nodesToVisit.push(child);
                 }
-            }
-            else
-            {
-                for (auto child : currentNode->children)
-                    nodesToVisit.push(child);
             }
         }
     }
@@ -299,17 +320,19 @@ bool DynamicOctree::RemoveElement(GameObject* gameObject)
                             childNode = nullptr;
                         }
 
+                        for (auto& element : currentNode->elements)
+                            element.gameObject->SetDynamicNode(currentNode);
+
                         totalLeaf -= 7;
 
                         // DONT FORGET TO ADD IT TO NODE STATES!!!!!!
                         nodeStates.insert({currentNode, std::make_pair(true, (int)childElements)});
-                        
+
                         if (currentNode != rootNode && nodesInStack.find(currentNode->parentNode) == nodesInStack.end())
                         {
                             nodesInStack.insert(currentNode->parentNode);
                             nodesToCheck.push(currentNode->parentNode);
                         }
-
                     }
                     else if (allChildsValid && childElements > currentNode->elementsCapacity) return removed;
                 }
@@ -364,4 +387,30 @@ const std::vector<LineSegment>& DynamicOctree::GetDrawLines()
         }
     }
     return drawLines;
+}
+
+void DynamicOctree::UpdateTree(std::vector<GameObject*> movedGameObjects)
+{
+    // CHECK IF GO HAS MOVED OUT OF ITS CONTAINER NODE AND REMOVE
+
+    std::vector<GameObject*> gameObjectsToAdd;
+    gameObjectsToAdd.reserve(movedGameObjects.size());
+
+    for (GameObject* gameObject : movedGameObjects)
+    {
+        DynamicOctreeNode* node = gameObject->GetDynamicNode();
+
+        if (node && !node->Intersects(gameObject->GetGlobalAABB()))
+        {
+            if (RemoveElement(gameObject, true))
+            {
+                gameObjectsToAdd.push_back(gameObject);
+            }
+        }
+    }
+
+    for (GameObject* gameObject : gameObjectsToAdd)
+    {
+        InsertElement(gameObject);
+    }
 }

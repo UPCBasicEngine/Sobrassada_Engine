@@ -283,7 +283,7 @@ void Scene::Init()
 
     UpdateStaticSpatialStructure();
     UpdateDynamicSpatialStructure();
-    UpdateDynamicOctree();
+    CreateDynamicOctree();
 
     isSceneLoaded = true;
 }
@@ -786,7 +786,7 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUID)
             SetDynamicModified();
 
             // DYNAMIC OCTREE TESTING
-            dynamicOctree->RemoveElement(gameObject);
+            dynamicOctree->RemoveElement(gameObject, false);
         }
 
         if (gameObject == nullptr) continue;
@@ -1167,9 +1167,13 @@ void Scene::UpdateDynamicSpatialStructure()
 
 void Scene::UpdateDynamicOctree()
 {
-    delete dynamicOctree;
+    dynamicOctree->UpdateTree(transformUpdatedGameObjects);
 
-    CreateDynamicOctree();
+
+    transformUpdatedGameObjects.clear();
+    /*delete dynamicOctree;*/
+
+    //CreateDynamicOctree();
 }
 
 void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const

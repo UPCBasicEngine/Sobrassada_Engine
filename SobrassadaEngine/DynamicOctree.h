@@ -52,8 +52,10 @@ class DynamicOctree
     ~DynamicOctree();
 
     bool InsertElement(GameObject* gameObject);
-    bool RemoveElement(GameObject* gameObject);
+    bool RemoveElement(GameObject* gameObject, bool goTransformed);
     const std::vector<LineSegment>& GetDrawLines();
+
+    void UpdateTree(std::vector<GameObject*> movedGameObjects);
 
     template <typename AreaType>
     void QueryElements(const AreaType& queryObject, std::vector<GameObject*>& foundElements) const;

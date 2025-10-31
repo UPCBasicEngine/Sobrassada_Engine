@@ -485,6 +485,7 @@ void SceneModule::HandleTreesUpdates()
         if (loadedScene->IsDynamicModified())
         {
             loadedScene->UpdateDynamicSpatialStructure();
+            loadedScene->UpdateDynamicOctree();
         }
 
         loadedScene->UpdateGameObjectsComponents();

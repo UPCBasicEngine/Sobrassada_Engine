@@ -796,7 +796,11 @@ void GameObject::OnTransformUpdated()
     if (transform2D) transform2D->OnTransform3DUpdated(globalTransform);
 
     if (mobilitySettings == STATIC) App->GetSceneModule()->GetScene()->SetStaticModified();
-    else App->GetSceneModule()->GetScene()->SetDynamicModified();
+    else
+    {
+        App->GetSceneModule()->GetScene()->SetDynamicModified();
+        App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
+    }
 }
 
 void GameObject::ParentUpdatedComponents()
