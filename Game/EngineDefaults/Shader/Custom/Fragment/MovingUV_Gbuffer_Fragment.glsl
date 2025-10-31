@@ -2,9 +2,16 @@
 
 #extension GL_ARB_bindless_texture : require
 
+layout(binding=0) uniform sampler2D diffuseTex;
+layout(binding=1) uniform sampler2D specularMetallicTex;
+layout(binding=2) uniform sampler2D normalTex;
+layout(binding=3) uniform sampler2D emmisiveTex;
+
 layout(location=4) uniform bool isWireframe;
 layout(location=5) uniform bool isAlphaDiscard;
-layout(location=16) uniform int baseIndex;
+layout(location=6) uniform bool isMetallic;
+layout(location=7) uniform float roughnessFactor;
+layout(location=8) uniform float metallicFactor;
 
 layout(location = 0)out vec4 gDiffuse;
 layout(location = 1)out vec4 gSpecular;
@@ -17,31 +24,6 @@ in vec2 uv;
 in vec3 normal;
 in vec4 tangent;
 
-struct Material
-{
-    vec4 diffColor;
-    vec3 specColor;
-    float shininess;
-    bool shininessInAlpha;
-    float metallicFactor;
-    float roughnessFactor;
-    uvec2 diffuseTex;
-    uvec2 specularTex;
-    uvec2 metallicTex;
-    uvec2 normalTex;
-    int hasSpecular;
-    int hasMetallic;
-    uvec2 emmisiveTex;
-    uvec2 occlusionTex;
-    float emissiveIntensity;
-    float padding;
-};
-
-readonly layout(std430, binding = 11) buffer Materials {
-    Material materials[];
-};
-
-
 mat3 CreateTBN()
 {
     const vec3 T = normalize(vec3(tangent));
@@ -52,9 +34,7 @@ mat3 CreateTBN()
 
 void main()
 {
-    const Material mat = materials[baseIndex];
-
-    vec4 texColor = pow(texture(sampler2D(mat.diffuseTex), uv), vec4(2.2f));
+    vec4 texColor = pow(texture2D(diffuseTex, uv), vec4(2.2f));
 
     const float alpha = texColor.a;
 
@@ -65,24 +45,19 @@ void main()
 
     gDiffuse = vec4(texColor.rgb, alpha);
 
-    
+    gSpecular = pow(texture2D(specularMetallicTex, uv), vec4(2.2));
     
     gPosition = vec4(pos, 1);
     gNormal = vec4(normal, 0);
     
-    if(mat.hasMetallic == 0)
+    if(isMetallic)
     {
-        gSpecular = pow(texture(sampler2D(mat.metallicTex), uv), vec4(2.2));
-        gSpecular.y = mat.roughnessFactor * gSpecular.y;
-        gSpecular.z = mat.metallicFactor * gSpecular.z;
-    }
-    else
-    {
-        gSpecular = pow(texture(sampler2D(mat.specularTex), uv), vec4(2.2));
+        gSpecular.y = roughnessFactor * gSpecular.y;
+        gSpecular.z = metallicFactor * gSpecular.z;
     }
     
     vec3 N = normalize(normal);
-    vec3 normalTexSample = texture(sampler2D(mat.normalTex), uv).xyz;
+    vec3 normalTexSample = texture2D(normalTex, uv).xyz;
 
     // Retrive normal for normal map
     if (normalTexSample.r != 0 || normalTexSample.g != 0) {
@@ -93,6 +68,6 @@ void main()
     }
     gNormal = vec4(N,0);
 
-    vec3 emissiveColor = pow(texture(sampler2D(mat.emmisiveTex), uv).rgb, vec3(2.2f));
+    vec3 emissiveColor = pow(texture2D(emmisiveTex, uv).rgb, vec3(2.2f));
     gEmissive = vec4(emissiveColor, 1.0);
 }

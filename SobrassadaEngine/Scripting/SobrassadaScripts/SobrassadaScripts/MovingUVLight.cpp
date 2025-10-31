@@ -89,6 +89,24 @@ bool MovingUVLight::Init()
             indexCount = (unsigned int)rmesh->GetIndices().size();
         }
 
+        const ResourceMaterial* rmat = meshComp->GetResourceMaterial();
+        if (rmat)
+        {
+            isAlphaDiscard = rmat->IsAlphaDiscard();
+
+            diffuseTex     = rmat->GetDiffuseColorID();
+
+            if (rmat->GetIsMetallicRoughness()) specularMetallicTex = rmat->GetMetallicTextureID();
+            else specularMetallicTex = rmat->GetSpecularTextureID();
+
+            matIsMetallic   = rmat->GetIsMetallicRoughness();
+
+            roughnessFactor = rmat->GetMaterial().roughnessFactor;
+            metallicFactor  = rmat->GetMaterial().metallicFactor;
+
+            emissiveTex     = rmat->GetEmissiveTextureID();
+        }
+
         meshComp->SetEnabled(false);
         meshComp->SetUpdateShaderStorage(true);
     }
@@ -134,24 +152,30 @@ void MovingUVLight::Render(float deltaTime, CameraComponent* cameraComp)
 
         glUniform1i(4, 0);
         glUniform1i(5, isAlphaDiscard);
-        glUniform1i(16, meshComp->GetBaseIndex());
+        glUniform1i(6, matIsMetallic);
 
-        GeometryBatch* batch = meshComp->GetBatch();
-        if (batch)
-        {
-            batch->BindBonesBuffer();
-            batch->BindMaterialsBuffer();
-        }
+        glUniform1f(7, roughnessFactor);
+        glUniform1f(8, metallicFactor);
+
+        meshComp->GetBatch()->BindBonesBuffer();
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseTex);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMetallicTex);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, normalTex);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, emissiveTex);
 
         glBindVertexArray(vao);
 
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
-        if (batch)
-        {
-            batch->UnbindBonesBuffer();
-            batch->UnbindMaterialsBuffer();
-        }
+        meshComp->GetBatch()->UnbindBonesBuffer();
 
         glBindVertexArray(0);
     }

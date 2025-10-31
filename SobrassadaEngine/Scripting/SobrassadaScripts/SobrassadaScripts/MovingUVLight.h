@@ -25,7 +25,16 @@ class MovingUVLight : public Script
     unsigned int vbo                 = 0;
     unsigned int ebo                 = 0;
 
+    unsigned int diffuseTex          = 0;
+    unsigned int specularMetallicTex = 0;
+    unsigned int normalTex           = 0;
+    unsigned int emissiveTex         = 0;
+
     bool isAlphaDiscard              = false;
+    bool matIsMetallic               = false;
+
+    float roughnessFactor            = 1.f;
+    float metallicFactor             = 1.f;
 
     unsigned int indexCount          = 0;
 

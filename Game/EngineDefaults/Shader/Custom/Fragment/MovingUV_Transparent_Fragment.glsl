@@ -9,9 +9,7 @@ layout(location=5) uniform bool isAlphaDiscard;
 layout(location=6) uniform vec3 cameraPos;
 layout(location=7) uniform float time;
 layout(location=8) uniform float fadeOutTime;
-layout(location=15) uniform float fadeOutDuration;
-layout(location=16) uniform int baseIndex;
-
+layout(location=11) uniform float fadeOutDuration;
 
 in vec3 pos;
 in vec2 uv;
@@ -44,7 +42,8 @@ struct SpotLight
     float anisotropy;
 };
 
-struct Material
+// UBOs
+layout(std140, binding = 6) uniform Material
 {
     vec4 diffColor;
     vec3 specColor;
@@ -62,10 +61,6 @@ struct Material
     uvec2 occlusionTex;
     float emissiveIntensity;
     float padding;
-};
-
-readonly layout(std430, binding = 11) buffer Materials {
-    Material materials[];
 };
 
 layout(std140, binding = 2) uniform Ambient
@@ -198,12 +193,11 @@ mat3 CreateTBN()
 
 void main()
 {
-    const Material mat = materials[baseIndex];
-    const vec4 texColor = pow(texture(sampler2D(mat.diffuseTex), uv), vec4(2.2f));
+    const vec4 texColor = pow(texture(sampler2D(diffuseTex), uv), vec4(2.2f));
     vec4 metallicRoughnessTexColor;
-    if(mat.hasMetallic == 1) metallicRoughnessTexColor = pow(texture(sampler2D(mat.metallicTex), uv), vec4(2.2));
+    if(hasMetallic == 1) metallicRoughnessTexColor = pow(texture(sampler2D(metallicTex), uv), vec4(2.2));
     else metallicRoughnessTexColor = vec4(1);
-    float alpha = texColor.a * mat.diffColor.a;
+    float alpha = texColor.a * diffColor.a;
 
     if (time > fadeOutTime) 
     {
@@ -218,23 +212,23 @@ void main()
 
     vec3 N = normalize(normal);
     // Retrive normal for normal map
-    if (mat.normalTex.r != 0 || mat.normalTex.g != 0) {
+    if (normalTex.r != 0 || normalTex.g != 0) {
         const mat3 space = CreateTBN();
-        const vec3 texNormal = (texture(sampler2D(mat.normalTex), uv).xyz*2.0-1.0);
+        const vec3 texNormal = (texture(sampler2D(normalTex), uv).xyz*2.0-1.0);
         const vec3 final_normal = space * texNormal;
         N = normalize(final_normal);
     }
 
-    const float roughness = mat.roughnessFactor * metallicRoughnessTexColor.y;
+    const float roughness = roughnessFactor * metallicRoughnessTexColor.y;
     //roughness = roughness * roughness;
-    const float metallic = mat.metallicFactor * metallicRoughnessTexColor.z;
+    const float metallic = metallicFactor * metallicRoughnessTexColor.z;
 
     const vec3 V = normalize(cameraPos - pos);
     const vec3 R = reflect(-V, N);
     const float NdotV = max(dot(N, V), 0.0001);
 
     // Ambient light
-    const vec3 BaseColor = mat.diffColor.rgb * texColor.rgb;
+    const vec3 BaseColor = diffColor.rgb * texColor.rgb;
     const vec3 Cd = BaseColor * (1 - metallic);
     const vec3 RF0 = mix(vec3(0.04), BaseColor, metallic);
 
@@ -263,9 +257,9 @@ void main()
 		hdr += RenderLight(L, N, Cd, lightColor, NdotL, roughness, RF0);
     }
 
-    const vec4 emissive = vec4(pow(texture(sampler2D(mat.emmisiveTex), uv), vec4(2.2f)));
+    const vec4 emissive = vec4(pow(texture(sampler2D(emmisiveTex), uv), vec4(2.2f)));
 
-    hdr += emissive.rgb * vec3(mat.emissiveIntensity);
+    hdr += emissive.rgb * vec3(emissiveIntensity);
 
     vec3 ldr = hdr.rgb / (hdr.rgb + vec3(1.0));
     ldr = pow(hdr, vec3(1.0/2.2));
