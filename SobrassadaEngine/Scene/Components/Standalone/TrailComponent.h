@@ -42,7 +42,6 @@ class TrailComponent : public Component
     void ParentUpdated() override;
 
     void UpdateTexture(UID newTextureUID);
-    void RecalculateAABB();
     
  private:
     void ClearTrail();

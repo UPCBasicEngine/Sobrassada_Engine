@@ -468,6 +468,8 @@ void SceneModule::HandleObjectDeletion()
     else loadedScene->RemoveGameObjectHierarchy(loadedScene->GetSelectedGameObjectUID());
 
     loadedScene->SetSelectedGameObject(loadedScene->GetGameObjectRootUID());
+
+    HandleTreesUpdates();
 }
 
 void SceneModule::HandleTreesUpdates()

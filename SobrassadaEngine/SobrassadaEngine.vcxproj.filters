@@ -625,6 +625,9 @@
     <ClCompile Include="VolumetricAreaComponent.cpp">
       <Filter>Scene\Components</Filter>
     </ClCompile>
+    <ClCompile Include="DynamicOctree.cpp">
+      <Filter>Utils\Tree</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Modules">
@@ -1235,6 +1238,9 @@
     <ClInclude Include="Utils\WindConfig.h" />
     <ClInclude Include="VolumetricAreaComponent.h">
       <Filter>Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicOctree.h">
+      <Filter>Utils\Tree</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

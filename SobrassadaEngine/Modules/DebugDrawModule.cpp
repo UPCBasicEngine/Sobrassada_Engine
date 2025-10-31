@@ -10,6 +10,7 @@
 #include "Globals.h"
 #include "MathGeoLib.h"
 #include "Octree.h"
+#include "DynamicOctree.h"
 #include "OpenGLModule.h"
 #include "PathfinderModule.h"
 #include "Quadtree.h"
@@ -843,6 +844,12 @@ void DebugDrawModule::HandleDebugRenderOptions()
     {
         Octree* dynamicTree = sceneModule->GetScene()->GetDynamicTree();
         if (dynamicTree != nullptr) RenderLines(dynamicTree->GetDrawLines(), float3(0.467f, 0.647f, 0.91f));
+    }
+
+    if (debugOptionValues[(int)DebugOptions::RENDER_DYNAMICOCTREE])
+    {
+        DynamicOctree* dynamicTree = sceneModule->GetScene()->GetDynamicOctree();
+        if (dynamicTree != nullptr) RenderLines(dynamicTree->GetDrawLines(), float3(0.878f, 0.667f, 0.243f));
     }
 
     if (debugOptionValues[(int)DebugOptions::RENDER_CAMERA_RAY])

@@ -9,6 +9,7 @@
 #include "ComponentUtils.h"
 #include "Components/ShaderScriptComponent.h"
 #include "DebugDrawModule.h"
+#include "DynamicOctree.h"
 #include "EditorUIModule.h"
 #include "Framebuffer.h"
 #include "GBuffer.h"
@@ -215,11 +216,15 @@ Scene::~Scene()
     delete sceneOctree;
     delete dynamicTree;
     delete renderPass;
+    delete dynamicOctree;
 
-    lightsConfig = nullptr;
-    windConfig   = nullptr;
-    sceneOctree  = nullptr;
-    dynamicTree  = nullptr;
+    lightsConfig  = nullptr;
+    windConfig    = nullptr;
+    sceneOctree   = nullptr;
+    dynamicTree   = nullptr;
+
+    // DYNAMIC OCTREE TESING
+    dynamicOctree = nullptr;
 
     // GLOG("%s scene closed", sceneName.c_str());
 }
@@ -278,6 +283,7 @@ void Scene::Init()
 
     UpdateStaticSpatialStructure();
     UpdateDynamicSpatialStructure();
+    UpdateDynamicOctree();
 
     isSceneLoaded = true;
 }
@@ -775,7 +781,13 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUID)
         GameObject* gameObject = GetGameObjectByUID(currentUID);
 
         if (gameObject->IsStatic()) SetStaticModified();
-        else SetDynamicModified();
+        else
+        {
+            SetDynamicModified();
+
+            // DYNAMIC OCTREE TESTING
+            dynamicOctree->RemoveElement(gameObject);
+        }
 
         if (gameObject == nullptr) continue;
 
@@ -1116,6 +1128,25 @@ void Scene::CreateDynamicSpatialDataStruct()
     }
 }
 
+void Scene::CreateDynamicOctree()
+{
+    float3 center    = float3::zero;
+    float length     = 2000;
+    int nodeCapacity = 15;
+    dynamicOctree    = new DynamicOctree(center, length, nodeCapacity);
+
+    for (const auto& objectIterator : gameObjectsContainer)
+    {
+        AABB objectBB = objectIterator.second->GetGlobalAABB();
+
+        if (objectIterator.second->IsStatic()) continue;
+        if (objectIterator.second->GetUID() == gameObjectRootUID) continue;
+        if (!objectBB.IsFinite() || objectBB.IsDegenerate() || objectBB.Size().IsZero()) continue;
+
+        dynamicOctree->InsertElement(objectIterator.second);
+    }
+}
+
 void Scene::UpdateStaticSpatialStructure()
 {
     staticModified = false;
@@ -1132,6 +1163,13 @@ void Scene::UpdateDynamicSpatialStructure()
     delete dynamicTree;
 
     CreateDynamicSpatialDataStruct();
+}
+
+void Scene::UpdateDynamicOctree()
+{
+    delete dynamicOctree;
+
+    CreateDynamicOctree();
 }
 
 void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const

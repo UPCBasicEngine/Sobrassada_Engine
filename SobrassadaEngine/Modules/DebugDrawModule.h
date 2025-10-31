@@ -31,6 +31,7 @@ enum class DebugOptions : uint8_t
     RENDER_SPLINES,
     RENDER_DEBUG_VISUALS,
     RENDER_SSAO,
+    RENDER_DYNAMICOCTREE,
 };
 
 enum DrawNavMeshFlags
@@ -40,9 +41,11 @@ enum DrawNavMeshFlags
     DRAWNAVMESH_COLOR_TILES = 0x04
 };
 
-constexpr const char* DebugStrings[] = {"Render Lights", "Render Wireframe", "AABB",    "OBB",           "Static Tree",
-                                        "Dynamic Tree",  "Camera Ray",       "Navmesh", "Physics World", "GBuffers",
-                                        "Depth", "ShadowMap", "Navmesh Meshes",   "Splines", "Debug Visuals", "SSAO"};
+constexpr const char* DebugStrings[] = {"Render Lights",  "Render Wireframe", "AABB",          "OBB",
+                                        "Static Tree",    "Dynamic Tree",     "Camera Ray",    "Navmesh",
+                                        "Physics World",  "GBuffers",         "Depth",         "ShadowMap",
+                                        "Navmesh Meshes", "Splines",          "Debug Visuals", "SSAO",
+                                        "DYNAMIC OCTREE"};
 
 class DebugDrawModule : public Module
 {
@@ -73,7 +76,9 @@ class DebugDrawModule : public Module
     void DrawPoint(const float3& center, const float size);
     void DrawCone(const float3& center, const float3& dir, const float baseRadius, const float apexRadius);
     SOBRASADA_API_ENGINE void DrawArrow(const float3& from, const float3& to, const float3& color, float headSize);
-    void DrawCone(const float3& apexPosition, const float3& direction, const float3& color, float apexRadius, float baseRadius);
+    void DrawCone(
+        const float3& apexPosition, const float3& direction, const float3& color, float apexRadius, float baseRadius
+    );
     SOBRASADA_API_ENGINE void Draw3DText(const btVector3& location, const char* textString);
     SOBRASADA_API_ENGINE void
     Draw2DText(const char* textString, const float3& location, const float3& color = float3::zero, float scale = 1.0f);

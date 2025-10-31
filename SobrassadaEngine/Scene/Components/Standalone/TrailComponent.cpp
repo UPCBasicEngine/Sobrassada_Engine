@@ -306,8 +306,6 @@ void TrailComponent::Update(float deltaTime)
             indices.push_back(leftCurrent);
         }
     }
-
-    RecalculateAABB();
 }
 
 void TrailComponent::Render(float deltaTime, CameraComponent* camera)
@@ -418,43 +416,10 @@ void TrailComponent::ParentUpdated()
 {
 }
 
-void TrailComponent::RecalculateAABB()
-{
-    if (points.empty())
-    {
-        //localComponentAABB = AABB(float3::zero, float3::zero);
-        localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
-        parent->OnAABBUpdated();
-        return;
-    }
-
-    AABB globalAABB;
-    globalAABB.minPoint = float3::inf;
-    globalAABB.maxPoint = -float3::inf;
-
-    for (const TrailPoint& tp : points)
-    {
-        const float3 left  = tp.position - tp.perpendicular * width;
-        const float3 right = tp.position + tp.perpendicular * width;
-
-        globalAABB.Enclose(float3(left.x + 0.1f, left.y + 0.1f, left.z + 0.1f));
-        globalAABB.Enclose(float3(right.x - 0.1f, right.y - 0.1f, right.z - 0.1f));
-    }
-
-    // Convertir AABB global a espacio local
-    const float4x4 invTransform = parent->GetGlobalTransform().Inverted();
-    const float3 localMin       = invTransform.MulPos(globalAABB.minPoint);
-    const float3 localMax       = invTransform.MulPos(globalAABB.maxPoint);
-
-    localComponentAABB          = AABB(localMin.Min(localMax), localMin.Max(localMax));
-    parent->OnAABBUpdated();
-}
-
 void TrailComponent::ClearTrail()
 {
     points.clear();
     vertices.clear();
     indices.clear();
     if (spline) spline->ClearPoints();
-    RecalculateAABB();
 }
