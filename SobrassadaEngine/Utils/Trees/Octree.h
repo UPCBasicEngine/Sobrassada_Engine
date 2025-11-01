@@ -78,7 +78,7 @@ inline void Octree::QueryElements(const AreaType& queryObject, std::vector<GameO
 #ifdef OPTICK
     OPTICK_CATEGORY("Octree::QueryElements", Optick::Category::GameLogic)
 #endif
-    std::vector<bool> insertedElements = std::vector<bool>(totalElements, false);
+    std::vector<uint8_t> insertedElements = std::vector<uint8_t>(totalElements, false);
 
     std::stack<OctreeNode*> nodesToVisit;
     nodesToVisit.push(rootNode);

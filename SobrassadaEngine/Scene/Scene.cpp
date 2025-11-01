@@ -1157,13 +1157,16 @@ void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects
 }
 
 void Scene::CheckObjectsInFrustum_Cached(
-    std::vector<GameObject*>& outRenderGameObjects, 
-    FrustumPlanes frustumPlanes,
-    const std::vector<GameObject*>& candidateObjects) const
+    std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes,
+    const std::vector<GameObject*>& candidateObjects
+) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsInFrustum_Cached", Optick::Category::GameLogic)
 #endif
+
+    outRenderGameObjects.clear();
+    outRenderGameObjects.reserve(candidateObjects.size());
 
     for (auto gameObject : candidateObjects)
     {

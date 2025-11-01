@@ -673,6 +673,8 @@ void RenderPass::ShadowMapPassRender(
 {
     if (light == nullptr) return;
 
+    glEnable(GL_DEPTH_CLAMP);
+
 #ifdef OPTICK
     OPTICK_PUSH("RenderPass::ShadowMap::Directional")
 #endif
@@ -859,6 +861,8 @@ void RenderPass::ShadowMapPassRender(
 
     glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glDisable(GL_DEPTH_CLAMP);
 
 #ifdef OPTICK
     OPTICK_POP();

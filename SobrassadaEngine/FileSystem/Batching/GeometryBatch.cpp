@@ -201,7 +201,7 @@ void GeometryBatch::LoadData()
     modelsSize              = totalModels.size() * sizeof(float4x4);
     deltaWindDirectionsSize = totalModels.size() * sizeof(float4);
 
-    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
+    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
     for (int i = 0; i < 3; i++)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
@@ -247,7 +247,10 @@ void GeometryBatch::LoadData()
 
         for (size_t j = 0; j < accBonesCount; ++j)
             ptrBones[i][j] = float4x4::identity;
+    }
 
+    if (hasBones)
+    {
         bonesIndexSize = bonesCount.size() * sizeof(unsigned int);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, bonesIndex);
         glBufferData(GL_SHADER_STORAGE_BUFFER, bonesIndexSize, bonesCount.data(), GL_STATIC_DRAW);
@@ -257,6 +260,8 @@ void GeometryBatch::LoadData()
     glBufferData(
         GL_SHADER_STORAGE_BUFFER, totalMaterials.size() * sizeof(MaterialGPU), totalMaterials.data(), GL_STATIC_DRAW
     );
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bool shadowMap)
@@ -341,7 +346,7 @@ void GeometryBatch::WaitBuffer()
 {
     if (gSync[currentBufferIndex])
     {
-        GLenum result = glClientWaitSync(gSync[currentBufferIndex], GL_SYNC_FLUSH_COMMANDS_BIT, 1000000);
+        GLenum result = glClientWaitSync(gSync[currentBufferIndex], 0, 0);
         if (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED)
         {
             glDeleteSync(gSync[currentBufferIndex]);
@@ -349,7 +354,18 @@ void GeometryBatch::WaitBuffer()
         }
         else if (result == GL_TIMEOUT_EXPIRED)
         {
-            GLOG("WARNING: WaitBuffer timeout on buffer %d", currentBufferIndex);
+            result = glClientWaitSync(gSync[currentBufferIndex], GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000); // 1 segundo
+            
+            if (result == GL_TIMEOUT_EXPIRED)
+            {
+                glDeleteSync(gSync[currentBufferIndex]);
+                gSync[currentBufferIndex] = nullptr;
+            }
+            else
+            {
+                glDeleteSync(gSync[currentBufferIndex]);
+                gSync[currentBufferIndex] = nullptr;
+            }
         }
     }
 }
@@ -381,7 +397,6 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
             component->SetBaseIndex((unsigned int)index);
             component->SetBoneIndexOffset((unsigned int)accBones);
         }
-        glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 12, currentBuffer, 0, bonesSize);
@@ -403,7 +418,6 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         const std::size_t index           = componentsMap[component];
         ptrModels[nextBufferIndex][index] = component->GetCombinedMatrix();
     }
-    glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentBuffer);
     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10, currentBuffer, 0, modelsSize);
@@ -424,7 +438,6 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
             ptrDeltaWindDirections[nextBufferIndex][index] =
                 float4(deltaWindDirection.x, deltaWindDirection.y, deltaWindDirection.z, deltaWindDirection.w);
         }
-        glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentWindBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 14, currentWindBuffer, 0, deltaWindDirectionsSize);

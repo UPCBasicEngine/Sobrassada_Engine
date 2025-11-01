@@ -26,7 +26,6 @@ readonly layout(std430, row_major, binding = 13) buffer AccBones {
 
 void main()
 {
-    mat4 model = models[gl_BaseInstance];
     vec4 pos;
 
     if (hasBones) 
@@ -38,6 +37,7 @@ void main()
     } 
     else 
     {
+        mat4 model = models[gl_BaseInstance];
         pos = model * vec4(vertex_position, 1.0);
     }
 
