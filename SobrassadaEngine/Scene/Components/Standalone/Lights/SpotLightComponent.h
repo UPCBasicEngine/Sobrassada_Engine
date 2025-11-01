@@ -41,6 +41,9 @@ class SpotLightComponent : public LightComponent
     void SetShadowGPUIndex(int newIndex) { shadowGPUIndex = newIndex; }
 
   private:
+    void UpdateLocalAABB();
+
+  private:
     float range;
     float innerAngle;
     float outerAngle;

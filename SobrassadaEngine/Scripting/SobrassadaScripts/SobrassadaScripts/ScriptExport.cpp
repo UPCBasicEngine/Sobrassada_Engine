@@ -10,6 +10,7 @@
 #include "ChangeSceneScript.h"
 #include "Changeling.h"
 #include "CoverPointTrigger.h"
+#include "Crow.h"
 #include "CuChulainn.h"
 #include "Destructible.h"
 #include "EnemySpawnerScript.h"
@@ -82,6 +83,7 @@ constexpr const char* scripts[] = {
     "ButtonScript",
     "GodModeScript",
     "CuChulainnScript",
+    "CrowScript",
     "SoldierScript",
     "ExitGameScript",
     "FullscreenToggleScript",
@@ -188,6 +190,8 @@ extern "C" SOBRASSADA_API Script* CreateScript(const std::string& scriptType, Ga
     if (scriptType == "Changeling") return new Changeling(parent);
     if (scriptType == "Boss") return new Boss(parent);
     if (scriptType == "HighlightCharacter") return new HighlightCharacter(parent);
+    if (scriptType == "CrowScript") return new Crow(parent);
+
 
     /* Environment */
     if (scriptType == "TileFloatScript") return new TileFloatScript(parent);

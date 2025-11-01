@@ -24,6 +24,7 @@ bool MoveGOInSpline::Init()
 
 void MoveGOInSpline::Update(float deltaTime)
 {
+    if (!enabled) return;
     if (!spline)
     {
         spline = FindSpline();
