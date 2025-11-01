@@ -2029,51 +2029,19 @@ void CuChulainn::ActivateArrowMark()
     }
     float3 playerPos = character->GetLastPosition();
     SetArrowMark(playerPos);
-    markVfxTimer    = 0.0f;
-    markVfxIsActive = true;
+    markVfxTimer       = 0.0f;
+   markVfxIsActive = true;
     markVfxObject->SetEnabled(true);
 
-    if (markVfxObject)
+    ParticleSystemComponent* particleSystem = markVfxObject->GetComponent<ParticleSystemComponent*>();
+    if (particleSystem)
     {
-        GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
-
-        GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
-        markVfxTimer    = 0.0f;
-        markVfxIsActive = true;
-
-        markVfxObject->SetEnabled(true);
-        GLOG("VFX: Object enabled");
-
-        auto meshComp = markVfxObject->GetComponent<MeshComponent*>();
-        if (meshComp != nullptr)
-        {
-            meshComp->SetEnabled(false);
-            GLOG("VFX: MeshComponent disabled successfully");
-        }
-        else
-        {
-            GLOG("VFX: WARNING - No MeshComponent found on %s", markVfxObject->GetName().c_str());
-        }
-        auto shaderScriptComp = markVfxObject->GetComponent<ShaderScriptComponent*>();
-        if (shaderScriptComp != nullptr)
-        {
-            GLOG("VFX: ShaderScriptComponent found");
-
-            auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
-            if (attackVfxScript)
-            {
-                attackVfxScript->Reset();
-                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
-            }
-            else
-            {
-                GLOG("VFX: ERROR - AttackVfxSpritesheet script not found!");
-            }
-        }
-        else
-        {
-            GLOG("VFX: ERROR - No ShaderScriptComponent found on %s", markVfxObject->GetName().c_str());
-        }
+        particleSystem->SpawnAllInstances();
+        GLOG("VFX: Glow particles spawned at archer position");
+    }
+    else
+    {
+        GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", markVfxObject->GetName().c_str());
     }
 }
 
