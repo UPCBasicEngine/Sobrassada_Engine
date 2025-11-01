@@ -175,6 +175,26 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+    if (isDead || currentState == ArcherStates::DEATH)
+    {
+        if (agentAI)
+        {
+            agentAI->PauseMovement();
+            agentAI->SetSpeed(0.0f, 0.0f);
+        }
+
+        if (animComponent) animComponent->UseTrigger("die");
+
+        deathTimer += deltaTime;
+        if (deathTimer >= DEATH_DURATION)
+        {
+            parent->SetEnabledRecursive(false);
+            GLOG("Archer DISAPPEARED");
+        }
+
+        Character::UpdateTimers(deltaTime);
+        return; 
+    }
     if (currentState != ArcherStates::DEATH)
     {
         if (playerScript && (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN))
@@ -823,35 +843,49 @@ void Archer::UpdateHighlightState(float deltaTime)
 
 void Archer::OnDeath()
 {
+    isDead          = true;
+    currentState    = ArcherStates::DEATH;
+
     hasEscapeTarget = false;
     hasDangerTarget = false;
     isAiming        = false;
     isAttacking     = false;
     hasShot         = false;
     isKnockback     = false;
-    currentState = ArcherStates::DEATH;
+
+    if (hitVfxObject)
+    {
+        hitVfxObject->SetEnabled(false);
+        hitVfxIsActive = false;
+        hitVfxTimer    = 0.0f;
+    }
+
+    if (glowVfxObject)
+    {
+        glowVfxObject->SetEnabled(false);
+        glowVfxIsActive = false;
+        glowTimer       = 0.0f;
+    }
 
     if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_ARCHER_DEATH);
 
-   
     if (agentAI)
     {
-        agentAI->PauseMovement(); 
+        agentAI->PauseMovement();
         agentAI->SetSpeed(0.0f, 0.0f);
     }
 
-  
-
     if (animComponent)
     {
-        GLOG("TRIGGERING die ANIMATION");
         animComponent->UseTrigger("die");
     }
+
+    deathTimer = 0.0f;
 }
 
 void Archer::OnDamageTaken(int amount)
 {
-
+    if (isDead || currentState == ArcherStates::DEATH) return;
     isAttacking   = false;
     attackTimer   = 0.0f;
     isAiming      = false;
@@ -1625,7 +1659,7 @@ void Archer::Attack(float deltaTime)
 
 void Archer::ChangeState()
 {
-    if (isDead) return;
+    if (isDead || currentState == ArcherStates::DEATH) return;
 
     if (currentState == ArcherStates::DANGER)
     {

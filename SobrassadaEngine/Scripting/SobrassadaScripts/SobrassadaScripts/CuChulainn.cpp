@@ -1236,8 +1236,11 @@ void CuChulainn::GetInputs()
 
 float3 CuChulainn::GetMark() const
 {
-
-    return markVfxObject->GetPosition();
+    if (markVfxObject)
+    {
+        return markVfxObject->GetPosition();
+    }
+    return float3::zero;
 }
 
 bool CuChulainn::CanDash() const
