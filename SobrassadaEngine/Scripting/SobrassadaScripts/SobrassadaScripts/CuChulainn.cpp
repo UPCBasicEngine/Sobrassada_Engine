@@ -2023,28 +2023,59 @@ void CuChulainn::UpdateUltimateVfx()
     vfxTimeUnscaledSec = 0.0f;
 }
 
-void CuChulainn::ActivateArrowMark()
+void CuChulainn::ActivateArrowMark(float3 targetPos)
 {
     if (!markVfxObject)
     {
-        GLOG("VFX: ERROR - glowVfxObject is NULL!");
+        GLOG("VFX: ERROR - markVfxObject is NULL!");
         return;
     }
-    float3 playerPos = character->GetLastPosition();
-    SetArrowMark(playerPos);
-    markVfxTimer       = 0.0f;
-   markVfxIsActive = true;
+
+    SetArrowMark(targetPos);
+
+    GLOG("VFX: Activating arrow mark at position (%.2f, %.2f, %.2f)", targetPos.x, targetPos.y, targetPos.z);
+
+    markVfxTimer    = 0.0f;
+    markVfxIsActive = true;
     markVfxObject->SetEnabled(true);
 
-    ParticleSystemComponent* particleSystem = markVfxObject->GetComponent<ParticleSystemComponent*>();
-    if (particleSystem)
+    if (markVfxIsActive && markVfxObject && !markVfxObject->IsEnabled())
     {
-        particleSystem->SpawnAllInstances();
-        GLOG("VFX: Glow particles spawned at archer position");
-    }
-    else
-    {
-        GLOG("VFX: WARNING - No ParticleSystemComponent found on %s", markVfxObject->GetName().c_str());
+
+        GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
+
+        markVfxTimer    = 0.0f;
+        markVfxIsActive = true;
+
+        markVfxObject->SetEnabled(true);
+        GLOG("VFX: Object enabled");
+
+        auto meshComp = markVfxObject->GetComponent<MeshComponent*>();
+        if (meshComp != nullptr)
+        {
+            meshComp->SetEnabled(false);
+            GLOG("VFX: MeshComponent disabled successfully");
+        }
+        else
+        {
+            GLOG("VFX: WARNING - No MeshComponent found on %s", markVfxObject->GetName().c_str());
+        }
+        auto shaderScriptComp = markVfxObject->GetComponent<ShaderScriptComponent*>();
+        if (shaderScriptComp != nullptr)
+        {
+            GLOG("VFX: ShaderScriptComponent found");
+
+            auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
+            if (attackVfxScript)
+            {
+                attackVfxScript->Reset();
+                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
+            }
+            else
+            {
+                GLOG("VFX: ERROR - AttackVfxSpritesheet script not found!");
+            }
+        }
     }
 }
 

@@ -83,7 +83,7 @@ class CuChulainn : public Character
     void OnObjectDestroyed();
     void OnEnemyHit();
     void OnEnemyDefeated();
-    void ActivateArrowMark();
+    void ActivateArrowMark(float3 targetPos);
     void SetArrowMark(float3 posArrow);
 
     void ActivateAbility(std::string abilityName);

@@ -1481,7 +1481,9 @@ void Archer::Aim(float deltaTime)
         if (animComponent) animComponent->UseTrigger("aim");
         isAiming = true;
         aimTimer = 0.0f;
-        playerScript->ActivateArrowMark();
+        float3 predictedTarget = CalculatePredictiveTarget();
+        if (playerScript) playerScript->ActivateArrowMark(predictedTarget);
+        
         ActivateGlowVFX();
         GLOG("AIM: Starting to aim at player");
     }
@@ -1492,6 +1494,7 @@ void Archer::Aim(float deltaTime)
         {
             float3 predictedTarget = CalculatePredictiveTarget();
             agentAI->LookAtMovement(predictedTarget, deltaTime);
+            if (playerScript) playerScript->SetArrowMark(predictedTarget);
         }
 
         if (aimTimer >= aimDuration)
@@ -1546,7 +1549,7 @@ float3 Archer::CalculatePredictiveTarget()
 {
     if (!character) return float3::zero;
 
-    float3 playerPos      = playerScript->GetMark();
+    float3 playerPos      = character->GetLastPosition();
     float3 playerVelocity = character->GetVelocity();
 
     if (!character->IsMoving()) return playerPos;
