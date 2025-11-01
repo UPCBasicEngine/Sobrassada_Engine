@@ -1812,8 +1812,6 @@ void Archer::Escape(float deltaTime)
 
         agentAI->SetSpeed(6.0f, 10.0f);
     }
-
-
    
     if (hasEscapeTarget)
     {
