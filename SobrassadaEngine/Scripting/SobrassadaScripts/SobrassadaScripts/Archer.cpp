@@ -179,6 +179,7 @@ void Archer::Update(float deltaTime)
     {
         if (playerScript && (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN))
         {
+            if (animComponent) animComponent->UseTrigger("idle");
             GLOG("UPDATE: Player dead, forcing PATROL from state: %s", GetLogicStateName().c_str());
 
            
@@ -201,7 +202,7 @@ void Archer::Update(float deltaTime)
            
             currentState     = ArcherStates::PATROL;
 
-            if (animComponent) animComponent->UseTrigger("idle");
+           
             return;
         }
     }
@@ -506,11 +507,10 @@ void Archer::ActivateHitVFX()
         hitVfxTimer    = 0.0f;
         hitVfxIsActive = true;
 
-        // Verificar cada paso
+       
         hitVfxObject->SetEnabled(true);
         GLOG("VFX: Object enabled");
 
-        // Verificar MeshComponent
         auto meshComp = hitVfxObject->GetComponent<MeshComponent*>(); 
         if (meshComp != nullptr)
         {
@@ -521,8 +521,6 @@ void Archer::ActivateHitVFX()
         {
             GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
         }
-
-        // Verificar ShaderScriptComponent
         auto shaderScriptComp = hitVfxObject->GetComponent<ShaderScriptComponent*>();
         if (shaderScriptComp != nullptr)
         {
@@ -1744,52 +1742,77 @@ void Archer::Escape(float deltaTime)
     lastDangerPosition = archerPos;
 
   
-    if (!hasEscapeTarget)
+   if (!hasEscapeTarget)
     {
-        float3 playerPos        = character->GetLastPosition();
-        float3 escapeDir        = (archerPos - playerPos).Normalized();
-        escapeDir.y             = 0.0f;
+        float3 playerPos     = character->GetLastPosition();
+        float3 escapeDir     = (archerPos - playerPos).Normalized();
+        escapeDir.y          = 0.0f;
 
-        float escapeDistance    = rangeEscape + 3.0f;
-        const float angleStep   = 25.0f * (3.14159f / 180.0f);
-        const float3 searchArea = {3.0f, 3.0f, 3.0f};
+        float escapeDistance = 4.0f;
 
-        bool found              = false;
-        for (int i = 0; i < 14; i++)
+        float angles[]       = {0.0f, 30.0f, -30.0f, 60.0f, -60.0f, 90.0f, -90.0f, 120.0f, -120.0f};
+
+        for (float angleDeg : angles)
         {
-            float angle = angleStep * i;
-            float3 dir  = float3(
+            float angle    = angleDeg * (3.14159f / 180.0f);
+            float3 testDir = float3(
                 escapeDir.x * std::cos(angle) - escapeDir.z * std::sin(angle), 0.0f,
                 escapeDir.x * std::sin(angle) + escapeDir.z * std::cos(angle)
             );
 
-            float3 candidatePos = archerPos + dir * escapeDistance;
-            bool posOverPoly    = false;
-            float3 navPos       = float3::zero;
-            agentAI->GetClosestPointInNavmesh(candidatePos, searchArea, posOverPoly, navPos);
+            float3 targetPos = archerPos + testDir * escapeDistance;
+            float hitT       = 0.0f;
 
-           
-            if (posOverPoly && candidatePos.Distance(navPos) <= 2.0f && navPos.Distance(playerPos) > distToPlayer &&
-                IsNavmeshPathClear(archerPos, navPos)) 
+            if (agentAI->RaycastNavmesh(archerPos, targetPos, hitT) && hitT >= 0.90f)
             {
-                currentEscapeTarget = navPos;
-                hasEscapeTarget     = true;
-                found               = true;
-                GLOG("ESCAPE: Found clear path at angle %d", i * 30);
-                break;
+             
+                bool posOverPoly        = false;
+                float3 validatedPos     = float3::zero;
+                const float3 searchArea = {2.0f, 2.0f, 2.0f};
+
+                agentAI->GetClosestPointInNavmesh(targetPos, searchArea, posOverPoly, validatedPos);
+
+                if (posOverPoly && targetPos.Distance(validatedPos) <= 1.0f)
+                {
+                   
+                    float3 beyondTarget = targetPos + testDir * 2.0f;
+                    float beyondHitT    = 0.0f;
+                    bool hasSpaceBeyond = agentAI->RaycastNavmesh(targetPos, beyondTarget, beyondHitT);
+
+                  
+                    if ((hasSpaceBeyond && beyondHitT > 0.5f) || targetPos.Distance(playerPos) > distToPlayer + 3.0f)
+                    {
+                        currentEscapeTarget = validatedPos;
+                        hasEscapeTarget     = true;
+                        GLOG("ESCAPE: Good escape point at %.0f degrees", angleDeg);
+                        break;
+                    }
+                    else
+                    {
+                        GLOG("ESCAPE: Rejected %.0f degrees - dead end detected", angleDeg);
+                    }
+                }
+                else
+                {
+                    GLOG(
+                        "ESCAPE: Rejected %.0f degrees - near navmesh edge (dist=%.2f)", angleDeg,
+                        targetPos.Distance(validatedPos)
+                    );
+                }
             }
         }
 
-        if (!found)
+        if (!hasEscapeTarget)
         {
-            currentEscapeTarget = archerPos + escapeDir * 3.0f;
+            GLOG("ESCAPE: No good escape found, using immediate perpendicular");
+            float3 perpDir      = float3(-escapeDir.z, 0.0f, escapeDir.x);
+            currentEscapeTarget = archerPos + perpDir * 1.5f;
             hasEscapeTarget     = true;
-            GLOG("ESCAPE: Using fallback direction");
         }
 
         agentAI->SetSpeed(6.0f, 10.0f);
-      
     }
+
 
    
     if (hasEscapeTarget)
